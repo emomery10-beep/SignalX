@@ -1,0 +1,42 @@
+{
+  "name": "signalx",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:migrate": "supabase db push",
+    "db:types": "supabase gen types typescript --local > lib/supabase/types.ts"
+  },
+  "dependencies": {
+    "next": "14.2.3",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "@supabase/supabase-js": "^2.43.4",
+    "@supabase/ssr": "^0.3.0",
+    "@anthropic-ai/sdk": "^0.24.3",
+    "chart.js": "^4.4.3",
+    "react-chartjs-2": "^5.2.0",
+    "papaparse": "^5.4.1",
+    "xlsx": "^0.18.5",
+    "zustand": "^4.5.2",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "next-themes": "^0.3.0",
+    "stripe": "^14.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "@types/react": "^18.3.2",
+    "@types/react-dom": "^18.3.0",
+    "@types/papaparse": "^5.3.14",
+    "typescript": "^5.4.5",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.3",
+    "tailwindcss": "^3.4.3",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38"
+  }
+}
