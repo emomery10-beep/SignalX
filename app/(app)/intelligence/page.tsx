@@ -175,14 +175,14 @@ export default function IntelligencePage() {
                 <button key={i} onClick={() => setSparringInput(p)} style={{ fontSize: 12, color: 'var(--tx2)', background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 9999, padding: '5px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>{p}</button>
               ))}
             </div>
-            <textarea value={sparringInput} onChange={e => setSparringInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askSparring() } }} placeholder="Ask anything about your business strategy..." rows={3} style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid var(--b2)', background: 'var(--sf)', fontSize: 13, fontFamily: 'inherit', color: 'var(--tx)', resize: 'none', outline: 'none', lineHeight: 1.6, boxSizing: 'border-box', marginBottom: 10 }}/>
+            <textarea value={sparringInput} onChange={e => setSparringInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askSparring() } }} placeholder="Ask anything about your business strategy..." rows={3} style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid var(--b2)', background: 'var(--sf)', fontSize: 13, fontFamily: 'inherit', color: 'var(--tx)', resize: 'none', outline: 'none', lineHeight: 1.6, boxSizing: 'border-box', marginBottom: 10 }}></div>
             <button onClick={askSparring} disabled={!sparringInput.trim() || sparringSending} style={{ width: '100%', padding: '11px', borderRadius: 10, border: 'none', background: sparringSending ? 'var(--b)' : '#6366F1', color: sparringSending ? 'var(--tx3)' : '#fff', fontSize: 13, fontWeight: 600, cursor: sparringSending ? 'wait' : 'pointer', fontFamily: 'inherit', marginBottom: 16 }}>
               {sparringSending ? 'Thinking...' : 'Ask AskBiz'}
             </button>
             {sparringResponse && (
               <div style={{ padding: '16px 18px', borderRadius: 14, border: '1px solid rgba(99,102,241,.2)', background: 'rgba(99,102,241,.03)' }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#6366F1', marginBottom: 10 }}>AskBiz</div>
-                <div style={{ fontSize: 14, color: 'var(--tx)', lineHeight: 1.75 }} dangerouslySetInnerHTML={{ __html: sparringResponse.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>') }}/>
+                <div style={{ fontSize: 14, color: 'var(--tx)', lineHeight: 1.75 }} dangerouslySetInnerHTML={{ __html: sparringResponse.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>') }}></div>
                 <button onClick={() => { setSparringInput(''); setSparringResponse('') }} style={{ marginTop: 12, fontSize: 12, color: 'var(--tx3)', background: 'transparent', border: '1px solid var(--b)', borderRadius: 9999, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>Ask something else</button>
               </div>
             )}
