@@ -1,0 +1,839 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design tokens ──────────────────────────────────────────── */
+:root {
+  /* Claude-inspired warm neutral palette — easy on the eyes */
+  --bg:   #f9f8f6;
+  --sf:   #ffffff;
+  --ev:   #f3f2ef;
+  --ov:   #ece9e3;
+  --b:    rgba(0,0,0,.08);
+  --b2:   rgba(0,0,0,.14);
+  --b3:   rgba(208,138,89,.4);
+  --tx:   #1a1916;
+  --tx2:  #6b6760;
+  --tx3:  #a39e97;
+  --acc:  #d08a59;
+  --acc2: #8c6fe0;
+  --glow: 0 0 30px rgba(208,138,89,.15), 0 0 60px rgba(208,138,89,.06);
+  --sh:   0 2px 12px rgba(0,0,0,.08);
+  --shl:  0 8px 32px rgba(0,0,0,.12);
+  --ease: cubic-bezier(.16,1,.3,1);
+  --r-sm: 6px; --r-md: 10px; --r-lg: 16px; --r-xl: 22px; --rf: 9999px;
+
+  /* ── Mobile-first font sizes ── */
+  --fs-xs:  13px;
+  --fs-sm:  14px;
+  --fs-md:  15px;
+  --fs-lg:  17px;
+  --fs-xl:  20px;
+  --fs-2xl: 24px;
+  --fs-3xl: 28px;
+}
+
+/* ── Base ───────────────────────────────────────────────────── */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; scroll-behavior: smooth; overflow-x: hidden; }
+body {
+  background: var(--bg);
+  color: var(--tx);
+  font-family: var(--font-dm), 'DM Sans', sans-serif;
+  font-size: var(--fs-md);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  min-height: 100%;
+  overflow-x: hidden;
+  /* Prevent tiny fonts on iOS */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Tap targets — minimum 44px on mobile */
+button, a, label, [role="button"] {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Grid texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,0,0,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,.04) 1px, transparent 1px);
+  background-size: 54px 54px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Scrollbars ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,.15); border-radius: 2px; }
+
+/* ── Focus ──────────────────────────────────────────────────── */
+:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; border-radius: var(--r-sm); }
+
+/* ── Animations ─────────────────────────────────────────────── */
+@keyframes fadeUp    { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeDown  { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn    { from{opacity:0} to{opacity:1} }
+@keyframes fadeLeft  { from{opacity:0;transform:translateX(16px)} to{opacity:1;transform:translateX(0)} }
+@keyframes fadeRight { from{opacity:0;transform:translateX(-16px)} to{opacity:1;transform:translateX(0)} }
+@keyframes scaleIn   { from{opacity:0;transform:scale(.94)} to{opacity:1;transform:scale(1)} }
+@keyframes scaleUp   { from{opacity:0;transform:scale(.88) translateY(12px)} to{opacity:1;transform:scale(1) translateY(0)} }
+@keyframes msgIn     { from{opacity:0;transform:translateY(8px)}  to{opacity:1;transform:translateY(0)} }
+@keyframes tdot      { 0%,60%,100%{transform:translateY(0);opacity:.45} 30%{transform:translateY(-5px);opacity:1} }
+@keyframes shimmer   { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+@keyframes spin      { to{transform:rotate(360deg)} }
+@keyframes pulse     { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+@keyframes slideUp   { from{transform:translateY(100%)} to{transform:translateY(0)} }
+@keyframes slideDown { from{transform:translateY(-100%)} to{transform:translateY(0)} }
+@keyframes ping      { 0%,100%{transform:scale(1);opacity:.6} 50%{transform:scale(1.6);opacity:0} }
+@keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+@keyframes popIn     { 0%{opacity:0;transform:scale(.8)} 60%{transform:scale(1.04)} 100%{opacity:1;transform:scale(1)} }
+@keyframes verdictIn { 0%{opacity:0;transform:translateX(-8px) scale(.97)} 100%{opacity:1;transform:translateX(0) scale(1)} }
+@keyframes countUp   { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+@keyframes borderPulse { 0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.0)} 50%{box-shadow:0 0 0 4px rgba(99,102,241,.15)} }
+
+/* ── Easing vars — spring physics ───────────────────────────── */
+:root {
+  --ease:         cubic-bezier(.16,1,.3,1);       /* spring — main */
+  --ease-out:     cubic-bezier(.0,0,.2,1);         /* decel */
+  --ease-in:      cubic-bezier(.4,0,1,1);          /* accel */
+  --ease-back:    cubic-bezier(.34,1.56,.64,1);    /* overshoot */
+  --ease-smooth:  cubic-bezier(.25,.46,.45,.94);   /* smooth */
+  --ease-snappy:  cubic-bezier(.23,1,.32,1);       /* snappy spring */
+}
+
+/* ── Utility animation classes ──────────────────────────────── */
+.animate-fade-up    { animation: fadeUp    .45s var(--ease) both; }
+.animate-fade-down  { animation: fadeDown  .4s  var(--ease) both; }
+.animate-fade-in    { animation: fadeIn    .35s var(--ease-out) both; }
+.animate-fade-left  { animation: fadeLeft  .4s  var(--ease) both; }
+.animate-fade-right { animation: fadeRight .4s  var(--ease) both; }
+.animate-scale-in   { animation: scaleIn   .35s var(--ease) both; }
+.animate-scale-up   { animation: scaleUp   .5s  var(--ease-back) both; }
+.animate-pop-in     { animation: popIn     .4s  var(--ease-back) both; }
+.animate-float      { animation: float     3s   ease-in-out infinite; }
+.animate-ping       { animation: ping      1.8s ease-in-out infinite; }
+.animate-border-pulse { animation: borderPulse 2s ease-in-out infinite; }
+
+/* Stagger delays for lists and grids */
+.stagger-1  { animation-delay: .05s; }
+.stagger-2  { animation-delay: .1s;  }
+.stagger-3  { animation-delay: .15s; }
+.stagger-4  { animation-delay: .2s;  }
+.stagger-5  { animation-delay: .25s; }
+.stagger-6  { animation-delay: .3s;  }
+.stagger-7  { animation-delay: .35s; }
+.stagger-8  { animation-delay: .4s;  }
+
+/* ── Scroll-driven entrance (IntersectionObserver hook) ──────── */
+/* Elements start invisible, JS adds .is-visible when they enter viewport */
+[data-motion] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity .55s var(--ease),
+    transform .55s var(--ease);
+}
+[data-motion="left"] {
+  transform: translateX(-18px);
+}
+[data-motion="right"] {
+  transform: translateX(18px);
+}
+[data-motion="scale"] {
+  transform: scale(.93);
+}
+[data-motion="fade"] {
+  transform: none;
+}
+[data-motion].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Stagger children inside a [data-motion-group] */
+[data-motion-group] > * {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity .45s var(--ease),
+    transform .45s var(--ease);
+}
+[data-motion-group].is-visible > *:nth-child(1) { opacity:1; transform:none; transition-delay:.04s; }
+[data-motion-group].is-visible > *:nth-child(2) { opacity:1; transform:none; transition-delay:.10s; }
+[data-motion-group].is-visible > *:nth-child(3) { opacity:1; transform:none; transition-delay:.16s; }
+[data-motion-group].is-visible > *:nth-child(4) { opacity:1; transform:none; transition-delay:.22s; }
+[data-motion-group].is-visible > *:nth-child(5) { opacity:1; transform:none; transition-delay:.28s; }
+[data-motion-group].is-visible > *:nth-child(6) { opacity:1; transform:none; transition-delay:.34s; }
+[data-motion-group].is-visible > *:nth-child(7) { opacity:1; transform:none; transition-delay:.40s; }
+[data-motion-group].is-visible > *:nth-child(8) { opacity:1; transform:none; transition-delay:.46s; }
+
+/* ── Interactive micro-animations ───────────────────────────── */
+
+/* Buttons — lift on hover, press on click */
+button:not([disabled]),
+.btn {
+  transition:
+    background .15s var(--ease-out),
+    color .15s var(--ease-out),
+    border-color .15s var(--ease-out),
+    box-shadow .2s var(--ease-out),
+    transform .15s var(--ease-out),
+    opacity .15s var(--ease-out);
+  will-change: transform;
+}
+button:not([disabled]):hover,
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,0,0,.10);
+}
+button:not([disabled]):active,
+.btn:active {
+  transform: translateY(0px) scale(.97);
+  box-shadow: none;
+  transition-duration: .08s;
+}
+
+/* Cards — subtle lift */
+.card-hover {
+  transition:
+    box-shadow .25s var(--ease-out),
+    transform .25s var(--ease-out),
+    border-color .2s var(--ease-out);
+  cursor: pointer;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0,0,0,.10);
+  border-color: rgba(99,102,241,.25);
+}
+.card-hover:active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0,0,0,.08);
+  transition-duration: .1s;
+}
+
+/* Links */
+a {
+  transition: color .15s var(--ease-out), opacity .15s var(--ease-out);
+}
+
+/* Inputs — smooth focus ring */
+input, textarea, select {
+  transition:
+    border-color .18s var(--ease-out),
+    box-shadow .18s var(--ease-out),
+    background .18s var(--ease-out);
+}
+input:focus, textarea:focus, select:focus {
+  box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+}
+
+/* Nav links — underline slide */
+.nav-link {
+  position: relative;
+  text-decoration: none;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 0;
+  width: 0; height: 2px;
+  background: #6366F1;
+  border-radius: 1px;
+  transition: width .2s var(--ease);
+}
+.nav-link:hover::after { width: 100%; }
+
+/* Toggle switches */
+.toggle {
+  transition: background .2s var(--ease);
+}
+.toggle-thumb {
+  transition: transform .2s var(--ease-back);
+}
+
+/* Sidebar items */
+.sidebar-item {
+  transition:
+    background .15s var(--ease-out),
+    color .15s var(--ease-out),
+    transform .15s var(--ease-out);
+}
+.sidebar-item:hover {
+  transform: translateX(2px);
+}
+.sidebar-item.active {
+  animation: verdictIn .3s var(--ease) both;
+}
+
+/* Verdict bar entrance */
+.verdict-bar {
+  animation: verdictIn .35s var(--ease) both;
+}
+
+/* Message bubbles */
+.msg-in {
+  animation: msgIn .26s var(--ease) both;
+}
+
+/* Pulse bar */
+.pulse-bar {
+  animation: fadeDown .3s var(--ease) both;
+}
+
+/* KPI cards stagger */
+.kpi-card {
+  animation: scaleUp .4s var(--ease-back) both;
+}
+.kpi-card:nth-child(2) { animation-delay: .07s; }
+.kpi-card:nth-child(3) { animation-delay: .14s; }
+.kpi-card:nth-child(4) { animation-delay: .21s; }
+
+/* Modal / overlay entrance */
+.modal-enter {
+  animation: scaleUp .35s var(--ease-back) both;
+}
+.overlay-enter {
+  animation: fadeIn .2s var(--ease-out) both;
+}
+
+/* Toast / notification pop */
+.toast-enter {
+  animation: fadeLeft .35s var(--ease-back) both;
+}
+
+/* Loading dots */
+.tdot {
+  width:5px;height:5px;border-radius:50%;
+  background:var(--tx3);
+  animation:tdot 1.2s infinite;
+  display:inline-block;
+}
+.tdot:nth-child(2) { animation-delay:.2s; }
+.tdot:nth-child(3) { animation-delay:.4s; }
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(90deg, var(--ev) 25%, var(--ov) 50%, var(--ev) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: var(--r-sm);
+}
+
+/* Spinner */
+.spin { animation: spin .8s linear infinite; }
+
+/* Float (for hero icons etc) */
+.float { animation: float 3s ease-in-out infinite; }
+
+/* Fade utilities */
+.fade-up  { animation: fadeUp .4s var(--ease) both; }
+.fade-in  { animation: fadeIn .3s var(--ease-out) both; }
+
+/* Blog post image alt text */
+img {
+  transition: opacity .3s var(--ease-out);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  [data-motion], [data-motion-group] > * {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ── MOBILE SIDEBAR ─────────────────────────────────────────── */
+/* Sidebar hidden on mobile by default, shown as overlay when open */
+@media (max-width: 768px) {
+  .sidebar-mobile-hidden { transform: translateX(-100%); transition: transform 280ms var(--ease); }
+  .sidebar-mobile-open   { transform: translateX(0) !important; }
+  .sidebar-overlay       { display: block !important; }
+}
+
+/* ── RESPONSIVE GRID HELPERS ────────────────────────────────── */
+.grid-responsive-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+.grid-responsive-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; }
+
+@media (max-width: 900px) {
+  .grid-responsive-4 { grid-template-columns: repeat(2,1fr); }
+}
+@media (max-width: 600px) {
+  .grid-responsive-4 { grid-template-columns: 1fr; }
+  .grid-responsive-2 { grid-template-columns: 1fr; }
+}
+
+/* ── MOBILE BOTTOM NAV ──────────────────────────────────────── */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--sf);
+  border-top: 1px solid var(--b);
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── MAIN LAYOUT ────────────────────────────────────────────── */
+.main-content {
+  min-width: 0;
+  overflow-x: hidden;
+  margin-left: 240px;
+}
+
+@media (min-width: 769px) {
+  .desktop-sidebar {
+    display: flex !important;
+    transform: translateX(0) !important;
+  }
+  .mobile-header {
+    display: none !important;
+  }
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0 !important;
+    padding-top: 56px;
+    padding-bottom: 72px;
+  }
+  .desktop-sidebar {
+    display: flex !important;
+  }
+  .mobile-header {
+    display: flex !important;
+  }
+  .mobile-bottom-nav {
+    display: flex !important;
+  }
+  /* Larger tap targets on mobile */
+  button, a {
+    min-height: 44px;
+  }
+  /* Bigger font on mobile inputs */
+  input, textarea {
+    font-size: 16px !important; /* prevents iOS zoom */
+  }
+}
+
+@media (max-width: 768px) {
+  #sidebar {
+    position: fixed !important;
+    z-index: 99 !important;
+  }
+  #mobile-topbar {
+    display: flex !important;
+  }
+  .desktop-sidebar {
+    width: 280px !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ASKBIZ RESPONSIVE SYSTEM
+   Use these classes on any container instead of inline grid styles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Page wrapper — constrains width and adds horizontal padding */
+.page-wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 24px 40px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Grid: 2 equal columns → 1 on mobile */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Grid: 3 equal columns → 2 on tablet → 1 on mobile */
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+/* Grid: 4 equal columns → 2 on tablet → 1 on mobile */
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+/* Stat cards row — wraps on narrow screens */
+.stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.stat-row > * {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+/* Card — consistent padding */
+.card {
+  padding: 18px 20px;
+  border-radius: 14px;
+  border: 1px solid var(--b);
+  background: var(--sf);
+}
+
+/* Responsive table wrapper */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+/* ── BREAKPOINTS ─────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 640px) {
+  .page-wrap { padding: 16px 14px 32px; }
+  .grid-4 { grid-template-columns: 1fr; }
+  .grid-3 { grid-template-columns: 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .stat-row > * { flex: 1 1 100%; }
+}
+
+/* ── MOBILE PADDING OVERRIDES ──────────────────────────────── */
+@media (max-width: 640px) {
+  /* Reduce header padding on all pages */
+  .page-header {
+    padding: 14px 14px 12px !important;
+  }
+  /* Reduce content area padding */
+  .page-content {
+    padding: 14px 14px 24px !important;
+  }
+  /* Stack any flex row on mobile */
+  .flex-row-mobile-stack {
+    flex-direction: column !important;
+  }
+  /* Full width buttons on mobile */
+  .btn-mobile-full {
+    width: 100% !important;
+  }
+  /* Hide secondary columns on mobile */
+  .mobile-hide {
+    display: none !important;
+  }
+}
+
+/* ── SAFE SCROLLABLE CONTENT AREA ──────────────────────────── */
+.scroll-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  min-width: 0;
+}
+
+/* ── CONSISTENT INNER CONTENT WIDTH ────────────────────────── */
+.inner {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 640px) {
+  .inner { padding: 0 14px; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   GLOBAL RESPONSIVE RESET — applies to ALL app pages
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Every page content column should never overflow */
+* {
+  box-sizing: border-box;
+}
+
+/* All page root divs must not overflow */
+.main-content > div {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Any div with flex column layout should constrain children */
+[style*="flexDirection: column"], [style*="flex-direction: column"] {
+  min-width: 0;
+}
+
+/* ── PAGE SHELL: consistent header + scroll body ─────────────── */
+.page-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+.page-shell-header {
+  padding: 18px 28px 14px;
+  border-bottom: 1px solid var(--b);
+  flex-shrink: 0;
+}
+.page-shell-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px 28px 40px;
+  min-width: 0;
+}
+
+/* ── RESPONSIVE CONTAINERS ───────────────────────────────────── */
+.rcontainer {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ── RESPONSIVE GRIDS ────────────────────────────────────────── */
+.rgrid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.rgrid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.rgrid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+
+/* ── KPI STAT ROW ────────────────────────────────────────────── */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+/* ── CARD ────────────────────────────────────────────────────── */
+.rcard {
+  background: var(--sf);
+  border: 1px solid var(--b);
+  border-radius: 16px;
+  padding: 20px;
+  min-width: 0;
+}
+
+/* ── TABLE ───────────────────────────────────────────────────── */
+.rtable-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+  border: 1px solid var(--b);
+}
+
+/* ══ TABLET (≤ 960px) ════════════════════════════════════════ */
+@media (max-width: 960px) {
+  .rgrid-4 { grid-template-columns: repeat(2, 1fr); }
+  .rgrid-3 { grid-template-columns: repeat(2, 1fr); }
+  .kpi-row  { grid-template-columns: repeat(2, 1fr); }
+  .page-shell-header { padding: 16px 20px 12px; }
+  .page-shell-body   { padding: 20px 20px 32px; }
+}
+
+/* ══ MOBILE (≤ 640px) ════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .main-content {
+    margin-left: 0 !important;
+  }
+  .rgrid-4,
+  .rgrid-3,
+  .rgrid-2 { grid-template-columns: 1fr; }
+  .kpi-row  { grid-template-columns: repeat(2, 1fr); }
+  .page-shell-header { padding: 12px 14px 10px; }
+  .page-shell-body   { padding: 14px 14px 80px; }
+  .rcard    { padding: 14px; }
+
+  /* Hide non-essential table columns */
+  .mobile-hide { display: none !important; }
+
+  /* Any inline grid with fixed columns should collapse */
+  [style*="repeat(4,1fr)"],
+  [style*="repeat(4, 1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  [style*="repeat(3,1fr)"],
+  [style*="repeat(3, 1fr)"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* ══ SMALL MOBILE (≤ 480px) ════════════════════════════════ */
+@media (max-width: 480px) {
+  .kpi-row  { grid-template-columns: 1fr 1fr; }
+  .page-shell-body { padding: 12px 12px 80px; }
+
+  /* Force any 2-col grid to 1-col on very small screens */
+  [style*="1fr 1fr"],
+  [style*="1fr, 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INLINE STYLE OVERRIDES FOR RESPONSIVE LAYOUT
+   These catch any remaining inline grid/flex patterns
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Force all page content areas to not overflow */
+.main-content,
+.main-content > *,
+.page-shell,
+.page-shell-body {
+  max-width: 100vw;
+  box-sizing: border-box;
+}
+
+/* Ensure page headers stay readable on mobile */
+@media (max-width: 640px) {
+  /* All page-level header sections */
+  .page-shell-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* Stat/KPI cards - always 2 col minimum for readability */
+  .stat-row > * {
+    flex: 1 1 calc(50% - 6px);
+    min-width: calc(50% - 6px);
+  }
+
+  /* Force all overflowing tables to scroll */
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Prevent wide images/charts from blowing out layout */
+  img, svg, canvas {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Tab bars should scroll horizontally */
+  [role="tablist"] {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* All action button rows should wrap */
+  .btn-row {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-row > * {
+    flex: 1 1 100%;
+  }
+
+  /* Full width cards on tiny screens */
+  .rcard, .card {
+    border-radius: 12px;
+    padding: 12px;
+  }
+
+  /* Smaller headings on tiny screens */
+  h1 { font-size: clamp(18px, 5vw, 26px) !important; }
+  h2 { font-size: clamp(16px, 4vw, 22px) !important; }
+}
+
+/* ── Mobile-first optimisations ─────────────────────────────── */
+
+/* Larger tap targets on mobile */
+@media (max-width: 600px) {
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Verdict bar full-width on mobile */
+  .verdict-bar {
+    border-radius: 0;
+    margin-left: -16px;
+    margin-right: -16px;
+    border-left: none;
+    border-right: none;
+    border-radius: 0 !important;
+  }
+
+  /* Daily brief readable in portrait */
+  .daily-brief-card {
+    padding: 14px !important;
+  }
+
+  /* Larger text for key numbers */
+  .health-score-number {
+    font-size: 36px !important;
+  }
+}
+
+/* Page shell — consistent layout for app pages */
+.page-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.page-shell-header {
+  flex-shrink: 0;
+  padding: 16px 20px 0;
+  border-bottom: 1px solid var(--b);
+  background: var(--sf);
+}
+
+.page-shell-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* Smooth scroll */
+* {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Focus visible for accessibility */
+:focus-visible {
+  outline: 2px solid #6366F1;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Better font rendering */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
