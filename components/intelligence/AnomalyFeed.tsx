@@ -66,7 +66,7 @@ export default function AnomalyFeed({ anomalies, onAsk, onDismiss, compact = fal
                 <span style={{
                   position: 'absolute', inset: 0, borderRadius: '50%', background: s.dot,
                   ...(a.severity === 'critical' ? { animation: 'pulse 1.5s ease-in-out infinite' } : {}),
-                }}/>
+                }}></span>
               </div>
 
               <div style={{ flex: 1, minWidth: 0 }}>

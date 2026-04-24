@@ -110,7 +110,7 @@ export default function LandingClient({ geo }: { geo: GeoData | null }) {
             <div>
               <div style={{ fontSize: 13, fontWeight: 600 }}>AskBiz</div>
               <div style={{ fontSize: 11, color: '#22c55e', display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}/>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}></span>
                 Ready to answer
               </div>
             </div>
@@ -135,7 +135,7 @@ export default function LandingClient({ geo }: { geo: GeoData | null }) {
                   <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/><path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </div>
                 <div style={{ padding: '10px 14px', borderRadius: 14, borderBottomLeftRadius: 3, background: 'var(--ev)', border: '1px solid var(--b)', display: 'flex', gap: 4, alignItems: 'center' }}>
-                  <span className="tdot"/><span className="tdot"/><span className="tdot"/>
+                  <span className="tdot"></span><span className="tdot"></span><span className="tdot"></span>
                 </div>
               </div>
             )}

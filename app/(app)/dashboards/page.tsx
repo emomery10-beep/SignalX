@@ -223,7 +223,7 @@ export default function DashboardPage() {
                 <div style={{ fontSize:11, color:'var(--tx3)' }}>AskBiz is watching your data</div>
               </div>
               <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, color:'#22c55e', fontWeight:500 }}>
-                <span style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e', display:'inline-block', animation:'pulse 2s infinite' }}/>
+                <span style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e', display:'inline-block', animation:'pulse 2s infinite' }}></span>
                 Live
               </div>
             </div>
@@ -250,8 +250,8 @@ export default function DashboardPage() {
                 <div style={{ fontSize:11, color:'var(--tx3)' }}>Top 6 products from your latest file</div>
               </div>
               <div style={{ display:'flex', gap:8 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:4, fontSize:11, color:'var(--tx3)' }}><span style={{ width:10, height:10, borderRadius:3, background:'rgba(208,138,89,.75)', display:'inline-block' }}/> Top 3</div>
-                <div style={{ display:'flex', alignItems:'center', gap:4, fontSize:11, color:'var(--tx3)' }}><span style={{ width:10, height:10, borderRadius:3, background:'rgba(140,111,224,.65)', display:'inline-block' }}/> Others</div>
+                <div style={{ display:'flex', alignItems:'center', gap:4, fontSize:11, color:'var(--tx3)' }}><span style={{ width:10, height:10, borderRadius:3, background:'rgba(208,138,89,.75)', display:'inline-block' }}></span> Top 3</div>
+                <div style={{ display:'flex', alignItems:'center', gap:4, fontSize:11, color:'var(--tx3)' }}><span style={{ width:10, height:10, borderRadius:3, background:'rgba(140,111,224,.65)', display:'inline-block' }}></span> Others</div>
               </div>
             </div>
             <div style={{ position:'relative', height:180 }}>

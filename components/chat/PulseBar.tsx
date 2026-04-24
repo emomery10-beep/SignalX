@@ -131,7 +131,7 @@ export default function PulseBar({ lastResult, onAsk, hasData }: Props) {
         background: style.dot,
         flexShrink: 0,
         animation: active.level !== 'neutral' ? 'pulse 2s ease-in-out infinite' : 'none',
-      }}/>
+      }}></span>
 
       {/* Signal text */}
       <span style={{

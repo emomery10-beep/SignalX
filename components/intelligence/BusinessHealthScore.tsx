@@ -134,7 +134,7 @@ export default function BusinessHealthScore({ health, size = 'md', showComponent
         <div style={{ borderTop: `1px solid ${c.border}`, padding: '12px 18px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {health.components.map((comp, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: STATUS_DOT[comp.status], flexShrink: 0 }}/>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: STATUS_DOT[comp.status], flexShrink: 0 }}></span>
               <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', minWidth: 110 }}>{comp.name}</span>
               <div style={{ flex: 1, height: 4, background: 'var(--ov)', borderRadius: 2, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${(comp.score / 20) * 100}%`, background: STATUS_DOT[comp.status], borderRadius: 2, transition: 'width 0.8s var(--ease)' }}></div>

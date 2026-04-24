@@ -217,7 +217,7 @@ export default function ChatPage() {
           </div>
           {voice.isRecording && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 9999, background: 'linear-gradient(135deg,rgba(99,102,241,.15),rgba(139,92,246,.15))', border: '1px solid rgba(99,102,241,.3)', fontSize: 11, fontWeight: 600, color: '#818cf8', flexShrink: 0 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#818cf8', animation: 'pulse 1s infinite' }}/>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#818cf8', animation: 'pulse 1s infinite' }}></span>
               AskBiz Live
             </div>
           )}
@@ -337,7 +337,7 @@ export default function ChatPage() {
                   <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/><path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </div>
                 <div style={{ padding: '10px 14px', borderRadius: 13, borderBottomLeftRadius: 3, background: 'var(--ev)', border: '1px solid var(--b)', display: 'flex', gap: 4, alignItems: 'center' }}>
-                  <span className="tdot"/><span className="tdot"/><span className="tdot"/>
+                  <span className="tdot"></span><span className="tdot"></span><span className="tdot"></span>
                 </div>
               </div>
             )}
@@ -383,12 +383,12 @@ export default function ChatPage() {
           <div style={{ textAlign: 'center', padding: '8px 0 12px', fontSize: 11, color: 'var(--tx3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
             {uploadedFile ? (
               <>
-                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22C55E', display: 'inline-block' }}/>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#22C55E', display: 'inline-block' }}></span>
                 Connected: {uploadedFile.name}
               </>
             ) : (
               <>
-                <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--b2)', display: 'inline-block' }}/>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--b2)', display: 'inline-block' }}></span>
                 No data connected · Upload a file or connect your shop for personalised answers
               </>
             )}

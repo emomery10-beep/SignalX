@@ -46,13 +46,13 @@ export default function VerdictBar({ verdict, sentence, marketPosition }: Props)
             position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
             borderRadius: '50%', background: c.dot,
             animation: verdict === 'act' ? 'pulse 1.5s ease-in-out infinite' : 'none',
-          }}/>
+          }}></span>
           {verdict === 'act' && (
             <span style={{
               position: 'absolute', top: -3, left: -3, right: -3, bottom: -3,
               borderRadius: '50%', background: c.dot, opacity: 0.3,
               animation: 'ping 1.5s ease-in-out infinite',
-            }}/>
+            }}></span>
           )}
         </div>
 

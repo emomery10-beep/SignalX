@@ -218,7 +218,7 @@ export default function SourcesPage() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 600 }}>{source.name}</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: source.status === 'active' ? '#22c55e' : source.status === 'error' ? '#ef4444' : '#f59e0b', display: 'inline-block', flexShrink: 0 }}/>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: source.status === 'active' ? '#22c55e' : source.status === 'error' ? '#ef4444' : '#f59e0b', display: 'inline-block', flexShrink: 0 }}></span>
                           <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{source.status === 'active' ? 'Connected' : source.status} · Last sync: {timeAgo(source.last_synced_at)}</span>
                           {source.error_message && <span style={{ fontSize: 11, color: '#ef4444' }}>{source.error_message.slice(0, 60)}</span>}
                         </div>
@@ -268,7 +268,7 @@ export default function SourcesPage() {
                       </button>
                     ) : (
                       <div style={{ fontSize: 12, color: 'var(--tx3)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}/>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}></span>
                         Live — syncing automatically
                       </div>
                     )}
