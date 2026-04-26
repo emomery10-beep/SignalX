@@ -1,179 +1,37 @@
 // ============================================================
-// X (Twitter) API v2 Client for AskBiz Growth Agent
-// Handles: search, reply, post thread, like, follow
+// X (Twitter) API — OAuth 2.0 for posting
+// Search via Tavily (free, already integrated)
 // ============================================================
 
 const X_BASE = 'https://api.twitter.com/2'
 
-interface XTweet {
-  id: string
-  text: string
-  author_id?: string
-  created_at?: string
-  public_metrics?: {
-    reply_count: number
-    retweet_count: number
-    like_count: number
-    impression_count: number
-  }
-  author?: {
-    id: string
-    name: string
-    username: string
-    public_metrics?: {
-      followers_count: number
-    }
-  }
-}
-
-interface XSearchResult {
-  data: XTweet[]
-  meta?: {
-    newest_id: string
-    oldest_id: string
-    result_count: number
-    next_token?: string
-  }
-}
-
-// ── Auth headers ─────────────────────────────────────────────
-function bearerHeaders() {
-  const token = process.env.X_BEARER_TOKEN
-  if (!token) throw new Error('X_BEARER_TOKEN not configured')
-  return {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  }
-}
-
-function oauth1Headers(method: string, url: string, params: Record<string, string> = {}) {
-  const consumerKey    = process.env.X_API_KEY
-  const consumerSecret = process.env.X_API_SECRET
-  const accessToken    = process.env.X_ACCESS_TOKEN
-  const accessSecret   = process.env.X_ACCESS_TOKEN_SECRET
-
-  if (!consumerKey || !consumerSecret || !accessToken || !accessSecret) {
-    throw new Error('X OAuth1 credentials not configured. Need: X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET')
-  }
-
-  const nonce     = Math.random().toString(36).substring(2) + Date.now().toString(36)
-  const timestamp = Math.floor(Date.now() / 1000).toString()
-
-  const oauthParams: Record<string, string> = {
-    oauth_consumer_key:     consumerKey,
-    oauth_nonce:            nonce,
-    oauth_signature_method: 'HMAC-SHA1',
-    oauth_timestamp:        timestamp,
-    oauth_token:            accessToken,
-    oauth_version:          '1.0',
-  }
-
-  // Build signature base string
-  const allParams = { ...params, ...oauthParams }
-  const sortedParams = Object.keys(allParams).sort()
-    .map(k => `${encodeURIComponent(k)}=${encodeURIComponent(allParams[k])}`)
-    .join('&')
-
-  const baseString = [
-    method.toUpperCase(),
-    encodeURIComponent(url),
-    encodeURIComponent(sortedParams),
-  ].join('&')
-
-  // Sign with HMAC-SHA1 (required by Twitter OAuth 1.0a)
-  const signingKey = `${encodeURIComponent(consumerSecret)}&${encodeURIComponent(accessSecret)}`
-
-  const crypto = require('crypto')
-  const signature = crypto
-    .createHmac('sha1', signingKey)
-    .update(baseString)
-    .digest('base64')
-
-  oauthParams['oauth_signature'] = signature
-
-  const authHeader = 'OAuth ' + Object.keys(oauthParams)
-    .sort()
-    .map(k => `${encodeURIComponent(k)}="${encodeURIComponent(oauthParams[k])}"`)
-    .join(', ')
-
-  return {
-    'Authorization': authHeader,
-    'Content-Type': 'application/json',
-  }
-}
-
-// ── Search tweets ─────────────────────────────────────────────
-export async function searchTweets(
-  query: string,
-  options: {
-    maxResults?: number
-    sinceId?: string
-    lang?: string
-    minLikes?: number
-  } = {}
-): Promise<XSearchResult> {
-  const params = new URLSearchParams({
-    query: query + ' -is:retweet lang:en',
-    max_results: String(Math.min(options.maxResults || 10, 100)),
-    'tweet.fields': 'created_at,public_metrics,author_id',
-    'expansions': 'author_id',
-    'user.fields': 'name,username,public_metrics',
-  })
-
-  if (options.sinceId) params.set('since_id', options.sinceId)
-
-  const res = await fetch(`${X_BASE}/tweets/search/recent?${params}`, {
-    headers: bearerHeaders(),
-  })
-
-  if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`X search failed: ${res.status} — ${err}`)
-  }
-
-  const data = await res.json()
-
-  // Attach author data to tweets
-  const users = data.includes?.users || []
-  const userMap = Object.fromEntries(users.map(u => [u.id, u]))
-  if (data.data) {
-    data.data = data.data.map(t => ({
-      ...t,
-      author: userMap[t.author_id],
-    }))
-
-    // Filter by min likes if specified
-    if (options.minLikes) {
-      data.data = data.data.filter(t =>
-        (t.public_metrics?.like_count || 0) >= options.minLikes
-      )
-    }
-  }
-
-  return data
-}
-
-// ── Post a tweet ─────────────────────────────────────────────
+// ── Post a tweet via OAuth 2.0 ────────────────────────────────
 export async function postTweet(
   text: string,
   options: { replyToId?: string } = {}
 ): Promise<{ id: string; text: string }> {
-  const url = `${X_BASE}/tweets`
+  const accessToken = process.env.X_ACCESS_TOKEN_V2
+
+  if (!accessToken) throw new Error('X_ACCESS_TOKEN_V2 not configured')
+
+  const url = X_BASE + '/tweets'
   const body: Record<string, unknown> = { text }
   if (options.replyToId) {
     body.reply = { in_reply_to_tweet_id: options.replyToId }
   }
 
-  const headers = oauth1Headers('POST', url)
   const res = await fetch(url, {
     method: 'POST',
-    headers,
+    headers: {
+      Authorization: 'Bearer ' + accessToken,
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify(body),
   })
 
   if (!res.ok) {
     const err = await res.text()
-    throw new Error(`X post failed: ${res.status} — ${err}`)
+    throw new Error('X post failed: ' + res.status + ' — ' + err)
   }
 
   const data = await res.json()
@@ -189,91 +47,132 @@ export async function postThread(tweets: string[]): Promise<string[]> {
     const posted = await postTweet(text, replyToId ? { replyToId } : {})
     ids.push(posted.id)
     replyToId = posted.id
-    // Rate limit courtesy delay
-    await new Promise(r => setTimeout(r, 1500))
+    await new Promise(r => setTimeout(r, 2000))
   }
 
   return ids
 }
 
-// ── Like a tweet ─────────────────────────────────────────────
-export async function likeTweet(tweetId: string, userId: string): Promise<void> {
-  const url = `${X_BASE}/users/${userId}/likes`
-  const headers = oauth1Headers('POST', url)
-  await fetch(url, {
+// ── Search tweets via Tavily (free) ──────────────────────────
+// Uses site:x.com search to find relevant tweets without X API credits
+export async function searchTweetsViaTavily(
+  query: string,
+  maxResults: number = 10
+): Promise<Array<{
+  id: string
+  text: string
+  url: string
+  author: string
+  score: number
+}>> {
+  const tavilyKey = process.env.TAVILY_API_KEY
+  if (!tavilyKey) throw new Error('TAVILY_API_KEY not configured')
+
+  const searchQuery = 'site:x.com OR site:twitter.com ' + query
+
+  const res = await fetch('https://api.tavily.com/search', {
     method: 'POST',
-    headers,
-    body: JSON.stringify({ tweet_id: tweetId }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      api_key: tavilyKey,
+      query: searchQuery,
+      search_depth: 'basic',
+      max_results: maxResults,
+      include_answer: false,
+    }),
   })
-}
 
-// ── Get authenticated user ID ────────────────────────────────
-export async function getMyUserId(): Promise<string> {
-  const url = `${X_BASE}/users/me`
-  const headers = oauth1Headers('GET', url)
-  const res = await fetch(url, { headers })
-  if (!res.ok) throw new Error(`Could not get X user ID: ${res.status}`)
+  if (!res.ok) throw new Error('Tavily search failed: ' + res.status)
+
   const data = await res.json()
-  return data.data.id
+  const results = data.results || []
+
+  return results
+    .filter(r => r.url && (r.url.includes('x.com') || r.url.includes('twitter.com')))
+    .map(r => {
+      // Extract tweet ID from URL
+      const match = r.url.match(/status\/(\d+)/)
+      const id = match ? match[1] : r.url
+      // Extract author from URL
+      const authorMatch = r.url.match(/(?:x|twitter)\.com\/([^/]+)\/status/)
+      const author = authorMatch ? authorMatch[1] : 'unknown'
+
+      return {
+        id,
+        text: r.content || r.title || '',
+        url: r.url,
+        author,
+        score: r.score || 0,
+      }
+    })
+    .filter(t => t.id && t.id.match(/^\d+$/))
 }
 
-// ── Validate credentials ──────────────────────────────────────
+// ── Validate OAuth 2.0 token ──────────────────────────────────
 export async function validateXCredentials(): Promise<{
   valid: boolean
   username?: string
   error?: string
+  mode?: string
 }> {
+  const token = process.env.X_ACCESS_TOKEN_V2
+  if (!token) {
+    return { valid: false, error: 'X_ACCESS_TOKEN_V2 not set in environment variables' }
+  }
+
   try {
-    const url = `${X_BASE}/users/me`
-    const headers = oauth1Headers('GET', url)
-    const res = await fetch(url, { headers })
+    const res = await fetch(X_BASE + '/users/me', {
+      headers: { Authorization: 'Bearer ' + token },
+    })
+
     if (!res.ok) {
-      const err = await res.text()
-      return { valid: false, error: `${res.status}: ${err}` }
+      const body = await res.json().catch(() => ({}))
+      return { valid: false, error: res.status + ': ' + JSON.stringify(body) }
     }
+
     const data = await res.json()
-    return { valid: true, username: data.data.username }
+    return { valid: true, username: data.data?.username, mode: 'oauth2' }
   } catch (err) {
     return { valid: false, error: String(err) }
   }
 }
 
-// ── Keyword presets for AskBiz ────────────────────────────────
+// ── Keyword presets ───────────────────────────────────────────
 export const X_KEYWORD_PRESETS = [
   {
     id: 'sme_pain',
     label: 'SME Pain Points',
-    query: '(small business OR SME OR "shop owner" OR "online seller") (struggling OR "cash flow" OR margins OR inventory OR stockout) -is:retweet',
-    description: 'Founders talking about business problems — prime reply targets',
+    query: 'small business struggling cash flow margins inventory',
+    description: 'Founders talking about business problems',
   },
   {
     id: 'shopify_problems',
     label: 'Shopify Problems',
-    query: '(shopify) (margins OR shipping OR profit OR "running out" OR stockout OR "not making money") -is:retweet',
-    description: 'Shopify sellers with problems AskBiz can solve',
+    query: 'shopify margins shipping profit not making money',
+    description: 'Shopify sellers with margin/stock issues',
   },
   {
     id: 'amazon_sellers',
     label: 'Amazon Seller Pain',
-    query: '("amazon seller" OR "amazon fba" OR "selling on amazon") (fees OR margins OR profit OR ranking OR "not worth it") -is:retweet',
-    description: 'Amazon sellers frustrated with margins and fees',
+    query: 'amazon fba fees margins profit not worth it',
+    description: 'FBA sellers frustrated with fees',
   },
   {
     id: 'ecommerce_data',
     label: 'eCommerce Data Questions',
-    query: '(ecommerce OR "e-commerce") ("how do I know" OR "how to track" OR analytics OR "which product" OR "best selling") -is:retweet',
-    description: 'eCommerce owners asking data questions',
+    query: 'ecommerce analytics which product best selling track sales',
+    description: 'Sellers asking data/analytics questions',
   },
   {
     id: 'ai_business',
     label: 'AI for Business',
-    query: '("AI for business" OR "business intelligence" OR "AI analytics") (SME OR "small business" OR founder OR "shop owner") -is:retweet',
+    query: 'AI for small business analytics founder data insights',
     description: 'People exploring AI for their business',
   },
   {
     id: 'uk_retail',
     label: 'UK Retail Pain',
-    query: '("UK retail" OR "UK shop" OR "UK small business") (inflation OR costs OR margins OR "running at a loss") -is:retweet',
+    query: 'UK retail shop inflation costs margins losing money',
     description: 'UK retailers struggling with costs',
   },
 ]
