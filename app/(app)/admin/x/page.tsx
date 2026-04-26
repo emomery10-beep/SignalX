@@ -20,6 +20,7 @@ export default function XAgentPage() {
   const [authorized, setAuthorized]     = useState(false)
   const [xConnected, setXConnected]     = useState(null)
   const [xUsername, setXUsername]       = useState('')
+  const [xError, setXError]             = useState('')
   const [tab, setTab]                   = useState('search')
   const [selectedPreset, setSelectedPreset] = useState('sme_pain')
   const [customQuery, setCustomQuery]   = useState('')
@@ -47,6 +48,7 @@ export default function XAgentPage() {
         const data = await res.json()
         setXConnected(data.valid)
         if (data.username) setXUsername('@' + data.username)
+        if (data.error) setXError(data.error)
       } catch { setXConnected(false) }
     }
     check()
@@ -122,18 +124,22 @@ export default function XAgentPage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {xConnected === true && <div style={{ padding: '5px 12px', borderRadius: 9999, background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.3)', fontSize: 12, fontWeight: 600, color: '#16a34a' }}>Connected {xUsername}</div>}
-            {xConnected === false && <div style={{ padding: '5px 12px', borderRadius: 9999, background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.3)', fontSize: 12, fontWeight: 600, color: '#dc2626' }}>X not connected — add env vars</div>}
+            {xConnected === false && <div style={{ padding: '5px 12px', borderRadius: 9999, background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.3)', fontSize: 12, fontWeight: 600, color: '#dc2626' }} title={xError || ''}>X not connected</div>}
             <button onClick={() => router.push('/admin/agent')} style={{ padding: '7px 14px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--sf)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx2)' }}>Back to Agent</button>
           </div>
         </div>
 
         {xConnected === false && (
           <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)', marginBottom: 20 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', marginBottom: 6 }}>Add these to Vercel Environment Variables</div>
-            <code style={{ display: 'block', fontSize: 12, color: 'var(--tx2)', lineHeight: 2 }}>
-              X_BEARER_TOKEN<br/>X_API_KEY<br/>X_API_SECRET<br/>X_ACCESS_TOKEN<br/>X_ACCESS_TOKEN_SECRET
-            </code>
-            <p style={{ fontSize: 12, color: 'var(--tx3)', margin: '8px 0 0' }}>Get them at developer.twitter.com → Your Project → Keys & Tokens</p>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', marginBottom: 6 }}>X connection failed</div>
+            {xError && <div style={{ fontSize: 12, color: '#dc2626', background: 'rgba(239,68,68,.08)', padding: '6px 10px', borderRadius: 7, marginBottom: 8, fontFamily: 'monospace' }}>{xError}</div>}
+            <div style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 6 }}>Make sure these are set in Vercel Environment Variables:</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {['X_API_KEY','X_API_SECRET','X_ACCESS_TOKEN','X_ACCESS_TOKEN_SECRET'].map(k => (
+                <code key={k} style={{ fontSize: 12, color: 'var(--tx2)', background: 'var(--ev)', padding: '3px 8px', borderRadius: 5, display: 'block' }}>{k}</code>
+              ))}
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--tx3)', margin: '8px 0 0' }}>After adding env vars, redeploy Vercel then refresh this page.</p>
           </div>
         )}
 
