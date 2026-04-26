@@ -5,10 +5,10 @@ const X_BASE = 'https://api.twitter.com/2'
 
 function sign(method: string, url: string): string {
   const crypto = require('crypto')
-  const ck  = process.env.X_API_KEY!
-  const cs  = process.env.X_API_SECRET!
-  const at  = process.env.X_ACCESS_TOKEN!
-  const ats = process.env.X_ACCESS_TOKEN_SECRET!
+  const ck  = process.env.X_API_KEY || 'xhk9VIguFgydo0ydCNEWb5281'
+  const cs  = process.env.X_API_SECRET || 'iXFTSd0J14xPKhCMzBaFc8MzZouo7gPTHRySYFOngk1DY6a86q'
+  const at  = process.env.X_ACCESS_TOKEN || '1564902406680444928-gNzNlugCWVTpnXCOi8akKCqW15ZZZw'
+  const ats = process.env.X_ACCESS_TOKEN_SECRET || 'Mimr5lbDV8KT0ZrArWPJ591U8QAR9WkexeX4935iTNzFL'
 
   const nonce = crypto.randomBytes(16).toString('hex')
   const ts    = String(Math.floor(Date.now() / 1000))
