@@ -27,7 +27,9 @@ export async function GET(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { searchParams } = new URL(request.url)
-  if (searchParams.get('action') === 'validate') {
+  const action = searchParams.get('action')
+
+  if (action === 'validate') {
     const result = await validateXCredentials()
     return NextResponse.json(result)
   }
@@ -46,13 +48,7 @@ export async function POST(request: NextRequest) {
   const user = await verifyAdmin(supabase)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  let body: Record<string, unknown>
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
-  }
-
+  const body = await request.json()
   const { action } = body
 
   if (action === 'validate') {
@@ -60,122 +56,157 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result)
   }
 
+  // ── Search via Tavily ─────────────────────────────────────
   if (action === 'search') {
-    const { presetId, customQuery, maxResults = 10 } = body as Record<string, unknown>
+    const { presetId, customQuery, maxResults = 10 } = body
 
-    let query = customQuery as string
+    let query = customQuery
     if (presetId && !customQuery) {
       const preset = X_KEYWORD_PRESETS.find(p => p.id === presetId)
       if (!preset) return NextResponse.json({ error: 'Preset not found' }, { status: 400 })
       query = preset.query
     }
+
     if (!query) return NextResponse.json({ error: 'query or presetId required' }, { status: 400 })
 
-    try {
-      const tweets = await searchTweetsViaTavily(query, Number(maxResults))
-      if (!tweets.length) return NextResponse.json({ tweets: [], generated: 0 })
+    const tweets = await searchTweetsViaTavily(query, maxResults)
 
-      const withReplies = await Promise.allSettled(
-        tweets.slice(0, 10).map(async tweet => {
-          const reply = await generateReply(tweet.text, tweet.author)
-          return { tweet, reply }
-        })
-      )
-
-      const pairs = withReplies
-        .filter(r => r.status === 'fulfilled')
-        .map(r => (r as PromiseFulfilledResult<{ tweet: typeof tweets[0]; reply: string }>).value)
-
-      if (pairs.length > 0) {
-        await supabase.from('x_agent_activity').insert(
-          pairs.map(({ tweet, reply }) => ({
-            tweet_id: tweet.id,
-            tweet_text: tweet.text,
-            tweet_author: tweet.author,
-            tweet_author_id: tweet.author,
-            tweet_likes: 0,
-            tweet_replies: 0,
-            generated_reply: reply,
-            keyword_query: query,
-            status: 'pending',
-            created_at: new Date().toISOString(),
-          }))
-        )
-      }
-
-      return NextResponse.json({ tweets: pairs, generated: pairs.length, query })
-    } catch (err) {
-      return NextResponse.json({ error: String(err) }, { status: 500 })
+    if (!tweets.length) {
+      return NextResponse.json({ tweets: [], generated: 0 })
     }
+
+    // Generate AI replies
+    const withReplies = await Promise.allSettled(
+      tweets.slice(0, 10).map(async tweet => {
+        const reply = await generateReply(tweet.text, tweet.author)
+        return { tweet, reply }
+      })
+    )
+
+    const pairs = withReplies
+      .filter(r => r.status === 'fulfilled')
+      .map(r => (r as PromiseFulfilledResult<{ tweet: typeof tweets[0]; reply: string }>).value)
+
+    if (pairs.length > 0) {
+      await supabase.from('x_agent_activity').insert(
+        pairs.map(({ tweet, reply }) => ({
+          tweet_id: tweet.id,
+          tweet_text: tweet.text,
+          tweet_author: tweet.author,
+          tweet_author_id: tweet.author,
+          tweet_likes: 0,
+          tweet_replies: 0,
+          generated_reply: reply,
+          keyword_query: query,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+        }))
+      )
+    }
+
+    return NextResponse.json({ tweets: pairs, generated: pairs.length, query })
   }
 
+  // ── Post a reply ──────────────────────────────────────────
   if (action === 'post_reply') {
-    const { activityId, tweetId, replyText } = body as Record<string, string>
+    const { activityId, tweetId, replyText } = body
     if (!tweetId || !replyText) return NextResponse.json({ error: 'tweetId and replyText required' }, { status: 400 })
 
-    try {
-      const posted = await postTweet(replyText, { replyToId: tweetId })
-      if (activityId) {
-        await supabase.from('x_agent_activity').update({
-          status: 'posted',
-          posted_reply_id: posted.id,
-          posted_at: new Date().toISOString(),
-        }).eq('id', activityId)
-      }
-      return NextResponse.json({ success: true, postedId: posted.id })
-    } catch (err) {
-      return NextResponse.json({ error: String(err) }, { status: 500 })
+    const posted = await postTweet(replyText, { replyToId: tweetId })
+
+    if (activityId) {
+      await supabase.from('x_agent_activity').update({
+        status: 'posted',
+        posted_reply_id: posted.id,
+        posted_at: new Date().toISOString(),
+      }).eq('id', activityId)
     }
+
+    return NextResponse.json({ success: true, postedId: posted.id })
   }
 
+  // ── Post a standalone tweet / thread ─────────────────────
   if (action === 'post_thread') {
-    const { agentContentId, tweets } = body as { agentContentId?: string; tweets: unknown[] }
+    const { agentContentId, tweets } = body
     if (!tweets?.length) return NextResponse.json({ error: 'tweets array required' }, { status: 400 })
 
-    try {
-      const tweetTexts = tweets.map(t => (typeof t === 'string' ? t : (t as { text: string }).text))
-      const postedIds = await postThread(tweetTexts)
-      if (agentContentId) {
-        await supabase.from('agent_content').update({
-          status: 'published',
-          published_at: new Date().toISOString(),
-          metadata: { x_thread_ids: postedIds },
-        }).eq('id', agentContentId)
-      }
-      return NextResponse.json({ success: true, postedIds, count: postedIds.length })
-    } catch (err) {
-      return NextResponse.json({ error: String(err) }, { status: 500 })
+    const tweetTexts = tweets.map(t => t.text || t)
+    const postedIds = await postThread(tweetTexts)
+
+    if (agentContentId) {
+      await supabase.from('agent_content').update({
+        status: 'published',
+        published_at: new Date().toISOString(),
+        metadata: { x_thread_ids: postedIds },
+      }).eq('id', agentContentId)
     }
+
+    return NextResponse.json({ success: true, postedIds, count: postedIds.length })
   }
 
+  // ── Reject ────────────────────────────────────────────────
   if (action === 'reject') {
-    const { activityId } = body as { activityId: string }
+    const { activityId } = body
     await supabase.from('x_agent_activity').update({ status: 'rejected' }).eq('id', activityId)
     return NextResponse.json({ success: true })
   }
 
+  // ── Regenerate reply ──────────────────────────────────────
   if (action === 'regenerate') {
-    const { tweetText, tweetAuthor } = body as { tweetText: string; tweetAuthor: string }
-    try {
-      const reply = await generateReply(tweetText, tweetAuthor || 'founder')
-      return NextResponse.json({ reply })
-    } catch (err) {
-      return NextResponse.json({ error: String(err) }, { status: 500 })
-    }
+    const { tweetText, tweetAuthor } = body
+    const reply = await generateReply(tweetText, tweetAuthor || 'founder')
+    return NextResponse.json({ reply })
   }
 
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
 }
 
 async function generateReply(tweetText: string, username: string): Promise<string> {
+  const problemKeywords: Record<string, string> = {
+    margins:   'track your real margin per product after all fees and shipping',
+    profit:    'see exactly which products are actually making you money',
+    stock:     'get alerts before you run out of stock',
+    inventory: 'know your days-of-stock left before it becomes a crisis',
+    cash:      'model your cash position 30, 60, 90 days out',
+    shipping:  'calculate your true landed cost after shipping',
+    amazon:    'calculate your true Amazon FBA margin per ASIN after all fees',
+    shopify:   'see your real Shopify margin after ads, fees and returns',
+    data:      'ask your sales data questions in plain English',
+    sales:     'find your best and worst performing products instantly',
+    pricing:   'simulate price changes and see the margin impact before you commit',
+    forecast:  'forecast your next 90 days based on current trends',
+  }
+
+  let specificSolve = 'get a clear picture of what is actually happening in your business'
+  const lower = tweetText.toLowerCase()
+  for (const [kw, solve] of Object.entries(problemKeywords)) {
+    if (lower.includes(kw)) { specificSolve = solve; break }
+  }
+
+  const prompt = `You are the AskBiz X account. AskBiz is an AI business intelligence tool for SME founders — connect Shopify/Amazon/eBay or upload a CSV and ask questions in plain English.
+
+Write a reply to this tweet from @${username} that:
+1. Acknowledges their specific problem genuinely (1 sentence, no fluff)
+2. Offers the specific AskBiz solution: ${specificSolve}
+3. Ends with a CTA — EVERY reply must end with either "askbiz.co" or "DM us"
+
+Tweet: "${tweetText}"
+
+Rules:
+- Max 240 characters total including CTA
+- Sound human — not a bot or salesperson
+- CTA examples: "...askbiz.co does exactly this — free to try" or "...we built askbiz.co for this" or "...DM us, happy to show you"
+- No hashtags
+- Be specific about their exact problem
+
+Return ONLY the reply text.`
+
   const res = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 300,
-    messages: [{
-      role: 'user',
-      content: 'You are the AskBiz growth account on X. Write a genuine helpful reply to this tweet from @' + username + '.\n\nTweet: "' + tweetText + '"\n\nRules:\n- Max 255 characters\n- Sound like a real person not a bot\n- Add genuine value\n- Mention askbiz.co naturally only if very relevant\n- Max 1 hashtag\n- Be specific\n\nReturn ONLY the reply text.',
-    }],
+    messages: [{ role: 'user', content: prompt }],
   })
+
   const text = res.content[0].type === 'text' ? res.content[0].text.trim() : ''
-  return text.length > 255 ? text.slice(0, 252) + '...' : text
+  return text.length > 240 ? text.slice(0, 237) + '...' : text
 }
