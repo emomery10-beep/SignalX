@@ -8822,8 +8822,6 @@ export const BLOG_POSTS: BlogPost[] = [
   },
   "relatedSlugs": ["cash-flow-forecasting-30-60-90-day", "importer-cash-flow-guide-2026", "uk-interest-rates-sme-cash-flow-2026"]
 }
-
-]]
 ]
 
 export function getAllPosts(): BlogPost[] { return BLOG_POSTS }
