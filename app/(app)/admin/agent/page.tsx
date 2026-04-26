@@ -162,7 +162,7 @@ export default function AgentAdminPage() {
               <h1 style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-sora)', margin: 0 }}>
                 Growth Agent
               </h1>
-              <button onClick={() => router.push('/admin/x')}
+              <button onClick={() => router.push('/admin/xagent')}
                 style={{ padding: '7px 14px', borderRadius: 9, border: '1px solid #1d9bf0', background: 'rgba(29,155,240,.06)', color: '#1d9bf0', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
                 𝕏 X Agent →
               </button>
