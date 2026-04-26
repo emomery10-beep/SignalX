@@ -7874,6 +7874,956 @@ export const BLOG_POSTS: BlogPost[] = [
     "roi-of-ai-automated-bi"
   ]
 }
+,
+{
+  "slug": "red-sea-shipping-crisis-sme-guide-2026",
+  "title": "Red Sea Shipping Crisis 2026: What SME Founders Must Do Right Now",
+  "metaDescription": "Red Sea disruptions are pushing shipping costs up 300% and adding 14 days to delivery times. Here is exactly how SME founders can protect margins and supply chains using AI business intelligence.",
+  "cluster": "Global Trade Intelligence",
+  "pillar": "Geopolitical Impact",
+  "publishDate": "2026-04-20",
+  "readTime": 9,
+  "tldr": "Red Sea disruptions have rerouted container ships around the Cape of Good Hope, adding 14 days and up to 300% to freight costs. SME founders importing from Asia or the Middle East are being hit hardest. This post explains the specific actions you can take now to protect your margins and supply chain.",
+  "sections": [
+    {
+      "heading": "What is happening in the Red Sea and why it matters to your business",
+      "level": 2,
+      "body": "Since late 2023, Houthi attacks on commercial shipping in the Red Sea have forced the majority of container traffic to reroute around the Cape of Good Hope. The longer route adds between 10 and 14 days to transit times and significantly increases fuel costs. The result for UK, EU, and US importers is higher freight costs, longer lead times, and a supply chain that is harder to predict. If you import goods from Asia, India, or the Middle East — electronics, clothing, consumer goods, food — you are already feeling this. Shipping costs that were £1,200 per container in 2023 are now running £3,500 to £4,500 for the same route."
+    },
+    {
+      "heading": "The three ways this hits your margins",
+      "level": 2,
+      "body": "First, your landed cost goes up. If freight was 8% of your product cost before, it may now be 18-22%. Every product you import is less profitable than your spreadsheet currently shows. Second, your lead times extend. Stock you ordered 8 weeks out may now arrive in 11 weeks. If you are running lean inventory, you will hit stockouts before the shipment arrives. Third, your cash is tied up longer. Longer transit times mean your cash is in a container on a ship for 14 extra days — not in your account, not buying new stock."
+    },
+    {
+      "heading": "How to calculate your real landed cost right now",
+      "level": 3,
+      "body": "Your landed cost is: product cost + freight + insurance + import duty + VAT + last-mile delivery. Most founders calculate the first two and stop. With freight now volatile, your landed cost formula needs to be recalculated every order. Ask AskBiz: what is my real landed cost per unit including current freight rates? Upload your supplier invoices and last three shipping bills. AskBiz will calculate the true margin on every product line and flag which SKUs are no longer profitable at current freight rates."
+    },
+    {
+      "heading": "Stock positioning — how much buffer do you actually need",
+      "level": 2,
+      "body": "With lead times extended by 14 days, your safety stock calculation changes entirely. If you previously held 3 weeks of safety stock based on a 6-week lead time, you now need 4-5 weeks of safety stock based on an 8-10 week lead time. For fast-moving products, this is the difference between a profitable quarter and a stockout that loses you customers permanently. Upload your sales velocity data to AskBiz and ask: given current lead times of 10 weeks, how much safety stock do I need for each product to avoid stockouts? You will get a specific answer per SKU."
+    },
+    {
+      "heading": "Pricing — should you pass costs on to customers",
+      "level": 2,
+      "body": "This is the hardest decision for most founders. The answer depends on three things: your category's price elasticity, what your competitors are paying for freight (probably the same as you), and your current margin headroom. If your competitors are importing from the same region, they face the same cost increase. That means the category has room to reprice. If you import from a different region — say, you source from Eastern Europe while competitors source from Asia — you may have a competitive advantage right now. Ask AskBiz: if I increase my prices by 8% to cover freight increases, what happens to my monthly profit assuming a 5% volume drop? Simulate it before you decide."
+    },
+    {
+      "heading": "How AskBiz helps you navigate the Red Sea disruption",
+      "level": 2,
+      "body": "AskBiz connects to your Shopify, Amazon, or eBay store and to your uploaded supplier data. It tracks your landed costs, calculates current margins with updated freight, flags which products are now underwater, and models pricing scenarios. You can ask it daily: which of my products is no longer profitable at current shipping costs? It will tell you. You can also set up anomaly alerts so that if your margin on any product drops below a threshold you set, you get notified immediately — before the problem compounds."
+    }
+  ],
+  "paa": [
+    { "q": "How much have Red Sea shipping costs increased in 2026?", "a": "Container freight costs for Asia-to-Europe routes have increased 200-300% from 2023 levels due to Red Sea rerouting, with transit times extending by 10-14 days." },
+    { "q": "How does the Red Sea crisis affect small business importers?", "a": "Higher freight costs increase landed costs, reducing margins. Longer lead times require more safety stock, tying up more cash. Both effects squeeze profitability for SME importers." },
+    { "q": "Should I raise prices because of shipping costs?", "a": "If your competitors face the same shipping cost increases — because they import from the same region — the category has room to reprice. Simulate the volume impact before deciding." }
+  ],
+  "cta": {
+    "heading": "Calculate your real margins with current freight costs",
+    "body": "Upload your product and shipping data and ask AskBiz which products are still profitable at today's freight rates. Free to start — no card needed."
+  },
+  "relatedSlugs": ["us-tariffs-sme-import-strategy-2026", "supplier-risk-intelligence-ai", "hidden-margin-killers-shipping-transaction-fees"]
+},
+{
+  "slug": "us-tariffs-sme-import-strategy-2026",
+  "title": "US Tariffs 2026: How SME Importers Can Protect Their Margins",
+  "metaDescription": "New US tariffs on goods from China, Vietnam, and other major suppliers are hitting SME importers hard. Here is a practical strategy for protecting margins and restructuring your supply chain.",
+  "cluster": "Global Trade Intelligence",
+  "pillar": "Geopolitical Impact",
+  "publishDate": "2026-04-21",
+  "readTime": 8,
+  "tldr": "The US has imposed significant new tariffs on imports from China and several other major manufacturing countries. For UK, EU, and US-based SMEs that import goods for resale, the cost impact is immediate and material. This post gives you a practical framework for protecting margins and adapting your sourcing strategy.",
+  "sections": [
+    {
+      "heading": "What the new tariff landscape means for SME importers",
+      "level": 2,
+      "body": "Tariffs on Chinese goods now reach 25-145% depending on the product category. Vietnam, a popular alternative to China, now faces tariffs of 46%. Cambodia, Bangladesh, and other low-cost alternatives have seen tariff increases of 10-49%. For UK and EU businesses, the direct tariff impact applies if you are selling into the US market. For US-based businesses, the impact is immediate — your landed cost just went up by the tariff percentage on every affected import. The first step is knowing exactly which of your products are affected and by how much."
+    },
+    {
+      "heading": "How to audit your product range for tariff exposure",
+      "level": 2,
+      "body": "Pull your supplier list and identify which products come from tariff-affected countries. For each product, calculate the new landed cost including the tariff. Then compare the new landed cost against your current selling price. Any product where the new landed cost exceeds your current selling price needs immediate action. Ask AskBiz: based on my supplier countries and current margins, which products are now unprofitable after tariff increases? Upload your purchase orders and AskBiz will flag every affected SKU."
+    },
+    {
+      "heading": "Three responses to tariff increases",
+      "level": 3,
+      "body": "First, absorb and reprice. Increase selling prices to pass the tariff cost to customers. This works if competitors face the same tariff increase and if your category has low price elasticity. Second, restructure sourcing. Find suppliers in countries with lower or zero tariff exposure. Mexico (USMCA), India, Indonesia, and Turkey are seeing increased interest as sourcing alternatives. Third, reduce the affected range. Discontinue or pause products that cannot be repriced and cannot be resourced without losing margin. AskBiz can model all three scenarios with your actual margin data."
+    },
+    {
+      "heading": "How UK and EU businesses are affected",
+      "level": 2,
+      "body": "If you export goods to the US, your products now face the same tariff environment as all other exporters. However, UK and EU goods face lower tariffs than Chinese equivalents in most categories — which creates an opportunity. If you manufacture or source locally and sell into the US, you may be more competitive relative to Chinese suppliers than you were 12 months ago. This is the moment to reconsider your US expansion strategy. Ask AskBiz: if I expand sales to the US market given current tariff differentials, what is my estimated margin per unit after shipping and duty?"
+    },
+    {
+      "heading": "Using AskBiz to monitor margin impact in real time",
+      "level": 2,
+      "body": "Connect your sales channels and supplier data to AskBiz. Set margin thresholds on each product. When tariff-related cost increases push a product below your threshold, AskBiz alerts you immediately. You can also ask AskBiz to run monthly margin reviews: which of my products has seen the largest margin compression in the last 30 days and what is the cause? This keeps you in front of the problem rather than discovering it six months later when cash is tight."
+    }
+  ],
+  "paa": [
+    { "q": "How do US tariffs affect UK businesses?", "a": "UK businesses exporting to the US face the new tariff schedule. UK goods currently face lower tariffs than Chinese equivalents in most categories, which may be a competitive advantage for UK exporters." },
+    { "q": "What should SMEs do about US tariff increases?", "a": "Audit your product range for tariff exposure, calculate new landed costs, then choose between repricing, alternative sourcing, or discontinuing affected products." },
+    { "q": "Which countries have the lowest US tariff rates in 2026?", "a": "Countries with trade agreements with the US — including Mexico (USMCA) and some Commonwealth countries — face lower tariffs. The situation changes frequently; check the USITC tariff schedule for current rates." }
+  ],
+  "cta": {
+    "heading": "Find out which of your products are affected by tariffs",
+    "body": "Upload your supplier data and ask AskBiz to calculate your margin impact. Free to start."
+  },
+  "relatedSlugs": ["red-sea-shipping-crisis-sme-guide-2026", "hidden-margin-killers-shipping-transaction-fees", "supplier-risk-intelligence-ai"]
+},
+{
+  "slug": "ukraine-conflict-energy-costs-sme-2026",
+  "title": "How UK and EU Businesses Can Manage Energy Costs in 2026",
+  "metaDescription": "Energy costs remain elevated for UK and EU businesses in 2026. Here is how SME founders can track energy as a cost driver, protect margins, and use data to make smarter decisions.",
+  "cluster": "Global Trade Intelligence",
+  "pillar": "Geopolitical Impact",
+  "publishDate": "2026-04-22",
+  "readTime": 7,
+  "tldr": "Energy costs remain a significant pressure for UK and EU SMEs in 2026. This post explains how to track energy as a cost of sale, build it into your margin calculations, and use business intelligence to manage it proactively.",
+  "sections": [
+    {
+      "heading": "Energy costs in 2026 — where things stand for SMEs",
+      "level": 2,
+      "body": "UK business electricity prices remain significantly above pre-2022 levels, averaging 25-30p per kWh for SMEs compared to 12-15p before the energy crisis. Gas prices have moderated but remain volatile. For businesses with energy-intensive operations — manufacturing, food production, cold storage, logistics — energy is now a material cost of sale, not a background overhead. The businesses being hit hardest are those that have not changed how they track and manage energy costs since the price environment changed."
+    },
+    {
+      "heading": "Why most SMEs are not tracking energy correctly",
+      "level": 2,
+      "body": "Most small businesses record energy as a single overhead line in their P&L. At pre-2022 prices, this was fine — energy was a small, predictable cost. At current prices, this approach hides the true cost of each product or service you sell. If you are a food manufacturer using £8,000 per month of gas and electricity, that cost needs to be allocated per product to know your real margins. If you are a logistics business, fuel and energy are a significant percentage of every delivery. Ask AskBiz: what percentage of my revenue is going to energy costs? How does this compare to six months ago? If you do not know the answer, you are flying blind."
+    },
+    {
+      "heading": "How to build energy into your margin calculation",
+      "level": 3,
+      "body": "Step one: pull your last 12 months of energy bills and calculate your average monthly cost. Step two: allocate that cost across your product lines by production volume or revenue share. Step three: recalculate your gross margin per product including the allocated energy cost. Step four: set a monthly alert in AskBiz to flag if your energy cost per unit of revenue exceeds a threshold. This turns energy from a background cost into a managed variable."
+    },
+    {
+      "heading": "Practical steps to reduce energy cost exposure",
+      "level": 2,
+      "body": "Fix your energy tariff if you can. Most UK business energy contracts are now available on fixed rates for 12-24 months, which provides cost certainty even if prices rise further. Shift energy-intensive operations to off-peak hours where possible. Industrial electricity is significantly cheaper at night for businesses on time-of-use tariffs. Audit your largest energy draws — refrigeration, heating, machinery — and calculate the ROI on more efficient alternatives. Use AskBiz to model: if I reduce my energy cost by 15% through operational changes, what is the impact on my annual profit? The answer often surprises founders."
+    },
+    {
+      "heading": "Using AskBiz to monitor energy as a business risk",
+      "level": 2,
+      "body": "Upload your energy bills alongside your sales data in AskBiz. Ask it to calculate energy cost as a percentage of revenue by month. Set an anomaly alert for any month where energy costs exceed a threshold. Ask it quarterly: is my energy cost trend improving or worsening relative to revenue? This keeps energy visible as a managed cost rather than a surprise on the year-end accounts."
+    }
+  ],
+  "paa": [
+    { "q": "How much are UK business energy costs in 2026?", "a": "UK business electricity averages 25-30p per kWh in 2026, significantly above the 12-15p pre-2022 levels. Gas prices have moderated but remain volatile." },
+    { "q": "How can small businesses reduce energy costs?", "a": "Fix your tariff for 12-24 months for cost certainty, shift energy-intensive work to off-peak hours, and audit your largest energy draws for efficiency opportunities." },
+    { "q": "How do I calculate energy cost per product?", "a": "Divide your total monthly energy cost by your production volume to get a per-unit energy cost. Allocate this to each product line based on its share of production time or volume." }
+  ],
+  "cta": {
+    "heading": "Track your energy cost as a margin driver",
+    "body": "Upload your business data and ask AskBiz to calculate your real margins including energy. Free to start."
+  },
+  "relatedSlugs": ["uk-inflation-margins-sme-2026", "hidden-margin-killers-shipping-transaction-fees", "cash-flow-forecasting-30-60-90-day"]
+},
+{
+  "slug": "uk-inflation-margins-sme-2026",
+  "title": "UK Inflation 2026: How SME Founders Can Protect Their Margins",
+  "metaDescription": "UK inflation is squeezing SME margins from both sides — rising costs and price-sensitive customers. Here is a data-driven framework for protecting profitability in 2026.",
+  "cluster": "BI News & Trends 2026",
+  "pillar": "Business & Economic Impact",
+  "publishDate": "2026-04-18",
+  "readTime": 8,
+  "tldr": "UK inflation remains above the Bank of England target in 2026, hitting SME founders with higher input costs, wages, and energy while customers become more price-sensitive. This post gives you a data-driven framework for protecting margins without losing customers.",
+  "sections": [
+    {
+      "heading": "The margin squeeze facing UK SMEs in 2026",
+      "level": 2,
+      "body": "UK SMEs are being hit from both sides in 2026. Input costs — materials, energy, freight — remain elevated. The National Living Wage increase in April 2026 has added 6.7% to the wage bill for businesses employing staff at the minimum. At the same time, consumer confidence is fragile and customers are more price-sensitive than at any point in the last decade. The businesses surviving this environment are not the ones absorbing costs or blindly raising prices — they are the ones using data to make precise decisions about where to hold, where to cut, and where to reprice."
+    },
+    {
+      "heading": "The four levers that protect margin in an inflationary environment",
+      "level": 2,
+      "body": "First, product mix optimisation. Not all your products face the same cost inflation. Some input costs have risen; others have not. Shifting sales toward products with more stable input costs protects your blended margin. Second, supplier renegotiation. With input costs rising across the board, your suppliers may have more flexibility than you think — especially if you can commit to larger orders or faster payment. Third, selective repricing. Rather than raising all prices by a blanket percentage, use data to identify which products have the least price-sensitive customers and reprice those first. Fourth, cost reduction without quality cuts. Find the costs in your business that have grown by more than inflation without a corresponding increase in output or quality — those are the targets."
+    },
+    {
+      "heading": "How to identify your most inflation-exposed products",
+      "level": 3,
+      "body": "Upload your product-level cost and revenue data to AskBiz. Ask: which of my products has seen the largest increase in cost of goods over the last 12 months? Which products have the smallest margin buffer before they become loss-making? This gives you a prioritised list of products requiring action — either repricing, supplier renegotiation, or discontinuation."
+    },
+    {
+      "heading": "The wage cost challenge — National Living Wage April 2026",
+      "level": 2,
+      "body": "The April 2026 National Living Wage increase to £12.21 per hour represents a 6.7% increase for workers over 21. For businesses with a significant hourly workforce — retail, hospitality, care, logistics — this is an immediate and material cost increase. The question is not whether to absorb it but where to find the offset. Ask AskBiz: if my wage bill increases by £X per month, which combination of price increases and cost reductions would maintain my current profit margin? The tool will model this with your actual numbers."
+    },
+    {
+      "heading": "Using AskBiz to monitor margin health weekly",
+      "level": 2,
+      "body": "In an inflationary environment, monthly P&L reviews are too slow. By the time you see margin compression on your accounts, it has been happening for 4-6 weeks. AskBiz monitors your margin in real time and alerts you the moment it starts moving in the wrong direction. Set a margin floor for your business overall and for each key product line. When any metric drops below the floor, you get an alert before the problem compounds."
+    }
+  ],
+  "paa": [
+    { "q": "How is UK inflation affecting small businesses in 2026?", "a": "UK SMEs face higher input costs, elevated wages following the April 2026 NLW increase, and price-sensitive customers, creating a margin squeeze that requires data-driven management." },
+    { "q": "How can small businesses protect margins during inflation?", "a": "Focus on product mix optimisation, selective repricing of low-elasticity products, supplier renegotiation, and identifying costs that have grown faster than output." },
+    { "q": "What is the National Living Wage in 2026?", "a": "The National Living Wage for workers aged 21 and over increased to £12.21 per hour in April 2026, a 6.7% increase from the previous year." }
+  ],
+  "cta": {
+    "heading": "See your real margins with a Business Pulse score",
+    "body": "Upload your data and ask AskBiz which of your products are most exposed to cost inflation. Free to start."
+  },
+  "relatedSlugs": ["uk-interest-rates-sme-cash-flow-2026", "dynamic-pricing-profit-sweet-spot", "hidden-margin-killers-shipping-transaction-fees"]
+},
+{
+  "slug": "uk-interest-rates-sme-cash-flow-2026",
+  "title": "UK Interest Rates 2026: What SME Founders Need to Know About Cash Flow",
+  "metaDescription": "The Bank of England base rate remains elevated in 2026, affecting SME borrowing costs and cash flow. Here is how to manage your business finances in a high-rate environment.",
+  "cluster": "BI News & Trends 2026",
+  "pillar": "Business & Economic Impact",
+  "publishDate": "2026-04-19",
+  "readTime": 7,
+  "tldr": "Bank of England interest rates remain above 4% in 2026, making borrowing more expensive for SMEs and changing the economics of financing stock, equipment, and growth. This post explains how to manage cash flow intelligently in this environment.",
+  "sections": [
+    {
+      "heading": "The interest rate environment for UK SMEs in 2026",
+      "level": 2,
+      "body": "The Bank of England base rate has fallen gradually from its 2023 peak of 5.25% but remains elevated at 4.25-4.5% in 2026. For SMEs, this translates to commercial lending rates of 6-9% on business loans and overdrafts. The cost of borrowing to finance stock, equipment, or growth is materially higher than it was in the near-zero rate environment of 2020-2021. Every pound you borrow now has a real cost that needs to be built into your financial decisions."
+    },
+    {
+      "heading": "Four ways elevated rates affect your business",
+      "level": 2,
+      "body": "First, higher overdraft and loan costs. If you use an overdraft to manage cash flow timing, you are paying 7-9% on that facility. Second, the cost of financing stock increases. Businesses that borrow to buy stock and then sell it need to factor the financing cost into their margin calculation. Third, customers are also under pressure. B2B customers may pay more slowly as they manage their own cash constraints. Fourth, asset finance for equipment or vehicles is more expensive. The monthly payment on financed assets is higher, reducing cash flow."
+    },
+    {
+      "heading": "How to calculate your real cost of capital",
+      "level": 3,
+      "body": "Your cost of capital is the weighted average of what you are paying on all your financing. If you have a £50,000 overdraft at 8%, a £100,000 business loan at 7%, and £30,000 in asset finance at 9%, your blended cost of capital is approximately 7.6%. Every investment decision you make needs to generate a return above this number. Ask AskBiz: given my current borrowing costs, what return do I need on new stock investment to be profitable? This changes how you think about buying decisions."
+    },
+    {
+      "heading": "Cash flow strategies for a high-rate environment",
+      "level": 2,
+      "body": "Reduce working capital requirements. The less cash you need tied up in stock and receivables, the less you need to borrow. Use AskBiz to identify your slowest-moving stock — those products are costing you financing charges every day they sit unsold. Accelerate collections. Chase outstanding invoices aggressively. Every day an invoice is outstanding, you are effectively lending that money to your customer at 0% while you pay 8% on your overdraft. Renegotiate supplier terms. Longer payment terms reduce your cash requirement and effectively reduce your cost of financing stock."
+    },
+    {
+      "heading": "Using AskBiz to model cash flow scenarios",
+      "level": 2,
+      "body": "Ask AskBiz: what is my cash runway at current burn rate? If I collect all outstanding invoices this month, how does that change my position? If I reduce stock levels by 20%, how much cash does that free up? These questions — answered with your actual numbers — give you a clear picture of your financial position and your options. Connect your Stripe or accounting data for the most accurate picture."
+    }
+  ],
+  "paa": [
+    { "q": "What is the Bank of England base rate in 2026?", "a": "The Bank of England base rate is approximately 4.25-4.5% in 2026, down from the 5.25% peak in 2023 but still significantly above the near-zero rates of 2020-2021." },
+    { "q": "How do high interest rates affect small businesses?", "a": "High rates increase borrowing costs, make financing stock and equipment more expensive, and put pressure on customers who may pay more slowly as they manage their own cash constraints." },
+    { "q": "How can SMEs manage cash flow in a high interest rate environment?", "a": "Reduce working capital requirements, accelerate invoice collection, negotiate longer supplier payment terms, and identify slow-moving stock that ties up cash unnecessarily." }
+  ],
+  "cta": {
+    "heading": "Model your cash flow with real numbers",
+    "body": "Upload your financial data and ask AskBiz what your cash runway looks like. Free to start."
+  },
+  "relatedSlugs": ["cash-flow-forecasting-30-60-90-day", "uk-inflation-margins-sme-2026", "roi-of-ai-automated-bi"]
+},
+{
+  "slug": "eu-recession-sme-strategy-2026",
+  "title": "EU Economic Slowdown 2026: How SMEs Can Stay Profitable",
+  "metaDescription": "Several major EU economies are experiencing slow growth or recession in 2026. Here is how SME founders selling into or operating in European markets can protect revenue and margins.",
+  "cluster": "Global Trade Intelligence",
+  "pillar": "Business & Economic Impact",
+  "publishDate": "2026-04-20",
+  "readTime": 8,
+  "tldr": "Germany, France, and several other major EU economies have experienced weak growth or contraction in 2025-2026. For UK and non-EU SMEs exporting to Europe, and for EU-based businesses, this creates real revenue pressure. This post gives you a framework for protecting your position.",
+  "sections": [
+    {
+      "heading": "The EU economic picture in 2026",
+      "level": 2,
+      "body": "Germany — the EU's largest economy — has experienced two consecutive years of GDP contraction, driven by high energy costs, weak industrial output, and subdued consumer spending. France has seen marginal growth. The eurozone as a whole has underperformed expectations, with business and consumer confidence below long-term averages. For SMEs that export to EU markets or operate within them, this translates to slower sales cycles, more price-sensitive buyers, and tighter credit conditions from European banking partners."
+    },
+    {
+      "heading": "How EU weakness affects UK exporters",
+      "level": 2,
+      "body": "The EU remains the UK's largest trading partner despite Brexit friction. If you sell goods or services into German, French, Dutch, or other EU markets, you are selling into a weaker demand environment than two years ago. Your EU customers are under their own margin pressure and may push for lower prices, longer payment terms, or smaller orders. Understanding which of your EU customers and product lines are most exposed to this environment is critical to planning your 2026 sales strategy."
+    },
+    {
+      "heading": "Three strategies for EU-exposed SMEs",
+      "level": 3,
+      "body": "First, diversify your customer base within the EU. Some EU markets — Spain, Poland, the Nordic countries — have held up better than Germany and France. If your EU exposure is concentrated in weaker markets, explore whether your product fits higher-growth alternatives. Second, protect your highest-margin EU relationships at the expense of lower-margin ones. In a downturn, it is better to serve fewer customers profitably than many at breakeven. Third, use the weak euro. If you invoice in euros and convert to pounds, the current exchange rate may be working in your favour. Lock in good rates where possible."
+    },
+    {
+      "heading": "How AskBiz helps EU-exposed businesses",
+      "level": 2,
+      "body": "Upload your EU sales data to AskBiz. Ask it: which of my EU markets has seen the largest revenue decline in the last six months? Which EU customers have the longest average payment days? Which products sell best in which EU countries? These questions — answered with your actual data — give you a clear picture of where to focus and where to reduce exposure. AskBiz also converts all your numbers into your home currency, giving you an accurate view of EU revenue in real terms."
+    }
+  ],
+  "paa": [
+    { "q": "Is the EU in recession in 2026?", "a": "Germany experienced two consecutive years of GDP contraction in 2024-2025. The broader eurozone saw weak growth, with business and consumer confidence below long-term averages." },
+    { "q": "How does EU economic weakness affect UK exporters?", "a": "EU buyers become more price-sensitive, payment terms lengthen, and sales cycles slow. SMEs with concentrated EU exposure need to monitor customer health and diversify where possible." }
+  ],
+  "cta": {
+    "heading": "Understand your EU revenue exposure",
+    "body": "Upload your sales data and ask AskBiz which markets and customers are under most pressure. Free to start."
+  },
+  "relatedSlugs": ["us-tariffs-sme-import-strategy-2026", "uk-inflation-margins-sme-2026", "cash-flow-forecasting-30-60-90-day"]
+},
+{
+  "slug": "us-economy-sme-opportunities-2026",
+  "title": "US Economy 2026: Where the Real Opportunities Are for SME Founders",
+  "metaDescription": "Despite tariff uncertainty, the US economy continues to grow in 2026. Here is where UK and EU SME founders can find real opportunities in the US market right now.",
+  "cluster": "Global Trade Intelligence",
+  "pillar": "Business & Economic Impact",
+  "publishDate": "2026-04-21",
+  "readTime": 7,
+  "tldr": "The US economy continues to outperform the UK and EU in 2026, with consumer spending resilient and several sectors growing strongly. For UK and EU SMEs, this creates real export and expansion opportunities — if you know where to look.",
+  "sections": [
+    {
+      "heading": "The US economic picture in 2026",
+      "level": 2,
+      "body": "US GDP growth is running at approximately 2.5% in 2026, significantly ahead of the EU and roughly in line with the UK. Consumer spending has remained resilient despite elevated interest rates. The labour market is tight. Several sectors — healthcare technology, defence, infrastructure, and AI services — are growing strongly. For international SMEs, the US represents a large, growing market where British and European products often benefit from a quality perception premium."
+    },
+    {
+      "heading": "Sectors with the strongest opportunity for UK and EU SMEs",
+      "level": 2,
+      "body": "Food and premium consumer goods: American consumers continue to pay premium prices for British and European food, beverages, and personal care products. The Anglophile premium is real and measurable. B2B services: US companies are actively buying AI, analytics, legal tech, and professional services from UK and EU providers. The quality perception, combined with time zone overlap, makes this a strong market. Sustainability and green products: US corporate buyers are under increasing pressure to demonstrate sustainable supply chains. UK and EU businesses with strong ESG credentials have a genuine advantage. Manufacturing components: With US companies reshoring and near-shoring manufacturing, there is demand for precision-engineered components from established European suppliers."
+    },
+    {
+      "heading": "How to assess whether the US market is right for your business",
+      "level": 3,
+      "body": "Before entering the US market, you need to know three things. First, what is my product-market fit? Research whether your product category is growing in the US and at what price points. Second, what is my landed cost including freight, duty, and last-mile delivery — and does it leave a viable margin? Third, what are the regulatory requirements — FDA, FTC, state-specific rules — and what do they cost to comply with? Ask AskBiz: if I expand to the US market with my current top 5 products, what margin do I need per unit to cover additional costs and return a profit?"
+    },
+    {
+      "heading": "Using AskBiz to model US expansion",
+      "level": 2,
+      "body": "Upload your current product margin data to AskBiz. Ask it to model: what would my profitability look like if I add US freight costs and a 10% import duty to my landed cost? At what price point do I need to sell in US dollars to achieve my target margin? How much revenue do I need from the US market to justify the investment in market entry? These are decisions that need to be grounded in your actual numbers, not industry averages."
+    }
+  ],
+  "paa": [
+    { "q": "Is the US a good market for UK SMEs in 2026?", "a": "The US economy is growing at approximately 2.5% in 2026 with resilient consumer spending. UK businesses benefit from a quality premium perception and time zone overlap for services." },
+    { "q": "What are the biggest challenges for UK businesses entering the US market?", "a": "Key challenges include higher freight and duty costs affecting margins, complex state-by-state regulatory requirements, and the need to adapt marketing for US consumer preferences." }
+  ],
+  "cta": {
+    "heading": "Model your US expansion economics",
+    "body": "Upload your product data and ask AskBiz whether the US market makes financial sense for your business. Free to start."
+  },
+  "relatedSlugs": ["us-tariffs-sme-import-strategy-2026", "hidden-margin-killers-shipping-transaction-fees", "identifying-competitive-advantage-ai"]
+},
+{
+  "slug": "ai-adoption-sme-competitive-advantage-2026",
+  "title": "AI Adoption for SMEs in 2026: Why Early Movers Are Pulling Ahead",
+  "metaDescription": "SMEs that adopted AI business intelligence tools early in 2025-2026 are now operating with a measurable competitive advantage. Here is what they are doing differently and how to catch up.",
+  "cluster": "AI & Business Trends 2026",
+  "pillar": "Corporate Strategy",
+  "publishDate": "2026-04-15",
+  "readTime": 8,
+  "tldr": "The gap between SMEs using AI business intelligence and those still running on spreadsheets is widening. Early adopters are making faster decisions, catching problems earlier, and growing more efficiently. This post explains what they are doing differently.",
+  "sections": [
+    {
+      "heading": "The AI adoption gap in SMEs is now visible in performance",
+      "level": 2,
+      "body": "In 2024, AI adoption among SMEs was mostly experimental — founders trying chatbots, playing with AI writing tools. In 2025-2026, a meaningful segment of SMEs moved to using AI for core business operations: demand forecasting, margin analysis, cash flow monitoring, and competitor intelligence. The performance difference between this group and the spreadsheet-dependent majority is now measurable. Faster decision cycles, lower stockout rates, better margin management, and more accurate cash flow forecasting are the consistent advantages showing up in the data."
+    },
+    {
+      "heading": "What AI-adopting SMEs are actually doing",
+      "level": 2,
+      "body": "They are not using AI to generate blog posts or write emails. They are using it to answer business questions with data. Which product should I reorder this week? Which customer segment is most profitable? Am I on track to hit my revenue target this quarter? What will my cash position be in 60 days if nothing changes? These are not complex AI applications — they are simply connecting business data to a system that can interpret it and answer questions in plain English. The barrier to doing this dropped significantly in 2025."
+    },
+    {
+      "heading": "The three competitive advantages early adopters have",
+      "level": 3,
+      "body": "First, speed. When a margin problem appears, AI-adopting businesses catch it in days not months. By the time a spreadsheet-dependent business sees it in their quarterly accounts, the AI-adopting competitor has already corrected it. Second, precision. Blanket price increases versus targeted repricing of low-elasticity products. Buying all stock versus buying based on demand forecasts. The precision advantage compounds over time. Third, bandwidth. Founders who are not spending hours on analysis have more time for the work that actually grows the business: sales, relationships, product development."
+    },
+    {
+      "heading": "What to implement first if you are starting now",
+      "level": 2,
+      "body": "Start with margin monitoring. Upload your sales and cost data to AskBiz and ask it to calculate your real gross margin by product. This single step typically reveals 2-4 products that are significantly less profitable than you thought — and 1-2 that are significantly more profitable. Then connect your sales channel — Shopify, Amazon, eBay — and set up anomaly alerts. You want to know the moment something unusual happens, not four weeks later. Then ask your first strategic question: which product should I focus on growing and why? The answer will be grounded in your actual data."
+    }
+  ],
+  "paa": [
+    { "q": "How are SMEs using AI in 2026?", "a": "Leading SMEs in 2026 use AI for margin analysis, demand forecasting, cash flow monitoring, and competitor intelligence — not just content generation. They connect their sales data and ask business questions in plain English." },
+    { "q": "What is the ROI of AI for small businesses?", "a": "The primary ROI comes from faster decision-making, catching margin problems earlier, reducing stockouts, and freeing founder time from analysis. Businesses typically identify 2-4 underperforming products in their first week of use." }
+  ],
+  "cta": {
+    "heading": "Start your AI business intelligence journey today",
+    "body": "Upload your data and get your Business Pulse score in 3 minutes. Free — no card needed."
+  },
+  "relatedSlugs": ["what-is-an-ai-chief-of-staff", "askbiz-vs-traditional-bi-tools", "roi-of-ai-automated-bi"]
+},
+{
+  "slug": "supply-chain-resilience-sme-2026",
+  "title": "Supply Chain Resilience for SMEs: A Practical Guide for 2026",
+  "metaDescription": "Global supply chain disruptions continue in 2026. Here is how SME founders can build supply chain resilience using data, without the enterprise budget.",
+  "cluster": "Predictive Operations",
+  "pillar": "Corporate Strategy",
+  "publishDate": "2026-04-16",
+  "readTime": 8,
+  "tldr": "Supply chain disruptions from Red Sea rerouting, tariff changes, and supplier instability continue to affect SMEs in 2026. This post gives you a practical framework for building resilience — using data, not just instinct.",
+  "sections": [
+    {
+      "heading": "Why supply chain resilience is now a survival skill for SMEs",
+      "level": 2,
+      "body": "The supply chain crises of 2020-2026 have fundamentally changed the risk environment for SME importers and product businesses. What was once a background operational function is now a strategic priority. Businesses that entered 2020 with single-source suppliers, minimal safety stock, and no visibility into lead time volatility were the ones that ran out of stock, missed peak trading periods, and lost customers permanently. In 2026, those risks have not gone away — they have diversified. Red Sea disruptions, tariff changes, and supplier financial instability mean supply chain risk is a permanent feature of the business environment."
+    },
+    {
+      "heading": "The five components of supply chain resilience",
+      "level": 2,
+      "body": "First, supplier diversification. No single product should depend on a single supplier from a single country. This is harder and more expensive than single-source procurement, but the cost of a stockout — lost sales, lost customers, emergency air freight — is almost always higher. Second, lead time visibility. Know the actual, current lead time for every supplier — not the lead time they quoted 18 months ago. Third, dynamic safety stock. Your safety stock should be calculated based on current lead times and current sales velocity, and recalculated at least monthly. Fourth, early warning signals. You want to know about supplier problems before they become your stockout. Monitor supplier news, track payment terms changes, and watch for quality degradation. Fifth, financial resilience. A supply chain shock always has a cash component. Make sure you have enough liquidity to respond when something goes wrong."
+    },
+    {
+      "heading": "Using data to calculate your optimal safety stock",
+      "level": 3,
+      "body": "Safety stock formula: (Maximum daily demand × Maximum lead time) − (Average daily demand × Average lead time). For a product selling 50 units per day on average, with a maximum of 70 units per day, and a lead time that averages 30 days but can stretch to 45 days: safety stock = (70 × 45) − (50 × 30) = 3,150 − 1,500 = 1,650 units. Upload your sales and lead time data to AskBiz and ask it to calculate optimal safety stock for each of your top 20 SKUs. This calculation changes every time lead times or demand patterns shift."
+    },
+    {
+      "heading": "How AskBiz monitors supply chain risk",
+      "level": 2,
+      "body": "Connect your inventory and sales data to AskBiz. Ask it weekly: which of my products is closest to a stockout given current lead times? Which suppliers have had the most variable lead times in the last 90 days? If lead times increase by 20%, which products hit stockout first? These questions — answered with your actual data — give you a supply chain risk picture that no spreadsheet can provide at scale. AskBiz also alerts you automatically when a product's days-of-stock falls below your threshold, giving you time to act before the stockout happens."
+    }
+  ],
+  "paa": [
+    { "q": "How can small businesses build supply chain resilience?", "a": "Diversify suppliers across countries, maintain dynamic safety stock calculated from current lead times and demand, monitor supplier health, and maintain enough cash liquidity to respond to disruptions." },
+    { "q": "What is safety stock and how do I calculate it?", "a": "Safety stock is the buffer inventory held to protect against demand spikes and supply delays. The formula is (Maximum daily demand × Maximum lead time) minus (Average daily demand × Average lead time)." }
+  ],
+  "cta": {
+    "heading": "Calculate your supply chain risk right now",
+    "body": "Upload your inventory data and ask AskBiz which products are closest to a stockout. Free to start."
+  },
+  "relatedSlugs": ["predicting-stockouts-before-they-happen", "supplier-risk-intelligence-ai", "red-sea-shipping-crisis-sme-guide-2026"]
+},
+{
+  "slug": "shopify-margin-optimisation-uk-2026",
+  "title": "Shopify Margin Optimisation for UK Sellers in 2026",
+  "metaDescription": "UK Shopify sellers face rising costs, new fees, and tighter margins in 2026. Here is a data-driven guide to finding and fixing the margin leaks in your Shopify store.",
+  "cluster": "Local & Vertical Growth",
+  "pillar": "Corporate Strategy",
+  "publishDate": "2026-04-17",
+  "readTime": 8,
+  "tldr": "UK Shopify sellers face a tighter margin environment in 2026: higher ad costs, rising fulfilment fees, and more price-sensitive customers. This post shows you exactly where the margin is leaking and how to fix it with data.",
+  "sections": [
+    {
+      "heading": "The margin environment for UK Shopify sellers in 2026",
+      "level": 2,
+      "body": "UK ecommerce sellers on Shopify are navigating a harder environment than 2021-2022. Meta and Google advertising costs have risen significantly, with CPMs up 30-50% from 2021 levels. Fulfilment costs — picking, packing, shipping — have risen with labour and energy costs. Return rates remain elevated, particularly for fashion and electronics. And customers, squeezed by cost of living pressures, are more price-sensitive and more likely to abandon carts or switch to cheaper alternatives. The Shopify sellers who are growing profitably in this environment are doing so by managing margins at the product level, not the store level."
+    },
+    {
+      "heading": "The six places UK Shopify sellers lose margin",
+      "level": 2,
+      "body": "First, payment processing fees. Shopify Payments charges 1.5-2% per transaction depending on your plan. Third-party gateways add another 0.5-2%. Second, advertising cost of sale. Many sellers calculate ad spend as a total number without attributing it by product. Some products have ad costs that consume their entire margin. Third, returns. A product with a 25% margin and a 20% return rate has an effective margin closer to 5% after return processing. Fourth, fulfilment. Oversized or heavy products cost disproportionately more to ship. Fifth, discounts and promotions. Blanket percentage discounts often eliminate margin on your lowest-margin products. Sixth, chargebacks. Even at 0.5%, chargebacks represent lost revenue and processing fees."
+    },
+    {
+      "heading": "How to calculate your true margin per Shopify product",
+      "level": 3,
+      "body": "True margin = (Revenue − COGS − allocated ad spend − fulfilment cost − return rate impact − payment fees − allocated overhead) / Revenue. Most Shopify sellers calculate gross margin as revenue minus COGS. This overstates margin by 10-30 percentage points on most products. Connect your Shopify store to AskBiz and ask: what is my true margin per product after all costs? You will see which products are actually profitable and which are consuming cash."
+    },
+    {
+      "heading": "The product decisions that improve margin fastest",
+      "level": 2,
+      "body": "Discontinue high-return products. If a product has a return rate above 15% in fashion or 5% in electronics, the return cost is destroying margin. Either fix the product description, size guide, or quality — or discontinue it. Increase AOV on your high-margin products. Bundles, upsells, and cross-sells with your best-margin products improve your blended margin without changing your cost base. Renegotiate fulfilment on your top sellers. If a product is in your top 10 by volume, you have leverage to negotiate better rates with your 3PL. Reduce ad spend on products with negative contribution margin. This is the most common and most impactful finding — sellers spending money to acquire customers for products that lose money on every sale."
+    }
+  ],
+  "paa": [
+    { "q": "What is a good profit margin for a UK Shopify store?", "a": "A healthy gross margin for a UK Shopify store (before marketing) is 40-60% for most product categories. After advertising, fulfilment, and fees, a net contribution margin of 15-25% is typically healthy." },
+    { "q": "How do I calculate true margin on Shopify?", "a": "True margin per product = revenue minus cost of goods, allocated ad spend, fulfilment costs, return rate impact, and payment processing fees. Shopify's built-in analytics does not include all these costs." }
+  ],
+  "cta": {
+    "heading": "See your true Shopify margin per product",
+    "body": "Connect your Shopify store to AskBiz and ask which products are actually profitable. Free to start."
+  },
+  "relatedSlugs": ["amazon-fba-margin-guide-uk-2026", "hidden-margin-killers-shipping-transaction-fees", "dynamic-pricing-profit-sweet-spot"]
+},
+{
+  "slug": "amazon-fba-margin-guide-uk-2026",
+  "title": "Amazon FBA Margins for UK Sellers in 2026: The Complete Guide",
+  "metaDescription": "Amazon FBA fees have increased significantly in 2025-2026. UK sellers need a clear picture of their true margin per ASIN after all Amazon fees. Here is how to calculate it and improve it.",
+  "cluster": "Local & Vertical Growth",
+  "pillar": "Corporate Strategy",
+  "publishDate": "2026-04-18",
+  "readTime": 9,
+  "tldr": "Amazon FBA fees in the UK have increased across fulfilment, storage, referral, and advertising in 2025-2026. UK sellers need to recalculate their true margin per ASIN to understand which products are worth continuing. This post walks you through the calculation and the decisions that follow.",
+  "sections": [
+    {
+      "heading": "The Amazon FBA fee environment for UK sellers in 2026",
+      "level": 2,
+      "body": "Amazon UK has increased FBA fulfilment fees, introduced new inbound placement fees, and raised storage fees for oversized and hazardous products. Combined with higher advertising costs — sponsored products CPCs up 20-35% year on year — the total cost of selling on Amazon UK has increased materially. Many sellers who were profitable in 2021-2022 are finding their margins significantly compressed or negative on products they have not reviewed recently."
+    },
+    {
+      "heading": "The complete Amazon FBA cost structure",
+      "level": 2,
+      "body": "Your true Amazon FBA cost per unit includes: referral fee (8-15% of selling price depending on category), FBA fulfilment fee (£2.50-£8.50+ depending on size and weight), storage fees (monthly per cubic foot, higher October-December), inbound placement fees (new in 2024-2025), sponsored products advertising (variable), returns processing, and VAT on fees. Most sellers know their referral fee and FBA fee but underestimate advertising and storage as margin drains."
+    },
+    {
+      "heading": "Calculating true margin per ASIN",
+      "level": 3,
+      "body": "For each ASIN: True margin = (Selling price − referral fee − FBA fee − COGS − allocated advertising spend − allocated storage cost − returns cost) / selling price. Upload your Amazon sales report and advertising report to AskBiz. Ask: what is my true margin per ASIN after all Amazon fees and advertising? AskBiz will calculate this for every product and rank them by true profitability. You will almost certainly find products you thought were profitable that are actually losing money."
+    },
+    {
+      "heading": "The four most common Amazon margin problems",
+      "level": 2,
+      "body": "First, advertising spend on products with negative contribution margin. This is the most common and most expensive mistake — spending money to sell a product that loses money on every sale. Second, slow-moving inventory accumulating storage fees. Products sitting in Amazon warehouses for more than 180 days face long-term storage fees that destroy margin on slow sellers. Third, incorrect category classification. If Amazon has classified your product in the wrong category, you may be paying a higher referral fee than necessary. Fourth, undersized or oversized fee bucket. Small changes in product dimensions or weight can push you into a higher FBA fee bracket."
+    },
+    {
+      "heading": "Using AskBiz to manage Amazon FBA margin",
+      "level": 2,
+      "body": "Connect your Amazon Seller Central account to AskBiz via the Amazon integration. Ask it weekly: which of my ASINs has seen the largest margin decline in the last 30 days? Which products am I paying the most in storage fees relative to their sales? Which ASINs have an advertising ACoS above their product margin? AskBiz gives you these answers in plain English so you can act on them without spending hours in Seller Central reports."
+    }
+  ],
+  "paa": [
+    { "q": "What are Amazon FBA fees for UK sellers in 2026?", "a": "UK Amazon FBA fees in 2026 include referral fees of 8-15%, FBA fulfilment fees of £2.50-£8.50+ by size, monthly storage fees, inbound placement fees, and returns processing. The total can represent 30-50% of revenue for many categories." },
+    { "q": "How do I calculate my true Amazon FBA margin?", "a": "True margin = selling price minus referral fee, FBA fulfilment fee, cost of goods, allocated advertising spend, storage costs, and returns processing, divided by selling price." }
+  ],
+  "cta": {
+    "heading": "Calculate your true Amazon FBA margin per ASIN",
+    "body": "Connect your Amazon store to AskBiz and ask which products are actually profitable. Free to start."
+  },
+  "relatedSlugs": ["shopify-margin-optimisation-uk-2026", "hidden-margin-killers-shipping-transaction-fees", "predicting-stockouts-before-they-happen"]
+},
+{
+  "slug": "eu-digital-markets-act-sme-2026",
+  "title": "EU Digital Markets Act 2026: What SME Sellers Need to Know",
+  "metaDescription": "The EU Digital Markets Act is changing how large platforms operate in Europe. Here is what SME sellers on Amazon, Google, and Meta need to know and how to adapt.",
+  "cluster": "EU-Ready AI",
+  "pillar": "Corporate Strategy",
+  "publishDate": "2026-04-19",
+  "readTime": 7,
+  "tldr": "The EU Digital Markets Act (DMA) requires large platform gatekeepers to change how they operate, creating new opportunities and risks for SME sellers dependent on Amazon, Google, and Meta. This post explains the key changes and how to adapt.",
+  "sections": [
+    {
+      "heading": "What the EU Digital Markets Act means for SME sellers",
+      "level": 2,
+      "body": "The EU Digital Markets Act designates large tech platforms as gatekeepers — Amazon, Google, Meta, Apple, Microsoft, and ByteDance — and imposes obligations on how they operate within the EU. For SME sellers, the most relevant changes are: Amazon must allow third-party sellers to link to their own websites from within Amazon product listings (interoperability). Google must show comparison shopping results more fairly, reducing the dominance of Google Shopping as an advertising product. Meta must allow users to port data to third-party platforms. These changes are being implemented in 2025-2026 and will gradually affect how SME sellers acquire customers and manage platform dependency."
+    },
+    {
+      "heading": "The opportunity for SME sellers: reducing platform dependency",
+      "level": 2,
+      "body": "The DMA creates a structural push away from complete platform dependency. If you can direct Amazon customers to your own website — through packaging inserts, loyalty programmes, or DMA-enabled linking — you reduce your dependence on Amazon fees and Amazon's algorithm. If comparison shopping becomes more transparent under the DMA, high-quality products with genuine reviews may surface more easily in organic results. The businesses that benefit most from the DMA are those with genuine customer relationships, strong brand identity, and owned channels (email lists, direct websites). This is the moment to invest in those."
+    },
+    {
+      "heading": "How to measure your platform dependency",
+      "level": 3,
+      "body": "Platform dependency risk = percentage of revenue from a single platform. If more than 60% of your revenue comes from Amazon or 50% from paid Meta advertising, you have meaningful concentration risk. The DMA does not eliminate this risk overnight, but it creates the conditions to reduce it over time. Ask AskBiz: what percentage of my total revenue comes from each sales channel? How has this changed over the last 12 months? Is my channel mix becoming more or less concentrated?"
+    },
+    {
+      "heading": "Practical steps for EU-trading SMEs",
+      "level": 2,
+      "body": "First, build your email list. Every customer who gives you their email address is a customer you own, not a customer you rent from Amazon or Meta. Second, invest in your website SEO. With the DMA pushing platforms toward fairer organic results, high-quality content ranks better than before. Third, test direct-to-consumer marketing. The DMA creates conditions for DTC to become more viable relative to platform selling. Fourth, monitor platform fee changes. As the DMA constrains platform monetisation options, fee structures may change. Stay informed."
+    }
+  ],
+  "paa": [
+    { "q": "What is the EU Digital Markets Act?", "a": "The EU Digital Markets Act designates large tech platforms as gatekeepers and imposes obligations on how they operate — including allowing interoperability, fair search results, and data portability — to create a more competitive digital market." },
+    { "q": "How does the DMA affect Amazon sellers?", "a": "The DMA requires Amazon to allow sellers to link to their own websites from product listings and restricts Amazon from self-preferencing its own products in search results, creating more opportunity for third-party sellers." }
+  ],
+  "cta": {
+    "heading": "Measure your platform concentration risk",
+    "body": "Upload your sales data and ask AskBiz what percentage of revenue comes from each channel. Free to start."
+  },
+  "relatedSlugs": ["shopify-margin-optimisation-uk-2026", "amazon-fba-margin-guide-uk-2026", "identifying-competitive-advantage-ai"]
+},
+{
+  "slug": "uk-employment-law-changes-sme-2026",
+  "title": "UK Employment Law Changes 2026: What SME Founders Must Prepare For",
+  "metaDescription": "New UK employment law changes in 2026 affect worker classification, flexible working rights, and redundancy rules. Here is what SME founders need to know and how to manage the cost impact.",
+  "cluster": "BI News & Trends 2026",
+  "pillar": "Business & Economic Impact",
+  "publishDate": "2026-04-20",
+  "readTime": 7,
+  "tldr": "The UK Employment Rights Bill introduces significant changes to flexible working rights, zero-hours contracts, and trade union access in 2026. For SME founders managing staff costs, understanding these changes is essential to avoiding unexpected costs and compliance risk.",
+  "sections": [
+    {
+      "heading": "Key UK employment law changes affecting SMEs in 2026",
+      "level": 2,
+      "body": "The UK Employment Rights Bill, progressing through Parliament in 2025-2026, introduces several significant changes. Day-one unfair dismissal rights: currently employees need 2 years service to claim unfair dismissal. The Bill removes this qualifying period, significantly changing the risk calculus of hiring. Zero-hours contracts reform: workers on zero-hours contracts will have the right to request guaranteed hours after 12 weeks, and employers must offer guaranteed hours if the work pattern has been consistent. Flexible working as a day-one right: employees can request flexible working from day one, and employers must have stronger justification for refusal. These changes affect the cost and flexibility of your workforce model."
+    },
+    {
+      "heading": "The financial impact on SME staffing costs",
+      "level": 2,
+      "body": "Day-one unfair dismissal rights increase the risk cost of every hire. If a new employee does not work out, the process of exiting them becomes more expensive and time-consuming. This does not mean you should not hire — but it means your hiring process needs to be more rigorous. Zero-hours contract reform will affect seasonal and hospitality businesses most. If you rely on a flexible pool of zero-hours workers, some will be entitled to guaranteed hours after 12 weeks of consistent patterns. This changes your workforce cost model and requires more careful rostering."
+    },
+    {
+      "heading": "How to quantify your employment law cost exposure",
+      "level": 3,
+      "body": "For each employment law change, calculate the worst-case cost increase and the probability-weighted expected cost. For day-one unfair dismissal: estimate the number of employees you hire and exit in the first year, multiply by average settlement cost (£5,000-£15,000 typical for small businesses), multiply by probability of a claim (historically around 5-10% of eligible exits). This gives you a rough annual exposure figure. Ask AskBiz: if my staff turnover increases by 20% in cost terms, what is the impact on my annual labour cost and overall margin?"
+    },
+    {
+      "heading": "Practical steps to manage the transition",
+      "level": 2,
+      "body": "Strengthen your onboarding and probation processes. With day-one rights, your probation period becomes your primary risk management tool. Document performance and conduct issues from day one — not when problems escalate. Review your zero-hours arrangements. Identify which workers are likely to qualify for guaranteed hours under the new rules and model the cost impact before it becomes a legal requirement. Get your employment contracts updated. Many SME contracts predate these changes and will need updating to reflect new rights and procedures."
+    }
+  ],
+  "paa": [
+    { "q": "What are the key UK employment law changes in 2026?", "a": "Key changes include day-one unfair dismissal rights (removing the 2-year qualifying period), zero-hours contract reforms giving workers the right to request guaranteed hours, and flexible working as a day-one right." },
+    { "q": "How will day-one unfair dismissal rights affect small businesses?", "a": "SMEs will face higher risk when hiring, as the cost of exiting an employee who does not work out increases significantly. Stronger hiring processes and documented probation periods become essential risk management tools." }
+  ],
+  "cta": {
+    "heading": "Model your employment cost impact",
+    "body": "Upload your staff cost data and ask AskBiz how employment law changes affect your margins. Free to start."
+  },
+  "relatedSlugs": ["uk-inflation-margins-sme-2026", "cash-flow-forecasting-30-60-90-day", "roi-of-ai-automated-bi"]
+},
+{
+  "slug": "pricing-strategy-sme-2026",
+  "title": "Pricing Strategy for SMEs in 2026: How to Raise Prices Without Losing Customers",
+  "metaDescription": "Most SME founders are underpricing their products and services. Here is a data-driven framework for raising prices confidently in 2026 — with specific tactics for retail, ecommerce, and services.",
+  "cluster": "Financial Intelligence",
+  "pillar": "Corporate Strategy",
+  "publishDate": "2026-04-16",
+  "readTime": 8,
+  "tldr": "Most SMEs are underpricing. The fear of losing customers keeps founders from raising prices even when margins demand it. This post gives you a data-driven framework for identifying which products to reprice, by how much, and how to do it without losing your best customers.",
+  "sections": [
+    {
+      "heading": "Why most SMEs are underpricing",
+      "level": 2,
+      "body": "Pricing is the fastest lever to improve profitability — faster than increasing volume, cutting costs, or launching new products. Yet most SME founders underprice for three reasons. First, fear of customer loss. The assumption is that any price increase will drive customers to competitors. Second, cost-plus pricing. Setting prices at cost plus a fixed percentage does not account for the value customers perceive or what they would actually pay. Third, not knowing their margin clearly enough. If you do not know exactly what each product costs to produce and sell, you cannot price it confidently. The founders who price well are the ones who have done the data work."
+    },
+    {
+      "heading": "How to identify products with pricing power",
+      "level": 2,
+      "body": "Pricing power exists where customers perceive high value, few direct substitutes are available, and purchase decisions are not highly price-sensitive. For most SMEs, pricing power is concentrated in their best-selling products with the most loyal customers. Ask AskBiz: which of my products has the lowest price elasticity based on historical sales data? Which products sell consistently even when I run fewer promotions? These are your repricing targets — the products where you have the most headroom to increase price without proportional volume loss."
+    },
+    {
+      "heading": "The 5% rule — a low-risk first move",
+      "level": 3,
+      "body": "Raise your three highest-margin, lowest-elasticity products by 5%. Monitor volume for 30 days. If volume drops by less than 3%, your revenue and margin have improved — the price increase has paid off. If volume drops by 5-8%, you have learned the elasticity ceiling. If volume holds flat, raise by another 5% and repeat. This iterative approach lets you find the optimal price point without a risky blanket increase across your range. Ask AskBiz: if I raise the price of product X by 5% and volume drops by 3%, what is the net impact on my monthly profit?"
+    },
+    {
+      "heading": "Communicating price increases to customers",
+      "level": 2,
+      "body": "B2B customers need advance notice — typically 30-60 days. The communication should reference cost pressures honestly (materials, logistics, wages) without being apologetic. The most effective framing is: we have absorbed cost increases for as long as we can; we are committed to maintaining quality and service; effective [date] prices will increase by X%. B2C customers need less communication. Simply update prices and let the organic process work. If you are concerned about loyal customers, consider a loyalty lock-in: customers who order within 30 days at current prices lock in that price for 6 months."
+    },
+    {
+      "heading": "Using AskBiz to monitor the impact of price changes",
+      "level": 2,
+      "body": "After any price change, you want to monitor volume, revenue, and margin by product for 30-60 days. Connect your Shopify or Amazon store to AskBiz. Ask it weekly after a price increase: what is the volume trend on product X since the price change? Is total revenue from this product up or down? Has margin improved? This data tells you whether to hold the new price, push higher, or roll back. Most founders who try this process are surprised — the volume drop from a 5-10% price increase is almost always smaller than they feared."
+    }
+  ],
+  "paa": [
+    { "q": "How do I know if I can raise my prices?", "a": "Look at your price elasticity — how volume has changed when you have previously run sales or promotions. Products with low elasticity tolerate price increases well. Also assess competitive positioning: if you are the lowest-priced option in your category, you almost certainly have room to increase." },
+    { "q": "How much should I raise prices in 2026?", "a": "Start with 5% on your lowest-elasticity products. Monitor volume for 30 days. If volume holds, the increase is working. If it drops significantly, you have learned your ceiling. Most SMEs can achieve 5-15% price increases on select products with minimal volume impact." }
+  ],
+  "cta": {
+    "heading": "Find your repricing opportunities with real data",
+    "body": "Ask AskBiz which of your products have the most pricing power based on your actual sales data. Free to start."
+  },
+  "relatedSlugs": ["dynamic-pricing-profit-sweet-spot", "uk-inflation-margins-sme-2026", "hidden-margin-killers-shipping-transaction-fees"]
+},
+{
+  "slug": "export-diversification-sme-guide-2026",
+  "title": "Export Diversification for UK SMEs in 2026: Where to Sell Next",
+  "metaDescription": "UK SMEs that depend on a single export market face concentration risk. Here is a data-driven guide to identifying your next export market and validating it before committing resources.",
+  "cluster": "Global Trade Intelligence",
+  "pillar": "Corporate Strategy",
+  "publishDate": "2026-04-17",
+  "readTime": 8,
+  "tldr": "UK SMEs with concentrated export revenue face significant risk from market-specific shocks — EU slowdown, US tariff changes, currency moves. This post shows you how to identify and validate your next export market using data, not instinct.",
+  "sections": [
+    {
+      "heading": "Why export concentration is a hidden business risk",
+      "level": 2,
+      "body": "Most UK SMEs that export do so to one or two primary markets — typically the EU and/or the US. This concentration feels natural: you go where you know, where you have relationships, where the language is familiar. But concentration creates fragility. An EU recession, a US tariff change, a currency shock, or a regulatory barrier in your primary market can cut your export revenue significantly and quickly. The businesses that survived the Brexit friction period best were those with diversified export routes — multiple markets, multiple currencies, multiple regulatory environments."
+    },
+    {
+      "heading": "How to identify your next export market",
+      "level": 2,
+      "body": "The right next market is not the biggest or the most obvious — it is the one with the best fit for your specific product, your margin requirements, and your operational capacity. Use four filters. First, market size and growth: is the target market large enough and is it growing? Second, product-market fit: is there demonstrated demand for your product category, and are customers willing to pay at a price that gives you viable margin after export costs? Third, operational complexity: what are the regulatory requirements, import duties, and logistics challenges? Fourth, strategic fit: does this market align with your 3-year business direction?"
+    },
+    {
+      "heading": "The cheapest way to test a new export market",
+      "level": 3,
+      "body": "Before committing to a market entry strategy, test with minimum viable export. List your top three products on Amazon or eBay in the target market (FBA handles the logistics). Run a small paid search campaign. Measure conversion rate, return rate, and margin at the actual selling price in that market. This gives you real market data — not market research estimates — for a few hundred pounds. Ask AskBiz: if I test the German market with these three products at these prices, what margin do I need to see to justify full market entry?"
+    },
+    {
+      "heading": "Markets with strong opportunity for UK SMEs in 2026",
+      "level": 2,
+      "body": "Australia and Canada: English-speaking, strong UK product affinity, familiar legal environment. Growing ecommerce penetration and no language barrier. The Gulf (UAE, Saudi Arabia): strong appetite for UK brands, premiumisation trend, no import duty on most consumer goods. Growing retail infrastructure and high consumer spending power. Singapore: gateway to broader Southeast Asia, English business language, rule-of-law environment, high income demographics. Poland and the CEE region: EU member states with lower saturation than Western Europe and strong economic growth relative to the EU average. India: complex regulatory environment but enormous and growing middle class with strong appetite for imported consumer goods."
+    }
+  ],
+  "paa": [
+    { "q": "Which markets should UK SMEs export to in 2026?", "a": "Strong opportunities exist in Australia, Canada, the UAE, Singapore, and Central/Eastern Europe. Each offers different combinations of demand, UK brand affinity, and operational complexity." },
+    { "q": "How do I test a new export market cheaply?", "a": "List products on Amazon or eBay in the target market using FBA, run a small paid search campaign, and measure real conversion rates and margins before committing to full market entry." }
+  ],
+  "cta": {
+    "heading": "Model your export market opportunity",
+    "body": "Upload your product data and ask AskBiz which markets make financial sense for your business. Free to start."
+  },
+  "relatedSlugs": ["us-economy-sme-opportunities-2026", "eu-recession-sme-strategy-2026", "identifying-competitive-advantage-ai"]
+},
+{
+  "slug": "business-health-score-guide-2026",
+  "title": "What is a Business Health Score and How Do You Improve Yours?",
+  "metaDescription": "A Business Health Score gives you a single number that captures the overall financial health of your business. Here is how it is calculated, what a good score looks like, and how to improve it.",
+  "cluster": "AI Chief of Staff",
+  "pillar": "Corporate Strategy",
+  "publishDate": "2026-04-14",
+  "readTime": 7,
+  "tldr": "A Business Health Score is a 0-100 composite metric built from five components: margin health, revenue trend, stock position, cash flow, and product mix. AskBiz calculates yours automatically when you upload your data or connect your store.",
+  "sections": [
+    {
+      "heading": "Why a single health score is more useful than five separate metrics",
+      "level": 2,
+      "body": "Most business owners track multiple metrics — revenue, margin, cash, stock levels — but separately. When you look at them individually, it is hard to get an overall sense of business health. Is a great revenue month with low margin healthy? Is a strong margin with cash flow pressure positive or negative? A composite Business Health Score answers this by weighting the most important metrics and combining them into a single number that tells you at a glance whether your business is in good shape."
+    },
+    {
+      "heading": "The five components of the AskBiz Business Pulse score",
+      "level": 2,
+      "body": "First, margin health: your gross margin compared to your target and your historical average. Second, revenue trend: whether your revenue is growing, stable, or declining relative to the previous period. Third, stock position: the days of stock remaining for your key products relative to lead times. Fourth, cash flow health: your current cash runway and whether your cash position is improving or deteriorating. Fifth, product mix: the concentration and health of your product range — whether you are dependent on one product and whether your mix is diversifying or concentrating."
+    },
+    {
+      "heading": "What different score ranges mean",
+      "level": 3,
+      "body": "65-100: Healthy. Your business fundamentals are strong. Focus on growth. 45-64: At Risk. One or more components need attention. Review your score breakdown to identify the specific issue. Below 45: Critical. Multiple components need immediate action. Cash flow and margin should be your priority. A score below 45 does not mean your business is failing — but it means you need to act on the data, not wait to see how things develop."
+    },
+    {
+      "heading": "How to improve your Business Pulse score",
+      "level": 2,
+      "body": "The fastest improvements typically come from margin and stock. Identifying your three lowest-margin products and either repricing them or discontinuing them often moves the margin component significantly. Resolving stockout risks on your highest-velocity products improves the stock component. Cash flow improvement typically takes longer but is driven by faster collections, reduced slow-moving inventory, and better payment term management. Ask AskBiz: what is the single action that would most improve my Business Pulse score right now? It will identify the highest-leverage intervention based on your specific data."
+    }
+  ],
+  "paa": [
+    { "q": "What is a good business health score?", "a": "On AskBiz's 0-100 scale, 65+ is healthy, 45-64 is at risk, and below 45 is critical. A score of 75+ indicates strong business fundamentals across all five components." },
+    { "q": "How do you calculate a business health score?", "a": "AskBiz calculates a Business Pulse score from five weighted components: margin health, revenue trend, stock position, cash flow, and product mix. Each component is scored and weighted to produce a composite 0-100 score." }
+  ],
+  "cta": {
+    "heading": "Get your Business Pulse score right now",
+    "body": "Upload your sales data or connect your store. Your score is calculated in under 60 seconds. Free — no card needed."
+  },
+  "relatedSlugs": ["what-is-an-ai-chief-of-staff", "predictive-analytics-small-business", "cash-flow-forecasting-30-60-90-day"]
+},
+{
+  "slug": "competitor-watch-guide-2026",
+  "title": "How to Monitor Competitors Without Spending Hours on Research",
+  "metaDescription": "Competitor monitoring does not have to take hours. Here is how SME founders can set up automated competitor intelligence using AI tools to stay informed without the manual effort.",
+  "cluster": "AI & Business Trends 2026",
+  "pillar": "Corporate Strategy",
+  "publishDate": "2026-04-15",
+  "readTime": 7,
+  "tldr": "Most SME founders either spend too much time on competitor research or none at all. AI-powered competitor monitoring changes this — you get the intelligence you need without the hours. Here is how to set it up.",
+  "sections": [
+    {
+      "heading": "The competitor monitoring problem for SMEs",
+      "level": 2,
+      "body": "You know you should be monitoring competitors. You know that pricing changes, new product launches, and promotional activity from your competitors affect your sales. But in practice, most SME founders do one of two things: they either spend disproportionate time manually checking competitor websites and Amazon listings, or they do not do it at all because it is too time-consuming. Neither approach is sustainable. What you need is a system that surfaces the competitor changes that matter — and only those — without requiring your manual attention."
+    },
+    {
+      "heading": "What competitor intelligence actually matters for SMEs",
+      "level": 2,
+      "body": "Not all competitor information is equally useful. The things that matter most are pricing changes on products that directly compete with your top sellers, new product launches in your category, significant promotional activity (particularly if it is sustained, not just a one-off sale), and channel expansion — if a competitor that previously sold only direct starts selling on Amazon or Shopify. These are the changes that affect your sales and margins directly and quickly. Everything else is interesting but not actionable."
+    },
+    {
+      "heading": "Setting up Competitor Watch in AskBiz",
+      "level": 3,
+      "body": "AskBiz Competitor Watch (available on the Business plan) monitors pricing on your specified competitor products and surfaces changes that are material to your business. Set it up by telling AskBiz which competitors and which product categories to monitor. AskBiz checks daily and alerts you when a competitor makes a significant pricing move on a product that directly competes with your range. It also tells you whether to match, hold, or undercut based on your current margin and competitive position."
+    },
+    {
+      "heading": "What to do when a competitor changes their price",
+      "level": 2,
+      "body": "The wrong response is to react immediately. The right response is to understand why and what the numbers say about matching. Ask AskBiz: if I match competitor X's 15% price reduction on product Y, what is the impact on my monthly profit assuming volume increases by 20%? And: if I hold my current price, what volume loss can I sustain before I am worse off than if I had matched? These questions — answered with your actual margin data — tell you whether to follow or hold. Most of the time, the data will tell you to hold when your instinct says to follow."
+    }
+  ],
+  "paa": [
+    { "q": "How do I monitor competitors without spending hours on research?", "a": "Use AI-powered competitor monitoring tools that automatically track pricing changes on specified competitor products and alert you to material changes — rather than requiring you to manually check competitor sites." },
+    { "q": "Should I always match competitor price reductions?", "a": "Not always. Calculate the margin impact of matching versus the volume loss of holding. For many products, the profit impact of matching a competitor price cut is worse than the modest volume loss from holding — especially if the competitor is operating on thinner margins." }
+  ],
+  "cta": {
+    "heading": "Set up Competitor Watch on autopilot",
+    "body": "AskBiz Business plan includes daily competitor price monitoring. Try free to start."
+  },
+  "relatedSlugs": ["identifying-competitive-advantage-ai", "dynamic-pricing-profit-sweet-spot", "ai-adoption-sme-competitive-advantage-2026"]
+},
+{
+  "slug": "decision-memory-business-intelligence-2026",
+  "title": "Why Your Business Decisions Need a Memory (And How to Build One)",
+  "metaDescription": "Most business decisions are made and then forgotten. No tracking of outcomes, no learning from mistakes. Decision Memory changes this — here is why it matters and how to implement it.",
+  "cluster": "AI Chief of Staff",
+  "pillar": "Corporate Strategy",
+  "publishDate": "2026-04-16",
+  "readTime": 7,
+  "tldr": "Most SME founders make business decisions without tracking whether they worked. Decision Memory — logging decisions and reviewing outcomes 6 weeks later — is one of the highest-leverage habits successful founders share. AskBiz builds this into your workflow automatically.",
+  "sections": [
+    {
+      "heading": "The decision-making problem most founders do not acknowledge",
+      "level": 2,
+      "body": "Every week you make dozens of business decisions. You raise a price. You switch a supplier. You add a product to your range. You change your marketing channel mix. You renegotiate payment terms. Most of these decisions are made and then immediately forgotten in the urgency of running the business. Six weeks later, you might vaguely remember making the decision, but you have no structured way of evaluating whether it worked. This means you cannot learn from your own experience at the rate you could. You make the same types of mistakes repeatedly. You do not double down on the approaches that work."
+    },
+    {
+      "heading": "What Decision Memory is and how it works",
+      "level": 2,
+      "body": "Decision Memory is simply a structured log of your business decisions with planned outcome reviews. You record the decision (what you did), the hypothesis (why you thought it would work), and the expected outcome (what you expected to happen by when). Six weeks later, your system reviews the outcome against the expectation. Did the price increase hold? Did the new supplier deliver? Did the product launch generate the revenue you expected? This closes the feedback loop that most business owners never close."
+    },
+    {
+      "heading": "How AskBiz implements Decision Memory",
+      "level": 3,
+      "body": "In AskBiz, go to Monitor → Decision Memory. Log a decision in one sentence: raised the price of product X by 10% — expected no significant volume loss. AskBiz sets a 6-week review reminder. After 6 weeks, it pulls your actual sales data for product X and compares volume and revenue before and after the price change. It shows you whether the hypothesis was correct. It asks: was this decision right? What would you do differently? Over time, this builds a searchable record of your business decision history — what worked, what did not, and why."
+    },
+    {
+      "heading": "The compounding value of Decision Memory over time",
+      "level": 2,
+      "body": "After 6 months of logging decisions, you have a dataset of 20-40 decisions with outcomes. Patterns emerge. You might find that your pricing decisions consistently outperform expectations but your supplier switches consistently underperform. Or that your product launches work best when led by existing customer demand rather than category assumptions. These patterns — invisible without a systematic record — are the foundation of a learning organisation. Founders who use Decision Memory make better decisions in year two because they have the data from year one."
+    }
+  ],
+  "paa": [
+    { "q": "How do I track business decisions and their outcomes?", "a": "Log each decision with the hypothesis and expected outcome. Set a review date 4-8 weeks later. Compare actual outcomes against expectations. AskBiz automates this process with 6-week check-ins using your actual business data." },
+    { "q": "Why do business decisions fail?", "a": "Most business decision failures come from incorrect assumptions — about price elasticity, customer behaviour, supplier reliability, or market demand. Decision Memory helps you identify which assumptions you consistently get wrong." }
+  ],
+  "cta": {
+    "heading": "Start building your Decision Memory today",
+    "body": "AskBiz Business plan includes Decision Memory with 6-week outcome reviews. Free to start."
+  },
+  "relatedSlugs": ["what-is-an-ai-chief-of-staff", "entrepreneurs-guide-data-backed-decision-making", "ai-adoption-sme-competitive-advantage-2026"]
+},
+{
+  "slug": "daily-brief-business-intelligence-2026",
+  "title": "Why Successful Founders Start Every Morning With a Business Brief",
+  "metaDescription": "The most effective SME founders do not start their day by checking emails. They start with a business brief — a 2-minute summary of what is happening and what needs attention. Here is how to build one.",
+  "cluster": "AI Chief of Staff",
+  "pillar": "Corporate Strategy",
+  "publishDate": "2026-04-17",
+  "readTime": 6,
+  "tldr": "Starting every morning with a structured business brief — 2 minutes, three things — changes how you prioritise and make decisions. AskBiz generates this automatically from your connected data, every morning before you wake up.",
+  "sections": [
+    {
+      "heading": "Why most founders start their day reactively",
+      "level": 2,
+      "body": "The first thing most founders do in the morning is check email, WhatsApp, or Slack. This immediately puts you in reactive mode — responding to other people's priorities. The most effective founders do something different. Before responding to anything, they get a clear picture of what their business needs from them today. Not yesterday's problems, not other people's requests — the most important thing in the business right now. This 2-minute brief changes the entire character of the day."
+    },
+    {
+      "heading": "What a good business brief contains",
+      "level": 2,
+      "body": "A daily business brief should contain exactly three things. First, what improved overnight or in the last 24 hours — so you know what is working. Second, what needs attention today — the one or two things that could become problems if you do not act. Third, the single most important action you could take today to move the business forward. That is it. Anything more becomes noise. The brief should take less than 2 minutes to read and tell you what to focus on before you open a single email."
+    },
+    {
+      "heading": "How the AskBiz Daily Brief works",
+      "level": 3,
+      "body": "AskBiz generates a personalised Daily Brief every morning at 7am using your connected data. It pulls your most recent sales, stock levels, margin data, and anomaly alerts. It surfaces the one improvement, the one concern, and the one action. If your inventory for a top product dropped overnight, it says so. If your margin on a product improved after a price change, it tells you. If you have a stockout risk developing, it gives you the reorder action. You open AskBiz in the morning and your brief is waiting — no setup, no manual checking."
+    },
+    {
+      "heading": "The cumulative effect of starting every day with data",
+      "level": 2,
+      "body": "Founders who use the Daily Brief consistently report the same thing: they catch problems earlier, act faster, and feel less reactive. The brief does not replace deep analysis — but it replaces the vague anxiety of not knowing what is happening in the business. It means you start every day knowing exactly where to focus your first hour. Over time, this compounds. Early problem detection means smaller problems, lower costs, and less crisis management. Faster decisions mean more experiments, more learning, more growth."
+    }
+  ],
+  "paa": [
+    { "q": "What should be in a daily business brief?", "a": "A daily business brief should contain three things: what improved in the last 24 hours, what needs attention today, and the single most important action you can take to move the business forward. It should take under 2 minutes to read." },
+    { "q": "How do I get a daily summary of my business performance?", "a": "AskBiz generates a personalised Daily Brief every morning from your connected sales, inventory, and financial data. Connect your store or upload your data and the brief is generated automatically." }
+  ],
+  "cta": {
+    "heading": "Get your Daily Brief every morning",
+    "body": "Connect your store or upload your data. AskBiz generates your personalised brief automatically. Growth plan from £19/month."
+  },
+  "relatedSlugs": ["what-is-an-ai-chief-of-staff", "business-health-score-guide-2026", "ai-adoption-sme-competitive-advantage-2026"]
+},
+{
+  "slug": "importer-cash-flow-guide-2026",
+  "title": "Cash Flow Management for UK Importers in 2026",
+  "metaDescription": "UK importers face unique cash flow challenges: long lead times, upfront payments, delayed revenue, and volatile forex. Here is a practical guide to managing importer cash flow with data.",
+  "cluster": "Financial Intelligence",
+  "pillar": "Business & Economic Impact",
+  "publishDate": "2026-04-18",
+  "readTime": 8,
+  "tldr": "UK importers face a uniquely difficult cash flow structure: pay for goods 60-90 days before you receive revenue from selling them, with currency risk and freight volatility in between. This post gives you a data-driven framework for managing importer cash flow.",
+  "sections": [
+    {
+      "heading": "The importer cash flow cycle and why it is hard",
+      "level": 2,
+      "body": "If you import goods from Asia, the Middle East, or other international suppliers, your cash flow cycle looks something like this. Day 1: pay your supplier deposit (30-50% of order value). Day 30-45: pay the balance before goods ship. Day 50-70: goods in transit. Day 70-90: goods arrive, clear customs, reach your warehouse. Day 90-120: goods sold and revenue received. This means you are out of pocket for 90-120 days before you see any return. Multiply this across multiple orders and multiple suppliers, and managing the cash timing becomes one of the most complex challenges in running an import business."
+    },
+    {
+      "heading": "The three biggest cash flow risks for UK importers",
+      "level": 2,
+      "body": "First, currency risk. If you pay your suppliers in USD or CNY and the pound weakens between order and payment, your cost goes up without any change in selling price. Second, freight cost volatility. As discussed in our Red Sea article, freight costs can double or triple without warning. If you budgeted for £1,500 per container and the shipment costs £4,000, that is an unbudgeted cash outflow of £2,500 per order. Third, slow-moving inventory. Stock that takes twice as long to sell as expected extends your cash cycle and ties up capital that could be funding new orders."
+    },
+    {
+      "heading": "Building a 90-day cash flow model for importers",
+      "level": 3,
+      "body": "A useful importer cash flow model shows: all committed supplier payments due in the next 90 days, expected revenue from goods already in stock and in transit, estimated revenue from goods not yet ordered (based on reorder planning), and fixed and variable overhead. The gap between cash outflows and inflows at any point is your funding requirement. Ask AskBiz: based on my current stock levels, reorder schedule, and sales velocity, what is my cash position in 30, 60, and 90 days? Upload your purchase orders and sales data for the most accurate picture."
+    },
+    {
+      "heading": "Practical strategies for improving importer cash flow",
+      "level": 2,
+      "body": "Negotiate better payment terms. Moving from 50% deposit, 50% before shipping to 30% deposit, 70% letter of credit on arrival can significantly improve cash timing. Reduce minimum order quantities. Buying more frequently in smaller quantities reduces the cash tied up in inventory at any one time — even if the per-unit cost is slightly higher, the cash flow benefit often outweighs it. Use revolving trade finance. Several UK lenders offer revolving credit facilities specifically for importers that bridge the gap between supplier payment and customer receipt. Fix your currency exposure. Forward contracts lock in your exchange rate for future supplier payments, eliminating currency risk on committed orders."
+    }
+  ],
+  "paa": [
+    { "q": "How do UK importers manage cash flow?", "a": "Key strategies include negotiating better supplier payment terms, using revolving trade finance facilities, reducing minimum order quantities to free up cash, and fixing currency exposure through forward contracts." },
+    { "q": "What is a cash flow cycle for an importer?", "a": "The importer cash flow cycle runs from supplier deposit payment (Day 1) through to revenue receipt from customers (Day 90-120). Managing this 90-120 day cash gap is the central financial challenge of running an import business." }
+  ],
+  "cta": {
+    "heading": "Model your 90-day cash position",
+    "body": "Upload your purchase orders and sales data and ask AskBiz what your cash position looks like in 30, 60, and 90 days. Free to start."
+  },
+  "relatedSlugs": ["cash-flow-forecasting-30-60-90-day", "uk-interest-rates-sme-cash-flow-2026", "red-sea-shipping-crisis-sme-guide-2026"]
+},
+{
+  "slug": "uk-retail-outlook-sme-2026",
+  "title": "UK Retail Outlook 2026: What SME Retailers Need to Know",
+  "metaDescription": "UK retail is navigating a challenging but evolving landscape in 2026. Here is what independent retailers and SME brands need to know about consumer trends, channel shifts, and margin pressures.",
+  "cluster": "BI News & Trends 2026",
+  "pillar": "Business & Economic Impact",
+  "publishDate": "2026-04-19",
+  "readTime": 8,
+  "tldr": "UK retail in 2026 is characterised by value-seeking consumers, channel fragmentation, and ongoing margin pressure. This post gives SME retailers a clear picture of the landscape and practical strategies for staying profitable.",
+  "sections": [
+    {
+      "heading": "The UK retail landscape in 2026",
+      "level": 2,
+      "body": "UK retail in 2026 is characterised by several converging trends. Consumer confidence remains below historical averages, with shoppers prioritising value and making more deliberate purchase decisions. The channel mix continues to fragment — online remains strong but physical retail is recovering in certain categories (food, wellness, experience-led retail). The middle market is being squeezed: premium brands are holding and budget options are growing, while mid-market retailers face the toughest environment. UK consumer spending growth is running at roughly 2-3% in real terms, below the pre-2020 trend, meaning growth has to come from share gain rather than market expansion."
+    },
+    {
+      "heading": "The three trends reshaping UK retail for SMEs",
+      "level": 2,
+      "body": "First, the rise of values-led purchasing. UK consumers, particularly under 35, are increasingly making purchase decisions based on brand values — sustainability, provenance, ethics. SME retailers with genuine stories in these areas have an advantage over faceless large retailers. Second, social commerce. TikTok Shop and Instagram Shopping have emerged as significant channels for SME retailers in categories including fashion, beauty, food, and home. These channels reward content and community over advertising spend, which often advantages smaller brands. Third, subscription and loyalty models. Consumers who are value-conscious prefer predictable costs. Subscription and loyalty models that offer genuine value — not just points — are retaining customers in ways that one-off promotions cannot."
+    },
+    {
+      "heading": "Margin management for UK retailers in 2026",
+      "level": 3,
+      "body": "UK retail margins are under pressure from four directions: higher COGS (materials, freight, energy), higher labour costs (NLW increase), higher rent and rates (commercial property costs recovering), and promotional pressure (consumers expecting discounts). The retailers protecting margin are those who understand their margin per product, per category, and per channel — not just their blended overall margin. Ask AskBiz: what is my margin by product category? Which categories are margin-positive after all channel and fulfilment costs? Which categories should I grow and which should I reduce?"
+    },
+    {
+      "heading": "The opportunity for SME retailers that large retailers cannot match",
+      "level": 2,
+      "body": "Large retailers cannot serve niche, locality, or community. They cannot offer genuine expert curation. They cannot build real relationships with individual customers. These are the natural advantages of SME retail, and they are worth more in 2026 than they were in 2019. The consumers who were lost to online during COVID have now bifurcated: those who want convenience go to Amazon, those who want discovery, community, and experience go to independent retailers. If you are an independent retailer who knows your customer, curates your range expertly, and delivers genuine service, you have a proposition that Amazon cannot replicate."
+    }
+  ],
+  "paa": [
+    { "q": "What is happening in UK retail in 2026?", "a": "UK retail in 2026 features value-seeking consumers, channel fragmentation between online and physical, squeeze on mid-market brands, and margin pressure from higher costs. Growth is coming from share gain rather than market expansion." },
+    { "q": "How can independent retailers compete with Amazon in 2026?", "a": "Independent retailers compete through expert curation, genuine customer relationships, community and experience, and values-led brand identity — all things Amazon cannot replicate at scale." }
+  ],
+  "cta": {
+    "heading": "Get a clear picture of your retail margins",
+    "body": "Upload your sales data and ask AskBiz which categories and products are actually profitable. Free to start."
+  },
+  "relatedSlugs": ["shopify-margin-optimisation-uk-2026", "uk-inflation-margins-sme-2026", "dynamic-pricing-profit-sweet-spot"]
+},
+{
+  "slug": "working-capital-sme-guide-2026",
+  "title": "Working Capital Management for SMEs: A Practical Guide for 2026",
+  "metaDescription": "Working capital is the lifeblood of an SME. Here is how to calculate how much you need, identify where it is leaking, and manage it proactively using business intelligence.",
+  "cluster": "Financial Intelligence",
+  "pillar": "Business & Economic Impact",
+  "publishDate": "2026-04-22",
+  "readTime": 7,
+  "tldr": "Working capital — the difference between your current assets and current liabilities — determines whether you can meet your obligations and fund growth. Most SMEs manage it reactively. This post shows you how to manage it proactively with data.",
+  "sections": [
+    {
+      "heading": "What working capital is and why it matters more than profit",
+      "level": 2,
+      "body": "A business can be profitable and still run out of cash. This happens because profit is a timing construct — you record revenue when you invoice, not when you are paid. Working capital is the real-time measure of financial health: cash, receivables, and inventory minus the short-term obligations you owe. A profitable SME with poor working capital management regularly faces the paradox of growing revenue and worsening cash position. Understanding and actively managing your working capital cycle is more important for day-to-day survival than your monthly P&L."
+    },
+    {
+      "heading": "The working capital cycle for SME founders",
+      "level": 2,
+      "body": "Your working capital cycle works like this. You buy stock or materials (cash out). You store it, process it, or fulfil it (time passes, costs accumulate). You sell it and invoice (revenue recorded). You wait for payment (days sales outstanding). You receive payment (cash in). The length of this cycle — from cash out to cash in — determines how much working capital you need. A business with a 90-day cycle needs three times the working capital of a business with a 30-day cycle, even at the same revenue level. Shortening your cycle is the most powerful working capital improvement you can make."
+    },
+    {
+      "heading": "Calculating your working capital requirement",
+      "level": 3,
+      "body": "Working capital requirement = inventory days + debtor days minus creditor days, multiplied by daily cost of sales. If your inventory takes 45 days to sell, your customers take 30 days to pay, and your suppliers give you 30 days to pay: your net working capital cycle is 45 days. At daily cost of sales of £500, you need £22,500 in working capital just to sustain current operations. Ask AskBiz: what is my current working capital cycle and how much working capital do I need to sustain my current sales volume? Upload your stock, sales, and payment data for an accurate calculation."
+    },
+    {
+      "heading": "The three fastest ways to improve working capital",
+      "level": 2,
+      "body": "First, reduce inventory days. Identify your slow-moving stock — products taking more than 60 days to sell — and either discount to clear or pause reordering. Every day of reduction in inventory days frees up cash. Ask AskBiz: which products have the highest days-on-hand relative to their sales velocity? Second, reduce debtor days. Chase outstanding invoices systematically. Offer early payment discounts to customers who take more than 30 days. Consider invoice finance for your largest outstanding balances. Third, extend creditor days. Negotiate longer payment terms with your key suppliers — 45-60 days instead of 30. This effectively gives you interest-free financing from your supply chain."
+    }
+  ],
+  "paa": [
+    { "q": "What is working capital for a small business?", "a": "Working capital is the difference between a business current assets (cash, stock, receivables) and current liabilities (short-term debt, payables). It represents the operational liquidity available to run the business day to day." },
+    { "q": "How do I improve working capital for my SME?", "a": "The three fastest improvements are reducing inventory days (sell slow-moving stock faster), reducing debtor days (chase invoices more aggressively), and extending creditor days (negotiate longer supplier payment terms)." }
+  ],
+  "cta": {
+    "heading": "Calculate your working capital position",
+    "body": "Upload your financial data and ask AskBiz how much working capital you need and where it is leaking. Free to start."
+  },
+  "relatedSlugs": ["cash-flow-forecasting-30-60-90-day", "importer-cash-flow-guide-2026", "uk-interest-rates-sme-cash-flow-2026"]
+}
+
+]]
 ]
 
 export function getAllPosts(): BlogPost[] { return BLOG_POSTS }
@@ -7898,4 +8848,7 @@ export const CLUSTERS = [
   'Global Trade Intelligence',
   'AI & Business Trends 2026',
   'BI News & Trends 2026',
+  'Geopolitical Impact',
+  'Business & Economic Impact',
+  'Corporate Strategy',
 ]
