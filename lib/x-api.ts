@@ -1,119 +1,116 @@
-// X API — OAuth 1.0a posting + Tavily search
+// ============================================================
+// X (Twitter) API — OAuth 1.0a posting + Tavily search
+// ============================================================
 const X_BASE = 'https://api.twitter.com/2'
 
-function buildOAuth1Header(method: string, url: string): string {
+function sign(method: string, url: string): string {
   const crypto = require('crypto')
   const ck  = process.env.X_API_KEY!
   const cs  = process.env.X_API_SECRET!
   const at  = process.env.X_ACCESS_TOKEN!
   const ats = process.env.X_ACCESS_TOKEN_SECRET!
 
-  const nonce     = crypto.randomBytes(32).toString('base64').replace(/[^a-zA-Z0-9]/g, '')
-  const timestamp = String(Math.floor(Date.now() / 1000))
+  const nonce = crypto.randomBytes(16).toString('hex')
+  const ts    = String(Math.floor(Date.now() / 1000))
 
-  const params: Record<string, string> = {
+  const p: Record<string,string> = {
     oauth_consumer_key:     ck,
     oauth_nonce:            nonce,
     oauth_signature_method: 'HMAC-SHA1',
-    oauth_timestamp:        timestamp,
+    oauth_timestamp:        ts,
     oauth_token:            at,
     oauth_version:          '1.0',
   }
 
-  // Percent-encode keys and values, sort, join
-  const encode = (s: string) => encodeURIComponent(s).replace(/!/g,'%21').replace(/'/g,'%27').replace(/\(/g,'%28').replace(/\)/g,'%29').replace(/\*/g,'%2A')
+  const enc = (s: string) => encodeURIComponent(s)
 
-  const paramStr = Object.keys(params)
-    .sort()
-    .map(k => encode(k) + '=' + encode(params[k]))
-    .join('&')
+  const base = method + '&' + enc(url) + '&' +
+    enc(Object.keys(p).sort().map(k => enc(k) + '=' + enc(p[k])).join('&'))
 
-  const base = method.toUpperCase() + '&' + encode(url) + '&' + encode(paramStr)
-  const key  = encode(cs) + '&' + encode(ats)
-  const sig  = crypto.createHmac('sha1', key).update(base).digest('base64')
+  const key = enc(cs) + '&' + enc(ats)
+  p.oauth_signature = crypto.createHmac('sha1', key).update(base).digest('base64')
 
-  params['oauth_signature'] = sig
-
-  return 'OAuth ' + Object.keys(params)
-    .sort()
-    .map(k => encode(k) + '="' + encode(params[k]) + '"')
-    .join(', ')
+  return 'OAuth ' + Object.keys(p).sort()
+    .map(k => enc(k) + '="' + enc(p[k]) + '"').join(', ')
 }
 
-export async function postTweet(text: string, options: { replyToId?: string } = {}): Promise<{ id: string; text: string }> {
-  if (!process.env.X_API_KEY || !process.env.X_API_SECRET || !process.env.X_ACCESS_TOKEN || !process.env.X_ACCESS_TOKEN_SECRET) {
-    throw new Error('Missing X OAuth 1.0a credentials in environment variables')
-  }
+export async function postTweet(
+  text: string,
+  options: { replyToId?: string } = {}
+): Promise<{ id: string; text: string }> {
+  if (!process.env.X_API_KEY) throw new Error('X_API_KEY not set in Vercel environment variables')
+  if (!process.env.X_ACCESS_TOKEN) throw new Error('X_ACCESS_TOKEN not set in Vercel environment variables')
 
   const url  = X_BASE + '/tweets'
-  const body: Record<string, unknown> = { text }
+  const body: Record<string,unknown> = { text }
   if (options.replyToId) body.reply = { in_reply_to_tweet_id: options.replyToId }
 
   const res = await fetch(url, {
     method: 'POST',
-    headers: { Authorization: buildOAuth1Header('POST', url), 'Content-Type': 'application/json' },
+    headers: { Authorization: sign('POST', url), 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
 
   const raw = await res.text()
   if (!raw) throw new Error('Empty response from X. Status: ' + res.status)
 
-  let data: Record<string, unknown>
-  try { data = JSON.parse(raw) } catch { throw new Error('Non-JSON from X: ' + raw.slice(0, 200)) }
+  const data = JSON.parse(raw)
+  if (!res.ok) throw new Error('X post failed (' + res.status + '): ' + (data.detail || data.title || raw))
 
-  if (!res.ok) {
-    throw new Error('X post failed (' + res.status + '): ' + ((data.detail as string) || (data.title as string) || JSON.stringify(data)))
-  }
-
-  return (data.data as { id: string; text: string })
+  return data.data as { id: string; text: string }
 }
 
 export async function postThread(tweets: string[]): Promise<string[]> {
   const ids: string[] = []
   let replyToId: string | undefined
   for (const text of tweets) {
-    const posted = await postTweet(text, replyToId ? { replyToId } : {})
-    ids.push(posted.id)
-    replyToId = posted.id
+    const p = await postTweet(text, replyToId ? { replyToId } : {})
+    ids.push(p.id)
+    replyToId = p.id
     await new Promise(r => setTimeout(r, 2000))
   }
   return ids
 }
 
-export async function searchTweetsViaTavily(query: string, maxResults = 10): Promise<Array<{ id: string; text: string; url: string; author: string; score: number }>> {
+export async function searchTweetsViaTavily(query: string, maxResults = 10) {
   const key = process.env.TAVILY_API_KEY
   if (!key) throw new Error('TAVILY_API_KEY not configured')
 
   const res = await fetch('https://api.tavily.com/search', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ api_key: key, query: 'site:x.com OR site:twitter.com ' + query, search_depth: 'basic', max_results: maxResults, include_answer: false }),
+    body: JSON.stringify({
+      api_key: key,
+      query: 'site:x.com OR site:twitter.com ' + query,
+      search_depth: 'basic',
+      max_results: maxResults,
+      include_answer: false,
+    }),
   })
   if (!res.ok) throw new Error('Tavily search failed: ' + res.status)
-
   const data = await res.json()
+
   return (data.results || [])
     .filter(r => r.url && (r.url.includes('x.com') || r.url.includes('twitter.com')))
-    .map(r => {
-      const id     = (r.url.match(/status\/(\d+)/) || [])[1] || ''
-      const author = (r.url.match(/(?:x|twitter)\.com\/([^/]+)\/status/) || [])[1] || 'unknown'
-      return { id, text: r.content || r.title || '', url: r.url, author, score: r.score || 0 }
-    })
+    .map(r => ({
+      id:     (r.url.match(/status\/(\d+)/) || [])[1] || '',
+      text:   r.content || r.title || '',
+      url:    r.url,
+      author: (r.url.match(/(?:x|twitter)\.com\/([^/]+)\/status/) || [])[1] || 'unknown',
+      score:  r.score || 0,
+    }))
     .filter(t => t.id && /^\d+$/.test(t.id))
 }
 
-export async function validateXCredentials(): Promise<{ valid: boolean; username?: string; error?: string; mode?: string }> {
-  const ck = process.env.X_API_KEY, cs = process.env.X_API_SECRET
-  const at = process.env.X_ACCESS_TOKEN, ats = process.env.X_ACCESS_TOKEN_SECRET
+export async function validateXCredentials() {
+  const missing = ['X_API_KEY','X_API_SECRET','X_ACCESS_TOKEN','X_ACCESS_TOKEN_SECRET']
+    .filter(k => !process.env[k])
 
-  if (!ck || !cs || !at || !ats) {
-    const missing = ['X_API_KEY','X_API_SECRET','X_ACCESS_TOKEN','X_ACCESS_TOKEN_SECRET'].filter(k => !process.env[k])
-    return { valid: false, error: 'Missing: ' + missing.join(', ') }
-  }
+  if (missing.length) return { valid: false, error: 'Missing env vars: ' + missing.join(', ') }
 
   try {
     const url = X_BASE + '/users/me'
-    const res = await fetch(url, { headers: { Authorization: buildOAuth1Header('GET', url) } })
+    const res = await fetch(url, { headers: { Authorization: sign('GET', url) } })
     const raw = await res.text()
     if (!raw) return { valid: false, error: 'Empty response. Status: ' + res.status }
     const data = JSON.parse(raw)
