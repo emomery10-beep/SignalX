@@ -62,7 +62,7 @@ function oauth1Headers(method: string, url: string, params: Record<string, strin
   const oauthParams: Record<string, string> = {
     oauth_consumer_key:     consumerKey,
     oauth_nonce:            nonce,
-    oauth_signature_method: 'HMAC-SHA256',
+    oauth_signature_method: 'HMAC-SHA1',
     oauth_timestamp:        timestamp,
     oauth_token:            accessToken,
     oauth_version:          '1.0',
@@ -80,13 +80,12 @@ function oauth1Headers(method: string, url: string, params: Record<string, strin
     encodeURIComponent(sortedParams),
   ].join('&')
 
-  // Sign with HMAC-SHA256
+  // Sign with HMAC-SHA1 (required by Twitter OAuth 1.0a)
   const signingKey = `${encodeURIComponent(consumerSecret)}&${encodeURIComponent(accessSecret)}`
 
-  // Use crypto (available in Node.js)
   const crypto = require('crypto')
   const signature = crypto
-    .createHmac('sha256', signingKey)
+    .createHmac('sha1', signingKey)
     .update(baseString)
     .digest('base64')
 
