@@ -1,0 +1,3 @@
+pbpaste > audit-fixes.patch
+wc -l audit-fixes.patch
+head -3 audit-fixes.patch

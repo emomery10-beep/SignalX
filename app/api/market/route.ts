@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
+import { createClient as createServerClient } from '@/lib/supabase/server'
 
 // ── MARKET INTELLIGENCE API ──────────────────────────────────────────────────
 // Pulls live pricing and trend data from Amazon, AliExpress, eBay, Google Trends

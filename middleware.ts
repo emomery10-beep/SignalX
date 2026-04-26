@@ -26,21 +26,41 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const appRoutes = ['/chat', '/files', '/dashboards', '/alerts', '/forecasts', '/templates', '/admin', '/sources', '/billing', '/onboarding']
-  const isAppRoute = appRoutes.some(r => request.nextUrl.pathname.startsWith(r))
-  if (isAppRoute && !user) {
+  // ── All protected app routes ───────────────────────────────────────────────
+  const protectedRoutes = [
+    '/home',
+    '/ask',
+    '/chat',
+    '/intelligence',
+    '/files',
+    '/dashboards',
+    '/alerts',
+    '/forecasts',
+    '/templates',
+    '/admin',
+    '/sources',
+    '/billing',
+    '/onboarding',
+    '/settings',
+    '/expansion',
+    '/invite',
+  ]
+
+  const isProtected = protectedRoutes.some(r => request.nextUrl.pathname.startsWith(r))
+  if (isProtected && !user) {
     return NextResponse.redirect(new URL('/signin', request.url))
   }
 
+  // ── Redirect signed-in users away from auth pages ─────────────────────────
   const authRoutes = ['/signin', '/signup']
   const isAuthRoute = authRoutes.some(r => request.nextUrl.pathname.startsWith(r))
   if (isAuthRoute && user) {
-    return NextResponse.redirect(new URL('/chat', request.url))
+    return NextResponse.redirect(new URL('/home', request.url))
   }
 
   return response
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/geo).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/geo|api/webhooks).*)'],
 }

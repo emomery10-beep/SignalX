@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' })
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://signal-x-navy.vercel.app'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://askbiz.co'
 
 const STRIPE_PRICES: Record<string, string> = {
   growth:   process.env.STRIPE_PRICE_GROWTH   || '',
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     await supabase.from('upgrade_triggers').insert({
       user_id: user.id, trigger: 'enterprise_enquiry', feature: 'enterprise', plan_needed: 'enterprise',
     })
-    return NextResponse.json({ url: `mailto:hello@signalx.ai?subject=Enterprise enquiry` })
+    return NextResponse.json({ url: `mailto:hello@askbiz.co?subject=Enterprise enquiry` })
   }
 
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 })

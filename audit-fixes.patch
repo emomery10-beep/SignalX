@@ -202,7 +202,7 @@ index 08c7449..6d5c8d7 100644
 +    return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status })
    }
  
-   try {
+  try {
 @@ -95,9 +89,10 @@ export async function GET(request: NextRequest) {
  }
  
@@ -286,7 +286,7 @@ index ec8c265..24a3178 100644
 +  try {
 +    event = stripe.webhooks.constructEvent(body, sig, webhookSecret)
 +  } catch {
-+    return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 400 })
+  return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 400 })
 +  }
  
    const supabase = createServiceClient()
@@ -364,109 +364,4 @@ new file mode 100644
 index 0000000..ed6ac30
 --- /dev/null
 +++ b/lib/auth/admin.ts
-@@ -0,0 +1,29 @@
-+import { createClient, createServiceClient } from '@/lib/supabase/server'
-+import type { User } from '@supabase/supabase-js'
-+
-+export type AdminCheck =
-+  | { ok: true; user: User }
-+  | { ok: false; status: 401 | 403 }
-+
-+/**
-+ * Verify the caller is signed in AND has profiles.is_admin = true.
-+ * Use the service-role client for the role lookup so it bypasses RLS
-+ * (the user's own RLS policy already covers them, but service-role is
-+ * defensive against future policy changes).
-+ */
-+export async function requireAdmin(
-+  supabase: ReturnType<typeof createClient>
-+): Promise<AdminCheck> {
-+  const { data: { user } } = await supabase.auth.getUser()
-+  if (!user) return { ok: false, status: 401 }
-+
-+  const service = createServiceClient()
-+  const { data, error } = await service
-+    .from('profiles')
-+    .select('is_admin')
-+    .eq('id', user.id)
-+    .single()
-+
-+  if (error || !data?.is_admin) return { ok: false, status: 403 }
-+  return { ok: true, user }
-+}
-diff --git a/lib/supabase/server.ts b/lib/supabase/server.ts
-index 4c0811e..485b6cd 100644
---- a/lib/supabase/server.ts
-+++ b/lib/supabase/server.ts
-@@ -1,9 +1,9 @@
--import { createServerClient, type CookieOptions } from '@supabase/ssr'
-+import { createServerClient as createSsrClient, type CookieOptions } from '@supabase/ssr'
- import { cookies } from 'next/headers'
- 
- export function createClient() {
-   const cookieStore = cookies()
--  return createServerClient(
-+  return createSsrClient(
-     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-     {
-@@ -20,6 +20,9 @@ export function createClient() {
-   )
- }
- 
-+// Backwards-compat alias — older routes import { createServerClient }
-+export { createClient as createServerClient }
-+
- /** Service-role client — only for trusted server-side operations */
- export function createServiceClient() {
-   const { createClient } = require('@supabase/supabase-js')
-diff --git a/next.config.js b/next.config.js
-index 62bf157..172c3d9 100644
---- a/next.config.js
-+++ b/next.config.js
-@@ -1,5 +1,10 @@
- /** @type {import('next').NextConfig} */
- const nextConfig = {
-+  // TODO: Remove these once the pre-existing TS / ESLint backlog is cleaned up.
-+  // Removing the flags surfaces ~40 latent type errors across the codebase
-+  // (implicit-any in AppShellClient, missing SpeechRecognition DOM types in
-+  // useVoice, duplicate object keys in signin/robots/geo/bloomberg pages,
-+  // Stripe apiVersion mismatch, etc.). Tracked as a follow-up cleanup pass.
-   typescript: {
-     ignoreBuildErrors: true,
-   },
-diff --git a/app/(app)/layout.tsx b/app/(app)/layout.tsx
-index 2c4ce13..ff6a37b 100644
---- a/app/(app)/layout.tsx
-+++ b/app/(app)/layout.tsx
-diff --git a/supabase/migrations/013_admin_rbac.sql b/supabase/migrations/013_admin_rbac.sql
-new file mode 100644
-index 0000000..c721a4a
---- /dev/null
-+++ b/supabase/migrations/013_admin_rbac.sql
-@@ -0,0 +1,22 @@
-+-- ============================================================
-+-- Admin RBAC — replace hardcoded email checks with a DB flag
-+-- ============================================================
-+
-+alter table public.profiles
-+  add column if not exists is_admin boolean not null default false;
-+
-+create index if not exists idx_profiles_is_admin
-+  on public.profiles(is_admin)
-+  where is_admin = true;
-+
-+-- Seed existing admins from auth.users so access is preserved
-+update public.profiles p
-+set is_admin = true
-+from auth.users u
-+where p.id = u.id
-+  and lower(u.email) in ('emomery10@gmail.com', 'emomery10@googlemail.com');
-+
-+-- Allow users to read their own admin flag (already covered by
-+-- "Users can view own profile" but kept explicit for clarity).
-+-- No policy is added that would let a user *grant* themselves admin —
-+-- only the service role (or a manual SQL update) can flip is_admin.
--- 
-2.43.0
-
+@@ -0,0 +1,
