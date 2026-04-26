@@ -161,13 +161,11 @@ export default function AgentAdminPage() {
               </div>
               <h1 style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-sora)', margin: 0 }}>
                 Growth Agent
-              </div>
+              </h1>
               <button onClick={() => router.push('/admin/x')}
                 style={{ padding: '7px 14px', borderRadius: 9, border: '1px solid #1d9bf0', background: 'rgba(29,155,240,.06)', color: '#1d9bf0', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
                 𝕏 X Agent →
               </button>
-              <div style={{ display: 'none' }}>
-              </h1>
               <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 9999, background: 'rgba(99,102,241,.1)', color: '#6366F1', fontWeight: 600 }}>
                 Admin Only
               </span>
