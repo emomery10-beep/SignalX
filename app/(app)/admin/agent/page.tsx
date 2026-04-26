@@ -161,6 +161,12 @@ export default function AgentAdminPage() {
               </div>
               <h1 style={{ fontSize: 20, fontWeight: 700, fontFamily: 'var(--font-sora)', margin: 0 }}>
                 Growth Agent
+              </div>
+              <button onClick={() => router.push('/admin/x')}
+                style={{ padding: '7px 14px', borderRadius: 9, border: '1px solid #1d9bf0', background: 'rgba(29,155,240,.06)', color: '#1d9bf0', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
+                𝕏 X Agent →
+              </button>
+              <div style={{ display: 'none' }}>
               </h1>
               <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 9999, background: 'rgba(99,102,241,.1)', color: '#6366F1', fontWeight: 600 }}>
                 Admin Only
@@ -257,8 +263,8 @@ export default function AgentAdminPage() {
                   <div
                     onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
                     style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = 'var(--ev)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--ev)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
                     {/* Type badge */}
                     <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: item.type === 'blog' ? 'rgba(99,102,241,.1)' : item.type === 'thread' ? 'rgba(34,197,94,.1)' : 'rgba(245,158,11,.1)', color: item.type === 'blog' ? '#6366F1' : item.type === 'thread' ? '#16a34a' : '#d97706', flexShrink: 0, textTransform: 'uppercase', letterSpacing: '.06em' }}>
