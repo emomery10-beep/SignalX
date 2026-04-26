@@ -1,0 +1,472 @@
+From f5fd569ef29362539ec67b0616099b779631e5c9 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 26 Apr 2026 06:54:54 +0000
+Subject: [PATCH] Fix critical security issues from audit
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- Verify Stripe webhook signatures in /api/webhooks/stripe
+  (constructEvent with STRIPE_WEBHOOK_SECRET, 400 on mismatch)
+- Replace hardcoded admin email gate with profiles.is_admin column
+  + shared requireAdmin helper; existing emails seeded via migration 013
+- Drop dead ADMIN_EMAILS list in /api/agent
+- Add /api/admin/me for client-side admin gate; pass is_admin from
+  server layout into AppShellClient instead of email comparison
+- Fix createServerClient export alias so consumers compile
+- Restore JSX comment in ResultBlock and rename useTeamRole.ts to .tsx
+  (both surfaced after removing build-error suppression)
+
+next.config.js still has ignoreBuildErrors/ignoreDuringBuilds set with
+a TODO — there are ~38 unrelated pre-existing TS errors that need a
+separate cleanup pass before the flags can be removed.
+---
+ app/(app)/admin/agent/page.tsx            | 17 +++++++------
+ app/(app)/admin/page.tsx                  | 22 ++++++++---------
+ app/(app)/layout.tsx                      |  3 ++-
+ app/api/admin/me/route.ts                 | 12 ++++++++++
+ app/api/admin/route.ts                    | 25 ++++++++-----------
+ app/api/agent/approve/route.ts            | 11 ++++-----
+ app/api/agent/route.ts                    |  2 --
+ app/api/webhooks/stripe/route.ts          | 26 ++++++++++++++------
+ components/chat/ResultBlock.tsx           |  2 +-
+ components/layout/AppShellClient.tsx      |  3 +--
+ hooks/{useTeamRole.ts => useTeamRole.tsx} |  0
+ lib/auth/admin.ts                         | 29 +++++++++++++++++++++++
+ lib/supabase/server.ts                    |  7 ++++--
+ next.config.js                            |  5 ++++
+ supabase/migrations/013_admin_rbac.sql    | 22 +++++++++++++++++
+ 15 files changed, 132 insertions(+), 54 deletions(-)
+ create mode 100644 app/api/admin/me/route.ts
+ rename hooks/{useTeamRole.ts => useTeamRole.tsx} (100%)
+ create mode 100644 lib/auth/admin.ts
+ create mode 100644 supabase/migrations/013_admin_rbac.sql
+
+diff --git a/app/(app)/admin/agent/page.tsx b/app/(app)/admin/agent/page.tsx
+index e216363..b2213a0 100644
+--- a/app/(app)/admin/agent/page.tsx
++++ b/app/(app)/admin/agent/page.tsx
+@@ -3,8 +3,6 @@ import { useState, useEffect, useCallback } from 'react'
+ import { createClient } from '@/lib/supabase/client'
+ import { useRouter } from 'next/navigation'
+ 
+-const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
+-
+ interface AgentItem {
+   id: string
+   run_id: string
+@@ -50,13 +48,18 @@ export default function AgentAdminPage() {
+   // ── Auth check ──────────────────────────────────────────────────────────────
+   useEffect(() => {
+     const check = async () => {
+-      const { data: { user } } = await supabase.auth.getUser()
+-      if (!user || !ADMIN_EMAILS.includes(user.email || '')) {
++      try {
++        const res = await fetch('/api/admin/me')
++        const data = await res.json()
++        if (!data.isAdmin) {
++          router.push('/')
++          return
++        }
++        setAuthorized(true)
++        setLoading(false)
++      } catch {
+         router.push('/')
+-        return
+       }
+-      setAuthorized(true)
+-      setLoading(false)
+     }
+     check()
+   }, [])
+diff --git a/app/(app)/admin/page.tsx b/app/(app)/admin/page.tsx
+index b8aada3..2dcebd7 100644
+--- a/app/(app)/admin/page.tsx
++++ b/app/(app)/admin/page.tsx
+@@ -1,10 +1,6 @@
+ 'use client'
+ import { useState, useEffect } from 'react'
+ import { useRouter } from 'next/navigation'
+-import { createClient } from '@/lib/supabase/client'
+-
+-const ADMIN_EMAIL = 'emomery10@gmail.com'
+-const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
+ 
+ interface Stats {
+   totalUsers: number
+@@ -46,7 +42,6 @@ const PLAN_COLORS: Record<string, string> = {
+ 
+ export default function AdminPage() {
+   const router = useRouter()
+-  const supabase = createClient()
+   const [authorized, setAuthorized] = useState(false)
+   const [loading, setLoading] = useState(true)
+   const [stats, setStats] = useState<Stats | null>(null)
+@@ -61,13 +56,18 @@ export default function AdminPage() {
+   }, [])
+ 
+   const checkAuth = async () => {
+-    const { data: { user } } = await supabase.auth.getUser()
+-    if (!user || !ADMIN_EMAILS.includes(user.email || '')) {
++    try {
++      const res = await fetch('/api/admin/me')
++      const data = await res.json()
++      if (!data.isAdmin) {
++        router.push('/chat')
++        return
++      }
++      setAuthorized(true)
++      loadData()
++    } catch {
+       router.push('/chat')
+-      return
+     }
+-    setAuthorized(true)
+-    loadData()
+   }
+ 
+   const loadData = async () => {
+@@ -115,7 +115,7 @@ export default function AdminPage() {
+           <h1 style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, marginBottom: 4 }}>
+             🔐 AskBiz Admin
+           </h1>
+-          <p style={{ fontSize: 13, color: 'var(--tx2)' }}>Restricted — emomery10@gmail.com only</p>
++          <p style={{ fontSize: 13, color: 'var(--tx2)' }}>Restricted — admins only</p>
+         </div>
+         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+           {(['overview','users','candidates','analytics'] as const).map(tab => (
+diff --git a/app/(app)/layout.tsx b/app/(app)/layout.tsx
+index 2c4ce13..ff6a37b 100644
+--- a/app/(app)/layout.tsx
++++ b/app/(app)/layout.tsx
+@@ -9,7 +9,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
+ 
+   const { data: profile } = await supabase
+     .from('profiles')
+-    .select('full_name, business_type, currency, currency_symbol, plan, region, sector_hints, onboarding_complete')
++    .select('full_name, business_type, currency, currency_symbol, plan, region, sector_hints, onboarding_complete, is_admin')
+     .eq('id', user.id)
+     .single()
+ 
+@@ -37,6 +37,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
+         sectorHints: profile?.sector_hints || '',
+       }}
+       conversations={conversations || []}
++      isAdmin={profile?.is_admin === true}
+     >
+       {children}
+     </AppShellClient>
+diff --git a/app/api/admin/me/route.ts b/app/api/admin/me/route.ts
+new file mode 100644
+index 0000000..4c18a9d
+--- /dev/null
++++ b/app/api/admin/me/route.ts
+@@ -0,0 +1,12 @@
++import { NextResponse } from 'next/server'
++import { createClient } from '@/lib/supabase/server'
++import { requireAdmin } from '@/lib/auth/admin'
++
++export async function GET() {
++  const supabase = createClient()
++  const auth = await requireAdmin(supabase)
++  if (!auth.ok) {
++    return NextResponse.json({ isAdmin: false }, { status: auth.status })
++  }
++  return NextResponse.json({ isAdmin: true })
++}
+diff --git a/app/api/admin/route.ts b/app/api/admin/route.ts
+index 08c7449..6d5c8d7 100644
+--- a/app/api/admin/route.ts
++++ b/app/api/admin/route.ts
+@@ -1,18 +1,12 @@
+ import { NextRequest, NextResponse } from 'next/server'
+-import { createServerClient } from '@/lib/supabase/server'
+-
+-const ADMIN_EMAIL = 'emomery10@gmail.com'
+-
+-async function verifyAdmin(supabase: ReturnType<typeof createServerClient>) {
+-  const { data: { user } } = await supabase.auth.getUser()
+-  if (!user || user.email !== ADMIN_EMAIL) return false
+-  return true
+-}
++import { createClient } from '@/lib/supabase/server'
++import { requireAdmin } from '@/lib/auth/admin'
+ 
+ export async function GET(request: NextRequest) {
+-  const supabase = createServerClient()
+-  if (!(await verifyAdmin(supabase))) {
+-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
++  const supabase = createClient()
++  const auth = await requireAdmin(supabase)
++  if (!auth.ok) {
++    return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status })
+   }
+ 
+   try {
+@@ -95,9 +89,10 @@ export async function GET(request: NextRequest) {
+ }
+ 
+ export async function POST(request: NextRequest) {
+-  const supabase = createServerClient()
+-  if (!(await verifyAdmin(supabase))) {
+-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
++  const supabase = createClient()
++  const auth = await requireAdmin(supabase)
++  if (!auth.ok) {
++    return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status })
+   }
+ 
+   const { action, userId, planId } = await request.json()
+diff --git a/app/api/agent/approve/route.ts b/app/api/agent/approve/route.ts
+index 92dd162..de69e56 100644
+--- a/app/api/agent/approve/route.ts
++++ b/app/api/agent/approve/route.ts
+@@ -1,19 +1,18 @@
+ import { NextRequest, NextResponse } from 'next/server'
+ import { createClient } from '@/lib/supabase/server'
++import { requireAdmin } from '@/lib/auth/admin'
+ import { readFileSync, writeFileSync } from 'fs'
+ import { join } from 'path'
+ 
+ export const runtime = 'nodejs'
+ 
+-const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
+-
+ export async function POST(request: NextRequest) {
+   const supabase = createClient()
+-  const { data: { user } } = await supabase.auth.getUser()
+-
+-  if (!user || !ADMIN_EMAILS.includes(user.email || '')) {
+-    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
++  const auth = await requireAdmin(supabase)
++  if (!auth.ok) {
++    return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status })
+   }
++  const user = auth.user
+ 
+   const { id, action } = await request.json()
+   if (!id || !action) {
+diff --git a/app/api/agent/route.ts b/app/api/agent/route.ts
+index daed3c4..cc07eee 100644
+--- a/app/api/agent/route.ts
++++ b/app/api/agent/route.ts
+@@ -5,8 +5,6 @@ import Anthropic from '@anthropic-ai/sdk'
+ export const runtime = 'nodejs'
+ export const maxDuration = 300
+ 
+-const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
+-
+ const SCOUT_QUERIES = [
+   'SME retail ecommerce trends UK EU 2026',
+   'global shipping customs tax changes ecommerce 2026',
+diff --git a/app/api/webhooks/stripe/route.ts b/app/api/webhooks/stripe/route.ts
+index ec8c265..24a3178 100644
+--- a/app/api/webhooks/stripe/route.ts
++++ b/app/api/webhooks/stripe/route.ts
+@@ -1,30 +1,42 @@
+ import { NextRequest, NextResponse } from 'next/server'
+ import { createServiceClient } from '@/lib/supabase/server'
+ import { normaliseStripe } from '@/lib/sync/normaliser'
++import Stripe from 'stripe'
++
++const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' })
+ 
+ export async function POST(request: NextRequest) {
+   const body = await request.text()
+   const sig = request.headers.get('stripe-signature')
++  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
++
++  if (!sig || !webhookSecret) {
++    return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
++  }
+ 
+-  // In production: verify with Stripe webhook secret
+-  // const event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET)
++  let event: Stripe.Event
++  try {
++    event = stripe.webhooks.constructEvent(body, sig, webhookSecret)
++  } catch {
++    return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 400 })
++  }
+ 
+   const supabase = createServiceClient()
+-  const payload = JSON.parse(body)
++  const payload = event as unknown as { type: string; data: { object: Record<string, unknown> } }
+ 
+   await supabase.from('webhook_events').insert({
+     source_type: 'stripe',
+-    event_type: payload.type || 'unknown',
++    event_type: event.type,
+     payload,
+   })
+ 
+   // Only process payment events
+   const paymentEvents = ['payment_intent.succeeded', 'charge.succeeded', 'checkout.session.completed']
+-  if (!paymentEvents.includes(payload.type)) {
++  if (!paymentEvents.includes(event.type)) {
+     return NextResponse.json({ received: true })
+   }
+ 
+-  const paymentData = payload.data?.object
++  const paymentData = event.data?.object
+   if (!paymentData) return NextResponse.json({ received: true })
+ 
+   // Find user's Stripe source by matching account
+@@ -36,7 +48,7 @@ export async function POST(request: NextRequest) {
+ 
+   if (!source) return NextResponse.json({ received: true })
+ 
+-  const record = normaliseStripe(paymentData)
++  const record = normaliseStripe(paymentData as unknown as Record<string, unknown>)
+   await supabase.from('unified_data').upsert(
+     [{ ...record, user_id: source.user_id, source_id: source.id, updated_at: new Date().toISOString() }],
+     { onConflict: 'user_id,source_type,source_record_id', ignoreDuplicates: false }
+diff --git a/components/chat/ResultBlock.tsx b/components/chat/ResultBlock.tsx
+index 5bd7c17..1b6e5ef 100644
+--- a/components/chat/ResultBlock.tsx
++++ b/components/chat/ResultBlock.tsx
+@@ -287,7 +287,7 @@ export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode
+         />
+       </div>
+ 
+-      {/* 8. Follow-up suggestions */}}
++      {/* 8. Follow-up suggestions */}
+       {hasFollowUps && (
+         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+           {result.follow_up_suggestions!.slice(0, 2).map((s, i) => (
+diff --git a/components/layout/AppShellClient.tsx b/components/layout/AppShellClient.tsx
+index 74eb7b1..b44db52 100644
+--- a/components/layout/AppShellClient.tsx
++++ b/components/layout/AppShellClient.tsx
+@@ -97,7 +97,7 @@ function ProfilePanel({ user, onClose, onSignOut }) {
+   )
+ }
+ 
+-export default function AppShellClient({ user, conversations, children }) {
++export default function AppShellClient({ user, conversations, isAdmin = false, children }) {
+   const pathname = usePathname()
+   const router = useRouter()
+   const supabase = createClient()
+@@ -109,7 +109,6 @@ export default function AppShellClient({ user, conversations, children }) {
+   const [search, setSearch] = useState('')
+   const [convOpen, setConvOpen] = useState(true)
+ 
+-  const isAdmin = user?.email === 'emomery10@gmail.com' || user?.email === 'emomery10@googlemail.com'
+   const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+ 
+   useEffect(() => {
+diff --git a/hooks/useTeamRole.ts b/hooks/useTeamRole.tsx
+similarity index 100%
+rename from hooks/useTeamRole.ts
+rename to hooks/useTeamRole.tsx
+diff --git a/lib/auth/admin.ts b/lib/auth/admin.ts
+new file mode 100644
+index 0000000..ed6ac30
+--- /dev/null
++++ b/lib/auth/admin.ts
+@@ -0,0 +1,29 @@
++import { createClient, createServiceClient } from '@/lib/supabase/server'
++import type { User } from '@supabase/supabase-js'
++
++export type AdminCheck =
++  | { ok: true; user: User }
++  | { ok: false; status: 401 | 403 }
++
++/**
++ * Verify the caller is signed in AND has profiles.is_admin = true.
++ * Use the service-role client for the role lookup so it bypasses RLS
++ * (the user's own RLS policy already covers them, but service-role is
++ * defensive against future policy changes).
++ */
++export async function requireAdmin(
++  supabase: ReturnType<typeof createClient>
++): Promise<AdminCheck> {
++  const { data: { user } } = await supabase.auth.getUser()
++  if (!user) return { ok: false, status: 401 }
++
++  const service = createServiceClient()
++  const { data, error } = await service
++    .from('profiles')
++    .select('is_admin')
++    .eq('id', user.id)
++    .single()
++
++  if (error || !data?.is_admin) return { ok: false, status: 403 }
++  return { ok: true, user }
++}
+diff --git a/lib/supabase/server.ts b/lib/supabase/server.ts
+index 4c0811e..485b6cd 100644
+--- a/lib/supabase/server.ts
++++ b/lib/supabase/server.ts
+@@ -1,9 +1,9 @@
+-import { createServerClient, type CookieOptions } from '@supabase/ssr'
++import { createServerClient as createSsrClient, type CookieOptions } from '@supabase/ssr'
+ import { cookies } from 'next/headers'
+ 
+ export function createClient() {
+   const cookieStore = cookies()
+-  return createServerClient(
++  return createSsrClient(
+     process.env.NEXT_PUBLIC_SUPABASE_URL!,
+     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+     {
+@@ -20,6 +20,9 @@ export function createClient() {
+   )
+ }
+ 
++// Backwards-compat alias — older routes import { createServerClient }
++export { createClient as createServerClient }
++
+ /** Service-role client — only for trusted server-side operations */
+ export function createServiceClient() {
+   const { createClient } = require('@supabase/supabase-js')
+diff --git a/next.config.js b/next.config.js
+index 62bf157..172c3d9 100644
+--- a/next.config.js
++++ b/next.config.js
+@@ -1,5 +1,10 @@
+ /** @type {import('next').NextConfig} */
+ const nextConfig = {
++  // TODO: Remove these once the pre-existing TS / ESLint backlog is cleaned up.
++  // Removing the flags surfaces ~40 latent type errors across the codebase
++  // (implicit-any in AppShellClient, missing SpeechRecognition DOM types in
++  // useVoice, duplicate object keys in signin/robots/geo/bloomberg pages,
++  // Stripe apiVersion mismatch, etc.). Tracked as a follow-up cleanup pass.
+   typescript: {
+     ignoreBuildErrors: true,
+   },
+diff --git a/app/(app)/layout.tsx b/app/(app)/layout.tsx
+index 2c4ce13..ff6a37b 100644
+--- a/app/(app)/layout.tsx
++++ b/app/(app)/layout.tsx
+diff --git a/supabase/migrations/013_admin_rbac.sql b/supabase/migrations/013_admin_rbac.sql
+new file mode 100644
+index 0000000..c721a4a
+--- /dev/null
++++ b/supabase/migrations/013_admin_rbac.sql
+@@ -0,0 +1,22 @@
++-- ============================================================
++-- Admin RBAC — replace hardcoded email checks with a DB flag
++-- ============================================================
++
++alter table public.profiles
++  add column if not exists is_admin boolean not null default false;
++
++create index if not exists idx_profiles_is_admin
++  on public.profiles(is_admin)
++  where is_admin = true;
++
++-- Seed existing admins from auth.users so access is preserved
++update public.profiles p
++set is_admin = true
++from auth.users u
++where p.id = u.id
++  and lower(u.email) in ('emomery10@gmail.com', 'emomery10@googlemail.com');
++
++-- Allow users to read their own admin flag (already covered by
++-- "Users can view own profile" but kept explicit for clarity).
++-- No policy is added that would let a user *grant* themselves admin —
++-- only the service role (or a manual SQL update) can flip is_admin.
+-- 
+2.43.0
+
