@@ -1,4 +1,3 @@
-// app/api/auth/x/callback/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -13,53 +12,56 @@ export async function GET(request: NextRequest) {
   }
 
   if (!code) {
-    return NextResponse.json({ error: 'No code returned' }, { status: 400 })
+    return NextResponse.redirect(new URL('/admin/x?error=no_code', request.url))
   }
 
-  // Exchange code for token
   const clientId     = process.env.X_CLIENT_ID!
   const clientSecret = process.env.X_CLIENT_SECRET!
-  const redirectUri  = process.env.NEXT_PUBLIC_APP_URL + '/api/auth/x/callback'
-  const codeVerifier = 'challenge' // matches code_challenge in the auth URL
 
-  const params = new URLSearchParams({
-    code,
-    grant_type:    'authorization_code',
-    redirect_uri:  redirectUri,
-    code_verifier: codeVerifier,
-  })
+  try {
+    const res = await fetch('https://api.twitter.com/2/oauth2/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: 'Basic ' + Buffer.from(clientId + ':' + clientSecret).toString('base64'),
+      },
+      body: new URLSearchParams({
+        grant_type:    'authorization_code',
+        code,
+        redirect_uri:  'https://askbiz.co/api/auth/x/callback',
+        code_verifier: 'challenge123',
+      }),
+    })
 
-  const tokenRes = await fetch('https://api.twitter.com/2/oauth2/token', {
-    method: 'POST',
-    headers: {
-      'Content-Type':  'application/x-www-form-urlencoded',
-      Authorization:   'Basic ' + Buffer.from(clientId + ':' + clientSecret).toString('base64'),
-    },
-    body: params.toString(),
-  })
+    const data = await res.json()
 
-  const tokenData = await tokenRes.json()
+    if (!res.ok || !data.access_token) {
+      return NextResponse.redirect(
+        new URL('/admin/x?error=' + encodeURIComponent(JSON.stringify(data)), request.url)
+      )
+    }
 
-  if (!tokenRes.ok) {
+    // Show the tokens so you can copy them into Vercel
+    return new NextResponse(`
+      <html><body style="font-family:monospace;padding:24px;background:#f5f5f5">
+        <h2 style="color:green">✅ X Connected Successfully!</h2>
+        <p>Copy these values into Vercel Environment Variables:</p>
+        <hr/>
+        <p><strong>X_ACCESS_TOKEN_V2</strong> (add this to Vercel):</p>
+        <textarea rows="4" style="width:100%;padding:8px;font-size:12px">${data.access_token}</textarea>
+        <p><strong>X_REFRESH_TOKEN_V2</strong> (add this to Vercel):</p>
+        <textarea rows="4" style="width:100%;padding:8px;font-size:12px">${data.refresh_token || 'not provided'}</textarea>
+        <p><strong>Scope:</strong> ${data.scope}</p>
+        <p><strong>Expires in:</strong> ${data.expires_in} seconds</p>
+        <hr/>
+        <p>After adding to Vercel, redeploy and the X agent will work.</p>
+      </body></html>
+    `, {
+      headers: { 'Content-Type': 'text/html' },
+    })
+  } catch (err) {
     return NextResponse.redirect(
-      new URL('/admin/x?error=' + encodeURIComponent(JSON.stringify(tokenData)), request.url)
+      new URL('/admin/x?error=' + encodeURIComponent(String(err)), request.url)
     )
   }
-
-  // Return the token to the user so they can add it to Vercel
-  const html = `<!DOCTYPE html>
-<html>
-<head><title>X Connected</title></head>
-<body style="font-family:system-ui;padding:40px;max-width:600px;margin:0 auto">
-  <h1 style="color:#16a34a">X Connected!</h1>
-  <p>Add this to Vercel Environment Variables as <strong>X_ACCESS_TOKEN_V2</strong>:</p>
-  <div style="background:#f1f5f9;padding:16px;border-radius:8px;word-break:break-all;font-family:monospace;font-size:13px;margin:16px 0">
-    ${tokenData.access_token}
-  </div>
-  <p style="color:#666">Then redeploy Vercel and go back to <a href="/admin/x">/admin/x</a></p>
-  ${tokenData.refresh_token ? '<p>Refresh token (save this too as <strong>X_REFRESH_TOKEN</strong>): <br><code style="font-size:11px">' + tokenData.refresh_token + '</code></p>' : ''}
-</body>
-</html>`
-
-  return new NextResponse(html, { headers: { 'Content-Type': 'text/html' } })
 }
