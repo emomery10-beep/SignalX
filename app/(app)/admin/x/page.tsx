@@ -21,7 +21,6 @@ export default function XAgentPage() {
   const [xConnected, setXConnected]     = useState(null)
   const [xUsername, setXUsername]       = useState('')
   const [xError, setXError]             = useState('')
-  const [xError, setXError]             = useState('')
   const [tab, setTab]                   = useState('search')
   const [selectedPreset, setSelectedPreset] = useState('sme_pain')
   const [customQuery, setCustomQuery]   = useState('')
