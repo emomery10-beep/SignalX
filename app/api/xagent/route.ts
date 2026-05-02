@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     const tweets = await searchTweetsViaTavily(query, maxResults)
     if (!tweets.length) return NextResponse.json({ tweets: [], generated: 0 })
     const pairs = await Promise.all(tweets.slice(0, 10).map(async tweet => {
-      const res = await anthropic.messages.create({ model:'claude-sonnet-4-20250514', max_tokens:300, messages:[{ role:'user', content:'Write a genuine helpful reply to this tweet from @'+tweet.author+'.\n\nTweet: "'+tweet.text+'"\n\nRules: Max 255 chars, sound like a real person, add value, mention askbiz.co only if very relevant, max 1 hashtag. Return ONLY the reply text.' }] })
+      const res = await anthropic.messages.create({ model:'claude-sonnet-4-5-20251001', max_tokens:300, messages:[{ role:'user', content:'Write a genuine helpful reply to this tweet from @'+tweet.author+'.\n\nTweet: "'+tweet.text+'"\n\nRules: Max 255 chars, sound like a real person, add value, mention askbiz.co only if very relevant, max 1 hashtag. Return ONLY the reply text.' }] })
       const reply = res.content[0].type === 'text' ? res.content[0].text.trim() : ''
       return { tweet, reply: reply.length > 255 ? reply.slice(0, 252)+'...' : reply }
     }))
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (action === 'regenerate') {
-    const res = await anthropic.messages.create({ model:'claude-sonnet-4-20250514', max_tokens:300, messages:[{ role:'user', content:'Write a genuine helpful reply to this tweet from @'+(body.tweetAuthor||'founder')+'.\n\nTweet: "'+body.tweetText+'"\n\nRules: Max 255 chars, sound like a real person, add value, mention askbiz.co only if very relevant. Return ONLY the reply text.' }] })
+    const res = await anthropic.messages.create({ model:'claude-sonnet-4-5-20251001', max_tokens:300, messages:[{ role:'user', content:'Write a genuine helpful reply to this tweet from @'+(body.tweetAuthor||'founder')+'.\n\nTweet: "'+body.tweetText+'"\n\nRules: Max 255 chars, sound like a real person, add value, mention askbiz.co only if very relevant. Return ONLY the reply text.' }] })
     const reply = res.content[0].type === 'text' ? res.content[0].text.trim() : ''
     return NextResponse.json({ reply: reply.length > 255 ? reply.slice(0,252)+'...' : reply })
   }

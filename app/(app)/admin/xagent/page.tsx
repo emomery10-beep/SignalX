@@ -26,15 +26,16 @@ export default function XAgentPage() {
   const [useCustom, setUseCustom]    = useState(false)
   const [maxResults, setMaxResults]  = useState(10)
   const [searching, setSearching]    = useState(false)
-  const [results, setResults]        = useState([])
-  const [queue, setQueue]            = useState([])
-  const [history, setHistory]        = useState([])
-  const [editId, setEditId]          = useState(null)
+  const [results, setResults]        = useState<any[]>([])
+  const [queue, setQueue]            = useState<any[]>([])
+  const [history, setHistory]        = useState<any[]>([])
+  const [editId, setEditId]          = useState<string|null>(null)
   const [editText, setEditText]      = useState('')
-  const [posting, setPosting]        = useState(null)
-  const [toast, setToast]            = useState(null)
+  const [posting, setPosting]        = useState<string|null>(null)
+  const [postedIds, setPostedIds]    = useState<Record<string, string>>({}) // tweetId -> postedReplyId
+  const [toast, setToast]            = useState<{msg:string,ok:boolean}|null>(null)
 
-  const showToast = (msg, ok=true) => { setToast({msg,ok}); setTimeout(()=>setToast(null),3500) }
+  const showToast = (msg: string, ok=true) => { setToast({msg,ok}); setTimeout(()=>setToast(null),3500) }
 
   useEffect(() => {
     const init = async () => {
@@ -54,11 +55,14 @@ export default function XAgentPage() {
     const res = await fetch('/api/xagent')
     const d = await res.json()
     const all = d.recent || []
-    setQueue(all.filter(i => i.status==='pending'))
-    setHistory(all.filter(i => i.status!=='pending'))
+    setQueue(all.filter((i:any) => i.status==='pending'))
+    setHistory(all.filter((i:any) => i.status!=='pending'))
   }
 
-  useEffect(() => { if (authorized) loadQueue() }, [authorized, tab])
+  // Only load queue when on queue/history tab — prevents duplicate badge after search
+  useEffect(() => {
+    if (authorized && (tab === 'queue' || tab === 'history')) loadQueue()
+  }, [authorized, tab])
 
   const handleSearch = async () => {
     setSearching(true); setResults([])
@@ -67,46 +71,128 @@ export default function XAgentPage() {
       const res = await fetch('/api/xagent', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
       const d = await res.json()
       if (!res.ok) throw new Error(d.error||'Search failed')
-      setResults(d.tweets||[])
-      showToast('Found '+(d.tweets?.length||0)+' tweets')
-      loadQueue()
-    } catch(e) { showToast(e.message, false) }
+      const tweets = d.tweets || []
+      if (!tweets.length) {
+        showToast('No tweets found — try a different query', false)
+        return
+      }
+      // Filter out any results with empty AI reply and warn
+      const valid = tweets.filter((t:any) => t.reply && t.reply.trim().length > 0)
+      const empty = tweets.length - valid.length
+      setResults(valid)
+      showToast(`Found ${valid.length} tweet${valid.length!==1?'s':''}${empty>0?' ('+empty+' skipped — empty reply)':''}`)
+    } catch(e:any) { showToast(e.message, false) }
     finally { setSearching(false) }
   }
 
-  const handlePost = async (item, isResult=false) => {
-    const reply = editId===(isResult?item.tweet?.id:item.id) ? editText : (isResult?item.reply:item.generated_reply)
-    const tweetId = isResult?item.tweet?.id:item.tweet_id
-    const activityId = isResult?null:item.id
-    setPosting(isResult?item.tweet?.id:item.id)
+  const handlePost = async (item: any, isResult=false) => {
+    const tweetId = isResult ? item.tweet?.id : item.tweet_id
+    const reply = editId === tweetId ? editText : (isResult ? item.reply : item.generated_reply)
+    const activityId = isResult ? null : item.id
+    setPosting(tweetId)
     try {
       const res = await fetch('/api/xagent', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'post_reply', activityId, tweetId, replyText:reply }) })
       const d = await res.json()
       if (!res.ok) throw new Error(d.error||'Post failed')
-      showToast('Reply posted to X!')
-      setEditId(null); loadQueue()
-    } catch(e) { showToast(e.message, false) }
+      showToast('Reply posted to X! 🎉')
+      setEditId(null)
+      // Track posted reply ID so we can show "View Post" link
+      if (d.postedId) setPostedIds(prev => ({...prev, [tweetId]: d.postedId}))
+      // Remove from results if posted from search tab
+      if (isResult) setResults(prev => prev.filter((r:any) => r.tweet?.id !== tweetId))
+      else loadQueue()
+    } catch(e:any) { showToast(e.message, false) }
     finally { setPosting(null) }
   }
 
-  const handleReject = async (id) => {
+  const handleReject = async (id: string) => {
     await fetch('/api/xagent', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'reject',activityId:id}) })
-    showToast('Rejected'); loadQueue()
+    showToast('Rejected')
+    loadQueue()
   }
 
-  const handleRegen = async (item, isResult=false) => {
-    setPosting('regen-'+(isResult?item.tweet?.id:item.id))
+  const handleRegen = async (item: any, isResult=false) => {
+    const tweetId = isResult ? item.tweet?.id : item.id
+    setPosting('regen-'+tweetId)
     try {
       const res = await fetch('/api/xagent', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'regenerate',tweetText:isResult?item.tweet?.text:item.tweet_text,tweetAuthor:isResult?item.tweet?.author:item.tweet_author}) })
       const d = await res.json()
-      setEditText(d.reply); setEditId(isResult?item.tweet?.id:item.id)
-    } catch(e) { showToast(e.message, false) }
+      if (!d.reply || !d.reply.trim()) { showToast('Regeneration returned empty reply', false); return }
+      setEditText(d.reply)
+      setEditId(tweetId)
+    } catch(e:any) { showToast(e.message, false) }
     finally { setPosting(null) }
   }
 
   if (!authorized) return null
 
-  const s = { card:{ padding:16, borderRadius:14, border:'1px solid var(--b)', background:'var(--sf)', marginBottom:12 } }
+  const s = { card:{ padding:16, borderRadius:14, border:'1px solid var(--b)', background:'var(--sf)', marginBottom:12 } as React.CSSProperties }
+
+  const ActionButtons = ({ item, isResult }: { item: any, isResult: boolean }) => {
+    const tweetId = isResult ? item.tweet?.id : item.tweet_id
+    const reply = isResult ? item.reply : item.generated_reply
+    const isPosting = posting === tweetId
+    const postedReplyId = postedIds[tweetId]
+
+    return (
+      <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
+        {postedReplyId ? (
+          // Already posted from this session — show View Post instead of Post button
+          <a href={'https://x.com/i/web/status/'+postedReplyId} target="_blank" rel="noopener noreferrer"
+            style={{padding:'7px 16px',borderRadius:9999,border:'none',background:'#16a34a',color:'#fff',fontSize:12,fontWeight:600,textDecoration:'none',display:'inline-block'}}>
+            ✓ View Post
+          </a>
+        ) : (
+          <button onClick={()=>handlePost(item,isResult)} disabled={isPosting}
+            style={{padding:'7px 16px',borderRadius:9999,border:'none',background:isPosting?'var(--b)':'#1d9bf0',color:isPosting?'var(--tx3)':'#fff',fontSize:12,fontWeight:600,cursor:isPosting?'not-allowed':'pointer',fontFamily:'inherit'}}>
+            {isPosting?'Posting...':'Post Reply'}
+          </button>
+        )}
+        <button onClick={()=>{setEditId(tweetId);setEditText(reply)}}
+          style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>
+          Edit
+        </button>
+        <button onClick={()=>handleRegen(item,isResult)} disabled={posting==='regen-'+tweetId}
+          style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>
+          {posting==='regen-'+tweetId ? 'Regenerating...' : 'Regenerate'}
+        </button>
+        {!isResult && (
+          <button onClick={()=>handleReject(item.id)}
+            style={{padding:'7px 14px',borderRadius:9999,border:'1px solid rgba(239,68,68,.3)',background:'transparent',color:'#dc2626',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>
+            Reject
+          </button>
+        )}
+        <a href={'https://x.com/i/web/status/'+tweetId} target="_blank" rel="noopener noreferrer"
+          style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:12,textDecoration:'none'}}>
+          View Tweet
+        </a>
+      </div>
+    )
+  }
+
+  const ReplyBlock = ({ item, isResult }: { item: any, isResult: boolean }) => {
+    const tweetId = isResult ? item.tweet?.id : item.tweet_id
+    const reply = isResult ? item.reply : item.generated_reply
+    const isEditing = editId === tweetId
+    const displayText = isEditing ? editText : reply
+
+    return (
+      <div style={{padding:'10px 12px',borderRadius:10,background:'rgba(99,102,241,.05)',border:'1px solid rgba(99,102,241,.15)',marginBottom:10}}>
+        <div style={{fontSize:10,fontWeight:700,color:'#6366F1',marginBottom:4}}>AI REPLY</div>
+        {!displayText || displayText.trim() === '' ? (
+          <p style={{fontSize:12,margin:0,color:'var(--tx3)',fontStyle:'italic'}}>
+            No reply generated — click Regenerate
+          </p>
+        ) : isEditing ? (
+          <textarea value={editText} onChange={e=>setEditText(e.target.value)} rows={2}
+            style={{width:'100%',padding:8,borderRadius:8,border:'1px solid var(--b)',background:'var(--bg)',fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/>
+        ) : (
+          <p style={{fontSize:13,margin:0,lineHeight:1.6,color:'var(--tx)'}}>{displayText}</p>
+        )}
+        <div style={{fontSize:10,color:'var(--tx3)',marginTop:4}}>{displayText?.length||0}/255</div>
+      </div>
+    )
+  }
 
   return (
     <div style={{minHeight:'100vh',background:'var(--bg)',padding:'clamp(16px,3vw,28px)'}}>
@@ -177,58 +263,49 @@ export default function XAgentPage() {
                   <span style={{fontSize:12,fontWeight:600,color:'var(--tx2)'}}>@{item.tweet?.author}</span>
                   <p style={{fontSize:13,color:'var(--tx)',margin:'6px 0 0',lineHeight:1.6}}>{item.tweet?.text}</p>
                 </div>
-                <div style={{padding:'10px 12px',borderRadius:10,background:'rgba(99,102,241,.05)',border:'1px solid rgba(99,102,241,.15)',marginBottom:10}}>
-                  <div style={{fontSize:10,fontWeight:700,color:'#6366F1',marginBottom:4}}>AI REPLY</div>
-                  {editId===item.tweet?.id?<textarea value={editText} onChange={e=>setEditText(e.target.value)} rows={2} style={{width:'100%',padding:8,borderRadius:8,border:'1px solid var(--b)',background:'var(--bg)',fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/>:<p style={{fontSize:13,margin:0,lineHeight:1.6,color:'var(--tx)'}}>{item.reply}</p>}
-                  <div style={{fontSize:10,color:'var(--tx3)',marginTop:4}}>{(editId===item.tweet?.id?editText:item.reply)?.length||0}/255</div>
-                </div>
-                <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                  <button onClick={()=>handlePost(item,true)} disabled={posting===item.tweet?.id} style={{padding:'7px 16px',borderRadius:9999,border:'none',background:'#1d9bf0',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{posting===item.tweet?.id?'Posting...':'Post Reply'}</button>
-                  <button onClick={()=>{setEditId(item.tweet?.id);setEditText(item.reply)}} style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>Edit</button>
-                  <button onClick={()=>handleRegen(item,true)} style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>Regenerate</button>
-                  <a href={'https://x.com/i/web/status/'+item.tweet?.id} target="_blank" rel="noopener noreferrer" style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:12,textDecoration:'none'}}>View</a>
-                </div>
+                <ReplyBlock item={item} isResult={true} />
+                <ActionButtons item={item} isResult={true} />
               </div>
             ))}
           </div>
         )}
 
         {tab==='queue'&&(
-          queue.length===0?<div style={{textAlign:'center',padding:'40px 0',color:'var(--tx3)'}}>No pending replies. Run a search first.</div>:
-          queue.map(item=>(
-            <div key={item.id} style={s.card}>
-              <div style={{marginBottom:10}}>
-                <span style={{fontSize:12,fontWeight:600,color:'var(--tx2)'}}>@{item.tweet_author}</span>
-                <p style={{fontSize:13,color:'var(--tx)',margin:'6px 0 0',lineHeight:1.6}}>{item.tweet_text}</p>
+          queue.length===0
+            ? <div style={{textAlign:'center',padding:'40px 0',color:'var(--tx3)'}}>No pending replies. Run a search first.</div>
+            : queue.map(item=>(
+              <div key={item.id} style={s.card}>
+                <div style={{marginBottom:10}}>
+                  <span style={{fontSize:12,fontWeight:600,color:'var(--tx2)'}}>@{item.tweet_author}</span>
+                  <p style={{fontSize:13,color:'var(--tx)',margin:'6px 0 0',lineHeight:1.6}}>{item.tweet_text}</p>
+                </div>
+                <ReplyBlock item={item} isResult={false} />
+                <ActionButtons item={item} isResult={false} />
               </div>
-              <div style={{padding:'10px 12px',borderRadius:10,background:'rgba(99,102,241,.05)',border:'1px solid rgba(99,102,241,.15)',marginBottom:10}}>
-                <div style={{fontSize:10,fontWeight:700,color:'#6366F1',marginBottom:4}}>AI REPLY</div>
-                {editId===item.id?<textarea value={editText} onChange={e=>setEditText(e.target.value)} rows={2} style={{width:'100%',padding:8,borderRadius:8,border:'1px solid var(--b)',background:'var(--bg)',fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/>:<p style={{fontSize:13,margin:0,lineHeight:1.6,color:'var(--tx)'}}>{item.generated_reply}</p>}
-                <div style={{fontSize:10,color:'var(--tx3)',marginTop:4}}>{(editId===item.id?editText:item.generated_reply)?.length||0}/255</div>
-              </div>
-              <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                <button onClick={()=>handlePost(item)} disabled={posting===item.id} style={{padding:'7px 16px',borderRadius:9999,border:'none',background:'#1d9bf0',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{posting===item.id?'Posting...':'Post Reply'}</button>
-                <button onClick={()=>{setEditId(item.id);setEditText(item.generated_reply)}} style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>Edit</button>
-                <button onClick={()=>handleRegen(item)} style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>Regenerate</button>
-                <button onClick={()=>handleReject(item.id)} style={{padding:'7px 14px',borderRadius:9999,border:'1px solid rgba(239,68,68,.3)',background:'transparent',color:'#dc2626',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
-                <a href={'https://x.com/i/web/status/'+item.tweet_id} target="_blank" rel="noopener noreferrer" style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:12,textDecoration:'none'}}>View</a>
-              </div>
-            </div>
-          ))
+            ))
         )}
 
         {tab==='history'&&(
-          history.length===0?<div style={{textAlign:'center',padding:'40px 0',color:'var(--tx3)'}}>No history yet.</div>:
-          history.map(item=>(
-            <div key={item.id} style={{...s.card,opacity:0.8}}>
-              <div style={{display:'flex',gap:8,marginBottom:8}}>
-                <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:9999,background:item.status==='posted'?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)',color:item.status==='posted'?'#16a34a':'#dc2626'}}>{item.status==='posted'?'Posted':'Rejected'}</span>
-                <span style={{fontSize:11,color:'var(--tx3)'}}>@{item.tweet_author} · {new Date(item.created_at).toLocaleDateString()}</span>
+          history.length===0
+            ? <div style={{textAlign:'center',padding:'40px 0',color:'var(--tx3)'}}>No history yet.</div>
+            : history.map(item=>(
+              <div key={item.id} style={{...s.card,opacity:0.8}}>
+                <div style={{display:'flex',gap:8,marginBottom:8,alignItems:'center',flexWrap:'wrap'}}>
+                  <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:9999,background:item.status==='posted'?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)',color:item.status==='posted'?'#16a34a':'#dc2626'}}>
+                    {item.status==='posted'?'Posted':'Rejected'}
+                  </span>
+                  <span style={{fontSize:11,color:'var(--tx3)'}}>@{item.tweet_author} · {new Date(item.created_at).toLocaleDateString()}</span>
+                  {item.status==='posted' && item.posted_reply_id && (
+                    <a href={'https://x.com/i/web/status/'+item.posted_reply_id} target="_blank" rel="noopener noreferrer"
+                      style={{fontSize:11,color:'#1d9bf0',textDecoration:'none',marginLeft:'auto'}}>
+                      View Post →
+                    </a>
+                  )}
+                </div>
+                <p style={{fontSize:12,color:'var(--tx2)',margin:'0 0 6px',lineHeight:1.5}}>{item.tweet_text}</p>
+                <p style={{fontSize:12,color:'#6366F1',margin:0,lineHeight:1.5,borderLeft:'2px solid #6366F1',paddingLeft:8}}>{item.generated_reply}</p>
               </div>
-              <p style={{fontSize:12,color:'var(--tx2)',margin:'0 0 6px',lineHeight:1.5}}>{item.tweet_text}</p>
-              <p style={{fontSize:12,color:'#6366F1',margin:0,lineHeight:1.5,borderLeft:'2px solid #6366F1',paddingLeft:8}}>{item.generated_reply}</p>
-            </div>
-          ))
+            ))
         )}
 
       </div>
