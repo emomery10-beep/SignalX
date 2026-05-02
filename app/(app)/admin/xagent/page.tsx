@@ -32,7 +32,7 @@ export default function XAgentPage() {
   const [editId, setEditId]          = useState<string|null>(null)
   const [editText, setEditText]      = useState('')
   const [posting, setPosting]        = useState<string|null>(null)
-  const [postedIds, setPostedIds]    = useState<Record<string, string>>({}) // tweetId -> postedReplyId
+  const [postedIds, setPostedIds]    = useState<Record<string, string>>({})
   const [toast, setToast]            = useState<{msg:string,ok:boolean}|null>(null)
 
   const showToast = (msg: string, ok=true) => { setToast({msg,ok}); setTimeout(()=>setToast(null),3500) }
@@ -59,7 +59,6 @@ export default function XAgentPage() {
     setHistory(all.filter((i:any) => i.status!=='pending'))
   }
 
-  // Only load queue when on queue/history tab — prevents duplicate badge after search
   useEffect(() => {
     if (authorized && (tab === 'queue' || tab === 'history')) loadQueue()
   }, [authorized, tab])
@@ -72,11 +71,7 @@ export default function XAgentPage() {
       const d = await res.json()
       if (!res.ok) throw new Error(d.error||'Search failed')
       const tweets = d.tweets || []
-      if (!tweets.length) {
-        showToast('No tweets found — try a different query', false)
-        return
-      }
-      // Filter out any results with empty AI reply and warn
+      if (!tweets.length) { showToast('No tweets found — try a different query', false); return }
       const valid = tweets.filter((t:any) => t.reply && t.reply.trim().length > 0)
       const empty = tweets.length - valid.length
       setResults(valid)
@@ -96,11 +91,10 @@ export default function XAgentPage() {
       if (!res.ok) throw new Error(d.error||'Post failed')
       showToast('Reply posted to X! 🎉')
       setEditId(null)
-      // Track posted reply ID so we can show "View Post" link
+      // Save posted reply ID — this makes the card show "View Post" button
       if (d.postedId) setPostedIds(prev => ({...prev, [tweetId]: d.postedId}))
-      // Remove from results if posted from search tab
-      if (isResult) setResults(prev => prev.filter((r:any) => r.tweet?.id !== tweetId))
-      else loadQueue()
+      // Do NOT remove card from results — user needs to see the View Post button
+      if (!isResult) loadQueue()
     } catch(e:any) { showToast(e.message, false) }
     finally { setPosting(null) }
   }
@@ -137,7 +131,6 @@ export default function XAgentPage() {
     return (
       <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
         {postedReplyId ? (
-          // Already posted from this session — show View Post instead of Post button
           <a href={'https://x.com/i/web/status/'+postedReplyId} target="_blank" rel="noopener noreferrer"
             style={{padding:'7px 16px',borderRadius:9999,border:'none',background:'#16a34a',color:'#fff',fontSize:12,fontWeight:600,textDecoration:'none',display:'inline-block'}}>
             ✓ View Post
@@ -180,9 +173,7 @@ export default function XAgentPage() {
       <div style={{padding:'10px 12px',borderRadius:10,background:'rgba(99,102,241,.05)',border:'1px solid rgba(99,102,241,.15)',marginBottom:10}}>
         <div style={{fontSize:10,fontWeight:700,color:'#6366F1',marginBottom:4}}>AI REPLY</div>
         {!displayText || displayText.trim() === '' ? (
-          <p style={{fontSize:12,margin:0,color:'var(--tx3)',fontStyle:'italic'}}>
-            No reply generated — click Regenerate
-          </p>
+          <p style={{fontSize:12,margin:0,color:'var(--tx3)',fontStyle:'italic'}}>No reply generated — click Regenerate</p>
         ) : isEditing ? (
           <textarea value={editText} onChange={e=>setEditText(e.target.value)} rows={2}
             style={{width:'100%',padding:8,borderRadius:8,border:'1px solid var(--b)',background:'var(--bg)',fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/>
