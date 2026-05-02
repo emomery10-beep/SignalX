@@ -45,12 +45,12 @@ export async function POST(request: NextRequest) {
     const tweets = await searchTweetsViaTavily(query, maxResults)
     if (!tweets.length) return NextResponse.json({ tweets: [], generated: 0 })
     const pairs = await Promise.all(tweets.slice(0, 10).map(async tweet => {
-      const res = await anthropic.messages.create({ model:'claude-sonnet-4-5-20251001', max_tokens:300, messages:[{ role:'user', content:'Write a genuine helpful reply to this tweet from @'+tweet.author+'.\n\nTweet: "'+tweet.text+'"\n\nRules: Max 255 chars, sound like a real person, add value, mention askbiz.co only if very relevant, max 1 hashtag. Return ONLY the reply text.' }] })
+      const res = await anthropic.messages.create({ model: 'claude-sonnet-4-5-20251001', max_tokens: 300, messages: [{ role: 'user', content: 'Write a genuine helpful reply to this tweet from @' + tweet.author + '.\n\nTweet: "' + tweet.text + '"\n\nRules: Max 255 chars, sound like a real person, add value, mention askbiz.co only if very relevant, max 1 hashtag. Return ONLY the reply text.' }] })
       const reply = res.content[0].type === 'text' ? res.content[0].text.trim() : ''
-      return { tweet, reply: reply.length > 255 ? reply.slice(0, 252)+'...' : reply }
+      return { tweet, reply: reply.length > 255 ? reply.slice(0, 252) + '...' : reply }
     }))
     const supabase = createClient()
-    await supabase.from('x_agent_activity').insert(pairs.map(({ tweet, reply }) => ({ tweet_id:tweet.id, tweet_text:tweet.text, tweet_author:tweet.author, generated_reply:reply, keyword_query:query, status:'pending', created_at:new Date().toISOString() })))
+    await supabase.from('x_agent_activity').insert(pairs.map(({ tweet, reply }) => ({ tweet_id: tweet.id, tweet_text: tweet.text, tweet_author: tweet.author, generated_reply: reply, keyword_query: query, status: 'pending', created_at: new Date().toISOString() })))
     return NextResponse.json({ tweets: pairs, generated: pairs.length })
   }
 
@@ -58,23 +58,32 @@ export async function POST(request: NextRequest) {
     const { activityId, tweetId, replyText } = body
     if (!tweetId || !replyText) return NextResponse.json({ error: 'tweetId and replyText required' }, { status: 400 })
     const posted = await postTweet(replyText, { replyToId: tweetId })
+    const supabase = createClient()
     if (activityId) {
-      const supabase = createClient()
-      await supabase.from('x_agent_activity').update({ status:'posted', posted_reply_id:posted.id, posted_at:new Date().toISOString() }).eq('id', activityId)
+      // Posted from queue - update by activity id
+      await supabase.from('x_agent_activity')
+        .update({ status: 'posted', posted_reply_id: posted.id, posted_at: new Date().toISOString() })
+        .eq('id', activityId)
+    } else {
+      // Posted from search results - find by tweet_id
+      await supabase.from('x_agent_activity')
+        .update({ status: 'posted', posted_reply_id: posted.id, posted_at: new Date().toISOString() })
+        .eq('tweet_id', tweetId)
+        .eq('status', 'pending')
     }
     return NextResponse.json({ success: true, postedId: posted.id })
   }
 
   if (action === 'reject') {
     const supabase = createClient()
-    await supabase.from('x_agent_activity').update({ status:'rejected' }).eq('id', body.activityId)
+    await supabase.from('x_agent_activity').update({ status: 'rejected' }).eq('id', body.activityId)
     return NextResponse.json({ success: true })
   }
 
   if (action === 'regenerate') {
-    const res = await anthropic.messages.create({ model:'claude-sonnet-4-5-20251001', max_tokens:300, messages:[{ role:'user', content:'Write a genuine helpful reply to this tweet from @'+(body.tweetAuthor||'founder')+'.\n\nTweet: "'+body.tweetText+'"\n\nRules: Max 255 chars, sound like a real person, add value, mention askbiz.co only if very relevant. Return ONLY the reply text.' }] })
+    const res = await anthropic.messages.create({ model: 'claude-sonnet-4-5-20251001', max_tokens: 300, messages: [{ role: 'user', content: 'Write a genuine helpful reply to this tweet from @' + (body.tweetAuthor || 'founder') + '.\n\nTweet: "' + body.tweetText + '"\n\nRules: Max 255 chars, sound like a real person, add value, mention askbiz.co only if very relevant. Return ONLY the reply text.' }] })
     const reply = res.content[0].type === 'text' ? res.content[0].text.trim() : ''
-    return NextResponse.json({ reply: reply.length > 255 ? reply.slice(0,252)+'...' : reply })
+    return NextResponse.json({ reply: reply.length > 255 ? reply.slice(0, 252) + '...' : reply })
   }
 
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
