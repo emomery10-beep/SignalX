@@ -89,11 +89,9 @@ export default function XAgentPage() {
       const res = await fetch('/api/xagent', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'post_reply', activityId, tweetId, replyText:reply }) })
       const d = await res.json()
       if (!res.ok) throw new Error(d.error||'Post failed')
-      showToast('Reply posted to X! 🎉')
+      showToast('Reply posted to X!')
       setEditId(null)
-      // Save posted reply ID — this makes the card show "View Post" button
       if (d.postedId) setPostedIds(prev => ({...prev, [tweetId]: d.postedId}))
-      // Do NOT remove card from results — user needs to see the View Post button
       if (!isResult) loadQueue()
     } catch(e:any) { showToast(e.message, false) }
     finally { setPosting(null) }
@@ -124,16 +122,22 @@ export default function XAgentPage() {
 
   const ActionButtons = ({ item, isResult }: { item: any, isResult: boolean }) => {
     const tweetId = isResult ? item.tweet?.id : item.tweet_id
+    const tweetAuthor = isResult ? item.tweet?.author : item.tweet_author
     const reply = isResult ? item.reply : item.generated_reply
     const isPosting = posting === tweetId
     const postedReplyId = postedIds[tweetId]
+    const originalUrl = 'https://x.com/' + tweetAuthor + '/status/' + tweetId
 
     return (
       <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
+        <a href={originalUrl} target="_blank" rel="noopener noreferrer"
+          style={{padding:'7px 14px',borderRadius:9999,border:'1px solid #1d9bf0',background:'transparent',color:'#1d9bf0',fontSize:12,fontWeight:600,textDecoration:'none',display:'inline-block'}}>
+          View Original Post
+        </a>
         {postedReplyId ? (
           <a href={'https://x.com/i/web/status/'+postedReplyId} target="_blank" rel="noopener noreferrer"
             style={{padding:'7px 16px',borderRadius:9999,border:'none',background:'#16a34a',color:'#fff',fontSize:12,fontWeight:600,textDecoration:'none',display:'inline-block'}}>
-            ✓ View Post
+            View Posted Reply
           </a>
         ) : (
           <button onClick={()=>handlePost(item,isResult)} disabled={isPosting}
@@ -155,10 +159,6 @@ export default function XAgentPage() {
             Reject
           </button>
         )}
-        <a href={'https://x.com/i/web/status/'+tweetId} target="_blank" rel="noopener noreferrer"
-          style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:12,textDecoration:'none'}}>
-          View Tweet
-        </a>
       </div>
     )
   }
@@ -197,9 +197,9 @@ export default function XAgentPage() {
           </div>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
             {connected===null&&<span style={{fontSize:12,color:'var(--tx3)'}}>Checking...</span>}
-            {connected===true&&<div style={{padding:'5px 12px',borderRadius:9999,background:'rgba(34,197,94,.1)',border:'1px solid rgba(34,197,94,.3)',fontSize:12,fontWeight:600,color:'#16a34a'}}>✓ Connected {username}</div>}
+            {connected===true&&<div style={{padding:'5px 12px',borderRadius:9999,background:'rgba(34,197,94,.1)',border:'1px solid rgba(34,197,94,.3)',fontSize:12,fontWeight:600,color:'#16a34a'}}>Connected {username}</div>}
             {connected===false&&<div style={{padding:'5px 12px',borderRadius:9999,background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',fontSize:12,fontWeight:600,color:'#dc2626'}} title={connError}>X not connected</div>}
-            <button onClick={()=>router.push('/admin/agent')} style={{padding:'7px 14px',borderRadius:9,border:'1px solid var(--b)',background:'var(--sf)',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'var(--tx2)'}}>← Back</button>
+            <button onClick={()=>router.push('/admin/agent')} style={{padding:'7px 14px',borderRadius:9,border:'1px solid var(--b)',background:'var(--sf)',fontSize:12,cursor:'pointer',fontFamily:'inherit',color:'var(--tx2)'}}>Back</button>
           </div>
         </div>
 
@@ -286,10 +286,14 @@ export default function XAgentPage() {
                     {item.status==='posted'?'Posted':'Rejected'}
                   </span>
                   <span style={{fontSize:11,color:'var(--tx3)'}}>@{item.tweet_author} · {new Date(item.created_at).toLocaleDateString()}</span>
+                  <a href={'https://x.com/'+item.tweet_author+'/status/'+item.tweet_id} target="_blank" rel="noopener noreferrer"
+                    style={{fontSize:11,color:'#1d9bf0',textDecoration:'none'}}>
+                    View Original Post
+                  </a>
                   {item.status==='posted' && item.posted_reply_id && (
                     <a href={'https://x.com/i/web/status/'+item.posted_reply_id} target="_blank" rel="noopener noreferrer"
-                      style={{fontSize:11,color:'#1d9bf0',textDecoration:'none',marginLeft:'auto'}}>
-                      View Post →
+                      style={{fontSize:11,color:'#16a34a',textDecoration:'none',marginLeft:'auto'}}>
+                      View Posted Reply
                     </a>
                   )}
                 </div>
