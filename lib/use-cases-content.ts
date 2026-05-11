@@ -1,0 +1,235 @@
+export interface UseCase {
+  slug: string
+  title: string
+  headline: string
+  subheadline: string
+  description: string
+  metaDescription: string
+  icon: string
+  color: string
+  metrics: { label: string; value: string; description: string }[]
+  painPoints: string[]
+  features: { title: string; description: string; icon: string }[]
+  testimonialQuote: string
+  testimonialName: string
+  testimonialRole: string
+  relatedAcademySlug: string
+  cta: string
+}
+
+export const USE_CASES: UseCase[] = [
+  {
+    slug: 'ecommerce-sellers',
+    title: 'eCommerce Sellers',
+    headline: 'The analytics platform built for online sellers',
+    subheadline: 'Connect Shopify, Amazon, and your ad accounts. See which products make money, which ads work, and where customers are dropping off — without building a single report.',
+    description: 'AskBiz connects directly to Shopify, Amazon, eBay, and your ad platforms to surface the metrics that matter for online sellers — revenue, margin, ROAS, inventory, and customer lifetime value — automatically.',
+    metaDescription: 'AskBiz for eCommerce sellers — connect Shopify and Amazon, track revenue, margin, ROAS, and inventory in one place. No dashboard building required.',
+    icon: '🛒',
+    color: '#59c9a5',
+    metrics: [
+      { label: 'Avg. time to first insight', value: '< 10 min', description: 'From connecting Shopify to your first dashboard' },
+      { label: 'Data sources connected', value: '12+', description: 'Shopify, Amazon, Meta, Google Ads, Xero, and more' },
+      { label: 'eCommerce metrics tracked', value: '40+', description: 'Revenue, margin, ROAS, CAC, LTV, inventory, and more' },
+    ],
+    painPoints: [
+      'You sell on Shopify and Amazon but your data lives in different places',
+      'You\'re spending money on ads but don\'t know which campaigns are actually profitable',
+      'Your inventory decisions are based on gut feel, not data',
+      'You know your revenue but not your actual profit after returns and ad spend',
+      'You spend hours each week pulling together numbers from different tools',
+    ],
+    features: [
+      { title: 'Multi-channel revenue view', description: 'See Shopify, Amazon, and other channels side by side — total revenue, by channel, by product, by day.', icon: '📊' },
+      { title: 'True profit after ad spend', description: 'AskBiz calculates your actual margin after COGS, returns, and ad spend — so you know which products actually make money.', icon: '💰' },
+      { title: 'ROAS by campaign and channel', description: 'Connect Meta Ads and Google Ads to see return on ad spend broken down by campaign, ad set, and creative.', icon: '📣' },
+      { title: 'Inventory alerts', description: 'Get notified when stock levels drop below reorder point. Stop losing sales to stockouts.', icon: '📦' },
+      { title: 'Customer lifetime value', description: 'See which acquisition channels bring your most valuable customers — not just the cheapest clicks.', icon: '👥' },
+      { title: 'Daily briefing', description: 'Every morning, a plain-English summary of yesterday\'s performance — revenue, orders, top products, and anything unusual.', icon: '📬' },
+    ],
+    testimonialQuote: 'I was spending 3 hours every Monday pulling numbers from Shopify, Amazon, and Meta into a spreadsheet. AskBiz replaced all of that in 10 minutes.',
+    testimonialName: 'Sarah K.',
+    testimonialRole: 'Founder, homewares brand, £2.4M revenue',
+    relatedAcademySlug: 'what-is-average-order-value',
+    cta: 'Connect your Shopify store',
+  },
+  {
+    slug: 'saas-founders',
+    title: 'SaaS Founders',
+    headline: 'SaaS metrics that actually make sense',
+    subheadline: 'MRR, churn, NRR, CAC payback — tracked automatically from Stripe, your CRM, and your product data. Know your business health at a glance, every day.',
+    description: 'AskBiz connects to Stripe and your key data sources to track the SaaS metrics that matter — MRR, ARR, churn, expansion revenue, and LTV:CAC — without building a metrics dashboard from scratch.',
+    metaDescription: 'AskBiz for SaaS founders — track MRR, churn, NRR, and LTV:CAC automatically from Stripe. Know your subscription business health without building a BI tool.',
+    icon: '🔄',
+    color: '#8e44ad',
+    metrics: [
+      { label: 'SaaS metrics tracked', value: '25+', description: 'MRR, ARR, churn, NRR, expansion, CAC, payback, LTV, and more' },
+      { label: 'Data sources', value: 'Stripe + CRM + product', description: 'Connect your revenue, sales, and product usage data' },
+      { label: 'Setup time', value: '< 15 min', description: 'Connect Stripe and start seeing your metrics immediately' },
+    ],
+    painPoints: [
+      'You\'re tracking MRR in a spreadsheet and it\'s always wrong',
+      'You know your churn rate exists but calculating it consistently is a pain',
+      'Investors keep asking for NRR and cohort data you don\'t have ready',
+      'You don\'t know if your CAC payback period is good or terrible for your market',
+      'Your growth looks good on revenue but you\'re not sure if it\'s healthy',
+    ],
+    features: [
+      { title: 'MRR waterfall', description: 'See new MRR, expansion, contraction, and churn broken down month by month — the full waterfall that investors love.', icon: '📈' },
+      { title: 'Cohort retention analysis', description: 'Track how well each cohort of customers retains over time. Identify when churn spikes and why.', icon: '🔍' },
+      { title: 'LTV:CAC ratio', description: 'Calculate your lifetime value to customer acquisition cost ratio automatically — and get alerted when it dips below 3:1.', icon: '💎' },
+      { title: 'CAC payback period', description: 'See how many months it takes to recover the cost of acquiring a customer — and whether it\'s improving or worsening.', icon: '📅' },
+      { title: 'Expansion MRR tracking', description: 'Track upsell and expansion revenue separately from new business — the leading indicator of a healthy SaaS.', icon: '⬆️' },
+      { title: 'Quick ratio', description: 'Monitor your SaaS quick ratio (new + expansion MRR ÷ churned + contracted MRR) — the single best measure of growth quality.', icon: '⚡' },
+    ],
+    testimonialQuote: 'We had all our Stripe data but zero visibility into what it meant. AskBiz surfaced our cohort retention problem within the first week — a problem we\'d had for months without knowing.',
+    testimonialName: 'Tom R.',
+    testimonialRole: 'Co-founder, B2B SaaS, $180k ARR',
+    relatedAcademySlug: 'what-is-monthly-recurring-revenue',
+    cta: 'Connect your Stripe account',
+  },
+  {
+    slug: 'importers-exporters',
+    title: 'Importers & Exporters',
+    headline: 'Landed cost, FX risk, and duty — under control',
+    subheadline: 'See your true landed cost on every shipment. Track FX exposure across currencies. Get alerted when margin slips below target due to rate movements.',
+    description: 'AskBiz is built for businesses that trade across borders — tracking landed costs, FX exposure, import duties, and supplier performance in one place.',
+    metaDescription: 'AskBiz for importers and exporters — track landed costs, FX risk, and import duties automatically. Know your true margin on every shipment.',
+    icon: '🌍',
+    color: '#e8734a',
+    metrics: [
+      { label: 'Currencies tracked', value: '150+', description: 'Live FX rates across all major currency pairs' },
+      { label: 'Landed cost components', value: '8+', description: 'Product cost, freight, duty, insurance, VAT, and more' },
+      { label: 'Alert types', value: 'FX + duty + margin', description: 'Get notified when rates or costs hit your thresholds' },
+    ],
+    painPoints: [
+      'You know your purchase price but not your true landed cost per unit',
+      'FX movements are eating your margin and you\'re reacting after the fact',
+      'You\'re not sure if your import duty calculations are correct',
+      'Your margin on international orders is opaque until you run a spreadsheet',
+      'You don\'t know which suppliers or origin countries are most profitable',
+    ],
+    features: [
+      { title: 'Landed cost calculator', description: 'Calculate the true cost of each shipment — product cost, freight, insurance, duty, VAT, and local delivery — automatically.', icon: '📦' },
+      { title: 'FX exposure tracker', description: 'See your total exposure in each currency and how rate movements are affecting your margin in real time.', icon: '💱' },
+      { title: 'FX rate alerts', description: 'Set rate thresholds and get notified when a currency pair hits your target — so you can time purchases and hedges.', icon: '🔔' },
+      { title: 'Duty and tariff tracking', description: 'Log import duty rates by commodity code and origin country. Get alerted when tariffs change on your key products.', icon: '🧾' },
+      { title: 'Supplier performance', description: 'Track on-time delivery, quality issues, and cost trends by supplier. Identify your most reliable and most profitable sources.', icon: '🏭' },
+      { title: 'Margin by origin country', description: 'See which sourcing countries are delivering the best landed margin after all costs — and make data-driven sourcing decisions.', icon: '🗺️' },
+    ],
+    testimonialQuote: 'We import from four countries in three currencies. Before AskBiz we had no idea what our actual margins were until we ran a monthly spreadsheet. Now I know every morning.',
+    testimonialName: 'James L.',
+    testimonialRole: 'MD, consumer goods importer, £5.2M revenue',
+    relatedAcademySlug: 'what-is-landed-cost',
+    cta: 'See your landed costs',
+  },
+  {
+    slug: 'retailers',
+    title: 'Retailers',
+    headline: 'Retail analytics that work in the real world',
+    subheadline: 'From foot traffic to basket size, sell-through to shrinkage — AskBiz gives physical and hybrid retailers the metrics they need to make better buying, staffing, and promotional decisions.',
+    description: 'AskBiz connects to your EPOS system, inventory platform, and accounting software to give retailers a complete picture of performance — by store, by category, by day of week.',
+    metaDescription: 'AskBiz for retailers — track sell-through, basket size, shrinkage, and margin by category and store. Connect your EPOS and make better buying decisions.',
+    icon: '🏪',
+    color: '#922b21',
+    metrics: [
+      { label: 'Retail metrics tracked', value: '30+', description: 'Sell-through, shrinkage, basket size, footfall conversion, and more' },
+      { label: 'EPOS integrations', value: 'Key UK systems', description: 'Connect your existing point-of-sale data' },
+      { label: 'Reporting frequency', value: 'Daily', description: 'Morning briefing with yesterday\'s performance by store' },
+    ],
+    painPoints: [
+      'You don\'t know which categories are dragging down your overall margin',
+      'Buying decisions are based on last year\'s data, not current sell-through rates',
+      'You can\'t easily compare performance across locations',
+      'Shrinkage and markdowns are tracked informally and often underestimated',
+      'Promotional effectiveness is measured by gut feel rather than data',
+    ],
+    features: [
+      { title: 'Sell-through rate by SKU', description: 'See what\'s selling, what\'s stalling, and what needs to be marked down — before you\'re stuck with dead stock.', icon: '📊' },
+      { title: 'Margin by category', description: 'Identify which categories are driving your profit and which are eroding it — and make buying decisions accordingly.', icon: '💰' },
+      { title: 'Basket size and units per transaction', description: 'Track average basket size and UPT over time. See the impact of promotions, layout changes, and staff training.', icon: '🛍️' },
+      { title: 'Multi-location comparison', description: 'Compare performance across locations side by side — same period, same metrics. Identify your best and weakest stores.', icon: '📍' },
+      { title: 'Promotional ROI', description: 'Measure the true ROI of each promotion — revenue uplift, margin impact, and whether it brought new customers or just discounted existing ones.', icon: '🏷️' },
+      { title: 'Stock turn and dead stock alerts', description: 'Get alerted when slow-moving SKUs are at risk of becoming dead stock — early enough to take action.', icon: '📦' },
+    ],
+    testimonialQuote: 'I have three stores and I used to spend every Monday morning gathering data from each. AskBiz gives me a consolidated view every morning before I open.',
+    testimonialName: 'Priya M.',
+    testimonialRole: 'Owner, gift and lifestyle retail, 3 locations',
+    relatedAcademySlug: 'what-is-inventory-turnover',
+    cta: 'See your retail metrics',
+  },
+  {
+    slug: 'agencies',
+    title: 'Agencies & Consultancies',
+    headline: 'Know your utilisation, margin, and pipeline — in one place',
+    subheadline: 'Track billable hours, project profitability, and client retention without switching between your time-tracking tool, invoicing platform, and spreadsheet.',
+    description: 'AskBiz connects your time-tracking, project management, and accounting tools to give agency founders and MDs visibility into utilisation, project margin, and client health — automatically.',
+    metaDescription: 'AskBiz for agencies and consultancies — track billable utilisation, project profitability, and client retention automatically. Know which clients and services are most profitable.',
+    icon: '💼',
+    color: '#2c3e50',
+    metrics: [
+      { label: 'Agency metrics tracked', value: '20+', description: 'Utilisation, project margin, client retention, pipeline, and more' },
+      { label: 'Time-tracking integrations', value: 'Key platforms', description: 'Connect Harvest, Toggl, or your existing tool' },
+      { label: 'Project margin visibility', value: 'Real-time', description: 'See actual margin vs planned on every active project' },
+    ],
+    painPoints: [
+      'You have no idea if your team is over- or under-utilised until the month-end',
+      'Project profitability is a mystery until you do a manual cost reconciliation',
+      'You\'re losing clients but don\'t know which ones are at risk until they leave',
+      'You can\'t easily see which service lines or clients are most profitable',
+      'Revenue looks healthy but your cash position is always squeezed',
+    ],
+    features: [
+      { title: 'Billable utilisation tracking', description: 'See billable vs non-billable hours by person, team, and client — in real time, not at month-end.', icon: '⏱️' },
+      { title: 'Project profitability', description: 'Track actual hours logged vs budget on every project. Get alerted when a project is at risk of going over budget.', icon: '📊' },
+      { title: 'Client health score', description: 'See which clients are engaged, at risk, or overdue for a review — based on project performance, responsiveness, and spend trends.', icon: '❤️' },
+      { title: 'Revenue by service line', description: 'Break down revenue and margin by service type — strategy, execution, retainer, project. Know where your best work is.', icon: '💡' },
+      { title: 'Cash flow visibility', description: 'Track invoiced, collected, and outstanding amounts. See your projected cash position for the next 30, 60, and 90 days.', icon: '💰' },
+      { title: 'Pipeline coverage', description: 'Connect your CRM to see how much pipeline you have relative to revenue target — and whether you need to generate more.', icon: '🔍' },
+    ],
+    testimonialQuote: 'We had £800k of revenue and literally no idea which clients made us money. AskBiz told us in 20 minutes. We fired two clients and increased profit by 40%.',
+    testimonialName: 'Dan H.',
+    testimonialRole: 'Founder, digital marketing agency, £820k revenue',
+    relatedAcademySlug: 'what-is-project-profitability',
+    cta: 'See your agency metrics',
+  },
+  {
+    slug: 'service-businesses',
+    title: 'Service Businesses',
+    headline: 'Run your service business on data, not gut feel',
+    subheadline: 'Whether you\'re a cleaner, accountant, tradesperson, or consultant — AskBiz connects your booking system, invoicing, and bank account to give you a clear picture of what\'s working.',
+    description: 'AskBiz helps service business owners track revenue, cash flow, customer retention, and job profitability — without needing an accountant or a spreadsheet for every decision.',
+    metaDescription: 'AskBiz for service businesses — track revenue, cash flow, customer retention, and job profitability automatically. Built for owners, not accountants.',
+    icon: '🔧',
+    color: '#2980b9',
+    metrics: [
+      { label: 'Setup time', value: '< 10 min', description: 'Connect your booking system or accounting tool' },
+      { label: 'Key metrics', value: 'Revenue, cash, retention', description: 'The numbers that matter most for service businesses' },
+      { label: 'Daily briefing', value: 'Every morning', description: 'Yesterday\'s revenue, bookings, and anything unusual' },
+    ],
+    painPoints: [
+      'You don\'t know which services or job types make you the most money',
+      'Cash flow is unpredictable and you\'re often surprised by what\'s in the bank',
+      'You don\'t track repeat customer rate — but you know some customers never come back',
+      'Pricing was set years ago and you\'re not sure if it\'s still profitable',
+      'You\'re too busy doing the work to track how the business is actually performing',
+    ],
+    features: [
+      { title: 'Revenue by service type', description: 'See which services generate the most revenue and profit. Make informed decisions about where to focus and what to price up.', icon: '📊' },
+      { title: 'Cash flow forecast', description: 'See your expected bank balance for the next 30, 60, and 90 days based on confirmed bookings and recurring costs.', icon: '💰' },
+      { title: 'Customer retention rate', description: 'Track what percentage of customers return — and identify when repeat bookings are declining before it becomes a problem.', icon: '🔄' },
+      { title: 'Job profitability', description: 'Compare revenue to time and material costs on each job type. Find out which work is genuinely worth doing.', icon: '🔍' },
+      { title: 'Booking trends', description: 'See seasonal patterns in your bookings and use them to plan staffing, marketing, and capacity in advance.', icon: '📅' },
+      { title: 'Plain-English daily briefing', description: 'Every morning, a simple summary of your business performance — no spreadsheets, no dashboards, just the numbers you need.', icon: '📬' },
+    ],
+    testimonialQuote: 'I\'m a plumber, not an accountant. AskBiz tells me every morning how much I invoiced, what\'s outstanding, and whether I\'m on track for the month. That\'s all I need.',
+    testimonialName: 'Mark T.',
+    testimonialRole: 'Owner, plumbing and heating business, £380k revenue',
+    relatedAcademySlug: 'what-is-cash-flow-forecasting',
+    cta: 'Connect your business',
+  },
+]
+
+export function getUseCase(slug: string): UseCase | undefined {
+  return USE_CASES.find(u => u.slug === slug)
+}

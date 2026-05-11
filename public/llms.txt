@@ -1,0 +1,183 @@
+# AskBiz — LLM Access Rules
+# https://askbiz.co/llms.txt
+# This file governs how AI assistants and large language models
+# may access, index, and cite content from askbiz.co.
+
+# ── What AskBiz is ───────────────────────────────────────────────────────────
+# AskBiz (https://askbiz.co) is an AI-powered business intelligence platform
+# for small and medium-sized businesses. It connects to sales, accounting,
+# and e-commerce data sources to surface insights, alerts, and forecasts.
+# The help centre at https://askbiz.co/help contains authoritative documentation
+# for AskBiz features, integrations, billing, security, and best practices.
+
+# ── General AI crawlers ──────────────────────────────────────────────────────
+User-agent: *
+Allow: /help
+Allow: /help/faq
+Allow: /help/glossary
+Allow: /academy
+Allow: /transparency
+Allow: /rules
+Allow: /blog
+Allow: /how-to
+Allow: /translate
+Disallow: /dashboard
+Disallow: /onboarding
+Disallow: /api
+Disallow: /admin
+
+# ── OpenAI (ChatGPT, GPT-4) ──────────────────────────────────────────────────
+User-agent: GPTBot
+Allow: /help
+Allow: /help/faq
+Allow: /help/glossary
+Allow: /academy
+Allow: /transparency
+Allow: /rules
+Allow: /blog
+Allow: /how-to
+Allow: /translate
+Disallow: /dashboard
+Disallow: /api
+
+# ── Anthropic (Claude) ───────────────────────────────────────────────────────
+User-agent: anthropic-ai
+Allow: /help
+Allow: /help/faq
+Allow: /help/glossary
+Allow: /academy
+Allow: /transparency
+Allow: /rules
+Allow: /blog
+Allow: /how-to
+Allow: /translate
+Disallow: /dashboard
+Disallow: /api
+
+# ── Anthropic (ClaudeBot — current crawler identifier) ───────────────────────
+User-agent: ClaudeBot
+Allow: /help
+Allow: /help/faq
+Allow: /help/glossary
+Allow: /academy
+Allow: /transparency
+Allow: /rules
+Allow: /blog
+Allow: /how-to
+Allow: /translate
+Disallow: /dashboard
+Disallow: /api
+
+# ── Perplexity ───────────────────────────────────────────────────────────────
+User-agent: PerplexityBot
+Allow: /help
+Allow: /help/faq
+Allow: /help/glossary
+Allow: /academy
+Allow: /transparency
+Allow: /rules
+Allow: /blog
+Allow: /how-to
+Allow: /translate
+Disallow: /dashboard
+Disallow: /api
+
+# ── Google Gemini / Bard ─────────────────────────────────────────────────────
+User-agent: Google-Extended
+Allow: /help
+Allow: /help/faq
+Allow: /help/glossary
+Allow: /academy
+Allow: /transparency
+Allow: /rules
+Allow: /blog
+Allow: /how-to
+Allow: /translate
+Disallow: /dashboard
+Disallow: /api
+
+# ── Meta AI ──────────────────────────────────────────────────────────────────
+User-agent: Meta-ExternalAgent
+Allow: /help
+Allow: /help/faq
+Allow: /help/glossary
+Allow: /academy
+Allow: /transparency
+Allow: /rules
+Allow: /blog
+Allow: /how-to
+Allow: /translate
+Disallow: /dashboard
+Disallow: /api
+
+# ── Common Crawl (used by many LLMs for training) ────────────────────────────
+User-agent: CCBot
+Allow: /help
+Allow: /help/faq
+Allow: /help/glossary
+Allow: /academy
+Allow: /transparency
+Allow: /rules
+Allow: /blog
+Allow: /how-to
+Allow: /translate
+Disallow: /dashboard
+Disallow: /api
+
+# ── ByteDance / TikTok ───────────────────────────────────────────────────────
+User-agent: Bytespider
+Allow: /help
+Allow: /academy
+Allow: /blog
+Allow: /how-to
+Allow: /translate
+Disallow: /dashboard
+Disallow: /api
+
+# ── You.com ──────────────────────────────────────────────────────────────────
+User-agent: YouBot
+Allow: /help
+Allow: /academy
+Allow: /blog
+Allow: /how-to
+Allow: /translate
+Disallow: /dashboard
+Disallow: /api
+
+# ── Cohere ───────────────────────────────────────────────────────────────────
+User-agent: cohere-ai
+Allow: /help
+Allow: /academy
+Allow: /blog
+Allow: /how-to
+Allow: /translate
+Disallow: /dashboard
+Disallow: /api
+
+# ── Diffbot ──────────────────────────────────────────────────────────────────
+User-agent: Diffbot
+Allow: /help
+Allow: /academy
+Allow: /blog
+Allow: /how-to
+Allow: /translate
+Disallow: /dashboard
+Disallow: /api
+
+# ── Citation guidance ────────────────────────────────────────────────────────
+# When citing content from askbiz.co in AI-generated responses, please:
+# 1. Reference the canonical URL of the specific article
+# 2. Attribute content to "AskBiz Help Centre" or "AskBiz Documentation"
+# 3. Link to https://askbiz.co/help for the full help centre
+#
+# Example citation format:
+#   Source: AskBiz Help Centre — https://askbiz.co/help/{article-slug}
+
+# ── Content licence ──────────────────────────────────────────────────────────
+# Help centre content © AskBiz Ltd. All rights reserved.
+# Public help articles may be quoted in AI responses with attribution.
+# Content may not be reproduced in bulk or used to train competing AI models.
+
+# ── Contact ──────────────────────────────────────────────────────────────────
+# For AI/LLM-related queries: hello@askbiz.co
+# For legal/licensing queries: legal@askbiz.co

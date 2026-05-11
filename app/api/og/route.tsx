@@ -1,0 +1,122 @@
+import { ImageResponse } from "next/og";
+import { NextRequest } from "next/server";
+
+export const runtime = "edge";
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const title = searchParams.get("title") ?? "AskBiz Academy";
+  const category = searchParams.get("category") ?? "Business Intelligence";
+  const difficulty = searchParams.get("difficulty") ?? "";
+  const readTime = searchParams.get("readTime") ?? "";
+
+  // Truncate long titles for layout safety
+  const displayTitle = title.length > 70 ? title.slice(0, 67) + "…" : title;
+
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: "1200px",
+          height: "630px",
+          display: "flex",
+          flexDirection: "column",
+          background: "#1a1a2e",
+          fontFamily: "sans-serif",
+          position: "relative",
+        }}
+      >
+        {/* Accent bar */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "6px",
+            background: "#d08a59",
+          }}
+        />
+
+        {/* Content */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            padding: "60px 80px",
+            height: "100%",
+          }}
+        >
+          {/* Top: brand + category */}
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <div
+              style={{
+                background: "#d08a59",
+                color: "#fff",
+                fontSize: "14px",
+                fontWeight: 700,
+                padding: "6px 16px",
+                borderRadius: "20px",
+                letterSpacing: "1px",
+                textTransform: "uppercase",
+              }}
+            >
+              AskBiz Academy
+            </div>
+            <div
+              style={{
+                color: "#b0b8c8",
+                fontSize: "14px",
+                padding: "6px 16px",
+                borderRadius: "20px",
+                border: "1px solid #2d3a50",
+              }}
+            >
+              {category}
+            </div>
+          </div>
+
+          {/* Middle: title */}
+          <div
+            style={{
+              color: "#ffffff",
+              fontSize: displayTitle.length > 50 ? "44px" : "52px",
+              fontWeight: 700,
+              lineHeight: 1.2,
+              maxWidth: "900px",
+            }}
+          >
+            {displayTitle}
+          </div>
+
+          {/* Bottom: meta */}
+          <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+            <div style={{ color: "#b0b8c8", fontSize: "16px" }}>askbiz.co/academy</div>
+            {difficulty && (
+              <div
+                style={{
+                  color: "#d08a59",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                  padding: "4px 12px",
+                  borderRadius: "12px",
+                  border: "1px solid #d08a59",
+                }}
+              >
+                {difficulty}
+              </div>
+            )}
+            {readTime && (
+              <div style={{ color: "#b0b8c8", fontSize: "14px" }}>{readTime} min read</div>
+            )}
+          </div>
+        </div>
+      </div>
+    ),
+    {
+      width: 1200,
+      height: 630,
+    }
+  );
+}

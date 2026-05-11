@@ -1,0 +1,7 @@
+{
+  "crons": [
+    { "path": "/api/cron/proactive-check", "schedule": "0 8 * * *" },
+    { "path": "/api/churn-scan/cron",      "schedule": "0 6 1 * *" },
+    { "path": "/api/cron/benchmarks",      "schedule": "0 2 * * *" }
+  ]
+}

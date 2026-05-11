@@ -1,0 +1,35 @@
+<svg width="480" height="160" viewBox="0 0 480 160" xmlns="http://www.w3.org/2000/svg" role="img">
+  <title>AskBiz — AI Business Intelligence</title>
+  <desc>AskBiz logo featuring a rising bar chart signal icon and wordmark</desc>
+
+  <style>
+    .wm { font-family: 'Inter', system-ui, sans-serif; font-weight: 900; font-size: 64px; fill: #0F172A; letter-spacing: -2px; }
+    .bz { fill: #6366F1; }
+    .tg { font-family: 'Inter', system-ui, sans-serif; font-weight: 400; font-size: 13px; fill: #64748B; letter-spacing: 2.5px; }
+    @media (prefers-color-scheme: dark) {
+      .wm { fill: #F1F5F9; }
+      .bz { fill: #818CF8; }
+      .tg { fill: #94A3B8; }
+    }
+  </style>
+
+  <!-- Icon: rising bars + signal arc -->
+  <g transform="translate(16, 28)">
+    <rect x="0"  y="62" width="20" height="30" rx="5" fill="#6366F1" opacity="0.3"/>
+    <rect x="26" y="40" width="20" height="52" rx="5" fill="#6366F1" opacity="0.55"/>
+    <rect x="52" y="16" width="20" height="76" rx="5" fill="#6366F1"/>
+    <path d="M62 12 L72 0 L82 12" fill="none" stroke="#6366F1" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M88 62 Q98 44 110 30" fill="none" stroke="#6366F1" stroke-width="3" stroke-linecap="round" opacity="0.4"/>
+    <path d="M88 62 Q102 34 118 16" fill="none" stroke="#6366F1" stroke-width="3" stroke-linecap="round" opacity="0.22"/>
+    <circle cx="88" cy="62" r="4" fill="#6366F1"/>
+  </g>
+
+  <!-- Divider -->
+  <line x1="148" y1="28" x2="148" y2="130" stroke="#E2E8F0" stroke-width="1.2"/>
+
+  <!-- Wordmark -->
+  <text x="164" y="110" class="wm">ask<tspan class="bz">biz</tspan></text>
+
+  <!-- Tagline -->
+  <text x="166" y="132" class="tg">AI BUSINESS INTELLIGENCE</text>
+</svg>
