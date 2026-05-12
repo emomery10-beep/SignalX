@@ -1,11 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
 
-export async function POST(req: NextRequest) {
+async function resolveOwnerId(req: NextRequest): Promise<string | null> {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  if (user) return user.id
+
+  // Staff PIN auth fallback
+  const staffId = req.headers.get('x-staff-id')
+  const ownerId = req.headers.get('x-owner-id')
+  if (!staffId || !ownerId) return null
+
+  const service = createServiceClient()
+  const { data: staff } = await service
+    .from('pos_staff')
+    .select('id')
+    .eq('id', staffId)
+    .eq('owner_id', ownerId)
+    .eq('active', true)
+    .maybeSingle()
+
+  return staff ? ownerId : null
+}
+
+export async function POST(req: NextRequest) {
+  const ownerId = await resolveOwnerId(req)
+  if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+
+  const service = createServiceClient()
 
   try {
     const formData = await req.formData()
@@ -40,7 +63,7 @@ export async function POST(req: NextRequest) {
               1. Product name(s) visible
               2. Approximate quantity if visible
               3. Product type/category
-              
+
               Respond in JSON: { products: [{ name: string, quantity: number, category: string, confidence: 0-100 }] }
               Be concise and practical for a retail inventory system.`,
             },
@@ -65,11 +88,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to parse image analysis', raw: content.text }, { status: 400 })
     }
 
-    // Store recognition data for analytics (what products were recognized, from which locations)
-    const { error: storageErr } = await supabase
+    // Store recognition data for analytics
+    const { error: storageErr } = await service
       .from('pos_image_recognition')
       .insert({
-        owner_id: user.id,
+        owner_id: ownerId,
         products: recognized.products,
         image_size: image.size,
         created_at: new Date().toISOString(),

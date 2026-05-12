@@ -45,6 +45,7 @@ export default function POSPage() {
   const [loading, setLoading]         = useState(true)
   const [currencySymbol, setCurrencySymbol] = useState('£')
   const [posEnabled, setPosEnabled] = useState<boolean | null>(null)
+  const [seatCount, setSeatCount]   = useState(0)
 
   // Refund state
   const [refundTx, setRefundTx]         = useState<Transaction | null>(null)
@@ -57,6 +58,7 @@ export default function POSPage() {
   const [newEmail, setNewEmail]         = useState('')
   const [newName, setNewName]           = useState('')
   const [newRole, setNewRole]           = useState<'cashier' | 'inventory'>('cashier')
+  const [newPin, setNewPin]             = useState('')
   const [addingStaff, setAddingStaff]   = useState(false)
 
   // Edit staff form
@@ -64,6 +66,7 @@ export default function POSPage() {
   const [editPhone, setEditPhone]       = useState('')
   const [editEmail, setEditEmail]       = useState('')
   const [editName, setEditName]         = useState('')
+  const [editPin, setEditPin]           = useState('')
   const [editingSubmitting, setEditingSubmitting] = useState(false)
 
   // Add product form
@@ -88,11 +91,12 @@ export default function POSPage() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('currency_symbol, pos_enabled')
+        .select('currency_symbol, pos_enabled, pos_seat_count')
         .eq('id', user.id)
         .single()
       if (profile?.currency_symbol) setCurrencySymbol(profile.currency_symbol)
       setPosEnabled(profile?.pos_enabled ?? false)
+      setSeatCount((profile as any)?.pos_seat_count ?? 0)
 
       const [staffRes, txRes, invRes] = await Promise.all([
         fetch('/api/pos/staff'),
@@ -151,17 +155,22 @@ export default function POSPage() {
 
   const handleAddStaff = async () => {
     if ((!newPhone && !newEmail) || !newName) return
+    if (newPin && (newPin.length < 4 || newPin.length > 6 || !/^\d+$/.test(newPin))) {
+      alert('PIN must be 4–6 digits'); return
+    }
     setAddingStaff(true)
     const res = await fetch('/api/pos/staff', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: newPhone || undefined, email: newEmail || undefined, name: newName, role: newRole }),
+      body: JSON.stringify({ phone: newPhone || undefined, email: newEmail || undefined, name: newName, role: newRole, pin: newPin || undefined }),
     })
     const data = await res.json()
     if (data.staff) {
       setStaff(prev => [...prev, data.staff])
-      setNewPhone(''); setNewEmail(''); setNewName(''); setNewRole('cashier')
+      setNewPhone(''); setNewEmail(''); setNewName(''); setNewRole('cashier'); setNewPin('')
       setShowAddStaff(false)
+    } else if (data.seat_limit) {
+      alert(data.error)
     }
     setAddingStaff(false)
   }
@@ -174,10 +183,14 @@ export default function POSPage() {
     })
     const data = await res.json()
     if (data.staff) setStaff(prev => prev.map(s => s.id === member.id ? data.staff : s))
+    else if (data.seat_limit) alert(data.error)
   }
 
   const handleEditStaff = async () => {
     if (!editingStaff || (!editPhone && !editEmail) || !editName) return
+    if (editPin && (editPin.length < 4 || editPin.length > 6 || !/^\d+$/.test(editPin))) {
+      alert('PIN must be 4–6 digits'); return
+    }
     setEditingSubmitting(true)
     const res = await fetch('/api/pos/staff', {
       method: 'PATCH',
@@ -186,7 +199,8 @@ export default function POSPage() {
         id: editingStaff.id,
         phone: editPhone || undefined,
         email: editEmail || undefined,
-        name: editName
+        name: editName,
+        pin: editPin || undefined,
       }),
     })
     const data = await res.json()
@@ -204,7 +218,16 @@ export default function POSPage() {
     setEditName(member.name)
     setEditPhone(member.phone || '')
     setEditEmail(member.email || '')
+    setEditPin('')
   }
+
+  // Wire up stream → video element after the modal mounts
+  useEffect(() => {
+    if (showCameraPreview && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current
+      videoRef.current.play().catch(() => {})
+    }
+  }, [showCameraPreview])
 
   const handleOpenCamera = async () => {
     try {
@@ -213,13 +236,8 @@ export default function POSPage() {
         audio: false,
       })
       streamRef.current = stream
-      setShowCameraPreview(true)
+      setShowCameraPreview(true)  // effect above will wire srcObject after render
       setShowCameraMenu(false)
-
-      // Set video source
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-      }
     } catch (err: any) {
       alert('Camera access denied or not available: ' + err.message)
     }
@@ -504,17 +522,28 @@ export default function POSPage() {
         {/* ── STAFF TAB ────────────────────────────────────── */}
         {tab === 'staff' && (
           <div style={{ maxWidth: 640 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <div style={{ fontSize: 13, color: 'var(--tx3)' }}>
-                {staff.filter(s => s.active).length} active · <strong>{currencySymbol}5/seat/month</strong> per staff member
-              </div>
-              <button
-                onClick={() => setShowAddStaff(true)}
-                style={{ padding: '8px 14px', borderRadius: 9, background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-              >
-                + Add staff
-              </button>
-            </div>
+            {(() => {
+              const activeStaff = staff.filter(s => s.active).length
+              const atLimit = activeStaff >= seatCount
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)' }}>
+                    {activeStaff} of {seatCount} seat{seatCount !== 1 ? 's' : ''} used
+                    {atLimit && (
+                      <span style={{ marginLeft: 8, color: '#dc2626', fontWeight: 600 }}>
+                        · <a href="/billing" style={{ color: '#dc2626' }}>Add seats →</a>
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => atLimit ? window.location.href = '/billing' : setShowAddStaff(true)}
+                    style={{ padding: '8px 14px', borderRadius: 9, background: atLimit ? '#dc2626' : ACC, color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    {atLimit ? 'Upgrade seats →' : '+ Add staff'}
+                  </button>
+                </div>
+              )
+            })()}
 
             {showAddStaff && (
               <div style={{ marginBottom: 16, padding: '16px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)' }}>
@@ -548,6 +577,15 @@ export default function POSPage() {
                     <option value="cashier">Cashier — can process sales</option>
                     <option value="inventory">Inventory — can manage stock</option>
                   </select>
+                  <input
+                    placeholder="PIN (4–6 digits) — required for POS login"
+                    value={newPin}
+                    onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    style={{ padding: '9px 12px', borderRadius: 8, border: `1px solid ${newPin && newPin.length >= 4 ? 'rgba(22,163,74,.4)' : 'var(--b2)'}`, fontSize: 13, fontFamily: 'inherit', background: 'var(--bg)', color: 'var(--tx)', letterSpacing: '0.15em' }}
+                  />
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button onClick={handleAddStaff} disabled={addingStaff} style={{ padding: '9px 16px', borderRadius: 8, background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
                       {addingStaff ? 'Adding...' : 'Add staff member'}
@@ -577,9 +615,13 @@ export default function POSPage() {
                       </div>
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)' }}>{s.name}</div>
-                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
-                          {s.role} · {s.phone}
-                          {s.last_login_at && ` · Last login ${new Date(s.last_login_at).toLocaleDateString('en-GB')}`}
+                        <div style={{ fontSize: 11, color: 'var(--tx3)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <span>{s.role}</span>
+                          {s.phone && <span>· {s.phone}</span>}
+                          {(s as any).has_pin
+                            ? <span style={{ color: '#16a34a', fontWeight: 600 }}>· PIN ✓</span>
+                            : <span style={{ color: '#dc2626', fontWeight: 600 }}>· No PIN set</span>}
+                          {s.last_login_at && <span>· Last login {new Date(s.last_login_at).toLocaleDateString('en-GB')}</span>}
                         </div>
                       </div>
                     </div>
@@ -633,6 +675,15 @@ export default function POSPage() {
                     onChange={(e) => setEditEmail(e.target.value)}
                     type="email"
                     style={{ padding: '9px 12px', borderRadius: 8, border: '1px solid var(--b2)', fontSize: 13, fontFamily: 'inherit', background: 'var(--bg)', color: 'var(--tx)' }}
+                  />
+                  <input
+                    placeholder={`New PIN (4–6 digits)${(editingStaff as any)?.has_pin ? ' — leave blank to keep current' : ' — required for POS login'}`}
+                    value={editPin}
+                    onChange={(e) => setEditPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    style={{ padding: '9px 12px', borderRadius: 8, border: `1px solid ${editPin && editPin.length >= 4 ? 'rgba(22,163,74,.4)' : 'var(--b2)'}`, fontSize: 13, fontFamily: 'inherit', background: 'var(--bg)', color: 'var(--tx)', letterSpacing: '0.15em' }}
                   />
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>

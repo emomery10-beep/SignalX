@@ -11,7 +11,7 @@ import NotificationBell from '@/components/layout/NotificationBell'
 const PRIMARY_NAV = [
   { id: 'ask',        href: '/ask',          label: 'Ask',         icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' },
   { id: 'monitor',    href: '/intelligence', label: 'My Business', icon: 'M12 2L2 7l10 5 10-5-10-5z M2 17l10 5 10-5 M2 12l10 5 10-5' },
-  { id: 'dashboards', href: '/dashboards',   label: 'Dashboard',   icon: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z' },
+  { id: 'pos',        href: '/pos',          label: 'POS',         icon: 'M2 3h20v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V3z M8 21h8M12 17v4' },
 ]
 
 const MORE_NAV = [
@@ -23,7 +23,6 @@ const MORE_NAV = [
   { id: 'shipments',  href: '/shipments',  label: 'Shipments',          icon: 'M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z' },
   { id: 'alerts',     href: '/alerts',     label: 'Alerts',             icon: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0' },
   { id: 'templates',  href: '/templates',  label: 'Templates',          icon: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2' },
-  { id: 'pos',        href: '/pos',        label: 'Point of Sale',      icon: 'M2 3h20v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V3z M8 21h8M12 17v4' },
   { id: 'billing',    href: '/billing',    label: 'Upgrade plan',       icon: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z' },
   { id: 'settings',   href: '/settings',   label: 'Settings',           icon: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z' },
 ]
@@ -530,7 +529,7 @@ export default function AppShellClient({ user, conversations, children }: {
       >
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)' }}>
           {[
-            { href: '/dashboards',   icon: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z',             label: 'Dashboard', id: 'dashboards' },
+            { href: '/pos',          icon: 'M2 3h20v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V3z M8 21h8M12 17v4', label: 'POS',       id: 'pos' },
             { href: '/ask',          icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', label: 'Ask',       id: 'ask' },
             { href: '/intelligence', icon: 'M12 2L2 7l10 5 10-5-10-5z M2 17l10 5 10-5',                       label: 'Business',  id: 'monitor' },
             { href: '/sources',      icon: 'M12 2c4.97 0 9 2.24 9 5s-4.03 5-9 5-9-2.24-9-5 4.03-5 9-5z M3 12c0 2.76 4.03 5 9 5s9-2.24 9-5', label: 'Data', id: 'sources' },
