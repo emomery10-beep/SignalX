@@ -630,6 +630,10 @@ export const HELP_TOPICS: HelpTopic[] = [
       "pos-hmrc-compliance",
       "pos-gdpr-customer-data",
       "pos-receipt-legal-requirements",
+      "pos-dashboards-and-reports",
+      "pos-ai-chat-guide",
+      "pos-multi-location",
+      "pos-offline-connectivity",
     ],
   },
 ];
@@ -11365,6 +11369,129 @@ export const HELP_ARTICLES: HelpArticle[] = [
       { q: "Can I use WhatsApp receipts instead of paper ones?", a: "Yes. Digital receipts are fully legal in the UK. Many customers prefer them. AskBiz POS can send receipts via WhatsApp instantly — the customer just needs to provide their phone number at checkout." },
     ],
     related: ["pos-hmrc-compliance", "pos-vat-tax-settings", "pos-whatsapp-receipts-setup"],
+  },
+
+  // ── POS + BI INTEGRATION & ADVANCED ───────────────────────────────────────
+  {
+    slug: "pos-dashboards-and-reports",
+    title: "Viewing POS Data in Dashboards and Reports",
+    description: "Your POS transactions feed directly into AskBiz dashboards. Learn how to set up a retail dashboard, read POS widgets, and schedule reports for your team.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    popular: true,
+    lastUpdated: "2026-05-12",
+    keywords: ["pos dashboard", "pos reports", "pos analytics askbiz", "retail dashboard setup", "pos data in askbiz", "point of sale reporting"],
+    content: [
+      {
+        heading: "How POS data reaches your dashboard",
+        body: "Every transaction processed through AskBiz POS is written to your central data store in real time. Dashboard widgets pull from the same store, so your numbers update within seconds of a sale completing. There is no export step, no CSV upload, and no overnight batch — the data flows automatically.\n\nIf you also sell online (Shopify, Amazon, Etsy, etc.), your POS data appears alongside online data in a unified view. This means you can see total revenue across all channels, compare in-store vs online performance, and spot products that sell differently depending on channel.",
+      },
+      {
+        heading: "Setting up a POS dashboard",
+        body: "Go to **Dashboards → Create Dashboard** and choose the **Retail POS** template, or start blank and add widgets manually. Recommended widgets:\n\n- **Revenue Today** — running total with day-over-day comparison\n- **Units Sold** — volume independent of value\n- **Average Basket Size** — mean transaction value\n- **Top Products** — ranked by revenue or units\n- **Sales by Staff** — cashier leaderboard\n- **Low Stock Alerts** — products approaching reorder point\n\nArrange them in the order you check each morning. Save the dashboard as your default home view.",
+      },
+      {
+        heading: "Scheduling POS reports",
+        body: "Go to **Dashboards → [your POS dashboard] → Schedule** to set up automatic email delivery. Choose daily, weekly, or monthly. Weekly reports sent on Monday mornings are popular — they give you a full view of the previous week's retail performance before the new week starts.\n\nReports include all widgets on the dashboard as a PDF snapshot. You can share them with staff, store managers, or your accountant without giving them AskBiz login access.",
+      },
+    ],
+    faq: [
+      { q: "Can my store manager see the POS dashboard without full admin access?", a: "Yes. Share the dashboard via Dashboards → Share and set the permission to 'View only'. The manager sees the data but cannot modify the dashboard or access other AskBiz features." },
+      { q: "How far back does POS dashboard data go?", a: "All the way back to your first POS transaction. There is no data retention limit while your account is active." },
+    ],
+    related: ["pos-viewing-daily-stats", "pos-staff-performance", "pos-exporting-data"],
+  },
+  {
+    slug: "pos-ai-chat-guide",
+    title: "Asking AskBiz AI About Your POS Data",
+    description: "Use AskBiz AI chat to ask questions about your POS transactions in plain English — revenue trends, product performance, staff metrics, and more.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    lastUpdated: "2026-05-12",
+    keywords: ["pos ai chat", "askbiz ai pos questions", "ask about pos data", "retail ai analytics", "natural language pos query", "pos insights ai"],
+    content: [
+      {
+        heading: "What you can ask",
+        body: "AskBiz AI has full access to your POS transaction data. You can ask about:\n\n- **Revenue:** 'What was my POS revenue last week?'\n- **Products:** 'What are my top 5 products by units sold this month?'\n- **Staff:** 'Which cashier has the highest average basket value?'\n- **Trends:** 'Is my in-store revenue growing or declining over the last 3 months?'\n- **Comparisons:** 'How does in-store compare to Shopify this quarter?'\n- **Anomalies:** 'Why was Tuesday's revenue so low?'\n\nJust type naturally — no filters, no query language. The AI interprets your question, runs it against your data, and returns an answer with a chart or table where appropriate.",
+      },
+      {
+        heading: "Tips for better answers",
+        body: "Be specific about **time periods** — 'this week' is better than 'recently'. Use **product names** as they appear in your inventory. If you want a chart, say so: 'Show me daily POS revenue for the last 30 days as a line chart.' If the first answer is too broad, follow up: 'Break that down by product category' or 'Just show me Mondays and Fridays.'\n\nThe AI remembers context within a conversation, so you can refine without repeating your full question.",
+      },
+      {
+        heading: "Combining POS with other data sources",
+        body: "The most powerful questions span multiple data sources. Try:\n\n- 'Compare my in-store revenue to online revenue this quarter'\n- 'Which products sell better in-store than online?'\n- 'What is my total revenue across all channels this month?'\n\nThe AI merges POS data with your connected platforms to give you a single answer. This omnichannel view is the core reason AskBiz POS exists as a built-in module rather than a separate product.",
+      },
+    ],
+    faq: [
+      { q: "Does the AI only answer questions about today's data?", a: "No. It has access to your full POS transaction history — ask about any date range since you started using the POS." },
+      { q: "Can I ask about individual transactions?", a: "Yes. Try: 'Show me all refunds over £50 this month' or 'Find the transaction for order #1234.'" },
+    ],
+    related: ["pos-dashboards-and-reports", "pos-viewing-daily-stats", "pos-getting-started"],
+  },
+  {
+    slug: "pos-multi-location",
+    title: "Using AskBiz POS Across Multiple Locations",
+    description: "Run AskBiz POS in more than one shop, market stall, or pop-up. Learn how multi-location data works, staff assignment, and consolidated reporting.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    lastUpdated: "2026-05-12",
+    keywords: ["pos multi location", "multiple shops pos", "pos two stores", "multi site point of sale", "askbiz pos locations", "pos pop-up shop"],
+    content: [
+      {
+        heading: "How multi-location POS works",
+        body: "Each AskBiz POS instance is tied to your account via the `owner_id`. If you run multiple locations — two shops, a market stall and a showroom, or permanent premises plus pop-ups — each location's staff log in with their own magic links and process sales independently. All transactions flow into your single AskBiz account, tagged by location.\n\nTo set up a second location, go to **Settings → POS → Locations → Add Location**. Name it, assign staff, and optionally set a location-specific product catalogue if pricing or stock differs between sites.",
+      },
+      {
+        heading: "Staff assignment and permissions",
+        body: "Staff members are assigned to one or more locations. A cashier at your High Street shop cannot accidentally log into your market stall POS unless you assign them to both. This keeps access controlled and performance metrics accurate.\n\nTo move a staff member between locations (e.g. for holiday cover), go to **Settings → POS → Staff → [name] → Locations** and tick the additional location. Their magic link will now work at both sites. Remove the tick when the cover period ends.",
+      },
+      {
+        heading: "Consolidated and per-location reporting",
+        body: "By default, your AskBiz dashboard shows consolidated data across all locations. To drill down, use the **Location filter** on any dashboard widget or ask the AI: 'What was revenue at the High Street shop last week?'\n\nYou can also create location-specific dashboards — useful if you have a manager per site who only needs to see their own numbers. Go to **Dashboards → Create Dashboard**, add your widgets, and set the default location filter. Share each dashboard with the relevant manager.",
+      },
+      {
+        heading: "Inventory across locations",
+        body: "Each location maintains its own stock levels. A product can be in stock at one location and out of stock at another. Low-stock alerts are triggered per location, so you restock where it is needed.\n\nIf you transfer stock between locations, update the quantities manually in **POS → Inventory → [product] → Adjust Stock** at both the source and destination. A stock transfer feature that automates this is on the roadmap.",
+      },
+    ],
+    faq: [
+      { q: "Is there an extra charge for additional POS locations?", a: "Check your plan details at Settings → Billing. The number of POS locations included depends on your AskBiz plan tier." },
+      { q: "Can I see which location a transaction came from?", a: "Yes. Every transaction is tagged with its location. You can filter by location in dashboards, AI chat, and the transaction export." },
+    ],
+    related: ["pos-adding-staff", "pos-managing-inventory", "pos-dashboards-and-reports"],
+  },
+  {
+    slug: "pos-offline-connectivity",
+    title: "What Happens When Your Internet Drops During a Sale",
+    description: "AskBiz POS can handle brief connectivity loss. Learn what works offline, what does not, and how transactions sync when you reconnect.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 3,
+    lastUpdated: "2026-05-12",
+    keywords: ["pos offline", "pos no internet", "pos connectivity issues", "offline point of sale", "pos sync after outage", "askbiz pos offline mode"],
+    content: [
+      {
+        heading: "What works without internet",
+        body: "AskBiz POS is a Progressive Web App that caches your product catalogue locally. During a brief outage you can:\n\n- Browse and search your product catalogue\n- Add items to the cart and adjust quantities\n- Complete a sale and accept **cash payments**\n- Generate a local receipt on screen\n\nTransactions are saved in a local queue and sync automatically when connectivity returns. You will see an **Offline** banner at the top of the screen so you always know the current status.",
+      },
+      {
+        heading: "What requires internet",
+        body: "Some features need a live connection and will not work offline:\n\n- **Card payments** — the card processor requires connectivity (this is a card network limitation, not AskBiz)\n- **Camera scanning for new products** — the image recognition API runs server-side\n- **WhatsApp receipt delivery** — requires an API call\n- **Staff login via magic link** — needs to verify the token with the server\n- **Real-time inventory level checks** — stock levels sync on reconnection\n\nIf you are in the middle of a card transaction when connectivity drops, the payment will fail. Ask the customer to pay cash or wait for reconnection.",
+      },
+      {
+        heading: "Recovering after an outage",
+        body: "When internet returns, the sync queue processes automatically — usually within a few seconds. You will see a confirmation banner. Dashboard data and inventory levels update once sync completes.\n\n**Best practices to prevent issues:**\n- Keep a mobile hotspot as a backup (a £10/month 4G SIM is sufficient)\n- Position your POS device within strong Wi-Fi range\n- If you sell at markets or pop-ups, pre-load your catalogue before leaving\n- Test offline mode once by enabling aeroplane mode and running a practice cash sale",
+      },
+    ],
+    faq: [
+      { q: "Will I lose sales data if my internet drops?", a: "No. Transactions are saved locally and sync when connectivity returns. Data is only at risk if the device loses power AND the browser cache is cleared before reconnecting, which is extremely rare." },
+      { q: "How long can I stay offline?", a: "Brief outages (under 30 minutes) are handled seamlessly. Longer outages work but may take a minute to sync the queue. Always restore connectivity as quickly as possible." },
+    ],
+    related: ["pos-getting-started", "pos-camera-troubleshooting", "pos-making-a-sale"],
   },
 
 ];
