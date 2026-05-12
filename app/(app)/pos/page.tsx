@@ -59,6 +59,13 @@ export default function POSPage() {
   const [newRole, setNewRole]           = useState<'cashier' | 'inventory'>('cashier')
   const [addingStaff, setAddingStaff]   = useState(false)
 
+  // Edit staff form
+  const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null)
+  const [editPhone, setEditPhone]       = useState('')
+  const [editEmail, setEditEmail]       = useState('')
+  const [editName, setEditName]         = useState('')
+  const [editingSubmitting, setEditingSubmitting] = useState(false)
+
   // Add product form
   const [showAddProduct, setShowAddProduct] = useState(false)
   const [newProduct, setNewProduct] = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5' })
@@ -165,7 +172,36 @@ export default function POSPage() {
     if (data.staff) setStaff(prev => prev.map(s => s.id === member.id ? data.staff : s))
   }
 
-  
+  const handleEditStaff = async () => {
+    if (!editingStaff || (!editPhone && !editEmail) || !editName) return
+    setEditingSubmitting(true)
+    const res = await fetch('/api/pos/staff', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: editingStaff.id,
+        phone: editPhone || undefined,
+        email: editEmail || undefined,
+        name: editName
+      }),
+    })
+    const data = await res.json()
+    if (data.staff) {
+      setStaff(prev => prev.map(s => s.id === editingStaff.id ? data.staff : s))
+      setEditingStaff(null)
+    } else if (data.error) {
+      alert('Error: ' + data.error)
+    }
+    setEditingSubmitting(false)
+  }
+
+  const handleOpenEditStaff = (member: StaffMember) => {
+    setEditingStaff(member)
+    setEditName(member.name)
+    setEditPhone(member.phone || '')
+    setEditEmail(member.email || '')
+  }
+
   const handleImageCapture = async (file: File) => {
     setRecognizing(true)
     try {
@@ -497,18 +533,73 @@ export default function POSPage() {
                         </div>
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleToggleStaff(s)}
-                      style={{
-                        padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: 'none',
-                        background: s.active ? 'rgba(220,38,38,.08)' : 'rgba(22,163,74,.08)',
-                        color: s.active ? '#dc2626' : '#16a34a',
-                      }}
-                    >
-                      {s.active ? 'Deactivate' : 'Reactivate'}
-                    </button>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        onClick={() => handleOpenEditStaff(s)}
+                        style={{
+                          padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: '1px solid var(--b)',
+                          background: 'transparent', color: 'var(--tx2)'
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleToggleStaff(s)}
+                        style={{
+                          padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: 'none',
+                          background: s.active ? 'rgba(220,38,38,.08)' : 'rgba(22,163,74,.08)',
+                          color: s.active ? '#dc2626' : '#16a34a',
+                        }}
+                      >
+                        {s.active ? 'Deactivate' : 'Reactivate'}
+                      </button>
+                    </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* ── EDIT STAFF MODAL ─────────────────────────────── */}
+            {editingStaff && (
+              <div style={{ marginTop: 16, padding: '16px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Edit {editingStaff.name}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
+                  <input
+                    placeholder="Full name"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    style={{ padding: '9px 12px', borderRadius: 8, border: '1px solid var(--b2)', fontSize: 13, fontFamily: 'inherit', background: 'var(--bg)', color: 'var(--tx)' }}
+                  />
+                  <input
+                    placeholder="Phone number"
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    style={{ padding: '9px 12px', borderRadius: 8, border: '1px solid var(--b2)', fontSize: 13, fontFamily: 'inherit', background: 'var(--bg)', color: 'var(--tx)' }}
+                  />
+                  <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>— or —</div>
+                  <input
+                    placeholder="Email address"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    type="email"
+                    style={{ padding: '9px 12px', borderRadius: 8, border: '1px solid var(--b2)', fontSize: 13, fontFamily: 'inherit', background: 'var(--bg)', color: 'var(--tx)' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={handleEditStaff}
+                    disabled={editingSubmitting}
+                    style={{ padding: '9px 16px', borderRadius: 8, background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    {editingSubmitting ? 'Saving...' : 'Save changes'}
+                  </button>
+                  <button
+                    onClick={() => setEditingStaff(null)}
+                    style={{ padding: '9px 16px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx2)' }}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             )}
           </div>

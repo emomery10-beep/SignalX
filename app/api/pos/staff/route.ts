@@ -59,28 +59,46 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PATCH — owner updates a staff member (name, role, active)
+// PATCH — owner updates a staff member (name, role, phone, email, active)
 export async function PATCH(req: NextRequest) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
-  const { id, name, role, active } = await req.json()
+  const { id, name, role, phone, email, active } = await req.json()
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
+
+  // If updating phone/email, ensure at least one is still present
+  if ((phone !== undefined || email !== undefined) && !phone && !email) {
+    return NextResponse.json({ error: 'At least phone or email required' }, { status: 400 })
+  }
 
   const updates: Record<string, unknown> = {}
   if (name   !== undefined) updates.name   = name
   if (role   !== undefined) updates.role   = role
+  if (phone !== undefined) updates.phone   = phone || null
+  if (email !== undefined) updates.email   = email || null
   if (active !== undefined) updates.active = active
 
-  const { data, error } = await supabase
-    .from('pos_staff')
-    .update(updates)
-    .eq('id', id)
-    .eq('owner_id', user.id)
-    .select()
-    .single()
+  try {
+    const { data, error } = await supabase
+      .from('pos_staff')
+      .update(updates)
+      .eq('id', id)
+      .eq('owner_id', user.id)
+      .select()
+      .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ staff: data })
+    if (error) {
+      console.error('❌ UPDATE error:', error.message)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+    return NextResponse.json({ staff: data })
+  } catch (err: any) {
+    console.error('❌ Unexpected error:', err)
+    return NextResponse.json({
+      error: 'Unexpected error',
+      message: err.message
+    }, { status: 500 })
+  }
 }
