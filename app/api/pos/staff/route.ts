@@ -27,15 +27,36 @@ export async function POST(req: NextRequest) {
   if ((!phone && !email) || !name || !role) return NextResponse.json({ error: 'phone or email, name and role required' }, { status: 400 })
   if (!['cashier', 'inventory'].includes(role)) return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
 
-  const { data, error } = await supabase
-    .from('pos_staff')
-    .insert({ owner_id: user.id, phone: phone || null, email: email || null, name, role })
-    .select()
-    .single()
+  try {
+    const { data, error } = await supabase
+      .from('pos_staff')
+      .insert({ owner_id: user.id, phone: phone || null, email: email || null, name, role })
+      .select()
+      .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      console.error('❌ INSERT error:', {
+        message: error.message,
+        code: (error as any).code,
+        details: (error as any).details,
+        hint: (error as any).hint,
+        context: (error as any).context
+      })
+      return NextResponse.json({
+        error: error.message,
+        code: (error as any).code,
+        details: (error as any).details
+      }, { status: 500 })
+    }
 
-  return NextResponse.json({ staff: data })
+    return NextResponse.json({ staff: data })
+  } catch (err: any) {
+    console.error('❌ Unexpected error:', err)
+    return NextResponse.json({
+      error: 'Unexpected error',
+      message: err.message
+    }, { status: 500 })
+  }
 }
 
 // PATCH — owner updates a staff member (name, role, active)
