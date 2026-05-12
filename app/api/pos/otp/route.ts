@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { sendMagicLinkEmail } from '@/lib/email'
-import { randomBytes } from 'crypto'
 
 const CORS = {
   'Access-Control-Allow-Origin': 'https://pos.askbiz.co',
@@ -17,24 +15,19 @@ function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status, headers: CORS })
 }
 
-// Generate a secure random token
-function generateToken() {
-  return randomBytes(32).toString('hex')
-}
-
-// POST /api/pos/otp — send magic link
 export async function POST(req: NextRequest) {
   const supabase = createServiceClient()
-  const { action, email } = await req.json()
+  const body = await req.json()
+  const { action, email } = body
 
-  if (!email?.trim()) return json({ error: 'email required' }, 400)
+  // ── CHECK STAFF EXISTS (before sending OTP from client) ───────────────────
+  if (action === 'check_staff') {
+    if (!email?.trim()) return json({ error: 'email required' }, 400)
 
-  // ── SEND MAGIC LINK ───────────────────────────────────────
-  if (action === 'send') {
     const { data: staff } = await supabase
       .from('pos_staff')
       .select('id, name, role, owner_id, active')
-      .eq('email', email.trim())
+      .eq('email', email.trim().toLowerCase())
       .eq('active', true)
       .maybeSingle()
 
@@ -42,66 +35,28 @@ export async function POST(req: NextRequest) {
       error: 'Email not recognised. Ask your manager to add you.',
     }, 404)
 
-    // Generate magic link token
-    const token = generateToken()
-    const expires_at = new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutes
-
-    // Save to database
-    const { error: insertError } = await supabase.from('pos_magic_links').insert({
-      staff_id: staff.id,
-      token,
-      email: email.trim(),
-      expires_at,
-    })
-
-    if (insertError) {
-      console.error('[pos/magic-link] Insert error:', insertError)
-      return json({ error: 'Failed to generate login link' }, 500)
-    }
-
-    // Send email with magic link
-    const magicLinkUrl = `https://pos.askbiz.co/pos/login?token=${token}`
-    const ok = await sendMagicLinkEmail(email.trim(), magicLinkUrl, staff.name)
-
-    if (!ok) {
-      console.error('[pos/magic-link] Email send failed for', email)
-      return json({ error: 'Failed to send email' }, 500)
-    }
-
-    return json({ sent: true, name: staff.name })
+    return json({ ok: true, name: staff.name })
   }
 
-  // ── VERIFY MAGIC LINK ────────────────────────────────────
-  if (action === 'verify') {
-    const { token } = await req.json()
-    if (!token) return json({ error: 'token required' }, 400)
+  // ── VERIFY STAFF after Supabase magic link auth ───────────────────────────
+  // Called after Supabase authenticates the user — just looks up their staff record
+  if (action === 'verify_staff') {
+    if (!email?.trim()) return json({ error: 'email required' }, 400)
 
-    const { data: link } = await supabase
-      .from('pos_magic_links')
-      .select('*')
-      .eq('token', token)
-      .eq('used', false)
-      .gt('expires_at', new Date().toISOString())
-      .single()
-      .catch(() => ({ data: null }))
-
-    if (!link) return json({ error: 'Invalid or expired link' }, 401)
-
-    // Mark as used
-    await supabase.from('pos_magic_links').update({ used: true, used_at: new Date().toISOString() }).eq('id', link.id)
-
-    // Get staff details
     const { data: staff } = await supabase
       .from('pos_staff')
       .select('id, name, role, owner_id, active')
-      .eq('id', link.staff_id)
+      .eq('email', email.trim().toLowerCase())
       .eq('active', true)
-      .single()
+      .maybeSingle()
 
-    if (!staff) return json({ error: 'Staff account not found' }, 404)
+    if (!staff) return json({ error: 'Staff account not found or deactivated' }, 404)
 
     // Update last login
-    await supabase.from('pos_staff').update({ last_login_at: new Date().toISOString() }).eq('id', staff.id)
+    await supabase
+      .from('pos_staff')
+      .update({ last_login_at: new Date().toISOString() })
+      .eq('id', staff.id)
 
     return json({
       verified: true,
