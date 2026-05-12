@@ -35,7 +35,7 @@ const FEATURES_TABLE = [
       { label: 'CFO Mode',                  free: '—',          growth: '—',          business: '✓'          },
     ]
   },
-  { category: 'Business Tools',
+  { category: 'Point of Sale',
     rows: [
       { label: 'FX Risk Modeller',          free: 'Manual',     growth: 'Pre-filled', business: 'Pre-filled' },
       { label: 'Landed Cost Calculator',    free: 'Manual',     growth: 'Pre-filled', business: 'Pre-filled' },

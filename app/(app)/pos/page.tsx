@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 const ACC = '#d08a59'
@@ -63,6 +63,9 @@ export default function POSPage() {
   const [showAddProduct, setShowAddProduct] = useState(false)
   const [newProduct, setNewProduct] = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5' })
   const [addingProduct, setAddingProduct] = useState(false)
+  const [recognizing, setRecognizing] = useState(false)
+  const [recognizedProducts, setRecognizedProducts] = useState<any[]>([])
+  const cameraInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const init = async () => {
@@ -158,6 +161,28 @@ export default function POSPage() {
     })
     const data = await res.json()
     if (data.staff) setStaff(prev => prev.map(s => s.id === member.id ? data.staff : s))
+  }
+
+  
+  const handleImageCapture = async (file: File) => {
+    setRecognizing(true)
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+      const res = await fetch('/api/pos/recognize-inventory', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (data.products && data.products.length > 0) {
+        setRecognizedProducts(data.products)
+      } else {
+        alert('Could not recognize products from image')
+      }
+    } catch (err) {
+      alert('Image recognition failed: ' + (err as any).message)
+    }
+    setRecognizing(false)
   }
 
   const handleAddProduct = async () => {
@@ -492,15 +517,61 @@ export default function POSPage() {
           <div style={{ maxWidth: 800 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{inventory.length} products</div>
-              <button
-                onClick={() => setShowAddProduct(true)}
-                style={{ padding: '8px 14px', borderRadius: 9, background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-              >
-                + Add product
-              </button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input 
+                  ref={cameraInputRef} 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={(e) => { if (e.target.files?.[0]) handleImageCapture(e.target.files[0]) }} 
+                  style={{ display: 'none' }} 
+                  capture="environment"
+                />
+                <button
+                  onClick={() => cameraInputRef.current?.click()}
+                  disabled={recognizing}
+                  style={{ padding: '8px 14px', borderRadius: 9, background: 'var(--ev)', color: 'var(--tx)', fontSize: 13, fontWeight: 600, border: '1px solid var(--b)', cursor: recognizing ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: recognizing ? 0.6 : 1 }}
+                >
+                  {recognizing ? 'Reading...' : '📷 Read inventory'}
+                </button>
+                <button
+                  onClick={() => setShowAddProduct(true)}
+                  style={{ padding: '8px 14px', borderRadius: 9, background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  + Add product
+                </button>
+              </div>
             </div>
 
-            {showAddProduct && (
+            {recognizedProducts.length > 0 && (
+              <div style={{ marginBottom: 16, padding: '16px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--ev)' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>📷 Recognized {recognizedProducts.length} product{recognizedProducts.length !== 1 ? 's' : ''}</span>
+                  <button onClick={() => setRecognizedProducts([])} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', fontSize: 12 }}>Clear</button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {recognizedProducts.map((p: any, i: number) => (
+                    <div key={i} style={{ padding: '10px 12px', borderRadius: 8, background: 'var(--sf)', border: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>{p.name}</div>
+                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{p.category} • {p.confidence}% confident</div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setNewProduct({ name: p.name, sale_price: '', cost_price: '', stock_qty: (p.quantity || 1).toString(), low_stock_threshold: '5' })
+                          setShowAddProduct(true)
+                          setRecognizedProducts(prev => prev.filter((_: any, idx: number) => idx !== i))
+                        }}
+                        style={{ padding: '6px 12px', borderRadius: 7, background: ACC, color: '#fff', fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer' }}
+                      >
+                        Add
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+                        {showAddProduct && (
               <div style={{ marginBottom: 16, padding: '16px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)' }}>
                 <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>New product</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>

@@ -35,9 +35,6 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Update seat count on profile
-  await supabase.rpc('increment_pos_seats', { p_user_id: user.id })
-
   return NextResponse.json({ staff: data })
 }
 
