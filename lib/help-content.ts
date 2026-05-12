@@ -605,6 +605,33 @@ export const HELP_TOPICS: HelpTopic[] = [
       "clv-cohort-analysis",
     ],
   },
+  {
+    slug: "point-of-sale",
+    title: "Point of Sale (POS)",
+    description: "Set up and use AskBiz POS — scan products, process sales, manage inventory, and track staff performance from any device.",
+    icon: "💳",
+    color: "#e67e22",
+    articles: [
+      "pos-getting-started",
+      "pos-adding-staff",
+      "pos-scanning-products",
+      "pos-making-a-sale",
+      "pos-managing-inventory",
+      "pos-restocking-guide",
+      "pos-processing-refunds",
+      "pos-amending-transactions",
+      "pos-whatsapp-receipts-setup",
+      "pos-vat-tax-settings",
+      "pos-viewing-daily-stats",
+      "pos-staff-performance",
+      "pos-exporting-data",
+      "pos-camera-troubleshooting",
+      "pos-login-issues",
+      "pos-hmrc-compliance",
+      "pos-gdpr-customer-data",
+      "pos-receipt-legal-requirements",
+    ],
+  },
 ];
 
 // ─── ARTICLES ─────────────────────────────────────────────────────────────────
@@ -930,7 +957,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Data that AskBiz cannot currently access",
-        body: "Some data types are not yet available in AskBiz:\n\n- **Point of sale data** from Zettle, Square, or Lightspeed — these can be partially imported via CSV\n- **Social media engagement data** (likes, follows, comments) — only conversion and revenue data from social is tracked\n- **Real-time stock market or commodity prices** — AskBiz does not pull live external market data\n- **Bank transactions without an accounting software connection** — direct bank connections require Open Banking setup (UK only)\n- **Data from platforms without an integration** — if your platform is not on the integrations list, use CSV upload\n\nIf you need a specific integration that is not yet available, request it via **Help → Feature Request**.",
+        body: "Some data types are not yet available in AskBiz:\n\n- **Point of sale data** — AskBiz now has a native POS system built in. You can also connect third-party POS data from Zettle, Square, or Lightspeed via CSV import\n- **Social media engagement data** (likes, follows, comments) — only conversion and revenue data from social is tracked\n- **Real-time stock market or commodity prices** — AskBiz does not pull live external market data\n- **Bank transactions without an accounting software connection** — direct bank connections require Open Banking setup (UK only)\n- **Data from platforms without an integration** — if your platform is not on the integrations list, use CSV upload\n\nIf you need a specific integration that is not yet available, request it via **Help → Feature Request**.",
       },
     ],
     faq: [
@@ -7810,7 +7837,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Supported POS Systems",
-        body: "AskBiz currently supports native integration with:\n\n- **Shopify POS** — if you use Shopify for your online store and Shopify POS in-store, your data is already unified in Shopify and AskBiz picks up both channels automatically\n- **Square** — connect via the Square integration at /sources. Syncs transactions, product catalogue, and customer data\n- **Lightspeed Retail** — connect via API. Syncs sales, inventory, and customer data\n- **Clover** — connect via the Clover integration. Syncs transaction-level data\n- **Zettle (by PayPal)** — connect via CSV export if no native integration is available for your version\n\nFor POS systems not listed, use the CSV upload feature — export your daily or weekly transaction data and upload to AskBiz for manual analysis.",
+        body: "AskBiz now includes a **native POS system** built directly into the platform — scan products, process sales, and manage inventory without any third-party hardware or software. Head to the Point of Sale (POS) help topic for full setup instructions.\n\nFor businesses already using an external POS, AskBiz also supports integration with:\n\n- **Shopify POS** — if you use Shopify for your online store and Shopify POS in-store, your data is already unified in Shopify and AskBiz picks up both channels automatically\n- **Square** — connect via the Square integration at /sources. Syncs transactions, product catalogue, and customer data\n- **Lightspeed Retail** — connect via API. Syncs sales, inventory, and customer data\n- **Clover** — connect via the Clover integration. Syncs transaction-level data\n- **Zettle (by PayPal)** — connect via CSV export if no native integration is available for your version\n\nFor POS systems not listed, use the CSV upload feature — export your daily or weekly transaction data and upload to AskBiz for manual analysis.",
       },
       {
         heading: "What Data Syncs From Your POS",
@@ -10750,6 +10777,594 @@ export const HELP_ARTICLES: HelpArticle[] = [
       { q: "Why do my most recent cohorts always look worst in cohort charts?", a: "Because they've had the least time to accumulate value. A 2-month-old cohort will always show lower cumulative CLV than a 12-month-old cohort — that's expected, not a problem. Compare cohorts at the same 'month since acquisition' column (not total CLV) to make fair comparisons." },
     ],
     related: ["clv-overview", "clv-calculation-guide", "improving-clv-strategies"],
+  },
+
+  // ── POINT OF SALE (POS) ───────────────────────────────────────────────────
+  {
+    slug: "pos-getting-started",
+    title: "Getting Started with AskBiz POS",
+    description: "Set up AskBiz POS from scratch — enable the module, add your first products, configure tax settings, and process your first test sale in under 10 minutes.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 5,
+    popular: true,
+    lastUpdated: "2026-05-12",
+    keywords: ["askbiz pos setup", "point of sale getting started", "how to set up pos system", "pos system for small business", "askbiz pos tutorial", "free pos system uk"],
+    content: [
+      {
+        heading: "What is AskBiz POS?",
+        body: "AskBiz POS is a built-in point of sale system that turns any phone, tablet, or laptop into a fully functional till. Unlike third-party POS systems that require separate hardware and monthly subscriptions, AskBiz POS is included in your existing plan and works straight from your browser.\n\nBecause it is native to AskBiz, every sale you process feeds directly into your dashboards, Daily Brief, and AI chat. There is no CSV export, no sync delay, and no data reconciliation — your in-store and online numbers live in one place from the moment you start selling.",
+      },
+      {
+        heading: "Enabling the POS module",
+        body: "Navigate to **Settings → Features → Point of Sale** and toggle it on. AskBiz will create a dedicated **/pos** section in your sidebar. You will also see a new **POS** tab on your main dashboard showing in-store revenue alongside your existing channels.\n\nIf you are on the Free plan, POS is available with a limit of 50 transactions per month. Growth and Business plans have unlimited transactions. Check **Account → Plan** if you are unsure which plan you are on.",
+      },
+      {
+        heading: "Adding your first products",
+        body: "Head to **/pos/inventory** and tap **Add Product**. Enter the product name, price, and optionally a barcode or SKU. If you already have products in your Shopify or other connected store, tap **Import from Source** to pull them in automatically — AskBiz will match on SKU or product name.\n\nYou can also bulk-import products via CSV. Download the template from the inventory page, fill in your product details, and upload. AskBiz maps columns automatically and flags any rows that need attention.",
+      },
+      {
+        heading: "Processing your first test sale",
+        body: "Go to **/pos** and you will see the sale screen. Tap a product or use the camera scanner to add items to the basket. When ready, tap **Charge** and select a payment method (cash, card, or other). For your first sale, try a cash transaction to get familiar with the flow.\n\nOnce complete, the sale appears immediately in your POS dashboard and in your main AskBiz analytics. Ask the AI chat *\"How much did I sell in-store today?\"* to confirm everything is connected.",
+      },
+    ],
+    faq: [
+      { q: "Do I need special hardware to use AskBiz POS?", a: "No. AskBiz POS runs in your browser on any device with a camera. A phone or tablet is ideal for scanning barcodes, but a laptop works too. If you want a barcode scanner or receipt printer, any USB or Bluetooth HID-compatible scanner will work." },
+      { q: "Can I use AskBiz POS offline?", a: "Currently AskBiz POS requires an internet connection to process and record sales. Offline mode is on the roadmap — for now, a mobile data connection on your phone is sufficient as a backup if your shop Wi-Fi goes down." },
+    ],
+    related: ["pos-scanning-products", "pos-making-a-sale", "pos-managing-inventory"],
+  },
+  {
+    slug: "pos-adding-staff",
+    title: "Adding and Managing POS Staff Members",
+    description: "Invite staff to your AskBiz POS, assign roles, set permissions, and track who processes each sale — all without sharing your main account login.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    lastUpdated: "2026-05-12",
+    keywords: ["pos staff management", "add staff to pos", "pos user permissions", "pos staff login", "point of sale employee setup", "pos roles and permissions"],
+    content: [
+      {
+        heading: "Why add staff members?",
+        body: "Adding individual staff accounts means every transaction is tagged with the person who processed it. This unlocks staff performance reporting, shift-level revenue breakdowns, and accountability if a transaction needs to be investigated later.\n\nStaff members log in with their own magic link — they never see your main AskBiz dashboard, billing details, or connected data sources. They only see the POS sale screen and, optionally, basic stats for their own shift.",
+      },
+      {
+        heading: "Inviting a new staff member",
+        body: "Go to **Settings → POS → Staff** and tap **Invite Staff**. Enter the person's name and email address. They will receive a magic link email that logs them straight into the POS screen on their device.\n\nYou can also generate a **PIN-only login** for environments where staff share a single tablet. Each person gets a unique 4-digit PIN — they tap it at the start of their shift and all sales are attributed to them until they tap out.",
+      },
+      {
+        heading: "Roles and permissions",
+        body: "AskBiz POS has three staff roles:\n\n- **Cashier** — can process sales, apply discounts up to a configured limit, and view their own shift stats\n- **Supervisor** — everything a Cashier can do, plus process refunds, void transactions, and view daily store stats\n- **Manager** — everything a Supervisor can do, plus add or remove products, adjust inventory, and export data\n\nOnly the account owner (you) can invite or remove staff, change roles, or access the full AskBiz analytics suite.",
+      },
+      {
+        heading: "Removing or deactivating staff",
+        body: "To remove a staff member, go to **Settings → POS → Staff**, find their name, and tap **Deactivate**. Their magic link and PIN stop working immediately, but their historical sales data remains in your reports for audit purposes.\n\nIf someone is on leave or temporarily unavailable, use **Pause** instead of Deactivate — this preserves their account so they can resume without a new invitation when they return.",
+      },
+    ],
+    faq: [
+      { q: "How many staff members can I add?", a: "Free and Growth plans support up to 5 POS staff members. The Business plan supports unlimited staff. You can check your current usage in Settings → POS → Staff." },
+      { q: "Can staff members see business analytics or revenue data?", a: "No. Staff members only see the POS sale screen and their own shift summary. They cannot access dashboards, AI chat, connected data sources, or billing information." },
+    ],
+    related: ["pos-getting-started", "pos-staff-performance", "pos-login-issues"],
+  },
+  {
+    slug: "pos-scanning-products",
+    title: "Scanning Products with Your Camera",
+    description: "Use your phone or tablet camera to scan barcodes and QR codes at the point of sale. Learn how to set up the scanner, link barcodes to products, and troubleshoot common issues.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    lastUpdated: "2026-05-12",
+    keywords: ["pos barcode scanner", "scan products with phone camera", "barcode scanning pos", "qr code pos system", "camera barcode reader pos", "how to scan barcodes askbiz"],
+    content: [
+      {
+        heading: "How camera scanning works",
+        body: "AskBiz POS uses your device's built-in camera to read barcodes and QR codes in real time. When you open the sale screen and tap the **Scan** button (or press `S` on a keyboard), the camera activates and looks for a recognisable code.\n\nSupported formats include EAN-13, EAN-8, UPC-A, UPC-E, Code 128, Code 39, ITF, and QR codes. Most retail products already carry one of these — you just need to link the code to a product in your inventory.",
+      },
+      {
+        heading: "Linking barcodes to products",
+        body: "There are two ways to link a barcode:\n\n- **During product creation** — when adding a product in **/pos/inventory**, tap the barcode field and scan the item. The code is saved automatically.\n- **On first scan** — if you scan a barcode that is not yet linked, AskBiz shows a prompt asking you to select or create the matching product. This is the fastest way to build your catalogue if you have physical stock to hand.\n\nOnce linked, scanning the same barcode instantly adds the product to the current sale basket.",
+      },
+      {
+        heading: "Tips for reliable scanning",
+        body: "- Hold the barcode **10–20 cm** from the camera and keep it steady for a second\n- Make sure the barcode area is **well lit** — the camera flash can be enabled in POS settings if your environment is dim\n- Clean any dust or moisture from the barcode label\n- For curved surfaces (bottles, tubes), angle the product so the barcode is as flat as possible toward the camera\n- If you are using a tablet on a stand, position the stand so products can be held in front of the camera comfortably",
+      },
+      {
+        heading: "Using an external scanner",
+        body: "If you prefer a dedicated barcode scanner, AskBiz POS supports any **HID-compatible** USB or Bluetooth scanner. These scanners type the barcode number into the active field, so they work without any driver installation.\n\nPlug in or pair your scanner, make sure the POS sale screen is in focus, and scan — the product will be added to the basket just as if you had used the camera. External scanners are faster and more reliable for high-volume environments.",
+      },
+    ],
+    faq: [
+      { q: "Can I scan QR codes as well as barcodes?", a: "Yes. AskBiz POS recognises both traditional barcodes (EAN, UPC, Code 128, etc.) and QR codes. You can generate custom QR codes for products that do not have a manufacturer barcode." },
+      { q: "What if two products have the same barcode?", a: "Each barcode can only be linked to one product in your inventory. If you scan a barcode already linked to a different product, AskBiz will show the existing match and give you the option to reassign it." },
+    ],
+    related: ["pos-getting-started", "pos-making-a-sale", "pos-camera-troubleshooting"],
+  },
+  {
+    slug: "pos-making-a-sale",
+    title: "Processing a Sale Step by Step",
+    description: "Walk through the full AskBiz POS sale flow — add items, apply discounts, choose a payment method, and complete the transaction with a receipt.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    popular: true,
+    lastUpdated: "2026-05-12",
+    keywords: ["how to process a sale pos", "pos sale flow", "take payment pos", "pos transaction guide", "cash sale pos system", "card payment pos askbiz"],
+    content: [
+      {
+        heading: "Starting a new sale",
+        body: "Open **/pos** from the sidebar. You will see the sale screen with a product grid on the left and the current basket on the right (on mobile, swipe between them). Each sale starts with an empty basket.\n\nAdd products by:\n- **Tapping a product tile** from the grid\n- **Scanning a barcode** with the camera or an external scanner\n- **Searching by name** using the search bar at the top\n\nEach tap adds one unit. To add multiple, tap the quantity number in the basket and type the amount, or use the **+** and **-** buttons.",
+      },
+      {
+        heading: "Applying discounts",
+        body: "Tap the **Discount** button at the bottom of the basket to apply a discount. You can choose:\n\n- **Percentage discount** — e.g. 10% off the entire basket\n- **Fixed amount** — e.g. £5 off\n- **Per-item discount** — tap a specific line item, then tap Discount to reduce just that product\n\nCashier-role staff can apply discounts up to the limit set by the account owner (default: 15%). Supervisors and Managers can apply any discount. All discounts are logged and visible in reporting.",
+      },
+      {
+        heading: "Choosing a payment method and completing the sale",
+        body: "When the basket is ready, tap **Charge**. You will see the total (including VAT if configured) and a list of payment methods:\n\n- **Cash** — enter the amount tendered and AskBiz calculates the change\n- **Card** — record that the customer paid by card (AskBiz POS does not process card payments directly — use your existing card terminal)\n- **Other** — for bank transfers, vouchers, or store credit\n\nTap the payment method, confirm, and the sale is complete. The basket clears and is ready for the next customer.",
+      },
+      {
+        heading: "Receipts and post-sale options",
+        body: "After completing a sale, you can:\n\n- **Send a WhatsApp receipt** — if configured (see the WhatsApp Receipts Setup article), enter the customer's number and tap Send\n- **Print a receipt** — if you have a connected receipt printer\n- **Email a receipt** — enter the customer's email address\n- **No receipt** — tap Done to skip\n\nAll completed sales are visible in **/pos/transactions** and are immediately reflected in your AskBiz dashboards and AI chat.",
+      },
+    ],
+    faq: [
+      { q: "Can I split a payment across two methods (e.g. part cash, part card)?", a: "Yes. After tapping Charge, select the first payment method and enter the partial amount. AskBiz will show the remaining balance and let you select a second method for the rest." },
+      { q: "What happens if I close the browser mid-sale?", a: "AskBiz POS saves the current basket in your browser session. When you reopen /pos, the basket will still be there. If you clear your browser data, the unsaved basket is lost — only completed sales are permanently stored." },
+    ],
+    related: ["pos-scanning-products", "pos-processing-refunds", "pos-whatsapp-receipts-setup"],
+  },
+  {
+    slug: "pos-managing-inventory",
+    title: "Managing Your POS Inventory",
+    description: "Add, edit, categorise, and organise products in your AskBiz POS inventory. Learn how to set prices, manage variants, and keep your product catalogue clean.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 5,
+    lastUpdated: "2026-05-12",
+    keywords: ["pos inventory management", "add products to pos", "pos product catalogue", "manage stock pos system", "pos inventory categories", "organise pos products"],
+    content: [
+      {
+        heading: "The POS inventory page",
+        body: "Your product catalogue lives at **/pos/inventory**. Here you can see every product available for sale, organised by category. Each product shows its name, price, current stock level (if tracked), and barcode status.\n\nUse the search bar to find products quickly, or filter by category using the sidebar tabs. Products with low stock are highlighted in amber, and out-of-stock items appear greyed out and cannot be added to a sale unless you enable overselling in settings.",
+      },
+      {
+        heading: "Adding and editing products",
+        body: "Tap **Add Product** to create a new item. Required fields are **name** and **price**. Optional fields include:\n\n- **SKU** — your internal reference code\n- **Barcode** — scan or type a barcode to link it\n- **Category** — assign to a category for filtering and reporting\n- **Cost price** — enter your buy price to enable margin reporting\n- **Track stock** — toggle on to enable quantity tracking\n\nTo edit an existing product, tap it in the list and make changes. Price changes take effect immediately for new sales but do not affect historical transactions.",
+      },
+      {
+        heading: "Categories and organisation",
+        body: "Categories help you organise the product grid on the sale screen and power category-level reporting. Go to **/pos/inventory → Categories** to create, rename, or reorder them.\n\nGood category structures are simple and flat. For a coffee shop: **Hot Drinks, Cold Drinks, Food, Snacks, Merchandise**. For a clothing retailer: **Tops, Bottoms, Accessories, Footwear, Sale Items**. Avoid nesting categories more than one level deep — it slows down the sale screen.",
+      },
+      {
+        heading: "Importing products from other sources",
+        body: "If you already sell online through Shopify, WooCommerce, or another connected platform, you can import your existing product catalogue into POS. Go to **/pos/inventory → Import → From Connected Source** and select the platform.\n\nAskBiz matches products by SKU first, then by name. Duplicates are flagged for review. You can also import from a CSV file — download the template, fill in your products, and upload. The importer handles up to 5,000 products per batch.",
+      },
+    ],
+    faq: [
+      { q: "Can I have different prices for in-store and online?", a: "Yes. POS prices are independent of your online store prices. When you import from a connected source, AskBiz copies the current online price but you can change it without affecting your online listing." },
+      { q: "What happens if I delete a product?", a: "Deleting a product removes it from the sale screen and inventory list, but historical sales data for that product is preserved in your reports. If you might sell it again, use Archive instead of Delete." },
+    ],
+    related: ["pos-getting-started", "pos-restocking-guide", "pos-scanning-products"],
+  },
+  {
+    slug: "pos-restocking-guide",
+    title: "Restocking Products and Updating Quantities",
+    description: "Record stock deliveries, adjust quantities, set low-stock alerts, and keep your POS inventory accurate so you never oversell or miss a restock.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    lastUpdated: "2026-05-12",
+    keywords: ["pos restocking", "update stock levels pos", "pos stock delivery", "low stock alert pos", "inventory recount pos", "pos stock adjustment"],
+    content: [
+      {
+        heading: "Recording a stock delivery",
+        body: "When new stock arrives, go to **/pos/inventory → Restock**. Select the products you received, enter the quantity for each, and optionally record the supplier name and delivery reference. Tap **Confirm Restock** and the quantities are added to your current stock levels immediately.\n\nYou can restock multiple products in a single batch. Each restock event is logged with a timestamp and the staff member who recorded it, creating a full audit trail.",
+      },
+      {
+        heading: "Manual stock adjustments",
+        body: "Sometimes stock levels drift — breakage, theft, miscounts, or samples given away. To correct this, open a product in **/pos/inventory**, tap **Adjust Stock**, and enter the new quantity or the adjustment amount (e.g. -3 for three units removed).\n\nAskBiz asks for an adjustment reason: **Breakage, Theft/shrinkage, Recount, Sample/giveaway, Other**. These reasons appear in your inventory reports and help you identify patterns — if shrinkage is consistently high for a product category, that is worth investigating.",
+      },
+      {
+        heading: "Setting low-stock alerts",
+        body: "For each product with stock tracking enabled, you can set a **reorder point**. When the quantity drops to or below this number, AskBiz sends you an alert via your Daily Brief and (optionally) by email or push notification.\n\nTo configure: open the product, tap **Stock Settings**, and set the reorder point. A good starting rule is to set it at two weeks of average sales. AskBiz can suggest a reorder point for you based on your recent sales velocity — tap **Suggest** to see the recommendation.",
+      },
+      {
+        heading: "Stock counts and reconciliation",
+        body: "Periodically, you should do a full stock count to ensure your system matches reality. Go to **/pos/inventory → Stock Count** and tap **Start Count**. AskBiz generates a count sheet you can work through — scan each product or enter the counted quantity.\n\nWhen you submit the count, AskBiz compares your counted figures with expected figures and highlights discrepancies. You can accept all adjustments in one tap or review them individually. Stock count history is saved so you can track accuracy over time.",
+      },
+    ],
+    faq: [
+      { q: "Does restocking a product in POS update my online store stock?", a: "No. POS inventory is managed separately from your online store. If you want unified stock, manage inventory in your ecommerce platform (e.g. Shopify) and import into POS — stock syncs one way from the source." },
+      { q: "Can I set different reorder points for different locations?", a: "Multi-location stock management is available on the Business plan. Each location has its own stock levels and reorder points. On Free and Growth plans, POS tracks a single location." },
+    ],
+    related: ["pos-managing-inventory", "pos-viewing-daily-stats", "pos-exporting-data"],
+  },
+  {
+    slug: "pos-processing-refunds",
+    title: "Processing Full and Partial Refunds",
+    description: "Refund a full transaction or specific line items through AskBiz POS. Understand refund permissions, how refunds affect reporting, and how to handle edge cases.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    lastUpdated: "2026-05-12",
+    keywords: ["pos refund process", "how to refund pos sale", "partial refund pos", "pos return item", "refund transaction point of sale", "pos refund permissions"],
+    content: [
+      {
+        heading: "Who can process refunds?",
+        body: "Refund permissions depend on staff roles:\n\n- **Cashier** — cannot process refunds. If a customer requests one, the Cashier must call a Supervisor or Manager.\n- **Supervisor** — can process refunds for transactions made in the current day.\n- **Manager** — can process refunds for any transaction, regardless of date.\n- **Account owner** — full refund access with no restrictions.\n\nThis tiered approach protects against unauthorised refunds while keeping the process fast for legitimate returns.",
+      },
+      {
+        heading: "Full refund",
+        body: "Go to **/pos/transactions**, find the original sale (search by receipt number, date, or product name), and tap **Refund**. AskBiz shows the full transaction with all line items. Tap **Refund All** to reverse the entire sale.\n\nYou will be asked to select the refund method — typically the same as the original payment. For cash sales, this means handing cash back. For card sales, process the refund on your card terminal and record it in AskBiz as a card refund. The refunded amount is deducted from your revenue figures immediately.",
+      },
+      {
+        heading: "Partial refund",
+        body: "If the customer is only returning some items, tap individual line items in the transaction to select them, then tap **Refund Selected**. You can also adjust the refund quantity — for example, if three units were sold but only one is being returned, set the refund quantity to 1.\n\nPartial refunds are recorded as a separate linked transaction. The original sale remains in your records with a note indicating the partial refund. This keeps your audit trail clean and makes it easy to reconcile at the end of the day.",
+      },
+      {
+        heading: "How refunds affect reporting",
+        body: "Refunded amounts are subtracted from your gross revenue to calculate **net revenue**, which is the figure AskBiz uses for all dashboards and AI analysis. The Daily Brief will flag unusual refund patterns — for example, if refund rate for a product exceeds 10%, AskBiz will surface this as an anomaly.\n\nRefunds also restore stock levels automatically (if stock tracking is enabled for the product). If you do not want stock restored — for example, if the returned item is damaged — toggle off **Restore Stock** during the refund process.",
+      },
+    ],
+    faq: [
+      { q: "Can I refund a transaction from a previous day?", a: "Supervisors can only refund same-day transactions. Managers and the account owner can refund transactions from any date. If you need to change this policy, adjust refund permissions in Settings → POS → Permissions." },
+      { q: "Is there a time limit for processing refunds?", a: "AskBiz does not enforce a refund time limit — that is your business policy. However, transactions older than 12 months are archived and require the account owner to process refunds." },
+    ],
+    related: ["pos-making-a-sale", "pos-amending-transactions", "pos-viewing-daily-stats"],
+  },
+  {
+    slug: "pos-amending-transactions",
+    title: "Amending and Correcting Transactions",
+    description: "Fix mistakes in completed POS transactions — wrong product, incorrect quantity, or wrong payment method — without losing your audit trail.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 3,
+    lastUpdated: "2026-05-12",
+    keywords: ["amend pos transaction", "correct pos sale mistake", "edit completed sale pos", "pos transaction correction", "fix wrong product pos", "pos void transaction"],
+    content: [
+      {
+        heading: "When to amend vs. when to refund",
+        body: "Use an **amendment** when the original transaction was recorded incorrectly — wrong product scanned, wrong quantity entered, or wrong payment method selected. The customer is not returning goods; you are correcting a data error.\n\nUse a **refund** when the customer is actually returning goods or requesting their money back. The distinction matters because amendments adjust historical data in place, while refunds create a new offsetting transaction.",
+      },
+      {
+        heading: "How to amend a transaction",
+        body: "Go to **/pos/transactions**, find the sale, and tap **Amend**. You can:\n\n- **Change a product** — remove the wrong item and add the correct one\n- **Adjust quantity** — increase or decrease units sold\n- **Change payment method** — switch from cash to card or vice versa\n- **Add a note** — record why the amendment was made\n\nOnly Managers and the account owner can amend transactions. A full amendment history is saved — the original and all changes are visible in the transaction detail view.",
+      },
+      {
+        heading: "Voiding a transaction",
+        body: "If a transaction should not have happened at all — for example, a test sale or a complete duplicate — use **Void** instead of Amend. Voiding removes the transaction from revenue calculations entirely but keeps a record of it in the audit log.\n\nVoided transactions are marked with a strikethrough in the transaction list and excluded from all reports. Stock levels are restored automatically when a transaction is voided. Only Managers and the account owner can void transactions.",
+      },
+      {
+        heading: "Audit trail and accountability",
+        body: "Every amendment and void is logged with the date, time, staff member, and reason. This audit trail is visible in **/pos/transactions** by tapping the transaction and scrolling to **History**.\n\nThe account owner receives a daily summary of all amendments and voids in the Daily Brief if any occurred. This keeps you informed without requiring you to check manually. If amendment rates are unusually high for a particular staff member, AskBiz flags this in the staff performance report.",
+      },
+    ],
+    faq: [
+      { q: "Can a Cashier amend or void a transaction?", a: "No. Only Managers and the account owner have amendment and void permissions. Cashiers should flag mistakes to a Manager for correction." },
+      { q: "Does amending a transaction change my historical reports?", a: "Yes. Amendments update the original transaction data, so reports reflect the corrected figures. The original values are preserved in the audit trail but not shown in standard reports." },
+    ],
+    related: ["pos-processing-refunds", "pos-making-a-sale", "pos-staff-performance"],
+  },
+  {
+    slug: "pos-whatsapp-receipts-setup",
+    title: "Setting Up WhatsApp Receipts",
+    description: "Send digital receipts to customers via WhatsApp after each POS sale. Configure the WhatsApp integration, customise your receipt template, and manage opt-in.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    lastUpdated: "2026-05-12",
+    keywords: ["whatsapp receipt pos", "send receipt via whatsapp", "digital receipt pos", "pos whatsapp integration", "paperless receipt pos system", "whatsapp business pos"],
+    content: [
+      {
+        heading: "Why WhatsApp receipts?",
+        body: "Paper receipts cost money, fade over time, and most customers lose them within hours. WhatsApp receipts solve all three problems — they are free to send, permanent on the customer's phone, and easy to search.\n\nFor your business, WhatsApp receipts also open a communication channel. Customers can reply to their receipt message if they have a question, and you have a record of every transaction sent. It is a small touch that builds trust and makes returns easier to handle.",
+      },
+      {
+        heading: "Connecting WhatsApp",
+        body: "Go to **Settings → POS → Receipts → WhatsApp** and tap **Connect**. You will need a WhatsApp Business account (free from Meta). AskBiz uses the WhatsApp Business API to send messages — follow the on-screen prompts to link your account.\n\nOnce connected, you will see a green **WhatsApp Connected** badge on your POS settings page. Test the connection by sending a receipt to your own number from any completed transaction.",
+      },
+      {
+        heading: "Customising your receipt template",
+        body: "The default receipt template includes your business name, transaction date, line items with prices, total, VAT breakdown, and a thank-you message. You can customise:\n\n- **Business logo** — appears at the top of the receipt\n- **Footer message** — add your returns policy, opening hours, or a promotional message\n- **Colours** — match your brand\n\nEdit the template in **Settings → POS → Receipts → Template**. Preview changes before saving — the preview shows exactly what the customer will see in their WhatsApp chat.",
+      },
+      {
+        heading: "Sending receipts during a sale",
+        body: "After completing a sale, the receipt screen offers a **Send via WhatsApp** option. Enter the customer's phone number (with country code) and tap Send. The receipt is delivered within seconds.\n\nTo speed up the process for regular customers, AskBiz remembers phone numbers linked to customer profiles. If the customer has purchased before and provided their number, it auto-fills. Staff can also skip the receipt entirely by tapping **Done** — sending is always optional and never automatic without customer consent.",
+      },
+    ],
+    faq: [
+      { q: "Does the customer need to opt in to receive WhatsApp receipts?", a: "Yes. You must have the customer's verbal or written consent before sending a WhatsApp message. AskBiz does not send receipts automatically — your staff must manually enter the number and tap Send each time." },
+      { q: "Is there a cost per WhatsApp message?", a: "AskBiz covers the WhatsApp Business API cost for receipt messages on Growth and Business plans. Free plan users can send up to 50 WhatsApp receipts per month. Additional messages are charged at the standard WhatsApp Business API rate." },
+    ],
+    related: ["pos-making-a-sale", "pos-vat-tax-settings", "pos-getting-started"],
+  },
+  {
+    slug: "pos-vat-tax-settings",
+    title: "VAT and Tax Settings for POS",
+    description: "Configure VAT rates, tax-inclusive or tax-exclusive pricing, and ensure your POS transactions comply with HMRC requirements for UK businesses.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    lastUpdated: "2026-05-12",
+    keywords: ["pos vat settings", "vat on pos sales", "tax settings point of sale", "hmrc pos compliance", "pos tax inclusive pricing", "vat rate pos uk"],
+    content: [
+      {
+        heading: "Configuring your default VAT rate",
+        body: "Go to **Settings → POS → Tax** to set your default VAT rate. For most UK businesses, this is **20%** (standard rate). If you sell goods at the reduced rate (5%) or zero rate (0%), you can set product-level overrides.\n\nAskBiz POS applies the default rate to all products unless a product has a specific rate assigned. This means you only need to override rates for exceptions — children's clothing (0%), domestic fuel (5%), and so on.",
+      },
+      {
+        heading: "Tax-inclusive vs. tax-exclusive pricing",
+        body: "In **Settings → POS → Tax**, choose how you want to display prices:\n\n- **Tax-inclusive (recommended for UK retail)** — the price shown on the sale screen includes VAT. A £10.00 product generates £8.33 net + £1.67 VAT.\n- **Tax-exclusive** — the price shown is the net amount. VAT is added at checkout. A £10.00 product becomes £12.00 at the till.\n\nMost UK high-street retailers use tax-inclusive pricing because it matches the price on the shelf. B2B sellers often prefer tax-exclusive. Choose whichever matches your current practice.",
+      },
+      {
+        heading: "Per-product tax overrides",
+        body: "To set a different VAT rate on a specific product, open it in **/pos/inventory**, tap **Tax Settings**, and select the applicable rate. Common scenarios:\n\n- **Zero-rated (0%)** — children's clothing, most food items, books, newspapers\n- **Reduced rate (5%)** — domestic fuel, children's car seats, smoking cessation products\n- **Exempt** — insurance, education, health services\n\nAskBiz saves these overrides and applies them automatically during every sale. The receipt and end-of-day reports break down VAT by rate, which is exactly what your accountant needs.",
+      },
+      {
+        heading: "VAT reporting for your accountant",
+        body: "AskBiz POS generates a **VAT summary** for any date range in **/pos/reports → VAT**. This shows:\n\n- Total gross sales\n- VAT collected, broken down by rate (20%, 5%, 0%)\n- Net sales after VAT\n\nYou can export this as a CSV or PDF and send it directly to your accountant. If you use QuickBooks or Xero, AskBiz can push POS VAT data to your accounting platform automatically — configure this in **Settings → Integrations**.",
+      },
+    ],
+    faq: [
+      { q: "I am not VAT registered — do I need to configure tax settings?", a: "If you are not VAT registered, set the default rate to 0% and toggle off VAT display on receipts. You do not charge VAT, so no VAT line should appear. AskBiz will still track gross sales for your records." },
+      { q: "Can I handle multiple tax jurisdictions (e.g. UK and EU)?", a: "AskBiz POS is designed for single-jurisdiction in-store sales. If you sell across borders, your online store handles international tax. POS tax settings apply to your physical location only." },
+    ],
+    related: ["pos-making-a-sale", "pos-exporting-data", "pos-whatsapp-receipts-setup"],
+  },
+  {
+    slug: "pos-viewing-daily-stats",
+    title: "Viewing Daily Sales and Revenue Stats",
+    description: "Check today's sales, revenue, average basket size, and top-selling products from the AskBiz POS dashboard. Understand your daily stats at a glance.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 3,
+    lastUpdated: "2026-05-12",
+    keywords: ["pos daily sales report", "pos revenue dashboard", "daily takings pos", "pos sales summary", "end of day pos report", "pos daily stats"],
+    content: [
+      {
+        heading: "The POS dashboard",
+        body: "Navigate to **/pos/dashboard** (or tap the chart icon in the POS sidebar) to see your daily stats. The dashboard updates in real time as sales are processed. At the top you will see four headline figures:\n\n- **Today's Revenue** — total net sales after refunds\n- **Transactions** — number of completed sales\n- **Average Basket** — revenue divided by transactions\n- **Items Sold** — total units across all transactions\n\nBelow the headlines, a live sales chart plots revenue by hour so you can see peak trading periods.",
+      },
+      {
+        heading: "Top products and categories",
+        body: "The **Top Products** panel shows your best sellers for the day, ranked by revenue or units sold (toggle between them). This is useful for spotting unexpected demand — if a product is selling faster than usual, you might need to restock sooner.\n\nThe **Category Breakdown** shows revenue split by product category as a simple bar chart. Over time, this helps you understand which parts of your range drive the most in-store revenue and whether that differs from your online mix.",
+      },
+      {
+        heading: "Comparing with previous periods",
+        body: "Tap the **date selector** at the top of the dashboard to view stats for any previous day, or compare today with the same day last week. AskBiz highlights the percentage change for each metric, coloured green (up) or red (down).\n\nYou can also ask the AI chat directly: *\"How does today's in-store revenue compare to last Tuesday?\"* or *\"What was my best POS day this month?\"* The AI has full access to your POS data and can answer trend questions instantly.",
+      },
+    ],
+    faq: [
+      { q: "Can staff members see the daily stats dashboard?", a: "Supervisors and Managers can view the POS dashboard. Cashiers can only see their own shift summary (their transactions, their revenue). The full dashboard is always visible to the account owner." },
+      { q: "When does the 'day' reset for daily stats?", a: "The day resets at midnight in your account timezone (set in Account Settings → Location & Currency). All transactions after midnight count toward the new day." },
+    ],
+    related: ["pos-staff-performance", "pos-exporting-data", "pos-restocking-guide"],
+  },
+  {
+    slug: "pos-staff-performance",
+    title: "Tracking Staff Sales Performance",
+    description: "See which staff members are selling the most, compare performance across shifts, and use data to coach your team — all from the AskBiz POS reports.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    lastUpdated: "2026-05-12",
+    keywords: ["pos staff performance report", "track employee sales pos", "staff sales leaderboard pos", "pos shift performance", "sales per staff member pos", "pos team performance analytics"],
+    content: [
+      {
+        heading: "The staff performance report",
+        body: "Go to **/pos/reports → Staff Performance** to see a breakdown of sales by team member. For each staff member, the report shows:\n\n- **Revenue processed** — total sales value\n- **Transactions** — number of sales\n- **Average basket** — their average sale value\n- **Items per transaction** — how many products per sale\n- **Refund rate** — percentage of their sales that were refunded\n\nFilter by date range to compare performance across different periods — daily, weekly, or monthly.",
+      },
+      {
+        heading: "Shift-level analysis",
+        body: "If your staff work in defined shifts, AskBiz can break performance down by shift. Configure your shift patterns in **Settings → POS → Shifts** (e.g. Morning 09:00–14:00, Afternoon 14:00–19:00). The report then shows performance per person per shift.\n\nThis is particularly useful for identifying whether performance differences are driven by the person or the time of day. A staff member who only works quiet Tuesday mornings will naturally have lower revenue than someone on busy Saturday afternoons — shift context makes comparisons fair.",
+      },
+      {
+        heading: "Using performance data constructively",
+        body: "Staff performance data works best as a coaching tool, not a ranking system. Look for:\n\n- **Low items-per-transaction** — this staff member might benefit from upselling training\n- **High refund rate** — could indicate mis-selling or product knowledge gaps\n- **Consistently high average basket** — learn what this person does differently and share it with the team\n\nAskBiz AI can also help. Ask: *\"Which staff member has the highest average basket this month, and what products are they selling most?\"* to get actionable insights you can use in your next team meeting.",
+      },
+      {
+        heading: "Privacy and transparency",
+        body: "Performance tracking should be transparent with your team. Let staff know that individual sales data is recorded and how it will be used. In many jurisdictions, you are legally required to inform employees about workplace monitoring.\n\nStaff members with Supervisor or Manager roles can see their own performance stats. Cashiers see only their shift summary. Only the account owner sees the comparative leaderboard across all staff.",
+      },
+    ],
+    faq: [
+      { q: "Can I turn off staff performance tracking?", a: "Yes. Go to Settings → POS → Staff → Performance Tracking and toggle it off. Sales will still be recorded but not attributed to individual staff members. You can re-enable it at any time." },
+      { q: "Can staff members see each other's performance?", a: "No. Only the account owner sees the full leaderboard. Staff members see only their own stats. If you want to share a team leaderboard, you can export and share it manually." },
+    ],
+    related: ["pos-adding-staff", "pos-viewing-daily-stats", "pos-exporting-data"],
+  },
+  {
+    slug: "pos-exporting-data",
+    title: "Exporting POS Transaction Data",
+    description: "Export your POS sales, inventory, and staff data as CSV or PDF. Send reports to your accountant, import into spreadsheets, or back up your records.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 3,
+    lastUpdated: "2026-05-12",
+    keywords: ["export pos data csv", "pos sales report download", "pos data export", "pos transaction history export", "download pos report pdf", "pos data backup"],
+    content: [
+      {
+        heading: "What you can export",
+        body: "AskBiz POS lets you export the following data sets:\n\n- **Transactions** — every sale, refund, void, and amendment with full line-item detail\n- **Daily summaries** — one row per day with total revenue, transactions, average basket, and VAT\n- **Inventory** — current product catalogue with stock levels, prices, and categories\n- **Staff performance** — per-staff revenue, transactions, and metrics for a date range\n- **VAT report** — VAT breakdown by rate for your accountant\n\nAll exports are available in **CSV** (for spreadsheets) and **PDF** (for printing or emailing).",
+      },
+      {
+        heading: "How to export",
+        body: "Go to **/pos/reports** and select the report you want. Set the date range using the date picker, then tap the **Export** button in the top-right corner. Choose CSV or PDF and the file will download to your device.\n\nFor scheduled exports, go to **Settings → POS → Scheduled Exports**. You can set up a weekly or monthly email that delivers a CSV or PDF to your inbox (or your accountant's inbox) automatically. This is useful for businesses that need to send regular takings reports.",
+      },
+      {
+        heading: "Importing exported data into other tools",
+        body: "CSV exports from AskBiz POS are formatted for easy import into:\n\n- **Excel or Google Sheets** — open the CSV directly, all columns are labelled\n- **QuickBooks or Xero** — use the accounting platform's bank/sales import feature. AskBiz CSVs include the date, description, and amount columns these platforms expect\n- **Other BI tools** — the CSV format is standard and compatible with any tool that reads comma-separated files\n\nIf your accounting software is connected to AskBiz, POS data flows automatically — you do not need to export and import manually.",
+      },
+    ],
+    faq: [
+      { q: "How far back can I export data?", a: "You can export all POS data from the date you first enabled the POS module. There is no time limit on historical exports. Very large exports (over 100,000 transactions) may take a few minutes to generate." },
+      { q: "Can I schedule automatic exports?", a: "Yes. Go to Settings → POS → Scheduled Exports and configure the frequency (daily, weekly, monthly), format (CSV or PDF), and recipient email address. Scheduled exports are available on all plans." },
+    ],
+    related: ["pos-viewing-daily-stats", "pos-vat-tax-settings", "pos-staff-performance"],
+  },
+  {
+    slug: "pos-camera-troubleshooting",
+    title: "Troubleshooting: Camera Not Working",
+    description: "Fix common camera issues in AskBiz POS — permission denied, black screen, slow scanning, or camera not detected. Step-by-step troubleshooting for all devices.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    lastUpdated: "2026-05-12",
+    keywords: ["pos camera not working", "barcode scanner not detecting", "camera permission denied pos", "pos black screen camera", "fix pos camera issue", "pos camera troubleshooting guide"],
+    content: [
+      {
+        heading: "Camera permission denied",
+        body: "The most common issue is that your browser has not been given permission to access the camera. When you first tap **Scan** in AskBiz POS, your browser should show a permission popup asking to allow camera access.\n\nIf you dismissed this popup or clicked **Block**, you need to reset the permission:\n\n- **Chrome (Android/Desktop)** — tap the padlock icon in the address bar → Site settings → Camera → Allow\n- **Safari (iPhone/iPad)** — go to Settings → Safari → Camera → set to Allow\n- **Firefox** — tap the padlock icon → Permissions → Camera → Allow\n\nAfter changing the permission, refresh the page and tap Scan again.",
+      },
+      {
+        heading: "Black screen or frozen image",
+        body: "If the camera opens but shows a black screen or a frozen image:\n\n1. Check that no other app is using the camera (video call, another browser tab, mirror app)\n2. Close and reopen the browser tab — this resets the camera session\n3. Restart the browser entirely if the issue persists\n4. On mobile, try switching between the front and rear cameras using the camera toggle in the scan view\n\nIf you are on a laptop with a privacy shutter, make sure it is open. Some laptops also have a keyboard shortcut (often `F8` or `Fn+F8`) that toggles the camera on and off.",
+      },
+      {
+        heading: "Slow or unreliable barcode detection",
+        body: "If the camera opens and shows a live image but fails to recognise barcodes:\n\n- **Improve lighting** — barcode scanning struggles in dim environments. Turn on overhead lights or enable the camera flash in POS scan settings\n- **Hold steady** — keep the barcode still in the centre of the frame for at least one second\n- **Clean the lens** — fingerprints and smudges reduce sharpness, especially on phones\n- **Check the barcode** — damaged, wrinkled, or very small barcodes may not scan. Try typing the barcode number manually as a fallback\n- **Reduce distance** — hold the barcode 10–20 cm from the camera, not further",
+      },
+      {
+        heading: "Camera not detected at all",
+        body: "If AskBiz says **No camera detected**, your device either does not have a camera or the browser cannot find it.\n\n- **Desktop without a webcam** — use an external USB webcam or switch to an external barcode scanner instead\n- **Browser does not support camera access** — ensure you are using a modern browser (Chrome, Safari, Firefox, Edge). Older browsers or in-app browsers (e.g. opening AskBiz from within Facebook) may not support camera access\n- **Device restrictions** — some corporate or school-managed devices have camera access disabled at the operating system level. Check with your IT administrator\n\nAs a workaround, you can always type barcode numbers manually or use the product search to add items to the basket.",
+      },
+    ],
+    faq: [
+      { q: "Does AskBiz POS work with the front-facing (selfie) camera?", a: "Yes, but the rear camera is recommended for barcode scanning because it has autofocus and a higher resolution on most devices. You can switch between cameras using the toggle in the scan view." },
+      { q: "Can I use AskBiz POS without a camera at all?", a: "Absolutely. You can add products by tapping the product grid, using the search bar, or typing barcode numbers manually. An external USB/Bluetooth barcode scanner also works without camera access." },
+    ],
+    related: ["pos-scanning-products", "pos-getting-started", "pos-login-issues"],
+  },
+  {
+    slug: "pos-login-issues",
+    title: "Troubleshooting: Login and Magic Link Issues",
+    description: "Fix common POS login problems — magic link not arriving, link expired, staff PIN not working, and session timeout issues.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 3,
+    lastUpdated: "2026-05-12",
+    keywords: ["pos login not working", "magic link not received pos", "pos staff pin not working", "pos session expired", "pos login troubleshooting", "askbiz pos login help"],
+    content: [
+      {
+        heading: "Magic link not arriving",
+        body: "AskBiz POS staff members log in via magic link emails. If the email is not arriving:\n\n1. **Check spam/junk** — magic links from AskBiz sometimes land in spam folders, especially on first use\n2. **Verify the email address** — ask the account owner to check the address in Settings → POS → Staff. A single typo will send the link to the wrong inbox\n3. **Wait 2 minutes** — email delivery can take up to 2 minutes during busy periods\n4. **Resend** — the staff member can tap **Resend Link** on the login page. Only the most recent link is valid\n5. **Check email filters** — corporate email systems sometimes block automated emails. Whitelist `noreply@askbiz.co` to prevent this",
+      },
+      {
+        heading: "Magic link expired",
+        body: "Magic links expire after **15 minutes** for security reasons. If a staff member clicks an expired link, they will see an error message with a **Request New Link** button.\n\nCommon causes of expiry:\n- The email sat in the inbox too long before being opened\n- The link was opened on a different device from the one that requested it (magic links are device-bound)\n- The account owner sent a new invitation, which invalidated the previous link\n\nThe fix is always the same: go to the POS login page and request a fresh link.",
+      },
+      {
+        heading: "Staff PIN not working",
+        body: "If a staff member's 4-digit PIN is rejected:\n\n- **Check caps lock is off** — PINs are numeric, but some on-screen keyboards behave unexpectedly with caps lock\n- **Verify the PIN** — the account owner can view and reset PINs in Settings → POS → Staff → [name] → Reset PIN\n- **Account deactivated** — if the staff member has been paused or deactivated, their PIN stops working. Check their status in staff settings\n- **Wrong location** — if you have multiple POS locations, PINs are location-specific. Make sure the staff member is logging into the correct location",
+      },
+      {
+        heading: "Session timeout and re-authentication",
+        body: "POS sessions stay active for **12 hours** by default. After that, the staff member is logged out and must re-authenticate with their magic link or PIN. This timeout protects against unattended devices being used by unauthorised people.\n\nYou can adjust the timeout period in **Settings → POS → Security → Session Timeout**. For high-security environments, reduce it to 1–4 hours. For convenience in trusted environments (e.g. your own shop with no public access), you can extend it to 24 hours.",
+      },
+    ],
+    faq: [
+      { q: "Can I use a password instead of a magic link?", a: "No. AskBiz POS uses magic links and PINs only — there are no passwords to remember, forget, or compromise. This is a deliberate security choice that reduces the risk of credential theft." },
+      { q: "What if I (the account owner) cannot log in?", a: "Account owner login issues are not POS-specific — use the main AskBiz login at /login. If your magic link is not arriving, check the general login troubleshooting guide or contact support at help@askbiz.co." },
+    ],
+    related: ["pos-adding-staff", "pos-getting-started", "pos-camera-troubleshooting"],
+  },
+
+  // ── POS COMPLIANCE ────────────────────────────────────────────────────────
+  {
+    slug: "pos-hmrc-compliance",
+    title: "HMRC Compliance and Digital Record-Keeping for POS",
+    description: "Understand your HMRC obligations when using a POS system — Making Tax Digital, VAT record-keeping, and what transaction data you must retain.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 5,
+    lastUpdated: "2026-05-12",
+    keywords: ["hmrc pos compliance", "making tax digital pos", "pos vat record keeping", "hmrc digital records retail", "pos tax compliance uk", "mtd for vat pos"],
+    content: [
+      {
+        heading: "Making Tax Digital and your POS",
+        body: "Since April 2022, all VAT-registered UK businesses must keep digital records and submit VAT returns using MTD-compatible software. Your POS system is a critical part of this chain. Every sale processed through AskBiz POS is automatically recorded with the transaction date, items sold, amounts, VAT rate applied, and payment method. This data feeds directly into your VAT reporting.\n\nThe key requirement is that records must be **digitally linked** — no manual re-keying between systems. AskBiz POS stores all transaction data in a structured format that can be exported directly to your accounting software (Xero, QuickBooks, FreeAgent) or downloaded as a CSV for your accountant. This digital link satisfies HMRC's MTD requirements without any extra work on your part.",
+      },
+      {
+        heading: "What transaction records you must keep",
+        body: "HMRC requires you to retain the following for every sale:\n\n- **Date and time** of the transaction\n- **Amount charged** (including VAT breakdown)\n- **VAT rate applied** (standard 20%, reduced 5%, or zero-rated)\n- **Description of goods or services** sold\n- **Payment method** (cash, card, contactless)\n\nAskBiz POS captures all of these automatically. You must retain these records for **at least 6 years** — AskBiz stores your full transaction history for the lifetime of your account. If you cancel your account, export your data first using **POS → Export → Full History**.",
+      },
+      {
+        heading: "VAT schemes and POS configuration",
+        body: "If you use a **VAT retail scheme** (Point of Sale, Apportionment, or Direct Calculation), your POS must be configured to match. AskBiz POS supports standard VAT accounting out of the box and separates VAT at the point of sale. If you use a retail scheme, ensure your accountant has confirmed which scheme applies and that your POS tax settings reflect it.\n\nFor businesses on the **Flat Rate Scheme**, your POS still records the full VAT breakdown per transaction — but your VAT return will use the flat rate percentage. AskBiz exports include both the actual VAT collected and the flat rate calculation to make quarterly returns straightforward.",
+      },
+      {
+        heading: "Common compliance mistakes to avoid",
+        body: "The most frequent HMRC compliance issues with POS systems are:\n\n- **Mixing personal and business transactions** — never process personal purchases through your business POS\n- **Not recording cash sales** — every cash sale must go through the POS, even small ones. HMRC penalties apply to undeclared income regardless of amount\n- **Incorrect VAT rates** — check that each product in your inventory has the correct VAT rate assigned. Food, children's clothing, and certain other categories have reduced or zero VAT rates\n- **Deleting or amending transactions without an audit trail** — AskBiz POS never deletes transaction data. Amendments and refunds create new records linked to the original, maintaining a complete audit trail that satisfies HMRC inspection requirements",
+      },
+    ],
+    faq: [
+      { q: "Does AskBiz POS satisfy Making Tax Digital requirements?", a: "Yes. AskBiz POS keeps digital records of all transactions with VAT breakdowns and supports digital export to MTD-compatible accounting software. The data chain is fully digital with no manual re-keying required." },
+      { q: "How long does HMRC require me to keep POS records?", a: "HMRC requires you to keep VAT records for at least 6 years. AskBiz retains your full transaction history for the lifetime of your account." },
+    ],
+    related: ["pos-vat-tax-settings", "pos-exporting-data", "pos-audit-trail"],
+  },
+  {
+    slug: "pos-gdpr-customer-data",
+    title: "GDPR and Customer Data Protection at Point of Sale",
+    description: "How to handle customer data collected through your POS system in compliance with UK GDPR — consent, retention, subject access requests, and staff responsibilities.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    lastUpdated: "2026-05-12",
+    keywords: ["pos gdpr compliance", "customer data protection pos", "pos privacy uk", "gdpr point of sale", "customer data retention pos", "pos data protection act"],
+    content: [
+      {
+        heading: "What customer data your POS collects",
+        body: "When a customer makes a purchase through AskBiz POS, the system records the transaction details — items, amounts, time, and payment method. If the customer opts in to receive a WhatsApp receipt, their phone number is also stored.\n\nThis is **personal data** under UK GDPR if it can identify an individual (a phone number always can). You are the **data controller** for this information — meaning you decide why and how it is processed. AskBiz is the **data processor**, handling the data on your behalf under the terms of the Data Processing Agreement included in your AskBiz subscription.",
+      },
+      {
+        heading: "Consent and lawful basis",
+        body: "For transaction data, your lawful basis is typically **legitimate interest** or **contractual necessity** — you need to record the sale to fulfil the purchase and meet your legal obligations (tax, consumer rights). No additional consent is required for this.\n\nFor WhatsApp receipt delivery, the customer is actively providing their phone number and requesting the receipt — this constitutes **consent**. Make it clear to the customer that their number will be used only to send the receipt. AskBiz POS does not use customer phone numbers for marketing, and neither should you without separate, explicit consent.",
+      },
+      {
+        heading: "Data retention and deletion",
+        body: "You must not keep personal data longer than necessary. Transaction records must be retained for 6 years for HMRC compliance, but customer phone numbers collected for receipts should be reviewed regularly.\n\nAskBiz POS retains transaction data for as long as your account is active (and for HMRC compliance after closure). WhatsApp phone numbers are stored alongside the transaction they relate to. If a customer requests deletion of their phone number under their **right to erasure**, you can remove it from the transaction record in **POS → Transactions → [transaction] → Customer Details → Remove Phone Number**. The transaction itself is retained for tax purposes, but the personal identifier is stripped.",
+      },
+      {
+        heading: "Staff responsibilities and training",
+        body: "Your POS staff handle customer data every day, so they need to understand the basics:\n\n- **Never share customer phone numbers** outside the POS system\n- **Never photograph or copy** transaction screens containing customer details\n- **Report any data breach** (e.g., a device left unlocked in a public area) to the account owner immediately\n- **Do not look up customer transaction history** without a legitimate business reason\n\nAskBiz POS role-based access helps enforce this — cashiers can only see the current transaction, not historical customer data. Only account owners and inventory managers with elevated permissions can access full transaction histories.",
+      },
+    ],
+    faq: [
+      { q: "Do I need a privacy notice for my POS?", a: "Yes. If you collect any personal data (including phone numbers for receipts), you should have a privacy notice that explains what data you collect, why, and how customers can exercise their rights. A simple sign at the till or a link on your digital receipt is sufficient for most small retailers." },
+      { q: "What if a customer asks for all the data I hold on them?", a: "This is a Subject Access Request (SAR) under UK GDPR. You must respond within 30 days. In AskBiz POS, use the export function to pull all transactions linked to that customer's phone number and provide the data in a readable format." },
+    ],
+    related: ["pos-hmrc-compliance", "pos-whatsapp-receipts-setup", "pos-security-best-practices"],
+  },
+  {
+    slug: "pos-receipt-legal-requirements",
+    title: "UK Receipt Requirements: What Must Appear on a POS Receipt",
+    description: "Legal requirements for till receipts in the UK — what information must be included, VAT receipt rules, and how AskBiz POS handles compliance automatically.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 3,
+    lastUpdated: "2026-05-12",
+    keywords: ["uk receipt requirements", "what must be on a receipt uk", "vat receipt rules", "pos receipt legal", "till receipt requirements", "vat invoice requirements uk"],
+    content: [
+      {
+        heading: "Standard receipt requirements",
+        body: "While UK law does not technically require retailers to issue a receipt for every transaction, it is considered best practice and many customers expect one. Consumer Rights Act 2015 gives customers the right to proof of purchase for returns and warranty claims.\n\nA good receipt should include:\n\n- **Your business name and address**\n- **Date and time** of the transaction\n- **Itemised list** of goods or services purchased\n- **Price of each item** and the **total amount paid**\n- **Payment method** (cash, card, etc.)\n- **A unique transaction reference number**\n\nAskBiz POS includes all of these on every receipt automatically — both printed and WhatsApp digital receipts.",
+      },
+      {
+        heading: "VAT receipt obligations",
+        body: "If you are VAT-registered, different rules apply depending on the transaction value:\n\n- **Under £250** — a simplified VAT receipt is sufficient. It must show your name, VAT number, date, description of goods, total including VAT, and the VAT rate applied\n- **£250 and over** — a full VAT invoice is required. This must additionally include the customer's name and address, a unique invoice number, your address, the net amount, VAT amount, and gross amount separately\n\nAskBiz POS generates simplified VAT receipts for all transactions by default. For sales of £250 or more where the customer requests a full VAT invoice, use **Transaction → Generate VAT Invoice** to create one with the required additional fields.",
+      },
+      {
+        heading: "Digital receipts and legal validity",
+        body: "Digital receipts (including WhatsApp receipts from AskBiz POS) are legally valid in the UK. HMRC accepts digital records and receipts as proof of transaction for both you and your customers. There is no legal requirement for a paper receipt.\n\nDigital receipts are actually preferable for compliance because they cannot be altered after issue, they are timestamped automatically, and they create a searchable archive. AskBiz POS stores every receipt permanently, so if a customer loses theirs, you can resend it from the transaction history at any time.",
+      },
+    ],
+    faq: [
+      { q: "Am I legally required to give a receipt for every sale?", a: "Not strictly, but it is strongly recommended. Customers have a right to proof of purchase under the Consumer Rights Act 2015, and HMRC expects you to be able to evidence every transaction. AskBiz POS generates a receipt for every sale automatically." },
+      { q: "Can I use WhatsApp receipts instead of paper ones?", a: "Yes. Digital receipts are fully legal in the UK. Many customers prefer them. AskBiz POS can send receipts via WhatsApp instantly — the customer just needs to provide their phone number at checkout." },
+    ],
+    related: ["pos-hmrc-compliance", "pos-vat-tax-settings", "pos-whatsapp-receipts-setup"],
   },
 
 ];
