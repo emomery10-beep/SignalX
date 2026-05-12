@@ -1,0 +1,13 @@
+{
+  "name": "AskBiz POS",
+  "short_name": "AskBiz POS",
+  "description": "Point of Sale for AskBiz — scan, sell, done.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9f8f6",
+  "theme_color": "#d08a59",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
