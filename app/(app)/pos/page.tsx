@@ -21,7 +21,7 @@ interface Transaction {
   payment_type: string
   status: string
   created_at: string
-  pos_staff: { name: string } | null
+  cashier: { name: string } | null
   pos_items: { name: string; qty: number; unit_price: number }[]
 }
 
@@ -112,7 +112,7 @@ export default function POSPage() {
   const cashierStats = staff
     .filter(s => s.role === 'cashier')
     .map(s => {
-      const txs = transactions.filter(t => t.pos_staff?.name === s.name && t.status === 'completed')
+      const txs = transactions.filter(t => t.cashier?.name === s.name && t.status === 'completed')
       return { ...s, sales: txs.length, revenue: txs.reduce((sum, t) => sum + t.total, 0) }
     })
     .sort((a, b) => b.revenue - a.revenue)
@@ -391,7 +391,7 @@ export default function POSPage() {
                           {tx.pos_items.length > 2 && ` +${tx.pos_items.length - 2} more`}
                         </div>
                         <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
-                          {tx.pos_staff?.name || 'Owner'} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · {tx.payment_type}
+                          {tx.cashier?.name || 'Owner'} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · {tx.payment_type}
                         </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -674,7 +674,7 @@ export default function POSPage() {
                       <span style={{ fontSize: 15, fontWeight: 700, color: '#dc2626' }}>−{currencySymbol}{tx.total.toFixed(2)}</span>
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--tx3)' }}>
-                      {tx.pos_staff?.name || 'Owner'} · {new Date(tx.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      {tx.cashier?.name || 'Owner'} · {new Date(tx.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
                 ))}
@@ -691,7 +691,7 @@ export default function POSPage() {
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 101, background: 'var(--sf)', borderRadius: 20, padding: '28px', width: '90%', maxWidth: 440, boxShadow: '0 20px 60px rgba(0,0,0,.2)' }}>
             <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Process refund</div>
             <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 20 }}>
-              Sale #{refundTx.id.slice(0, 8)} · {currencySymbol}{refundTx.total.toFixed(2)} · {refundTx.pos_staff?.name || 'Owner'}
+              Sale #{refundTx.id.slice(0, 8)} · {currencySymbol}{refundTx.total.toFixed(2)} · {refundTx.cashier?.name || 'Owner'}
             </div>
 
             {/* Items */}

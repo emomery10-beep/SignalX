@@ -17,7 +17,8 @@ export async function GET(req: NextRequest) {
     .select(`
       *,
       pos_items(*),
-      pos_staff(id, name, role),
+      cashier:cashier_id(id, name, role),
+      amended_by_staff:amended_by(id, name, role),
       pos_customers(id, phone, name)
     `)
     .eq('owner_id', user.id)
