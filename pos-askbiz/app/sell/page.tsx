@@ -52,29 +52,28 @@ export default function SellPage() {
     const s = JSON.parse(session) as StaffSession
     if (s.role !== 'cashier') { router.push('/inventory'); return }
     setStaff(s)
-    loadTodayStats(s.owner_id)
+    loadTodayStats(s.owner_id, s.id)
     loadCurrency(s.owner_id)
   }, [])
 
-  const loadCurrency = async (owner_id: string) => {
-    try {
-      const res = await fetch(`${API}/api/pos/transactions?limit=1`, { headers: { 'x-owner-id': owner_id } })
-      // currency comes from profile — use GBP as default for PWA
-      setCurrencySymbol('£')
-    } catch { /* silent */ }
+  const loadCurrency = async (_owner_id: string) => {
+    setCurrencySymbol('£')
   }
 
-  const loadTodayStats = async (owner_id: string) => {
+  const loadTodayStats = async (owner_id: string, staffId?: string) => {
     const from = new Date(); from.setHours(0,0,0,0)
     try {
-      const res = await fetch(`${API}/api/pos/transactions?from=${from.toISOString()}`)
+      const res = await fetch(`${API}/api/pos/transactions?from=${from.toISOString()}`, {
+        headers: { 'x-owner-id': owner_id },
+      })
       const data = await res.json()
+      const sid = staffId || staff?.id
       const mine = (data.transactions || []).filter((t: { pos_staff: { id: string } | null; status: string }) =>
-        t.pos_staff?.id === staff?.id && t.status === 'completed'
+        t.pos_staff?.id === sid && t.status === 'completed'
       )
       setTodaySales(mine.length)
       setTodayRevenue(mine.reduce((s: number, t: { total: number }) => s + t.total, 0))
-    } catch { /* silent */ }
+    } catch { /* silent — stats are non-critical */ }
   }
 
   const cartTotal = cart.reduce((s, i) => s + i.qty * i.unit_price, 0)
@@ -156,36 +155,42 @@ export default function SellPage() {
   const handleCheckout = async () => {
     if (!staff || cart.length === 0) return
     setProcessing(true)
-    const res = await fetch(`${API}/api/pos/transactions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        items:          cart,
-        payment_type:   paymentType,
-        cashier_id:     staff.id,
-        customer_phone: customerPhone || null,
-      }),
-    })
-    const data = await res.json()
-    setProcessing(false)
-    if (data.transaction_id) {
-      setLastTxId(data.transaction_id)
-      setTodaySales(s => s + 1)
-      setTodayRevenue(r => r + cartTotal)
-      setScreen('receipt')
+    try {
+      const res = await fetch(`${API}/api/pos/transactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-owner-id': staff.owner_id },
+        body: JSON.stringify({
+          items:          cart,
+          payment_type:   paymentType,
+          cashier_id:     staff.id,
+          customer_phone: customerPhone || null,
+        }),
+      })
+      const data = await res.json()
+      setProcessing(false)
+      if (data.transaction_id) {
+        setLastTxId(data.transaction_id)
+        setTodaySales(s => s + 1)
+        setTodayRevenue(r => r + cartTotal)
+        setScreen('receipt')
+      }
+    } catch {
+      setProcessing(false)
     }
   }
 
   const handleSendReceipt = async () => {
     if (!customerPhone || !lastTxId) return
     setSendingReceipt(true)
-    await fetch(`${API}/api/pos/receipt`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ transaction_id: lastTxId, phone: customerPhone }),
-    })
+    try {
+      await fetch(`${API}/api/pos/receipt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transaction_id: lastTxId, phone: customerPhone }),
+      })
+      setReceiptSent(true)
+    } catch { /* receipt send is best-effort */ }
     setSendingReceipt(false)
-    setReceiptSent(true)
   }
 
   const resetSale = () => {

@@ -31,9 +31,11 @@ export default function InventoryPage() {
 
   const loadInventory = async () => {
     setLoading(true)
-    const res = await fetch(`${API}/api/pos/inventory`)
-    const data = await res.json()
-    setItems(data.inventory || [])
+    try {
+      const res = await fetch(`${API}/api/pos/inventory`)
+      const data = await res.json()
+      setItems(data.inventory || [])
+    } catch { /* silent — will show empty state */ }
     setLoading(false)
   }
 
