@@ -75,6 +75,10 @@ export default function POSPage() {
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showCameraMenu, setShowCameraMenu] = useState(false)
+  const [showCameraPreview, setShowCameraPreview] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
 
   useEffect(() => {
     const init = async () => {
@@ -200,6 +204,52 @@ export default function POSPage() {
     setEditName(member.name)
     setEditPhone(member.phone || '')
     setEditEmail(member.email || '')
+  }
+
+  const handleOpenCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false,
+      })
+      streamRef.current = stream
+      setShowCameraPreview(true)
+      setShowCameraMenu(false)
+
+      // Set video source
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+      }
+    } catch (err: any) {
+      alert('Camera access denied or not available: ' + err.message)
+    }
+  }
+
+  const handleCapturePhoto = async () => {
+    if (!videoRef.current || !canvasRef.current) return
+
+    const context = canvasRef.current.getContext('2d')
+    if (!context) return
+
+    canvasRef.current.width = videoRef.current.videoWidth
+    canvasRef.current.height = videoRef.current.videoHeight
+    context.drawImage(videoRef.current, 0, 0)
+
+    canvasRef.current.toBlob(async (blob) => {
+      if (blob) {
+        const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' })
+        handleImageCapture(file)
+        handleCloseCamera()
+      }
+    }, 'image/jpeg', 0.9)
+  }
+
+  const handleCloseCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
+    }
+    setShowCameraPreview(false)
   }
 
   const handleImageCapture = async (file: File) => {
@@ -636,7 +686,7 @@ export default function POSPage() {
                 {showCameraMenu && (
                   <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, overflow: 'hidden', zIndex: 10, minWidth: 160 }}>
                     <button
-                      onClick={() => { cameraInputRef.current?.click(); setShowCameraMenu(false) }}
+                      onClick={handleOpenCamera}
                       style={{ width: '100%', padding: '12px 16px', textAlign: 'left', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: 'var(--tx)', borderBottom: '1px solid var(--b)', fontFamily: 'inherit' }}
                     >
                       📸 Take photo
@@ -657,6 +707,55 @@ export default function POSPage() {
                 </button>
               </div>
             </div>
+
+            {/* ── CAMERA PREVIEW MODAL ─────────────────────────── */}
+            {showCameraPreview && (
+              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.9)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  style={{ width: '100%', maxWidth: '600px', borderRadius: 12, marginBottom: 16 }}
+                />
+                <canvas ref={canvasRef} style={{ display: 'none' }} />
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                  <button
+                    onClick={handleCapturePhoto}
+                    disabled={recognizing}
+                    style={{
+                      padding: '12px 28px',
+                      borderRadius: 10,
+                      background: ACC,
+                      color: '#fff',
+                      fontSize: 14,
+                      fontWeight: 700,
+                      border: 'none',
+                      cursor: recognizing ? 'not-allowed' : 'pointer',
+                      fontFamily: 'inherit'
+                    }}
+                  >
+                    {recognizing ? 'Processing...' : '📷 Capture photo'}
+                  </button>
+                  <button
+                    onClick={handleCloseCamera}
+                    disabled={recognizing}
+                    style={{
+                      padding: '12px 28px',
+                      borderRadius: 10,
+                      border: '1px solid rgba(255,255,255,.3)',
+                      background: 'transparent',
+                      color: '#fff',
+                      fontSize: 14,
+                      fontWeight: 700,
+                      cursor: recognizing ? 'not-allowed' : 'pointer',
+                      fontFamily: 'inherit'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
 
             {recognizedProducts.length > 0 && (
               <div style={{ marginBottom: 16, padding: '16px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--ev)' }}>
