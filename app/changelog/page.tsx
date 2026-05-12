@@ -38,6 +38,30 @@ const TYPE_STYLE: Record<ChangeType, { label: string; bg: string; color: string;
 
 const RELEASES: Release[] = [
   {
+    version: '2.9.0',
+    date: '2026-05-12',
+    summary: 'Introducing AskBiz POS — a fully integrated point of sale system with camera scanning, inventory management, staff roles, and real-time BI.',
+    changes: [
+      { type: 'new',      text: 'AskBiz POS — built-in point of sale system accessible from any smartphone or tablet' },
+      { type: 'new',      text: 'Camera-based barcode and price tag scanning using your phone camera — no extra hardware needed' },
+      { type: 'new',      text: 'Full checkout flow: scan, cart, payment (cash or card), and receipt in under 60 seconds' },
+      { type: 'new',      text: 'WhatsApp receipt delivery — customers get digital proof of purchase instantly' },
+      { type: 'new',      text: 'Staff management with role-based access (cashier and inventory roles) and magic link login' },
+      { type: 'new',      text: 'Real-time inventory management with low-stock and out-of-stock alerts' },
+      { type: 'new',      text: 'Full and partial refund handling with reason tracking and audit trail' },
+      { type: 'new',      text: 'Transaction amendments and corrections with complete audit logging' },
+      { type: 'new',      text: 'VAT calculation on every transaction with MTD-compatible digital record-keeping' },
+      { type: 'new',      text: '30-day transaction export for accountants (CSV format)' },
+      { type: 'new',      text: 'POS data feeds directly into dashboards, Daily Brief, Business Pulse, and AI chat' },
+      { type: 'new',      text: 'Multi-location POS support with per-location staff, inventory, and reporting' },
+      { type: 'new',      text: 'Offline mode — continue processing cash sales during brief internet outages' },
+      { type: 'new',      text: '25 new Academy articles on POS and retail intelligence' },
+      { type: 'new',      text: '22 new Help Centre articles including compliance guides (HMRC, GDPR, receipt law)' },
+      { type: 'new',      text: '"Retail POS Mastery" learning path — from first sale to full intelligence' },
+      { type: 'improved', text: 'Help Centre POS integration reference updated (previously CSV-only for Zettle/Square)' },
+    ],
+  },
+  {
     version: '2.8.0',
     date: '2026-05-09',
     summary: 'Major help centre overhaul with contextual search, smart escalation, and an in-app help widget.',

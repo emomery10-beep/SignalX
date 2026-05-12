@@ -38,6 +38,70 @@ interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
 {
+  slug: "askbiz-pos-launch-built-in-point-of-sale",
+  title: "Introducing AskBiz POS: A Built-In Point of Sale That Turns Every Transaction Into Intelligence",
+  metaDescription: "AskBiz now includes a free built-in POS system. Scan products with your phone camera, process sales, manage inventory, and get AI-powered retail insights — no extra hardware needed.",
+  cluster: "AskBiz Tutorials",
+  pillar: "Product Launch",
+  publishDate: "2026-05-12",
+  readTime: 8,
+  tldr: "AskBiz POS is a fully integrated point of sale system built into the AskBiz platform. Use your phone camera to scan products, process cash and card payments, manage inventory, track staff performance, and get instant AI-powered insights from your retail data — all without buying extra hardware or subscribing to a separate service.",
+  sections: [
+    {
+      heading: "Why we built a POS into a business intelligence platform",
+      level: 2 as const,
+      body: "Most small retailers use a standalone POS to process sales and a completely separate system — if they have one at all — to understand what those sales mean. The data sits in two places. Getting it out of the till and into a dashboard requires CSV exports, manual uploads, or expensive integrations that break every time one side updates. We decided the simplest way to give shop owners real-time retail intelligence was to eliminate the gap entirely. AskBiz POS is not a third-party integration. It is built into the same platform that powers your dashboards, AI chat, Daily Briefs, and Business Pulse. Every sale you process updates your analytics instantly. There is no sync delay, no export step, and no middleware. The transaction and the insight live in the same system."
+    },
+    {
+      heading: "What AskBiz POS does",
+      level: 2 as const,
+      body: "AskBiz POS is a mobile-first Progressive Web App that runs on any smartphone or tablet. You do not need a dedicated terminal, receipt printer, or barcode scanner to get started — your phone camera does the scanning. Here is what it covers out of the box: product scanning via camera-based barcode and price tag recognition, a fast checkout flow that completes in under 60 seconds from scan to receipt, cash and card payment support, WhatsApp receipt delivery so your customers get digital proof of purchase instantly, real-time inventory management with low-stock and out-of-stock alerts, staff management with role-based access (cashiers and inventory managers), magic link authentication so staff never need to remember passwords, full refund handling including partial refunds with reason tracking, VAT calculation on every transaction, audit trails that log every action for HMRC compliance, and 30-day transaction exports for your accountant."
+    },
+    {
+      heading: "No hardware required — just your phone",
+      level: 2 as const,
+      body: "The single biggest barrier to POS adoption for small businesses is hardware cost. Traditional EPOS systems require a terminal, barcode scanner, receipt printer, and often a dedicated tablet — easily several hundred pounds before you process a single sale. AskBiz POS eliminates all of that. The app runs in your phone browser as a PWA, which means you install it to your home screen like a native app but it requires no App Store download and no approval process. Your phone camera handles barcode scanning using our image recognition API. Receipts are delivered digitally via WhatsApp or displayed on screen. If you want to add a Bluetooth receipt printer or card reader later, you can — but they are optional add-ons, not prerequisites."
+    },
+    {
+      heading: "Your POS data, in your AI chat",
+      level: 2 as const,
+      body: "This is where AskBiz POS differs from every standalone till on the market. Because the POS is built into AskBiz, your transaction data is immediately available to the AI. You can open the chat and ask: What was my best-selling product last week? Which cashier has the highest average basket value? How does my in-store revenue compare to Shopify this month? Why was Tuesday's revenue lower than usual? The AI does not need a data connection or an integration key. It already has your POS data because it is the same system. For shop owners who also sell online, this creates a genuine omnichannel view — in-store and online data in one place, queryable in plain English."
+    },
+    {
+      heading: "Daily Briefs and Business Pulse — now with retail data",
+      level: 2 as const,
+      body: "If you already use AskBiz, you know the Daily Brief and Business Pulse. With POS enabled, both automatically include your retail data. Your morning Brief now shows yesterday's in-store revenue, top products, staff leaderboard, stock alerts, and any anomalies — alongside your online channel data. Your Business Pulse score factors in POS revenue trends, refund rates, and inventory health. No configuration required. Enable the POS, process a few sales, and the next morning your Brief includes retail intelligence."
+    },
+    {
+      heading: "Compliance built in, not bolted on",
+      level: 2 as const,
+      body: "UK retailers face real compliance obligations — Making Tax Digital, VAT record-keeping, GDPR for customer data, and receipt regulations. AskBiz POS handles these automatically. Every transaction is recorded digitally with the date, items, amounts, VAT breakdown, and payment method — satisfying HMRC's MTD digital record-keeping requirements. VAT is calculated and separated on every sale. Transaction data is retained for the lifetime of your account, well beyond HMRC's six-year minimum. Audit trails log every action including refunds and amendments. Customer phone numbers collected for WhatsApp receipts are handled under GDPR with clear consent. We wrote detailed compliance guides in the Help Centre covering HMRC, GDPR, and UK receipt legal requirements so you know exactly where you stand."
+    },
+    {
+      heading: "Multi-location, multi-staff, one dashboard",
+      level: 2 as const,
+      body: "If you run more than one location — two shops, a permanent store plus market stalls, or premises with pop-ups — each location runs its own POS instance but all data flows into your single AskBiz account. Staff are assigned per location, inventory is tracked per location, and you can view consolidated or per-location reports. Add a second location in Settings and you are running within minutes."
+    },
+    {
+      heading: "Getting started takes five minutes",
+      level: 2 as const,
+      body: "Enable POS in your AskBiz settings. Add your products (manually or via CSV upload). Invite your staff and assign roles. Open the POS on your phone and process your first sale. That is it. No hardware to unbox, no software to install, no integration to configure. Your first transaction will appear on your dashboard and be queryable in AI chat immediately. We have published a full set of guides in the Academy — 25 articles covering everything from basic setup to advanced BI integration — and 22 help articles including compliance, troubleshooting, and multi-location setup. There is also a dedicated learning path if you prefer a structured walkthrough."
+    },
+  ],
+  paa: [
+    { q: "Does AskBiz POS require special hardware?", a: "No. It runs on any smartphone or tablet as a Progressive Web App. Your phone camera handles barcode scanning. Optional add-ons like Bluetooth receipt printers are supported but not required." },
+    { q: "Is AskBiz POS free?", a: "AskBiz POS is included in your AskBiz subscription at no additional cost. If you are on the free tier, check your plan details for any transaction limits." },
+    { q: "Can I use AskBiz POS alongside my existing till?", a: "Yes. You can run AskBiz POS alongside any existing POS system. If you want to consolidate your data, you can import historical transactions from your old system via CSV upload." },
+    { q: "Does it work offline?", a: "AskBiz POS caches your product catalogue locally and can process cash sales during brief internet outages. Transactions sync automatically when connectivity returns. Card payments require an active connection." },
+    { q: "What data does the AI have access to from my POS?", a: "Everything — transaction history, product sales, staff performance, refund data, inventory levels, and payment method breakdowns. Ask any question in plain English and the AI queries your full POS dataset." },
+  ],
+  cta: {
+    heading: "Start selling smarter today",
+    body: "AskBiz POS is live now. Enable it in your settings, add your products, and process your first sale in under five minutes. No hardware, no setup fees, no separate subscription. Just scan, sell, and let the intelligence take care of itself."
+  },
+  relatedSlugs: ["what-is-an-ai-chief-of-staff", "askbiz-daily-brief-guide", "askbiz-business-pulse-explained"],
+},
+{
   "slug": "what-is-an-ai-chief-of-staff",
   "title": "What is an AI Chief of Staff? Defining the New Category of Business Intelligence",
   "metaDescription": "An AI Chief of Staff handles the data work your business needs but no one has time for. Learn what this new category means and why founders are adopting it in 2026.",
