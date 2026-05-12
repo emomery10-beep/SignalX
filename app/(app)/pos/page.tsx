@@ -66,6 +66,8 @@ export default function POSPage() {
   const [recognizing, setRecognizing] = useState(false)
   const [recognizedProducts, setRecognizedProducts] = useState<any[]>([])
   const cameraInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [showCameraMenu, setShowCameraMenu] = useState(false)
 
   useEffect(() => {
     const init = async () => {
@@ -517,22 +519,45 @@ export default function POSPage() {
           <div style={{ maxWidth: 800 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{inventory.length} products</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input 
-                  ref={cameraInputRef} 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={(e) => { if (e.target.files?.[0]) handleImageCapture(e.target.files[0]) }} 
-                  style={{ display: 'none' }} 
+              <div style={{ display: 'flex', gap: 8, position: 'relative' }}>
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => { if (e.target.files?.[0]) handleImageCapture(e.target.files[0]) }}
+                  style={{ display: 'none' }}
                   capture="environment"
                 />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => { if (e.target.files?.[0]) handleImageCapture(e.target.files[0]) }}
+                  style={{ display: 'none' }}
+                />
                 <button
-                  onClick={() => cameraInputRef.current?.click()}
+                  onClick={() => setShowCameraMenu(!showCameraMenu)}
                   disabled={recognizing}
                   style={{ padding: '8px 14px', borderRadius: 9, background: 'var(--ev)', color: 'var(--tx)', fontSize: 13, fontWeight: 600, border: '1px solid var(--b)', cursor: recognizing ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: recognizing ? 0.6 : 1 }}
                 >
                   {recognizing ? 'Reading...' : '📷 Read inventory'}
                 </button>
+                {showCameraMenu && (
+                  <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, overflow: 'hidden', zIndex: 10, minWidth: 160 }}>
+                    <button
+                      onClick={() => { cameraInputRef.current?.click(); setShowCameraMenu(false) }}
+                      style={{ width: '100%', padding: '12px 16px', textAlign: 'left', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: 'var(--tx)', borderBottom: '1px solid var(--b)', fontFamily: 'inherit' }}
+                    >
+                      📸 Take photo
+                    </button>
+                    <button
+                      onClick={() => { fileInputRef.current?.click(); setShowCameraMenu(false) }}
+                      style={{ width: '100%', padding: '12px 16px', textAlign: 'left', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: 'var(--tx)', fontFamily: 'inherit' }}
+                    >
+                      📁 Upload file
+                    </button>
+                  </div>
+                )}
                 <button
                   onClick={() => setShowAddProduct(true)}
                   style={{ padding: '8px 14px', borderRadius: 9, background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
