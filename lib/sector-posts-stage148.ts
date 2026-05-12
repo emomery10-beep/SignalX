@@ -1,4 +1,4 @@
-import { BlogPost } from './blog-types'
+import { BlogPost } from './blog-content'
 
 export const SECTOR_POSTS_STAGE148: BlogPost[] = [
   {
