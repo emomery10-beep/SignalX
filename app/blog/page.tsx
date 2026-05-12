@@ -369,7 +369,7 @@ function BlogContent() {
         .mobile-toggle { display: none; cursor: pointer; border: none; background: none; align-items: center; gap: 6px; }
         .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 39; }
         @media (min-width: 861px) {
-          .blog-sidebar-wrap { position: sticky; top: 54px; height: calc(100vh - 54px); overflow-y: auto; align-self: start; }
+          .blog-sidebar-wrap { position: sticky !important; top: 54px !important; height: calc(100vh - 54px); overflow-y: auto; align-self: start; }
         }
         @media (max-width: 860px) {
           .blog-layout { grid-template-columns: 1fr !important; }
