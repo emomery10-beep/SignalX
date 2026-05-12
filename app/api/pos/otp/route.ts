@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { createClient as supabaseCreateClient } from '@supabase/supabase-js'
+import { randomBytes } from 'crypto'
 
 const CORS = {
   'Access-Control-Allow-Origin': 'https://pos.askbiz.co',
@@ -18,12 +20,13 @@ function json(data: unknown, status = 200) {
 export async function POST(req: NextRequest) {
   const supabase = createServiceClient()
   const body = await req.json()
-  const { action, email } = body
+  const { action, email, token } = body
 
-  // ── CHECK STAFF EXISTS (before sending OTP from client) ───────────────────
-  if (action === 'check_staff') {
+  // ── SEND magic link via Supabase email (server-side, no Resend) ──────────
+  if (action === 'send') {
     if (!email?.trim()) return json({ error: 'email required' }, 400)
 
+    // Check staff exists
     const { data: staff } = await supabase
       .from('pos_staff')
       .select('id, name, role, owner_id, active')
@@ -35,26 +38,59 @@ export async function POST(req: NextRequest) {
       error: 'Email not recognised. Ask your manager to add you.',
     }, 404)
 
-    return json({ ok: true, name: staff.name })
+    // Use implicit flow (token_hash) so no PKCE code verifier needed
+    const authClient = supabaseCreateClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false, flowType: 'implicit' } }
+    )
+
+    // Supabase sends the email — redirect callback goes to our server
+    const { error } = await authClient.auth.signInWithOtp({
+      email: email.trim().toLowerCase(),
+      options: {
+        emailRedirectTo: 'https://www.askbiz.co/api/pos/callback',
+        shouldCreateUser: true,
+      },
+    })
+
+    if (error) {
+      console.error('[pos/otp] send error:', error.message)
+      return json({ error: 'Failed to send login link' }, 500)
+    }
+
+    return json({ sent: true, name: staff.name })
   }
 
-  // ── VERIFY STAFF after Supabase magic link auth ───────────────────────────
-  // Called after Supabase authenticates the user — just looks up their staff record
-  if (action === 'verify_staff') {
-    if (!email?.trim()) return json({ error: 'email required' }, 400)
+  // ── VERIFY session token (set by the callback after Supabase auth) ────────
+  if (action === 'verify') {
+    if (!token) return json({ error: 'token required' }, 400)
+
+    const { data: link } = await supabase
+      .from('pos_magic_links')
+      .select('*')
+      .eq('token', token)
+      .eq('used', false)
+      .gt('expires_at', new Date().toISOString())
+      .maybeSingle()
+
+    if (!link) return json({ error: 'Invalid or expired link' }, 401)
+
+    // Mark as used
+    await supabase.from('pos_magic_links')
+      .update({ used: true, used_at: new Date().toISOString() })
+      .eq('id', link.id)
 
     const { data: staff } = await supabase
       .from('pos_staff')
       .select('id, name, role, owner_id, active')
-      .eq('email', email.trim().toLowerCase())
+      .eq('id', link.staff_id)
       .eq('active', true)
-      .maybeSingle()
+      .single()
 
-    if (!staff) return json({ error: 'Staff account not found or deactivated' }, 404)
+    if (!staff) return json({ error: 'Staff account not found' }, 404)
 
-    // Update last login
-    await supabase
-      .from('pos_staff')
+    await supabase.from('pos_staff')
       .update({ last_login_at: new Date().toISOString() })
       .eq('id', staff.id)
 
