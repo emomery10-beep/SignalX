@@ -2096,6 +2096,34 @@ export const LEARNING_PATHS: LearningPath[] = [
       { slug: 'what-is-marketing-automation-roi',     title: 'What Is Automation ROI?' },
     ],
   },
+
+  // ── Retail & POS ────────────────────────────────────────────────────────────
+  {
+    id: 'retail-pos-mastery',
+    title: 'Retail POS Mastery: From First Sale to Full Intelligence',
+    subtitle: 'Set up AskBiz POS and turn every transaction into a business insight',
+    icon: '💳',
+    color: '#e67e22',
+    duration: '~3 hours',
+    level: 'Beginner',
+    description: 'Learn how to set up and run a modern point of sale system, then connect it to dashboards, AI chat, and your Daily Brief for real-time retail intelligence. By the end, you will process sales confidently, manage inventory proactively, and ask your data questions that drive better decisions every day.',
+    articles: [
+      { slug: 'what-is-a-pos-system',           title: 'What Is a POS System?' },
+      { slug: 'askbiz-pos-overview',             title: 'AskBiz POS: How It Works' },
+      { slug: 'pos-staff-management',            title: 'Managing Staff Roles & Logins' },
+      { slug: 'pos-camera-scanning',             title: 'Camera Scanning & Barcode Recognition' },
+      { slug: 'pos-processing-a-sale',           title: 'Processing a Sale in Under 60 Seconds' },
+      { slug: 'pos-cart-management',             title: 'Cart Management' },
+      { slug: 'pos-inventory-management',        title: 'Inventory: Stock Levels, Alerts & Restocking' },
+      { slug: 'pos-refunds-guide',               title: 'Handling Refunds' },
+      { slug: 'pos-vat-calculations',            title: 'VAT Calculations & Tax Compliance' },
+      { slug: 'pos-data-in-dashboards',          title: 'How POS Data Powers Your Dashboard' },
+      { slug: 'pos-ai-chat-questions',           title: '25 AI Questions for Retail Insights' },
+      { slug: 'pos-daily-brief-integration',     title: 'POS Data in Your Daily Brief' },
+      { slug: 'pos-business-pulse-impact',       title: 'How POS Affects Your Business Pulse' },
+      { slug: 'pos-security-best-practices',     title: 'POS Security Best Practices' },
+    ],
+  },
 ]
 
 // ── Helper functions ────────────────────────────────────────────────────────
