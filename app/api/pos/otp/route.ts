@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { sendOTP } from '@/lib/whatsapp'
 import { sendOTPEmail } from '@/lib/email'
 
@@ -19,7 +19,7 @@ function json(data: unknown, status = 200) {
 
 // POST /api/pos/otp — send OTP or verify it
 export async function POST(req: NextRequest) {
-  const supabase = createClient()
+  const supabase = createServiceClient()
   const { action, phone, email, code } = await req.json()
 
   const contact = phone?.trim() || email?.trim()
