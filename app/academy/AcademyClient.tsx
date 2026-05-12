@@ -68,7 +68,7 @@ function ArticleRow({ article, index, total }: { article: AcademyArticle; index:
           {article.title}
         </div>
         <p style={{ fontSize: 12, color: TX2, lineHeight: 1.5, margin: 0 }}>
-          {article.description.slice(0, 100)}{article.description.length > 100 ? '…' : ''}
+          {(article.description || '').slice(0, 100)}{(article.description || '').length > 100 ? '…' : ''}
         </p>
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -95,16 +95,16 @@ export default function AcademyClient() {
     return academyArticles
       .filter(a =>
         a.title.toLowerCase().includes(q) ||
-        a.description.toLowerCase().includes(q) ||
+        (a.description || '').toLowerCase().includes(q) ||
         a.category.toLowerCase().includes(q) ||
-        (a.keywords || []).some(k => k.toLowerCase().includes(q))
+        (a.keywords || []).some(k => k?.toLowerCase().includes(q))
       )
       .map(a => {
         let score = 0
         if (a.title.toLowerCase().includes(q))                         score += 10
         if (a.category.toLowerCase().includes(q))                      score += 6
-        if (a.description.toLowerCase().includes(q))                   score += 4
-        if ((a.keywords || []).some(k => k.toLowerCase().includes(q))) score += 3
+        if ((a.description || '').toLowerCase().includes(q))           score += 4
+        if ((a.keywords || []).some(k => k?.toLowerCase().includes(q))) score += 3
         if (a.difficulty === 'Beginner')                               score += 1
         return { ...a, score }
       })

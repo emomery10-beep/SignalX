@@ -11420,6 +11420,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-revenue-forecasting",
     title: "What Is Revenue Forecasting?",
+    description: "Revenue forecasting estimates future income based on historical data and pipeline analysis, helping SMEs plan spending and avoid cash shortfalls.",
     category: "Financial Forecasting",
     categorySlug: "financial-forecasting",
     difficulty: "Beginner",
@@ -11442,6 +11443,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-zero-based-budgeting",
     title: "What Is Zero-Based Budgeting?",
+    description: "Zero-based budgeting requires every expense to be justified from scratch each cycle, helping SMEs eliminate wasteful spending that traditional budgets carry forward by default.",
     category: "Financial Forecasting",
     categorySlug: "financial-forecasting",
     difficulty: "Intermediate",
@@ -11464,6 +11466,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-variance-analysis",
     title: "What Is Variance Analysis?",
+    description: "Variance analysis compares your planned financial figures to actual results, revealing where and why performance diverged from the budget.",
     category: "Financial Forecasting",
     categorySlug: "financial-forecasting",
     difficulty: "Beginner",
@@ -11486,6 +11489,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-sensitivity-analysis",
     title: "What Is Sensitivity Analysis?",
+    description: "Sensitivity analysis tests how changes in key assumptions — like revenue growth or margins — affect your financial outcomes, so you can identify your biggest risks before they materialise.",
     category: "Financial Forecasting",
     categorySlug: "financial-forecasting",
     difficulty: "Intermediate",
@@ -11508,6 +11512,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-break-even-analysis",
     title: "What Is Break-Even Analysis?",
+    description: "Break-even analysis tells you exactly how many units or hours you need to sell to cover all your costs. Use it to evaluate pricing changes, new hires, and product launches.",
     category: "Financial Forecasting",
     categorySlug: "financial-forecasting",
     difficulty: "Beginner",
@@ -11530,6 +11535,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-budget-vs-actual",
     title: "What Is Budget vs. Actual Reporting?",
+    description: "Budget vs. actual reporting compares what you planned to earn and spend against what really happened, turning your budget from a wish list into a management tool.",
     category: "Financial Forecasting",
     categorySlug: "financial-forecasting",
     difficulty: "Beginner",
@@ -11552,6 +11558,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-13-week-cash-flow",
     title: "What Is a 13-Week Cash Flow Forecast?",
+    description: "A 13-week cash flow forecast tracks weekly inflows and outflows for a rolling quarter, giving you early warning of cash shortfalls while there is still time to act.",
     category: "Financial Forecasting",
     categorySlug: "financial-forecasting",
     difficulty: "Intermediate",
@@ -11574,6 +11581,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-run-rate",
     title: "What Is Run Rate?",
+    description: "Run rate takes a recent period of performance and extrapolates it to estimate annual results — useful for fast-growing businesses where last year's data no longer reflects current scale.",
     category: "Financial Forecasting",
     categorySlug: "financial-forecasting",
     difficulty: "Beginner",
@@ -11596,6 +11604,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-forecast-accuracy",
     title: "What Is Forecast Accuracy?",
+    description: "Forecast accuracy measures how closely your financial predictions match actual results. Tracking it over time reveals systematic biases and drives better planning.",
     category: "Financial Forecasting",
     categorySlug: "financial-forecasting",
     difficulty: "Intermediate",
@@ -11618,6 +11627,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-top-down-forecasting",
     title: "What Is Top-Down Forecasting?",
+    description: "Top-down forecasting starts with total market size and estimates your share to arrive at a revenue figure. It is best used alongside bottom-up methods for cross-validation.",
     category: "Financial Forecasting",
     categorySlug: "financial-forecasting",
     difficulty: "Beginner",
@@ -11640,6 +11650,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-bottom-up-forecasting",
     title: "What Is Bottom-Up Forecasting?",
+    description: "Bottom-up forecasting builds a revenue projection from granular inputs like individual deals, customers, and team capacity — making it the most accurate method for short-term planning.",
     category: "Financial Forecasting",
     categorySlug: "financial-forecasting",
     difficulty: "Beginner",
@@ -11662,6 +11673,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-financial-modelling",
     title: "What Is Financial Modelling?",
+    description: "A financial model is a spreadsheet-based tool that links your assumptions to projected outcomes, letting you test decisions like hiring, pricing, or expansion before committing.",
     category: "Financial Forecasting",
     categorySlug: "financial-forecasting",
     difficulty: "Intermediate",
@@ -11684,6 +11696,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-working-capital-forecast",
     title: "What Is a Working Capital Forecast?",
+    description: "A working capital forecast projects changes in your debtors, creditors, and inventory over time, revealing how growth ties up cash and where to free it.",
     category: "Financial Forecasting",
     categorySlug: "financial-forecasting",
     difficulty: "Intermediate",
@@ -11706,6 +11719,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-capex-vs-opex",
     title: "What Is CapEx vs. OpEx?",
+    description: "CapEx covers long-term asset purchases while OpEx covers day-to-day running costs. The distinction affects your tax treatment, reported profitability, and cash flow timing.",
     category: "Financial Forecasting",
     categorySlug: "financial-forecasting",
     difficulty: "Beginner",
@@ -11728,6 +11742,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-burn-rate-forecasting",
     title: "What Is Burn Rate Forecasting?",
+    description: "Burn rate forecasting projects how quickly your business consumes cash each month and how many months of runway remain, so you can act before funds run out.",
     category: "Financial Forecasting",
     categorySlug: "financial-forecasting",
     difficulty: "Beginner",
@@ -11750,6 +11765,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-contribution-margin-analysis",
     title: "What Is Contribution Margin Analysis?",
+    description: "Contribution margin analysis shows how much each product or service contributes to covering fixed costs and generating profit, helping you prioritise your most profitable revenue streams.",
     category: "Financial Forecasting",
     categorySlug: "financial-forecasting",
     difficulty: "Intermediate",
@@ -11772,6 +11788,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-ebitda-forecasting",
     title: "What Is EBITDA Forecasting?",
+    description: "EBITDA forecasting projects your operating earnings before interest, tax, and non-cash charges — the metric investors and lenders focus on when valuing your business.",
     category: "Financial Forecasting",
     categorySlug: "financial-forecasting",
     difficulty: "Intermediate",
@@ -11794,6 +11811,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-a-sales-pipeline",
     title: "What Is a Sales Pipeline?",
+    description: "A sales pipeline is a visual map of every active deal organised by stage. Learn how to build, manage, and review yours to produce reliable revenue forecasts.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Beginner",
@@ -11816,6 +11834,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-win-rate",
     title: "What Is Win Rate?",
+    description: "Win rate is the percentage of sales opportunities that end in a closed deal. Even a small improvement can significantly boost revenue without adding pipeline.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Beginner",
@@ -11838,6 +11857,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-average-deal-size",
     title: "What Is Average Deal Size?",
+    description: "Average deal size is the mean value of your closed deals. Segmenting it by customer type or product line reveals where revenue growth leverage is greatest.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Beginner",
@@ -11860,6 +11880,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-sales-cycle-length",
     title: "What Is Sales Cycle Length?",
+    description: "Sales cycle length measures the average number of days from first contact to closed deal. Shortening it accelerates revenue and frees up sales capacity.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Beginner",
@@ -11882,6 +11903,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-pipeline-velocity",
     title: "What Is Pipeline Velocity?",
+    description: "Pipeline velocity combines deal volume, win rate, deal size, and cycle length into a single metric that shows how much revenue your pipeline generates per day.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Intermediate",
@@ -11904,6 +11926,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-lead-scoring",
     title: "What Is Lead Scoring?",
+    description: "Lead scoring assigns a numerical rank to each prospect based on fit and engagement, so your sales team spends time on the leads most likely to convert.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Intermediate",
@@ -11926,6 +11949,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-a-sales-quota",
     title: "What Is a Sales Quota?",
+    description: "A sales quota is a performance target assigned to a salesperson or team for a set period. Learn how to set quotas that motivate without being unrealistic.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Beginner",
@@ -11948,6 +11972,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-a-sales-qualified-lead",
     title: "What Is a Sales Qualified Lead?",
+    description: "A sales qualified lead (SQL) is a prospect that has been vetted by sales and meets the criteria for active pursuit. Clear SQL definitions prevent wasted effort and team friction.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Beginner",
@@ -11970,6 +11995,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-a-marketing-qualified-lead",
     title: "What Is a Marketing Qualified Lead?",
+    description: "A marketing qualified lead (MQL) is a prospect whose engagement and profile suggest they are ready to be passed to sales. Getting the MQL threshold right controls lead quality and volume.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Beginner",
@@ -11992,6 +12018,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-sales-velocity",
     title: "What Is Sales Velocity?",
+    description: "Sales velocity measures the rate at which your sales engine generates revenue, combining opportunities, win rate, deal size, and cycle length into one diagnostic metric.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Intermediate",
@@ -12014,6 +12041,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-quota-attainment",
     title: "What Is Quota Attainment?",
+    description: "Quota attainment is the percentage of a sales target achieved in a given period. Team-wide attainment patterns reveal whether targets are realistic and forecasts are reliable.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Beginner",
@@ -12036,6 +12064,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-sales-productivity",
     title: "What Is Sales Productivity?",
+    description: "Sales productivity measures revenue output relative to the time and cost invested. Learn how to reclaim selling time and get more from your existing team.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Intermediate",
@@ -12058,6 +12087,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-upsell-and-cross-sell",
     title: "What Is Upsell and Cross-Sell?",
+    description: "Upselling and cross-selling grow revenue from existing customers — typically at a fraction of the cost of winning new ones. Learn how to spot opportunities and measure expansion performance.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Beginner",
@@ -12080,6 +12110,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-customer-acquisition-cost",
     title: "What Is Customer Acquisition Cost?",
+    description: "Customer acquisition cost (CAC) is the total sales and marketing spend needed to win one new customer. Pair it with lifetime value to assess whether your growth is commercially sustainable.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Beginner",
@@ -12102,6 +12133,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-sales-forecast-accuracy",
     title: "What Is Sales Forecast Accuracy?",
+    description: "Sales forecast accuracy measures how closely your predicted revenue matches actual results. Improving it builds credibility with stakeholders and enables reliable operational planning.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Intermediate",
@@ -12124,6 +12156,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-deal-slip-rate",
     title: "What Is Deal Slip Rate?",
+    description: "Deal slip rate tracks how often deals forecast to close in one period slide into the next. High slippage is a leading cause of missed revenue targets and cash flow surprises.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Intermediate",
@@ -12146,6 +12179,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-sales-funnel-conversion",
     title: "What Is Sales Funnel Conversion?",
+    description: "Sales funnel conversion rates measure the percentage of prospects that advance from one stage to the next, pinpointing exactly where your process is losing deals.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Beginner",
@@ -12168,6 +12202,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-a-sales-funnel",
     title: "What Is a Sales Funnel?",
+    description: "A sales funnel models the journey from first awareness to closed deal. Learn how to map your actual buyer journey and keep enough volume flowing at every stage.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Beginner",
@@ -12190,6 +12225,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-crm-and-why-it-matters",
     title: "What Is CRM and Why Does It Matter?",
+    description: "A CRM is the central system for tracking prospects, customers, and deals. Even a simple one, used consistently, transforms pipeline visibility and forecasting for growing SMEs.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Beginner",
@@ -12212,6 +12248,7 @@ export const academyArticles: AcademyArticle[] = [
   {
     slug: "what-is-account-based-selling",
     title: "What Is Account-Based Selling?",
+    description: "Account-based selling focuses your sales and marketing resources on a shortlist of high-value target accounts rather than broad prospecting, trading volume for precision.",
     category: "Sales Intelligence",
     categorySlug: "sales-intelligence",
     difficulty: "Intermediate",
