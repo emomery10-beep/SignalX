@@ -165,6 +165,35 @@ export function teamInviteEmail(opts: {
 </html>`
 }
 
+// ── POS Magic Link email ──────────────────────────────────────────────────────
+export async function sendMagicLinkEmail(email: string, magicLinkUrl: string, name: string): Promise<boolean> {
+  return sendEmail({
+    to: email,
+    subject: 'Your AskBiz POS login link',
+    html: `
+    <div style="font-family:system-ui,sans-serif;max-width:400px;margin:0 auto;padding:32px 24px;background:#f9f8f6;">
+      <div style="background:#fff;border-radius:16px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,.06);">
+        <div style="font-size:12px;font-weight:700;color:#d08a59;letter-spacing:.06em;text-transform:uppercase;margin-bottom:20px;">AskBiz POS</div>
+        <div style="font-size:18px;font-weight:700;color:#1a1916;margin-bottom:6px;">Hi ${name} 👋</div>
+        <div style="font-size:14px;color:#6b6760;margin-bottom:24px;">Click the button below to sign in to your AskBiz POS:</div>
+        <table cellpadding="0" cellspacing="0" style="margin-bottom:24px;width:100%;">
+          <tr>
+            <td align="center">
+              <a href="${magicLinkUrl}" style="display:inline-block;background:#d08a59;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">Sign in to POS</a>
+            </td>
+          </tr>
+        </table>
+        <div style="font-size:12px;color:#a39e97;text-align:center;">
+          Valid for 15 minutes · This link is only for your account
+          <br style="margin-bottom:12px;" />
+          <span style="color:#a39e97;">Or paste this link: <br/></span>
+          <span style="color:#6b6760;word-break:break-all;font-size:11px;">${magicLinkUrl}</span>
+        </div>
+      </div>
+    </div>`,
+  })
+}
+
 // ── Alert fired email ─────────────────────────────────────────────────────────
 export function alertEmail(opts: {
   alertName: string

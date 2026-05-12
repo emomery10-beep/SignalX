@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { sendOTP } from '@/lib/whatsapp'
-import { sendOTPEmail } from '@/lib/email'
+import { sendMagicLinkEmail } from '@/lib/email'
+import { randomBytes } from 'crypto'
 
 const CORS = {
   'Access-Control-Allow-Origin': 'https://pos.askbiz.co',
@@ -17,74 +17,90 @@ function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status, headers: CORS })
 }
 
-// POST /api/pos/otp — send OTP or verify it
+// Generate a secure random token
+function generateToken() {
+  return randomBytes(32).toString('hex')
+}
+
+// POST /api/pos/otp — send magic link
 export async function POST(req: NextRequest) {
   const supabase = createServiceClient()
-  const { action, phone, email, code } = await req.json()
+  const { action, email } = await req.json()
 
-  const contact = phone?.trim() || email?.trim()
-  if (!contact) return json({ error: 'phone or email required' }, 400)
-  const isEmail = !!email?.trim()
+  if (!email?.trim()) return json({ error: 'email required' }, 400)
 
-  // ── SEND OTP ──────────────────────────────────────────────
+  // ── SEND MAGIC LINK ───────────────────────────────────────
   if (action === 'send') {
     const { data: staff } = await supabase
       .from('pos_staff')
       .select('id, name, role, owner_id, active')
-      .eq(isEmail ? 'email' : 'phone', contact)
+      .eq('email', email.trim())
       .eq('active', true)
       .maybeSingle()
 
     if (!staff) return json({
-      error: isEmail
-        ? 'Email not recognised. Ask your manager to add you.'
-        : 'Phone number not recognised. Ask your manager to add you.',
+      error: 'Email not recognised. Ask your manager to add you.',
     }, 404)
 
-    const otp        = Math.floor(100000 + Math.random() * 900000).toString()
-    const expires_at = new Date(Date.now() + 10 * 60 * 1000).toISOString()
+    // Generate magic link token
+    const token = generateToken()
+    const expires_at = new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutes
 
-    await supabase.from('pos_otp').insert({ phone: contact, code: otp, expires_at })
+    // Save to database
+    const { error: insertError } = await supabase.from('pos_magic_links').insert({
+      staff_id: staff.id,
+      token,
+      email: email.trim(),
+      expires_at,
+    })
 
-    if (isEmail) {
-      const ok = await sendOTPEmail(contact, otp, staff.name)
-      if (!ok) console.error('[pos/otp] Email send failed for', contact)
-    } else {
-      const { ok, error: waError } = await sendOTP(contact, otp)
-      if (!ok) console.error('[pos/otp] WhatsApp send failed:', waError)
+    if (insertError) {
+      console.error('[pos/magic-link] Insert error:', insertError)
+      return json({ error: 'Failed to generate login link' }, 500)
     }
 
-    return json({ sent: true, name: staff.name, method: isEmail ? 'email' : 'whatsapp' })
+    // Send email with magic link
+    const magicLinkUrl = `https://pos.askbiz.co/pos/login?token=${token}`
+    const ok = await sendMagicLinkEmail(email.trim(), magicLinkUrl, staff.name)
+
+    if (!ok) {
+      console.error('[pos/magic-link] Email send failed for', email)
+      return json({ error: 'Failed to send email' }, 500)
+    }
+
+    return json({ sent: true, name: staff.name })
   }
 
-  // ── VERIFY OTP ───────────────────────────────────────────
+  // ── VERIFY MAGIC LINK ────────────────────────────────────
   if (action === 'verify') {
-    if (!code) return json({ error: 'code required' }, 400)
+    const { token } = await req.json()
+    if (!token) return json({ error: 'token required' }, 400)
 
-    const { data: otp } = await supabase
-      .from('pos_otp')
+    const { data: link } = await supabase
+      .from('pos_magic_links')
       .select('*')
-      .eq('phone', contact)
-      .eq('code', code)
+      .eq('token', token)
       .eq('used', false)
       .gt('expires_at', new Date().toISOString())
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+      .single()
+      .catch(() => ({ data: null }))
 
-    if (!otp) return json({ error: 'Invalid or expired code' }, 401)
+    if (!link) return json({ error: 'Invalid or expired link' }, 401)
 
-    await supabase.from('pos_otp').update({ used: true }).eq('id', otp.id)
+    // Mark as used
+    await supabase.from('pos_magic_links').update({ used: true, used_at: new Date().toISOString() }).eq('id', link.id)
 
+    // Get staff details
     const { data: staff } = await supabase
       .from('pos_staff')
       .select('id, name, role, owner_id, active')
-      .eq(isEmail ? 'email' : 'phone', contact)
+      .eq('id', link.staff_id)
       .eq('active', true)
-      .maybeSingle()
+      .single()
 
     if (!staff) return json({ error: 'Staff account not found' }, 404)
 
+    // Update last login
     await supabase.from('pos_staff').update({ last_login_at: new Date().toISOString() }).eq('id', staff.id)
 
     return json({
