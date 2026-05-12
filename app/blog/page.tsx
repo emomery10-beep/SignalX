@@ -211,7 +211,7 @@ function BlogContent() {
     const seen = new Set<string>()
     const out: string[] = []
     posts.forEach(p => { if (!seen.has(p.cluster)) { seen.add(p.cluster); out.push(p.cluster) } })
-    return out
+    return out.sort((a, b) => a.localeCompare(b))
   }, [posts])
 
   const clusterPillars = useMemo(() => {
