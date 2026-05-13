@@ -14,6 +14,7 @@ function BillingPageContent() {
   const [upgradeMessage, setUpgradeMessage] = useState('')
   const [loadingSeats, setLoadingSeats] = useState(true)
   const [seatsLoaded, setSeatsLoaded] = useState(false)
+  const [isClient, setIsClient] = useState(false)
 
   // Load current seat count from subscription
   const loadCurrentSeats = async (ownerId: string, ownerEmail: string) => {
@@ -39,7 +40,15 @@ function BillingPageContent() {
     }
   }
 
+  // Mark that we're on the client after hydration
   useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Check auth and load data only after client hydration
+  useEffect(() => {
+    if (!isClient) return
+
     const storedStaff = localStorage.getItem('pos_staff')
     if (!storedStaff) {
       router.push('/')
@@ -55,7 +64,7 @@ function BillingPageContent() {
       console.error('Failed to parse staff:', e)
       router.push('/')
     }
-  }, [router])
+  }, [isClient, router])
 
   useEffect(() => {
     const upgrade = searchParams.get('upgrade')
@@ -107,13 +116,17 @@ function BillingPageContent() {
             </div>
           </div>
 
-          {/* Seat Upgrade Component */}
-          {staff ? (
+          {/* Seat Upgrade Component - Only render after client hydration to prevent mismatch */}
+          {isClient && staff && staff.email && staff.owner_id ? (
             <SeatsUpgradeButton
               currentSeats={seatsActive}
               ownerEmail={staff.email}
               ownerId={staff.owner_id}
             />
+          ) : isClient ? (
+            <div style={{ padding: '16px', backgroundColor: '#fef3c7', borderRadius: '4px', color: '#78350f', fontSize: '13px' }}>
+              Loading seat information...
+            </div>
           ) : null}
 
           <div style={{ padding: '16px', backgroundColor: '#fef3c7', borderLeft: '4px solid #f59e0b', borderRadius: '4px', marginTop: '16px', fontSize: '13px', color: '#78350f' }}>
