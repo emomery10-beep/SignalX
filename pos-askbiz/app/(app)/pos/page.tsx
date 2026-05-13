@@ -201,9 +201,9 @@ export default function POSPage() {
     } else if (filterModal.type === 'refunds') {
       filtered = filtered.filter(t => t.status === 'refunded' || t.status === 'partially_refunded')
     } else if (filterModal.type === 'low_stock') {
-      const lowStockIds = new Set([...lowStock, ...outOfStock].map(i => i.id))
+      const lowStockNames = new Set([...lowStock, ...outOfStock].map(i => i.name))
       filtered = filtered.filter(t =>
-        t.pos_items?.some(item => lowStockIds.has(item.name))
+        t.pos_items?.some(item => lowStockNames.has(item.name))
       )
     } else if (filterModal.type === 'cashier_detail' && filterModal.cashier_id) {
       filtered = filtered.filter(t => t.cashier?.name === filterModal.cashier_id)
