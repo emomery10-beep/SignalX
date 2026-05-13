@@ -90,14 +90,6 @@ export default function POSPage() {
   const [customEnd, setCustomEnd] = useState('')
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
 
-  // ── Transaction detail modal (NEW) ──────────────────────
-  type FilterType = 'sales' | 'refunds' | 'low_stock' | 'cashier_detail'
-  const [filterModal, setFilterModal] = useState<{
-    type: FilterType
-    title: string
-    cashier_id?: string
-  } | null>(null)
-
   useEffect(() => {
     const init = async () => {
       setLoading(true)
@@ -119,15 +111,8 @@ export default function POSPage() {
         fetch('/api/pos/inventory'),
       ])
 
-      // Handle API response errors
-      if (!staffRes.ok) console.error('Staff API error:', staffRes.status, staffRes.statusText)
-      if (!txRes.ok) console.error('Transactions API error:', txRes.status, txRes.statusText)
-      if (!invRes.ok) console.error('Inventory API error:', invRes.status, invRes.statusText)
-
       const [staffData, txData, invData] = await Promise.all([
-        staffRes.ok ? staffRes.json() : { staff: [] },
-        txRes.ok ? txRes.json() : { transactions: [] },
-        invRes.ok ? invRes.json() : { inventory: [] },
+        staffRes.json(), txRes.json(), invRes.json(),
       ])
 
       setStaff(staffData.staff || [])
@@ -196,28 +181,6 @@ export default function POSPage() {
       return { ...s, sales: txs.length, revenue: txs.reduce((sum, t) => sum + t.total, 0) }
     })
     .sort((a, b) => b.revenue - a.revenue)
-
-  // ── Get filtered transactions for modal ──────────────────
-  const getModalTransactions = (): Transaction[] => {
-    if (!filterModal) return []
-
-    let filtered = filteredTx
-
-    if (filterModal.type === 'sales') {
-      filtered = filtered.filter(t => t.status === 'completed')
-    } else if (filterModal.type === 'refunds') {
-      filtered = filtered.filter(t => t.status === 'refunded' || t.status === 'partially_refunded')
-    } else if (filterModal.type === 'low_stock') {
-      const lowStockNames = new Set([...lowStock, ...outOfStock].map(i => i.name))
-      filtered = filtered.filter(t =>
-        t.pos_items?.some(item => lowStockNames.has(item.name))
-      )
-    } else if (filterModal.type === 'cashier_detail' && filterModal.cashier_id) {
-      filtered = filtered.filter(t => t.cashier?.name === filterModal.cashier_id)
-    }
-
-    return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-  }
 
   const handleRefund = async (full: boolean) => {
     if (!refundTx || !refundReason) return
@@ -587,7 +550,7 @@ export default function POSPage() {
                 { label: 'Refunds',          value: refundCount.toString(),                              color: refundCount > 2 ? '#dc2626' : 'var(--tx)', type: 'refunds' as const },
                 { label: 'Low stock alerts', value: (lowStock.length + outOfStock.length).toString(),    color: (lowStock.length + outOfStock.length) > 0 ? '#dc2626' : '#16a34a', type: 'low_stock' as const },
               ].map((kpi, i) => (
-                <div key={i} onClick={() => { console.log('KPI clicked:', kpi.type); setFilterModal({ type: kpi.type, title: kpi.label }) }} style={{ padding: '16px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', cursor: 'pointer', transition: 'all 200ms', transform: 'scale(1)' }} onMouseEnter={(e) => { (e.currentTarget as any).style.transform = 'scale(1.02)'; (e.currentTarget as any).style.borderColor = ACC }} onMouseLeave={(e) => { (e.currentTarget as any).style.transform = 'scale(1)'; (e.currentTarget as any).style.borderColor = 'var(--b)' }}>
+                <div key={i} onClick={() => setFilterModal({ type: kpi.type, title: kpi.label })} style={{ padding: '16px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', cursor: 'pointer', transition: 'all 200ms', transform: 'scale(1)' }} onMouseEnter={(e) => { (e.currentTarget as any).style.transform = 'scale(1.02)'; (e.currentTarget as any).style.borderColor = ACC }} onMouseLeave={(e) => { (e.currentTarget as any).style.transform = 'scale(1)'; (e.currentTarget as any).style.borderColor = 'var(--b)' }}>
                   <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 6 }}>{kpi.label}</div>
                   <div style={{ fontSize: 26, fontWeight: 800, color: kpi.color, letterSpacing: '-.02em' }}>{kpi.value}</div>
                 </div>
@@ -600,7 +563,7 @@ export default function POSPage() {
                 <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>Staff performance today</div>
                 <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
                   {cashierStats.map((c, i) => (
-                    <div key={c.id} onClick={() => { console.log('Cashier clicked:', c.name); setFilterModal({ type: 'cashier_detail', title: `${c.name}'s transactions`, cashier_id: c.name }) }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: i < cashierStats.length - 1 ? '1px solid var(--b)' : 'none', background: 'var(--sf)', cursor: 'pointer', transition: 'background 200ms' }} onMouseEnter={(e) => { (e.currentTarget as any).style.background = 'rgba(208,138,89,.04)' }} onMouseLeave={(e) => { (e.currentTarget as any).style.background = 'var(--sf)' }}>
+                    <div key={c.id} onClick={() => setFilterModal({ type: 'cashier_detail', title: `${c.name}'s transactions`, cashier_id: c.name })} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: i < cashierStats.length - 1 ? '1px solid var(--b)' : 'none', background: 'var(--sf)', cursor: 'pointer', transition: 'background 200ms' }} onMouseEnter={(e) => { (e.currentTarget as any).style.background = 'rgba(208,138,89,.04)' }} onMouseLeave={(e) => { (e.currentTarget as any).style.background = 'var(--sf)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div style={{ width: 32, height: 32, borderRadius: '50%', background: ACC_BG, border: `1px solid ${ACC_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: ACC }}>
                           {c.name.charAt(0).toUpperCase()}
@@ -1084,63 +1047,6 @@ export default function POSPage() {
           </div>
         )}
       </div>
-
-      {/* ── TRANSACTION DETAIL MODAL ───────────────────────── */}
-      {filterModal && (
-        <>
-          <div onClick={() => setFilterModal(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', zIndex: 100 }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 101, background: 'var(--sf)', borderRadius: 16, padding: '24px', width: '90%', maxWidth: 900, maxHeight: '80vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,.2)' }}>
-            {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700 }}>{filterModal.title}</div>
-              <button onClick={() => setFilterModal(null)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--tx3)' }}>✕</button>
-            </div>
-
-            {/* Transaction table */}
-            {getModalTransactions().length > 0 ? (
-              <div style={{ border: '1px solid var(--b)', borderRadius: 10, overflow: 'hidden' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                  <thead>
-                    <tr style={{ background: 'var(--bg)', borderBottom: '1px solid var(--b)' }}>
-                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--tx3)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '.05em' }}>Time</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--tx3)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '.05em' }}>Cashier</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--tx3)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '.05em' }}>Items</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: 'var(--tx3)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '.05em' }}>Payment</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 600, color: 'var(--tx3)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '.05em' }}>Amount</th>
-                      <th style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 600, color: 'var(--tx3)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '.05em' }}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {getModalTransactions().map((tx, i) => (
-                      <tr key={tx.id} style={{ borderBottom: i < getModalTransactions().length - 1 ? '1px solid var(--b)' : 'none', background: i % 2 === 0 ? 'transparent' : 'rgba(0,0,0,.01)' }}>
-                        <td style={{ padding: '10px 12px', color: 'var(--tx)', whiteSpace: 'nowrap' }}>
-                          {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                        </td>
-                        <td style={{ padding: '10px 12px', color: 'var(--tx)' }}>{tx.cashier?.name || 'Owner'}</td>
-                        <td style={{ padding: '10px 12px', color: 'var(--tx)', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {tx.pos_items?.slice(0, 2).map(i => i.name).join(', ')}
-                          {tx.pos_items && tx.pos_items.length > 2 && ` +${tx.pos_items.length - 2}`}
-                        </td>
-                        <td style={{ padding: '10px 12px', color: 'var(--tx3)', fontSize: 12 }}>{tx.payment_type}</td>
-                        <td style={{ padding: '10px 12px', color: 'var(--tx)', textAlign: 'right', fontWeight: 600 }}>{currencySymbol}{tx.total.toFixed(2)}</td>
-                        <td style={{ padding: '10px 12px', textAlign: 'center' }}>
-                          <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 600, padding: '4px 8px', borderRadius: 4, background: tx.status === 'completed' ? 'rgba(22,163,74,.1)' : 'rgba(220,38,38,.1)', color: tx.status === 'completed' ? '#16a34a' : '#dc2626' }}>
-                            {tx.status === 'completed' ? '✓' : tx.status === 'refunded' ? 'Refunded' : 'Partial'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--tx3)' }}>
-                <div style={{ fontSize: 14, fontWeight: 500 }}>No transactions found</div>
-              </div>
-            )}
-          </div>
-        </>
-      )}
 
       {/* ── REFUND MODAL ────────────────────────────────── */}
       {refundTx && (
