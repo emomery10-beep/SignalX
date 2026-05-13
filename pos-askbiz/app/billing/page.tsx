@@ -13,34 +13,9 @@ function BillingPageContent() {
   const [seatsActive, setSeatsActive] = useState(1)
   const [upgradeMessage, setUpgradeMessage] = useState('')
   const [loadingSeats, setLoadingSeats] = useState(true)
+  const [seatsLoaded, setSeatsLoaded] = useState(false)
 
-  useEffect(() => {
-    const storedStaff = localStorage.getItem('pos_staff')
-    if (!storedStaff) {
-      router.push('/')
-      return
-    }
-
-    try {
-      const parsedStaff = JSON.parse(storedStaff)
-      setStaff(parsedStaff)
-
-      // Load current seat count from subscription
-      loadCurrentSeats(parsedStaff.owner_id, parsedStaff.email)
-    } catch (e) {
-      router.push('/')
-    }
-
-    const upgrade = searchParams.get('upgrade')
-    if (upgrade === 'success') {
-      setUpgradeMessage('✅ Upgrade successful! Your new seats are now active.')
-      setTimeout(() => setUpgradeMessage(''), 5000)
-    } else if (upgrade === 'cancelled') {
-      setUpgradeMessage('❌ Upgrade cancelled. No charges were made.')
-      setTimeout(() => setUpgradeMessage(''), 5000)
-    }
-  }, [searchParams])
-
+  // Load current seat count from subscription
   const loadCurrentSeats = async (ownerId: string, ownerEmail: string) => {
     try {
       const response = await fetch('/api/billing/get-subscription', {
@@ -53,7 +28,6 @@ function BillingPageContent() {
         const data = await response.json()
         setSeatsActive(data.current_seats || 1)
       } else {
-        // No subscription found, default to 1 seat
         setSeatsActive(1)
       }
     } catch (error) {
@@ -61,8 +35,38 @@ function BillingPageContent() {
       setSeatsActive(1)
     } finally {
       setLoadingSeats(false)
+      setSeatsLoaded(true)
     }
   }
+
+  useEffect(() => {
+    const storedStaff = localStorage.getItem('pos_staff')
+    if (!storedStaff) {
+      router.push('/')
+      return
+    }
+
+    try {
+      const parsedStaff = JSON.parse(storedStaff)
+      setStaff(parsedStaff)
+      // Load seat count immediately
+      loadCurrentSeats(parsedStaff.owner_id, parsedStaff.email)
+    } catch (e) {
+      console.error('Failed to parse staff:', e)
+      router.push('/')
+    }
+  }, [router])
+
+  useEffect(() => {
+    const upgrade = searchParams.get('upgrade')
+    if (upgrade === 'success') {
+      setUpgradeMessage('✅ Upgrade successful! Your new seats are now active.')
+      setTimeout(() => setUpgradeMessage(''), 5000)
+    } else if (upgrade === 'cancelled') {
+      setUpgradeMessage('❌ Upgrade cancelled. No charges were made.')
+      setTimeout(() => setUpgradeMessage(''), 5000)
+    }
+  }, [searchParams])
 
   const handleLogout = () => {
     localStorage.removeItem('pos_staff')
@@ -97,26 +101,20 @@ function BillingPageContent() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <div>
               <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>Point of Sale Seats</h2>
-              {loadingSeats ? (
-                <span style={{ display: 'inline-block', padding: '4px 8px', backgroundColor: '#e5e7eb', color: '#6b7280', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>
-                  Loading...
-                </span>
-              ) : (
-                <span style={{ display: 'inline-block', padding: '4px 8px', backgroundColor: '#d1fae5', color: '#065f46', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>
-                  Active - {seatsActive} seat{seatsActive !== 1 ? 's' : ''}
-                </span>
-              )}
+              <span style={{ display: 'inline-block', padding: '4px 8px', backgroundColor: '#d1fae5', color: '#065f46', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>
+                Active - {seatsActive} seat{seatsActive !== 1 ? 's' : ''}
+              </span>
             </div>
           </div>
 
           {/* Seat Upgrade Component */}
-          {staff && !loadingSeats && (
+          {staff ? (
             <SeatsUpgradeButton
               currentSeats={seatsActive}
               ownerEmail={staff.email}
               ownerId={staff.owner_id}
             />
-          )}
+          ) : null}
 
           <div style={{ padding: '16px', backgroundColor: '#fef3c7', borderLeft: '4px solid #f59e0b', borderRadius: '4px', marginTop: '16px', fontSize: '13px', color: '#78350f' }}>
             <p style={{ margin: '0 0 12px 0' }}>Add cashier and inventory staff to your shop at £5/seat/month. Each seat lets one staff member log in to <code>pos.askbiz.co</code> via email or WhatsApp OTP on their own phone. The owner dashboard is always included — seats are for additional staff only.</p>
