@@ -177,10 +177,11 @@ export default function BillingPage() {
   const handlePosCheckout = async () => {
     setPosLoading(true)
     try {
+      const additionalSeats = posSeats - posSeatCount
       const res = await fetch('/api/billing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'checkout_pos_seat', seats: posSeats, currency, annual: false }),
+        body: JSON.stringify({ action: 'checkout_pos_seat', seats: additionalSeats, currency, annual: false }),
       })
       const data = await res.json()
       if (data.url) window.location.href = data.url
