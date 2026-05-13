@@ -13,15 +13,15 @@ export async function GET(req: NextRequest) {
   const to         = searchParams.get('to')   || new Date().toISOString()
   const cashier_id = searchParams.get('cashier_id')
 
+  // Select fields - tax fields are optional (may not exist in migration yet)
   let query = service
     .from('pos_transactions')
     .select(`
-      id, owner_id, cashier_id, customer_id, subtotal, discount_amount, amount_tendered, total, total_tax,
-      tax_jurisdiction, tax_country_code, tax_calculation_details_json,
-      payment_type, status, notes, created_at, receipt_sent,
+      id, owner_id, cashier_id, customer_id, subtotal, discount_amount, amount_tendered, total,
+      payment_type, status, notes, created_at,
       pos_staff!cashier_id(id, name, role),
       pos_customers(id, phone, name),
-      pos_items(name, qty, unit_price, tax_code, tax_rate, tax_amount)
+      pos_items!transaction_id(name, qty, unit_price)
     `)
     .eq('owner_id', ownerId)
     .gte('created_at', from)
@@ -121,52 +121,38 @@ export async function POST(req: NextRequest) {
     taxCodeMap[tc.category] = { rate: tc.rate, code: tc.code }
   })
 
-  // Calculate tax for each item (assume default category = 'general_merchandise')
-  const itemsWithTax = items.map((i: any) => {
-    const category = i.category || 'general_merchandise'
-    const taxInfo = taxCodeMap[category] || taxCodeMap['general_merchandise'] || { rate: 20, code: 'VAT-20-STANDARD' }
-
-    // Calculate tax based on item price
-    // Assume unit_price is before tax
-    const itemNetTotal = i.qty * i.unit_price
-    const itemTaxAmount = itemNetTotal * (taxInfo.rate / 100)
-
-    return {
-      ...i,
-      tax_code: taxInfo.code,
-      tax_rate: taxInfo.rate,
-      tax_amount: Math.round(itemTaxAmount * 100) / 100,
-    }
-  })
+  // NOTE: Tax calculation disabled temporarily while schema is being prepared
+  // Items are stored without tax information for now
+  const itemsWithTax = items  // Just use items as-is, no tax processing
 
   const subtotal        = items.reduce((s: number, i: { qty: number; unit_price: number }) => s + i.qty * i.unit_price, 0)
-  const totalTax        = itemsWithTax.reduce((s: number, i: any) => s + i.tax_amount, 0)
   const discountAmt     = Math.max(0, Number(discount_amount) || 0)
-  const total           = Math.max(0, subtotal + totalTax - discountAmt)
+  const total           = Math.max(0, subtotal - discountAmt)  // No tax included
 
   // Create transaction — fix #3: use verified cashier_id from header
+  // NOTE: Tax fields removed temporarily - only core transaction fields
+  // Tax features will be added once database is ready
   const { data: tx, error: txErr } = await service
     .from('pos_transactions')
     .insert({
-      owner_id:                      ownerId,
-      cashier_id:                    verifiedCashierId || null,  // fix #3
+      owner_id:        ownerId,
+      cashier_id:      verifiedCashierId || null,
       customer_id,
       subtotal,
-      discount_amount:               discountAmt || null,
+      discount_amount: discountAmt || null,
       total,
-      total_tax:                     Math.round(totalTax * 100) / 100,  // NEW: tax amount
-      tax_jurisdiction:              jurisdiction,  // NEW: jurisdiction code
-      tax_country_code:              taxCountryCode,  // NEW: country code
-      tax_calculation_details_json:  { version: '1.0', calculated_at: new Date().toISOString() },
       payment_type,
-      amount_tendered:               amount_tendered ? Number(amount_tendered) : null,
-      status:                        'completed',
-      notes:                         notes || null,
+      amount_tendered: amount_tendered ? Number(amount_tendered) : null,
+      status:          'completed',
+      notes:           notes || null,
     })
     .select('id')
     .single()
 
-  if (txErr || !tx) return NextResponse.json({ error: txErr?.message || 'Failed to create transaction' }, { status: 500 })
+  if (txErr || !tx) {
+    console.error('Transaction insert error:', txErr)
+    return NextResponse.json({ error: txErr?.message || 'Failed to create transaction' }, { status: 500 })
+  }
 
   // Insert line items — fix #16: look up cost_price server-side for tracked items
   // Build a map of inventory_id → cost_price from DB so we don't trust client-sent values
@@ -195,10 +181,8 @@ export async function POST(req: NextRequest) {
     // fix #16 — use server-looked-up cost_price for tracked items; fall back to client for manual items
     cost_price:     i.inventory_id ? (costPriceMap[i.inventory_id] ?? 0) : (i.cost_price || 0),
     line_total:     i.qty * i.unit_price,
-    // NEW: tax fields
-    tax_code:       i.tax_code,
-    tax_rate:       i.tax_rate,
-    tax_amount:     i.tax_amount,
+    // NOTE: tax fields (tax_code, tax_rate, tax_amount) removed temporarily
+    // Will be re-enabled once database schema supports them
   }))
 
   const { error: itemsErr } = await service.from('pos_items').insert(lineItems)
