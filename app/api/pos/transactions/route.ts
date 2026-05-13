@@ -16,10 +16,11 @@ export async function GET(req: NextRequest) {
   let query = service
     .from('pos_transactions')
     .select(`
-      id, owner_id, cashier_id, customer_id, subtotal, discount_amount, total,
+      id, owner_id, cashier_id, customer_id, subtotal, discount_amount, amount_tendered, total,
       payment_type, status, notes, created_at, receipt_sent,
       pos_staff!cashier_id(id, name, role),
-      pos_customers(id, phone, name)
+      pos_customers(id, phone, name),
+      pos_items(name, qty, unit_price)
     `)
     .eq('owner_id', ownerId)
     .gte('created_at', from)

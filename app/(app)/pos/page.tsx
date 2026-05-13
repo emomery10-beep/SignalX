@@ -491,8 +491,8 @@ export default function POSPage() {
                     <div key={tx.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: i < Math.min(transactions.length, 10) - 1 ? '1px solid var(--b)' : 'none', background: 'var(--sf)' }}>
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>
-                          {tx.pos_items.slice(0, 2).map(i => i.name).join(', ')}
-                          {tx.pos_items.length > 2 && ` +${tx.pos_items.length - 2} more`}
+                          {(tx.pos_items || []).slice(0, 2).map(i => i.name).join(', ')}
+                          {(tx.pos_items?.length ?? 0) > 2 && ` +${tx.pos_items.length - 2} more`}
                         </div>
                         <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
                           {tx.cashier?.name || 'Owner'} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · {tx.payment_type}
