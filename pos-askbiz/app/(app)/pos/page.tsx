@@ -119,8 +119,15 @@ export default function POSPage() {
         fetch('/api/pos/inventory'),
       ])
 
+      // Handle API response errors
+      if (!staffRes.ok) console.error('Staff API error:', staffRes.status, staffRes.statusText)
+      if (!txRes.ok) console.error('Transactions API error:', txRes.status, txRes.statusText)
+      if (!invRes.ok) console.error('Inventory API error:', invRes.status, invRes.statusText)
+
       const [staffData, txData, invData] = await Promise.all([
-        staffRes.json(), txRes.json(), invRes.json(),
+        staffRes.ok ? staffRes.json() : { staff: [] },
+        txRes.ok ? txRes.json() : { transactions: [] },
+        invRes.ok ? invRes.json() : { inventory: [] },
       ])
 
       setStaff(staffData.staff || [])
