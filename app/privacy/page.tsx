@@ -229,6 +229,7 @@ export default function PrivacyPage() {
             <Li><strong>Vercel</strong> — hosting and CDN (global edge)</Li>
             <Li><strong>Stripe</strong> — payment processing (PCI DSS Level 1)</Li>
             <Li><strong>Resend</strong> — transactional email delivery (USA — Standard Contractual Clauses apply). Used only for account and billing emails.</Li>
+            <Li><strong>WhatsApp/Meta</strong> — receipt delivery for AskBiz POS module (USA — Meta Data Processing Agreement and Standard Contractual Clauses apply). Customer phone numbers are transmitted only when customer opts in to receipt delivery; never stored by AskBiz after 30 days.</Li>
           </ul>
           <P>We never sell your data. We never share your data with advertisers. We never share individual business data with other AskBiz users.</P>
         </Section>
@@ -252,6 +253,9 @@ export default function PrivacyPage() {
                   ['Billing and payment records', '7 years', 'Legal requirement'],
                   ['IP hash records', '12 months', 'Automated'],
                   ['Consent audit log', '3 years', 'Required for compliance'],
+                  ['POS transaction history', 'Indefinite (accounting/tax requirement)', 'Business owner can export or request deletion via privacy@askbiz.co'],
+                  ['POS customer phone numbers', '30 days', 'Automated deletion'],
+                  ['POS staff PIN records', '90 days (failed login attempts only)', 'Automated deletion'],
                   ['Deleted account data', '30-day grace period', 'Permanent after 30 days'],
                 ].map((row, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid var(--b)', background: i % 2 === 0 ? 'var(--sf)' : 'var(--bg)' }}>
@@ -265,7 +269,60 @@ export default function PrivacyPage() {
           </div>
         </Section>
 
-        <Section title="10. Your Rights">
+        <Section title="10. AskBiz POS — Point of Sale Module">
+          <P><strong>The AskBiz POS module</strong> (pos.askbiz.co) is a separate application for managing retail sales, inventory, and receipts. When using POS, the following additional data is processed:</P>
+
+          <div style={{ marginTop: 20, marginBottom: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: 'var(--tx)' }}>📱 Customer Phone Numbers</div>
+            <ul style={{ paddingLeft: 24 }}>
+              <Li><strong>Purpose:</strong> Sending sales receipts via WhatsApp (optional)</Li>
+              <Li><strong>Legal basis:</strong> Explicit customer consent (customer must provide phone number; never pre-filled)</Li>
+              <Li><strong>Processing:</strong> Transmitted to WhatsApp/Meta for receipt delivery only</Li>
+              <Li><strong>Retention:</strong> 30 days, then automatically deleted</Li>
+              <Li><strong>Security:</strong> End-to-end encrypted by WhatsApp; AskBiz does not store receipt content</Li>
+              <Li><strong>Your rights:</strong> You can withdraw consent by not providing your phone number. You can request deletion of stored phone numbers at any time by contacting privacy@askbiz.co</Li>
+            </ul>
+          </div>
+
+          <div style={{ marginTop: 20, marginBottom: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: 'var(--tx)' }}>💳 Transaction History</div>
+            <ul style={{ paddingLeft: 24 }}>
+              <Li><strong>Data collected:</strong> Products sold, quantities, prices, discounts applied, payment method, timestamps, and customer phone (if provided)</Li>
+              <Li><strong>Purpose:</strong> Sales record-keeping, inventory management, business analytics, tax and accounting compliance</Li>
+              <Li><strong>Legal basis:</strong> Contract performance (fulfilling the POS service)</Li>
+              <Li><strong>Retention:</strong> Indefinitely (required by accounting and tax law in most jurisdictions for 7 years minimum)</Li>
+              <Li><strong>Your rights:</strong> You can request an export of all your transaction data in JSON format. You can request deletion of specific transactions subject to local accounting law requirements. Contact privacy@askbiz.co</Li>
+            </ul>
+          </div>
+
+          <div style={{ marginTop: 20, marginBottom: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: 'var(--tx)' }}>👤 Staff PIN Security</div>
+            <ul style={{ paddingLeft: 24 }}>
+              <Li><strong>PIN storage:</strong> Staff PINs are hashed using bcrypt with unique salts. Raw PINs are never stored or logged</Li>
+              <Li><strong>Access control:</strong> Only authenticated API calls can verify PINs. No staff member can see another staff member's PIN</Li>
+              <Li><strong>Failed login logging:</strong> Failed PIN attempts are logged for 90 days for security auditing, then automatically deleted</Li>
+              <Li><strong>Processor:</strong> All PIN data is stored in Supabase (AWS EU West) with row-level security</Li>
+              <Li><strong>Your rights:</strong> Staff members can request deletion of failed login logs at any time. All PIN data is deleted when the staff account is deactivated</Li>
+            </ul>
+          </div>
+
+          <div style={{ marginTop: 20, marginBottom: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: 'var(--tx)' }}>📦 Inventory & Product Data</div>
+            <ul style={{ paddingLeft: 24 }}>
+              <Li><strong>Data collected:</strong> Product names, SKUs, sale prices, cost prices, stock quantities, units, last sold dates</Li>
+              <Li><strong>Purpose:</strong> Inventory management, stock tracking, sales analytics, product performance analysis</Li>
+              <Li><strong>Legal basis:</strong> Contract performance (core POS functionality)</Li>
+              <Li><strong>Retention:</strong> Indefinitely (business owner retains control)</Li>
+              <Li><strong>Your rights:</strong> You retain full ownership. You can export, modify, or delete any inventory data at any time through the POS interface</Li>
+            </ul>
+          </div>
+
+          <P style={{ marginTop: 24, padding: '16px 18px', borderRadius: 12, background: 'rgba(22,163,74,.06)', borderLeft: '4px solid #16a34a' }}>
+            <strong>Summary:</strong> The POS module processes personal data transparently with clear legal bases and user rights. Customer phone numbers are optional and automatically deleted after 30 days. Transaction history is retained for accounting compliance but can be exported or deleted upon request. Staff PINs are securely hashed and never visible to other users.
+          </P>
+        </Section>
+
+        <Section title="11. Your Rights">
           <P>AskBiz serves users globally. Regardless of where you are located, you have the following rights. These satisfy EU GDPR, UK GDPR, CCPA/CPRA (California), LGPD (Brazil), PIPEDA (Canada), POPIA (South Africa), Australia Privacy Act, PDPA (Thailand &amp; Singapore), and most other applicable privacy laws.</P>
           <ul style={{ paddingLeft: 24 }}>
             <Li><strong>Right of access</strong> — Request a copy of all personal data we hold about you</Li>
@@ -282,13 +339,13 @@ export default function PrivacyPage() {
           <P>You also have the right to lodge a complaint with your local data protection authority: ICO (UK), Data Protection Commission (Ireland/EU), ANPD (Brazil), OPC (Canada), Information Regulator (South Africa), or your local equivalent.</P>
         </Section>
 
-        <Section title="11. Delete Your Account and Data">
+        <Section title="12. Delete Your Account and Data">
           <P>You can request deletion of your account and all associated data below. There is a <strong>30-day grace period</strong> before permanent deletion to protect against accidental requests. You can cancel at any time during this period.</P>
           <P><strong>What gets deleted:</strong> Profile, conversations, uploads, financial snapshots, IP hashes, and all associated data. Billing records are retained for 7 years as required by law.</P>
           <DeleteSection />
         </Section>
 
-        <Section title="12. Cookies">
+        <Section title="13. Cookies">
           <P>AskBiz uses only essential cookies required for authentication. We do not use advertising cookies or third-party tracking cookies.</P>
           <ul style={{ paddingLeft: 24 }}>
             <Li><strong>supabase-auth-token</strong> — Authentication session (essential, session duration)</Li>
@@ -296,7 +353,7 @@ export default function PrivacyPage() {
           </ul>
         </Section>
 
-        <Section title="13. Security &amp; Breach Notification">
+        <Section title="14. Security &amp; Breach Notification">
           <P>We use industry-standard measures to protect your data: encrypted connections (TLS), hashed IP addresses, row-level security on our database, and scoped API keys. Access to personal data is restricted to authorised personnel only.</P>
           <P><strong>If a data breach occurs</strong> that is likely to result in a risk to your rights and freedoms, we will:</P>
           <ul style={{ paddingLeft: 24 }}>
@@ -307,7 +364,7 @@ export default function PrivacyPage() {
           <P>To report a suspected security vulnerability or breach, contact us immediately at <strong>security@askbiz.co</strong>.</P>
         </Section>
 
-        <Section title="14. Changes to This Policy">
+        <Section title="15. Changes to This Policy">
           <P>We will notify you by email of any material changes to this policy at least 14 days before they take effect. Continued use of AskBiz after changes take effect constitutes acceptance of the updated policy.</P>
         </Section>
 

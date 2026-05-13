@@ -2,18 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { createHash } from 'crypto'
 
-const CORS = {
-  'Access-Control-Allow-Origin': 'https://pos.askbiz.co',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-}
-
+// CORS is handled globally by next.config.js headers() for all /api/pos/* routes.
 export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: CORS })
+  return new NextResponse(null, { status: 204 })
 }
 
 function json(data: unknown, status = 200) {
-  return NextResponse.json(data, { status, headers: CORS })
+  return NextResponse.json(data, { status })
 }
 
 /** Hash a PIN using SHA-256 with the staff ID as salt */
