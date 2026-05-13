@@ -53,12 +53,10 @@ export function SeatsUpgradeButton({
       const { sessionId } = await response.json()
 
       // Redirect to Stripe Checkout
-      const stripe = (window as any).Stripe
-      if (stripe) {
-        stripe.redirectToCheckout({ sessionId })
+      if (sessionId) {
+        window.location.href = `https://checkout.stripe.com/pay/${sessionId}`
       } else {
-        // Fallback: open Stripe checkout URL
-        window.location.href = sessionId // This should be a URL, but API might return sessionId
+        throw new Error('No session ID returned from server')
       }
     } catch (err: any) {
       setError(err.message || 'Failed to process upgrade')
