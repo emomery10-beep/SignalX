@@ -16,11 +16,12 @@ export async function GET(req: NextRequest) {
   let query = service
     .from('pos_transactions')
     .select(`
-      id, owner_id, cashier_id, customer_id, subtotal, discount_amount, amount_tendered, total,
+      id, owner_id, cashier_id, customer_id, subtotal, discount_amount, amount_tendered, total, total_tax,
+      tax_jurisdiction, tax_country_code, tax_calculation_details_json,
       payment_type, status, notes, created_at, receipt_sent,
       pos_staff!cashier_id(id, name, role),
       pos_customers(id, phone, name),
-      pos_items(name, qty, unit_price)
+      pos_items(name, qty, unit_price, tax_code, tax_rate, tax_amount)
     `)
     .eq('owner_id', ownerId)
     .gte('created_at', from)
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
 
   const service = createServiceClient()
   const body = await req.json()
-  const { items, payment_type, customer_phone, notes, discount_amount, amount_tendered } = body
+  const { items, payment_type, customer_phone, notes, discount_amount, amount_tendered, location_id } = body
 
   // fix #3 — cashier_id comes from the validated header, not the untrusted request body
   const cashier_id = body.cashier_id_from_header || null  // ignored; we use header below
@@ -88,24 +89,79 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // NEW: Tax Calculation
+  // Fetch location tax settings to determine jurisdiction
+  let jurisdiction = 'UK' // default
+  let taxCountryCode = 'GB'
+
+  if (location_id) {
+    const { data: locTaxSettings } = await service
+      .from('pos_location_tax_settings')
+      .select('jurisdiction_code')
+      .eq('owner_id', ownerId)
+      .eq('location_id', location_id)
+      .maybeSingle()
+
+    if (locTaxSettings?.jurisdiction_code) {
+      jurisdiction = locTaxSettings.jurisdiction_code
+      taxCountryCode = jurisdiction.split('_')[0] // e.g., 'US_CA' → 'US'
+    }
+  }
+
+  // Fetch default tax codes for this jurisdiction
+  const { data: taxCodes } = await service
+    .from('pos_item_tax_codes')
+    .select('category, rate, code')
+    .eq('owner_id', ownerId)
+    .eq('jurisdiction', jurisdiction)
+    .eq('is_active', true)
+
+  const taxCodeMap: Record<string, { rate: number; code: string }> = {}
+  ;(taxCodes || []).forEach(tc => {
+    taxCodeMap[tc.category] = { rate: tc.rate, code: tc.code }
+  })
+
+  // Calculate tax for each item (assume default category = 'general_merchandise')
+  const itemsWithTax = items.map((i: any) => {
+    const category = i.category || 'general_merchandise'
+    const taxInfo = taxCodeMap[category] || taxCodeMap['general_merchandise'] || { rate: 20, code: 'VAT-20-STANDARD' }
+
+    // Calculate tax based on item price
+    // Assume unit_price is before tax
+    const itemNetTotal = i.qty * i.unit_price
+    const itemTaxAmount = itemNetTotal * (taxInfo.rate / 100)
+
+    return {
+      ...i,
+      tax_code: taxInfo.code,
+      tax_rate: taxInfo.rate,
+      tax_amount: Math.round(itemTaxAmount * 100) / 100,
+    }
+  })
+
   const subtotal        = items.reduce((s: number, i: { qty: number; unit_price: number }) => s + i.qty * i.unit_price, 0)
+  const totalTax        = itemsWithTax.reduce((s: number, i: any) => s + i.tax_amount, 0)
   const discountAmt     = Math.max(0, Number(discount_amount) || 0)
-  const total           = Math.max(0, subtotal - discountAmt)
+  const total           = Math.max(0, subtotal + totalTax - discountAmt)
 
   // Create transaction — fix #3: use verified cashier_id from header
   const { data: tx, error: txErr } = await service
     .from('pos_transactions')
     .insert({
-      owner_id:        ownerId,
-      cashier_id:      verifiedCashierId || null,  // fix #3
+      owner_id:                      ownerId,
+      cashier_id:                    verifiedCashierId || null,  // fix #3
       customer_id,
       subtotal,
-      discount_amount: discountAmt || null,
+      discount_amount:               discountAmt || null,
       total,
+      total_tax:                     Math.round(totalTax * 100) / 100,  // NEW: tax amount
+      tax_jurisdiction:              jurisdiction,  // NEW: jurisdiction code
+      tax_country_code:              taxCountryCode,  // NEW: country code
+      tax_calculation_details_json:  { version: '1.0', calculated_at: new Date().toISOString() },
       payment_type,
-      amount_tendered: amount_tendered ? Number(amount_tendered) : null,
-      status:          'completed',
-      notes:           notes || null,
+      amount_tendered:               amount_tendered ? Number(amount_tendered) : null,
+      status:                        'completed',
+      notes:                         notes || null,
     })
     .select('id')
     .single()
@@ -130,9 +186,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const lineItems = items.map((i: {
-    inventory_id?: string; name: string; qty: number; unit_price: number; cost_price?: number
-  }) => ({
+  const lineItems = itemsWithTax.map((i: any) => ({
     transaction_id: tx.id,
     inventory_id:   i.inventory_id || null,
     name:           i.name.trim(),
@@ -141,6 +195,10 @@ export async function POST(req: NextRequest) {
     // fix #16 — use server-looked-up cost_price for tracked items; fall back to client for manual items
     cost_price:     i.inventory_id ? (costPriceMap[i.inventory_id] ?? 0) : (i.cost_price || 0),
     line_total:     i.qty * i.unit_price,
+    // NEW: tax fields
+    tax_code:       i.tax_code,
+    tax_rate:       i.tax_rate,
+    tax_amount:     i.tax_amount,
   }))
 
   const { error: itemsErr } = await service.from('pos_items').insert(lineItems)

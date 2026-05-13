@@ -83,6 +83,13 @@ export default function POSPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
 
+  // ── Date range filter (NEW) ──────────────────────────
+  type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
+  const [dateRange, setDateRange] = useState<DateRange>('today')
+  const [customStart, setCustomStart] = useState('')
+  const [customEnd, setCustomEnd] = useState('')
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
+
   useEffect(() => {
     const init = async () => {
       setLoading(true)
@@ -116,10 +123,53 @@ export default function POSPage() {
     init()
   }, [])
 
+  // ── Helper functions for date range (NEW) ─────────────────
+  const getDateRangeDetails = (range: DateRange): { start: Date; end: Date; label: string } => {
+    const now = new Date()
+    const start = new Date()
+    let label = ''
+
+    switch (range) {
+      case 'today':
+        start.setHours(0, 0, 0, 0)
+        label = `Today · ${now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}`
+        break
+      case 'yesterday':
+        start.setDate(start.getDate() - 1)
+        start.setHours(0, 0, 0, 0)
+        label = `Yesterday · ${start.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}`
+        break
+      case 'last7':
+        start.setDate(start.getDate() - 7)
+        start.setHours(0, 0, 0, 0)
+        label = `Last 7 days`
+        break
+      case 'last30':
+        start.setDate(start.getDate() - 30)
+        start.setHours(0, 0, 0, 0)
+        label = `Last 30 days`
+        break
+      case 'custom':
+        return {
+          start: customStart ? new Date(customStart) : start,
+          end: customEnd ? new Date(customEnd) : now,
+          label: `${customStart} to ${customEnd}`,
+        }
+    }
+
+    return { start, end: now, label }
+  }
+
+  // Update filtered transactions based on date range
+  const dateRangeDetails = getDateRangeDetails(dateRange)
+  const filteredTx = transactions.filter(
+    t => new Date(t.created_at) >= dateRangeDetails.start && new Date(t.created_at) <= dateRangeDetails.end
+  )
+
   // ── Derived stats ─────────────────────────────────────────
-  const todayRevenue  = transactions.filter(t => t.status === 'completed').reduce((s, t) => s + t.total, 0)
-  const todaySales    = transactions.filter(t => t.status === 'completed').length
-  const refundCount   = transactions.filter(t => t.status === 'refunded' || t.status === 'partially_refunded').length
+  const todayRevenue  = filteredTx.filter(t => t.status === 'completed').reduce((s, t) => s + t.total, 0)
+  const todaySales    = filteredTx.filter(t => t.status === 'completed').length
+  const refundCount   = filteredTx.filter(t => t.status === 'refunded' || t.status === 'partially_refunded').length
   const lowStock      = inventory.filter(i => i.stock_qty <= i.low_stock_threshold && i.stock_qty > 0)
   const outOfStock    = inventory.filter(i => i.stock_qty === 0)
 
@@ -127,7 +177,7 @@ export default function POSPage() {
   const cashierStats = staff
     .filter(s => s.role === 'cashier')
     .map(s => {
-      const txs = transactions.filter(t => t.cashier?.name === s.name && t.status === 'completed')
+      const txs = filteredTx.filter(t => t.cashier?.name === s.name && t.status === 'completed')
       return { ...s, sales: txs.length, revenue: txs.reduce((sum, t) => sum + t.total, 0) }
     })
     .sort((a, b) => b.revenue - a.revenue)
@@ -376,7 +426,7 @@ export default function POSPage() {
           </div>
           <div>
             <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700 }}>Point of Sale</div>
-            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Today's overview · {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{dateRangeDetails.label}</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -415,6 +465,79 @@ export default function POSPage() {
             </button>
           ))}
         </div>
+
+        {/* ── Date Range Selector (NEW) ── */}
+        {tab === 'overview' && (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
+            {['today', 'yesterday', 'last7', 'last30'].map(range => (
+              <button
+                key={range}
+                onClick={() => {
+                  setDateRange(range as DateRange)
+                  setCustomStart('')
+                  setCustomEnd('')
+                }}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 8,
+                  border: dateRange === range ? `1.5px solid ${ACC}` : '1px solid var(--b)',
+                  background: dateRange === range ? ACC_BG : 'var(--sf)',
+                  color: dateRange === range ? ACC : 'var(--tx2)',
+                  fontSize: 12,
+                  fontWeight: dateRange === range ? 600 : 500,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {range === 'today'
+                  ? '📅 Today'
+                  : range === 'yesterday'
+                    ? '📅 Yesterday'
+                    : range === 'last7'
+                      ? '📅 Last 7 days'
+                      : '📅 Last 30 days'}
+              </button>
+            ))}
+
+            {/* Custom date range */}
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <input
+                type="date"
+                value={customStart}
+                onChange={e => {
+                  setCustomStart(e.target.value)
+                  setDateRange('custom')
+                }}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: 8,
+                  border: '1px solid var(--b)',
+                  fontSize: 12,
+                  fontFamily: 'inherit',
+                  cursor: 'pointer',
+                }}
+              />
+              <span style={{ fontSize: 12, color: 'var(--tx3)' }}>to</span>
+              <input
+                type="date"
+                value={customEnd}
+                onChange={e => {
+                  setCustomEnd(e.target.value)
+                  setDateRange('custom')
+                }}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: 8,
+                  border: '1px solid var(--b)',
+                  fontSize: 12,
+                  fontFamily: 'inherit',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* ── OVERVIEW TAB ─────────────────────────────────── */}
         {tab === 'overview' && (
@@ -481,14 +604,14 @@ export default function POSPage() {
             {/* Recent transactions */}
             <div>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>Recent transactions</div>
-              {transactions.length === 0 ? (
+              {filteredTx.length === 0 ? (
                 <div style={{ padding: '32px', textAlign: 'center', color: 'var(--tx3)', fontSize: 13, border: '1px solid var(--b)', borderRadius: 12 }}>
-                  No sales today yet. Share <strong>pos.askbiz.co</strong> with your cashiers to get started.
+                  No sales in this period. Share <strong>pos.askbiz.co</strong> with your cashiers to get started.
                 </div>
               ) : (
                 <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
-                  {transactions.slice(0, 10).map((tx, i) => (
-                    <div key={tx.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: i < Math.min(transactions.length, 10) - 1 ? '1px solid var(--b)' : 'none', background: 'var(--sf)' }}>
+                  {filteredTx.slice(0, 10).map((tx, i) => (
+                    <div key={tx.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: i < Math.min(filteredTx.length, 10) - 1 ? '1px solid var(--b)' : 'none', background: 'var(--sf)' }}>
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>
                           {(tx.pos_items || []).slice(0, 2).map(i => i.name).join(', ')}
