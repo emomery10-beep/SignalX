@@ -10,8 +10,9 @@ export default function BillingPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [staff, setStaff] = useState<any>(null)
-  const [seatsActive, setSeatsActive] = useState(2)
+  const [seatsActive, setSeatsActive] = useState(1)
   const [upgradeMessage, setUpgradeMessage] = useState('')
+  const [loadingSeats, setLoadingSeats] = useState(true)
 
   useEffect(() => {
     const storedStaff = localStorage.getItem('pos_staff')
@@ -21,7 +22,11 @@ export default function BillingPage() {
     }
 
     try {
-      setStaff(JSON.parse(storedStaff))
+      const parsedStaff = JSON.parse(storedStaff)
+      setStaff(parsedStaff)
+
+      // Load current seat count from subscription
+      loadCurrentSeats(parsedStaff.owner_id, parsedStaff.email)
     } catch (e) {
       router.push('/')
     }
@@ -35,6 +40,29 @@ export default function BillingPage() {
       setTimeout(() => setUpgradeMessage(''), 5000)
     }
   }, [searchParams])
+
+  const loadCurrentSeats = async (ownerId: string, ownerEmail: string) => {
+    try {
+      const response = await fetch('/api/billing/get-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ owner_id: ownerId, owner_email: ownerEmail }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setSeatsActive(data.current_seats || 1)
+      } else {
+        // No subscription found, default to 1 seat
+        setSeatsActive(1)
+      }
+    } catch (error) {
+      console.error('Failed to load seats:', error)
+      setSeatsActive(1)
+    } finally {
+      setLoadingSeats(false)
+    }
+  }
 
   const handleLogout = () => {
     localStorage.removeItem('pos_staff')
@@ -69,12 +97,20 @@ export default function BillingPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <div>
               <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>Point of Sale Seats</h2>
-              <span style={{ display: 'inline-block', padding: '4px 8px', backgroundColor: '#d1fae5', color: '#065f46', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>Active - {seatsActive} seats</span>
+              {loadingSeats ? (
+                <span style={{ display: 'inline-block', padding: '4px 8px', backgroundColor: '#e5e7eb', color: '#6b7280', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>
+                  Loading...
+                </span>
+              ) : (
+                <span style={{ display: 'inline-block', padding: '4px 8px', backgroundColor: '#d1fae5', color: '#065f46', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>
+                  Active - {seatsActive} seat{seatsActive !== 1 ? 's' : ''}
+                </span>
+              )}
             </div>
           </div>
 
           {/* Seat Upgrade Component */}
-          {staff && (
+          {staff && !loadingSeats && (
             <SeatsUpgradeButton
               currentSeats={seatsActive}
               ownerEmail={staff.email}
