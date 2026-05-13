@@ -510,13 +510,41 @@ export default function BillingPage() {
             </div>
 
             {posEnabled ? (
-              <button onClick={handleManagePos} disabled={posLoading} style={{ flexShrink: 0, padding: '10px 20px', borderRadius: 10, border: `1px solid rgba(208,138,89,.4)`, background: 'transparent', color: ACC, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: posLoading ? .6 : 1 }}>
-                {posLoading ? 'Loading…' : 'Manage seats →'}
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', flexShrink: 0 }}>
+                {/* Seat stepper for amendment */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 0, border: `1px solid rgba(208,138,89,.3)`, borderRadius: 10, overflow: 'hidden', background: SF }}>
+                  <button
+                    onClick={() => setPosSeats(s => Math.max(1, s - 1))}
+                    style={{ width: 36, height: 36, border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: ACC, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >−</button>
+                  <div style={{ width: 44, textAlign: 'center', fontSize: 14, fontWeight: 700, color: TX }}>
+                    {posSeats}
+                  </div>
+                  <button
+                    onClick={() => setPosSeats(s => Math.min(50, s + 1))}
+                    style={{ width: 36, height: 36, border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: ACC, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >+</button>
+                </div>
+
+                {posSeats > posSeatCount ? (
+                  <button
+                    onClick={handlePosCheckout}
+                    disabled={posLoading}
+                    style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 2px 10px rgba(208,138,89,.3)`, opacity: posLoading ? .6 : 1 }}
+                  >
+                    {posLoading ? 'Loading…' : `Add ${posSeats - posSeatCount} seat${posSeats - posSeatCount !== 1 ? 's' : ''} →`}
+                  </button>
+                ) : (
+                  <button onClick={handleManagePos} disabled={posLoading} style={{ padding: '10px 20px', borderRadius: 10, border: `1px solid rgba(208,138,89,.4)`, background: 'transparent', color: ACC, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: posLoading ? .6 : 1 }}>
+                    {posLoading ? 'Loading…' : 'Manage subscription →'}
+                  </button>
+                )}
+              </div>
             ) : null}
           </div>
 
           {!posEnabled && (
+
             <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
               {/* Seat stepper */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 0, border: `1px solid rgba(208,138,89,.3)`, borderRadius: 10, overflow: 'hidden', background: SF }}>
