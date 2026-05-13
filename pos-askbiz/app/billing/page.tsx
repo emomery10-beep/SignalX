@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { SeatsUpgradeButton } from '@/components/SeatsUpgradeButton'
 
 const API = process.env.NEXT_PUBLIC_API_URL || ''
 
-export default function BillingPage() {
+function BillingPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [staff, setStaff] = useState<any>(null)
@@ -131,5 +131,13 @@ export default function BillingPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function BillingPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>}>
+      <BillingPageContent />
+    </Suspense>
   )
 }
