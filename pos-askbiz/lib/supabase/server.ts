@@ -22,10 +22,13 @@ export function createClient() {
 
 /** Service-role client — only for trusted server-side operations */
 export function createServiceClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!url || !key) {
+    throw new Error(`Missing Supabase credentials. URL: ${url ? 'set' : 'missing'}, KEY: ${key ? 'set' : 'missing'}`)
+  }
+
   const { createClient } = require('@supabase/supabase-js')
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  )
+  return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } })
 }
