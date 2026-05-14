@@ -90,7 +90,19 @@ export async function GET(request: NextRequest) {
       u.questions_used <= 9
     )
 
-    return NextResponse.json({ stats, users, candidates })
+    const { data: xActivity } = await supabase
+      .from('x_agent_activity')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100)
+
+    const { data: agentContent } = await supabase
+      .from('agent_content')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100)
+
+    return NextResponse.json({ stats, users, candidates, xActivity: xActivity || [], agentContent: agentContent || [] })
   } catch (error) {
     console.error('Admin error:', error)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })

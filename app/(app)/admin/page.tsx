@@ -54,6 +54,8 @@ export default function AdminPage() {
         setStats(d.stats)
         setUsers(d.users || [])
         setCandidates(d.candidates || [])
+        setXActivity(d.xActivity || [])
+        setAgentContent(d.agentContent || [])
         const days: Record<string, number> = {}
         const now = new Date()
         for (let i = 29; i >= 0; i--) {
@@ -67,10 +69,6 @@ export default function AdminPage() {
         })
         setSignups(Object.entries(days).map(([date, count]) => ({ date, count })))
       }
-      const xRes = await supabase.from('x_agent_activity').select('*').order('created_at', { ascending: false }).limit(100)
-      setXActivity(xRes.data || [])
-      const cRes = await supabase.from('agent_content').select('*').order('created_at', { ascending: false }).limit(100)
-      setAgentContent(cRes.data || [])
     } finally { setLoading(false) }
   }
 
