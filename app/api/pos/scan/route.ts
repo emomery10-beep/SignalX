@@ -103,8 +103,8 @@ Reply ONLY with valid JSON, nothing else:
         return { item, score }
       }).sort((a, b) => b.score - a.score)
 
-      // Require at least 60% of words to match, and minimum 2 matching words
-      const minMatches = Math.max(2, Math.ceil(words.length * 0.6))
+      // Require at least 60% of words to match (works for all product name lengths)
+      const minMatches = Math.max(1, Math.ceil(words.length * 0.6))
       if (scored[0].score >= minMatches) {
         match = scored[0].item
       }
