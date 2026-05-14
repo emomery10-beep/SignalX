@@ -1,0 +1,138 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { randomBytes } from 'crypto'
+
+export const runtime = 'nodejs'
+
+const PLAN_LIMITS: Record<string, { month: number; minute: number }> = {
+  free:       { month: 100,   minute: 5   },
+  starter:    { month: 2000,  minute: 20  },
+  growth:     { month: 10000, minute: 60  },
+  enterprise: { month: -1,    minute: 120 },
+}
+
+function generateKey(): string {
+  const rand = randomBytes(24).toString('hex')
+  return `abz_live_${rand}`
+}
+
+// ── GET — list all keys for the logged-in user ────────────────────────────────
+export async function GET() {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { data: keys, error } = await supabase
+    .from('api_keys')
+    .select('id, name, key, mode, plan, is_active, requests_month, request_limit_month, last_used_at, created_at')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Mask the key — only show last 6 chars
+  const masked = (keys || []).map(k => ({
+    ...k,
+    key: `abz_live_${'•'.repeat(10)}${k.key.slice(-6)}`,
+  }))
+
+  return NextResponse.json({ keys: masked })
+}
+
+// ── POST — create a new key ───────────────────────────────────────────────────
+export async function POST(request: NextRequest) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const body = await request.json()
+  const { name = 'My API Key', mode = 'generic', plan = 'free' } = body
+
+  // Max 5 keys per user
+  const { count } = await supabase
+    .from('api_keys')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+
+  if ((count || 0) >= 5) {
+    return NextResponse.json(
+      { error: 'Maximum of 5 API keys per account. Delete an existing key to create a new one.' },
+      { status: 400 }
+    )
+  }
+
+  const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free
+  const key = generateKey()
+
+  const { data, error } = await supabase
+    .from('api_keys')
+    .insert({
+      user_id:              user.id,
+      key,
+      name,
+      mode,
+      plan,
+      request_limit_month:  limits.month,
+      request_limit_minute: limits.minute,
+    })
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Return the full key ONCE — never shown again after this
+  return NextResponse.json({
+    success: true,
+    key: {
+      ...data,
+      key, // full key returned only on creation
+    },
+    warning: 'Copy this key now — it will not be shown again.',
+  })
+}
+
+// ── PATCH — rename or toggle active status ────────────────────────────────────
+export async function PATCH(request: NextRequest) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const body = await request.json()
+  const { id, name, is_active } = body
+
+  if (!id) return NextResponse.json({ error: 'Key id required' }, { status: 400 })
+
+  const update: Record<string, unknown> = {}
+  if (name      !== undefined) update.name      = name
+  if (is_active !== undefined) update.is_active = is_active
+
+  const { data, error } = await supabase
+    .from('api_keys')
+    .update(update)
+    .eq('id', id)
+    .eq('user_id', user.id) // ensure user owns this key
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true, key: data })
+}
+
+// ── DELETE — revoke a key ─────────────────────────────────────────────────────
+export async function DELETE(request: NextRequest) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { id } = await request.json()
+  if (!id) return NextResponse.json({ error: 'Key id required' }, { status: 400 })
+
+  const { error } = await supabase
+    .from('api_keys')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
+}
