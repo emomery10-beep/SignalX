@@ -51,19 +51,19 @@ export async function POST(req: NextRequest) {
             type: 'text',
             text: `You are a retail inventory assistant. Look at this image and identify the product.
 
-THIS STORE'S INVENTORY (what products actually exist):
+THIS STORE'S INVENTORY (reference list):
 ${catalogueText || '(Empty inventory)'}
 
 TASK:
-1. Identify what product is shown in the image
-2. If it matches something in the store's inventory above, give its EXACT name from the list
-3. If the product is NOT in the inventory list, say you cannot match it
-4. Only return products that exist in the store
+1. Identify what product is shown in the image - be specific with brand, size, type
+2. If it matches something in the store's inventory list above, give its EXACT name from the list
+3. If the product is NOT in the inventory list, give your best product identification anyway
+4. Set HIGH confidence (80-100) if you can clearly read the product name/label
+5. Set MEDIUM confidence (50-79) if you recognize the product but some details are unclear
+6. Set LOW confidence (below 50) if you are mostly guessing
 
-Reply with ONLY valid JSON:
-{"name":"exact product name from inventory or null if no match","confidence":90}
-
-If unsure or product not in inventory, set confidence below 50.`,
+Reply with ONLY valid JSON, no other text:
+{"name":"product name","confidence":85}`,
           },
         ],
       }],
