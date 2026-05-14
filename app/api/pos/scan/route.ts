@@ -25,6 +25,26 @@ export async function POST(req: NextRequest) {
   if (!image) return json({ error: 'image required' }, 400)
 
   try {
+    const service = createServiceClient()
+
+    // Fetch inventory to use as context for AI
+    const { data: inventoryList, error: invErr } = await service
+      .from('inventory')
+      .select('id, name, sale_price, cost_price, stock_qty, unit')
+      .eq('owner_id', ownerId)
+      .eq('active', true)
+      .order('name')
+
+    if (invErr) {
+      console.error('Inventory fetch error:', invErr)
+      return json({ error: 'Failed to fetch inventory' }, 500)
+    }
+
+    const catalogueText = (inventoryList || [])
+      .slice(0, 200)
+      .map(p => `- ${p.name}${p.stock_qty > 0 ? ` (${p.stock_qty} in stock)` : ' (OUT OF STOCK)'}`)
+      .join('\n')
+
     // fix #26 — use generic alias rather than date-pinned checkpoint
     const anthropic = new Anthropic()
     const aiResponse = await anthropic.messages.create({
@@ -39,13 +59,19 @@ export async function POST(req: NextRequest) {
           },
           {
             type: 'text',
-            text: `Identify the product in this image. Give a short clear product name (e.g. "Milk 1L", "Blue T-Shirt", "Paracetamol 500mg").
-Also extract the price if clearly shown on a label/tag.
+            text: `You are a POS cashier assistant. Look at this product image and identify it.
+
+YOUR STORE'S INVENTORY:
+${catalogueText || '(Empty inventory)'}
+
+TASK:
+1. Identify the product in the image - be specific with brand, size, type
+2. If it matches something in the inventory list above, use the EXACT name from the list
+3. If NOT in the inventory list, give your best identification anyway
+4. Also try to extract the price if shown on label/tag
 
 Reply ONLY with valid JSON, nothing else:
-{"name":"product name","price":0.00}
-
-Use null for price if not visible.`,
+{"name":"product name","price":null}`,
           },
         ],
       }],
@@ -65,45 +91,45 @@ Use null for price if not visible.`,
 
     if (!productName) return json({ error: 'Could not identify product' }, 422)
 
-    const service = createServiceClient()
+    // Try exact match first
+    let match = inventoryList?.find(p => p.name.toLowerCase() === productName.toLowerCase())
 
-    // fix #19 — search each word independently rather than joining with % (order-dependent)
-    // Also escape special ILIKE chars to prevent injection
-    const words = productName.split(/\s+/).slice(0, 4).map(escapeLike).filter(Boolean)
+    // If no exact match, use fuzzy matching
+    if (!match && inventoryList && inventoryList.length > 0) {
+      const words = productName.split(/\s+/).slice(0, 4).map(escapeLike).filter(Boolean)
+      const scored = inventoryList.map(item => {
+        const nameLower = item.name.toLowerCase()
+        const score = words.filter(w => nameLower.includes(w.toLowerCase())).length
+        return { item, score }
+      }).sort((a, b) => b.score - a.score)
 
-    // Build OR filter: name ilike %word1% OR name ilike %word2% ...
-    const ilikeFilter = words.map(w => `name.ilike.%${w}%`).join(',')
-
-    const { data: items } = await service
-      .from('inventory')
-      .select('id, name, sale_price, cost_price, stock_qty, unit')
-      .eq('owner_id', ownerId)
-      .eq('active', true)
-      .or(ilikeFilter)
-      .order('name')
-      .limit(8)
-
-    if (!items || items.length === 0) {
-      return json({ found: false, inventory_id: null, name: productName, price: tagPrice, stock_qty: null, unit: null })
+      // Require at least 60% of words to match, and minimum 2 matching words
+      const minMatches = Math.max(2, Math.ceil(words.length * 0.6))
+      if (scored[0].score >= minMatches) {
+        match = scored[0].item
+      }
     }
 
-    // Score matches: count how many words appear in the item name
-    const scored = items.map(item => {
-      const nameLower = item.name.toLowerCase()
-      const score = words.filter(w => nameLower.includes(w.toLowerCase())).length
-      return { item, score }
-    }).sort((a, b) => b.score - a.score)
+    if (match) {
+      return json({
+        found:        true,
+        inventory_id: match.id,
+        name:         match.name,
+        price:        match.sale_price,
+        cost_price:   match.cost_price,
+        stock_qty:    match.stock_qty,
+        unit:         match.unit,
+      })
+    }
 
-    const match = scored[0].item
-
+    // No match found, return with identified name for manual entry
     return json({
-      found:        true,
-      inventory_id: match.id,
-      name:         match.name,
-      price:        match.sale_price,
-      cost_price:   match.cost_price,
-      stock_qty:    match.stock_qty,
-      unit:         match.unit,
+      found: false,
+      inventory_id: null,
+      name: productName,
+      price: tagPrice,
+      stock_qty: null,
+      unit: null
     })
 
   } catch (err) {
