@@ -77,6 +77,7 @@ type TxDetailType = Transaction | null
 
 export default function POSPage() {
   const supabase = createClient()
+  // Modal state for recognized products from camera
   const [tab, setTab] = useState<Tab>('overview')
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
