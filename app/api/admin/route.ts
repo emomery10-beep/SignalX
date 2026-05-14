@@ -34,15 +34,22 @@ export async function GET(request: NextRequest) {
 
   try {
     // Get all profiles with usage
-    const { data: profiles } = await supabase
+    const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id, full_name, plan_id, business_type, registration_country, is_suspicious, created_at')
       .order('created_at', { ascending: false })
 
+    if (profilesError) console.error('Profiles query error:', profilesError)
+
     // Get all auth users for emails
-    const { data: authData } = await supabase.auth.admin.listUsers()
+    const { data: authData, error: authError } = await supabase.auth.admin.listUsers()
+    if (authError) console.error('Auth listUsers error:', authError)
     const emailMap: Record<string, string> = {}
-    authData?.users?.forEach((u: {id: string, email?: string}) => { if (u.email) emailMap[u.id] = u.email })
+    const authUserMap: Record<string, any> = {}
+    authData?.users?.forEach((u: any) => {
+      if (u.email) emailMap[u.id] = u.email
+      authUserMap[u.id] = u
+    })
 
     // Get usage for current month (table: usage, columns: questions / period)
     const monthYear = new Date().toISOString().slice(0, 7)
@@ -62,18 +69,33 @@ export async function GET(request: NextRequest) {
     const subsMap: Record<string, string> = {}
     subs?.forEach(s => { subsMap[s.user_id] = s.plan_id })
 
-    // Build user rows
-    const users = (profiles || []).map(p => ({
-      id: p.id,
-      email: emailMap[p.id] || '',
-      full_name: p.full_name,
-      plan_id: subsMap[p.id] || p.plan_id || 'free',
-      business_type: p.business_type,
-      registration_country: p.registration_country,
-      questions_used: usageMap[p.id] || 0,
-      created_at: p.created_at,
-      is_suspicious: p.is_suspicious,
-    }))
+    // Build user rows — fallback to auth users if profiles table is empty/errored
+    let users: any[]
+    if (profiles && profiles.length > 0) {
+      users = profiles.map(p => ({
+        id: p.id,
+        email: emailMap[p.id] || '',
+        full_name: p.full_name,
+        plan_id: subsMap[p.id] || p.plan_id || 'free',
+        business_type: p.business_type,
+        registration_country: p.registration_country,
+        questions_used: usageMap[p.id] || 0,
+        created_at: p.created_at,
+        is_suspicious: p.is_suspicious,
+      }))
+    } else {
+      users = (authData?.users || []).map((u: any) => ({
+        id: u.id,
+        email: u.email || '',
+        full_name: u.user_metadata?.full_name || u.email?.split('@')[0] || '',
+        plan_id: subsMap[u.id] || 'free',
+        business_type: null,
+        registration_country: null,
+        questions_used: usageMap[u.id] || 0,
+        created_at: u.created_at,
+        is_suspicious: false,
+      }))
+    }
 
     // Stats
     const now = new Date()
@@ -116,7 +138,17 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(100)
 
-    return NextResponse.json({ stats, users, candidates, xActivity: xActivity || [], agentContent: agentContent || [] })
+    return NextResponse.json({
+      stats, users, candidates,
+      xActivity: xActivity || [], agentContent: agentContent || [],
+      _debug: {
+        profilesCount: profiles?.length ?? 0,
+        profilesError: profilesError?.message || null,
+        authUsersCount: authData?.users?.length ?? 0,
+        subsCount: subs?.length ?? 0,
+        usageCount: usage?.length ?? 0,
+      }
+    })
   } catch (error) {
     console.error('Admin error:', error)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
