@@ -438,9 +438,9 @@ export async function POST(request: NextRequest) {
       from = new Date(now); from.setHours(0,0,0,0)
     }
 
-    const [txRes, invRes, staffRes, custRes, anomalyRes, alertRes, forecastRes, healthRes, shiftRes, decisionRes, sourcesRes, mpesaRes, briefRes] = await Promise.all([
-      service.from('pos_transactions').select('total,subtotal,discount_amount,status,payment_type,created_at,pos_items(name,qty,unit_price,cost_price),pos_staff(name)').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).order('created_at', { ascending: false }).limit(200),
-      service.from('inventory').select('name,stock_qty,low_stock_threshold,sale_price,cost_price').eq('owner_id', user.id).eq('active', true).order('stock_qty', { ascending: true }).limit(50),
+    const [txRes, invRes, staffRes, custRes, anomalyRes, alertRes, forecastRes, healthRes, shiftRes, decisionRes, sourcesRes, mpesaRes, briefRes, locRes] = await Promise.all([
+      service.from('pos_transactions').select('total,subtotal,discount_amount,status,payment_type,created_at,pos_location_id,pos_items(name,qty,unit_price,cost_price),pos_staff(name)').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).order('created_at', { ascending: false }).limit(200),
+      service.from('inventory').select('name,stock_qty,low_stock_threshold,sale_price,cost_price,location_id').eq('owner_id', user.id).eq('active', true).order('stock_qty', { ascending: true }).limit(100),
       service.from('pos_staff').select('name,role,active').eq('owner_id', user.id),
       service.from('pos_customers').select('id,name,phone,total_spent,visit_count,last_seen_at').eq('owner_id', user.id).order('total_spent', { ascending: false }).limit(10),
       service.from('anomalies').select('type,severity,title,body,product,metric,created_at').eq('user_id', user.id).eq('seen', false).order('created_at', { ascending: false }).limit(10),
@@ -457,6 +457,8 @@ export async function POST(request: NextRequest) {
       service.from('mpesa_payments').select('amount,status,mpesa_receipt,plan,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
       // Latest daily brief
       service.from('daily_briefs').select('improved,worsened,action,health_score,date,created_at').eq('user_id', user.id).order('date', { ascending: false }).limit(1),
+      // Locations
+      service.from('pos_locations').select('id,name,is_active').eq('owner_id', user.id).eq('is_active', true),
     ])
 
     const txs       = txRes.data || []
@@ -472,6 +474,7 @@ export async function POST(request: NextRequest) {
     const sources   = sourcesRes.data || []
     const mpesa     = mpesaRes.data || []
     const brief     = briefRes.data?.[0] || null
+    const locations = locRes.data || []
 
     if (txRes.error) console.error('POS tx query error:', txRes.error.message)
     if (invRes.error) console.error('POS inv query error:', invRes.error.message)
@@ -523,6 +526,30 @@ export async function POST(request: NextRequest) {
 
     posContext = `\n\nLIVE POS DATA (${periodLabel}):\n`
     posContext += `${completed.length} completed transactions, ${finalSymbol}${revenue.toFixed(2)} revenue, ${finalSymbol}${profit.toFixed(2)} profit (${marginPct}% margin), ${refunds} refund(s).\n`
+
+    // Per-branch breakdown (only if multiple locations exist)
+    if (locations.length > 1) {
+      const locMap = Object.fromEntries(locations.map((l: any) => [l.id, l.name]))
+      const branchRevenue: Record<string, { txns: number; revenue: number }> = {}
+      for (const t of completed) {
+        const locName = locMap[t.pos_location_id] || 'Unassigned'
+        if (!branchRevenue[locName]) branchRevenue[locName] = { txns: 0, revenue: 0 }
+        branchRevenue[locName].txns++
+        branchRevenue[locName].revenue += t.total
+      }
+      posContext += `\nBy branch:\n${Object.entries(branchRevenue).map(([name, d]) => `- ${name}: ${d.txns} txns, ${finalSymbol}${d.revenue.toFixed(2)} revenue`).join('\n')}\n`
+
+      // Inventory per branch
+      const branchStock: Record<string, { total: number; low: number; oos: number }> = {}
+      for (const item of inv) {
+        const locName = locMap[(item as any).location_id] || 'Unassigned'
+        if (!branchStock[locName]) branchStock[locName] = { total: 0, low: 0, oos: 0 }
+        branchStock[locName].total++
+        if (item.stock_qty <= 0) branchStock[locName].oos++
+        else if (item.stock_qty <= (item.low_stock_threshold || 5)) branchStock[locName].low++
+      }
+      posContext += `Inventory by branch:\n${Object.entries(branchStock).map(([name, d]) => `- ${name}: ${d.total} products, ${d.low} low stock, ${d.oos} out of stock`).join('\n')}\n`
+    }
 
     if (Object.keys(paymentBreakdown).length > 0) {
       posContext += `Payment methods: ${Object.entries(paymentBreakdown).map(([m, v]) => `${m}: ${finalSymbol}${v.toFixed(2)}`).join(', ')}.\n`

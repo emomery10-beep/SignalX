@@ -1,33 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { resolvePosOwner } from '@/lib/pos-auth'
+import { resolvePosOwner, resolvePosAuth } from '@/lib/pos-auth'
 
-// GET — fetch transactions with date/cashier filters
+// GET — fetch transactions with date/cashier/location filters
 export async function GET(req: NextRequest) {
-  const ownerId = await resolvePosOwner(req)
-  if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  const auth = await resolvePosAuth(req)
+  if (!auth) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
   const service = createServiceClient()
   const { searchParams } = new URL(req.url)
   const from       = searchParams.get('from') || new Date(Date.now() - 86400000).toISOString()
   const to         = searchParams.get('to')   || new Date().toISOString()
   const cashier_id = searchParams.get('cashier_id')
+  const location_id = searchParams.get('location_id') || auth.locationId
 
   let query = service
     .from('pos_transactions')
     .select(`
       id, owner_id, cashier_id, customer_id, subtotal, discount_amount, amount_tendered, total,
-      payment_type, status, notes, created_at,
+      payment_type, status, notes, created_at, pos_location_id,
       pos_staff!cashier_id(id, name, role),
       pos_customers(id, phone, name),
       pos_items!transaction_id(name, qty, unit_price, cost_price, inventory_id)
     `)
-    .eq('owner_id', ownerId)
+    .eq('owner_id', auth.ownerId)
     .gte('created_at', from)
     .lte('created_at', to)
     .order('created_at', { ascending: false })
 
   if (cashier_id) query = query.eq('cashier_id', cashier_id)
+  // Staff are locked to their branch; owners can filter or see all
+  if (location_id) query = query.eq('pos_location_id', location_id)
 
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -44,17 +47,21 @@ export async function GET(req: NextRequest) {
 
 // POST — cashier creates a new completed sale
 export async function POST(req: NextRequest) {
-  const ownerId = await resolvePosOwner(req)
-  if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  const auth = await resolvePosAuth(req)
+  if (!auth) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  const ownerId = auth.ownerId
 
   const service = createServiceClient()
   const body = await req.json()
-  const { items, payment_type, customer_phone, notes, discount_amount, amount_tendered, location_id } = body
+  const { items, payment_type, customer_phone, notes, discount_amount, amount_tendered } = body
+
+  // Location: staff locked to their branch, owner can specify
+  const txLocationId = auth.locationId || body.location_id || null
 
   // fix #3 — cashier_id comes from the validated header, not the untrusted request body
   const cashier_id = body.cashier_id_from_header || null  // ignored; we use header below
   void cashier_id
-  const verifiedCashierId = req.headers.get('x-staff-id') // already verified by resolvePosOwner
+  const verifiedCashierId = req.headers.get('x-staff-id') // already verified by resolvePosAuth
 
   if (!items?.length) return NextResponse.json({ error: 'No items' }, { status: 400 })
   if (!payment_type)  return NextResponse.json({ error: 'Payment type required' }, { status: 400 })
@@ -143,6 +150,7 @@ export async function POST(req: NextRequest) {
       payment_type,
       amount_tendered: amount_tendered ? Number(amount_tendered) : null,
       status:          'completed',
+      pos_location_id: txLocationId,
       notes:           notes || null,
     })
     .select('id')

@@ -65,7 +65,10 @@ interface Transaction {
   pos_customers?: { phone: string; name?: string } | null
 }
 interface InventoryItem {
-  id: string; name: string; sku?: string; sale_price: number; cost_price: number; stock_qty: number; low_stock_threshold: number; unit?: string; last_sold_at: string | null; category?: string; active: boolean
+  id: string; name: string; sku?: string; sale_price: number; cost_price: number; stock_qty: number; low_stock_threshold: number; unit?: string; last_sold_at: string | null; category?: string; active: boolean; location_id?: string; location?: { id: string; name: string } | null
+}
+interface Location {
+  id: string; name: string; address?: string; phone?: string; is_active: boolean
 }
 type Tab = 'overview' | 'staff' | 'inventory' | 'audit'
 type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
@@ -83,6 +86,10 @@ export default function POSPage() {
   const [currencySymbol, setCurrencySymbol] = useState('£')
   const [posEnabled, setPosEnabled] = useState<boolean | null>(null)
   const [seatCount, setSeatCount] = useState(0)
+
+  // Locations (multi-branch)
+  const [locations, setLocations] = useState<Location[]>([])
+  const [selectedLocation, setSelectedLocation] = useState<string>('all')
 
   // Toast
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
@@ -169,11 +176,13 @@ export default function POSPage() {
   }, [getDateRange])
 
   // ── Fetch data ─────────────────────────────────────────
-  const fetchTransactions = useCallback(async (from: string, to: string) => {
-    const res = await fetch(`/api/pos/transactions?from=${from}&to=${to}`)
+  const fetchTransactions = useCallback(async (from: string, to: string, locId?: string) => {
+    const loc = locId || selectedLocation
+    const locParam = loc && loc !== 'all' ? `&location_id=${loc}` : ''
+    const res = await fetch(`/api/pos/transactions?from=${from}&to=${to}${locParam}`)
     const data = await res.json()
     return data.transactions || []
-  }, [])
+  }, [selectedLocation])
 
   useEffect(() => {
     const init = async () => {
@@ -193,40 +202,47 @@ export default function POSPage() {
       const { start, end } = getDateRange(dateRange)
       const prev = getPrevRange(dateRange)
 
-      const [staffRes, txData, prevTxData, invRes] = await Promise.all([
+      const [staffRes, txData, prevTxData, invRes, locRes] = await Promise.all([
         fetch('/api/pos/staff'),
-        fetchTransactions(start.toISOString(), end.toISOString()),
-        fetchTransactions(prev.start.toISOString(), prev.end.toISOString()),
+        fetchTransactions(start.toISOString(), end.toISOString(), 'all'),
+        fetchTransactions(prev.start.toISOString(), prev.end.toISOString(), 'all'),
         fetch('/api/pos/inventory'),
+        fetch('/api/pos/locations'),
       ])
       const staffData = await staffRes.json()
       const invData = await invRes.json()
+      const locData = await locRes.json()
 
       setStaff(staffData.staff || [])
       setTransactions(txData)
       setPrevTransactions(prevTxData)
       setInventory(invData.inventory || [])
+      setLocations(locData.locations || [])
       setLoading(false)
     }
     init()
   }, [])
 
-  // Re-fetch when date range changes
+  // Re-fetch when date range or location changes
   useEffect(() => {
     if (loading) return
     const refetch = async () => {
       const { start, end } = getDateRange(dateRange)
       const prev = getPrevRange(dateRange)
-      const [txData, prevTxData] = await Promise.all([
+      const locParam = selectedLocation !== 'all' ? `&location_id=${selectedLocation}` : ''
+      const [txData, prevTxData, invRes] = await Promise.all([
         fetchTransactions(start.toISOString(), end.toISOString()),
         fetchTransactions(prev.start.toISOString(), prev.end.toISOString()),
+        fetch(`/api/pos/inventory?${locParam ? `location_id=${selectedLocation}` : ''}`),
       ])
+      const invData = await invRes.json()
       setTransactions(txData)
       setPrevTransactions(prevTxData)
+      setInventory(invData.inventory || [])
       setTxPage(0)
     }
     refetch()
-  }, [dateRange, customStart, customEnd])
+  }, [dateRange, customStart, customEnd, selectedLocation])
 
   // ── Realtime subscription ──────────────────────────────
   useEffect(() => {
@@ -638,6 +654,28 @@ export default function POSPage() {
             </button>
           ))}
         </div>
+
+        {/* ── Branch Picker (only shown if 2+ locations exist) ── */}
+        {locations.length > 1 && (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center' }}>
+            <span style={{ fontSize: 12, color: 'var(--tx3)', fontWeight: 500 }}>Branch:</span>
+            <select
+              value={selectedLocation}
+              onChange={e => setSelectedLocation(e.target.value)}
+              style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', color: 'var(--tx)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              <option value="all">All Branches</option>
+              {locations.map(loc => (
+                <option key={loc.id} value={loc.id}>{loc.name}</option>
+              ))}
+            </select>
+            {selectedLocation !== 'all' && (
+              <span style={{ fontSize: 11, color: ACC, fontWeight: 500 }}>
+                Viewing: {locations.find(l => l.id === selectedLocation)?.name}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* ── Date Range Selector ── */}
         {tab === 'overview' && (
