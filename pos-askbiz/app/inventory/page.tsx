@@ -8,6 +8,7 @@ const btnSecondary: React.CSSProperties = { padding: '9px 16px', borderRadius: 8
 
 const ACC = '#d08a59'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
+// Force redeploy
 
 interface StaffSession { id: string; name: string; role: string; owner_id: string }
 interface InventoryItem {
