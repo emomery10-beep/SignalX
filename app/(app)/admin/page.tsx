@@ -34,6 +34,7 @@ export default function AdminPage() {
   const [xActivity, setXActivity] = useState<any[]>([])
   const [agentContent, setAgentContent] = useState<any[]>([])
   const [signups, setSignups] = useState<any[]>([])
+  const [stripeData, setStripeData] = useState<any>(null)
 
   useEffect(() => {
     const init = async () => {
@@ -59,6 +60,7 @@ export default function AdminPage() {
         setCandidates(d.candidates || [])
         setXActivity(d.xActivity || [])
         setAgentContent(d.agentContent || [])
+        setStripeData(d.stripe || null)
         const days: Record<string, number> = {}
         const now = new Date()
         for (let i = 29; i >= 0; i--) {
@@ -85,9 +87,10 @@ export default function AdminPage() {
   if (!authorized) return null
 
   const fu = users.filter(u => u.email?.toLowerCase().includes(search.toLowerCase()) || u.full_name?.toLowerCase().includes(search.toLowerCase()))
-  const mrr = stats?.mrr || 0
-  const arr = mrr * 12
-  const conv = stats?.totalUsers > 0 ? ((stats?.payingUsers / stats?.totalUsers) * 100).toFixed(1) : '0'
+  const mrr = stripeData?.mrr ?? stats?.mrr ?? 0
+  const arr = stripeData?.arr ?? mrr * 12
+  const payingCount = stripeData?.activeSubscriptions ?? stats?.payingUsers ?? 0
+  const conv = stats?.totalUsers > 0 ? ((payingCount / stats.totalUsers) * 100).toFixed(1) : '0'
   const xPosted = xActivity.filter(x => x.status === 'posted').length
   const xPending = xActivity.filter(x => x.status === 'pending').length
   const pc = agentContent.filter(c => c.status === 'pending').length
@@ -121,7 +124,7 @@ export default function AdminPage() {
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:12,marginBottom:24}}>
               <KV label="MRR" value={"£"+mrr} sub="Monthly recurring" color="#f59e0b" />
               <KV label="ARR" value={"£"+arr} sub="Annual run rate" color="#8b5cf6" />
-              <KV label="Paying Users" value={stats?.payingUsers} sub="Growth + Business" color="#10b981" />
+              <KV label="Paying Users" value={payingCount} sub="Growth + Business" color="#10b981" />
               <KV label="Free Users" value={stats?.freeUsers} sub="Opportunities" color="#94a3b8" />
               <KV label="Conversion" value={conv+"%"} sub="Free to paid" color="#6366F1" />
               <KV label="New This Week" value={stats?.newThisWeek} sub="Last 7 days" color="#60a5fa" />
@@ -159,13 +162,55 @@ export default function AdminPage() {
 
           {tab==='Revenue' && <>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:12,marginBottom:24}}>
-              <KV label="MRR" value={"£"+mrr} sub="Monthly recurring" color="#f59e0b" />
+              <KV label="MRR" value={"£"+mrr} sub="From Stripe" color="#f59e0b" />
               <KV label="ARR" value={"£"+arr} sub="Annualised" color="#8b5cf6" />
-              <KV label="Avg/Paying User" value={"£"+(mrr/(stats?.payingUsers||1)).toFixed(0)} sub="Per paying user" color="#10b981" />
+              <KV label="Active Subs" value={stripeData?.activeSubscriptions??0} sub="Paying customers" color="#10b981" />
               <KV label="Conversion" value={conv+"%"} sub="Free to paid" color="#6366F1" />
-              <KV label="Growth Users" value={users.filter(u=>u.plan_id==='growth').length} sub="£19/mo each" color="#f59e0b" />
-              <KV label="Business Users" value={users.filter(u=>u.plan_id==='business').length} sub="£49/mo each" color="#8b5cf6" />
+              <KV label="This Month" value={"£"+(stripeData?.monthRevenue??0)} sub="Net revenue" color="#60a5fa" />
+              <KV label="Total Revenue" value={"£"+(stripeData?.totalRevenue??0)} sub="All time net" color="#34d399" />
             </div>
+
+            {stripeData?.subscriptions?.length > 0 && <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
+              <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Active Subscriptions</div>
+              <div style={{overflowX:'auto'}}>
+                <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+                  <thead>
+                    <tr style={{background:'var(--ev)'}}>
+                      {['Customer','Email','Plan','Amount','Interval','Renews','Since'].map(h=>(
+                        <th key={h} style={{padding:'8px 12px',textAlign:'left',fontWeight:600,color:'var(--tx2)'}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stripeData.subscriptions.map((s:any)=>(
+                      <tr key={s.id} style={{borderTop:'1px solid var(--b)'}}>
+                        <td style={{padding:'8px 12px',fontWeight:500}}>{s.customerName||'—'}</td>
+                        <td style={{padding:'8px 12px',color:'var(--tx2)'}}>{s.customerEmail}</td>
+                        <td style={{padding:'8px 12px'}}><span style={{padding:'2px 8px',borderRadius:9999,fontSize:11,fontWeight:600,background:'rgba(99,102,241,.1)',color:'#6366F1'}}>{s.plan}</span></td>
+                        <td style={{padding:'8px 12px',fontWeight:600}}>£{s.amount}</td>
+                        <td style={{padding:'8px 12px',color:'var(--tx3)',textTransform:'capitalize'}}>{s.interval}ly</td>
+                        <td style={{padding:'8px 12px',color:'var(--tx3)'}}>{new Date(s.currentPeriodEnd).toLocaleDateString('en-GB')}</td>
+                        <td style={{padding:'8px 12px',color:'var(--tx3)'}}>{new Date(s.created).toLocaleDateString('en-GB')}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>}
+
+            {stripeData?.recentPayments?.length > 0 && <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
+              <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Recent Payments</div>
+              {stripeData.recentPayments.map((p:any)=>(
+                <div key={p.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 0',borderBottom:'1px solid var(--b)',flexWrap:'wrap',gap:8}}>
+                  <div>
+                    <div style={{fontWeight:600,fontSize:13}}>£{p.amount} <span style={{fontSize:11,color:p.status==='succeeded'?'#10b981':'#f87171',fontWeight:500}}>{p.status}</span></div>
+                    <div style={{fontSize:12,color:'var(--tx3)'}}>{p.email}{p.description?' · '+p.description:''}</div>
+                  </div>
+                  <div style={{fontSize:11,color:'var(--tx3)'}}>{new Date(p.created).toLocaleDateString('en-GB')}</div>
+                </div>
+              ))}
+            </div>}
+
             <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)'}}>
               <div style={{fontSize:13,fontWeight:600,marginBottom:8}}>Upgrade Candidates ({candidates.length})</div>
               <p style={{fontSize:12,color:'var(--tx3)',marginBottom:16}}>Free users at 7-9 questions — prime conversion targets.</p>
@@ -303,10 +348,10 @@ export default function AdminPage() {
               <div style={{fontSize:13,fontWeight:600,color:'#6366F1',marginBottom:12}}>Unit Economics</div>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
                 {[
-                  {label:'Revenue per user',value:'£'+(mrr/(users.length||1)).toFixed(2)+'/mo'},
+                  {label:'Revenue per user',value:'£'+(mrr/(payingCount||1)).toFixed(2)+'/mo'},
                   {label:'Cost per question',value:'~£0.003'},
                   {label:'Gross margin est.',value:'~85%'},
-                  {label:'LTV (12 months)',value:'£'+((mrr/(stats?.payingUsers||1))*12).toFixed(0)},
+                  {label:'LTV (12 months)',value:'£'+((mrr/(payingCount||1))*12).toFixed(0)},
                 ].map(({label,value})=>(
                   <div key={label} style={{padding:'10px 12px',borderRadius:9,background:'var(--sf)',border:'1px solid var(--b)'}}>
                     <div style={{fontSize:11,color:'var(--tx3)',marginBottom:4}}>{label}</div>

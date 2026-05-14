@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import Stripe from 'stripe'
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' as any })
 
 const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
 
@@ -138,16 +141,73 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(100)
 
-    return NextResponse.json({
-      stats, users, candidates,
-      xActivity: xActivity || [], agentContent: agentContent || [],
-      _debug: {
-        profilesCount: profiles?.length ?? 0,
-        profilesError: profilesError?.message || null,
-        authUsersCount: authData?.users?.length ?? 0,
-        subsCount: subs?.length ?? 0,
-        usageCount: usage?.length ?? 0,
+    // Stripe data
+    let stripeData: any = { mrr: 0, arr: 0, activeSubscriptions: 0, totalRevenue: 0, customers: 0, recentPayments: [], subscriptions: [] }
+    try {
+      const [activeSubs, customers, recentCharges, balanceTransactions] = await Promise.all([
+        stripe.subscriptions.list({ status: 'active', limit: 100, expand: ['data.customer'] }),
+        stripe.customers.list({ limit: 100 }),
+        stripe.charges.list({ limit: 20 }),
+        stripe.balanceTransactions.list({ limit: 100, type: 'charge' }),
+      ])
+
+      let stripeMrr = 0
+      const stripeSubs = activeSubs.data.map(sub => {
+        const item = sub.items.data[0]
+        const amount = (item?.price?.unit_amount || 0) / 100
+        const interval = item?.price?.recurring?.interval
+        const monthly = interval === 'year' ? amount / 12 : amount
+        stripeMrr += monthly
+        const customer = sub.customer as Stripe.Customer
+        return {
+          id: sub.id,
+          customerEmail: customer?.email || '',
+          customerName: customer?.name || '',
+          plan: item?.price?.nickname || item?.price?.id || 'Unknown',
+          amount,
+          interval: interval || 'month',
+          status: sub.status,
+          currentPeriodEnd: new Date(sub.current_period_end * 1000).toISOString(),
+          created: new Date(sub.created * 1000).toISOString(),
+        }
+      })
+
+      const recentPayments = recentCharges.data.map(c => ({
+        id: c.id,
+        amount: (c.amount || 0) / 100,
+        currency: c.currency,
+        status: c.status,
+        email: c.billing_details?.email || c.receipt_email || '',
+        description: c.description || '',
+        created: new Date(c.created * 1000).toISOString(),
+      }))
+
+      const now = new Date()
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+      const monthRevenue = balanceTransactions.data
+        .filter(t => new Date(t.created * 1000) >= monthStart)
+        .reduce((sum, t) => sum + t.net, 0) / 100
+
+      stripeData = {
+        mrr: Math.round(stripeMrr * 100) / 100,
+        arr: Math.round(stripeMrr * 12 * 100) / 100,
+        activeSubscriptions: activeSubs.data.length,
+        totalCustomers: customers.data.length,
+        monthRevenue: Math.round(monthRevenue * 100) / 100,
+        totalRevenue: Math.round(balanceTransactions.data.reduce((s, t) => s + t.net, 0) / 100 * 100) / 100,
+        recentPayments,
+        subscriptions: stripeSubs,
       }
+
+      stats.mrr = stripeData.mrr
+      stats.payingUsers = activeSubs.data.length
+    } catch (stripeError) {
+      console.error('Stripe error:', stripeError)
+    }
+
+    return NextResponse.json({
+      stats, users, candidates, stripe: stripeData,
+      xActivity: xActivity || [], agentContent: agentContent || [],
     })
   } catch (error) {
     console.error('Admin error:', error)
