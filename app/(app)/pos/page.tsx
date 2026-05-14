@@ -70,7 +70,7 @@ interface InventoryItem {
 interface Location {
   id: string; name: string; address?: string; phone?: string; is_active: boolean
 }
-type Tab = 'overview' | 'staff' | 'inventory' | 'audit'
+type Tab = 'overview' | 'staff' | 'inventory' | 'branches' | 'audit'
 type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
 type FilterModalType = { type: 'sales' | 'refunds' | 'low_stock' | 'cashier_detail'; title: string; cashier_id?: string } | null
 type TxDetailType = Transaction | null
@@ -644,7 +644,7 @@ export default function POSPage() {
       <div className="page-shell-body">
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid var(--b)', paddingBottom: 0, overflowX: 'auto' }}>
-          {(['overview', 'staff', 'inventory', 'audit'] as Tab[]).map(t => (
+          {(['overview', 'staff', 'inventory', 'branches', 'audit'] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: '8px 16px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === t ? 'var(--sf)' : 'transparent', color: tab === t ? 'var(--tx)' : 'var(--tx3)',
@@ -1183,6 +1183,51 @@ export default function POSPage() {
                     </div>
                   )
                 })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ══════════════ BRANCHES TAB ══════════════ */}
+        {tab === 'branches' && (
+          <div style={{ maxWidth: 700 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{locations.length} branch{locations.length !== 1 ? 'es' : ''}</div>
+              <button onClick={() => {
+                const name = prompt('Branch name (e.g. "Downtown", "Mall Branch"):')
+                if (!name?.trim()) return
+                fetch('/api/pos/locations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name.trim() }) })
+                  .then(r => r.json()).then(d => { if (d.location) { setLocations(prev => [...prev, d.location]); notify(`${d.location.name} created`) } else { notify(d.error || 'Failed', false) } })
+              }} style={btnPrimary}>+ Add branch</button>
+            </div>
+            {locations.length === 0 ? (
+              <div style={{ ...cardStyle, textAlign: 'center', padding: 40 }}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>No branches yet</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Add your first branch to start managing multiple locations.</div>
+              </div>
+            ) : (
+              <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
+                {locations.map((loc, i) => (
+                  <div key={loc.id} style={{ padding: '14px 16px', borderBottom: i < locations.length - 1 ? '1px solid var(--b)' : 'none', background: 'var(--sf)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {loc.name}
+                        {!loc.is_active && <span style={{ fontSize: 10, color: RED, fontWeight: 700 }}>INACTIVE</span>}
+                      </div>
+                      {loc.address && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{loc.address}</div>}
+                      {loc.phone && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{loc.phone}</div>}
+                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>
+                        {staff.filter(s => s.location_id === loc.id).length} staff · {inventory.filter(p => p.location_id === loc.id).length} products
+                      </div>
+                    </div>
+                    <button onClick={() => {
+                      const newName = prompt('Rename branch:', loc.name)
+                      if (!newName?.trim() || newName.trim() === loc.name) return
+                      fetch('/api/pos/locations', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: loc.id, name: newName.trim() }) })
+                        .then(r => r.json()).then(d => { if (d.location) { setLocations(prev => prev.map(l => l.id === loc.id ? d.location : l)); notify('Branch renamed') } else { notify(d.error || 'Failed', false) } })
+                    }} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)' }}>Edit</button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
