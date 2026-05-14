@@ -1,22 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient as createServerClient, createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 
-const ADMIN_EMAIL = 'emomery10@gmail.com'
+const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
 
-async function verifyAdmin(supabase: ReturnType<typeof createServerClient>) {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user || user.email !== ADMIN_EMAIL) return false
-  return true
+async function getAdminUser(request: NextRequest, supabase: any) {
+  const authHeader = request.headers.get('authorization')
+  if (authHeader?.startsWith('Bearer ')) {
+    const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
+    if (user && ADMIN_EMAILS.includes(user.email || '')) return user
+  }
+  const accessToken = request.cookies.get('sb-access-token')?.value
+    || request.cookies.get(`sb-${(process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace('https://','').split('.')[0]}-auth-token`)?.value
+  if (accessToken) {
+    try {
+      const parsed = JSON.parse(accessToken)
+      const token = Array.isArray(parsed) ? parsed[0] : parsed
+      const { data: { user } } = await supabase.auth.getUser(token)
+      if (user && ADMIN_EMAILS.includes(user.email || '')) return user
+    } catch {
+      const { data: { user } } = await supabase.auth.getUser(accessToken)
+      if (user && ADMIN_EMAILS.includes(user.email || '')) return user
+    }
+  }
+  return null
 }
 
 export async function GET(request: NextRequest) {
-  // Use session client only for auth check, service client for all data reads
-  const sessionClient = createServerClient()
-  if (!(await verifyAdmin(sessionClient))) {
+  const supabase = createServiceClient()
+  const admin = await getAdminUser(request, supabase)
+  if (!admin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-
-  const supabase = createServiceClient()
 
   try {
     // Get all profiles with usage
@@ -110,12 +124,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const sessionClient = createServerClient()
-  if (!(await verifyAdmin(sessionClient))) {
+  const supabase = createServiceClient()
+  const admin = await getAdminUser(request, supabase)
+  if (!admin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-
-  const supabase = createServiceClient()
   const { action, userId, planId } = await request.json()
 
   if (action === 'change_plan') {

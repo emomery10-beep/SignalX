@@ -48,7 +48,10 @@ export default function AdminPage() {
   const loadAll = async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/admin')
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin', {
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+      })
       if (res.ok) {
         const d = await res.json()
         setStats(d.stats)
@@ -73,7 +76,8 @@ export default function AdminPage() {
   }
 
   const changePlan = async (userId: string, planId: string) => {
-    const res = await fetch('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'change_plan', userId, planId }) })
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) }, body: JSON.stringify({ action: 'change_plan', userId, planId }) })
     const d = await res.json()
     if (d.success) { setActionMsg('Plan updated to ' + planId); loadAll(); setTimeout(() => setActionMsg(''), 3000) }
   }
