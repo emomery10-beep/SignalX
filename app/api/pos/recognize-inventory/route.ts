@@ -24,12 +24,17 @@ export async function POST(req: NextRequest) {
     const service = createServiceClient()
 
     // Fetch this owner's inventory to use as context for AI
-    const { data: inventoryList } = await service
+    const { data: inventoryList, error: invErr } = await service
       .from('inventory')
       .select('id, name, sale_price, cost_price, stock_qty, unit')
       .eq('owner_id', auth.ownerId)
       .eq('active', true)
       .order('name')
+
+    if (invErr) {
+      console.error('Inventory fetch error:', invErr)
+      return NextResponse.json({ error: 'Failed to fetch inventory: ' + invErr.message }, { status: 500 })
+    }
 
     const catalogueText = (inventoryList || [])
       .slice(0, 200) // Limit to 200 products to stay within token limits
@@ -71,18 +76,22 @@ Reply with ONLY valid JSON, no other text:
 
     const content = response.content[0]
     if (content.type !== 'text') {
+      console.error('Unexpected response type:', content.type)
       return NextResponse.json({ products: [] })
     }
 
+    console.log('Claude response:', content.text)
     const jsonMatch = content.text.trim().match(/\{[\s\S]*?\}/)
     if (!jsonMatch) {
+      console.error('No JSON found in response:', content.text)
       return NextResponse.json({ products: [] })
     }
 
     let parsed: { name?: string; confidence?: number }
     try {
       parsed = JSON.parse(jsonMatch[0])
-    } catch {
+    } catch (e) {
+      console.error('JSON parse error:', e, 'raw:', jsonMatch[0])
       return NextResponse.json({ products: [] })
     }
 
@@ -152,7 +161,7 @@ Reply with ONLY valid JSON, no other text:
     // Very low confidence or no product identified
     return NextResponse.json({ products: [] })
   } catch (err: any) {
-    console.error('recognize-inventory error:', err)
-    return NextResponse.json({ error: err.message || 'Recognition failed' }, { status: 500 })
+    console.error('recognize-inventory error:', err, err.stack)
+    return NextResponse.json({ error: err.message || 'Recognition failed', details: String(err) }, { status: 500 })
   }
 }
