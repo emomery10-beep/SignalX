@@ -77,12 +77,13 @@ YOUR STORE'S INVENTORY:
 ${catalogueText || '(Empty inventory)'}${hotListText}
 
 TASK:
-1. Identify the product in the image - be specific with brand, size, type
-2. PRIORITIZE products in the "FREQUENTLY RECOGNIZED" list - these are the store's most common items
-3. If it matches something in the inventory list above, use the EXACT name from the list
-4. If NOT in the inventory list, give your best identification anyway
+1. Look at the image and the inventory list above
+2. FIRST: Check if this matches anything in the inventory list (even if worded differently - e.g., "Cumin Seeds" matches "Loose Cumin Seeds per Kilo")
+3. If you find a match, return the EXACT name from the inventory list
+4. If no match, identify the product as best you can
 5. Try to extract the price if shown on label/tag
-6. Identify anything you can visually see clearly, even generic items without brand labels (e.g., rice, flour, eggs)
+6. PRIORITIZE products in the "FREQUENTLY RECOGNIZED" list
+7. Identify anything you can visually see clearly, even generic items without brand labels
 
 Reply ONLY with valid JSON, nothing else:
 {"name":"product name","price":null}`,
@@ -103,40 +104,49 @@ Reply ONLY with valid JSON, nothing else:
     const productName = (parsed.name || '').trim()
     const tagPrice    = typeof parsed.price === 'number' ? parsed.price : null
 
+    console.log('🔍 SCAN RECOGNITION:', { productName, price: tagPrice, inventoryCount: inventoryList?.length })
+
     if (!productName) return json({ error: 'Could not identify product' }, 422)
 
     // Try exact match first
     let match = inventoryList?.find(p => p.name.toLowerCase() === productName.toLowerCase())
+    if (match) console.log('✓ EXACT MATCH:', match.name)
 
-    // If no exact match, use fuzzy matching
+    // If no exact match, use smart fuzzy matching - require ALL major words to be present
     if (!match && inventoryList && inventoryList.length > 0) {
-      const words = productName.split(/\s+/).slice(0, 4).map(escapeLike).filter(Boolean)
+      const words = productName.split(/\s+/).map(w => w.toLowerCase()).filter(Boolean)
       const scored = inventoryList.map(item => {
-        const nameLower = item.name.toLowerCase()
-        const score = words.filter(w => nameLower.includes(w.toLowerCase())).length
-        return { item, score }
+        const itemWords = item.name.toLowerCase().split(/\s+/)
+        const matchCount = words.filter(w => itemWords.some(iw => iw.includes(w) || w.includes(iw))).length
+        return { item, score: matchCount, totalWords: words.length }
       }).sort((a, b) => b.score - a.score)
 
-      // Require at least 60% of words to match (works for all product name lengths)
-      const minMatches = Math.max(1, Math.ceil(words.length * 0.6))
-      if (scored[0].score >= minMatches) {
+      console.log('🔎 FUZZY ATTEMPT:', { words, topMatch: scored[0]?.item?.name, matchScore: scored[0]?.score, needAllWords: scored[0]?.totalWords })
+
+      if (scored[0].score === scored[0].totalWords && scored[0].totalWords > 0) {
         match = scored[0].item
+        console.log('✓ FUZZY MATCH:', match.name)
+      } else if (scored[0]?.totalWords > 0) {
+        console.log('❌ FUZZY FAILED:', { reason: `Need ${scored[0].totalWords} words, got ${scored[0].score} matches` })
       }
     }
 
     if (match) {
-      // Log successful recognition
-      await service
-        .from('recognition_history')
-        .insert({
-          owner_id: ownerId,
-          inventory_id: match.id,
-          recognized_name: productName,
-          is_match: true,
-          confirmed: true,
-          source: 'cashier'
-        })
-        .catch(err => console.error('Failed to log recognition:', err))
+      // Log successful recognition (optional - table may not exist yet)
+      try {
+        await service
+          .from('recognition_history')
+          .insert({
+            owner_id: ownerId,
+            inventory_id: match.id,
+            recognized_name: productName,
+            is_match: true,
+            confirmed: true,
+            source: 'cashier'
+          })
+      } catch (logErr) {
+        console.error('Recognition logging unavailable:', logErr)
+      }
 
       return json({
         found:        true,

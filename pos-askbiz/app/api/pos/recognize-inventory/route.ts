@@ -72,13 +72,14 @@ THIS STORE'S INVENTORY (reference list):
 ${catalogueText || '(Empty inventory)'}${hotListText}
 
 TASK:
-1. Identify what product is shown in the image - be specific with brand, size, type
-2. PRIORITIZE products in the "FREQUENTLY RECOGNIZED" list - these are the store's most common items
-3. If it matches something in the store's inventory list, give its EXACT name from the list
-4. If the product is NOT in the inventory list, give your best product identification anyway
-5. Set HIGH confidence (80-100) if you can clearly see and read product branding/label with certainty
-6. Set MEDIUM confidence (50-79) if you can visually identify the product type (e.g., can see it's milk, bread, rice) even if no brand is visible
-7. Set LOW confidence (below 50) if it's too blurry, obscured, or truly unidentifiable
+1. Look at the image and the inventory list above
+2. FIRST: Check if this product matches anything in the inventory list (even if worded differently)
+3. If you find a match, return the EXACT name from the inventory list
+4. If no match in inventory, identify the product as best you can
+5. PRIORITIZE products in the "FREQUENTLY RECOGNIZED" list
+6. Set HIGH confidence (80-100) if you can clearly identify it
+7. Set MEDIUM confidence (50-79) if you recognize the product type but are unsure of exact match
+8. Set LOW confidence (below 50) if it's too blurry or unidentifiable
 
 Reply with ONLY valid JSON, no other text:
 {"name":"product name","confidence":70}`,
@@ -111,45 +112,55 @@ Reply with ONLY valid JSON, no other text:
     const productName = (parsed.name || '').trim()
     const confidence = typeof parsed.confidence === 'number' ? parsed.confidence : 0
 
+    console.log('🔍 RECOGNITION:', { productName, confidence, inventoryCount: inventoryList?.length })
+
     // If confidence is too low or no name, return empty
     if (!productName || confidence < 50) {
+      console.log('❌ LOW CONFIDENCE - REJECTED:', { productName, confidence })
       return NextResponse.json({ products: [] })
     }
 
     // Try exact match first
     let match = inventoryList?.find(p => p.name.toLowerCase() === productName.toLowerCase())
+    if (match) console.log('✓ EXACT MATCH:', match.name)
 
-    // If no exact match, use fuzzy matching (split name into words and score)
+    // If no exact match, use smart fuzzy matching - require ALL major words to be present
     if (!match && inventoryList && inventoryList.length > 0) {
-      const words = productName.split(/\s+/).slice(0, 4).map(escapeLike).filter(Boolean)
+      const words = productName.split(/\s+/).map(w => w.toLowerCase()).filter(Boolean)
       const scored = inventoryList.map(item => {
-        const nameLower = item.name.toLowerCase()
-        const score = words.filter(w => nameLower.includes(w.toLowerCase())).length
-        return { item, score }
+        const itemWords = item.name.toLowerCase().split(/\s+/)
+        const matchCount = words.filter(w => itemWords.some(iw => iw.includes(w) || w.includes(iw))).length
+        return { item, score: matchCount, totalWords: words.length }
       }).sort((a, b) => b.score - a.score)
 
-      // Require at least 60% of words to match (works for all product name lengths)
-      const minMatches = Math.max(1, Math.ceil(words.length * 0.6))
-      if (scored[0].score >= minMatches) {
+      console.log('🔎 FUZZY ATTEMPT:', { words, topMatch: scored[0]?.item?.name, matchScore: scored[0]?.score, needAllWords: scored[0]?.totalWords })
+
+      if (scored[0].score === scored[0].totalWords && scored[0].totalWords > 0) {
         match = scored[0].item
+        console.log('✓ FUZZY MATCH:', match.name)
+      } else if (scored[0]?.totalWords > 0) {
+        console.log('❌ FUZZY FAILED:', { reason: `Need ${scored[0].totalWords} words, got ${scored[0].score} matches` })
       }
     }
 
     // If we found a match in inventory, return it with the ID
     if (match) {
-      // Log successful recognition
-      await service
-        .from('recognition_history')
-        .insert({
-          owner_id: auth.ownerId,
-          inventory_id: match.id,
-          recognized_name: productName,
-          confidence,
-          is_match: true,
-          confirmed: true,
-          source: 'inventory'
-        })
-        .catch(err => console.error('Failed to log recognition:', err))
+      // Log successful recognition (optional - table may not exist yet)
+      try {
+        await service
+          .from('recognition_history')
+          .insert({
+            owner_id: auth.ownerId,
+            inventory_id: match.id,
+            recognized_name: productName,
+            confidence,
+            is_match: true,
+            confirmed: true,
+            source: 'inventory'
+          })
+      } catch (logErr) {
+        console.error('Recognition logging unavailable:', logErr)
+      }
 
       return NextResponse.json({
         products: [
