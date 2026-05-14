@@ -36,10 +36,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch inventory: ' + invErr.message }, { status: 500 })
     }
 
+    // Fetch hot list (frequently recognized products) to boost accuracy
+    const { data: hotList } = await service
+      .from('product_hot_list')
+      .select('recognized_name, recognition_count')
+      .eq('owner_id', auth.ownerId)
+      .order('recognition_count', { ascending: false })
+      .limit(20)
+
     const catalogueText = (inventoryList || [])
       .slice(0, 200) // Limit to 200 products to stay within token limits
       .map(p => `- ${p.name}${p.stock_qty > 0 ? ` (${p.stock_qty} in stock)` : ' (OUT OF STOCK)'}`)
       .join('\n')
+
+    const hotListText = (hotList || []).length > 0
+      ? `\n\nFREQUENTLY RECOGNIZED (prioritize these):\n${hotList.map(h => `- ${h.recognized_name}`).join('\n')}`
+      : ''
 
     const anthropic = new Anthropic()
     const response = await anthropic.messages.create({
@@ -57,15 +69,16 @@ export async function POST(req: NextRequest) {
             text: `You are a retail inventory assistant. Look at this image and identify the product.
 
 THIS STORE'S INVENTORY (reference list):
-${catalogueText || '(Empty inventory)'}
+${catalogueText || '(Empty inventory)'}${hotListText}
 
 TASK:
 1. Identify what product is shown in the image - be specific with brand, size, type
-2. If it matches something in the store's inventory list above, give its EXACT name from the list
-3. If the product is NOT in the inventory list, give your best product identification anyway
-4. Set HIGH confidence (80-100) if you can clearly see and read product branding/label with certainty
-5. Set MEDIUM confidence (50-79) if you can visually identify the product type (e.g., can see it's milk, bread, rice) even if no brand is visible
-6. Set LOW confidence (below 50) if it's too blurry, obscured, or truly unidentifiable
+2. PRIORITIZE products in the "FREQUENTLY RECOGNIZED" list - these are the store's most common items
+3. If it matches something in the store's inventory list, give its EXACT name from the list
+4. If the product is NOT in the inventory list, give your best product identification anyway
+5. Set HIGH confidence (80-100) if you can clearly see and read product branding/label with certainty
+6. Set MEDIUM confidence (50-79) if you can visually identify the product type (e.g., can see it's milk, bread, rice) even if no brand is visible
+7. Set LOW confidence (below 50) if it's too blurry, obscured, or truly unidentifiable
 
 Reply with ONLY valid JSON, no other text:
 {"name":"product name","confidence":70}`,
@@ -124,6 +137,20 @@ Reply with ONLY valid JSON, no other text:
 
     // If we found a match in inventory, return it with the ID
     if (match) {
+      // Log successful recognition
+      await service
+        .from('recognition_history')
+        .insert({
+          owner_id: auth.ownerId,
+          inventory_id: match.id,
+          recognized_name: productName,
+          confidence,
+          is_match: true,
+          confirmed: true,
+          source: 'inventory'
+        })
+        .catch(err => console.error('Failed to log recognition:', err))
+
       return NextResponse.json({
         products: [
           {

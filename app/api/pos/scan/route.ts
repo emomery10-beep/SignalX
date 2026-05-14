@@ -40,10 +40,22 @@ export async function POST(req: NextRequest) {
       return json({ error: 'Failed to fetch inventory' }, 500)
     }
 
+    // Fetch hot list (frequently recognized products) to boost accuracy
+    const { data: hotList } = await service
+      .from('product_hot_list')
+      .select('recognized_name, recognition_count')
+      .eq('owner_id', ownerId)
+      .order('recognition_count', { ascending: false })
+      .limit(20)
+
     const catalogueText = (inventoryList || [])
       .slice(0, 200)
       .map(p => `- ${p.name}${p.stock_qty > 0 ? ` (${p.stock_qty} in stock)` : ' (OUT OF STOCK)'}`)
       .join('\n')
+
+    const hotListText = (hotList || []).length > 0
+      ? `\n\nFREQUENTLY RECOGNIZED (prioritize these):\n${hotList.map(h => `- ${h.recognized_name}`).join('\n')}`
+      : ''
 
     // fix #26 — use generic alias rather than date-pinned checkpoint
     const anthropic = new Anthropic()
@@ -62,14 +74,15 @@ export async function POST(req: NextRequest) {
             text: `You are a POS cashier assistant. Look at this product image and identify it.
 
 YOUR STORE'S INVENTORY:
-${catalogueText || '(Empty inventory)'}
+${catalogueText || '(Empty inventory)'}${hotListText}
 
 TASK:
 1. Identify the product in the image - be specific with brand, size, type
-2. If it matches something in the inventory list above, use the EXACT name from the list
-3. If NOT in the inventory list, give your best identification anyway
-4. Try to extract the price if shown on label/tag
-5. Identify anything you can visually see clearly, even generic items without brand labels (e.g., rice, flour, eggs)
+2. PRIORITIZE products in the "FREQUENTLY RECOGNIZED" list - these are the store's most common items
+3. If it matches something in the inventory list above, use the EXACT name from the list
+4. If NOT in the inventory list, give your best identification anyway
+5. Try to extract the price if shown on label/tag
+6. Identify anything you can visually see clearly, even generic items without brand labels (e.g., rice, flour, eggs)
 
 Reply ONLY with valid JSON, nothing else:
 {"name":"product name","price":null}`,
@@ -112,6 +125,19 @@ Reply ONLY with valid JSON, nothing else:
     }
 
     if (match) {
+      // Log successful recognition
+      await service
+        .from('recognition_history')
+        .insert({
+          owner_id: ownerId,
+          inventory_id: match.id,
+          recognized_name: productName,
+          is_match: true,
+          confirmed: true,
+          source: 'cashier'
+        })
+        .catch(err => console.error('Failed to log recognition:', err))
+
       return json({
         found:        true,
         inventory_id: match.id,
