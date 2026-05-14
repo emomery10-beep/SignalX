@@ -13,7 +13,6 @@ export async function GET(req: NextRequest) {
   const to         = searchParams.get('to')   || new Date().toISOString()
   const cashier_id = searchParams.get('cashier_id')
 
-  // Select fields - tax fields are optional (may not exist in migration yet)
   let query = service
     .from('pos_transactions')
     .select(`
@@ -21,7 +20,7 @@ export async function GET(req: NextRequest) {
       payment_type, status, notes, created_at,
       pos_staff!cashier_id(id, name, role),
       pos_customers(id, phone, name),
-      pos_items!transaction_id(name, qty, unit_price)
+      pos_items!transaction_id(name, qty, unit_price, cost_price, inventory_id)
     `)
     .eq('owner_id', ownerId)
     .gte('created_at', from)
