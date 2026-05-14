@@ -11494,6 +11494,151 @@ export const HELP_ARTICLES: HelpArticle[] = [
     related: ["pos-getting-started", "pos-camera-troubleshooting", "pos-making-a-sale"],
   },
 
+  // ── AskBiz Academic Articles ────────────────────────────────────────────────
+
+  {
+    slug: "pos-architecture-cloud-based-systems",
+    title: "Architectural Design of Modern Cloud-Based POS Systems",
+    description: "Technical analysis of multi-tenant SaaS architecture for retail transaction processing, data isolation strategies, and compliance implications.",
+    topic: "Technical Architecture",
+    topicSlug: "technical-architecture",
+    readTime: 12,
+    popular: true,
+    lastUpdated: "2026-05-14",
+    keywords: ["POS architecture", "SaaS design", "multi-tenant", "cloud POS", "transaction processing", "real-time systems", "data isolation"],
+    content: [
+      {
+        heading: "Evolution of POS Systems",
+        body: "**Generation 1 (1980–2000): Standalone Hardware**\nTraditional cash registers → Custom hardware POS (NCR, Fujitsu). Characteristics: Closed systems (no extensibility), Standalone (no network dependency), Local storage (database on device), High hardware cost (£5,000–20,000 per unit).\n\n**Generation 2 (2000–2010): Client-Server Networks**\nCentral server (on-premises) ← Local terminals. Characteristics: Network-dependent (local LAN), Centralized data (server on-site), High operational cost (IT staff, server maintenance), Limited scalability.\n\n**Generation 3 (2010–Present): Cloud SaaS**\nGlobal cloud infrastructure ← Multi-tenant SaaS. Characteristics: Internet-based (location-agnostic), Centralized data (cloud provider manages), Minimal operational cost, Unlimited scalability, Regulatory complexity (multi-jurisdiction data residency).",
+      },
+      {
+        heading: "Multi-Tenant SaaS Architecture",
+        body: "**Definition:** Multiple customers (tenants) share the same application and infrastructure while their data remains logically isolated.\n\n**Tenancy Models:**\n- **Model 1: Shared Database, Shared Schema** — All tenants in 1 database, isolation via tenant_id columns. Pros: Cost-efficient. Cons: Complex isolation, risk of data leakage.\n- **Model 2: Shared Database, Separate Schemas** — All tenants in 1 database, separate schema per tenant. Pros: Good performance, moderate isolation. Cons: Schema migration complexity.\n- **Model 3: Separate Databases** — Each tenant has own database. Pros: Explicit isolation, easy audits. Cons: High operational cost.\n\n**Recommendation for POS:** Model 2 (shared database, separate schemas) for balance of cost, performance, and security.",
+      },
+      {
+        heading: "Service-Oriented Architecture",
+        body: "Microservices approach with separation of concerns:\n- **Transaction Service** — Process sales, issue refunds, manage payments\n- **Inventory Service** — Track stock, stock alerts, reorder flow\n- **Tax Service** — Calculate tax, file reports, compliance\n- **Auth Service** — User login, JWT tokens, role-based access control\n- **Reporting Service** — KPI dashboard, analytics, export data\n- **Compliance Service** — Audit trail, GDPR handling, data retention\n\nBenefits: Separation of concerns, independent scaling, technology diversity. Trade-offs: Network latency, distributed transaction complexity, operational overhead.",
+      },
+      {
+        heading: "Event-Driven Architecture",
+        body: "Publish-Subscribe pattern for asynchronous operations. Transaction Service publishes 'transaction.completed' event → multiple services subscribe (Inventory Service decrements stock, Tax Service records tax, Reporting Service updates dashboard). Benefits: Decoupling (services don't know about each other), Asynchronous (slow services don't block), Resilience (if one fails, others continue), Scalability (easy to add new subscribers). Implementation: Message broker (RabbitMQ, Kafka, AWS SQS).",
+      },
+    ],
+    faq: [
+      { q: "Why do modern POS systems use cloud architecture?", a: "Cloud architecture enables unlimited scalability (1 customer or 10,000), minimal operational cost (no on-premise hardware), real-time data synchronization across locations, and automatic disaster recovery. Standalone systems cannot match these benefits." },
+      { q: "What's the security risk of multi-tenant architecture?", a: "The primary risk is data isolation — one customer's data must never leak to another customer. Mitigation: separate database schemas (not just tenant_id columns), encryption of data at rest, API-level access controls, and regular security audits." },
+      { q: "How does a cloud POS handle offline transactions?", a: "Progressive Web Apps cache the product catalogue locally and queue transactions in browser storage. When connectivity returns, queued transactions sync to the server automatically. The limitation: card payments require live connectivity (card networks require it)." },
+    ],
+    related: ["saas-pricing-models", "audit-trails-immutable-logging", "gdpr-compliance-pos"],
+  },
+
+  {
+    slug: "saas-pricing-models",
+    title: "Multi-Tenant SaaS Pricing Models: Theory & Practice",
+    description: "Economic models for recurring revenue in cloud-based enterprise software. Seat-based, usage-based, and feature-tiered models with SMB retailer case studies.",
+    topic: "Pricing Strategy",
+    topicSlug: "pricing-strategy",
+    readTime: 11,
+    popular: true,
+    lastUpdated: "2026-05-14",
+    keywords: ["SaaS pricing", "seat-based pricing", "usage-based pricing", "pricing models", "recurring revenue", "MRR", "customer acquisition cost"],
+    content: [
+      {
+        heading: "The SaaS Pricing Challenge",
+        body: "**Traditional Software Licensing:** Perpetual license (one-time purchase). Revenue: £10,000 upfront. CLV: £10,000. Problem: High churn, no recurring revenue.\n\n**SaaS Subscription Model:** Monthly/annual subscription (e.g., £25/month). Revenue: £300/year. CLV: £25 × 24 = £600. Advantage: Predictable recurring revenue, continuous product improvement, lower churn.",
+      },
+      {
+        heading: "Pricing Model Taxonomy",
+        body: "**Flat-Rate Pricing:** Single price for all customers, unlimited usage. Example: Basecamp £99/month. Advantages: Simplicity, predictable costs, high adoption. Disadvantages: Revenue left on table, scaling issues.\n\n**Per-Seat Pricing:** Price per user/employee. Example: Slack £6.50/seat. Advantages: Aligns with unit economics, predictable expansion revenue, lower CAC payback. Disadvantages: Price sensitivity per seat.\n\n**Usage-Based Pricing:** Price proportional to consumption. Example: Stripe 2.9% + 30¢ per transaction. Advantages: Fair pricing, unlimited scalability, low friction for small users. Disadvantages: Revenue unpredictable, customer churn variable.\n\n**Tiered/Feature-Based Pricing:** Multiple plans with increasing features. Example: Free (basic), Professional (£500/month), Enterprise (custom). Advantages: Price discrimination, clear upgrade path. Disadvantages: Complexity, customer confusion.",
+      },
+      {
+        heading: "Seat-Based Model for POS",
+        body: "POS systems benefit from seat-based pricing because:\n- Usage is tied to number of staff (cashiers, inventory managers)\n- Growth (hiring more staff) naturally increases revenue (adds seats)\n- Pricing is transparent and fair (small business pays less than large)\n- Unit economics are predictable (£5 per cashier per month)\n\n**Example:** Coffee shop with 3 cashiers = £15/month. Add 2 more for peak season = £25/month. Remove seasonal staff = £15/month again. Flexible, predictable, fair.",
+      },
+      {
+        heading: "Value-Based Pricing",
+        body: "Price based on value delivered, not cost or usage. Example: A POS that prevents 5% inventory shrinkage saves a retailer £5,000/year. Pricing at £1,000/year captures 20% of the value created. Challenges: Hard to quantify value, customers may not perceive the value, complex sales process. Best for: Complex enterprise software where value is substantial and measurable.",
+      },
+    ],
+    faq: [
+      { q: "Which pricing model is best for SMB retailers?", a: "Seat-based pricing. Retailers understand the cost of a cashier (£8-12/hour), so pricing at £5/month per cashier feels fair. It's also 50-80% cheaper than flat-fee or % revenue models, which matters for price-sensitive small businesses." },
+      { q: "How do I choose between flat-fee and per-seat pricing?", a: "Flat-fee works if value is independent of usage (e.g., unlimited projects with Basecamp). Per-seat works if value scales with team size (e.g., POS, Slack). For retail POS, per-seat is clearly better because more staff = more transactions = more value." },
+      { q: "What's a healthy Customer Acquisition Cost (CAC) payback period?", a: "For SaaS, <12 months is healthy. At £15/month per customer (3 cashiers), you need customers to stay 12+ months to recoup acquisition costs. This incentivizes serving customers well and minimizing churn." },
+    ],
+    related: ["pos-architecture-cloud-based-systems", "seat-pricing-model", "what-is-an-ai-chief-of-staff"],
+  },
+
+  {
+    slug: "audit-trails-immutable-logging",
+    title: "Audit Trails & Immutable Logging: Compliance Forensics for Retail",
+    description: "How to build tamper-proof transaction records with hash chains and audit logs for HMRC, GDPR, and PCI compliance.",
+    topic: "Compliance & Security",
+    topicSlug: "compliance-security",
+    readTime: 11,
+    popular: true,
+    lastUpdated: "2026-05-14",
+    keywords: ["audit trail", "immutable logging", "hash chain", "transaction history", "HMRC compliance", "PCI DSS", "blockchain"],
+    content: [
+      {
+        heading: "Why Immutable Audit Trails Matter",
+        body: "HMRC, GDPR, and PCI regulations all require that you can prove what happened and when. The challenge: a simple database record can be edited (accidentally or maliciously) after the fact. Solution: immutable audit trails using hash chains — mathematically prove that a transaction cannot be changed without detection.\n\n**Real scenario:** HMRC audits you 2 years after a transaction. You claim 'This transaction was £100 with £20 VAT.' But what if a database backup was restored incorrectly, or a staff member edited the record to hide a mistake? Without proof of immutability, you lose the audit.",
+      },
+      {
+        heading: "How Hash Chains Create Immutability",
+        body: "A hash is a one-way fingerprint of data. Change the data 1%, the hash changes completely.\n\nExample:\n- Transaction 1: {date, items, amount} → Hash A (SHA-256)\n- Transaction 2: {date, items, amount} + Hash A → Hash B\n- Transaction 3: {date, items, amount} + Hash B → Hash C\n\nIf someone tries to edit Transaction 2 after the fact:\n- Old Hash B breaks (because it was computed from Transaction 1's old data)\n- New Hash B doesn't match Transaction 3's reference\n- Audit trail shows tampering detected ✓\n\nThis is how Bitcoin and blockchains prove immutability.",
+      },
+      {
+        heading: "Transaction History Table Design",
+        body: "Instead of editing transactions, create new versions:\n\n```\npos_transaction_history:\n- transaction_id (FK)\n- version (1 = original, 2 = amended, 3 = refunded)\n- state_json {all fields at that point in time}\n- hash: SHA-256(previous_hash + current_state)\n- changed_at: timestamp\n- changed_by: cashier_id or 'system'\n- change_reason: 'created' | 'refund' | 'amendment'\n```\n\nBenefits: Complete history preserved, cannot edit past records, auditors can verify entire chain, compliance proof automatic.",
+      },
+      {
+        heading: "Audit Export for Regulators",
+        body: "When HMRC audits you, export your audit trail as CSV:\n- Every transaction with full history\n- Line-by-line tax applied\n- Staff who made changes, timestamps\n- Hash chain (for regulator verification)\n- Opening/closing cash balances\n\nRegulator can verify: 'Is this hash chain mathematically valid? Were all changes logged? Are no transactions missing?' Answer yes to all = audit proof.",
+      },
+    ],
+    faq: [
+      { q: "Do I need blockchain technology for immutable audit trails?", a: "No. Blockchain is overkill for a single business POS. Simple hash chain design (hash each transaction based on the previous hash) gives you the same immutability proof without the complexity or cost." },
+      { q: "How do I handle legitimate amendments (e.g., refund)?", a: "Don't edit the original transaction. Create a new version in the history table: version 1 (original), version 2 (refund). Log the reason ('refund'), timestamp, and who made the change. Auditors see the complete history." },
+      { q: "Will auditors trust a hash chain I created?", a: "Yes, because hash verification is deterministic — the math is the same for everyone. If you provide the transaction data + hash chain, any auditor can independently verify whether the chain is mathematically valid and hasn't been tampered with." },
+    ],
+    related: ["gdpr-compliance-pos", "tax-automation", "pos-architecture-cloud-based-systems"],
+  },
+
+  {
+    slug: "inventory-optimization",
+    title: "Inventory Optimization: EOQ, Forecasting, and ABC Analysis",
+    description: "Advanced inventory management techniques — Economic Order Quantity, demand forecasting, and ABC segmentation for SMB retailers.",
+    topic: "Inventory Management",
+    topicSlug: "inventory-management",
+    readTime: 11,
+    popular: true,
+    lastUpdated: "2026-05-14",
+    keywords: ["EOQ", "economic order quantity", "inventory forecasting", "ABC analysis", "demand planning", "stock optimization"],
+    content: [
+      {
+        heading: "The Inventory Paradox",
+        body: "Hold too little stock: stockouts, lost sales, angry customers. Hold too much stock: tied-up cash, storage costs, obsolescence, shrinkage. The sweet spot is precise — order the right amount at the right time. This is inventory optimization.\n\n**The question:** How many units of Product X should I order, and how often?\n\n**Traditional answer:** Guess based on experience. Result: Either too much or too little (usually both at different products).\n\n**Data-driven answer:** Use three techniques: EOQ (how much), ABC analysis (which products to focus on), forecasting (when to reorder).",
+      },
+      {
+        heading: "Economic Order Quantity (EOQ)",
+        body: "EOQ balances two costs:\n- **Ordering cost** — Every order costs (shipping, admin time, handling fees). Order more frequently = higher total ordering cost.\n- **Holding cost** — Inventory sitting in stock costs (storage space, insurance, obsolescence risk, capital tied up). Order large quantities = higher holding cost.\n\n**Formula:** EOQ = √(2 × D × S / H)\nWhere:\n- D = Annual demand (units/year)\n- S = Cost per order\n- H = Holding cost per unit per year\n\n**Example:**\n- Product: Black Hair Soap\n- Annual demand: 2,400 units (200/month)\n- Supplier cost per order: £50\n- Holding cost per unit/year: £1 (storage, insurance, capital)\n\nEOQ = √(2 × 2,400 × 50 / 1) = √(240,000) = ~489 units\n\n**Interpretation:** Order 489 units at a time. Reorder every ~2.4 months. Result: Minimal total of ordering + holding costs.",
+      },
+      {
+        heading: "ABC Analysis: Focus on What Matters",
+        body: "Not all products matter equally. Some drive 80% of revenue, others 5%.\n\n**ABC Segmentation:**\n- **A products** (80% of revenue, ~20% of inventory): Your bestsellers. Focus here. Reorder frequently (lower safety stock). Monitor constantly.\n- **B products** (15% of revenue, ~30% of inventory): Mid-tier. Standard reorder process.\n- **C products** (5% of revenue, ~50% of inventory): Slow movers. Reorder infrequently, minimize safety stock. Consider discontinuing if margins are poor.\n\n**Pareto Principle:** In most retail, 20% of products drive 80% of revenue. Focusing management effort on A products yields 80% of the benefit.",
+      },
+      {
+        heading: "Demand Forecasting: When to Reorder",
+        body: "EOQ tells you how much. Forecasting tells you when. **Simple approach:** Reorder point = (Average daily sales × Lead time in days) + Safety stock.\n\n**Example:**\n- Product: Black Soap\n- Average daily sales: 8 units\n- Supplier lead time: 14 days\n- Safety stock (buffer): 20 units\n\nReorder point = (8 × 14) + 20 = 132 units\n\nWhen your stock reaches 132 units, place the next order. This ensures stock never runs out if demand is average.\n\n**Sophistication:** Weight recent sales more heavily (they're more predictive), adjust for seasonality (sales spike around holidays), apply trend (sales growing or declining). This is what AI-powered inventory does automatically.",
+      },
+    ],
+    faq: [
+      { q: "How do I calculate holding cost per unit?", a: "Holding cost = (Storage cost + Insurance + Obsolescence risk + Capital cost) / Annual units held. Example: £2,000 storage/year ÷ 2,000 units average = £1/unit/year. This is critical input to EOQ." },
+      { q: "What if my supplier lead time is unpredictable?", a: "Increase safety stock. If lead time is typically 14 days but sometimes 30 days, use 30 days + buffer in your reorder point calculation. Higher safety stock costs more but protects you from stockout." },
+      { q: "How often should I reorder?", a: "Frequency depends on EOQ. If EOQ is 489 units and you sell 200/month, reorder every ~2.4 months. Higher-velocity products reorder more frequently. Use your POS data to track this automatically." },
+    ],
+    related: ["pos-kpi-drilldown", "transaction-filtering", "what-is-business-intelligence"],
+  },
 ];
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
