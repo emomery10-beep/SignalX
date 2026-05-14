@@ -405,25 +405,68 @@ export async function POST(request: NextRequest) {
 
   // ── POS INTELLIGENCE CONTEXT ─────────────────────────────
   let posContext = ''
-  const posKeywords = /\b(sales?|till|cashier|pos|shop|store|sold|selling|stock|inventory|refund|receipt|customer|basket|revenue today|today.s sales?)\b/i
+  const posKeywords = /\b(sales?|till|cashier|pos|shop|store|sold|selling|stock|inventory|refund|receipt|customer|basket|revenue|profit|margin|transaction)/i
   if (posKeywords.test(questionText)) {
-    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const q = questionText.toLowerCase()
+    const now = new Date()
+    let from: Date
+    let to: Date = now
+    let periodLabel = "Today's"
+
+    if (/yesterday/.test(q)) {
+      const d = new Date(now); d.setDate(d.getDate() - 1); d.setHours(0,0,0,0)
+      from = d
+      to = new Date(d); to.setHours(23,59,59,999)
+      periodLabel = "Yesterday's"
+    } else if (/last\s*(7|seven)\s*days?|past\s*week/i.test(q)) {
+      from = new Date(now); from.setDate(from.getDate() - 7); from.setHours(0,0,0,0)
+      periodLabel = 'Last 7 days'
+    } else if (/last\s*month|past\s*month/i.test(q)) {
+      from = new Date(now); from.setMonth(from.getMonth() - 1); from.setHours(0,0,0,0)
+      periodLabel = 'Last month'
+    } else if (/last\s*30\s*days/i.test(q)) {
+      from = new Date(now); from.setDate(from.getDate() - 30); from.setHours(0,0,0,0)
+      periodLabel = 'Last 30 days'
+    } else if (/this\s*week/i.test(q)) {
+      from = new Date(now); from.setDate(from.getDate() - from.getDay()); from.setHours(0,0,0,0)
+      periodLabel = 'This week'
+    } else if (/this\s*month/i.test(q)) {
+      from = new Date(now.getFullYear(), now.getMonth(), 1)
+      periodLabel = 'This month'
+    } else {
+      from = new Date(now); from.setHours(0,0,0,0)
+    }
+
     const [txRes, invRes, staffRes] = await Promise.all([
-      supabase.from('pos_transactions').select('total,status,created_at,pos_items(name,qty),pos_staff(name)').eq('owner_id', user.id).gte('created_at', today.toISOString()).order('created_at', { ascending: false }).limit(50),
+      supabase.from('pos_transactions').select('total,status,payment_type,created_at,pos_items(name,qty,unit_price,cost_price),pos_staff(name)').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).order('created_at', { ascending: false }).limit(200),
       supabase.from('inventory').select('name,stock_qty,low_stock_threshold,sale_price').eq('owner_id', user.id).eq('active', true).order('stock_qty', { ascending: true }).limit(20),
       supabase.from('pos_staff').select('name,role,active').eq('owner_id', user.id),
     ])
     const txs      = txRes.data || []
     const inv      = invRes.data || []
     const staffList = staffRes.data || []
-    const todayRev  = txs.filter((t: { status: string }) => t.status === 'completed').reduce((s: number, t: { total: number }) => s + t.total, 0)
-    const todayCnt  = txs.filter((t: { status: string }) => t.status === 'completed').length
-    const refunds   = txs.filter((t: { status: string }) => t.status === 'refunded' || t.status === 'partially_refunded').length
-    const lowStock  = (inv as { stock_qty: number; low_stock_threshold: number; name: string }[]).filter(i => i.stock_qty <= i.low_stock_threshold)
-    if (todayCnt > 0 || inv.length > 0) {
-      posContext = `\n\nLIVE POS DATA:\nToday's sales: ${todayCnt} transactions, ${finalSymbol}${todayRev.toFixed(2)} revenue, ${refunds} refunds.\n`
-      if (lowStock.length > 0) posContext += `Low/out of stock: ${lowStock.map((i: { name: string; stock_qty: number }) => `${i.name} (${i.stock_qty} left)`).join(', ')}.\n`
-      if (staffList.length > 0) posContext += `Active staff: ${(staffList as { name: string; role: string; active: boolean }[]).filter(s => s.active).map(s => `${s.name} (${s.role})`).join(', ')}.\n`
+    const completed = txs.filter((t: any) => t.status === 'completed')
+    const revenue   = completed.reduce((s: number, t: any) => s + t.total, 0)
+    const refunds   = txs.filter((t: any) => t.status === 'refunded' || t.status === 'partially_refunded').length
+    const lowStock  = (inv as any[]).filter(i => i.stock_qty <= i.low_stock_threshold)
+
+    // Build top products summary
+    const productSales: Record<string, { qty: number; revenue: number }> = {}
+    for (const t of completed) {
+      for (const item of (t.pos_items || [])) {
+        const key = item.name
+        if (!productSales[key]) productSales[key] = { qty: 0, revenue: 0 }
+        productSales[key].qty += item.qty
+        productSales[key].revenue += item.qty * item.unit_price
+      }
+    }
+    const topProducts = Object.entries(productSales).sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 5)
+
+    if (completed.length > 0 || inv.length > 0) {
+      posContext = `\n\nLIVE POS DATA (${periodLabel}):\n${completed.length} completed transactions, ${finalSymbol}${revenue.toFixed(2)} revenue, ${refunds} refund(s).\n`
+      if (topProducts.length > 0) posContext += `Top products: ${topProducts.map(([name, s]) => `${name} (${s.qty} sold, ${finalSymbol}${s.revenue.toFixed(2)})`).join(', ')}.\n`
+      if (lowStock.length > 0) posContext += `Low/out of stock: ${lowStock.map((i: any) => `${i.name} (${i.stock_qty} left)`).join(', ')}.\n`
+      if (staffList.length > 0) posContext += `Active staff: ${(staffList as any[]).filter(s => s.active).map(s => `${s.name} (${s.role})`).join(', ')}.\n`
     }
   }
   // ── END POS CONTEXT ──────────────────────────────────────
