@@ -52,18 +52,20 @@ export async function PATCH(req: NextRequest) {
 
   if (!id) return NextResponse.json({ error: 'Location id required' }, { status: 400 })
 
-  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  const updates: Record<string, unknown> = {}
   if (name !== undefined) updates.name = name.trim()
   if (address !== undefined) updates.address = address
   if (phone !== undefined) updates.phone = phone
   if (is_active !== undefined) updates.is_active = is_active
 
-  const { error } = await service
+  const { data, error } = await service
     .from('pos_locations')
     .update(updates)
     .eq('id', id)
     .eq('owner_id', ownerId)
+    .select('id, name, address, phone, is_active, created_at')
+    .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ location: data })
 }
