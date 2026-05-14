@@ -3,6 +3,8 @@ import { createServiceClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosAuth } from '@/lib/pos-auth'
 
+export const dynamic = 'force-dynamic'
+
 // CORS handled globally by next.config.js
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })

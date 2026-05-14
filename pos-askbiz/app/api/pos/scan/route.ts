@@ -3,6 +3,8 @@ import { createServiceClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosOwner } from '@/lib/pos-auth'  // fix #20 — use shared auth helper
 
+export const dynamic = 'force-dynamic'
+
 // CORS handled globally by next.config.js
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
