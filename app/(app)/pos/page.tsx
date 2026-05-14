@@ -460,7 +460,18 @@ export default function POSPage() {
       const formData = new FormData(); formData.append('image', file)
       const res = await fetch('/api/pos/recognize-inventory', { method: 'POST', body: formData })
       const data = await res.json()
-      if (data.products?.length > 0) setRecognizedProducts(data.products)
+      if (data.products?.length > 0) {
+        setRecognizedProducts(data.products)
+        // Automatically open edit modal for first product
+        const firstProduct = data.products[0]
+        setEditingRecognizedIndex(0)
+        setEditingRecognizedData({
+          ...firstProduct,
+          sale_price: firstProduct.sale_price || '',
+          cost_price: firstProduct.cost_price || '',
+          stock_qty: (firstProduct.quantity || 1).toString()
+        })
+      }
       else notify('Could not recognise products from image', false)
     } catch (err) { notify('Image recognition failed', false) }
     setRecognizing(false)
@@ -1063,31 +1074,8 @@ export default function POSPage() {
               </div>
             )}
 
-            {/* Recognized products with edit modal */}
-            {recognizedProducts.length > 0 && (
-              <>
-                <div style={{ marginBottom: 16, padding: 16, borderRadius: 12, border: '1px solid var(--b)', background: 'var(--ev)' }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span>📸 Recognised {recognizedProducts.length} product{recognizedProducts.length !== 1 ? 's' : ''}</span>
-                    <button onClick={() => setRecognizedProducts([])} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit', color: 'var(--tx2)' }}>Clear all</button>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {recognizedProducts.map((p: any, i: number) => (
-                      <div key={i} style={{ padding: '12px', borderRadius: 8, background: 'var(--sf)', border: '1px solid var(--b)', cursor: 'pointer', transition: 'all 120ms' }} onClick={() => { setEditingRecognizedIndex(i); setEditingRecognizedData({ ...p, sale_price: p.sale_price || '', cost_price: p.cost_price || '', stock_qty: (p.quantity || 1).toString() }) }} onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--acc)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--b)'}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <div>
-                            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>{p.name}</div>
-                            <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{p.category} · {p.confidence}% confident {p.barcode_detected && p.barcode_number ? `· 📦 ${p.barcode_number}` : ''}</div>
-                          </div>
-                          <div style={{ fontSize: 20 }}>✏️</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Edit modal */}
-                {editingRecognizedIndex !== null && (
+            {/* Edit modal for recognized products */}
+            {editingRecognizedIndex !== null && recognizedProducts.length > 0 && (
                   <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 99, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setEditingRecognizedIndex(null)}>
                     <div style={{ background: 'var(--sf)', borderRadius: 16, padding: 24, maxWidth: 500, width: '100%', maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
                       <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)', marginBottom: 20, marginTop: 0 }}>Edit product details</h3>
@@ -1133,26 +1121,53 @@ export default function POSPage() {
 
                       {/* Actions */}
                       <div style={{ display: 'flex', gap: 12 }}>
-                        <button onClick={() => {
-                          setNewProduct({
-                            name: editingRecognizedData.name,
-                            sale_price: editingRecognizedData.sale_price?.toString() || '',
-                            cost_price: editingRecognizedData.cost_price?.toString() || '0',
-                            stock_qty: editingRecognizedData.stock_qty?.toString() || '1',
-                            low_stock_threshold: '5',
-                            category: editingRecognizedData.category || 'General',
-                            sku: editingRecognizedData.sku || ''
-                          });
-                          setShowAddProduct(true);
-                          setRecognizedProducts(prev => prev.filter((_, idx) => idx !== editingRecognizedIndex));
-                          setEditingRecognizedIndex(null);
-                        }} disabled={!editingRecognizedData.sale_price} style={{ ...btnPrimary, flex: 1, opacity: !editingRecognizedData.sale_price ? 0.5 : 1 }}>Add to inventory</button>
-                        <button onClick={() => setEditingRecognizedIndex(null)} style={btnSecondary}>Cancel</button>
+                        <button onClick={async () => {
+                          if (!editingRecognizedData.sale_price) return
+                          setAddingProduct(true)
+                          try {
+                            const res = await fetch('/api/pos/inventory', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                name: editingRecognizedData.name,
+                                sale_price: parseFloat(editingRecognizedData.sale_price),
+                                cost_price: parseFloat(editingRecognizedData.cost_price || '0'),
+                                stock_qty: parseInt(editingRecognizedData.stock_qty || '1'),
+                                low_stock_threshold: 5,
+                                category: editingRecognizedData.category || 'General',
+                                sku: editingRecognizedData.sku || ''
+                              })
+                            })
+                            const data = await res.json()
+                            if (data.product) {
+                              setInventory(prev => [...prev, data.product])
+                              notify(`${data.product.name} added`)
+                              // Remove from recognized list
+                              const newRecognized = recognizedProducts.filter((_, idx) => idx !== editingRecognizedIndex)
+                              setRecognizedProducts(newRecognized)
+                              // If more products to add, move to next one
+                              if (newRecognized.length > 0) {
+                                const nextProduct = newRecognized[0]
+                                setEditingRecognizedIndex(0)
+                                setEditingRecognizedData({
+                                  ...nextProduct,
+                                  sale_price: nextProduct.sale_price || '',
+                                  cost_price: nextProduct.cost_price || '',
+                                  stock_qty: (nextProduct.quantity || 1).toString()
+                                })
+                              } else {
+                                setEditingRecognizedIndex(null)
+                              }
+                            }
+                          } catch (err) {
+                            notify('Failed to add product', false)
+                          }
+                          setAddingProduct(false)
+                        }} disabled={!editingRecognizedData.sale_price || addingProduct} style={{ ...btnPrimary, flex: 1, opacity: !editingRecognizedData.sale_price || addingProduct ? 0.5 : 1 }}>{addingProduct ? 'Adding...' : 'Add to inventory'}</button>
+                        <button onClick={() => { setEditingRecognizedIndex(null); setRecognizedProducts([]) }} style={btnSecondary}>Done</button>
                       </div>
                     </div>
                   </div>
-                )}
-              </>
             )}
 
 
