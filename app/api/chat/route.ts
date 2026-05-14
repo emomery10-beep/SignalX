@@ -405,7 +405,7 @@ export async function POST(request: NextRequest) {
 
   // ── POS INTELLIGENCE CONTEXT ─────────────────────────────
   let posContext = ''
-  const posKeywords = /\b(sales?|till|cashier|pos|shop|store|sold|selling|stock|inventory|refund|receipt|customer|basket|revenue|profit|margin|transaction|busiest|best.?sell|top.?product|anomal|unusual|suspicious|alert|forecast|predict|health|brief|summary|daily.?report|who.?bought|top.?spend|loyal|repeat)/i
+  const posKeywords = /\b(sales?|till|cashier|pos|shop|store|sold|selling|stock|inventory|refund|receipt|customer|basket|revenue|profit|margin|transaction|busiest|best.?sell|top.?product|anomal|unusual|suspicious|alert|forecast|predict|health|brief|summary|daily.?report|who.?bought|top.?spend|loyal|repeat|shift|float|cash.?up|variance|reconcil|decision|m.?pesa|mpesa|mobile.?money|connect|integrat|sync|shopify|xero|source|data.?source)/i
   if (posKeywords.test(questionText)) {
     const service = createServiceClient()
     const q = questionText.toLowerCase()
@@ -438,7 +438,7 @@ export async function POST(request: NextRequest) {
       from = new Date(now); from.setHours(0,0,0,0)
     }
 
-    const [txRes, invRes, staffRes, custRes, anomalyRes, alertRes, forecastRes, healthRes] = await Promise.all([
+    const [txRes, invRes, staffRes, custRes, anomalyRes, alertRes, forecastRes, healthRes, shiftRes, decisionRes, sourcesRes, mpesaRes, briefRes] = await Promise.all([
       service.from('pos_transactions').select('total,subtotal,discount_amount,status,payment_type,created_at,pos_items(name,qty,unit_price,cost_price),pos_staff(name)').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).order('created_at', { ascending: false }).limit(200),
       service.from('inventory').select('name,stock_qty,low_stock_threshold,sale_price,cost_price').eq('owner_id', user.id).eq('active', true).order('stock_qty', { ascending: true }).limit(50),
       service.from('pos_staff').select('name,role,active').eq('owner_id', user.id),
@@ -447,6 +447,16 @@ export async function POST(request: NextRequest) {
       service.from('alerts').select('name,type,condition,last_triggered_at,enabled').eq('user_id', user.id).eq('enabled', true).limit(10),
       service.from('forecasts').select('metric,value,period,confidence,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
       service.from('health_scores').select('score,label,summary,components,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1),
+      // Shift management
+      service.from('pos_shifts').select('cashier_id,opening_balance,closing_balance,expected_balance,variance_amount,variance_reason,status,opened_at,closed_at').eq('owner_id', user.id).gte('opened_at', from.toISOString()).lte('opened_at', to.toISOString()).order('opened_at', { ascending: false }).limit(20),
+      // Decisions log
+      service.from('decisions').select('title,decision_type,product,before_value,after_value,review_at,reviewed,review_verdict,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
+      // Connected integrations
+      service.from('connected_sources').select('source_type,name,status,last_synced_at,error_message').eq('user_id', user.id),
+      // M-Pesa payments
+      service.from('mpesa_payments').select('amount,status,mpesa_receipt,plan,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
+      // Latest daily brief
+      service.from('daily_briefs').select('improved,worsened,action,health_score,date,created_at').eq('user_id', user.id).order('date', { ascending: false }).limit(1),
     ])
 
     const txs       = txRes.data || []
@@ -457,9 +467,15 @@ export async function POST(request: NextRequest) {
     const alerts    = alertRes.data || []
     const forecasts = forecastRes.data || []
     const health    = healthRes.data?.[0] || null
+    const shifts    = shiftRes.data || []
+    const decisions = decisionRes.data || []
+    const sources   = sourcesRes.data || []
+    const mpesa     = mpesaRes.data || []
+    const brief     = briefRes.data?.[0] || null
 
     if (txRes.error) console.error('POS tx query error:', txRes.error.message)
     if (invRes.error) console.error('POS inv query error:', invRes.error.message)
+    if (shiftRes.error) console.error('Shift query error:', shiftRes.error.message)
 
     const completed = txs.filter((t: any) => t.status === 'completed')
     const revenue   = completed.reduce((s: number, t: any) => s + t.total, 0)
@@ -537,6 +553,66 @@ export async function POST(request: NextRequest) {
     }
     if (alerts.length > 0) {
       posContext += `\nACTIVE ALERTS: ${alerts.map((a: any) => `${a.name} (${a.type}${a.last_triggered_at ? ', last triggered ' + new Date(a.last_triggered_at).toLocaleDateString() : ''})`).join(', ')}.\n`
+    }
+
+    // Shift management
+    if (shifts.length > 0) {
+      const closedShifts = shifts.filter((s: any) => s.status !== 'open')
+      const openShifts = shifts.filter((s: any) => s.status === 'open')
+      const totalVariance = closedShifts.reduce((s: number, sh: any) => s + Math.abs(sh.variance_amount || 0), 0)
+      const shiftsWithVariance = closedShifts.filter((s: any) => s.variance_amount && Math.abs(s.variance_amount) > 0)
+      posContext += `\nSHIFT DATA (${periodLabel}):\n`
+      posContext += `${shifts.length} shift(s) (${openShifts.length} open, ${closedShifts.length} closed).\n`
+      if (closedShifts.length > 0) {
+        posContext += `Cash variance: ${finalSymbol}${totalVariance.toFixed(2)} across ${shiftsWithVariance.length} shift(s) with discrepancies.\n`
+        const reconciled = closedShifts.filter((s: any) => s.status === 'reconciled').length
+        posContext += `Reconciliation rate: ${closedShifts.length > 0 ? ((reconciled / closedShifts.length) * 100).toFixed(0) : 0}%.\n`
+      }
+      if (openShifts.length > 0) {
+        posContext += `Currently open: ${openShifts.map((s: any) => `cashier ${s.cashier_id} (float ${finalSymbol}${(s.opening_balance || 0).toFixed(2)}, opened ${new Date(s.opened_at).toLocaleTimeString()})`).join(', ')}.\n`
+      }
+    }
+
+    // Daily brief
+    if (brief) {
+      posContext += `\nLATEST DAILY BRIEF (${brief.date}):\n`
+      if (brief.improved) posContext += `Improved: ${brief.improved}\n`
+      if (brief.worsened) posContext += `Worsened: ${brief.worsened}\n`
+      if (brief.action) posContext += `Key action: ${brief.action}\n`
+      if (brief.health_score) posContext += `Health score: ${brief.health_score}/100\n`
+    }
+
+    // Connected integrations
+    if (sources.length > 0) {
+      const active = sources.filter((s: any) => s.status === 'active')
+      const errored = sources.filter((s: any) => s.status === 'error')
+      posContext += `\nCONNECTED INTEGRATIONS (${sources.length}):\n`
+      posContext += `Active: ${active.map((s: any) => `${s.name} (${s.source_type}${s.last_synced_at ? ', synced ' + new Date(s.last_synced_at).toLocaleDateString() : ''})`).join(', ') || 'none'}.\n`
+      if (errored.length > 0) {
+        posContext += `Errors: ${errored.map((s: any) => `${s.name} (${s.source_type}): ${s.error_message || 'unknown error'}`).join(', ')}.\n`
+      }
+    }
+
+    // M-Pesa payments
+    if (mpesa.length > 0) {
+      const completed_mpesa = mpesa.filter((p: any) => p.status === 'completed')
+      const pending_mpesa = mpesa.filter((p: any) => p.status === 'pending')
+      posContext += `\nM-PESA PAYMENTS (recent ${mpesa.length}):\n`
+      posContext += `${completed_mpesa.length} completed, ${pending_mpesa.length} pending.\n`
+      if (completed_mpesa.length > 0) {
+        const totalMpesa = completed_mpesa.reduce((s: number, p: any) => s + p.amount, 0)
+        posContext += `Total received: KSh ${totalMpesa.toLocaleString()}. Latest: ${completed_mpesa.slice(0, 3).map((p: any) => `KSh ${p.amount} (${p.plan}, ${new Date(p.created_at).toLocaleDateString()})`).join(', ')}.\n`
+      }
+    }
+
+    // Decisions log
+    if (decisions.length > 0) {
+      const pending = decisions.filter((d: any) => !d.reviewed && d.review_at && new Date(d.review_at) <= new Date())
+      posContext += `\nDECISIONS LOG (${decisions.length} recent):\n`
+      posContext += decisions.slice(0, 5).map((d: any) => `- ${d.title} (${d.decision_type}${d.before_value ? `, ${d.before_value} → ${d.after_value}` : ''}${d.review_verdict ? `, verdict: ${d.review_verdict}` : ''}) — ${new Date(d.created_at).toLocaleDateString()}`).join('\n') + '\n'
+      if (pending.length > 0) {
+        posContext += `⚠ ${pending.length} decision(s) overdue for review.\n`
+      }
     }
   }
   // ── END POS CONTEXT ──────────────────────────────────────
