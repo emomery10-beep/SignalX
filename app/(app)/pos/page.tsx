@@ -126,7 +126,7 @@ export default function POSPage() {
 
   // Inventory
   const [showAddProduct, setShowAddProduct] = useState(false)
-  const [newProduct, setNewProduct] = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '' })
+  const [newProduct, setNewProduct] = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '' })
   const [addingProduct, setAddingProduct] = useState(false)
   const [invSearch, setInvSearch] = useState('')
   const [invCategory, setInvCategory] = useState('all')
@@ -143,6 +143,8 @@ export default function POSPage() {
   // Camera
   const [recognizing, setRecognizing] = useState(false)
   const [recognizedProducts, setRecognizedProducts] = useState<any[]>([])
+  const [editingRecognizedIndex, setEditingRecognizedIndex] = useState<number | null>(null)
+  const [editingRecognizedData, setEditingRecognizedData] = useState<any>({})
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showCameraMenu, setShowCameraMenu] = useState(false)
@@ -467,9 +469,9 @@ export default function POSPage() {
     if (!newProduct.name || !newProduct.sale_price) return
     setAddingProduct(true)
     try {
-      const res = await fetch('/api/pos/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newProduct.name, sale_price: parseFloat(newProduct.sale_price), cost_price: parseFloat(newProduct.cost_price || '0'), stock_qty: parseInt(newProduct.stock_qty || '0'), low_stock_threshold: parseInt(newProduct.low_stock_threshold || '5') }) })
+      const res = await fetch('/api/pos/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newProduct.name, sale_price: parseFloat(newProduct.sale_price), cost_price: parseFloat(newProduct.cost_price || '0'), stock_qty: parseInt(newProduct.stock_qty || '0'), low_stock_threshold: parseInt(newProduct.low_stock_threshold || '5'), category: newProduct.category, sku: newProduct.sku }) })
       const data = await res.json()
-      if (data.product) { setInventory(prev => [...prev, data.product]); setNewProduct({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '' }); setShowAddProduct(false); notify(`${data.product.name} added`) }
+      if (data.product) { setInventory(prev => [...prev, data.product]); setNewProduct({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '' }); setShowAddProduct(false); notify(`${data.product.name} added`) }
     } catch { notify('Failed to add product', false) }
     setAddingProduct(false)
   }
@@ -1060,23 +1062,98 @@ export default function POSPage() {
               </div>
             )}
 
-            {/* Recognized products */}
+            {/* Recognized products with edit modal */}
             {recognizedProducts.length > 0 && (
-              <div style={{ marginBottom: 16, padding: 16, borderRadius: 12, border: '1px solid var(--b)', background: 'var(--ev)' }}>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span>Recognised {recognizedProducts.length} product{recognizedProducts.length !== 1 ? 's' : ''}</span>
-                  <button onClick={() => setRecognizedProducts([])} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit', color: 'var(--tx2)' }}>Clear</button>
+              <>
+                <div style={{ marginBottom: 16, padding: 16, borderRadius: 12, border: '1px solid var(--b)', background: 'var(--ev)' }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>📸 Recognised {recognizedProducts.length} product{recognizedProducts.length !== 1 ? 's' : ''}</span>
+                    <button onClick={() => setRecognizedProducts([])} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit', color: 'var(--tx2)' }}>Clear all</button>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {recognizedProducts.map((p: any, i: number) => (
+                      <div key={i} style={{ padding: '12px', borderRadius: 8, background: 'var(--sf)', border: '1px solid var(--b)', cursor: 'pointer', transition: 'all 120ms' }} onClick={() => { setEditingRecognizedIndex(i); setEditingRecognizedData({ ...p, sale_price: p.sale_price || '', cost_price: p.cost_price || '', stock_qty: (p.quantity || 1).toString() }) }} onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--acc)'} onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--b)'}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>{p.name}</div>
+                            <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{p.category} · {p.confidence}% confident {p.barcode_detected && p.barcode_number ? `· 📦 ${p.barcode_number}` : ''}</div>
+                          </div>
+                          <div style={{ fontSize: 20 }}>✏️</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {recognizedProducts.map((p: any, i: number) => (
-                    <div key={i} style={{ padding: '10px 12px', borderRadius: 8, background: 'var(--sf)', border: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div><div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>{p.name}</div><div style={{ fontSize: 11, color: 'var(--tx3)' }}>{p.category} · {p.confidence}% confident</div></div>
-                      <button onClick={() => { setNewProduct({ name: p.name, sale_price: '', cost_price: '', stock_qty: (p.quantity || 1).toString(), low_stock_threshold: '5', category: p.category || '' }); setShowAddProduct(true); setRecognizedProducts(prev => prev.filter((_, idx) => idx !== i)) }} style={{ ...btnPrimary, padding: '6px 12px', fontSize: 12 }}>Add</button>
+
+                {/* Edit modal */}
+                {editingRecognizedIndex !== null && (
+                  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 99, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setEditingRecognizedIndex(null)}>
+                    <div style={{ background: 'var(--sf)', borderRadius: 16, padding: 24, maxWidth: 500, width: '100%', maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
+                      <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)', marginBottom: 20, marginTop: 0 }}>Edit product details</h3>
+                      
+                      {/* Product name (read-only) */}
+                      <div style={{ marginBottom: 16 }}>
+                        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Product name</label>
+                        <input type="text" value={editingRecognizedData.name || ''} disabled style={{ ...inputStyle, background: 'var(--ev)', opacity: 0.6, width: '100%' }} />
+                      </div>
+
+                      {/* SKU / Barcode */}
+                      <div style={{ marginBottom: 16 }}>
+                        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>SKU / Barcode {editingRecognizedData.barcode_number ? '(auto-detected)' : ''}</label>
+                        <input type="text" placeholder="e.g. 8718924509127" value={editingRecognizedData.sku || editingRecognizedData.barcode_number || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, sku: e.target.value })} style={{ ...inputStyle, width: '100%' }} />
+                        {editingRecognizedData.barcode_detected && <div style={{ fontSize: 11, color: 'var(--acc)', marginTop: 4 }}>✓ Barcode detected in image</div>}
+                      </div>
+
+                      {/* Cost price */}
+                      <div style={{ marginBottom: 16 }}>
+                        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Cost price (purchase price)</label>
+                        <input type="number" placeholder="0.00" value={editingRecognizedData.cost_price || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, cost_price: e.target.value })} style={{ ...inputStyle, width: '100%' }} step="0.01" />
+                      </div>
+
+                      {/* Sale price */}
+                      <div style={{ marginBottom: 16 }}>
+                        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Sale price (selling price)</label>
+                        <input type="number" placeholder="0.00" value={editingRecognizedData.sale_price || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, sale_price: e.target.value })} style={{ ...inputStyle, width: '100%' }} step="0.01" />
+                      </div>
+
+                      {/* Quantity */}
+                      <div style={{ marginBottom: 20 }}>
+                        <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Starting stock quantity</label>
+                        <input type="number" value={editingRecognizedData.stock_qty || 1} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, stock_qty: e.target.value })} style={{ ...inputStyle, width: '100%' }} min="1" />
+                      </div>
+
+                      {/* Margin preview */}
+                      {editingRecognizedData.cost_price && editingRecognizedData.sale_price && (
+                        <div style={{ background: 'var(--ev)', padding: 12, borderRadius: 8, marginBottom: 20, fontSize: 12 }}>
+                          <div style={{ color: 'var(--tx2)', marginBottom: 4 }}>Margin: <strong style={{ color: 'var(--acc)' }}>{((parseFloat(editingRecognizedData.sale_price) - parseFloat(editingRecognizedData.cost_price || 0)) / parseFloat(editingRecognizedData.sale_price || 1) * 100).toFixed(1)}%</strong></div>
+                          <div style={{ color: 'var(--tx3)', fontSize: 11 }}>Profit per unit: {(parseFloat(editingRecognizedData.sale_price) - parseFloat(editingRecognizedData.cost_price || 0)).toFixed(2)}</div>
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      <div style={{ display: 'flex', gap: 12 }}>
+                        <button onClick={() => {
+                          setNewProduct({
+                            name: editingRecognizedData.name,
+                            sale_price: editingRecognizedData.sale_price?.toString() || '',
+                            cost_price: editingRecognizedData.cost_price?.toString() || '0',
+                            stock_qty: editingRecognizedData.stock_qty?.toString() || '1',
+                            low_stock_threshold: '5',
+                            category: editingRecognizedData.category || 'General',
+                            sku: editingRecognizedData.sku || ''
+                          });
+                          setShowAddProduct(true);
+                          setRecognizedProducts(prev => prev.filter((_, idx) => idx !== editingRecognizedIndex));
+                          setEditingRecognizedIndex(null);
+                        }} disabled={!editingRecognizedData.sale_price} style={{ ...btnPrimary, flex: 1, opacity: !editingRecognizedData.sale_price ? 0.5 : 1 }}>Add to inventory</button>
+                        <button onClick={() => setEditingRecognizedIndex(null)} style={btnSecondary}>Cancel</button>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </div>
+                )}
+              </>
             )}
+
 
             {/* Bulk CSV import */}
             {showBulkImport && (
