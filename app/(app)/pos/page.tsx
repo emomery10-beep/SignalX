@@ -1082,8 +1082,9 @@ export default function POSPage() {
             {/* Camera match result modal */}
             {recognizedProducts.length > 0 && (
               <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 99, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setRecognizedProducts([])}>
-                <div style={{ background: 'var(--sf)', borderRadius: 16, padding: 24, maxWidth: 400, width: '100%' }} onClick={(e) => e.stopPropagation()}>
-                  {recognizedProducts[0]?.id ? (
+                <div style={{ background: 'var(--sf)', borderRadius: 16, padding: 24, maxWidth: 450, width: '100%', maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
+                  {recognizedProducts[0]?.matched ? (
+                    // ── Matched: Existing product in inventory ──
                     <>
                       <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)', marginBottom: 12, marginTop: 0 }}>✓ Product found</h3>
                       <div style={{ background: 'var(--ev)', padding: 16, borderRadius: 10, marginBottom: 16 }}>
@@ -1096,13 +1097,77 @@ export default function POSPage() {
                       <button onClick={() => setRecognizedProducts([])} style={{ ...btnPrimary, width: '100%' }}>Close</button>
                     </>
                   ) : (
+                    // ── Unmatched: New product to add ──
                     <>
-                      <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)', marginBottom: 12, marginTop: 0 }}>✗ No match found</h3>
-                      <div style={{ background: 'var(--ev)', padding: 16, borderRadius: 10, marginBottom: 16 }}>
-                        <div style={{ fontSize: 13, color: 'var(--tx2)' }}>The product in the image does not match any items in your inventory.</div>
-                        <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 8 }}>Add the product manually using the <strong>+ Add product</strong> button to start tracking it.</div>
+                      <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)', marginBottom: 12, marginTop: 0 }}>Add new product</h3>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {/* Product name (from recognition) */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Product name</label>
+                          <input type="text" value={recognizedProducts[0]?.name || ''} disabled style={{ ...inputStyle, width: '100%', background: 'var(--ev)', opacity: 0.6 }} />
+                          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4 }}>Auto-recognized from image</div>
+                        </div>
+
+                        {/* Sale price */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Sale price</label>
+                          <input type="number" placeholder="0.00" value={editingRecognizedData.sale_price || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, sale_price: e.target.value })} style={{ ...inputStyle, width: '100%' }} step="0.01" />
+                        </div>
+
+                        {/* Cost price */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Cost price (optional)</label>
+                          <input type="number" placeholder="0.00" value={editingRecognizedData.cost_price || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, cost_price: e.target.value })} style={{ ...inputStyle, width: '100%' }} step="0.01" />
+                        </div>
+
+                        {/* Stock qty */}
+                        <div>
+                          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Starting stock</label>
+                          <input type="number" value={editingRecognizedData.stock_qty || '1'} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, stock_qty: e.target.value })} style={{ ...inputStyle, width: '100%' }} min="1" />
+                        </div>
+
+                        {/* Margin preview */}
+                        {editingRecognizedData.cost_price && editingRecognizedData.sale_price && (
+                          <div style={{ background: 'var(--ev)', padding: 10, borderRadius: 8, fontSize: 11 }}>
+                            <div style={{ color: 'var(--tx2)', marginBottom: 2 }}>Margin: <strong style={{ color: 'var(--acc)' }}>{((parseFloat(editingRecognizedData.sale_price) - parseFloat(editingRecognizedData.cost_price || 0)) / parseFloat(editingRecognizedData.sale_price || 1) * 100).toFixed(1)}%</strong></div>
+                            <div style={{ color: 'var(--tx3)' }}>Profit: {(parseFloat(editingRecognizedData.sale_price) - parseFloat(editingRecognizedData.cost_price || 0)).toFixed(2)}</div>
+                          </div>
+                        )}
                       </div>
-                      <button onClick={() => setRecognizedProducts([])} style={{ ...btnSecondary, width: '100%' }}>Dismiss</button>
+
+                      {/* Actions */}
+                      <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                        <button onClick={async () => {
+                          if (!editingRecognizedData.sale_price) { notify('Sale price required', false); return }
+                          setAddingProduct(true)
+                          try {
+                            const res = await fetch('/api/pos/inventory', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                name: recognizedProducts[0]?.name,
+                                sale_price: parseFloat(editingRecognizedData.sale_price),
+                                cost_price: editingRecognizedData.cost_price ? parseFloat(editingRecognizedData.cost_price) : 0,
+                                stock_qty: parseInt(editingRecognizedData.stock_qty || '1'),
+                                low_stock_threshold: 5,
+                              })
+                            })
+                            const data = await res.json()
+                            if (data.product) {
+                              setInventory(prev => [...prev, data.product])
+                              notify(`${data.product.name} added`)
+                              setRecognizedProducts([])
+                              setEditingRecognizedData({})
+                            } else {
+                              notify(data.error || 'Failed to add', false)
+                            }
+                          } catch (err) {
+                            notify('Failed to add product', false)
+                          }
+                          setAddingProduct(false)
+                        }} disabled={!editingRecognizedData.sale_price || addingProduct} style={{ ...btnPrimary, flex: 1, opacity: !editingRecognizedData.sale_price || addingProduct ? 0.5 : 1 }}>{addingProduct ? 'Adding...' : 'Add to inventory'}</button>
+                        <button onClick={() => { setRecognizedProducts([]); setEditingRecognizedData({}) }} style={{ ...btnSecondary, flex: 1 }}>Cancel</button>
+                      </div>
                     </>
                   )}
                 </div>

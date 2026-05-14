@@ -111,25 +111,46 @@ If unsure or product not in inventory, set confidence below 50.`,
       }
     }
 
-    // Only return if we found a match
-    if (!match) {
-      return NextResponse.json({ products: [] })
+    // If we found a match in inventory, return it with the ID
+    if (match) {
+      return NextResponse.json({
+        products: [
+          {
+            id: match.id,
+            name: match.name,
+            sale_price: match.sale_price,
+            cost_price: match.cost_price,
+            stock_qty: match.stock_qty,
+            unit: match.unit || 'item',
+            confidence,
+            quantity: 1,
+            matched: true, // Flag: this is an existing product
+          },
+        ],
+      })
     }
 
-    return NextResponse.json({
-      products: [
-        {
-          id: match.id,
-          name: match.name,
-          sale_price: match.sale_price,
-          cost_price: match.cost_price,
-          stock_qty: match.stock_qty,
-          unit: match.unit || 'item',
-          confidence,
-          quantity: 1,
-        },
-      ],
-    })
+    // No inventory match found, but Claude identified something
+    // Return the raw recognition so user can add it as new product
+    // (This allows recognizing new products not yet in inventory)
+    if (productName && confidence >= 50) {
+      return NextResponse.json({
+        products: [
+          {
+            name: productName,
+            confidence,
+            quantity: 1,
+            matched: false, // Flag: this is a new unmatched product
+            sale_price: null,
+            cost_price: null,
+            stock_qty: null,
+          },
+        ],
+      })
+    }
+
+    // Very low confidence or no product identified
+    return NextResponse.json({ products: [] })
   } catch (err: any) {
     console.error('recognize-inventory error:', err)
     return NextResponse.json({ error: err.message || 'Recognition failed' }, { status: 500 })
