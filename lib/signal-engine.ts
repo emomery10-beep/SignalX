@@ -251,6 +251,139 @@ export function runHealthCheck(input: HealthCheckInput): Signal[] {
   return unique.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity])
 }
 
+// ── POS-BASED SIGNALS ────────────────────────────────────────
+// Generate signals directly from live POS inventory + transaction data
+
+export interface PosSignalInput {
+  inventory: { name: string; stock_qty: number; low_stock_threshold: number; sale_price?: number; cost_price?: number }[]
+  recentSales: { name: string; qty: number; unit_price: number; cost_price: number }[]
+  todayRevenue: number
+  avgDailyRevenue: number
+}
+
+export function runHealthCheckFromPOSData(input: PosSignalInput): Signal[] {
+  const { inventory, recentSales, todayRevenue, avgDailyRevenue } = input
+  const signals: Signal[] = []
+
+  // Build daily sales velocity per product (from last 7 days of line items)
+  const salesByProduct: Record<string, number> = {}
+  for (const item of recentSales) {
+    salesByProduct[item.name] = (salesByProduct[item.name] || 0) + item.qty
+  }
+
+  // CHECK 1: Stockout risk from inventory
+  for (const item of inventory) {
+    const dailyVelocity = (salesByProduct[item.name] || 0) / 7
+    if (dailyVelocity <= 0) continue
+
+    const daysLeft = item.stock_qty / dailyVelocity
+    const leadTime = 14
+
+    if (daysLeft < leadTime) {
+      const severity: SignalSeverity = daysLeft < 7 ? 'red' : 'yellow'
+      signals.push({
+        id: `stockout-pos-${item.name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
+        title: `${item.name} running low`,
+        description: `${Math.round(daysLeft)} days of stock left at current sales rate (${dailyVelocity.toFixed(1)}/day). You have ${item.stock_qty} units remaining.`,
+        severity,
+        suggested_action: 'Reorder now',
+        prompt: `${item.name} has ${item.stock_qty} units left, selling ${dailyVelocity.toFixed(1)} per day. How many should I reorder and when?`,
+        product: item.name,
+        metric: `${Math.round(daysLeft)} days left`,
+        created_at: new Date().toISOString(),
+      })
+    }
+  }
+
+  // CHECK 2: Out-of-stock items
+  const outOfStock = inventory.filter(i => i.stock_qty <= 0)
+  for (const item of outOfStock) {
+    signals.push({
+      id: `oos-${item.name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
+      title: `${item.name} — OUT OF STOCK`,
+      description: `${item.name} has zero stock. You're losing sales on this product.`,
+      severity: 'red',
+      suggested_action: 'Restock urgently',
+      prompt: `${item.name} is out of stock. What's the fastest way to restock and how much am I losing in daily sales?`,
+      product: item.name,
+      metric: '0 units',
+      created_at: new Date().toISOString(),
+    })
+  }
+
+  // CHECK 3: Low margin products
+  const productMargins: Record<string, { revenue: number; cost: number }> = {}
+  for (const item of recentSales) {
+    if (!productMargins[item.name]) productMargins[item.name] = { revenue: 0, cost: 0 }
+    productMargins[item.name].revenue += item.qty * item.unit_price
+    productMargins[item.name].cost += item.qty * (item.cost_price || 0)
+  }
+
+  for (const [name, data] of Object.entries(productMargins)) {
+    if (data.cost <= 0 || data.revenue <= 0) continue
+    const margin = ((data.revenue - data.cost) / data.revenue) * 100
+    if (margin < 0) {
+      signals.push({
+        id: `neg-margin-pos-${name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
+        title: `${name} — losing money`,
+        description: `${name} has a ${margin.toFixed(1)}% margin. You lose money on every sale.`,
+        severity: 'red',
+        suggested_action: 'Fix pricing',
+        prompt: `${name} has a negative ${margin.toFixed(1)}% margin. Should I raise the price, find a cheaper supplier, or discontinue it?`,
+        product: name,
+        metric: `${margin.toFixed(1)}% margin`,
+        created_at: new Date().toISOString(),
+      })
+    } else if (margin < 10) {
+      signals.push({
+        id: `low-margin-pos-${name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
+        title: `Low margin on ${name}`,
+        description: `${name} has only a ${margin.toFixed(1)}% margin — barely covering costs.`,
+        severity: 'yellow',
+        suggested_action: 'Review pricing',
+        prompt: `${name} has a ${margin.toFixed(1)}% margin. How can I improve profitability on this product?`,
+        product: name,
+        metric: `${margin.toFixed(1)}% margin`,
+        created_at: new Date().toISOString(),
+      })
+    }
+  }
+
+  // CHECK 4: Sales anomaly (today vs 7-day average)
+  if (avgDailyRevenue > 0 && todayRevenue >= 0) {
+    const changePct = ((todayRevenue - avgDailyRevenue) / avgDailyRevenue) * 100
+    if (Math.abs(changePct) >= 30) {
+      const isSpike = changePct > 0
+      signals.push({
+        id: `anomaly-pos-${Date.now()}`,
+        title: isSpike ? 'Unusual sales spike today' : 'Sales down significantly today',
+        description: isSpike
+          ? `Today's revenue (${formatValue(todayRevenue)}) is ${changePct.toFixed(0)}% above your 7-day average (${formatValue(avgDailyRevenue)}).`
+          : `Today's revenue (${formatValue(todayRevenue)}) is ${Math.abs(changePct).toFixed(0)}% below your 7-day average (${formatValue(avgDailyRevenue)}).`,
+        severity: isSpike ? 'blue' : (Math.abs(changePct) > 50 ? 'red' : 'yellow'),
+        suggested_action: isSpike ? 'Capitalise on this' : 'Investigate the drop',
+        prompt: isSpike
+          ? `My POS sales today are ${changePct.toFixed(0)}% above my 7-day average. Which products are driving this and do I have enough stock?`
+          : `My POS sales today are ${Math.abs(changePct).toFixed(0)}% below average. What's causing the drop and what should I do?`,
+        metric: `${changePct > 0 ? '+' : ''}${changePct.toFixed(0)}% vs avg`,
+        created_at: new Date().toISOString(),
+      })
+    }
+  }
+
+  // Deduplicate and sort
+  const seen = new Set<string>()
+  const unique = signals.filter(s => {
+    const key = `${s.product || 'global'}-${s.id.split('-')[0]}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+
+  const severityOrder: Record<SignalSeverity, number> = { red: 0, yellow: 1, blue: 2 }
+  return unique.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity])
+}
+
 // ── API ROUTE HELPER ──────────────────────────────────────────
 export async function runHealthCheckFromUpload(
   userId: string,

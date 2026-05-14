@@ -201,6 +201,156 @@ export function calculateHealthScore(input: HealthInput): HealthScore {
   return { score: total, label, color, components, summary: summaryMap[label], topIssue }
 }
 
+// ── POS-Based Health Score ──────────────────────────────────────────────────────
+// Calculates health score directly from live POS tables instead of uploaded CSVs
+
+export interface PosHealthInput {
+  transactions: { total: number; status: string; created_at: string; pos_items?: { name: string; qty: number; unit_price: number; cost_price: number }[] }[]
+  previousTransactions?: { total: number; status: string; created_at: string; pos_items?: { name: string; qty: number; unit_price: number; cost_price: number }[] }[]
+  inventory: { name: string; stock_qty: number; low_stock_threshold: number; sale_price?: number; cost_price?: number }[]
+  targetMargin?: number
+}
+
+export function calculateHealthScoreFromPOS(input: PosHealthInput): HealthScore {
+  const { transactions, previousTransactions, inventory, targetMargin = 0.30 } = input
+
+  if (!transactions?.length && !inventory?.length) {
+    return {
+      score: 0, label: 'No Data', color: 'red',
+      components: [],
+      summary: 'No POS data available. Start making sales to generate your Business Health Score.',
+      topIssue: 'No transactions found.',
+    }
+  }
+
+  const components: HealthComponent[] = []
+  const completed = transactions.filter(t => t.status === 'completed')
+
+  // Revenue & cost from line items
+  let totalRevenue = 0, totalCost = 0
+  for (const tx of completed) {
+    totalRevenue += tx.total
+    for (const item of (tx.pos_items || [])) {
+      totalCost += (item.cost_price || 0) * item.qty
+    }
+  }
+
+  // ── 1. MARGIN HEALTH (0-20) ───────────────────────────────────────────────
+  const grossMargin = totalRevenue > 0 ? (totalRevenue - totalCost) / totalRevenue : null
+  let marginScore = 10, marginLabel = 'Unknown'
+  let marginStatus: 'good' | 'warning' | 'critical' = 'warning'
+  let marginDetail = 'Not enough cost data to calculate margins. Add cost prices to your products.'
+
+  if (grossMargin !== null && totalCost > 0) {
+    if (grossMargin >= targetMargin + 0.05) { marginScore = 20; marginLabel = 'Strong'; marginStatus = 'good'; marginDetail = `Gross margin at ${(grossMargin * 100).toFixed(1)}% — ${((grossMargin - targetMargin) * 100).toFixed(1)}pp above target.` }
+    else if (grossMargin >= targetMargin)      { marginScore = 16; marginLabel = 'On target'; marginStatus = 'good'; marginDetail = `Gross margin at ${(grossMargin * 100).toFixed(1)}% — at target.` }
+    else if (grossMargin >= targetMargin - 0.05) { marginScore = 10; marginLabel = 'Slipping'; marginStatus = 'warning'; marginDetail = `Gross margin at ${(grossMargin * 100).toFixed(1)}% — ${((targetMargin - grossMargin) * 100).toFixed(1)}pp below target.` }
+    else if (grossMargin >= 0)               { marginScore = 4;  marginLabel = 'Danger zone'; marginStatus = 'critical'; marginDetail = `Gross margin at ${(grossMargin * 100).toFixed(1)}% — significantly below target.` }
+    else                                      { marginScore = 0;  marginLabel = 'Negative'; marginStatus = 'critical'; marginDetail = `Gross margin is negative — you are losing money on each sale.` }
+  }
+  components.push({ name: 'Margin Health', score: marginScore, label: marginLabel, status: marginStatus, detail: marginDetail })
+
+  // ── 2. REVENUE TREND (0-20) ───────────────────────────────────────────────
+  let trendScore = 10, trendLabel = 'Stable'
+  let trendStatus: 'good' | 'warning' | 'critical' = 'warning'
+  let trendDetail = 'No previous period data to compare against.'
+
+  if (previousTransactions?.length && totalRevenue > 0) {
+    const prevCompleted = previousTransactions.filter(t => t.status === 'completed')
+    const prevRevenue = prevCompleted.reduce((s, t) => s + t.total, 0)
+    if (prevRevenue > 0) {
+      const change = (totalRevenue - prevRevenue) / prevRevenue
+      if (change > 0.1)       { trendScore = 20; trendLabel = 'Growing'; trendStatus = 'good'; trendDetail = `Revenue up ${(change * 100).toFixed(1)}% vs previous period.` }
+      else if (change > 0)    { trendScore = 16; trendLabel = 'Slightly up'; trendStatus = 'good'; trendDetail = `Revenue up ${(change * 100).toFixed(1)}% vs previous period.` }
+      else if (change > -0.05){ trendScore = 12; trendLabel = 'Stable'; trendStatus = 'warning'; trendDetail = `Revenue stable vs previous period (${(change * 100).toFixed(1)}%).` }
+      else if (change > -0.15){ trendScore = 6;  trendLabel = 'Declining'; trendStatus = 'warning'; trendDetail = `Revenue down ${Math.abs(change * 100).toFixed(1)}% vs previous period.` }
+      else                    { trendScore = 0;  trendLabel = 'Sharp drop'; trendStatus = 'critical'; trendDetail = `Revenue down ${Math.abs(change * 100).toFixed(1)}% vs previous period — investigate immediately.` }
+    }
+  }
+  components.push({ name: 'Revenue Trend', score: trendScore, label: trendLabel, status: trendStatus, detail: trendDetail })
+
+  // ── 3. STOCK POSITION (0-20) ──────────────────────────────────────────────
+  let stockScore = 15, stockLabel = 'OK'
+  let stockStatus: 'good' | 'warning' | 'critical' = 'warning'
+  let stockDetail = 'No inventory data found.'
+
+  if (inventory.length > 0) {
+    const criticalCount = inventory.filter(i => i.stock_qty <= (i.low_stock_threshold || 5) && i.stock_qty >= 0).length
+    const outOfStock = inventory.filter(i => i.stock_qty <= 0).length
+    const totalItems = inventory.length
+
+    if (outOfStock > 0) {
+      stockScore = 2; stockLabel = `${outOfStock} out of stock`; stockStatus = 'critical'
+      stockDetail = `${outOfStock} product(s) are completely out of stock. ${criticalCount - outOfStock} more are running low.`
+    } else if (criticalCount === 0) {
+      stockScore = 20; stockLabel = 'Well stocked'; stockStatus = 'good'
+      stockDetail = `All ${totalItems} products have healthy stock levels.`
+    } else if (criticalCount <= totalItems * 0.2) {
+      stockScore = 13; stockLabel = `${criticalCount} low`; stockStatus = 'warning'
+      stockDetail = `${criticalCount} product(s) are at or below their reorder threshold.`
+    } else {
+      stockScore = 4; stockLabel = `${criticalCount} critical`; stockStatus = 'critical'
+      stockDetail = `${criticalCount} of ${totalItems} products need restocking urgently.`
+    }
+  }
+  components.push({ name: 'Stock Position', score: stockScore, label: stockLabel, status: stockStatus, detail: stockDetail })
+
+  // ── 4. CASH FLOW (0-20) ───────────────────────────────────────────────────
+  let cashScore = 12, cashLabel = 'Unknown'
+  let cashStatus: 'good' | 'warning' | 'critical' = 'warning'
+  let cashDetail = 'Connect bank data for cash flow analysis.'
+
+  if (totalRevenue > 0) {
+    const estimatedProfit = totalRevenue - totalCost
+    if (estimatedProfit > 0 && totalCost > 0) { cashScore = 14; cashLabel = 'Profitable'; cashStatus = 'good'; cashDetail = `Business is cash flow positive. Estimated profit: ${((estimatedProfit / totalRevenue) * 100).toFixed(0)}% of revenue.` }
+    else if (totalCost > 0)                    { cashScore = 3;  cashLabel = 'Unprofitable'; cashStatus = 'critical'; cashDetail = 'Costs appear to exceed revenue — review your cost structure.' }
+    else                                        { cashScore = 10; cashLabel = 'Unknown costs'; cashStatus = 'warning'; cashDetail = 'Revenue is coming in but cost data is incomplete. Add cost prices to your products for full analysis.' }
+  }
+  components.push({ name: 'Cash Flow', score: cashScore, label: cashLabel, status: cashStatus, detail: cashDetail })
+
+  // ── 5. PRODUCT DIVERSITY (0-20) ───────────────────────────────────────────
+  let diversityScore = 12, diversityLabel = 'OK'
+  let diversityStatus: 'good' | 'warning' | 'critical' = 'warning'
+  let diversityDetail = 'No product data to analyse.'
+
+  const productRevenue: Record<string, number> = {}
+  for (const tx of completed) {
+    for (const item of (tx.pos_items || [])) {
+      productRevenue[item.name] = (productRevenue[item.name] || 0) + item.qty * item.unit_price
+    }
+  }
+  const products = Object.entries(productRevenue).sort((a, b) => b[1] - a[1])
+  const totalRev = products.reduce((s, [, v]) => s + v, 0)
+  const topProductShare = totalRev > 0 ? (products[0]?.[1] || 0) / totalRev : 0
+  const productCount = products.length
+
+  if (productCount > 0) {
+    if (productCount >= 10 && topProductShare < 0.4)  { diversityScore = 20; diversityLabel = 'Diversified'; diversityStatus = 'good'; diversityDetail = `${productCount} products sold, top product is ${(topProductShare * 100).toFixed(0)}% of revenue.` }
+    else if (productCount >= 5 && topProductShare < 0.6) { diversityScore = 14; diversityLabel = 'Moderate'; diversityStatus = 'good'; diversityDetail = `${productCount} products sold, top product is ${(topProductShare * 100).toFixed(0)}% of revenue.` }
+    else if (topProductShare > 0.8)                   { diversityScore = 5;  diversityLabel = 'High risk'; diversityStatus = 'critical'; diversityDetail = `${(topProductShare * 100).toFixed(0)}% of revenue from one product — high concentration risk.` }
+    else                                               { diversityScore = 10; diversityLabel = 'Limited'; diversityStatus = 'warning'; diversityDetail = `${productCount} products sold — consider diversifying your range.` }
+  }
+  components.push({ name: 'Product Mix', score: diversityScore, label: diversityLabel, status: diversityStatus, detail: diversityDetail })
+
+  // ── FINAL SCORE ───────────────────────────────────────────────────────────
+  const total = components.reduce((s, c) => s + c.score, 0)
+  const label = total >= 80 ? 'Healthy' : total >= 65 ? 'Good' : total >= 45 ? 'At Risk' : 'Critical'
+  const color = total >= 65 ? 'green' : total >= 45 ? 'amber' : 'red'
+
+  const criticalComponents = components.filter(c => c.status === 'critical')
+  const warningComponents = components.filter(c => c.status === 'warning')
+  const topIssue = criticalComponents[0]?.detail || warningComponents[0]?.detail || null
+
+  const summaryMap: Record<string, string> = {
+    Healthy: `Your business is in strong shape. Score: ${total}/100.`,
+    Good: `Business is performing well with some areas to watch. Score: ${total}/100.`,
+    'At Risk': `Several metrics need attention. Score: ${total}/100. Focus on ${criticalComponents[0]?.name || 'your weakest area'}.`,
+    Critical: `Business health is critical. Score: ${total}/100. Immediate action required on ${criticalComponents[0]?.name || 'key metrics'}.`,
+  }
+
+  return { score: total, label, color, components, summary: summaryMap[label], topIssue }
+}
+
 // ── Anomaly Detection ─────────────────────────────────────────────────────────
 export interface Anomaly {
   type: string
