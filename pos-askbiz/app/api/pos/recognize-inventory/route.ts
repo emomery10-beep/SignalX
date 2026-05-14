@@ -145,22 +145,7 @@ Reply with ONLY valid JSON, no other text:
 
     // If we found a match in inventory, return it with the ID
     if (match) {
-      // Log successful recognition (optional - table may not exist yet)
-      try {
-        await service
-          .from('recognition_history')
-          .insert({
-            owner_id: auth.ownerId,
-            inventory_id: match.id,
-            recognized_name: productName,
-            confidence,
-            is_match: true,
-            confirmed: true,
-            source: 'inventory'
-          })
-      } catch (logErr) {
-        console.error('Recognition logging unavailable:', logErr)
-      }
+      // Skip logging for now - focus on camera working first
 
       return NextResponse.json({
         products: [
