@@ -460,7 +460,9 @@ export default function POSPage() {
       const formData = new FormData(); formData.append('image', file)
       const res = await fetch('/api/pos/recognize-inventory', { method: 'POST', body: formData })
       const data = await res.json()
+      console.log('🔍 Recognition response:', data)
       if (data.products?.length > 0) {
+        console.log('✅ Opening modal for product:', data.products[0].name)
         setRecognizedProducts(data.products)
         // Automatically open edit modal for first product
         const firstProduct = data.products[0]
@@ -473,7 +475,10 @@ export default function POSPage() {
         })
       }
       else notify('Could not recognise products from image', false)
-    } catch (err) { notify('Image recognition failed', false) }
+    } catch (err) {
+      console.error('❌ Error:', err)
+      notify('Image recognition failed', false)
+    }
     setRecognizing(false)
   }
 
