@@ -63,12 +63,12 @@ TASK:
 1. Identify what product is shown in the image - be specific with brand, size, type
 2. If it matches something in the store's inventory list above, give its EXACT name from the list
 3. If the product is NOT in the inventory list, give your best product identification anyway
-4. Set HIGH confidence (80-100) if you can clearly read the product name/label
-5. Set MEDIUM confidence (50-79) if you recognize the product but some details are unclear
-6. Set LOW confidence (below 50) if you are mostly guessing
+4. Set HIGH confidence (80-100) if you can clearly see and read product branding/label with certainty
+5. Set MEDIUM confidence (50-79) if you can visually identify the product type (e.g., can see it's milk, bread, rice) even if no brand is visible
+6. Set LOW confidence (below 50) if it's too blurry, obscured, or truly unidentifiable
 
 Reply with ONLY valid JSON, no other text:
-{"name":"product name","confidence":85}`,
+{"name":"product name","confidence":70}`,
           },
         ],
       }],

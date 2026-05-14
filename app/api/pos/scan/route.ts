@@ -68,7 +68,8 @@ TASK:
 1. Identify the product in the image - be specific with brand, size, type
 2. If it matches something in the inventory list above, use the EXACT name from the list
 3. If NOT in the inventory list, give your best identification anyway
-4. Also try to extract the price if shown on label/tag
+4. Try to extract the price if shown on label/tag
+5. Identify anything you can visually see clearly, even generic items without brand labels (e.g., rice, flour, eggs)
 
 Reply ONLY with valid JSON, nothing else:
 {"name":"product name","price":null}`,
