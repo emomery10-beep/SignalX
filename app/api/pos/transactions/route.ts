@@ -100,12 +100,12 @@ export async function POST(req: NextRequest) {
   let jurisdiction = 'UK' // default
   let taxCountryCode = 'GB'
 
-  if (location_id) {
+  if (txLocationId) {
     const { data: locTaxSettings } = await service
       .from('pos_location_tax_settings')
       .select('jurisdiction_code')
       .eq('owner_id', ownerId)
-      .eq('location_id', location_id)
+      .eq('location_id', txLocationId)
       .maybeSingle()
 
     if (locTaxSettings?.jurisdiction_code) {

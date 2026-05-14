@@ -14,7 +14,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('pos_staff')
-    .select('id, name, email, phone, role, active, last_login_at, created_at, pin_hash')
+    .select('id, name, email, phone, role, active, last_login_at, created_at, pin_hash, location_id, location:pos_locations!location_id(id, name)')
     .eq('owner_id', user.id)
     .order('created_at', { ascending: true })
 
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
-  const { phone, email, name, role, pin } = await req.json()
+  const { phone, email, name, role, pin, location_id } = await req.json()
   if ((!phone && !email) || !name || !role) return NextResponse.json({ error: 'phone or email, name and role required' }, { status: 400 })
   if (!['cashier', 'inventory'].includes(role)) return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
   if (pin && (String(pin).length < 4 || String(pin).length > 6)) return NextResponse.json({ error: 'PIN must be 4–6 digits' }, { status: 400 })
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
   try {
     const { data, error } = await supabase
       .from('pos_staff')
-      .insert({ owner_id: user.id, phone: phone || null, email: email || null, name, role })
+      .insert({ owner_id: user.id, phone: phone || null, email: email || null, name, role, location_id: location_id || null })
       .select()
       .single()
 
@@ -87,7 +87,7 @@ export async function PATCH(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
-  const { id, name, role, phone, email, active, pin } = await req.json()
+  const { id, name, role, phone, email, active, pin, location_id } = await req.json()
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
 
   if ((phone !== undefined || email !== undefined) && !phone && !email) {
@@ -121,6 +121,7 @@ export async function PATCH(req: NextRequest) {
   if (phone  !== undefined) updates.phone  = phone || null
   if (email  !== undefined) updates.email  = email || null
   if (active !== undefined) updates.active = active
+  if (location_id !== undefined) updates.location_id = location_id || null
 
   // PIN update — need staff ID to hash
   if (pin) {

@@ -32,8 +32,8 @@ CREATE INDEX IF NOT EXISTS idx_inventory_location ON inventory(owner_id, locatio
 ALTER TABLE pos_staff ADD COLUMN IF NOT EXISTS location_id uuid REFERENCES pos_locations(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_staff_location ON pos_staff(owner_id, location_id);
 
--- ── 4. pos_transactions already has pos_location_id from migration 031 ──
--- Just ensure the index exists
+-- ── 4. Add pos_location_id to pos_transactions ──
+ALTER TABLE pos_transactions ADD COLUMN IF NOT EXISTS pos_location_id uuid REFERENCES pos_locations(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_tx_location ON pos_transactions(owner_id, pos_location_id);
 
 -- ── 5. Stock transfer table ──────────────────────────────────

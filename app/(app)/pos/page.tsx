@@ -56,7 +56,7 @@ function MiniBarChart({ data, color = ACC, height = 80 }: { data: { label: strin
 
 // ── Types ────────────────────────────────────────────────
 interface StaffMember {
-  id: string; name: string; phone: string; email?: string; role: 'cashier' | 'inventory'; active: boolean; last_login_at: string | null; has_pin?: boolean
+  id: string; name: string; phone: string; email?: string; role: 'cashier' | 'inventory'; active: boolean; last_login_at: string | null; has_pin?: boolean; location_id?: string; location?: { id: string; name: string } | null
 }
 interface Transaction {
   id: string; total: number; subtotal?: number; payment_type: string; status: string; created_at: string; notes?: string
@@ -114,12 +114,14 @@ export default function POSPage() {
   const [newName, setNewName] = useState('')
   const [newRole, setNewRole] = useState<'cashier' | 'inventory'>('cashier')
   const [newPin, setNewPin] = useState('')
+  const [newLocationId, setNewLocationId] = useState('')
   const [addingStaff, setAddingStaff] = useState(false)
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null)
   const [editPhone, setEditPhone] = useState('')
   const [editEmail, setEditEmail] = useState('')
   const [editName, setEditName] = useState('')
   const [editPin, setEditPin] = useState('')
+  const [editLocationId, setEditLocationId] = useState('')
   const [editingSubmitting, setEditingSubmitting] = useState(false)
 
   // Inventory
@@ -386,9 +388,9 @@ export default function POSPage() {
     if (newPin && (newPin.length < 4 || newPin.length > 6 || !/^\d+$/.test(newPin))) { notify('PIN must be 4-6 digits', false); return }
     setAddingStaff(true)
     try {
-      const res = await fetch('/api/pos/staff', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: newPhone || undefined, email: newEmail || undefined, name: newName, role: newRole, pin: newPin || undefined }) })
+      const res = await fetch('/api/pos/staff', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: newPhone || undefined, email: newEmail || undefined, name: newName, role: newRole, pin: newPin || undefined, location_id: newLocationId || undefined }) })
       const data = await res.json()
-      if (data.staff) { setStaff(prev => [...prev, data.staff]); setNewPhone(''); setNewEmail(''); setNewName(''); setNewRole('cashier'); setNewPin(''); setShowAddStaff(false); notify(`${data.staff.name} added`) }
+      if (data.staff) { setStaff(prev => [...prev, data.staff]); setNewPhone(''); setNewEmail(''); setNewName(''); setNewRole('cashier'); setNewPin(''); setNewLocationId(''); setShowAddStaff(false); notify(`${data.staff.name} added`) }
       else if (data.seat_limit) notify(data.error, false)
       else if (data.error) notify(data.error, false)
     } catch { notify('Failed to add staff', false) }
@@ -409,7 +411,7 @@ export default function POSPage() {
     if (editPin && (editPin.length < 4 || editPin.length > 6 || !/^\d+$/.test(editPin))) { notify('PIN must be 4-6 digits', false); return }
     setEditingSubmitting(true)
     try {
-      const res = await fetch('/api/pos/staff', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingStaff.id, phone: editPhone || undefined, email: editEmail || undefined, name: editName, pin: editPin || undefined }) })
+      const res = await fetch('/api/pos/staff', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingStaff.id, phone: editPhone || undefined, email: editEmail || undefined, name: editName, pin: editPin || undefined, location_id: editLocationId || undefined }) })
       const data = await res.json()
       if (data.staff) { setStaff(prev => prev.map(s => s.id === editingStaff.id ? data.staff : s)); setEditingStaff(null); notify('Staff updated') }
       else if (data.error) notify(data.error, false)
@@ -418,7 +420,7 @@ export default function POSPage() {
   }
 
   const handleOpenEditStaff = (member: StaffMember) => {
-    setEditingStaff(member); setEditName(member.name); setEditPhone(member.phone || ''); setEditEmail(member.email || ''); setEditPin('')
+    setEditingStaff(member); setEditName(member.name); setEditPhone(member.phone || ''); setEditEmail(member.email || ''); setEditPin(''); setEditLocationId(member.location_id || '')
   }
 
   // Camera handlers
@@ -933,6 +935,12 @@ export default function POSPage() {
                     <option value="cashier">Cashier — can process sales</option>
                     <option value="inventory">Inventory — can manage stock</option>
                   </select>
+                  {locations.length > 0 && (
+                    <select value={newLocationId} onChange={e => setNewLocationId(e.target.value)} style={inputStyle}>
+                      <option value="">No branch (can work anywhere)</option>
+                      {locations.map(loc => <option key={loc.id} value={loc.id}>{loc.name}</option>)}
+                    </select>
+                  )}
                   <input placeholder="PIN (4–6 digits) — required for POS login" value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: newPin && newPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button onClick={handleAddStaff} disabled={addingStaff} style={btnPrimary}>{addingStaff ? 'Adding...' : 'Add staff member'}</button>
@@ -964,6 +972,7 @@ export default function POSPage() {
                         <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)' }}>{s.name}</div>
                         <div style={{ fontSize: 11, color: 'var(--tx3)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                           <span>{s.role}</span>
+                          {s.location?.name && <span style={{ color: ACC, fontWeight: 600 }}>· {s.location.name}</span>}
                           {s.phone && <span>· {s.phone}</span>}
                           {s.has_pin ? <span style={{ color: GREEN, fontWeight: 600 }}>· PIN set</span> : <span style={{ color: RED, fontWeight: 600 }}>· No PIN</span>}
                           {s.last_login_at && <span>· Last login {new Date(s.last_login_at).toLocaleDateString('en-GB')}</span>}
@@ -991,6 +1000,12 @@ export default function POSPage() {
                   <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>— or —</div>
                   <input placeholder="Email address" value={editEmail} onChange={e => setEditEmail(e.target.value)} type="email" style={inputStyle} />
                   <input placeholder={`New PIN (4–6 digits)${editingStaff.has_pin ? ' — leave blank to keep current' : ''}`} value={editPin} onChange={e => setEditPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: editPin && editPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
+                  {locations.length > 0 && (
+                    <select value={editLocationId} onChange={e => setEditLocationId(e.target.value)} style={inputStyle}>
+                      <option value="">No branch (can work anywhere)</option>
+                      {locations.map(loc => <option key={loc.id} value={loc.id}>{loc.name}</option>)}
+                    </select>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={handleEditStaff} disabled={editingSubmitting} style={btnPrimary}>{editingSubmitting ? 'Saving...' : 'Save changes'}</button>
@@ -1140,6 +1155,7 @@ export default function POSPage() {
                           {isOut && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: RED, background: 'rgba(220,38,38,.08)', padding: '1px 6px', borderRadius: 9999 }}>OUT</span>}
                           {isLow && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: AMBER, background: 'rgba(234,179,8,.08)', padding: '1px 6px', borderRadius: 9999 }}>LOW</span>}
                         </div>
+                        {item.location?.name && selectedLocation === 'all' && locations.length > 1 && <div style={{ fontSize: 10, color: ACC, fontWeight: 600 }}>{item.location.name}</div>}
                         {item.sku && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>SKU: {item.sku}</div>}
                         {item.last_sold_at && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Last sold {new Date(item.last_sold_at).toLocaleDateString('en-GB')}</div>}
                       </div>
