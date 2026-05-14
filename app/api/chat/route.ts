@@ -3,7 +3,7 @@ import { buildSystemPrompt, askOnce } from '@/lib/ai'
 import { loadMemoryContext, extractAndSaveMemory } from '@/lib/ai/memory'
 import { isExpansionQuestion, buildExpansionContext, buildDataSummary } from '@/lib/ai/expansion'
 import { tavilySearch, detectSearchIntent, formatSearchContext } from '@/lib/tavily'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { detectChurnIntent, buildChurnAIResult } from '@/lib/ai/churn'
 import { detectCostIntent, buildCostContext, fetchCostProfile } from '@/lib/ai/cost-context'
 import { detectExportIntent, buildExportMarketsResult } from '@/lib/ai/export-markets'
@@ -405,8 +405,9 @@ export async function POST(request: NextRequest) {
 
   // ── POS INTELLIGENCE CONTEXT ─────────────────────────────
   let posContext = ''
-  const posKeywords = /\b(sales?|till|cashier|pos|shop|store|sold|selling|stock|inventory|refund|receipt|customer|basket|revenue|profit|margin|transaction)/i
+  const posKeywords = /\b(sales?|till|cashier|pos|shop|store|sold|selling|stock|inventory|refund|receipt|customer|basket|revenue|profit|margin|transaction|busiest|best.?sell|top.?product|anomal|unusual|suspicious|alert|forecast|predict|health|brief|summary|daily.?report|who.?bought|top.?spend|loyal|repeat)/i
   if (posKeywords.test(questionText)) {
+    const service = createServiceClient()
     const q = questionText.toLowerCase()
     const now = new Date()
     let from: Date
@@ -437,36 +438,105 @@ export async function POST(request: NextRequest) {
       from = new Date(now); from.setHours(0,0,0,0)
     }
 
-    const [txRes, invRes, staffRes] = await Promise.all([
-      supabase.from('pos_transactions').select('total,status,payment_type,created_at,pos_items(name,qty,unit_price,cost_price),pos_staff(name)').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).order('created_at', { ascending: false }).limit(200),
-      supabase.from('inventory').select('name,stock_qty,low_stock_threshold,sale_price').eq('owner_id', user.id).eq('active', true).order('stock_qty', { ascending: true }).limit(20),
-      supabase.from('pos_staff').select('name,role,active').eq('owner_id', user.id),
+    const [txRes, invRes, staffRes, custRes, anomalyRes, alertRes, forecastRes, healthRes] = await Promise.all([
+      service.from('pos_transactions').select('total,subtotal,discount_amount,status,payment_type,created_at,pos_items(name,qty,unit_price,cost_price),pos_staff(name)').eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString()).order('created_at', { ascending: false }).limit(200),
+      service.from('inventory').select('name,stock_qty,low_stock_threshold,sale_price,cost_price').eq('owner_id', user.id).eq('active', true).order('stock_qty', { ascending: true }).limit(50),
+      service.from('pos_staff').select('name,role,active').eq('owner_id', user.id),
+      service.from('pos_customers').select('id,name,phone,total_spent,visit_count,last_seen_at').eq('owner_id', user.id).order('total_spent', { ascending: false }).limit(10),
+      service.from('anomalies').select('type,severity,title,body,product,metric,created_at').eq('user_id', user.id).eq('seen', false).order('created_at', { ascending: false }).limit(10),
+      service.from('alerts').select('name,type,condition,last_triggered_at,enabled').eq('user_id', user.id).eq('enabled', true).limit(10),
+      service.from('forecasts').select('metric,value,period,confidence,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
+      service.from('health_scores').select('score,label,summary,components,created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1),
     ])
-    const txs      = txRes.data || []
-    const inv      = invRes.data || []
+
+    const txs       = txRes.data || []
+    const inv       = invRes.data || []
     const staffList = staffRes.data || []
+    const customers = custRes.data || []
+    const anomalies = anomalyRes.data || []
+    const alerts    = alertRes.data || []
+    const forecasts = forecastRes.data || []
+    const health    = healthRes.data?.[0] || null
+
+    if (txRes.error) console.error('POS tx query error:', txRes.error.message)
+    if (invRes.error) console.error('POS inv query error:', invRes.error.message)
+
     const completed = txs.filter((t: any) => t.status === 'completed')
     const revenue   = completed.reduce((s: number, t: any) => s + t.total, 0)
     const refunds   = txs.filter((t: any) => t.status === 'refunded' || t.status === 'partially_refunded').length
-    const lowStock  = (inv as any[]).filter(i => i.stock_qty <= i.low_stock_threshold)
 
-    // Build top products summary
-    const productSales: Record<string, { qty: number; revenue: number }> = {}
+    // Profit from line items
+    let totalCost = 0
+    for (const t of completed) {
+      for (const item of (t.pos_items || [])) {
+        totalCost += (item.cost_price || 0) * item.qty
+      }
+    }
+    const profit = revenue - totalCost
+    const marginPct = revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : '0'
+
+    // Top products
+    const productSales: Record<string, { qty: number; revenue: number; cost: number }> = {}
     for (const t of completed) {
       for (const item of (t.pos_items || [])) {
         const key = item.name
-        if (!productSales[key]) productSales[key] = { qty: 0, revenue: 0 }
+        if (!productSales[key]) productSales[key] = { qty: 0, revenue: 0, cost: 0 }
         productSales[key].qty += item.qty
         productSales[key].revenue += item.qty * item.unit_price
+        productSales[key].cost += (item.cost_price || 0) * item.qty
       }
     }
     const topProducts = Object.entries(productSales).sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 5)
 
-    if (completed.length > 0 || inv.length > 0) {
-      posContext = `\n\nLIVE POS DATA (${periodLabel}):\n${completed.length} completed transactions, ${finalSymbol}${revenue.toFixed(2)} revenue, ${refunds} refund(s).\n`
-      if (topProducts.length > 0) posContext += `Top products: ${topProducts.map(([name, s]) => `${name} (${s.qty} sold, ${finalSymbol}${s.revenue.toFixed(2)})`).join(', ')}.\n`
-      if (lowStock.length > 0) posContext += `Low/out of stock: ${lowStock.map((i: any) => `${i.name} (${i.stock_qty} left)`).join(', ')}.\n`
-      if (staffList.length > 0) posContext += `Active staff: ${(staffList as any[]).filter(s => s.active).map(s => `${s.name} (${s.role})`).join(', ')}.\n`
+    // Payment breakdown
+    const paymentBreakdown: Record<string, number> = {}
+    for (const t of completed) {
+      const method = t.payment_type || 'unknown'
+      paymentBreakdown[method] = (paymentBreakdown[method] || 0) + t.total
+    }
+
+    // Busiest hour
+    const hourCounts: Record<number, number> = {}
+    for (const t of completed) {
+      const hour = new Date(t.created_at).getHours()
+      hourCounts[hour] = (hourCounts[hour] || 0) + 1
+    }
+    const busiestHour = Object.entries(hourCounts).sort((a, b) => Number(b[1]) - Number(a[1]))[0]
+
+    const lowStock = (inv as any[]).filter(i => i.stock_qty <= (i.low_stock_threshold || 5))
+
+    posContext = `\n\nLIVE POS DATA (${periodLabel}):\n`
+    posContext += `${completed.length} completed transactions, ${finalSymbol}${revenue.toFixed(2)} revenue, ${finalSymbol}${profit.toFixed(2)} profit (${marginPct}% margin), ${refunds} refund(s).\n`
+
+    if (Object.keys(paymentBreakdown).length > 0) {
+      posContext += `Payment methods: ${Object.entries(paymentBreakdown).map(([m, v]) => `${m}: ${finalSymbol}${v.toFixed(2)}`).join(', ')}.\n`
+    }
+    if (busiestHour) {
+      posContext += `Busiest hour: ${Number(busiestHour[0])}:00 (${busiestHour[1]} transactions).\n`
+    }
+    if (topProducts.length > 0) {
+      posContext += `Top products: ${topProducts.map(([name, s]) => `${name} (${s.qty} sold, ${finalSymbol}${s.revenue.toFixed(2)}, margin ${s.revenue > 0 ? ((s.revenue - s.cost) / s.revenue * 100).toFixed(0) : 0}%)`).join(', ')}.\n`
+    }
+    if (lowStock.length > 0) {
+      posContext += `Low/out of stock (${lowStock.length} items): ${lowStock.slice(0, 10).map((i: any) => `${i.name} (${i.stock_qty} left)`).join(', ')}.\n`
+    }
+    if (staffList.length > 0) {
+      posContext += `Staff: ${(staffList as any[]).filter(s => s.active).map(s => `${s.name} (${s.role})`).join(', ')}.\n`
+    }
+    if (customers.length > 0) {
+      posContext += `Top customers: ${customers.slice(0, 5).map((c: any) => `${c.name || c.phone || 'Anonymous'} (${finalSymbol}${(c.total_spent || 0).toFixed(2)} spent, ${c.visit_count || 0} visits)`).join(', ')}.\n`
+    }
+    if (anomalies.length > 0) {
+      posContext += `\nACTIVE ANOMALIES (${anomalies.length}):\n${anomalies.map((a: any) => `- [${a.severity.toUpperCase()}] ${a.title}: ${a.body}`).join('\n')}\n`
+    }
+    if (health) {
+      posContext += `\nBUSINESS HEALTH: ${health.score}/100 (${health.label}). ${health.summary}\n`
+    }
+    if (forecasts.length > 0) {
+      posContext += `\nFORECASTS: ${forecasts.map((f: any) => `${f.metric}: ${finalSymbol}${f.value?.toFixed?.(2) ?? f.value} (${f.period}, ${f.confidence || 'medium'} confidence)`).join(', ')}.\n`
+    }
+    if (alerts.length > 0) {
+      posContext += `\nACTIVE ALERTS: ${alerts.map((a: any) => `${a.name} (${a.type}${a.last_triggered_at ? ', last triggered ' + new Date(a.last_triggered_at).toLocaleDateString() : ''})`).join(', ')}.\n`
     }
   }
   // ── END POS CONTEXT ──────────────────────────────────────
