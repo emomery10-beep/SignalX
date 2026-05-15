@@ -486,6 +486,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
     { q: 'What does "pre-filled from data" mean on Growth?', a: 'On Growth, the FX Risk, Landed Cost, and other tools automatically pull your real product costs, margins, and supplier data from your connected sources. You review and calculate — not re-enter.' },
     { q: 'Can I cancel anytime?', a: 'Yes — cancel in one click. You keep access until the end of your billing period.' },
     { q: 'How does the social commerce integration work?', a: 'Connect TikTok Shop, Instagram Shopping, or Pinterest from the Sources page. AskBiz tracks conversion rates, saves (demand signals), and alerts you when a product has high saves but no orders — before you sell out.' },
+    { q: 'What does the Point of Sale system include?', a: 'The PoS includes a full register with barcode scanning, inventory management, staff shift tracking, digital receipts, refunds, multi-branch support, tax compliance (VAT, multi-jurisdiction), GDPR tools, and integrations with Xero and QuickBooks. It\'s included on Growth and Business plans at no extra cost.' },
     { q: 'Is my business data safe?', a: 'Your data is encrypted at rest and in transit. We never use your business data to train AI models.' },
   ]
 
@@ -517,8 +518,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </Link>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <LanguageToggle/>
+          <a href="#pos" className="nav-link" style={{ fontSize:13, color:C.tx2, textDecoration:'none', padding:'0 8px' }}>Point of Sale</a>
           <a href="#pricing" className="nav-link" style={{ fontSize:13, color:C.tx2, textDecoration:'none', padding:'0 8px' }}>Pricing</a>
           <Link href="/blog" className="nav-link" style={{ fontSize:13, color:C.tx2, textDecoration:'none', padding:'0 8px' }}>Blog</Link>
+          <Link href="/academy" className="nav-link" style={{ fontSize:13, color:C.tx2, textDecoration:'none', padding:'0 8px' }}>Academy</Link>
           <Link href="/signin" style={{ padding:'7px 14px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx, fontSize:13, fontWeight:500, textDecoration:'none' }}>Sign in</Link>
           <Link href="/signin" className="btn-primary" style={{ padding:'7px 16px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:13, fontWeight:600, textDecoration:'none', boxShadow:`0 2px 10px ${C.acc}40` }}>Try free →</Link>
         </div>
@@ -638,6 +641,60 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
       </section>
 
+      {/* ── POINT OF SALE ──────────────────────────────────────── */}
+      <section id="pos" style={{ maxWidth:1060, margin:'0 auto', padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
+        <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16, textAlign:'center' }}>Point of Sale</div>
+        <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,36px)', fontWeight:700, textAlign:'center', marginBottom:12, letterSpacing:'-.03em', color:C.tx }}>
+          A full PoS system — built into your intelligence platform.
+        </h2>
+        <p style={{ fontSize:'clamp(14px,1.6vw,17px)', color:C.tx2, lineHeight:1.7, maxWidth:600, margin:'0 auto 44px', textAlign:'center' }}>
+          Ring up sales, manage inventory across branches, track staff shifts, and stay tax-compliant — all while your AI learns from every transaction.
+        </p>
+
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
+          {[
+            { icon:'🧾', title:'Register & Checkout', desc:'Fast checkout with barcode scanning, split payments, refunds, and digital receipts. Works on tablet or desktop.', tag:'Core' },
+            { icon:'📦', title:'Inventory & Stock', desc:'Real-time stock levels, low-stock alerts, stock transfers between branches, and AI reorder recommendations.', tag:'Smart' },
+            { icon:'🏪', title:'Multi-Branch', desc:'Manage multiple locations from one dashboard. Per-branch reporting, staff, inventory, and tax settings.', tag:'Scale' },
+            { icon:'👥', title:'Staff & Shifts', desc:'Role-based access for cashiers and managers. Shift open/close, OTP login, and per-cashier performance tracking.', tag:'Team' },
+          ].map((f, i) => (
+            <div key={i} className="card-hover" style={{ padding:'22px 18px', borderRadius:16, border:`1px solid ${C.b}`, background:C.sf, display:'flex', flexDirection:'column', gap:10 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                <span style={{ fontSize:24 }}>{f.icon}</span>
+                <span style={{ fontSize:10, fontWeight:700, color:C.acc, background:C.accBg, border:`1px solid ${C.accBdr}`, padding:'2px 8px', borderRadius:9999, textTransform:'uppercase', letterSpacing:'.05em' }}>{f.tag}</span>
+              </div>
+              <div style={{ fontFamily:'var(--font-sora)', fontSize:15, fontWeight:700, color:C.tx }}>{f.title}</div>
+              <p style={{ fontSize:13, color:C.tx2, lineHeight:1.65, margin:0 }}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:14, marginTop:14 }}>
+          {[
+            { icon:'🧮', title:'Tax & Compliance', desc:'Multi-jurisdiction VAT, consolidated tax reports, and filing previews. Xero and QuickBooks sync built in.' },
+            { icon:'🔒', title:'GDPR Ready', desc:'Customer data export, deletion, consent logging, and data retention reports — all one click.' },
+            { icon:'🤖', title:'AI Intelligence', desc:'Anomaly detection on transactions, AI supplier recommendations, and sales pattern insights from your PoS data.' },
+          ].map((f, i) => (
+            <div key={i} className="card-hover" style={{ padding:'18px 16px', borderRadius:14, border:`1px solid ${C.b}`, background:C.bg }}>
+              <div style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
+                <span style={{ fontSize:20, flexShrink:0 }}>{f.icon}</span>
+                <div>
+                  <div style={{ fontFamily:'var(--font-sora)', fontSize:14, fontWeight:700, color:C.tx, marginBottom:4 }}>{f.title}</div>
+                  <div style={{ fontSize:12, color:C.tx2, lineHeight:1.6 }}>{f.desc}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ textAlign:'center', marginTop:36 }}>
+          <Link href="/signin" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'12px 24px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:14, fontWeight:700, textDecoration:'none', boxShadow:`0 3px 16px ${C.acc}40` }}>
+            Try the PoS free →
+          </Link>
+          <p style={{ fontSize:12, color:C.tx3, marginTop:10 }}>Included on Growth and Business plans · No extra cost</p>
+        </div>
+      </section>
+
       {/* ── HOW IT WORKS ─────────────────────────────────────── */}
       <section style={{ maxWidth:860, margin:'0 auto', padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
         <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16, textAlign:'center' }}>How it works</div>
@@ -738,9 +795,9 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               { id:'free', name:'Free', colour:'#6b6760', price:`${sym}0`, sub:'10 questions/month', popular:false,
                 features:['10 questions per month','Upload CSV & Excel','Business Pulse score','Connect Shopify, Amazon & more','FX Risk, Landed Cost, Export tools','API access','No credit card needed'] },
               { id:'growth', name:'Growth', colour:C.acc, price:growthMonthly, sub:'per month', popular:true,
-                features:['Unlimited questions','All tools pre-filled from your data','Daily Brief — AI morning intelligence','Social Commerce — TikTok, Instagram, Pinterest','Churn Intelligence — monthly scan','Export market product matching','Anomaly alerts'] },
+                features:['Unlimited questions','All tools pre-filled from your data','Daily Brief — AI morning intelligence','Point of Sale — register, inventory, receipts','Social Commerce — TikTok, Instagram, Pinterest','Churn Intelligence — monthly scan','Anomaly alerts'] },
               { id:'business', name:'Business', colour:'#7c3aed', price:bizMonthly, sub:'per month', popular:false,
-                features:['Everything in Growth','Team seats — up to 5','Decision Memory','Competitor Watch','CFO Mode reports','Unlimited shipment intelligence','Priority support'] },
+                features:['Everything in Growth','Team seats — up to 5','Multi-branch PoS — locations, staff, tax','Decision Memory','Competitor Watch','CFO Mode reports','Priority support'] },
             ].map((plan, i) => (
               <div key={i} style={{ borderRadius:18, border:plan.popular?`2px solid ${C.acc}`:`1px solid ${C.b}`, background:plan.popular?`rgba(208,138,89,.02)`:C.bg, padding:'22px 20px', position:'relative', display:'flex', flexDirection:'column' }}>
                 {plan.popular && (
@@ -794,6 +851,78 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
       </section>
 
+      {/* ── LEARN — ACADEMY + BLOG ─────────────────────────── */}
+      <section style={{ maxWidth:1060, margin:'0 auto', padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'clamp(32px,5vw,64px)', alignItems:'start' }}>
+
+          {/* Academy */}
+          <div>
+            <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:14 }}>Academy</div>
+            <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(20px,3vw,30px)', fontWeight:700, lineHeight:1.15, letterSpacing:'-.03em', marginBottom:10, color:C.tx }}>
+              420+ free guides.<br/>No jargon. No paywall.
+            </h2>
+            <p style={{ fontSize:14, color:C.tx2, lineHeight:1.7, marginBottom:22 }}>
+              Business metrics, KPIs, financial intelligence, eCommerce analytics, FX risk, and AI — explained for founders, not analysts.
+            </p>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:20 }}>
+              {[
+                { icon:'📊', label:'Financial Intelligence', count:'40+' },
+                { icon:'🛒', label:'eCommerce Analytics', count:'35+' },
+                { icon:'💱', label:'FX & Trade', count:'30+' },
+                { icon:'📦', label:'Inventory & Supply Chain', count:'25+' },
+                { icon:'🤖', label:'AI for Business', count:'30+' },
+                { icon:'📈', label:'Growth & Strategy', count:'45+' },
+              ].map((topic, i) => (
+                <div key={i} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', borderRadius:8, border:`1px solid ${C.b}`, background:C.sf, fontSize:12, color:C.tx2 }}>
+                  <span style={{ fontSize:16 }}>{topic.icon}</span>
+                  <span style={{ flex:1 }}>{topic.label}</span>
+                  <span style={{ fontSize:10, fontWeight:700, color:C.acc }}>{topic.count}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+              <Link href="/academy" className="btn-primary" style={{ padding:'10px 20px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:13, fontWeight:600, textDecoration:'none', boxShadow:`0 2px 10px ${C.acc}35` }}>
+                Browse the Academy →
+              </Link>
+              <Link href="/academy/learning-paths" style={{ fontSize:13, color:C.tx2, textDecoration:'none', fontWeight:500 }}>
+                Learning paths
+              </Link>
+            </div>
+          </div>
+
+          {/* Blog */}
+          <div>
+            <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:14 }}>From the Blog</div>
+            <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(20px,3vw,30px)', fontWeight:700, lineHeight:1.15, letterSpacing:'-.03em', marginBottom:10, color:C.tx }}>
+              Intelligence Hub
+            </h2>
+            <p style={{ fontSize:14, color:C.tx2, lineHeight:1.7, marginBottom:22 }}>
+              Deep dives on AI, eCommerce, finance, and SME strategy from the AskBiz team.
+            </p>
+            <div style={{ display:'flex', flexDirection:'column', gap:0 }}>
+              {[
+                { tag:'AI Chief of Staff', title:'How AI Is Replacing the COO for Solo Founders', time:'6 min', tagColor:'#9268f8' },
+                { tag:'Financial Intelligence', title:'The Cash Flow Metrics Every SME Founder Should Track Weekly', time:'5 min', tagColor:'#16a34a' },
+                { tag:'eCommerce', title:'TikTok Shop vs Shopify: Where Should You Sell First?', time:'7 min', tagColor:'#0284c7' },
+              ].map((post, i) => (
+                <div key={i} style={{ padding:'14px 12px', borderBottom:i<2?`1px solid ${C.b}`:'none' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:5 }}>
+                    <span style={{ fontSize:10, fontWeight:700, color:post.tagColor, background:`${post.tagColor}14`, border:`1px solid ${post.tagColor}33`, padding:'2px 7px', borderRadius:9999 }}>{post.tag}</span>
+                    <span style={{ fontSize:10, color:C.tx3 }}>{post.time} read</span>
+                  </div>
+                  <div style={{ fontFamily:'var(--font-sora)', fontSize:14, fontWeight:600, color:C.tx, lineHeight:1.4 }}>{post.title}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop:16 }}>
+              <Link href="/blog" className="btn-primary" style={{ padding:'10px 20px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:13, fontWeight:600, textDecoration:'none' }}>
+                Read all articles →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA ──────────────────────────────────────────────── */}
       <section style={{ background:C.tx, padding:'clamp(56px,8vw,96px) clamp(16px,4vw,40px)', textAlign:'center' }}>
         <div style={{ maxWidth:560, margin:'0 auto' }}>
@@ -823,7 +952,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <span style={{ fontSize:12, color:C.tx3 }}>© 2026</span>
         </div>
         <nav style={{ display:'flex', gap:20, flexWrap:'wrap' }}>
-          {[['/', 'Home'], ['/blog', 'Blog'], ['/developers', 'API'], ['/help', 'Help'], ['/rules', 'Rules & Policies'], ['/transparency', 'Transparency'], ['/privacy', 'Privacy'], ['/terms', 'Terms'], ['mailto:hello@askbiz.co', 'Contact']].map(([href, label]) => (
+          {[['/', 'Home'], ['/blog', 'Blog'], ['/academy', 'Academy'], ['/integrations', 'Integrations'], ['/free-tools', 'Free Tools'], ['/developers', 'API'], ['/help', 'Help'], ['/pricing', 'Pricing'], ['/changelog', 'Changelog'], ['/rules', 'Rules & Policies'], ['/transparency', 'Transparency'], ['/privacy', 'Privacy'], ['/terms', 'Terms'], ['mailto:hello@askbiz.co', 'Contact']].map(([href, label]) => (
             <a key={href} href={href} className="nav-link" style={{ fontSize:12, color:C.tx3, textDecoration:'none' }}>{label}</a>
           ))}
         </nav>

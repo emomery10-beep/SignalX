@@ -7,7 +7,7 @@ import { COUNTRY_CURRENCY, CURRENCIES } from '@/lib/geo'
 // ── SEO Metadata ─────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
   title: 'AskBiz — AI Business Intelligence for SME Founders',
-  description: 'AskBiz is AI-powered business intelligence for SME founders. Connect Shopify, Amazon, TikTok Shop, or QuickBooks. Ask questions in plain English, get answers with your real numbers. FX Risk, Landed Cost, Export Markets, Social Commerce. Free to start.',
+  description: 'AskBiz is AI-powered business intelligence for SME founders. Connect Shopify, Amazon, TikTok Shop, or QuickBooks. Ask questions in plain English, get answers with your real numbers. Point of Sale, FX Risk, Landed Cost, Export Markets, Social Commerce. Free to start.',
   keywords: 'AI business intelligence, SME analytics, small business data, Shopify analytics, Amazon seller analytics, TikTok Shop analytics, export market scoring, landed cost calculator, FX risk modeller, supplier scorecard, social commerce intelligence, business health score, plain English business insights',
   authors: [{ name: 'AskBiz' }],
   creator: 'AskBiz',
@@ -156,6 +156,11 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
         'CFO Mode board-ready reports',
         'What-if scenario simulation',
         'Multi-currency support (40+ currencies)',
+        'Point of Sale (register, inventory, receipts)',
+        'Multi-branch PoS with per-location tax settings',
+        'Staff shift management with OTP login',
+        'GDPR tools (data export, deletion, consent)',
+        'Xero and QuickBooks PoS integration',
       ],
       screenshot: 'https://askbiz.co/og-image.png',
     },
@@ -214,6 +219,11 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
           '@type': 'Question',
           name: 'What is the Business Pulse score?',
           acceptedAnswer: { '@type': 'Answer', text: 'The Business Pulse score is a 0-100 health rating for your business, calculated from five components: margin health, revenue trend, stock position, cash flow, and product mix. It updates every time you upload new data or sync your connected stores.' },
+        },
+        {
+          '@type': 'Question',
+          name: 'Does AskBiz include a Point of Sale system?',
+          acceptedAnswer: { '@type': 'Answer', text: 'Yes — AskBiz includes a full Point of Sale system with register checkout, barcode scanning, inventory management, staff shift tracking, digital receipts, multi-branch support, tax compliance, GDPR tools, and integrations with Xero and QuickBooks. The PoS is included on Growth and Business plans at no extra cost.' },
         },
         {
           '@type': 'Question',
