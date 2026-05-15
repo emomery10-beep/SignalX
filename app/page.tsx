@@ -223,7 +223,7 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
         {
           '@type': 'Question',
           name: 'Does AskBiz include a Point of Sale system?',
-          acceptedAnswer: { '@type': 'Answer', text: 'Yes — AskBiz includes a full Point of Sale system with register checkout, barcode scanning, inventory management, staff shift tracking, digital receipts, multi-branch support, tax compliance, GDPR tools, and integrations with Xero and QuickBooks. The PoS is included on Growth and Business plans at no extra cost.' },
+          acceptedAnswer: { '@type': 'Answer', text: 'Yes — AskBiz includes a full Point of Sale system with register checkout, barcode scanning, inventory management, staff shift tracking, digital receipts, multi-branch support, tax compliance, GDPR tools, and integrations with Xero and QuickBooks. The PoS costs £5 per seat per month and is available on all plans.' },
         },
         {
           '@type': 'Question',

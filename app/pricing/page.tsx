@@ -86,6 +86,7 @@ const FAQS = [
   { q: 'What happens to my data if I cancel?', a: 'Your data is retained for 30 days after cancellation, during which you can export everything. After 30 days, your data is permanently deleted.' },
   { q: 'Do you offer discounts for startups or nonprofits?', a: 'Yes — we offer discounts for qualifying early-stage startups and registered charities. Contact us via the Help Centre to apply.' },
   { q: 'Can I upgrade or downgrade my plan?', a: 'Yes, at any time. Upgrades take effect immediately and are prorated. Downgrades take effect at your next billing date.' },
+  { q: 'How does Point of Sale pricing work?', a: 'The PoS is a £5/seat/month add-on available on any plan. Each seat is one cashier or manager login. You get a full register with barcode scanning, inventory management, multi-branch support, staff shifts, tax compliance, GDPR tools, and Xero/QuickBooks sync. Add or remove seats anytime.' },
 ]
 
 export default function PricingPage() {
@@ -178,6 +179,42 @@ export default function PricingPage() {
           ))}
         </div>
 
+        {/* PoS Add-on */}
+        <div style={{ marginTop: 24, background: SF, border: `2px solid ${ACC}`, borderRadius: 16, padding: '28px', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: -12, left: 24, background: ACC, color: '#fff', fontSize: 10, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', borderRadius: 9999, padding: '3px 12px' }}>Add-on</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'start' }}>
+            <div>
+              <div style={{ fontFamily: 'Sora, system-ui', fontSize: 20, fontWeight: 700, color: TX, marginBottom: 6 }}>Point of Sale</div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 12 }}>
+                <span style={{ fontFamily: 'Sora, system-ui', fontSize: 34, fontWeight: 700, color: ACC }}>£5</span>
+                <span style={{ fontSize: 14, color: TX3 }}>/seat/month</span>
+              </div>
+              <p style={{ fontSize: 14, color: TX2, lineHeight: 1.7, marginBottom: 18 }}>
+                A full point-of-sale system that plugs into your AskBiz intelligence. Add as many seats as you need — each seat is a cashier or manager login.
+              </p>
+              <Link href="/signin" style={{ display: 'inline-block', fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9, padding: '10px 22px', textDecoration: 'none' }}>Add PoS seats →</Link>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {[
+                { icon: '🧾', label: 'Register & checkout', desc: 'Barcode scanning, split payments, refunds, digital receipts' },
+                { icon: '📦', label: 'Inventory management', desc: 'Real-time stock, low-stock alerts, AI reorder suggestions' },
+                { icon: '🏪', label: 'Multi-branch', desc: 'Per-location inventory, staff, reporting, and tax settings' },
+                { icon: '👥', label: 'Staff & shifts', desc: 'OTP login, shift open/close, per-cashier performance' },
+                { icon: '🧮', label: 'Tax & compliance', desc: 'Multi-jurisdiction VAT, consolidated reports, filing previews' },
+                { icon: '🔗', label: 'Accounting sync', desc: 'Xero and QuickBooks integration built in' },
+              ].map((f, i) => (
+                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>{f.icon}</span>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: TX, marginBottom: 2 }}>{f.label}</div>
+                    <div style={{ fontSize: 11, color: TX3, lineHeight: 1.4 }}>{f.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* Enterprise */}
         <div style={{ marginTop: 24, background: SF, border: `1px solid ${BD}`, borderRadius: 14, padding: '24px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
           <div>
@@ -198,6 +235,8 @@ export default function PricingPage() {
               { icon: '🤖', title: 'AI-powered answers', desc: 'Ask questions about your business in plain English' },
               { icon: '📱', title: 'Mobile-friendly', desc: 'Access your metrics on any device, anywhere' },
               { icon: '🔒', title: 'UK data residency', desc: 'Your data stays in the UK. GDPR compliant by design' },
+              { icon: '🧾', title: 'Point of Sale', desc: 'Full register, inventory, multi-branch, staff shifts — £5/seat add-on' },
+              { icon: '🏪', title: 'Multi-branch PoS', desc: 'Per-location inventory, tax settings, and reporting across all your shops' },
             ].map((item, i) => (
               <div key={i} style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 12, padding: '18px 16px' }}>
                 <div style={{ fontSize: 24, marginBottom: 10 }}>{item.icon}</div>

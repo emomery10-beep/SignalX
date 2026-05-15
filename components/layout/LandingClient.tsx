@@ -486,7 +486,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
     { q: 'What does "pre-filled from data" mean on Growth?', a: 'On Growth, the FX Risk, Landed Cost, and other tools automatically pull your real product costs, margins, and supplier data from your connected sources. You review and calculate — not re-enter.' },
     { q: 'Can I cancel anytime?', a: 'Yes — cancel in one click. You keep access until the end of your billing period.' },
     { q: 'How does the social commerce integration work?', a: 'Connect TikTok Shop, Instagram Shopping, or Pinterest from the Sources page. AskBiz tracks conversion rates, saves (demand signals), and alerts you when a product has high saves but no orders — before you sell out.' },
-    { q: 'What does the Point of Sale system include?', a: 'The PoS includes a full register with barcode scanning, inventory management, staff shift tracking, digital receipts, refunds, multi-branch support, tax compliance (VAT, multi-jurisdiction), GDPR tools, and integrations with Xero and QuickBooks. It\'s included on Growth and Business plans at no extra cost.' },
+    { q: 'What does the Point of Sale system include?', a: 'The PoS includes a full register with barcode scanning, inventory management, staff shift tracking, digital receipts, refunds, multi-branch support, tax compliance (VAT, multi-jurisdiction), GDPR tools, and integrations with Xero and QuickBooks. It costs £5 per seat per month.' },
     { q: 'Is my business data safe?', a: 'Your data is encrypted at rest and in transit. We never use your business data to train AI models.' },
   ]
 
@@ -691,7 +691,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <Link href="/signin" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'12px 24px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:14, fontWeight:700, textDecoration:'none', boxShadow:`0 3px 16px ${C.acc}40` }}>
             Try the PoS free →
           </Link>
-          <p style={{ fontSize:12, color:C.tx3, marginTop:10 }}>Included on Growth and Business plans · No extra cost</p>
+          <p style={{ fontSize:12, color:C.tx3, marginTop:10 }}>£5 per seat/month · Works on tablet or desktop</p>
         </div>
       </section>
 
@@ -795,9 +795,9 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               { id:'free', name:'Free', colour:'#6b6760', price:`${sym}0`, sub:'10 questions/month', popular:false,
                 features:['10 questions per month','Upload CSV & Excel','Business Pulse score','Connect Shopify, Amazon & more','FX Risk, Landed Cost, Export tools','API access','No credit card needed'] },
               { id:'growth', name:'Growth', colour:C.acc, price:growthMonthly, sub:'per month', popular:true,
-                features:['Unlimited questions','All tools pre-filled from your data','Daily Brief — AI morning intelligence','Point of Sale — register, inventory, receipts','Social Commerce — TikTok, Instagram, Pinterest','Churn Intelligence — monthly scan','Anomaly alerts'] },
+                features:['Unlimited questions','All tools pre-filled from your data','Daily Brief — AI morning intelligence','Point of Sale — £5/seat add-on','Social Commerce — TikTok, Instagram, Pinterest','Churn Intelligence — monthly scan','Anomaly alerts'] },
               { id:'business', name:'Business', colour:'#7c3aed', price:bizMonthly, sub:'per month', popular:false,
-                features:['Everything in Growth','Team seats — up to 5','Multi-branch PoS — locations, staff, tax','Decision Memory','Competitor Watch','CFO Mode reports','Priority support'] },
+                features:['Everything in Growth','Team seats — up to 5','Multi-branch PoS — £5/seat add-on','Decision Memory','Competitor Watch','CFO Mode reports','Priority support'] },
             ].map((plan, i) => (
               <div key={i} style={{ borderRadius:18, border:plan.popular?`2px solid ${C.acc}`:`1px solid ${C.b}`, background:plan.popular?`rgba(208,138,89,.02)`:C.bg, padding:'22px 20px', position:'relative', display:'flex', flexDirection:'column' }}>
                 {plan.popular && (
