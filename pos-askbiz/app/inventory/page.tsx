@@ -10,7 +10,7 @@ const ACC = '#d08a59'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
 // Force redeploy
 
-interface StaffSession { id: string; name: string; role: string; owner_id: string }
+interface StaffSession { id: string; name: string; role: string; owner_id: string; currency_symbol?: string; location_id?: string }
 interface InventoryItem {
   id: string; name: string; sale_price: number; stock_qty: number
   low_stock_threshold: number; last_sold_at: string | null
@@ -19,6 +19,7 @@ interface InventoryItem {
 export default function InventoryPage() {
   const router = useRouter()
   const [staff, setStaff]         = useState<StaffSession | null>(null)
+  const [sym, setSym]             = useState('£')
   const [items, setItems]         = useState<InventoryItem[]>([])
   const [loading, setLoading]     = useState(true)
   const [restocking, setRestocking] = useState<string | null>(null)
@@ -44,13 +45,21 @@ export default function InventoryPage() {
     const s = JSON.parse(session) as StaffSession
     if (s.role !== 'inventory') { router.push('/sell'); return }
     setStaff(s)
-    loadInventory()
+    setSym(s.currency_symbol || '£')
+    loadInventory(s)
   }, [])
 
-  const loadInventory = async () => {
+  const posHeaders = (s: StaffSession) => ({
+    'x-staff-id': s.id,
+    'x-owner-id': s.owner_id,
+  })
+
+  const loadInventory = async (s?: StaffSession) => {
+    const session = s || staff
+    if (!session) return
     setLoading(true)
     try {
-      const res = await fetch(`${API}/api/pos/inventory`)
+      const res = await fetch(`${API}/api/pos/inventory`, { headers: posHeaders(session) })
       const data = await res.json()
       setItems(data.inventory || [])
     } catch { /* silent — will show empty state */ }
@@ -84,10 +93,20 @@ export default function InventoryPage() {
   }
 
   const handleImageCapture = async (file: File) => {
+    if (!staff) return
     setRecognizing(true)
     try {
-      const formData = new FormData(); formData.append('image', file)
-      const res = await fetch(`${API}/api/pos/recognize-inventory`, { method: 'POST', body: formData })
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve((reader.result as string).split(',')[1])
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+      const res = await fetch(`${API}/api/pos/recognize-inventory`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...posHeaders(staff) },
+        body: JSON.stringify({ image: base64 }),
+      })
       const data = await res.json()
       if (data.products?.length > 0) {
         setRecognizedProducts(data.products)
@@ -111,8 +130,8 @@ export default function InventoryPage() {
     if (isNaN(qty) || qty <= 0) return
     await fetch(`${API}/api/pos/inventory`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: item.id, restock_qty: qty, staff_id: staff.id }),
+      headers: { 'Content-Type': 'application/json', ...posHeaders(staff) },
+      body: JSON.stringify({ id: item.id, restock_qty: qty }),
     })
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, stock_qty: i.stock_qty + qty } : i))
     setRestocking(null); setRestockQty('')
@@ -230,7 +249,7 @@ export default function InventoryPage() {
                 try {
                   const res = await fetch(`${API}/api/pos/inventory`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', ...(staff ? posHeaders(staff) : {}) },
                     body: JSON.stringify({
                       name: editingRecognizedData.name,
                       sale_price: parseFloat(editingRecognizedData.sale_price),
@@ -296,7 +315,7 @@ export default function InventoryPage() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 15, fontWeight: 600, color: '#1a1916', marginBottom: 2 }}>{item.name}</div>
-                    <div style={{ fontSize: 12, color: '#6b6760' }}>£{item.sale_price.toFixed(2)} · {item.stock_qty} in stock</div>
+                    <div style={{ fontSize: 12, color: '#6b6760' }}>{sym}{item.sale_price.toFixed(2)} · {item.stock_qty} in stock</div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: status.color, background: status.bg, padding: '3px 9px', borderRadius: 9999 }}>{status.label}</span>
