@@ -132,10 +132,10 @@ function TypeBadge({ type }: { type: ChangeType }) {
   const s = TYPE_STYLE[type]
   return (
     <span style={{
-      fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em',
-      padding: '2px 8px', borderRadius: 9999,
+      fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em',
+      padding: '3px 10px', borderRadius: 6,
       background: s.bg, color: s.color, border: `1px solid ${s.border}`,
-      flexShrink: 0,
+      flexShrink: 0, lineHeight: 1, display: 'inline-block', whiteSpace: 'nowrap',
     }}>
       {s.label}
     </span>
@@ -164,70 +164,87 @@ export default function ChangelogPage() {
       </nav>
 
       {/* Hero */}
-      <div style={{ background: SF, borderBottom: `1px solid ${BD}`, padding: 'clamp(32px,5vw,56px) clamp(16px,6vw,80px)' }}>
-        <div style={{ maxWidth: 720 }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.1em', margin: '0 0 10px' }}>Product updates</p>
-          <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(26px,4vw,38px)', fontWeight: 700, color: TX, margin: '0 0 12px', letterSpacing: '-.025em', lineHeight: 1.15 }}>
+      <div style={{ background: SF, borderBottom: `1px solid ${BD}`, padding: 'clamp(40px,6vw,72px) clamp(16px,6vw,80px)' }}>
+        <div style={{ maxWidth: 680, margin: '0 auto' }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.1em', margin: '0 0 12px' }}>Product updates</p>
+          <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(28px,4.5vw,42px)', fontWeight: 700, color: TX, margin: '0 0 14px', letterSpacing: '-.03em', lineHeight: 1.1 }}>
             Changelog
           </h1>
-          <p style={{ fontSize: 15, color: TX2, margin: '0 0 20px', lineHeight: 1.65, maxWidth: 560 }}>
+          <p style={{ fontSize: 16, color: TX2, margin: '0 0 24px', lineHeight: 1.7, maxWidth: 520 }}>
             New features, improvements, and fixes — updated with every release.
           </p>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <a href="mailto:hello@askbiz.co?subject=Changelog feedback" style={{ fontSize: 13, color: TX2, textDecoration: 'none', border: `1px solid ${BD}`, borderRadius: 8, padding: '7px 16px', fontWeight: 500 }}>
+            <a href="mailto:hello@askbiz.co?subject=Changelog feedback" style={{ fontSize: 13, color: TX2, textDecoration: 'none', border: `1px solid ${BD}`, borderRadius: 8, padding: '8px 18px', fontWeight: 500, transition: 'border-color .15s' }}>
               Send feedback →
             </a>
-            <Link href="/help" style={{ fontSize: 13, color: ACC, textDecoration: 'none', border: `1px solid ${ACC}`, borderRadius: 8, padding: '7px 16px', fontWeight: 600 }}>
+            <Link href="/help" style={{ fontSize: 13, color: ACC, textDecoration: 'none', border: `1px solid ${ACC}`, borderRadius: 8, padding: '8px 18px', fontWeight: 600 }}>
               Help Centre →
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Timeline */}
-      <div style={{ maxWidth: 800, margin: '0 auto', padding: 'clamp(32px,5vw,56px) clamp(16px,4vw,24px)' }}>
-        {RELEASES.map((rel, i) => (
-          <div key={rel.version} style={{ display: 'flex', gap: 28, marginBottom: i < RELEASES.length - 1 ? 52 : 0 }}>
-            {/* Date column */}
-            <div style={{ width: 100, flexShrink: 0, paddingTop: 4, textAlign: 'right' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: TX, fontFamily: 'Sora, system-ui' }}>
-                {new Date(rel.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-              </div>
-              <div style={{ fontSize: 11, color: TX3, marginTop: 2 }}>v{rel.version}</div>
-            </div>
-
-            {/* Timeline line + dot */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 24, flexShrink: 0 }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: i === 0 ? ACC : BD, border: `2px solid ${i === 0 ? ACC : TX3}`, flexShrink: 0, marginTop: 4 }} />
-              {i < RELEASES.length - 1 && (
-                <div style={{ width: 2, flex: 1, background: BD, marginTop: 6 }} />
-              )}
-            </div>
-
-            {/* Content */}
-            <div style={{ flex: 1, minWidth: 0, paddingBottom: 8 }}>
-              <div style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 12, padding: '20px 22px', boxShadow: i === 0 ? '0 2px 12px rgba(0,0,0,.06)' : 'none' }}>
+      {/* Releases */}
+      <div style={{ maxWidth: 680, margin: '0 auto', padding: 'clamp(36px,5vw,64px) clamp(16px,4vw,24px)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+          {RELEASES.map((rel, i) => (
+            <article key={rel.version} style={{
+              background: SF,
+              border: `1px solid ${i === 0 ? ACC : BD}`,
+              borderRadius: 14,
+              padding: 'clamp(20px,3vw,28px)',
+              boxShadow: i === 0 ? `0 0 0 1px ${ACC}22, 0 4px 20px rgba(0,0,0,.06)` : '0 1px 4px rgba(0,0,0,.04)',
+              position: 'relative',
+            }}>
+              {/* Header row */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
+                <span style={{
+                  fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, color: TX, letterSpacing: '-.01em',
+                }}>
+                  v{rel.version}
+                </span>
+                <span style={{ width: 4, height: 4, borderRadius: '50%', background: TX3, flexShrink: 0 }} />
+                <span style={{ fontSize: 13, color: TX3, fontWeight: 500 }}>
+                  {new Date(rel.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </span>
                 {i === 0 && (
-                  <span style={{ fontSize: 10, fontWeight: 700, color: SF, background: ACC, padding: '2px 9px', borderRadius: 9999, letterSpacing: '.06em', textTransform: 'uppercase', display: 'inline-block', marginBottom: 10 }}>
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, color: SF, background: ACC,
+                    padding: '3px 10px', borderRadius: 9999, letterSpacing: '.06em', textTransform: 'uppercase',
+                    marginLeft: 'auto',
+                  }}>
                     Latest
                   </span>
                 )}
-                <p style={{ fontSize: 14, color: TX2, margin: '0 0 16px', lineHeight: 1.55 }}>{rel.summary}</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {rel.changes.map((c, j) => (
-                    <div key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                      <TypeBadge type={c.type} />
-                      <span style={{ fontSize: 14, color: TX, lineHeight: 1.5, flex: 1 }}>{c.text}</span>
-                    </div>
-                  ))}
-                </div>
               </div>
-            </div>
-          </div>
-        ))}
 
-        {/* Footer note */}
-        <div style={{ marginTop: 48, paddingTop: 24, borderTop: `1px solid ${BD}`, textAlign: 'center' }}>
+              {/* Summary */}
+              <p style={{ fontSize: 14, color: TX2, margin: '0 0 18px', lineHeight: 1.6 }}>
+                {rel.summary}
+              </p>
+
+              {/* Changes */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {rel.changes.map((c, j) => (
+                  <div key={j} style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 10,
+                    padding: '8px 12px',
+                    background: BG,
+                    borderRadius: 8,
+                  }}>
+                    <div style={{ paddingTop: 2, flexShrink: 0 }}>
+                      <TypeBadge type={c.type} />
+                    </div>
+                    <span style={{ fontSize: 13, color: TX, lineHeight: 1.55, flex: 1 }}>{c.text}</span>
+                  </div>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div style={{ marginTop: 48, paddingTop: 28, borderTop: `1px solid ${BD}`, textAlign: 'center' }}>
           <p style={{ fontSize: 13, color: TX3, margin: '0 0 12px' }}>
             Looking for older releases? <a href="mailto:hello@askbiz.co" style={{ color: ACC, textDecoration: 'none', fontWeight: 600 }}>Contact support</a>.
           </p>
