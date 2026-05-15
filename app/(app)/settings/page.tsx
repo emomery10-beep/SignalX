@@ -1316,7 +1316,7 @@ function CompliancePanel() {
                 <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5, marginBottom: 6 }}>
                   Share anonymised selling prices and channel data from your connected stores. In return, see what products are actually selling for across thousands of merchants worldwide — by channel, region, and trend. Your identity, cost prices, and business name are never shared.
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Only product names, selling prices, channel, and region are pooled — aggregated across 3+ merchants minimum before any signal is published. Opt out at any time.</div>
+                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Enabled by default for new accounts. Only product names, selling prices, channel, and region are pooled — aggregated across 3+ merchants minimum before any signal is published. You can opt out at any time.</div>
               </div>
               <Toggle value={marketIntelOpt} onChange={toggleMarketIntel} color="#d08a59"/>
             </div>
