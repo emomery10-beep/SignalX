@@ -111,6 +111,14 @@ export function detectSearchIntent(question: string): string | null {
     return question
   }
 
+  // Export / market entry triggers
+  const exportMatch = q.match(
+    /export to|sell in|selling in|launch in|enter.*market|import duty on|tariff for|customs duty|vat in|gst in|how much.*sell.*in|price.*in (usa|uk|us|eu|germany|france|uae|canada|australia|turkey|nigeria|india|brazil)/
+  )
+  if (exportMatch) {
+    return `${question} 2026 export market price duty`
+  }
+
   // Product / category trend triggers
   const trendMatch = q.match(
     /trending|popular|demand|hot product|best seller|what.s selling|growing market|niche|opportunity/

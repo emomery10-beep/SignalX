@@ -152,6 +152,30 @@ export async function POST(request: NextRequest) {
   const isGrowthPlus = ['growth', 'business', 'enterprise'].includes(userPlan)
   const isBusinessPlus = ['business', 'enterprise'].includes(userPlan)
 
+  // ── GLOBAL PRODUCT CATALOGUE CONTEXT (Growth+) ───────────────
+  if (isGrowthPlus && marketKeywords.test(questionText)) {
+    try {
+      const service = createServiceClient()
+      const productMatch = questionText.match(/(?:price|sell|worth|cost|market|rate|what is|how much)(?:\s+\w+){0,3}\s+([\w\s]{3,40}?)(?:\s+in|\s+on|\s+for|\?|$)/i)
+      const gpcQuery = productMatch ? productMatch[1].trim() : questionText.replace(/[^a-zA-Z0-9\s]/g, '').trim().slice(0, 50)
+      if (gpcQuery.length >= 3) {
+        const { data: gpcRows } = await service
+          .from('global_product_catalogue')
+          .select('product_name,channel,region,currency,avg_selling_price,min_selling_price,max_selling_price,avg_gross_margin,merchant_count,period')
+          .ilike('product_name', `%${gpcQuery}%`)
+          .order('merchant_count', { ascending: false })
+          .limit(5)
+        if (gpcRows?.length) {
+          const gpcLines = ['GLOBAL MERCHANT PRICE POOL (anonymised, n≥3 merchants):']
+          for (const r of gpcRows) {
+            gpcLines.push(`${r.product_name} | ${r.channel} | ${r.region}: avg ${r.currency}${r.avg_selling_price} (range ${r.min_selling_price}–${r.max_selling_price}) | margin ${r.avg_gross_margin ? r.avg_gross_margin + '%' : 'N/A'} | ${r.merchant_count}+ merchants | ${r.period}`)
+          }
+          marketContext = marketContext ? marketContext + '\n\n' + gpcLines.join('\n') : gpcLines.join('\n')
+        }
+      }
+    } catch {}
+  }
+
   // -- 17TRACK SHIPMENT LOOKUP --
   let trackingContext = ""
   const trackingNumberMatch = questionText.match(/\b([A-Z]{2}\d{9}[A-Z]{2}|\d{12,22}|1Z[A-Z0-9]{16}|[A-Z]{3}\d{10}|JD\d{18})\b/i)

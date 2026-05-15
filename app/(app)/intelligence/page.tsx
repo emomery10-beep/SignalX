@@ -26,6 +26,12 @@ export default function IntelligencePage() {
   }, [router])
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const t = params.get('tab')
+    if (t && ['overview','anomalies','decisions','team','sparring','shipments','memory','market'].includes(t)) setTab(t)
+  }, [])
+
+  useEffect(() => {
     fetch('/api/health')
       .then(r => r.ok ? r.json() : null)
       .then(data => {
@@ -69,8 +75,34 @@ export default function IntelligencePage() {
     { id: 'sparring', label: 'Ask AskBiz' },
     { id: 'shipments', label: '📦 Shipments' },
     { id: 'memory', label: '🧠 What I Know' },
+    { id: 'market', label: '🌍 Market' },
   ]
   const sparringPrompts = ['Should I launch in Germany?', 'Is now a good time to raise my prices?', 'What is my biggest business risk?', 'Hire or use freelancers?']
+
+  // Market Intelligence state
+  const [mktQuery, setMktQuery] = useState('')
+  const [mktRegion, setMktRegion] = useState('')
+  const [mktChannel, setMktChannel] = useState('')
+  const [mktLoading, setMktLoading] = useState(false)
+  const [mktResult, setMktResult] = useState<any>(null)
+
+  const searchMarket = async () => {
+    if (!mktQuery.trim()) return
+    setMktLoading(true)
+    setMktResult(null)
+    try {
+      const params = new URLSearchParams({ q: mktQuery.trim() })
+      if (mktRegion) params.set('region', mktRegion)
+      if (mktChannel) params.set('channel', mktChannel)
+      const res = await fetch(`/api/market/products?${params}`)
+      const data = await res.json()
+      setMktResult(data)
+    } catch {
+      setMktResult({ error: 'Could not load market data.' })
+    } finally {
+      setMktLoading(false)
+    }
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
@@ -199,6 +231,199 @@ export default function IntelligencePage() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+        {tab === 'market' && (
+          <div style={{ maxWidth: 720 }}>
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>Market Intelligence</div>
+              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Search real market prices, channels, and routes — powered by merchant data + live web signals</div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '16px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 20 }}>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  value={mktQuery}
+                  onChange={e => setMktQuery(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && searchMarket()}
+                  placeholder="e.g. leather handbag, running shoes, phone case..."
+                  style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 14, fontFamily: 'inherit', outline: 'none' }}
+                />
+                <button
+                  onClick={searchMarket}
+                  disabled={mktLoading || !mktQuery.trim()}
+                  style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#d08a59', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: mktLoading || !mktQuery.trim() ? 0.5 : 1 }}
+                >
+                  {mktLoading ? '...' : 'Search'}
+                </button>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <input
+                  value={mktRegion}
+                  onChange={e => setMktRegion(e.target.value)}
+                  placeholder="Region (e.g. USA, UK, EU)"
+                  style={{ flex: 1, minWidth: 140, padding: '7px 12px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
+                />
+                <select
+                  value={mktChannel}
+                  onChange={e => setMktChannel(e.target.value)}
+                  style={{ flex: 1, minWidth: 140, padding: '7px 12px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
+                >
+                  <option value="">All channels</option>
+                  <option value="shopify">Shopify</option>
+                  <option value="amazon_fba">Amazon FBA</option>
+                  <option value="ebay">eBay</option>
+                  <option value="etsy">Etsy</option>
+                  <option value="woocommerce">WooCommerce</option>
+                  <option value="pos">POS</option>
+                </select>
+              </div>
+            </div>
+
+            {mktResult?.locked && (
+              <div style={{ padding: '24px 20px', borderRadius: 14, border: '1px solid #d08a59', background: 'rgba(208,138,89,0.07)', textAlign: 'center' }}>
+                <div style={{ fontSize: 28, marginBottom: 10 }}>🌍</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)', marginBottom: 6 }}>Market Intelligence</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 16, lineHeight: 1.5 }}>Available on Growth and above. See real market prices, channel benchmarks, and live web signals.</div>
+                <a href="/billing" style={{ display: 'inline-block', padding: '10px 24px', borderRadius: 9999, background: '#d08a59', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Upgrade to Growth →</a>
+              </div>
+            )}
+
+            {mktResult?.error && (
+              <div style={{ padding: '14px 16px', borderRadius: 12, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 13, color: '#EF4444' }}>{mktResult.error}</div>
+            )}
+
+            {mktResult && !mktResult.locked && !mktResult.error && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {mktResult.catalogue?.length > 0 && (
+                  <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
+                    <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Merchant Price Data</div>
+                      <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{mktResult.catalogue.length} records · {mktResult.plan} plan</span>
+                    </div>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                        <thead>
+                          <tr style={{ background: 'var(--ev)' }}>
+                            {['Product', 'Channel', 'Region', 'Avg Price', 'Min', 'Max', 'Margin %', 'Merchants'].map(h => (
+                              <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--tx3)', whiteSpace: 'nowrap' }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {mktResult.catalogue.map((row: any, i: number) => (
+                            <tr key={i} style={{ borderTop: '1px solid var(--b)' }}>
+                              <td style={{ padding: '9px 12px', fontWeight: 500, color: 'var(--tx)', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.product_name}</td>
+                              <td style={{ padding: '9px 12px', color: 'var(--tx2)' }}>{row.channel}</td>
+                              <td style={{ padding: '9px 12px', color: 'var(--tx2)' }}>{row.region}</td>
+                              <td style={{ padding: '9px 12px', fontWeight: 600, color: 'var(--tx)' }}>{row.currency} {row.avg_selling_price}</td>
+                              <td style={{ padding: '9px 12px', color: 'var(--tx3)' }}>{row.min_selling_price}</td>
+                              <td style={{ padding: '9px 12px', color: 'var(--tx3)' }}>{row.max_selling_price}</td>
+                              <td style={{ padding: '9px 12px', color: row.avg_gross_margin ? 'var(--tx2)' : 'var(--tx3)' }}>{row.avg_gross_margin ? `${row.avg_gross_margin}%` : '—'}</td>
+                              <td style={{ padding: '9px 12px', color: 'var(--tx3)' }}>{row.merchant_count}+</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {mktResult.catalogue?.length === 0 && (
+                  <div style={{ padding: '14px 16px', borderRadius: 12, background: 'var(--sf)', border: '1px solid var(--b)', fontSize: 13, color: 'var(--tx3)' }}>
+                    No merchant price data yet for this product — web signals below may help.
+                  </div>
+                )}
+
+                {mktResult.routes?.length > 0 && (
+                  <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
+                    <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Route Intelligence · {mktResult.region}</div>
+                    </div>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                        <thead>
+                          <tr style={{ background: 'var(--ev)' }}>
+                            {['Origin', 'Destination', 'Carrier', 'Avg Transit', 'On-Time', 'Customs Hold', 'Merchants'].map(h => (
+                              <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--tx3)', whiteSpace: 'nowrap' }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {mktResult.routes.map((row: any, i: number) => (
+                            <tr key={i} style={{ borderTop: '1px solid var(--b)' }}>
+                              <td style={{ padding: '9px 12px', color: 'var(--tx2)' }}>{row.origin_country}</td>
+                              <td style={{ padding: '9px 12px', color: 'var(--tx2)' }}>{row.destination_country}</td>
+                              <td style={{ padding: '9px 12px', color: 'var(--tx2)' }}>{row.carrier_code}</td>
+                              <td style={{ padding: '9px 12px', fontWeight: 500 }}>{row.avg_transit_days ? `${row.avg_transit_days}d` : '—'}</td>
+                              <td style={{ padding: '9px 12px', color: row.on_time_rate >= 80 ? '#22C55E' : row.on_time_rate >= 60 ? '#F59E0B' : '#EF4444', fontWeight: 600 }}>{row.on_time_rate}%</td>
+                              <td style={{ padding: '9px 12px', color: row.customs_hold_rate > 10 ? '#EF4444' : 'var(--tx3)' }}>{row.customs_hold_rate}%</td>
+                              <td style={{ padding: '9px 12px', color: 'var(--tx3)' }}>{row.merchant_count}+</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {mktResult.web && (
+                  <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
+                    <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Live Web Signals</div>
+                    </div>
+                    <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      {mktResult.web.price_summary && (
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>Price Summary</div>
+                          <div style={{ fontSize: 13, color: 'var(--tx)', lineHeight: 1.6, padding: '10px 14px', borderRadius: 10, background: 'var(--ev)' }}>{mktResult.web.price_summary}</div>
+                          {mktResult.web.price_sources?.length > 0 && (
+                            <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                              {mktResult.web.price_sources.map((s: any, i: number) => (
+                                <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--b)', textDecoration: 'none' }}>
+                                  <span style={{ fontSize: 12, fontWeight: 600, color: '#6366F1' }}>{s.title}</span>
+                                  <span style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>{s.snippet}</span>
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {mktResult.web.news?.length > 0 && (
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>Market News (last 30 days)</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            {mktResult.web.news.map((n: any, i: number) => (
+                              <a key={i} href={n.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--b)', textDecoration: 'none' }}>
+                                <span style={{ fontSize: 12, fontWeight: 500, color: '#6366F1', flex: 1 }}>{n.title}</span>
+                                {n.date && <span style={{ fontSize: 11, color: 'var(--tx3)', whiteSpace: 'nowrap' }}>{n.date?.slice(0, 10)}</span>}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {mktResult.data_thin && (
+                  <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(208,138,89,0.08)', border: '1px solid rgba(208,138,89,0.2)', fontSize: 12, color: '#d08a59' }}>
+                    Limited merchant data for this product — supplemented with live web signals. As more merchants contribute, this will improve.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!mktResult && !mktLoading && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10, marginTop: 4 }}>
+                {[['leather handbag', 'USA'], ['running shoes', 'UK'], ['phone case', 'EU'], ['candles', '']].map(([product, region], i) => (
+                  <button key={i} onClick={() => { setMktQuery(product); if (region) setMktRegion(region) }} style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 3 }}>Try searching</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{product}{region ? `, ${region}` : ''}</div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

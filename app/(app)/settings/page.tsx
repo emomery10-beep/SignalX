@@ -1139,16 +1139,18 @@ function CompliancePanel() {
   const [vatNumber, setVatNumber]   = useState('')
   const [saving, setSaving]         = useState(false)
   const [saved, setSaved]           = useState(false)
-  const [collectiveOpt, setCollectiveOpt] = useState(false)
+  const [collectiveOpt, setCollectiveOpt]       = useState(false)
+  const [marketIntelOpt, setMarketIntelOpt]     = useState(false)
   const [loadingOpt, setLoadingOpt] = useState(true)
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.from('profiles').select('ico_number,vat_number,collective_opt_in').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('ico_number,vat_number,collective_opt_in,market_intelligence_opt_in').eq('id', user.id).single().then(({ data }) => {
       if (data) {
         setIcoNumber(data.ico_number || '')
         setVatNumber(data.vat_number || '')
         setCollectiveOpt(data.collective_opt_in || false)
+        setMarketIntelOpt(data.market_intelligence_opt_in || false)
       }
       setLoadingOpt(false)
     })
@@ -1168,6 +1170,13 @@ function CompliancePanel() {
     setCollectiveOpt(next)
     const supabase = createClient()
     await supabase.from('profiles').update({ collective_opt_in: next, collective_opted_at: next ? new Date().toISOString() : null }).eq('id', user.id)
+  }
+
+  const toggleMarketIntel = async () => {
+    const next = !marketIntelOpt
+    setMarketIntelOpt(next)
+    const supabase = createClient()
+    await supabase.from('profiles').update({ market_intelligence_opt_in: next, market_intelligence_opted_at: next ? new Date().toISOString() : null }).eq('id', user.id)
   }
 
   const STATUS_BADGE = (label: string, ok: boolean) => (
@@ -1291,6 +1300,25 @@ function CompliancePanel() {
                 <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Opt out at any time. Only sector, region, and aggregated values are shared — never your business name, products, or transactions.</div>
               </div>
               <Toggle value={collectiveOpt} onChange={toggleCollective} color="#8c6fe0"/>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Market intelligence opt-in */}
+      {!loadingOpt && (
+        <Card>
+          <CardHeader title="Global market intelligence"/>
+          <div style={{ padding: '16px 20px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>Contribute to the global price pool</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5, marginBottom: 6 }}>
+                  Share anonymised selling prices and channel data from your connected stores. In return, see what products are actually selling for across thousands of merchants worldwide — by channel, region, and trend. Your identity, cost prices, and business name are never shared.
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Only product names, selling prices, channel, and region are pooled — aggregated across 3+ merchants minimum before any signal is published. Opt out at any time.</div>
+              </div>
+              <Toggle value={marketIntelOpt} onChange={toggleMarketIntel} color="#d08a59"/>
             </div>
           </div>
         </Card>

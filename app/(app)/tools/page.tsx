@@ -61,6 +61,15 @@ const TOOLS = [
     bg: 'rgba(225,48,108,.06)',
     tags: ['Social', 'Demand signals'],
   },
+  {
+    id: 'market',
+    label: 'Market Intelligence',
+    icon: '🌍',
+    desc: 'Search real market prices across channels and regions — merchant data pooled with live web signals.',
+    colour: '#d08a59',
+    bg: 'rgba(208,138,89,.06)',
+    tags: ['Pricing', 'Export', 'Growth+'],
+  },
 ]
 
 export default function ToolsPage() {
@@ -80,6 +89,11 @@ export default function ToolsPage() {
   }
 
   const activeMeta = TOOLS.find(t => t.id === activeTool)
+
+  const openTool = (id: string) => {
+    if (id === 'market') { router.push('/intelligence?tab=market'); return }
+    setActiveTool(id)
+  }
 
   return (
     <div className="page-shell">
@@ -124,7 +138,7 @@ export default function ToolsPage() {
               {TOOLS.map(tool => (
                 <button
                   key={tool.id}
-                  onClick={() => setActiveTool(tool.id)}
+                  onClick={() => openTool(tool.id)}
                   style={{ textAlign: 'left', padding: '20px', borderRadius: 16, border: `1px solid ${B}`, background: SF, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms', display: 'flex', flexDirection: 'column', gap: 0 }}
                   onMouseEnter={e => {
                     e.currentTarget.style.borderColor = tool.colour + '50'
@@ -173,6 +187,7 @@ export default function ToolsPage() {
                   'Model my FX risk if sterling falls 10%',
                   'Which export market should I enter first?',
                   'Which products have the most social commerce potential?',
+                  'What is the market price for my best-selling product?',
                 ].map((prompt, i) => (
                   <button
                     key={i}
