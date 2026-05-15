@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
@@ -79,12 +80,17 @@ YOUR STORE'S INVENTORY:
 ${catalogueText || '(Empty inventory)'}${hotListText}
 
 TASK:
-1. Look at the image and the inventory list above
-2. FIRST: Check if this matches anything in the inventory list (even if worded differently - e.g., "Cumin Seeds" matches "Loose Cumin Seeds per Kilo")
+1. Look at the image carefully and determine WHAT FORM the product is in:
+   - Is it LOOSE/BULK (unpackaged raw ingredients like seeds, grains, spices in a bag or container)?
+   - Is it a BRANDED/PACKAGED product (bottle, box, jar with a label)?
+2. Match ONLY to inventory items that match BOTH the product AND its form. For example:
+   - Loose sesame seeds must match "Loose Sesame Seeds per Kilo", NOT "Sesame Oil 250ml"
+   - A bottle of oil must match the oil product, NOT loose seeds
+   - "per Kilo" or "Loose" items are raw bulk ingredients, NOT packaged goods
 3. If you find a match, return the EXACT name from the inventory list
 4. If no match, identify the product as best you can
 5. Try to extract the price if shown on label/tag
-6. PRIORITIZE products in the "FREQUENTLY RECOGNIZED" list
+6. The "FREQUENTLY RECOGNIZED" list is for reference only — still match based on what you actually SEE
 7. Identify anything you can visually see clearly, even generic items without brand labels
 
 Reply ONLY with valid JSON, nothing else:
@@ -115,21 +121,27 @@ Reply ONLY with valid JSON, nothing else:
     if (match) console.log('✓ EXACT MATCH:', match.name)
 
     // If no exact match, use smart fuzzy matching - require ALL major words to be present
+    // and also check that the inventory item's major words are mostly covered (bidirectional)
     if (!match && inventoryList && inventoryList.length > 0) {
-      const words = productName.split(/\s+/).map(w => w.toLowerCase()).filter(Boolean)
+      const stopWords = new Set(['the','a','an','of','per','and','in','for','with'])
+      const words = productName.split(/\s+/).map(w => w.toLowerCase()).filter(w => w && !stopWords.has(w))
       const scored = inventoryList.map(item => {
-        const itemWords = item.name.toLowerCase().split(/\s+/)
-        const matchCount = words.filter(w => itemWords.some(iw => iw.includes(w) || w.includes(iw))).length
-        return { item, score: matchCount, totalWords: words.length }
-      }).sort((a, b) => b.score - a.score)
+        const itemWords = item.name.toLowerCase().split(/\s+/).filter(w => !stopWords.has(w))
+        const forwardMatch = words.filter(w => itemWords.some(iw => iw.includes(w) || w.includes(iw))).length
+        const reverseMatch = itemWords.filter(iw => words.some(w => iw.includes(w) || w.includes(iw))).length
+        const forwardRatio = words.length > 0 ? forwardMatch / words.length : 0
+        const reverseRatio = itemWords.length > 0 ? reverseMatch / itemWords.length : 0
+        return { item, forwardMatch, reverseMatch, forwardRatio, reverseRatio, totalWords: words.length, itemWordCount: itemWords.length }
+      }).sort((a, b) => (b.forwardRatio + b.reverseRatio) - (a.forwardRatio + a.reverseRatio))
 
-      console.log('🔎 FUZZY ATTEMPT:', { words, topMatch: scored[0]?.item?.name, matchScore: scored[0]?.score, needAllWords: scored[0]?.totalWords })
+      console.log('🔎 FUZZY ATTEMPT:', { words, topMatch: scored[0]?.item?.name, forward: scored[0]?.forwardRatio, reverse: scored[0]?.reverseRatio })
 
-      if (scored[0].score === scored[0].totalWords && scored[0].totalWords > 0) {
+      // Require all recognized words match AND at least 50% of inventory item words match back
+      if (scored[0].forwardRatio === 1 && scored[0].reverseRatio >= 0.5 && scored[0].totalWords > 0) {
         match = scored[0].item
         console.log('✓ FUZZY MATCH:', match.name)
       } else if (scored[0]?.totalWords > 0) {
-        console.log('❌ FUZZY FAILED:', { reason: `Need ${scored[0].totalWords} words, got ${scored[0].score} matches` })
+        console.log('❌ FUZZY FAILED:', { reason: `forward=${scored[0].forwardRatio}, reverse=${scored[0].reverseRatio}` })
       }
     }
 
