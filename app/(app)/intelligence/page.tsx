@@ -8,9 +8,12 @@ import DecisionMemory from '@/components/intelligence/DecisionMemory'
 import TeamPanel from '@/components/intelligence/TeamPanel'
 import LogisticsPulseCard from '@/components/LogisticsPulseCard'
 import BusinessMemory from '@/components/intelligence/BusinessMemory'
+import FeatureGate from '@/components/gates/FeatureGate'
+import { usePlan } from '@/lib/hooks/usePlan'
 
 export default function IntelligencePage() {
   const router = useRouter()
+  const { planId, loading: planLoading } = usePlan()
   const [tab, setTab] = useState('overview')
   const [health, setHealth] = useState(null)
   const [anomalies, setAnomalies] = useState([])
@@ -67,15 +70,17 @@ export default function IntelligencePage() {
   const criticalCount = anomalies.filter(a => a.severity === 'critical').length
   const warningCount = anomalies.filter(a => a.severity === 'warning').length
   const scoreHistoryItems = scoreHistory.slice(-30)
+  const canAlerts    = !planLoading && (planId === 'growth' || planId === 'business')
+  const canDecisions = !planLoading && planId === 'business'
   const tabs = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'anomalies', label: 'Alerts', badge: criticalCount + warningCount },
-    { id: 'decisions', label: 'Decision Memory' },
-    { id: 'team', label: 'Team' },
-    { id: 'sparring', label: 'Ask AskBiz' },
-    { id: 'shipments', label: '📦 Shipments' },
-    { id: 'memory', label: '🧠 What I Know' },
-    { id: 'market', label: '🌍 Market' },
+    { id: 'overview',   label: 'Overview' },
+    { id: 'anomalies',  label: 'Alerts',          badge: canAlerts ? (criticalCount + warningCount) : 0, locked: !canAlerts },
+    { id: 'decisions',  label: 'Decision Memory',  locked: !canDecisions },
+    { id: 'team',       label: 'Team' },
+    { id: 'sparring',   label: 'Ask AskBiz' },
+    { id: 'shipments',  label: '📦 Shipments' },
+    { id: 'memory',     label: '🧠 What I Know' },
+    { id: 'market',     label: '🌍 Market' },
   ]
   const sparringPrompts = ['Should I launch in Germany?', 'Is now a good time to raise my prices?', 'What is my biggest business risk?', 'Hire or use freelancers?']
 
@@ -122,8 +127,13 @@ export default function IntelligencePage() {
         </div>
         <div style={{ display: 'flex', gap: 0, overflowX: 'auto' }}>
           {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: '8px 14px', border: 'none', background: 'transparent', fontSize: 13, fontWeight: tab === t.id ? 600 : 400, color: tab === t.id ? (t.id === 'fx' ? 'var(--acc)' : '#6366F1') : 'var(--tx3)', borderBottom: tab === t.id ? `2px solid ${t.id === 'fx' ? 'var(--acc)' : '#6366F1'}` : '2px solid transparent', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+            <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: '8px 14px', border: 'none', background: 'transparent', fontSize: 13, fontWeight: tab === t.id ? 600 : 400, color: tab === t.id ? '#6366F1' : t.locked ? 'var(--tx3)' : 'var(--tx3)', borderBottom: tab === t.id ? '2px solid #6366F1' : '2px solid transparent', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', opacity: t.locked ? 0.65 : 1 }}>
               {t.label}
+              {t.locked && !planLoading && (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              )}
               {t.badge ? <span style={{ fontSize: 10, fontWeight: 700, background: '#EF4444', color: '#fff', borderRadius: 9999, padding: '1px 6px' }}>{t.badge}</span> : null}
             </button>
           ))}
@@ -192,14 +202,22 @@ export default function IntelligencePage() {
         )}
         {tab === 'anomalies' && (
           <div style={{ maxWidth: 720 }}>
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', marginBottom: 4 }}>Active Alerts</div>
-              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>AskBiz monitors your data and flags anything that needs attention</div>
-            </div>
-            <AnomalyFeed anomalies={anomalies} onAsk={askAskBiz} onDismiss={dismissAnomaly}/>
+            <FeatureGate planId={planId} feature="anomaly_alerts">
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', marginBottom: 4 }}>Active Alerts</div>
+                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>AskBiz monitors your data and flags anything that needs attention</div>
+              </div>
+              <AnomalyFeed anomalies={anomalies} onAsk={askAskBiz} onDismiss={dismissAnomaly}/>
+            </FeatureGate>
           </div>
         )}
-        {tab === 'decisions' && <div style={{ maxWidth: 720 }}><DecisionMemory onAsk={askAskBiz}/></div>}
+        {tab === 'decisions' && (
+          <div style={{ maxWidth: 720 }}>
+            <FeatureGate planId={planId} feature="decision_memory">
+              <DecisionMemory onAsk={askAskBiz}/>
+            </FeatureGate>
+          </div>
+        )}
         {tab === 'team' && <div style={{ maxWidth: 720 }}><TeamPanel/></div>}
         {tab === 'memory' && <div style={{ maxWidth: 720 }}><BusinessMemory onAsk={askAskBiz}/></div>}
         {tab === 'shipments' && (
