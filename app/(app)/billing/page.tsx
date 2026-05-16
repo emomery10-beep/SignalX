@@ -15,50 +15,79 @@ const EV   = '#f3f2ef'
 
 // ── Feature comparison table data ─────────────────────────────
 const FEATURES_TABLE = [
-  { category: 'Core',
+  {
+    category: 'Core',
     rows: [
-      { label: 'Questions per month',       free: '10',         growth: 'Unlimited',  business: 'Unlimited'  },
-      { label: 'File uploads',              free: '1/month',    growth: 'Unlimited',  business: 'Unlimited'  },
-      { label: 'Business Pulse score',      free: '✓',          growth: '✓',          business: '✓'          },
-      { label: 'Connect data sources',      free: '✓',          growth: '✓',          business: '✓'          },
-      { label: 'API access',               free: '✓',          growth: '✓',          business: '✓'          },
-    ]
+      { label: 'Questions per month',           free: '10',           growth: 'Unlimited',   business: 'Unlimited'   },
+      { label: 'File uploads',                  free: '1 / month',    growth: 'Unlimited',   business: 'Unlimited'   },
+      { label: 'Business Pulse health score',   free: '✓',            growth: '✓',           business: '✓'           },
+      { label: 'Data source connections',       free: 'Up to 3',      growth: 'Unlimited',   business: 'Unlimited'   },
+      { label: 'API access',                    free: '✓',            growth: '✓',           business: '✓'           },
+    ],
   },
-  { category: 'Intelligence',
+  {
+    category: 'Dashboard & Visuals',
     rows: [
-      { label: 'Daily Brief',               free: '—',          growth: '✓',          business: '✓'          },
-      { label: 'Anomaly alerts',            free: '—',          growth: 'Unlimited',  business: 'Unlimited'  },
-      { label: 'Market intelligence',       free: '—',          growth: '✓',          business: '✓'          },
-      { label: 'Churn intelligence',        free: '—',          growth: 'Monthly',    business: 'Real-time'  },
-      { label: 'Decision Memory',           free: '—',          growth: '—',          business: '✓'          },
-      { label: 'Competitor Watch',          free: '—',          growth: '—',          business: '✓'          },
-      { label: 'CFO Mode',                  free: '—',          growth: '—',          business: '✓'          },
-    ]
+      { label: 'Command Centre KPI strip',      free: '✓',            growth: '✓',           business: '✓'           },
+      { label: '30-day health trend (expandable)', free: '✓',         growth: '✓',           business: '✓'           },
+      { label: 'Revenue & margin waterfall',    free: '—',            growth: '✓',           business: '✓'           },
+      { label: 'Anomaly live alerts',           free: '—',            growth: 'Unlimited',   business: 'Unlimited'   },
+      { label: 'Decision Timeline view',        free: '—',            growth: '—',           business: '✓'           },
+    ],
   },
-  { category: 'Point of Sale',
+  {
+    category: 'Intelligence',
     rows: [
-      { label: 'FX Risk Modeller',          free: 'Manual',     growth: 'Pre-filled', business: 'Pre-filled' },
-      { label: 'Landed Cost Calculator',    free: 'Manual',     growth: 'Pre-filled', business: 'Pre-filled' },
-      { label: 'Supplier Scorecard',        free: 'View',       growth: 'Full',       business: 'Full'       },
-      { label: 'Export Market Scoring',     free: '20 markets', growth: '+ Products', business: '+ Products' },
-      { label: 'Social Commerce',           free: '—',          growth: '✓',          business: '✓'          },
-      { label: 'Auto pre-fill from data',   free: '—',          growth: '✓',          business: '✓'          },
-    ]
+      { label: 'Daily Brief',                   free: '—',            growth: '✓',           business: '✓'           },
+      { label: 'Market intelligence',           free: '—',            growth: '✓',           business: '✓'           },
+      { label: 'Churn intelligence',            free: '—',            growth: 'Monthly',     business: 'Real-time'   },
+      { label: 'Expansion Intelligence',        free: '—',            growth: '✓',           business: '✓'           },
+      { label: 'Decision Memory (6-week)',       free: '—',            growth: '—',           business: '✓'           },
+      { label: 'Competitor Watch',              free: '—',            growth: '—',           business: '✓'           },
+      { label: 'CFO Mode — P&L report',         free: '—',            growth: '—',           business: '✓'           },
+      { label: 'CFO Mode — Cash runway',        free: '—',            growth: '—',           business: '✓'           },
+      { label: 'CFO Mode — Board report',       free: '—',            growth: '—',           business: '✓'           },
+      { label: 'CFO Mode — Margin analysis',    free: '—',            growth: '—',           business: '✓'           },
+      { label: 'CFO Mode — Working capital',    free: '—',            growth: '—',           business: '✓'           },
+      { label: 'CFO Mode — Cost structure',     free: '—',            growth: '—',           business: '✓'           },
+    ],
   },
-  { category: 'Shipments',
+  {
+    category: 'Connections',
     rows: [
-      { label: 'Shipment tracking',         free: '1',          growth: '5',          business: 'Unlimited'  },
-      { label: 'Financial intelligence',    free: '—',          growth: 'Basic',      business: 'Full'       },
-      { label: 'Customs hold alerts',       free: '—',          growth: '—',          business: '✓'          },
-      { label: 'Working capital tracking',  free: '—',          growth: '—',          business: '✓'          },
-    ]
+      { label: 'Integration Hub (31 sources)',  free: '✓',            growth: '✓',           business: '✓'           },
+      { label: 'E-commerce sync',               free: 'Up to 3',      growth: 'Unlimited',   business: 'Unlimited'   },
+      { label: 'Accounting sync',               free: 'Up to 3',      growth: 'Unlimited',   business: 'Unlimited'   },
+      { label: 'Payments sync',                 free: 'Up to 3',      growth: 'Unlimited',   business: 'Unlimited'   },
+      { label: 'Social commerce tracking',      free: '—',            growth: '✓',           business: '✓'           },
+      { label: 'Auto pre-fill tools from data', free: '—',            growth: '✓',           business: '✓'           },
+    ],
   },
-  { category: 'Team',
+  {
+    category: 'Tools',
     rows: [
-      { label: 'Team seats',               free: '1',          growth: '1',          business: 'Up to 5'    },
-      { label: 'Role-based access',        free: '—',          growth: '—',          business: '✓'          },
-      { label: 'Priority support',         free: '—',          growth: '—',          business: '✓'          },
-    ]
+      { label: 'FX Risk Modeller',              free: 'Manual',       growth: 'Pre-filled',  business: 'Pre-filled'  },
+      { label: 'Landed Cost Calculator',        free: 'Manual',       growth: 'Pre-filled',  business: 'Pre-filled'  },
+      { label: 'Supplier Scorecard',            free: 'View',         growth: 'Full',        business: 'Full'        },
+      { label: 'Export Market Scoring',         free: '20 markets',   growth: '+ Products',  business: '+ Products'  },
+    ],
+  },
+  {
+    category: 'Shipments',
+    rows: [
+      { label: 'Shipment tracking',             free: '1',            growth: '5',           business: 'Unlimited'   },
+      { label: 'Financial impact tracking',     free: '—',            growth: 'Basic',       business: 'Full'        },
+      { label: 'Customs hold alerts',           free: '—',            growth: '—',           business: '✓'           },
+      { label: 'Working capital tracking',      free: '—',            growth: '—',           business: '✓'           },
+    ],
+  },
+  {
+    category: 'Team',
+    rows: [
+      { label: 'Team seats',                    free: '1 (owner)',    growth: '1 (owner)',   business: 'Up to 5'     },
+      { label: 'Role-based access',             free: '—',            growth: '—',           business: '✓'           },
+      { label: 'Priority support',              free: '—',            growth: '—',           business: '✓'           },
+    ],
   },
 ]
 
@@ -621,11 +650,22 @@ export default function BillingPage() {
                 {section.rows.map((row, ri) => (
                   <div key={ri} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', borderBottom: `1px solid ${B}`, background: ri % 2 === 0 ? SF : 'rgba(0,0,0,.01)' }}>
                     <div style={{ padding: '10px 16px', fontSize: 13, color: TX2 }}>{row.label}</div>
-                    {[row.free, row.growth, row.business].map((val, i) => (
-                      <div key={i} style={{ padding: '10px 12px', textAlign: 'center', fontSize: 13, fontWeight: val === '✓' || val === 'Full' || val === 'Unlimited' || val === 'Real-time' ? 600 : 400, color: val === '—' ? TX3 : val === '✓' || val === 'Full' || val === 'Unlimited' ? '#16a34a' : TX2 }}>
-                        {val}
-                      </div>
-                    ))}
+                    {[row.free, row.growth, row.business].map((val, i) => {
+                      const isGood = val === '✓' || val === 'Full' || val === 'Unlimited' || val === 'Real-time' || val === 'Pre-filled'
+                      const isDash = val === '—'
+                      const isLimit = val === 'Manual' || val === 'View' || val === 'Monthly' || val === 'Basic'
+                      return (
+                        <div key={i} style={{
+                          padding: '10px 12px',
+                          textAlign: 'center',
+                          fontSize: 13,
+                          fontWeight: isGood ? 600 : 400,
+                          color: isDash ? TX3 : isGood ? '#16a34a' : isLimit ? '#d08a59' : TX2,
+                        }}>
+                          {val}
+                        </div>
+                      )
+                    })}
                   </div>
                 ))}
               </div>
@@ -647,15 +687,20 @@ export default function BillingPage() {
         <div>
           <div style={{ fontSize: 12, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>Common questions</div>
           {[
-            { q: 'Can I cancel anytime?',                a: 'Yes — cancel in one click, no questions asked. You keep access until the end of your billing period.' },
-            { q: 'What counts as a question?',           a: 'Every time you ask AskBiz something — in chat, on the home screen, or via API — it counts as one question. Free plan gets 10 per month.' },
-            { q: 'What does "pre-filled from data" mean?', a: 'On Growth and Business plans, the FX Risk, Landed Cost, and other tools automatically pull your product costs, margins, and supplier data from your connected sources — so you review and calculate rather than entering everything manually.' },
-            { q: 'How does social commerce work?',       a: 'Connect TikTok Shop, Instagram Shopping, or Pinterest from the Sources page. AskBiz tracks your conversion rates, saves (demand signals), and which products are going viral — and alerts you when a product has high saves but no orders.' },
-            { q: 'How does churn intelligence work?',    a: 'AskBiz scans your customer data monthly and scores each customer by churn risk based on days since last order and purchase frequency. At-risk customers appear in a retention priority list on My Business, and you can ask AskBiz why any specific customer is flagged.' },
-            { q: 'How do team seats work?',              a: 'Business plan includes up to 5 team members. Each person gets their own login with role-based access.' },
-            { q: 'How do POS seats work?',               a: 'POS seats are a separate add-on at £5/seat/month — available on any plan. Each seat lets one cashier or inventory staff member log in to pos.askbiz.co via email or WhatsApp OTP on their own phone. The owner dashboard is always included free.' },
-            { q: 'Are prices in my local currency?',     a: 'Prices are shown in GBP. At checkout, Stripe automatically converts to your local currency at the current exchange rate.' },
-            { q: 'Is my data safe?',                     a: 'Your data is encrypted at rest and in transit. We never use your business data to train AI models.' },
+            { q: 'Can I cancel anytime?',                    a: 'Yes — cancel in one click, no questions asked. You keep access until the end of your billing period.' },
+            { q: 'What counts as a question?',               a: 'Every time you ask AskBiz something — in chat, the Monitor page, or via API — it counts as one question. Free plan gets 10 per month. Growth and Business are unlimited.' },
+            { q: 'What is the Command Centre KPI strip?',     a: 'Available on all plans, the KPI strip sits at the top of your Monitor overview and shows your live health score, active alert count, 30-day score change, and how many data sources are connected — all at a glance.' },
+            { q: 'What is the revenue & margin waterfall?',   a: 'A small, expandable chart on the Growth and Business overview that breaks down your revenue into COGS, gross profit, operating costs, and net margin — based on your health score signals. Click it to expand with hover detail. Connect accounting data for exact figures.' },
+            { q: 'What is Decision Timeline?',               a: 'A Business-only visual view inside Decision Memory. Every business decision you log appears on a horizontal timeline, colour-coded by outcome: green for good calls, red for missed calls, pulsing gold for decisions due for review. A stats bar shows your overall success rate.' },
+            { q: 'What does CFO Mode include?',              a: 'Six AI-generated board-ready reports: P&L Summary, Cash Runway, Margin Analysis, Board Report, Working Capital, and Cost Structure. Results use percentage-first language and appear inline with a follow-up button. Business plan only.' },
+            { q: 'What is the Integration Hub?',             a: 'A visual Connections tab (available to all plans) showing all 31 supported data sources — e-commerce, accounting, payments, marketing, logistics, and social — with live sync status, a connection health bar, and category filters. Green dot = synced, red = error, grey = not connected.' },
+            { q: 'What does "pre-filled from data" mean?',   a: 'On Growth and Business plans, the FX Risk, Landed Cost, and other tools automatically pull your product costs, margins, and supplier data from your connected sources — so you review and calculate rather than entering everything manually.' },
+            { q: 'How does social commerce work?',           a: 'Connect TikTok Shop, Instagram Shopping, or Pinterest from the Sources page. AskBiz tracks conversion rates, saves (demand signals), and which products are going viral — and alerts you when a product has high saves but no orders.' },
+            { q: 'How does churn intelligence work?',        a: 'AskBiz scans your customer data monthly and scores each customer by churn risk based on days since last order and purchase frequency. At-risk customers appear in a retention priority list, and you can ask AskBiz why any specific customer is flagged.' },
+            { q: 'How do team seats work?',                  a: 'Business plan includes up to 5 team members. Each person gets their own login with a role — owner, admin, analyst, accountant, buyer, or viewer.' },
+            { q: 'How do POS seats work?',                   a: 'POS seats are a separate add-on at £5/seat/month — available on any plan. Each seat lets one cashier or inventory staff member log in to pos.askbiz.co via email or WhatsApp OTP on their own phone. The owner dashboard is always included free.' },
+            { q: 'Are prices in my local currency?',         a: 'Prices are shown in GBP. At checkout, Stripe automatically converts to your local currency at the current exchange rate.' },
+            { q: 'Is my data safe?',                         a: 'Your data is encrypted at rest and in transit. We never use your business data to train AI models.' },
           ].map((faq, i) => (
             <div key={i} style={{ borderBottom: `1px solid ${B}`, padding: '14px 0' }}>
               <div style={{ fontSize: 14, fontWeight: 600, color: TX, marginBottom: 5 }}>{faq.q}</div>
