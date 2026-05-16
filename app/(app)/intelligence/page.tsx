@@ -10,30 +10,56 @@ import LogisticsPulseCard from '@/components/LogisticsPulseCard'
 import BusinessMemory from '@/components/intelligence/BusinessMemory'
 import FeatureGate from '@/components/gates/FeatureGate'
 import { usePlan } from '@/lib/hooks/usePlan'
+import KpiStrip from '@/components/intelligence/KpiStrip'
+import MiniTrendChart from '@/components/intelligence/MiniTrendChart'
+import IntegrationHub from '@/components/intelligence/IntegrationHub'
+import CfoMode from '@/components/intelligence/CfoMode'
+import RevenueWaterfall from '@/components/intelligence/RevenueWaterfall'
+import DecisionTimeline from '@/components/intelligence/DecisionTimeline'
 
 export default function IntelligencePage() {
   const router = useRouter()
   const { planId, loading: planLoading } = usePlan()
+
+  // Core state
   const [tab, setTab] = useState('overview')
-  const [health, setHealth] = useState(null)
-  const [anomalies, setAnomalies] = useState([])
+  const [health, setHealth] = useState<any>(null)
+  const [anomalies, setAnomalies] = useState<any[]>([])
   const [loadingHealth, setLoadingHealth] = useState(true)
+  const [scoreHistory, setScoreHistory] = useState<any[]>([])
+  const [connectedCount, setConnectedCount] = useState(0)
+
+  // Decisions state (for timeline)
+  const [decisions, setDecisions] = useState<any[]>([])
+  const [decisionsLoaded, setDecisionsLoaded] = useState(false)
+  const [decisionView, setDecisionView] = useState<'timeline' | 'cards'>('timeline')
+
+  // Sparring state
   const [sparringInput, setSparringInput] = useState('')
   const [sparringResponse, setSparringResponse] = useState('')
   const [sparringSending, setSparringSending] = useState(false)
-  const [scoreHistory, setScoreHistory] = useState([])
 
-  const askAskBiz = useCallback((prompt) => {
+  // Market Intelligence state
+  const [mktQuery, setMktQuery] = useState('')
+  const [mktRegion, setMktRegion] = useState('')
+  const [mktChannel, setMktChannel] = useState('')
+  const [mktLoading, setMktLoading] = useState(false)
+  const [mktResult, setMktResult] = useState<any>(null)
+
+  const askAskBiz = useCallback((prompt: string) => {
     router.push('/ask')
     setTimeout(() => window.dispatchEvent(new CustomEvent('askbiz:send', { detail: prompt })), 400)
   }, [router])
 
+  // Restore tab from URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const t = params.get('tab')
-    if (t && ['overview','anomalies','decisions','team','sparring','shipments','memory','market'].includes(t)) setTab(t)
+    const validTabs = ['overview','anomalies','decisions','team','sparring','shipments','memory','market','connections','cfo']
+    if (t && validTabs.includes(t)) setTab(t)
   }, [])
 
+  // Fetch health, anomalies, history
   useEffect(() => {
     fetch('/api/health')
       .then(r => r.ok ? r.json() : null)
@@ -47,7 +73,28 @@ export default function IntelligencePage() {
       .finally(() => setLoadingHealth(false))
   }, [])
 
-  const dismissAnomaly = async (id) => {
+  // Fetch connected sources count
+  useEffect(() => {
+    fetch('/api/sources')
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setConnectedCount(Array.isArray(data) ? data.length : 0))
+      .catch(() => setConnectedCount(0))
+  }, [])
+
+  // Fetch decisions when decisions tab is active (lazy)
+  useEffect(() => {
+    if ((tab === 'decisions') && !decisionsLoaded) {
+      fetch('/api/decisions')
+        .then(r => r.ok ? r.json() : [])
+        .then(data => {
+          setDecisions(Array.isArray(data) ? data : (data?.decisions || []))
+          setDecisionsLoaded(true)
+        })
+        .catch(() => setDecisionsLoaded(true))
+    }
+  }, [tab, decisionsLoaded])
+
+  const dismissAnomaly = async (id: string) => {
     await fetch('/api/health/anomaly', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, seen: true }) })
     setAnomalies(prev => prev.filter(a => a.id !== id))
   }
@@ -67,30 +114,6 @@ export default function IntelligencePage() {
     }
   }
 
-  const criticalCount = anomalies.filter(a => a.severity === 'critical').length
-  const warningCount = anomalies.filter(a => a.severity === 'warning').length
-  const scoreHistoryItems = scoreHistory.slice(-30)
-  const canAlerts    = !planLoading && (planId === 'growth' || planId === 'business')
-  const canDecisions = !planLoading && planId === 'business'
-  const tabs = [
-    { id: 'overview',   label: 'Overview' },
-    { id: 'anomalies',  label: 'Alerts',          badge: canAlerts ? (criticalCount + warningCount) : 0, locked: !canAlerts },
-    { id: 'decisions',  label: 'Decision Memory',  locked: !canDecisions },
-    { id: 'team',       label: 'Team' },
-    { id: 'sparring',   label: 'Ask AskBiz' },
-    { id: 'shipments',  label: '📦 Shipments' },
-    { id: 'memory',     label: '🧠 What I Know' },
-    { id: 'market',     label: '🌍 Market' },
-  ]
-  const sparringPrompts = ['Should I launch in Germany?', 'Is now a good time to raise my prices?', 'What is my biggest business risk?', 'Hire or use freelancers?']
-
-  // Market Intelligence state
-  const [mktQuery, setMktQuery] = useState('')
-  const [mktRegion, setMktRegion] = useState('')
-  const [mktChannel, setMktChannel] = useState('')
-  const [mktLoading, setMktLoading] = useState(false)
-  const [mktResult, setMktResult] = useState<any>(null)
-
   const searchMarket = async () => {
     if (!mktQuery.trim()) return
     setMktLoading(true)
@@ -100,8 +123,7 @@ export default function IntelligencePage() {
       if (mktRegion) params.set('region', mktRegion)
       if (mktChannel) params.set('channel', mktChannel)
       const res = await fetch(`/api/market/products?${params}`)
-      const data = await res.json()
-      setMktResult(data)
+      setMktResult(await res.json())
     } catch {
       setMktResult({ error: 'Could not load market data.' })
     } finally {
@@ -109,97 +131,215 @@ export default function IntelligencePage() {
     }
   }
 
+  // Derived values
+  const criticalCount   = anomalies.filter(a => a.severity === 'critical').length
+  const warningCount    = anomalies.filter(a => a.severity === 'warning').length
+  const scoreHistoryItems = scoreHistory.slice(-30)
+  const scoreDelta = scoreHistoryItems.length > 1
+    ? Math.round((Number(scoreHistoryItems[scoreHistoryItems.length - 1]?.score) || 0) - (Number(scoreHistoryItems[0]?.score) || 0))
+    : 0
+
+  // Plan gates
+  const canAlerts    = !planLoading && (planId === 'growth' || planId === 'business')
+  const canDecisions = !planLoading && planId === 'business'
+  const canCfo       = !planLoading && planId === 'business'
+
+  const tabs = [
+    { id: 'overview',     label: 'Overview' },
+    { id: 'anomalies',    label: 'Alerts',           badge: canAlerts ? (criticalCount + warningCount) : 0, locked: !canAlerts },
+    { id: 'decisions',    label: 'Decision Memory',  locked: !canDecisions },
+    { id: 'team',         label: 'Team' },
+    { id: 'sparring',     label: 'Ask AskBiz' },
+    { id: 'shipments',    label: '📦 Shipments' },
+    { id: 'memory',       label: '🧠 What I Know' },
+    { id: 'market',       label: '🌍 Market' },
+    { id: 'connections',  label: '🔗 Connections' },
+    { id: 'cfo',          label: '🏛️ CFO Mode',      locked: !canCfo },
+  ]
+
+  const sparringPrompts = [
+    'Should I launch in Germany?',
+    'Is now a good time to raise my prices?',
+    'What is my biggest business risk?',
+    'Hire or use freelancers?',
+  ]
+
+  // KPI strip cards
+  const kpiCards = [
+    {
+      label: 'Health Score',
+      value: health?.score != null ? health.score : '—',
+      sub: health?.label ?? (loadingHealth ? 'Loading...' : 'Upload data to score'),
+      trend: scoreDelta > 0 ? 'up' as const : scoreDelta < 0 ? 'down' as const : null,
+      trendLabel: scoreDelta !== 0 ? `${scoreDelta > 0 ? '+' : ''}${scoreDelta} pts` : undefined,
+      accentColor: health?.score != null
+        ? (health.score >= 65 ? '#22C55E' : health.score >= 45 ? '#F59E0B' : '#EF4444')
+        : undefined,
+      onClick: undefined,
+    },
+    {
+      label: 'Active Alerts',
+      value: criticalCount + warningCount || '—',
+      sub: criticalCount > 0 ? `${criticalCount} critical` : warningCount > 0 ? `${warningCount} warnings` : 'All clear',
+      accentColor: criticalCount > 0 ? '#EF4444' : warningCount > 0 ? '#F59E0B' : '#22C55E',
+      onClick: canAlerts ? () => setTab('anomalies') : undefined,
+    },
+    {
+      label: '30-Day Trend',
+      value: scoreDelta === 0 ? '—' : `${scoreDelta > 0 ? '+' : ''}${scoreDelta}`,
+      sub: scoreHistoryItems.length > 1 ? 'pts vs 30 days ago' : 'Not enough history yet',
+      trend: scoreDelta > 0 ? 'up' as const : scoreDelta < 0 ? 'down' as const : 'flat' as const,
+      trendLabel: undefined,
+      accentColor: scoreDelta > 0 ? '#22C55E' : scoreDelta < 0 ? '#EF4444' : undefined,
+    },
+    {
+      label: 'Data Sources',
+      value: connectedCount || '—',
+      sub: connectedCount === 0 ? 'None connected yet' : `of 31 sources live`,
+      accentColor: connectedCount > 0 ? '#6366F1' : undefined,
+      onClick: () => setTab('connections'),
+    },
+  ]
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+
+      {/* ── Header + tabs ── */}
       <div style={{ flexShrink: 0, padding: '16px 20px 0', borderBottom: '1px solid var(--b)', background: 'var(--sf)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 32, height: 32, borderRadius: 9, background: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
             </div>
             <div>
               <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700 }}>Monitor</div>
-              <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Health, Alerts, Decisions, Team, AI Sparring</div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Health · Alerts · Decisions · Team · AI Sparring</div>
             </div>
-            {criticalCount > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: '#EF4444', borderRadius: 9999, padding: '2px 8px' }}>{criticalCount} critical</span>}
+            {criticalCount > 0 && (
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: '#EF4444', borderRadius: 9999, padding: '2px 8px' }}>
+                {criticalCount} critical
+              </span>
+            )}
           </div>
           {health && <BusinessHealthScore health={health} size="sm" onAsk={askAskBiz}/>}
         </div>
+
+        {/* Tab bar */}
         <div style={{ display: 'flex', gap: 0, overflowX: 'auto' }}>
           {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: '8px 14px', border: 'none', background: 'transparent', fontSize: 13, fontWeight: tab === t.id ? 600 : 400, color: tab === t.id ? '#6366F1' : t.locked ? 'var(--tx3)' : 'var(--tx3)', borderBottom: tab === t.id ? '2px solid #6366F1' : '2px solid transparent', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', opacity: t.locked ? 0.65 : 1 }}>
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              style={{
+                padding: '8px 14px',
+                border: 'none',
+                background: 'transparent',
+                fontSize: 13,
+                fontWeight: tab === t.id ? 600 : 400,
+                color: tab === t.id ? '#6366F1' : 'var(--tx3)',
+                borderBottom: tab === t.id ? '2px solid #6366F1' : '2px solid transparent',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                whiteSpace: 'nowrap',
+                opacity: t.locked ? 0.6 : 1,
+                transition: 'color 150ms',
+              }}
+            >
               {t.label}
               {t.locked && !planLoading && (
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                   <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
               )}
-              {t.badge ? <span style={{ fontSize: 10, fontWeight: 700, background: '#EF4444', color: '#fff', borderRadius: 9999, padding: '1px 6px' }}>{t.badge}</span> : null}
+              {t.badge ? (
+                <span style={{ fontSize: 10, fontWeight: 700, background: '#EF4444', color: '#fff', borderRadius: 9999, padding: '1px 6px' }}>
+                  {t.badge}
+                </span>
+              ) : null}
             </button>
           ))}
         </div>
       </div>
+
+      {/* ── Tab content ── */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+
+        {/* ─── OVERVIEW ─── */}
         {tab === 'overview' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 720 }}>
+
+            {/* KPI strip */}
+            <KpiStrip cards={kpiCards} />
+
+            {/* Daily brief */}
             <DailyBrief onAsk={askAskBiz}/>
+
+            {/* Health score */}
             {loadingHealth ? (
-              <div style={{ height: 120, borderRadius: 16, background: 'var(--ev)', animation: 'shimmer 1.4s infinite' }}></div>
+              <div style={{ height: 120, borderRadius: 16, background: 'var(--ev)', animation: 'shimmer 1.4s infinite' }}/>
             ) : (
               <BusinessHealthScore health={health} size="lg" showComponents onAsk={askAskBiz}/>
             )}
+
+            {/* Charts row: trend + waterfall side by side */}
             {scoreHistoryItems.length > 1 && (
-              <div style={{ padding: '14px 16px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>30-Day Trend</div>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 48 }}>
-                  {scoreHistoryItems.map((h, i) => {
-                    const sc = Number(h.score) || 0
-                    const ht = Math.max(4, (sc / 100) * 48)
-                    const col = sc >= 65 ? '#22C55E' : sc >= 45 ? '#F59E0B' : '#EF4444'
-                    return <div key={i} style={{ flex: 1, height: ht, background: col, borderRadius: '2px 2px 0 0', opacity: 0.8, minWidth: 4 }}></div>
-                  })}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 10, color: 'var(--tx3)' }}><span>30 days ago</span><span>Today</span></div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <MiniTrendChart history={scoreHistoryItems} label="30-Day Trend" height={52}/>
+                <RevenueWaterfall health={health} onAsk={askAskBiz}/>
               </div>
             )}
+            {scoreHistoryItems.length <= 1 && (
+              <RevenueWaterfall health={health} onAsk={askAskBiz}/>
+            )}
+
+            {/* Active alerts preview */}
             {anomalies.length > 0 && (
               <div style={{ padding: '14px 16px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Active Alerts</div>
-                  <button onClick={() => setTab('anomalies')} style={{ fontSize: 11, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>View all ({anomalies.length})</button>
+                  <button
+                    onClick={() => setTab('anomalies')}
+                    style={{ fontSize: 11, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    View all ({anomalies.length})
+                  </button>
                 </div>
                 <AnomalyFeed anomalies={anomalies.slice(0, 3)} onAsk={askAskBiz} compact/>
               </div>
             )}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
-              <button onClick={() => askAskBiz('What is my best performing product by margin right now?')} style={{ padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
-                <div style={{ fontSize: 20, marginBottom: 6 }}>📊</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 3 }}>Ask about your data</div>
-                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Plain English questions</div>
-              </button>
-              <button onClick={() => setTab('sparring')} style={{ padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
-                <div style={{ fontSize: 20, marginBottom: 6 }}>⚡</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 3 }}>What if...?</div>
-                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Scenario planning</div>
-              </button>
-              <button onClick={() => setTab('decisions')} style={{ padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
-                <div style={{ fontSize: 20, marginBottom: 6 }}>📝</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 3 }}>Log a decision</div>
-                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>AskBiz checks back in 6 weeks</div>
-              </button>
-              <button onClick={() => setTab('team')} style={{ padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
-                <div style={{ fontSize: 20, marginBottom: 6 }}>👥</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 3 }}>Your team</div>
-                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Give your accountant access</div>
-              </button>
-              <button onClick={() => setTab('memory')} style={{ padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
-                <div style={{ fontSize: 20, marginBottom: 6 }}>🧠</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 3 }}>What I Know</div>
-                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Facts AskBiz has learned about you</div>
-              </button>
+
+            {/* Quick action cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 10 }}>
+              {[
+                { emoji: '📊', title: 'Ask about your data', sub: 'Plain English questions', action: () => askAskBiz('What is my best performing product by margin right now?') },
+                { emoji: '⚡', title: 'What if...?', sub: 'Scenario planning', action: () => setTab('sparring') },
+                { emoji: '📝', title: 'Log a decision', sub: 'AskBiz checks back in 6 weeks', action: () => setTab('decisions') },
+                { emoji: '🔗', title: 'Connections', sub: `${connectedCount} sources live`, action: () => setTab('connections') },
+                { emoji: '👥', title: 'Your team', sub: 'Role-based access', action: () => setTab('team') },
+                { emoji: '🧠', title: 'What I Know', sub: 'Facts AskBiz has learned', action: () => setTab('memory') },
+              ].map((card, i) => (
+                <button
+                  key={i}
+                  onClick={card.action}
+                  style={{ padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', transition: 'box-shadow 150ms' }}
+                  onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)' }}
+                  onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none' }}
+                >
+                  <div style={{ fontSize: 20, marginBottom: 6 }}>{card.emoji}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 3 }}>{card.title}</div>
+                  <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{card.sub}</div>
+                </button>
+              ))}
             </div>
           </div>
         )}
+
+        {/* ─── ALERTS ─── */}
         {tab === 'anomalies' && (
           <div style={{ maxWidth: 720 }}>
             <FeatureGate planId={planId} feature="anomaly_alerts">
@@ -211,15 +351,58 @@ export default function IntelligencePage() {
             </FeatureGate>
           </div>
         )}
+
+        {/* ─── DECISIONS ─── */}
         {tab === 'decisions' && (
           <div style={{ maxWidth: 720 }}>
             <FeatureGate planId={planId} feature="decision_memory">
-              <DecisionMemory onAsk={askAskBiz}/>
+              {/* View toggle */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
+                <div>
+                  <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>Decision Memory</div>
+                  <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Log decisions · AskBiz reviews outcomes in 6 weeks</div>
+                </div>
+                <div style={{ display: 'flex', borderRadius: 9999, border: '1px solid var(--b)', overflow: 'hidden', background: 'var(--sf)' }}>
+                  {(['timeline', 'cards'] as const).map(v => (
+                    <button
+                      key={v}
+                      onClick={() => setDecisionView(v)}
+                      style={{
+                        padding: '6px 14px',
+                        border: 'none',
+                        background: decisionView === v ? '#6366F1' : 'transparent',
+                        color: decisionView === v ? '#fff' : 'var(--tx3)',
+                        fontSize: 12,
+                        fontWeight: decisionView === v ? 600 : 400,
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                        transition: 'all 150ms',
+                      }}
+                    >
+                      {v === 'timeline' ? '⏱ Timeline' : '📋 Cards'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {decisionView === 'timeline' ? (
+                decisionsLoaded
+                  ? <DecisionTimeline decisions={decisions} onAsk={askAskBiz}/>
+                  : <div style={{ height: 200, borderRadius: 14, background: 'var(--ev)', animation: 'shimmer 1.4s infinite' }}/>
+              ) : (
+                <DecisionMemory onAsk={askAskBiz}/>
+              )}
             </FeatureGate>
           </div>
         )}
+
+        {/* ─── TEAM ─── */}
         {tab === 'team' && <div style={{ maxWidth: 720 }}><TeamPanel/></div>}
+
+        {/* ─── WHAT I KNOW ─── */}
         {tab === 'memory' && <div style={{ maxWidth: 720 }}><BusinessMemory onAsk={askAskBiz}/></div>}
+
+        {/* ─── SHIPMENTS ─── */}
         {tab === 'shipments' && (
           <div style={{ maxWidth: 720 }}>
             <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
@@ -227,7 +410,10 @@ export default function IntelligencePage() {
                 <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>Shipment Intelligence</div>
                 <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Real-time tracking · Financial impact · Supplier scoring</div>
               </div>
-              <button onClick={() => router.push('/shipments')} style={{ padding: '8px 16px', borderRadius: 9999, border: 'none', background: '#6366F1', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button
+                onClick={() => router.push('/shipments')}
+                style={{ padding: '8px 16px', borderRadius: 9999, border: 'none', background: '#6366F1', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
                 Open full view →
               </button>
             </div>
@@ -238,12 +424,16 @@ export default function IntelligencePage() {
                 {[
                   { label: 'Add tracking number', action: () => router.push('/shipments') },
                   { label: 'View at-risk shipments', action: () => router.push('/shipments?filter=at_risk') },
-                  { label: 'Ask about a delay', action: () => { router.push('/ask'); setTimeout(() => window.dispatchEvent(new CustomEvent('askbiz:send', { detail: 'Which of my shipments are delayed and what is the financial impact?' })), 400) } },
-                  { label: 'Supplier performance', action: () => { router.push('/ask'); setTimeout(() => window.dispatchEvent(new CustomEvent('askbiz:send', { detail: 'Which supplier has the best delivery reliability based on my shipment history?' })), 400) } },
+                  { label: 'Ask about a delay', action: () => askAskBiz('Which of my shipments are delayed and what is the financial impact?') },
+                  { label: 'Supplier performance', action: () => askAskBiz('Which supplier has the best delivery reliability based on my shipment history?') },
                 ].map((item, i) => (
-                  <button key={i} onClick={item.action} style={{ padding: '8px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx2)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms' }}
+                  <button
+                    key={i}
+                    onClick={item.action}
+                    style={{ padding: '8px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx2)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = '#6366F1'; e.currentTarget.style.color = '#6366F1' }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.color = 'var(--tx2)' }}>
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.color = 'var(--tx2)' }}
+                  >
                     {item.label}
                   </button>
                 ))}
@@ -251,13 +441,59 @@ export default function IntelligencePage() {
             </div>
           </div>
         )}
+
+        {/* ─── ASK ASKBIZ / SPARRING ─── */}
+        {tab === 'sparring' && (
+          <div style={{ maxWidth: 720 }}>
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>AI Sparring Partner</div>
+              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Scenario planning · What-if analysis · Strategic decisions</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16, padding: '16px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)' }}>
+              <textarea
+                value={sparringInput}
+                onChange={e => setSparringInput(e.target.value)}
+                placeholder="Ask a strategic question... e.g. Should I expand to Germany? Is now a good time to raise prices?"
+                rows={3}
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 14, fontFamily: 'inherit', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
+              />
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button
+                  onClick={askSparring}
+                  disabled={sparringSending || !sparringInput.trim()}
+                  style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: '#6366F1', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: sparringSending || !sparringInput.trim() ? 0.5 : 1 }}
+                >
+                  {sparringSending ? 'Thinking...' : 'Ask →'}
+                </button>
+              </div>
+            </div>
+            {/* Prompt suggestions */}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+              {sparringPrompts.map((p, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSparringInput(p)}
+                  style={{ padding: '6px 12px', borderRadius: 9999, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx3)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+            {sparringResponse && (
+              <div style={{ padding: '16px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', fontSize: 13, color: 'var(--tx2)', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>
+                {sparringResponse}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ─── MARKET ─── */}
         {tab === 'market' && (
           <div style={{ maxWidth: 720 }}>
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>Market Intelligence</div>
-              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Search real market prices, channels, and routes — powered by merchant data + live web signals</div>
+              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Real market prices, channels, and routes — merchant data + live web signals</div>
             </div>
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '16px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 20 }}>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input
@@ -297,7 +533,6 @@ export default function IntelligencePage() {
                 </select>
               </div>
             </div>
-
             {mktResult?.locked && (
               <div style={{ padding: '24px 20px', borderRadius: 14, border: '1px solid #d08a59', background: 'rgba(208,138,89,0.07)', textAlign: 'center' }}>
                 <div style={{ fontSize: 28, marginBottom: 10 }}>🌍</div>
@@ -306,11 +541,9 @@ export default function IntelligencePage() {
                 <a href="/billing" style={{ display: 'inline-block', padding: '10px 24px', borderRadius: 9999, background: '#d08a59', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Upgrade to Growth →</a>
               </div>
             )}
-
             {mktResult?.error && (
               <div style={{ padding: '14px 16px', borderRadius: 12, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', fontSize: 13, color: '#EF4444' }}>{mktResult.error}</div>
             )}
-
             {mktResult && !mktResult.locked && !mktResult.error && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {mktResult.catalogue?.length > 0 && (
@@ -323,7 +556,7 @@ export default function IntelligencePage() {
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                         <thead>
                           <tr style={{ background: 'var(--ev)' }}>
-                            {['Product', 'Channel', 'Region', 'Avg Price', 'Min', 'Max', 'Margin %', 'Merchants'].map(h => (
+                            {['Product','Channel','Region','Avg Price','Min','Max','Margin %','Merchants'].map(h => (
                               <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--tx3)', whiteSpace: 'nowrap' }}>{h}</th>
                             ))}
                           </tr>
@@ -346,13 +579,11 @@ export default function IntelligencePage() {
                     </div>
                   </div>
                 )}
-
                 {mktResult.catalogue?.length === 0 && (
                   <div style={{ padding: '14px 16px', borderRadius: 12, background: 'var(--sf)', border: '1px solid var(--b)', fontSize: 13, color: 'var(--tx3)' }}>
                     No merchant price data yet for this product — web signals below may help.
                   </div>
                 )}
-
                 {mktResult.routes?.length > 0 && (
                   <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
                     <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)' }}>
@@ -362,7 +593,7 @@ export default function IntelligencePage() {
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                         <thead>
                           <tr style={{ background: 'var(--ev)' }}>
-                            {['Origin', 'Destination', 'Carrier', 'Avg Transit', 'On-Time', 'Customs Hold', 'Merchants'].map(h => (
+                            {['Origin','Destination','Carrier','Avg Transit','On-Time','Customs Hold','Merchants'].map(h => (
                               <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--tx3)', whiteSpace: 'nowrap' }}>{h}</th>
                             ))}
                           </tr>
@@ -384,7 +615,6 @@ export default function IntelligencePage() {
                     </div>
                   </div>
                 )}
-
                 {mktResult.web && (
                   <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
                     <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)' }}>
@@ -414,7 +644,7 @@ export default function IntelligencePage() {
                             {mktResult.web.news.map((n: any, i: number) => (
                               <a key={i} href={n.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--b)', textDecoration: 'none' }}>
                                 <span style={{ fontSize: 12, fontWeight: 500, color: '#6366F1', flex: 1 }}>{n.title}</span>
-                                {n.date && <span style={{ fontSize: 11, color: 'var(--tx3)', whiteSpace: 'nowrap' }}>{n.date?.slice(0, 10)}</span>}
+                                {n.date && <span style={{ fontSize: 11, color: 'var(--tx3)', whiteSpace: 'nowrap' }}>{n.date?.slice(0,10)}</span>}
                               </a>
                             ))}
                           </div>
@@ -423,7 +653,6 @@ export default function IntelligencePage() {
                     </div>
                   </div>
                 )}
-
                 {mktResult.data_thin && (
                   <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(208,138,89,0.08)', border: '1px solid rgba(208,138,89,0.2)', fontSize: 12, color: '#d08a59' }}>
                     Limited merchant data for this product — supplemented with live web signals. As more merchants contribute, this will improve.
@@ -431,11 +660,14 @@ export default function IntelligencePage() {
                 )}
               </div>
             )}
-
             {!mktResult && !mktLoading && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10, marginTop: 4 }}>
-                {[['leather handbag', 'USA'], ['running shoes', 'UK'], ['phone case', 'EU'], ['candles', '']].map(([product, region], i) => (
-                  <button key={i} onClick={() => { setMktQuery(product); if (region) setMktRegion(region) }} style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
+                {[['leather handbag','USA'],['running shoes','UK'],['phone case','EU'],['candles','']].map(([product, region], i) => (
+                  <button
+                    key={i}
+                    onClick={() => { setMktQuery(product); if (region) setMktRegion(region) }}
+                    style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
                     <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 3 }}>Try searching</div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{product}{region ? `, ${region}` : ''}</div>
                   </button>
@@ -444,6 +676,19 @@ export default function IntelligencePage() {
             )}
           </div>
         )}
+
+        {/* ─── CONNECTIONS ─── */}
+        {tab === 'connections' && <IntegrationHub />}
+
+        {/* ─── CFO MODE ─── */}
+        {tab === 'cfo' && (
+          <div style={{ maxWidth: 720 }}>
+            <FeatureGate planId={planId} feature="cfo_mode">
+              <CfoMode health={health} onAsk={askAskBiz}/>
+            </FeatureGate>
+          </div>
+        )}
+
       </div>
     </div>
   )
