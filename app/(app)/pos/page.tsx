@@ -70,7 +70,7 @@ interface InventoryItem {
 interface Location {
   id: string; name: string; address?: string; phone?: string; is_active: boolean
 }
-type Tab = 'overview' | 'staff' | 'inventory' | 'branches' | 'audit'
+type Tab = 'overview' | 'staff' | 'inventory' | 'branches' | 'audit' | 'map'
 type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
 type FilterModalType = { type: 'sales' | 'refunds' | 'low_stock' | 'cashier_detail'; title: string; cashier_id?: string } | null
 type TxDetailType = Transaction | null
@@ -140,6 +140,11 @@ export default function POSPage() {
   const [bulkCsv, setBulkCsv] = useState('')
   const [importingBulk, setImportingBulk] = useState(false)
   const csvInputRef = useRef<HTMLInputElement>(null)
+
+  // Map
+  const mapDivRef      = useRef<HTMLDivElement>(null)
+  const mapRef         = useRef<any>(null)
+  const mapMarkersRef  = useRef<any[]>([])
 
   // Camera
   const [recognizing, setRecognizing] = useState(false)
@@ -287,6 +292,23 @@ export default function POSPage() {
   const totalCost = completedTx.reduce((s, t) => s + (t.pos_items || []).reduce((is, i) => is + (i.cost_price || 0) * i.qty, 0), 0)
   const grossProfit = todayRevenue - totalCost
   const margin = todayRevenue > 0 ? (grossProfit / todayRevenue * 100) : 0
+
+  // Geo-tagged sales for map tab
+  const geoPoints = useMemo(() => {
+    const pts: any[] = []
+    for (const t of transactions) {
+      if (!t.notes) continue
+      const m = t.notes.match(/\|__geo:([-\d.]+),([-\d.]+)/)
+      if (!m) continue
+      pts.push({
+        id: t.id, lat: parseFloat(m[1]), lng: parseFloat(m[2]),
+        total: t.total, payment_type: t.payment_type, created_at: t.created_at,
+        cashier_name: t.cashier?.name || '',
+        cleanNotes: t.notes.replace(/\s*\|__geo:[^\s|]+/, '').trim(),
+      })
+    }
+    return pts
+  }, [transactions])
 
   // Comparison helper
   const pctChange = (curr: number, prev: number) => {
@@ -578,6 +600,85 @@ export default function POSPage() {
     )
   }
 
+  // ── Leaflet map lifecycle ──────────────────────────────
+  useEffect(() => {
+    if (tab !== 'map') {
+      if (mapRef.current) { mapRef.current.remove(); mapRef.current = null }
+      return
+    }
+    if (!document.getElementById('lf-css')) {
+      const link = document.createElement('link')
+      link.id = 'lf-css'; link.rel = 'stylesheet'
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+      document.head.appendChild(link)
+    }
+    // Use setTimeout to guarantee React has committed the tab's DOM before Leaflet mounts
+    const doInit = () => {
+      const L = (window as any).L
+      if (!L || !mapDivRef.current || mapRef.current) return
+      const map = L.map(mapDivRef.current, { center: [20, 0], zoom: 2 })
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap', maxZoom: 19,
+      }).addTo(map)
+      mapRef.current = map
+      mapMarkersRef.current = []
+    }
+    const t = setTimeout(() => {
+      if (document.getElementById('lf-js')) { doInit(); return }
+      const script = document.createElement('script')
+      script.id = 'lf-js'; script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+      script.async = true; script.onload = doInit
+      document.head.appendChild(script)
+    }, 80) // 80ms — enough for React commit + first paint
+    return () => clearTimeout(t)
+  }, [tab])
+
+  // ── Render map markers whenever geo points change ──────
+  useEffect(() => {
+    // If Leaflet hasn't loaded yet (async), retry once after the init delay
+    if (tab === 'map' && !mapRef.current) {
+      const retry = setTimeout(() => {
+        const L = (window as any).L; const map = mapRef.current
+        if (!L || !map) return
+        renderMarkers(L, map)
+      }, 200)
+      return () => clearTimeout(retry)
+    }
+    const L   = (window as any).L
+    const map = mapRef.current
+    if (!L || !map) return
+    renderMarkers(L, map)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geoPoints, tab])
+
+  const renderMarkers = (L: any, map: any) => {
+    mapMarkersRef.current.forEach(m => map.removeLayer(m))
+    mapMarkersRef.current = []
+    const bounds: [number, number][] = []
+    geoPoints.forEach((p: any) => {
+      const marker = L.circleMarker([p.lat, p.lng], {
+        radius: 10, fillColor: ACC, color: '#fff', weight: 2.5, fillOpacity: 0.9,
+      }).addTo(map)
+      const dt  = new Date(p.created_at)
+      const lbl = dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' +
+                  dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+      marker.bindPopup(`
+        <div style="font-family:-apple-system,sans-serif;min-width:150px;padding:2px 0">
+          <div style="font-weight:800;font-size:16px;color:#1a1916">${currencySymbol}${p.total.toFixed(2)}</div>
+          <div style="font-size:12px;color:#6b6760;margin-top:2px">${lbl}</div>
+          ${p.cashier_name ? `<div style="font-size:12px;color:#6b6760">by ${p.cashier_name}</div>` : ''}
+          <div style="font-size:12px;color:#6b6760;text-transform:capitalize">${p.payment_type}</div>
+          ${p.cleanNotes ? `<div style="font-size:11px;color:#a39e97;margin-top:2px">${p.cleanNotes}</div>` : ''}
+        </div>
+      `)
+      mapMarkersRef.current.push(marker)
+      bounds.push([p.lat, p.lng])
+    })
+    if (bounds.length > 0) {
+      try { map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 }) } catch {}
+    }
+  }
+
   // ── LOADING STATE ──────────────────────────────────────
   if (loading || posEnabled === null) return (
     <div className="page-shell">
@@ -663,14 +764,14 @@ export default function POSPage() {
       <div className="page-shell-body">
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid var(--b)', paddingBottom: 0, overflowX: 'auto' }}>
-          {(['overview', 'staff', 'inventory', 'branches', 'audit'] as Tab[]).map(t => (
+          {(['overview', 'staff', 'inventory', 'branches', 'map', 'audit'] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: '8px 16px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === t ? 'var(--sf)' : 'transparent', color: tab === t ? 'var(--tx)' : 'var(--tx3)',
               fontSize: 13, fontWeight: tab === t ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
               borderBottom: tab === t ? `2px solid ${ACC}` : '2px solid transparent',
             }}>
-              {t.charAt(0).toUpperCase() + t.slice(1)}
+              {t === 'map' ? '🗺️ Map' : t.charAt(0).toUpperCase() + t.slice(1)}
               {t === 'inventory' && alertCount > 0 && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px', verticalAlign: 'top' }}>{alertCount}</span>}
             </button>
           ))}
@@ -1358,6 +1459,29 @@ export default function POSPage() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+        {tab === 'map' && (
+          <div>
+            <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: 13, color: 'var(--tx3)' }}>
+                {geoPoints.length > 0
+                  ? `${geoPoints.length} geo-tagged sale${geoPoints.length !== 1 ? 's' : ''} in this period`
+                  : 'No geo-tagged sales in this period — cashiers must allow location access when checking out'}
+              </div>
+            </div>
+            <div style={{ position: 'relative', height: 520, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--b)' }}>
+              <div ref={mapDivRef} style={{ position: 'absolute', inset: 0 }} />
+              {geoPoints.length === 0 && (
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(249,248,246,0.95)', gap: 10, zIndex: 999 }}>
+                  <div style={{ fontSize: 40 }}>🗺️</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>No location data yet</div>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', maxWidth: 300, lineHeight: 1.6 }}>
+                    Each sale will drop a pin here when the cashier allows location access on their device during checkout.
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
