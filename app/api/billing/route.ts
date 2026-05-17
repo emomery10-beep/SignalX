@@ -51,7 +51,7 @@ export async function GET() {
     supabase.from('subscriptions').select('*, plans(*)').eq('user_id', user.id).single(),
     supabase.from('usage').select('*').eq('user_id', user.id).eq('period', period).single(),
     supabase.from('plans').select('*').eq('is_active', true).order('sort_order'),
-    supabase.from('profiles').select('pos_enabled, pos_seat_count').eq('id', user.id).single(),
+    supabase.from('profiles').select('pos_enabled, pos_seat_count, currency').eq('id', user.id).single(),
   ])
 
   const plan = (sub as { plans?: Record<string, unknown> } | null)?.plans as {
@@ -95,6 +95,7 @@ export async function GET() {
       enabled:   (profile as { pos_enabled?: boolean } | null)?.pos_enabled   ?? false,
       seatCount: (profile as { pos_seat_count?: number } | null)?.pos_seat_count ?? 0,
     },
+    userCurrency: (profile as { currency?: string } | null)?.currency || 'GBP',
   })
 }
 

@@ -108,11 +108,13 @@ export default function BillingPage() {
   const [posSeats,     setPosSeats]     = useState(1)
   const [posLoading,   setPosLoading]   = useState(false)
   const [posSuccess,   setPosSuccess]   = useState(false)
+  // Kenyan user detection + PesaPal
+  const [isKenyan,          setIsKenyan]          = useState(false)
+  const [pesapalLoading,    setPesapalLoading]    = useState('')
+  const [pesapalSuccess,    setPesapalSuccess]    = useState(false)
 
-  // Prices are always shown in GBP to match what Stripe actually charges.
-  // Stripe converts to local currency at checkout automatically.
-  const sym      = '£'
-  const currency = 'GBP'
+  const sym      = isKenyan ? 'KSh' : '£'
+  const currency = isKenyan ? 'KES' : 'GBP'
 
   useEffect(() => {
     const init = async () => {
@@ -128,11 +130,18 @@ export default function BillingPage() {
             setPosSeatCount(data.pos.seatCount)
             if (data.pos.seatCount > 0) setPosSeats(data.pos.seatCount)
           }
+          // Detect Kenyan user from profile currency
+          const uc = (data.userCurrency || '').toUpperCase()
+          if (uc === 'KES') setIsKenyan(true)
         }
         // Check for pos_success in URL
         if (window.location.search.includes('pos_success=true')) {
           setPosSuccess(true)
           setTimeout(() => setPosSuccess(false), 6000)
+        }
+        if (window.location.search.includes('pesapal=complete')) {
+          setPesapalSuccess(true)
+          setTimeout(() => setPesapalSuccess(false), 8000)
         }
       } catch {}
       finally { setPageLoading(false) }
@@ -141,14 +150,16 @@ export default function BillingPage() {
   }, [])
 
   // ── Price calculation ──────────────────────────────────────
-  // Fixed GBP prices — matches what Stripe actually charges.
-  // Stripe converts to the customer's local currency at checkout.
-  const GBP_PRICES: Record<string, number> = { growth: 19, business: 39 }
+  const PRICES: Record<string, Record<string, number>> = {
+    GBP: { growth: 19, business: 39 },
+    KES: { growth: 1900, business: 4900 },
+  }
 
   const getPrice = (planId: string) => {
-    const base = GBP_PRICES[planId]
+    const table = PRICES[isKenyan ? 'KES' : 'GBP'] || PRICES.GBP
+    const base = table[planId]
     if (!base) return null
-    const fmt = (n: number) => `£${n}`
+    const fmt = (n: number) => `${sym}${n.toLocaleString()}`
     return {
       monthly:       fmt(base),
       annualMonthly: fmt(Math.round(base * 10 / 12)),
@@ -209,6 +220,42 @@ export default function BillingPage() {
       const data = await res.json()
       if (data.url) window.location.href = data.url
     } finally { setPosLoading(false) }
+  }
+
+  // ── PesaPal checkout (Kenyan users) ─────────────────────────
+  const handlePesapalCheckout = async (planId: string) => {
+    if (planId === 'free' || planId === currentPlan) return
+    setPesapalLoading(planId)
+    try {
+      const res = await fetch('/api/pesapal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'submit_order', plan: planId }),
+      })
+      const data = await res.json()
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl
+        return
+      }
+      alert(data.error || 'Something went wrong')
+    } catch {
+      alert('Something went wrong. Please try again.')
+    } finally { setPesapalLoading('') }
+  }
+
+  const handlePesapalPosCheckout = async () => {
+    setPosLoading(true)
+    try {
+      const res = await fetch('/api/pesapal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'submit_order', plan: 'pos', seats: posSeats }),
+      })
+      const data = await res.json()
+      if (data.redirectUrl) window.location.href = data.redirectUrl
+      else alert(data.error || 'Something went wrong')
+    } catch { alert('Something went wrong. Please try again.') }
+    finally { setPosLoading(false) }
   }
 
   const currentBadge = getPlanBadge(currentPlan)
@@ -346,8 +393,8 @@ export default function BillingPage() {
                 </div>
 
                 <button
-                  onClick={() => handleUpgrade(plan.id)}
-                  disabled={isCurrent || plan.id === 'free' || loading === plan.id}
+                  onClick={() => isKenyan ? handlePesapalCheckout(plan.id) : handleUpgrade(plan.id)}
+                  disabled={isCurrent || plan.id === 'free' || loading === plan.id || pesapalLoading === plan.id}
                   style={{
                     width: '100%', padding: '11px', borderRadius: 10,
                     border: isCurrent || plan.id === 'free' ? `1px solid ${B}` : 'none',
@@ -358,12 +405,80 @@ export default function BillingPage() {
                     boxShadow: isCurrent || plan.id === 'free' ? 'none' : `0 2px 12px ${plan.colour}35`,
                   }}
                 >
-                  {loading === plan.id ? 'Loading…' : isCurrent ? 'Current plan' : plan.id === 'free' ? 'Free forever' : `Upgrade to ${plan.name} →`}
+                  {(loading === plan.id || pesapalLoading === plan.id) ? 'Loading…' : isCurrent ? 'Current plan' : plan.id === 'free' ? 'Free forever' : `Upgrade to ${plan.name} →`}
                 </button>
               </div>
             )
           })}
         </div>
+
+        {/* PesaPal success toast */}
+        {pesapalSuccess && (
+          <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+            <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500 }}>Payment confirmed! Your plan is being activated…</span>
+          </div>
+        )}
+
+        {/* M-Pesa / PesaPal section — Kenyan users (all plans) */}
+        {isKenyan && (
+          <div style={{ borderRadius: 18, border: '1px solid rgba(76,175,80,.3)', background: 'rgba(76,175,80,.03)', padding: '22px 24px', marginBottom: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 9, background: '#4CAF50', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M12 1v4M12 19v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M1 12h4M19 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+              </div>
+              <div>
+                <span style={{ fontSize: 16, fontWeight: 700, color: '#4CAF50' }}>Pay with M-Pesa</span>
+                <div style={{ fontSize: 12, color: TX3 }}>Lipa Na M-Pesa — pay directly from your phone via PesaPal</div>
+              </div>
+            </div>
+
+            <p style={{ fontSize: 13, color: TX2, marginBottom: 16, lineHeight: 1.6 }}>
+              Use the buttons below to upgrade your plan or add POS staff seats. You'll be redirected to PesaPal's secure checkout — pay with M-Pesa, Airtel Money, or card.
+            </p>
+
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              {currentPlan !== 'growth' && (
+                <button
+                  onClick={() => handlePesapalCheckout('growth')}
+                  disabled={!!pesapalLoading}
+                  style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#4CAF50', color: '#fff', fontSize: 13, fontWeight: 600, cursor: pesapalLoading ? 'default' : 'pointer', fontFamily: 'inherit', opacity: pesapalLoading ? .6 : 1 }}
+                >
+                  {pesapalLoading === 'growth' ? 'Redirecting…' : 'Growth — KSh 1,900/mo'}
+                </button>
+              )}
+              {currentPlan !== 'business' && (
+                <button
+                  onClick={() => handlePesapalCheckout('business')}
+                  disabled={!!pesapalLoading}
+                  style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#388E3C', color: '#fff', fontSize: 13, fontWeight: 600, cursor: pesapalLoading ? 'default' : 'pointer', fontFamily: 'inherit', opacity: pesapalLoading ? .6 : 1 }}
+                >
+                  {pesapalLoading === 'business' ? 'Redirecting…' : 'Business — KSh 4,900/mo'}
+                </button>
+              )}
+              <button
+                onClick={handlePesapalPosCheckout}
+                disabled={!!pesapalLoading || posLoading}
+                style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid rgba(76,175,80,.4)', background: 'transparent', color: '#4CAF50', fontSize: 13, fontWeight: 600, cursor: (pesapalLoading || posLoading) ? 'default' : 'pointer', fontFamily: 'inherit', opacity: (pesapalLoading || posLoading) ? .6 : 1 }}
+              >
+                {posLoading ? 'Loading…' : `POS ${posSeats} seat${posSeats !== 1 ? 's' : ''} — KSh ${(posSeats * 500).toLocaleString()}/mo`}
+              </button>
+            </div>
+
+            <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+              {['M-Pesa', 'Airtel Money', 'Visa / Mastercard'].map(m => (
+                <div key={m} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: TX3, padding: '4px 10px', borderRadius: 8, background: 'rgba(76,175,80,.06)', border: '1px solid rgba(76,175,80,.12)' }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+                  {m}
+                </div>
+              ))}
+            </div>
+
+            <p style={{ fontSize: 11, color: TX3, marginTop: 12, lineHeight: 1.5 }}>
+              Powered by PesaPal — Kenya's trusted payment gateway. POS seats: KSh 500/seat/month (~$4 USD). Card payments via Stripe also available above.
+            </p>
+          </div>
+        )}
 
         {/* POS success toast */}
         {posSuccess && (
@@ -387,7 +502,7 @@ export default function BillingPage() {
                 )}
               </div>
               <p style={{ fontSize: 13, color: TX2, margin: 0, lineHeight: 1.6, maxWidth: 480 }}>
-                Add cashier and inventory staff to your shop at <strong>£5/seat/month</strong>. Each seat lets one staff member log in to <a href="https://pos.askbiz.co" target="_blank" rel="noreferrer" style={{ color: ACC, textDecoration: 'none' }}>pos.askbiz.co</a> via email or WhatsApp OTP on their own phone. The owner dashboard is always included — seats are for additional staff only.
+                Add cashier and inventory staff to your shop at <strong>{isKenyan ? 'KSh 500' : '£5'}/seat/month</strong>. Each seat lets one staff member log in to <a href="https://pos.askbiz.co" target="_blank" rel="noreferrer" style={{ color: ACC, textDecoration: 'none' }}>pos.askbiz.co</a> via email or WhatsApp OTP on their own phone. The owner dashboard is always included — seats are for additional staff only.
               </p>
             </div>
 
@@ -445,11 +560,11 @@ export default function BillingPage() {
 
               <div style={{ fontSize: 13, color: TX2 }}>
                 {posSeats} seat{posSeats !== 1 ? 's' : ''} ·{' '}
-                <strong style={{ color: TX }}>£{posSeats * 5}/month</strong>
+                <strong style={{ color: TX }}>{isKenyan ? `KSh ${(posSeats * 500).toLocaleString()}` : `£${posSeats * 5}`}/month</strong>
               </div>
 
               <button
-                onClick={handlePosCheckout}
+                onClick={isKenyan ? handlePesapalPosCheckout : handlePosCheckout}
                 disabled={posLoading}
                 style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 2px 10px rgba(208,138,89,.3)`, opacity: posLoading ? .6 : 1 }}
               >
@@ -550,8 +665,8 @@ export default function BillingPage() {
             { q: 'How does social commerce work?',           a: 'Connect TikTok Shop, Instagram Shopping, or Pinterest from the Sources page. AskBiz tracks conversion rates, saves (demand signals), and which products are going viral — and alerts you when a product has high saves but no orders.' },
             { q: 'How does churn intelligence work?',        a: 'AskBiz scans your customer data monthly and scores each customer by churn risk based on days since last order and purchase frequency. At-risk customers appear in a retention priority list, and you can ask AskBiz why any specific customer is flagged.' },
             { q: 'How do team seats work?',                  a: 'Business plan includes up to 5 team members. Each person gets their own login with a role — owner, admin, analyst, accountant, buyer, or viewer.' },
-            { q: 'How do POS seats work?',                   a: 'POS seats are a separate add-on at £5/seat/month — available on any plan. Each seat lets one cashier or inventory staff member log in to pos.askbiz.co via email or WhatsApp OTP on their own phone. The owner dashboard is always included free.' },
-            { q: 'Are prices in my local currency?',         a: 'Prices are shown in GBP. At checkout, Stripe automatically converts to your local currency at the current exchange rate.' },
+            { q: 'How do POS seats work?',                   a: `POS seats are a separate add-on at ${isKenyan ? 'KSh 500' : '£5'}/seat/month — available on any plan. Each seat lets one cashier or inventory staff member log in to pos.askbiz.co via email or WhatsApp OTP on their own phone. The owner dashboard is always included free.` },
+            { q: 'Are prices in my local currency?',         a: isKenyan ? 'Yes — prices are shown in Kenyan Shillings (KES). You can pay via M-Pesa, Airtel Money, or card through PesaPal.' : 'Prices are shown in GBP. At checkout, Stripe automatically converts to your local currency at the current exchange rate.' },
             { q: 'Is my data safe?',                         a: 'Your data is encrypted at rest and in transit. We never use your business data to train AI models.' },
           ].map((faq, i) => (
             <div key={i} style={{ borderBottom: `1px solid ${B}`, padding: '14px 0' }}>
