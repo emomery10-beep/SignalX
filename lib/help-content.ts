@@ -125,6 +125,9 @@ export const HELP_TOPICS: HelpTopic[] = [
       "asking-about-competitors",
       "forecasting-questions",
       "improving-ai-answers",
+      "voice-input-guide",
+      "file-context-in-chat",
+      "conversation-search-guide",
     ],
   },
   {
@@ -212,6 +215,11 @@ export const HELP_TOPICS: HelpTopic[] = [
       "dashboard-loading-slow",
       "missing-historical-data",
       "ai-not-responding",
+      "xero-sync-error",
+      "stripe-sync-error",
+      "woocommerce-sync-error",
+      "ebay-sync-error",
+      "paypal-sync-error",
     ],
   },
   {
@@ -606,6 +614,108 @@ export const HELP_TOPICS: HelpTopic[] = [
     ],
   },
   {
+    slug: "expansion-intelligence",
+    title: "Expansion Intelligence",
+    description: "Discover new product opportunities, variant extensions, bundles, and geographic expansion candidates ranked by profit potential.",
+    icon: "🌱",
+    color: "#27ae60",
+    articles: [
+      "expansion-overview",
+      "understanding-opportunity-scores",
+      "expansion-candidate-types",
+      "cannibalization-risk-explained",
+      "running-expansion-analysis",
+      "shortlisting-and-testing",
+      "expansion-with-real-data",
+      "expansion-best-practices",
+    ],
+  },
+  {
+    slug: "files-uploads",
+    title: "Files & Uploads",
+    description: "Upload CSV and Excel files, manage your datasets, use uploaded files as context in AI chat, and troubleshoot upload issues.",
+    icon: "📂",
+    color: "#1ed4ca",
+    articles: [
+      "files-overview",
+      "uploading-csv-xlsx",
+      "file-status-and-parsing",
+      "ask-about-uploaded-file",
+      "managing-uploaded-files",
+      "file-size-limits",
+      "file-column-detection",
+      "file-troubleshooting",
+    ],
+  },
+  {
+    slug: "my-business",
+    title: "My Business",
+    description: "Your personalised business command centre — health score, KPIs from your data, live insights, shipping quotes, and quick actions in one place.",
+    icon: "🏠",
+    color: "#d08a59",
+    articles: [
+      "my-business-overview",
+      "business-health-score",
+      "kpi-cards-explained",
+      "live-insights-feed",
+      "revenue-and-margin-charts",
+      "shipping-quote-tool",
+      "daily-brief-on-my-business",
+      "quick-actions-guide",
+    ],
+  },
+  {
+    slug: "templates",
+    title: "Industry Templates",
+    description: "Pre-built question sets tailored to your business type — retail, ecommerce, distributor, or exporter. Jump straight into insights.",
+    icon: "📋",
+    color: "#8c6fe0",
+    articles: [
+      "templates-overview",
+      "using-a-template",
+      "filtering-by-business-type",
+      "template-questions-explained",
+      "templates-for-retail",
+      "templates-for-ecommerce",
+      "templates-for-distributors",
+      "templates-for-exporters",
+    ],
+  },
+  {
+    slug: "shipments-tracking",
+    title: "Shipments & Tracking",
+    description: "Track shipments, monitor customs holds, analyse delays, understand financial impact, and manage supplier risk from one dashboard.",
+    icon: "📦",
+    color: "#6366F1",
+    articles: [
+      "shipments-overview",
+      "adding-a-shipment",
+      "tracking-shipment-status",
+      "customs-hold-guide",
+      "delay-and-risk-flags",
+      "financial-impact-of-delays",
+      "shipment-filtering",
+      "shipments-plan-features",
+    ],
+  },
+  {
+    slug: "settings-preferences",
+    title: "Settings & Preferences",
+    description: "Configure your profile, team, localisation, business address, integrations, notifications, AI preferences, and API access.",
+    icon: "⚙️",
+    color: "#636e72",
+    articles: [
+      "settings-overview",
+      "profile-settings",
+      "team-management-settings",
+      "localisation-currency",
+      "business-address-setup",
+      "notification-preferences",
+      "ai-preferences",
+      "privacy-and-compliance-settings",
+    ],
+  },
+  {
     slug: "point-of-sale",
     title: "Point of Sale (POS)",
     description: "Set up and use AskBiz POS — scan products, process sales, manage inventory, and track staff performance from any device.",
@@ -638,6 +748,19 @@ export const HELP_TOPICS: HelpTopic[] = [
       "pos-branch-filtered-dashboard",
       "pos-multi-branch-ai",
       "pos-offline-connectivity",
+      "pos-sales-map",
+      "pos-selling-by-weight",
+      "pos-shift-management",
+      "pos-repair-getting-started",
+      "pos-repair-intake-workflow",
+      "pos-repair-quoting-customers",
+      "pos-repair-assigning-engineers",
+      "pos-repair-tracking-parts",
+      "pos-repair-completing-collection",
+      "pos-repair-warranty-management",
+      "pos-repair-service-presets",
+      "pos-repair-customer-notifications",
+      "pos-repair-reports-analytics",
     ],
   },
 ];
@@ -11640,6 +11763,105 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
     related: ["pos-getting-started", "pos-camera-troubleshooting", "pos-making-a-sale"],
   },
+  {
+    slug: "pos-sales-map",
+    title: "Using the Sales Map",
+    description: "View geo-tagged transactions on an interactive map in your POS admin dashboard. Learn how to enable location on cashier devices, what the green dot means, and what each map pin shows.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    lastUpdated: "2026-05-16",
+    keywords: ["pos sales map", "geo tagged sales", "location tracking pos", "pos map view", "where are my sales", "askbiz sales map"],
+    content: [
+      {
+        heading: "What is the Sales Map?",
+        body: "The Sales Map is an interactive map in your POS admin dashboard (🗺️ Map tab at **askbiz.co/pos**) that shows a pin for every completed sale that has location data. It lets you see at a glance where your business is happening — across market zones, delivery areas, or event venues.\n\nThe map is powered by Leaflet.js and uses OpenStreetMap tiles. It is available to business owners and admin-level staff. Cashiers do not have access to the map view.",
+      },
+      {
+        heading: "Enabling location on a cashier device",
+        body: "Location is captured by the cashier's device browser at the moment each sale completes. To enable it:\n\n1. Open **askbiz.co/pos** on the cashier device\n2. When prompted, tap **Allow** for location access\n3. Confirm the **green dot** appears in the cashier header\n\nThe green dot is your real-time indicator:\n- **Green dot visible** — GPS is active; all completed sales will be geo-tagged automatically\n- **No dot or amber dot** — location is unavailable; sales complete normally without coordinates\n\nIf the browser previously denied location, go to the browser's site settings for `askbiz.co`, re-enable location, and reload the page. Once allowed, the permission persists — the cashier does not need to re-authorise each session.",
+      },
+      {
+        heading: "What each map pin shows",
+        body: "Tapping a pin on the Sales Map opens a popup with:\n\n- **Sale amount** — in your business currency (e.g. KSh 450)\n- **Date and time** — when the transaction completed\n- **Cashier name** — who processed the sale\n- **Payment method** — cash, card, or mobile money\n\nPins cluster automatically in dense areas. Use the date range filter at the top of the map to narrow down to a specific day, week, or custom period. Zoom and pan the map to explore different areas.",
+      },
+      {
+        heading: "Transactions without location data",
+        body: "Not every sale will have a pin. Transactions without coordinates are excluded from the map but appear normally in all other reports and transaction lists. A sale will not carry location data if:\n\n- The cashier did not grant location permission\n- GPS was unavailable at the moment of sale (e.g. poor signal indoors)\n- The sale was recorded in offline mode\n\nNo action is needed for untagged transactions — they are complete and accurate records, just without the spatial component.",
+      },
+    ],
+    faq: [
+      { q: "Can cashiers see the map or each other's locations?", a: "No. The Sales Map is only visible to business owners and admin-level staff. Cashiers see the green dot indicator on their own device but cannot access the map or view any other cashier's location data." },
+      { q: "Does the map track cashier movement continuously?", a: "No. Location is captured once per transaction, at the moment the sale completes. There is no continuous tracking between sales. If a cashier completes 10 sales in a day, there are 10 location data points — one per transaction." },
+    ],
+    related: ["pos-making-a-sale", "pos-viewing-daily-stats", "pos-staff-performance"],
+  },
+  {
+    slug: "pos-selling-by-weight",
+    title: "Selling Items by Weight (kg)",
+    description: "Set up kg items in your AskBiz POS inventory, enter decimal quantities on the sell screen, and understand how totals recalculate live and how weight sales appear on receipts.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    lastUpdated: "2026-05-16",
+    keywords: ["sell by weight pos", "kg items pos", "decimal quantity pos", "butcher pos", "weight based selling", "pos per kilogram pricing"],
+    content: [
+      {
+        heading: "Setting up a kg item in inventory",
+        body: "Any inventory item can be configured for weight-based selling. Open the item in **/pos/inventory** (or create a new one) and set the **Unit** field to **kg**.\n\nSet the **Price** as the per-kilogram rate — for example, if minced beef sells at KSh 600 per kilogram, enter KSh 600. This is the rate the system uses to calculate the line total when the cashier enters the weight.\n\nAll other fields (SKU, category, stock tracking, low-stock threshold) work the same as for unit items. Save the item — it appears on the sell screen immediately.",
+      },
+      {
+        heading: "Entering weight on the sell screen",
+        body: "When a cashier taps a kg item on the product grid, a **decimal quantity input** appears in the basket instead of the standard whole-number input. The cashier reads the weight from their scale and types it in:\n\n- `0.5` for half a kilogram\n- `1.25` for one and a quarter kilograms\n- `0.375` for 375 grams\n\nThe line total recalculates **in real time** as the cashier types — no need to confirm before seeing the result. If the amount looks correct, the cashier proceeds to payment as normal. There is no mode switch or separate screen; the flow is identical to a regular sale.",
+      },
+      {
+        heading: "How receipts show kg items",
+        body: "On printed and digital receipts, kg items display the weight and per-kg rate clearly:\n\n```\nMinced Beef x 0.75 kg       KSh 450.00\n  @ KSh 600.00 / kg\n```\n\nThe per-kg reference line lets customers verify the arithmetic. WhatsApp receipts use the same format. If you have multiple kg items in a single sale, each appears as a separate line with its own weight and rate.",
+      },
+      {
+        heading: "Stock tracking for kg items",
+        body: "If stock tracking is enabled for a kg item, the quantity sold is deducted from the stock total in kg. Selling 0.75 kg from a 5 kg stock leaves 4.25 kg.\n\nLow-stock alerts work in kg — set a threshold in kg (e.g. alert when stock falls below 2 kg). When restocking, use **Add** mode to add the delivery weight, or **Set** mode to override to a specific total. Both modes accept decimal values.\n\nIf stock tracking is disabled for a kg item (common for items where you don't need precise stock counts), the weight input and live recalculation still work — tracking is optional.",
+      },
+    ],
+    faq: [
+      { q: "Can I sell items by other units, like litres or metres?", a: "The unit field currently supports 'kg' for weight-based decimal input. For other continuous units (litres, metres), you can set the unit label to whatever describes your product and use the decimal input the same way — the system treats any non-unit item as a decimal quantity input." },
+      { q: "How does a kg sale appear in transaction reports?", a: "The transaction records the item name, the weight entered as the quantity, the per-kg price, and the line total. In reporting, kg sales appear alongside regular unit sales with the weight shown in the quantity column." },
+    ],
+    related: ["pos-managing-inventory", "pos-restocking-guide", "pos-making-a-sale"],
+  },
+  {
+    slug: "pos-shift-management",
+    title: "Opening and Closing Shifts",
+    description: "Use AskBiz POS shift management to record opening cash balances, close shifts with a physical cash count, and track variances for end-of-day reconciliation.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    lastUpdated: "2026-05-16",
+    keywords: ["pos shift management", "opening cash balance pos", "cash count pos", "pos shift close", "till reconciliation", "pos cash accountability"],
+    content: [
+      {
+        heading: "Why shifts matter",
+        body: "Shift management creates a formal cash accountability record for each cashier session. Without it, cash discrepancies at the end of the day are difficult to trace — you know the till is short, but not when the shortfall occurred or who was responsible.\n\nWith shifts, every session has:\n- A recorded opening cash balance (the float put in at the start)\n- A timestamp for when the shift opened and closed\n- The expected cash total (opening balance + cash sales during the shift)\n- The actual cash count (physical count entered by the cashier at closing)\n- The variance (expected minus actual)\n\nThis creates clear accountability per cashier, per session — making end-of-day reconciliation fast and transparent.",
+      },
+      {
+        heading: "Opening a shift",
+        body: "At the start of a trading session:\n\n1. Open the **Shift** panel on the POS screen (accessible from the main sell screen menu)\n2. Count the physical cash in the till drawer\n3. Enter the **opening cash balance** — this is the float (e.g. KSh 5,000)\n4. Tap **Open Shift**\n\nThe shift start time is recorded. The shift state is stored in the device's `localStorage` as the primary record, with a background write to the database. If connectivity is unavailable when the shift opens, it still opens locally and syncs when internet returns.\n\nOnly one shift can be open per cashier at a time. If the previous shift was not closed, the system will prompt the cashier to close it first.",
+      },
+      {
+        heading: "Closing a shift",
+        body: "At the end of the trading session:\n\n1. Open the **Shift** panel\n2. Physically count all the cash in the till drawer\n3. Enter the **actual cash count** into the closing form\n4. The system shows the **expected cash** (opening balance + all cash sales during the shift) and calculates the **variance** automatically\n5. Review the summary and tap **Close Shift**\n\nExample:\n```\nOpening Balance:    KSh  5,000\nCash Sales:         KSh  8,650\nExpected Cash:      KSh 13,650\nActual Count:       KSh 13,620\nVariance:          -KSh     30\nShift Duration:     7h 45m\n```\n\nA small variance (under KSh 100) is typical and may reflect damaged notes, rounding, or minor errors. A larger variance should be investigated before the cashier leaves.",
+      },
+      {
+        heading: "What shift data is used for",
+        body: "Shift records are visible to the business owner in the admin dashboard under **Shifts** in the POS section. Each record shows the cashier, dates, opening/closing balances, expected cash, actual cash, variance, and shift duration.\n\nShift data is used for:\n- **Daily reconciliation** — confirm cash matches expectations before banking\n- **Cashier accountability** — variances are linked to the specific cashier\n- **Cash flow tracking** — opening balances reveal how much float is circulating\n- **Trend analysis** — patterns in variance over time may indicate a training need or a systematic issue\n\nShift records are stored in the `pos_shifts` table and are included in your standard data exports.",
+      },
+    ],
+    faq: [
+      { q: "What if a cashier forgets to open a shift before selling?", a: "Sales still process normally regardless of whether a shift is open — shift management is a reconciliation layer, not a blocker. If a cashier forgets, the business owner can manually create a shift record from the admin panel to cover the session retroactively." },
+      { q: "Does AskBiz count my cash for me?", a: "No — AskBiz calculates the *expected* cash based on the opening balance plus recorded cash sales. The cashier must physically count the actual cash in the till and enter it. The variance is the difference between what AskBiz expects and what the cashier counts." },
+    ],
+    related: ["pos-viewing-daily-stats", "pos-staff-performance", "pos-making-a-sale"],
+  },
 
   // ── AskBiz Academic Articles ────────────────────────────────────────────────
 
@@ -11785,6 +12007,1922 @@ export const HELP_ARTICLES: HelpArticle[] = [
       { q: "How often should I reorder?", a: "Frequency depends on EOQ. If EOQ is 489 units and you sell 200/month, reorder every ~2.4 months. Higher-velocity products reorder more frequently. Use your POS data to track this automatically." },
     ],
     related: ["pos-kpi-drilldown", "transaction-filtering", "what-is-business-intelligence"],
+  },
+
+  // ── EXPANSION INTELLIGENCE ──────────────────────────────────────────────────
+  {
+    slug: "expansion-overview",
+    title: "Expansion Intelligence Overview",
+    description: "How AskBiz identifies new product opportunities, variant extensions, bundles, and geographic expansion candidates ranked by profit potential.",
+    topic: "Expansion Intelligence",
+    topicSlug: "expansion-intelligence",
+    readTime: 4,
+    popular: true,
+    keywords: ["expansion intelligence", "product opportunities", "new products", "growth", "product expansion"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "What is Expansion Intelligence?",
+        body: "Expansion Intelligence analyses your existing sales data to find new product opportunities you're likely to succeed with. Instead of guessing what to sell next, AskBiz ranks candidates by **opportunity score**, **estimated margin**, and **cannibalization risk** — so you focus on the products most likely to grow your revenue without hurting existing sales.\n\nExpansion Intelligence is available on Growth and Business plans.",
+      },
+      {
+        heading: "How opportunities are found",
+        body: "AskBiz looks at several signals from your data:\n\n- **Purchase patterns** — what your customers buy together or from competitors\n- **Category gaps** — product categories your buyers shop in that you don't stock\n- **Variant demand** — whether a different size, quantity, or format of a bestseller would sell\n- **Trend signals** — rising search volume or seasonal demand in your market\n- **Bundle potential** — products frequently bought together that could be packaged as a set",
+      },
+      {
+        heading: "The Expansion dashboard",
+        body: "The Expansion page shows:\n\n- **KPI row** — total opportunities found, top opportunity score, average estimated margin, high-confidence picks, and low-cannibalization count\n- **Candidate cards** — each opportunity ranked by score, showing the product name, type (variant, adjacent, bundle, geographic, trend), confidence level, estimated margin, and cannibalization risk\n- **Filters** — switch between All, New, Shortlisted, and Testing to track your pipeline\n\nClick any candidate card to see the full analysis including the reasoning behind the recommendation.",
+      },
+      {
+        heading: "Getting personalised results",
+        body: "Expansion Intelligence works best with real sales data. Connect **Shopify**, **Amazon**, or another ecommerce source — or upload a CSV with your product and sales data. The more history AskBiz has, the more accurate the opportunity scores and margin estimates become.\n\nWithout connected data, you'll see sample candidates to illustrate how the feature works.",
+      },
+    ],
+    faq: [
+      { q: "Do I need to connect a data source to use Expansion Intelligence?", a: "You can explore the feature with sample data, but personalised recommendations require at least one connected data source or an uploaded file with product and sales information." },
+      { q: "How often are expansion candidates updated?", a: "Candidates refresh each time you run a new analysis by clicking 'Run new analysis' on the Expansion page. You can run this as often as you like." },
+      { q: "What plan do I need for Expansion Intelligence?", a: "Expansion Intelligence is available on Growth and Business plans. Free plan users see an upgrade prompt." },
+    ],
+    related: ["expansion-candidate-types", "understanding-opportunity-scores", "connect-first-data-source"],
+  },
+  {
+    slug: "understanding-opportunity-scores",
+    title: "Understanding Opportunity Scores",
+    description: "How AskBiz calculates the 0–100 opportunity score for each expansion candidate and what the numbers mean for your business.",
+    topic: "Expansion Intelligence",
+    topicSlug: "expansion-intelligence",
+    readTime: 3,
+    popular: false,
+    keywords: ["opportunity score", "expansion scoring", "product ranking", "confidence score"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "What the opportunity score means",
+        body: "Every expansion candidate gets a score from **0 to 100**. This represents how strong the evidence is that the product will succeed in your business.\n\n- **70–100**: Strong candidate — high demand evidence, good margin, low risk\n- **50–69**: Promising — worth investigating further or testing with a small order\n- **30–49**: Speculative — some signal but limited evidence\n- **Below 30**: Weak — low confidence, consider only if you have domain expertise suggesting otherwise",
+      },
+      {
+        heading: "What feeds into the score",
+        body: "The score combines multiple signals:\n\n- **Demand evidence** (40% weight) — purchase correlation, search trends, and category spending patterns\n- **Margin potential** (25% weight) — estimated gross margin based on typical pricing in the category\n- **Fit with your business** (20% weight) — how closely the product relates to your existing range and customer base\n- **Risk factors** (15% weight) — cannibalization risk, supplier complexity, and capital required",
+      },
+      {
+        heading: "Confidence levels",
+        body: "Each candidate also shows a **confidence level** (high, medium, or low) separate from the score. Confidence reflects how much data backs the recommendation:\n\n- **High confidence** — based on your actual sales data with clear patterns\n- **Medium confidence** — based on partial data or industry benchmarks\n- **Low confidence** — limited data, more of an educated guess\n\nA high score with low confidence means the opportunity looks great on paper but needs more data to validate.",
+      },
+    ],
+    faq: [
+      { q: "Can I change how the score is calculated?", a: "Not currently. The scoring model uses a fixed formula optimised for SME retail and ecommerce businesses. We're exploring custom weighting in a future release." },
+      { q: "Why do some candidates have high scores but low confidence?", a: "This happens when industry data suggests strong potential, but your own sales data doesn't have enough history to confirm. Consider a small test order to validate before committing." },
+    ],
+    related: ["expansion-overview", "expansion-candidate-types", "cannibalization-risk-explained"],
+  },
+  {
+    slug: "expansion-candidate-types",
+    title: "Expansion Candidate Types Explained",
+    description: "The five types of expansion candidates AskBiz identifies: variant extensions, adjacent categories, bundles, geographic, and trend-led opportunities.",
+    topic: "Expansion Intelligence",
+    topicSlug: "expansion-intelligence",
+    readTime: 4,
+    popular: false,
+    keywords: ["variant extension", "adjacent category", "bundle", "geographic expansion", "trend-led"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Variant Extension",
+        body: "A different size, quantity, or format of a product you already sell well. **Example:** Your 1L cooking oil is a bestseller — a 2L variant captures bulk buyers and improves margin per unit.\n\n**Why it's low risk:** You already know the product sells. You're just offering it in a different format your customers are asking for.",
+      },
+      {
+        heading: "Adjacent Category",
+        body: "A product in a related category that your existing customers already buy — just not from you. **Example:** Your cooking oil buyers purchase body lotion 38% of the time from competitors.\n\n**Why it works:** Your customers already trust you. Stocking what they need saves them a trip elsewhere and increases your basket size.",
+      },
+      {
+        heading: "Bundle",
+        body: "Two or more products frequently bought together, packaged as a set at a small discount. **Example:** Maize flour + sugar + tea are bought together 44% of the time — bundle them at 8% off to drive basket size.\n\n**Why it works:** Bundles increase average order value while giving the customer perceived savings. The margin per transaction goes up even with the discount.",
+      },
+      {
+        heading: "Geographic",
+        body: "An opportunity to sell an existing product into a new region or market where demand exists. **Example:** A product selling well in Nairobi Central could be expanded to Mombasa where search data shows rising demand.\n\n**Why it works:** You already have the supply chain — you're just extending your reach.",
+      },
+      {
+        heading: "Trend-Led",
+        body: "A product with rising demand based on search volume, social trends, or seasonal patterns. **Example:** Hand sanitiser search volume up 34% this month in your market.\n\n**Why it's higher risk:** Trends can be short-lived. AskBiz flags the confidence level so you can decide whether to stock lightly or go all in.",
+      },
+    ],
+    faq: [
+      { q: "Which candidate type is safest to start with?", a: "Variant extensions are typically the lowest risk because you're selling a different format of a proven product. Adjacent categories are next safest because you're selling to customers you already have." },
+      { q: "Can I filter by candidate type?", a: "Not yet as a standalone filter, but each card is tagged with its type so you can visually scan. This is on our roadmap." },
+    ],
+    related: ["expansion-overview", "understanding-opportunity-scores", "cannibalization-risk-explained"],
+  },
+  {
+    slug: "cannibalization-risk-explained",
+    title: "Cannibalization Risk Explained",
+    description: "What cannibalization risk means in Expansion Intelligence and how to use it when deciding which new products to launch.",
+    topic: "Expansion Intelligence",
+    topicSlug: "expansion-intelligence",
+    readTime: 3,
+    popular: false,
+    keywords: ["cannibalization", "cannibalisation risk", "product overlap", "self-competition"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "What is cannibalization risk?",
+        body: "Cannibalization happens when a new product steals sales from your existing products rather than bringing in new revenue. **Example:** If you launch a 2L cooking oil and your 1L sales drop by 50%, you've cannibalized yourself.\n\nAskBiz rates cannibalization risk as **low**, **medium**, or **high** for each expansion candidate.",
+      },
+      {
+        heading: "How risk levels are determined",
+        body: "- **Low risk** — the new product serves a different need, format, or customer segment. Adding it grows your total revenue.\n- **Medium risk** — some overlap exists. You may see a dip in a related SKU, but the net effect is positive because the new product captures additional demand.\n- **High risk** — the new product directly competes with an existing one. Only launch if the new product has significantly better margins.",
+      },
+      {
+        heading: "How to use this information",
+        body: "Don't avoid all medium-risk candidates — some cannibalization is acceptable if total revenue grows. The key question is: **will total margin increase?**\n\nAskBiz shows estimated margin alongside risk so you can do this calculation. A medium-risk candidate with 34% margin replacing a low-risk product at 19% margin is a net win.",
+      },
+    ],
+    faq: [
+      { q: "Should I avoid all high-risk candidates?", a: "Not necessarily. High risk means significant overlap with existing products. If the new product has much better margins or captures a segment you're losing to competitors, it can still be worth launching. Compare total margin, not just unit sales." },
+    ],
+    related: ["expansion-overview", "understanding-opportunity-scores", "expansion-candidate-types"],
+  },
+  {
+    slug: "running-expansion-analysis",
+    title: "Running an Expansion Analysis",
+    description: "How to trigger a new expansion analysis, what happens during the scan, and how long results take to appear.",
+    topic: "Expansion Intelligence",
+    topicSlug: "expansion-intelligence",
+    readTime: 2,
+    popular: false,
+    keywords: ["run analysis", "expansion scan", "generate opportunities"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "How to run an analysis",
+        body: "1. Go to **Expansion** in the sidebar\n2. Click **Run new analysis** in the top-right corner\n3. Wait for the scan to complete (usually a few seconds)\n\nAskBiz analyses your connected data sources and uploaded files to generate a ranked list of expansion candidates.",
+      },
+      {
+        heading: "What happens during the scan",
+        body: "The analysis examines your product catalogue, sales history, customer purchase patterns, and market signals to identify gaps and opportunities. It compares your assortment against what your customers are buying elsewhere and flags products with strong demand evidence.\n\nResults appear as ranked candidate cards on the same page.",
+      },
+      {
+        heading: "Running multiple analyses",
+        body: "You can run as many analyses as you need. Each run generates a fresh set of candidates based on your latest data. If you've recently uploaded new sales data or connected a new source, run a fresh analysis to see updated recommendations.",
+      },
+    ],
+    faq: [
+      { q: "How long does an analysis take?", a: "Typically a few seconds. Larger datasets with years of history may take up to 30 seconds." },
+      { q: "Does running an analysis cost extra?", a: "No. Expansion analysis is included in your Growth or Business plan with no per-run charges." },
+    ],
+    related: ["expansion-overview", "expansion-with-real-data", "shortlisting-and-testing"],
+  },
+  {
+    slug: "shortlisting-and-testing",
+    title: "Shortlisting and Testing Candidates",
+    description: "How to move expansion candidates through your pipeline — from new to shortlisted to testing — and track results.",
+    topic: "Expansion Intelligence",
+    topicSlug: "expansion-intelligence",
+    readTime: 3,
+    popular: false,
+    keywords: ["shortlist", "test product", "expansion pipeline", "candidate status"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "The candidate pipeline",
+        body: "Each expansion candidate has a status:\n\n- **New** — freshly identified, not yet reviewed\n- **Shortlisted** — you've reviewed it and it looks promising\n- **Testing** — you've ordered a small batch and are tracking performance\n\nUse the filter tabs at the top of the Expansion page to switch between views.",
+      },
+      {
+        heading: "Moving candidates through the pipeline",
+        body: "Click on any candidate card to open its detail view. From there you can change its status. A good workflow:\n\n1. Review all **New** candidates after each analysis\n2. Move promising ones to **Shortlisted**\n3. When you place a test order, move to **Testing**\n4. Track actual sales against the predicted margin",
+      },
+      {
+        heading: "Measuring test results",
+        body: "After testing a new product, compare actual performance against the AskBiz prediction:\n\n- Did the margin match the estimate?\n- Did cannibalization match the risk level?\n- Did the best region prediction hold?\n\nThis helps you calibrate how much to trust future recommendations and decide whether to scale up the product.",
+      },
+    ],
+    faq: [
+      { q: "Can I delete a candidate I'm not interested in?", a: "Currently you can leave it as 'New' and ignore it. Future updates will add a 'Dismissed' status for cleaner pipeline management." },
+    ],
+    related: ["expansion-overview", "running-expansion-analysis", "expansion-best-practices"],
+  },
+  {
+    slug: "expansion-with-real-data",
+    title: "Getting Personalised Expansion Recommendations",
+    description: "How to connect your data so Expansion Intelligence uses your actual sales patterns instead of sample data.",
+    topic: "Expansion Intelligence",
+    topicSlug: "expansion-intelligence",
+    readTime: 2,
+    popular: false,
+    keywords: ["connect data expansion", "personalised recommendations", "real data"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Why real data matters",
+        body: "Without connected data, Expansion Intelligence shows sample candidates to demonstrate the feature. These aren't relevant to your business. Once you connect at least one data source, AskBiz generates recommendations based on your actual products, customers, and sales patterns.",
+      },
+      {
+        heading: "Best data sources for expansion",
+        body: "The most useful sources for Expansion Intelligence are:\n\n- **Shopify / WooCommerce / Amazon** — product catalogue and sales history\n- **CSV upload** — product list with sales, margins, and stock levels\n- **Stripe / PayPal** — transaction patterns and customer behaviour\n\nThe more sales history you provide, the better AskBiz can identify purchase correlations and category gaps.",
+      },
+      {
+        heading: "Connecting your data",
+        body: "Go to **Sources** in the sidebar and connect your primary sales platform. Or go to **Files** and upload a CSV with your product data. Then return to Expansion and click **Run new analysis** to generate personalised candidates.",
+      },
+    ],
+    faq: [
+      { q: "How much data do I need for good recommendations?", a: "At least 3 months of sales history with 20+ products gives meaningful results. 12+ months of data produces the most accurate opportunity scores and margin estimates." },
+    ],
+    related: ["expansion-overview", "connect-first-data-source", "uploading-csv-xlsx"],
+  },
+  {
+    slug: "expansion-best-practices",
+    title: "Expansion Intelligence Best Practices",
+    description: "Tips for getting the most from expansion recommendations — when to act, how much to order, and common mistakes to avoid.",
+    topic: "Expansion Intelligence",
+    topicSlug: "expansion-intelligence",
+    readTime: 3,
+    popular: false,
+    keywords: ["expansion tips", "best practices", "test order", "product launch"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Start with low-risk, high-confidence candidates",
+        body: "Your first expansion should be a candidate with **high confidence** and **low cannibalization risk**. This lets you validate the feature before making bigger bets. Variant extensions of bestsellers are typically the safest starting point.",
+      },
+      {
+        heading: "Order small, test fast",
+        body: "Use the **recommended opening order** on each candidate card as your starting quantity. This is calibrated to give you enough stock to test demand without over-committing capital. If it sells through, reorder at a larger quantity.",
+      },
+      {
+        heading: "Run analysis after major changes",
+        body: "Re-run your expansion analysis after:\n\n- Adding a new data source or uploading fresh sales data\n- Seasonal transitions (pre-holiday, post-holiday)\n- Launching a new product (the model recalculates cannibalization)\n- Significant changes in your product range",
+      },
+      {
+        heading: "Common mistakes to avoid",
+        body: "- **Ignoring cannibalization risk** — launching a product that steals from your bestseller can reduce total margin\n- **Over-ordering trend-led products** — trends fade fast, start small\n- **Skipping the test phase** — even high-score candidates should be tested before a full commitment\n- **Only looking at margin** — a 40% margin product that sells 5 units is worth less than a 20% margin product that sells 500",
+      },
+    ],
+    faq: [
+      { q: "How often should I check Expansion Intelligence?", a: "Monthly is a good cadence for most businesses. Check more frequently if you're actively testing new products or if your market moves quickly (e.g., seasonal retail)." },
+    ],
+    related: ["expansion-overview", "shortlisting-and-testing", "running-expansion-analysis"],
+  },
+
+  // ── FILES & UPLOADS ─────────────────────────────────────────────────────────
+  {
+    slug: "files-overview",
+    title: "Files & Uploads Overview",
+    description: "How the Files section works in AskBiz — upload, manage, and analyse your CSV and Excel datasets from one place.",
+    topic: "Files & Uploads",
+    topicSlug: "files-uploads",
+    readTime: 3,
+    popular: true,
+    keywords: ["files", "uploads", "csv", "excel", "datasets", "file management"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "What is the Files page?",
+        body: "The **Files** page is where you upload, view, and manage your CSV and Excel datasets. Every file you upload is parsed and stored securely so you can:\n\n- Ask AskBiz questions about your data\n- Power dashboards and KPI cards with your numbers\n- Feed data into Forecasts, Expansion Intelligence, and other tools",
+      },
+      {
+        heading: "What you can do",
+        body: "- **Upload** CSV (.csv) and Excel (.xlsx, .xls) files up to 50 MB\n- **View** file details — row count, column count, file size, and upload date\n- **Check status** — see whether a file has been parsed and is ready for analysis\n- **Ask about it** — click 'Ask about this' to jump straight into chat with that file as context\n- **Delete** files you no longer need",
+      },
+      {
+        heading: "How uploads work",
+        body: "When you upload a file, AskBiz:\n\n1. Receives the file securely\n2. Parses it to extract rows and column names\n3. Stores the parsed data in your private account\n4. Marks the file as **Ready** when parsing completes\n\nSmall files (under 1 MB) are parsed in seconds. Larger files may take up to a minute.",
+      },
+    ],
+    faq: [
+      { q: "Is my uploaded data shared with anyone?", a: "No. Your files are stored in your private account and are never shared with other users or used for AI training. See our Privacy & Security articles for full details." },
+      { q: "Can I upload multiple files at once?", a: "Currently you upload one file at a time. Each file is processed independently and appears in your file list when ready." },
+    ],
+    related: ["uploading-csv-xlsx", "ask-about-uploaded-file", "file-troubleshooting"],
+  },
+  {
+    slug: "uploading-csv-xlsx",
+    title: "Uploading a CSV or Excel File",
+    description: "Step-by-step guide to uploading your CSV or XLSX data into AskBiz for analysis.",
+    topic: "Files & Uploads",
+    topicSlug: "files-uploads",
+    readTime: 2,
+    popular: true,
+    keywords: ["upload csv", "upload excel", "upload xlsx", "import data", "drag and drop"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "How to upload a file",
+        body: "1. Go to **Files** in the sidebar\n2. Either click the **Upload file** button in the top-right, or drag your file into the drop zone in the centre of the page\n3. Select a CSV (.csv) or Excel (.xlsx, .xls) file from your computer\n4. Wait for the upload and parsing to complete\n\nYou'll see a status message confirming the filename and row count once ready.",
+      },
+      {
+        heading: "Supported formats",
+        body: "- **CSV** (.csv) — comma-separated values, the most common format for data exports\n- **Excel** (.xlsx, .xls) — Microsoft Excel workbooks\n\nMaximum file size is **50 MB**. Your data stays private and is never shared.",
+      },
+      {
+        heading: "Tips for best results",
+        body: "- Include **column headers** in the first row — AskBiz uses these to understand your data\n- Use clear column names like 'Product Name', 'Revenue', 'Quantity', 'Margin' rather than codes like 'COL_A'\n- Remove blank rows or summary rows at the bottom of your spreadsheet before uploading\n- If your Excel file has multiple sheets, AskBiz reads the first sheet",
+      },
+    ],
+    faq: [
+      { q: "Can I upload a Google Sheets file?", a: "Not directly. Export your Google Sheet as a CSV (File → Download → Comma-separated values) and upload the CSV." },
+      { q: "What happens if my CSV uses semicolons instead of commas?", a: "AskBiz auto-detects common delimiters including semicolons, tabs, and pipes. Most files work without any changes." },
+    ],
+    related: ["files-overview", "file-status-and-parsing", "csv-upload-error"],
+  },
+  {
+    slug: "file-status-and-parsing",
+    title: "File Status and Parsing",
+    description: "What the file status badges mean and what happens when AskBiz parses your uploaded file.",
+    topic: "Files & Uploads",
+    topicSlug: "files-uploads",
+    readTime: 2,
+    popular: false,
+    keywords: ["file status", "parsed", "ready", "file processing"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "File status badges",
+        body: "Each file in your list shows a status badge:\n\n- **Ready** (green) — the file has been parsed successfully and is available for analysis in chat, dashboards, and other tools\n- **Processing** — the file is still being parsed. This usually takes a few seconds\n- **Error** — something went wrong during parsing. Check the file format and try re-uploading",
+      },
+      {
+        heading: "What parsing does",
+        body: "When you upload a file, AskBiz:\n\n- Detects the delimiter (comma, semicolon, tab)\n- Reads column headers from the first row\n- Counts total rows\n- Identifies numeric columns (used by Forecasts and dashboards)\n- Stores a parsed sample for quick preview\n\nOnce parsed, the file is immediately available across AskBiz.",
+      },
+    ],
+    faq: [
+      { q: "How long does parsing take?", a: "Most files under 10 MB are parsed in under 10 seconds. Larger files (10–50 MB) may take up to a minute. If a file is stuck in 'Processing' for more than 5 minutes, try deleting it and re-uploading." },
+    ],
+    related: ["files-overview", "uploading-csv-xlsx", "file-troubleshooting"],
+  },
+  {
+    slug: "ask-about-uploaded-file",
+    title: "Asking Questions About an Uploaded File",
+    description: "How to use your uploaded CSV or Excel file as context when chatting with AskBiz for instant data analysis.",
+    topic: "Files & Uploads",
+    topicSlug: "files-uploads",
+    readTime: 2,
+    popular: true,
+    keywords: ["ask about file", "chat with data", "analyse csv", "file context"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Using a file in chat",
+        body: "From the **Files** page, click the **Ask about this →** button next to any file. This opens the AI chat with that file pre-loaded as context.\n\nYou can then ask questions like:\n\n- \"What is my total revenue?\"\n- \"Which product has the highest margin?\"\n- \"Show me items with stock below 10 units\"\n- \"What's the trend in my monthly sales?\"",
+      },
+      {
+        heading: "How AskBiz reads your file",
+        body: "AskBiz uses the column names in your file to understand what each field represents. It automatically detects columns related to revenue, price, stock, margins, dates, and product names. The more descriptive your column names, the better the answers.",
+      },
+      {
+        heading: "Combining files with connected sources",
+        body: "If you have both uploaded files and connected data sources (like Shopify), AskBiz can answer questions using both. For example, you could upload a cost spreadsheet and ask \"Compare my Shopify revenue against my costs from the uploaded file.\"",
+      },
+    ],
+    faq: [
+      { q: "Can I ask about multiple files at once?", a: "AskBiz loads one file at a time as primary context. However, you can reference data from other files and connected sources in the same conversation." },
+    ],
+    related: ["files-overview", "what-can-i-ask", "uploading-csv-xlsx"],
+  },
+  {
+    slug: "managing-uploaded-files",
+    title: "Managing Your Uploaded Files",
+    description: "How to view, organise, and delete uploaded files in your AskBiz account.",
+    topic: "Files & Uploads",
+    topicSlug: "files-uploads",
+    readTime: 2,
+    popular: false,
+    keywords: ["manage files", "delete file", "file list", "organise uploads"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Viewing your files",
+        body: "The **Files** page lists all your uploads in reverse chronological order (newest first). Each file shows:\n\n- Filename\n- Row count and column count\n- File size\n- Upload date\n- Status badge",
+      },
+      {
+        heading: "Deleting a file",
+        body: "Click the **Delete** button (red) next to any file to remove it. This permanently deletes the file and its parsed data from your account. Deleted files cannot be recovered — you would need to re-upload the original file.\n\nDeleting a file does not affect any previously generated insights, dashboards, or chat conversations that used the file.",
+      },
+      {
+        heading: "Re-uploading updated data",
+        body: "If you have a newer version of a dataset, simply upload the new file. AskBiz treats each upload as a separate file. You can delete the old version after uploading the new one to keep your file list clean.",
+      },
+    ],
+    faq: [
+      { q: "Is there a limit on how many files I can upload?", a: "There's no hard limit on the number of files. The main constraint is the 50 MB per-file size limit. If you're on the free plan, uploaded files can still be used in chat." },
+    ],
+    related: ["files-overview", "file-status-and-parsing", "uploading-csv-xlsx"],
+  },
+  {
+    slug: "file-size-limits",
+    title: "File Size Limits and Supported Formats",
+    description: "Maximum file sizes, supported formats, and tips for handling large datasets in AskBiz.",
+    topic: "Files & Uploads",
+    topicSlug: "files-uploads",
+    readTime: 2,
+    popular: false,
+    keywords: ["file size limit", "50mb", "supported formats", "large file"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Size limits",
+        body: "- **Maximum file size**: 50 MB per file\n- **Row limit**: No hard row limit, but files with more than 500,000 rows may take longer to parse\n- **Column limit**: No hard column limit, but AskBiz works best with datasets that have clear, named columns",
+      },
+      {
+        heading: "Supported formats",
+        body: "- **.csv** — Comma-separated values (most reliable format)\n- **.xlsx** — Microsoft Excel 2007+ workbooks\n- **.xls** — Legacy Microsoft Excel workbooks\n\nOther formats (PDF, JSON, TXT) are not currently supported for upload. If your data is in another format, convert it to CSV first.",
+      },
+      {
+        heading: "Handling large files",
+        body: "If your file exceeds 50 MB:\n\n- **Split it** — break the data into smaller files by date range or category\n- **Remove unnecessary columns** — drop columns you don't need for analysis\n- **Summarise** — if you have transaction-level data, aggregate to daily or weekly totals\n- **Use CSV** — CSV files are typically smaller than equivalent Excel files",
+      },
+    ],
+    faq: [
+      { q: "Will you increase the file size limit?", a: "We're evaluating larger file support for Business and Enterprise plans. For now, 50 MB handles the vast majority of SME datasets." },
+    ],
+    related: ["files-overview", "uploading-csv-xlsx", "file-troubleshooting"],
+  },
+  {
+    slug: "file-column-detection",
+    title: "How AskBiz Detects Your Columns",
+    description: "How AskBiz automatically identifies revenue, stock, margin, and other columns in your uploaded files.",
+    topic: "Files & Uploads",
+    topicSlug: "files-uploads",
+    readTime: 2,
+    popular: false,
+    keywords: ["column detection", "auto-detect", "column names", "data mapping"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Automatic column detection",
+        body: "When you upload a file, AskBiz scans your column headers and automatically identifies common business data fields:\n\n- **Revenue / Sales / Price / Amount** → used for revenue KPIs and charts\n- **Stock / Qty / Quantity / Inventory** → used for stock alerts and inventory analysis\n- **Margin** → used for margin health charts and profitability analysis\n- **Date / Period / Month** → used for time-series analysis and forecasting\n- **Product / Item / SKU / Name** → used as the primary identifier",
+      },
+      {
+        heading: "Tips for better detection",
+        body: "- Use descriptive English column names in your header row\n- Avoid abbreviations — 'Revenue' works better than 'Rev' or 'R'\n- Keep numeric columns as numbers (not formatted as '£1,234' — just '1234')\n- Use consistent date formats (YYYY-MM-DD is most reliable)",
+      },
+    ],
+    faq: [
+      { q: "What if AskBiz misidentifies a column?", a: "You can clarify in chat. For example: 'The column called Amount is actually my cost price, not revenue.' AskBiz will adjust its analysis accordingly." },
+    ],
+    related: ["files-overview", "uploading-csv-xlsx", "ask-about-uploaded-file"],
+  },
+  {
+    slug: "file-troubleshooting",
+    title: "File Upload Troubleshooting",
+    description: "Common file upload problems and how to fix them — parsing errors, wrong row counts, and unsupported formats.",
+    topic: "Files & Uploads",
+    topicSlug: "files-uploads",
+    readTime: 3,
+    popular: false,
+    keywords: ["upload error", "file error", "parsing failed", "file not working"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Upload failed",
+        body: "If the upload itself fails:\n\n- Check your internet connection\n- Ensure the file is under 50 MB\n- Ensure it's a .csv, .xlsx, or .xls file\n- Try a different browser if the issue persists",
+      },
+      {
+        heading: "Parsing error",
+        body: "If the file uploads but shows an error status:\n\n- **Empty file** — the file has no data rows after the header\n- **No header row** — the first row must contain column names, not data\n- **Corrupt file** — the file may be damaged. Try re-exporting from the source application\n- **Encoding issues** — save your CSV as UTF-8 encoded if you see garbled characters",
+      },
+      {
+        heading: "Wrong row count",
+        body: "If the row count looks wrong:\n\n- AskBiz counts data rows only (the header row is not counted)\n- Blank rows at the end of your file are skipped\n- If your Excel file has multiple sheets, only the first sheet is read",
+      },
+      {
+        heading: "Columns not detected correctly",
+        body: "If AskBiz doesn't recognise your columns:\n\n- Rename columns to use standard business terms (Revenue, Quantity, Margin, etc.)\n- Remove merged cells in Excel files\n- Ensure the header row is the very first row (no title rows above it)",
+      },
+    ],
+    faq: [
+      { q: "My file is stuck in 'Processing' — what do I do?", a: "If a file has been processing for more than 5 minutes, delete it and upload again. If it fails repeatedly, check the file format and size, or email hello@askbiz.co with the file attached." },
+    ],
+    related: ["files-overview", "uploading-csv-xlsx", "csv-upload-error"],
+  },
+
+  // ── MY BUSINESS ─────────────────────────────────────────────────────────────
+  {
+    slug: "my-business-overview",
+    title: "My Business Overview",
+    description: "Your personalised business command centre — health score, KPIs, insights, charts, shipping quotes, and quick actions in one dashboard.",
+    topic: "My Business",
+    topicSlug: "my-business",
+    readTime: 4,
+    popular: true,
+    keywords: ["my business", "dashboard", "command centre", "business overview", "home page"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "What is My Business?",
+        body: "**My Business** is your personalised command centre. It combines your Business Pulse health score, KPI cards from your data, a live insights feed, trend charts, shipping quotes, and quick actions — all on one page.\n\nIt greets you by name and adapts based on your connected data sources and uploaded files.",
+      },
+      {
+        heading: "What you'll see",
+        body: "The page is divided into sections:\n\n- **KPI cards** — revenue, average margin, low stock alerts, and top product (powered by your uploaded files or connected sources)\n- **Business Pulse** — your 0–100 health score with a summary of what's improved and what needs attention\n- **Insights feed** — live alerts and tips from AskBiz watching your data\n- **Trend charts** — revenue and shipping cost trends over the last 6 months\n- **Revenue by product** — bar chart of your top 6 products\n- **Margin health** — doughnut chart showing the distribution of high, mid, and low margin products\n- **Daily brief** — what improved, what worsened, and your recommended action for today\n- **Quick actions** — shortcuts to ask a question, upload a file, set an alert, or run a forecast\n- **Your files** — recent uploads with a one-click 'Ask' button",
+      },
+      {
+        heading: "No data yet?",
+        body: "If you haven't connected any data or uploaded files, the page shows prompts to get started. Connect Shopify, Amazon, or Stripe — or upload a CSV — and the page populates automatically with your real numbers.",
+      },
+    ],
+    faq: [
+      { q: "Is My Business the same as Dashboards?", a: "No. My Business is your personal overview with health scores, insights, and quick actions. Dashboards is a dedicated analytics page focused on KPI cards and charts from uploaded files. My Business brings the most important information from all features into one place." },
+      { q: "Can I customise what appears on My Business?", a: "Not currently. The page auto-populates based on your data. We're evaluating customisable widgets for a future release." },
+    ],
+    related: ["business-health-score", "kpi-cards-explained", "live-insights-feed"],
+  },
+  {
+    slug: "business-health-score",
+    title: "Business Health Score on My Business",
+    description: "How the Business Pulse health score works on the My Business page and what each score range means.",
+    topic: "My Business",
+    topicSlug: "my-business",
+    readTime: 3,
+    popular: false,
+    keywords: ["health score", "business pulse", "pulse score", "business health"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "The health score ring",
+        body: "The large animated ring at the top of My Business shows your **Business Pulse score** from 0 to 100. The colour changes based on your score:\n\n- **Green (70–100)** — your business is performing well across key metrics\n- **Amber (50–69)** — stable but one or two areas need attention\n- **Red (below 50)** — action needed on multiple fronts",
+      },
+      {
+        heading: "What feeds into the score",
+        body: "The health score is calculated from four components:\n\n- **Revenue trend** — is revenue growing, flat, or declining?\n- **Margin health** — are your margins stable or being squeezed?\n- **Stock risk** — do you have low-stock or stockout situations?\n- **Cash flow** — is cash coming in faster than it's going out?\n\nEach component contributes to the overall score. The summary text below the ring tells you which area is pulling the score down.",
+      },
+      {
+        heading: "Taking action",
+        body: "If the health score shows an issue, click **What should I do?** below the summary. This sends the top issue to AskBiz chat for a personalised recommendation.\n\nThe score updates automatically as new data syncs from your connected sources.",
+      },
+    ],
+    faq: [
+      { q: "How often does the health score update?", a: "It refreshes each time you load the My Business page. If your connected data sources sync new data (e.g., new Shopify orders), the score reflects the latest numbers." },
+    ],
+    related: ["my-business-overview", "business-pulse-score-explained", "daily-brief-on-my-business"],
+  },
+  {
+    slug: "kpi-cards-explained",
+    title: "KPI Cards on My Business",
+    description: "How the KPI cards on My Business work — revenue, margin, stock alerts, and top product powered by your uploaded data.",
+    topic: "My Business",
+    topicSlug: "my-business",
+    readTime: 2,
+    popular: false,
+    keywords: ["kpi cards", "revenue card", "margin card", "low stock", "top product"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "What the KPI cards show",
+        body: "The row of cards at the top of My Business shows four key metrics:\n\n- **Total revenue** — sum of the revenue/sales/amount column in your latest uploaded file\n- **Average margin** — mean margin across all products in your data\n- **Low stock items** — count of products with stock below 10 units\n- **Top product** — the single product with the highest revenue",
+      },
+      {
+        heading: "Where the data comes from",
+        body: "KPI cards pull from your most recently uploaded file. AskBiz auto-detects which columns contain revenue, stock, and margin data based on the column names.\n\nIf no file has been uploaded, the cards show placeholder text prompting you to upload data.",
+      },
+      {
+        heading: "Trend indicators",
+        body: "Each card shows an up (↑) or down (↓) arrow:\n\n- **Revenue**: always shows ↑ (indicates data is present)\n- **Margin**: ↑ if average margin is above 20%, ↓ if below\n- **Low stock**: ↓ if items are low, ↑ if everything is well-stocked\n- **Top product**: always shows ↑",
+      },
+    ],
+    faq: [
+      { q: "Can I change the KPI thresholds?", a: "Not currently. The low stock threshold is 10 units and the margin threshold is 20%. Custom thresholds are on our roadmap." },
+    ],
+    related: ["my-business-overview", "revenue-and-margin-charts", "files-overview"],
+  },
+  {
+    slug: "live-insights-feed",
+    title: "Live Insights Feed",
+    description: "How the real-time insights feed on My Business works — alerts, trends, tips, and wins from your data.",
+    topic: "My Business",
+    topicSlug: "my-business",
+    readTime: 2,
+    popular: false,
+    keywords: ["insights feed", "live alerts", "business insights", "tips"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "What the insights feed shows",
+        body: "The insights feed is a live stream of observations from AskBiz watching your data. Each insight is tagged by urgency:\n\n- **High** (red) — something needs immediate attention (e.g., critically low stock)\n- **Medium** (amber) — worth reviewing soon (e.g., margins below 15%)\n- **Low** (warm) — tips and suggestions (e.g., recommended questions to ask)",
+      },
+      {
+        heading: "How insights are generated",
+        body: "AskBiz analyses your uploaded files and connected sources to detect:\n\n- Products with critically low stock (below 5 units)\n- Products with margins below 15%\n- Revenue anomalies vs previous periods\n- Opportunities to ask better questions\n\nInsights update when you load the page and when new data is added.",
+      },
+      {
+        heading: "Acting on insights",
+        body: "Click any insight to take action — it'll either navigate you to the relevant page (Alerts, Files, Sources) or open AskBiz chat with a pre-filled question.",
+      },
+    ],
+    faq: [
+      { q: "Can I dismiss insights?", a: "Insights refresh automatically. Acting on the underlying issue (e.g., restocking a low item) will remove the insight on the next page load." },
+    ],
+    related: ["my-business-overview", "kpi-cards-explained", "anomaly-alerts-guide"],
+  },
+  {
+    slug: "revenue-and-margin-charts",
+    title: "Revenue and Margin Charts",
+    description: "How to read the revenue by product bar chart and margin health doughnut chart on My Business.",
+    topic: "My Business",
+    topicSlug: "my-business",
+    readTime: 2,
+    popular: false,
+    keywords: ["revenue chart", "margin chart", "bar chart", "doughnut chart"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Revenue by product",
+        body: "The bar chart shows your top 6 products by revenue from your latest uploaded file. The top 3 products are highlighted in one colour, and the remaining 3 in another, so you can quickly see which products drive most of your income.",
+      },
+      {
+        heading: "Margin health doughnut",
+        body: "The doughnut chart breaks your products into three margin tiers:\n\n- **High (>25%)** — healthy margins, shown in green\n- **Mid (15–25%)** — acceptable margins, shown in amber\n- **Low (<15%)** — margins that need attention, shown in red\n\nHover over any segment to see the exact count of products in that tier.",
+      },
+      {
+        heading: "No charts showing?",
+        body: "Charts only appear after you've uploaded at least one file with revenue or margin data. Go to **Files** and upload a CSV with a revenue or price column to see your charts populate.",
+      },
+    ],
+    faq: [
+      { q: "Can I see charts from connected sources instead of uploaded files?", a: "Currently, charts on My Business pull from your latest uploaded file. Connected source data powers the Business Pulse score and trend mini-charts. Full source-powered charts are available on the Dashboards page." },
+    ],
+    related: ["my-business-overview", "kpi-cards-explained", "understanding-your-dashboard"],
+  },
+  {
+    slug: "shipping-quote-tool",
+    title: "Shipping Quote Tool on My Business",
+    description: "How to compare live carrier rates, get instant shipping quotes, and book shipments directly from the My Business page.",
+    topic: "My Business",
+    topicSlug: "my-business",
+    readTime: 3,
+    popular: false,
+    keywords: ["shipping quotes", "carrier rates", "compare shipping", "book shipment", "parcel quote"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Getting a shipping quote",
+        body: "When My Business detects rising shipping costs, it shows a **Compare carrier rates now** button. Click it to open the shipping quote panel.\n\nYou can enter your parcel details two ways:\n\n- **Natural language** — type something like '2kg box 30×20×15cm, London to Paris, value £50' and AskBiz will parse it\n- **Manual form** — fill in the origin, destination, weight, dimensions, and goods value fields directly",
+      },
+      {
+        heading: "Comparing rates",
+        body: "After submitting, you'll see live quotes from multiple carriers ranked cheapest first. Each quote shows:\n\n- Carrier name and service type\n- Service description and delivery speed\n- Whether customs documents are required\n- Total price\n\nThe cheapest option is highlighted with a green badge.",
+      },
+      {
+        heading: "Booking a shipment",
+        body: "Select a carrier by clicking its card, then click the **Book** button. AskBiz creates the shipment and gives you a payment link to confirm and print your label.\n\nYou'll need your business address set up in **Settings** before booking. If it's missing, the tool will prompt you to add it.",
+      },
+    ],
+    faq: [
+      { q: "Which carriers are available?", a: "Available carriers depend on your origin and destination countries. Common UK carriers include Royal Mail, DPD, Hermes, and UPS. International routes include DHL, FedEx, and regional carriers." },
+      { q: "Do I need to set up my address first?", a: "Yes. Go to Settings → Business Address and fill in your details before using the quote tool. The tool will remind you if this is missing." },
+    ],
+    related: ["my-business-overview", "business-address-setup", "shipping-cost-analysis"],
+  },
+  {
+    slug: "daily-brief-on-my-business",
+    title: "Daily Brief on My Business",
+    description: "How the daily brief section on My Business works — what improved, what worsened, and your recommended action for today.",
+    topic: "My Business",
+    topicSlug: "my-business",
+    readTime: 2,
+    popular: false,
+    keywords: ["daily brief", "today's brief", "daily summary", "what improved"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "What the daily brief shows",
+        body: "The daily brief is a three-part summary that appears on My Business when you have connected data:\n\n- 🟢 **What improved** — the best-performing metric or trend since yesterday\n- 🔴 **What worsened** — the metric that declined or needs attention\n- ⚡ **Today's action** — a specific, actionable recommendation for today",
+      },
+      {
+        heading: "Acting on the brief",
+        body: "Click the **Ask** button next to the recommended action to send it directly to AskBiz chat. The AI will give you a detailed breakdown and next steps.",
+      },
+      {
+        heading: "When the brief appears",
+        body: "The daily brief requires at least one connected data source with recent transaction data. It updates once per day based on your latest sync. If no source is connected, this section won't appear.",
+      },
+    ],
+    faq: [
+      { q: "Can I get the daily brief by email?", a: "Yes — go to Settings → Notifications and enable daily brief emails. You'll receive the same summary in your inbox each morning." },
+    ],
+    related: ["my-business-overview", "daily-brief-explained", "business-health-score"],
+  },
+  {
+    slug: "quick-actions-guide",
+    title: "Quick Actions on My Business",
+    description: "The quick action shortcuts on My Business — ask a question, upload a file, set an alert, or run a forecast in one click.",
+    topic: "My Business",
+    topicSlug: "my-business",
+    readTime: 1,
+    popular: false,
+    keywords: ["quick actions", "shortcuts", "one-click", "my business actions"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Available quick actions",
+        body: "The Quick Actions section provides one-click shortcuts to the most common tasks:\n\n- **Ask a question** — opens AI chat to talk to your data in plain English\n- **Upload a file** — goes to the Files page to upload a CSV or Excel file\n- **Set an alert** — goes to Alerts to create a new notification rule\n- **Run a forecast** — goes to Forecasts to predict future demand or revenue",
+      },
+      {
+        heading: "Why quick actions exist",
+        body: "My Business is designed as your starting point each day. Quick actions save you navigating through the sidebar — one click gets you to the action you need. Each action shows a brief description so you know exactly what it does.",
+      },
+    ],
+    faq: [
+      { q: "Can I add my own quick actions?", a: "Not currently. The four actions cover the most common daily workflows. Custom shortcuts may be added in a future update." },
+    ],
+    related: ["my-business-overview", "what-can-i-ask", "files-overview"],
+  },
+
+  // ── INDUSTRY TEMPLATES ──────────────────────────────────────────────────────
+  {
+    slug: "templates-overview",
+    title: "Industry Templates Overview",
+    description: "Pre-built question sets for retail, ecommerce, distributors, and exporters — skip the blank page and start analysing immediately.",
+    topic: "Industry Templates",
+    topicSlug: "templates",
+    readTime: 3,
+    popular: true,
+    keywords: ["templates", "industry templates", "question sets", "pre-built questions"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "What are Industry Templates?",
+        body: "Industry Templates are pre-built sets of questions tailored to specific business types. Instead of figuring out what to ask AskBiz, templates give you a curated list of high-value questions for your industry — ready to use in one click.\n\nTemplates are available on Growth and Business plans.",
+      },
+      {
+        heading: "How templates work",
+        body: "1. Go to **Templates** in the sidebar\n2. Browse templates or filter by business type (Retail, Ecommerce, Distributor, Exporter)\n3. Click a template card to see its questions\n4. Click any question to send it directly to AskBiz chat\n5. AskBiz analyses your connected data and gives you an instant answer",
+      },
+      {
+        heading: "What each template includes",
+        body: "Each template has:\n\n- **Name and icon** — describes the analysis area\n- **Business type** — which industry it's designed for\n- **Description** — what insights you'll get\n- **Question list** — the specific questions you can ask, each clickable",
+      },
+    ],
+    faq: [
+      { q: "Do I need data connected to use templates?", a: "Templates work best with connected data. Without data, AskBiz can answer general questions but can't give you personalised insights. Connect at least one source first for the best experience." },
+      { q: "Can I create my own templates?", a: "Not currently. Templates are curated by AskBiz. If you have suggestions for templates you'd find useful, email hello@askbiz.co." },
+    ],
+    related: ["using-a-template", "filtering-by-business-type", "what-can-i-ask"],
+  },
+  {
+    slug: "using-a-template",
+    title: "Using a Template in Chat",
+    description: "How to select a template question and send it to AskBiz chat for instant analysis of your business data.",
+    topic: "Industry Templates",
+    topicSlug: "templates",
+    readTime: 2,
+    popular: false,
+    keywords: ["use template", "template in chat", "ask template question"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Selecting a question",
+        body: "1. On the Templates page, click a template card to expand it\n2. You'll see a list of questions inside the template\n3. Click any question to send it to AskBiz chat\n4. AskBiz opens the chat with the question pre-filled and immediately starts analysing your data",
+      },
+      {
+        heading: "Using the 'Use this template' button",
+        body: "At the bottom of each expanded template, there's a **Use this template in chat →** button. This sends the first question in the template to chat — useful if you want to work through the questions in order.",
+      },
+      {
+        heading: "Modifying template questions",
+        body: "Template questions are starting points. Once in chat, you can follow up with your own questions, ask for more detail, or change the time period. For example, if the template asks about 'last month', you can follow up with 'now show me the last quarter'.",
+      },
+    ],
+    faq: [
+      { q: "Can I use multiple template questions in one chat?", a: "Yes. Each question opens in chat, and you can continue the conversation by asking follow-up questions or clicking back to templates for another question." },
+    ],
+    related: ["templates-overview", "what-can-i-ask", "best-questions-for-ecommerce"],
+  },
+  {
+    slug: "filtering-by-business-type",
+    title: "Filtering Templates by Business Type",
+    description: "How to filter industry templates by retail, ecommerce, distributor, or exporter to find the most relevant questions.",
+    topic: "Industry Templates",
+    topicSlug: "templates",
+    readTime: 1,
+    popular: false,
+    keywords: ["filter templates", "business type", "retail templates", "ecommerce templates"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Business type filters",
+        body: "At the top of the Templates page, you'll see filter buttons:\n\n- **All types** — shows every template\n- **Retail** — questions for physical stores, stock management, footfall\n- **Ecommerce** — questions for online sellers, conversion rates, digital marketing\n- **Distributor** — questions for wholesale, B2B orders, supply chain\n- **Exporter** — questions for international trade, FX risk, compliance\n\nClick a filter to narrow the templates. Click it again (or click 'All types') to reset.",
+      },
+      {
+        heading: "Mixed business types",
+        body: "If your business spans multiple types (e.g., retail and ecommerce), browse templates from both categories. Many questions are useful across business types — a stock management template designed for retail works equally well for ecommerce inventory.",
+      },
+    ],
+    faq: [
+      { q: "What if my business type isn't listed?", a: "The four categories cover most SME types. If you're a service business, SaaS company, or in another niche, browse 'All types' — many questions are broadly applicable. More categories are planned." },
+    ],
+    related: ["templates-overview", "using-a-template", "kpis-by-business-type"],
+  },
+  {
+    slug: "template-questions-explained",
+    title: "How Template Questions Are Designed",
+    description: "The thinking behind template questions — why they're phrased the way they are and how to get the most from them.",
+    topic: "Industry Templates",
+    topicSlug: "templates",
+    readTime: 2,
+    popular: false,
+    keywords: ["template design", "question format", "question quality"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Why templates matter",
+        body: "The biggest barrier to getting value from AI analytics isn't the AI — it's knowing what to ask. Templates solve this by providing questions that experienced analysts would ask of your data.\n\nEach question is designed to surface a specific, actionable insight rather than a generic overview.",
+      },
+      {
+        heading: "Question design principles",
+        body: "Template questions follow these principles:\n\n- **Specific** — 'What's my best-selling product by margin?' not 'How are things going?'\n- **Time-bound** — most questions reference a specific period (last 30 days, last quarter)\n- **Actionable** — the answer should tell you what to do, not just what happened\n- **Data-dependent** — questions are matched to the kind of data your business type typically has",
+      },
+      {
+        heading: "Customising questions",
+        body: "Treat template questions as a starting point. After getting an answer, follow up with:\n\n- 'Break this down by channel'\n- 'Compare to the same period last year'\n- 'What should I do about this?'\n- 'Show me the top 5 instead of top 10'",
+      },
+    ],
+    faq: [
+      { q: "Who writes the template questions?", a: "Templates are created by AskBiz based on common analysis patterns from successful businesses in each industry. They're regularly updated based on user feedback." },
+    ],
+    related: ["templates-overview", "using-a-template", "improving-ai-answers"],
+  },
+  {
+    slug: "templates-for-retail",
+    title: "Templates for Retail Businesses",
+    description: "Pre-built question templates designed for physical retail stores — stock, footfall, basket analysis, staff, and seasonal planning.",
+    topic: "Industry Templates",
+    topicSlug: "templates",
+    readTime: 2,
+    popular: false,
+    keywords: ["retail templates", "store analytics", "retail questions"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "What retail templates cover",
+        body: "Retail templates focus on the metrics that matter for physical stores:\n\n- **Stock management** — what to reorder, dead stock identification, optimal stock levels\n- **Sales performance** — best sellers, slow movers, margin by product\n- **Customer behaviour** — basket analysis, repeat purchase rates, peak hours\n- **Staff and operations** — revenue per staff member, shift performance\n- **Seasonal planning** — holiday prep, seasonal demand shifts",
+      },
+      {
+        heading: "Example questions",
+        body: "- 'Which products should I reorder this week?'\n- 'What's my average basket size and how can I increase it?'\n- 'Which products have the lowest margin — should I adjust pricing?'\n- 'What are my peak sales hours by day of week?'\n- 'Show me dead stock that hasn't sold in 90 days'",
+      },
+    ],
+    faq: [
+      { q: "Do I need POS data for retail templates?", a: "Retail templates work with any sales data — POS exports, CSV uploads, or connected platforms like Shopify or Square. The more granular your data (individual transactions vs daily totals), the better the insights." },
+    ],
+    related: ["templates-overview", "filtering-by-business-type", "retail-basket-analysis"],
+  },
+  {
+    slug: "templates-for-ecommerce",
+    title: "Templates for Ecommerce Businesses",
+    description: "Pre-built question templates for online sellers — conversion, marketing ROI, product performance, and customer acquisition.",
+    topic: "Industry Templates",
+    topicSlug: "templates",
+    readTime: 2,
+    popular: false,
+    keywords: ["ecommerce templates", "online store analytics", "ecommerce questions"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "What ecommerce templates cover",
+        body: "Ecommerce templates focus on online selling metrics:\n\n- **Conversion** — conversion rates, abandoned cart analysis, checkout drop-off\n- **Product performance** — best sellers, return rates, product page effectiveness\n- **Marketing** — CAC by channel, ROAS, email campaign performance\n- **Customer** — lifetime value, cohort retention, repeat purchase behaviour\n- **Growth** — month-over-month trends, channel mix, AOV optimisation",
+      },
+      {
+        heading: "Example questions",
+        body: "- 'What's my conversion rate by traffic source?'\n- 'Which products have the highest return rate?'\n- 'What's my customer acquisition cost by marketing channel?'\n- 'Show me customer cohort retention — are first-time buyers coming back?'\n- 'What's my average order value trend over the last 6 months?'",
+      },
+    ],
+    faq: [
+      { q: "Which data sources work best with ecommerce templates?", a: "Shopify, WooCommerce, and Amazon are ideal. Add Google Analytics for traffic data and Stripe for payment insights. The more sources you connect, the richer the cross-channel analysis." },
+    ],
+    related: ["templates-overview", "filtering-by-business-type", "conversion-rate-optimisation-guide"],
+  },
+  {
+    slug: "templates-for-distributors",
+    title: "Templates for Distributors",
+    description: "Pre-built question templates for wholesale and distribution businesses — B2B orders, supplier management, and margin analysis.",
+    topic: "Industry Templates",
+    topicSlug: "templates",
+    readTime: 2,
+    popular: false,
+    keywords: ["distributor templates", "wholesale templates", "b2b questions"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "What distributor templates cover",
+        body: "Distributor templates focus on wholesale-specific metrics:\n\n- **Order management** — order frequency, average order size, payment terms\n- **Supplier performance** — lead times, fill rates, cost trends\n- **Customer health** — account profitability, concentration risk, churn risk\n- **Inventory** — turnover rates, safety stock levels, dead stock\n- **Pricing** — volume discount effectiveness, margin by customer tier",
+      },
+      {
+        heading: "Example questions",
+        body: "- 'Which accounts are most profitable after factoring in payment terms?'\n- 'What's my supplier lead time trend — is it getting worse?'\n- 'Which customers are at risk of churning based on order frequency?'\n- 'Show me my inventory turnover by product category'\n- 'What would happen to my margin if I increased prices by 5%?'",
+      },
+    ],
+    faq: [
+      { q: "Can I use distributor templates with CSV data?", a: "Yes. Upload a CSV with your order data (customer, product, quantity, value, date) and the templates will work. Column names should be descriptive — e.g., 'Customer Name', 'Order Value', 'Order Date'." },
+    ],
+    related: ["templates-overview", "filtering-by-business-type", "b2b-customer-management"],
+  },
+  {
+    slug: "templates-for-exporters",
+    title: "Templates for Exporters",
+    description: "Pre-built question templates for international trade — market selection, FX risk, compliance, landed costs, and export readiness.",
+    topic: "Industry Templates",
+    topicSlug: "templates",
+    readTime: 2,
+    popular: false,
+    keywords: ["exporter templates", "international trade questions", "export analytics"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "What exporter templates cover",
+        body: "Exporter templates focus on international trade:\n\n- **Market selection** — which countries offer the best opportunity for your products\n- **FX risk** — currency exposure analysis and hedging recommendations\n- **Compliance** — customs requirements, documentation, tariff codes\n- **Landed cost** — total cost to deliver to a destination including duties and freight\n- **Trade finance** — payment terms, letter of credit analysis, working capital impact",
+      },
+      {
+        heading: "Example questions",
+        body: "- 'Which export markets should I prioritise based on my product range?'\n- 'What's my currency exposure and how much could FX movements cost me?'\n- 'Calculate the landed cost for shipping my top 5 products to Germany'\n- 'What documentation do I need to export to the US?'\n- 'How do my export margins compare to domestic margins?'",
+      },
+    ],
+    faq: [
+      { q: "Do I need special data for exporter templates?", a: "Basic sales data works. For deeper analysis, upload data that includes destination country, shipping costs, and currency information. Connecting Xero or QuickBooks adds multi-currency transaction data automatically." },
+    ],
+    related: ["templates-overview", "filtering-by-business-type", "export-readiness-guide"],
+  },
+
+  // ── SHIPMENTS & TRACKING ────────────────────────────────────────────────────
+  {
+    slug: "shipments-overview",
+    title: "Shipments & Tracking Overview",
+    description: "Track all your shipments, monitor customs holds and delays, analyse financial impact, and manage supplier risk from one dashboard.",
+    topic: "Shipments & Tracking",
+    topicSlug: "shipments-tracking",
+    readTime: 4,
+    popular: true,
+    keywords: ["shipments", "tracking", "logistics", "customs", "delays", "shipping dashboard"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "What is the Shipments page?",
+        body: "The **Shipments** page gives you a single view of every shipment you're tracking — inbound from suppliers and outbound to customers. Each shipment shows real-time status, carrier, tracking number, expected arrival, and financial details.\n\nThe page also flags risks: customs holds, delays, and their estimated financial impact on your business.",
+      },
+      {
+        heading: "What you can see",
+        body: "For each shipment:\n\n- **Tracking number and carrier** — click to see the latest tracking event\n- **Status** — Pending, Picked Up, In Transit, Out for Delivery, Delivered, Customs Hold, Delayed, or Exception\n- **Supplier and SKU** — what's in the shipment and who sent it\n- **Expected arrival** — when the shipment should arrive\n- **Risk flags** — at-risk indicator, customs hold badge, delay days\n- **Financial impact** — estimated cost of delays including daily financing costs and working capital impact",
+      },
+      {
+        heading: "Plan features",
+        body: "The Shipments page is available on all plans, but some features require Growth or Business:\n\n- **Free**: Basic tracking with status updates\n- **Growth**: Financial impact analysis, risk scoring, delay alerts\n- **Business**: Full intelligence including supplier scoring and customs analytics\n\nLocked features show an upgrade prompt.",
+      },
+    ],
+    faq: [
+      { q: "How does AskBiz get tracking updates?", a: "AskBiz integrates with carrier tracking APIs to pull the latest status. Updates typically refresh every few hours. For 17track-connected shipments, webhooks provide near-real-time updates." },
+      { q: "Can I track both inbound and outbound shipments?", a: "Yes. When adding a shipment, specify the type (inbound from supplier or outbound to customer). Both types appear on the same page with filtering options." },
+    ],
+    related: ["adding-a-shipment", "tracking-shipment-status", "customs-hold-guide"],
+  },
+  {
+    slug: "adding-a-shipment",
+    title: "Adding a Shipment to Track",
+    description: "How to add a new shipment for tracking in AskBiz — enter the tracking number, carrier, supplier, and shipment details.",
+    topic: "Shipments & Tracking",
+    topicSlug: "shipments-tracking",
+    readTime: 2,
+    popular: false,
+    keywords: ["add shipment", "new shipment", "tracking number", "add tracking"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "How to add a shipment",
+        body: "1. Go to **Shipments** in the sidebar\n2. Click the **+ Add shipment** button\n3. Fill in the details:\n   - **Tracking number** — from your carrier or supplier\n   - **Supplier name** — who's sending the goods\n   - **SKU** — the product or order reference\n   - **Quantity** — number of units\n   - **Total value** — the value of the goods (for financial impact calculations)\n   - **Expected arrival** — when you expect delivery\n   - **Shipment type** — inbound (from supplier) or outbound (to customer)\n4. Click **Add shipment** to start tracking",
+      },
+      {
+        heading: "After adding",
+        body: "AskBiz immediately starts pulling tracking updates from the carrier. The shipment appears in your list with a 'Pending' status until the first tracking event is received. This usually takes a few minutes.",
+      },
+    ],
+    faq: [
+      { q: "Can I bulk-add shipments?", a: "Not currently through the UI. If you have many shipments to track, contact us about the API or CSV import options." },
+      { q: "What carriers are supported?", a: "AskBiz supports most major carriers worldwide through our tracking integration. If your carrier isn't recognised, the tracking number will show as Pending until a match is found." },
+    ],
+    related: ["shipments-overview", "tracking-shipment-status", "shipments-plan-features"],
+  },
+  {
+    slug: "tracking-shipment-status",
+    title: "Understanding Shipment Status",
+    description: "What each shipment status means — from Pending to Delivered — and what the colour-coded badges indicate.",
+    topic: "Shipments & Tracking",
+    topicSlug: "shipments-tracking",
+    readTime: 2,
+    popular: false,
+    keywords: ["shipment status", "in transit", "delivered", "pending", "tracking status"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Status types",
+        body: "Each shipment shows one of these statuses:\n\n- **Pending** (grey) — shipment added but no tracking event received yet\n- **Picked Up** (purple) — carrier has collected the parcel\n- **In Transit** (purple) — shipment is moving through the carrier network\n- **Out for Delivery** (green) — final delivery attempt in progress\n- **Delivered** (green) — shipment has been delivered\n- **Customs Hold** (red) — held at customs for inspection or documentation\n- **Delayed** (amber) — shipment is behind the expected arrival date\n- **Exception** (red) — an issue has occurred (failed delivery, damage, return to sender)",
+      },
+      {
+        heading: "Last event and location",
+        body: "Below the status badge, each shipment shows the last tracking event description and location. This tells you exactly where the shipment was last scanned and what happened. Expand the shipment card for the full event history.",
+      },
+    ],
+    faq: [
+      { q: "How often does the status update?", a: "Tracking data refreshes every few hours automatically. For urgent shipments, expanding the card triggers a manual refresh." },
+    ],
+    related: ["shipments-overview", "delay-and-risk-flags", "customs-hold-guide"],
+  },
+  {
+    slug: "customs-hold-guide",
+    title: "Customs Holds Explained",
+    description: "What a customs hold means for your shipment, why it happens, and what you can do to resolve it.",
+    topic: "Shipments & Tracking",
+    topicSlug: "shipments-tracking",
+    readTime: 3,
+    popular: false,
+    keywords: ["customs hold", "customs clearance", "held at customs", "customs documentation"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "What is a customs hold?",
+        body: "A customs hold means your shipment has been stopped at a border checkpoint for inspection, documentation review, or duty assessment. It's flagged with a red **Customs Hold** badge on the Shipments page.\n\nCommon for international shipments, especially those without complete documentation.",
+      },
+      {
+        heading: "Common reasons",
+        body: "- **Missing or incorrect customs documentation** — commercial invoice, packing list, or certificate of origin\n- **Incorrect tariff code** — the HS code doesn't match the goods description\n- **Duty payment required** — duties or taxes need to be paid before release\n- **Random inspection** — routine checks by customs authorities\n- **Restricted goods** — the product requires special permits or licences",
+      },
+      {
+        heading: "What to do",
+        body: "1. Check the latest tracking event for details on why the shipment is held\n2. Contact your carrier or customs broker for specific requirements\n3. Provide any missing documentation as quickly as possible\n4. If duty is owed, arrange payment through your carrier or directly with customs\n\nMost customs holds are resolved within 1–5 business days once documentation is provided.",
+      },
+      {
+        heading: "Preventing future holds",
+        body: "- Always include a complete commercial invoice with every international shipment\n- Double-check HS tariff codes before shipping\n- Include accurate goods descriptions and values\n- Use AskBiz's Landed Cost Calculator to estimate duties in advance\n- Work with a customs broker for complex or high-value shipments",
+      },
+    ],
+    faq: [
+      { q: "Does a customs hold mean my goods are seized?", a: "No. A hold is temporary — your goods are being reviewed, not confiscated. Seizures are rare and only happen for prohibited or heavily restricted goods. Most holds are resolved within days." },
+    ],
+    related: ["shipments-overview", "tracking-shipment-status", "customs-and-duties-explained"],
+  },
+  {
+    slug: "delay-and-risk-flags",
+    title: "Delay and Risk Flags",
+    description: "How AskBiz detects delayed and at-risk shipments and what the risk indicators mean for your business.",
+    topic: "Shipments & Tracking",
+    topicSlug: "shipments-tracking",
+    readTime: 2,
+    popular: false,
+    keywords: ["delay flag", "at risk", "shipment risk", "delayed shipment"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Delay detection",
+        body: "AskBiz compares each shipment's expected arrival date against its current tracking status. If a shipment is past its expected date and hasn't been delivered, it's flagged as **Delayed** with the number of days overdue shown.\n\nDelayed shipments are highlighted in amber on the shipments list.",
+      },
+      {
+        heading: "At-risk indicator",
+        body: "The **at-risk** flag appears when AskBiz detects signals that a shipment may be delayed before it actually misses its date. Signals include:\n\n- No tracking update for an unusually long period\n- Shipment routed through a congested hub\n- Carrier service disruption on the route\n\nAt-risk shipments let you take preemptive action — contact the carrier, notify your customer, or arrange alternative supply.",
+      },
+      {
+        heading: "Delay days",
+        body: "The **delay_days** figure shows how many days behind schedule the shipment is. This feeds directly into the financial impact calculation so you can see the real cost of the delay.",
+      },
+    ],
+    faq: [
+      { q: "Can I get notified when a shipment is flagged as delayed?", a: "Yes. Go to Alerts and create a shipment delay alert. You'll receive an email when any shipment exceeds its expected delivery date." },
+    ],
+    related: ["shipments-overview", "financial-impact-of-delays", "tracking-shipment-status"],
+  },
+  {
+    slug: "financial-impact-of-delays",
+    title: "Financial Impact of Shipment Delays",
+    description: "How AskBiz calculates the financial cost of delayed shipments — working capital, financing costs, and lost revenue.",
+    topic: "Shipments & Tracking",
+    topicSlug: "shipments-tracking",
+    readTime: 3,
+    popular: false,
+    keywords: ["financial impact", "delay cost", "working capital", "financing cost"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "What financial impact means",
+        body: "When a shipment is delayed, your money is tied up longer than planned. AskBiz calculates three financial metrics for delayed shipments:\n\n- **Financial impact** — estimated total cost of the delay in pounds\n- **Daily financing cost** — how much the delay costs you per day in tied-up capital\n- **Working capital days** — how many extra days your cash is locked in transit",
+      },
+      {
+        heading: "How the calculation works",
+        body: "The financial impact is based on:\n\n- **Shipment value** — the value of goods in transit\n- **Delay duration** — how many days past the expected arrival\n- **Cost of capital** — estimated at a standard rate for SMEs\n- **Opportunity cost** — revenue you could be earning if the goods were available to sell\n\nThis gives you a clear picture of how much each delayed day actually costs your business.",
+      },
+      {
+        heading: "Using this information",
+        body: "Financial impact data helps you:\n\n- **Prioritise** — focus on the most expensive delays first\n- **Negotiate** — use data when discussing compensation with carriers or suppliers\n- **Plan** — factor delay costs into your supplier evaluation and carrier selection\n- **Budget** — account for realistic delivery timelines in cash flow planning",
+      },
+    ],
+    faq: [
+      { q: "Is the financial impact exact?", a: "It's an estimate based on the shipment value and delay duration. Actual costs depend on your specific cost of capital and whether the delay causes stockouts or lost sales. Use it as a directional indicator, not an exact accounting figure." },
+      { q: "What plan do I need for financial impact?", a: "Financial impact analysis is available on Growth and Business plans. Free plan users see basic tracking only." },
+    ],
+    related: ["shipments-overview", "delay-and-risk-flags", "cash-flow-intelligence"],
+  },
+  {
+    slug: "shipment-filtering",
+    title: "Filtering Your Shipments",
+    description: "How to filter shipments by status — active, all, or delivered — to focus on what needs attention.",
+    topic: "Shipments & Tracking",
+    topicSlug: "shipments-tracking",
+    readTime: 1,
+    popular: false,
+    keywords: ["filter shipments", "active shipments", "delivered shipments"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Filter options",
+        body: "The Shipments page has three filter tabs:\n\n- **Active** — shows shipments that are Pending, Picked Up, In Transit, Out for Delivery, Customs Hold, Delayed, or Exception. This is the default view.\n- **All** — shows every shipment including delivered ones\n- **Delivered** — shows only completed shipments\n\nClick a tab to switch views. The count updates to show how many shipments match each filter.",
+      },
+      {
+        heading: "Finding a specific shipment",
+        body: "If you have many shipments, scroll through the list or use your browser's find function (Ctrl+F / Cmd+F) to search by tracking number, supplier name, or SKU.",
+      },
+    ],
+    faq: [
+      { q: "Can I search shipments by date range?", a: "Not currently in the UI. You can ask AskBiz in chat: 'Show me all shipments arriving this week' or 'Which shipments from Supplier X are delayed?'" },
+    ],
+    related: ["shipments-overview", "tracking-shipment-status", "adding-a-shipment"],
+  },
+  {
+    slug: "shipments-plan-features",
+    title: "Shipment Features by Plan",
+    description: "What shipment tracking features are available on Free, Growth, and Business plans.",
+    topic: "Shipments & Tracking",
+    topicSlug: "shipments-tracking",
+    readTime: 2,
+    popular: false,
+    keywords: ["shipment plan", "tracking features", "upgrade shipments"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Free plan",
+        body: "- Add and track shipments with basic status updates\n- View tracking number, carrier, and latest event\n- Filter by active, all, or delivered",
+      },
+      {
+        heading: "Growth plan",
+        body: "Everything in Free, plus:\n\n- **Financial impact analysis** — see the cost of delays in real pounds\n- **Daily financing cost** — understand per-day cost of tied-up capital\n- **Working capital days** — track how long your cash is locked\n- **Risk flags** — at-risk and customs hold indicators\n- **Delay day count** — see exactly how many days behind each shipment is",
+      },
+      {
+        heading: "Business plan",
+        body: "Everything in Growth, plus:\n\n- **Supplier scoring** — rate suppliers by delivery reliability\n- **Customs analytics** — patterns in customs holds by route and carrier\n- **Automated alerts** — get notified when shipments are flagged\n- **Full intelligence** — AI-powered recommendations for carrier and route optimisation",
+      },
+    ],
+    faq: [
+      { q: "How do I upgrade?", a: "Go to Settings → Billing → Change Plan, or click any 'Upgrade' prompt on the Shipments page. Your existing shipment data is preserved when you upgrade." },
+    ],
+    related: ["shipments-overview", "plans-comparison", "upgrade-downgrade"],
+  },
+
+  // ── SETTINGS & PREFERENCES ──────────────────────────────────────────────────
+  {
+    slug: "settings-overview",
+    title: "Settings Overview",
+    description: "A guide to every section in AskBiz Settings — profile, team, localisation, address, integrations, AI, notifications, API, privacy, and account.",
+    topic: "Settings & Preferences",
+    topicSlug: "settings-preferences",
+    readTime: 3,
+    popular: true,
+    keywords: ["settings", "preferences", "configuration", "account settings"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Accessing Settings",
+        body: "Click **Settings** in the sidebar to open the settings page. The left panel shows navigation tabs for each section. Click any section to view and edit its options.",
+      },
+      {
+        heading: "Settings sections",
+        body: "- **Profile** — your name, email, and avatar\n- **Team** — invite members, manage roles, view pending invitations\n- **Localisation** — currency, language, date format, and timezone\n- **Business address** — your registered business address (used for shipping quotes and invoices)\n- **Integrations** — view and manage connected data sources\n- **AI preferences** — control how AskBiz responds and what data it uses\n- **Notifications** — email alerts, daily briefs, and in-app notifications\n- **API access** — API keys for developer integrations\n- **Privacy** — data consent, AI training consent, and compliance settings\n- **Account** — plan details, danger zone (delete account)",
+      },
+      {
+        heading: "Changes are saved automatically",
+        body: "Most settings save automatically when you make a change. Where explicit saving is required, you'll see a 'Save' button.",
+      },
+    ],
+    faq: [
+      { q: "Can team members access Settings?", a: "Only account owners and admins can access most settings. Team members with 'member' role can edit their own profile but cannot change billing, integrations, or team settings." },
+    ],
+    related: ["profile-settings", "team-management-settings", "localisation-currency"],
+  },
+  {
+    slug: "profile-settings",
+    title: "Profile Settings",
+    description: "How to update your name, email, and profile information in AskBiz.",
+    topic: "Settings & Preferences",
+    topicSlug: "settings-preferences",
+    readTime: 1,
+    popular: false,
+    keywords: ["profile", "name", "email", "account details"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Editing your profile",
+        body: "Go to **Settings → Profile** to update:\n\n- **Full name** — displayed in the app, team lists, and shared reports\n- **Email** — your login email (changing this requires re-verification)\n- **Business type** — helps AskBiz tailor recommendations (e.g., retail, ecommerce, distributor)",
+      },
+      {
+        heading: "Your name in the app",
+        body: "AskBiz uses your first name in greetings (e.g., 'Good morning, Sarah') on the My Business page and in chat. Updating your name here updates it everywhere in the app.",
+      },
+    ],
+    faq: [
+      { q: "Can I change my email address?", a: "Yes. Update it in Profile settings. You'll receive a verification email at the new address. Your login will switch to the new email after verification." },
+    ],
+    related: ["settings-overview", "team-management-settings", "business-address-setup"],
+  },
+  {
+    slug: "team-management-settings",
+    title: "Team Management in Settings",
+    description: "How to invite team members, assign roles, manage pending invitations, and remove members from your AskBiz account.",
+    topic: "Settings & Preferences",
+    topicSlug: "settings-preferences",
+    readTime: 3,
+    popular: false,
+    keywords: ["team settings", "invite member", "remove member", "team roles"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Inviting team members",
+        body: "Go to **Settings → Team** and click **Invite member**. Enter their email address and select a role:\n\n- **Admin** — full access to all settings, billing, and data\n- **Member** — can use chat, view dashboards, and access tools but cannot change settings or billing\n- **Viewer** — read-only access to shared dashboards and reports\n\nThe invited person receives an email with a link to join your team.",
+      },
+      {
+        heading: "Managing existing members",
+        body: "The team list shows each member's name, email, role, and status (active or pending). You can:\n\n- Change a member's role\n- Resend a pending invitation\n- Remove a member from the team\n\nRemoved members lose access immediately but can be re-invited later.",
+      },
+      {
+        heading: "Seat billing",
+        body: "Each team member uses one seat on your plan. Check your current seat count and limit in **Settings → Billing**. If you've reached your seat limit, you'll need to upgrade or remove an existing member before inviting someone new.",
+      },
+    ],
+    faq: [
+      { q: "Can I invite someone with view-only access?", a: "Yes. Assign the 'Viewer' role when inviting. Viewers can see shared dashboards and reports but cannot ask questions in chat or modify anything." },
+    ],
+    related: ["settings-overview", "invite-team-member", "roles-and-permissions"],
+  },
+  {
+    slug: "localisation-currency",
+    title: "Localisation and Currency Settings",
+    description: "How to set your preferred currency, language, date format, and timezone in AskBiz.",
+    topic: "Settings & Preferences",
+    topicSlug: "settings-preferences",
+    readTime: 2,
+    popular: false,
+    keywords: ["currency", "localisation", "language", "timezone", "date format"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Setting your currency",
+        body: "Go to **Settings → Localisation** and select your preferred currency from the dropdown. This affects how monetary values are displayed across the entire app — dashboards, KPI cards, chat answers, and reports.\n\nCommon options include GBP (£), USD ($), EUR (€), KES (KSh), and 40+ other currencies.",
+      },
+      {
+        heading: "Language and date format",
+        body: "AskBiz supports multiple languages for the interface. Select your preferred language and date format:\n\n- **Date formats**: DD/MM/YYYY (UK), MM/DD/YYYY (US), YYYY-MM-DD (ISO)\n- **Number formats**: 1,234.56 (UK/US) or 1.234,56 (EU)\n\nThese settings apply to all reports, charts, and exports.",
+      },
+      {
+        heading: "Timezone",
+        body: "Set your timezone so that daily briefs, alerts, and scheduled reports arrive at the right time for your location. AskBiz uses this timezone for all time-based calculations and displays.",
+      },
+    ],
+    faq: [
+      { q: "Does changing currency convert my data?", a: "No. Changing the currency symbol only changes the display format. It does not convert your underlying data. If you need multi-currency reporting, see the Multi-Currency Reporting help article." },
+    ],
+    related: ["settings-overview", "multi-currency-reporting", "profile-settings"],
+  },
+  {
+    slug: "business-address-setup",
+    title: "Business Address Setup",
+    description: "How to add your business address in AskBiz — required for shipping quotes, invoices, and carrier booking.",
+    topic: "Settings & Preferences",
+    topicSlug: "settings-preferences",
+    readTime: 2,
+    popular: false,
+    keywords: ["business address", "address settings", "shipping address", "invoice address"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Why your address is needed",
+        body: "Your business address is used for:\n\n- **Shipping quotes** — the quote tool on My Business needs your origin address to calculate carrier rates\n- **Invoices** — your address appears on plan invoices and receipts\n- **Compliance** — some features (VAT reports, HMRC compliance) require a registered address",
+      },
+      {
+        heading: "Adding your address",
+        body: "Go to **Settings → Business address** and fill in:\n\n- Business name\n- Phone number\n- Address line\n- Town/city\n- County/state\n- Postcode/ZIP\n\nClick **Save** to store your address. You can update it at any time.",
+      },
+    ],
+    faq: [
+      { q: "Is my address visible to other users?", a: "No. Your business address is private to your account. It's only used for internal calculations (shipping quotes) and on your own invoices." },
+    ],
+    related: ["settings-overview", "shipping-quote-tool", "invoices-receipts"],
+  },
+  {
+    slug: "notification-preferences",
+    title: "Notification Preferences",
+    description: "How to configure email alerts, daily brief delivery, and in-app notification settings in AskBiz.",
+    topic: "Settings & Preferences",
+    topicSlug: "settings-preferences",
+    readTime: 2,
+    popular: false,
+    keywords: ["notifications", "email alerts", "daily brief email", "notification settings"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Email notifications",
+        body: "Go to **Settings → Notifications** to control which emails you receive:\n\n- **Alert emails** — receive an email when a custom alert is triggered (e.g., revenue drops 20%)\n- **Daily brief** — receive your business summary each morning\n- **Weekly digest** — a weekly roundup of key metrics and insights\n- **Product updates** — announcements about new features\n\nToggle each on or off independently.",
+      },
+      {
+        heading: "In-app notifications",
+        body: "In-app notifications appear as badges or banners within AskBiz when you're logged in. These include:\n\n- Alert triggers\n- Sync completions and errors\n- Team activity (new member joined, invitation accepted)\n\nIn-app notifications cannot be individually disabled but are cleared once viewed.",
+      },
+      {
+        heading: "Team notifications",
+        body: "If you're on a team plan, you can also control whether team-level events (member joins, role changes) generate notifications. These settings are under the **Team** section.",
+      },
+    ],
+    faq: [
+      { q: "Can I set quiet hours for notifications?", a: "Not currently. Email notifications are sent when the trigger occurs. You can manage this through your email client's notification settings. Quiet hours are on our roadmap." },
+    ],
+    related: ["settings-overview", "custom-alert-setup", "daily-brief-explained"],
+  },
+  {
+    slug: "ai-preferences",
+    title: "AI Preferences",
+    description: "How to control how AskBiz AI responds — data usage, response style, and training consent settings.",
+    topic: "Settings & Preferences",
+    topicSlug: "settings-preferences",
+    readTime: 2,
+    popular: false,
+    keywords: ["ai preferences", "ai settings", "response style", "data usage"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "AI preferences",
+        body: "Go to **Settings → AI preferences** to control how AskBiz AI works with your data:\n\n- **Data sources for chat** — choose which connected sources and files AskBiz can reference when answering questions\n- **Response style** — adjust between concise and detailed responses\n- **Proactive suggestions** — enable or disable AskBiz suggesting follow-up questions",
+      },
+      {
+        heading: "Data consent and training",
+        body: "Under **Settings → Privacy**, you can manage:\n\n- **Data consent** — whether AskBiz can process your data for insights (required for the product to work)\n- **Training consent** — whether your anonymised data can be used to improve AskBiz's AI models\n\nBoth consents are explicit opt-in. You can withdraw either at any time. Withdrawing data consent will limit what AskBiz can do for you.",
+      },
+    ],
+    faq: [
+      { q: "Is my data used to train AI models by default?", a: "No. Training consent is opt-in. Your data is never used for model training unless you explicitly enable it in Settings → Privacy. See our AI Training Policy article for full details." },
+    ],
+    related: ["settings-overview", "ai-training-policy", "privacy-and-compliance-settings"],
+  },
+  {
+    slug: "privacy-and-compliance-settings",
+    title: "Privacy and Compliance Settings",
+    description: "How to manage data consent, AI training consent, and compliance settings in your AskBiz account.",
+    topic: "Settings & Preferences",
+    topicSlug: "settings-preferences",
+    readTime: 2,
+    popular: false,
+    keywords: ["privacy settings", "compliance", "data consent", "GDPR settings"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Privacy controls",
+        body: "Go to **Settings → Privacy** to manage:\n\n- **Data processing consent** — AskBiz needs this to analyse your data and provide insights. You can see when consent was given.\n- **AI training consent** — optional. Allows anonymised data to improve AskBiz models. Fully opt-in.\n- **Data retention** — view how long your data is stored and request early deletion",
+      },
+      {
+        heading: "Compliance section",
+        body: "**Settings → Compliance** (available on Business plans) provides:\n\n- GDPR compliance status overview\n- Data processing records\n- Third-party data sharing audit\n- Export your compliance report for auditors",
+      },
+      {
+        heading: "Your rights",
+        body: "You have the right to:\n\n- **Access** — request a copy of all data AskBiz holds about you\n- **Rectification** — correct inaccurate data\n- **Erasure** — request deletion of your data\n- **Portability** — export your data in a standard format\n\nTo exercise any of these rights, email **hello@askbiz.co** or use the self-service options in Settings → Privacy.",
+      },
+    ],
+    faq: [
+      { q: "What happens if I withdraw data consent?", a: "AskBiz will no longer be able to analyse your connected data or answer questions about it. Your account remains active and you can re-consent at any time to restore full functionality." },
+    ],
+    related: ["settings-overview", "data-security", "gdpr-compliance", "data-subject-rights"],
+  },
+
+  // ── ADDITIONAL: TROUBLESHOOTING (connector errors) ──────────────────────────
+  {
+    slug: "xero-sync-error",
+    title: "Xero Sync Errors",
+    description: "Fix common Xero connection and sync problems — token expiry, permission errors, and missing transactions.",
+    topic: "Troubleshooting",
+    topicSlug: "troubleshooting",
+    readTime: 3,
+    popular: false,
+    keywords: ["xero error", "xero sync", "xero connection", "xero not syncing"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Token expired or disconnected",
+        body: "Xero access tokens expire periodically. If your sync shows an error:\n\n1. Go to **Settings → Integrations**\n2. Find Xero in your connected sources\n3. Click **Reconnect** and log in to Xero again\n4. Grant the same read-only permissions\n\nSync will resume automatically after reconnecting.",
+      },
+      {
+        heading: "Missing transactions",
+        body: "If transactions are missing after sync:\n\n- Check the date range — AskBiz syncs data from the last 24 months by default\n- Verify the transactions exist in Xero (not in a draft or voided state)\n- Check that the correct Xero organisation is connected (if you have multiple)\n- Wait 10 minutes and refresh — large accounts may take time to sync fully",
+      },
+      {
+        heading: "Permission errors",
+        body: "If you see a permissions error, the Xero user who authorised the connection may not have sufficient access. The connecting user needs at least **Standard** role in Xero with access to the relevant organisation. Advisor or read-only roles also work.",
+      },
+    ],
+    faq: [
+      { q: "Do I need to reconnect Xero regularly?", a: "Xero tokens refresh automatically in most cases. You only need to manually reconnect if the token expires due to a long period of inactivity or if you changed your Xero password." },
+    ],
+    related: ["data-not-syncing", "connect-xero", "troubleshooting"],
+  },
+  {
+    slug: "stripe-sync-error",
+    title: "Stripe Sync Errors",
+    description: "Fix common Stripe connection and sync problems — API key issues, webhook errors, and missing payment data.",
+    topic: "Troubleshooting",
+    topicSlug: "troubleshooting",
+    readTime: 3,
+    popular: false,
+    keywords: ["stripe error", "stripe sync", "stripe connection", "stripe not syncing"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Connection failed",
+        body: "If Stripe fails to connect:\n\n1. Go to **Sources** and click **Connect Stripe**\n2. Log in to your Stripe account when prompted\n3. Ensure you're connecting the correct Stripe account (live, not test mode)\n4. Grant the requested read-only permissions\n\nIf it still fails, check that your Stripe account is fully activated (not in restricted mode).",
+      },
+      {
+        heading: "Missing payment data",
+        body: "If payments are missing after sync:\n\n- AskBiz imports successful charges, refunds, and payouts — not failed or incomplete charges\n- Check the date range in your dashboard\n- If you recently connected, allow 5–10 minutes for the initial sync to complete\n- Very large Stripe accounts (100k+ transactions) may take up to an hour for the first sync",
+      },
+      {
+        heading: "Webhook errors",
+        body: "If you've set up Stripe webhooks for real-time updates and they're failing:\n\n- Verify the webhook endpoint URL in your Stripe dashboard\n- Check that the webhook signing secret matches what's configured in AskBiz\n- Ensure the webhook is listening for the correct events (payment_intent.succeeded, charge.refunded, etc.)",
+      },
+    ],
+    faq: [
+      { q: "Can I connect Stripe test mode?", a: "No. AskBiz only connects to live Stripe accounts to ensure real business data is used for analysis. Test mode data is not imported." },
+    ],
+    related: ["data-not-syncing", "connect-stripe", "troubleshooting"],
+  },
+  {
+    slug: "woocommerce-sync-error",
+    title: "WooCommerce Sync Errors",
+    description: "Fix common WooCommerce connection and sync problems — API authentication, REST API issues, and missing orders.",
+    topic: "Troubleshooting",
+    topicSlug: "troubleshooting",
+    readTime: 3,
+    popular: false,
+    keywords: ["woocommerce error", "woocommerce sync", "woocommerce connection", "woocommerce not syncing"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "API authentication failed",
+        body: "WooCommerce connects via REST API keys. If authentication fails:\n\n1. Log in to your WordPress admin\n2. Go to **WooCommerce → Settings → Advanced → REST API**\n3. Create a new API key with **Read** permissions\n4. Copy the Consumer Key and Consumer Secret\n5. Enter these in AskBiz when connecting WooCommerce\n\nEnsure your site uses HTTPS — WooCommerce API keys don't work over plain HTTP.",
+      },
+      {
+        heading: "REST API not accessible",
+        body: "Some WordPress configurations block the REST API:\n\n- Check that your site's REST API is not disabled by a security plugin\n- Verify the permalink structure is not set to 'Plain' (WooCommerce REST API requires pretty permalinks)\n- If you're behind a CDN or firewall, ensure API requests are allowed through",
+      },
+      {
+        heading: "Missing orders",
+        body: "If orders are missing:\n\n- AskBiz imports completed and processing orders — not cancelled, failed, or pending payment\n- Check the API key permissions — it needs Read access\n- Large stores may take longer for initial sync\n- Verify the correct store URL was entered during connection",
+      },
+    ],
+    faq: [
+      { q: "Does WooCommerce sync work with WordPress.com hosted sites?", a: "Yes, as long as you have a WooCommerce plan that includes REST API access. Free WordPress.com sites without WooCommerce are not supported." },
+    ],
+    related: ["data-not-syncing", "connect-woocommerce", "troubleshooting"],
+  },
+  {
+    slug: "ebay-sync-error",
+    title: "eBay Sync Errors",
+    description: "Fix common eBay connection and sync problems — token expiry, marketplace selection, and missing listings.",
+    topic: "Troubleshooting",
+    topicSlug: "troubleshooting",
+    readTime: 2,
+    popular: false,
+    keywords: ["ebay error", "ebay sync", "ebay connection", "ebay not syncing"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Token expired",
+        body: "eBay OAuth tokens expire after a set period. If your sync stops working:\n\n1. Go to **Settings → Integrations**\n2. Find eBay and click **Reconnect**\n3. Log in to eBay and re-authorise AskBiz\n\nSync resumes automatically after reconnecting.",
+      },
+      {
+        heading: "Wrong marketplace",
+        body: "If data looks wrong, check you connected the correct eBay marketplace (e.g., ebay.co.uk vs ebay.com). Each marketplace is a separate connection. You can connect multiple marketplaces from the Sources page.",
+      },
+      {
+        heading: "Missing listings or sales",
+        body: "AskBiz imports completed sales, not active or unsold listings. If sales are missing:\n\n- Allow 10–15 minutes for sync after connecting\n- Check that sales exist in the date range you're viewing\n- eBay API has rate limits — very active accounts may need longer for a full import",
+      },
+    ],
+    faq: [
+      { q: "Can I connect multiple eBay accounts?", a: "Yes. Connect each eBay account separately from the Sources page. Data from each account is kept separate and can be viewed independently or combined in chat." },
+    ],
+    related: ["data-not-syncing", "connect-ebay", "troubleshooting"],
+  },
+  {
+    slug: "paypal-sync-error",
+    title: "PayPal Sync Errors",
+    description: "Fix common PayPal connection and sync problems — authorisation issues, missing transactions, and business vs personal accounts.",
+    topic: "Troubleshooting",
+    topicSlug: "troubleshooting",
+    readTime: 2,
+    popular: false,
+    keywords: ["paypal error", "paypal sync", "paypal connection", "paypal not syncing"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Connection failed",
+        body: "PayPal connection requires a **Business** account. Personal PayPal accounts are not supported.\n\n1. Go to **Sources** and click **Connect PayPal**\n2. Log in with your PayPal Business credentials\n3. Approve the read-only data sharing request\n\nIf it fails, verify you're using a Business account and that your account is in good standing.",
+      },
+      {
+        heading: "Missing transactions",
+        body: "If transactions are missing after sync:\n\n- AskBiz imports completed payments, refunds, and withdrawals\n- Pending, held, or disputed transactions may not appear until resolved\n- Initial sync may take up to 15 minutes for accounts with large transaction history\n- Check the currency — multi-currency PayPal accounts import all currencies",
+      },
+    ],
+    faq: [
+      { q: "Can I connect a personal PayPal account?", a: "No. AskBiz requires a PayPal Business account for API access. Upgrade your PayPal account to Business (free) if needed." },
+    ],
+    related: ["data-not-syncing", "connect-paypal", "troubleshooting"],
+  },
+
+  // ── ADDITIONAL: ASK ASKBIZ (advanced features) ──────────────────────────────
+  {
+    slug: "voice-input-guide",
+    title: "Using Voice Input in Chat",
+    description: "How to use voice input to ask AskBiz questions by speaking instead of typing.",
+    topic: "Ask AskBiz",
+    topicSlug: "ask-askbiz",
+    readTime: 2,
+    popular: false,
+    keywords: ["voice input", "speech to text", "talk to askbiz", "voice chat", "microphone"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "How to use voice input",
+        body: "In the chat interface, click the **microphone icon** next to the message input. Speak your question naturally — AskBiz converts your speech to text and sends it as a message.\n\nVoice input works in any language your browser supports for speech recognition.",
+      },
+      {
+        heading: "Tips for best results",
+        body: "- Speak clearly and at a normal pace\n- State your question in one go rather than pausing mid-sentence\n- Review the transcribed text before sending — you can edit it if the transcription isn't perfect\n- Works best in a quiet environment without background noise",
+      },
+      {
+        heading: "Browser requirements",
+        body: "Voice input uses your browser's built-in speech recognition. It works best in Chrome and Edge. Safari and Firefox have partial support. You'll need to grant microphone permission when prompted.",
+      },
+    ],
+    faq: [
+      { q: "Can AskBiz speak answers back to me?", a: "Text-to-speech for answers is available in supported browsers. The response is read aloud automatically after voice input if your browser supports the Web Speech API." },
+      { q: "Is my voice data stored?", a: "No. Speech recognition runs in your browser. The audio is not sent to or stored by AskBiz — only the transcribed text is sent as a chat message." },
+    ],
+    related: ["what-can-i-ask", "getting-the-most-from-ai-chat", "improving-ai-answers"],
+  },
+  {
+    slug: "file-context-in-chat",
+    title: "Using Files as Context in Chat",
+    description: "How to reference uploaded files when chatting with AskBiz for data-driven answers from your own datasets.",
+    topic: "Ask AskBiz",
+    topicSlug: "ask-askbiz",
+    readTime: 2,
+    popular: false,
+    keywords: ["file context", "upload in chat", "csv in chat", "data context"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "How file context works",
+        body: "When you click **Ask about this →** on the Files page, AskBiz loads that file as context for your conversation. This means:\n\n- AskBiz knows your column names, data types, and row count\n- You can ask questions about the data without specifying the file name each time\n- Analysis is based on your actual data, not general knowledge",
+      },
+      {
+        heading: "What you can ask",
+        body: "With a file loaded, try questions like:\n\n- 'What's the total of the Revenue column?'\n- 'Which product has the most stock?'\n- 'Show me items where margin is below 15%'\n- 'What's the average order value by month?'\n- 'Find any anomalies in this data'",
+      },
+      {
+        heading: "Combining with other data",
+        body: "File context works alongside your connected data sources. You can ask questions that combine both — for example, comparing uploaded cost data against live Shopify revenue.",
+      },
+    ],
+    faq: [
+      { q: "Can I switch files mid-conversation?", a: "Yes. Go back to Files, click 'Ask about this' on a different file, and continue chatting. The context switches to the new file." },
+    ],
+    related: ["ask-about-uploaded-file", "what-can-i-ask", "files-overview"],
+  },
+  {
+    slug: "conversation-search-guide",
+    title: "Searching Your Conversation History",
+    description: "How to find and revisit previous conversations with AskBiz — search by keyword, browse by date, and continue past chats.",
+    topic: "Ask AskBiz",
+    topicSlug: "ask-askbiz",
+    readTime: 2,
+    popular: false,
+    keywords: ["conversation search", "chat history", "find conversation", "past chats"],
+    lastUpdated: "2026-05-15",
+    content: [
+      {
+        heading: "Finding past conversations",
+        body: "Your conversation history is saved automatically. To find a previous chat:\n\n1. Open the **Chat** or **Ask** page\n2. Look for the conversation list in the sidebar\n3. Scroll through recent conversations or use the search bar to find by keyword\n4. Click any conversation to reopen it and continue where you left off",
+      },
+      {
+        heading: "Continuing a conversation",
+        body: "When you reopen a past conversation, the full context is preserved. You can:\n\n- Ask follow-up questions about previous answers\n- Request updated numbers (AskBiz will re-query your latest data)\n- Share or export insights from the conversation",
+      },
+      {
+        heading: "Managing conversations",
+        body: "Conversations are stored until you delete them. Old conversations don't affect your question limits or storage. You can delete conversations you no longer need from the conversation list.",
+      },
+    ],
+    faq: [
+      { q: "Is there a limit on how many conversations are stored?", a: "No hard limit. All your conversations are stored and searchable. Very old conversations may load slightly slower but are always accessible." },
+    ],
+    related: ["chat-history", "what-can-i-ask", "getting-the-most-from-ai-chat"],
+  },
+
+  // ─── REPAIR & SERVICE JOBS ──────────────────────────────────────────────────
+
+  {
+    slug: "pos-repair-getting-started",
+    title: "Getting Started with Repair & Service Jobs",
+    description: "Learn how to enable the repair and service jobs feature in AskBiz POS, configure staff roles, and understand the end-to-end repair workflow.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    popular: true,
+    content: [
+      {
+        heading: "Enabling repair and service jobs",
+        body: "Navigate to POS Settings and toggle on 'Repair & Service Jobs'. Once enabled, a new Repairs tab appears in your POS dashboard. Only account owners and managers can enable this feature. All existing POS functionality continues to work alongside the repair module without interruption.",
+      },
+      {
+        heading: "Staff roles for repairs",
+        body: "Two additional roles become available: Repair Staff and Engineer. Repair Staff can check in devices and manage the front-desk workflow. Engineers are assigned to jobs and can log diagnostics, parts used, and completion notes. Assign roles from the Staff Management page under POS Settings.",
+      },
+      {
+        heading: "The repair workflow at a glance",
+        body: "Every repair follows a clear pipeline: intake, quoting, assignment, repair, completion, and collection. Each stage updates in real time on the Repairs dashboard. Staff and customers receive notifications at key milestones, keeping everyone informed throughout the process.",
+      },
+    ],
+    faq: [
+      { q: "Can I use repair jobs without the standard POS sales features?", a: "Yes. You can enable repair jobs independently. However, linking repairs to sales transactions requires the full POS module to be active." },
+      { q: "Is there an extra charge for the repair feature?", a: "Repair & Service Jobs is included in all POS plans at no additional cost." },
+      { q: "Can I disable the feature after enabling it?", a: "Yes, you can toggle it off at any time. Existing repair records are preserved and remain accessible in your reports." },
+    ],
+    related: ["pos-getting-started", "pos-adding-staff", "pos-repair-intake-workflow"],
+    keywords: ["repair", "service jobs", "enable repairs", "repair workflow", "engineer role", "repair staff"],
+    lastUpdated: "2026-05-16",
+  },
+  {
+    slug: "pos-repair-intake-workflow",
+    title: "Checking In a Device for Repair",
+    description: "Step-by-step guide to creating a new service job, capturing customer and device details, recording faults, and taking intake photos.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    content: [
+      {
+        heading: "Creating a new service job",
+        body: "From the Repairs tab, tap 'New Job'. Search for an existing customer or add a new one. Customer name, phone number, and email are captured so notifications can be sent automatically. Returning customers have their details pre-filled from previous visits.",
+      },
+      {
+        heading: "Recording device and fault information",
+        body: "Enter the device type, make, model, and serial number. Then describe the reported fault in the free-text field. You can select from common fault categories to speed up entry. A clear fault description helps engineers diagnose the issue more quickly once assigned.",
+      },
+      {
+        heading: "Intake photos and geo-tagging",
+        body: "Use your device camera to capture photos of the item at intake. Photos are timestamped and geo-tagged automatically, providing a verifiable record of the item's condition on arrival. This protects both your business and the customer in the event of any dispute.",
+      },
+    ],
+    faq: [
+      { q: "Can I add multiple faults to one job?", a: "Yes. You can list multiple faults during intake or add further issues later when the engineer begins their assessment." },
+      { q: "Are intake photos required?", a: "Photos are optional but strongly recommended. They serve as evidence of the device condition at check-in and help avoid disputes." },
+    ],
+    related: ["pos-repair-getting-started", "pos-repair-quoting-customers", "pos-camera-troubleshooting"],
+    keywords: ["device check-in", "intake", "fault description", "intake photos", "geo-tag", "service job"],
+    lastUpdated: "2026-05-16",
+  },
+  {
+    slug: "pos-repair-quoting-customers",
+    title: "Quoting Customers for Repairs",
+    description: "Learn how to build repair quotes using service presets or custom pricing, send them via WhatsApp or email, and manage customer approvals.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    content: [
+      {
+        heading: "Building a repair quote",
+        body: "Open a service job and tap 'Create Quote'. Select from your saved service presets for common repairs or add custom line items with descriptions and prices. Parts can be itemised separately. The quote total updates in real time as you add or remove items.",
+      },
+      {
+        heading: "Sending quotes to customers",
+        body: "Once the quote is ready, send it directly to the customer via WhatsApp or email. The message uses a professional template that includes your business name, a breakdown of costs, and a link for the customer to approve or decline the quote online.",
+      },
+      {
+        heading: "Customer approval flow",
+        body: "Customers can approve or decline the quote from the link provided. Approved quotes automatically move the job to the next stage. Declined quotes prompt an optional reason field. You can revise and resend a quote as many times as needed before work begins.",
+      },
+    ],
+    faq: [
+      { q: "Can I offer a discount on a quote?", a: "Yes. Add a discount line item or adjust individual line prices. The customer sees the final total after any discounts applied." },
+      { q: "What happens if the customer does not respond?", a: "The job remains in the 'Awaiting Approval' stage. You can resend the quote or follow up manually. No automatic reminders are sent unless you configure them." },
+    ],
+    related: ["pos-repair-service-presets", "pos-repair-customer-notifications", "pos-repair-intake-workflow"],
+    keywords: ["repair quote", "customer approval", "WhatsApp quote", "pricing", "service estimate", "quote template"],
+    lastUpdated: "2026-05-16",
+  },
+  {
+    slug: "pos-repair-assigning-engineers",
+    title: "Assigning Engineers to Repair Jobs",
+    description: "How to assign and reassign engineers to service jobs, manage engineer skills, and handle additional issues discovered during repair.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 3,
+    content: [
+      {
+        heading: "Assigning an engineer",
+        body: "From the service job, tap 'Assign Engineer' and select from your available engineers. You can filter by skill or availability. The assigned engineer receives a notification with the job details, fault description, and any intake photos attached to the record.",
+      },
+      {
+        heading: "Engineer skills and specialisations",
+        body: "Each engineer profile can list their skills and specialisations, such as screen repair, logic board work, or software diagnostics. When assigning jobs, AskBiz highlights engineers whose skills match the reported fault, helping you route work to the right person.",
+      },
+      {
+        heading: "Reassignment and additional issues",
+        body: "Engineers can be reassigned if priorities change. Engineers may also log additional issues discovered during the repair. These additional findings can trigger a revised quote to the customer before further work proceeds, keeping the process transparent.",
+      },
+    ],
+    faq: [
+      { q: "Can one job be assigned to multiple engineers?", a: "Currently each job is assigned to a single engineer at a time. You can reassign to a different engineer if the scope changes." },
+      { q: "Do engineers see all jobs or only their own?", a: "Engineers see only jobs assigned to them by default. Managers and owners can view all jobs across the team." },
+      { q: "What happens when an engineer finds an additional fault?", a: "They log it against the job. If the additional work changes the cost, a revised quote is sent to the customer for approval before proceeding." },
+    ],
+    related: ["pos-repair-getting-started", "pos-adding-staff", "pos-repair-quoting-customers"],
+    keywords: ["assign engineer", "engineer skills", "reassign", "repair assignment", "additional issues", "engineer notes"],
+    lastUpdated: "2026-05-16",
+  },
+  {
+    slug: "pos-repair-tracking-parts",
+    title: "Tracking Parts Used in Repairs",
+    description: "Add parts from your inventory to repair jobs, track costs per job, and let AskBiz automatically deduct stock when parts are used.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 3,
+    content: [
+      {
+        heading: "Adding parts to a repair job",
+        body: "While working on a job, tap 'Add Parts' to search your POS inventory. Select the part, specify the quantity, and it is linked to the job. If the part is not in your inventory, you can add a custom entry with a description and cost for one-off items.",
+      },
+      {
+        heading: "Automatic stock deduction",
+        body: "When a part is added to a repair job, AskBiz automatically deducts it from your inventory. This keeps stock levels accurate without manual adjustments. If a part is removed from the job before completion, the stock is restored automatically.",
+      },
+      {
+        heading: "Part costs and line totals",
+        body: "Each part carries its cost price and any markup you configure. The job's parts total updates in real time. This feeds directly into your repair margin reports, giving you clear visibility of material costs versus the amount charged to the customer.",
+      },
+    ],
+    faq: [
+      { q: "What if a part is out of stock?", a: "You can still add it to the job, but AskBiz displays a warning that stock is insufficient. You may need to restock before completing the repair." },
+      { q: "Can I track parts that are not in my main inventory?", a: "Yes. Use the custom part entry to log items purchased specifically for a repair. These are tracked against the job but do not appear in your main inventory." },
+    ],
+    related: ["pos-managing-inventory", "pos-restocking-guide", "pos-repair-completing-collection"],
+    keywords: ["repair parts", "stock deduction", "parts tracking", "inventory", "part costs", "materials"],
+    lastUpdated: "2026-05-16",
+  },
+  {
+    slug: "pos-repair-completing-collection",
+    title: "Completing Repairs and Customer Collection",
+    description: "Mark repair jobs as complete, capture checkout photos, link payments, and manage the customer collection process.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    content: [
+      {
+        heading: "Marking a job as complete",
+        body: "Once the repair is finished, the engineer taps 'Mark Complete' and adds any final notes. A checkout photo of the repaired item is captured to document its condition. The job status moves to 'Ready for Collection' and the customer is notified automatically.",
+      },
+      {
+        heading: "Payment and checkout",
+        body: "When the customer arrives, open the job and tap 'Collect & Pay'. The outstanding balance is shown. Payment can be taken via your standard POS payment methods. The repair transaction links to the original job, keeping your financial records unified.",
+      },
+      {
+        heading: "Collection flow",
+        body: "After payment, the customer signs on screen to confirm collection. The job moves to 'Collected' status. A final receipt is generated and can be sent via WhatsApp or email. The entire job history, including photos and notes, is archived for future reference.",
+      },
+    ],
+    faq: [
+      { q: "Can I take a deposit at intake and the balance at collection?", a: "Yes. Record a partial payment at intake. The remaining balance is shown at collection and must be settled before the job is marked as collected." },
+      { q: "What if the customer does not collect the item?", a: "The job remains in 'Ready for Collection' status. You can send reminder notifications from the job screen at any time." },
+    ],
+    related: ["pos-repair-tracking-parts", "pos-making-a-sale", "pos-repair-warranty-management"],
+    keywords: ["complete repair", "collection", "checkout photos", "repair payment", "customer pickup", "ready for collection"],
+    lastUpdated: "2026-05-16",
+  },
+  {
+    slug: "pos-repair-warranty-management",
+    title: "Managing Repair Warranties",
+    description: "Understand how AskBiz automatically creates warranties for completed repairs, manage warranty terms, and handle warranty claims.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    content: [
+      {
+        heading: "Auto-created warranties",
+        body: "When a repair job is marked as collected, AskBiz automatically creates a warranty record. The default warranty period is 90 days from the collection date. Each warranty is linked to the job, customer, and device serial number for easy lookup.",
+      },
+      {
+        heading: "Customising warranty terms",
+        body: "You can adjust the default warranty period in POS Settings under Repair Preferences. Individual jobs can also have their warranty overridden at completion. Set longer warranties for premium repairs or shorter ones for minor fixes as your business requires.",
+      },
+      {
+        heading: "Warranty claims and lookups",
+        body: "Customers can return with a warranty claim. Search by serial number, customer name, or job reference to find the warranty. If the claim is valid, a new linked job is created at no charge. The original job history is attached for the engineer's reference.",
+      },
+    ],
+    faq: [
+      { q: "Can I disable automatic warranties?", a: "Yes. Toggle off auto-warranties in Repair Preferences. You can still create warranties manually on individual jobs if needed." },
+      { q: "What happens when a warranty expires?", a: "Expired warranties remain in your records for reference but are clearly marked as expired. Any new work on the device is treated as a standard paid repair." },
+      { q: "Can customers check their warranty status online?", a: "Not currently. Warranty lookups are performed in-store by your staff using the serial number or customer details." },
+    ],
+    related: ["pos-repair-completing-collection", "pos-repair-getting-started", "pos-repair-reports-analytics"],
+    keywords: ["warranty", "90-day warranty", "warranty claim", "serial number lookup", "repair guarantee", "warranty terms"],
+    lastUpdated: "2026-05-16",
+  },
+  {
+    slug: "pos-repair-service-presets",
+    title: "Creating Service Presets for Common Repairs",
+    description: "Set up reusable service presets with standard pricing, estimated times, and required parts to speed up quoting and maintain consistency.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 3,
+    content: [
+      {
+        heading: "Creating a service preset",
+        body: "Go to POS Settings, then Repair Presets. Tap 'Add Preset' and enter the service name, category, standard price, estimated repair time, and any required parts. Presets appear as quick-select options when building quotes, saving time on repetitive repairs.",
+      },
+      {
+        heading: "Organising presets by category",
+        body: "Group your presets into categories such as Screen Repairs, Battery Replacements, or Software Services. Categories keep the preset list manageable as it grows and help staff find the right service quickly during the quoting process.",
+      },
+      {
+        heading: "Editing and removing presets",
+        body: "Presets can be updated at any time. Price changes apply to future quotes only and do not affect existing jobs. You can archive presets you no longer offer rather than deleting them, which preserves historical reporting accuracy for past jobs that used those presets.",
+      },
+    ],
+    faq: [
+      { q: "Can I set different prices for different device models?", a: "Yes. Create separate presets for each model variant, for example 'Screen Repair - iPhone 15' and 'Screen Repair - iPhone 16', each with its own pricing." },
+      { q: "Do presets automatically add parts to the job?", a: "Presets can list required parts. When selected during quoting, those parts are suggested but not added to the job until the engineer confirms them during the repair." },
+    ],
+    related: ["pos-repair-quoting-customers", "pos-repair-getting-started", "pos-managing-inventory"],
+    keywords: ["service preset", "repair template", "standard pricing", "repair categories", "estimated time", "common repairs"],
+    lastUpdated: "2026-05-16",
+  },
+  {
+    slug: "pos-repair-customer-notifications",
+    title: "Customer Notifications for Repair Jobs",
+    description: "Configure WhatsApp and email notifications that keep customers informed at every stage of their repair, from intake to collection.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    content: [
+      {
+        heading: "Notification stages",
+        body: "AskBiz sends notifications at key milestones: intake confirmation, quote sent, quote approved, repair complete, ready for collection, and warranty information. Each notification is triggered automatically when the job moves to the corresponding stage, requiring no manual effort from staff.",
+      },
+      {
+        heading: "WhatsApp and email templates",
+        body: "Notifications are sent via WhatsApp and email using professional templates that include your business name and job details. Templates are pre-configured but can be customised in POS Settings under Notification Templates. You can adjust the wording to match your brand voice.",
+      },
+      {
+        heading: "Managing notification preferences",
+        body: "You can enable or disable individual notification stages. For example, you might choose to send only the intake confirmation and ready-for-collection messages. Customer contact preferences are respected, so notifications are sent only via channels the customer has provided.",
+      },
+    ],
+    faq: [
+      { q: "Can I send a custom message to the customer outside the standard stages?", a: "Yes. Open the job and tap 'Send Message' to compose a free-text WhatsApp or email message directly from the job screen." },
+      { q: "What if the customer has not provided an email address?", a: "Notifications fall back to WhatsApp if a phone number is available. If neither is on file, the notification is skipped and a note is added to the job." },
+      { q: "Are notifications sent in the customer's language?", a: "Templates currently support English only. Multi-language support is planned for a future update." },
+    ],
+    related: ["pos-whatsapp-receipts-setup", "pos-repair-quoting-customers", "pos-repair-completing-collection"],
+    keywords: ["repair notifications", "WhatsApp", "email templates", "customer updates", "intake confirmation", "collection notification"],
+    lastUpdated: "2026-05-16",
+  },
+  {
+    slug: "pos-repair-reports-analytics",
+    title: "Repair Revenue and Analytics",
+    description: "View repair metrics on your POS dashboard, analyse margins per job, and use AI chat to query repair performance data.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 5,
+    content: [
+      {
+        heading: "Unified data integration",
+        body: "Repair revenue feeds directly into your main POS reporting. Sales and repair income appear together on your dashboard, giving you a complete picture of business performance. You can filter views to show repairs only or combined totals as needed.",
+      },
+      {
+        heading: "Repair metrics and margins",
+        body: "The Repairs dashboard shows jobs completed, average repair time, revenue, parts costs, and profit margins. Drill into individual jobs to see a full cost breakdown. Use date filters and engineer filters to compare performance across your team or time periods.",
+      },
+      {
+        heading: "AI chat queries for repairs",
+        body: "Use AskBiz AI Chat to ask natural-language questions about your repair data. For example, ask 'What was my repair revenue last month?' or 'Which engineer completed the most jobs this week?'. The AI draws on your live repair data to provide instant answers.",
+      },
+    ],
+    faq: [
+      { q: "Can I export repair reports?", a: "Yes. Repair data can be exported in the same formats as your standard POS reports, including CSV and PDF, from the Reports section." },
+      { q: "Do repair margins include labour costs?", a: "Margins currently reflect parts costs against the amount charged. Labour cost tracking is not yet included but is planned for a future release." },
+    ],
+    related: ["pos-dashboards-and-reports", "pos-ai-chat-guide", "pos-exporting-data"],
+    keywords: ["repair analytics", "repair revenue", "margin calculation", "repair dashboard", "AI chat repairs", "repair reports"],
+    lastUpdated: "2026-05-16",
   },
 ];
 

@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
   const { phone, email, name, role, pin, location_id } = await req.json()
   if ((!phone && !email) || !name || !role) return NextResponse.json({ error: 'phone or email, name and role required' }, { status: 400 })
-  if (!['cashier', 'inventory'].includes(role)) return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
+  if (!['cashier', 'inventory', 'repair', 'engineer'].includes(role)) return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
   if (pin && (String(pin).length < 4 || String(pin).length > 6)) return NextResponse.json({ error: 'PIN must be 4–6 digits' }, { status: 400 })
 
   // ── Enforce seat limit ────────────────────────────────────────────────────

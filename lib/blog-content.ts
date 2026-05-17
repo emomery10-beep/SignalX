@@ -102,6 +102,197 @@ export const BLOG_POSTS: BlogPost[] = [
   relatedSlugs: ["what-is-an-ai-chief-of-staff", "askbiz-daily-brief-guide", "askbiz-business-pulse-explained"],
 },
 {
+  slug: "askbiz-pos-repair-service-jobs-launch",
+  title: "Introducing Repair and Service Jobs in AskBiz POS: From Intake to Collection in One System",
+  metaDescription: "AskBiz POS now supports repair and service jobs. Track devices from intake to collection with auto-generated tickets, customer notifications, parts tracking, warranty creation, and full analytics.",
+  cluster: "AskBiz Tutorials",
+  pillar: "Product Launch",
+  publishDate: "2026-05-16",
+  readTime: 9,
+  tldr: "AskBiz POS now includes a complete repair and service jobs workflow. Create service presets with preset pricing, intake customer devices with photos, generate tickets automatically, assign engineers, track parts with inventory deduction, notify customers via WhatsApp and email at every status change, auto-create warranties on completion, and see all repair revenue in your unified analytics. No separate repair shop software needed.",
+  sections: [
+    {
+      heading: "Why repair shops need more than a basic POS",
+      level: 2 as const,
+      body: "A standard point of sale system is built for one-step transactions: scan, pay, done. Repair and service work is fundamentally different. A customer drops off a device, you diagnose the fault, quote for parts and labour, wait for approval, order components, assign the job to a technician, complete the repair, notify the customer, handle collection, and then track the warranty period afterwards. That is not a transaction — it is a multi-stage workflow that can span days or weeks. Most repair shops bolt together a POS for payments, a spreadsheet for job tracking, WhatsApp for customer updates, and a notebook for warranty records. Every handoff between those tools is a place where information gets lost, customers get forgotten, and revenue leaks out. AskBiz POS now handles the entire lifecycle in one system."
+    },
+    {
+      heading: "The repair job lifecycle: intake to collection",
+      level: 2 as const,
+      body: "Every repair job in AskBiz follows a clear six-stage status workflow: intake, quoted, accepted, in progress, completed, and collected. When a customer brings in a device, you create a new service job, select from your preset services or add a custom description, capture photos of the device condition at intake, and the system generates a unique ticket number automatically. The customer receives their ticket reference immediately. As the job moves through each stage — from quoting the repair cost, to the customer accepting, to the engineer beginning work, to completion and final collection — AskBiz tracks every transition with timestamps. At collection, you can capture checkout photos to confirm the device condition on return, closing the loop on the entire job."
+    },
+    {
+      heading: "Auto-generated tickets and customer notifications",
+      level: 2 as const,
+      body: "Every service job receives an auto-generated ticket number that serves as the unique reference throughout the repair lifecycle. Customers receive this ticket number at intake so they can enquire about their job at any time. The real power is in automated notifications. At every status change — when you send a quote, when work begins, when the repair is finished and ready for collection — AskBiz can notify the customer via WhatsApp or email automatically. You do not need to remember to send updates manually or worry about customers chasing you for progress. The system handles it. This alone eliminates one of the biggest pain points in repair shop management: customers ringing to ask whether their device is ready yet."
+    },
+    {
+      heading: "Parts tracking and inventory deduction",
+      level: 2 as const,
+      body: "Repair jobs consume parts, and those parts need to come out of your inventory accurately. When an engineer adds parts to a service job in AskBiz, the system deducts them from your stock automatically. There is no separate step to update inventory and no risk of selling a screen replacement to a walk-in customer when it has already been allocated to a repair job. You can see exactly which parts were used on every job, what they cost, and how that affects your margin. If a part is out of stock, the system flags it before the engineer tries to use it. This integration between service jobs and inventory means your stock levels are always accurate, whether parts are sold over the counter or consumed in repairs."
+    },
+    {
+      heading: "Engineer assignment and preset pricing",
+      level: 2 as const,
+      body: "If you have multiple technicians, AskBiz lets you assign each service job to a specific engineer. This gives you visibility into workload distribution, individual performance, and job completion times. You can see at a glance who is overloaded and who has capacity. Preset pricing lets you define standard services — such as screen replacement, battery swap, water damage assessment, or full diagnostic — with fixed prices. When creating a new job, your staff select from the preset list rather than typing prices manually. This ensures consistent quoting, speeds up the intake process, and eliminates pricing errors. You can still override preset prices for non-standard work or add custom line items when the repair falls outside your standard menu."
+    },
+    {
+      heading: "Device photos at intake and checkout",
+      level: 2 as const,
+      body: "Disputes over pre-existing damage are one of the most frustrating aspects of running a repair shop. A customer drops off a phone with a cracked back panel, you repair the screen, and at collection they claim you caused the crack. AskBiz solves this by letting you capture device photos at both intake and checkout. The photos are attached directly to the service job record and timestamped. If a dispute arises, you have photographic evidence of the device condition before and after your work. This protects both you and the customer. The photo capture uses your phone camera directly within the POS interface — there is no need to take photos separately and try to match them to the right job later."
+    },
+    {
+      heading: "Warranty auto-creation on completion",
+      level: 2 as const,
+      body: "When a repair job is marked as completed, AskBiz can automatically create a warranty record linked to that job. The warranty duration is configurable per service type — you might offer 90 days on a screen replacement and 30 days on a diagnostic service. The warranty record includes the original job details, parts used, engineer who performed the work, and the device photos. If a customer returns within the warranty period, your staff can look up the original job instantly by ticket number and see exactly what was done. This turns warranty management from a manual headache into an automatic background process. Customers appreciate knowing their repair is covered, and you gain trust and repeat business."
+    },
+    {
+      heading: "Unified analytics for sales and repairs",
+      level: 2 as const,
+      body: "Because repair jobs live inside AskBiz POS alongside your retail transactions, all of your revenue appears in one set of analytics. You can see total revenue broken down by product sales and service jobs, track average repair value, monitor turnaround times, and identify which services are most profitable. The AI chat has access to all of this data. You can ask questions like: What was my repair revenue last month? Which engineer completes jobs fastest? What is the average time from intake to collection? How does my parts cost compare to labour revenue? There is no need to export data from a separate repair management tool and merge it with your sales figures. Everything is already in one place."
+    },
+  ],
+  paa: [
+    { q: "Can AskBiz POS handle both retail sales and repair jobs?", a: "Yes. AskBiz POS supports standard retail transactions and multi-stage repair or service jobs in the same system. You can sell products over the counter and manage repair intake, quoting, parts, and collection all from one interface, with unified analytics covering both revenue streams." },
+    { q: "How do customers get updates on their repair job?", a: "AskBiz sends automatic notifications via WhatsApp or email at every status change. When a quote is sent, when work begins, and when the device is ready for collection, the customer is notified automatically using the ticket reference number generated at intake." },
+    { q: "Does the parts tracking deduct from inventory automatically?", a: "Yes. When an engineer adds parts to a service job, those parts are deducted from your inventory in real time. This prevents double-allocation and keeps your stock levels accurate across both retail sales and repair consumption." },
+    { q: "Can I assign repair jobs to specific engineers?", a: "Absolutely. Each service job can be assigned to a specific engineer, giving you visibility into workload distribution, individual performance metrics, and job completion times across your team." },
+    { q: "Is warranty tracking included?", a: "Yes. When a repair job is marked as completed, AskBiz automatically creates a warranty record linked to the job. Warranty duration is configurable per service type, and the record includes full job details, parts used, and device photos for easy reference." },
+  ],
+  cta: {
+    heading: "Start managing repairs in AskBiz POS today",
+    body: "Repair and service jobs are live now in AskBiz POS. Create your service presets, intake your first device, and experience the full workflow from ticket generation to warranty creation. No separate software, no spreadsheets, no missed customer updates."
+  },
+  relatedSlugs: ["askbiz-pos-launch-built-in-point-of-sale", "repair-shop-management-software-small-business", "how-to-track-repair-jobs-pos-system"],
+},
+{
+  slug: "repair-shop-management-software-small-business",
+  title: "Repair Shop Management Software for Small Businesses: Why Spreadsheets Are Costing You Money",
+  metaDescription: "Small repair shops lose revenue to disorganised workflows. Learn what proper repair shop management software does and how AskBiz replaces spreadsheets, paper tickets, and manual follow-ups.",
+  cluster: "AskBiz Tutorials",
+  pillar: "SEO Education",
+  publishDate: "2026-05-16",
+  readTime: 10,
+  tldr: "Running a phone, electronics, or appliance repair shop on spreadsheets and paper tickets leads to lost jobs, missed follow-ups, inaccurate inventory, and zero visibility into profitability. Proper repair shop management software tracks every job from intake to collection, automates customer communications, manages parts inventory, handles warranties, and gives you real analytics. AskBiz POS does all of this inside a system you already use for retail sales.",
+  sections: [
+    {
+      heading: "The hidden chaos of running a small repair shop",
+      level: 2 as const,
+      body: "From the outside, a repair shop looks straightforward: customers bring in broken devices, you fix them, they pay and leave. In practice, you are juggling dozens of jobs at different stages, chasing customers for quote approvals, ordering parts from multiple suppliers, tracking which technician is working on what, remembering warranty commitments, and trying to work out whether you actually made money at the end of the month. Most small repair shops handle this with a combination of paper tickets, a WhatsApp group, a spreadsheet with colour-coded rows, and the owner's memory. It works until it does not — and the point where it stops working is usually the point where the business is growing and should be thriving."
+    },
+    {
+      heading: "Why spreadsheets fail repair shops",
+      level: 2 as const,
+      body: "Spreadsheets are general-purpose tools forced into a specific workflow. They cannot send a customer a notification when their device is ready. They cannot deduct a replacement screen from your parts inventory when an engineer uses it. They cannot generate a warranty record when a job is completed. They cannot assign a job to a technician and track how long it takes. Every one of those actions requires a manual step — and manual steps get skipped when you are busy. A single missed follow-up means a device sits on your shelf for weeks. A forgotten inventory update means you promise a repair you cannot fulfil. A lost paper ticket means a customer dispute you cannot resolve. The cost of these failures is invisible until you add it up."
+    },
+    {
+      heading: "What proper repair management software looks like",
+      level: 2 as const,
+      body: "Good repair shop management software handles the full lifecycle of a service job without requiring you to switch between systems. At intake, it captures the device details, customer information, and condition photos, then generates a unique ticket number. During the repair, it tracks status changes, engineer assignments, and parts consumption. At completion, it notifies the customer, records the warranty, and logs the revenue. Critically, it does all of this while keeping your parts inventory accurate and giving you analytics on turnaround times, revenue per service type, engineer productivity, and profit margins. The software should not create more admin work — it should eliminate it. If you are spending time maintaining the tool instead of using it, the tool is wrong."
+    },
+    {
+      heading: "Device tracking from intake to collection",
+      level: 2 as const,
+      body: "The core of any repair management system is device tracking. When a customer hands over their phone, laptop, or appliance, you need to know exactly where it is in the process at all times. AskBiz tracks every device through six clear stages: intake, quoted, accepted, in progress, completed, and collected. Each transition is timestamped and logged. Your staff can filter the job list by status to see everything that is waiting for a quote, everything in progress, and everything ready for collection. No device gets forgotten on a shelf. No customer has to ring you to find out what is happening. The ticket number ties everything together — the customer has it, your system has it, and every notification references it."
+    },
+    {
+      heading: "Customer communications that happen automatically",
+      level: 2 as const,
+      body: "The number one complaint customers have about repair shops is poor communication. They drop off a device and hear nothing for days. They have to call repeatedly to get updates. They miss the collection window because nobody told them the repair was done. AskBiz eliminates this entirely with automated WhatsApp and email notifications at every status change. When you send a quote, the customer is notified with the price and a reference number. When the repair is finished, they receive a collection notification immediately. You do not need to remember to send these messages — the system sends them the moment you update the job status. This transforms the customer experience and dramatically reduces inbound enquiry calls."
+    },
+    {
+      heading: "Parts inventory that stays accurate",
+      level: 2 as const,
+      body: "Repair shops have a unique inventory challenge: parts are consumed during service jobs, not sold over the counter in the traditional sense. A standard POS does not understand this. AskBiz does. When an engineer adds a part to a repair job — a replacement battery, a charging port, a display assembly — the system deducts it from your inventory automatically. You can see your current stock levels at any time, get alerts when parts are running low, and track exactly which parts were used on which jobs. This means your purchasing decisions are based on real consumption data, not estimates. It also means you never promise a same-day repair only to discover you are out of the required part halfway through the job."
+    },
+    {
+      heading: "Warranty management without the admin burden",
+      level: 2 as const,
+      body: "Offering warranties on repairs builds customer trust and drives repeat business, but tracking them manually is a nightmare. Which job was it? When was it completed? What parts were used? Who did the work? AskBiz creates warranty records automatically when a job is marked as completed. Each warranty is linked to the original service job, complete with photos, parts list, engineer details, and timestamps. Warranty duration is configurable per service type, so a screen replacement might carry a 90-day warranty while a software reset carries 14 days. When a customer returns with an issue, your staff look up the ticket number and see everything instantly. No digging through filing cabinets or searching old spreadsheets."
+    },
+    {
+      heading: "Revenue analytics that cover sales and repairs",
+      level: 2 as const,
+      body: "Most repair shops have no idea which services are actually profitable. They know the price they charge, but they do not track parts cost, labour time, or overhead per job type. AskBiz provides unified analytics that cover both retail sales and service jobs in one dashboard. You can see total repair revenue, average job value, parts cost ratio, turnaround time by service type, and engineer performance metrics. The AI chat lets you ask questions in plain English: Which service type has the highest margin? What is my average turnaround time this month? How does repair revenue compare to retail sales? These insights help you make pricing decisions, hire at the right time, and focus on the services that actually grow your business."
+    },
+  ],
+  paa: [
+    { q: "What is repair shop management software?", a: "Repair shop management software is a system that tracks the full lifecycle of service and repair jobs — from customer intake and quoting through to parts tracking, engineer assignment, completion, collection, and warranty management. It replaces spreadsheets, paper tickets, and manual follow-ups with an automated workflow." },
+    { q: "Can I use AskBiz for phone and electronics repairs?", a: "Yes. AskBiz POS supports repair and service jobs for any device type including phones, tablets, laptops, appliances, and electronics. You create service presets for your common repairs and can add custom jobs for non-standard work." },
+    { q: "How does repair tracking reduce lost revenue?", a: "Proper repair tracking ensures no job is forgotten, no customer goes without an update, no parts are double-allocated, and no warranty is missed. Each of these failures costs money — either directly through lost jobs and wasted parts, or indirectly through damaged reputation and lost repeat business." },
+    { q: "Do I need separate software for POS and repair management?", a: "Not with AskBiz. The repair and service jobs feature is built directly into AskBiz POS, so you manage retail sales and repair jobs in one system with unified analytics, shared inventory, and a single customer database." },
+    { q: "Is AskBiz suitable for a one-person repair shop?", a: "Absolutely. AskBiz scales from a single technician to a multi-engineer operation. For solo repairers, the automated customer notifications and warranty tracking save significant admin time. As you grow and add staff, engineer assignment and workload visibility become invaluable." },
+  ],
+  cta: {
+    heading: "Replace your spreadsheets with a proper repair system",
+    body: "AskBiz POS handles retail sales and repair jobs in one platform. Set up your service presets, start tracking jobs from intake to collection, and let the system handle customer notifications, inventory, and warranties automatically. No separate subscription required."
+  },
+  relatedSlugs: ["askbiz-pos-repair-service-jobs-launch", "how-to-track-repair-jobs-pos-system", "askbiz-pos-launch-built-in-point-of-sale"],
+},
+{
+  slug: "how-to-track-repair-jobs-pos-system",
+  title: "How to Track Repair Jobs in Your POS System: A Step-by-Step Guide with AskBiz",
+  metaDescription: "Learn how to track repair and service jobs from intake to collection using AskBiz POS. Step-by-step walkthrough covering presets, quoting, engineer assignment, parts, completion, and warranty.",
+  cluster: "AskBiz Tutorials",
+  pillar: "How-To Guide",
+  publishDate: "2026-05-16",
+  readTime: 8,
+  tldr: "This guide walks you through the entire repair job workflow in AskBiz POS — from creating service presets and intake of a customer device, through quoting, engineer assignment, parts tracking, completion, collection, and automatic warranty creation. Follow each step to manage repair jobs without spreadsheets or paper tickets.",
+  sections: [
+    {
+      heading: "Step one: create your service presets",
+      level: 2 as const,
+      body: "Before you intake your first repair job, set up your service presets. These are your standard repairs and services with predefined pricing. Navigate to the POS settings in AskBiz and select Service Presets. Add each service you commonly offer — for example, screen replacement, battery replacement, water damage assessment, charging port repair, full diagnostic, or data recovery. For each preset, enter the service name, default price, estimated turnaround time, and warranty duration. Presets speed up the intake process because your staff select from a list rather than typing descriptions and prices manually. You can always add custom line items for non-standard work, but having your common services ready to go eliminates errors and ensures consistent pricing."
+    },
+    {
+      heading: "Step two: intake a customer device",
+      level: 2 as const,
+      body: "When a customer brings in a device for repair, open AskBiz POS and select New Service Job. Enter the customer details — name, phone number, and email address. Then record the device information: type, make, model, and a description of the reported fault. This is also the moment to capture intake photos. Use your phone camera directly within the POS interface to photograph the device from multiple angles. These photos are timestamped and attached to the job record, protecting you against disputes about pre-existing damage. Once you save the job, AskBiz generates a unique ticket number automatically. Give this number to the customer — it is their reference for all future enquiries and the key that ties together every notification they receive."
+    },
+    {
+      heading: "Step three: send a quote to the customer",
+      level: 2 as const,
+      body: "After diagnosing the fault, update the job with the quote. Select the appropriate service preset or enter a custom price, add a description of the work required, and list any parts needed. When you move the job status to Quoted, AskBiz sends the customer an automatic notification via WhatsApp or email with the quote details and their ticket reference number. The customer can review the quote and respond with their approval. You do not need to chase them manually — the notification includes everything they need. Once the customer approves, update the job status to Accepted. This clear quoting step prevents misunderstandings about pricing and creates a documented record of what was agreed before any work begins."
+    },
+    {
+      heading: "Step four: assign an engineer and begin work",
+      level: 2 as const,
+      body: "With the quote accepted, assign the job to a specific engineer if you have multiple technicians on your team. Open the job, select the engineer from your staff list, and move the status to In Progress. The engineer can see their assigned jobs in the POS interface, filtered by status. AskBiz sends another notification to the customer confirming that work has begun on their device. For solo repairers, you can skip the engineer assignment step and simply move the job to In Progress yourself. The key benefit of this stage is visibility — you always know which jobs are actively being worked on, which are waiting, and who is responsible for each one. If a customer calls to ask about progress, any member of staff can look up the ticket and answer immediately."
+    },
+    {
+      heading: "Step five: add parts and track inventory",
+      level: 2 as const,
+      body: "As the engineer works on the repair, they add parts to the job record. Select parts from your inventory — a replacement screen, a new battery, screws, adhesive strips, or whatever the job requires. Each part added to the job is automatically deducted from your inventory in real time. The job record shows a complete parts list with individual costs, giving you an accurate picture of the total parts expenditure on that repair. If a part is not in stock, the system flags it immediately rather than letting the engineer discover the shortage mid-repair. This parts tracking is essential for understanding your true margins on each service type. Revenue minus parts cost minus labour gives you the actual profit per job — data that most repair shops simply do not have."
+    },
+    {
+      heading: "Step six: complete the repair and notify the customer",
+      level: 2 as const,
+      body: "When the repair is finished, move the job status to Completed. At this point, capture checkout photos of the device to document its condition after the repair. These photos sit alongside the intake photos in the job record, providing a complete visual history. AskBiz sends the customer an automatic collection notification via WhatsApp or email, letting them know their device is ready to pick up. The notification includes the ticket number and any relevant details. You do not need to call, text, or message the customer separately — the system handles it the moment you update the status. This is one of the highest-impact automation points in the workflow. Customers consistently report that prompt collection notifications are the feature they value most."
+    },
+    {
+      heading: "Step seven: handle collection and close the job",
+      level: 2 as const,
+      body: "When the customer arrives, look up their job by ticket number. Review the completed work and parts used with them, process the payment through AskBiz POS as you would any other transaction, and update the job status to Collected. The job is now closed. At this point, AskBiz automatically creates a warranty record linked to the job. The warranty duration comes from the service preset you selected at intake — or you can set it manually for custom jobs. The warranty record includes the full job history: intake photos, parts used, engineer who performed the work, checkout photos, and timestamps for every status change. If the customer returns within the warranty period, your staff can pull up the complete record in seconds using the ticket number."
+    },
+    {
+      heading: "Tracking everything in your analytics dashboard",
+      level: 2 as const,
+      body: "Once you have repair jobs flowing through the system, AskBiz gives you analytics you never had with spreadsheets. View total repair revenue alongside your retail sales, track average turnaround time from intake to collection, see which service types are most popular and most profitable, and monitor engineer performance. The AI chat also has full access to your repair data. Ask questions like: What is my average repair job value this week? Which service preset generates the most revenue? How long do screen replacements take on average? Are my turnaround times improving or getting worse? This data-driven approach to managing your repair business means you can spot trends, adjust pricing, and make hiring decisions based on real numbers rather than gut feeling."
+    },
+  ],
+  paa: [
+    { q: "How do I create a repair job in AskBiz POS?", a: "Open AskBiz POS, select New Service Job, enter the customer and device details, choose a service preset or add a custom description, capture intake photos, and save. The system generates a unique ticket number automatically and the job enters the intake stage of the workflow." },
+    { q: "Can customers track their own repair status?", a: "Customers receive automatic WhatsApp or email notifications at every status change — when a quote is sent, when work begins, and when their device is ready for collection. They use their ticket number as a reference for any enquiries." },
+    { q: "What happens to inventory when parts are used in a repair?", a: "Parts added to a service job are automatically deducted from your inventory in real time. The system tracks which parts were used on which job, keeps your stock levels accurate, and flags out-of-stock items before an engineer tries to use them." },
+    { q: "Is warranty tracking automatic?", a: "Yes. When a repair job is marked as completed, AskBiz automatically creates a warranty record linked to that job. The warranty duration is configurable per service type and the record includes full job details, photos, and parts information." },
+  ],
+  cta: {
+    heading: "Try the full repair workflow today",
+    body: "Open AskBiz POS, create your first service preset, and intake a test device. Walk through the entire process — quoting, assignment, parts, completion, collection, and warranty — in under ten minutes. See how much simpler repair management becomes when everything is in one system."
+  },
+  relatedSlugs: ["askbiz-pos-repair-service-jobs-launch", "repair-shop-management-software-small-business", "askbiz-pos-launch-built-in-point-of-sale"],
+},
+{
   "slug": "what-is-an-ai-chief-of-staff",
   "title": "What is an AI Chief of Staff? Defining the New Category of Business Intelligence",
   "metaDescription": "An AI Chief of Staff handles the data work your business needs but no one has time for. Learn what this new category means and why founders are adopting it in 2026.",
@@ -13929,6 +14120,94 @@ export const BLOG_POSTS: BlogPost[] = [
     ],
     cta: { heading: "Never calculate tax manually again", body: "Enable tax automation in your AskBiz POS. Set your location and product categories. Every transaction calculates tax correctly. Every quarter, click 'Generate Tax Report' and see your filing-ready summary. File on time, every time." },
     relatedSlugs: ["askbiz-pos-launch-built-in-point-of-sale", "gdpr-compliance-pos", "what-is-an-ai-chief-of-staff"]
+  },
+
+  {
+    slug: "askbiz-pos-geo-tagged-sales-map",
+    title: "See Exactly Where Your Sales Happen: The AskBiz Geo-Tagged Sales Map",
+    metaDescription: "AskBiz POS now geo-tags every sale with GPS coordinates. See an interactive pin map of where your revenue comes from — perfect for market traders, delivery operations, and multi-area businesses.",
+    cluster: "AskBiz Tutorials",
+    pillar: "POS",
+    publishDate: "2026-05-16",
+    readTime: 5,
+    tldr: "Every AskBiz POS sale can now be tagged with the cashier's GPS location. Open the Map tab in your admin dashboard to see exactly where your revenue is being generated — down to street level.",
+    sections: [
+      {
+        heading: "Why Location Data Changes Everything for Retailers",
+        level: 2 as const,
+        body: "Traditional POS tells you WHAT sold and WHEN. Geo-tagging tells you WHERE. For any business that operates across multiple areas — market stalls, delivery drivers, pop-up shops, field sales teams — this is the missing dimension. A butcher with two market pitches can now see which pitch drives more revenue by time of day. A delivery business can see if certain postcodes generate more returns."
+      },
+      {
+        heading: "How It Works: From Cashier Device to Admin Map",
+        level: 2 as const,
+        body: "When a cashier opens the AskBiz POS app, the browser requests location permission once. A green dot appears in the header confirming GPS is active and sales will be tagged. Every completed sale automatically captures the device's coordinates and stores them alongside the transaction. No manual input required. In the admin dashboard at askbiz.co/pos, click the 🗺️ Map tab to see an interactive map with an orange pin for every geo-tagged sale. Click any pin to see the sale amount, time, cashier name, and payment method."
+      },
+      {
+        heading: "Enabling Location on the Cashier Device",
+        level: 2 as const,
+        body: "On iPhone (Safari): tap the address bar lock icon → Website Settings → Location → Allow. On Android (Chrome): tap the lock icon → Permissions → Location → Allow. The green dot in the POS header confirms location is active. If the dot is grey, location was denied — the sale will still process but won't appear on the map. Location is re-requested each session."
+      },
+      {
+        heading: "Real-World Use Cases",
+        level: 3 as const,
+        body: "Market traders can compare pitches — see which stall location generates more revenue at which times. Delivery drivers enable territory analysis, revealing which routes or postcodes convert best. Pop-up shops can identify best performing locations before committing to a permanent site. Multi-cashier events give managers visibility into each cashier's zone and contribution."
+      },
+      {
+        heading: "Privacy and Data Handling",
+        level: 2 as const,
+        body: "Location data is stored only at the transaction level — no continuous tracking between sales. Coordinates are visible only to the business owner in the admin dashboard, never to customers. Staff should be informed that location capture is active, as required by GDPR Article 13. The data minimisation principle applies: only coordinates at point of sale are stored, not movement data."
+      },
+    ],
+    paa: [
+      { q: "Does the cashier device need GPS?", a: "Any device with a browser that supports the Geolocation API works — most modern smartphones and tablets. The browser will prompt for permission the first time." },
+      { q: "What if the cashier denies location?", a: "The sale processes normally but won't appear on the map. The cashier sees a grey dot instead of green in the header." },
+    ],
+    cta: { heading: "Start Mapping Your Sales Today", body: "Open your POS admin at askbiz.co/pos, click the Map tab, and ask your cashier to enable location on their device for the next sale." },
+    relatedSlugs: [],
+  },
+
+  {
+    slug: "askbiz-pos-sell-by-weight",
+    title: "Selling by Weight Made Simple: Kg Items, Decimals, and Live Price Recalculation",
+    metaDescription: "AskBiz POS supports weight-based selling for butchers, delis, fabric shops, and produce markets. Enter 0.5kg, get the right price instantly — no manual calculations.",
+    cluster: "AskBiz Tutorials",
+    pillar: "POS",
+    publishDate: "2026-05-16",
+    readTime: 4,
+    tldr: "Set any inventory item to 'kg' unit type, and cashiers can enter decimal quantities like 0.5 or 1.25 at the till. The total recalculates instantly. No manual maths, no pricing errors.",
+    sections: [
+      {
+        heading: "The Problem with Fixed-Quantity POS Systems",
+        level: 2 as const,
+        body: "Most POS systems assume you sell whole units. A butcher selling 0.73kg of steak has to calculate the price manually, key it in as a custom item, or round up — all of which introduce errors and slow down the queue. AskBiz solves this natively."
+      },
+      {
+        heading: "Setting Up a Weight-Based Item",
+        level: 2 as const,
+        body: "In Inventory, create or edit an item and set the Unit field to 'kg'. Set the sale price as the per-kilogram rate (e.g. KSh 1,200 per kg). That's it. The item is now a weight-based product."
+      },
+      {
+        heading: "How the Cashier Experience Works",
+        level: 2 as const,
+        body: "When a cashier adds a kg item to the cart, a decimal quantity input appears instead of a whole-number stepper. They type the weight — say 0.75 — and the line total updates instantly: 0.75 × KSh 1,200 = KSh 900. They can adjust the weight any number of times before checkout. The receipt shows the item name, weight, per-kg rate, and line total clearly."
+      },
+      {
+        heading: "Which Businesses Benefit Most",
+        level: 2 as const,
+        body: "Butchers and fishmongers price by cut weight rather than piece count. Delis and cheese shops sell by 100g or kg. Fabric and textile retailers price per metre using the same decimal quantity logic. Produce markets handle variable weight produce without manual overrides. Bulk food stores selling loose grains, nuts, or dried goods can price accurately every time."
+      },
+      {
+        heading: "Stock Deduction",
+        level: 2 as const,
+        body: "When a 0.75kg sale completes, the system deducts 0.75 from the item's stock balance. Low-stock alerts trigger at the kg threshold you set, so you'll know when to reorder."
+      },
+    ],
+    paa: [
+      { q: "Can I sell in grams?", a: "Enter quantities as decimals — 0.25 for 250g, 0.1 for 100g. Set your price as the per-kg rate and the maths works automatically." },
+      { q: "Does it work offline?", a: "The cart and price calculation work on-device. An internet connection is needed to complete the transaction and sync stock." },
+    ],
+    cta: { heading: "Set Up Your First Kg Item", body: "Go to Inventory in your AskBiz POS, edit any item, and change the Unit to 'kg'. Your cashiers can start selling by weight immediately." },
+    relatedSlugs: [],
   },
 ]
 import { EVERYDAY_POSTS } from './everyday-posts'

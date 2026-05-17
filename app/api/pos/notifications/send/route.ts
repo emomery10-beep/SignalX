@@ -129,6 +129,16 @@ function buildMessage(template: string, data: Record<string, any>): string {
     tax_reminder: `📅 Tax Filing Reminder\nJurisdiction: ${data.jurisdiction}\nDeadline: ${data.deadline}\nDays until: ${data.days_until}\nTax due: £${data.tax_due}\n\nAction: Prepare and file tax return.`,
 
     payment_failed: `❌ Payment Failed\nTransaction: ${data.transaction_id}\nAmount: £${data.amount}\nReason: ${data.failure_reason}\n\nAction: Contact customer or retry payment.`,
+
+    service_ready: `✅ ${data.customer_name}, your ${data.device_model} is ready for collection!\nTicket: ${data.ticket_number}\n\nPlease visit us at your earliest convenience to collect your device.`,
+
+    service_quote: `Hi ${data.customer_name}, we've assessed your ${data.device_model}.\n\n🔧 Issue: ${data.fault_description}\n💰 Repair cost: ${data.quoted_price}\nTicket: ${data.ticket_number}\n\nReply YES to approve or contact us to discuss.\n\n— ${data.business_name}`,
+
+    service_warranty: `Hi ${data.customer_name}, your repair of ${data.device_model} (Ticket: ${data.ticket_number}) includes a ${data.warranty_days}-day warranty, valid until ${data.warranty_expires}.\n\nIf you experience the same issue, bring your device back — it's covered.\n\n— ${data.business_name}`,
+
+    service_intake: `Hi ${data.customer_name}, we've received your ${data.device_model} for repair.\n\nTicket: ${data.ticket_number}\nIssue: ${data.fault_description}\nEstimated cost: ${data.quoted_price}\nEstimated time: ${data.estimated_time}\n\nWe'll notify you when it's ready.\n\n— ${data.business_name}`,
+
+    service_collected: `Hi ${data.customer_name}, thank you for collecting your ${data.device_model}.\n\nTicket: ${data.ticket_number}\nTotal paid: ${data.total_paid}\n\nYour repair includes a 90-day warranty. If you experience the same issue, bring it back.\n\n— ${data.business_name}`,
   }
 
   let message = messages[template] || template
@@ -235,6 +245,11 @@ function getEmailSubject(template: string): string {
     cash_variance: '💰 Cash Variance Report',
     tax_reminder: '📅 Tax Filing Reminder',
     payment_failed: '❌ Payment Failed',
+    service_ready: '✅ Your Device is Ready for Collection',
+    service_quote: '🔧 Repair Quote for Your Device',
+    service_warranty: '🛡️ Your Repair Warranty Details',
+    service_intake: '📋 Device Received for Repair',
+    service_collected: '✅ Repair Complete — Thank You',
   }
 
   return subjects[template] || 'AskBiz Alert'

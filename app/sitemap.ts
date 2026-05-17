@@ -38,6 +38,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/stock-management-analytics`,                 lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/profit-margin-calculator`,                   lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/changelog`,                                  lastModified: now, changeFrequency: "weekly",  priority: 0.6 },
+    { url: `${base}/point-of-sale`,                              lastModified: now, changeFrequency: "monthly", priority: 0.9 },
   ];
 
   // ── Help Center ─────────────────────────────────────────────────────────────
@@ -94,6 +95,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/free-tools`,                              lastModified: now, changeFrequency: "monthly" as const, priority: 0.9 },
     { url: `${base}/free-tools/landed-cost-calculator`,       lastModified: now, changeFrequency: "monthly" as const, priority: 0.9 },
     { url: `${base}/free-tools/fx-risk-modeller`,             lastModified: now, changeFrequency: "monthly" as const, priority: 0.9 },
+    { url: `${base}/free-tools/vat-calculator`,               lastModified: now, changeFrequency: "monthly" as const, priority: 0.9 },
+    { url: `${base}/free-tools/break-even-calculator`,        lastModified: now, changeFrequency: "monthly" as const, priority: 0.9 },
   ];
 
   // ── Blog posts ──────────────────────────────────────────────────────────────
@@ -141,6 +144,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { USE_CASES } = await import("@/lib/use-cases-content");
   const forRoutes: MetadataRoute.Sitemap = USE_CASES.map(u => ({ url: `${base}/for/${u.slug}`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.8 }));
 
+  // ── Case Studies ─────────────────────────────────────────────────────────────
+  const { CASE_STUDIES } = await import("@/lib/case-studies-content");
+  const caseStudyIndexRoute: MetadataRoute.Sitemap = [{ url: `${base}/case-studies`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.9 }];
+  const caseStudyRoutes: MetadataRoute.Sitemap = CASE_STUDIES.map(cs => ({ url: `${base}/case-studies/${cs.slug}`, lastModified: new Date(cs.publishDate).toISOString(), changeFrequency: "monthly" as const, priority: 0.8 }));
+
+  // ── Benchmarks ──────────────────────────────────────────────────────────────
+  const benchmarksRoute: MetadataRoute.Sitemap = [
+    { url: `${base}/benchmarks`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.9 },
+  ];
+
   // ── Pricing & Search ─────────────────────────────────────────────────────────
   const pricingAndSearchRoutes: MetadataRoute.Sitemap = [
     { url: `${base}/pricing`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.9 },
@@ -166,6 +179,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...integrationsIndexRoute,
     ...integrationRoutes,
     ...forRoutes,
+    ...caseStudyIndexRoute,
+    ...caseStudyRoutes,
+    ...benchmarksRoute,
     ...pricingAndSearchRoutes,
   ];
 }

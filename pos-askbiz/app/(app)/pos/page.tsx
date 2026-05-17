@@ -1,6 +1,8 @@
 'use client'
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import ServiceJobsTab from '@/components/pos/ServiceJobsTab'
+import RepairMetrics from '@/components/pos/RepairMetrics'
 
 const ACC = '#d08a59'
 const ACC_BG = 'rgba(208,138,89,.08)'
@@ -50,7 +52,7 @@ function MiniBarChart({ data, color = ACC, height = 80 }: { data: { label: strin
 
 // ── Types ────────────────────────────────────────────────
 interface StaffMember {
-  id: string; name: string; phone: string; email?: string; role: 'cashier' | 'inventory'; active: boolean; last_login_at: string | null; has_pin?: boolean
+  id: string; name: string; phone: string; email?: string; role: 'cashier' | 'inventory' | 'repair' | 'engineer'; active: boolean; last_login_at: string | null; has_pin?: boolean
 }
 interface Transaction {
   id: string; total: number; subtotal?: number; payment_type: string; status: string; created_at: string; notes?: string
@@ -61,7 +63,7 @@ interface Transaction {
 interface InventoryItem {
   id: string; name: string; sku?: string; sale_price: number; cost_price: number; stock_qty: number; low_stock_threshold: number; unit?: string; last_sold_at: string | null; category?: string; active: boolean
 }
-type Tab = 'overview' | 'staff' | 'inventory' | 'audit'
+type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'audit' | 'map'
 type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
 type FilterModalType = { type: 'sales' | 'refunds' | 'low_stock' | 'cashier_detail'; title: string; cashier_id?: string } | null
 type TxDetailType = Transaction | null
@@ -99,7 +101,7 @@ export default function POSPage() {
   const [newPhone, setNewPhone] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newName, setNewName] = useState('')
-  const [newRole, setNewRole] = useState<'cashier' | 'inventory'>('cashier')
+  const [newRole, setNewRole] = useState<'cashier' | 'inventory' | 'repair' | 'engineer'>('cashier')
   const [newPin, setNewPin] = useState('')
   const [addingStaff, setAddingStaff] = useState(false)
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null)
@@ -123,7 +125,10 @@ export default function POSPage() {
   const [showBulkImport, setShowBulkImport] = useState(false)
   const [bulkCsv, setBulkCsv] = useState('')
   const [importingBulk, setImportingBulk] = useState(false)
-  const csvInputRef = useRef<HTMLInputElement>(null)
+  const csvInputRef    = useRef<HTMLInputElement>(null)
+  const mapDivRef      = useRef<HTMLDivElement>(null)
+  const mapRef         = useRef<any>(null)
+  const mapMarkersRef  = useRef<any[]>([])
 
   // Camera
   const [recognizing, setRecognizing] = useState(false)
@@ -264,6 +269,23 @@ export default function POSPage() {
   const margin = todayRevenue > 0 ? (grossProfit / todayRevenue * 100) : 0
 
   // Comparison helper
+  // Geo-tagged sales for map tab
+  const geoPoints = useMemo(() => {
+    const pts: any[] = []
+    for (const t of transactions) {
+      if (!t.notes) continue
+      const m = t.notes.match(/\|__geo:([-\d.]+),([-\d.]+)/)
+      if (!m) continue
+      pts.push({
+        id: t.id, lat: parseFloat(m[1]), lng: parseFloat(m[2]),
+        total: t.total, payment_type: t.payment_type, created_at: t.created_at,
+        cashier_name: t.cashier?.name || '',
+        cleanNotes: t.notes.replace(/\s*\|__geo:[^\s|]+/, '').trim(),
+      })
+    }
+    return pts
+  }, [transactions])
+
   const pctChange = (curr: number, prev: number) => {
     if (prev === 0) return curr > 0 ? 100 : 0
     return ((curr - prev) / prev * 100)
@@ -548,6 +570,68 @@ export default function POSPage() {
     )
   }
 
+  // ── Leaflet map lifecycle ──────────────────────────────
+  useEffect(() => {
+    if (tab !== 'map') {
+      if (mapRef.current) { mapRef.current.remove(); mapRef.current = null }
+      return
+    }
+    if (!document.getElementById('lf-css')) {
+      const link = document.createElement('link')
+      link.id = 'lf-css'; link.rel = 'stylesheet'
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+      document.head.appendChild(link)
+    }
+    const doInit = () => {
+      const L = (window as any).L
+      if (!L || !mapDivRef.current || mapRef.current) return
+      const map = L.map(mapDivRef.current, { center: [20, 0], zoom: 2 })
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap', maxZoom: 19,
+      }).addTo(map)
+      mapRef.current = map
+      mapMarkersRef.current = []
+    }
+    requestAnimationFrame(() => {
+      if (document.getElementById('lf-js')) { doInit(); return }
+      const script = document.createElement('script')
+      script.id = 'lf-js'; script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+      script.async = true; script.onload = doInit
+      document.head.appendChild(script)
+    })
+  }, [tab])
+
+  useEffect(() => {
+    const L   = (window as any).L
+    const map = mapRef.current
+    if (!L || !map) return
+    mapMarkersRef.current.forEach(m => map.removeLayer(m))
+    mapMarkersRef.current = []
+    const bounds: [number, number][] = []
+    geoPoints.forEach((p: any) => {
+      const marker = L.circleMarker([p.lat, p.lng], {
+        radius: 10, fillColor: ACC, color: '#fff', weight: 2.5, fillOpacity: 0.9,
+      }).addTo(map)
+      const dt  = new Date(p.created_at)
+      const lbl = dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' +
+                  dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+      marker.bindPopup(`
+        <div style="font-family:-apple-system,sans-serif;min-width:150px;padding:2px 0">
+          <div style="font-weight:800;font-size:16px;color:#1a1916">${currencySymbol}${p.total.toFixed(2)}</div>
+          <div style="font-size:12px;color:#6b6760;margin-top:2px">${lbl}</div>
+          ${p.cashier_name ? `<div style="font-size:12px;color:#6b6760">by ${p.cashier_name}</div>` : ''}
+          <div style="font-size:12px;color:#6b6760;text-transform:capitalize">${p.payment_type}</div>
+          ${p.cleanNotes ? `<div style="font-size:11px;color:#a39e97;margin-top:2px">${p.cleanNotes}</div>` : ''}
+        </div>
+      `)
+      mapMarkersRef.current.push(marker)
+      bounds.push([p.lat, p.lng])
+    })
+    if (bounds.length > 0) {
+      try { map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 }) } catch {}
+    }
+  }, [geoPoints, tab])
+
   // ── LOADING STATE ──────────────────────────────────────
   if (loading || posEnabled === null) return (
     <div className="page-shell">
@@ -623,6 +707,10 @@ export default function POSPage() {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export CSV
           </button>
+          <a href="/intelligence" style={{ padding: '8px 14px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx2)', fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="11" r="3"/><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"/></svg>
+            Sales Map
+          </a>
           <a href="https://pos.askbiz.co" target="_blank" rel="noopener noreferrer" style={{ padding: '8px 14px', borderRadius: 9, background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
             Open till
@@ -633,14 +721,14 @@ export default function POSPage() {
       <div className="page-shell-body">
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid var(--b)', paddingBottom: 0, overflowX: 'auto' }}>
-          {(['overview', 'staff', 'inventory', 'audit'] as Tab[]).map(t => (
+          {(['overview', 'services', 'staff', 'inventory', 'audit', 'map'] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: '8px 16px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === t ? 'var(--sf)' : 'transparent', color: tab === t ? 'var(--tx)' : 'var(--tx3)',
               fontSize: 13, fontWeight: tab === t ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
               borderBottom: tab === t ? `2px solid ${ACC}` : '2px solid transparent',
             }}>
-              {t.charAt(0).toUpperCase() + t.slice(1)}
+              {t === 'services' ? '🔧 Services' : t === 'map' ? '🗺️ Map' : t.charAt(0).toUpperCase() + t.slice(1)}
               {t === 'inventory' && alertCount > 0 && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px', verticalAlign: 'top' }}>{alertCount}</span>}
             </button>
           ))}
@@ -700,6 +788,8 @@ export default function POSPage() {
                 <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)' }}>{currencySymbol}{todaySales > 0 ? (todayRevenue / todaySales).toFixed(2) : '0.00'}</div>
               </div>
             </div>
+
+            <RepairMetrics currencySymbol={currencySymbol} selectedLocation={'all'} />
 
             {/* Sales chart (hourly) */}
             {completedTx.length > 0 && (
@@ -870,6 +960,14 @@ export default function POSPage() {
           </div>
         )}
 
+        {/* ══════════════ SERVICES TAB ══════════════ */}
+        {tab === 'services' && (
+          <ServiceJobsTab
+            currencySymbol={currencySymbol}
+            selectedLocation={'all'}
+          />
+        )}
+
         {/* ══════════════ STAFF TAB ══════════════ */}
         {tab === 'staff' && (
           <div style={{ maxWidth: 700 }}>
@@ -901,6 +999,8 @@ export default function POSPage() {
                   <select value={newRole} onChange={e => setNewRole(e.target.value as any)} style={inputStyle}>
                     <option value="cashier">Cashier — can process sales</option>
                     <option value="inventory">Inventory — can manage stock</option>
+                    <option value="repair">Repair — can intake & manage service jobs</option>
+                    <option value="engineer">Engineer — assigned to repair jobs</option>
                   </select>
                   <input placeholder="PIN (4–6 digits) — required for POS login" value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: newPin && newPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
                   <div style={{ display: 'flex', gap: 8 }}>
@@ -1247,6 +1347,29 @@ export default function POSPage() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+        {tab === 'map' && (
+          <div>
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 13, color: 'var(--tx3)' }}>
+                {geoPoints.length > 0
+                  ? `${geoPoints.length} geo-tagged sale${geoPoints.length !== 1 ? 's' : ''} in this period`
+                  : 'No geo-tagged sales yet — cashiers must allow location access on their device when checking out'}
+              </div>
+            </div>
+            <div style={{ position: 'relative', height: 520, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--b)' }}>
+              <div ref={mapDivRef} style={{ position: 'absolute', inset: 0 }} />
+              {geoPoints.length === 0 && (
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(249,248,246,0.95)', gap: 10, zIndex: 999 }}>
+                  <div style={{ fontSize: 40 }}>🗺️</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>No location data yet</div>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', maxWidth: 300, lineHeight: 1.6 }}>
+                    Each sale will drop a pin here when the cashier allows location access on their device during checkout.
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

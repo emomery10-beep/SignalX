@@ -1,6 +1,8 @@
 'use client'
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import ServiceJobsTab from '@/components/pos/ServiceJobsTab'
+import RepairMetrics from '@/components/pos/RepairMetrics'
 
 const ACC = '#d08a59'
 const ACC_BG = 'rgba(208,138,89,.08)'
@@ -56,7 +58,7 @@ function MiniBarChart({ data, color = ACC, height = 80 }: { data: { label: strin
 
 // ── Types ────────────────────────────────────────────────
 interface StaffMember {
-  id: string; name: string; phone: string; email?: string; role: 'cashier' | 'inventory'; active: boolean; last_login_at: string | null; has_pin?: boolean; location_id?: string; location?: { id: string; name: string } | null
+  id: string; name: string; phone: string; email?: string; role: 'cashier' | 'inventory' | 'repair' | 'engineer'; active: boolean; last_login_at: string | null; has_pin?: boolean; location_id?: string; location?: { id: string; name: string } | null
 }
 interface Transaction {
   id: string; total: number; subtotal?: number; payment_type: string; status: string; created_at: string; notes?: string
@@ -70,7 +72,7 @@ interface InventoryItem {
 interface Location {
   id: string; name: string; address?: string; phone?: string; is_active: boolean
 }
-type Tab = 'overview' | 'staff' | 'inventory' | 'branches' | 'audit' | 'map'
+type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'branches' | 'audit' | 'map'
 type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
 type FilterModalType = { type: 'sales' | 'refunds' | 'low_stock' | 'cashier_detail'; title: string; cashier_id?: string } | null
 type TxDetailType = Transaction | null
@@ -113,7 +115,7 @@ export default function POSPage() {
   const [newPhone, setNewPhone] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newName, setNewName] = useState('')
-  const [newRole, setNewRole] = useState<'cashier' | 'inventory'>('cashier')
+  const [newRole, setNewRole] = useState<'cashier' | 'inventory' | 'repair' | 'engineer'>('cashier')
   const [newPin, setNewPin] = useState('')
   const [newLocationId, setNewLocationId] = useState('')
   const [addingStaff, setAddingStaff] = useState(false)
@@ -764,14 +766,14 @@ export default function POSPage() {
       <div className="page-shell-body">
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid var(--b)', paddingBottom: 0, overflowX: 'auto' }}>
-          {(['overview', 'staff', 'inventory', 'branches', 'map', 'audit'] as Tab[]).map(t => (
+          {(['overview', 'services', 'staff', 'inventory', 'branches', 'map', 'audit'] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: '8px 16px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === t ? 'var(--sf)' : 'transparent', color: tab === t ? 'var(--tx)' : 'var(--tx3)',
               fontSize: 13, fontWeight: tab === t ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
               borderBottom: tab === t ? `2px solid ${ACC}` : '2px solid transparent',
             }}>
-              {t === 'map' ? '🗺️ Map' : t.charAt(0).toUpperCase() + t.slice(1)}
+              {t === 'map' ? '🗺️ Map' : t === 'services' ? '🔧 Services' : t.charAt(0).toUpperCase() + t.slice(1)}
               {t === 'inventory' && alertCount > 0 && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px', verticalAlign: 'top' }}>{alertCount}</span>}
             </button>
           ))}
@@ -853,6 +855,9 @@ export default function POSPage() {
                 <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, todaySales > 0 ? todayRevenue / todaySales : 0)}</div>
               </div>
             </div>
+
+            {/* Repair metrics */}
+            <RepairMetrics currencySymbol={currencySymbol} selectedLocation={selectedLocation} />
 
             {/* Sales chart (hourly) */}
             {completedTx.length > 0 && (
@@ -1023,6 +1028,16 @@ export default function POSPage() {
           </div>
         )}
 
+        {/* ══════════════ SERVICES TAB ══════════════ */}
+        {tab === 'services' && (
+          <ServiceJobsTab
+            currencySymbol={currencySymbol}
+            selectedLocation={selectedLocation}
+            staff={staff.map(s => ({ id: s.id, name: s.name, role: s.role || 'cashier', active: s.active, location_id: s.location_id }))}
+            notify={notify}
+          />
+        )}
+
         {/* ══════════════ STAFF TAB ══════════════ */}
         {tab === 'staff' && (
           <div style={{ maxWidth: 700 }}>
@@ -1054,6 +1069,8 @@ export default function POSPage() {
                   <select value={newRole} onChange={e => setNewRole(e.target.value as any)} style={inputStyle}>
                     <option value="cashier">Cashier — can process sales</option>
                     <option value="inventory">Inventory — can manage stock</option>
+                    <option value="repair">Repair — can intake & checkout service jobs</option>
+                    <option value="engineer">Engineer — can work on assigned repairs</option>
                   </select>
                   {locations.length > 0 && (
                     <select value={newLocationId} onChange={e => setNewLocationId(e.target.value)} style={inputStyle}>
