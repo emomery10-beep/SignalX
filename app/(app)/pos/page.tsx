@@ -1099,6 +1099,41 @@ export default function POSPage() {
           const sector = sectorOverride || detectedSector
 
           const ACC = '#d08a59'
+
+          // ── Shared tile card renderer ──────────────────────────────────────
+          const tileStyle: React.CSSProperties = {
+            background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12,
+            padding: '16px 14px', textAlign: 'left', textDecoration: 'none',
+            transition: 'border-color 0.15s', fontFamily: 'inherit',
+            position: 'relative', display: 'flex', flexDirection: 'column',
+            minHeight: 110, cursor: 'pointer',
+          }
+          const renderTile = (tile: { icon: string; label: string; desc: string; badge?: number | null; tab?: Tab; href?: string }, idx: number) => {
+            const inner = (
+              <>
+                {tile.badge ? <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px' }}>{tile.badge}</span> : null}
+                <div style={{ fontSize: 22, marginBottom: 8, lineHeight: 1 }}>{tile.icon}</div>
+                <div style={{ fontWeight: 600, color: 'var(--tx)', fontSize: 13, lineHeight: 1.3 }}>{tile.label}</div>
+                <div style={{ color: 'var(--tx3)', fontSize: 11, marginTop: 4, lineHeight: 1.4 }}>{tile.desc}</div>
+              </>
+            )
+            if (tile.href) return (
+              <a key={idx} href={`https://pos.askbiz.co${tile.href}`} style={tileStyle}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>{inner}</a>
+            )
+            return (
+              <button key={idx} onClick={() => setTab(tile.tab!)} style={tileStyle}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>{inner}</button>
+            )
+          }
+          const tileGrid = (tiles: Parameters<typeof renderTile>[0][]) => (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(148px, 1fr))', gap: 12 }}>
+              {tiles.map((t, i) => renderTile(t, i))}
+            </div>
+          )
+
           const sectorPicker = (
             <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
               {[
@@ -1159,33 +1194,21 @@ export default function POSPage() {
                 <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>🔧 Repair Operations</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Service jobs, engineer assignments, parts and customer collection.</div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
-                {[
-                  { label: '🔧 Service Jobs', tab: 'services' as Tab, desc: 'All jobs by status', badge: null },
-                  { label: '👥 Staff',        tab: 'staff' as Tab,       desc: 'Engineers & repair roles', badge: null },
-                  { label: '🛒 Sales',        tab: 'overview' as Tab,    desc: 'Revenue & transaction history', badge: null },
-                  { label: '📦 Inventory',    tab: 'inventory' as Tab,   desc: 'Parts & stock levels', badge: alertCount > 0 ? alertCount : null },
-                  { label: '🔍 Audit',        tab: 'audit' as Tab,       desc: 'Every staff action logged', badge: null },
-                ].map(tile => (
-                  <button key={tile.label} onClick={() => setTab(tile.tab)}
-                    style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: '16px 14px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s', fontFamily: 'inherit', position: 'relative' }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>
-                    {tile.badge && (
-                      <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px' }}>{tile.badge}</span>
-                    )}
-                    <div style={{ fontSize: 20, marginBottom: 6 }}>{tile.label.split(' ')[0]}</div>
-                    <div style={{ fontWeight: 600, color: 'var(--tx)', fontSize: 14 }}>{tile.label.split(' ').slice(1).join(' ')}</div>
-                    <div style={{ color: 'var(--tx3)', fontSize: 12, marginTop: 2 }}>{tile.desc}</div>
-                  </button>
-                ))}
+              {tileGrid([
+                { icon: '🔧', label: 'Service Jobs',  tab: 'services' as Tab,  desc: 'All jobs by status' },
+                { icon: '👥', label: 'Staff',         tab: 'staff' as Tab,     desc: 'Engineers & repair roles' },
+                { icon: '🛒', label: 'Sales',         tab: 'overview' as Tab,  desc: 'Revenue & transactions' },
+                { icon: '📦', label: 'Parts & Stock', tab: 'inventory' as Tab, desc: 'Inventory levels',        badge: alertCount > 0 ? alertCount : null },
+                { icon: '🔍', label: 'Audit',         tab: 'audit' as Tab,     desc: 'Every action logged' },
+              ])}
+              <div style={{ marginTop: 28 }}>
+                <ServiceJobsTab
+                  currencySymbol={currencySymbol}
+                  selectedLocation={selectedLocation}
+                  staff={staff.map(s => ({ id: s.id, name: s.name, role: s.role || 'cashier', active: s.active, location_id: s.location_id }))}
+                  notify={notify}
+                />
               </div>
-              <ServiceJobsTab
-                currencySymbol={currencySymbol}
-                selectedLocation={selectedLocation}
-                staff={staff.map(s => ({ id: s.id, name: s.name, role: s.role || 'cashier', active: s.active, location_id: s.location_id }))}
-                notify={notify}
-              />
             </div>
           )
 
@@ -1196,39 +1219,13 @@ export default function POSPage() {
                 <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>🏭 Factory Operations</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Production captures, intake/output tracking, wastage logs and dispatch.</div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
-                {[
-                  { label: '📷 Captures',    href: '/dashboard',          desc: 'Intake, output, wastage & dispatch photos', badge: null },
-                  { label: '✅ Approvals',   href: '/dashboard',          desc: 'Pending captures awaiting sign-off', badge: null },
-                  { label: '👥 Staff',       tab: 'staff' as Tab,         desc: 'Supervisors & floor workers', badge: null },
-                  { label: '📦 Inventory',   tab: 'inventory' as Tab,     desc: 'Raw materials & finished goods', badge: alertCount > 0 ? alertCount : null },
-                  { label: '🔍 Audit',       tab: 'audit' as Tab,         desc: 'Every capture & approval logged', badge: null },
-                ].map(tile => (
-                  tile.href
-                    ? <a key={tile.label} href={`https://pos.askbiz.co${tile.href}`}
-                        style={{ display: 'block', background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: '16px 14px', textDecoration: 'none', transition: 'border-color 0.15s', position: 'relative' }}
-                        onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
-                        onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>
-                        {tile.badge && (
-                          <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px' }}>{tile.badge}</span>
-                        )}
-                        <div style={{ fontSize: 20, marginBottom: 6 }}>{tile.label.split(' ')[0]}</div>
-                        <div style={{ fontWeight: 600, color: 'var(--tx)', fontSize: 14 }}>{tile.label.split(' ').slice(1).join(' ')}</div>
-                        <div style={{ color: 'var(--tx3)', fontSize: 12, marginTop: 2 }}>{tile.desc}</div>
-                      </a>
-                    : <button key={tile.label} onClick={() => setTab(tile.tab!)}
-                        style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: '16px 14px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s', fontFamily: 'inherit', position: 'relative' }}
-                        onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
-                        onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>
-                        {tile.badge && (
-                          <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px' }}>{tile.badge}</span>
-                        )}
-                        <div style={{ fontSize: 20, marginBottom: 6 }}>{tile.label.split(' ')[0]}</div>
-                        <div style={{ fontWeight: 600, color: 'var(--tx)', fontSize: 14 }}>{tile.label.split(' ').slice(1).join(' ')}</div>
-                        <div style={{ color: 'var(--tx3)', fontSize: 12, marginTop: 2 }}>{tile.desc}</div>
-                      </button>
-                ))}
-              </div>
+              {tileGrid([
+                { icon: '📷', label: 'Captures',    href: '/dashboard', desc: 'Intake, output, wastage & dispatch' },
+                { icon: '✅', label: 'Approvals',   href: '/dashboard', desc: 'Pending sign-offs' },
+                { icon: '👥', label: 'Staff',       tab: 'staff' as Tab,     desc: 'Supervisors & floor workers' },
+                { icon: '📦', label: 'Inventory',   tab: 'inventory' as Tab, desc: 'Raw materials & finished goods', badge: alertCount > 0 ? alertCount : null },
+                { icon: '🔍', label: 'Audit',       tab: 'audit' as Tab,     desc: 'Every capture & approval logged' },
+              ])}
             </div>
           )
 
@@ -1247,28 +1244,14 @@ export default function POSPage() {
                 <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>📦 Retail Operations</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Stock management, sales tracking, and supplier orders.</div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
-                {[
-                  { label: '📦 Inventory', tab: 'inventory' as Tab, desc: 'Stock levels & products', badge: alertCount > 0 ? alertCount : null },
-                  { label: '🛒 Sales', tab: 'overview' as Tab, desc: 'Revenue & transaction history', badge: null },
-                  { label: '👥 Staff', tab: 'staff' as Tab, desc: 'Cashiers & permissions', badge: null },
-                  { label: '🏪 Branches', tab: 'branches' as Tab, desc: 'Locations & stock by branch', badge: null },
-                  { label: '🗺️ Map', tab: 'map' as Tab, desc: 'Branch locations on map', badge: null },
-                  { label: '🔍 Audit', tab: 'audit' as Tab, desc: 'Transaction & change log', badge: null },
-                ].map(tile => (
-                  <button key={tile.label} onClick={() => setTab(tile.tab)}
-                    style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: '16px 14px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s', fontFamily: 'inherit', position: 'relative' }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>
-                    {tile.badge && (
-                      <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px' }}>{tile.badge}</span>
-                    )}
-                    <div style={{ fontSize: 20, marginBottom: 6 }}>{tile.label.split(' ')[0]}</div>
-                    <div style={{ fontWeight: 600, color: 'var(--tx)', fontSize: 14 }}>{tile.label.split(' ').slice(1).join(' ')}</div>
-                    <div style={{ color: 'var(--tx3)', fontSize: 12, marginTop: 2 }}>{tile.desc}</div>
-                  </button>
-                ))}
-              </div>
+              {tileGrid([
+                { icon: '📦', label: 'Inventory', tab: 'inventory' as Tab, desc: 'Stock levels & products',    badge: alertCount > 0 ? alertCount : null },
+                { icon: '🛒', label: 'Sales',     tab: 'overview' as Tab,  desc: 'Revenue & transactions' },
+                { icon: '👥', label: 'Staff',     tab: 'staff' as Tab,     desc: 'Cashiers & permissions' },
+                { icon: '🏪', label: 'Branches',  tab: 'branches' as Tab,  desc: 'Locations & stock by branch' },
+                { icon: '🗺️', label: 'Map',       tab: 'map' as Tab,       desc: 'Branch locations on map' },
+                { icon: '🔍', label: 'Audit',     tab: 'audit' as Tab,     desc: 'Transaction & change log' },
+              ])}
             </div>
           )
         })()}
