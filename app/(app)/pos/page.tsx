@@ -141,6 +141,7 @@ export default function POSPage() {
   const [invSearch, setInvSearch] = useState('')
   const [invCategory, setInvCategory] = useState('all')
   const [invSector, setInvSector] = useState('all')
+  const [bulkTagging, setBulkTagging] = useState(false)
   const [editingProduct, setEditingProduct] = useState<InventoryItem | null>(null)
   const [editProduct, setEditProduct] = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '', category: '', sector: '' })
   const [editingProductSubmitting, setEditingProductSubmitting] = useState(false)
@@ -1495,6 +1496,45 @@ export default function POSPage() {
                 <option value="salon">💇 Salon</option>
               </select>
             </div>
+
+            {/* Bulk-tag banner — shown when untagged items exist */}
+            {(() => {
+              const untagged = inventory.filter(i => !i.sector)
+              if (untagged.length === 0) return null
+              const SECTORS = [
+                { value: 'retail', label: '🛒 Retail' },
+                { value: 'repair', label: '🔧 Repair' },
+                { value: 'factory', label: '🏭 Factory' },
+                { value: 'restaurant', label: '🍴 Restaurant' },
+                { value: 'logistics', label: '🚚 Logistics' },
+                { value: 'salon', label: '💇 Salon' },
+              ]
+              return (
+                <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)', flex: 1, minWidth: 200 }}>
+                    <strong style={{ color: 'var(--tx)' }}>{untagged.length} item{untagged.length !== 1 ? 's' : ''}</strong> have no sector tag — they appear in every sector's badge count.
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 12, color: 'var(--tx3)' }}>Tag all untagged as:</span>
+                    {SECTORS.map(s => (
+                      <button key={s.value} disabled={bulkTagging} onClick={async () => {
+                        setBulkTagging(true)
+                        try {
+                          await Promise.all(untagged.map(item =>
+                            fetch('/api/pos/inventory', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: item.id, sector: s.value }) })
+                          ))
+                          setInventory(prev => prev.map(i => !i.sector ? { ...i, sector: s.value } : i))
+                          notify(`${untagged.length} items tagged as ${s.label}`)
+                        } catch { notify('Bulk tag failed', false) }
+                        setBulkTagging(false)
+                      }} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', cursor: bulkTagging ? 'not-allowed' : 'pointer', fontFamily: 'inherit', color: 'var(--tx)', opacity: bulkTagging ? 0.5 : 1 }}>
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
 
             {/* Camera preview modal */}
             {showCameraPreview && (
