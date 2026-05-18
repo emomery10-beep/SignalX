@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     // fix #26 — use generic alias rather than date-pinned checkpoint
     const anthropic = new Anthropic()
     const aiResponse = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 300,
       messages: [{
         role: 'user',
@@ -125,8 +125,8 @@ Reply ONLY with valid JSON, nothing else:
     }
 
     if (match) {
-      // Log successful recognition
-      await service
+      // Log successful recognition (fire-and-forget)
+      service
         .from('recognition_history')
         .insert({
           owner_id: ownerId,
@@ -136,7 +136,7 @@ Reply ONLY with valid JSON, nothing else:
           confirmed: true,
           source: 'cashier'
         })
-        .catch((err: any) => console.error('Failed to log recognition:', err))
+        .then(({ error }: { error: unknown }) => { if (error) console.error('Failed to log recognition:', error) })
 
       return json({
         found:        true,

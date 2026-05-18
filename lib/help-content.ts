@@ -767,6 +767,23 @@ export const HELP_TOPICS: HelpTopic[] = [
       "pos-restaurant-getting-started",
       "pos-restaurant-daily-brief",
       "pos-restaurant-orders",
+      "pos-staff-roles-explained",
+      "pos-audit-trail-guide",
+    ],
+  },
+  {
+    slug: "factory-operations",
+    title: "Factory Operations",
+    description: "Set up and use AskBiz Factory Captures — submit production photos, manage approvals, track wastage, and maintain a full audit trail across your production floor.",
+    icon: "🏭",
+    color: "#6b7280",
+    articles: [
+      "pos-factory-getting-started",
+      "pos-factory-submitting-captures",
+      "pos-factory-approvals",
+      "pos-factory-roles-permissions",
+      "pos-staff-roles-explained",
+      "pos-audit-trail-guide",
     ],
   },
 ];
@@ -14161,6 +14178,197 @@ export const HELP_ARTICLES: HelpArticle[] = [
     related: ["pos-restaurant-getting-started", "pos-restaurant-daily-brief", "pos-processing-refunds", "pos-amending-transactions"],
     keywords: ["restaurant orders", "table management", "order processing", "kitchen orders", "bill", "payment", "covers"],
     lastUpdated: "2026-05-17",
+  },
+
+  // ── FACTORY OPERATIONS ──────────────────────────────────────────────────────
+  {
+    slug: "pos-factory-getting-started",
+    title: "Getting Started with Factory Captures",
+    description: "Learn what Factory Captures are, how to enable the factory sector in AskBiz POS, and understand the four capture types — intake, output, wastage, and dispatch.",
+    topic: "Factory Operations",
+    topicSlug: "factory-operations",
+    readTime: 4,
+    popular: true,
+    lastUpdated: "2026-05-18",
+    keywords: ["factory captures askbiz", "production logging pos", "photo capture manufacturing", "askbiz factory feature", "production intake output wastage dispatch"],
+    content: [
+      {
+        heading: "What are Factory Captures?",
+        body: "**Factory Captures** is a production logging feature built into AskBiz POS. It gives floor staff a fast, photo-first way to record production events — without paper forms or separate software.\n\nEvery capture is:\n- Timestamped and attributed to the submitting staff member\n- Attached to a mandatory photo\n- Queued for supervisor approval before being formally recorded\n\nThe result is a tamper-proof production log that reflects what actually happened on your floor, not what someone remembered later.",
+      },
+      {
+        heading: "Enabling the factory sector",
+        body: "To activate Factory Captures, go to **Settings → Features → Sectors** in your AskBiz admin panel and toggle on **Factory**.\n\nOnce enabled:\n- Factory-specific role permissions become available in the **Staff** tab\n- Your staff dashboard at **pos.askbiz.co** shows capture buttons based on assigned permissions\n- The **Audit** tab in your admin panel begins recording all capture events\n\nIf you are on the Free plan, Factory Captures is available with a limit of 100 captures per month. Growth and Business plans have unlimited captures.",
+      },
+      {
+        heading: "The four capture types",
+        body: "AskBiz Factory Captures has four event types, each covering a distinct production stage:\n\n- **Intake** — log incoming raw materials or components. Staff photograph the batch on arrival.\n- **Output** — record finished goods coming off the production line. Photo verifies quantity and condition.\n- **Wastage** — document damaged, spoiled, or rejected materials. Every wastage event builds your loss rate record.\n- **Dispatch** — log finished goods leaving the facility. Closes the loop between production and fulfilment.\n\nEach type has its own permission flag (`camera.intake`, `camera.output`, `camera.wastage`, `camera.dispatch`) so you can assign exactly the right access to each staff member.",
+      },
+    ],
+    faq: [
+      { q: "Do I need special hardware to use Factory Captures?", a: "No. Factory Captures runs in any browser at pos.askbiz.co. Staff use the camera on their phone or tablet to take photos. No app download or dedicated hardware is required." },
+      { q: "Can I use Factory Captures alongside the POS sales features?", a: "Yes. Factory Captures is a feature layer on top of AskBiz POS. Staff who process sales and log captures use the same pos.askbiz.co interface — their permissions determine which features they see." },
+      { q: "What happens to a capture before it is approved?", a: "It sits in the pending queue and is visible to supervisors with the capture.approve permission. It does not appear in your formal production record or audit trail until it is approved." },
+    ],
+    related: ["pos-factory-submitting-captures", "pos-factory-approvals", "pos-factory-roles-permissions"],
+  },
+  {
+    slug: "pos-factory-submitting-captures",
+    title: "How to Submit a Factory Capture",
+    description: "Step-by-step guide for floor workers: log in to pos.askbiz.co with your PIN, open the capture dashboard, take a photo, select a capture type, add notes, and submit for supervisor approval.",
+    topic: "Factory Operations",
+    topicSlug: "factory-operations",
+    readTime: 3,
+    lastUpdated: "2026-05-18",
+    keywords: ["submit factory capture", "pos.askbiz.co floor worker", "production photo log", "capture intake output", "factory capture how to"],
+    content: [
+      {
+        heading: "Logging in as a floor worker",
+        body: "Floor workers do not use email to log in. Open **pos.askbiz.co** on any phone, tablet, or shared device and tap **PIN Login**. Enter your unique **4-digit PIN** — your manager will have provided this when setting up your account.\n\nOnce logged in, your dashboard shows only the capture buttons your permissions allow. For example, if you have `camera.intake` and `camera.output`, you will see **Intake** and **Output** buttons. You will not see options outside your assigned role.\n\nIf you do not have a PIN or it is not working, ask your manager to check **Settings → POS → Staff** and regenerate your PIN.",
+      },
+      {
+        heading: "Opening the capture dashboard and submitting",
+        body: "Tap the capture button for the event you are logging (for example, **Output**). The capture form opens in four steps:\n\n1. **Photo** — tap the camera icon to take a photo, or tap the gallery icon to upload an existing image. The photo is **mandatory** — you cannot submit without one.\n2. **Type** — the capture type is pre-filled based on the button you tapped. You can change it if needed.\n3. **Notes** — optional but recommended. Include the batch reference, quantity, or any relevant context your supervisor needs to approve the capture.\n4. **Submit** — tap **Submit Capture** to send it to the pending approval queue.\n\nYou will see a confirmation screen with a **Pending** status badge. Your capture is now visible to supervisors.",
+      },
+      {
+        heading: "After submission — what to expect",
+        body: "Once submitted, your capture is in the **pending queue**. You do not need to take any further action unless a supervisor rejects it.\n\nIf a supervisor **approves** your capture, it becomes part of the formal production record. You may see the status update to **Approved** on your dashboard if you are still logged in.\n\nIf a supervisor **rejects** your capture, you will see a **Rejected** status with the reason your supervisor entered. You should review the reason, correct the issue (for example, retake the photo or correct the capture type), and resubmit.",
+      },
+    ],
+    faq: [
+      { q: "What should I include in the notes field?", a: "Include the batch reference number, quantity logged, and any relevant context — for example, a damaged batch reference or a supplier delivery note number. Good notes make supervisor approval faster and the audit trail more useful." },
+      { q: "Can I submit a capture without a photo?", a: "No. A photo is mandatory for every capture submission. This is by design — the photo is what gives the capture its evidentiary value and allows supervisors to verify the event visually." },
+      { q: "What happens if I submit the wrong capture type?", a: "Contact your supervisor immediately. They can reject the capture with a reason, and you can resubmit with the correct type. Do not attempt to submit a duplicate with the correct type while the original is still pending — wait for the rejection first." },
+    ],
+    related: ["pos-factory-getting-started", "pos-factory-approvals", "pos-factory-roles-permissions"],
+  },
+  {
+    slug: "pos-factory-approvals",
+    title: "Approving and Rejecting Captures",
+    description: "How supervisors and managers review the pending approvals queue, approve captures with one tap, reject with a mandatory reason, and what happens to the audit trail after each action.",
+    topic: "Factory Operations",
+    topicSlug: "factory-operations",
+    readTime: 4,
+    lastUpdated: "2026-05-18",
+    keywords: ["approve factory capture", "reject production capture", "supervisor approvals pos", "capture.approve permission", "factory audit trail approval"],
+    content: [
+      {
+        heading: "The approvals queue — supervisor login",
+        body: "Supervisors holding the **`capture.approve`** permission see an **Approvals** tab when they log in at **pos.askbiz.co** with their PIN.\n\nThe approvals queue lists all pending captures for the facility. Each entry shows:\n- The **photo** attached to the capture\n- The **capture type** (intake, output, wastage, or dispatch)\n- The **submitting staff member** and their PIN\n- The **timestamp** of submission\n- Any **notes** the staff member entered\n\nPending captures are shown in chronological order. Supervisors should work through the queue regularly — ideally before the end of each shift.",
+      },
+      {
+        heading: "Approving a capture",
+        body: "To approve a capture:\n\n1. Tap the capture entry in the queue to open the detail view\n2. Review the photo and details\n3. Tap **Approve**\n\nThe capture is immediately recorded in the **audit trail** with your supervisor ID and the approval timestamp. It becomes part of the formal production record. The status on the floor worker's dashboard updates to **Approved**.\n\nApprovals are **permanent** — once approved, a capture cannot be deleted. It can be flagged for review by a manager, but the original record remains in the audit trail.",
+      },
+      {
+        heading: "Rejecting a capture and what happens next",
+        body: "To reject a capture:\n\n1. Tap the capture entry in the queue\n2. Tap **Reject**\n3. Enter a **rejection reason** — this field is mandatory\n4. Tap **Confirm Rejection**\n\nCommon rejection reasons include: *photo unclear or missing*, *incorrect capture type selected*, *batch reference missing from notes*, or *duplicate submission*.\n\nThe rejection reason is recorded in the **audit trail** alongside your supervisor ID and timestamp. The floor worker is notified of the rejection and can see your reason. They should resubmit with the issue corrected.\n\n**Managers** can override a rejection and approve a previously rejected capture from the admin panel Audit tab if needed.",
+      },
+    ],
+    faq: [
+      { q: "Can I approve captures in bulk?", a: "Currently, approvals are one at a time to ensure each capture is reviewed individually. Bulk approval is on the product roadmap." },
+      { q: "What happens if a shift ends with pending captures still in the queue?", a: "Pending captures remain in the queue until approved or rejected — they do not expire. However, best practice is to clear the queue before a shift ends. Managers can see all pending captures across shifts from the admin panel." },
+      { q: "Can a manager approve captures if no supervisor is available?", a: "Yes. Managers have all supervisor permissions by default, including capture.approve. If no supervisor is on shift, a manager can approve captures directly." },
+    ],
+    related: ["pos-factory-getting-started", "pos-factory-submitting-captures", "pos-audit-trail-guide"],
+  },
+  {
+    slug: "pos-factory-roles-permissions",
+    title: "Factory Roles and Permissions",
+    description: "Understand the factory-specific permission flags in AskBiz POS — camera.intake, camera.output, camera.wastage, camera.dispatch, and capture.approve — and how to assign them to your staff.",
+    topic: "Factory Operations",
+    topicSlug: "factory-operations",
+    readTime: 4,
+    lastUpdated: "2026-05-18",
+    keywords: ["factory permissions askbiz", "camera.intake permission", "capture.approve role", "factory staff roles pos", "production floor permissions"],
+    content: [
+      {
+        heading: "The factory permission flags",
+        body: "AskBiz Factory Captures uses five specific permission flags that control what each staff member can do on the production floor:\n\n- **`camera.intake`** — can submit intake captures (incoming materials/components)\n- **`camera.output`** — can submit output captures (finished goods off the line)\n- **`camera.wastage`** — can submit wastage captures (damaged or rejected materials)\n- **`camera.dispatch`** — can submit dispatch captures (finished goods leaving the facility)\n- **`capture.approve`** — can see the pending approvals queue and approve or reject captures\n\nPermission flags are additive — a staff member can hold any combination. A floor supervisor might hold all four `camera.*` flags plus `capture.approve`.",
+      },
+      {
+        heading: "Roles in context — who gets what",
+        body: "While you can configure permissions freely, most factory operations map to these typical role profiles:\n\n- **Floor worker (general)** — assigned `camera.intake` and `camera.output`. Logs material arrivals and finished goods.\n- **Wastage monitor** — assigned `camera.wastage`. Responsible for formally logging all waste events.\n- **Dispatch operative** — assigned `camera.dispatch`. Logs goods leaving the facility.\n- **Supervisor** — assigned `capture.approve` plus any camera flags relevant to their floor role. Reviews and approves all pending captures.\n- **Manager** — has all permissions by default, including `capture.approve`. Can also access the audit trail and override rejected captures.\n- **Owner/admin** — full access to all features including staff management and audit trail.",
+      },
+      {
+        heading: "Assigning roles from the admin Staff tab",
+        body: "To assign factory permissions to a staff member:\n\n1. Go to **Settings → POS → Staff** in your admin panel\n2. Find the staff member and tap **Edit**\n3. Under **Factory Permissions**, toggle on the relevant flags\n4. Tap **Save**\n\nChanges take effect immediately — the staff member will see the updated capture buttons the next time they log in at **pos.askbiz.co**.\n\nTo remove a permission, return to the same screen and toggle it off. The staff member's historical captures are not affected — only future capture access is changed.",
+      },
+    ],
+    faq: [
+      { q: "Can a floor worker also be a supervisor?", a: "Yes. You can assign both camera permissions and capture.approve to the same staff member. This is common in small operations where a working supervisor logs captures and approves their own team's submissions." },
+      { q: "What happens if a staff member tries to access a capture type they do not have permission for?", a: "The capture button for that type simply does not appear on their dashboard. Staff only see the actions their permissions allow — there is no error or workaround." },
+      { q: "How do I remove a staff member's capture permissions if they change roles?", a: "Go to Settings → POS → Staff, edit the staff member, and toggle off the relevant factory permission flags. Changes are immediate." },
+    ],
+    related: ["pos-factory-getting-started", "pos-staff-roles-explained", "pos-factory-approvals"],
+  },
+
+  // ── POS — STAFF ROLES & AUDIT TRAIL ─────────────────────────────────────────
+  {
+    slug: "pos-staff-roles-explained",
+    title: "Understanding POS Staff Roles",
+    description: "A complete guide to the six AskBiz POS staff roles — cashier, inventory, repair/engineer, supervisor, and manager — including what each can do, the permission hierarchy, and how to assign and change roles.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 5,
+    popular: true,
+    lastUpdated: "2026-05-18",
+    keywords: ["pos staff roles", "askbiz pos permissions", "cashier supervisor manager pos", "pos role hierarchy", "staff access control pos", "askbiz staff management"],
+    content: [
+      {
+        heading: "Why role-based access matters",
+        body: "Every action in AskBiz POS is tagged to the staff member who performed it. Role-based access ensures each person can only do what their role allows — a cashier cannot process refunds, a supervisor cannot change product prices without manager permission.\n\nThis matters for three reasons:\n- **Accountability** — every transaction, refund, and amendment has a named staff member attached to it in the audit trail\n- **Error prevention** — staff who cannot access functions they should not use cannot make costly mistakes inadvertently\n- **Compliance** — role-based records are essential for dispute resolution, HMRC enquiries, and any fraud investigation",
+      },
+      {
+        heading: "The six POS staff roles",
+        body: "AskBiz POS has six staff role levels, ordered from most restricted to most permissive:\n\n**Cashier** — the most common floor role. Can process sales, apply discounts up to a configured limit, and view their own shift summary. Cannot process refunds or void transactions.\n\n**Inventory** — focused on stock management. Can add, edit, and adjust product inventory. Cannot process sales or access financial reports.\n\n**Repair / Engineer** — specific to the repair sector. Can log repair intake, update job status, mark jobs complete, and view assigned jobs. Cannot access sales or inventory functions outside the repair workflow.\n\n**Supervisor** — everything a Cashier can do, plus process refunds, void transactions, approve factory captures, and view daily store stats across all staff.\n\n**Manager** — everything a Supervisor can do, plus add or edit products, adjust inventory, export data, run reports, and access the full audit trail.\n\n**Owner / Admin** — full access to all features including billing, API connections, staff management, and all analytics.",
+      },
+      {
+        heading: "How to assign and change roles",
+        body: "To assign a role when adding a new staff member:\n1. Go to **Settings → POS → Staff** and tap **Invite Staff** or **Add Staff (PIN)**\n2. Enter the staff member's details\n3. Select their **Role** from the dropdown\n4. Tap **Save**\n\nTo change an existing staff member's role:\n1. Go to **Settings → POS → Staff**\n2. Find the staff member and tap **Edit**\n3. Change the **Role** dropdown to the new role\n4. Tap **Save** — the change is immediate\n\nRole changes do not affect historical records. If a cashier is promoted to supervisor, their previous transactions remain tagged as cashier-level actions in the audit trail.",
+      },
+      {
+        heading: "Role interactions with factory permissions",
+        body: "Factory capture permissions (`camera.intake`, `camera.output`, `camera.wastage`, `camera.dispatch`, `capture.approve`) are additive on top of a staff member's base role.\n\nA **Cashier** with `camera.output` can process sales and submit output captures. A **Supervisor** automatically has `capture.approve` but can also be given additional camera flags if they work the floor.\n\nFactory permissions do not change a staff member's base role permissions. They only add factory-specific capabilities. See the **Factory Roles and Permissions** article for full details on configuring production floor access.",
+      },
+    ],
+    faq: [
+      { q: "Can I customise what each role can do?", a: "Role definitions are currently fixed in AskBiz POS to maintain accountability integrity. You can adjust individual factory permission flags, but the core role permissions (cashier, supervisor, manager) are standardised." },
+      { q: "How many staff members can I add?", a: "Free and Growth plans support up to 5 POS staff members. Business plans support unlimited staff. Check your current usage in Settings → POS → Staff." },
+      { q: "Can a staff member hold multiple roles?", a: "No — each staff member has one base role. However, factory permission flags can be added on top of any base role to extend their access in the production floor context." },
+      { q: "What happens to a staff member's data if I change their role?", a: "All historical transactions, captures, and actions remain attributed to the staff member with the role they held at the time of the action. Role changes only affect what they can do going forward." },
+    ],
+    related: ["pos-adding-staff", "pos-factory-roles-permissions", "pos-audit-trail-guide"],
+  },
+  {
+    slug: "pos-audit-trail-guide",
+    title: "Using the POS Audit Trail",
+    description: "Learn what the AskBiz POS audit log records, how to access it in the admin panel, filter by staff, event type, or date, and how to use it for dispute resolution and compliance.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    lastUpdated: "2026-05-18",
+    keywords: ["pos audit trail", "askbiz audit log", "pos transaction history", "pos dispute resolution", "staff action log pos", "pos compliance records"],
+    content: [
+      {
+        heading: "What the audit trail records",
+        body: "The AskBiz POS audit trail is a permanent, tamper-proof log of every action taken in your POS system. It records:\n\n- **Transactions** — every sale, with the staff member, items, payment method, and timestamp\n- **Refunds** — who processed the refund, the original transaction reference, and the reason if entered\n- **Amendments** — any change to a transaction after it was processed, including who made the change\n- **Void events** — transactions cancelled before completion\n- **Staff actions** — login and logout events, role changes, and permission updates\n- **Factory captures** — every submission, approval, and rejection with the associated photo and staff IDs\n\nAudit entries cannot be edited or deleted. The trail is immutable from the moment an action is recorded.",
+      },
+      {
+        heading: "Accessing the audit trail",
+        body: "Go to your AskBiz admin panel at **askbiz.co/pos** and click the **Audit** tab in the left navigation.\n\nThe audit trail loads the most recent 100 entries by default. Each entry shows:\n- Event type and a plain-English description\n- The staff member who performed the action (name and PIN)\n- Timestamp (date and time)\n- For factory captures: the attached photo and approval chain\n\nYou can expand any entry to see full details. For transaction events, you can also navigate directly to the original transaction record.",
+      },
+      {
+        heading: "Filtering and using the audit trail for disputes",
+        body: "Use the filter controls at the top of the Audit tab to narrow down records:\n\n- **By event type** — filter to see only refunds, amendments, captures, or any specific event category\n- **By staff member** — enter a name or PIN to see all actions by that person\n- **By date range** — set start and end dates to scope the view to a specific period\n- **By status** — for factory captures, filter by approved, pending, or rejected\n\n**For dispute resolution:** if a customer disputes a transaction, filter by the transaction date and the staff member who served them. The audit entry shows the exact items, price, payment method, and any subsequent amendments.\n\n**For compliance:** the full audit trail can be exported as a CSV from the **Export** button on the Audit tab. This export is suitable for HMRC enquiries, accountant review, or insurance purposes.",
+      },
+    ],
+    faq: [
+      { q: "How long is audit trail data retained?", a: "AskBiz retains audit trail data for a minimum of 7 years to meet HMRC and standard accounting compliance requirements. Data is not deleted when staff are removed or when you change plans." },
+      { q: "Can staff members see the audit trail?", a: "No. The audit trail is only accessible to managers and account owners from the admin panel at askbiz.co/pos. Staff who log in at pos.askbiz.co cannot see audit records." },
+      { q: "Is the audit trail included in all plans?", a: "Yes. The audit trail is available on all plans including Free. The export to CSV feature is available on Growth and Business plans." },
+    ],
+    related: ["pos-staff-roles-explained", "pos-factory-approvals", "pos-amending-transactions"],
   },
 ];
 
