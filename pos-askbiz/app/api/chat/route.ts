@@ -403,10 +403,236 @@ export async function POST(request: NextRequest) {
   }
   // ── END COST INTELLIGENCE CONTEXT ────────────────────────────
 
-  // ── POS INTELLIGENCE CONTEXT ─────────────────────────────
+  // ── SECTOR DETECTION ────────────────────────────────────
+  const isRestaurantSector = /restaurant|cafe|café|bar|pub|takeaway|takeout|food.?stall|catering|bistro|canteen|diner|eatery|food.?truck|brasserie|pizzeria|burger|sushi|kebab|chicken.?shop|fish.?chips/i.test(finalBizType + ' ' + finalSector)
+
+  // ── RESTAURANT INTELLIGENCE CONTEXT ─────────────────────
+  let restaurantContext = ''
+  const restaurantKeywords = /\b(order|table|cover|dine|kitchen|menu|dish|prep|station|server|waiter|chef|till|pos|revenue|profit|food.?cost|labor|labour|prime.?cost|turn|dwell|reservation|booking|kiosk|online.?order|takeaway|delivery|86|eighty.?six|out.?of.?stock|waste|portion|allergen|modifier|ticket|bump|shift|tip|split.?bill|sales?|margin|busiest|peak|top.?sell|popular|slow.?mover|refund|void|comp|customer|loyal|repeat|daily|brief|forecast|anomal|health)/i
+
+  if (isRestaurantSector && restaurantKeywords.test(questionText)) {
+    const service = createServiceClient()
+    const q = questionText.toLowerCase()
+    const now = new Date()
+    let from: Date
+    let to: Date = now
+    let periodLabel = "Today's"
+
+    if (/yesterday/.test(q)) {
+      const d = new Date(now); d.setDate(d.getDate() - 1); d.setHours(0,0,0,0)
+      from = d; to = new Date(d); to.setHours(23,59,59,999); periodLabel = "Yesterday's"
+    } else if (/last\s*(7|seven)\s*days?|past\s*week/i.test(q)) {
+      from = new Date(now); from.setDate(from.getDate() - 7); from.setHours(0,0,0,0); periodLabel = 'Last 7 days'
+    } else if (/last\s*30\s*days/i.test(q)) {
+      from = new Date(now); from.setDate(from.getDate() - 30); from.setHours(0,0,0,0); periodLabel = 'Last 30 days'
+    } else if (/this\s*week/i.test(q)) {
+      from = new Date(now); from.setDate(from.getDate() - from.getDay()); from.setHours(0,0,0,0); periodLabel = 'This week'
+    } else if (/this\s*month|last\s*month/i.test(q)) {
+      from = new Date(now.getFullYear(), now.getMonth(), 1); periodLabel = 'This month'
+    } else {
+      from = new Date(now); from.setHours(0,0,0,0)
+    }
+
+    const [ordersRes, laborRes, menuRes, tablesRes, onlineRes, wasteRes, anomalyRes, briefRes] = await Promise.all([
+      service.from('restaurant_orders')
+        .select(`id,status,covers,subtotal,total,order_type,seated_at,first_item_sent_at,paid_at,created_at,
+          order_items:restaurant_order_items(name,unit_price,food_cost,qty,station,course,status,sent_at,ready_at)`)
+        .eq('owner_id', user.id).gte('created_at', from.toISOString()).lte('created_at', to.toISOString())
+        .not('status','eq','void').order('created_at', { ascending: false }).limit(300),
+      service.from('restaurant_labor_shifts')
+        .select('role,hourly_rate,total_hours,total_cost,status,clock_in')
+        .eq('owner_id', user.id).gte('clock_in', from.toISOString()).lte('clock_in', to.toISOString()),
+      service.from('restaurant_menu_items')
+        .select('id,name,price,food_cost,station,available,eighty_sixed,allergens,tags')
+        .eq('owner_id', user.id).eq('available', true).limit(100),
+      service.from('restaurant_tables')
+        .select('id,name,section,capacity,status,seated_at')
+        .eq('owner_id', user.id),
+      service.from('restaurant_online_orders')
+        .select('status,total,source,created_at')
+        .eq('owner_id', user.id).gte('created_at', from.toISOString()),
+      service.from('restaurant_waste_log')
+        .select('item_name,qty,total_cost,reason')
+        .eq('owner_id', user.id).gte('created_at', from.toISOString()),
+      service.from('anomalies')
+        .select('type,severity,title,body,created_at').eq('user_id', user.id).eq('seen', false)
+        .order('created_at', { ascending: false }).limit(5),
+      service.from('daily_briefs')
+        .select('improved,worsened,action,health_score,date').eq('user_id', user.id)
+        .order('date', { ascending: false }).limit(1),
+    ])
+
+    const orders    = ordersRes.data   || []
+    const labor     = laborRes.data    || []
+    const menuItems = menuRes.data     || []
+    const tables    = tablesRes.data   || []
+    const online    = onlineRes.data   || []
+    const waste     = wasteRes.data    || []
+    const anomalies = anomalyRes.data  || []
+    const brief     = briefRes.data?.[0] || null
+
+    const paidOrders = orders.filter((o: any) => o.status === 'paid')
+    const totalRevenue = paidOrders.reduce((s: number, o: any) => s + (o.total || 0), 0)
+    const totalCovers  = paidOrders.reduce((s: number, o: any) => s + (o.covers || 1), 0)
+    const avgTicket    = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0
+    const avgPerCover  = totalCovers > 0 ? totalRevenue / totalCovers : 0
+
+    // Food cost
+    let totalFoodCost = 0
+    const dishSales: Record<string, { qty: number; revenue: number; cost: number }> = {}
+    for (const order of paidOrders) {
+      for (const item of (order.order_items || [])) {
+        totalFoodCost += (item.food_cost || 0) * item.qty
+        const k = item.name
+        if (!dishSales[k]) dishSales[k] = { qty: 0, revenue: 0, cost: 0 }
+        dishSales[k].qty     += item.qty
+        dishSales[k].revenue += item.unit_price * item.qty
+        dishSales[k].cost    += (item.food_cost || 0) * item.qty
+      }
+    }
+    const foodCostPct = totalRevenue > 0 ? (totalFoodCost / totalRevenue * 100).toFixed(1) : '0'
+
+    // Labor cost
+    const totalLaborCost = labor.reduce((s: number, sh: any) => s + (sh.total_cost || 0), 0)
+    const laborCostPct   = totalRevenue > 0 ? (totalLaborCost / totalRevenue * 100).toFixed(1) : '0'
+    const primeCostPct   = (parseFloat(foodCostPct) + parseFloat(laborCostPct)).toFixed(1)
+
+    // Table turns & dwell
+    const dineIn = paidOrders.filter((o: any) => o.order_type === 'dine_in' && o.seated_at && o.paid_at)
+    const avgDwellMins = dineIn.length > 0
+      ? (dineIn.reduce((s: number, o: any) =>
+          s + (new Date(o.paid_at).getTime() - new Date(o.seated_at).getTime()) / 60000, 0
+        ) / dineIn.length).toFixed(0)
+      : '0'
+
+    // Top dishes
+    const topDishes = Object.entries(dishSales)
+      .sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 6)
+
+    // Channels
+    const byChannel: Record<string, number> = {}
+    for (const o of paidOrders) { const c = o.order_type || 'dine_in'; byChannel[c] = (byChannel[c] || 0) + (o.total || 0) }
+
+    // Current table status
+    const occupied  = tables.filter((t: any) => t.status === 'occupied').length
+    const available = tables.filter((t: any) => t.status === 'available').length
+    const cleaning  = tables.filter((t: any) => t.status === 'cleaning').length
+
+    // 86 board
+    const eightySixed = menuItems.filter((m: any) => m.eighty_sixed)
+    const onlinePending = online.filter((o: any) => o.status === 'pending').length
+    const totalWaste = waste.reduce((s: number, w: any) => s + (w.total_cost || 0), 0)
+
+    restaurantContext = `\n\nLIVE RESTAURANT DATA (${periodLabel}):\n`
+    restaurantContext += `${paidOrders.length} orders completed | ${finalSymbol}${totalRevenue.toFixed(2)} revenue | ${totalCovers} covers\n`
+    restaurantContext += `Avg ticket: ${finalSymbol}${avgTicket.toFixed(2)} | Avg per cover: ${finalSymbol}${avgPerCover.toFixed(2)} | Avg dwell: ${avgDwellMins} mins\n`
+    restaurantContext += `Food cost: ${foodCostPct}% | Labour cost: ${laborCostPct}% | Prime cost: ${primeCostPct}% (target <65%)\n`
+    restaurantContext += `Tables now: ${occupied} occupied, ${available} available, ${cleaning} cleaning (${tables.length} total)\n`
+
+    if (topDishes.length) {
+      restaurantContext += `\nTop dishes: ${topDishes.map(([name, d]) =>
+        `${name} (${d.qty} sold, ${finalSymbol}${d.revenue.toFixed(2)}, margin ${d.revenue > 0 ? ((d.revenue - d.cost) / d.revenue * 100).toFixed(0) : 0}%)`
+      ).join(', ')}\n`
+    }
+    if (Object.keys(byChannel).length) {
+      restaurantContext += `Channel split: ${Object.entries(byChannel).map(([c, v]) => `${c}: ${finalSymbol}${(v as number).toFixed(2)}`).join(', ')}\n`
+    }
+    if (eightySixed.length) {
+      restaurantContext += `\n86 BOARD (currently out): ${eightySixed.map((m: any) => m.name).join(', ')}\n`
+    }
+    if (onlinePending > 0) {
+      restaurantContext += `⚠ ${onlinePending} online order(s) awaiting acceptance\n`
+    }
+    if (totalWaste > 0) {
+      restaurantContext += `Waste cost (period): ${finalSymbol}${totalWaste.toFixed(2)}\n`
+    }
+    if (labor.length > 0) {
+      const activeStaff = labor.filter((s: any) => s.status === 'active')
+      restaurantContext += `\nLabour: ${activeStaff.length} staff clocked in | Total labour cost: ${finalSymbol}${totalLaborCost.toFixed(2)}\n`
+    }
+    if (anomalies.length) {
+      restaurantContext += `\nANOMALIES: ${anomalies.map((a: any) => `[${a.severity.toUpperCase()}] ${a.title}: ${a.body}`).join(' | ')}\n`
+    }
+    if (brief) {
+      restaurantContext += `\nLATEST BRIEF (${brief.date}): Improved: ${brief.improved} | Worsened: ${brief.worsened} | Action: ${brief.action}\n`
+    }
+  }
+  // ── END RESTAURANT CONTEXT ─────────────────────────────────
+
+  // ── COLLECTIVE INTELLIGENCE CONTEXT ────────────────────────
+  // Fires for: (a) restaurant owners asking about ingredient costs
+  //             (b) any user asking about commodity/ingredient prices (exporter, researcher, distributor)
+  let collectiveContext = ''
+  const collectiveKeywords = /\b(price|cost|cheap|expensive|afford|market.?rate|going.?rate|benchmark|supplier|ingredient|commodity|chicken|beef|lamb|pork|fish|salmon|tuna|shrimp|prawn|cheese|butter|cream|milk|flour|sugar|oil|rice|potato|tomato|onion|garlic|lemon|avocado|broccoli|carrot|spinach|herb|spice|pepper|coffee|chocolate|vanilla|meat|produce|dairy|grain|vegetable|fruit|seafood)/i
+  const askingAboutPrices = collectiveKeywords.test(questionText)
+
+  if (askingAboutPrices) {
+    try {
+      const service = createServiceClient()
+
+      // Extract ingredient keywords from the question to do a targeted query
+      const ingredientWords = questionText.toLowerCase().match(/\b[a-z]{3,}\b/g) || []
+      const stopWords = new Set(['what','how','much','does','cost','price','the','for','and','are','our','per','can','you','tell','me','about','compared','average','market','rate'])
+      const queryWords = ingredientWords.filter((w: string) => !stopWords.has(w) && w.length > 3).slice(0, 5)
+
+      // Query the k-anonymised market view (only shows data with ≥3 contributors)
+      let priceQuery = service
+        .from('ingredient_price_market')
+        .select('ingredient,category,unit,currency,region,period,data_points,p25,median,p75,avg_price')
+        .order('data_points', { ascending: false })
+        .limit(20)
+
+      // If we can pick out specific ingredients, filter to them
+      if (queryWords.length > 0) {
+        priceQuery = priceQuery.or(queryWords.map((w: string) => `ingredient.ilike.%${w}%`).join(','))
+      }
+
+      // Also filter by region if we know the user's region
+      if (finalRegion) {
+        // Try region match first, fall back to all regions if empty
+        const { data: regionalData } = await service
+          .from('ingredient_price_market')
+          .select('ingredient,category,unit,currency,region,period,data_points,p25,median,p75,avg_price')
+          .ilike('region', `%${finalRegion.split(',')[0].trim()}%`)
+          .order('data_points', { ascending: false })
+          .limit(15)
+
+        if (regionalData && regionalData.length > 0) {
+          const currentPeriod = new Date().toISOString().slice(0, 7)
+          const prevPeriod    = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 7)
+          const recent = regionalData.filter((r: any) => r.period === currentPeriod || r.period === prevPeriod)
+          const toShow = (recent.length > 0 ? recent : regionalData).slice(0, 12)
+
+          collectiveContext = `\n\nCOLLECTIVE INTELLIGENCE — MARKET PRICES (${finalRegion}, anonymised from ${toShow.reduce((s: number, r: any) => Math.max(s, r.data_points), 0)}+ contributors):\n`
+          collectiveContext += toShow.map((r: any) =>
+            `${r.ingredient} (${r.unit}): median ${r.currency} ${r.median}/unit · range ${r.p25}–${r.p75} · ${r.data_points} data pts · ${r.period}`
+          ).join('\n')
+          collectiveContext += `\n\nUse these anonymised market benchmarks to tell the user if their costs are above/below market. Be specific with numbers.`
+        }
+      }
+
+      // Fallback: global data if no regional match
+      if (!collectiveContext) {
+        const { data: globalData } = await priceQuery
+        if (globalData && globalData.length > 0) {
+          collectiveContext = `\n\nCOLLECTIVE INTELLIGENCE — MARKET PRICES (global, anonymised from ${globalData.reduce((s: number, r: any) => Math.max(s, r.data_points), 0)}+ contributors):\n`
+          collectiveContext += globalData.map((r: any) =>
+            `${r.ingredient} (${r.unit}): median ${r.currency} ${r.median}/unit · range ${r.p25}–${r.p75} · ${r.data_points} data pts`
+          ).join('\n')
+          collectiveContext += `\n\nUse these anonymised market benchmarks to advise on pricing. More data accumulates each time a restaurant scans a delivery invoice.`
+        }
+      }
+    } catch {
+      // Non-fatal — collective intelligence is best-effort
+    }
+  }
+  // ── END COLLECTIVE INTELLIGENCE ─────────────────────────────
+
+  // ── POS INTELLIGENCE CONTEXT (retail/generic) ─────────────
   let posContext = ''
   const posKeywords = /\b(sales?|till|cashier|pos|shop|store|sold|selling|stock|inventory|refund|receipt|customer|basket|revenue|profit|margin|transaction|busiest|best.?sell|top.?product|anomal|unusual|suspicious|alert|forecast|predict|health|brief|summary|daily.?report|who.?bought|top.?spend|loyal|repeat|shift|float|cash.?up|variance|reconcil|decision|m.?pesa|mpesa|mobile.?money|connect|integrat|sync|shopify|xero|source|data.?source)/i
-  if (posKeywords.test(questionText)) {
+  // Skip retail posContext for restaurant businesses — they use restaurantContext above
+  if (!isRestaurantSector && posKeywords.test(questionText)) {
     const service = createServiceClient()
     const q = questionText.toLowerCase()
     const now = new Date()
@@ -723,6 +949,8 @@ export async function POST(request: NextRequest) {
     simulateMode: !!simulateMode,
     cfoMode: !!cfoMode,
     posContext: posContext || undefined,
+    restaurantContext: restaurantContext || undefined,
+    collectiveContext: collectiveContext || undefined,
     benchmarkContext: benchmarkContext || undefined,
   })
 

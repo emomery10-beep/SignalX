@@ -14,6 +14,18 @@ const POPULAR_QUERIES = [
   'Billing & invoices', 'API access', 'Reset password',
 ]
 
+// Curated featured topics shown on the home page (subset of all topics)
+const FEATURED_TOPIC_SLUGS = [
+  'getting-started',
+  'point-of-sale',
+  'data-analysis-reporting',
+  'account-billing',
+  'intelligence-alerts',
+  'api-developers',
+  'privacy-security',
+  'troubleshooting',
+]
+
 const ACC = '#d08a59'
 const BG  = '#f9f8f6'
 const SF  = '#ffffff'
@@ -346,17 +358,17 @@ export default function HelpPage() {
         </div>
 
         {/* ── Main ── */}
-        <main className="h-main" style={{ flex: 1, overflowY: 'auto', padding: 'clamp(28px,4vw,48px) clamp(24px,4vw,48px)' }}>
+        <main className="h-main" style={{ flex: 1, overflowY: 'auto', padding: 'clamp(32px,4vw,56px) clamp(32px,5vw,72px)' }}>
 
           {/* Search bar + heading */}
-          <div style={{ marginBottom: isHome ? 36 : 28 }}>
+          <div style={{ marginBottom: isHome ? 40 : 28 }}>
             {isHome && (
-              <div style={{ marginBottom: 18 }}>
-                <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(22px,3vw,30px)', fontWeight: 700, letterSpacing: '-.025em', color: TX, marginBottom: 6 }}>
-                  Help Centre
+              <div style={{ marginBottom: 22, maxWidth: 580 }}>
+                <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(24px,3vw,32px)', fontWeight: 700, letterSpacing: '-.03em', color: TX, marginBottom: 8, lineHeight: 1.15 }}>
+                  How can we help?
                 </h1>
-                <p style={{ fontSize: 14, color: TX2, margin: 0 }}>
-                  Guides, tutorials, and answers — {HELP_ARTICLES.length} articles across {HELP_TOPICS.length} topics
+                <p style={{ fontSize: 14, color: TX2, margin: 0, lineHeight: 1.6 }}>
+                  {HELP_ARTICLES.length} guides and articles across {HELP_TOPICS.length} topics — search or browse below.
                 </p>
               </div>
             )}
@@ -438,11 +450,14 @@ export default function HelpPage() {
           {/* ── Home state ── */}
           {isHome && (
             <>
-              {/* Popular topics — same card grid as blog */}
-              <section style={{ marginBottom: 52 }}>
-                <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, marginBottom: 20, letterSpacing: '-.015em' }}>Popular topics</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 14 }}>
-                  {HELP_TOPICS.map(topic => {
+              {/* Popular topics — curated 8-topic grid */}
+              <section style={{ marginBottom: 48 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                  <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>Browse by topic</h2>
+                  <span style={{ fontSize: 12, color: TX3 }}>{HELP_TOPICS.length} topics total</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14 }}>
+                  {HELP_TOPICS.filter(t => FEATURED_TOPIC_SLUGS.includes(t.slug)).sort((a, b) => FEATURED_TOPIC_SLUGS.indexOf(a.slug) - FEATURED_TOPIC_SLUGS.indexOf(b.slug)).map(topic => {
                     const color = topic.color || ACC
                     const count = HELP_ARTICLES.filter(a => a.topicSlug === topic.slug).length
                     return (
@@ -451,19 +466,33 @@ export default function HelpPage() {
                         className="h-card"
                         onClick={() => selectTopic(topic.slug)}
                         aria-label={`Browse ${topic.title} articles`}
-                        style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 12, padding: '20px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', cursor: 'pointer', textAlign: 'left', width: '100%', fontFamily: 'inherit', color: 'inherit' }}
+                        style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 14, padding: '22px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', cursor: 'pointer', textAlign: 'left', width: '100%', fontFamily: 'inherit', color: 'inherit' }}
                       >
-                        <div style={{ width: 44, height: 44, borderRadius: 10, background: `${color}18`, border: `1px solid ${color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, fontSize: 22, flexShrink: 0 }}>
-                          {topic.icon}
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                          <div style={{ width: 42, height: 42, borderRadius: 10, background: `${color}18`, border: `1px solid ${color}28`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
+                            {topic.icon}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 4, lineHeight: 1.3 }}>{topic.title}</div>
+                            <p style={{ fontSize: 12, color: TX2, margin: '0 0 8px', lineHeight: 1.5 }}>
+                              {topic.description.slice(0, 65)}{topic.description.length > 65 ? '…' : ''}
+                            </p>
+                            <span style={{ fontSize: 11, color, fontWeight: 600 }}>{count} articles →</span>
+                          </div>
                         </div>
-                        <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 5, lineHeight: 1.3 }}>{topic.title}</div>
-                        <p style={{ fontSize: 12, color: TX2, margin: '0 0 10px', lineHeight: 1.55 }}>
-                          {topic.description.slice(0, 72)}{topic.description.length > 72 ? '…' : ''}
-                        </p>
-                        <span style={{ fontSize: 11, color, fontWeight: 600 }}>{count} articles →</span>
                       </button>
                     )
                   })}
+                </div>
+                {/* See all topics link */}
+                <div style={{ marginTop: 16, textAlign: 'center' }}>
+                  <button
+                    className="sb-btn"
+                    onClick={() => { /* scroll sidebar into view or expand — for now just hint */ document.querySelector('.h-sb-wrap')?.scrollIntoView({ behavior: 'smooth' }) }}
+                    style={{ fontSize: 12, color: TX3, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}
+                  >
+                    View all {HELP_TOPICS.length} topics in the sidebar →
+                  </button>
                 </div>
               </section>
 

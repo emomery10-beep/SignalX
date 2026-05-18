@@ -91,7 +91,7 @@ export default function AlertsPage() {
     loadData()
   }
 
-  const severityColor = s => s==='critical'?'#f48080':s==='warning'?'#f5c55a':'#47e2da'
+  const severityColor = (s: any) => s==='critical'?'#f48080':s==='warning'?'#f5c55a':'#47e2da'
 
   return (
     <div className="page-shell">

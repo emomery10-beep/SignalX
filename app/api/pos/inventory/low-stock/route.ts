@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
       .single()
 
     // Calculate reorder details
-    const enrichedItems = (items || []).map((item) => ({
+    const enrichedItems = (items || []).map((item: any) => ({
       ...item,
       qty_deficit: Math.max(0, (item.reorder_qty || 10) - (item.qty || 0)),
       urgency: (item.qty || 0) === 0 ? 'critical' : (item.qty || 0) <= 2 ? 'high' : 'medium',

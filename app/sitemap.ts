@@ -3,6 +3,8 @@
 // Automatically includes all help articles, rules policies, transparency articles, and academy articles
 // Updated: 420+ academy articles across 15 categories
 
+export const revalidate = 0 // Always regenerate — never serve stale cached sitemap
+
 import type { MetadataRoute } from "next";
 import { getAllPosts } from "@/lib/blog-content";
 import { HELP_ARTICLES, HELP_TOPICS } from "@/lib/help-content";

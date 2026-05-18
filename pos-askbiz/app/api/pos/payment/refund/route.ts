@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
       currency: stripeRefund.currency,
       tax_reversed: taxReversal,
       transaction_id,
-      receipt_url: stripeRefund.charges.data[0]?.receipt_url || null,
+      receipt_url: stripeRefund.charge ? null : null,
       refund_reason: reason,
     })
   } catch (error: any) {

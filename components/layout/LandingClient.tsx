@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import LanguageToggle from '@/components/LanguageToggle'
 import { LanguageProvider, useLang } from '@/components/LanguageProvider'
@@ -7,17 +7,17 @@ import type { Lang } from '@/lib/i18n'
 import { COUNTRY_TO_LANG } from '@/lib/i18n'
 
 const C = {
-  bg:     '#f9f8f6',
-  sf:     '#ffffff',
-  ev:     '#f3f2ef',
-  tx:     '#1a1916',
-  tx2:    '#6b6760',
-  tx3:    '#a39e97',
+  bg:     '#F9F8F6',
+  sf:     '#FFFFFF',
+  ev:     '#F3F2EF',
+  tx:     '#1A1916',
+  tx2:    '#6B6760',
+  tx3:    '#A39E97',
   b:      'rgba(0,0,0,.08)',
   b2:     'rgba(0,0,0,.14)',
-  acc:    '#d08a59',
-  accBg:  'rgba(208,138,89,.08)',
-  accBdr: 'rgba(208,138,89,.25)',
+  acc:    '#D08A59',
+  accBg:  'rgba(208,138,89,.10)',
+  accBdr: 'rgba(208,138,89,.30)',
 }
 
 interface Geo {
@@ -118,320 +118,231 @@ const TESTIMONIALS = [
   },
 ]
 
-// ── Feature tab panels ────────────────────────────────────────────────────────
+// ── Product Demo (Google "What's New" style) ──────────────────────────────────
 
-function PanelRevenue({ activeDemo, setActiveDemo, phase }: { activeDemo: number; setActiveDemo: (i: number) => void; phase: 'typing' | 'answer' }) {
-  const demo = DEMOS[activeDemo]
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Chat header */}
-      <div style={{ padding: '10px 14px', borderBottom: `1px solid ${C.b}`, display: 'flex', alignItems: 'center', gap: 10, background: C.ev }}>
-        <div style={{ width: 26, height: 26, borderRadius: 7, background: C.acc, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg width="11" height="11" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.75"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/></svg>
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: C.tx }}>AskBiz AI</div>
-          <div style={{ fontSize: 10, color: '#22c55e', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
-            Connected to your data
-          </div>
-        </div>
-        <div style={{ padding: '2px 8px', borderRadius: 9999, background: C.accBg, border: `1px solid ${C.accBdr}`, fontSize: 10, color: C.acc, fontWeight: 600 }}>
-          {demo.emoji} {demo.tag}
-        </div>
-      </div>
-      {/* Chat body */}
-      <div style={{ padding: '14px 14px 10px', flex: 1 }}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-          <div style={{ padding: '9px 13px', borderRadius: 13, borderBottomRightRadius: 3, background: C.ev, border: `1px solid ${C.b}`, fontSize: 12, lineHeight: 1.55, maxWidth: '88%', color: C.tx }}>
-            {demo.q}
-          </div>
-        </div>
-        {phase === 'typing' && (
-          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-            <div style={{ width: 26, height: 26, borderRadius: 7, background: C.acc, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="11" height="11" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.75"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/></svg>
-            </div>
-            <div style={{ padding: '10px 13px', borderRadius: 13, borderBottomLeftRadius: 3, background: C.sf, border: `1px solid ${C.b}`, display: 'flex', gap: 4, alignItems: 'center' }}>
-              <span className="tdot" style={{ animationDelay: '0ms' }} /><span className="tdot" style={{ animationDelay: '150ms' }} /><span className="tdot" style={{ animationDelay: '300ms' }} />
-            </div>
-          </div>
-        )}
-        {phase === 'answer' && (
-          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-            <div style={{ width: 26, height: 26, borderRadius: 7, background: C.acc, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
-              <svg width="11" height="11" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.75"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/></svg>
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ padding: '10px 13px', borderRadius: 13, borderBottomLeftRadius: 3, background: C.sf, border: `1px solid ${C.b}`, fontSize: 12, lineHeight: 1.7, color: C.tx, marginBottom: 8 }}>{demo.a}</div>
-              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                {demo.kpis.map((kpi, i) => (
-                  <div key={i} className="kpi-chip" style={{ background: kpi.good ? 'rgba(34,197,94,.06)' : 'rgba(239,68,68,.06)', color: kpi.good ? '#16a34a' : '#dc2626', borderColor: kpi.good ? 'rgba(34,197,94,.2)' : 'rgba(239,68,68,.2)' }}>
-                    <span style={{ opacity: .7 }}>{kpi.label}</span><strong>{kpi.value}</strong>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-      {/* Demo tabs */}
-      <div style={{ padding: '8px 12px', borderTop: `1px solid ${C.b}`, background: C.ev, display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-        {DEMOS.map((d, i) => (
-          <button key={i} onClick={() => setActiveDemo(i)}
-            style={{ padding: '3px 9px', borderRadius: 9999, border: `1px solid ${i === activeDemo ? C.accBdr : C.b}`, background: i === activeDemo ? C.accBg : 'transparent', color: i === activeDemo ? C.acc : C.tx3, fontSize: 10, cursor: 'pointer', fontFamily: 'inherit', fontWeight: i === activeDemo ? 600 : 400, transition: 'all 150ms' }}>
-            {d.emoji} {d.tag}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function PanelSupplier() {
-  const suppliers = [
-    { name: 'Guangzhou Tech Co.', grade: 'A', gradeColor: '#16a34a', onTime: '96%', avgDelay: '0.4 days', customs: '0 holds', impact: '+£2,100/mo', items: 'Electronics, Accessories' },
-    { name: 'Shenzhen Goods Ltd', grade: 'B', gradeColor: '#d08a59', onTime: '81%', avgDelay: '2.1 days', customs: '1 hold', impact: '-£380/mo', items: 'Homeware, Textiles' },
-    { name: 'Alibaba Exports Co.', grade: 'D', gradeColor: '#dc2626', onTime: '62%', avgDelay: '6.8 days', customs: '3 holds', impact: '-£1,940/mo', items: 'Mixed goods' },
-  ]
-  return (
-    <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: C.tx }}>Supplier Scorecard</span>
-        <span style={{ fontSize: 10, color: C.tx3 }}>Last 6 months · 3 suppliers</span>
-      </div>
-      {suppliers.map((s, i) => (
-        <div key={i} style={{ background: C.bg, borderRadius: 10, border: `1px solid ${C.b}`, padding: '12px 14px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: C.tx, marginBottom: 2 }}>{s.name}</div>
-              <div style={{ fontSize: 10, color: C.tx3 }}>{s.items}</div>
-            </div>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: `${s.gradeColor}15`, border: `1px solid ${s.gradeColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sora)', fontWeight: 800, fontSize: 16, color: s.gradeColor }}>
-              {s.grade}
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6 }}>
-            {[
-              { label: 'On-time', value: s.onTime, good: parseFloat(s.onTime) > 85 },
-              { label: 'Avg delay', value: s.avgDelay, good: parseFloat(s.avgDelay) < 1 },
-              { label: 'Customs', value: s.customs, good: s.customs === '0 holds' },
-              { label: 'P&L impact', value: s.impact, good: s.impact.startsWith('+') },
-            ].map((m, j) => (
-              <div key={j} style={{ textAlign: 'center', padding: '6px 4px', borderRadius: 6, background: m.good ? 'rgba(34,197,94,.06)' : 'rgba(239,68,68,.06)', border: `1px solid ${m.good ? 'rgba(34,197,94,.15)' : 'rgba(239,68,68,.15)'}` }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: m.good ? '#16a34a' : '#dc2626' }}>{m.value}</div>
-                <div style={{ fontSize: 9, color: C.tx3, marginTop: 2 }}>{m.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function PanelFX() {
-  const pairs = [
-    { pair: 'GBP / CNY', rate: '9.12', exposure: '£18,400', drop5: '-£920', drop10: '-£1,840', drop15: '-£2,760', risk: 'high' },
-    { pair: 'GBP / USD', rate: '1.27', exposure: '£6,200', drop5: '-£310', drop10: '-£620', drop15: '-£930', risk: 'medium' },
-    { pair: 'GBP / AED', rate: '4.67', exposure: '£3,100', drop5: '-£155', drop10: '-£310', drop15: '-£465', risk: 'low' },
-  ]
-  const riskColor = (r: string) => r === 'high' ? '#dc2626' : r === 'medium' ? '#d08a59' : '#16a34a'
-  return (
-    <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: C.tx }}>FX Risk Monitor</span>
-        <span style={{ fontSize: 10, color: C.tx3 }}>Sterling drop scenario</span>
-      </div>
-      {/* Header row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 0.8fr 0.8fr 0.9fr 0.9fr 0.9fr', gap: 4, padding: '4px 8px' }}>
-        {['Pair', 'Rate', 'Exposure', '-5%', '-10%', '-15%'].map(h => (
-          <div key={h} style={{ fontSize: 9, fontWeight: 700, color: C.tx3, textTransform: 'uppercase', letterSpacing: '.05em' }}>{h}</div>
-        ))}
-      </div>
-      {pairs.map((p, i) => (
-        <div key={i} style={{ display: 'grid', gridTemplateColumns: '1.4fr 0.8fr 0.8fr 0.9fr 0.9fr 0.9fr', gap: 4, padding: '10px 8px', background: C.bg, borderRadius: 8, border: `1px solid ${C.b}`, alignItems: 'center' }}>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: C.tx }}>{p.pair}</div>
-            <div style={{ display: 'inline-block', marginTop: 3, fontSize: 9, fontWeight: 700, color: riskColor(p.risk), background: `${riskColor(p.risk)}12`, padding: '1px 6px', borderRadius: 4 }}>{p.risk} risk</div>
-          </div>
-          <div style={{ fontSize: 12, color: C.tx2 }}>{p.rate}</div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: C.tx }}>{p.exposure}</div>
-          <div style={{ fontSize: 12, color: '#d08a59', fontWeight: 600 }}>{p.drop5}</div>
-          <div style={{ fontSize: 12, color: '#dc2626', fontWeight: 600 }}>{p.drop10}</div>
-          <div style={{ fontSize: 12, color: '#991b1b', fontWeight: 700 }}>{p.drop15}</div>
-        </div>
-      ))}
-      <div style={{ padding: '10px 12px', borderRadius: 8, background: 'rgba(239,68,68,.05)', border: '1px solid rgba(239,68,68,.15)', fontSize: 11, color: '#dc2626', lineHeight: 1.5 }}>
-        ⚠️ If GBP/CNY drops 10%, your China imports lose <strong>£1,840</strong> in margin this month. Reorder before mid-month to lock current rates.
-      </div>
-    </div>
-  )
-}
-
-function PanelExport() {
-  const markets = [
-    { flag: '🇦🇪', name: 'UAE', score: 78, duty: '5% flat', premium: '+18%', channel: 'Noon.com', tag: 'Top match', tagColor: '#16a34a', bars: [90, 85, 70, 95, 72] },
-    { flag: '🇩🇪', name: 'Germany', score: 71, duty: '6.5% avg', premium: '+12%', channel: 'Amazon.de', tag: 'Strong', tagColor: '#d08a59', bars: [80, 75, 88, 65, 68] },
-    { flag: '🇺🇸', name: 'United States', score: 64, duty: '3.5% avg', premium: '+9%', channel: 'Amazon US', tag: 'Moderate', tagColor: '#6b6760', bars: [95, 60, 55, 70, 58] },
-  ]
-  const barLabels = ['eComm', 'Logistics', 'UK prem.', 'Duty env.', 'Category']
-  return (
-    <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: C.tx }}>Export Market Scoring</span>
-        <span style={{ fontSize: 10, color: C.tx3 }}>20 markets · Your product mix</span>
-      </div>
-      {markets.map((m, i) => (
-        <div key={i} style={{ background: C.bg, borderRadius: 10, border: `1px solid ${C.b}`, padding: '12px 14px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 20 }}>{m.flag}</span>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.tx }}>{m.name}</div>
-                <div style={{ fontSize: 10, color: C.tx3 }}>{m.channel}</div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 9, fontWeight: 700, color: m.tagColor, background: `${m.tagColor}12`, padding: '2px 7px', borderRadius: 4 }}>{m.tag}</span>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 20, fontWeight: 800, color: m.tagColor }}>{m.score}<span style={{ fontSize: 10, color: C.tx3, fontWeight: 400 }}>/100</span></div>
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 4 }}>
-            {m.bars.map((val, j) => (
-              <div key={j} style={{ textAlign: 'center' }}>
-                <div style={{ height: 32, background: C.ev, borderRadius: 4, position: 'relative', overflow: 'hidden', marginBottom: 3 }}>
-                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${val}%`, background: i === 0 ? '#16a34a' : i === 1 ? C.acc : C.tx3, opacity: .7, borderRadius: 4, transition: 'height 600ms ease' }} />
-                </div>
-                <div style={{ fontSize: 8, color: C.tx3 }}>{barLabels[j]}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-            <div style={{ fontSize: 10, color: C.tx2 }}>Duty: <strong>{m.duty}</strong></div>
-            <div style={{ fontSize: 10, color: C.tx2 }}>UK premium: <strong style={{ color: '#16a34a' }}>{m.premium}</strong></div>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// ── Main feature tabs ─────────────────────────────────────────────────────────
-
-const FEATURE_TABS = [
-  { id: 'revenue', icon: '💬', label: 'AI Answers' },
-  { id: 'supplier', icon: '🏭', label: 'Supplier Scorecard' },
-  { id: 'fx', icon: '💱', label: 'FX Risk Monitor' },
-  { id: 'export', icon: '🌍', label: 'Export Markets' },
+const DEMO_SLIDES = [
+  {
+    id: 'ai-chat',
+    title: 'Ask questions in plain English',
+    desc: 'Type a question about your business — revenue, margins, stock levels, customer trends — and get specific answers with your actual numbers.',
+    steps: ['Connect your store or upload a CSV', 'Type a question in the chat', 'Get insights with real numbers instantly'],
+    label: 'AI Answers',
+    thumb: '💬',
+    screen: 'chat',
+  },
+  {
+    id: 'supplier',
+    title: 'Grade every supplier A–F',
+    desc: 'Your supplier scorecard is built automatically from shipment data. See on-time rates, delay averages, customs holds, and the P&L impact of each supplier.',
+    steps: ['Connect your logistics or upload shipment data', 'View automatic grades for every supplier', 'Spot underperformers costing you money'],
+    label: 'Supplier Scorecard',
+    thumb: '🏭',
+    screen: 'supplier',
+  },
+  {
+    id: 'fx',
+    title: 'Model currency risk before it hits',
+    desc: 'See what happens to your margins if sterling drops 5%, 10%, or 15% against your import currencies. Know exactly which product lines go below your minimum margin.',
+    steps: ['Select your import currencies', 'Set drop scenarios (5%, 10%, 15%)', 'See which SKUs lose margin first'],
+    label: 'FX Risk Monitor',
+    thumb: '💱',
+    screen: 'fx',
+  },
+  {
+    id: 'export',
+    title: 'Find your best export market',
+    desc: '20 markets scored by ecommerce growth, logistics quality, UK brand premium, duty environment, and your specific product category match.',
+    steps: ['Your product mix is analysed automatically', 'Markets scored 0–100 for your categories', 'See duty rates, premiums, and top channels'],
+    label: 'Export Markets',
+    thumb: '🌍',
+    screen: 'export',
+  },
 ]
 
-function FeatureShowcase() {
-  const [activeTab, setActiveTab] = useState(0)
-  const [activeDemo, setActiveDemo] = useState(0)
-  const [phase, setPhase] = useState<'typing' | 'answer'>('typing')
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const cycleRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+function DemoScreen({ screen }: { screen: string }) {
+  if (screen === 'chat') return (
+    <div style={{ display:'flex', flexDirection:'column', gap:10, padding:'14px 16px' }}>
+      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+        <div style={{ width:24, height:24, borderRadius:7, background:C.acc, display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <svg width="10" height="10" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.75"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/></svg>
+        </div>
+        <span style={{ fontSize:12, fontWeight:700, color:C.tx }}>AskBiz AI</span>
+        <span style={{ fontSize:9, color:'#22c55e', display:'flex', alignItems:'center', gap:3 }}>
+          <span style={{ width:4, height:4, borderRadius:'50%', background:'#22c55e', display:'inline-block' }}/>Online
+        </span>
+      </div>
+      <div style={{ display:'flex', justifyContent:'flex-end' }}>
+        <div style={{ padding:'8px 12px', borderRadius:14, borderBottomRightRadius:3, background:C.ev, border:`1px solid ${C.b}`, fontSize:12, color:C.tx, maxWidth:'85%' }}>What is my best margin product?</div>
+      </div>
+      <div style={{ display:'flex', gap:8, alignItems:'flex-start' }}>
+        <div style={{ width:24, height:24, borderRadius:7, background:C.acc, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:2 }}>
+          <svg width="10" height="10" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.75"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/></svg>
+        </div>
+        <div style={{ flex:1 }}>
+          <div style={{ padding:'8px 12px', borderRadius:14, borderBottomLeftRadius:3, background:C.sf, border:`1px solid ${C.b}`, fontSize:11, lineHeight:1.65, color:C.tx, marginBottom:8 }}>
+            <strong>Wireless Earbuds</strong> — 34.2% gross margin, £8.22 profit per unit. At 143 units/month that&apos;s <strong>£1,175</strong> in monthly profit.
+          </div>
+          <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+            <span className="kpi-chip" style={{ background:'rgba(34,197,94,.06)', color:'#16a34a', borderColor:'rgba(34,197,94,.2)', fontSize:10, padding:'3px 8px' }}><span style={{ opacity:.7 }}>Margin</span> <strong>34.2%</strong></span>
+            <span className="kpi-chip" style={{ background:'rgba(34,197,94,.06)', color:'#16a34a', borderColor:'rgba(34,197,94,.2)', fontSize:10, padding:'3px 8px' }}><span style={{ opacity:.7 }}>Profit</span> <strong>£1,175/mo</strong></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+  if (screen === 'supplier') return (
+    <div style={{ padding:'14px 16px', display:'flex', flexDirection:'column', gap:8 }}>
+      <div style={{ fontSize:12, fontWeight:700, color:C.tx, marginBottom:2 }}>Supplier Scorecard <span style={{ fontSize:10, fontWeight:400, color:C.tx3 }}>— Last 6 months</span></div>
+      {[
+        { name:'Guangzhou Tech Co.', grade:'A', color:'#16a34a', onTime:'96%', delay:'0.4d', impact:'+£2,100' },
+        { name:'Shenzhen Goods Ltd', grade:'B', color:C.acc, onTime:'81%', delay:'2.1d', impact:'-£380' },
+        { name:'Alibaba Exports Co.', grade:'D', color:'#dc2626', onTime:'62%', delay:'6.8d', impact:'-£1,940' },
+      ].map((s,i) => (
+        <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 10px', background:C.bg, borderRadius:8, border:`1px solid ${C.b}` }}>
+          <div style={{ width:28, height:28, borderRadius:6, background:`${s.color}12`, border:`1px solid ${s.color}30`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-sora)', fontWeight:800, fontSize:14, color:s.color }}>{s.grade}</div>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontSize:11, fontWeight:600, color:C.tx }}>{s.name}</div>
+            <div style={{ fontSize:9, color:C.tx3 }}>On-time: {s.onTime} · Avg delay: {s.delay}</div>
+          </div>
+          <div style={{ fontSize:11, fontWeight:700, color:s.impact.startsWith('+') ? '#16a34a' : '#dc2626' }}>{s.impact}/mo</div>
+        </div>
+      ))}
+    </div>
+  )
+  if (screen === 'fx') return (
+    <div style={{ padding:'14px 16px', display:'flex', flexDirection:'column', gap:8 }}>
+      <div style={{ fontSize:12, fontWeight:700, color:C.tx, marginBottom:2 }}>FX Risk Monitor <span style={{ fontSize:10, fontWeight:400, color:C.tx3 }}>— Sterling drop scenario</span></div>
+      <div style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr 1fr 1fr', gap:4, padding:'4px 0' }}>
+        {['Pair','−5%','−10%','−15%'].map(h => <div key={h} style={{ fontSize:9, fontWeight:700, color:C.tx3, textTransform:'uppercase' }}>{h}</div>)}
+      </div>
+      {[
+        { pair:'GBP / CNY', d5:'-£920', d10:'-£1,840', d15:'-£2,760', risk:'high' },
+        { pair:'GBP / USD', d5:'-£310', d10:'-£620', d15:'-£930', risk:'medium' },
+        { pair:'GBP / AED', d5:'-£155', d10:'-£310', d15:'-£465', risk:'low' },
+      ].map((p,i) => (
+        <div key={i} style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr 1fr 1fr', gap:4, padding:'8px 0', borderTop:`1px solid ${C.b}`, alignItems:'center' }}>
+          <div><div style={{ fontSize:11, fontWeight:600, color:C.tx }}>{p.pair}</div><span style={{ fontSize:8, fontWeight:700, color:p.risk==='high'?'#dc2626':p.risk==='medium'?C.acc:'#16a34a', background:p.risk==='high'?'rgba(239,68,68,.08)':p.risk==='medium'?C.accBg:'rgba(34,197,94,.08)', padding:'1px 5px', borderRadius:3 }}>{p.risk}</span></div>
+          <div style={{ fontSize:11, color:'#d08a59', fontWeight:600 }}>{p.d5}</div>
+          <div style={{ fontSize:11, color:'#dc2626', fontWeight:600 }}>{p.d10}</div>
+          <div style={{ fontSize:11, color:'#991b1b', fontWeight:700 }}>{p.d15}</div>
+        </div>
+      ))}
+      <div style={{ padding:'8px 10px', borderRadius:6, background:'rgba(239,68,68,.05)', border:'1px solid rgba(239,68,68,.12)', fontSize:10, color:'#dc2626', lineHeight:1.5 }}>
+        ⚠️ If GBP/CNY drops 10%, China imports lose <strong>£1,840</strong> this month.
+      </div>
+    </div>
+  )
+  return (
+    <div style={{ padding:'14px 16px', display:'flex', flexDirection:'column', gap:8 }}>
+      <div style={{ fontSize:12, fontWeight:700, color:C.tx, marginBottom:2 }}>Export Market Scoring <span style={{ fontSize:10, fontWeight:400, color:C.tx3 }}>— Your product mix</span></div>
+      {[
+        { flag:'🇦🇪', name:'UAE', score:78, channel:'Noon.com', duty:'5% flat', premium:'+18%', tagColor:'#16a34a' },
+        { flag:'🇩🇪', name:'Germany', score:71, channel:'Amazon.de', duty:'6.5%', premium:'+12%', tagColor:C.acc },
+        { flag:'🇺🇸', name:'United States', score:64, channel:'Amazon US', duty:'3.5%', premium:'+9%', tagColor:C.tx3 },
+      ].map((m,i) => (
+        <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 10px', background:C.bg, borderRadius:8, border:`1px solid ${C.b}` }}>
+          <span style={{ fontSize:20 }}>{m.flag}</span>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontSize:11, fontWeight:600, color:C.tx }}>{m.name} <span style={{ fontSize:9, color:C.tx3 }}>via {m.channel}</span></div>
+            <div style={{ fontSize:9, color:C.tx3 }}>Duty: {m.duty} · UK premium: <span style={{ color:'#16a34a' }}>{m.premium}</span></div>
+          </div>
+          <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:800, color:m.tagColor }}>{m.score}<span style={{ fontSize:9, color:C.tx3, fontWeight:400 }}>/100</span></div>
+        </div>
+      ))}
+    </div>
+  )
+}
 
-  // Auto-cycle tabs every 5 seconds
+function InteractiveDemo() {
+  const [active, setActive] = useState(0)
+  const tickRef = useRef(0)
+
   useEffect(() => {
-    cycleRef.current = setTimeout(() => {
-      setActiveTab(t => (t + 1) % FEATURE_TABS.length)
-    }, 5000)
-    return () => { if (cycleRef.current) clearTimeout(cycleRef.current) }
-  }, [activeTab])
+    const id = window.setInterval(() => {
+      tickRef.current += 1
+      if (tickRef.current % 30 === 0) {
+        setActive(a => (a + 1) % DEMO_SLIDES.length)
+      }
+    }, 200)
+    return () => window.clearInterval(id)
+  }, [])
 
-  // Demo cycling inside revenue tab
-  useEffect(() => {
-    if (FEATURE_TABS[activeTab].id !== 'revenue') return
-    setPhase('typing')
-    timerRef.current = setTimeout(() => setPhase('answer'), 1100)
-    const next = setTimeout(() => {
-      setActiveDemo(i => (i + 1) % DEMOS.length)
-    }, 5800)
-    return () => { clearTimeout(timerRef.current!); clearTimeout(next) }
-  }, [activeDemo, activeTab])
+  const slide = DEMO_SLIDES[active]
 
-  // Reset demo when switching to revenue tab
-  useEffect(() => {
-    if (FEATURE_TABS[activeTab].id === 'revenue') {
-      setPhase('typing')
-      setTimeout(() => setPhase('answer'), 1100)
-    }
-  }, [activeTab])
+  const go = useCallback((i: number) => {
+    tickRef.current = 0
+    setActive(i)
+  }, [])
 
-  const handleTabClick = (i: number) => {
-    if (cycleRef.current) clearTimeout(cycleRef.current)
-    setActiveTab(i)
-  }
+  const next = useCallback(() => {
+    tickRef.current = 0
+    setActive(a => (a + 1) % DEMO_SLIDES.length)
+  }, [])
 
   return (
-    <div style={{ background: C.sf, border: `1px solid ${C.b}`, borderRadius: 20, overflow: 'hidden', boxShadow: '0 12px 48px rgba(0,0,0,.1)', minHeight: 420 }}>
+    <div id="demo" style={{ maxWidth:1100, margin:'0 auto', padding:'0 clamp(16px,4vw,40px) clamp(40px,6vw,64px)' }}>
 
-      {/* Tab bar */}
-      <div style={{ display: 'flex', borderBottom: `1px solid ${C.b}`, background: C.ev, overflowX: 'auto' }}>
-        {FEATURE_TABS.map((tab, i) => (
-          <button
-            key={tab.id}
-            onClick={() => handleTabClick(i)}
-            style={{
-              flex: 1,
-              padding: '12px 8px',
-              border: 'none',
-              borderBottom: i === activeTab ? `2px solid ${C.acc}` : '2px solid transparent',
-              background: i === activeTab ? C.sf : 'transparent',
-              color: i === activeTab ? C.acc : C.tx3,
-              fontSize: 11,
-              fontWeight: i === activeTab ? 700 : 500,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              whiteSpace: 'nowrap',
-              transition: 'all 180ms',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 3,
-            }}
-          >
-            <span style={{ fontSize: 16 }}>{tab.icon}</span>
-            <span>{tab.label}</span>
+      {/* Main area: left text + right screen */}
+      <div className="demo-layout" style={{ display:'grid', gridTemplateColumns:'1fr 1.3fr', gap:'clamp(24px,4vw,56px)', alignItems:'center', marginBottom:32 }}>
+
+        {/* Left — description */}
+        <div>
+          <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3vw,32px)', fontWeight:700, lineHeight:1.2, letterSpacing:'-.02em', marginBottom:16, color:C.tx }}>{slide.title}</h2>
+          <p style={{ fontSize:14, color:C.tx2, lineHeight:1.7, marginBottom:24 }}>{slide.desc}</p>
+          <ol style={{ listStyle:'none', padding:0, margin:'0 0 28px', display:'flex', flexDirection:'column', gap:12 }}>
+            {slide.steps.map((step, i) => (
+              <li key={i} style={{ display:'flex', gap:10, alignItems:'flex-start', fontSize:13, color:C.tx, lineHeight:1.55 }}>
+                <span style={{ width:22, height:22, borderRadius:'50%', background:C.accBg, border:`1px solid ${C.accBdr}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:C.acc, flexShrink:0 }}>{i + 1}</span>
+                {step}
+              </li>
+            ))}
+          </ol>
+          <button onClick={next} style={{ padding:'10px 24px', borderRadius:9999, border:`1px solid ${C.b2}`, background:C.sf, color:C.tx, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit', transition:'all 150ms' }} className="card-hover">
+            Next →
           </button>
-        ))}
+        </div>
+
+        {/* Right — mock screen */}
+        <div style={{ background:C.ev, borderRadius:16, border:`1px solid ${C.b}`, overflow:'hidden', boxShadow:'0 8px 32px rgba(0,0,0,.07)', position:'relative' }}>
+          {/* Window chrome */}
+          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', background:'rgba(0,0,0,.03)', borderBottom:`1px solid ${C.b}` }}>
+            <div style={{ display:'flex', gap:5 }}>
+              <span style={{ width:9, height:9, borderRadius:'50%', background:'#ff5f57' }} />
+              <span style={{ width:9, height:9, borderRadius:'50%', background:'#febc2e' }} />
+              <span style={{ width:9, height:9, borderRadius:'50%', background:'#28c840' }} />
+            </div>
+            <div style={{ flex:1, textAlign:'center', fontSize:10, color:C.tx3 }}>askbiz.co/dashboard</div>
+          </div>
+          {/* Progress bar */}
+          <div style={{ height:2, background:C.ev, position:'relative', overflow:'hidden' }}>
+            <div key={active} style={{ position:'absolute', top:0, left:0, height:'100%', background:C.acc, animation:'progress 6s linear forwards' }} />
+          </div>
+          {/* Screen content */}
+          <div style={{ background:C.sf, minHeight:260 }}>
+            <DemoScreen screen={slide.screen} />
+          </div>
+        </div>
       </div>
 
-      {/* Progress bar — auto-cycle indicator */}
-      <div style={{ height: 2, background: C.ev, position: 'relative', overflow: 'hidden' }}>
-        <div
-          key={activeTab}
-          style={{
-            position: 'absolute',
-            top: 0, left: 0,
-            height: '100%',
-            background: C.acc,
-            animation: 'progress 5s linear forwards',
-          }}
-        />
-      </div>
-
-      {/* Panel content */}
-      <div style={{ minHeight: 360, overflow: 'hidden' }}>
-        {FEATURE_TABS[activeTab].id === 'revenue' && (
-          <PanelRevenue activeDemo={activeDemo} setActiveDemo={setActiveDemo} phase={phase} />
-        )}
-        {FEATURE_TABS[activeTab].id === 'supplier' && <PanelSupplier />}
-        {FEATURE_TABS[activeTab].id === 'fx' && <PanelFX />}
-        {FEATURE_TABS[activeTab].id === 'export' && <PanelExport />}
-      </div>
-
-      {/* Footer label */}
-      <div style={{ padding: '8px 14px', borderTop: `1px solid ${C.b}`, background: C.ev, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 10, color: C.tx3 }}>
-          {activeTab + 1} of {FEATURE_TABS.length} features · auto-cycling
-        </span>
-        <div style={{ display: 'flex', gap: 4 }}>
-          {FEATURE_TABS.map((_, i) => (
-            <button key={i} onClick={() => handleTabClick(i)} style={{ width: i === activeTab ? 16 : 6, height: 6, borderRadius: 3, border: 'none', background: i === activeTab ? C.acc : C.b2, cursor: 'pointer', transition: 'all 250ms', padding: 0 }} />
+      {/* Bottom carousel */}
+      <div style={{ display:'flex', gap:12, alignItems:'center' }}>
+        <div className="demo-cards" style={{ display:'flex', gap:10, flex:1, overflowX:'auto', paddingBottom:4 }}>
+          {DEMO_SLIDES.map((s, i) => (
+            <button key={s.id} onClick={() => go(i)} style={{
+              flex:'1 0 0', minWidth:140, padding:'14px 12px', borderRadius:12,
+              border: i === active ? `2px solid ${C.acc}` : `1px solid ${C.b}`,
+              background: i === active ? C.accBg : C.sf,
+              cursor:'pointer', textAlign:'left', fontFamily:'inherit', transition:'all 180ms',
+              display:'flex', alignItems:'center', gap:10,
+            }}>
+              <span style={{ fontSize:22 }}>{s.thumb}</span>
+              <span style={{ fontSize:12, fontWeight: i === active ? 700 : 500, color: i === active ? C.acc : C.tx2, lineHeight:1.3 }}>{s.label}</span>
+            </button>
           ))}
+        </div>
+        <div style={{ display:'flex', gap:6, flexShrink:0 }}>
+          <button onClick={() => go((active - 1 + DEMO_SLIDES.length) % DEMO_SLIDES.length)} style={{ width:32, height:32, borderRadius:'50%', border:`1px solid ${C.b}`, background:C.sf, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, color:C.tx3 }}>‹</button>
+          <button onClick={next} style={{ width:32, height:32, borderRadius:'50%', border:`1px solid ${C.b}`, background:C.sf, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, color:C.tx3 }}>›</button>
         </div>
       </div>
     </div>
@@ -444,13 +355,20 @@ function LandingInner({ geo }: { geo: Geo | null }) {
   const { t, lang, setLang } = useLang()
   const [annual, setAnnual] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const sym = geo?.pricing?.sym || '£'
   const growthPrice = geo?.pricing?.growth || '£19'
   const businessPrice = geo?.pricing?.business || '£49'
   const country = geo?.country || ''
+  const countryCode = geo?.countryCode || ''
   const flag = geo?.flag || ''
   const isRTL = lang === 'ar'
+
+  const geoCtaText = country ? `Start free — from ${growthPrice}/mo` : 'Start for free →'
+  const geoSubText = country
+    ? `No credit card · Prices from ${growthPrice}/mo · 2 minutes to set up`
+    : 'No credit card · Takes 2 minutes to set up'
 
   useEffect(() => {
     const saved = document.cookie.split(';').find(c => c.trim().startsWith('askbiz_lang='))
@@ -499,70 +417,155 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
         @keyframes progress { from{width:0%} to{width:100%} }
         .fade-up { animation: fadeUp 500ms ease both }
-        .tdot { display:inline-block; width:6px; height:6px; border-radius:50%; background:#a39e97; animation:tdot 1.2s infinite }
-        .card-hover:hover { border-color:rgba(208,138,89,.25) !important; transform:translateY(-2px); transition:all 180ms ease }
-        .btn-primary:hover { opacity:.88; transform:translateY(-1px) }
-        .btn-primary { transition:all 150ms ease }
-        .nav-link:hover { color:#1a1916 !important }
-        .faq-item:hover { background:#f3f2ef }
+        .tdot { display:inline-block; width:6px; height:6px; border-radius:50%; background:#6B7280; animation:tdot 1.2s infinite }
+        .card-hover:hover { border-color:rgba(208,138,89,.3) !important; transform:translateY(-2px); transition:all 180ms ease }
+        .btn-primary { transition:all 150ms ease; transform:translateY(0); position:relative }
+        .btn-primary:hover { transform:translateY(-2px) }
+        .btn-primary:active { transform:translateY(0) }
+        .nav-link:hover { color:#1A1916 !important }
+        .faq-item:hover { background:#F3F2EF }
         .kpi-chip { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:9999px; font-size:12px; font-weight:600; border:1px solid }
+        .nav-desktop { display:flex }
+        .nav-hamburger { display:none }
+        .mobile-menu { display:none }
+        @media (max-width:767px) {
+          .nav-desktop { display:none !important }
+          .nav-hamburger { display:flex !important }
+          .mobile-menu.open { display:flex !important }
+          .demo-layout { grid-template-columns:1fr !important }
+          .demo-cards { flex-wrap:wrap }
+          .problem-grid { grid-template-columns:1fr !important }
+          .tools-grid { grid-template-columns:1fr !important }
+          .pos-grid-4 { grid-template-columns:1fr 1fr !important }
+          .pos-grid-3 { grid-template-columns:1fr !important }
+          .steps-grid { grid-template-columns:1fr !important; gap:32px !important }
+          .steps-line { display:none !important }
+          .testimonials-grid { grid-template-columns:1fr !important }
+          .stats-grid { grid-template-columns:1fr 1fr !important }
+          .pricing-grid { grid-template-columns:1fr !important }
+          .learn-grid { grid-template-columns:1fr !important }
+          .academy-topics { grid-template-columns:1fr !important }
+          .footer-nav { justify-content:center }
+          .nav-mega-wrap { display:none !important }
+          .hero-ctas { flex-direction:column !important }
+          .hero-ctas a { width:100% !important; text-align:center !important; justify-content:center !important }
+          .pos-callout-mock { display:none !important }
+        }
+        @media (max-width:480px) {
+          .pos-grid-4 { grid-template-columns:1fr !important }
+          .stats-grid { grid-template-columns:1fr !important }
+        }
       `}</style>
 
       {/* ── NAV ───────────────────────────────────────────────── */}
-      <nav style={{ position:'sticky', top:0, zIndex:50, background:'rgba(249,248,246,.96)', backdropFilter:'blur(16px)', borderBottom:`1px solid ${C.b}`, padding:'0 clamp(16px,4vw,32px)', height:54, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+      <nav style={{ position:'sticky', top:0, zIndex:50, background:'rgba(249,248,246,.96)', backdropFilter:'blur(16px)', borderBottom:`1px solid ${C.b}`, padding:'0 clamp(16px,4vw,32px)', height:56, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <Link href="/" style={{ display:'flex', alignItems:'center', gap:8, textDecoration:'none', color:C.tx }}>
           <div style={{ width:26, height:26, borderRadius:7, background:C.acc, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
             <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.75"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/></svg>
           </div>
           <span style={{ fontFamily:'var(--font-sora)', fontSize:15, fontWeight:700, letterSpacing:'-.02em' }}>AskBiz</span>
         </Link>
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+
+        {/* Desktop nav */}
+        <div className="nav-desktop" style={{ display:'flex', alignItems:'center', gap:10 }}>
           <LanguageToggle/>
-          <a href="#pos" className="nav-link" style={{ fontSize:13, color:C.tx2, textDecoration:'none', padding:'0 8px' }}>Point of Sale</a>
           <a href="#pricing" className="nav-link" style={{ fontSize:13, color:C.tx2, textDecoration:'none', padding:'0 8px' }}>Pricing</a>
-          <Link href="/blog" className="nav-link" style={{ fontSize:13, color:C.tx2, textDecoration:'none', padding:'0 8px' }}>Blog</Link>
-          <Link href="/academy" className="nav-link" style={{ fontSize:13, color:C.tx2, textDecoration:'none', padding:'0 8px' }}>Academy</Link>
+          <div className="nav-mega-wrap" style={{ position:'relative' }} onMouseEnter={(e)=>{const d=e.currentTarget.querySelector('.nav-mega') as HTMLElement;if(d)d.style.display='block'}} onMouseLeave={(e)=>{const d=e.currentTarget.querySelector('.nav-mega') as HTMLElement;if(d)d.style.display='none'}}>
+            <span className="nav-link" style={{ fontSize:13, color:C.tx2, padding:'0 8px', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:3 }}>Resources <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg></span>
+            <div className="nav-mega" style={{ display:'none', position:'absolute', top:'100%', right:0, paddingTop:8, zIndex:60 }}>
+              <div style={{ background:C.sf, border:`1px solid ${C.b}`, borderRadius:14, boxShadow:'0 8px 32px rgba(0,0,0,.12)', padding:20, width:480, display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+                {[
+                  { href:'/blog', icon:'📝', title:'Blog', desc:'201 articles on AI, commerce & growth' },
+                  { href:'/academy', icon:'🎓', title:'Academy', desc:'420+ structured learning articles' },
+                  { href:'/free-tools', icon:'🧮', title:'Free Tools', desc:'VAT, landed cost, FX & break-even' },
+                  { href:'/case-studies', icon:'📊', title:'Case Studies', desc:'Real results from real businesses' },
+                  { href:'/benchmarks', icon:'📈', title:'Benchmarks', desc:'Industry KPIs across 8 sectors' },
+                  { href:'/help', icon:'💡', title:'Help Center', desc:'Guides, FAQ & troubleshooting' },
+                  { href:'/glossary', icon:'📖', title:'Glossary', desc:'Business & analytics terms explained' },
+                  { href:'/integrations', icon:'🔗', title:'Integrations', desc:'Shopify, Amazon, Xero & more' },
+                ].map(item=>(
+                  <Link key={item.href} href={item.href} style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'10px 12px', borderRadius:10, textDecoration:'none', color:C.tx, transition:'background .12s' }} onMouseEnter={e=>{e.currentTarget.style.background=C.ev}} onMouseLeave={e=>{e.currentTarget.style.background='transparent'}}>
+                    <span style={{ fontSize:18, lineHeight:1, flexShrink:0, marginTop:1 }}>{item.icon}</span>
+                    <div>
+                      <div style={{ fontSize:13, fontWeight:700, color:C.tx, lineHeight:1.2 }}>{item.title}</div>
+                      <div style={{ fontSize:11, color:C.tx3, marginTop:2, lineHeight:1.4 }}>{item.desc}</div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
           <Link href="/signin" style={{ padding:'7px 14px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx, fontSize:13, fontWeight:500, textDecoration:'none' }}>Sign in</Link>
-          <Link href="/signin" className="btn-primary" style={{ padding:'7px 16px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:13, fontWeight:600, textDecoration:'none', boxShadow:`0 2px 10px ${C.acc}40` }}>Try free →</Link>
+          <Link href="/signin" className="btn-primary" style={{ padding:'7px 16px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none', boxShadow:`0 2px 12px ${C.acc}35` }}>Try free</Link>
+        </div>
+
+        {/* Mobile nav — hamburger + CTA */}
+        <div className="nav-hamburger" style={{ display:'none', alignItems:'center', gap:10 }}>
+          <Link href="/signin" className="btn-primary" style={{ padding:'7px 16px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none', boxShadow:`0 2px 12px ${C.acc}35` }}>Try free</Link>
+          <button onClick={() => setMenuOpen(o => !o)} aria-label="Menu" style={{ width:40, height:40, borderRadius:10, border:`1px solid ${C.b}`, background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
+            {menuOpen ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.tx} strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.tx} strokeWidth="2" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            )}
+          </button>
         </div>
       </nav>
 
+      {/* Mobile menu drawer */}
+      <div className={`mobile-menu ${menuOpen ? 'open' : ''}`} style={{ display:'none', flexDirection:'column', gap:0, position:'fixed', top:56, left:0, right:0, bottom:0, background:C.bg, zIndex:49, overflowY:'auto', padding:'16px 20px 32px' }}>
+        <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+          {[
+            { href:'#pricing', label:'Pricing' },
+            { href:'/point-of-sale', label:'Point of Sale' },
+            { href:'/blog', label:'Blog' },
+            { href:'/academy', label:'Academy' },
+            { href:'/free-tools', label:'Free Tools' },
+            { href:'/help', label:'Help Center' },
+            { href:'/integrations', label:'Integrations' },
+          ].map(item => (
+            <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} style={{ display:'block', padding:'14px 12px', borderRadius:10, fontSize:15, fontWeight:600, color:C.tx, textDecoration:'none', borderBottom:`1px solid ${C.b}` }}>{item.label}</a>
+          ))}
+        </div>
+        <div style={{ marginTop:24, display:'flex', flexDirection:'column', gap:10 }}>
+          <Link href="/signin" onClick={() => setMenuOpen(false)} className="btn-primary" style={{ display:'block', padding:'14px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', textAlign:'center' }}>Start free</Link>
+          <Link href="/signin" onClick={() => setMenuOpen(false)} style={{ display:'block', padding:'14px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:14, fontWeight:500, textDecoration:'none', textAlign:'center' }}>Sign in</Link>
+        </div>
+        <div style={{ marginTop:20, display:'flex', justifyContent:'center' }}><LanguageToggle/></div>
+      </div>
+
+      {/* Geo promo banner removed */}
+
       {/* ── HERO ─────────────────────────────────────────────── */}
-      <section style={{ maxWidth:1100, margin:'0 auto', padding:'clamp(52px,8vw,96px) clamp(16px,4vw,40px) clamp(40px,6vw,72px)', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'clamp(32px,5vw,64px)', alignItems:'center' }}>
-
-        {/* Left — copy */}
-        <div>
-          {country && (
-            <div className="fade-up" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 12px', borderRadius:9999, background:C.accBg, border:`1px solid ${C.accBdr}`, fontSize:12, color:C.acc, fontWeight:600, marginBottom:24, letterSpacing:'.02em' }}>
-              {flag} Prices shown in {sym} for {country}
-            </div>
-          )}
-          <h1 className="fade-up" style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(32px,5vw,54px)', fontWeight:700, lineHeight:1.1, letterSpacing:'-.035em', marginBottom:22, color:C.tx }}>
-            Your business data,<br/>
-            <span style={{ color:C.acc }}>answering back.</span>
-          </h1>
-          <p className="fade-up" style={{ fontSize:'clamp(15px,1.8vw,18px)', color:C.tx2, lineHeight:1.7, marginBottom:14, maxWidth:440 }}>
-            Ask questions about your business in plain English. Get specific answers — with your actual numbers, not generic advice.
-          </p>
-          <p className="fade-up" style={{ fontSize:13, color:C.tx3, marginBottom:36, lineHeight:1.6 }}>
-            Connect Shopify, Amazon, TikTok Shop, QuickBooks — or upload a CSV. Free to start, no card needed.
-          </p>
-          <div className="fade-up" style={{ display:'flex', gap:10, flexWrap:'wrap', marginBottom:20 }}>
-            <Link href="/signin" className="btn-primary" style={{ padding:'13px 26px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8, boxShadow:`0 4px 20px ${C.acc}40`, letterSpacing:'-.01em' }}>
-              Start for free →
-            </Link>
-            <a href="#demo" style={{ padding:'13px 20px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:14, fontWeight:500, textDecoration:'none', display:'inline-flex', alignItems:'center' }}>
-              See it in action
-            </a>
+      <section style={{ maxWidth:700, margin:'0 auto', padding:'clamp(52px,8vw,96px) clamp(16px,4vw,40px) clamp(36px,5vw,56px)', textAlign:'center' }}>
+        {country && (
+          <div className="fade-up" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 12px', borderRadius:9999, background:C.accBg, border:`1px solid ${C.accBdr}`, fontSize:12, color:C.acc, fontWeight:600, marginBottom:24, letterSpacing:'.02em' }}>
+            {flag} Prices shown in {sym} for {country}
           </div>
-          <p style={{ fontSize:12, color:C.tx3 }}>No credit card · Takes 2 minutes to set up</p>
+        )}
+        <h1 className="fade-up" style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(32px,5vw,54px)', fontWeight:700, lineHeight:1.1, letterSpacing:'-.035em', marginBottom:22, color:C.tx }}>
+          Your business data,<br/>
+          <span style={{ color:C.acc }}>answering back.</span>
+        </h1>
+        <p className="fade-up" style={{ fontSize:'clamp(15px,1.8vw,18px)', color:C.tx2, lineHeight:1.7, marginBottom:14, maxWidth:520, margin:'0 auto 14px' }}>
+          Ask questions about your business in plain English. Get specific answers — with your actual numbers, not generic advice.
+        </p>
+        <p className="fade-up" style={{ fontSize:13, color:C.tx3, marginBottom:36, lineHeight:1.6 }}>
+          Connect Shopify, Amazon, TikTok Shop, QuickBooks — or upload a CSV. Free to start, no card needed.
+        </p>
+        <div className="fade-up" style={{ display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center', marginBottom:20 }}>
+          <Link href="/signin" className="btn-primary" style={{ padding:'13px 26px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8, boxShadow:`0 2px 12px ${C.acc}35`, letterSpacing:'-.01em' }}>
+            {geoCtaText}
+          </Link>
+          <a href="#demo" style={{ padding:'13px 20px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:14, fontWeight:500, textDecoration:'none', display:'inline-flex', alignItems:'center' }}>
+            See it in action
+          </a>
         </div>
-
-        {/* Right — feature showcase */}
-        <div id="demo">
-          <FeatureShowcase />
-        </div>
+        <p style={{ fontSize:12, color:C.tx3 }}>{geoSubText}</p>
       </section>
+
+      {/* ── PRODUCT DEMO ──────────────────────────────────────── */}
+      <InteractiveDemo />
 
       {/* ── INTEGRATIONS TICKER ──────────────────────────────── */}
       <div style={{ borderTop:`1px solid ${C.b}`, borderBottom:`1px solid ${C.b}`, background:C.sf, padding:'16px 0', overflow:'hidden' }}>
@@ -578,6 +581,40 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
       </div>
 
+      {/* ── POS CALLOUT ──────────────────────────────────────── */}
+      <section style={{ maxWidth:1060, margin:'0 auto', padding:'clamp(36px,5vw,56px) clamp(16px,4vw,40px)' }}>
+        <Link href="/point-of-sale" style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:'clamp(20px,3vw,40px)', alignItems:'center', padding:'clamp(20px,3vw,32px)', borderRadius:20, border:`1px solid ${C.b}`, background:C.sf, textDecoration:'none', transition:'box-shadow 180ms ease, transform 180ms ease' }} className="card-hover">
+          <div>
+            <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'3px 10px', borderRadius:9999, background:C.accBg, border:`1px solid ${C.accBdr}`, fontSize:11, color:C.acc, fontWeight:700, marginBottom:14, textTransform:'uppercase', letterSpacing:'.06em' }}>
+              🧾 Point of Sale
+            </div>
+            <div style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(18px,2.5vw,26px)', fontWeight:700, color:C.tx, lineHeight:1.2, marginBottom:8, letterSpacing:'-.02em' }}>
+              A full register system — built into your AI platform.
+            </div>
+            <p style={{ fontSize:'clamp(13px,1.4vw,15px)', color:C.tx2, lineHeight:1.6, margin:0, maxWidth:520 }}>
+              Ring up sales, manage inventory, track staff shifts, and stay tax-compliant — £5/seat/month.
+            </p>
+          </div>
+          <div className="pos-callout-mock" style={{ width:220, flexShrink:0, background:C.bg, borderRadius:14, border:`1px solid ${C.b}`, padding:16, fontSize:12 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:10 }}>
+              <span style={{ fontWeight:700, color:C.tx, fontSize:11 }}>Shift #104</span>
+              <span style={{ color:'#16a34a', fontWeight:600, fontSize:10 }}>● Live</span>
+            </div>
+            {[{ n:'Earbuds', p:'£59.98' },{ n:'Phone Case', p:'£12.50' },{ n:'USB-C Cable', p:'£20.97' }].map((r,i)=>(
+              <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'5px 0', borderBottom:`1px solid ${C.ev}`, fontSize:11, color:C.tx2 }}>
+                <span>{r.n}</span><span style={{ fontWeight:600, color:C.tx }}>{r.p}</span>
+              </div>
+            ))}
+            <div style={{ display:'flex', justifyContent:'space-between', marginTop:10, fontWeight:800, color:C.tx, fontSize:13, fontFamily:'var(--font-sora)' }}>
+              <span>Total</span><span>£111.94</span>
+            </div>
+            <div style={{ marginTop:10, padding:'7px', borderRadius:8, background:C.acc, color:'#fff', fontSize:11, fontWeight:700, textAlign:'center' }}>
+              Pay →
+            </div>
+          </div>
+        </Link>
+      </section>
+
       {/* ── THE PROBLEM ──────────────────────────────────────── */}
       <section style={{ maxWidth:760, margin:'0 auto', padding:'clamp(56px,8vw,96px) clamp(16px,4vw,40px)', textAlign:'center' }}>
         <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:20 }}>
@@ -590,7 +627,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         <p style={{ fontSize:'clamp(14px,1.6vw,17px)', color:C.tx2, lineHeight:1.75, maxWidth:560, margin:'0 auto 40px' }}>
           Most founders run on instinct — not because they want to, but because getting to the data takes too long. By the time you've pulled the reports, the moment has passed.
         </p>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:1, borderRadius:16, overflow:'hidden', border:`1px solid ${C.b}` }}>
+        <div className="problem-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:1, borderRadius:16, overflow:'hidden', border:`1px solid ${C.b}` }}>
           {[
             { before:'2 hours to pull Monday numbers', after:'4 minutes with AskBiz' },
             { before:'Margin looked like 34%', after:'Actually 18.4% once you include freight, duty, and FX' },
@@ -611,7 +648,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       {/* ── BUSINESS TOOLS ───────────────────────────────────── */}
       <section style={{ background:C.sf, borderTop:`1px solid ${C.b}`, borderBottom:`1px solid ${C.b}`, padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:960, margin:'0 auto' }}>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'clamp(40px,6vw,80px)', alignItems:'start' }}>
+          <div className="tools-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'clamp(40px,6vw,80px)', alignItems:'start' }}>
             <div>
               <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16 }}>Business Tools</div>
               <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,36px)', fontWeight:700, lineHeight:1.15, letterSpacing:'-.03em', marginBottom:16, color:C.tx }}>
@@ -651,7 +688,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           Ring up sales, manage inventory across branches, track staff shifts, and stay tax-compliant — all while your AI learns from every transaction.
         </p>
 
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
+        <div className="pos-grid-4" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
           {[
             { icon:'🧾', title:'Register & Checkout', desc:'Fast checkout with barcode scanning, split payments, refunds, and digital receipts. Works on tablet or desktop.', tag:'Core' },
             { icon:'📦', title:'Inventory & Stock', desc:'Real-time stock levels, low-stock alerts, stock transfers between branches, and AI reorder recommendations.', tag:'Smart' },
@@ -669,7 +706,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           ))}
         </div>
 
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:14, marginTop:14 }}>
+        <div className="pos-grid-3" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:14, marginTop:14 }}>
           {[
             { icon:'🧮', title:'Tax & Compliance', desc:'Multi-jurisdiction VAT, consolidated tax reports, and filing previews. Xero and QuickBooks sync built in.' },
             { icon:'🔒', title:'GDPR Ready', desc:'Customer data export, deletion, consent logging, and data retention reports — all one click.' },
@@ -701,8 +738,8 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,34px)', fontWeight:700, textAlign:'center', marginBottom:52, letterSpacing:'-.03em', color:C.tx }}>
           Up and running in under 5 minutes
         </h2>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:0, position:'relative' }}>
-          <div style={{ position:'absolute', top:28, left:'16.6%', right:'16.6%', height:1, background:`linear-gradient(90deg, ${C.acc}, ${C.accBdr})`, zIndex:0 }}/>
+        <div className="steps-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:0, position:'relative' }}>
+          <div className="steps-line" style={{ position:'absolute', top:28, left:'16.6%', right:'16.6%', height:1, background:`linear-gradient(90deg, ${C.acc}, ${C.accBdr})`, zIndex:0 }}/>
           {[
             { num:'1', icon:'🔌', title:'Connect your data', body:'Shopify, Amazon, QuickBooks, TikTok Shop — or drop a CSV. Takes 2 minutes.' },
             { num:'2', icon:'💬', title:'Ask in plain English', body:'"What is my best margin product?" "Which customers are about to churn?" No SQL, no dashboards.' },
@@ -733,7 +770,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               <span><strong style={{ color:C.tx2 }}>David O.</strong> · Amazon FBA seller · Lagos</span>
             </cite>
           </blockquote>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+          <div className="testimonials-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             {TESTIMONIALS.slice(1).map((tm, i) => (
               <figure key={i} style={{ margin:0, padding:'20px', borderRadius:14, border:`1px solid ${C.b}`, background:C.bg }}>
                 <div style={{ display:'flex', gap:2, marginBottom:10 }}>
@@ -757,7 +794,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
       {/* ── STATS ────────────────────────────────────────────── */}
       <section style={{ maxWidth:760, margin:'0 auto', padding:'clamp(40px,6vw,64px) clamp(16px,4vw,40px)' }}>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:1, border:`1px solid ${C.b}`, borderRadius:16, overflow:'hidden' }}>
+        <div className="stats-grid" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:1, border:`1px solid ${C.b}`, borderRadius:16, overflow:'hidden' }}>
           {[
             { num:'2 min', label:'Average setup time' },
             { num:'£400+', label:'Avg monthly saving found' },
@@ -779,7 +816,6 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,34px)', fontWeight:700, textAlign:'center', marginBottom:8, letterSpacing:'-.03em', color:C.tx }}>
             Simple, honest pricing
           </h2>
-          {country && <p style={{ textAlign:'center', fontSize:12, color:C.acc, marginBottom:8, fontWeight:500 }}>{flag} Prices in {sym} for {country}</p>}
           <p style={{ textAlign:'center', fontSize:14, color:C.tx2, marginBottom:28 }}>All plans include API access. Cancel anytime.</p>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, marginBottom:32 }}>
             <span style={{ fontSize:13, color:annual?C.tx3:C.tx, fontWeight:annual?400:600 }}>Monthly</span>
@@ -790,14 +826,14 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               Annual <span style={{ fontSize:11, fontWeight:700, color:'#16a34a', background:'rgba(34,197,94,.1)', borderRadius:9999, padding:'1px 7px', marginLeft:4 }}>2 months free</span>
             </span>
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
+          <div className="pricing-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
             {[
-              { id:'free', name:'Free', colour:'#6b6760', price:`${sym}0`, sub:'10 questions/month', popular:false,
+              { id:'free', name:'Free', colour:'#6b6760', price:'£0', sub:'10 questions/month', popular:false,
                 features:['10 questions per month','Upload CSV & Excel','Business Pulse score','Connect Shopify, Amazon & more','FX Risk, Landed Cost, Export tools','API access','No credit card needed'] },
-              { id:'growth', name:'Growth', colour:C.acc, price:growthMonthly, sub:'per month', popular:true,
-                features:['Unlimited questions','All tools pre-filled from your data','Daily Brief — AI morning intelligence','Point of Sale — £5/seat add-on','Social Commerce — TikTok, Instagram, Pinterest','Churn Intelligence — monthly scan','Anomaly alerts'] },
-              { id:'business', name:'Business', colour:'#7c3aed', price:bizMonthly, sub:'per month', popular:false,
-                features:['Everything in Growth','Team seats — up to 5','Multi-branch PoS — £5/seat add-on','Decision Memory','Competitor Watch','CFO Mode reports','Priority support'] },
+              { id:'growth', name:'Growth', colour:C.acc, price:annual?'£16':'£19', sub:'per month', popular:true,
+                features:['Unlimited questions','All tools pre-filled from your data','Daily Brief — AI morning intelligence','Point of Sale — £5/seat/month add-on','Social Commerce — TikTok, Instagram, Pinterest','Churn Intelligence — monthly scan','Anomaly alerts'] },
+              { id:'business', name:'Business', colour:'#7c3aed', price:annual?'£41':'£49', sub:'per month', popular:false,
+                features:['Everything in Growth','Team seats — up to 5','Multi-branch PoS — £5/seat/month add-on','Decision Memory','Competitor Watch','CFO Mode reports','Priority support'] },
             ].map((plan, i) => (
               <div key={i} style={{ borderRadius:18, border:plan.popular?`2px solid ${C.acc}`:`1px solid ${C.b}`, background:plan.popular?`rgba(208,138,89,.02)`:C.bg, padding:'22px 20px', position:'relative', display:'flex', flexDirection:'column' }}>
                 {plan.popular && (
@@ -827,6 +863,11 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               </div>
             ))}
           </div>
+          <div style={{ textAlign:'center', marginTop:20 }}>
+            <Link href="/point-of-sale" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'10px 22px', borderRadius:9999, border:`1px solid ${C.accBdr}`, background:C.accBg, color:C.acc, fontSize:13, fontWeight:700, textDecoration:'none' }}>
+              🧾 Add Point of Sale — £5/seat/month
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -853,7 +894,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
       {/* ── LEARN — ACADEMY + BLOG ─────────────────────────── */}
       <section style={{ maxWidth:1060, margin:'0 auto', padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'clamp(32px,5vw,64px)', alignItems:'start' }}>
+        <div className="learn-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'clamp(32px,5vw,64px)', alignItems:'start' }}>
 
           {/* Academy */}
           <div>
@@ -864,7 +905,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             <p style={{ fontSize:14, color:C.tx2, lineHeight:1.7, marginBottom:22 }}>
               Business metrics, KPIs, financial intelligence, eCommerce analytics, FX risk, and AI — explained for founders, not analysts.
             </p>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:20 }}>
+            <div className="academy-topics" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:20 }}>
               {[
                 { icon:'📊', label:'Financial Intelligence', count:'40+' },
                 { icon:'🛒', label:'eCommerce Analytics', count:'35+' },
@@ -936,7 +977,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             Most founders are one question away from a decision that changes their month. Ask AskBiz.
           </p>
           <Link href="/signin" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'14px 30px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:16, fontWeight:700, textDecoration:'none', boxShadow:`0 4px 24px ${C.acc}50`, letterSpacing:'-.01em' }}>
-            Start for free →
+            {geoCtaText}
           </Link>
           <p style={{ fontSize:12, color:'rgba(255,255,255,.35)', marginTop:14 }}>No credit card · 2 minutes to set up · Cancel anytime</p>
         </div>
@@ -951,8 +992,8 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <span style={{ fontFamily:'var(--font-sora)', fontSize:13, fontWeight:700, color:C.tx }}>AskBiz</span>
           <span style={{ fontSize:12, color:C.tx3 }}>© 2026</span>
         </div>
-        <nav style={{ display:'flex', gap:20, flexWrap:'wrap' }}>
-          {[['/', 'Home'], ['/blog', 'Blog'], ['/academy', 'Academy'], ['/integrations', 'Integrations'], ['/free-tools', 'Free Tools'], ['/developers', 'API'], ['/help', 'Help'], ['/pricing', 'Pricing'], ['/changelog', 'Changelog'], ['/rules', 'Rules & Policies'], ['/transparency', 'Transparency'], ['/privacy', 'Privacy'], ['/terms', 'Terms'], ['mailto:hello@askbiz.co', 'Contact']].map(([href, label]) => (
+        <nav className="footer-nav" style={{ display:'flex', gap:20, flexWrap:'wrap' }}>
+          {[['/', 'Home'], ['/blog', 'Blog'], ['/academy', 'Academy'], ['/case-studies', 'Case Studies'], ['/benchmarks', 'Benchmarks'], ['/integrations', 'Integrations'], ['/free-tools', 'Free Tools'], ['/developers', 'API'], ['/help', 'Help'], ['/pricing', 'Pricing'], ['/changelog', 'Changelog'], ['/rules', 'Rules & Policies'], ['/transparency', 'Transparency'], ['/privacy', 'Privacy'], ['/terms', 'Terms'], ['mailto:hello@askbiz.co', 'Contact']].map(([href, label]) => (
             <a key={href} href={href} className="nav-link" style={{ fontSize:12, color:C.tx3, textDecoration:'none' }}>{label}</a>
           ))}
         </nav>

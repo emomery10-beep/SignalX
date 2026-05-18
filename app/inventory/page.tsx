@@ -271,7 +271,7 @@ export default function InventoryPage() {
       {/* Filter tabs */}
       <div style={{ display: 'flex', gap: 8, padding: '12px 20px' }}>
         {([['all', `All (${items.length})`], ['low', `Low (${lowCount})`], ['out', `Out (${outCount})`]] as [typeof filter, string][]).map(([f, label]) => (
-          <button key={f} onClick={() => setFilter(f)} style={{ padding: '7px 14px', borderRadius: 9999, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none', background: filter === f ? ACC : '#fff', color: filter === f ? '#fff' : '#6b6760', border: filter === f ? 'none' : '1px solid #e5e2dc' } as React.CSSProperties}>
+          <button key={f} onClick={() => setFilter(f)} style={{ padding: '7px 14px', borderRadius: 9999, fontSize: 12, fontWeight: 600, cursor: 'pointer', background: filter === f ? ACC : '#fff', color: filter === f ? '#fff' : '#6b6760', border: filter === f ? 'none' : '1px solid #e5e2dc' } as React.CSSProperties}>
             {label}
           </button>
         ))}

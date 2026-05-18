@@ -144,11 +144,11 @@ export default function ChatConversationPage() {
     } finally { setIsLoadingLocal(false) }
   }, [input, messages, isLoading, conversationId, geo, settings, uploadedFile, session, user.name, router, supabase, setLastResult])
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: any) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
   }
 
-  const autoResize = (e) => {
+  const autoResize = (e: any) => {
     setInput(e.target.value)
     const ta = e.target; ta.style.height = 'auto'
     ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'

@@ -38,6 +38,23 @@ const TYPE_STYLE: Record<ChangeType, { label: string; bg: string; color: string;
 
 const RELEASES: Release[] = [
   {
+    version: '2.10.0',
+    date: '2026-05-16',
+    summary: 'New free tools, case studies, industry benchmarks, geo-aware CTAs, and POS seat pricing on the landing page.',
+    changes: [
+      { type: 'new',      text: 'VAT Calculator — supports 30+ countries with auto-filled VAT rates and reverse VAT calculation' },
+      { type: 'new',      text: 'Break-Even Calculator — 12 currencies, interactive chart, and what-if price scenarios' },
+      { type: 'new',      text: 'Case Studies section — 6 real-world stories showing how SMEs use AskBiz across sectors' },
+      { type: 'new',      text: 'SME Industry Benchmarks — compare margins, growth, AOV, and KPIs across 8 sectors (updated quarterly)' },
+      { type: 'new',      text: 'Geo-aware CTAs — landing page adapts headline and promo for visitors from Singapore, Australia, Nigeria, and more' },
+      { type: 'new',      text: 'African market promo banner — auto-surfaces ASKBIZ-AFRICA discount code for eligible countries' },
+      { type: 'improved', text: 'Pricing section now shows explicit POS seat pricing (£5/seat/month add-on) on Growth and Business tiers' },
+      { type: 'improved', text: 'Navigation mega-menu updated with Resources dropdown linking to all new sections' },
+      { type: 'improved', text: 'Footer updated with Case Studies and Benchmarks links' },
+      { type: 'improved', text: 'Sitemap expanded with all new routes for improved SEO coverage' },
+    ],
+  },
+  {
     version: '2.9.0',
     date: '2026-05-12',
     summary: 'Introducing AskBiz POS — a fully integrated point of sale system with camera scanning, inventory management, staff roles, and real-time BI.',

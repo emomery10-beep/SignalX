@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
     .eq('is_active', true)
 
   const taxCodeMap: Record<string, { rate: number; code: string }> = {}
-  ;(taxCodes || []).forEach(tc => {
+  ;(taxCodes || []).forEach((tc: any) => {
     taxCodeMap[tc.category] = { rate: tc.rate, code: tc.code }
   })
 
@@ -198,7 +198,7 @@ export async function POST(req: NextRequest) {
   // Stock deduction — fix #1: use single atomic UPDATE (no prior SELECT = no race condition)
   // This replaces the old read-modify-write loop that could double-deduct if a DB trigger also ran.
   const oversold: string[] = []
-  const trackedLineItems = lineItems.filter(i => i.inventory_id)
+  const trackedLineItems = lineItems.filter((i: any) => i.inventory_id)
 
   for (const item of trackedLineItems) {
     // Atomic decrement via RPC (if available)

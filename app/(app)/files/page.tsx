@@ -55,7 +55,7 @@ export default function FilesPage() {
     setUploads(u => u.filter(f => f.id !== id))
   }
 
-  const useInChat = filename => {
+  const useInChat = (filename: any) => {
     sessionStorage.setItem('signalx-active-file', filename)
     router.push('/chat')
   }

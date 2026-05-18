@@ -13,7 +13,7 @@ const API = process.env.NEXT_PUBLIC_API_URL || ''
 interface StaffSession { id: string; name: string; role: string; owner_id: string; currency_symbol?: string; location_id?: string }
 interface InventoryItem {
   id: string; name: string; sale_price: number; stock_qty: number
-  low_stock_threshold: number; last_sold_at: string | null
+  low_stock_threshold: number; last_sold_at: string | null; unit?: string
 }
 
 export default function InventoryPage() {
@@ -24,7 +24,9 @@ export default function InventoryPage() {
   const [loading, setLoading]     = useState(true)
   const [restocking, setRestocking] = useState<string | null>(null)
   const [restockQty, setRestockQty] = useState('')
+  const [updateMode, setUpdateMode] = useState<'add' | 'set'>('add')
   const [filter, setFilter]       = useState<'all' | 'low' | 'out'>('all')
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Camera
   const [recognizedProducts, setRecognizedProducts] = useState<any[]>([])
@@ -47,6 +49,12 @@ export default function InventoryPage() {
     setStaff(s)
     setSym(s.currency_symbol || '£')
     loadInventory(s)
+    // Fetch fresh currency from owner profile
+    fetch(`${API}/api/pos/config`, {
+      headers: { 'x-owner-id': s.owner_id, 'x-staff-id': s.id },
+    }).then(r => r.json()).then(cfg => {
+      if (cfg.currency_symbol) setSym(cfg.currency_symbol)
+    }).catch(() => {})
   }, [])
 
   const posHeaders = (s: StaffSession) => ({
@@ -126,14 +134,16 @@ export default function InventoryPage() {
 
   const handleRestock = async (item: InventoryItem) => {
     if (!restockQty || !staff) return
-    const qty = parseInt(restockQty)
-    if (isNaN(qty) || qty <= 0) return
+    const qty = parseFloat(restockQty)
+    if (isNaN(qty) || qty < 0) return
+
+    const newQty = updateMode === 'add' ? item.stock_qty + qty : qty
     await fetch(`${API}/api/pos/inventory`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', ...posHeaders(staff) },
-      body: JSON.stringify({ id: item.id, restock_qty: qty }),
+      body: JSON.stringify({ id: item.id, stock_qty: newQty }),
     })
-    setItems(prev => prev.map(i => i.id === item.id ? { ...i, stock_qty: i.stock_qty + qty } : i))
+    setItems(prev => prev.map(i => i.id === item.id ? { ...i, stock_qty: newQty } : i))
     setRestocking(null); setRestockQty('')
   }
 
@@ -141,7 +151,9 @@ export default function InventoryPage() {
     if (filter === 'out') return i.stock_qty === 0
     if (filter === 'low') return i.stock_qty > 0 && i.stock_qty <= i.low_stock_threshold
     return true
-  })
+  }).filter(i =>
+    !searchQuery.trim() || i.name.toLowerCase().includes(searchQuery.trim().toLowerCase())
+  )
 
   const outCount  = items.filter(i => i.stock_qty === 0).length
   const lowCount  = items.filter(i => i.stock_qty > 0 && i.stock_qty <= i.low_stock_threshold).length
@@ -166,6 +178,7 @@ export default function InventoryPage() {
           <button onClick={handleOpenCamera} disabled={recognizing} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e5e2dc', background: 'transparent', fontSize: 12, cursor: 'pointer', color: '#6b6760', opacity: recognizing ? 0.5 : 1 }}>
             {recognizing ? 'Scanning...' : '📷 Scan'}
           </button>
+
           <button onClick={() => { localStorage.removeItem('pos_staff'); router.push('/') }}
             style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e5e2dc', background: 'transparent', fontSize: 12, cursor: 'pointer', color: '#6b6760' }}>
             Sign out
@@ -202,10 +215,10 @@ export default function InventoryPage() {
           <div style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 500, width: '100%', maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
             <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1a1916', marginBottom: 20, marginTop: 0 }}>Edit product details</h3>
 
-            {/* Product name (read-only) */}
+            {/* Product name (editable) */}
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b6760', marginBottom: 6 }}>Product name</label>
-              <input type="text" value={editingRecognizedData.name || ''} disabled style={{ ...inputStyle, background: '#f0f0f0', opacity: 0.6, width: '100%' }} />
+              <input type="text" value={editingRecognizedData.name || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, name: e.target.value })} style={{ ...inputStyle, width: '100%' }} placeholder="Enter product name" />
             </div>
 
             {/* SKU / Barcode */}
@@ -229,8 +242,15 @@ export default function InventoryPage() {
 
             {/* Quantity */}
             <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b6760', marginBottom: 6 }}>Starting stock quantity</label>
-              <input type="number" value={editingRecognizedData.stock_qty || 1} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, stock_qty: e.target.value })} style={{ ...inputStyle, width: '100%' }} min="1" />
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b6760', marginBottom: 6 }}>
+                Starting stock quantity {editingRecognizedData.unit === 'kg' ? '(kg)' : ''}
+              </label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input type="number" value={editingRecognizedData.stock_qty || 1} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, stock_qty: e.target.value })} style={{ ...inputStyle, flex: 1 }} min="0" step={editingRecognizedData.unit === 'kg' ? '0.1' : '1'} />
+                {editingRecognizedData.unit === 'kg' && (
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#d08a59', background: 'rgba(208,138,89,.1)', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(208,138,89,.2)', whiteSpace: 'nowrap' }}>kg</span>
+                )}
+              </div>
             </div>
 
             {/* Margin preview */}
@@ -254,7 +274,8 @@ export default function InventoryPage() {
                       name: editingRecognizedData.name,
                       sale_price: parseFloat(editingRecognizedData.sale_price),
                       cost_price: parseFloat(editingRecognizedData.cost_price || '0'),
-                      stock_qty: parseInt(editingRecognizedData.stock_qty || '1'),
+                      stock_qty: parseFloat(editingRecognizedData.stock_qty || '1'),
+                      unit: editingRecognizedData.unit || 'item',
                       low_stock_threshold: 5
                     })
                   })
@@ -287,10 +308,26 @@ export default function InventoryPage() {
         </div>
       )}
 
+      {/* Search bar */}
+      <div style={{ padding: '8px 20px 4px' }}>
+        <div style={{ position: 'relative' }}>
+          <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1916" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search products..."
+            style={{ width: '100%', padding: '10px 12px 10px 36px', borderRadius: 10, border: '1.5px solid #e5e2dc', fontSize: 14, fontFamily: 'inherit', background: '#fff', color: '#1a1916', boxSizing: 'border-box' }}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#a39e97', padding: 2 }}>×</button>
+          )}
+        </div>
+      </div>
+
       {/* Filter tabs */}
       <div style={{ display: 'flex', gap: 8, padding: '12px 20px' }}>
         {([['all', `All (${items.length})`], ['low', `Low (${lowCount})`], ['out', `Out (${outCount})`]] as [typeof filter, string][]).map(([f, label]) => (
-          <button key={f} onClick={() => setFilter(f)} style={{ padding: '7px 14px', borderRadius: 9999, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none', background: filter === f ? ACC : '#fff', color: filter === f ? '#fff' : '#6b6760', border: filter === f ? 'none' : '1px solid #e5e2dc' } as React.CSSProperties}>
+          <button key={f} onClick={() => setFilter(f)} style={{ padding: '7px 14px', borderRadius: 9999, fontSize: 12, fontWeight: 600, cursor: 'pointer', background: filter === f ? ACC : '#fff', color: filter === f ? '#fff' : '#6b6760', border: filter === f ? 'none' : '1px solid #e5e2dc' } as React.CSSProperties}>
             {label}
           </button>
         ))}
@@ -315,30 +352,53 @@ export default function InventoryPage() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 15, fontWeight: 600, color: '#1a1916', marginBottom: 2 }}>{item.name}</div>
-                    <div style={{ fontSize: 12, color: '#6b6760' }}>{sym}{item.sale_price.toFixed(2)} · {item.stock_qty} in stock</div>
+                    <div style={{ fontSize: 12, color: '#6b6760' }}>{sym}{item.sale_price.toFixed(2)} · {item.stock_qty}{item.unit === 'kg' ? ' kg' : ''} in stock</div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: status.color, background: status.bg, padding: '3px 9px', borderRadius: 9999 }}>{status.label}</span>
-                    <button onClick={() => { setRestocking(restocking === item.id ? null : item.id); setRestockQty('') }}
+                    <button onClick={() => { setRestocking(restocking === item.id ? null : item.id); setRestockQty(''); setUpdateMode('add') }}
                       style={{ padding: '7px 12px', borderRadius: 9, background: `rgba(208,138,89,.1)`, border: `1px solid rgba(208,138,89,.2)`, color: ACC, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                      Restock
+                      Update stock
                     </button>
                   </div>
                 </div>
 
                 {restocking === item.id && (
-                  <div style={{ padding: '0 16px 14px', display: 'flex', gap: 10 }}>
-                    <input
-                      type="number"
-                      placeholder="Qty to add"
-                      value={restockQty}
-                      onChange={e => setRestockQty(e.target.value)}
-                      style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1.5px solid #e5e2dc', fontSize: 15, fontFamily: 'inherit', background: '#f9f8f6', color: '#1a1916' }}
-                      autoFocus
-                    />
-                    <button onClick={() => handleRestock(item)} style={{ padding: '10px 20px', borderRadius: 10, background: ACC, color: '#fff', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-                      Add
-                    </button>
+                  <div style={{ padding: '0 16px 14px' }}>
+                    {/* Add / Set toggle */}
+                    <div style={{ display: 'flex', borderRadius: 9, overflow: 'hidden', border: '1.5px solid #e5e2dc', marginBottom: 10, background: '#f9f8f6' }}>
+                      {(['add', 'set'] as const).map(mode => (
+                        <button key={mode} onClick={() => { setUpdateMode(mode); setRestockQty('') }}
+                          style={{ flex: 1, padding: '8px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', background: updateMode === mode ? ACC : 'transparent', color: updateMode === mode ? '#fff' : '#6b6760', transition: 'all 0.15s' }}>
+                          {mode === 'add' ? '＋ Add stock' : '✎ Set total'}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#a39e97', marginBottom: 8 }}>
+                      {updateMode === 'add'
+                        ? `Current: ${item.stock_qty}${item.unit === 'kg' ? ' kg' : ''} → will become ${(item.stock_qty + (parseFloat(restockQty) || 0)).toFixed(item.unit === 'kg' ? 2 : 0)}${item.unit === 'kg' ? ' kg' : ''}`
+                        : `Will override current stock (${item.stock_qty}${item.unit === 'kg' ? ' kg' : ''}) with new value`}
+                    </div>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <div style={{ flex: 1, position: 'relative' }}>
+                        <input
+                          type="number"
+                          placeholder={updateMode === 'add' ? `Qty to add${item.unit === 'kg' ? ' (kg)' : ''}` : `Set stock to${item.unit === 'kg' ? ' (kg)' : ''}`}
+                          value={restockQty}
+                          onChange={e => setRestockQty(e.target.value)}
+                          step={item.unit === 'kg' ? '0.1' : '1'}
+                          min="0"
+                          style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #e5e2dc', fontSize: 15, fontFamily: 'inherit', background: '#f9f8f6', color: '#1a1916', boxSizing: 'border-box' }}
+                          autoFocus
+                        />
+                        {item.unit === 'kg' && (
+                          <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 12, fontWeight: 700, color: '#d08a59' }}>kg</span>
+                        )}
+                      </div>
+                      <button onClick={() => handleRestock(item)} style={{ padding: '10px 20px', borderRadius: 10, background: ACC, color: '#fff', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                        {updateMode === 'add' ? 'Add' : 'Set'}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

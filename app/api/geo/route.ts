@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       DE: 'Germany', FR: 'France', IT: 'Italy', ES: 'Spain', NL: 'Netherlands',
       BR: 'Brazil', MX: 'Mexico', PK: 'Pakistan', BD: 'Bangladesh',
       EG: 'Egypt', MA: 'Morocco', CI: "Côte d'Ivoire", CM: 'Cameroon',
-      SN: 'Senegal', MX: 'Mexico', JP: 'Japan', KR: 'South Korea', CN: 'China',
+      SN: 'Senegal', JP: 'Japan', KR: 'South Korea', CN: 'China',
     }
     if (!country) country = COUNTRY_NAMES[countryCode] || countryCode
 

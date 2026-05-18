@@ -282,9 +282,8 @@ async function sha256(message: string): Promise<string> {
 }
 
 async function hmacSHA256(message: string, key: string | CryptoKey): Promise<string> {
-  const keyData = typeof key === 'string' ? new TextEncoder().encode(key) : key
   const cryptoKey = typeof key === 'string'
-    ? await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+    ? await crypto.subtle.importKey('raw', new TextEncoder().encode(key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
     : key
   const sig = await crypto.subtle.sign('HMAC', cryptoKey, new TextEncoder().encode(message))
   return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('')

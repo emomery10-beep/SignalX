@@ -101,14 +101,14 @@ export async function GET(req: NextRequest) {
   }
 
   // ── 4. Log the search (non-blocking) ─────────────────────────
-  service.from('market_intelligence_searches').insert({
+  Promise.resolve(service.from('market_intelligence_searches').insert({
     user_id:       user.id,
     query,
     product_name:  query,
     region:        region || null,
     results_count: catalogue?.length || 0,
     tavily_fired:  needsTavily,
-  }).then(() => {}).catch(() => {})
+  })).catch(() => {})
 
   return NextResponse.json({
     query,

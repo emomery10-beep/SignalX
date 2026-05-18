@@ -9,6 +9,7 @@ export async function OPTIONS() {
 }
 
 export async function GET(req: NextRequest) {
+  const staffId = req.headers.get('x-staff-id')
   const ownerId = await resolvePosOwner(req)
   if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
@@ -21,8 +22,21 @@ export async function GET(req: NextRequest) {
 
   if (error) console.error('Config profile fetch error:', error)
 
+  // For staff sessions, return their assigned sector so the POS locks to it
+  let staffSector: string | null = null
+  if (staffId) {
+    const { data: staffRow } = await supabase
+      .from('pos_staff')
+      .select('sector')
+      .eq('id', staffId)
+      .eq('owner_id', ownerId)
+      .single()
+    staffSector = staffRow?.sector || null
+  }
+
   return NextResponse.json({
     currency_symbol: profile?.currency_symbol || null,
     business_type:   profile?.business_type   || 'retail',
+    staff_sector:    staffSector,
   })
 }

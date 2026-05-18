@@ -761,6 +761,12 @@ export const HELP_TOPICS: HelpTopic[] = [
       "pos-repair-service-presets",
       "pos-repair-customer-notifications",
       "pos-repair-reports-analytics",
+      "pos-multi-sector-overview",
+      "pos-sector-staff-assignment",
+      "pos-branch-sector-filters",
+      "pos-restaurant-getting-started",
+      "pos-restaurant-daily-brief",
+      "pos-restaurant-orders",
     ],
   },
 ];
@@ -13923,6 +13929,238 @@ export const HELP_ARTICLES: HelpArticle[] = [
     related: ["pos-dashboards-and-reports", "pos-ai-chat-guide", "pos-exporting-data"],
     keywords: ["repair analytics", "repair revenue", "margin calculation", "repair dashboard", "AI chat repairs", "repair reports"],
     lastUpdated: "2026-05-16",
+  },
+  {
+    slug: "pos-multi-sector-overview",
+    title: "Running Multiple Sectors from One POS Account",
+    description: "How to manage Restaurant, Retail, Repair, and Salon from a single AskBiz account — with separated intelligence, staff permissions, and a unified owner view.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 6,
+    content: [
+      {
+        heading: "What sectors are supported",
+        body: "AskBiz POS supports four sectors from a single account: **Retail** (standard product sales), **Repair / Service** (job-based workflow with intake, parts, and collection), **Restaurant** (table orders, covers, kitchen workflow, daily brief), and **Salon** (chair-based services, stylist assignment). You do not need separate accounts or subscriptions — one owner account covers all sectors you operate.",
+      },
+      {
+        heading: "The sector picker in admin",
+        body: "In your admin dashboard at askbiz.co/pos, the **Services** tab contains a sector picker. Tap the sector pill that matches the type of work you want to manage. Restaurant tiles link through to pos.askbiz.co/restaurant. Repair tiles open the repair workflow. The Retail sector shows your product inventory, sales, and stock management. Switching sectors does not log you out or lose any data.",
+      },
+      {
+        heading: "How staff see their sector",
+        body: "Staff log in at pos.askbiz.co using their phone (WhatsApp OTP) or email. They only see the sector they have been assigned to by the admin. A cashier assigned to Retail sees the retail till. A repair engineer sees their job queue. A restaurant server sees the order flow. They cannot cross into other sectors. This keeps each role focused and prevents accidental cross-sector data entry.",
+      },
+      {
+        heading: "Intelligence stays separated",
+        body: "Revenue, transaction counts, staff performance, and anomaly detection all stay separated by sector. The Overview tab's Branch and Sector filter lets you drill into exactly the data you need. If you run a café (Restaurant) and a merchandise counter (Retail) at the same premises, you can view each separately or combined. This separation also means your restaurant daily brief only analyses restaurant transactions — it does not blend in retail sales.",
+      },
+      {
+        heading: "Adding a new sector",
+        body: "To start using a new sector, navigate to the Services tab and select the relevant sector pill. If you are setting up Restaurant for the first time, you will be prompted to configure your menu and service areas. Staff you assign to that sector will then be able to log in and start processing through that workflow. You do not need to contact support or change your subscription tier to unlock additional sectors.",
+      },
+    ],
+    faq: [
+      { q: "Do I pay more for multiple sectors?", a: "No. Sectors are not priced separately. You pay per staff seat, not per sector. One account covers all sectors you operate." },
+      { q: "Can the same staff member work across two sectors?", a: "Each staff member is assigned to one sector, with a maximum of two sector changes (to prevent account-sharing). If a staff member genuinely needs to switch sectors long-term, you can edit their assignment in the Staff tab. Further changes beyond the limit require purchasing a new seat." },
+      { q: "Can I see combined revenue across all sectors?", a: "Yes. Set the Sector filter to 'All Sectors' on the Overview tab to see total revenue across every sector and branch in one view." },
+    ],
+    related: ["pos-sector-staff-assignment", "pos-branch-sector-filters", "pos-restaurant-getting-started", "pos-repair-getting-started"],
+    keywords: ["multi-sector", "restaurant", "retail", "repair", "salon", "sector picker", "one account", "staff permissions"],
+    lastUpdated: "2026-05-17",
+  },
+  {
+    slug: "pos-sector-staff-assignment",
+    title: "Assigning Staff to Sectors",
+    description: "How to assign each staff member to their sector so they only see what is relevant to them when they log in at pos.askbiz.co.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 4,
+    content: [
+      {
+        heading: "Why sector assignment matters",
+        body: "When a staff member logs in at pos.askbiz.co, they see only the sector they are assigned to. This means a restaurant server is not distracted by repair jobs, and a retail cashier cannot accidentally enter data into the restaurant workflow. It also creates a clean audit trail — every transaction is attributed to a sector from the moment it is created.",
+      },
+      {
+        heading: "Assigning a sector when adding staff",
+        body: "When you add a new staff member in the Staff tab at askbiz.co/pos, the Add Staff form includes a Sector dropdown. Select the sector they will work in: Restaurant, Repair, Salon, or Retail. If you do not select one, the member defaults to Retail. This sector is stored with their profile and applies every time they log in.",
+      },
+      {
+        heading: "Changing an existing staff member's sector",
+        body: "Open the Staff tab, find the member, and tap Edit. The Sector dropdown shows the current assignment and how many changes remain. Each staff member can have their sector changed a maximum of **two times**. This limit prevents sector changes being used to share a single seat across different workers. The counter shows '2 changes remaining', '1 change remaining', or 'Locked' when the limit is reached.",
+      },
+      {
+        heading: "What happens when the limit is reached",
+        body: "Once a staff member has used both sector changes, the dropdown is locked and a message explains that further reassignment requires purchasing a new seat. This is intentional — a new seat represents a new worker, and the limit protects the integrity of per-seat pricing. To reassign, go to Billing and add a seat, then create a fresh staff profile for that worker.",
+      },
+      {
+        heading: "The sector badge on the staff list",
+        body: "Each staff member in the list displays a colour-coded sector badge: orange for Restaurant, purple for Repair, pink for Salon, and green for Retail. This lets you see at a glance how your team is distributed across sectors and spot any misassignments before they cause problems.",
+      },
+    ],
+    faq: [
+      { q: "What if I assigned the wrong sector when adding the staff member?", a: "You have two changes available per staff member. Edit their profile, correct the sector, and that uses one change. The second change is there in case of a genuine business shift later." },
+      { q: "Can a staff member see their sector assignment?", a: "Staff see only the interface for their assigned sector when they log in. They are not shown a label for their sector — they simply see the relevant workflow." },
+      { q: "Does sector assignment affect the staff member's login?", a: "No. They log in the same way regardless of sector. Their sector determines what they see after login, not how they authenticate." },
+    ],
+    related: ["pos-multi-sector-overview", "pos-adding-staff", "pos-branch-sector-filters"],
+    keywords: ["sector assignment", "staff sector", "sector limit", "sector change", "restaurant staff", "repair engineer", "retail cashier"],
+    lastUpdated: "2026-05-17",
+  },
+  {
+    slug: "pos-branch-sector-filters",
+    title: "Filtering by Branch and Sector Across Your Dashboard",
+    description: "How the Branch and Sector filter dropdowns work — and how they affect every tab of your POS dashboard, from Overview through to Audit.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 5,
+    content: [
+      {
+        heading: "Where the filters appear",
+        body: "The Branch and Sector dropdowns appear at the top of your POS dashboard, directly above the date range selector. They are always visible regardless of which tab is active. This means you set your filter once and it applies consistently as you move between Overview, Operations, Staff, Branches, Map, and Audit — you do not need to re-select your filter on each tab.",
+      },
+      {
+        heading: "Branch filter",
+        body: "The Branch dropdown lists every location (branch) you have added under your account. Select a specific branch to see only transactions, staff, and inventory for that location. Select **All Branches** to see your consolidated view across the entire business. If you have not set up branches yet, the dropdown shows only 'All Branches' and the filter has no visible effect.",
+      },
+      {
+        heading: "Sector filter",
+        body: "The Sector dropdown lets you isolate one sector at a time: Restaurant, Repair, Salon, or Retail. When you select a sector, all dashboard data — revenue figures, transaction lists, staff performance, geo-tagged map pins, and audit entries — is filtered to show only that sector's activity. Select **All Sectors** to return to the combined view.",
+      },
+      {
+        heading: "How sector filtering works technically",
+        body: "Sector attribution works through your staff assignments. Each transaction is recorded by a staff member who is assigned to a sector. When you filter by Retail, you see transactions processed by retail-assigned staff. This means the filter is only as accurate as your sector assignments — if a cashier has no sector assigned, their transactions default to Retail.",
+      },
+      {
+        heading: "Using both filters together",
+        body: "You can combine Branch and Sector filters. For example: Branch 2, Retail — shows only retail transactions processed at Branch 2. This lets you answer specific questions like 'How did our Manchester branch repair revenue compare to Birmingham last week?' without manually segmenting data in a spreadsheet.",
+      },
+      {
+        heading: "Filter persistence across tabs",
+        body: "Your filter selection persists as you switch between tabs within a session. If you set Sector to Restaurant and navigate from Overview to Staff and then to Audit, you will see restaurant-filtered data on all three. The filter resets to All Branches / All Sectors when you refresh the page.",
+      },
+    ],
+    faq: [
+      { q: "Why does the Staff tab show fewer staff when I select a sector?", a: "The Staff tab filters the list to show only staff assigned to the selected sector. This is correct — it helps you see your team for that specific area of the business. Set Sector to All Sectors to see your full team." },
+      { q: "Does the branch filter affect inventory?", a: "Yes. Inventory views respect the branch filter and show only stock assigned to the selected location." },
+      { q: "Can I save a filter preset?", a: "Filter presets are not available yet. Your selection persists within a session but resets on page reload." },
+    ],
+    related: ["pos-multi-sector-overview", "pos-multi-location", "pos-sector-staff-assignment", "pos-branch-staff-assignment"],
+    keywords: ["branch filter", "sector filter", "dashboard filter", "multi-location", "multi-sector", "filter dropdown", "overview"],
+    lastUpdated: "2026-05-17",
+  },
+  {
+    slug: "pos-restaurant-getting-started",
+    title: "Getting Started with AskBiz Restaurant POS",
+    description: "How to activate the Restaurant sector, set up your menu, assign staff, and start processing orders at pos.askbiz.co/restaurant.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 6,
+    content: [
+      {
+        heading: "Activating the Restaurant sector",
+        body: "The Restaurant sector is available to all AskBiz POS accounts. In your admin dashboard at askbiz.co/pos, go to the **Services** tab and select the Restaurant pill. This opens the restaurant hub, which links through to pos.askbiz.co/restaurant — the dedicated interface for front-of-house and kitchen staff.",
+      },
+      {
+        heading: "Assigning staff to Restaurant",
+        body: "In the Staff tab, edit each staff member who will work in the restaurant and set their Sector to Restaurant. When they log in at pos.askbiz.co, they will be directed to the restaurant interface automatically. Staff assigned to other sectors (Retail, Repair) will not see the restaurant workflow.",
+      },
+      {
+        heading: "Setting up your menu",
+        body: "Your restaurant menu lives in the Inventory section, filtered to the Restaurant sector. Add menu items with name, price, and category (e.g. Starter, Main, Dessert, Drinks). Categories appear as tabs on the order screen so staff can find items quickly. You can also flag items as 86'd (out of stock) from the dashboard without removing them from the menu permanently.",
+      },
+      {
+        heading: "Processing orders",
+        body: "Staff access orders at pos.askbiz.co/restaurant/orders. They select items, add quantities, and submit the order. Orders flow into the kitchen display (or print to a receipt printer if connected). When the table is ready to pay, the cashier opens the order, applies any discounts, and processes payment. Each completed order creates a transaction that feeds your revenue dashboard.",
+      },
+      {
+        heading: "Understanding the restaurant dashboard",
+        body: "The restaurant hub at pos.askbiz.co/restaurant shows today's revenue, covers (number of guests served), average ticket value, and top-selling dishes. The daily brief card appears each morning with an AI-generated summary of yesterday's performance and a recommendation for today. Anomaly chips alert you to unusual patterns — unexpected revenue drops, unusually high waste, or staffing cost spikes.",
+      },
+    ],
+    faq: [
+      { q: "Do I need a separate subscription for the restaurant module?", a: "No. Restaurant is included in your standard AskBiz POS account. You pay per staff seat, not per module." },
+      { q: "Can I run restaurant and retail simultaneously?", a: "Yes. Staff are assigned to their sector. Your restaurant team processes food orders at pos.askbiz.co/restaurant while your retail staff use the main POS interface. Revenue from both appears in your admin dashboard." },
+      { q: "Is there a kitchen display screen?", a: "Order data is available at pos.askbiz.co/restaurant/orders, which can be loaded on any screen or tablet placed in the kitchen. A dedicated kitchen display mode is planned for a future release." },
+    ],
+    related: ["pos-multi-sector-overview", "pos-restaurant-daily-brief", "pos-restaurant-orders", "pos-adding-staff"],
+    keywords: ["restaurant POS", "restaurant setup", "menu setup", "restaurant staff", "orders", "covers", "pos.askbiz.co/restaurant"],
+    lastUpdated: "2026-05-17",
+  },
+  {
+    slug: "pos-restaurant-daily-brief",
+    title: "The Restaurant Daily Brief",
+    description: "How AskBiz generates an AI-powered morning intelligence summary for your restaurant — and what to do with it.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 5,
+    content: [
+      {
+        heading: "What the daily brief is",
+        body: "The Daily Brief is an AI-generated summary that appears on your restaurant hub each morning. It analyses yesterday's trading data and produces a plain-English report covering revenue vs target, covers served, average ticket, best-selling dishes, waste costs, and a single recommended action for today. It is generated automatically — you do not need to request it.",
+      },
+      {
+        heading: "When it generates",
+        body: "The brief generates automatically at 23:30 each night, based on the full day's trading data. When you open the restaurant hub the following morning, the brief is ready. If you open the hub before 23:30, you will see the previous day's brief. You can also force a regeneration at any time using the refresh button on the brief card.",
+      },
+      {
+        heading: "What the brief contains",
+        body: "The brief includes a health score (0–100) based on performance against your targets, a three-column summary grid (Revenue, Covers, Avg Ticket), an AI-written paragraph identifying what drove performance and what to watch, and a single recommended action. The health score ring colour changes with performance — green for strong days, amber for average, red for days that need attention.",
+      },
+      {
+        heading: "Anomaly chips",
+        body: "Alongside the brief, anomaly chips flag unusual patterns detected in yesterday's data. These might be a dish that sold unusually poorly, a waste cost spike, an unexpected revenue drop in a specific service period, or a staffing cost that looks high relative to covers. Each chip is colour-coded by severity (critical, warning, info) and can be dismissed once actioned.",
+      },
+      {
+        heading: "How to use it",
+        body: "Read the brief before morning briefing with your team. The recommended action gives you one concrete thing to focus on — whether that is adjusting a price, 86-ing a slow dish, or reviewing a staff rota. The brief does not replace your judgement — it gives you the data to inform it faster. Over time, acting on brief recommendations moves your health score upward.",
+      },
+    ],
+    faq: [
+      { q: "What if I do not have enough data for a meaningful brief?", a: "The brief uses whatever data is available. In the first few days of use, the AI will note that the baseline is still being established. Recommendations become more specific as your transaction history grows." },
+      { q: "Can I share the brief with my manager or head chef?", a: "The brief is currently visible only within the restaurant hub. Shareable exports and email delivery are planned for a future release." },
+      { q: "What AI model powers the brief?", a: "The brief is generated by Claude (Anthropic). The prompt is built from your actual transaction data — the AI has no access to information beyond what is in your AskBiz account." },
+    ],
+    related: ["pos-restaurant-getting-started", "pos-restaurant-orders", "pos-dashboards-and-reports"],
+    keywords: ["restaurant daily brief", "AI morning report", "health score", "anomaly detection", "covers", "average ticket", "restaurant intelligence"],
+    lastUpdated: "2026-05-17",
+  },
+  {
+    slug: "pos-restaurant-orders",
+    title: "Managing Restaurant Orders",
+    description: "How to create, manage, and close orders in the AskBiz restaurant interface — from table to payment.",
+    topic: "Point of Sale (POS)",
+    topicSlug: "point-of-sale",
+    readTime: 5,
+    content: [
+      {
+        heading: "Opening the orders screen",
+        body: "Restaurant staff access orders at pos.askbiz.co/restaurant/orders. The screen shows all open orders for the current service period, with each order displaying the table reference, number of covers, and current total. New orders can be started with the + New Order button.",
+      },
+      {
+        heading: "Creating a new order",
+        body: "Tap + New Order and enter a table number or identifier. Select menu items by category — items are grouped by the categories you set in your menu (Starters, Mains, Desserts, Drinks). Tap an item to add it; tap again to increase the quantity. Add a note to any item for kitchen instructions (e.g. 'no onions', 'medium rare'). Submit the order to send it to the kitchen.",
+      },
+      {
+        heading: "Modifying an open order",
+        body: "Open orders can be modified until payment is processed. Tap the order to open it, then add or remove items. Each modification is logged with a timestamp so there is a full audit trail of what was added or removed and when. If an item needs to be comped (given without charge), set the price to zero or apply a discount before submitting.",
+      },
+      {
+        heading: "Processing payment",
+        body: "When a table is ready to pay, open their order and tap Checkout. The checkout screen shows the full itemised bill, any discounts applied, and the total. Select the payment method (cash, card, split). Processing payment marks the order as completed and creates a transaction record in your POS database. The order disappears from the active list and the table becomes available.",
+      },
+      {
+        heading: "Refunds and voids",
+        body: "If an order needs to be voided after submission (wrong table, duplicate entry), open the order and tap Void. Voids are recorded in your audit trail with a reason. If payment has already been processed and a refund is needed, use the standard POS refund workflow from the admin dashboard. All refunds appear in your Operations tab with full detail.",
+      },
+    ],
+    faq: [
+      { q: "Can two staff members add to the same order at the same time?", a: "Orders are currently single-edit — only one device should be modifying an order at a time. Simultaneous edits from different devices may result in the last submission overwriting earlier changes." },
+      { q: "Is there a way to split a bill between customers?", a: "Split payment by method (part cash, part card) is supported. Splitting a bill by item or by equal shares between guests is planned for a future update." },
+      { q: "How do I see orders from earlier today?", a: "Completed orders are visible in the Operations tab of the admin dashboard at askbiz.co/pos, filtered to the Restaurant sector. You can also export them from the Reports section." },
+    ],
+    related: ["pos-restaurant-getting-started", "pos-restaurant-daily-brief", "pos-processing-refunds", "pos-amending-transactions"],
+    keywords: ["restaurant orders", "table management", "order processing", "kitchen orders", "bill", "payment", "covers"],
+    lastUpdated: "2026-05-17",
   },
 ];
 

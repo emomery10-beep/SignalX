@@ -134,7 +134,8 @@ export async function checkNewsSignals(
   const query = `${sectorHints || businessType} business news ${region} tariff regulation supply chain disruption 2025`
 
   try {
-    const results = await tavilySearch(query, { maxResults: 5, days: 3, topic: 'news' })
+    const response = await tavilySearch(query, { maxResults: 5, days: 3, topic: 'news' })
+    const results = response?.results
     if (!results?.length) return alerts
 
     // Pick the most relevant result

@@ -88,7 +88,7 @@ function parseCustomersFromData(
     if (!ref) continue
 
     const date = String(row[dateCol] || '').trim()
-    const revenue = parseFloat(String(row[revenueCol] || '0').replace(/[^0-9.-]/g, '')) || 0
+    const revenue = parseFloat(String(row[revenueCol ?? ''] || '0').replace(/[^0-9.-]/g, '')) || 0
     const name = nameCol ? String(row[nameCol] || '').trim() || null : null
     const count = countCol ? parseInt(String(row[countCol] || '1')) || 1 : 1
 

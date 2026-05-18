@@ -1,5 +1,8 @@
 {
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "crons": [
+    { "path": "/api/cron/restaurant-brief", "schedule": "30 23 * * *" }
+  ]
 }

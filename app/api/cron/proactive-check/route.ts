@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
         .eq('user_id', userId)
         .gte('created_at', new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString())
 
-      const recentTitles = new Set((recentNotes || []).map(n => n.title))
+      const recentTitles = new Set((recentNotes || []).map((n: any) => n.title))
       const freshAlerts  = allAlerts.filter(a => !recentTitles.has(a.title))
 
       if (!freshAlerts.length) {

@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
         payment_method: paymentMethodId,
       })
 
-      return handlePaymentResult(service, ownerId, transaction_id, confirmedIntent, paymentMethod)
+      return handlePaymentResult(service, ownerId, transaction_id, confirmedIntent, payment_method)
     }
 
     // Return payment intent client secret for frontend to confirm

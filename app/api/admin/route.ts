@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
       .eq('period', monthYear)
 
     const usageMap: Record<string, number> = {}
-    usage?.forEach(u => { usageMap[u.user_id] = u.questions })
+    usage?.forEach((u: any) => { usageMap[u.user_id] = u.questions })
 
     // Get subscriptions
     const { data: subs } = await supabase
@@ -70,12 +70,12 @@ export async function GET(request: NextRequest) {
       .select('user_id, plan_id, status')
 
     const subsMap: Record<string, string> = {}
-    subs?.forEach(s => { subsMap[s.user_id] = s.plan_id })
+    subs?.forEach((s: any) => { subsMap[s.user_id] = s.plan_id })
 
     // Build user rows — fallback to auth users if profiles table is empty/errored
     let users: any[]
     if (profiles && profiles.length > 0) {
-      users = profiles.map(p => ({
+      users = profiles.map((p: any) => ({
         id: p.id,
         email: emailMap[p.id] || '',
         full_name: p.full_name,

@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
           preferred_contact_method: preferences.preferred_contact_method,
         }
       : null,
-    transaction_history: transactions.map(tx => ({
+    transaction_history: transactions.map((tx: any) => ({
       id: tx.id,
       created_at: tx.created_at,
       subtotal: tx.subtotal,
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
       status: tx.status,
       notes: tx.notes,
     })),
-    consent_history: consents.map(c => ({
+    consent_history: consents.map((c: any) => ({
       id: c.id,
       consent_type: c.consent_type,
       status: c.status,
@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
     data_summary: {
       total_transactions: transactions.length,
       total_spent: customer?.total_spent || 0,
-      total_consents_granted: consents.filter(c => c.status === 'granted').length,
+      total_consents_granted: consents.filter((c: any) => c.status === 'granted').length,
       retention_policy: `${preferences?.data_retention_days || 2555} days (${Math.round((preferences?.data_retention_days || 2555) / 365)} years)`,
     },
   }

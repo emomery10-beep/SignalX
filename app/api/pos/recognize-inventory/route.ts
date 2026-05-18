@@ -46,11 +46,11 @@ export async function POST(req: NextRequest) {
 
     const catalogueText = (inventoryList || [])
       .slice(0, 200) // Limit to 200 products to stay within token limits
-      .map(p => `- ${p.name}${p.stock_qty > 0 ? ` (${p.stock_qty} in stock)` : ' (OUT OF STOCK)'}`)
+      .map((p: any) => `- ${p.name}${p.stock_qty > 0 ? ` (${p.stock_qty} in stock)` : ' (OUT OF STOCK)'}`)
       .join('\n')
 
     const hotListText = (hotList || []).length > 0
-      ? `\n\nFREQUENTLY RECOGNIZED (prioritize these):\n${hotList.map(h => `- ${h.recognized_name}`).join('\n')}`
+      ? `\n\nFREQUENTLY RECOGNIZED (prioritize these):\n${hotList.map((h: any) => `- ${h.recognized_name}`).join('\n')}`
       : ''
 
     const anthropic = new Anthropic()
@@ -117,16 +117,16 @@ Reply with ONLY valid JSON, no other text:
     }
 
     // Try exact match first
-    let match = inventoryList?.find(p => p.name.toLowerCase() === productName.toLowerCase())
+    let match = inventoryList?.find((p: any) => p.name.toLowerCase() === productName.toLowerCase())
 
     // If no exact match, use fuzzy matching (split name into words and score)
     if (!match && inventoryList && inventoryList.length > 0) {
       const words = productName.split(/\s+/).slice(0, 4).map(escapeLike).filter(Boolean)
-      const scored = inventoryList.map(item => {
+      const scored = inventoryList.map((item: any) => {
         const nameLower = item.name.toLowerCase()
         const score = words.filter(w => nameLower.includes(w.toLowerCase())).length
         return { item, score }
-      }).sort((a, b) => b.score - a.score)
+      }).sort((a: any, b: any) => b.score - a.score)
 
       // Require at least 60% of words to match (works for all product name lengths)
       const minMatches = Math.max(1, Math.ceil(words.length * 0.6))
@@ -149,7 +149,7 @@ Reply with ONLY valid JSON, no other text:
           confirmed: true,
           source: 'inventory'
         })
-        .catch(err => console.error('Failed to log recognition:', err))
+        .catch((err: any) => console.error('Failed to log recognition:', err))
 
       return NextResponse.json({
         products: [

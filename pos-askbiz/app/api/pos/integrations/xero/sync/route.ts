@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Transform transactions to Xero invoices
-  const invoices = transactions.map((tx) => {
+  const invoices = transactions.map((tx: any) => {
     const items = tx.pos_items || []
     return {
       Type: 'ACCREC', // Accounts Receivable (invoice)

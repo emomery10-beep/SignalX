@@ -9,6 +9,7 @@ interface CartItem {
   inventory_id?: string
   name: string
   qty: number
+  unit?: string
   unit_price: number
   cost_price: number
   notes?: string
@@ -61,7 +62,7 @@ export default function SellPage() {
   // Add-item mode
   const [addMode, setAddMode]           = useState<AddMode>('camera')
   const [scanning, setScanning]         = useState(false)
-  const [scanResult, setScanResult]     = useState<{ name: string; price: number; inventory_id?: string } | null>(null)
+  const [scanResult, setScanResult]     = useState<{ name: string; price: number; inventory_id?: string; unit?: string } | null>(null)
   const [scanError, setScanError]       = useState('')
   const [searchQuery, setSearchQuery]   = useState('')
   const [searchResults, setSearchResults] = useState<InventoryItem[]>([])
@@ -72,6 +73,11 @@ export default function SellPage() {
   // Cart editing
   const [editNoteIdx, setEditNoteIdx] = useState<number | null>(null)
   const [noteInput, setNoteInput]     = useState('')
+  const [kgInputs, setKgInputs]       = useState<Record<number, string>>({})
+  const [checkoutError, setCheckoutError] = useState('')
+
+  // Geo
+  const [geoCoords, setGeoCoords] = useState<{ lat: number; lng: number } | null>(null)
 
   // Checkout
   const [paymentType, setPaymentType]   = useState<'cash' | 'card' | 'mobile'>('cash')
@@ -106,7 +112,26 @@ export default function SellPage() {
     setSym(s.currency_symbol || '£')
     setBiz(bizLabel(s.business_type || 'retail'))
     loadTodayStats(s)
-    if (s.location_id) checkShift(s)
+    if (s.location_id) checkShift(s)  // sync localStorage check
+    // Fetch fresh owner config to get correct currency symbol
+    fetch(`${API}/api/pos/config`, {
+      headers: { 'x-owner-id': s.owner_id, 'x-staff-id': s.id },
+    }).then(r => r.json()).then(cfg => {
+      if (cfg.currency_symbol) setSym(cfg.currency_symbol)
+      if (cfg.business_type)   setBiz(bizLabel(cfg.business_type))
+    }).catch(() => {})
+
+    // Start capturing location immediately so it's ready by checkout
+    if (navigator.geolocation) {
+      const doGeo = () => navigator.geolocation.getCurrentPosition(
+        pos => setGeoCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {} // silently ignore denial
+      )
+      doGeo()
+      // Refresh every 60 s so coords stay current for long sessions
+      const geoTimer = setInterval(doGeo, 60_000)
+      return () => clearInterval(geoTimer)
+    }
   }, [])
 
   const loadTodayStats = async (s: StaffSession) => {
@@ -125,47 +150,69 @@ export default function SellPage() {
   }
 
   // ── Shift ────────────────────────────────────────────────────
-  const checkShift = async (s: StaffSession) => {
+  const shiftKey = (s: StaffSession) => `pos_shift_${s.owner_id}_${s.id}`
+
+  const checkShift = (s: StaffSession) => {
+    // Read from localStorage — no API call needed, instant and reliable
     try {
-      const res = await fetch(`${API}/api/pos/shift/summary`, {
-        headers: { 'x-owner-id': s.owner_id, 'x-staff-id': s.id },
-      })
-      const data = await res.json()
-      if (data.shift?.id) { setShiftOpen(true); setShiftId(data.shift.id) }
-      else setShiftOpen(false)
-    } catch { setShiftOpen(false) }
+      const stored = localStorage.getItem(shiftKey(s))
+      if (stored) {
+        const shift = JSON.parse(stored)
+        if (shift?.id) { setShiftOpen(true); setShiftId(shift.id); return }
+      }
+    } catch {}
+    setShiftOpen(false)
   }
 
   const handleOpenShift = async () => {
     if (!staff?.location_id) return
     setShiftLoading(true)
-    try {
-      const res = await fetch(`${API}/api/pos/shift/open`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-owner-id': staff.owner_id, 'x-staff-id': staff.id },
-        body: JSON.stringify({
-          cashier_id: staff.id,
-          location_id: staff.location_id,
-          opening_cash_balance: parseFloat(openingCash) || 0,
-        }),
-      })
-      const data = await res.json()
-      if (data.shift_id) { setShiftOpen(true); setShiftId(data.shift_id); setShowShiftModal(false); setOpeningCash('') }
-    } catch {}
+    // Generate a local shift ID and persist immediately — no DB required
+    const newShiftId = `shift_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
+    const shiftRecord = {
+      id:            newShiftId,
+      openedAt:      new Date().toISOString(),
+      openingCash:   parseFloat(openingCash) || 0,
+      locationId:    staff.location_id,
+      cashierId:     staff.id,
+    }
+    localStorage.setItem(shiftKey(staff), JSON.stringify(shiftRecord))
+    setShiftOpen(true); setShiftId(newShiftId); setShowShiftModal(false); setOpeningCash('')
+
+    // Persist to DB — update localStorage shiftId with real DB id on success
+    fetch(`${API}/api/pos/shift/open`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-owner-id': staff.owner_id, 'x-staff-id': staff.id },
+      body: JSON.stringify({ cashier_id: staff.id, location_id: staff.location_id, opening_cash_balance: parseFloat(openingCash) || 0 }),
+    }).then(r => r.json()).then(data => {
+      if (data.shift_id) {
+        // Update stored shift id to the real DB uuid so close works correctly
+        const stored = localStorage.getItem(shiftKey(staff))
+        if (stored) {
+          const rec = JSON.parse(stored)
+          localStorage.setItem(shiftKey(staff), JSON.stringify({ ...rec, id: data.shift_id }))
+          setShiftId(data.shift_id)
+        }
+      }
+    }).catch(() => {})
+
     setShiftLoading(false)
   }
 
   const handleCloseShift = async () => {
-    if (!staff || !shiftId) return
+    if (!staff) return
     setShiftLoading(true)
-    try {
-      await fetch(`${API}/api/pos/shift/close`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-owner-id': staff.owner_id, 'x-staff-id': staff.id },
-        body: JSON.stringify({ shift_id: shiftId, closing_cash_balance: parseFloat(closingCash) || 0 }),
-      })
-      setShiftOpen(false); setShiftId(null); setShowShiftModal(false); setClosingCash('')
-    } catch {}
+    // Remove from localStorage immediately
+    localStorage.removeItem(shiftKey(staff))
+    setShiftOpen(false); setShiftId(null); setShowShiftModal(false); setClosingCash('')
+
+    // Best-effort DB write
+    fetch(`${API}/api/pos/shift/close`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-owner-id': staff.owner_id, 'x-staff-id': staff.id },
+      body: JSON.stringify({ shift_id: shiftId, closing_cash_balance: parseFloat(closingCash) || 0 }),
+    }).catch(() => {})
+
     setShiftLoading(false)
   }
 
@@ -216,7 +263,7 @@ export default function SellPage() {
         body: JSON.stringify({ image: base64 }),
       })
       const data = await res.json()
-      if (data.name) setScanResult({ name: data.name, price: data.price ?? 0, inventory_id: data.inventory_id })
+      if (data.name) setScanResult({ name: data.name, price: data.price ?? 0, inventory_id: data.inventory_id, unit: data.unit })
       else setScanError('Could not identify product. Try search instead.')
     } catch {
       setScanError('Scan failed. Try search instead.')
@@ -268,19 +315,38 @@ export default function SellPage() {
 
   const confirmScan = () => {
     if (!scanResult) return
-    addToCart({ name: scanResult.name, unit_price: scanResult.price, cost_price: 0, inventory_id: scanResult.inventory_id })
+    addToCart({ name: scanResult.name, unit_price: scanResult.price, cost_price: 0, inventory_id: scanResult.inventory_id, unit: scanResult.unit })
     setScanResult(null); setScreen('cart')
   }
 
   const addFromSearch = (item: InventoryItem) => {
-    addToCart({ name: item.name, unit_price: item.sale_price, cost_price: item.cost_price || 0, inventory_id: item.id })
+    addToCart({ name: item.name, unit_price: item.sale_price, cost_price: item.cost_price || 0, inventory_id: item.id, unit: item.unit })
     setScreen('cart')
+  }
+
+  const captureGeo = () => {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      pos => setGeoCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {} // silently ignore if denied
+    )
+  }
+
+  const setItemQty = (idx: number, qty: number) => {
+    setCart(prev => {
+      const next = [...prev]
+      const rounded = Math.round(qty * 100) / 100
+      if (rounded <= 0) return next.filter((_, i) => i !== idx)
+      next[idx] = { ...next[idx], qty: rounded }
+      return next
+    })
   }
 
   // ── Checkout ──────────────────────────────────────────────────
   const handleCheckout = async () => {
     if (!staff || cart.length === 0) return
     setProcessing(true)
+    setCheckoutError('')
     try {
       const res = await fetch(`${API}/api/pos/transactions`, {
         method: 'POST',
@@ -292,7 +358,7 @@ export default function SellPage() {
           customer_phone:  customerPhone || null,
           discount_amount: discountAmt || null,
           amount_tendered: paymentType === 'cash' && tendered ? tendered : null,
-          notes:           tableNumber ? `Table: ${tableNumber}` : undefined,
+          notes:           [tableNumber ? `Table: ${tableNumber}` : '', geoCoords ? `|__geo:${geoCoords.lat.toFixed(6)},${geoCoords.lng.toFixed(6)}` : ''].filter(Boolean).join(' ') || undefined,
         }),
       })
       const data = await res.json()
@@ -303,8 +369,12 @@ export default function SellPage() {
         setTodaySales(s => s + 1)
         setTodayRevenue(r => r + cartTotal)
         setScreen('receipt')
+      } else {
+        setCheckoutError(data.error || 'Payment failed — please try again')
       }
-    } catch {}
+    } catch (err: any) {
+      setCheckoutError('Network error — check your connection and try again')
+    }
     setProcessing(false)
   }
 
@@ -329,6 +399,7 @@ export default function SellPage() {
     setLastTxId(''); setLastTotal(0); setReceiptSent(false)
     setOversold([]); setScanResult(null); setScanError('')
     setSearchQuery(''); setSearchResults([])
+    setKgInputs({}); setCheckoutError(''); setGeoCoords(null)
     setScreen('home')
   }
 
@@ -352,6 +423,10 @@ export default function SellPage() {
               {shiftOpen ? '● Shift open' : '○ Open shift'}
             </button>
           )}
+
+          {/* Location indicator */}
+          <div title={geoCoords ? `Location active · ${geoCoords.lat.toFixed(3)}, ${geoCoords.lng.toFixed(3)}` : 'Location off — allow in browser to geo-tag sales'} style={{ width: 8, height: 8, borderRadius: '50%', background: geoCoords ? '#16a34a' : '#d1d5db', flexShrink: 0 }} />
+
           <button onClick={() => { localStorage.removeItem('pos_staff'); router.push('/') }} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e5e2dc', background: 'transparent', fontSize: 12, cursor: 'pointer', color: '#6b6760' }}>
             Sign out
           </button>
@@ -477,8 +552,16 @@ export default function SellPage() {
             <div style={{ flex: 1, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ padding: '24px', borderRadius: 16, background: '#fff', textAlign: 'center' }}>
                 <div style={{ fontSize: 13, color: '#6b6760', marginBottom: 6 }}>Found</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: '#1a1916', marginBottom: 6 }}>{scanResult.name}</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 6 }}>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: '#1a1916' }}>{scanResult.name}</div>
+                  {scanResult.unit === 'kg' && (
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#d08a59', background: 'rgba(208,138,89,.1)', padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(208,138,89,.25)' }}>kg</span>
+                  )}
+                </div>
                 <div style={{ fontSize: 36, fontWeight: 900, color: ACC }}>{sym}{scanResult.price.toFixed(2)}</div>
+                {scanResult.unit === 'kg' && (
+                  <div style={{ fontSize: 12, color: '#6b6760', marginTop: 2 }}>per kg — set quantity in cart</div>
+                )}
               </div>
               {scanError && <div style={{ fontSize: 13, color: '#fca5a5', textAlign: 'center' }}>{scanError}</div>}
               <button onClick={confirmScan} style={{ padding: '16px', borderRadius: 14, background: ACC, color: '#fff', fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
@@ -577,13 +660,34 @@ export default function SellPage() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 15, fontWeight: 600, color: '#1a1916' }}>{item.name}</div>
-                  <div style={{ fontSize: 13, color: '#6b6760' }}>{sym}{item.unit_price.toFixed(2)} each</div>
+                  <div style={{ fontSize: 13, color: '#6b6760' }}>{sym}{item.unit_price.toFixed(2)} {item.unit === 'kg' ? 'per kg' : 'each'}</div>
                   {item.notes && <div style={{ fontSize: 12, color: ACC, marginTop: 2 }}>📝 {item.notes}</div>}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <button onClick={() => updateQty(idx, -1)} style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid #e5e2dc', background: '#f9f8f6', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>−</button>
-                  <span style={{ fontSize: 16, fontWeight: 700, minWidth: 20, textAlign: 'center' }}>{item.qty}</span>
-                  <button onClick={() => updateQty(idx, 1)}  style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid #e5e2dc', background: '#f9f8f6', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>+</button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {item.unit === 'kg' ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <input
+                        type="number"
+                        value={kgInputs[idx] !== undefined ? kgInputs[idx] : String(item.qty)}
+                        onChange={e => setKgInputs(prev => ({ ...prev, [idx]: e.target.value }))}
+                        onBlur={e => {
+                          const val = parseFloat(e.target.value)
+                          if (!isNaN(val) && val > 0) setItemQty(idx, val)
+                          setKgInputs(prev => { const n = { ...prev }; delete n[idx]; return n })
+                        }}
+                        step="0.1"
+                        min="0.1"
+                        style={{ width: 68, padding: '6px 8px', borderRadius: 8, border: '1.5px solid #d08a59', fontSize: 15, fontWeight: 700, textAlign: 'center', fontFamily: 'inherit', color: '#1a1916', background: '#fff', boxSizing: 'border-box' }}
+                      />
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#d08a59', background: 'rgba(208,138,89,.1)', padding: '4px 8px', borderRadius: 6, border: '1px solid rgba(208,138,89,.25)', whiteSpace: 'nowrap' }}>kg</span>
+                    </div>
+                  ) : (
+                    <>
+                      <button onClick={() => updateQty(idx, -1)} style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid #e5e2dc', background: '#f9f8f6', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>−</button>
+                      <span style={{ fontSize: 16, fontWeight: 700, minWidth: 20, textAlign: 'center' }}>{item.qty}</span>
+                      <button onClick={() => updateQty(idx, 1)}  style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid #e5e2dc', background: '#f9f8f6', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>+</button>
+                    </>
+                  )}
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#1a1916', minWidth: 64, textAlign: 'right' }}>{sym}{(item.qty * item.unit_price).toFixed(2)}</div>
                 </div>
               </div>
@@ -617,7 +721,7 @@ export default function SellPage() {
           <button onClick={() => { stopCamera(); setScreen('add'); setAddMode('search') }} style={{ flex: 1, padding: '13px', borderRadius: 12, background: '#f9f8f6', border: '1px solid #e5e2dc', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: '#1a1916' }}>
             + {biz.item}
           </button>
-          <button onClick={() => setScreen('checkout')} disabled={cart.length === 0} style={{ flex: 2, padding: '13px', borderRadius: 12, background: ACC, color: '#fff', fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+          <button onClick={() => { captureGeo(); setScreen('checkout') }} disabled={cart.length === 0} style={{ flex: 2, padding: '13px', borderRadius: 12, background: ACC, color: '#fff', fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
             Checkout →
           </button>
         </div>
@@ -674,7 +778,7 @@ export default function SellPage() {
         {/* Cash tendered → change */}
         {paymentType === 'cash' && (
           <div style={{ marginBottom: 14, padding: '16px', background: '#fff', borderRadius: 14, border: '1px solid #e5e2dc' }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1916', marginBottom: 8 }}>Amount tendered</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1916', marginBottom: 8 }}>Amount received</div>
             <input
               type="number" inputMode="decimal" placeholder={`${sym}0.00`} value={amountTendered}
               onChange={e => setAmountTendered(e.target.value)}
@@ -743,6 +847,11 @@ export default function SellPage() {
       </div>
 
       <div style={{ padding: '14px 20px 40px', background: '#fff', borderTop: '1px solid #e5e2dc' }}>
+        {checkoutError && (
+          <div style={{ marginBottom: 10, padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.25)', fontSize: 13, color: '#dc2626', fontWeight: 500 }}>
+            ⚠ {checkoutError}
+          </div>
+        )}
         <button
           onClick={handleCheckout}
           disabled={processing || (paymentType === 'cash' && !!amountTendered && tendered < cartTotal)}
@@ -789,7 +898,7 @@ export default function SellPage() {
         <div style={{ background: '#fff', borderRadius: 14, border: '1px solid #e5e2dc', padding: '14px', marginBottom: 16, textAlign: 'left' }}>
           {cart.map((item, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: i < cart.length - 1 ? '1px solid #f0ede8' : 'none', fontSize: 14 }}>
-              <span style={{ color: '#1a1916' }}>{item.name} ×{item.qty}{item.notes ? ` (${item.notes})` : ''}</span>
+              <span style={{ color: '#1a1916' }}>{item.name} ×{item.qty}{item.unit === 'kg' ? 'kg' : ''}{item.notes ? ` (${item.notes})` : ''}</span>
               <span style={{ fontWeight: 600, color: '#1a1916' }}>{sym}{(item.qty * item.unit_price).toFixed(2)}</span>
             </div>
           ))}

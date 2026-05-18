@@ -49,8 +49,8 @@ export async function POST(req: NextRequest) {
     .eq('shift_id', shift_id)
 
   const cashSales = (transactions || [])
-    .filter((tx) => tx.payment_method === 'cash' || !tx.payment_method)
-    .reduce((sum, tx) => sum + (tx.total_amount || 0), 0)
+    .filter((tx: any) => tx.payment_method === 'cash' || !tx.payment_method)
+    .reduce((sum: number, tx: any) => sum + (tx.total_amount || 0), 0)
 
   // Calculate expected cash
   const expectedCash = shift.opening_balance + cashSales

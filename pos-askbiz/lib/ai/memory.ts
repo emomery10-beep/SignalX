@@ -22,7 +22,7 @@ export async function extractAndSaveMemory(
 ): Promise<void> {
   try {
     const extraction = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-3-5-haiku-20241022',
       max_tokens: 512,
       system: `You extract concrete business facts from a conversation between a business owner and an AI advisor.
 

@@ -217,7 +217,7 @@ export default function AskPage() {
       }
       if (!res.ok) throw new Error(`API error ${res.status}`)
       const result: AIResult = await res.json()
-      setLastResult(result)
+      setLastResult(result as unknown as Record<string, unknown>)
 
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(), role: 'assistant',
@@ -246,12 +246,12 @@ export default function AskPage() {
     } finally { setIsLoadingLocal(false) }
   }, [input, messages, isLoading, conversationId, geo, settings, uploadedFile, user.name, router, supabase, setLastResult])
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: any) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
   }
 
   useEffect(() => {
-    const handler = (e) => {
+    const handler = (e: any) => {
       const q = (e as CustomEvent).detail as string
       if (q) sendMessage(q)
     }
@@ -315,7 +315,7 @@ export default function AskPage() {
   const lastResultForPulse = session.lastResult as AIResult | null
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'row', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'row', height: isMobile ? 'calc(100vh - 72px)' : '100vh', overflow: 'hidden' }}>
 
       {/* ── MAIN CHAT COLUMN ── */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>

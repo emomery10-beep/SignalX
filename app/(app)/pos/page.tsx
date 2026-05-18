@@ -58,7 +58,7 @@ function MiniBarChart({ data, color = ACC, height = 80 }: { data: { label: strin
 
 // ── Types ────────────────────────────────────────────────
 interface StaffMember {
-  id: string; name: string; phone: string; email?: string; role: 'cashier' | 'inventory' | 'repair' | 'engineer'; active: boolean; last_login_at: string | null; has_pin?: boolean; location_id?: string; location?: { id: string; name: string } | null
+  id: string; name: string; phone: string; email?: string; role: 'cashier' | 'inventory' | 'repair' | 'engineer'; sector: string; sector_edit_count: number; active: boolean; last_login_at: string | null; has_pin?: boolean; location_id?: string; location?: { id: string; name: string } | null
 }
 interface Transaction {
   id: string; total: number; subtotal?: number; payment_type: string; status: string; created_at: string; notes?: string
@@ -77,6 +77,8 @@ type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
 type FilterModalType = { type: 'sales' | 'refunds' | 'low_stock' | 'cashier_detail'; title: string; cashier_id?: string } | null
 type TxDetailType = Transaction | null
 
+const SECTOR_BADGE_COLOR: Record<string, string> = { restaurant: '#d08a59', repair: '#6366f1', salon: '#ec4899', retail: '#22c55e' }
+
 export default function POSPage() {
   const supabase = createClient()
   // Modal state for recognized products from camera
@@ -89,10 +91,13 @@ export default function POSPage() {
   const [currencySymbol, setCurrencySymbol] = useState('£')
   const [posEnabled, setPosEnabled] = useState<boolean | null>(null)
   const [seatCount, setSeatCount] = useState(0)
+  const [businessType, setBusinessType] = useState('')
+  const [sectorOverride, setSectorOverride] = useState<string | null>(null)
 
   // Locations (multi-branch)
   const [locations, setLocations] = useState<Location[]>([])
   const [selectedLocation, setSelectedLocation] = useState<string>('all')
+  const [selectedSector, setSelectedSector] = useState<string>('all')
 
   // Toast
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
@@ -125,6 +130,7 @@ export default function POSPage() {
   const [editName, setEditName] = useState('')
   const [editPin, setEditPin] = useState('')
   const [editLocationId, setEditLocationId] = useState('')
+  const [editSector, setEditSector] = useState('retail')
   const [editingSubmitting, setEditingSubmitting] = useState(false)
 
   // Inventory
@@ -204,12 +210,13 @@ export default function POSPage() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('currency_symbol, pos_enabled, pos_seat_count')
+        .select('currency_symbol, pos_enabled, pos_seat_count, business_type')
         .eq('id', user.id)
         .single()
       if (profile?.currency_symbol) setCurrencySymbol(profile.currency_symbol)
       setPosEnabled(profile?.pos_enabled ?? false)
       setSeatCount((profile as any)?.pos_seat_count ?? 0)
+      setBusinessType((profile as any)?.business_type || '')
 
       const { start, end } = getDateRange(dateRange)
       const prev = getPrevRange(dateRange)
@@ -276,16 +283,50 @@ export default function POSPage() {
 
   // ── Derived stats ──────────────────────────────────────
   const dateRangeDetails = getDateRange(dateRange)
-  const completedTx = useMemo(() => transactions.filter(t => t.status === 'completed'), [transactions])
-  const prevCompletedTx = useMemo(() => prevTransactions.filter(t => t.status === 'completed'), [prevTransactions])
+
+  // Build cashier→sector lookup — use assigned sector, fall back to role-derived sector
+  const cashierSectorMap = useMemo(() => {
+    const m: Record<string, string> = {}
+    for (const s of staff) {
+      const roleFallback = ['repair','engineer'].includes(s.role) ? 'repair'
+        : s.role === 'inventory' ? 'retail' : 'retail'
+      m[s.id] = s.sector || roleFallback
+    }
+    return m
+  }, [staff])
+
+  // Sync selectedSector → sectorOverride so Operations tab auto-switches
+  useEffect(() => {
+    if (selectedSector !== 'all') setSectorOverride(selectedSector)
+  }, [selectedSector])
+
+  // Sector-filtered staff list
+  const filteredStaff = useMemo(() =>
+    selectedSector === 'all' ? staff : staff.filter(s => (s.sector || 'retail') === selectedSector),
+    [staff, selectedSector])
+
+  const txMatchesSector = (t: Transaction) => {
+    if (selectedSector === 'all') return true
+    const cid = t.cashier?.id
+    return cid ? cashierSectorMap[cid] === selectedSector : selectedSector === 'retail'
+  }
+
+  const completedTx = useMemo(() =>
+    transactions.filter(t => t.status === 'completed' && txMatchesSector(t)),
+    [transactions, selectedSector, cashierSectorMap])
+  const prevCompletedTx = useMemo(() =>
+    prevTransactions.filter(t => t.status === 'completed' && (selectedSector === 'all' || (t.cashier?.id ? cashierSectorMap[t.cashier.id] === selectedSector : selectedSector === 'retail'))),
+    [prevTransactions, selectedSector, cashierSectorMap])
 
   const todayRevenue = completedTx.reduce((s, t) => s + t.total, 0)
   const prevRevenue = prevCompletedTx.reduce((s, t) => s + t.total, 0)
   const todaySales = completedTx.length
   const prevSales = prevCompletedTx.length
-  const refundedTx = useMemo(() => transactions.filter(t => t.status === 'refunded' || t.status === 'partially_refunded'), [transactions])
+  const refundedTx = useMemo(() =>
+    transactions.filter(t => (t.status === 'refunded' || t.status === 'partially_refunded') && txMatchesSector(t)),
+    [transactions, selectedSector, cashierSectorMap])
   const refundCount = refundedTx.length
-  const prevRefunds = prevTransactions.filter(t => t.status === 'refunded' || t.status === 'partially_refunded').length
+  const prevRefunds = prevTransactions.filter(t => (t.status === 'refunded' || t.status === 'partially_refunded') && (selectedSector === 'all' || (t.cashier?.id ? cashierSectorMap[t.cashier.id] === selectedSector : selectedSector === 'retail'))).length
   const lowStock = inventory.filter(i => i.stock_qty <= i.low_stock_threshold && i.stock_qty > 0)
   const outOfStock = inventory.filter(i => i.stock_qty === 0)
   const alertCount = lowStock.length + outOfStock.length
@@ -295,11 +336,12 @@ export default function POSPage() {
   const grossProfit = todayRevenue - totalCost
   const margin = todayRevenue > 0 ? (grossProfit / todayRevenue * 100) : 0
 
-  // Geo-tagged sales for map tab
+  // Geo-tagged sales for map tab — filtered by sector
   const geoPoints = useMemo(() => {
     const pts: any[] = []
     for (const t of transactions) {
       if (!t.notes) continue
+      if (!txMatchesSector(t)) continue
       const m = t.notes.match(/\|__geo:([-\d.]+),([-\d.]+)/)
       if (!m) continue
       pts.push({
@@ -310,7 +352,7 @@ export default function POSPage() {
       })
     }
     return pts
-  }, [transactions])
+  }, [transactions, selectedSector, cashierSectorMap])
 
   // Comparison helper
   const pctChange = (curr: number, prev: number) => {
@@ -438,7 +480,7 @@ export default function POSPage() {
     if (editPin && (editPin.length < 4 || editPin.length > 6 || !/^\d+$/.test(editPin))) { notify('PIN must be 4-6 digits', false); return }
     setEditingSubmitting(true)
     try {
-      const res = await fetch('/api/pos/staff', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingStaff.id, phone: editPhone || undefined, email: editEmail || undefined, name: editName, pin: editPin || undefined, location_id: editLocationId || undefined }) })
+      const res = await fetch('/api/pos/staff', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingStaff.id, phone: editPhone || undefined, email: editEmail || undefined, name: editName, pin: editPin || undefined, location_id: editLocationId || undefined, sector: editSector }) })
       const data = await res.json()
       if (data.staff) { setStaff(prev => prev.map(s => s.id === editingStaff.id ? data.staff : s)); setEditingStaff(null); notify('Staff updated') }
       else if (data.error) notify(data.error, false)
@@ -447,7 +489,7 @@ export default function POSPage() {
   }
 
   const handleOpenEditStaff = (member: StaffMember) => {
-    setEditingStaff(member); setEditName(member.name); setEditPhone(member.phone || ''); setEditEmail(member.email || ''); setEditPin(''); setEditLocationId(member.location_id || '')
+    setEditingStaff(member); setEditName(member.name); setEditPhone(member.phone || ''); setEditEmail(member.email || ''); setEditPin(''); setEditLocationId(member.location_id || ''); setEditSector(member.sector || 'retail')
   }
 
   // Camera handlers
@@ -766,22 +808,29 @@ export default function POSPage() {
       <div className="page-shell-body">
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid var(--b)', paddingBottom: 0, overflowX: 'auto' }}>
-          {(['overview', 'services', 'staff', 'inventory', 'branches', 'map', 'audit'] as Tab[]).map(t => (
+          {(['overview', 'services', 'staff', 'branches', 'map', 'audit'] as Tab[]).filter(Boolean).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: '8px 16px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === t ? 'var(--sf)' : 'transparent', color: tab === t ? 'var(--tx)' : 'var(--tx3)',
               fontSize: 13, fontWeight: tab === t ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
               borderBottom: tab === t ? `2px solid ${ACC}` : '2px solid transparent',
             }}>
-              {t === 'map' ? '🗺️ Map' : t === 'services' ? '🔧 Services' : t.charAt(0).toUpperCase() + t.slice(1)}
+              {t === 'map' ? '🗺️ Map' : t === 'services' ? (() => {
+                const bt = (businessType || '').toLowerCase()
+                const d = ['restaurant','cafe','café','bar','pub','takeaway','food','catering','food stall','bistro','diner'].some(k => bt.includes(k)) ? 'restaurant'
+                  : ['repair','phone','mobile','electronic','watch','laptop','computer'].some(k => bt.includes(k)) ? 'repair'
+                  : ['salon','barber','barbershop','spa','beauty','clinic','nail'].some(k => bt.includes(k)) ? 'salon' : 'retail'
+                const s = sectorOverride || d
+                return s === 'restaurant' ? '🍴 Restaurant' : s === 'repair' ? '🔧 Repairs' : s === 'salon' ? '💇 Bookings' : '📦 Operations'
+              })() : t.charAt(0).toUpperCase() + t.slice(1)}
               {t === 'inventory' && alertCount > 0 && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px', verticalAlign: 'top' }}>{alertCount}</span>}
             </button>
           ))}
         </div>
 
-        {/* ── Branch Picker (only shown if 2+ locations exist) ── */}
-        {locations.length > 1 && (
-          <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center' }}>
+        {/* ── Branch + Sector filters ── */}
+        <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             <span style={{ fontSize: 12, color: 'var(--tx3)', fontWeight: 500 }}>Branch:</span>
             <select
               value={selectedLocation}
@@ -793,16 +842,25 @@ export default function POSPage() {
                 <option key={loc.id} value={loc.id}>{loc.name}</option>
               ))}
             </select>
-            {selectedLocation !== 'all' && (
-              <span style={{ fontSize: 11, color: ACC, fontWeight: 500 }}>
-                Viewing: {locations.find(l => l.id === selectedLocation)?.name}
-              </span>
-            )}
           </div>
-        )}
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <span style={{ fontSize: 12, color: 'var(--tx3)', fontWeight: 500 }}>Sector:</span>
+            <select
+              value={selectedSector}
+              onChange={e => setSelectedSector(e.target.value)}
+              style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${ACC_BORDER}`, background: 'var(--sf)', color: 'var(--tx)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              <option value="all">All Sectors</option>
+              <option value="restaurant">🍴 Restaurant</option>
+              <option value="repair">🔧 Repair</option>
+              <option value="salon">💇 Salon</option>
+              <option value="retail">📦 Retail</option>
+            </select>
+          </div>
+        </div>
 
         {/* ── Date Range Selector ── */}
-        {tab === 'overview' && (
+        {(tab === 'overview' || tab === 'map') && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
             {(['today', 'yesterday', 'last7', 'last30'] as DateRange[]).map(range => (
               <button key={range} onClick={() => { setDateRange(range); setCustomStart(''); setCustomEnd('') }}
@@ -1029,14 +1087,119 @@ export default function POSPage() {
         )}
 
         {/* ══════════════ SERVICES TAB ══════════════ */}
-        {tab === 'services' && (
-          <ServiceJobsTab
-            currencySymbol={currencySymbol}
-            selectedLocation={selectedLocation}
-            staff={staff.map(s => ({ id: s.id, name: s.name, role: s.role || 'cashier', active: s.active, location_id: s.location_id }))}
-            notify={notify}
-          />
-        )}
+        {tab === 'services' && (() => {
+          const bt = (businessType || '').toLowerCase()
+          const detectedSector = ['restaurant','cafe','café','bar','pub','takeaway','food','catering','food stall','bistro','diner'].some(k => bt.includes(k)) ? 'restaurant'
+            : ['repair','phone','mobile','electronic','watch','laptop','computer'].some(k => bt.includes(k)) ? 'repair'
+            : ['salon','barber','barbershop','spa','beauty','clinic','nail'].some(k => bt.includes(k)) ? 'salon'
+            : 'retail'
+          const sector = sectorOverride || detectedSector
+
+          const ACC = '#d08a59'
+          const sectorPicker = (
+            <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
+              {[
+                { id: 'restaurant', label: '🍴 Restaurant' },
+                { id: 'repair',     label: '🔧 Repair' },
+                { id: 'salon',      label: '💇 Salon' },
+                { id: 'retail',     label: '📦 Retail' },
+              ].map(s => (
+                <button key={s.id} onClick={() => setSectorOverride(s.id === detectedSector ? null : s.id)}
+                  style={{ padding: '5px 14px', borderRadius: 20, border: `1.5px solid ${sector === s.id ? ACC : 'var(--b)'}`,
+                    background: sector === s.id ? ACC : 'var(--sf)', color: sector === s.id ? '#fff' : 'var(--tx3)',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          )
+
+          if (sector === 'restaurant') return (
+            <div style={{ maxWidth: 860 }}>
+              {sectorPicker}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>🍴 Restaurant Operations</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Floor plan, kitchen, orders, menu and labour — all in one place.</div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+                {[
+                  { label: '🏠 Hub',           href: '/restaurant',              desc: 'Live operations dashboard' },
+                  { label: '🗺️ Floor Plan',    href: '/restaurant/floor',        desc: 'Table status & seating' },
+                  { label: '📋 Orders',        href: '/restaurant/orders',       desc: 'Take & manage orders' },
+                  { label: '🍳 Kitchen',       href: '/restaurant/kitchen',      desc: 'Live KDS display' },
+                  { label: '🍽️ Menu',          href: '/restaurant/menu',         desc: 'Edit items & pricing' },
+                  { label: '⏱️ Labour',        href: '/restaurant/labor',        desc: 'Clock in/out & costs' },
+                  { label: '📱 Online Orders', href: '/restaurant/online-orders',desc: 'Accept & manage online orders' },
+                  { label: '📅 Reservations',  href: '/restaurant/reservations', desc: 'Bookings & covers management' },
+                  { label: '📦 Deliveries',    href: '/restaurant/deliveries',   desc: 'Scan invoices & food costs' },
+                  { label: '🗑️ Waste',         href: '/restaurant/waste',        desc: 'Log & track food waste' },
+                  { label: '👥 Staff',         href: '/restaurant/staff',        desc: 'Server revenue & shifts' },
+                ].map(tile => (
+                  <a key={tile.href} href={`https://pos.askbiz.co${tile.href}`}
+                    style={{ display: 'block', background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: '16px 14px', textDecoration: 'none', transition: 'border-color 0.15s' }}
+                    onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>
+                    <div style={{ fontSize: 20, marginBottom: 6 }}>{tile.label.split(' ')[0]}</div>
+                    <div style={{ fontWeight: 600, color: 'var(--tx)', fontSize: 14 }}>{tile.label.split(' ').slice(1).join(' ')}</div>
+                    <div style={{ color: 'var(--tx3)', fontSize: 12, marginTop: 2 }}>{tile.desc}</div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )
+
+          if (sector === 'repair') return (
+            <div>
+              {sectorPicker}
+              <ServiceJobsTab
+                currencySymbol={currencySymbol}
+                selectedLocation={selectedLocation}
+                staff={staff.map(s => ({ id: s.id, name: s.name, role: s.role || 'cashier', active: s.active, location_id: s.location_id }))}
+                notify={notify}
+              />
+            </div>
+          )
+
+          if (sector === 'salon') return (
+            <div style={{ maxWidth: 860 }}>
+              {sectorPicker}
+              <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>💇 Salon & Bookings</div>
+              <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 4 }}>Salon module coming soon.</div>
+            </div>
+          )
+
+          return (
+            <div style={{ maxWidth: 860 }}>
+              {sectorPicker}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>📦 Retail Operations</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Stock management, sales tracking, and supplier orders.</div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+                {[
+                  { label: '📦 Inventory', tab: 'inventory' as Tab, desc: 'Stock levels & products', badge: alertCount > 0 ? alertCount : null },
+                  { label: '🛒 Sales', tab: 'overview' as Tab, desc: 'Revenue & transaction history', badge: null },
+                  { label: '👥 Staff', tab: 'staff' as Tab, desc: 'Cashiers & permissions', badge: null },
+                  { label: '🏪 Branches', tab: 'branches' as Tab, desc: 'Locations & stock by branch', badge: null },
+                  { label: '🗺️ Map', tab: 'map' as Tab, desc: 'Branch locations on map', badge: null },
+                  { label: '🔍 Audit', tab: 'audit' as Tab, desc: 'Transaction & change log', badge: null },
+                ].map(tile => (
+                  <button key={tile.label} onClick={() => setTab(tile.tab)}
+                    style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: '16px 14px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s', fontFamily: 'inherit', position: 'relative' }}
+                    onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>
+                    {tile.badge && (
+                      <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px' }}>{tile.badge}</span>
+                    )}
+                    <div style={{ fontSize: 20, marginBottom: 6 }}>{tile.label.split(' ')[0]}</div>
+                    <div style={{ fontWeight: 600, color: 'var(--tx)', fontSize: 14 }}>{tile.label.split(' ').slice(1).join(' ')}</div>
+                    <div style={{ color: 'var(--tx3)', fontSize: 12, marginTop: 2 }}>{tile.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
 
         {/* ══════════════ STAFF TAB ══════════════ */}
         {tab === 'staff' && (
@@ -1089,24 +1252,34 @@ export default function POSPage() {
             )}
 
             {/* Staff list */}
-            {staff.length === 0 ? (
+            {selectedSector !== 'all' && (
+              <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 10 }}>
+                Showing {filteredStaff.length} of {staff.length} staff · filtered by {selectedSector}
+              </div>
+            )}
+            {filteredStaff.length === 0 ? (
               <div style={{ ...cardStyle, textAlign: 'center', padding: 40 }}>
                 <div style={{ width: 56, height: 56, borderRadius: 14, background: ACC_BG, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>No staff added yet</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Add your first cashier or inventory manager above.</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{staff.length === 0 ? 'No staff added yet' : `No ${selectedSector} staff`}</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{staff.length === 0 ? 'Add your first cashier or inventory manager above.' : `No staff assigned to the ${selectedSector} sector yet.`}</div>
               </div>
             ) : (
               <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
-                {staff.map((s, i) => (
-                  <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < staff.length - 1 ? '1px solid var(--b)' : 'none', background: 'var(--sf)', opacity: s.active ? 1 : 0.5, flexWrap: 'wrap', gap: 8 }}>
+                {filteredStaff.map((s, i) => (
+                  <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: i < filteredStaff.length - 1 ? '1px solid var(--b)' : 'none', background: 'var(--sf)', opacity: s.active ? 1 : 0.5, flexWrap: 'wrap', gap: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{ width: 36, height: 36, borderRadius: '50%', background: s.active ? ACC_BG : 'var(--ev)', border: `1px solid ${s.active ? ACC_BORDER : 'var(--b)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: s.active ? ACC : 'var(--tx3)', flexShrink: 0 }}>
                         {s.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)' }}>{s.name}</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          {s.name}
+                          <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 7px', borderRadius: 9999, background: `${SECTOR_BADGE_COLOR[s.sector||'retail']}20`, color: SECTOR_BADGE_COLOR[s.sector||'retail'] }}>
+                            {s.sector || 'retail'}
+                          </span>
+                        </div>
                         <div style={{ fontSize: 11, color: 'var(--tx3)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                           <span>{s.role}</span>
                           {s.location?.name && <span style={{ color: ACC, fontWeight: 600 }}>· {s.location.name}</span>}
@@ -1143,6 +1316,27 @@ export default function POSPage() {
                       {locations.map(loc => <option key={loc.id} value={loc.id}>{loc.name}</option>)}
                     </select>
                   )}
+                  {/* Sector assignment with 2-edit limit */}
+                  <div>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>
+                      Sector — what this staff member can access
+                      {(editingStaff.sector_edit_count ?? 0) >= 2
+                        ? <span style={{ marginLeft: 6, color: '#ef4444', fontWeight: 600 }}>· Edit limit reached (purchase a new seat to change)</span>
+                        : <span style={{ marginLeft: 6, color: 'var(--tx3)' }}>· {2 - (editingStaff.sector_edit_count ?? 0)} change{2 - (editingStaff.sector_edit_count ?? 0) !== 1 ? 's' : ''} remaining</span>
+                      }
+                    </div>
+                    <select
+                      value={editSector}
+                      onChange={e => setEditSector(e.target.value)}
+                      disabled={(editingStaff.sector_edit_count ?? 0) >= 2 && editSector !== editingStaff.sector}
+                      style={{ ...inputStyle, opacity: (editingStaff.sector_edit_count ?? 0) >= 2 ? 0.5 : 1, cursor: (editingStaff.sector_edit_count ?? 0) >= 2 ? 'not-allowed' : 'pointer' }}
+                    >
+                      <option value="restaurant">🍴 Restaurant</option>
+                      <option value="repair">🔧 Repair</option>
+                      <option value="salon">💇 Salon</option>
+                      <option value="retail">📦 Retail</option>
+                    </select>
+                  </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={handleEditStaff} disabled={editingSubmitting} style={btnPrimary}>{editingSubmitting ? 'Saving...' : 'Save changes'}</button>
@@ -1432,7 +1626,10 @@ export default function POSPage() {
                       {loc.address && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{loc.address}</div>}
                       {loc.phone && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{loc.phone}</div>}
                       <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>
-                        {staff.filter(s => s.location_id === loc.id).length} staff · {inventory.filter(p => p.location_id === loc.id).length} products
+                        {selectedSector === 'all'
+                          ? `${staff.filter(s => s.location_id === loc.id).length} staff · ${inventory.filter(p => p.location_id === loc.id).length} products`
+                          : `${staff.filter(s => s.location_id === loc.id && (s.sector || 'retail') === selectedSector).length} ${selectedSector} staff · ${completedTx.filter(t => t.cashier?.id && staff.find(s => s.id === t.cashier!.id && s.location_id === loc.id)).length} sales`
+                        }
                       </div>
                     </div>
                     <button onClick={() => {
@@ -1451,18 +1648,23 @@ export default function POSPage() {
         {/* ══════════════ AUDIT TAB ══════════════ */}
         {tab === 'audit' && (
           <div style={{ maxWidth: 800 }}>
-            <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 16 }}>All amendments and refunds are logged here automatically.</div>
-            {transactions.filter(t => t.status !== 'completed').length === 0 ? (
+            <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 16 }}>
+              All amendments and refunds are logged here automatically.
+              {selectedSector !== 'all' && <span style={{ marginLeft: 6, color: ACC, fontWeight: 600 }}>· filtered by {selectedSector}</span>}
+            </div>
+            {(() => {
+              const auditTx = transactions.filter(t => t.status !== 'completed' && txMatchesSector(t))
+              return auditTx.length === 0 ? (
               <div style={{ ...cardStyle, textAlign: 'center', padding: 40 }}>
                 <div style={{ width: 56, height: 56, borderRadius: 14, background: 'rgba(22,163,74,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.8" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                 </div>
                 <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>Clean record</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No amendments or refunds yet.</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No amendments or refunds{selectedSector !== 'all' ? ` for ${selectedSector}` : ''} yet.</div>
               </div>
             ) : (
               <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
-                {transactions.filter(t => t.status !== 'completed').map((tx, i, arr) => (
+                {auditTx.map((tx, i, arr) => (
                   <div key={tx.id} style={{ padding: '14px 16px', borderBottom: i < arr.length - 1 ? '1px solid var(--b)' : 'none', background: 'var(--sf)', cursor: 'pointer' }} onClick={() => setTxDetail(tx)}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1475,7 +1677,8 @@ export default function POSPage() {
                   </div>
                 ))}
               </div>
-            )}
+            )
+            })()}
           </div>
         )}
         {tab === 'map' && (
@@ -1490,11 +1693,11 @@ export default function POSPage() {
             <div style={{ position: 'relative', height: 520, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--b)' }}>
               <div ref={mapDivRef} style={{ position: 'absolute', inset: 0 }} />
               {geoPoints.length === 0 && (
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(249,248,246,0.95)', gap: 10, zIndex: 999 }}>
-                  <div style={{ fontSize: 40 }}>🗺️</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>No location data yet</div>
-                  <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', maxWidth: 300, lineHeight: 1.6 }}>
-                    Each sale will drop a pin here when the cashier allows location access on their device during checkout.
+                <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 999, background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderRadius: 12, padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 2px 12px rgba(0,0,0,0.12)', whiteSpace: 'nowrap' }}>
+                  <span style={{ fontSize: 20 }}>📍</span>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>No pins yet for this period</div>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Cashiers must allow location access when checking out</div>
                   </div>
                 </div>
               )}

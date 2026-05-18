@@ -86,6 +86,136 @@ export const ASKBIZ_BLOG_POSTS: AskBizBlogPost[] = [
     publishDate: '2026-05-14',
     filePath: '/content/blogs/05-tax-automation.md',
     keywords: ['tax', 'VAT', 'automation', 'compliance', 'HMRC']
+  },
+  {
+    slug: 'affordable-pos-uk-small-business',
+    title: 'Why UK Small Businesses Are Overpaying for Their POS System',
+    description: 'Square, Lightspeed, and traditional POS hardware cost far more than most UK small business owners realise. Here is the real maths — and a better model.',
+    category: 'strategy',
+    readTime: 8,
+    publishDate: '2026-05-17',
+    filePath: '/content/blogs/08-affordable-pos-uk-small-business.md',
+    keywords: ['UK', 'small business', 'POS cost', 'Square alternative', 'affordable POS', 'HMRC', 'retail']
+  },
+  {
+    slug: 'africa-business-intelligence-data-scarce',
+    title: 'Business Intelligence for African SMEs: Getting Insights Where Data Has Always Been Scarce',
+    description: 'Most African small businesses have never had access to real business data. Collective intelligence changes that — pooling anonymised data from similar traders to create meaningful benchmarks even where individual history is short.',
+    category: 'strategy',
+    readTime: 10,
+    publishDate: '2026-05-17',
+    filePath: '/content/blogs/09-africa-business-intelligence-data-scarce.md',
+    keywords: ['Africa', 'Nigeria', 'Kenya', 'Ghana', 'SME', 'business intelligence', 'data-scarce', 'collective intelligence']
+  },
+  {
+    slug: 'eu-gdpr-pos-compliance',
+    title: 'GDPR-Ready POS: How European Small Businesses Stay Compliant Without the Legal Bills',
+    description: 'EU businesses must handle customer data under GDPR — but most affordable POS systems were not built with this in mind. How AskBiz handles compliance by default.',
+    category: 'compliance',
+    readTime: 9,
+    publishDate: '2026-05-17',
+    filePath: '/content/blogs/10-eu-gdpr-pos-compliance.md',
+    keywords: ['GDPR', 'EU', 'compliance', 'data protection', 'France', 'Germany', 'Netherlands', 'POS']
+  },
+  {
+    slug: 'us-small-business-pos-cost',
+    title: 'The Real Cost of Your POS System: What American Small Business Owners Are Not Told',
+    description: 'Toast, Square, and Clover all charge hardware plus monthly fees plus per-transaction cuts. A realistic cost comparison for US small business owners — and what seat-based pricing actually means.',
+    category: 'strategy',
+    readTime: 9,
+    publishDate: '2026-05-17',
+    filePath: '/content/blogs/11-us-small-business-pos-cost.md',
+    keywords: ['US', 'America', 'small business', 'Toast alternative', 'Clover alternative', 'POS cost', 'restaurant POS']
+  },
+  {
+    slug: 'multi-sector-one-dashboard',
+    title: 'Running a Restaurant AND a Repair Shop? One Dashboard Now Covers Both',
+    description: 'Many small business owners operate across multiple sectors. AskBiz is the first affordable POS to handle Restaurant, Retail, Repair, and Salon from a single account — with separated intelligence and staff permissions for each.',
+    category: 'pos-features',
+    readTime: 7,
+    publishDate: '2026-05-17',
+    filePath: '/content/blogs/12-multi-sector-one-dashboard.md',
+    keywords: ['multi-sector', 'restaurant', 'repair', 'retail', 'salon', 'one dashboard', 'small business']
+  },
+  {
+    slug: 'africa-mobile-market-traders',
+    title: 'From Nairobi to Lagos: How Mobile Market Traders Are Getting Enterprise-Grade Intelligence',
+    description: 'African market traders and informal sellers have always priced by gut feel and tracked nothing. AskBiz changes that — running on any Android phone, with WhatsApp staff login and GPS-tagged sales showing exactly where revenue is generated.',
+    category: 'strategy',
+    readTime: 10,
+    publishDate: '2026-05-17',
+    filePath: '/content/blogs/13-africa-mobile-market-traders.md',
+    keywords: ['Africa', 'Kenya', 'Nigeria', 'market traders', 'mobile POS', 'informal economy', 'WhatsApp', 'geo-tagged']
+  },
+  {
+    slug: 'collective-intelligence-small-business',
+    title: 'You Do Not Need Big Data — You Need Shared Data: The Collective Intelligence Model',
+    description: 'How k-anonymised collective benchmarking gives every small business the intelligence that was previously only available to large chains — without exposing anyone\'s individual data.',
+    category: 'strategy',
+    readTime: 9,
+    publishDate: '2026-05-17',
+    filePath: '/content/blogs/14-collective-intelligence-small-business.md',
+    keywords: ['collective intelligence', 'benchmarking', 'anonymised data', 'small business', 'pricing intelligence', 'Africa']
+  },
+  {
+    slug: 'restaurant-daily-brief-intelligence',
+    title: 'What if Your Restaurant Got a Business Report Every Morning Before Service?',
+    description: 'AskBiz Restaurant generates a daily brief every morning — revenue vs target, covers, average ticket, waste cost, and an AI-written recommendation. The intelligence a chain has, at independent restaurant prices.',
+    category: 'pos-features',
+    readTime: 8,
+    publishDate: '2026-05-17',
+    filePath: '/content/blogs/15-restaurant-daily-brief-intelligence.md',
+    keywords: ['restaurant', 'daily brief', 'AI intelligence', 'hospitality', 'food & beverage', 'morning report']
+  },
+  {
+    slug: 'making-tax-digital-uk-pos',
+    title: 'Making Tax Digital Is Coming for Every UK Business — Is Your POS Ready?',
+    description: 'HMRC\'s MTD programme is expanding to cover more businesses. AskBiz POS exports compliant VAT reports directly from the dashboard — no manual spreadsheets, no accountant needed for basic filing.',
+    category: 'compliance',
+    readTime: 8,
+    publishDate: '2026-05-17',
+    filePath: '/content/blogs/16-making-tax-digital-uk-pos.md',
+    keywords: ['Making Tax Digital', 'MTD', 'HMRC', 'VAT', 'UK', 'compliance', 'small business']
+  },
+  {
+    slug: 'staff-sector-permissions-pos',
+    title: 'How to Give Staff Exactly the Right Access — No More, No Less',
+    description: 'The risk of giving all staff full POS access. How sector-based permissions mean restaurant staff only see the restaurant, repair staff only see repairs — and the admin sees everything from one place.',
+    category: 'pos-features',
+    readTime: 7,
+    publishDate: '2026-05-17',
+    filePath: '/content/blogs/17-staff-sector-permissions-pos.md',
+    keywords: ['staff permissions', 'sector access', 'POS security', 'role-based access', 'multi-sector', 'small business']
+  },
+  {
+    slug: 'pos-without-hardware',
+    title: 'Why the Hardware Model of POS Is Broken — and What Replaces It',
+    description: 'Traditional POS vendors sell you terminals, card readers, and receipt printers. In the UK that is £500–2000 upfront. In Nigeria or Ghana, even more proportionally. AskBiz runs on the phone you already own.',
+    category: 'strategy',
+    readTime: 9,
+    publishDate: '2026-05-17',
+    filePath: '/content/blogs/18-pos-without-hardware-africa-asia.md',
+    keywords: ['no hardware', 'mobile POS', 'Africa', 'Asia', 'affordable', 'phone POS', 'WhatsApp receipts']
+  },
+  {
+    slug: 'branch-sector-intelligence',
+    title: 'Filtering Your Business by Branch and Sector: Why Granular Intelligence Changes Everything',
+    description: 'A business with three branches and two sectors needs to answer specific questions — not see everything blended together. How AskBiz branch and sector filters work across every tab of the dashboard.',
+    category: 'pos-features',
+    readTime: 7,
+    publishDate: '2026-05-17',
+    filePath: '/content/blogs/19-branch-sector-intelligence.md',
+    keywords: ['branch filter', 'sector filter', 'multi-location', 'intelligence', 'dashboard', 'analytics']
+  },
+  {
+    slug: 'africa-fintech-sme-intelligence',
+    title: 'The Missing Layer in African Fintech: Business Intelligence for the Informal Economy',
+    description: 'M-Pesa and Flutterwave solved payments. But payment is not intelligence. AskBiz is the layer that tells African SMEs which products drive margin, which staff are performing, and how they compare to similar businesses nearby.',
+    category: 'strategy',
+    readTime: 11,
+    publishDate: '2026-05-17',
+    filePath: '/content/blogs/20-africa-fintech-sme-intelligence.md',
+    keywords: ['Africa', 'fintech', 'M-Pesa', 'Flutterwave', 'SME', 'informal economy', 'business intelligence', 'Nigeria', 'Kenya']
   }
 ]
 

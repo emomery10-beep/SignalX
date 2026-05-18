@@ -150,10 +150,10 @@ export async function GET(req: NextRequest) {
     customer_id,
     consents: consents || [],
     summary: {
-      email_marketing: (consents || []).find(c => c.consent_type === 'marketing_email' && c.status === 'granted') ? 'granted' : 'not_granted',
-      sms: (consents || []).find(c => c.consent_type === 'sms' && c.status === 'granted') ? 'granted' : 'not_granted',
-      whatsapp: (consents || []).find(c => c.consent_type === 'whatsapp' && c.status === 'granted') ? 'granted' : 'not_granted',
-      analytics: (consents || []).find(c => c.consent_type === 'analytics' && c.status === 'granted') ? 'granted' : 'not_granted',
+      email_marketing: (consents || []).find((c: any) => c.consent_type === 'marketing_email' && c.status === 'granted') ? 'granted' : 'not_granted',
+      sms: (consents || []).find((c: any) => c.consent_type === 'sms' && c.status === 'granted') ? 'granted' : 'not_granted',
+      whatsapp: (consents || []).find((c: any) => c.consent_type === 'whatsapp' && c.status === 'granted') ? 'granted' : 'not_granted',
+      analytics: (consents || []).find((c: any) => c.consent_type === 'analytics' && c.status === 'granted') ? 'granted' : 'not_granted',
     },
   })
 }

@@ -232,7 +232,7 @@ export function UnifiedSearch({ ownerId, ownerEmail, compact = false }: UnifiedS
                   textAlign: 'left',
                   transition: 'all 0.2s',
                 }}
-                onHover={(e) => {
+                onMouseOver={(e: any) => {
                   ;(e.target as HTMLElement).style.backgroundColor = '#dbeafe'
                 }}
               >

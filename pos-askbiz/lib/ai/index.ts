@@ -70,6 +70,8 @@ export function buildSystemPrompt(opts: {
   parcelContext?: string
   costContext?: string
   posContext?: string
+  restaurantContext?: string  // restaurant/food-service specific live data
+  collectiveContext?: string  // ingredient price intelligence from anonymised invoice scans
   benchmarkContext?: string   // collective intelligence: anonymised cross-business benchmarks
   businessMemory?: string     // persistent facts learned from past conversations
   userName?: string
@@ -80,7 +82,7 @@ export function buildSystemPrompt(opts: {
     currency, symbol, bizType, region, sectorHints, trendTopics,
     activeFile, datasetSummary, expansionContext, marketContext,
     searchContext, trackingContext, freightContext, parcelContext,
-    costContext, posContext, benchmarkContext, businessMemory,
+    costContext, posContext, restaurantContext, collectiveContext, benchmarkContext, businessMemory,
     userName, simulateMode, cfoMode,
   } = opts
 
@@ -89,6 +91,12 @@ export function buildSystemPrompt(opts: {
     ecommerce: 'ecommerce seller (Shopify, Jumia, Takealot, etc.)',
     distributor: 'distributor or wholesaler supplying retailers',
     exporter: 'exporter / importer doing cross-border trade',
+    restaurant: 'restaurant / food service operator',
+    cafe: 'café / coffee shop operator',
+    bar: 'bar / pub operator',
+    takeaway: 'takeaway / fast-food operator',
+    food_stall: 'food stall / market trader',
+    catering: 'catering business',
   }
 
   const trendContext = trendTopics?.length
@@ -125,9 +133,22 @@ When answering this question, use the user's actual numbers above. Reference the
 ` : ''
 
   const posIntelligence = posContext ? `
---- LIVE POS DATA ---
+--- LIVE POS DATA (RETAIL) ---
 ${posContext}
 Use this real-time shop data to answer the question. Reference actual numbers, staff names, and stock levels. Give specific, actionable answers — not generic advice.
+---` : ''
+
+  const restaurantIntelligence = restaurantContext ? `
+--- LIVE RESTAURANT DATA ---
+${restaurantContext}
+Use this real-time restaurant data to answer the question with specifics:
+- FOOD COST %: target 28-35%. Prime cost (food+labour) target <65%. Flag if over.
+- TABLE TURNS: faster turns = more revenue. Avg dwell >90 mins on busy nights = issue.
+- TOP DISHES: rank by margin %, not just revenue. High-volume low-margin = problem.
+- 86 BOARD: if items are out, suggest alternatives or restock priorities.
+- LABOUR: labour% >35% of revenue = overstaffed or underperforming.
+- ONLINE ORDERS: pending orders need immediate attention — flag if any waiting.
+Reference real numbers. Be direct. Use restaurant industry language.
 ---` : ''
 
   const benchmarkIntelligence = benchmarkContext ? `
@@ -140,6 +161,20 @@ Use these anonymised industry benchmarks to answer the user's market or expansio
 - Always state it is based on anonymised data from AskBiz businesses in that sector — never imply it is their own data
 - If benchmark data is from web research (not local), flag it as indicative rather than exact
 - verdict: act if their numbers beat benchmarks or opportunity is clear, watch if marginal, problem if they are significantly below sector average
+---` : ''
+
+  const collectiveIntelligence = collectiveContext ? `
+--- COLLECTIVE INTELLIGENCE — INGREDIENT MARKET PRICES ---
+${collectiveContext}
+
+This is anonymised, aggregated real-world price data from restaurant businesses scanning delivery invoices through AskBiz.
+How to use it:
+- If the user is a restaurant owner: compare their actual food costs to the market median. Say "chicken breast is trading at a median of £X/kg in your region — your cost of £Y is Z% above/below market."
+- If the user is an exporter, researcher or distributor: quote these as real indicative wholesale prices from the market. E.g. "Based on anonymised restaurant delivery data, beef is currently priced at a median of £X/kg across UK restaurants."
+- Always cite the data point count so the user understands the confidence level ("based on N data points").
+- Where the range (p25–p75) is wide, note that prices vary significantly and advise them to get multiple supplier quotes.
+- Never reveal which specific businesses contributed. This is a pool — it belongs to no one and everyone.
+- If no data is shown, say that the collective pool is still building and invite them to scan a delivery invoice to contribute.
 ---` : ''
 
   const parcelIntelligence = parcelContext ? `
@@ -241,6 +276,8 @@ ${freightIntelligence}
 ${parcelIntelligence}
 ${costIntelligence}
 ${posIntelligence}
+${restaurantIntelligence}
+${collectiveIntelligence}
 ${benchmarkIntelligence}
 ${webSearchIntelligence}${marketIntelligence}${expansionInstructions}
 

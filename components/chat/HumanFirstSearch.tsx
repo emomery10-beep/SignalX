@@ -146,7 +146,7 @@ interface Props {
   onSend: (s: string) => void
   inputValue: string
   onInputChange: (s: string) => void
-  onKeyDown: (e) => void
+  onKeyDown: (e: any) => void
   inputRef: React.RefObject<HTMLTextAreaElement>
   isLoading?: boolean
   simulateMode?: boolean

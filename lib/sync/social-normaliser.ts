@@ -167,7 +167,7 @@ export function normaliseInstagramOrders(
 
     for (const item of items) {
       const qty     = safeNum(item.quantity)
-      const price   = safeNum(item.price_per_unit?.amount) || safeNum(item.retailer_price)
+      const price   = safeNum((item.price_per_unit as any)?.amount) || safeNum(item.retailer_price)
       const name    = safeStr(item.product_name) || safeStr(item.retailer_product_id)
 
       records.push({
@@ -196,7 +196,7 @@ export function normaliseInstagramOrders(
         damaged_stock:    0,
         channel:          'instagram_shopping',
         customer_region:  '',
-        currency:         safeStr(item.price_per_unit?.currency) || 'GBP',
+        currency:         safeStr((item.price_per_unit as any)?.currency) || 'GBP',
         ad_spend:         0,
         campaign:         '',
         coupon_code:      '',

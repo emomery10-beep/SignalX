@@ -18,6 +18,7 @@ interface SettingsState {
   showFollowUps: boolean
   biScopeEnforcement: boolean
   cfoMode: boolean
+  symbol?: string
 }
 
 interface SessionState {

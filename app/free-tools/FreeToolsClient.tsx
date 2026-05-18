@@ -41,6 +41,44 @@ const TOOLS = [
     color: "#3b82f6",
     popular: false,
   },
+  {
+    href: "/free-tools/vat-calculator",
+    icon: "🧾",
+    title: "VAT / Sales Tax Calculator",
+    tagline: "Add or remove tax in one click",
+    description:
+      "Calculate VAT, GST, or sales tax for 30 countries. Add tax to a net price or extract tax from a gross price. Supports standard, reduced, and zero rates with country-specific rules.",
+    features: [
+      "30 countries covered",
+      "Add VAT or extract from gross",
+      "Standard, reduced & zero rates",
+      "US state-level sales tax",
+      "Auto-detects VAT / GST / Sales Tax label",
+      "Full rate reference table",
+    ],
+    cta: "Calculate VAT →",
+    color: "#16a34a",
+    popular: false,
+  },
+  {
+    href: "/free-tools/break-even-calculator",
+    icon: "📐",
+    title: "Break-Even Calculator",
+    tagline: "How many units until you're profitable?",
+    description:
+      "Enter your fixed costs, selling price, and variable cost per unit. Instantly see your break-even point in units and revenue, contribution margin, profit scenarios at different volumes, and price sensitivity analysis.",
+    features: [
+      "Break-even in units & revenue",
+      "Contribution margin calculation",
+      "6 profit/loss scenarios",
+      "Price sensitivity analysis",
+      "Monthly or yearly fixed costs",
+      "12 currencies supported",
+    ],
+    cta: "Calculate Break-Even →",
+    color: "#7c3aed",
+    popular: false,
+  },
 ];
 
 const FAQS = [
@@ -81,7 +119,7 @@ export default function FreeToolsClient() {
               "@context": "https://schema.org",
               "@type": "WebPage",
               name: "Free Business Tools — AskBiz",
-              description: "Free landed cost calculator and FX risk modeller for importers and exporters.",
+              description: "Free business calculators — landed cost, FX risk, VAT, and break-even analysis for SME founders.",
               url: "https://askbiz.co/free-tools",
               offers: TOOLS.map((t) => ({
                 "@type": "Offer",
@@ -112,7 +150,8 @@ export default function FreeToolsClient() {
             <div className="ft-nav-links">
               <Link href="/help" className="ft-nav-link">Help Center</Link>
               <Link href="/free-tools/landed-cost-calculator" className="ft-nav-link">Landed Cost</Link>
-              <Link href="/free-tools/fx-risk-modeller" className="ft-nav-link">FX Risk</Link>
+              <Link href="/free-tools/vat-calculator" className="ft-nav-link">VAT Calculator</Link>
+              <Link href="/free-tools/break-even-calculator" className="ft-nav-link">Break-Even</Link>
               <Link href="/#pricing" className="ft-nav-cta">Try AskBiz Free →</Link>
             </div>
           </div>
@@ -127,14 +166,14 @@ export default function FreeToolsClient() {
               <span className="ft-hero-accent">Before You Order</span>
             </h1>
             <p className="ft-hero-sub">
-              Two free calculators for importers and exporters. Calculate your
-              true landed cost and model currency risk — in seconds, with no account needed.
+              Free calculators for importers, exporters, and business owners. Landed cost, FX risk,
+              VAT, and break-even analysis — in seconds, with no account needed.
             </p>
             <div className="ft-hero-stats">
               {[
-                ["25+", "Import destinations"],
-                ["28", "HS code categories"],
-                ["15", "Currency pairs"],
+                ["30+", "Countries covered"],
+                ["4", "Free calculators"],
+                ["12", "Currencies supported"],
                 ["Free", "No sign-up"],
               ].map(([val, label]) => (
                 <div key={label} className="ft-hero-stat">
@@ -263,6 +302,8 @@ export default function FreeToolsClient() {
                 ["/", "Home"],
                 ["/free-tools/landed-cost-calculator", "Landed Cost Calculator"],
                 ["/free-tools/fx-risk-modeller", "FX Risk Modeller"],
+                ["/free-tools/vat-calculator", "VAT Calculator"],
+                ["/free-tools/break-even-calculator", "Break-Even Calculator"],
                 ["/help", "Help Center"],
                 ["/rules", "Rules & Policies"],
                 ["/privacy", "Privacy"],

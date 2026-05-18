@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
       .eq('pos_location_id', location.id)
       .gte('created_at', getCurrentPeriodStart(location.tax_jurisdiction).toISOString())
 
-    const totalTaxDue = (currentTransactions || []).reduce((sum, tx) => sum + (tx.total_tax || 0), 0)
+    const totalTaxDue = (currentTransactions || []).reduce((sum: number, tx: any) => sum + (tx.total_tax || 0), 0)
 
     // Determine filing status and deadline
     const { status, deadline, daysUntil } = getFilingStatus(location.tax_jurisdiction, lastFiling)

@@ -3,6 +3,9 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import ServiceJobsTab from '@/components/pos/ServiceJobsTab'
 import RepairMetrics from '@/components/pos/RepairMetrics'
+import RestaurantSnapshot from '@/components/pos/RestaurantSnapshot'
+
+const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 const ACC = '#d08a59'
 const ACC_BG = 'rgba(208,138,89,.08)'
@@ -79,6 +82,9 @@ export default function POSPage() {
   const [currencySymbol, setCurrencySymbol] = useState('£')
   const [posEnabled, setPosEnabled] = useState<boolean | null>(null)
   const [seatCount, setSeatCount] = useState(0)
+  const [businessType, setBusinessType] = useState('retail')
+  const [sectorOverride, setSectorOverride] = useState<string | null>(null)
+  const [staffSector, setStaffSector] = useState<string | null>(null) // set when a staff member is logged in
 
   // Toast
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
@@ -184,12 +190,21 @@ export default function POSPage() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('currency_symbol, pos_enabled, pos_seat_count')
+        .select('currency_symbol, pos_enabled, pos_seat_count, business_type, sector_hints')
         .eq('id', user.id)
         .single()
       if (profile?.currency_symbol) setCurrencySymbol(profile.currency_symbol)
       setPosEnabled(profile?.pos_enabled ?? false)
       setSeatCount((profile as any)?.pos_seat_count ?? 0)
+      setBusinessType((profile as any)?.business_type || 'retail')
+
+      // Check if this is a staff session and lock to their assigned sector
+      const configRes = await fetch(`${API}/api/pos/config`)
+      const config = configRes.ok ? await configRes.json() : {}
+      if (config.staff_sector) {
+        setStaffSector(config.staff_sector)
+        setSectorOverride(config.staff_sector)
+      }
 
       const { start, end } = getDateRange(dateRange)
       const prev = getPrevRange(dateRange)
@@ -721,21 +736,39 @@ export default function POSPage() {
       <div className="page-shell-body">
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid var(--b)', paddingBottom: 0, overflowX: 'auto' }}>
-          {(['overview', 'services', 'staff', 'inventory', 'audit', 'map'] as Tab[]).map(t => (
-            <button key={t} onClick={() => setTab(t)} style={{
-              padding: '8px 16px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
-              background: tab === t ? 'var(--sf)' : 'transparent', color: tab === t ? 'var(--tx)' : 'var(--tx3)',
-              fontSize: 13, fontWeight: tab === t ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
-              borderBottom: tab === t ? `2px solid ${ACC}` : '2px solid transparent',
-            }}>
-              {t === 'services' ? '🔧 Services' : t === 'map' ? '🗺️ Map' : t.charAt(0).toUpperCase() + t.slice(1)}
-              {t === 'inventory' && alertCount > 0 && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px', verticalAlign: 'top' }}>{alertCount}</span>}
-            </button>
-          ))}
+          {(['overview', 'services', 'staff', 'inventory', 'audit', 'map'] as Tab[]).map(t => {
+            const bt = (businessType || '').toLowerCase()
+            const _detected = ['restaurant','cafe','café','bar','pub','takeaway','food','catering','food stall','bistro','diner'].some(k => bt.includes(k)) ? 'restaurant'
+              : ['repair','phone','mobile','electronic','watch','laptop','computer'].some(k => bt.includes(k)) ? 'repair'
+              : ['salon','barber','barbershop','spa','beauty','clinic','nail'].some(k => bt.includes(k)) ? 'salon'
+              : 'retail'
+            const _sector = sectorOverride || _detected
+            const sectorLabel = _sector === 'restaurant' ? '🍴 Restaurant'
+              : _sector === 'repair' ? '🔧 Repairs'
+              : _sector === 'salon'  ? '💇 Bookings'
+              : '📦 Operations'
+
+            const tabLabel = t === 'services'
+              ? sectorLabel
+              : t === 'map' ? '🗺️ Map'
+              : t.charAt(0).toUpperCase() + t.slice(1)
+
+            return (
+              <button key={t} onClick={() => setTab(t)} style={{
+                padding: '8px 16px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
+                background: tab === t ? 'var(--sf)' : 'transparent', color: tab === t ? 'var(--tx)' : 'var(--tx3)',
+                fontSize: 13, fontWeight: tab === t ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
+                borderBottom: tab === t ? `2px solid ${ACC}` : '2px solid transparent',
+              }}>
+                {tabLabel}
+                {t === 'inventory' && alertCount > 0 && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px', verticalAlign: 'top' }}>{alertCount}</span>}
+              </button>
+            )
+          })}
         </div>
 
         {/* ── Date Range Selector ── */}
-        {tab === 'overview' && (
+        {(tab === 'overview' || tab === 'map') && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
             {(['today', 'yesterday', 'last7', 'last30'] as DateRange[]).map(range => (
               <button key={range} onClick={() => { setDateRange(range); setCustomStart(''); setCustomEnd('') }}
@@ -960,13 +993,118 @@ export default function POSPage() {
           </div>
         )}
 
-        {/* ══════════════ SERVICES TAB ══════════════ */}
-        {tab === 'services' && (
-          <ServiceJobsTab
-            currencySymbol={currencySymbol}
-            selectedLocation={'all'}
-          />
-        )}
+        {/* ══════════════ SECTOR TAB (adapts per business_type) ══════════════ */}
+        {tab === 'services' && (() => {
+          const bt = (businessType || '').toLowerCase()
+          const detectedSector = ['restaurant','cafe','café','bar','pub','takeaway','food','catering','food stall','bistro','diner'].some(k => bt.includes(k)) ? 'restaurant'
+            : ['repair','phone','mobile','electronic','watch','laptop','computer'].some(k => bt.includes(k)) ? 'repair'
+            : ['salon','barber','barbershop','spa','beauty','clinic','nail'].some(k => bt.includes(k)) ? 'salon'
+            : 'retail'
+          const sector = sectorOverride || detectedSector
+
+          const isRestaurant = sector === 'restaurant'
+          const isRepair     = sector === 'repair'
+
+          const sectorPicker = staffSector ? (
+            // Staff session — show locked sector badge, no switching
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+              <span style={{ padding: '5px 14px', borderRadius: 20, background: ACC, color: '#fff', fontSize: 12, fontWeight: 600 }}>
+                {sector === 'restaurant' ? '🍴 Restaurant' : sector === 'repair' ? '🔧 Repair' : sector === 'salon' ? '💇 Salon' : '📦 Retail'}
+              </span>
+              <span style={{ fontSize: 12, color: 'var(--tx3)' }}>Assigned by admin · contact your manager to change</span>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
+              {[
+                { id: 'restaurant', label: '🍴 Restaurant' },
+                { id: 'repair',     label: '🔧 Repair' },
+                { id: 'salon',      label: '💇 Salon' },
+                { id: 'retail',     label: '📦 Retail' },
+              ].map(s => (
+                <button key={s.id} onClick={() => setSectorOverride(s.id === detectedSector ? null : s.id)}
+                  style={{ padding: '5px 14px', borderRadius: 20, border: `1.5px solid ${sector === s.id ? ACC : 'var(--b)'}`,
+                    background: sector === s.id ? ACC : 'var(--sf)', color: sector === s.id ? '#fff' : 'var(--tx3)',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          )
+
+          // ── RESTAURANT sector gateway ─────────────────────────────
+          if (isRestaurant) return (
+            <div style={{ maxWidth: 860 }}>
+              {sectorPicker}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>🍴 Restaurant Operations</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Floor plan, kitchen, orders, menu and labour — all in one place.</div>
+              </div>
+
+              {/* Quick-link tiles */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 28 }}>
+                {[
+                  { label: '🗺️ Floor Plan',  href: '/restaurant/floor',   desc: 'Table status & seating' },
+                  { label: '📋 Orders',      href: '/restaurant/orders',   desc: 'Take & manage orders' },
+                  { label: '🍳 Kitchen',     href: '/restaurant/kitchen',  desc: 'Live KDS display' },
+                  { label: '🍽️ Menu',        href: '/restaurant/menu',     desc: 'Edit items & pricing' },
+                  { label: '⏱️ Labour',      href: '/restaurant/labor',    desc: 'Clock in/out & costs' },
+                  { label: '📱 Online Orders', href: '/restaurant/online-orders', desc: 'Accept & manage online orders' },
+                  { label: '📅 Reservations', href: '/restaurant/reservations',  desc: 'Bookings & covers management' },
+                  { label: '📦 Deliveries',   href: '/restaurant/deliveries',    desc: 'Scan invoices & food costs' },
+                  { label: '🗑️ Waste',        href: '/restaurant/waste',         desc: 'Log & track food waste' },
+                ].map(tile => (
+                  <a key={tile.href} href={tile.href}
+                    style={{ display: 'block', background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: '16px 14px', textDecoration: 'none', transition: 'border-color 0.15s' }}
+                    onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>
+                    <div style={{ fontSize: 20, marginBottom: 6 }}>{tile.label.split(' ')[0]}</div>
+                    <div style={{ fontWeight: 600, color: 'var(--tx)', fontSize: 14 }}>{tile.label.split(' ').slice(1).join(' ')}</div>
+                    <div style={{ color: 'var(--tx3)', fontSize: 12, marginTop: 2 }}>{tile.desc}</div>
+                  </a>
+                ))}
+              </div>
+
+              {/* Live snapshot — fetched client-side */}
+              <RestaurantSnapshot currencySymbol={currencySymbol} />
+            </div>
+          )
+
+          // ── REPAIR sector ───
+          if (isRepair) return (
+            <div style={{ maxWidth: 900 }}>
+              {sectorPicker}
+              <ServiceJobsTab currencySymbol={currencySymbol} selectedLocation={'all'} staff={staff} notify={notify} />
+            </div>
+          )
+
+          // ── SALON sector ───
+          if (sector === 'salon') return (
+            <div style={{ maxWidth: 860 }}>
+              {sectorPicker}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>💇 Salon & Bookings</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Manage appointments, staff schedules, and services.</div>
+              </div>
+              <div style={{ color: 'var(--tx3)', fontSize: 13 }}>Salon module coming soon.</div>
+            </div>
+          )
+
+          // ── RETAIL / DEFAULT ───
+          return (
+            <div style={{ maxWidth: 860 }}>
+              {sectorPicker}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>📦 Retail Operations</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Stock management, purchase orders, and supplier tracking.</div>
+              </div>
+              <div style={{ color: 'var(--tx3)', fontSize: 13 }}>
+                Use the <strong>Inventory</strong> tab for stock levels and alerts.{' '}
+                Select a different sector above or update your business type in{' '}
+                <a href="/pos/settings" style={{ color: ACC }}>Settings</a>.
+              </div>
+            </div>
+          )
+        })()}
 
         {/* ══════════════ STAFF TAB ══════════════ */}
         {tab === 'staff' && (
@@ -1361,11 +1499,11 @@ export default function POSPage() {
             <div style={{ position: 'relative', height: 520, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--b)' }}>
               <div ref={mapDivRef} style={{ position: 'absolute', inset: 0 }} />
               {geoPoints.length === 0 && (
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(249,248,246,0.95)', gap: 10, zIndex: 999 }}>
-                  <div style={{ fontSize: 40 }}>🗺️</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>No location data yet</div>
-                  <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', maxWidth: 300, lineHeight: 1.6 }}>
-                    Each sale will drop a pin here when the cashier allows location access on their device during checkout.
+                <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 999, background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderRadius: 12, padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 2px 12px rgba(0,0,0,0.12)', whiteSpace: 'nowrap' }}>
+                  <span style={{ fontSize: 20 }}>📍</span>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>No pins yet for this period</div>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Cashiers must allow location access when checking out</div>
                   </div>
                 </div>
               )}

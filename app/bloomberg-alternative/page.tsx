@@ -92,7 +92,7 @@ export default function BloombergAlternativePage() {
             </div>
             {comparisons.map((row, i) => (
               <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderTop: '1px solid #e8e6e1', background: i % 2 === 0 ? '#fff' : '#f9f8f6' }}>
-                <div style={{ padding: '16px 20px', fontSize: 14, color: '#6b6760', lineHeight: 1.6, borderRight: '1px solid #e8e6e1', fontFamily: 'var(--font-mono, monospace)', fontSize: 13 }}>
+                <div style={{ padding: '16px 20px', color: '#6b6760', lineHeight: 1.6, borderRight: '1px solid #e8e6e1', fontFamily: 'var(--font-mono, monospace)', fontSize: 13 }}>
                   {row.terminal}
                 </div>
                 <div style={{ padding: '16px 20px', fontSize: 14, color: '#1a1916', lineHeight: 1.65 }}>

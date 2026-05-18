@@ -53,8 +53,8 @@ export async function GET(req: NextRequest) {
     .lte('created_at', `${endDate}T23:59:59Z`)
 
   const tx = transactions || []
-  const totalGross = tx.reduce((s, t) => s + (t.total_amount || 0), 0)
-  const totalTax = tx.reduce((s, t) => s + (t.total_tax || 0), 0)
+  const totalGross = tx.reduce((s: number, t: any) => s + (t.total_amount || 0), 0)
+  const totalTax = tx.reduce((s: number, t: any) => s + (t.total_tax || 0), 0)
 
   const preview = {
     jurisdiction,

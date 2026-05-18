@@ -513,7 +513,7 @@ function LocalisationPanel() {
 
       <Card>
         <CardHeader title="Business"/>
-        <SettingRow label="Business type" description="Shapes how AskBiz frames answers and recommendations" border={false} right={<select value={bizType} onChange={e => setBizType(e.target.value)} style={{ ...sel, minWidth: 160 }}><option value="retail">Retail / shop</option><option value="ecommerce">Ecommerce</option><option value="distributor">Distributor</option><option value="exporter">Exporter</option></select>}/>
+        <SettingRow label="Business type" description="Shapes how AskBiz frames answers and recommendations" border={false} right={<select value={bizType} onChange={e => setBizType(e.target.value as any)} style={{ ...sel, minWidth: 160 }}><option value="retail">Retail / shop</option><option value="ecommerce">Ecommerce</option><option value="distributor">Distributor</option><option value="exporter">Exporter</option></select>}/>
       </Card>
 
       <SaveRow onClick={save} saving={saving} saved={saved}/>
@@ -1359,11 +1359,22 @@ export default function SettingsPage() {
   const router  = useRouter()
   const supabase = createClient()
   const [active, setActive] = useState<Section>('profile')
+  const [winW, setWinW] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200)
+
+  useEffect(() => {
+    const h = () => setWinW(window.innerWidth)
+    window.addEventListener('resize', h)
+    return () => window.removeEventListener('resize', h)
+  }, [])
+
+  const isMobile = winW < 768
 
   const signOut = async () => {
     await supabase.auth.signOut()
     router.push('/')
   }
+
+  const activeItem = NAV.find(n => n.id === active)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -1371,42 +1382,54 @@ export default function SettingsPage() {
         <button onClick={() => router.back()} style={{ width: 30, height: 30, borderRadius: 7, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx2)" strokeWidth="2" strokeLinecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
         </button>
-        <div>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700 }}>Settings</div>
-          <div style={{ fontSize: 13, color: 'var(--tx2)', marginTop: 1 }}>Manage your account and preferences</div>
+          {!isMobile && <div style={{ fontSize: 13, color: 'var(--tx2)', marginTop: 1 }}>Manage your account and preferences</div>}
         </div>
+        {/* Mobile section picker — replaces sidebar */}
+        {isMobile && (
+          <select
+            value={active}
+            onChange={e => setActive(e.target.value as Section)}
+            style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx)', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', maxWidth: 160 }}
+          >
+            {NAV.map(n => <option key={n.id} value={n.id}>{n.label}</option>)}
+          </select>
+        )}
       </div>
 
       <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
-        {/* Sidebar */}
-        <nav style={{ width: 220, flexShrink: 0, borderRight: '1px solid var(--b)', overflowY: 'auto', padding: '12px 8px' }}>
-          {NAV.map(item => {
-            const isActive = item.id === active
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActive(item.id)}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 11px', marginBottom: 2, borderRadius: 'var(--r-md)', border: 'none', background: isActive ? 'rgba(208,138,89,.1)' : 'transparent', color: isActive ? 'var(--acc)' : 'var(--tx2)', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' as const, transition: 'background 120ms, color 120ms' }}
-                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--ev)' }}
-                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                  <path d={item.icon}/>
-                </svg>
-                <span style={{ fontSize: 13, fontWeight: isActive ? 600 : 500 }}>{item.label}</span>
-                {isActive && (
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ marginLeft: 'auto', flexShrink: 0 }}>
-                    <path d="M9 18l6-6-6-6"/>
+        {/* Sidebar — desktop only */}
+        {!isMobile && (
+          <nav style={{ width: 220, flexShrink: 0, borderRight: '1px solid var(--b)', overflowY: 'auto', padding: '12px 8px' }}>
+            {NAV.map(item => {
+              const isActive = item.id === active
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActive(item.id)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 11px', marginBottom: 2, borderRadius: 'var(--r-md)', border: 'none', background: isActive ? 'rgba(208,138,89,.1)' : 'transparent', color: isActive ? 'var(--acc)' : 'var(--tx2)', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' as const, transition: 'background 120ms, color 120ms' }}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--ev)' }}
+                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <path d={item.icon}/>
                   </svg>
-                )}
-              </button>
-            )
-          })}
-        </nav>
+                  <span style={{ fontSize: 13, fontWeight: isActive ? 600 : 500 }}>{item.label}</span>
+                  {isActive && (
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ marginLeft: 'auto', flexShrink: 0 }}>
+                      <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                  )}
+                </button>
+              )
+            })}
+          </nav>
+        )}
 
         {/* Content */}
         <div style={{ flex: 1, overflowY: 'auto', minWidth: 0 }}>
-          <div style={{ maxWidth: 680, padding: '32px 36px 60px' }}>
+          <div style={{ maxWidth: 680, padding: isMobile ? '16px 16px 60px' : '32px 36px 60px' }}>
             {active === 'profile'      && <ProfilePanel onSignOut={signOut}/>}
             {active === 'team'         && <TeamPanel/>}
             {active === 'localisation' && <LocalisationPanel/>}

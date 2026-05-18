@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { Metadata } from 'next'
 import LandingClient from '@/components/layout/LandingClient'
 import { COUNTRY_CURRENCY, CURRENCIES } from '@/lib/geo'
+import { COUNTRY_TO_LANG } from '@/lib/i18n'
 
 // ── SEO Metadata ─────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
@@ -73,14 +74,7 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
   const headersList = headers()
   const countryCode = headersList.get('x-vercel-ip-country') || 'US'
   const cookieStore = cookies()
-  const LMAP: Record<string,string> = {
-    GB:'en',US:'en',AU:'en',NZ:'en',IE:'en',CA:'en',ZA:'en',NG:'en',GH:'en',UG:'en',
-    FR:'fr',BE:'fr',SN:'fr',CI:'fr',CM:'fr',TN:'fr',MA:'fr',LU:'fr',
-    DE:'de',AT:'de',ES:'es',MX:'es',AR:'es',CO:'es',CL:'es',PE:'es',
-    SA:'ar',AE:'ar',EG:'ar',KW:'ar',QA:'ar',JO:'ar',
-    KE:'sw',TZ:'sw',PT:'pt',BR:'pt',NL:'nl',IT:'it',PL:'pl',
-  }
-  const lang = cookieStore.get('askbiz_lang')?.value || LMAP[countryCode] || 'en'
+  const lang = cookieStore.get('askbiz_lang')?.value || COUNTRY_TO_LANG[countryCode as keyof typeof COUNTRY_TO_LANG] || 'en'
   const city = headersList.get('x-vercel-ip-city') || ''
 
   const country = COUNTRY_NAMES[countryCode] || countryCode

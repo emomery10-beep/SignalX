@@ -1,8 +1,10 @@
 // Web Speech API type declarations (not in default TypeScript lib)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SpeechRecognition = any
 declare global {
   interface Window {
-    SpeechRecognition: typeof SpeechRecognition
-    webkitSpeechRecognition: typeof SpeechRecognition
+    SpeechRecognition: new () => SpeechRecognition
+    webkitSpeechRecognition: new () => SpeechRecognition
   }
 }
 

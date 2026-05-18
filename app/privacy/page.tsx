@@ -11,8 +11,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function P({ children }: { children: React.ReactNode }) {
-  return <p style={{ fontSize: 15, lineHeight: 1.85, color: 'var(--tx2)', marginBottom: 12 }}>{children}</p>
+function P({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return <p style={{ fontSize: 15, lineHeight: 1.85, color: 'var(--tx2)', marginBottom: 12, ...style }}>{children}</p>
 }
 
 function Li({ children }: { children: React.ReactNode }) {

@@ -1,11 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // TODO: remove once pre-existing TS errors are fixed across the codebase
+  typescript: { ignoreBuildErrors: true },
 
   async headers() {
     return [

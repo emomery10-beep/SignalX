@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
       message: `Downgrade to ${new_seats} seat(s) successful`,
       subscription_id: updatedSubscription.id,
       new_monthly_amount: newPriceAmount / 100, // Convert to pounds
-      proration_credit: (lineItem.price.unit_amount - newPriceAmount) / 100, // Approximate
+      proration_credit: ((lineItem.price.unit_amount ?? 0) - newPriceAmount) / 100, // Approximate
     })
   } catch (error: any) {
     console.error('Downgrade error:', error)

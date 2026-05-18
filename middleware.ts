@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { COUNTRY_TO_LANG } from '@/lib/i18n'
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } })
@@ -27,21 +28,10 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   // ── Language detection ─────────────────────────────────────────────────────
-  // Only set if user hasn't already chosen a language manually
-  const LANG_MAP: Record<string,string> = {
-    GB:'en',US:'en',AU:'en',NZ:'en',IE:'en',CA:'en',ZA:'en',NG:'en',GH:'en',UG:'en',
-    FR:'fr',BE:'fr',SN:'fr',CI:'fr',CM:'fr',TN:'fr',MA:'fr',LU:'fr',
-    DE:'de',AT:'de',
-    ES:'es',MX:'es',AR:'es',CO:'es',CL:'es',PE:'es',
-    SA:'ar',AE:'ar',EG:'ar',KW:'ar',QA:'ar',JO:'ar',
-    KE:'sw',TZ:'sw',
-    PT:'pt',BR:'pt',AO:'pt',MZ:'pt',
-    NL:'nl',IT:'it',PL:'pl',
-  }
   const existingLang = request.cookies.get('askbiz_lang')?.value
   if (!existingLang) {
     const country = request.headers.get('x-vercel-ip-country') || ''
-    const detectedLang = LANG_MAP[country.toUpperCase()] || 'en'
+    const detectedLang = COUNTRY_TO_LANG[country.toUpperCase() as keyof typeof COUNTRY_TO_LANG] || 'en'
     response.cookies.set('askbiz_lang', detectedLang, {
       path: '/',
       maxAge: 60 * 60 * 24 * 30, // 30 days

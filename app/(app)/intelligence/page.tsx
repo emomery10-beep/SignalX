@@ -28,6 +28,14 @@ export default function IntelligencePage() {
   const [loadingHealth, setLoadingHealth] = useState(true)
   const [scoreHistory, setScoreHistory] = useState<any[]>([])
   const [connectedCount, setConnectedCount] = useState(0)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   // Decisions state (for timeline)
   const [decisions, setDecisions] = useState<any[]>([])
@@ -146,15 +154,15 @@ export default function IntelligencePage() {
 
   const tabs = [
     { id: 'overview',     label: 'Overview' },
-    { id: 'anomalies',    label: 'Alerts',           badge: canAlerts ? (criticalCount + warningCount) : 0, locked: !canAlerts },
-    { id: 'decisions',    label: 'Decision Memory',  locked: !canDecisions },
+    { id: 'anomalies',    label: 'Alerts',       badge: canAlerts ? (criticalCount + warningCount) : 0, locked: !canAlerts },
+    { id: 'decisions',    label: 'Decisions',    locked: !canDecisions },
     { id: 'team',         label: 'Team' },
-    { id: 'sparring',     label: 'Ask AskBiz' },
-    { id: 'shipments',    label: '📦 Shipments' },
-    { id: 'memory',       label: '🧠 What I Know' },
+    { id: 'sparring',     label: 'Ask AI' },
+    { id: 'shipments',    label: '📦 Ships' },
+    { id: 'memory',       label: '🧠 Memory' },
     { id: 'market',       label: '🌍 Market' },
-    { id: 'connections',  label: '🔗 Connections' },
-    { id: 'cfo',          label: '🏛️ CFO Mode',      locked: !canCfo },
+    { id: 'connections',  label: '🔗 Connect' },
+    { id: 'cfo',          label: '🏛️ CFO',       locked: !canCfo },
   ]
 
   const sparringPrompts = [
@@ -202,7 +210,7 @@ export default function IntelligencePage() {
   ]
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: isMobile ? 'calc(100vh - 72px)' : '100vh', overflow: 'hidden' }} className="intelligence-shell">
 
       {/* ── Header + tabs ── */}
       <div style={{ flexShrink: 0, padding: '16px 20px 0', borderBottom: '1px solid var(--b)', background: 'var(--sf)' }}>
@@ -227,7 +235,7 @@ export default function IntelligencePage() {
         </div>
 
         {/* Tab bar */}
-        <div style={{ display: 'flex', gap: 0, overflowX: 'auto' }}>
+        <div style={{ display: 'flex', gap: 0, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {tabs.map(t => (
             <button
               key={t.id}
@@ -248,6 +256,7 @@ export default function IntelligencePage() {
                 whiteSpace: 'nowrap',
                 opacity: t.locked ? 0.6 : 1,
                 transition: 'color 150ms',
+                flexShrink: 0,
               }}
             >
               {t.label}
@@ -267,7 +276,7 @@ export default function IntelligencePage() {
       </div>
 
       {/* ── Tab content ── */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '16px 16px 24px' : '20px' }}>
 
         {/* ─── OVERVIEW ─── */}
         {tab === 'overview' && (

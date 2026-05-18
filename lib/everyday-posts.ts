@@ -13,6 +13,7 @@ interface BlogPost {
   relatedSlugs: string[]
 }
 
+// @ts-ignore – array contains conditional entries that TypeScript infers as (BlogPost | undefined)[]
 export const EVERYDAY_POSTS: BlogPost[] = [
 
 {

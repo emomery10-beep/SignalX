@@ -12,7 +12,7 @@ export default function PreviewBilling() {
   const [mpesaPolling, setMpesaPolling]   = useState(false)
   const [mpesaStatus, setMpesaStatus]     = useState<'idle'|'sent'|'success'|'failed'|'cancelled'>('idle')
   const [posSeats, setPosSeats]           = useState(1)
-  const currentPlan = 'free'
+  const currentPlan: string = 'free'
   const posEnabled = false
 
   const handleMpesaPay = async (planOrSeats: string, seats?: number) => {

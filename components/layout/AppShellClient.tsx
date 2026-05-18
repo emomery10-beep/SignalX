@@ -188,7 +188,7 @@ function ProfilePanel({ user, onClose, onSignOut }: {
 }
 
 export default function AppShellClient({ user, conversations, children }: {
-  user: { id: string; name: string; email: string; plan: string; bizType?: string }
+  user: { id: string; name: string; email: string; plan: string; bizType?: string; currency?: string; currencySymbol?: string; region?: string; sectorHints?: string }
   conversations: { id: string; title?: string; created_at: string }[]
   children: React.ReactNode
 }) {
@@ -207,8 +207,8 @@ export default function AppShellClient({ user, conversations, children }: {
   const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 
   useEffect(() => {
-    setUser({ id: user.id, name: user.name, email: user.email, plan: user.plan, initials })
-    updateSettings({ bizType: user.bizType })
+    setUser({ id: user.id, name: user.name, email: user.email, plan: user.plan as any, initials })
+    updateSettings({ bizType: user.bizType as any })
   }, [user, setUser, updateSettings, initials])
 
   useEffect(() => {

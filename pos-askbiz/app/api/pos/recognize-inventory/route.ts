@@ -3,8 +3,6 @@ import { createServiceClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosAuth } from '@/lib/pos-auth'
 
-export const dynamic = 'force-dynamic'
-
 // CORS handled globally by next.config.js
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -48,11 +46,11 @@ export async function POST(req: NextRequest) {
 
     const catalogueText = (inventoryList || [])
       .slice(0, 200) // Limit to 200 products to stay within token limits
-      .map(p => `- ${p.name}${p.stock_qty > 0 ? ` (${p.stock_qty} in stock)` : ' (OUT OF STOCK)'}`)
+      .map((p: any) => `- ${p.name}${p.stock_qty > 0 ? ` (${p.stock_qty} in stock)` : ' (OUT OF STOCK)'}`)
       .join('\n')
 
     const hotListText = (hotList || []).length > 0
-      ? `\n\nFREQUENTLY RECOGNIZED (prioritize these):\n${hotList.map(h => `- ${h.recognized_name}`).join('\n')}`
+      ? `\n\nFREQUENTLY RECOGNIZED (prioritize these):\n${hotList.map((h: any) => `- ${h.recognized_name}`).join('\n')}`
       : ''
 
     const anthropic = new Anthropic()
@@ -74,14 +72,13 @@ THIS STORE'S INVENTORY (reference list):
 ${catalogueText || '(Empty inventory)'}${hotListText}
 
 TASK:
-1. Look at the image and the inventory list above
-2. FIRST: Check if this product matches anything in the inventory list (even if worded differently)
-3. If you find a match, return the EXACT name from the inventory list
-4. If no match in inventory, identify the product as best you can
-5. PRIORITIZE products in the "FREQUENTLY RECOGNIZED" list
-6. Set HIGH confidence (80-100) if you can clearly identify it
-7. Set MEDIUM confidence (50-79) if you recognize the product type but are unsure of exact match
-8. Set LOW confidence (below 50) if it's too blurry or unidentifiable
+1. Identify what product is shown in the image - be specific with brand, size, type
+2. PRIORITIZE products in the "FREQUENTLY RECOGNIZED" list - these are the store's most common items
+3. If it matches something in the store's inventory list, give its EXACT name from the list
+4. If the product is NOT in the inventory list, give your best product identification anyway
+5. Set HIGH confidence (80-100) if you can clearly see and read product branding/label with certainty
+6. Set MEDIUM confidence (50-79) if you can visually identify the product type (e.g., can see it's milk, bread, rice) even if no brand is visible
+7. Set LOW confidence (below 50) if it's too blurry, obscured, or truly unidentifiable
 
 Reply with ONLY valid JSON, no other text:
 {"name":"product name","confidence":70}`,
@@ -114,40 +111,45 @@ Reply with ONLY valid JSON, no other text:
     const productName = (parsed.name || '').trim()
     const confidence = typeof parsed.confidence === 'number' ? parsed.confidence : 0
 
-    console.log('🔍 RECOGNITION:', { productName, confidence, inventoryCount: inventoryList?.length })
-
     // If confidence is too low or no name, return empty
     if (!productName || confidence < 50) {
-      console.log('❌ LOW CONFIDENCE - REJECTED:', { productName, confidence })
       return NextResponse.json({ products: [] })
     }
 
     // Try exact match first
-    let match = inventoryList?.find(p => p.name.toLowerCase() === productName.toLowerCase())
-    if (match) console.log('✓ EXACT MATCH:', match.name)
+    let match = inventoryList?.find((p: any) => p.name.toLowerCase() === productName.toLowerCase())
 
-    // If no exact match, use smart fuzzy matching - require ALL major words to be present
+    // If no exact match, use fuzzy matching (split name into words and score)
     if (!match && inventoryList && inventoryList.length > 0) {
-      const words = productName.split(/\s+/).map(w => w.toLowerCase()).filter(Boolean)
-      const scored = inventoryList.map(item => {
-        const itemWords = item.name.toLowerCase().split(/\s+/)
-        const matchCount = words.filter(w => itemWords.some(iw => iw.includes(w) || w.includes(iw))).length
-        return { item, score: matchCount, totalWords: words.length }
-      }).sort((a, b) => b.score - a.score)
+      const words = productName.split(/\s+/).slice(0, 4).map(escapeLike).filter(Boolean)
+      const scored = inventoryList.map((item: any) => {
+        const nameLower = item.name.toLowerCase()
+        const score = words.filter(w => nameLower.includes(w.toLowerCase())).length
+        return { item, score }
+      }).sort((a: any, b: any) => b.score - a.score)
 
-      console.log('🔎 FUZZY ATTEMPT:', { words, topMatch: scored[0]?.item?.name, matchScore: scored[0]?.score, needAllWords: scored[0]?.totalWords })
-
-      if (scored[0].score === scored[0].totalWords && scored[0].totalWords > 0) {
+      // Require at least 60% of words to match (works for all product name lengths)
+      const minMatches = Math.max(1, Math.ceil(words.length * 0.6))
+      if (scored[0].score >= minMatches) {
         match = scored[0].item
-        console.log('✓ FUZZY MATCH:', match.name)
-      } else if (scored[0]?.totalWords > 0) {
-        console.log('❌ FUZZY FAILED:', { reason: `Need ${scored[0].totalWords} words, got ${scored[0].score} matches` })
       }
     }
 
     // If we found a match in inventory, return it with the ID
     if (match) {
-      // Skip logging for now - focus on camera working first
+      // Log successful recognition
+      await service
+        .from('recognition_history')
+        .insert({
+          owner_id: auth.ownerId,
+          inventory_id: match.id,
+          recognized_name: productName,
+          confidence,
+          is_match: true,
+          confirmed: true,
+          source: 'inventory'
+        })
+        .catch((err: any) => console.error('Failed to log recognition:', err))
 
       return NextResponse.json({
         products: [

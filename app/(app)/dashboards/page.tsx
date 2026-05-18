@@ -153,7 +153,7 @@ export default function DashboardPage() {
     })
   }
 
-  const handleAction = action => {
+  const handleAction = (action: any) => {
     if (action === 'Upload now' || action === 'Upload data') router.push('/files')
     else if (action === 'Connect sources') router.push('/sources')
     else if (action === 'View alerts' || action === 'See which items') router.push('/alerts')

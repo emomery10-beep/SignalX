@@ -23,7 +23,7 @@ function Row({ label, desc, children }: { label: string; desc?: string; children
   )
 }
 
-function Toggle({ on, onChange }: { on: boolean; onChange: (s: string) => void }) {
+function Toggle({ on, onChange }: { on: boolean; onChange: (s: any) => void }) {
   return (
     <button onClick={() => onChange(!on)} style={{ width: 36, height: 20, borderRadius: 9999, border: 'none', background: on ? '#1ed4ca' : 'var(--b2)', position: 'relative', cursor: 'pointer', transition: 'background 200ms', flexShrink: 0 }}>
       <span style={{ position: 'absolute', width: 14, height: 14, borderRadius: '50%', background: '#fff', top: 3, left: 3, transition: 'transform 200ms', transform: on ? 'translateX(16px)' : 'none' }}/>

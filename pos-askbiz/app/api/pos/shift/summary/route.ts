@@ -109,14 +109,14 @@ export async function GET(req: NextRequest) {
   const averageShiftDuration = shifts.length > 0 ? totalDuration / shifts.length / (1000 * 60 * 60) : 0 // hours
 
   // Find cash variance patterns
-  const variances = shifts.map((s) => ({
+  const variances = shifts.map((s: any) => ({
     amount: Math.abs(s.variance_amount || 0),
     percent: s.expected_balance ? (Math.abs(s.variance_amount || 0) / s.expected_balance) * 100 : 0,
     cashier: s.cashier_id,
   }))
 
-  const avgVariance = variances.length > 0 ? variances.reduce((sum, v) => sum + v.amount, 0) / variances.length : 0
-  const largestVariances = variances.sort((a, b) => b.amount - a.amount).slice(0, 5)
+  const avgVariance = variances.length > 0 ? variances.reduce((sum: number, v: any) => sum + v.amount, 0) / variances.length : 0
+  const largestVariances = variances.sort((a: any, b: any) => b.amount - a.amount).slice(0, 5)
 
   // Alerts
   const alerts = []
@@ -155,7 +155,7 @@ export async function GET(req: NextRequest) {
       variance_shifts: cashier.variance_count,
     })),
     largest_variances: includeVariances
-      ? largestVariances.map((v) => ({
+      ? largestVariances.map((v: any) => ({
           amount: Math.round(v.amount * 100) / 100,
           percent: v.percent.toFixed(2),
           cashier: v.cashier,

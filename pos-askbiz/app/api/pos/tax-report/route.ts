@@ -222,11 +222,11 @@ function buildEUVATReport(
   endDate: string,
   format: string
 ) {
-  const totalNet = transactions.reduce((s, t) => {
+  const totalNet = transactions.reduce((s: number, t: any) => {
     const items = t.pos_items || []
-    return s + items.reduce((is, i) => is + (i.unit_price || 0) * (i.qty || 1), 0)
+    return s + items.reduce((is: number, i: any) => is + (i.unit_price || 0) * (i.qty || 1), 0)
   }, 0)
-  const totalTax = transactions.reduce((s, t) => s + (t.total_tax || 0), 0)
+  const totalTax = transactions.reduce((s: number, t: any) => s + (t.total_tax || 0), 0)
 
   const report = {
     reporting_period: `${startDate} to ${endDate}`,

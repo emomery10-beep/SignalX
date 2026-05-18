@@ -511,7 +511,7 @@ async function syncInstagram(
           const { data: metrics } = await insightRes.json()
           const merged: Record<string, unknown> = { ...post }
           for (const m of (metrics as Record<string, unknown>[])) {
-            merged[String(m.name)] = m.values?.[0]?.value || 0
+            merged[String(m.name)] = (m.values as any)?.[0]?.value || 0
           }
           return merged
         } catch { return post }

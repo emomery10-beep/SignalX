@@ -36,7 +36,7 @@ export default function TemplatesPage() {
     load()
   }, [filter])
 
-  const useTemplate = q => {
+  const useTemplate = (q: any) => {
     // Store question in session storage, redirect to chat
     sessionStorage.setItem('signalx-prefill', q)
     router.push('/chat')
@@ -53,7 +53,7 @@ export default function TemplatesPage() {
         </div>
         <div style={{ display:'flex', gap:6 }}>
           {BIZ_FILTERS.map(f => (
-            <button key={f.value} onClick={() => setFilter(f.value)}
+            <button key={f.value} onClick={() => setFilter(f.value as any)}
               style={{ padding:'6px 13px', borderRadius:9999, border:`1px solid ${filter===f.value?'rgba(30,212,202,.35)':'var(--b2)'}`, background:filter===f.value?'rgba(30,212,202,.09)':'transparent', color:filter===f.value?'#47e2da':'var(--tx2)', fontFamily:'inherit', fontSize:12, cursor:'pointer' }}>
               {f.label}
             </button>

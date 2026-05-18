@@ -12,11 +12,22 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('pos_staff')
-    .select('id, name, email, phone, role, active, last_login_at, created_at, pin_hash, location_id, location:pos_locations!location_id(id, name)')
+    .select('id, name, email, phone, role, sector, sector_edit_count, active, last_login_at, created_at, pin_hash, location_id, location:pos_locations!location_id(id, name)')
     .eq('owner_id', user.id)
     .order('created_at', { ascending: true })
+
+  // If columns don't exist yet (migration pending), fall back to query without them
+  if (error && (error.message.includes('column') || error.message.includes('does not exist') || (error as any).code === '42703')) {
+    const fallback = await supabase
+      .from('pos_staff')
+      .select('id, name, email, phone, role, active, last_login_at, created_at, pin_hash, location_id, location:pos_locations!location_id(id, name)')
+      .eq('owner_id', user.id)
+      .order('created_at', { ascending: true })
+    data = fallback.data as any
+    error = fallback.error
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
@@ -31,9 +42,10 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
-  const { phone, email, name, role, pin, location_id } = await req.json()
+  const { phone, email, name, role, pin, location_id, sector } = await req.json()
   if ((!phone && !email) || !name || !role) return NextResponse.json({ error: 'phone or email, name and role required' }, { status: 400 })
-  if (!['cashier', 'inventory', 'repair', 'engineer'].includes(role)) return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
+  if (!['cashier', 'inventory', 'repair', 'engineer', 'manager', 'supervisor'].includes(role)) return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
+  if (sector && !['restaurant', 'repair', 'salon', 'retail'].includes(sector)) return NextResponse.json({ error: 'Invalid sector' }, { status: 400 })
   if (pin && (String(pin).length < 4 || String(pin).length > 6)) return NextResponse.json({ error: 'PIN must be 4–6 digits' }, { status: 400 })
 
   // ── Enforce seat limit ────────────────────────────────────────────────────
@@ -61,7 +73,7 @@ export async function POST(req: NextRequest) {
   try {
     const { data, error } = await supabase
       .from('pos_staff')
-      .insert({ owner_id: user.id, phone: phone || null, email: email || null, name, role, location_id: location_id || null })
+      .insert({ owner_id: user.id, phone: phone || null, email: email || null, name, role, sector: sector || 'retail', sector_edit_count: 0, location_id: location_id || null })
       .select()
       .single()
 
@@ -87,8 +99,22 @@ export async function PATCH(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
-  const { id, name, role, phone, email, active, pin, location_id } = await req.json()
+  const { id, name, role, phone, email, active, pin, location_id, sector } = await req.json()
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
+  if (role !== undefined && !['cashier', 'inventory', 'repair', 'engineer', 'manager', 'supervisor'].includes(role)) {
+    return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
+  }
+
+  // Enforce sector edit limit of 2
+  if (sector !== undefined) {
+    const { data: existing } = await supabase.from('pos_staff').select('sector, sector_edit_count').eq('id', id).eq('owner_id', user.id).single()
+    if (existing && sector !== existing.sector) {
+      const editCount = existing.sector_edit_count ?? 0
+      if (editCount >= 2) {
+        return NextResponse.json({ error: 'Sector edit limit reached. Purchase a new seat to reassign this staff member.', sector_limit: true }, { status: 403 })
+      }
+    }
+  }
 
   if ((phone !== undefined || email !== undefined) && !phone && !email) {
     return NextResponse.json({ error: 'At least phone or email required' }, { status: 400 })
@@ -122,6 +148,12 @@ export async function PATCH(req: NextRequest) {
   if (email  !== undefined) updates.email  = email || null
   if (active !== undefined) updates.active = active
   if (location_id !== undefined) updates.location_id = location_id || null
+  if (sector !== undefined) {
+    updates.sector = sector
+    // Only increment count when sector actually changes (checked above)
+    const { data: cur } = await supabase.from('pos_staff').select('sector, sector_edit_count').eq('id', id).eq('owner_id', user.id).single()
+    if (cur && sector !== cur.sector) updates.sector_edit_count = (cur.sector_edit_count ?? 0) + 1
+  }
 
   // PIN update — need staff ID to hash
   if (pin) {

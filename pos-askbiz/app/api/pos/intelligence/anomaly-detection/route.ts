@@ -26,10 +26,10 @@ export async function POST(req: NextRequest) {
   if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
   const service = createServiceClient()
-  const body = req.json() as any
+  const body = await req.json() as any
 
-  const analysisType = (await body).analysis_type || 'all'
-  const periodDays = (await body).period_days || 30
+  const analysisType = body.analysis_type || 'all'
+  const periodDays = body.period_days || 30
 
   const startDate = new Date()
   startDate.setDate(startDate.getDate() - periodDays)
@@ -126,7 +126,7 @@ async function getSalesData(service: any, ownerId: string, startDate: Date) {
     days_analyzed: Object.keys(byDay).length,
     by_day: byDay,
     payment_methods: transactions.reduce(
-      (acc, tx) => {
+      (acc: Record<string, number>, tx: any) => {
         const method = tx.payment_method || 'unknown'
         acc[method] = (acc[method] || 0) + 1
         return acc
@@ -146,19 +146,19 @@ async function getCashData(service: any, ownerId: string, startDate: Date) {
 
   if (!shifts) return null
 
-  const variances = shifts.map((s) => ({
+  const variances = shifts.map((s: any) => ({
     variance: s.variance_amount || 0,
     reason: s.variance_reason,
   }))
 
-  const avgVariance = variances.reduce((sum, v) => sum + Math.abs(v.variance), 0) / variances.length
+  const avgVariance = variances.reduce((sum: number, v: any) => sum + Math.abs(v.variance), 0) / variances.length
 
   return {
     total_shifts: shifts.length,
     average_variance: avgVariance,
-    shifts_with_variance: variances.filter((v) => v.variance !== 0).length,
-    largest_variance: Math.max(...variances.map((v) => Math.abs(v.variance))),
-    variance_reasons: variances.map((v) => v.reason).filter(Boolean),
+    shifts_with_variance: variances.filter((v: any) => v.variance !== 0).length,
+    largest_variance: Math.max(...variances.map((v: any) => Math.abs(v.variance))),
+    variance_reasons: variances.map((v: any) => v.reason).filter(Boolean),
   }
 }
 
@@ -171,14 +171,14 @@ async function getInventoryData(service: any, ownerId: string, startDate: Date) 
   if (!items) return null
 
   // Calculate inventory value
-  const totalValue = items.reduce((sum, item) => sum + ((item.cost_price || 0) * (item.qty || 0)), 0)
-  const lowStockItems = items.filter((item) => (item.qty || 0) < 5)
+  const totalValue = items.reduce((sum: number, item: any) => sum + ((item.cost_price || 0) * (item.qty || 0)), 0)
+  const lowStockItems = items.filter((item: any) => (item.qty || 0) < 5)
 
   return {
     total_items: items.length,
     low_stock_items: lowStockItems.length,
     total_inventory_value: totalValue,
-    items_below_threshold: lowStockItems.map((item) => ({ name: item.name, qty: item.qty })),
+    items_below_threshold: lowStockItems.map((item: any) => ({ name: item.name, qty: item.qty })),
   }
 }
 
@@ -191,8 +191,8 @@ async function getTaxData(service: any, ownerId: string, startDate: Date) {
 
   if (!transactions) return null
 
-  const totalRevenue = transactions.reduce((sum, t) => sum + (t.total_amount || 0), 0)
-  const totalTax = transactions.reduce((sum, t) => sum + (t.total_tax || 0), 0)
+  const totalRevenue = transactions.reduce((sum: number, t: any) => sum + (t.total_amount || 0), 0)
+  const totalTax = transactions.reduce((sum: number, t: any) => sum + (t.total_tax || 0), 0)
 
   return {
     total_revenue: totalRevenue,

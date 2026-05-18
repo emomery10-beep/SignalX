@@ -45,7 +45,6 @@ body {
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
   min-height: 100%;
-  overflow-x: hidden;
   /* Prevent tiny fonts on iOS */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;

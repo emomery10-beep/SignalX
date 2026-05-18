@@ -193,7 +193,7 @@ export default function ChatPage() {
       }
       if (!res.ok) throw new Error(`API error ${res.status}`)
       const result: AIResult = await res.json()
-      setLastResult(result)
+      setLastResult(result as unknown as Record<string, unknown>)
 
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(), role: 'assistant',
@@ -222,12 +222,12 @@ export default function ChatPage() {
     } finally { setIsLoadingLocal(false) }
   }, [input, messages, isLoading, conversationId, geo, settings, uploadedFile, user?.name, router, supabase, setLastResult])
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = (e: any) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
   }
 
   useEffect(() => {
-    const handler = (e) => {
+    const handler = (e: any) => {
       const q = (e as CustomEvent).detail as string
       if (q) sendMessage(q)
     }

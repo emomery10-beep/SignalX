@@ -35,18 +35,18 @@ export async function GET(req: NextRequest) {
   const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
 
   // Calculate retention stats
-  const customersToDelete = customers?.filter(c => {
+  const customersToDelete = customers?.filter((c: any) => {
     if (c.is_anonymized) return false // Already deleted
     const lastActivity = new Date(c.last_seen_at || c.created_at)
     return lastActivity < ninetyDaysAgo // Inactive for 90+ days
   }) || []
 
-  const transactionsExpired = transactions?.filter(t => {
+  const transactionsExpired = transactions?.filter((t: any) => {
     const txDate = new Date(t.created_at)
     return txDate < sevenYearsAgo // Older than 7 years
   }) || []
 
-  const consentExpired = consents?.filter(c => {
+  const consentExpired = consents?.filter((c: any) => {
     const consentDate = new Date(c.timestamp)
     return consentDate < sevenYearsAgo
   }) || []
@@ -56,8 +56,8 @@ export async function GET(req: NextRequest) {
       generated_at: now.toISOString(),
       jurisdiction: 'GDPR / CCPA / UK GDPR',
       total_customers: customers?.length || 0,
-      anonymized_customers: customers?.filter(c => c.is_anonymized).length || 0,
-      active_customers: customers?.filter(c => !c.is_anonymized).length || 0,
+      anonymized_customers: customers?.filter((c: any) => c.is_anonymized).length || 0,
+      active_customers: customers?.filter((c: any) => !c.is_anonymized).length || 0,
     },
 
     retention_schedule: {
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
         policy: 'Delete inactive customers after 90 days of inactivity',
         inactive_threshold_days: 90,
         customers_pending_deletion: customersToDelete.length,
-        next_deletion_batch: customersToDelete.slice(0, 5).map(c => ({
+        next_deletion_batch: customersToDelete.slice(0, 5).map((c: any) => ({
           customer_id: c.id,
           last_activity: c.last_seen_at || c.created_at,
           deletion_date: new Date(new Date(c.last_seen_at || c.created_at).getTime() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
         total_transactions: transactions?.length || 0,
         transactions_ready_for_deletion: transactionsExpired.length,
         oldest_active_transaction: transactions
-          ?.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())[0]?.created_at,
+          ?.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())[0]?.created_at,
         retention_expires_date: new Date(now.getTime() + 7 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       },
 
@@ -87,8 +87,8 @@ export async function GET(req: NextRequest) {
         retention_period_years: 7,
         total_consent_records: consents?.length || 0,
         records_ready_for_deletion: consentExpired.length,
-        granted_consents: consents?.filter(c => c.status === 'granted').length || 0,
-        withdrawn_consents: consents?.filter(c => c.status === 'withdrawn').length || 0,
+        granted_consents: consents?.filter((c: any) => c.status === 'granted').length || 0,
+        withdrawn_consents: consents?.filter((c: any) => c.status === 'withdrawn').length || 0,
       },
 
       audit_logs: {

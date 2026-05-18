@@ -64,9 +64,9 @@ async function runPOSSignals(userId: string): Promise<Signal[]> {
     }
 
     // Calculate daily averages (exclude today)
-    const pastTx = recentTx.filter(t => new Date(t.created_at) < todayStart)
-    const daysWithSales = new Set(pastTx.map(t => t.created_at.slice(0, 10))).size || 1
-    const pastRevenue = pastTx.reduce((s, t) => s + t.total, 0)
+    const pastTx = recentTx.filter((t: any) => new Date(t.created_at) < todayStart)
+    const daysWithSales = new Set(pastTx.map((t: any) => t.created_at.slice(0, 10))).size || 1
+    const pastRevenue = pastTx.reduce((s: number, t: any) => s + t.total, 0)
     const avgDailyRevenue = pastRevenue / daysWithSales
 
     const todayRevenue = todayTx.reduce((s: number, t: any) => s + t.total, 0)

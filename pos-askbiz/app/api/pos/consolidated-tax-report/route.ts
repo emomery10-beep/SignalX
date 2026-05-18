@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
   let locationsToReport = locations
   if (jurisdictionsParam) {
     const requestedJurisdictions = jurisdictionsParam.split(',')
-    locationsToReport = locations.filter((loc) => requestedJurisdictions.includes(loc.tax_jurisdiction))
+    locationsToReport = locations.filter((loc: any) => requestedJurisdictions.includes(loc.tax_jurisdiction))
   }
 
   // Build report for each location
@@ -93,8 +93,8 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const locationRevenue = tx.reduce((sum, t) => sum + (t.total_amount || 0), 0)
-    const locationTax = tx.reduce((sum, t) => sum + (t.total_tax || 0), 0)
+    const locationRevenue = tx.reduce((sum: number, t: any) => sum + (t.total_amount || 0), 0)
+    const locationTax = tx.reduce((sum: number, t: any) => sum + (t.total_tax || 0), 0)
 
     totalRevenue += locationRevenue
     totalTax += locationTax

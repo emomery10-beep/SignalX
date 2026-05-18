@@ -3,8 +3,6 @@ import { createServiceClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosOwner } from '@/lib/pos-auth'  // fix #20 — use shared auth helper
 
-export const dynamic = 'force-dynamic'
-
 // CORS handled globally by next.config.js
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -52,11 +50,11 @@ export async function POST(req: NextRequest) {
 
     const catalogueText = (inventoryList || [])
       .slice(0, 200)
-      .map(p => `- ${p.name}${p.stock_qty > 0 ? ` (${p.stock_qty} in stock)` : ' (OUT OF STOCK)'}`)
+      .map((p: any) => `- ${p.name}${p.stock_qty > 0 ? ` (${p.stock_qty} in stock)` : ' (OUT OF STOCK)'}`)
       .join('\n')
 
     const hotListText = (hotList || []).length > 0
-      ? `\n\nFREQUENTLY RECOGNIZED (prioritize these):\n${hotList.map(h => `- ${h.recognized_name}`).join('\n')}`
+      ? `\n\nFREQUENTLY RECOGNIZED (prioritize these):\n${hotList.map((h: any) => `- ${h.recognized_name}`).join('\n')}`
       : ''
 
     // fix #26 — use generic alias rather than date-pinned checkpoint
@@ -79,13 +77,12 @@ YOUR STORE'S INVENTORY:
 ${catalogueText || '(Empty inventory)'}${hotListText}
 
 TASK:
-1. Look at the image and the inventory list above
-2. FIRST: Check if this matches anything in the inventory list (even if worded differently - e.g., "Cumin Seeds" matches "Loose Cumin Seeds per Kilo")
-3. If you find a match, return the EXACT name from the inventory list
-4. If no match, identify the product as best you can
+1. Identify the product in the image - be specific with brand, size, type
+2. PRIORITIZE products in the "FREQUENTLY RECOGNIZED" list - these are the store's most common items
+3. If it matches something in the inventory list above, use the EXACT name from the list
+4. If NOT in the inventory list, give your best identification anyway
 5. Try to extract the price if shown on label/tag
-6. PRIORITIZE products in the "FREQUENTLY RECOGNIZED" list
-7. Identify anything you can visually see clearly, even generic items without brand labels
+6. Identify anything you can visually see clearly, even generic items without brand labels (e.g., rice, flour, eggs)
 
 Reply ONLY with valid JSON, nothing else:
 {"name":"product name","price":null}`,
@@ -106,49 +103,40 @@ Reply ONLY with valid JSON, nothing else:
     const productName = (parsed.name || '').trim()
     const tagPrice    = typeof parsed.price === 'number' ? parsed.price : null
 
-    console.log('🔍 SCAN RECOGNITION:', { productName, price: tagPrice, inventoryCount: inventoryList?.length })
-
     if (!productName) return json({ error: 'Could not identify product' }, 422)
 
     // Try exact match first
-    let match = inventoryList?.find(p => p.name.toLowerCase() === productName.toLowerCase())
-    if (match) console.log('✓ EXACT MATCH:', match.name)
+    let match = inventoryList?.find((p: any) => p.name.toLowerCase() === productName.toLowerCase())
 
-    // If no exact match, use smart fuzzy matching - require ALL major words to be present
+    // If no exact match, use fuzzy matching
     if (!match && inventoryList && inventoryList.length > 0) {
-      const words = productName.split(/\s+/).map(w => w.toLowerCase()).filter(Boolean)
-      const scored = inventoryList.map(item => {
-        const itemWords = item.name.toLowerCase().split(/\s+/)
-        const matchCount = words.filter(w => itemWords.some(iw => iw.includes(w) || w.includes(iw))).length
-        return { item, score: matchCount, totalWords: words.length }
-      }).sort((a, b) => b.score - a.score)
+      const words = productName.split(/\s+/).slice(0, 4).map(escapeLike).filter(Boolean)
+      const scored = inventoryList.map((item: any) => {
+        const nameLower = item.name.toLowerCase()
+        const score = words.filter(w => nameLower.includes(w.toLowerCase())).length
+        return { item, score }
+      }).sort((a: any, b: any) => b.score - a.score)
 
-      console.log('🔎 FUZZY ATTEMPT:', { words, topMatch: scored[0]?.item?.name, matchScore: scored[0]?.score, needAllWords: scored[0]?.totalWords })
-
-      if (scored[0].score === scored[0].totalWords && scored[0].totalWords > 0) {
+      // Require at least 60% of words to match (works for all product name lengths)
+      const minMatches = Math.max(1, Math.ceil(words.length * 0.6))
+      if (scored[0].score >= minMatches) {
         match = scored[0].item
-        console.log('✓ FUZZY MATCH:', match.name)
-      } else if (scored[0]?.totalWords > 0) {
-        console.log('❌ FUZZY FAILED:', { reason: `Need ${scored[0].totalWords} words, got ${scored[0].score} matches` })
       }
     }
 
     if (match) {
-      // Log successful recognition (optional - table may not exist yet)
-      try {
-        await service
-          .from('recognition_history')
-          .insert({
-            owner_id: ownerId,
-            inventory_id: match.id,
-            recognized_name: productName,
-            is_match: true,
-            confirmed: true,
-            source: 'cashier'
-          })
-      } catch (logErr) {
-        console.error('Recognition logging unavailable:', logErr)
-      }
+      // Log successful recognition
+      await service
+        .from('recognition_history')
+        .insert({
+          owner_id: ownerId,
+          inventory_id: match.id,
+          recognized_name: productName,
+          is_match: true,
+          confirmed: true,
+          source: 'cashier'
+        })
+        .catch((err: any) => console.error('Failed to log recognition:', err))
 
       return json({
         found:        true,
