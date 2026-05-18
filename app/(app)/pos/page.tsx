@@ -1217,7 +1217,7 @@ export default function POSPage() {
                 { icon: '🔧', label: 'Service Jobs',  tab: 'services' as Tab,  desc: 'All jobs by status' },
                 { icon: '👥', label: 'Staff',         tab: 'staff' as Tab,     desc: 'Engineers & repair roles' },
                 { icon: '🛒', label: 'Sales',         tab: 'overview' as Tab,  desc: 'Revenue & transactions' },
-                { icon: '📦', label: 'Parts & Stock', tab: 'inventory' as Tab, desc: 'Inventory levels',        badge: alertCount > 0 ? alertCount : null },
+                { icon: '📦', label: 'Parts & Stock', tab: 'inventory' as Tab, desc: 'Inventory levels',        badge: !sectorOverride && alertCount > 0 ? alertCount : null },
                 { icon: '🔍', label: 'Audit',         tab: 'audit' as Tab,     desc: 'Every action logged' },
               ])}
               <div style={{ marginTop: 28 }}>
@@ -1243,7 +1243,7 @@ export default function POSPage() {
                 { icon: '✅', label: 'Approvals',    tab: 'approvals' as Tab,    desc: 'Pending sign-offs' },
                 { icon: '🧠', label: 'Intelligence', tab: 'intelligence' as Tab, desc: 'AI anomaly detection & production insights' },
                 { icon: '👥', label: 'Staff',        tab: 'staff' as Tab,        desc: 'Supervisors & floor workers' },
-                { icon: '📦', label: 'Inventory',    tab: 'inventory' as Tab,    desc: 'Raw materials & finished goods', badge: alertCount > 0 ? alertCount : null },
+                { icon: '📦', label: 'Inventory',    tab: 'inventory' as Tab,    desc: 'Raw materials & finished goods', badge: !sectorOverride && alertCount > 0 ? alertCount : null },
                 { icon: '🔍', label: 'Audit',        tab: 'audit' as Tab,        desc: 'Every capture & approval logged' },
               ])}
             </div>
@@ -1265,7 +1265,7 @@ export default function POSPage() {
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Stock management, sales tracking, and supplier orders.</div>
               </div>
               {tileGrid([
-                { icon: '📦', label: 'Inventory', tab: 'inventory' as Tab, desc: 'Stock levels & products',    badge: alertCount > 0 ? alertCount : null },
+                { icon: '📦', label: 'Inventory', tab: 'inventory' as Tab, desc: 'Stock levels & products',    badge: !sectorOverride && alertCount > 0 ? alertCount : null },
                 { icon: '🛒', label: 'Sales',     tab: 'overview' as Tab,  desc: 'Revenue & transactions' },
                 { icon: '👥', label: 'Staff',     tab: 'staff' as Tab,     desc: 'Cashiers & permissions' },
                 { icon: '🏪', label: 'Branches',  tab: 'branches' as Tab,  desc: 'Locations & stock by branch' },
