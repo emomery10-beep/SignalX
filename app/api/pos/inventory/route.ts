@@ -14,10 +14,11 @@ export async function GET(req: NextRequest) {
 
   const service = createServiceClient()
   const { searchParams } = new URL(req.url)
-  const search = searchParams.get('search') || ''
-  const page   = Math.max(0, parseInt(searchParams.get('page') || '0'))
-  const limit  = Math.min(200, parseInt(searchParams.get('limit') || '200'))
+  const search      = searchParams.get('search') || ''
+  const page        = Math.max(0, parseInt(searchParams.get('page') || '0'))
+  const limit       = Math.min(200, parseInt(searchParams.get('limit') || '200'))
   const location_id = searchParams.get('location_id') || auth.locationId
+  const sector      = searchParams.get('sector') || null   // filter by sector tag
 
   let query = service
     .from('inventory')
@@ -29,6 +30,9 @@ export async function GET(req: NextRequest) {
 
   // Staff locked to branch; owner can filter or see all
   if (location_id) query = query.eq('location_id', location_id)
+
+  // Sector filter: return items tagged to this sector + untagged (shared) items
+  if (sector) query = query.or(`sector.eq.${sector},sector.is.null`)
 
   if (search) {
     query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`)
@@ -47,7 +51,7 @@ export async function POST(req: NextRequest) {
 
   const service = createServiceClient()
   const body = await req.json()
-  const { name, sku, cost_price, sale_price, stock_qty, low_stock_threshold, unit } = body
+  const { name, sku, cost_price, sale_price, stock_qty, low_stock_threshold, unit, sector } = body
   const locationId = auth.locationId || body.location_id || null
 
   if (!name?.trim()) return NextResponse.json({ error: 'name required' }, { status: 400 })
@@ -64,6 +68,7 @@ export async function POST(req: NextRequest) {
       stock_qty:           Math.max(0, parseInt(stock_qty) || 0),
       low_stock_threshold: Math.max(1, parseInt(low_stock_threshold) || 5),
       unit:                unit || 'item',
+      sector:              sector || null,
     })
     .select()
     .single()
@@ -158,7 +163,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   // General field update — whitelist writable fields
-  const allowed = ['name', 'sku', 'cost_price', 'sale_price', 'stock_qty', 'low_stock_threshold', 'unit', 'active']
+  const allowed = ['name', 'sku', 'cost_price', 'sale_price', 'stock_qty', 'low_stock_threshold', 'unit', 'active', 'sector']
   const updates: Record<string, unknown> = {}
   for (const key of allowed) {
     if (fields[key] !== undefined) updates[key] = fields[key]

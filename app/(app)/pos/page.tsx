@@ -67,7 +67,7 @@ interface Transaction {
   pos_customers?: { phone: string; name?: string } | null
 }
 interface InventoryItem {
-  id: string; name: string; sku?: string; sale_price: number; cost_price: number; stock_qty: number; low_stock_threshold: number; unit?: string; last_sold_at: string | null; category?: string; active: boolean; location_id?: string; location?: { id: string; name: string } | null
+  id: string; name: string; sku?: string; sale_price: number; cost_price: number; stock_qty: number; low_stock_threshold: number; unit?: string; last_sold_at: string | null; category?: string; sector?: string | null; active: boolean; location_id?: string; location?: { id: string; name: string } | null
 }
 interface Location {
   id: string; name: string; address?: string; phone?: string; is_active: boolean
@@ -136,12 +136,13 @@ export default function POSPage() {
 
   // Inventory
   const [showAddProduct, setShowAddProduct] = useState(false)
-  const [newProduct, setNewProduct] = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '' })
+  const [newProduct, setNewProduct] = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '', sector: '' })
   const [addingProduct, setAddingProduct] = useState(false)
   const [invSearch, setInvSearch] = useState('')
   const [invCategory, setInvCategory] = useState('all')
+  const [invSector, setInvSector] = useState('all')
   const [editingProduct, setEditingProduct] = useState<InventoryItem | null>(null)
-  const [editProduct, setEditProduct] = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '', category: '' })
+  const [editProduct, setEditProduct] = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '', category: '', sector: '' })
   const [editingProductSubmitting, setEditingProductSubmitting] = useState(false)
   const [restockId, setRestockId] = useState<string | null>(null)
   const [restockQty, setRestockQty] = useState('')
@@ -422,8 +423,9 @@ export default function POSPage() {
     let items = inventory
     if (invSearch) items = items.filter(i => i.name.toLowerCase().includes(invSearch.toLowerCase()) || (i.sku && i.sku.toLowerCase().includes(invSearch.toLowerCase())))
     if (invCategory !== 'all') items = items.filter(i => (i.category || 'Uncategorised') === invCategory)
+    if (invSector !== 'all') items = items.filter(i => !i.sector || i.sector === invSector)
     return items
-  }, [inventory, invSearch, invCategory])
+  }, [inventory, invSearch, invCategory, invSector])
 
   // P&L data
   const plData = useMemo(() => {
@@ -561,9 +563,9 @@ export default function POSPage() {
     if (!newProduct.name || !newProduct.sale_price) return
     setAddingProduct(true)
     try {
-      const res = await fetch('/api/pos/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newProduct.name, sale_price: parseFloat(newProduct.sale_price), cost_price: parseFloat(newProduct.cost_price || '0'), stock_qty: parseInt(newProduct.stock_qty || '0'), low_stock_threshold: parseInt(newProduct.low_stock_threshold || '5'), category: newProduct.category, sku: newProduct.sku }) })
+      const res = await fetch('/api/pos/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newProduct.name, sale_price: parseFloat(newProduct.sale_price), cost_price: parseFloat(newProduct.cost_price || '0'), stock_qty: parseInt(newProduct.stock_qty || '0'), low_stock_threshold: parseInt(newProduct.low_stock_threshold || '5'), category: newProduct.category, sku: newProduct.sku, sector: newProduct.sector || null }) })
       const data = await res.json()
-      if (data.product) { setInventory(prev => [...prev, data.product]); setNewProduct({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '' }); setShowAddProduct(false); notify(`${data.product.name} added`) }
+      if (data.product) { setInventory(prev => [...prev, data.product]); setNewProduct({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '', sector: '' }); setShowAddProduct(false); notify(`${data.product.name} added`) }
     } catch { notify('Failed to add product', false) }
     setAddingProduct(false)
   }
@@ -578,6 +580,7 @@ export default function POSPage() {
       if (editProduct.cost_price) updates.cost_price = parseFloat(editProduct.cost_price)
       if (editProduct.stock_qty) updates.stock_qty = parseInt(editProduct.stock_qty)
       if (editProduct.low_stock_threshold) updates.low_stock_threshold = parseInt(editProduct.low_stock_threshold)
+      updates.sector = editProduct.sector || null
       const res = await fetch('/api/pos/inventory', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingProduct.id, ...updates }) })
       const data = await res.json()
       if (data.product) { setInventory(prev => prev.map(i => i.id === editingProduct.id ? data.product : i)); setEditingProduct(null); notify('Product updated') }
@@ -1117,6 +1120,10 @@ export default function POSPage() {
             : 'retail'
           const sector = sectorOverride || detectedSector
 
+          // Sector-specific alert count: items tagged to this sector + untagged (shared) items
+          const sectorInventory = inventory.filter(i => !i.sector || i.sector === sector)
+          const sectorAlertCount = sectorInventory.filter(i => i.stock_qty <= i.low_stock_threshold).length
+
           const ACC = '#d08a59'
 
           // ── Shared tile card renderer ──────────────────────────────────────
@@ -1217,7 +1224,7 @@ export default function POSPage() {
                 { icon: '🔧', label: 'Service Jobs',  tab: 'services' as Tab,  desc: 'All jobs by status' },
                 { icon: '👥', label: 'Staff',         tab: 'staff' as Tab,     desc: 'Engineers & repair roles' },
                 { icon: '🛒', label: 'Sales',         tab: 'overview' as Tab,  desc: 'Revenue & transactions' },
-                { icon: '📦', label: 'Parts & Stock', tab: 'inventory' as Tab, desc: 'Inventory levels',        badge: !sectorOverride && alertCount > 0 ? alertCount : null },
+                { icon: '📦', label: 'Parts & Stock', tab: 'inventory' as Tab, desc: 'Inventory levels',        badge: sectorAlertCount > 0 ? sectorAlertCount : null },
                 { icon: '🔍', label: 'Audit',         tab: 'audit' as Tab,     desc: 'Every action logged' },
               ])}
               <div style={{ marginTop: 28 }}>
@@ -1243,7 +1250,7 @@ export default function POSPage() {
                 { icon: '✅', label: 'Approvals',    tab: 'approvals' as Tab,    desc: 'Pending sign-offs' },
                 { icon: '🧠', label: 'Intelligence', tab: 'intelligence' as Tab, desc: 'AI anomaly detection & production insights' },
                 { icon: '👥', label: 'Staff',        tab: 'staff' as Tab,        desc: 'Supervisors & floor workers' },
-                { icon: '📦', label: 'Inventory',    tab: 'inventory' as Tab,    desc: 'Raw materials & finished goods', badge: !sectorOverride && alertCount > 0 ? alertCount : null },
+                { icon: '📦', label: 'Inventory',    tab: 'inventory' as Tab,    desc: 'Raw materials & finished goods', badge: sectorAlertCount > 0 ? sectorAlertCount : null },
                 { icon: '🔍', label: 'Audit',        tab: 'audit' as Tab,        desc: 'Every capture & approval logged' },
               ])}
             </div>
@@ -1265,7 +1272,7 @@ export default function POSPage() {
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Stock management, sales tracking, and supplier orders.</div>
               </div>
               {tileGrid([
-                { icon: '📦', label: 'Inventory', tab: 'inventory' as Tab, desc: 'Stock levels & products',    badge: !sectorOverride && alertCount > 0 ? alertCount : null },
+                { icon: '📦', label: 'Inventory', tab: 'inventory' as Tab, desc: 'Stock levels & products',    badge: sectorAlertCount > 0 ? sectorAlertCount : null },
                 { icon: '🛒', label: 'Sales',     tab: 'overview' as Tab,  desc: 'Revenue & transactions' },
                 { icon: '👥', label: 'Staff',     tab: 'staff' as Tab,     desc: 'Cashiers & permissions' },
                 { icon: '🏪', label: 'Branches',  tab: 'branches' as Tab,  desc: 'Locations & stock by branch' },
@@ -1470,7 +1477,7 @@ export default function POSPage() {
               </div>
             </div>
 
-            {/* Search & category filter */}
+            {/* Search, category & sector filter */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
               <input placeholder="Search products..." value={invSearch} onChange={e => setInvSearch(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 180 }} />
               {categories.length > 2 && (
@@ -1478,6 +1485,15 @@ export default function POSPage() {
                   {categories.map(c => <option key={c} value={c}>{c === 'all' ? 'All categories' : c}</option>)}
                 </select>
               )}
+              <select value={invSector} onChange={e => setInvSector(e.target.value)} style={{ ...inputStyle, minWidth: 140 }}>
+                <option value="all">All sectors</option>
+                <option value="retail">🛒 Retail</option>
+                <option value="repair">🔧 Repair</option>
+                <option value="factory">🏭 Factory</option>
+                <option value="restaurant">🍴 Restaurant</option>
+                <option value="logistics">🚚 Logistics</option>
+                <option value="salon">💇 Salon</option>
+              </select>
             </div>
 
             {/* Camera preview modal */}
@@ -1613,6 +1629,15 @@ export default function POSPage() {
                   <input placeholder="Cost price (optional)" type="number" value={newProduct.cost_price} onChange={e => setNewProduct(p => ({ ...p, cost_price: e.target.value }))} style={inputStyle} />
                   <input placeholder="Starting stock qty" type="number" value={newProduct.stock_qty} onChange={e => setNewProduct(p => ({ ...p, stock_qty: e.target.value }))} style={inputStyle} />
                   <input placeholder="Low stock alert at" type="number" value={newProduct.low_stock_threshold} onChange={e => setNewProduct(p => ({ ...p, low_stock_threshold: e.target.value }))} style={inputStyle} />
+                  <select value={newProduct.sector} onChange={e => setNewProduct(p => ({ ...p, sector: e.target.value }))} style={{ ...inputStyle, gridColumn: '1/-1' }}>
+                    <option value="">All sectors (shared item)</option>
+                    <option value="retail">🛒 Retail only</option>
+                    <option value="repair">🔧 Repair only</option>
+                    <option value="factory">🏭 Factory only</option>
+                    <option value="restaurant">🍴 Restaurant only</option>
+                    <option value="logistics">🚚 Logistics only</option>
+                    <option value="salon">💇 Salon only</option>
+                  </select>
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                   <button onClick={handleAddProduct} disabled={addingProduct} style={btnPrimary}>{addingProduct ? 'Adding...' : 'Add product'}</button>
@@ -1631,6 +1656,15 @@ export default function POSPage() {
                   <input placeholder="Cost price" type="number" value={editProduct.cost_price} onChange={e => setEditProduct(p => ({ ...p, cost_price: e.target.value }))} style={inputStyle} />
                   <input placeholder="Stock qty" type="number" value={editProduct.stock_qty} onChange={e => setEditProduct(p => ({ ...p, stock_qty: e.target.value }))} style={inputStyle} />
                   <input placeholder="Low stock threshold" type="number" value={editProduct.low_stock_threshold} onChange={e => setEditProduct(p => ({ ...p, low_stock_threshold: e.target.value }))} style={inputStyle} />
+                  <select value={editProduct.sector} onChange={e => setEditProduct(p => ({ ...p, sector: e.target.value }))} style={{ ...inputStyle, gridColumn: '1/-1' }}>
+                    <option value="">All sectors (shared item)</option>
+                    <option value="retail">🛒 Retail only</option>
+                    <option value="repair">🔧 Repair only</option>
+                    <option value="factory">🏭 Factory only</option>
+                    <option value="restaurant">🍴 Restaurant only</option>
+                    <option value="logistics">🚚 Logistics only</option>
+                    <option value="salon">💇 Salon only</option>
+                  </select>
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                   <button onClick={handleEditProduct} disabled={editingProductSubmitting} style={btnPrimary}>{editingProductSubmitting ? 'Saving...' : 'Save'}</button>
@@ -1667,6 +1701,7 @@ export default function POSPage() {
                         </div>
                         {item.location?.name && selectedLocation === 'all' && locations.length > 1 && <div style={{ fontSize: 10, color: ACC, fontWeight: 600 }}>{item.location.name}</div>}
                         {item.sku && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>SKU: {item.sku}</div>}
+                        {item.sector && <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', background: 'var(--b)', padding: '1px 6px', borderRadius: 9999, display: 'inline-block', marginTop: 2, textTransform: 'capitalize' }}>{item.sector}</div>}
                         {item.last_sold_at && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Last sold {new Date(item.last_sold_at).toLocaleDateString('en-GB')}</div>}
                       </div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', textAlign: 'right' }}>{fmt(currencySymbol, item.sale_price)}</div>
@@ -1687,7 +1722,7 @@ export default function POSPage() {
                         )}
                       </div>
                       <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-                        <button onClick={() => { setEditingProduct(item); setEditProduct({ name: item.name, sale_price: item.sale_price.toString(), cost_price: (item.cost_price || 0).toString(), stock_qty: item.stock_qty.toString(), low_stock_threshold: item.low_stock_threshold.toString(), category: item.category || '' }) }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx2)' }}>Edit</button>
+                        <button onClick={() => { setEditingProduct(item); setEditProduct({ name: item.name, sale_price: item.sale_price.toString(), cost_price: (item.cost_price || 0).toString(), stock_qty: item.stock_qty.toString(), low_stock_threshold: item.low_stock_threshold.toString(), category: item.category || '', sector: item.sector || '' }) }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx2)' }}>Edit</button>
                         <button onClick={() => handleDeleteProduct(item)} style={{ padding: '4px 8px', borderRadius: 6, border: 'none', background: 'rgba(220,38,38,.08)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', color: RED }}>Remove</button>
                       </div>
                     </div>
