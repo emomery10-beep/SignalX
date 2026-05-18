@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   // Check usage limits
   const period = new Date().toISOString().slice(0, 7)
   const { data: sub } = await supabase.from('subscriptions').select('plan_id, plans(question_limit)').eq('user_id', user.id).single()
-  const questionLimit = (sub as { plans?: { question_limit: number } } | null)?.plans?.question_limit ?? 10
+  const questionLimit = (sub as unknown as { plans?: { question_limit: number } } | null)?.plans?.question_limit ?? 10
 
   if (questionLimit !== -1) {
     const { data: usage } = await supabase.from('usage').select('questions').eq('user_id', user.id).eq('period', period).single()

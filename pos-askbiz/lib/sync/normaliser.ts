@@ -158,7 +158,7 @@ export function normaliseStripe(payment: Record<string, unknown>): UnifiedRecord
     low_stock_flag: false,
     damaged_stock: 0,
     channel: 'stripe',
-    customer_region: safeStr((payment.billing_details as Record<string, unknown>)?.address?.country),
+    customer_region: safeStr((payment.billing_details as any)?.address?.country),
     currency: safeStr(payment.currency).toUpperCase() || 'USD',
     ad_spend: 0,
     campaign: safeStr(meta.campaign),
