@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
+import { hasPermission } from '@/lib/pos-permissions'
+import { logPosAudit } from '@/lib/pos-audit'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -64,9 +66,9 @@ export async function POST(req: NextRequest) {
   const auth = await resolvePosAuth(req)
   if (!auth) return json({ error: 'Unauthorised' }, 401)
 
-  // Repair or owner can create jobs
-  if (auth.role !== 'owner' && auth.role !== 'repair') {
-    return json({ error: 'Only repair staff or owner can create service jobs' }, 403)
+  // Repair, manager, or owner can create jobs
+  if (!hasPermission(auth.role, 'service.manage')) {
+    return json({ error: 'Only repair staff, manager, or owner can create service jobs' }, 403)
   }
 
   const service = createServiceClient()
@@ -165,6 +167,12 @@ export async function POST(req: NextRequest) {
     to_status: initialStatus,
     changed_by: auth.staffId || null,
     notes: isWarrantyReturn ? 'Warranty return' : 'Job created',
+  })
+
+  logPosAudit({
+    auth, event: 'job.created', entityType: 'service_job', entityId: job.id,
+    toValue: initialStatus,
+    metadata: { ticket_number: job.ticket_number, device_model, warranty_return: isWarrantyReturn },
   })
 
   // If warranty return, mark the warranty as claimed
@@ -385,6 +393,20 @@ export async function PATCH(req: NextRequest) {
       to_status: updated.status,
       changed_by: auth.staffId || null,
       notes: fields.history_note,
+    })
+  }
+
+  // Audit log — record status changes and significant field updates
+  if (fields.status && fields.status !== current.status) {
+    logPosAudit({
+      auth, event: 'job.status_change', entityType: 'service_job', entityId: id,
+      fromValue: current.status, toValue: fields.status,
+      metadata: { ticket_number: updated.ticket_number, device_model: updated.device_model },
+    })
+  } else if (Object.keys(updates).length > 0) {
+    logPosAudit({
+      auth, event: 'job.updated', entityType: 'service_job', entityId: id,
+      metadata: { fields_updated: Object.keys(updates), ticket_number: updated.ticket_number },
     })
   }
 

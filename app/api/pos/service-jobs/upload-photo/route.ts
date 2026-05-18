@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
+import { hasPermission } from '@/lib/pos-permissions'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -16,8 +17,8 @@ export async function POST(req: NextRequest) {
   const auth = await resolvePosAuth(req)
   if (!auth) return json({ error: 'Unauthorised' }, 401)
 
-  if (auth.role !== 'owner' && auth.role !== 'repair') {
-    return json({ error: 'Only repair staff or owner can upload photos' }, 403)
+  if (!hasPermission(auth.role, 'service.upload_photo')) {
+    return json({ error: 'Only repair staff, manager, or owner can upload photos' }, 403)
   }
 
   const { image, job_id, type } = await req.json()

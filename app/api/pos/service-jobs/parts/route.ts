@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
+import { hasPermission } from '@/lib/pos-permissions'
+import { logPosAudit } from '@/lib/pos-audit'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -45,8 +47,8 @@ export async function POST(req: NextRequest) {
   const auth = await resolvePosAuth(req)
   if (!auth) return json({ error: 'Unauthorised' }, 401)
 
-  if (auth.role !== 'owner' && auth.role !== 'repair' && auth.role !== 'engineer') {
-    return json({ error: 'Only repair/engineer staff can add parts' }, 403)
+  if (!hasPermission(auth.role, 'service.parts')) {
+    return json({ error: 'Only repair/engineer staff, manager, or owner can add parts' }, 403)
   }
 
   const service = createServiceClient()
@@ -107,6 +109,11 @@ export async function POST(req: NextRequest) {
     changed_by: auth.staffId || null,
     notes: `Part added: ${name.trim()} x${partQty}`,
     metadata: { part_id: data.id, inventory_id, qty: partQty },
+  })
+
+  logPosAudit({
+    auth, event: 'job.part_added', entityType: 'service_job', entityId: job_id,
+    metadata: { part_id: data.id, name: name.trim(), qty: partQty, unit_cost: partCost },
   })
 
   return json({ part: data }, 201)

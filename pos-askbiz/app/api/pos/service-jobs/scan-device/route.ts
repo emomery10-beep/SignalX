@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosAuth } from '@/lib/pos-auth'
+import { hasPermission } from '@/lib/pos-permissions'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -16,8 +17,8 @@ export async function POST(req: NextRequest) {
   const auth = await resolvePosAuth(req)
   if (!auth) return json({ error: 'Unauthorised' }, 401)
 
-  if (auth.role !== 'owner' && auth.role !== 'repair') {
-    return json({ error: 'Only repair staff or owner can scan devices' }, 403)
+  if (!hasPermission(auth.role, 'service.scan_device')) {
+    return json({ error: 'Only repair staff, manager, or owner can scan devices' }, 403)
   }
 
   const { image } = await req.json()

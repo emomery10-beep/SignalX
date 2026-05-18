@@ -2,11 +2,34 @@
 import { NextRequest } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 
+// All valid POS staff roles in hierarchy order (highest → lowest)
+export type PosRole = 'owner' | 'manager' | 'supervisor' | 'repair' | 'engineer' | 'inventory' | 'cashier'
+
+export const POS_ROLES: PosRole[] = ['owner', 'manager', 'supervisor', 'repair', 'engineer', 'inventory', 'cashier']
+
+// Role hierarchy: a role can access anything its level or below
+// e.g. manager can access supervisor-gated and cashier-gated routes
+const ROLE_LEVEL: Record<PosRole, number> = {
+  owner:      100,
+  manager:    80,
+  supervisor: 60,
+  repair:     50,
+  engineer:   40,
+  inventory:  30,
+  cashier:    20,
+}
+
+export function roleCanAccess(userRole: string, requiredRole: string): boolean {
+  const userLevel   = ROLE_LEVEL[userRole as PosRole]   ?? 0
+  const neededLevel = ROLE_LEVEL[requiredRole as PosRole] ?? 0
+  return userLevel >= neededLevel
+}
+
 export interface PosAuthResult {
   ownerId: string
   locationId: string | null
   staffId: string | null
-  role: string | null
+  role: PosRole | null
 }
 
 /**
@@ -48,12 +71,13 @@ export async function resolvePosAuth(
     .maybeSingle()
 
   if (!staff) return null
-  if (requiredRole && staff.role !== requiredRole) return null
+  // Use hierarchy: manager/supervisor can access routes requiring lower roles
+  if (requiredRole && !roleCanAccess(staff.role, requiredRole)) return null
 
   return {
     ownerId,
     locationId: staff.location_id || null,
     staffId,
-    role: staff.role,
+    role: staff.role as PosRole,
   }
 }

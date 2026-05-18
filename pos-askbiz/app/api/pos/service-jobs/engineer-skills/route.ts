@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
+import { hasPermission } from '@/lib/pos-permissions'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -53,8 +54,8 @@ export async function POST(req: NextRequest) {
   const auth = await resolvePosAuth(req)
   if (!auth) return json({ error: 'Unauthorised' }, 401)
 
-  if (auth.role !== 'owner') {
-    return json({ error: 'Only owner can manage engineer skills' }, 403)
+  if (!hasPermission(auth.role, 'service.manage')) {
+    return json({ error: 'Only repair/manager/owner can manage engineer skills' }, 403)
   }
 
   const service = createServiceClient()
@@ -94,8 +95,8 @@ export async function DELETE(req: NextRequest) {
   const auth = await resolvePosAuth(req)
   if (!auth) return json({ error: 'Unauthorised' }, 401)
 
-  if (auth.role !== 'owner') {
-    return json({ error: 'Only owner can manage engineer skills' }, 403)
+  if (!hasPermission(auth.role, 'service.manage')) {
+    return json({ error: 'Only repair/manager/owner can manage engineer skills' }, 403)
   }
 
   const service = createServiceClient()

@@ -54,10 +54,10 @@ export async function POST(req: NextRequest) {
     const expected = hashPin(String(pin), staff.id)
     if (expected !== staff.pin_hash) return json({ error: 'Incorrect PIN' }, 401)
 
-    // Fetch owner profile (currency + business type)
+    // Fetch owner currency
     const { data: profile } = await supabase
       .from('profiles')
-      .select('currency_symbol, business_type')
+      .select('currency_symbol')
       .eq('id', staff.owner_id)
       .single()
 
@@ -68,13 +68,12 @@ export async function POST(req: NextRequest) {
     return json({
       verified: true,
       staff: {
-        id:              staff.id,
-        name:            staff.name,
-        role:            staff.role,
-        owner_id:        staff.owner_id,
-        location_id:     (staff as any).location_id || null,
+        id: staff.id,
+        name: staff.name,
+        role: staff.role,
+        owner_id: staff.owner_id,
+        location_id: staff.location_id || null,
         currency_symbol: (profile as any)?.currency_symbol || '£',
-        business_type:   (profile as any)?.business_type  || 'retail',
       },
     })
   }

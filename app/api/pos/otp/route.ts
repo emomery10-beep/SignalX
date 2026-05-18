@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
     const { data: staff } = await supabase
       .from('pos_staff')
-      .select('id, name, role, owner_id, active, pin_hash')
+      .select('id, name, role, owner_id, active, pin_hash, location_id')
       .eq('email', email.trim().toLowerCase())
       .eq('active', true)
       .maybeSingle()
@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
         name: staff.name,
         role: staff.role,
         owner_id: staff.owner_id,
+        location_id: staff.location_id || null,
         currency_symbol: (profile as any)?.currency_symbol || '£',
       },
     })
