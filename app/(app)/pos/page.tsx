@@ -72,7 +72,7 @@ interface InventoryItem {
 interface Location {
   id: string; name: string; address?: string; phone?: string; is_active: boolean
 }
-type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'branches' | 'audit' | 'map'
+type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'branches' | 'audit' | 'map' | 'operations'
 type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
 type FilterModalType = { type: 'sales' | 'refunds' | 'low_stock' | 'cashier_detail'; title: string; cashier_id?: string } | null
 type TxDetailType = Transaction | null
@@ -856,6 +856,7 @@ export default function POSPage() {
               <option value="repair">🔧 Repair</option>
               <option value="salon">💇 Salon</option>
               <option value="retail">📦 Retail</option>
+              <option value="factory">🏭 Factory</option>
             </select>
           </div>
         </div>
@@ -1093,6 +1094,7 @@ export default function POSPage() {
           const detectedSector = ['restaurant','cafe','café','bar','pub','takeaway','food','catering','food stall','bistro','diner'].some(k => bt.includes(k)) ? 'restaurant'
             : ['repair','phone','mobile','electronic','watch','laptop','computer'].some(k => bt.includes(k)) ? 'repair'
             : ['salon','barber','barbershop','spa','beauty','clinic','nail'].some(k => bt.includes(k)) ? 'salon'
+            : ['factory','manufactur','production','warehouse','processing','packaging'].some(k => bt.includes(k)) ? 'factory'
             : 'retail'
           const sector = sectorOverride || detectedSector
 
@@ -1104,6 +1106,7 @@ export default function POSPage() {
                 { id: 'repair',     label: '🔧 Repair' },
                 { id: 'salon',      label: '💇 Salon' },
                 { id: 'retail',     label: '📦 Retail' },
+                { id: 'factory',    label: '🏭 Factory' },
               ].map(s => (
                 <button key={s.id} onClick={() => setSectorOverride(s.id === detectedSector ? null : s.id)}
                   style={{ padding: '5px 14px', borderRadius: 20, border: `1.5px solid ${sector === s.id ? ACC : 'var(--b)'}`,
@@ -1150,14 +1153,82 @@ export default function POSPage() {
           )
 
           if (sector === 'repair') return (
-            <div>
+            <div style={{ maxWidth: 860 }}>
               {sectorPicker}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>🔧 Repair Operations</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Service jobs, engineer assignments, parts and customer collection.</div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
+                {[
+                  { label: '🔧 Service Jobs', tab: 'services' as Tab, desc: 'All jobs by status', badge: null },
+                  { label: '👥 Staff',        tab: 'staff' as Tab,       desc: 'Engineers & repair roles', badge: null },
+                  { label: '🛒 Sales',        tab: 'overview' as Tab,    desc: 'Revenue & transaction history', badge: null },
+                  { label: '📦 Inventory',    tab: 'inventory' as Tab,   desc: 'Parts & stock levels', badge: alertCount > 0 ? alertCount : null },
+                  { label: '🔍 Audit',        tab: 'audit' as Tab,       desc: 'Every staff action logged', badge: null },
+                ].map(tile => (
+                  <button key={tile.label} onClick={() => setTab(tile.tab)}
+                    style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: '16px 14px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s', fontFamily: 'inherit', position: 'relative' }}
+                    onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>
+                    {tile.badge && (
+                      <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px' }}>{tile.badge}</span>
+                    )}
+                    <div style={{ fontSize: 20, marginBottom: 6 }}>{tile.label.split(' ')[0]}</div>
+                    <div style={{ fontWeight: 600, color: 'var(--tx)', fontSize: 14 }}>{tile.label.split(' ').slice(1).join(' ')}</div>
+                    <div style={{ color: 'var(--tx3)', fontSize: 12, marginTop: 2 }}>{tile.desc}</div>
+                  </button>
+                ))}
+              </div>
               <ServiceJobsTab
                 currencySymbol={currencySymbol}
                 selectedLocation={selectedLocation}
                 staff={staff.map(s => ({ id: s.id, name: s.name, role: s.role || 'cashier', active: s.active, location_id: s.location_id }))}
                 notify={notify}
               />
+            </div>
+          )
+
+          if (sector === 'factory') return (
+            <div style={{ maxWidth: 860 }}>
+              {sectorPicker}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>🏭 Factory Operations</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Production captures, intake/output tracking, wastage logs and dispatch.</div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+                {[
+                  { label: '📷 Captures',    href: '/dashboard',          desc: 'Intake, output, wastage & dispatch photos', badge: null },
+                  { label: '✅ Approvals',   href: '/dashboard',          desc: 'Pending captures awaiting sign-off', badge: null },
+                  { label: '👥 Staff',       tab: 'staff' as Tab,         desc: 'Supervisors & floor workers', badge: null },
+                  { label: '📦 Inventory',   tab: 'inventory' as Tab,     desc: 'Raw materials & finished goods', badge: alertCount > 0 ? alertCount : null },
+                  { label: '🔍 Audit',       tab: 'audit' as Tab,         desc: 'Every capture & approval logged', badge: null },
+                ].map(tile => (
+                  tile.href
+                    ? <a key={tile.label} href={`https://pos.askbiz.co${tile.href}`}
+                        style={{ display: 'block', background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: '16px 14px', textDecoration: 'none', transition: 'border-color 0.15s', position: 'relative' }}
+                        onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
+                        onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>
+                        {tile.badge && (
+                          <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px' }}>{tile.badge}</span>
+                        )}
+                        <div style={{ fontSize: 20, marginBottom: 6 }}>{tile.label.split(' ')[0]}</div>
+                        <div style={{ fontWeight: 600, color: 'var(--tx)', fontSize: 14 }}>{tile.label.split(' ').slice(1).join(' ')}</div>
+                        <div style={{ color: 'var(--tx3)', fontSize: 12, marginTop: 2 }}>{tile.desc}</div>
+                      </a>
+                    : <button key={tile.label} onClick={() => setTab(tile.tab!)}
+                        style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: '16px 14px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s', fontFamily: 'inherit', position: 'relative' }}
+                        onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
+                        onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>
+                        {tile.badge && (
+                          <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px' }}>{tile.badge}</span>
+                        )}
+                        <div style={{ fontSize: 20, marginBottom: 6 }}>{tile.label.split(' ')[0]}</div>
+                        <div style={{ fontWeight: 600, color: 'var(--tx)', fontSize: 14 }}>{tile.label.split(' ').slice(1).join(' ')}</div>
+                        <div style={{ color: 'var(--tx3)', fontSize: 12, marginTop: 2 }}>{tile.desc}</div>
+                      </button>
+                ))}
+              </div>
             </div>
           )
 
