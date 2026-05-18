@@ -782,8 +782,6 @@ export const HELP_TOPICS: HelpTopic[] = [
       "pos-factory-submitting-captures",
       "pos-factory-approvals",
       "pos-factory-roles-permissions",
-      "pos-staff-roles-explained",
-      "pos-audit-trail-guide",
     ],
   },
 ];

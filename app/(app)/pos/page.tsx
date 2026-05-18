@@ -58,7 +58,7 @@ function MiniBarChart({ data, color = ACC, height = 80 }: { data: { label: strin
 
 // ── Types ────────────────────────────────────────────────
 interface StaffMember {
-  id: string; name: string; phone: string; email?: string; role: 'cashier' | 'inventory' | 'repair' | 'engineer' | 'supervisor' | 'manager'; sector: string; sector_edit_count: number; active: boolean; last_login_at: string | null; has_pin?: boolean; location_id?: string; location?: { id: string; name: string } | null
+  id: string; name: string; phone: string; email?: string; role: 'cashier' | 'inventory' | 'repair' | 'engineer' | 'supervisor' | 'manager' | 'handler' | 'driver' | 'dispatcher' | 'branch_manager'; sector: string; sector_edit_count: number; active: boolean; last_login_at: string | null; has_pin?: boolean; location_id?: string; location?: { id: string; name: string } | null
 }
 interface Transaction {
   id: string; total: number; subtotal?: number; payment_type: string; status: string; created_at: string; notes?: string
@@ -72,12 +72,12 @@ interface InventoryItem {
 interface Location {
   id: string; name: string; address?: string; phone?: string; is_active: boolean
 }
-type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'branches' | 'audit' | 'map' | 'operations'
+type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'branches' | 'audit' | 'map' | 'operations' | 'captures' | 'approvals' | 'intelligence'
 type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
 type FilterModalType = { type: 'sales' | 'refunds' | 'low_stock' | 'cashier_detail'; title: string; cashier_id?: string } | null
 type TxDetailType = Transaction | null
 
-const SECTOR_BADGE_COLOR: Record<string, string> = { restaurant: '#d08a59', repair: '#6366f1', salon: '#ec4899', retail: '#22c55e' }
+const SECTOR_BADGE_COLOR: Record<string, string> = { restaurant: '#d08a59', repair: '#6366f1', salon: '#ec4899', retail: '#22c55e', logistics: '#0891b2' }
 
 export default function POSPage() {
   const supabase = createClient()
@@ -120,7 +120,7 @@ export default function POSPage() {
   const [newPhone, setNewPhone] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newName, setNewName] = useState('')
-  const [newRole, setNewRole] = useState<'cashier' | 'inventory' | 'repair' | 'engineer' | 'supervisor' | 'manager'>('cashier')
+  const [newRole, setNewRole] = useState<'cashier' | 'inventory' | 'repair' | 'engineer' | 'supervisor' | 'manager' | 'handler' | 'driver' | 'dispatcher' | 'branch_manager'>('cashier')
   const [newPin, setNewPin] = useState('')
   const [newLocationId, setNewLocationId] = useState('')
   const [addingStaff, setAddingStaff] = useState(false)
@@ -129,7 +129,7 @@ export default function POSPage() {
   const [editEmail, setEditEmail] = useState('')
   const [editName, setEditName] = useState('')
   const [editPin, setEditPin] = useState('')
-  const [editRole, setEditRole] = useState<'cashier' | 'inventory' | 'repair' | 'engineer' | 'supervisor' | 'manager'>('cashier')
+  const [editRole, setEditRole] = useState<'cashier' | 'inventory' | 'repair' | 'engineer' | 'supervisor' | 'manager' | 'handler' | 'driver' | 'dispatcher' | 'branch_manager'>('cashier')
   const [editLocationId, setEditLocationId] = useState('')
   const [editSector, setEditSector] = useState('retail')
   const [editingSubmitting, setEditingSubmitting] = useState(false)
@@ -174,6 +174,12 @@ export default function POSPage() {
 
   // P&L view
   const [plView, setPlView] = useState<'daily' | 'weekly' | 'monthly'>('daily')
+
+  // Factory captures
+  const [factoryCaptures, setFactoryCaptures] = useState<any[]>([])
+  const [factoryLoading, setFactoryLoading] = useState(false)
+  const [factoryIntelligence, setFactoryIntelligence] = useState<any>(null)
+  const [factoryIntelLoading, setFactoryIntelLoading] = useState(false)
 
   // ── Date range helpers ─────────────────────────────────
   const getDateRange = useCallback((range: DateRange): { start: Date; end: Date; label: string } => {
@@ -290,6 +296,7 @@ export default function POSPage() {
     const m: Record<string, string> = {}
     for (const s of staff) {
       const roleFallback = ['repair','engineer'].includes(s.role) ? 'repair'
+        : ['handler','driver','dispatcher','branch_manager'].includes(s.role) ? 'logistics'
         : s.role === 'inventory' ? 'retail' : 'retail'
       m[s.id] = s.sector || roleFallback
     }
@@ -458,7 +465,8 @@ export default function POSPage() {
     if (newPin && (newPin.length < 4 || newPin.length > 6 || !/^\d+$/.test(newPin))) { notify('PIN must be 4-6 digits', false); return }
     setAddingStaff(true)
     try {
-      const res = await fetch('/api/pos/staff', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: newPhone || undefined, email: newEmail || undefined, name: newName, role: newRole, pin: newPin || undefined, location_id: newLocationId || undefined }) })
+      const sectorForRole = ['handler','driver','dispatcher','branch_manager'].includes(newRole) ? 'logistics' : (selectedSector !== 'all' ? selectedSector : undefined)
+      const res = await fetch('/api/pos/staff', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: newPhone || undefined, email: newEmail || undefined, name: newName, role: newRole, pin: newPin || undefined, location_id: newLocationId || undefined, sector: sectorForRole }) })
       const data = await res.json()
       if (data.staff) { setStaff(prev => [...prev, data.staff]); setNewPhone(''); setNewEmail(''); setNewName(''); setNewRole('cashier'); setNewPin(''); setNewLocationId(''); setShowAddStaff(false); notify(`${data.staff.name} added`) }
       else if (data.seat_limit) notify(data.error, false)
@@ -696,6 +704,16 @@ export default function POSPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [geoPoints, tab])
 
+  // Load factory captures when switching to captures or approvals tab
+  useEffect(() => {
+    if (tab !== 'captures' && tab !== 'approvals') return
+    setFactoryLoading(true)
+    fetch('/api/pos/factory/capture')
+      .then(r => r.json())
+      .then(d => { setFactoryCaptures(d.captures || []); setFactoryLoading(false) })
+      .catch(() => setFactoryLoading(false))
+  }, [tab])
+
   const renderMarkers = (L: any, map: any) => {
     mapMarkersRef.current.forEach(m => map.removeLayer(m))
     mapMarkersRef.current = []
@@ -857,6 +875,7 @@ export default function POSPage() {
               <option value="salon">💇 Salon</option>
               <option value="retail">📦 Retail</option>
               <option value="factory">🏭 Factory</option>
+              <option value="logistics">🚛 Logistics</option>
             </select>
           </div>
         </div>
@@ -1220,11 +1239,12 @@ export default function POSPage() {
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Production captures, intake/output tracking, wastage logs and dispatch.</div>
               </div>
               {tileGrid([
-                { icon: '📷', label: 'Captures',    href: '/dashboard', desc: 'Intake, output, wastage & dispatch' },
-                { icon: '✅', label: 'Approvals',   href: '/dashboard', desc: 'Pending sign-offs' },
-                { icon: '👥', label: 'Staff',       tab: 'staff' as Tab,     desc: 'Supervisors & floor workers' },
-                { icon: '📦', label: 'Inventory',   tab: 'inventory' as Tab, desc: 'Raw materials & finished goods', badge: alertCount > 0 ? alertCount : null },
-                { icon: '🔍', label: 'Audit',       tab: 'audit' as Tab,     desc: 'Every capture & approval logged' },
+                { icon: '📷', label: 'Captures',     tab: 'captures' as Tab,     desc: 'Intake, output, wastage & dispatch' },
+                { icon: '✅', label: 'Approvals',    tab: 'approvals' as Tab,    desc: 'Pending sign-offs' },
+                { icon: '🧠', label: 'Intelligence', tab: 'intelligence' as Tab, desc: 'AI anomaly detection & production insights' },
+                { icon: '👥', label: 'Staff',        tab: 'staff' as Tab,        desc: 'Supervisors & floor workers' },
+                { icon: '📦', label: 'Inventory',    tab: 'inventory' as Tab,    desc: 'Raw materials & finished goods', badge: alertCount > 0 ? alertCount : null },
+                { icon: '🔍', label: 'Audit',        tab: 'audit' as Tab,        desc: 'Every capture & approval logged' },
               ])}
             </div>
           )
@@ -1285,12 +1305,20 @@ export default function POSPage() {
                   <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>— or —</div>
                   <input placeholder="Email address (alternative to WhatsApp)" value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" style={inputStyle} />
                   <select value={newRole} onChange={e => setNewRole(e.target.value as any)} style={inputStyle}>
-                    <option value="cashier">Cashier — can process sales</option>
-                    <option value="inventory">Inventory — can manage stock</option>
-                    <option value="repair">Repair — can intake & checkout service jobs</option>
-                    <option value="engineer">Engineer — can work on assigned repairs</option>
-                    <option value="supervisor">Supervisor — can approve captures & view reports</option>
-                    <option value="manager">Manager — full staff access, refunds & amendments</option>
+                    {(selectedSector === 'logistics' || selectedSector === 'all') && <>
+                      <option value="handler">Handler — receives & releases parcels at branch</option>
+                      <option value="driver">Driver — pickups, deliveries & vehicle inspections</option>
+                      <option value="dispatcher">Dispatcher — assigns parcels to trucks & routes</option>
+                      <option value="branch_manager">Branch Manager — branch dashboard & oversight</option>
+                    </>}
+                    {(selectedSector !== 'logistics') && <>
+                      <option value="cashier">Cashier — can process sales</option>
+                      <option value="inventory">Inventory — can manage stock</option>
+                      <option value="repair">Repair — can intake & checkout service jobs</option>
+                      <option value="engineer">Engineer — can work on assigned repairs</option>
+                      <option value="supervisor">Supervisor — can approve captures & view reports</option>
+                      <option value="manager">Manager — full staff access, refunds & amendments</option>
+                    </>}
                   </select>
                   {locations.length > 0 && (
                     <select value={newLocationId} onChange={e => setNewLocationId(e.target.value)} style={inputStyle}>
@@ -1368,12 +1396,19 @@ export default function POSPage() {
                   <input placeholder="Email address" value={editEmail} onChange={e => setEditEmail(e.target.value)} type="email" style={inputStyle} />
                   <input placeholder={`New PIN (4–6 digits)${editingStaff.has_pin ? ' — leave blank to keep current' : ''}`} value={editPin} onChange={e => setEditPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: editPin && editPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
                   <select value={editRole} onChange={e => setEditRole(e.target.value as any)} style={inputStyle}>
-                    <option value="cashier">Cashier — can process sales</option>
-                    <option value="inventory">Inventory — can manage stock</option>
-                    <option value="repair">Repair — can intake & checkout service jobs</option>
-                    <option value="engineer">Engineer — can work on assigned repairs</option>
-                    <option value="supervisor">Supervisor — can approve captures & view reports</option>
-                    <option value="manager">Manager — full staff access, refunds & amendments</option>
+                    {['handler', 'driver', 'dispatcher', 'branch_manager'].includes(editingStaff.role) || selectedSector === 'logistics' ? <>
+                      <option value="handler">Handler — receives & releases parcels at branch</option>
+                      <option value="driver">Driver — pickups, deliveries & vehicle inspections</option>
+                      <option value="dispatcher">Dispatcher — assigns parcels to trucks & routes</option>
+                      <option value="branch_manager">Branch Manager — branch dashboard & oversight</option>
+                    </> : <>
+                      <option value="cashier">Cashier — can process sales</option>
+                      <option value="inventory">Inventory — can manage stock</option>
+                      <option value="repair">Repair — can intake & checkout service jobs</option>
+                      <option value="engineer">Engineer — can work on assigned repairs</option>
+                      <option value="supervisor">Supervisor — can approve captures & view reports</option>
+                      <option value="manager">Manager — full staff access, refunds & amendments</option>
+                    </>}
                   </select>
                   {locations.length > 0 && (
                     <select value={editLocationId} onChange={e => setEditLocationId(e.target.value)} style={inputStyle}>
@@ -1400,6 +1435,7 @@ export default function POSPage() {
                       <option value="repair">🔧 Repair</option>
                       <option value="salon">💇 Salon</option>
                       <option value="retail">📦 Retail</option>
+                      <option value="logistics">🚛 Logistics</option>
                     </select>
                   </div>
                 </div>
@@ -1767,6 +1803,206 @@ export default function POSPage() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* ══════════════ FACTORY CAPTURES TAB ══════════════ */}
+        {tab === 'captures' && (
+          <div style={{ maxWidth: 900 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>📷 Production Captures</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>All intake, output, wastage and dispatch records</div>
+              </div>
+              <button onClick={() => setTab('operations')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
+            </div>
+            {factoryLoading
+              ? <div style={{ color: 'var(--tx3)', fontSize: 13, padding: 24, textAlign: 'center' }}>Loading captures…</div>
+              : factoryCaptures.length === 0
+                ? <div style={{ color: 'var(--tx3)', fontSize: 13, padding: 24, textAlign: 'center' }}>No captures yet. Floor workers submit captures via the POS app.</div>
+                : (
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid var(--b)' }}>
+                          {['Date', 'Type', 'Product', 'Batch', 'Qty', 'Captured by', 'Status', 'Approved by'].map(h => (
+                            <th key={h} style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 600, color: 'var(--tx3)', whiteSpace: 'nowrap' }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {factoryCaptures.map((c: any) => {
+                          const typeColor: Record<string, string> = { intake: '#2563eb', output: '#16a34a', wastage: '#dc2626', dispatch: '#9333ea' }
+                          const statusColor: Record<string, string> = { approved: '#16a34a', rejected: '#dc2626', pending: '#d97706' }
+                          return (
+                            <tr key={c.id} style={{ borderBottom: '1px solid var(--b)' }}>
+                              <td style={{ padding: '8px 10px', color: 'var(--tx3)', whiteSpace: 'nowrap' }}>{new Date(c.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
+                              <td style={{ padding: '8px 10px' }}><span style={{ fontSize: 11, fontWeight: 700, color: typeColor[c.type] || 'var(--tx)', background: `${typeColor[c.type] || '#666'}18`, padding: '2px 8px', borderRadius: 9999, textTransform: 'capitalize' }}>{c.type}</span></td>
+                              <td style={{ padding: '8px 10px' }}>{c.product_name || '—'}</td>
+                              <td style={{ padding: '8px 10px', color: 'var(--tx3)' }}>{c.batch_ref || '—'}</td>
+                              <td style={{ padding: '8px 10px' }}>{c.quantity ?? '—'}</td>
+                              <td style={{ padding: '8px 10px' }}>{c.captured_by_staff?.name || '—'}</td>
+                              <td style={{ padding: '8px 10px' }}><span style={{ fontSize: 11, fontWeight: 700, color: statusColor[c.status], background: `${statusColor[c.status]}18`, padding: '2px 8px', borderRadius: 9999, textTransform: 'capitalize' }}>{c.status}</span></td>
+                              <td style={{ padding: '8px 10px', color: 'var(--tx3)' }}>{c.approved_by_staff?.name || '—'}</td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+          </div>
+        )}
+
+        {/* ══════════════ FACTORY APPROVALS TAB ══════════════ */}
+        {tab === 'approvals' && (
+          <div style={{ maxWidth: 900 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>✅ Pending Approvals</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Captures awaiting supervisor sign-off</div>
+              </div>
+              <button onClick={() => setTab('operations')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
+            </div>
+            {factoryLoading
+              ? <div style={{ color: 'var(--tx3)', fontSize: 13, padding: 24, textAlign: 'center' }}>Loading…</div>
+              : (() => {
+                  const pending = factoryCaptures.filter((c: any) => c.status === 'pending')
+                  if (pending.length === 0) return (
+                    <div style={{ color: 'var(--tx3)', fontSize: 13, padding: 24, textAlign: 'center' }}>No pending approvals — all captures are reviewed.</div>
+                  )
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {pending.map((c: any) => {
+                        const typeColor: Record<string, string> = { intake: '#2563eb', output: '#16a34a', wastage: '#dc2626', dispatch: '#9333ea' }
+                        return (
+                          <div key={c.id} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                            {c.photo_url && <img src={c.photo_url} alt="capture" style={{ width: 72, height: 72, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: '1px solid var(--b)' }} />}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: typeColor[c.type] || 'var(--tx)', background: `${typeColor[c.type] || '#666'}18`, padding: '2px 8px', borderRadius: 9999, textTransform: 'capitalize' }}>{c.type}</span>
+                                {c.batch_ref && <span style={{ fontSize: 11, color: 'var(--tx3)' }}>Batch: {c.batch_ref}</span>}
+                                {c.quantity != null && <span style={{ fontSize: 11, color: 'var(--tx3)' }}>Qty: {c.quantity}</span>}
+                              </div>
+                              <div style={{ fontSize: 13, fontWeight: 600 }}>{c.product_name || 'Unlabelled capture'}</div>
+                              {c.notes && <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>{c.notes}</div>}
+                              <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 4 }}>
+                                Submitted by {c.captured_by_staff?.name || 'staff'} · {new Date(c.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                              <button
+                                onClick={async () => {
+                                  await fetch('/api/pos/factory/capture', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: c.id, status: 'approved' }) })
+                                  setFactoryCaptures(prev => prev.map(x => x.id === c.id ? { ...x, status: 'approved' } : x))
+                                  notify('Capture approved')
+                                }}
+                                style={{ fontSize: 12, fontWeight: 600, background: '#16a34a', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', cursor: 'pointer' }}>
+                                Approve
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  const reason = prompt('Rejection reason (optional):') || ''
+                                  await fetch('/api/pos/factory/capture', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: c.id, status: 'rejected', rejection_reason: reason }) })
+                                  setFactoryCaptures(prev => prev.map(x => x.id === c.id ? { ...x, status: 'rejected' } : x))
+                                  notify('Capture rejected', false)
+                                }}
+                                style={{ fontSize: 12, fontWeight: 600, background: '#dc2626', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', cursor: 'pointer' }}>
+                                Reject
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })()
+            }
+          </div>
+        )}
+
+        {/* ══════════════ FACTORY INTELLIGENCE TAB ══════════════ */}
+        {tab === 'intelligence' && (
+          <div style={{ maxWidth: 800 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>🧠 Production Intelligence</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>AI-powered anomaly detection across your production floor</div>
+              </div>
+              <button onClick={() => setTab('operations')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
+            </div>
+            {!factoryIntelligence && !factoryIntelLoading && (
+              <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 28, textAlign: 'center' }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>🏭</div>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Run Production Analysis</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 20, maxWidth: 420, margin: '0 auto 20px' }}>
+                  Claude analyses your captures, wastage rate, approval lag, output/intake ratio and batch patterns to surface anomalies and recommend actions.
+                </div>
+                <button
+                  onClick={async () => {
+                    setFactoryIntelLoading(true)
+                    try {
+                      const res = await fetch('/api/pos/intelligence/anomaly-detection', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ analysis_type: 'factory', period_days: 30 }),
+                      })
+                      const d = await res.json()
+                      setFactoryIntelligence(d)
+                    } catch {
+                      notify('Analysis failed — please try again', false)
+                    }
+                    setFactoryIntelLoading(false)
+                  }}
+                  style={{ background: 'var(--acc, #4f46e5)', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 24px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  Analyse last 30 days
+                </button>
+              </div>
+            )}
+            {factoryIntelLoading && (
+              <div style={{ color: 'var(--tx3)', fontSize: 13, padding: 40, textAlign: 'center' }}>
+                <div style={{ fontSize: 24, marginBottom: 8 }}>🔍</div>
+                Analysing your production data…
+              </div>
+            )}
+            {factoryIntelligence && !factoryIntelLoading && (() => {
+              const { anomalies = [], recommendations = [], period_analyzed, raw_analysis } = factoryIntelligence
+              const riskColor: Record<string, string> = { High: '#dc2626', Medium: '#d97706', Low: '#16a34a' }
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--tx3)' }}>
+                    Analysed period: {period_analyzed}
+                    <button onClick={() => setFactoryIntelligence(null)} style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--tx3)', background: 'none', border: '1px solid var(--b)', borderRadius: 6, padding: '2px 10px', cursor: 'pointer' }}>Re-run</button>
+                  </div>
+                  {recommendations.length > 0 && (
+                    <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 16 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Recommendations</div>
+                      {recommendations.map((r: string, i: number) => <div key={i} style={{ fontSize: 13, color: 'var(--tx)', marginBottom: 6 }}>{r}</div>)}
+                    </div>
+                  )}
+                  {anomalies.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>Detected anomalies</div>
+                      {anomalies.map((a: any, i: number) => (
+                        <div key={i} style={{ background: 'var(--sf)', border: `1px solid ${riskColor[a.risk_level] || 'var(--b)'}40`, borderRadius: 12, padding: '14px 16px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: riskColor[a.risk_level] || 'var(--tx3)', background: `${riskColor[a.risk_level] || '#888'}18`, padding: '2px 8px', borderRadius: 9999 }}>{a.risk_level}</span>
+                            <div style={{ fontSize: 13, fontWeight: 600 }}>{a.issue}</div>
+                          </div>
+                          <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 4 }}>💡 {a.hypothesis}</div>
+                          <div style={{ fontSize: 12, color: 'var(--tx)' }}>→ {a.action}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {anomalies.length === 0 && (
+                    <div style={{ fontSize: 13, color: '#16a34a', background: '#16a34a10', border: '1px solid #16a34a30', borderRadius: 12, padding: 16, textAlign: 'center' }}>
+                      ✅ No significant anomalies detected — production looks healthy.
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
           </div>
         )}
       </div>

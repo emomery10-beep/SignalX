@@ -18,7 +18,7 @@ const anthropic = new Anthropic({
  * - Fraud indicators
  *
  * Body:
- *   analysis_type: 'sales' | 'cash' | 'inventory' | 'tax' | 'all'
+ *   analysis_type: 'sales' | 'cash' | 'inventory' | 'tax' | 'factory' | 'all'
  *   period_days?: number (default: 30)
  */
 export async function POST(req: NextRequest) {
@@ -54,11 +54,15 @@ export async function POST(req: NextRequest) {
       analysisData.tax = await getTaxData(service, ownerId, startDate)
     }
 
+    if (analysisType === 'factory' || analysisType === 'all') {
+      analysisData.factory = await getFactoryData(service, ownerId, startDate)
+    }
+
     // Use Claude to analyze the data
     const prompt = buildAnalysisPrompt(analysisData, periodDays)
 
     const message = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 1024,
       messages: [
         {
@@ -202,13 +206,75 @@ async function getTaxData(service: any, ownerId: string, startDate: Date) {
   }
 }
 
+async function getFactoryData(service: any, ownerId: string, startDate: Date) {
+  const { data: captures } = await service
+    .from('pos_factory_captures')
+    .select('type, status, quantity, created_at, approved_at, batch_ref, product_name')
+    .eq('owner_id', ownerId)
+    .gte('created_at', startDate.toISOString())
+
+  if (!captures || captures.length === 0) return null
+
+  const byType: Record<string, { count: number; totalQty: number }> = {}
+  let pending = 0, approved = 0, rejected = 0
+
+  for (const c of captures) {
+    const t = c.type || 'unknown'
+    if (!byType[t]) byType[t] = { count: 0, totalQty: 0 }
+    byType[t].count++
+    byType[t].totalQty += c.quantity || 0
+    if (c.status === 'pending') pending++
+    else if (c.status === 'approved') approved++
+    else if (c.status === 'rejected') rejected++
+  }
+
+  const total = captures.length
+  const wastageCount = byType['wastage']?.count || 0
+  const outputCount  = byType['output']?.count  || 0
+  const intakeCount  = byType['intake']?.count  || 0
+
+  // Average approval lag (hours)
+  const approvedWithTimes = captures.filter((c: any) => c.approved_at && c.created_at)
+  const avgApprovalLagHrs = approvedWithTimes.length > 0
+    ? (approvedWithTimes.reduce((sum: number, c: any) => {
+        return sum + (new Date(c.approved_at).getTime() - new Date(c.created_at).getTime()) / 3_600_000
+      }, 0) / approvedWithTimes.length).toFixed(1)
+    : null
+
+  return {
+    total_captures: total,
+    by_type: byType,
+    status_breakdown: { pending, approved, rejected },
+    wastage_rate_pct: total > 0 ? +((wastageCount / total) * 100).toFixed(1) : 0,
+    rejection_rate_pct: (approved + rejected) > 0 ? +((rejected / (approved + rejected)) * 100).toFixed(1) : 0,
+    output_vs_intake_ratio: intakeCount > 0 ? +(outputCount / intakeCount).toFixed(2) : null,
+    avg_approval_lag_hours: avgApprovalLagHrs,
+    pending_approvals: pending,
+    unique_batches: new Set(captures.map((c: any) => c.batch_ref).filter(Boolean)).size,
+    unique_products: new Set(captures.map((c: any) => c.product_name).filter(Boolean)).size,
+  }
+}
+
 function buildAnalysisPrompt(data: Record<string, any>, periodDays: number): string {
+  const focusAreas = [
+    '1. Sales trends (normal vs unusual patterns)',
+    '2. Cash discrepancies and possible causes',
+    '3. Inventory health and shrinkage',
+    '4. Tax calculation accuracy',
+    '5. Potential fraud indicators',
+  ]
+  if (data.factory) {
+    focusAreas.push(
+      '6. Factory production efficiency (output vs intake ratio)',
+      '7. Wastage rate — is it rising above baseline?',
+      '8. Approval bottlenecks (pending captures, slow approval lag)',
+      '9. Rejection spikes — potential quality control issues',
+      '10. Batch-level anomalies in production flow',
+    )
+  }
+
   return `Analyze this POS business data for anomalies and patterns. Focus on:
-1. Sales trends (normal vs unusual patterns)
-2. Cash discrepancies and possible causes
-3. Inventory health and shrinkage
-4. Tax calculation accuracy
-5. Potential fraud indicators
+${focusAreas.join('\n')}
 
 Period analyzed: Last ${periodDays} days
 
@@ -216,8 +282,8 @@ Data:
 ${JSON.stringify(data, null, 2)}
 
 Provide:
-- Top 3 anomalies (if any)
-- Risk level (Low/Medium/High)
+- Top 3–5 anomalies (if any)
+- Risk level (Low/Medium/High) for each
 - Root cause hypothesis for each anomaly
 - Recommended actions
 
