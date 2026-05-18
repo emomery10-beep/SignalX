@@ -58,7 +58,7 @@ function MiniBarChart({ data, color = ACC, height = 80 }: { data: { label: strin
 
 // ── Types ────────────────────────────────────────────────
 interface StaffMember {
-  id: string; name: string; phone: string; email?: string; role: 'cashier' | 'inventory' | 'repair' | 'engineer'; sector: string; sector_edit_count: number; active: boolean; last_login_at: string | null; has_pin?: boolean; location_id?: string; location?: { id: string; name: string } | null
+  id: string; name: string; phone: string; email?: string; role: 'cashier' | 'inventory' | 'repair' | 'engineer' | 'supervisor' | 'manager'; sector: string; sector_edit_count: number; active: boolean; last_login_at: string | null; has_pin?: boolean; location_id?: string; location?: { id: string; name: string } | null
 }
 interface Transaction {
   id: string; total: number; subtotal?: number; payment_type: string; status: string; created_at: string; notes?: string
@@ -120,7 +120,7 @@ export default function POSPage() {
   const [newPhone, setNewPhone] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newName, setNewName] = useState('')
-  const [newRole, setNewRole] = useState<'cashier' | 'inventory' | 'repair' | 'engineer'>('cashier')
+  const [newRole, setNewRole] = useState<'cashier' | 'inventory' | 'repair' | 'engineer' | 'supervisor' | 'manager'>('cashier')
   const [newPin, setNewPin] = useState('')
   const [newLocationId, setNewLocationId] = useState('')
   const [addingStaff, setAddingStaff] = useState(false)
@@ -129,6 +129,7 @@ export default function POSPage() {
   const [editEmail, setEditEmail] = useState('')
   const [editName, setEditName] = useState('')
   const [editPin, setEditPin] = useState('')
+  const [editRole, setEditRole] = useState<'cashier' | 'inventory' | 'repair' | 'engineer' | 'supervisor' | 'manager'>('cashier')
   const [editLocationId, setEditLocationId] = useState('')
   const [editSector, setEditSector] = useState('retail')
   const [editingSubmitting, setEditingSubmitting] = useState(false)
@@ -480,7 +481,7 @@ export default function POSPage() {
     if (editPin && (editPin.length < 4 || editPin.length > 6 || !/^\d+$/.test(editPin))) { notify('PIN must be 4-6 digits', false); return }
     setEditingSubmitting(true)
     try {
-      const res = await fetch('/api/pos/staff', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingStaff.id, phone: editPhone || undefined, email: editEmail || undefined, name: editName, pin: editPin || undefined, location_id: editLocationId || undefined, sector: editSector }) })
+      const res = await fetch('/api/pos/staff', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingStaff.id, phone: editPhone || undefined, email: editEmail || undefined, name: editName, role: editRole, pin: editPin || undefined, location_id: editLocationId || undefined, sector: editSector }) })
       const data = await res.json()
       if (data.staff) { setStaff(prev => prev.map(s => s.id === editingStaff.id ? data.staff : s)); setEditingStaff(null); notify('Staff updated') }
       else if (data.error) notify(data.error, false)
@@ -489,7 +490,7 @@ export default function POSPage() {
   }
 
   const handleOpenEditStaff = (member: StaffMember) => {
-    setEditingStaff(member); setEditName(member.name); setEditPhone(member.phone || ''); setEditEmail(member.email || ''); setEditPin(''); setEditLocationId(member.location_id || ''); setEditSector(member.sector || 'retail')
+    setEditingStaff(member); setEditName(member.name); setEditPhone(member.phone || ''); setEditEmail(member.email || ''); setEditPin(''); setEditRole(member.role || 'cashier'); setEditLocationId(member.location_id || ''); setEditSector(member.sector || 'retail')
   }
 
   // Camera handlers
@@ -1234,6 +1235,8 @@ export default function POSPage() {
                     <option value="inventory">Inventory — can manage stock</option>
                     <option value="repair">Repair — can intake & checkout service jobs</option>
                     <option value="engineer">Engineer — can work on assigned repairs</option>
+                    <option value="supervisor">Supervisor — can approve captures & view reports</option>
+                    <option value="manager">Manager — full staff access, refunds & amendments</option>
                   </select>
                   {locations.length > 0 && (
                     <select value={newLocationId} onChange={e => setNewLocationId(e.target.value)} style={inputStyle}>
@@ -1310,6 +1313,14 @@ export default function POSPage() {
                   <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>— or —</div>
                   <input placeholder="Email address" value={editEmail} onChange={e => setEditEmail(e.target.value)} type="email" style={inputStyle} />
                   <input placeholder={`New PIN (4–6 digits)${editingStaff.has_pin ? ' — leave blank to keep current' : ''}`} value={editPin} onChange={e => setEditPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: editPin && editPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
+                  <select value={editRole} onChange={e => setEditRole(e.target.value as any)} style={inputStyle}>
+                    <option value="cashier">Cashier — can process sales</option>
+                    <option value="inventory">Inventory — can manage stock</option>
+                    <option value="repair">Repair — can intake & checkout service jobs</option>
+                    <option value="engineer">Engineer — can work on assigned repairs</option>
+                    <option value="supervisor">Supervisor — can approve captures & view reports</option>
+                    <option value="manager">Manager — full staff access, refunds & amendments</option>
+                  </select>
                   {locations.length > 0 && (
                     <select value={editLocationId} onChange={e => setEditLocationId(e.target.value)} style={inputStyle}>
                       <option value="">No branch (can work anywhere)</option>
