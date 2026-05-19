@@ -449,6 +449,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           .nav-mega-wrap { display:none !important }
           .hero-ctas { flex-direction:column !important }
           .hero-ctas a { width:100% !important; text-align:center !important; justify-content:center !important }
+          .hero-preview-grid { grid-template-columns:1fr !important }
           .pos-callout-mock { display:none !important }
         }
         @media (max-width:480px) {
@@ -537,31 +538,112 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       {/* Geo promo banner removed */}
 
       {/* ── HERO ─────────────────────────────────────────────── */}
-      <section style={{ maxWidth:700, margin:'0 auto', padding:'clamp(52px,8vw,96px) clamp(16px,4vw,40px) clamp(36px,5vw,56px)', textAlign:'center' }}>
-        {country && (
-          <div className="fade-up" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 12px', borderRadius:9999, background:C.accBg, border:`1px solid ${C.accBdr}`, fontSize:12, color:C.acc, fontWeight:600, marginBottom:24, letterSpacing:'.02em' }}>
-            {flag} Prices shown in {sym} for {country}
-          </div>
-        )}
-        <h1 className="fade-up" style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(32px,5vw,54px)', fontWeight:700, lineHeight:1.1, letterSpacing:'-.035em', marginBottom:22, color:C.tx }}>
-          Your business data,<br/>
-          <span style={{ color:C.acc }}>answering back.</span>
+      <section style={{ maxWidth:1080, margin:'0 auto', padding:'clamp(52px,8vw,88px) clamp(16px,4vw,40px) clamp(32px,4vw,48px)', textAlign:'center' }}>
+
+        {/* Dual-product badge */}
+        <div className="fade-up" style={{ display:'inline-flex', alignItems:'center', gap:0, borderRadius:9999, border:`1px solid ${C.b2}`, background:C.sf, fontSize:12, fontWeight:700, marginBottom:28, overflow:'hidden' }}>
+          <span style={{ padding:'5px 14px', color:C.acc, borderRight:`1px solid ${C.b2}`, display:'flex', alignItems:'center', gap:5 }}>
+            <svg width="11" height="11" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill={C.acc} opacity="0.5"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill={C.acc} opacity="0.75"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill={C.acc}/></svg>
+            Business Intelligence
+          </span>
+          <span style={{ padding:'5px 14px', color:C.tx2, display:'flex', alignItems:'center', gap:5 }}>
+            🧾 Point of Sale
+          </span>
+        </div>
+
+        {/* H1 */}
+        <h1 className="fade-up" style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(30px,5.5vw,60px)', fontWeight:700, lineHeight:1.07, letterSpacing:'-.04em', marginBottom:22, color:C.tx }}>
+          A full PoS system —<br/>
+          <span style={{ color:C.acc }}>built into your intelligence platform.</span>
         </h1>
-        <p className="fade-up" style={{ fontSize:'clamp(15px,1.8vw,18px)', color:C.tx2, lineHeight:1.7, marginBottom:14, maxWidth:520, margin:'0 auto 14px' }}>
-          Ask questions about your business in plain English. Get specific answers — with your actual numbers, not generic advice.
+
+        <p className="fade-up" style={{ fontSize:'clamp(15px,1.8vw,18px)', color:C.tx2, lineHeight:1.7, maxWidth:540, margin:'0 auto 10px' }}>
+          Every sale your register takes feeds directly into your AI. Ask questions, spot problems, act fast — from one place.
         </p>
-        <p className="fade-up" style={{ fontSize:13, color:C.tx3, marginBottom:36, lineHeight:1.6 }}>
-          Connect Shopify, Amazon, TikTok Shop, QuickBooks — or upload a CSV. Free to start, no card needed.
+        <p className="fade-up" style={{ fontSize:13, color:C.tx3, marginBottom:32 }}>
+          Connect Shopify, Amazon, QuickBooks or run the built-in PoS. Free to start — no card needed.
         </p>
-        <div className="fade-up" style={{ display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center', marginBottom:20 }}>
-          <Link href="/signin" className="btn-primary" style={{ padding:'13px 26px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8, boxShadow:`0 2px 12px ${C.acc}35`, letterSpacing:'-.01em' }}>
+
+        {/* CTAs */}
+        <div className="fade-up hero-ctas" style={{ display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center', marginBottom:12 }}>
+          <Link href="/signin" className="btn-primary" style={{ padding:'13px 26px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8, boxShadow:`0 2px 14px ${C.acc}40`, letterSpacing:'-.01em' }}>
             {geoCtaText}
           </Link>
-          <a href="#demo" style={{ padding:'13px 20px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:14, fontWeight:500, textDecoration:'none', display:'inline-flex', alignItems:'center' }}>
-            See it in action
-          </a>
+          <Link href="/point-of-sale" style={{ padding:'13px 20px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:14, fontWeight:500, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:6 }}>
+            🧾 See the PoS
+          </Link>
         </div>
-        <p style={{ fontSize:12, color:C.tx3 }}>{geoSubText}</p>
+        <p className="fade-up" style={{ fontSize:12, color:C.tx3, marginBottom:48 }}>
+          {country ? `${flag} ${geoSubText}` : geoSubText} · PoS from {sym}5/seat/mo
+        </p>
+
+        {/* ── Dual product preview cards ── */}
+        <div className="fade-up hero-preview-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, textAlign:'left', maxWidth:900, margin:'0 auto' }}>
+
+          {/* Intelligence card */}
+          <div style={{ background:C.sf, border:`1px solid ${C.b}`, borderRadius:18, overflow:'hidden', boxShadow:'0 4px 24px rgba(0,0,0,.06)' }}>
+            <div style={{ padding:'10px 14px', background:C.ev, borderBottom:`1px solid ${C.b}`, display:'flex', alignItems:'center', gap:8 }}>
+              <div style={{ width:22, height:22, borderRadius:6, background:C.acc, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <svg width="10" height="10" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.75"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/></svg>
+              </div>
+              <span style={{ fontSize:12, fontWeight:700, color:C.tx }}>Business Intelligence</span>
+              <span style={{ marginLeft:'auto', fontSize:10, color:'#22c55e', display:'flex', alignItems:'center', gap:3 }}><span style={{ width:5, height:5, borderRadius:'50%', background:'#22c55e', display:'inline-block' }}/>Live</span>
+            </div>
+            <div style={{ padding:'14px 16px', display:'flex', flexDirection:'column', gap:10 }}>
+              <div style={{ display:'flex', justifyContent:'flex-end' }}>
+                <div style={{ padding:'8px 12px', borderRadius:14, borderBottomRightRadius:3, background:C.ev, border:`1px solid ${C.b}`, fontSize:12, color:C.tx, maxWidth:'85%' }}>
+                  Why did revenue drop this week?
+                </div>
+              </div>
+              <div style={{ display:'flex', gap:8, alignItems:'flex-start' }}>
+                <div style={{ width:22, height:22, borderRadius:6, background:C.acc, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:2 }}>
+                  <svg width="10" height="10" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.75"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/></svg>
+                </div>
+                <div style={{ flex:1 }}>
+                  <div style={{ padding:'8px 12px', borderRadius:14, borderBottomLeftRadius:3, background:C.sf, border:`1px solid ${C.b}`, fontSize:11, lineHeight:1.65, color:C.tx, marginBottom:8 }}>
+                    Tuesday PoS revenue was <strong>£340 below</strong> the 4-week average. Your lunch shift had 6 fewer transactions — check if the till was open late.
+                  </div>
+                  <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
+                    <span className="kpi-chip" style={{ background:'rgba(239,68,68,.06)', color:'#dc2626', borderColor:'rgba(239,68,68,.2)', fontSize:10, padding:'3px 8px' }}><span style={{ opacity:.7 }}>Drop</span> <strong>−£340</strong></span>
+                    <span className="kpi-chip" style={{ background:'rgba(208,138,89,.08)', color:C.acc, borderColor:C.accBdr, fontSize:10, padding:'3px 8px' }}><span style={{ opacity:.7 }}>Shift gap</span> <strong>6 txns</strong></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* PoS card */}
+          <div style={{ background:C.sf, border:`1px solid ${C.b}`, borderRadius:18, overflow:'hidden', boxShadow:'0 4px 24px rgba(0,0,0,.06)' }}>
+            <div style={{ padding:'10px 14px', background:C.ev, borderBottom:`1px solid ${C.b}`, display:'flex', alignItems:'center', gap:8 }}>
+              <span style={{ fontSize:15 }}>🧾</span>
+              <span style={{ fontSize:12, fontWeight:700, color:C.tx }}>Point of Sale</span>
+              <span style={{ marginLeft:'auto', fontSize:10, color:'#22c55e', display:'flex', alignItems:'center', gap:3 }}><span style={{ width:5, height:5, borderRadius:'50%', background:'#22c55e', display:'inline-block' }}/>Shift open</span>
+            </div>
+            <div style={{ padding:'14px 16px', display:'flex', flexDirection:'column', gap:0 }}>
+              {[
+                { n:'Wireless Earbuds', qty:1, p:'£59.98' },
+                { n:'Phone Case × 2', qty:2, p:'£25.00' },
+                { n:'USB-C Cable', qty:1, p:'£12.99' },
+              ].map((r,i,arr)=>(
+                <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'7px 0', borderBottom:i<arr.length-1?`1px solid ${C.ev}`:'none', fontSize:12, color:C.tx2, alignItems:'center' }}>
+                  <span style={{ color:C.tx }}>{r.n}</span>
+                  <span style={{ fontWeight:600, color:C.tx }}>{r.p}</span>
+                </div>
+              ))}
+              <div style={{ display:'flex', justifyContent:'space-between', marginTop:10, paddingTop:10, borderTop:`1px solid ${C.b}`, fontWeight:800, color:C.tx, fontSize:14, fontFamily:'var(--font-sora)' }}>
+                <span>Total</span><span>£97.97</span>
+              </div>
+              <div style={{ marginTop:10, padding:'9px', borderRadius:10, background:C.acc, color:'#fff', fontSize:12, fontWeight:700, textAlign:'center', letterSpacing:'-.01em' }}>
+                Take payment →
+              </div>
+              <div style={{ marginTop:8, display:'flex', alignItems:'center', gap:5, fontSize:10, color:C.tx3, justifyContent:'center' }}>
+                <svg width="9" height="9" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill={C.tx3} opacity="0.5"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill={C.tx3} opacity="0.75"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill={C.tx3}/></svg>
+                Sale syncs to intelligence instantly
+              </div>
+            </div>
+          </div>
+
+        </div>
       </section>
 
       {/* ── PRODUCT DEMO ──────────────────────────────────────── */}
@@ -581,38 +663,44 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
       </div>
 
-      {/* ── POS CALLOUT ──────────────────────────────────────── */}
-      <section style={{ maxWidth:1060, margin:'0 auto', padding:'clamp(36px,5vw,56px) clamp(16px,4vw,40px)' }}>
-        <Link href="/point-of-sale" style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:'clamp(20px,3vw,40px)', alignItems:'center', padding:'clamp(20px,3vw,32px)', borderRadius:20, border:`1px solid ${C.b}`, background:C.sf, textDecoration:'none', transition:'box-shadow 180ms ease, transform 180ms ease' }} className="card-hover">
-          <div>
-            <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'3px 10px', borderRadius:9999, background:C.accBg, border:`1px solid ${C.accBdr}`, fontSize:11, color:C.acc, fontWeight:700, marginBottom:14, textTransform:'uppercase', letterSpacing:'.06em' }}>
-              🧾 Point of Sale
-            </div>
-            <div style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(18px,2.5vw,26px)', fontWeight:700, color:C.tx, lineHeight:1.2, marginBottom:8, letterSpacing:'-.02em' }}>
-              A full register system — built into your AI platform.
-            </div>
-            <p style={{ fontSize:'clamp(13px,1.4vw,15px)', color:C.tx2, lineHeight:1.6, margin:0, maxWidth:520 }}>
-              Ring up sales, manage inventory, track staff shifts, and stay tax-compliant — £5/seat/month.
-            </p>
-          </div>
-          <div className="pos-callout-mock" style={{ width:220, flexShrink:0, background:C.bg, borderRadius:14, border:`1px solid ${C.b}`, padding:16, fontSize:12 }}>
-            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:10 }}>
-              <span style={{ fontWeight:700, color:C.tx, fontSize:11 }}>Shift #104</span>
-              <span style={{ color:'#16a34a', fontWeight:600, fontSize:10 }}>● Live</span>
-            </div>
-            {[{ n:'Earbuds', p:'£59.98' },{ n:'Phone Case', p:'£12.50' },{ n:'USB-C Cable', p:'£20.97' }].map((r,i)=>(
-              <div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'5px 0', borderBottom:`1px solid ${C.ev}`, fontSize:11, color:C.tx2 }}>
-                <span>{r.n}</span><span style={{ fontWeight:600, color:C.tx }}>{r.p}</span>
-              </div>
-            ))}
-            <div style={{ display:'flex', justifyContent:'space-between', marginTop:10, fontWeight:800, color:C.tx, fontSize:13, fontFamily:'var(--font-sora)' }}>
-              <span>Total</span><span>£111.94</span>
-            </div>
-            <div style={{ marginTop:10, padding:'7px', borderRadius:8, background:C.acc, color:'#fff', fontSize:11, fontWeight:700, textAlign:'center' }}>
-              Pay →
-            </div>
-          </div>
-        </Link>
+      {/* ── HOW THEY WORK TOGETHER ───────────────────────────── */}
+      <section style={{ maxWidth:1060, margin:'0 auto', padding:'clamp(52px,7vw,80px) clamp(16px,4vw,40px)' }}>
+        <div style={{ textAlign:'center', marginBottom:40 }}>
+          <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:12 }}>One platform. Two powers.</div>
+          <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,38px)', fontWeight:700, lineHeight:1.15, letterSpacing:'-.03em', color:C.tx, marginBottom:14 }}>
+            Your PoS and your intelligence<br/>finally talk to each other.
+          </h2>
+          <p style={{ fontSize:15, color:C.tx2, lineHeight:1.7, maxWidth:520, margin:'0 auto' }}>
+            Most businesses run their register and their analytics in two separate worlds. AskBiz connects them — every sale, shift, and stock movement feeds your intelligence layer automatically.
+          </p>
+        </div>
+
+        <div className="pos-grid-3" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16 }}>
+          {[
+            {
+              icon:'🧾', title:'Ring up sales',
+              desc:'Full register with barcode scanning, multi-item baskets, discounts, refunds, and digital receipts. Works on any browser — no hardware needed.',
+              link:'/point-of-sale', cta:'See the PoS →',
+            },
+            {
+              icon:'🧠', title:'Intelligence analyses every sale',
+              desc:'Ask which products drive your margin. Spot slow-moving stock before it becomes a problem. Get alerted when a cashier shift has an unusual variance.',
+              link:'/signin', cta:'Try it free →',
+            },
+            {
+              icon:'👥', title:'Staff, inventory & branches',
+              desc:'Multi-branch PoS with per-location stock, staff OTP login, shift tracking, factory captures, service jobs, and role-based permissions.',
+              link:'/point-of-sale', cta:'Learn more →',
+            },
+          ].map((card,i)=>(
+            <Link key={i} href={card.link} className="card-hover" style={{ padding:'24px 22px', borderRadius:16, border:`1px solid ${C.b}`, background:C.sf, textDecoration:'none', display:'flex', flexDirection:'column', gap:12, transition:'all 180ms' }}>
+              <span style={{ fontSize:28 }}>{card.icon}</span>
+              <div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:C.tx, lineHeight:1.25 }}>{card.title}</div>
+              <p style={{ fontSize:13, color:C.tx2, lineHeight:1.65, margin:0, flex:1 }}>{card.desc}</p>
+              <span style={{ fontSize:13, fontWeight:600, color:C.acc }}>{card.cta}</span>
+            </Link>
+          ))}
+        </div>
       </section>
 
       {/* ── THE PROBLEM ──────────────────────────────────────── */}
