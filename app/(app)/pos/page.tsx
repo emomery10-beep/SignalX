@@ -983,8 +983,8 @@ export default function POSPage() {
               </div>
             )}
 
-            {/* Payment & product breakdown side-by-side */}
-            {completedTx.length > 0 && (
+            {/* Payment & product breakdown side-by-side — retail only */}
+            {completedTx.length > 0 && selectedSector === 'retail' && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12, marginBottom: 24 }}>
                 {/* Payment breakdown */}
                 <div style={cardStyle}>
@@ -1064,8 +1064,8 @@ export default function POSPage() {
               </div>
             )}
 
-            {/* P&L summary */}
-            {completedTx.length > 0 && (
+            {/* P&L summary — retail only */}
+            {completedTx.length > 0 && selectedSector === 'retail' && (
               <div style={{ marginBottom: 24 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                   <div style={sectionLabel}>Profit & loss</div>
