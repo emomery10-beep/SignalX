@@ -38,6 +38,24 @@ const TYPE_STYLE: Record<ChangeType, { label: string; bg: string; color: string;
 
 const RELEASES: Release[] = [
   {
+    version: '2.11.0',
+    date: '2026-05-19',
+    summary: 'Point of Sale marketing page, global currency support, interactive demos, geo-aware PoS pricing, and full logistics API.',
+    changes: [
+      { type: 'new',      text: '/point-of-sale marketing page — hero, camera-first scan demo, 12-feature grid, comparison table, and per-seat pricing' },
+      { type: 'new',      text: 'Camera-first PoS demo — animated phone mock showing scan → recognise → basket → pay in 4 steps with a progress tracker' },
+      { type: 'new',      text: 'Staff setup walkthrough — interactive screen-recording style demo showing how to add a cashier in under 2 minutes with OTP login' },
+      { type: 'new',      text: 'Global currency support on /point-of-sale — 150+ currencies, localisation, mobile money (M-Pesa, MTN, Airtel), and 10 tax regimes (UK VAT, US Sales Tax, FIRS, KRA, GST, SARS, UAE VAT, AU GST, EU OSS, Custom)' },
+      { type: 'new',      text: 'Logistics API routes — /api/pos/parcels, /api/pos/trucks, /api/pos/routes, /api/pos/logistics-invoices, /api/pos/vehicle-inspection, /api/pos/parcels/handover, /api/pos/parcels/photos, /api/pos/parcels/scan' },
+      { type: 'new',      text: '/benchmarks and /case-studies pages now live — were returning 404 (untracked files fixed)' },
+      { type: 'improved', text: 'Pricing section — PoS add-on card now shown first before intelligence tiers; includes feature pills and dual CTAs' },
+      { type: 'improved', text: 'Geo-aware PoS pricing — PoS seat price now localised per country (KSh 600, ₦2,500, R 90, ₹400, £5, $5, etc.) across all pricing surfaces and FAQ' },
+      { type: 'improved', text: 'Growth and Business plan prices now correctly use geo-detected currency on landing page (was hardcoded £ regardless of country)' },
+      { type: 'fixed',    text: '/free-tools/break-even-calculator and /free-tools/vat-calculator were returning 404 — files committed and deployed' },
+      { type: 'fixed',    text: 'PoS pricing card showing £5 for Kenyan users instead of KSh 600 — currency detection now wired end-to-end' },
+    ],
+  },
+  {
     version: '2.10.0',
     date: '2026-05-16',
     summary: 'New free tools, case studies, industry benchmarks, geo-aware CTAs, and POS seat pricing on the landing page.',

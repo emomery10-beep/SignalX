@@ -23,7 +23,7 @@ const C = {
 interface Geo {
   country: string; countryCode: string; city: string
   currency: string; currencySymbol: string; currencyName: string; flag: string
-  pricing: { growth: string; business: string; sym: string }
+  pricing: { growth: string; business: string; sym: string; pos: string }
 }
 
 const INTEGRATIONS = [
@@ -360,6 +360,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
   const sym = geo?.pricing?.sym || '£'
   const growthPrice = geo?.pricing?.growth || '£19'
   const businessPrice = geo?.pricing?.business || '£49'
+  const posPrice = geo?.pricing?.pos || '£5'
   const country = geo?.country || ''
   const countryCode = geo?.countryCode || ''
   const flag = geo?.flag || ''
@@ -404,7 +405,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
     { q: 'What does "pre-filled from data" mean on Growth?', a: 'On Growth, the FX Risk, Landed Cost, and other tools automatically pull your real product costs, margins, and supplier data from your connected sources. You review and calculate — not re-enter.' },
     { q: 'Can I cancel anytime?', a: 'Yes — cancel in one click. You keep access until the end of your billing period.' },
     { q: 'How does the social commerce integration work?', a: 'Connect TikTok Shop, Instagram Shopping, or Pinterest from the Sources page. AskBiz tracks conversion rates, saves (demand signals), and alerts you when a product has high saves but no orders — before you sell out.' },
-    { q: 'What does the Point of Sale system include?', a: 'The PoS includes a full register with barcode scanning, inventory management, staff shift tracking, digital receipts, refunds, multi-branch support, tax compliance (VAT, multi-jurisdiction), GDPR tools, and integrations with Xero and QuickBooks. It costs £5 per seat per month.' },
+    { q: 'What does the Point of Sale system include?', a: `The PoS includes a full register with barcode scanning, inventory management, staff shift tracking, digital receipts, refunds, multi-branch support, tax compliance (VAT, GST, multi-jurisdiction), GDPR tools, and integrations with Xero and QuickBooks. It costs ${posPrice} per seat per month — each seat is one register or device.` },
     { q: 'Is my business data safe?', a: 'Your data is encrypted at rest and in transit. We never use your business data to train AI models.' },
   ]
 
@@ -574,7 +575,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           </Link>
         </div>
         <p className="fade-up" style={{ fontSize:12, color:C.tx3, marginBottom:48 }}>
-          {country ? `${flag} ${geoSubText}` : geoSubText} · PoS from {sym}5/seat/mo
+          {country ? `${flag} ${geoSubText}` : geoSubText} · PoS from {posPrice}/seat/mo
         </p>
 
         {/* ── Dual product preview cards ── */}
@@ -816,7 +817,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <Link href="/signin" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'12px 24px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:14, fontWeight:700, textDecoration:'none', boxShadow:`0 3px 16px ${C.acc}40` }}>
             Try the PoS free →
           </Link>
-          <p style={{ fontSize:12, color:C.tx3, marginTop:10 }}>£5 per seat/month · Works on tablet or desktop</p>
+          <p style={{ fontSize:12, color:C.tx3, marginTop:10 }}>{posPrice} per seat/month · Works on tablet or desktop</p>
         </div>
       </section>
 
@@ -919,7 +920,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                   <span style={{ fontSize:10, fontWeight:700, color:'#fff', background:C.acc, padding:'2px 9px', borderRadius:9999, textTransform:'uppercase', letterSpacing:'.06em' }}>Add-on</span>
                 </div>
                 <div style={{ display:'flex', alignItems:'baseline', gap:4, marginBottom:6 }}>
-                  <span style={{ fontFamily:'var(--font-sora)', fontSize:36, fontWeight:800, color:C.tx, letterSpacing:'-.03em' }}>{sym}5</span>
+                  <span style={{ fontFamily:'var(--font-sora)', fontSize:36, fontWeight:800, color:C.tx, letterSpacing:'-.03em' }}>{posPrice}</span>
                   <span style={{ fontSize:13, color:C.tx3 }}>/seat/month</span>
                 </div>
                 <p style={{ fontSize:12, color:C.tx3, margin:0, lineHeight:1.5 }}>Add to any Growth or Business plan.<br/>Each seat is one register or device.</p>
@@ -964,10 +965,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             {[
               { id:'free', name:'Free', colour:'#6b6760', price:'£0', sub:'10 questions/month', popular:false,
                 features:['10 questions per month','Upload CSV & Excel','Business Pulse score','Connect Shopify, Amazon & more','FX Risk, Landed Cost, Export tools','API access','No credit card needed'] },
-              { id:'growth', name:'Growth', colour:C.acc, price:annual?'£16':'£19', sub:'per month', popular:true,
-                features:['Unlimited questions','All tools pre-filled from your data','Daily Brief — AI morning intelligence','Point of Sale — £5/seat/month add-on','Social Commerce — TikTok, Instagram, Pinterest','Churn Intelligence — monthly scan','Anomaly alerts'] },
-              { id:'business', name:'Business', colour:'#7c3aed', price:annual?'£41':'£49', sub:'per month', popular:false,
-                features:['Everything in Growth','Team seats — up to 5','Multi-branch PoS — £5/seat/month add-on','Decision Memory','Competitor Watch','CFO Mode reports','Priority support'] },
+              { id:'growth', name:'Growth', colour:C.acc, price:growthMonthly, sub:'per month', popular:true,
+                features:['Unlimited questions','All tools pre-filled from your data','Daily Brief — AI morning intelligence',`Point of Sale — ${posPrice}/seat/month add-on`,'Social Commerce — TikTok, Instagram, Pinterest','Churn Intelligence — monthly scan','Anomaly alerts'] },
+              { id:'business', name:'Business', colour:'#7c3aed', price:bizMonthly, sub:'per month', popular:false,
+                features:['Everything in Growth','Team seats — up to 5',`Multi-branch PoS — ${posPrice}/seat/month add-on`,'Decision Memory','Competitor Watch','CFO Mode reports','Priority support'] },
             ].map((plan, i) => (
               <div key={i} style={{ borderRadius:18, border:plan.popular?`2px solid ${C.acc}`:`1px solid ${C.b}`, background:plan.popular?`rgba(208,138,89,.02)`:C.bg, padding:'22px 20px', position:'relative', display:'flex', flexDirection:'column' }}>
                 {plan.popular && (
