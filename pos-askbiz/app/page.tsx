@@ -50,7 +50,13 @@ function LoginPageContent() {
         ? '/inventory'
         : ['engineer', 'repair', 'supervisor', 'manager'].includes(role)
           ? '/dashboard'
-          : '/sell'
+          : role === 'dispatcher'
+            ? '/logistics/dispatch'
+            : role === 'branch_manager'
+              ? '/logistics/dashboard'
+              : ['handler', 'driver'].includes(role)
+                ? '/logistics'
+                : '/sell'
       router.push(dest)
     } catch { setLoading(false); setError('Network error — please try again') }
   }

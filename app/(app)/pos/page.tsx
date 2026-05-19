@@ -72,7 +72,7 @@ interface InventoryItem {
 interface Location {
   id: string; name: string; address?: string; phone?: string; is_active: boolean
 }
-type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'branches' | 'audit' | 'map' | 'operations' | 'captures' | 'approvals' | 'intelligence'
+type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'branches' | 'audit' | 'map' | 'operations' | 'captures' | 'approvals' | 'intelligence' | 'logistics'
 type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
 type FilterModalType = { type: 'sales' | 'refunds' | 'low_stock' | 'cashier_detail'; title: string; cashier_id?: string } | null
 type TxDetailType = Transaction | null
@@ -182,6 +182,15 @@ export default function POSPage() {
   const [factoryLoading, setFactoryLoading] = useState(false)
   const [factoryIntelligence, setFactoryIntelligence] = useState<any>(null)
   const [factoryIntelLoading, setFactoryIntelLoading] = useState(false)
+
+  // Logistics
+  const [logParcels, setLogParcels] = useState<any[]>([])
+  const [logTrucks, setLogTrucks] = useState<any[]>([])
+  const [logRoutes, setLogRoutes] = useState<any[]>([])
+  const [logLoading, setLogLoading] = useState(false)
+  const [logTab, setLogTab] = useState<'overview' | 'parcels' | 'fleet' | 'routes' | 'revenue'>('overview')
+  const [logSearch, setLogSearch] = useState('')
+  const [logStatusFilter, setLogStatusFilter] = useState('')
 
   // ── Date range helpers ─────────────────────────────────
   const getDateRange = useCallback((range: DateRange): { start: Date; end: Date; label: string } => {
@@ -718,6 +727,22 @@ export default function POSPage() {
       .catch(() => setFactoryLoading(false))
   }, [tab])
 
+  // Load logistics data when switching to logistics tab
+  useEffect(() => {
+    if (tab !== 'logistics') return
+    setLogLoading(true)
+    Promise.all([
+      fetch('/api/pos/parcels?limit=200').then(r => r.json()),
+      fetch('/api/pos/trucks').then(r => r.json()),
+      fetch('/api/pos/routes').then(r => r.json()),
+    ]).then(([pData, tData, rData]) => {
+      setLogParcels(pData.parcels || [])
+      setLogTrucks(tData.trucks || [])
+      setLogRoutes(rData.routes || [])
+    }).catch(() => {})
+      .finally(() => setLogLoading(false))
+  }, [tab])
+
   const renderMarkers = (L: any, map: any) => {
     mapMarkersRef.current.forEach(m => map.removeLayer(m))
     mapMarkersRef.current = []
@@ -849,6 +874,14 @@ export default function POSPage() {
               {t === 'inventory' && alertCount > 0 && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px', verticalAlign: 'top' }}>{alertCount}</span>}
             </button>
           ))}
+          {(selectedSector === 'all' || selectedSector === 'logistics') && (
+            <button onClick={() => setTab('logistics')} style={{
+              padding: '8px 16px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
+              background: tab === 'logistics' ? 'var(--sf)' : 'transparent', color: tab === 'logistics' ? '#0891b2' : 'var(--tx3)',
+              fontSize: 13, fontWeight: tab === 'logistics' ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
+              borderBottom: tab === 'logistics' ? '2px solid #0891b2' : '2px solid transparent',
+            }}>🚛 Logistics</button>
+          )}
         </div>
 
         {/* ── Branch + Sector filters ── */}
@@ -1995,6 +2028,253 @@ export default function POSPage() {
             }
           </div>
         )}
+
+        {/* ══════════════ LOGISTICS TAB ══════════════ */}
+        {tab === 'logistics' && (() => {
+          const TEAL = '#0891b2'
+          const LP = logParcels
+          const today = new Date(); today.setHours(0, 0, 0, 0)
+          const todayP = LP.filter((p: any) => new Date(p.created_at) >= today)
+          const inTransit = LP.filter((p: any) => ['in_transit', 'out_for_delivery'].includes(p.status))
+          const atBranch = LP.filter((p: any) => ['received', 'at_branch', 'assigned', 'loaded', 'at_destination'].includes(p.status))
+          const delivered = LP.filter((p: any) => ['delivered', 'collected'].includes(p.status))
+          const failed = LP.filter((p: any) => p.status === 'failed_delivery')
+          const completedAll = delivered.length + failed.length
+          const deliveryRate = completedAll > 0 ? Math.round((delivered.length / completedAll) * 100) : 0
+          const totalRev = LP.reduce((s: number, p: any) => s + (p.fee_charged || 0), 0)
+          const todayRev = todayP.reduce((s: number, p: any) => s + (p.fee_charged || 0), 0)
+          const unpaid = LP.filter((p: any) => p.payment_status === 'unpaid').reduce((s: number, p: any) => s + (p.fee_charged || 0), 0)
+
+          const statusBreak = Object.entries(
+            LP.reduce<Record<string, number>>((a: any, p: any) => { a[p.status] = (a[p.status] || 0) + 1; return a }, {})
+          ).sort((a: any, b: any) => b[1] - a[1])
+
+          const SL: Record<string, string> = { received: 'Received', at_branch: 'At Branch', assigned: 'Assigned', loaded: 'Loaded', in_transit: 'In Transit', at_destination: 'At Destination', out_for_delivery: 'Out for Delivery', delivered: 'Delivered', collected: 'Collected', failed_delivery: 'Failed', returned: 'Returned' }
+          const SC: Record<string, string> = { received: AMBER, at_branch: TEAL, assigned: TEAL, loaded: TEAL, in_transit: '#6366f1', at_destination: GREEN, out_for_delivery: '#6366f1', delivered: GREEN, collected: GREEN, failed_delivery: RED, returned: RED }
+
+          const filteredParcels = LP.filter((p: any) => {
+            if (logStatusFilter && p.status !== logStatusFilter) return false
+            if (logSearch) {
+              const q = logSearch.toLowerCase()
+              return (p.tracking_number?.toLowerCase().includes(q) || p.sender_name?.toLowerCase().includes(q) || p.receiver_name?.toLowerCase().includes(q) || p.destination_city?.toLowerCase().includes(q))
+            }
+            return true
+          })
+
+          const byCity = Object.entries(
+            LP.reduce<Record<string, { count: number; revenue: number }>>((acc: any, p: any) => {
+              const city = p.destination_city || 'Unknown'
+              if (!acc[city]) acc[city] = { count: 0, revenue: 0 }
+              acc[city].count++; acc[city].revenue += p.fee_charged || 0
+              return acc
+            }, {})
+          ).sort((a: any, b: any) => b[1].revenue - a[1].revenue)
+
+          const trucksAvail = logTrucks.filter((t: any) => t.status === 'available').length
+          const trucksTransit = logTrucks.filter((t: any) => t.status === 'in_transit').length
+          const trucksMaint = logTrucks.filter((t: any) => t.status === 'maintenance').length
+
+          return (
+            <div style={{ maxWidth: 900 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700 }}>🚛 Logistics Network</div>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Parcels, fleet, routes & revenue across all branches</div>
+                </div>
+                <button onClick={() => { setLogLoading(true); Promise.all([fetch('/api/pos/parcels?limit=200').then(r=>r.json()),fetch('/api/pos/trucks').then(r=>r.json()),fetch('/api/pos/routes').then(r=>r.json())]).then(([p,t,r])=>{setLogParcels(p.parcels||[]);setLogTrucks(t.trucks||[]);setLogRoutes(r.routes||[])}).finally(()=>setLogLoading(false)) }} style={{ fontSize: 12, color: TEAL, background: `${TEAL}10`, border: `1px solid ${TEAL}30`, borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontWeight: 600 }}>↻ Refresh</button>
+              </div>
+
+              {logLoading ? (
+                <div style={{ textAlign: 'center', padding: 40, color: 'var(--tx3)' }}>Loading logistics data…</div>
+              ) : (
+                <>
+                  {/* Sub-tabs */}
+                  <div style={{ display: 'flex', gap: 4, marginBottom: 16, borderBottom: '1px solid var(--b)' }}>
+                    {(['overview', 'parcels', 'fleet', 'routes', 'revenue'] as const).map(st => (
+                      <button key={st} onClick={() => setLogTab(st)} style={{ padding: '6px 14px', border: 'none', borderBottom: logTab === st ? `2px solid ${TEAL}` : '2px solid transparent', background: 'transparent', color: logTab === st ? TEAL : 'var(--tx3)', fontSize: 12, fontWeight: logTab === st ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>{st}</button>
+                    ))}
+                  </div>
+
+                  {logTab === 'overview' && (
+                    <>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
+                        {[{ l: 'Today', v: todayP.length, c: TEAL, s: 'received' }, { l: 'In Transit', v: inTransit.length, c: '#6366f1', s: 'on the road' }, { l: 'At Branch', v: atBranch.length, c: AMBER, s: 'pending' }, { l: 'Delivered', v: delivered.length, c: GREEN, s: `${deliveryRate}% rate` }].map(k => (
+                          <div key={k.l} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14 }}>
+                            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{k.l}</div>
+                            <div style={{ fontSize: 24, fontWeight: 800, color: k.c }}>{k.v}</div>
+                            <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{k.s}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                        <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>💰 Revenue</div>
+                          {[{ l: 'Today', v: todayRev, c: GREEN }, { l: 'Total', v: totalRev, c: 'var(--tx)' }, { l: 'Unpaid', v: unpaid, c: unpaid > 0 ? RED : 'var(--tx3)' }].map(r => (
+                            <div key={r.l} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                              <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{r.l}</span>
+                              <span style={{ fontSize: 13, fontWeight: 700, color: r.c }}>{currencySymbol} {r.v.toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>🚛 Fleet</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            {[{ l: 'Available', v: trucksAvail, c: GREEN }, { l: 'In Transit', v: trucksTransit, c: '#6366f1' }, { l: 'Maintenance', v: trucksMaint, c: RED }].map(f => (
+                              <div key={f.l} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <div style={{ width: 8, height: 8, borderRadius: 4, background: f.c }} />
+                                <span style={{ fontSize: 12, color: 'var(--tx3)', flex: 1 }}>{f.l}</span>
+                                <span style={{ fontSize: 14, fontWeight: 800, color: f.c }}>{f.v}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {statusBreak.length > 0 && (
+                        <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14, marginBottom: 16 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>📊 Status Breakdown</div>
+                          {statusBreak.map(([st, count]: any) => (
+                            <div key={st} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                              <div style={{ width: 8, height: 8, borderRadius: 4, background: SC[st] || '#888', flexShrink: 0 }} />
+                              <span style={{ flex: 1, fontSize: 12, color: 'var(--tx3)' }}>{SL[st] || st}</span>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{count}</span>
+                              <div style={{ width: 80, height: 6, background: 'var(--b)', borderRadius: 3, overflow: 'hidden' }}>
+                                <div style={{ width: `${Math.min((count / LP.length) * 100, 100)}%`, height: '100%', background: SC[st] || '#888', borderRadius: 3 }} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Recent parcels */}
+                      <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>🕒 Recent Parcels</div>
+                        {LP.slice(0, 10).map((p: any) => (
+                          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--b)' }}>
+                            <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700 }}>{p.tracking_number}</span>
+                            <span style={{ flex: 1, fontSize: 11, color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.receiver_name || p.destination_city || '—'}</span>
+                            <span style={{ background: `${SC[p.status] || '#888'}18`, color: SC[p.status] || '#888', padding: '1px 6px', borderRadius: 4, fontSize: 9, fontWeight: 700 }}>{SL[p.status] || p.status}</span>
+                          </div>
+                        ))}
+                        {LP.length === 0 && <div style={{ fontSize: 12, color: 'var(--tx3)', textAlign: 'center', padding: 16 }}>No parcels yet</div>}
+                      </div>
+                    </>
+                  )}
+
+                  {logTab === 'parcels' && (
+                    <div>
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                        <input value={logSearch} onChange={e => setLogSearch(e.target.value)} placeholder="Search tracking, name, city…" style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--b)', borderRadius: 8, fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
+                        <select value={logStatusFilter} onChange={e => setLogStatusFilter(e.target.value)} style={{ padding: '8px 10px', border: '1px solid var(--b)', borderRadius: 8, fontSize: 12, fontFamily: 'inherit' }}>
+                          <option value="">All statuses</option>
+                          {Object.entries(SL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                        </select>
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>{filteredParcels.length} parcels</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 500, overflowY: 'auto' }}>
+                        {filteredParcels.map((p: any) => (
+                          <div key={p.id} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, padding: 10 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                              <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700 }}>{p.tracking_number}</span>
+                              <span style={{ marginLeft: 'auto', background: `${SC[p.status] || '#888'}18`, color: SC[p.status] || '#888', padding: '1px 6px', borderRadius: 4, fontSize: 9, fontWeight: 700 }}>{SL[p.status] || p.status}</span>
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>
+                              <div>{p.sender_name || '—'} → {p.receiver_name || '—'}</div>
+                              <div>📍 {p.destination_city || '—'} {p.weight_kg ? `· ${p.weight_kg}kg` : ''}</div>
+                              {p.fee_charged ? <div>💰 {currencySymbol} {p.fee_charged.toLocaleString()} · {p.payment_status || '—'}</div> : null}
+                              {p.truck && <div>🚛 {p.truck.plate_number} {p.driver ? `· ${p.driver.name}` : ''}</div>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {logTab === 'fleet' && (
+                    <div>
+                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>{logTrucks.length} trucks</div>
+                      {logTrucks.map((t: any) => {
+                        const st = t.status === 'available' ? { bg: `${GREEN}18`, color: GREEN, label: 'Available' } : t.status === 'in_transit' ? { bg: '#6366f118', color: '#6366f1', label: 'In Transit' } : { bg: `${RED}18`, color: RED, label: t.status === 'maintenance' ? 'Maintenance' : t.status }
+                        const tp = LP.filter((p: any) => p.truck?.id === t.id && ['assigned', 'loaded', 'in_transit'].includes(p.status))
+                        return (
+                          <div key={t.id} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, padding: 12, marginBottom: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                              <span style={{ fontSize: 14, fontWeight: 800 }}>{t.plate_number}</span>
+                              {t.make_model && <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{t.make_model}</span>}
+                              {t.branch && <span style={{ fontSize: 10, color: 'var(--tx3)' }}>📍 {t.branch.name}</span>}
+                              <span style={{ marginLeft: 'auto', background: st.bg, color: st.color, padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700 }}>{st.label}</span>
+                            </div>
+                            {tp.length > 0 && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>📦 {tp.length} active parcel{tp.length !== 1 ? 's' : ''}</div>}
+                          </div>
+                        )
+                      })}
+                      {logTrucks.length === 0 && <div style={{ fontSize: 12, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>No trucks registered</div>}
+                    </div>
+                  )}
+
+                  {logTab === 'routes' && (
+                    <div>
+                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>{logRoutes.length} routes</div>
+                      {logRoutes.map((r: any) => (
+                        <div key={r.id} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, padding: 12, marginBottom: 8 }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{r.name || `${r.origin?.name || '—'} → ${r.destination?.name || '—'}`}</div>
+                          <div style={{ display: 'flex', gap: 16, fontSize: 11, color: 'var(--tx3)' }}>
+                            {r.distance_km && <span>📏 {r.distance_km} km</span>}
+                            {r.estimated_hours && <span>⏱️ {r.estimated_hours}h</span>}
+                            {r.price_per_kg > 0 && <span>💰 {currencySymbol} {r.price_per_kg}/kg</span>}
+                            {r.flat_rate > 0 && <span>📦 {currencySymbol} {r.flat_rate} flat</span>}
+                          </div>
+                        </div>
+                      ))}
+                      {logRoutes.length === 0 && <div style={{ fontSize: 12, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>No routes configured</div>}
+                    </div>
+                  )}
+
+                  {logTab === 'revenue' && (
+                    <div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                        <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>📈 By Period</div>
+                          {[{ l: 'Today', p: todayP }, { l: 'Last 7d', p: LP.filter((p: any) => new Date(p.created_at) >= new Date(Date.now() - 7*86400000)) }, { l: 'This month', p: LP.filter((p: any) => { const d = new Date(p.created_at); const n = new Date(); return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear() }) }, { l: 'All time', p: LP }].map(r => (
+                            <div key={r.l} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                              <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{r.l} <span style={{ fontSize: 10 }}>({r.p.length})</span></span>
+                              <span style={{ fontSize: 12, fontWeight: 700 }}>{currencySymbol} {r.p.reduce((s: number, p: any) => s + (p.fee_charged || 0), 0).toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>💳 Payment Status</div>
+                          {[{ l: 'Paid', f: 'paid', c: GREEN }, { l: 'Unpaid', f: 'unpaid', c: RED }, { l: 'Partial', f: 'partial', c: AMBER }].map(ps => {
+                            const filtered = LP.filter((p: any) => p.payment_status === ps.f)
+                            return (
+                              <div key={ps.l} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                                <div style={{ width: 8, height: 8, borderRadius: 4, background: ps.c }} />
+                                <span style={{ flex: 1, fontSize: 12, color: 'var(--tx3)' }}>{ps.l} ({filtered.length})</span>
+                                <span style={{ fontSize: 12, fontWeight: 700, color: ps.c }}>{currencySymbol} {filtered.reduce((s: number, p: any) => s + (p.fee_charged || 0), 0).toLocaleString()}</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                      <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>🗺️ Revenue by Destination</div>
+                        {byCity.map(([city, data]: any) => (
+                          <div key={city} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                            <span style={{ flex: 1, fontSize: 12, color: 'var(--tx3)' }}>{city}</span>
+                            <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{data.count} pkgs</span>
+                            <span style={{ fontSize: 12, fontWeight: 700 }}>{currencySymbol} {data.revenue.toLocaleString()}</span>
+                          </div>
+                        ))}
+                        {byCity.length === 0 && <div style={{ fontSize: 12, color: 'var(--tx3)', textAlign: 'center', padding: 16 }}>No data yet</div>}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )
+        })()}
 
         {/* ══════════════ FACTORY INTELLIGENCE TAB ══════════════ */}
         {tab === 'intelligence' && (

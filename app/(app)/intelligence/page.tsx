@@ -7,6 +7,7 @@ import AnomalyFeed from '@/components/intelligence/AnomalyFeed'
 import DecisionMemory from '@/components/intelligence/DecisionMemory'
 import TeamPanel from '@/components/intelligence/TeamPanel'
 import LogisticsPulseCard from '@/components/LogisticsPulseCard'
+import CourierPulseCard from '@/components/intelligence/CourierPulseCard'
 import BusinessMemory from '@/components/intelligence/BusinessMemory'
 import FeatureGate from '@/components/gates/FeatureGate'
 import { usePlan } from '@/lib/hooks/usePlan'
@@ -63,7 +64,7 @@ export default function IntelligencePage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const t = params.get('tab')
-    const validTabs = ['overview','anomalies','decisions','team','sparring','shipments','memory','market','connections','cfo']
+    const validTabs = ['overview','anomalies','decisions','team','sparring','shipments','courier','memory','market','connections','cfo']
     if (t && validTabs.includes(t)) setTab(t)
   }, [])
 
@@ -159,6 +160,7 @@ export default function IntelligencePage() {
     { id: 'team',         label: 'Team' },
     { id: 'sparring',     label: 'Ask AI' },
     { id: 'shipments',    label: '📦 Ships' },
+    { id: 'courier',      label: '🚛 Courier' },
     { id: 'memory',       label: '🧠 Memory' },
     { id: 'market',       label: '🌍 Market' },
     { id: 'connections',  label: '🔗 Connect' },
@@ -441,6 +443,41 @@ export default function IntelligencePage() {
                     onClick={item.action}
                     style={{ padding: '8px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx2)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = '#6366F1'; e.currentTarget.style.color = '#6366F1' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.color = 'var(--tx2)' }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── COURIER ─── */}
+        {tab === 'courier' && (
+          <div style={{ maxWidth: 720 }}>
+            <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+              <div>
+                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>Courier Intelligence</div>
+                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Parcel throughput · Delivery performance · Fleet health · Revenue</div>
+              </div>
+            </div>
+            <CourierPulseCard onAsk={askAskBiz} />
+            <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 12, background: 'var(--sf)', border: '1px solid var(--b)' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>Quick Actions</div>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                {[
+                  { label: 'Delivery failure analysis', action: () => askAskBiz('Analyse our delivery failures — what are the top reasons and which routes are worst?') },
+                  { label: 'Revenue at risk', action: () => askAskBiz('How much courier revenue is unpaid? Which parcels should we chase first?') },
+                  { label: 'Fleet utilization', action: () => askAskBiz('How well are we using our truck fleet? Any bottlenecks or underutilized vehicles?') },
+                  { label: 'Route performance', action: () => askAskBiz('Which courier routes are most profitable and which have the highest failure rate?') },
+                  { label: 'Stuck parcels', action: () => askAskBiz('Which parcels have been at branch for over 48 hours and need urgent dispatch?') },
+                ].map((item, i) => (
+                  <button
+                    key={i}
+                    onClick={item.action}
+                    style={{ padding: '8px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx2)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#0891b2'; e.currentTarget.style.color = '#0891b2' }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.color = 'var(--tx2)' }}
                   >
                     {item.label}

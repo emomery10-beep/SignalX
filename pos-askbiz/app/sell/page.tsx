@@ -424,8 +424,19 @@ export default function SellPage() {
             </button>
           )}
 
-          {/* Location indicator */}
-          <div title={geoCoords ? `Location active · ${geoCoords.lat.toFixed(3)}, ${geoCoords.lng.toFixed(3)}` : 'Location off — allow in browser to geo-tag sales'} style={{ width: 8, height: 8, borderRadius: '50%', background: geoCoords ? '#16a34a' : '#d1d5db', flexShrink: 0 }} />
+          {/* Location indicator — tappable to request permission */}
+          <button
+            onClick={() => {
+              if (!navigator.geolocation) return
+              navigator.geolocation.getCurrentPosition(
+                pos => setGeoCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                () => alert('Location access denied. Go to browser Settings → this site → allow Location to geo-tag sales.')
+              )
+            }}
+            title={geoCoords ? `📍 ${geoCoords.lat.toFixed(4)}, ${geoCoords.lng.toFixed(4)}` : 'Tap to enable location for map pins'}
+            style={{ padding: '4px 8px', borderRadius: 20, border: `1px solid ${geoCoords ? '#16a34a' : '#e5e2dc'}`, background: geoCoords ? 'rgba(22,163,74,.08)' : 'rgba(229,226,220,.5)', fontSize: 11, fontWeight: 600, cursor: 'pointer', color: geoCoords ? '#16a34a' : '#9ca3af', display: 'flex', alignItems: 'center', gap: 4 }}>
+            {geoCoords ? '📍' : '📍?'}
+          </button>
 
           <button onClick={() => { localStorage.removeItem('pos_staff'); router.push('/') }} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e5e2dc', background: 'transparent', fontSize: 12, cursor: 'pointer', color: '#6b6760' }}>
             Sign out
@@ -444,6 +455,25 @@ export default function SellPage() {
           <div style={{ fontSize: 24, fontWeight: 800, color: '#1a1916' }}>{todaySales}</div>
         </div>
       </div>
+
+      {/* Geo permission nudge — shown when location not yet captured */}
+      {!geoCoords && (
+        <button
+          onClick={() => {
+            if (!navigator.geolocation) return
+            navigator.geolocation.getCurrentPosition(
+              pos => setGeoCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+              () => alert('Location access denied. Go to your browser Settings → this site → allow Location to geo-tag sales on the map.')
+            )
+          }}
+          style={{ margin: '0 20px 12px', padding: '10px 14px', borderRadius: 12, border: '1px dashed #d1d5db', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, width: 'calc(100% - 40px)', textAlign: 'left' }}>
+          <span style={{ fontSize: 16 }}>📍</span>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#6b6760' }}>Tap to enable location</div>
+            <div style={{ fontSize: 11, color: '#9ca3af' }}>Geo-tags each sale on the map</div>
+          </div>
+        </button>
+      )}
 
       {/* Cart resume banner */}
       {cart.length > 0 && (

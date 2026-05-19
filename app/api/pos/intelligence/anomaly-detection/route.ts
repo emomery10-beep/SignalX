@@ -58,6 +58,10 @@ export async function POST(req: NextRequest) {
       analysisData.factory = await getFactoryData(service, ownerId, startDate)
     }
 
+    if (analysisType === 'logistics' || analysisType === 'all') {
+      analysisData.logistics = await getLogisticsData(service, ownerId, startDate)
+    }
+
     // Use Claude to analyze the data
     const prompt = buildAnalysisPrompt(analysisData, periodDays)
 
@@ -255,6 +259,78 @@ async function getFactoryData(service: any, ownerId: string, startDate: Date) {
   }
 }
 
+async function getLogisticsData(service: any, ownerId: string, startDate: Date) {
+  const [{ data: parcels }, { data: trucks }] = await Promise.all([
+    service
+      .from('pos_parcels')
+      .select('status, fee_charged, payment_status, created_at, delivered_at, dispatched_at, fail_reason, destination_city')
+      .eq('owner_id', ownerId)
+      .gte('created_at', startDate.toISOString()),
+    service
+      .from('pos_trucks')
+      .select('plate_number, status, make_model')
+      .eq('owner_id', ownerId),
+  ])
+
+  if (!parcels || parcels.length === 0) return null
+
+  const byStatus: Record<string, number> = {}
+  let totalRevenue = 0, unpaidRevenue = 0, failedCount = 0, deliveredCount = 0
+
+  for (const p of parcels) {
+    byStatus[p.status] = (byStatus[p.status] || 0) + 1
+    totalRevenue += p.fee_charged || 0
+    if (p.payment_status === 'unpaid') unpaidRevenue += p.fee_charged || 0
+    if (p.status === 'failed_delivery') failedCount++
+    if (p.status === 'delivered' || p.status === 'collected') deliveredCount++
+  }
+
+  const completedTotal = deliveredCount + failedCount
+  const failRate = completedTotal > 0 ? +((failedCount / completedTotal) * 100).toFixed(1) : 0
+
+  // Average delivery time (dispatched → delivered)
+  const deliveredWithTimes = parcels.filter((p: any) => p.delivered_at && p.dispatched_at)
+  const avgDeliveryHrs = deliveredWithTimes.length > 0
+    ? +(deliveredWithTimes.reduce((sum: number, p: any) => sum + (new Date(p.delivered_at).getTime() - new Date(p.dispatched_at).getTime()) / 3_600_000, 0) / deliveredWithTimes.length).toFixed(1)
+    : null
+
+  // Parcels stuck > 48h
+  const now = Date.now()
+  const stuckCount = parcels.filter((p: any) => ['received', 'at_branch'].includes(p.status) && (now - new Date(p.created_at).getTime()) > 48 * 3600000).length
+
+  // By destination city
+  const byCity: Record<string, number> = {}
+  for (const p of parcels) {
+    const city = p.destination_city || 'Unknown'
+    byCity[city] = (byCity[city] || 0) + 1
+  }
+
+  // Fail reasons
+  const failReasons: Record<string, number> = {}
+  for (const p of parcels.filter((p: any) => p.fail_reason)) {
+    failReasons[p.fail_reason] = (failReasons[p.fail_reason] || 0) + 1
+  }
+
+  return {
+    total_parcels: parcels.length,
+    status_breakdown: byStatus,
+    total_revenue: totalRevenue,
+    unpaid_revenue: unpaidRevenue,
+    unpaid_rate_pct: totalRevenue > 0 ? +((unpaidRevenue / totalRevenue) * 100).toFixed(1) : 0,
+    delivery_fail_rate_pct: failRate,
+    fail_reasons: failReasons,
+    avg_delivery_hours: avgDeliveryHrs,
+    parcels_stuck_over_48h: stuckCount,
+    by_destination: byCity,
+    fleet: {
+      total_trucks: trucks?.length || 0,
+      available: trucks?.filter((t: any) => t.status === 'available').length || 0,
+      in_transit: trucks?.filter((t: any) => t.status === 'in_transit').length || 0,
+      maintenance: trucks?.filter((t: any) => t.status === 'maintenance').length || 0,
+    },
+  }
+}
+
 function buildAnalysisPrompt(data: Record<string, any>, periodDays: number): string {
   const focusAreas = [
     '1. Sales trends (normal vs unusual patterns)',
@@ -270,6 +346,17 @@ function buildAnalysisPrompt(data: Record<string, any>, periodDays: number): str
       '8. Approval bottlenecks (pending captures, slow approval lag)',
       '9. Rejection spikes — potential quality control issues',
       '10. Batch-level anomalies in production flow',
+    )
+  }
+  if (data.logistics) {
+    const n = focusAreas.length + 1
+    focusAreas.push(
+      `${n}. Delivery failure rate — is it above 15%? What are the top reasons?`,
+      `${n+1}. Parcel throughput anomalies — unusual spikes or drops in volume`,
+      `${n+2}. Revenue at risk — unpaid parcels, stuck parcels over 48h`,
+      `${n+3}. Fleet utilization — trucks in maintenance vs available`,
+      `${n+4}. Delivery speed — average delivery time trends`,
+      `${n+5}. Route/destination imbalances — any city disproportionately failing?`,
     )
   }
 

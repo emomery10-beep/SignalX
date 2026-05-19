@@ -384,6 +384,132 @@ export function runHealthCheckFromPOSData(input: PosSignalInput): Signal[] {
   return unique.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity])
 }
 
+// ── LOGISTICS SIGNALS ────────────────────────────────────────
+// Generate signals from logistics/courier parcel data
+
+export interface LogisticsSignalInput {
+  parcels: { status: string; fee_charged: number; payment_status: string; created_at: string; delivered_at?: string; dispatched_at?: string; fail_reason?: string; destination_city?: string }[]
+  trucks: { status: string; plate_number: string }[]
+  todayParcelsIn: number
+  avgDailyParcelsIn: number
+}
+
+export function runLogisticsSignals(input: LogisticsSignalInput): Signal[] {
+  const { parcels, trucks, todayParcelsIn, avgDailyParcelsIn } = input
+  const signals: Signal[] = []
+
+  // CHECK 1: Throughput anomaly (today vs average)
+  if (avgDailyParcelsIn > 0 && todayParcelsIn >= 0) {
+    const changePct = ((todayParcelsIn - avgDailyParcelsIn) / avgDailyParcelsIn) * 100
+    if (Math.abs(changePct) >= 30) {
+      const isSpike = changePct > 0
+      signals.push({
+        id: `logistics-throughput-${Date.now()}`,
+        title: isSpike ? 'Parcel intake spike today' : 'Parcel intake down today',
+        description: isSpike
+          ? `${todayParcelsIn} parcels received today — ${changePct.toFixed(0)}% above average (${avgDailyParcelsIn.toFixed(0)}/day). Check handler capacity.`
+          : `Only ${todayParcelsIn} parcels received — ${Math.abs(changePct).toFixed(0)}% below average (${avgDailyParcelsIn.toFixed(0)}/day).`,
+        severity: isSpike ? 'blue' : (Math.abs(changePct) > 50 ? 'red' : 'yellow'),
+        suggested_action: isSpike ? 'Check capacity' : 'Investigate drop',
+        prompt: isSpike
+          ? `Parcel intake is ${changePct.toFixed(0)}% above average today. Do we have enough handlers and truck capacity?`
+          : `Parcel intake is ${Math.abs(changePct).toFixed(0)}% below average today. What's causing the drop?`,
+        metric: `${changePct > 0 ? '+' : ''}${changePct.toFixed(0)}% vs avg`,
+        created_at: new Date().toISOString(),
+      })
+    }
+  }
+
+  // CHECK 2: Failed delivery rate
+  const delivered = parcels.filter(p => p.status === 'delivered' || p.status === 'collected')
+  const failed = parcels.filter(p => p.status === 'failed_delivery')
+  const completedTotal = delivered.length + failed.length
+  if (completedTotal >= 5) {
+    const failRate = (failed.length / completedTotal) * 100
+    if (failRate > 15) {
+      signals.push({
+        id: `logistics-fail-rate-${Date.now()}`,
+        title: `High failed delivery rate: ${failRate.toFixed(0)}%`,
+        description: `${failed.length} of ${completedTotal} deliveries failed. Top reason: ${failed[0]?.fail_reason || 'unknown'}. This impacts revenue and customer satisfaction.`,
+        severity: failRate > 25 ? 'red' : 'yellow',
+        suggested_action: 'Review failed deliveries',
+        prompt: `Our delivery failure rate is ${failRate.toFixed(0)}% (${failed.length} of ${completedTotal}). Analyse the failure reasons and recommend fixes.`,
+        metric: `${failRate.toFixed(0)}% fail rate`,
+        created_at: new Date().toISOString(),
+      })
+    }
+  }
+
+  // CHECK 3: Unpaid revenue
+  const unpaidTotal = parcels.filter(p => p.payment_status === 'unpaid').reduce((s, p) => s + (p.fee_charged || 0), 0)
+  const totalRevenue = parcels.reduce((s, p) => s + (p.fee_charged || 0), 0)
+  if (totalRevenue > 0) {
+    const unpaidPct = (unpaidTotal / totalRevenue) * 100
+    if (unpaidPct > 30) {
+      signals.push({
+        id: `logistics-unpaid-${Date.now()}`,
+        title: `${unpaidPct.toFixed(0)}% of revenue is unpaid`,
+        description: `${formatValue(unpaidTotal)} in unpaid parcel fees out of ${formatValue(totalRevenue)} total. Cash flow at risk.`,
+        severity: unpaidPct > 50 ? 'red' : 'yellow',
+        suggested_action: 'Chase payments',
+        prompt: `${unpaidPct.toFixed(0)}% of our logistics revenue (${formatValue(unpaidTotal)}) is unpaid. Which parcels should we prioritize collecting payment for?`,
+        metric: `${unpaidPct.toFixed(0)}% unpaid`,
+        created_at: new Date().toISOString(),
+      })
+    }
+  }
+
+  // CHECK 4: Trucks in maintenance
+  const maintenanceCount = trucks.filter(t => t.status === 'maintenance').length
+  const totalTrucks = trucks.length
+  if (totalTrucks > 0 && maintenanceCount > 0) {
+    const maintenancePct = (maintenanceCount / totalTrucks) * 100
+    if (maintenancePct > 30) {
+      signals.push({
+        id: `logistics-fleet-${Date.now()}`,
+        title: `${maintenanceCount} of ${totalTrucks} trucks in maintenance`,
+        description: `${maintenancePct.toFixed(0)}% of your fleet is offline. This may delay dispatches and increase delivery times.`,
+        severity: maintenancePct > 50 ? 'red' : 'yellow',
+        suggested_action: 'Check fleet status',
+        prompt: `${maintenanceCount} of our ${totalTrucks} trucks are in maintenance. What's the impact on our delivery capacity and when should we expect them back?`,
+        metric: `${maintenancePct.toFixed(0)}% offline`,
+        created_at: new Date().toISOString(),
+      })
+    }
+  }
+
+  // CHECK 5: Parcels stuck at branch (older than 48h without dispatch)
+  const now = Date.now()
+  const stuckParcels = parcels.filter(p => {
+    if (!['received', 'at_branch'].includes(p.status)) return false
+    const age = now - new Date(p.created_at).getTime()
+    return age > 48 * 3600 * 1000
+  })
+  if (stuckParcels.length > 0) {
+    signals.push({
+      id: `logistics-stuck-${Date.now()}`,
+      title: `${stuckParcels.length} parcels stuck at branch`,
+      description: `${stuckParcels.length} parcel${stuckParcels.length > 1 ? 's' : ''} received over 48 hours ago and not yet dispatched. Customers may complain.`,
+      severity: stuckParcels.length > 10 ? 'red' : 'yellow',
+      suggested_action: 'Dispatch pending parcels',
+      prompt: `We have ${stuckParcels.length} parcels that have been sitting at branch for over 48 hours. How should we prioritize dispatching them?`,
+      metric: `${stuckParcels.length} stuck`,
+      created_at: new Date().toISOString(),
+    })
+  }
+
+  const seen = new Set<string>()
+  const unique = signals.filter(s => {
+    const key = s.id.split('-').slice(0, 2).join('-')
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+
+  const severityOrder: Record<SignalSeverity, number> = { red: 0, yellow: 1, blue: 2 }
+  return unique.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity])
+}
+
 // ── API ROUTE HELPER ──────────────────────────────────────────
 export async function runHealthCheckFromUpload(
   userId: string,

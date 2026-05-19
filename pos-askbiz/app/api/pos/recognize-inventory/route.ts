@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
 
     const anthropic = new Anthropic()
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 500,
       messages: [{
         role: 'user',
@@ -137,8 +137,8 @@ Reply with ONLY valid JSON, no other text:
 
     // If we found a match in inventory, return it with the ID
     if (match) {
-      // Log successful recognition
-      await service
+      // Log successful recognition (fire-and-forget, don't let logging errors block response)
+      service
         .from('recognition_history')
         .insert({
           owner_id: auth.ownerId,
@@ -149,7 +149,7 @@ Reply with ONLY valid JSON, no other text:
           confirmed: true,
           source: 'inventory'
         })
-        .catch((err: any) => console.error('Failed to log recognition:', err))
+        .then(({ error }) => { if (error) console.error('Failed to log recognition:', error) })
 
       return NextResponse.json({
         products: [

@@ -74,6 +74,30 @@ async function generateBrief(userId: string, supabase: ReturnType<typeof createC
     ? `POS today: ${posSalesToday} sales, £${posRevToday.toFixed(2)} revenue${posRefunds > 0 ? `, ${posRefunds} refund${posRefunds > 1 ? 's' : ''}` : ''}.${(lowStockItems?.length ?? 0) > 0 ? ` Low/out of stock: ${(lowStockItems || []).slice(0, 3).map((i: { name: string }) => i.name).join(', ')}.` : ''}`
     : ''
 
+  // ── Logistics context for brief ─────────────────────────────
+  let logisticsContext = ''
+  try {
+    const { data: todayParcels } = await supabase
+      .from('pos_parcels')
+      .select('status, fee_charged, payment_status')
+      .eq('owner_id', userId)
+      .gte('created_at', todayStart.toISOString())
+    const { data: allActiveParcels } = await supabase
+      .from('pos_parcels')
+      .select('status')
+      .eq('owner_id', userId)
+      .in('status', ['received', 'at_branch', 'assigned', 'loaded', 'in_transit', 'out_for_delivery', 'failed_delivery'])
+
+    if (todayParcels && todayParcels.length > 0) {
+      const todayIn = todayParcels.length
+      const todayRev = todayParcels.reduce((s: number, p: any) => s + (p.fee_charged || 0), 0)
+      const inTransit = (allActiveParcels || []).filter((p: any) => ['in_transit', 'out_for_delivery'].includes(p.status)).length
+      const atBranch = (allActiveParcels || []).filter((p: any) => ['received', 'at_branch', 'assigned', 'loaded'].includes(p.status)).length
+      const failedToday = todayParcels.filter((p: any) => p.status === 'failed_delivery').length
+      logisticsContext = `Logistics today: ${todayIn} parcels received, revenue ${todayRev.toLocaleString()}. ${inTransit} in transit, ${atBranch} at branch.${failedToday > 0 ? ` ${failedToday} failed deliveries.` : ''}`
+    }
+  } catch {}
+
   // ── Build rich context ────────────────────────────────────────
   const healthContext = health
     ? `Business health: ${health.score}/100 (${health.label}). ${health.summary || ''}`
@@ -123,6 +147,7 @@ async function generateBrief(userId: string, supabase: ReturnType<typeof createC
       healthContext,
       revenueContext,
       posContext,
+      logisticsContext,
       anomalyContext,
       decisionContext,
       churnContext,
