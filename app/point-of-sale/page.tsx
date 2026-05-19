@@ -11,18 +11,18 @@ const C = {
 }
 
 const FEATURES = [
-  { icon:'🧾', title:'Register & Checkout', desc:'Fast checkout with barcode scanning or manual search. Split payments, layaways, discounts, refunds, and digital receipts in any currency.', tag:'Core' },
-  { icon:'💱', title:'Any Currency, Any Country', desc:'Set your store currency to GBP, USD, EUR, NGN, KES, AED, INR, ZAR or 150+ others. Exchange rates, symbol formatting, and decimal rules handled automatically.', tag:'Global' },
-  { icon:'📦', title:'Inventory Management', desc:'Real-time stock levels across every branch. Low-stock alerts, stock transfers, batch updates, and AI-powered reorder recommendations.', tag:'Smart' },
-  { icon:'🏪', title:'Multi-Branch', desc:'Run multiple locations — in the same country or across borders — from one dashboard. Per-branch currency, tax, inventory, and staff settings.', tag:'Scale' },
-  { icon:'👥', title:'Staff & Shifts', desc:'Role-based access for cashiers and managers. Shift open/close with cash reconciliation, OTP login, and per-cashier performance tracking.', tag:'Team' },
-  { icon:'🧮', title:'Tax & Compliance', desc:'VAT, GST, sales tax, and custom local tax rates. Multi-jurisdiction rules, consolidated reports, and filing-ready previews. Syncs to Xero and QuickBooks.', tag:'Finance' },
-  { icon:'🌍', title:'Localisation', desc:'Date formats, number separators, address formats, and receipt layouts automatically match your country. Right-to-left language support included.', tag:'Local' },
-  { icon:'💳', title:'Flexible Payments', desc:'Accept card, cash, mobile money (M-Pesa, MTN, Airtel), QR pay, and split payments. Works offline and syncs when reconnected.', tag:'Payments' },
-  { icon:'🤖', title:'AI Intelligence', desc:'Anomaly detection on transactions, AI-driven supplier recommendations, sales pattern insights, and demand forecasting — all from your PoS data.', tag:'AI' },
-  { icon:'📊', title:'Reports & Analytics', desc:'Daily, weekly, and monthly sales reports broken down by product, cashier, branch, and payment method. Export in your local currency.', tag:'Insights' },
-  { icon:'🔒', title:'Privacy & Compliance', desc:'GDPR, NDPR, POPIA, and PDPA ready. One-click customer data export, deletion requests, consent logging, and configurable retention policies.', tag:'Trust' },
-  { icon:'📱', title:'Works Everywhere', desc:'Runs on any device — iPad at the counter, Android phone for pop-ups, or desktop in the back office. No proprietary hardware, no lock-in.', tag:'Flex' },
+  { icon:'🧾', title:'Register & Checkout', desc:'Fast checkout with barcode scanning or manual search. Split payments, layaways, discounts, refunds, and digital receipts in any currency.', tag:'Core', slug:'register-checkout' },
+  { icon:'💱', title:'Any Currency, Any Country', desc:'Set your store currency to GBP, USD, EUR, NGN, KES, AED, INR, ZAR or 150+ others. Exchange rates, symbol formatting, and decimal rules handled automatically.', tag:'Global', slug:'multi-currency' },
+  { icon:'📦', title:'Inventory Management', desc:'Real-time stock levels across every branch. Low-stock alerts, stock transfers, batch updates, and AI-powered reorder recommendations.', tag:'Smart', slug:'inventory' },
+  { icon:'🏪', title:'Multi-Branch', desc:'Run multiple locations — in the same country or across borders — from one dashboard. Per-branch currency, tax, inventory, and staff settings.', tag:'Scale', slug:'multi-branch' },
+  { icon:'👥', title:'Staff & Shifts', desc:'Role-based access for cashiers and managers. Shift open/close with cash reconciliation, OTP login, and per-cashier performance tracking.', tag:'Team', slug:'staff-shifts' },
+  { icon:'🧮', title:'Tax & Compliance', desc:'VAT, GST, sales tax, and custom local tax rates. Multi-jurisdiction rules, consolidated reports, and filing-ready previews. Syncs to Xero and QuickBooks.', tag:'Finance', slug:'tax-compliance' },
+  { icon:'🌍', title:'Localisation', desc:'Date formats, number separators, address formats, and receipt layouts automatically match your country. Right-to-left language support included.', tag:'Local', slug:'localisation' },
+  { icon:'💳', title:'Flexible Payments', desc:'Accept card, cash, mobile money (M-Pesa, MTN, Airtel), QR pay, and split payments. Works offline and syncs when reconnected.', tag:'Payments', slug:'payments' },
+  { icon:'🤖', title:'AI Intelligence', desc:'Anomaly detection on transactions, AI-driven supplier recommendations, sales pattern insights, and demand forecasting — all from your PoS data.', tag:'AI', slug:'ai-intelligence' },
+  { icon:'📊', title:'Reports & Analytics', desc:'Daily, weekly, and monthly sales reports broken down by product, cashier, branch, and payment method. Export in your local currency.', tag:'Insights', slug:'reports' },
+  { icon:'🔒', title:'Privacy & Compliance', desc:'GDPR, NDPR, POPIA, and PDPA ready. One-click customer data export, deletion requests, consent logging, and configurable retention policies.', tag:'Trust', slug:'privacy' },
+  { icon:'📱', title:'Works Everywhere', desc:'Runs on any device — iPad at the counter, Android phone for pop-ups, or desktop in the back office. No proprietary hardware, no lock-in.', tag:'Flex', slug:'works-everywhere' },
 ]
 
 const WORKFLOW = [
@@ -399,17 +399,20 @@ export default function PosPage() {
             </div>
           </div>
 
-          {/* Feature cards — 4 col, 3 rows */}
+          {/* Feature cards — 4 col, 3 rows — each links to its feature page */}
           <div className="features-grid" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
             {FEATURES.map((f, i) => (
-              <div key={i} className="card-hover" style={{ padding:'22px 18px', borderRadius:16, border: f.tag === 'Global' ? `2px solid ${C.accBdr}` : `1px solid ${C.b}`, background: f.tag === 'Global' ? C.accBg : C.bg, display:'flex', flexDirection:'column', gap:10 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                  <span style={{ fontSize:24 }}>{f.icon}</span>
-                  <span style={{ fontSize:10, fontWeight:700, color: f.tag === 'Global' ? C.acc : C.acc, background: f.tag === 'Global' ? `rgba(208,138,89,.18)` : C.accBg, border:`1px solid ${C.accBdr}`, padding:'2px 8px', borderRadius:9999, textTransform:'uppercase', letterSpacing:'.05em' }}>{f.tag}</span>
+              <Link key={i} href={`/point-of-sale/feature/${(f as any).slug}`} style={{ textDecoration:'none' }}>
+                <div className="card-hover" style={{ padding:'22px 18px', borderRadius:16, border: f.tag === 'Global' ? `2px solid ${C.accBdr}` : `1px solid ${C.b}`, background: f.tag === 'Global' ? C.accBg : C.bg, display:'flex', flexDirection:'column', gap:10, height:'100%', position:'relative', cursor:'pointer' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                    <span style={{ fontSize:24 }}>{f.icon}</span>
+                    <span style={{ fontSize:10, fontWeight:700, color:C.acc, background: f.tag === 'Global' ? `rgba(208,138,89,.18)` : C.accBg, border:`1px solid ${C.accBdr}`, padding:'2px 8px', borderRadius:9999, textTransform:'uppercase', letterSpacing:'.05em' }}>{f.tag}</span>
+                  </div>
+                  <div style={{ fontFamily:'var(--font-sora)', fontSize:15, fontWeight:700, color:C.tx }}>{f.title}</div>
+                  <p style={{ fontSize:13, color:C.tx2, lineHeight:1.65, margin:0, flex:1 }}>{f.desc}</p>
+                  <div style={{ fontSize:11, color:C.acc, fontWeight:600, marginTop:4 }}>Learn more →</div>
                 </div>
-                <div style={{ fontFamily:'var(--font-sora)', fontSize:15, fontWeight:700, color:C.tx }}>{f.title}</div>
-                <p style={{ fontSize:13, color:C.tx2, lineHeight:1.65, margin:0 }}>{f.desc}</p>
-              </div>
+              </Link>
             ))}
           </div>
 

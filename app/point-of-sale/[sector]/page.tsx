@@ -3,6 +3,13 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { SECTORS } from '@/lib/pos-sectors'
+import PosScreenMockup from '@/components/pos/PosScreenMockup'
+
+type SectorScreen = 'retail' | 'restaurant' | 'repair' | 'salon' | 'factory' | 'logistics'
+const SECTOR_SCREENS: Record<string, SectorScreen> = {
+  retail: 'retail', restaurant: 'restaurant', repair: 'repair',
+  salon: 'salon', factory: 'factory', logistics: 'logistics',
+}
 
 const C = {
   bg: '#f9f8f6', sf: '#ffffff', ev: '#f3f2ef',
@@ -141,6 +148,29 @@ export default function SectorPage() {
           </div>
         </div>
       </section>
+
+      {/* Screen mockup — "See it in action" */}
+      {SECTOR_SCREENS[sector.id] && (
+        <section style={{ background: '#1a1916', padding: '64px 24px' }}>
+          <div style={{ maxWidth: 960, margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: 36 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.acc, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 8 }}>Live preview</div>
+              <h2 style={{ fontSize: 26, fontWeight: 800, color: '#fff', margin: '0 0 10px', letterSpacing: '-0.02em' }}>See {sector.label} PoS in action</h2>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,.5)', maxWidth: 440, margin: '0 auto' }}>
+                This is the real AskBiz PoS admin — {sector.label.toLowerCase()} operations at a glance.
+              </p>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <PosScreenMockup screen={SECTOR_SCREENS[sector.id]} />
+            </div>
+            <div style={{ textAlign: 'center', marginTop: 28 }}>
+              <a href="https://askbiz.co/pos" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '11px 22px', background: C.acc, color: '#fff', borderRadius: 9, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+                Open the live admin →
+              </a>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Workflow */}
       <section style={{ background: C.sf, borderTop: `1px solid ${C.b}`, borderBottom: `1px solid ${C.b}`, padding: '64px 24px' }}>
