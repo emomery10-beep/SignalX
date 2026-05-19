@@ -356,14 +356,16 @@ function LandingInner({ geo }: { geo: Geo | null }) {
   const [annual, setAnnual] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  // Live geo — updated client-side on mount from /api/geo to override any CDN-cached server value
+  const [liveGeo, setLiveGeo] = useState<Geo | null>(geo)
 
-  const sym = geo?.pricing?.sym || '£'
-  const growthPrice = geo?.pricing?.growth || '£19'
-  const businessPrice = geo?.pricing?.business || '£49'
-  const posPrice = geo?.pricing?.pos || '£5'
-  const country = geo?.country || ''
-  const countryCode = geo?.countryCode || ''
-  const flag = geo?.flag || ''
+  const sym           = liveGeo?.pricing?.sym      || '£'
+  const growthPrice   = liveGeo?.pricing?.growth   || '£19'
+  const businessPrice = liveGeo?.pricing?.business || '£49'
+  const posPrice      = liveGeo?.pricing?.pos      || '£5'
+  const country       = liveGeo?.country           || geo?.country    || ''
+  const countryCode   = liveGeo?.countryCode       || geo?.countryCode || ''
+  const flag          = liveGeo?.flag              || geo?.flag        || ''
   const isRTL = lang === 'ar'
 
   const geoCtaText = country ? `Start free — from ${growthPrice}/mo` : 'Start for free →'
@@ -372,14 +374,31 @@ function LandingInner({ geo }: { geo: Geo | null }) {
     : 'No credit card · Takes 2 minutes to set up'
 
   useEffect(() => {
-    const saved = document.cookie.split(';').find(c => c.trim().startsWith('askbiz_lang='))
-    if (saved) return
-    const browserLang = navigator.language?.split('-')[0]?.toLowerCase()
-    const BMAP: Record<string, Lang> = { en:'en', fr:'fr', de:'de', es:'es', ar:'ar', sw:'sw', pt:'pt', nl:'nl', it:'it', pl:'pl' }
-    if (browserLang && browserLang !== 'en' && BMAP[browserLang]) { setLang(BMAP[browserLang] as Lang); return }
+    // Always fetch live geo on mount — overrides any CDN-cached server-rendered value
     fetch('/api/geo').then(r => r.json()).then(d => {
-      const detected = (COUNTRY_TO_LANG as Record<string, Lang>)[d.countryCode] || 'en'
-      setLang(detected)
+      if (d.pricing) {
+        setLiveGeo({
+          country: d.country || '',
+          countryCode: d.countryCode || '',
+          city: d.city || '',
+          currency: d.currency || 'USD',
+          currencySymbol: d.currencySymbol || '$',
+          currencyName: d.currencyName || 'US Dollar',
+          flag: d.flag || '',
+          pricing: d.pricing,
+        })
+      }
+      // Language detection
+      const saved = document.cookie.split(';').find(c => c.trim().startsWith('askbiz_lang='))
+      if (!saved) {
+        const browserLang = navigator.language?.split('-')[0]?.toLowerCase()
+        const BMAP: Record<string, Lang> = { en:'en', fr:'fr', de:'de', es:'es', ar:'ar', sw:'sw', pt:'pt', nl:'nl', it:'it', pl:'pl' }
+        if (browserLang && browserLang !== 'en' && BMAP[browserLang]) { setLang(BMAP[browserLang] as Lang) }
+        else {
+          const detected = (COUNTRY_TO_LANG as Record<string, Lang>)[d.countryCode] || 'en'
+          setLang(detected)
+        }
+      }
     }).catch(() => {})
   }, [])
 

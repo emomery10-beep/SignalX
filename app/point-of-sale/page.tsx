@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { SECTORS as SHARED_SECTORS } from '@/lib/pos-sectors'
 
 const C = {
   bg:'#f9f8f6', sf:'#ffffff', ev:'#f3f2ef',
@@ -31,98 +32,8 @@ const WORKFLOW = [
   { step:'4', title:'Close & reconcile', desc:'Close the shift, reconcile cash, and the day\'s data flows into your reports and accounting sync.' },
 ]
 
-const SECTORS = [
-  {
-    id: 'retail', icon: '🛒', label: 'Retail',
-    tagline: 'Fast checkout. Smart shelves. Zero shrinkage.',
-    desc: 'Everything a retail store needs from the floor to the back office — with AI watching margins and stock in real time.',
-    color: '#2563eb',
-    tiles: ['📦 Inventory', '🧾 Sales', '👥 Staff', '🏪 Branches', '🗺 Map', '📋 Audit'],
-    features: [
-      { icon:'📷', title:'Barcode scanning', desc:'Scan any product at the counter — item, price, and stock update instantly.' },
-      { icon:'📦', title:'Live inventory', desc:'Real-time stock across all branches. Low-stock alerts and AI reorder suggestions.' },
-      { icon:'💰', title:'Split payments', desc:'Card, cash, mobile money, or any combination. Discount codes and layaway built in.' },
-      { icon:'🔄', title:'Stock transfers', desc:'Move items between branches and track every movement with a full audit trail.' },
-      { icon:'🤖', title:'AI margin alerts', desc:'Anomaly detection flags unusual price drops, voids, or shrinkage patterns.' },
-      { icon:'📊', title:'Sales reports', desc:'Daily, weekly, monthly — broken down by product, cashier, and payment method.' },
-    ],
-  },
-  {
-    id: 'restaurant', icon: '🍽️', label: 'Restaurant',
-    tagline: 'Table to till in seconds.',
-    desc: 'Manage covers, kitchen orders, and front-of-house from one screen. No separate KDS hardware needed.',
-    color: '#dc2626',
-    tiles: ['🍽️ Tables', '🧾 Orders', '👥 Staff', '📦 Menu', '📋 Audit', '📊 Reports'],
-    features: [
-      { icon:'🍽️', title:'Table & cover management', desc:'Open a table, add covers, and ring up courses — all from a single screen.' },
-      { icon:'🧾', title:'Order & kitchen flow', desc:'Orders route to the kitchen display automatically. No manual ticket writing.' },
-      { icon:'🍷', title:'Menu builder', desc:'Categories, modifiers (extras, swaps), happy hour pricing, and daily specials.' },
-      { icon:'💳', title:'Split-bill & tips', desc:'Split by item or equally. Tip prompts on screen. Gratuity line on receipt.' },
-      { icon:'🗑️', title:'Food waste capture', desc:'Log wastage by item and shift. AI flags when waste is rising above baseline.' },
-      { icon:'📊', title:'Cover & revenue reports', desc:'Average spend per cover, peak hours, and top-selling dishes — daily.' },
-    ],
-  },
-  {
-    id: 'repair', icon: '🔧', label: 'Repair',
-    tagline: 'Job in. Job tracked. Job done.',
-    desc: 'Full job-ticket workflow from device check-in through diagnosis, repair, and customer handover — with parts inventory built in.',
-    color: '#d97706',
-    tiles: ['🔧 Service Jobs', '📦 Parts', '👥 Engineers', '🧾 Quotes', '📋 History', '🏪 Branches'],
-    features: [
-      { icon:'🔧', title:'Service job tickets', desc:'Log device make/model, fault description, and customer details on check-in.' },
-      { icon:'📷', title:'Device scan & photos', desc:'Scan serial numbers or IMEI. Attach before/after photos to every job.' },
-      { icon:'🛠️', title:'Parts inventory', desc:'Track parts stock, auto-deduct on job completion, and reorder when low.' },
-      { icon:'💬', title:'Customer quotes', desc:'Generate a quote link customers can approve digitally before you start work.' },
-      { icon:'🏆', title:'Engineer skill matching', desc:'Assign jobs by engineer specialisation. Track jobs per tech and completion rate.' },
-      { icon:'🔒', title:'Warranty tracking', desc:'Log warranty period and alert cashiers when a device returns in-warranty.' },
-    ],
-  },
-  {
-    id: 'salon', icon: '💇', label: 'Salon',
-    tagline: 'Book it. Bill it. Build loyalty.',
-    desc: 'Run appointments alongside walk-in retail. Track stylist performance, client history, and product sales from one dashboard.',
-    color: '#7c3aed',
-    tiles: ['📅 Appointments', '🛒 Retail', '👥 Stylists', '📋 Client history', '💳 Payments', '📊 Reports'],
-    features: [
-      { icon:'📅', title:'Appointment booking', desc:'Schedule appointments per stylist. Walk-ins slot in without disrupting the book.' },
-      { icon:'💇', title:'Service menu', desc:'Set prices per service and stylist tier. Promotions and package deals built in.' },
-      { icon:'🛒', title:'Product retail', desc:'Sell retail products alongside services. Inventory tracked the same as any store.' },
-      { icon:'👤', title:'Client history', desc:'See every client\'s previous services, products bought, and stylist preferences.' },
-      { icon:'💰', title:'Tips & commissions', desc:'Tip collection on screen. Per-stylist commission rules calculated automatically.' },
-      { icon:'📊', title:'Stylist performance', desc:'Revenue, services, and product sales per stylist. Know your top earners daily.' },
-    ],
-  },
-  {
-    id: 'factory', icon: '🏭', label: 'Factory',
-    tagline: 'Every batch tracked. Nothing lost.',
-    desc: 'Capture intake, output, wastage, and dispatch at every stage. Approval workflows keep managers in control of production flow.',
-    color: '#059669',
-    tiles: ['📥 Captures', '✅ Approvals', '📦 Inventory', '🤖 Intelligence', '📋 Audit', '📊 Reports'],
-    features: [
-      { icon:'📥', title:'Production captures', desc:'Log intake, output, wastage, and dispatch with batch references and quantities.' },
-      { icon:'✅', title:'Approval workflow', desc:'Managers approve or reject each capture. Pending queue with lag-time tracking.' },
-      { icon:'📊', title:'Output vs intake ratio', desc:'AI monitors production efficiency and flags when yield drops below baseline.' },
-      { icon:'🗑️', title:'Wastage rate monitoring', desc:'Track wastage % per batch. AI alerts when rising above your historical average.' },
-      { icon:'🔍', title:'Batch-level traceability', desc:'Every capture linked to a batch reference — full chain from raw material to dispatch.' },
-      { icon:'🤖', title:'Factory intelligence', desc:'Claude AI analyses your production data and surfaces anomalies and bottlenecks.' },
-    ],
-  },
-  {
-    id: 'logistics', icon: '🚚', label: 'Logistics',
-    tagline: 'Every parcel. Every mile. Accounted for.',
-    desc: 'Manage your courier fleet and parcel pipeline — from booking through delivery confirmation — with real-time fleet visibility.',
-    color: '#0891b2',
-    tiles: ['📦 Parcels', '🚚 Fleet', '🗺 Routes', '📋 Handover', '📊 Reports', '🤖 Intelligence'],
-    features: [
-      { icon:'📦', title:'Parcel management', desc:'Book, scan, track, and confirm parcels across every status from received to delivered.' },
-      { icon:'🚚', title:'Fleet tracking', desc:'Monitor trucks by status — available, in transit, or maintenance. Assign loads.' },
-      { icon:'🗺️', title:'Route planning', desc:'Group parcels by destination. Assign routes to drivers and track completion.' },
-      { icon:'📷', title:'Photo proof of delivery', desc:'Drivers capture delivery photos. Stored against the parcel record permanently.' },
-      { icon:'💰', title:'Invoice & payment', desc:'Auto-generate logistics invoices. Track paid vs unpaid across your parcel book.' },
-      { icon:'🤖', title:'Delivery intelligence', desc:'AI flags high failure-rate routes, stuck parcels, and fleet utilisation anomalies.' },
-    ],
-  },
-]
+// SECTORS imported from @/lib/pos-sectors
+const SECTORS = SHARED_SECTORS
 
 const DEMO_STEPS = [
   { label: 'Point & scan', desc: 'Point the camera at any barcode or QR code. No typing.' },
@@ -581,13 +492,16 @@ export default function PosPage() {
                     </div>
                   ))}
                 </div>
+                {/* CTA to dedicated sector page */}
+                <div style={{ marginTop:20, display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
+                  <p style={{ fontSize:13, color:C.tx3, margin:0 }}>All sectors share inventory, staff, branches, tax, AI, and multi-currency.</p>
+                  <Link href={`/point-of-sale/${sectorTab}`} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'9px 18px', borderRadius:9999, background:SECTORS.find(s => s.id === sectorTab)?.color || C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none' }}>
+                    Full {SECTORS.find(s => s.id === sectorTab)?.label} guide →
+                  </Link>
+                </div>
               </div>
             </div>
           ))}
-
-          <p style={{ textAlign:'center', fontSize:13, color:C.tx3, marginTop:20 }}>
-            All sectors share core features: inventory, staff, branches, tax, AI intelligence, and multi-currency.
-          </p>
         </div>
       </section>
 
