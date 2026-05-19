@@ -899,13 +899,57 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
       {/* ── PRICING ──────────────────────────────────────────── */}
       <section id="pricing" style={{ background:C.sf, borderTop:`1px solid ${C.b}`, borderBottom:`1px solid ${C.b}`, padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
-        <div style={{ maxWidth:820, margin:'0 auto' }}>
+        <div style={{ maxWidth:960, margin:'0 auto' }}>
           <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16, textAlign:'center' }}>Pricing</div>
           <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,34px)', fontWeight:700, textAlign:'center', marginBottom:8, letterSpacing:'-.03em', color:C.tx }}>
             Simple, honest pricing
           </h2>
-          <p style={{ textAlign:'center', fontSize:14, color:C.tx2, marginBottom:28 }}>All plans include API access. Cancel anytime.</p>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, marginBottom:32 }}>
+          <p style={{ textAlign:'center', fontSize:14, color:C.tx2, marginBottom:36 }}>All plans include API access. Cancel anytime.</p>
+
+          {/* ── PoS card — shown first ── */}
+          <div style={{ borderRadius:20, border:`2px solid ${C.acc}`, background:`linear-gradient(135deg, rgba(208,138,89,.06) 0%, rgba(208,138,89,.02) 100%)`, padding:'clamp(20px,3vw,28px) clamp(20px,3vw,32px)', marginBottom:28, position:'relative', overflow:'hidden' }}>
+            {/* background glow */}
+            <div style={{ position:'absolute', top:-40, right:-40, width:200, height:200, background:`radial-gradient(circle, ${C.acc}18 0%, transparent 70%)`, pointerEvents:'none' }} />
+            <div style={{ display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'space-between', gap:20 }}>
+              {/* Left: name + price */}
+              <div style={{ minWidth:200 }}>
+                <div style={{ display:'inline-flex', alignItems:'center', gap:8, marginBottom:10 }}>
+                  <span style={{ fontSize:22 }}>🧾</span>
+                  <span style={{ fontFamily:'var(--font-sora)', fontSize:20, fontWeight:800, color:C.acc }}>Point of Sale</span>
+                  <span style={{ fontSize:10, fontWeight:700, color:'#fff', background:C.acc, padding:'2px 9px', borderRadius:9999, textTransform:'uppercase', letterSpacing:'.06em' }}>Add-on</span>
+                </div>
+                <div style={{ display:'flex', alignItems:'baseline', gap:4, marginBottom:6 }}>
+                  <span style={{ fontFamily:'var(--font-sora)', fontSize:36, fontWeight:800, color:C.tx, letterSpacing:'-.03em' }}>{sym}5</span>
+                  <span style={{ fontSize:13, color:C.tx3 }}>/seat/month</span>
+                </div>
+                <p style={{ fontSize:12, color:C.tx3, margin:0, lineHeight:1.5 }}>Add to any Growth or Business plan.<br/>Each seat is one register or device.</p>
+                <div style={{ display:'flex', gap:10, marginTop:18, flexWrap:'wrap' }}>
+                  <Link href="/signin" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'10px 22px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none', boxShadow:`0 3px 16px ${C.acc}40` }}>
+                    Add to my plan →
+                  </Link>
+                  <Link href="/point-of-sale" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'10px 18px', borderRadius:9999, border:`1px solid ${C.accBdr}`, background:'transparent', color:C.acc, fontSize:13, fontWeight:600, textDecoration:'none' }}>
+                    See all features
+                  </Link>
+                </div>
+              </div>
+              {/* Right: feature pills */}
+              <div style={{ display:'flex', flexWrap:'wrap', gap:8, maxWidth:520 }}>
+                {[
+                  '🧾 Register & checkout','📦 Inventory management','👥 Staff & shifts',
+                  '🏪 Multi-branch','🧮 Tax & VAT (Xero/QB)','📷 Barcode scanning',
+                  '🤖 AI anomaly alerts','📱 Tablet, phone, desktop',
+                ].map((f, i) => (
+                  <div key={i} style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'6px 12px', borderRadius:9999, background:C.accBg, border:`1px solid ${C.accBdr}`, fontSize:12, color:C.tx2, fontWeight:500 }}>
+                    {f}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Intelligence tier toggle ── */}
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, marginBottom:20 }}>
+            <span style={{ fontSize:12, color:C.tx3, fontWeight:500 }}>Intelligence platform:</span>
             <span style={{ fontSize:13, color:annual?C.tx3:C.tx, fontWeight:annual?400:600 }}>Monthly</span>
             <button onClick={() => setAnnual(v=>!v)} style={{ width:42, height:22, borderRadius:11, background:annual?C.acc:C.b2, border:'none', cursor:'pointer', position:'relative', transition:'background 200ms' }}>
               <div style={{ width:16, height:16, borderRadius:'50%', background:'#fff', position:'absolute', top:3, left:annual?23:3, transition:'left 200ms', boxShadow:'0 1px 4px rgba(0,0,0,.2)' }}/>
@@ -914,6 +958,8 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               Annual <span style={{ fontSize:11, fontWeight:700, color:'#16a34a', background:'rgba(34,197,94,.1)', borderRadius:9999, padding:'1px 7px', marginLeft:4 }}>2 months free</span>
             </span>
           </div>
+
+          {/* ── Intelligence tier cards ── */}
           <div className="pricing-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
             {[
               { id:'free', name:'Free', colour:'#6b6760', price:'£0', sub:'10 questions/month', popular:false,
@@ -950,11 +996,6 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                 </Link>
               </div>
             ))}
-          </div>
-          <div style={{ textAlign:'center', marginTop:20 }}>
-            <Link href="/point-of-sale" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'10px 22px', borderRadius:9999, border:`1px solid ${C.accBdr}`, background:C.accBg, color:C.acc, fontSize:13, fontWeight:700, textDecoration:'none' }}>
-              🧾 Add Point of Sale — £5/seat/month
-            </Link>
           </div>
         </div>
       </section>
