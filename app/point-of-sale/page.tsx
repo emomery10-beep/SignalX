@@ -27,9 +27,28 @@ const WORKFLOW = [
   { step:'4', title:'Close & reconcile', desc:'Close the shift, reconcile cash, and the day\'s data flows into your reports and accounting sync.' },
 ]
 
+const DEMO_STEPS = [
+  { label: 'Point & scan', desc: 'Point the camera at any barcode or QR code. No typing.' },
+  { label: 'Instant recognition', desc: 'Product matched in your inventory in under a second.' },
+  { label: 'Added to basket', desc: 'Line item appears with price, quantity, and tax — automatically.' },
+  { label: 'Tap to pay', desc: 'Card, cash, or mobile wallet. Receipt sent digitally.' },
+]
+
 export default function PosPage() {
   const [annual, setAnnual] = useState(true)
+  const [demoStep, setDemoStep] = useState(0)
+  const [demoRunning, setDemoRunning] = useState(false)
   const seatPrice = '£5'
+
+  function runDemo() {
+    if (demoRunning) return
+    setDemoRunning(true)
+    setDemoStep(1)
+    setTimeout(() => setDemoStep(2), 1600)
+    setTimeout(() => setDemoStep(3), 2900)
+    setTimeout(() => setDemoStep(4), 4200)
+    setTimeout(() => { setDemoStep(0); setDemoRunning(false) }, 6200)
+  }
 
   return (
     <div style={{ background:C.bg, minHeight:'100vh' }}>
@@ -38,11 +57,21 @@ export default function PosPage() {
         .fade-up { animation: fadeUp .5s ease both }
         .card-hover { transition: transform 180ms ease, box-shadow 180ms ease }
         .card-hover:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,.07) }
+        @keyframes scanLine { 0%,100% { top:8% } 50% { top:82% } }
+        .scan-line { position:absolute; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,#4ade80 40%,#4ade80 60%,transparent); animation:scanLine 1.1s ease-in-out infinite; box-shadow:0 0 10px rgba(74,222,128,.7); z-index:4 }
+        @keyframes popIn { from { opacity:0; transform:scale(.88) translateY(6px) } to { opacity:1; transform:scale(1) translateY(0) } }
+        .pop-in { animation:popIn .3s cubic-bezier(.34,1.56,.64,1) both }
+        @keyframes slideUp { from { opacity:0; transform:translateY(14px) } to { opacity:1; transform:translateY(0) } }
+        .slide-up { animation:slideUp .35s ease both }
+        @keyframes pulseGreen { 0%,100% { box-shadow:0 0 0 0 rgba(74,222,128,.4) } 50% { box-shadow:0 0 0 10px rgba(74,222,128,0) } }
+        .pulse-green { animation:pulseGreen 1.2s ease infinite }
+        @keyframes spin { to { transform:rotate(360deg) } }
         @media (max-width:767px) {
           .pos-hero-grid { grid-template-columns:1fr !important }
           .features-grid { grid-template-columns:1fr !important }
           .workflow-grid { grid-template-columns:1fr !important }
           .compare-grid { grid-template-columns:1fr !important }
+          .demo-grid { grid-template-columns:1fr !important }
           .pos-hero-mock { display:none !important }
         }
         @media (min-width:768px) and (max-width:1023px) {
@@ -122,6 +151,171 @@ export default function PosPage() {
             <div style={{ flex:1, padding:'8px', borderRadius:8, background:C.ev, textAlign:'center', fontSize:11, fontWeight:600, color:C.tx3 }}>💳 Card</div>
             <div style={{ flex:1, padding:'8px', borderRadius:8, background:C.ev, textAlign:'center', fontSize:11, fontWeight:600, color:C.tx3 }}>💵 Cash</div>
             <div style={{ flex:1, padding:'8px', borderRadius:8, background:C.ev, textAlign:'center', fontSize:11, fontWeight:600, color:C.tx3 }}>📱 Mobile Wallet</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Camera-first Demo */}
+      <section style={{ background:`linear-gradient(160deg, #0f0f0e 0%, #1a1916 100%)`, padding:'clamp(56px,7vw,92px) clamp(16px,4vw,40px)' }}>
+        <div style={{ maxWidth:1060, margin:'0 auto' }}>
+          <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16, textAlign:'center' }}>How it feels</div>
+          <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(24px,3.5vw,38px)', fontWeight:700, textAlign:'center', marginBottom:12, letterSpacing:'-.03em', color:'#fff' }}>
+            Scan. Add. Done.
+          </h2>
+          <p style={{ fontSize:'clamp(14px,1.6vw,17px)', color:'rgba(255,255,255,.55)', lineHeight:1.7, maxWidth:520, margin:'0 auto 52px', textAlign:'center' }}>
+            No manual entry. Point, scan, checkout — the entire sale takes seconds.
+          </p>
+
+          <div className="demo-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'clamp(32px,5vw,72px)', alignItems:'center' }}>
+
+            {/* Phone mock */}
+            <div style={{ display:'flex', justifyContent:'center' }}>
+              <div style={{ width:260, background:'#111', borderRadius:40, padding:'14px 10px 20px', boxShadow:'0 32px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.06)', position:'relative' }}>
+                {/* Status bar */}
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0 14px 10px', color:'rgba(255,255,255,.5)', fontSize:10 }}>
+                  <span>9:41</span>
+                  <div style={{ width:80, height:6, background:'rgba(255,255,255,.08)', borderRadius:3 }} />
+                  <span>●●●</span>
+                </div>
+                {/* App bar */}
+                <div style={{ background:'#1a1a1a', margin:'0 2px', borderRadius:'14px 14px 0 0', padding:'10px 14px', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'1px solid rgba(255,255,255,.06)' }}>
+                  <span style={{ fontSize:11, color:'rgba(255,255,255,.7)', fontWeight:600 }}>askbiz Register</span>
+                  <span style={{ fontSize:10, color:'#4ade80', fontWeight:600 }}>● Live</span>
+                </div>
+                {/* Camera view */}
+                <div style={{ background:'#000', margin:'0 2px', aspectRatio:'1/1.1', position:'relative', overflow:'hidden' }}>
+                  {/* Subtle camera noise texture */}
+                  <div style={{ position:'absolute', inset:0, background:'radial-gradient(ellipse at center, rgba(255,255,255,.03) 0%, transparent 70%)', zIndex:1 }} />
+                  {/* Viewfinder corners */}
+                  {[{top:14,left:14},{top:14,right:14},{bottom:14,left:14},{bottom:14,right:14}].map((pos, i) => (
+                    <div key={i} style={{ position:'absolute', ...pos, width:22, height:22, zIndex:3,
+                      borderTop: (i < 2) ? `2px solid ${C.acc}` : 'none',
+                      borderBottom: (i >= 2) ? `2px solid ${C.acc}` : 'none',
+                      borderLeft: (i === 0 || i === 2) ? `2px solid ${C.acc}` : 'none',
+                      borderRight: (i === 1 || i === 3) ? `2px solid ${C.acc}` : 'none',
+                    }} />
+                  ))}
+                  {/* Barcode target area */}
+                  {demoStep <= 1 && (
+                    <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', zIndex:2 }}>
+                      {demoStep === 0 && (
+                        <div style={{ textAlign:'center' }}>
+                          <div style={{ fontSize:28, marginBottom:8 }}>📷</div>
+                          <div style={{ fontSize:11, color:'rgba(255,255,255,.5)', letterSpacing:'.04em' }}>Aim at barcode</div>
+                        </div>
+                      )}
+                      {demoStep === 1 && (
+                        <div style={{ textAlign:'center' }}>
+                          <div style={{ fontSize:11, color:'rgba(255,255,255,.6)', letterSpacing:'.04em', background:'rgba(0,0,0,.5)', padding:'4px 10px', borderRadius:6 }}>Scanning…</div>
+                          {/* fake barcode lines */}
+                          <div style={{ marginTop:14, display:'flex', gap:2, justifyContent:'center', opacity:.4 }}>
+                            {[3,7,2,6,4,8,3,5,7,2,6,4,5,3,8,4,7,3].map((h, j) => (
+                              <div key={j} style={{ width:2, height:h*4, background:'#fff', borderRadius:1 }} />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {/* Scanning line */}
+                  {demoStep === 1 && <div className="scan-line" />}
+                  {/* Recognition overlay */}
+                  {demoStep === 2 && (
+                    <div className="pop-in" style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', zIndex:5, background:'rgba(0,0,0,.75)', backdropFilter:'blur(4px)' }}>
+                      <div style={{ background:'#1a1a1a', borderRadius:16, padding:'16px 20px', border:`1px solid rgba(74,222,128,.4)`, minWidth:180, textAlign:'center' }}>
+                        <div style={{ width:36, height:36, background:'rgba(74,222,128,.15)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 10px', fontSize:18 }}>✓</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:'#fff', marginBottom:3 }}>USB-C Charger 65W</div>
+                        <div style={{ fontSize:11, color:'rgba(255,255,255,.45)', marginBottom:10 }}>SKU: CHG-65W-BK</div>
+                        <div style={{ fontSize:18, fontWeight:800, color:'#4ade80', fontFamily:'var(--font-sora)' }}>£24.99</div>
+                      </div>
+                    </div>
+                  )}
+                  {/* Added state */}
+                  {demoStep === 3 && (
+                    <div className="pop-in" style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', zIndex:5, background:'rgba(0,0,0,.75)', backdropFilter:'blur(4px)', padding:16 }}>
+                      <div style={{ width:'100%', background:'#1a1a1a', borderRadius:12, padding:'12px 14px', marginBottom:10, border:'1px solid rgba(255,255,255,.08)' }}>
+                        <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:'rgba(255,255,255,.7)', marginBottom:4 }}>
+                          <span>USB-C Charger 65W</span>
+                          <span style={{ color:'#4ade80', fontWeight:700 }}>£24.99</span>
+                        </div>
+                        <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:'rgba(255,255,255,.7)', marginBottom:4 }}>
+                          <span>Wireless Mouse Pro</span>
+                          <span style={{ color:'#4ade80', fontWeight:700 }}>£49.99</span>
+                        </div>
+                        <div style={{ borderTop:'1px solid rgba(255,255,255,.1)', paddingTop:8, marginTop:4, display:'flex', justifyContent:'space-between', fontSize:12, color:'#fff', fontWeight:700 }}>
+                          <span>Total</span>
+                          <span>£74.98</span>
+                        </div>
+                      </div>
+                      <div style={{ fontSize:10, color:'rgba(74,222,128,.8)', fontWeight:600, letterSpacing:'.06em' }}>+1 ITEM ADDED</div>
+                    </div>
+                  )}
+                  {/* Paid state */}
+                  {demoStep === 4 && (
+                    <div className="pop-in" style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', zIndex:5, background:'rgba(0,0,0,.85)', backdropFilter:'blur(6px)' }}>
+                      <div style={{ textAlign:'center' }}>
+                        <div className="pulse-green" style={{ width:56, height:56, background:'rgba(74,222,128,.15)', border:'2px solid #4ade80', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px', fontSize:24 }}>✓</div>
+                        <div style={{ fontSize:15, fontWeight:700, color:'#fff', marginBottom:4 }}>Payment complete</div>
+                        <div style={{ fontSize:12, color:'rgba(255,255,255,.5)' }}>£74.98 · Card · 2.1s</div>
+                        <div style={{ marginTop:10, fontSize:10, color:'rgba(74,222,128,.7)', fontWeight:600, letterSpacing:'.06em' }}>RECEIPT SENT · AI UPDATED</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {/* Bottom tray */}
+                <div style={{ background:'#1a1a1a', margin:'0 2px', borderRadius:'0 0 14px 14px', padding:'10px 14px', borderTop:'1px solid rgba(255,255,255,.06)' }}>
+                  <div style={{ display:'flex', gap:6 }}>
+                    {['💳','💵','📱'].map((icon, i) => (
+                      <div key={i} style={{ flex:1, background:'rgba(255,255,255,.06)', borderRadius:8, padding:'6px 0', textAlign:'center', fontSize:13 }}>{icon}</div>
+                    ))}
+                  </div>
+                </div>
+                {/* Home indicator */}
+                <div style={{ width:70, height:3, background:'rgba(255,255,255,.2)', borderRadius:2, margin:'12px auto 0' }} />
+              </div>
+            </div>
+
+            {/* Steps + CTA */}
+            <div>
+              <div style={{ display:'flex', flexDirection:'column', gap:0, marginBottom:36 }}>
+                {DEMO_STEPS.map((s, i) => {
+                  const stepNum = i + 1
+                  const isActive = demoStep === stepNum
+                  const isDone = demoStep > stepNum
+                  return (
+                    <div key={i} style={{ display:'flex', gap:16, padding:'16px 0', borderBottom:'1px solid rgba(255,255,255,.06)', transition:'opacity .3s ease', opacity: demoStep === 0 || isActive || isDone ? 1 : .35 }}>
+                      <div style={{ width:32, height:32, borderRadius:'50%', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:800, fontFamily:'var(--font-sora)',
+                        background: isDone ? '#4ade80' : isActive ? C.acc : 'rgba(255,255,255,.08)',
+                        color: (isDone || isActive) ? '#fff' : 'rgba(255,255,255,.4)',
+                        transition: 'background .3s ease, color .3s ease',
+                        boxShadow: isActive ? `0 0 16px ${C.acc}60` : isDone ? '0 0 16px rgba(74,222,128,.4)' : 'none',
+                      }}>
+                        {isDone ? '✓' : stepNum}
+                      </div>
+                      <div style={{ paddingTop:4 }}>
+                        <div style={{ fontSize:14, fontWeight:700, color: isActive ? '#fff' : isDone ? 'rgba(255,255,255,.8)' : 'rgba(255,255,255,.5)', marginBottom:3, transition:'color .3s ease' }}>{s.label}</div>
+                        <div style={{ fontSize:12, color:'rgba(255,255,255,.35)', lineHeight:1.6 }}>{s.desc}</div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <button
+                onClick={runDemo}
+                disabled={demoRunning}
+                style={{ display:'inline-flex', alignItems:'center', gap:10, padding:'14px 28px', borderRadius:9999, background: demoRunning ? 'rgba(255,255,255,.08)' : C.acc, color: demoRunning ? 'rgba(255,255,255,.4)' : '#fff', fontSize:15, fontWeight:700, border:'none', cursor: demoRunning ? 'not-allowed' : 'pointer', boxShadow: demoRunning ? 'none' : `0 4px 24px ${C.acc}50`, transition:'all .25s ease', letterSpacing:'-.01em' }}>
+                {demoRunning ? (
+                  <>
+                    <span style={{ display:'inline-block', width:14, height:14, border:'2px solid rgba(255,255,255,.3)', borderTopColor:'rgba(255,255,255,.7)', borderRadius:'50%', animation:'spin .7s linear infinite' }} />
+                    Running demo…
+                  </>
+                ) : (
+                  <>▶ Watch it in action</>
+                )}
+              </button>
+              <p style={{ marginTop:12, fontSize:12, color:'rgba(255,255,255,.3)' }}>No sign-up needed — just hit play.</p>
+            </div>
           </div>
         </div>
       </section>
