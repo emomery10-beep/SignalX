@@ -42,7 +42,19 @@ export default function PosPage() {
   const [annual, setAnnual] = useState(true)
   const [demoStep, setDemoStep] = useState(0)
   const [demoRunning, setDemoRunning] = useState(false)
+  const [walkthroughStep, setWalkthroughStep] = useState(0)
+  const [walkthroughPlaying, setWalkthroughPlaying] = useState(false)
   const seatPrice = '£5'
+
+  function playWalkthrough() {
+    if (walkthroughPlaying) return
+    setWalkthroughPlaying(true)
+    setWalkthroughStep(1)
+    setTimeout(() => setWalkthroughStep(2), 2200)
+    setTimeout(() => setWalkthroughStep(3), 4400)
+    setTimeout(() => setWalkthroughStep(4), 6600)
+    setTimeout(() => { setWalkthroughPlaying(false) }, 8800)
+  }
 
   function runDemo() {
     if (demoRunning) return
@@ -70,6 +82,11 @@ export default function PosPage() {
         @keyframes pulseGreen { 0%,100% { box-shadow:0 0 0 0 rgba(74,222,128,.4) } 50% { box-shadow:0 0 0 10px rgba(74,222,128,0) } }
         .pulse-green { animation:pulseGreen 1.2s ease infinite }
         @keyframes spin { to { transform:rotate(360deg) } }
+        @keyframes progressBar { from { width:0% } to { width:100% } }
+        .progress-fill { animation: progressBar 8.8s linear both }
+        @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+        .cursor { display:inline-block; width:2px; height:14px; background:#d08a59; animation:cursorBlink .8s ease infinite; verticalAlign:middle; marginLeft:2px }
+        @media (max-width:767px) { .walkthrough-nav { display:none !important } .walkthrough-facts { grid-template-columns:1fr !important } }
         @media (max-width:767px) {
           .pos-hero-grid { grid-template-columns:1fr !important }
           .features-grid { grid-template-columns:1fr !important }
@@ -446,6 +463,238 @@ export default function PosPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Setup walkthrough */}
+      <section style={{ background:C.bg, borderTop:`1px solid ${C.b}`, padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
+        <div style={{ maxWidth:980, margin:'0 auto' }}>
+          <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16, textAlign:'center' }}>Setup in minutes</div>
+          <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,36px)', fontWeight:700, textAlign:'center', marginBottom:12, letterSpacing:'-.03em', color:C.tx }}>
+            Add a cashier or inventory user<br/>in under 2 minutes
+          </h2>
+          <p style={{ fontSize:'clamp(14px,1.6vw,17px)', color:C.tx2, lineHeight:1.7, maxWidth:520, margin:'0 auto 44px', textAlign:'center' }}>
+            No IT team. No training manuals. Pick a name, set a role, share an OTP — your staff is live.
+          </p>
+
+          {/* Walkthrough player */}
+          <div style={{ borderRadius:20, overflow:'hidden', border:`1px solid ${C.b2}`, boxShadow:'0 16px 48px rgba(0,0,0,.08)', background:'#fff' }}>
+            {/* Fake browser chrome */}
+            <div style={{ background:'#f3f2ef', padding:'10px 16px', display:'flex', alignItems:'center', gap:10, borderBottom:`1px solid ${C.b}` }}>
+              <div style={{ display:'flex', gap:6 }}>
+                {['#ff5f57','#ffbd2e','#28c840'].map((c,i) => <div key={i} style={{ width:11, height:11, borderRadius:'50%', background:c }} />)}
+              </div>
+              <div style={{ flex:1, background:'rgba(0,0,0,.06)', borderRadius:6, padding:'4px 12px', fontSize:11, color:C.tx3, textAlign:'center' }}>
+                pos.askbiz.co — Staff Management
+              </div>
+            </div>
+
+            {/* Screen area */}
+            <div style={{ display:'grid', gridTemplateColumns:'200px 1fr', minHeight:340 }}>
+              {/* Left nav */}
+              <div className="walkthrough-nav" style={{ background:'#faf9f7', borderRight:`1px solid ${C.b}`, padding:'16px 0' }}>
+                <div style={{ padding:'6px 16px', marginBottom:4 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:C.tx3, textTransform:'uppercase', letterSpacing:'.06em', marginBottom:8 }}>askbiz PoS</div>
+                </div>
+                {[
+                  { icon:'🏠', label:'Overview' },
+                  { icon:'🧾', label:'Register' },
+                  { icon:'📦', label:'Inventory' },
+                  { icon:'👥', label:'Staff', active: true },
+                  { icon:'📊', label:'Reports' },
+                  { icon:'⚙️', label:'Settings' },
+                ].map((item, i) => (
+                  <div key={i} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 16px', fontSize:13, fontWeight: item.active ? 600 : 400, color: item.active ? C.acc : C.tx2, background: item.active ? C.accBg : 'transparent', borderRight: item.active ? `2px solid ${C.acc}` : '2px solid transparent' }}>
+                    <span style={{ fontSize:15 }}>{item.icon}</span>
+                    {item.label}
+                  </div>
+                ))}
+              </div>
+
+              {/* Main content — changes by step */}
+              <div style={{ padding:'24px 28px', position:'relative', minHeight:300 }}>
+
+                {/* Step 0 — idle / cover */}
+                {walkthroughStep === 0 && (
+                  <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'rgba(249,248,246,.92)', backdropFilter:'blur(2px)', zIndex:10, gap:16 }}>
+                    <div style={{ width:64, height:64, borderRadius:'50%', background:C.acc, display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, boxShadow:`0 6px 24px ${C.acc}50`, cursor:'pointer' }} onClick={playWalkthrough}>▶</div>
+                    <div style={{ textAlign:'center' }}>
+                      <div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:C.tx, marginBottom:4 }}>Watch: Add your first cashier</div>
+                      <div style={{ fontSize:13, color:C.tx3 }}>2 min walkthrough · No audio needed</div>
+                    </div>
+                    <button onClick={playWalkthrough} style={{ padding:'10px 28px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:14, fontWeight:700, border:'none', cursor:'pointer', boxShadow:`0 3px 16px ${C.acc}40` }}>
+                      ▶ Play walkthrough
+                    </button>
+                  </div>
+                )}
+
+                {/* Step 1 — Staff list, click Add */}
+                {walkthroughStep >= 1 && (
+                  <div style={{ opacity: walkthroughStep >= 1 ? 1 : 0, transition:'opacity .4s ease' }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+                      <div>
+                        <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:700, color:C.tx }}>Staff Members</div>
+                        <div style={{ fontSize:12, color:C.tx3, marginTop:2 }}>2 active · 1 location</div>
+                      </div>
+                      <div style={{ padding:'8px 16px', borderRadius:9, background: walkthroughStep === 1 ? C.acc : C.acc, color:'#fff', fontSize:13, fontWeight:700, cursor:'default', boxShadow: walkthroughStep === 1 ? `0 0 0 3px ${C.acc}30, 0 3px 12px ${C.acc}40` : `0 3px 12px ${C.acc}40`, transition:'box-shadow .3s ease' }}>
+                        + Add staff member
+                      </div>
+                    </div>
+                    {[
+                      { name:'Sarah M.', role:'Manager', status:'Active', avatar:'S' },
+                      { name:'James K.', role:'Cashier', status:'Active', avatar:'J' },
+                    ].map((s, i) => (
+                      <div key={i} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 0', borderBottom:`1px solid ${C.ev}` }}>
+                        <div style={{ width:36, height:36, borderRadius:'50%', background:C.ev, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:700, color:C.tx2 }}>{s.avatar}</div>
+                        <div style={{ flex:1 }}>
+                          <div style={{ fontSize:13, fontWeight:600, color:C.tx }}>{s.name}</div>
+                          <div style={{ fontSize:11, color:C.tx3 }}>{s.role}</div>
+                        </div>
+                        <div style={{ fontSize:11, color:'#16a34a', fontWeight:600, background:'rgba(22,163,74,.08)', padding:'3px 9px', borderRadius:9999 }}>● {s.status}</div>
+                      </div>
+                    ))}
+                    {walkthroughStep === 1 && (
+                      <div className="pop-in" style={{ position:'absolute', top:20, right:28, background:'#fff', borderRadius:12, border:`2px solid ${C.acc}`, padding:'6px 12px', fontSize:12, color:C.acc, fontWeight:600, boxShadow:`0 4px 16px ${C.acc}25` }}>
+                        👆 Click to add new staff
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Step 2 — Add staff form */}
+                {walkthroughStep === 2 && (
+                  <div className="pop-in" style={{ position:'absolute', inset:0, background:'#fff', padding:'24px 28px', zIndex:5 }}>
+                    <div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:C.tx, marginBottom:20 }}>New Staff Member</div>
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:16 }}>
+                      <div>
+                        <div style={{ fontSize:11, fontWeight:600, color:C.tx2, marginBottom:6, textTransform:'uppercase', letterSpacing:'.04em' }}>Full name</div>
+                        <div style={{ padding:'9px 12px', borderRadius:8, border:`2px solid ${C.acc}`, fontSize:13, color:C.tx, background:'#fff', display:'flex', alignItems:'center', gap:4 }}>
+                          Amara Osei<span className="cursor" />
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize:11, fontWeight:600, color:C.tx2, marginBottom:6, textTransform:'uppercase', letterSpacing:'.04em' }}>Role</div>
+                        <div style={{ padding:'9px 12px', borderRadius:8, border:`1px solid ${C.b2}`, fontSize:13, color:C.tx, background:'#fff', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                          <span>Cashier</span><span style={{ fontSize:10, color:C.tx3 }}>▼</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ marginBottom:16 }}>
+                      <div style={{ fontSize:11, fontWeight:600, color:C.tx2, marginBottom:6, textTransform:'uppercase', letterSpacing:'.04em' }}>Branch access</div>
+                      <div style={{ padding:'9px 12px', borderRadius:8, border:`1px solid ${C.b2}`, fontSize:13, color:C.tx, background:'#fff', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                        <span>Main Branch</span><span style={{ fontSize:10, color:C.tx3 }}>▼</span>
+                      </div>
+                    </div>
+                    <div style={{ display:'flex', gap:8, alignItems:'center', padding:'10px 14px', borderRadius:9, background:C.accBg, border:`1px solid ${C.accBdr}`, marginBottom:18 }}>
+                      <span style={{ fontSize:16 }}>🔒</span>
+                      <span style={{ fontSize:12, color:C.tx2, lineHeight:1.5 }}>Staff log in with a one-time OTP — no password needed. You control who can access what.</span>
+                    </div>
+                    <div style={{ padding:'10px 24px', borderRadius:9, background:C.acc, color:'#fff', fontSize:14, fontWeight:700, display:'inline-flex', alignItems:'center', gap:8, boxShadow:`0 3px 12px ${C.acc}40`, cursor:'default' }}>
+                      Create & send OTP →
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3 — OTP generated */}
+                {walkthroughStep === 3 && (
+                  <div className="pop-in" style={{ position:'absolute', inset:0, background:'#fff', padding:'24px 28px', zIndex:5, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
+                    <div style={{ width:60, height:60, borderRadius:'50%', background:'rgba(22,163,74,.1)', border:'2px solid #16a34a', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, marginBottom:16 }}>✓</div>
+                    <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:C.tx, marginBottom:6, textAlign:'center' }}>Amara Osei added</div>
+                    <div style={{ fontSize:13, color:C.tx3, marginBottom:24, textAlign:'center' }}>Share this one-time code with your staff member</div>
+                    <div style={{ display:'flex', gap:8, marginBottom:20 }}>
+                      {['7','4','2','9','1','8'].map((d, i) => (
+                        <div key={i} style={{ width:44, height:52, borderRadius:10, background:C.ev, border:`2px solid ${C.b2}`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-sora)', fontSize:22, fontWeight:800, color:C.tx }}>{d}</div>
+                      ))}
+                    </div>
+                    <div style={{ display:'flex', gap:10 }}>
+                      <div style={{ padding:'8px 18px', borderRadius:8, border:`1px solid ${C.b2}`, fontSize:13, color:C.tx2, cursor:'default', display:'flex', alignItems:'center', gap:6 }}>
+                        📋 Copy code
+                      </div>
+                      <div style={{ padding:'8px 18px', borderRadius:8, background:C.acc, color:'#fff', fontSize:13, fontWeight:700, cursor:'default', display:'flex', alignItems:'center', gap:6, boxShadow:`0 2px 10px ${C.acc}35` }}>
+                        📱 Send via WhatsApp
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 4 — Staff logs in */}
+                {walkthroughStep === 4 && (
+                  <div className="pop-in" style={{ position:'absolute', inset:0, background:'#fff', padding:'24px 28px', zIndex:5 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+                      <div>
+                        <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:700, color:C.tx }}>Staff Members</div>
+                        <div style={{ fontSize:12, color:C.tx3, marginTop:2 }}>3 active · 1 location</div>
+                      </div>
+                    </div>
+                    {[
+                      { name:'Sarah M.', role:'Manager', status:'Active', avatar:'S' },
+                      { name:'James K.', role:'Cashier', status:'Active', avatar:'J' },
+                      { name:'Amara O.', role:'Cashier', status:'Active', avatar:'A', new:true },
+                    ].map((s, i) => (
+                      <div key={i} className={s.new ? 'pop-in' : ''} style={{ display:'flex', alignItems:'center', gap:12, padding: s.new ? '12px' : '12px 0', borderBottom:`1px solid ${C.ev}`, background: s.new ? C.accBg : 'transparent', borderRadius: s.new ? 8 : 0, margin: s.new ? '4px 0' : 0 }}>
+                        <div style={{ width:36, height:36, borderRadius:'50%', background: s.new ? C.acc : C.ev, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:700, color: s.new ? '#fff' : C.tx2 }}>{s.avatar}</div>
+                        <div style={{ flex:1 }}>
+                          <div style={{ fontSize:13, fontWeight:600, color:C.tx, display:'flex', alignItems:'center', gap:6 }}>{s.name} {s.new && <span style={{ fontSize:10, color:C.acc, fontWeight:700, background:C.accBg, border:`1px solid ${C.accBdr}`, padding:'1px 6px', borderRadius:9999 }}>NEW</span>}</div>
+                          <div style={{ fontSize:11, color:C.tx3 }}>{s.role}</div>
+                        </div>
+                        <div style={{ fontSize:11, color:'#16a34a', fontWeight:600, background:'rgba(22,163,74,.08)', padding:'3px 9px', borderRadius:9999 }}>● {s.status}</div>
+                      </div>
+                    ))}
+                    <div style={{ marginTop:16, padding:'12px 16px', borderRadius:10, background:'rgba(22,163,74,.06)', border:'1px solid rgba(22,163,74,.2)', display:'flex', alignItems:'center', gap:10 }}>
+                      <span style={{ fontSize:18 }}>🎉</span>
+                      <div>
+                        <div style={{ fontSize:13, fontWeight:700, color:'#16a34a' }}>Amara is live on Register #2</div>
+                        <div style={{ fontSize:11, color:C.tx3 }}>Logged in 12 seconds ago · Ready to take payments</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Progress bar footer */}
+            <div style={{ background:'#f3f2ef', borderTop:`1px solid ${C.b}`, padding:'10px 16px', display:'flex', alignItems:'center', gap:14 }}>
+              <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                {[1,2,3,4].map(n => (
+                  <div key={n} style={{ display:'flex', alignItems:'center', gap:6 }}>
+                    <div style={{ width:20, height:20, borderRadius:'50%', background: walkthroughStep >= n ? C.acc : C.ev, border: walkthroughStep === n ? `2px solid ${C.acc}` : '2px solid transparent', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, fontWeight:800, color: walkthroughStep >= n ? '#fff' : C.tx3, transition:'all .3s ease' }}>{walkthroughStep > n ? '✓' : n}</div>
+                    {n < 4 && <div style={{ width:24, height:2, background: walkthroughStep > n ? C.acc : C.ev, transition:'background .3s ease', borderRadius:1 }} />}
+                  </div>
+                ))}
+              </div>
+              <div style={{ flex:1, height:3, background:C.ev, borderRadius:2, overflow:'hidden' }}>
+                {walkthroughPlaying && <div className="progress-fill" style={{ height:'100%', background:C.acc, borderRadius:2 }} />}
+                {!walkthroughPlaying && walkthroughStep === 4 && <div style={{ height:'100%', background:C.acc, width:'100%', borderRadius:2 }} />}
+              </div>
+              <div style={{ fontSize:11, color:C.tx3, whiteSpace:'nowrap' }}>
+                {walkthroughStep === 0 && 'Click play to start'}
+                {walkthroughStep === 1 && 'Step 1 — Staff list'}
+                {walkthroughStep === 2 && 'Step 2 — Fill in details'}
+                {walkthroughStep === 3 && 'Step 3 — OTP generated'}
+                {walkthroughStep === 4 && '✓ Done — staff is live'}
+              </div>
+              {walkthroughStep > 0 && !walkthroughPlaying && (
+                <button onClick={() => { setWalkthroughStep(0); setWalkthroughPlaying(false) }} style={{ fontSize:11, color:C.tx3, background:'none', border:`1px solid ${C.b2}`, borderRadius:6, padding:'3px 10px', cursor:'pointer' }}>↺ Replay</button>
+              )}
+            </div>
+          </div>
+
+          {/* 3 quick facts below */}
+          <div className="walkthrough-facts" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginTop:24 }}>
+            {[
+              { icon:'⏱', stat:'< 2 min', desc:'Average setup time per staff member' },
+              { icon:'📱', stat:'OTP login', desc:'No passwords — staff get a one-time code' },
+              { icon:'🔑', stat:'3 roles', desc:'Manager · Cashier · Inventory — set once, controlled forever' },
+            ].map((f, i) => (
+              <div key={i} style={{ padding:'18px 16px', borderRadius:14, border:`1px solid ${C.b}`, background:C.sf, display:'flex', gap:12, alignItems:'flex-start' }}>
+                <span style={{ fontSize:22 }}>{f.icon}</span>
+                <div>
+                  <div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:800, color:C.tx, marginBottom:2 }}>{f.stat}</div>
+                  <div style={{ fontSize:12, color:C.tx3, lineHeight:1.5 }}>{f.desc}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
