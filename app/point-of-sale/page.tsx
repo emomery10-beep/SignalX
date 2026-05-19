@@ -1,0 +1,266 @@
+'use client'
+import { useState } from 'react'
+import Link from 'next/link'
+
+const C = {
+  bg:'#f9f8f6', sf:'#ffffff', ev:'#f3f2ef',
+  tx:'#1a1916', tx2:'#6b6760', tx3:'#a39e97',
+  b:'rgba(0,0,0,.08)', b2:'rgba(0,0,0,.14)',
+  acc:'#d08a59', accBg:'rgba(208,138,89,.08)', accBdr:'rgba(208,138,89,.25)',
+}
+
+const FEATURES = [
+  { icon:'🧾', title:'Register & Checkout', desc:'Fast checkout with barcode scanning, split payments, layaways, refunds, and digital receipts. Works on tablet, phone, or desktop.', tag:'Core' },
+  { icon:'📦', title:'Inventory Management', desc:'Real-time stock levels across every branch. Low-stock alerts, stock transfers, batch updates, and AI-powered reorder recommendations.', tag:'Smart' },
+  { icon:'🏪', title:'Multi-Branch', desc:'Run multiple locations from one dashboard. Per-branch reporting, staff, inventory, and tax settings — all synced in real time.', tag:'Scale' },
+  { icon:'👥', title:'Staff & Shifts', desc:'Role-based access for cashiers and managers. Shift open/close with cash reconciliation, OTP login, and per-cashier performance tracking.', tag:'Team' },
+  { icon:'🧮', title:'Tax & Compliance', desc:'Multi-jurisdiction VAT handling, consolidated tax reports, and filing-ready previews. Syncs directly with Xero and QuickBooks.', tag:'Finance' },
+  { icon:'🔒', title:'GDPR & Privacy', desc:'One-click customer data export, deletion requests, consent logging, and configurable data-retention policies.', tag:'Trust' },
+  { icon:'🤖', title:'AI Intelligence', desc:'Anomaly detection on transactions, AI-driven supplier recommendations, sales pattern insights, and demand forecasting from your PoS data.', tag:'AI' },
+  { icon:'📱', title:'Works Everywhere', desc:'Responsive design runs on any device — iPad at the counter, phone for pop-ups, or desktop in the back office. No special hardware needed.', tag:'Flex' },
+]
+
+const WORKFLOW = [
+  { step:'1', title:'Open a shift', desc:'Cashier logs in with OTP, counts the float, and the register is live.' },
+  { step:'2', title:'Ring up sales', desc:'Scan barcodes or search products. Split payments, apply discounts, issue digital receipts.' },
+  { step:'3', title:'AI works in the background', desc:'Every transaction feeds your intelligence layer — anomaly alerts, restock suggestions, margin analysis.' },
+  { step:'4', title:'Close & reconcile', desc:'Close the shift, reconcile cash, and the day\'s data flows into your reports and accounting sync.' },
+]
+
+export default function PosPage() {
+  const [annual, setAnnual] = useState(true)
+  const seatPrice = '£5'
+
+  return (
+    <div style={{ background:C.bg, minHeight:'100vh' }}>
+      <style>{`
+        @keyframes fadeUp { from { opacity:0; transform:translateY(18px) } to { opacity:1; transform:translateY(0) } }
+        .fade-up { animation: fadeUp .5s ease both }
+        .card-hover { transition: transform 180ms ease, box-shadow 180ms ease }
+        .card-hover:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,.07) }
+        @media (max-width:767px) {
+          .pos-hero-grid { grid-template-columns:1fr !important }
+          .features-grid { grid-template-columns:1fr !important }
+          .workflow-grid { grid-template-columns:1fr !important }
+          .compare-grid { grid-template-columns:1fr !important }
+          .pos-hero-mock { display:none !important }
+        }
+        @media (min-width:768px) and (max-width:1023px) {
+          .features-grid { grid-template-columns:1fr 1fr !important }
+        }
+      `}</style>
+
+      {/* Nav */}
+      <nav style={{ position:'sticky', top:0, zIndex:50, background:'rgba(249,248,246,.96)', backdropFilter:'blur(16px)', borderBottom:`1px solid ${C.b}`, padding:'0 clamp(16px,4vw,32px)', height:56, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <Link href="/" style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:800, color:C.tx, textDecoration:'none', letterSpacing:'-.03em' }}>
+          ask<span style={{ color:C.acc }}>biz</span>
+        </Link>
+        <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+          <Link href="/#pricing" style={{ fontSize:13, color:C.tx2, textDecoration:'none', fontWeight:500 }}>Pricing</Link>
+          <Link href="/signin" className="btn-primary" style={{ padding:'8px 18px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none' }}>
+            Try free
+          </Link>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <section className="pos-hero-grid" style={{ maxWidth:1100, margin:'0 auto', padding:'clamp(56px,8vw,100px) clamp(16px,4vw,40px) clamp(40px,6vw,72px)', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'clamp(32px,5vw,64px)', alignItems:'center' }}>
+        <div>
+          <div className="fade-up" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 12px', borderRadius:9999, background:C.accBg, border:`1px solid ${C.accBdr}`, fontSize:12, color:C.acc, fontWeight:600, marginBottom:24 }}>
+            🧾 Point of Sale
+          </div>
+          <h1 className="fade-up" style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(30px,4.5vw,48px)', fontWeight:700, lineHeight:1.1, letterSpacing:'-.035em', marginBottom:20, color:C.tx }}>
+            A full PoS system,<br/>
+            <span style={{ color:C.acc }}>powered by AI.</span>
+          </h1>
+          <p className="fade-up" style={{ fontSize:'clamp(15px,1.8vw,18px)', color:C.tx2, lineHeight:1.7, marginBottom:14, maxWidth:460 }}>
+            Ring up sales, manage inventory across branches, track staff shifts, and stay tax-compliant — while your AI learns from every transaction.
+          </p>
+          <p className="fade-up" style={{ fontSize:13, color:C.tx3, marginBottom:32, lineHeight:1.6 }}>
+            {seatPrice}/seat per month · Works on tablet, phone, or desktop · No special hardware
+          </p>
+          <div className="fade-up" style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+            <Link href="/signin" className="btn-primary" style={{ padding:'13px 28px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8, boxShadow:`0 4px 20px ${C.acc}40` }}>
+              Start free trial
+            </Link>
+            <a href="#features" style={{ padding:'13px 20px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:14, fontWeight:500, textDecoration:'none', display:'inline-flex', alignItems:'center' }}>
+              See features ↓
+            </a>
+          </div>
+        </div>
+
+        {/* Mock register UI */}
+        <div className="pos-hero-mock fade-up" style={{ background:C.sf, borderRadius:20, border:`1px solid ${C.b}`, padding:24, boxShadow:'0 12px 40px rgba(0,0,0,.06)' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:C.tx }}>Register — Shift #104</div>
+            <div style={{ fontSize:11, color:'#16a34a', fontWeight:600, background:'rgba(22,163,74,.08)', padding:'3px 10px', borderRadius:9999 }}>● Live</div>
+          </div>
+          {[
+            { name:'Wireless Earbuds', qty:2, price:'£29.99', total:'£59.98' },
+            { name:'Phone Case — Matte Black', qty:1, price:'£12.50', total:'£12.50' },
+            { name:'USB-C Cable 2m', qty:3, price:'£6.99', total:'£20.97' },
+          ].map((item, i) => (
+            <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 0', borderBottom:`1px solid ${C.ev}`, fontSize:13 }}>
+              <div>
+                <div style={{ fontWeight:600, color:C.tx }}>{item.name}</div>
+                <div style={{ fontSize:11, color:C.tx3 }}>× {item.qty} @ {item.price}</div>
+              </div>
+              <div style={{ fontWeight:700, color:C.tx }}>{item.total}</div>
+            </div>
+          ))}
+          <div style={{ display:'flex', justifyContent:'space-between', marginTop:16, paddingTop:12, borderTop:`2px solid ${C.tx}` }}>
+            <div>
+              <div style={{ fontSize:11, color:C.tx3, marginBottom:2 }}>Subtotal · VAT 20%</div>
+              <div style={{ fontFamily:'var(--font-sora)', fontSize:22, fontWeight:800, color:C.tx }}>£111.94</div>
+            </div>
+            <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+              <div style={{ padding:'10px 20px', borderRadius:10, background:C.ev, fontSize:13, fontWeight:600, color:C.tx2, cursor:'default' }}>Split</div>
+              <div style={{ padding:'10px 24px', borderRadius:10, background:C.acc, color:'#fff', fontSize:13, fontWeight:700, cursor:'default', boxShadow:`0 2px 12px ${C.acc}35` }}>Pay →</div>
+            </div>
+          </div>
+          <div style={{ marginTop:16, display:'flex', gap:8 }}>
+            <div style={{ flex:1, padding:'8px', borderRadius:8, background:C.ev, textAlign:'center', fontSize:11, fontWeight:600, color:C.tx3 }}>💳 Card</div>
+            <div style={{ flex:1, padding:'8px', borderRadius:8, background:C.ev, textAlign:'center', fontSize:11, fontWeight:600, color:C.tx3 }}>💵 Cash</div>
+            <div style={{ flex:1, padding:'8px', borderRadius:8, background:C.ev, textAlign:'center', fontSize:11, fontWeight:600, color:C.tx3 }}>📱 Mobile Wallet</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section id="features" style={{ background:C.sf, borderTop:`1px solid ${C.b}`, borderBottom:`1px solid ${C.b}`, padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
+        <div style={{ maxWidth:1060, margin:'0 auto' }}>
+          <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16, textAlign:'center' }}>Features</div>
+          <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,36px)', fontWeight:700, textAlign:'center', marginBottom:12, letterSpacing:'-.03em', color:C.tx }}>
+            Everything you need to sell
+          </h2>
+          <p style={{ fontSize:'clamp(14px,1.6vw,17px)', color:C.tx2, lineHeight:1.7, maxWidth:560, margin:'0 auto 44px', textAlign:'center' }}>
+            Not a bolt-on — a full point-of-sale system that feeds your business intelligence.
+          </p>
+          <div className="features-grid" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
+            {FEATURES.map((f, i) => (
+              <div key={i} className="card-hover" style={{ padding:'22px 18px', borderRadius:16, border:`1px solid ${C.b}`, background:C.bg, display:'flex', flexDirection:'column', gap:10 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                  <span style={{ fontSize:24 }}>{f.icon}</span>
+                  <span style={{ fontSize:10, fontWeight:700, color:C.acc, background:C.accBg, border:`1px solid ${C.accBdr}`, padding:'2px 8px', borderRadius:9999, textTransform:'uppercase', letterSpacing:'.05em' }}>{f.tag}</span>
+                </div>
+                <div style={{ fontFamily:'var(--font-sora)', fontSize:15, fontWeight:700, color:C.tx }}>{f.title}</div>
+                <p style={{ fontSize:13, color:C.tx2, lineHeight:1.65, margin:0 }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section style={{ maxWidth:900, margin:'0 auto', padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
+        <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16, textAlign:'center' }}>How it works</div>
+        <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,34px)', fontWeight:700, textAlign:'center', marginBottom:48, letterSpacing:'-.03em', color:C.tx }}>
+          From shift open to close
+        </h2>
+        <div className="workflow-grid" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:20 }}>
+          {WORKFLOW.map((s, i) => (
+            <div key={i} style={{ textAlign:'center' }}>
+              <div style={{ width:40, height:40, borderRadius:'50%', background:C.acc, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px', fontFamily:'var(--font-sora)', fontSize:16, fontWeight:800 }}>{s.step}</div>
+              <div style={{ fontFamily:'var(--font-sora)', fontSize:14, fontWeight:700, color:C.tx, marginBottom:8 }}>{s.title}</div>
+              <p style={{ fontSize:13, color:C.tx2, lineHeight:1.6, margin:0 }}>{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Comparison */}
+      <section style={{ background:C.sf, borderTop:`1px solid ${C.b}`, borderBottom:`1px solid ${C.b}`, padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
+        <div style={{ maxWidth:800, margin:'0 auto' }}>
+          <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16, textAlign:'center' }}>Why askbiz PoS</div>
+          <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,34px)', fontWeight:700, textAlign:'center', marginBottom:44, letterSpacing:'-.03em', color:C.tx }}>
+            More than a register
+          </h2>
+          <div className="compare-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
+            <div style={{ padding:24, borderRadius:16, border:`1px solid ${C.b}`, background:C.bg }}>
+              <div style={{ fontSize:14, fontWeight:700, color:C.tx3, marginBottom:16 }}>Traditional PoS</div>
+              {['Ring up sales','Basic inventory','Manual reporting','Separate analytics tool','No AI insights','Extra cost for multi-branch'].map((f, i) => (
+                <div key={i} style={{ display:'flex', gap:8, alignItems:'center', fontSize:13, color:C.tx3, marginBottom:8 }}>
+                  <span style={{ fontSize:12 }}>—</span> {f}
+                </div>
+              ))}
+            </div>
+            <div style={{ padding:24, borderRadius:16, border:`2px solid ${C.acc}`, background:`rgba(208,138,89,.02)` }}>
+              <div style={{ fontSize:14, fontWeight:700, color:C.acc, marginBottom:16 }}>askbiz PoS</div>
+              {['Ring up sales + AI anomaly alerts','Smart inventory with reorder AI','Auto reports synced to Xero / QB','Built-in business intelligence','AI pattern insights from every sale','Multi-branch included'].map((f, i) => (
+                <div key={i} style={{ display:'flex', gap:8, alignItems:'center', fontSize:13, color:C.tx, marginBottom:8 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.acc} strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink:0 }}><path d="M20 6L9 17l-5-5"/></svg>
+                  {f}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section id="pricing" style={{ maxWidth:600, margin:'0 auto', padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
+        <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16, textAlign:'center' }}>Pricing</div>
+        <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,34px)', fontWeight:700, textAlign:'center', marginBottom:8, letterSpacing:'-.03em', color:C.tx }}>
+          Simple per-seat pricing
+        </h2>
+        <p style={{ textAlign:'center', fontSize:14, color:C.tx2, marginBottom:36 }}>Add PoS to any Growth or Business plan.</p>
+
+        <div style={{ borderRadius:20, border:`2px solid ${C.acc}`, background:C.sf, padding:'32px 28px', textAlign:'center', position:'relative' }}>
+          <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', padding:'3px 14px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em' }}>
+            Add-on
+          </div>
+          <div style={{ fontFamily:'var(--font-sora)', fontSize:42, fontWeight:800, color:C.tx, letterSpacing:'-.03em', marginBottom:4 }}>
+            {seatPrice}<span style={{ fontSize:16, fontWeight:500, color:C.tx3 }}>/seat/month</span>
+          </div>
+          <p style={{ fontSize:14, color:C.tx2, marginBottom:24, lineHeight:1.6 }}>
+            Each seat is one register or device. Add as many as you need.
+          </p>
+          <div style={{ textAlign:'left', maxWidth:340, margin:'0 auto 28px' }}>
+            {[
+              'Unlimited transactions',
+              'All 8 features included',
+              'Multi-branch at no extra cost',
+              'AI intelligence from day one',
+              'Xero & QuickBooks sync',
+              'Cancel anytime',
+            ].map((f, i) => (
+              <div key={i} style={{ display:'flex', gap:8, alignItems:'center', fontSize:13, color:C.tx2, marginBottom:8 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.acc} strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink:0 }}><path d="M20 6L9 17l-5-5"/></svg>
+                {f}
+              </div>
+            ))}
+          </div>
+          <Link href="/signin" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'13px 32px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', boxShadow:`0 4px 20px ${C.acc}40` }}>
+            Start free trial
+          </Link>
+          <p style={{ fontSize:12, color:C.tx3, marginTop:12 }}>Free during trial · No credit card needed</p>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section style={{ background:C.sf, borderTop:`1px solid ${C.b}`, padding:'clamp(52px,7vw,80px) clamp(16px,4vw,40px)', textAlign:'center' }}>
+        <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,34px)', fontWeight:700, letterSpacing:'-.03em', color:C.tx, marginBottom:14 }}>
+          Ready to sell smarter?
+        </h2>
+        <p style={{ fontSize:'clamp(14px,1.6vw,17px)', color:C.tx2, lineHeight:1.7, maxWidth:480, margin:'0 auto 28px' }}>
+          Set up your first register in under 5 minutes. No hardware needed — just sign in and start selling.
+        </p>
+        <Link href="/signin" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'14px 32px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', boxShadow:`0 4px 20px ${C.acc}40` }}>
+          Get started free →
+        </Link>
+      </section>
+
+      {/* Footer */}
+      <footer style={{ borderTop:`1px solid ${C.b}`, padding:'28px clamp(16px,4vw,40px)', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:12, fontSize:12, color:C.tx3 }}>
+        <Link href="/" style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:800, color:C.tx, textDecoration:'none' }}>
+          ask<span style={{ color:C.acc }}>biz</span>
+        </Link>
+        <div style={{ display:'flex', gap:20 }}>
+          <Link href="/" style={{ color:C.tx3, textDecoration:'none' }}>Home</Link>
+          <Link href="/#pricing" style={{ color:C.tx3, textDecoration:'none' }}>Pricing</Link>
+          <Link href="/signin" style={{ color:C.tx3, textDecoration:'none' }}>Sign in</Link>
+        </div>
+      </footer>
+    </div>
+  )
+}
