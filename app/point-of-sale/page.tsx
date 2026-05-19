@@ -31,6 +31,99 @@ const WORKFLOW = [
   { step:'4', title:'Close & reconcile', desc:'Close the shift, reconcile cash, and the day\'s data flows into your reports and accounting sync.' },
 ]
 
+const SECTORS = [
+  {
+    id: 'retail', icon: '🛒', label: 'Retail',
+    tagline: 'Fast checkout. Smart shelves. Zero shrinkage.',
+    desc: 'Everything a retail store needs from the floor to the back office — with AI watching margins and stock in real time.',
+    color: '#2563eb',
+    tiles: ['📦 Inventory', '🧾 Sales', '👥 Staff', '🏪 Branches', '🗺 Map', '📋 Audit'],
+    features: [
+      { icon:'📷', title:'Barcode scanning', desc:'Scan any product at the counter — item, price, and stock update instantly.' },
+      { icon:'📦', title:'Live inventory', desc:'Real-time stock across all branches. Low-stock alerts and AI reorder suggestions.' },
+      { icon:'💰', title:'Split payments', desc:'Card, cash, mobile money, or any combination. Discount codes and layaway built in.' },
+      { icon:'🔄', title:'Stock transfers', desc:'Move items between branches and track every movement with a full audit trail.' },
+      { icon:'🤖', title:'AI margin alerts', desc:'Anomaly detection flags unusual price drops, voids, or shrinkage patterns.' },
+      { icon:'📊', title:'Sales reports', desc:'Daily, weekly, monthly — broken down by product, cashier, and payment method.' },
+    ],
+  },
+  {
+    id: 'restaurant', icon: '🍽️', label: 'Restaurant',
+    tagline: 'Table to till in seconds.',
+    desc: 'Manage covers, kitchen orders, and front-of-house from one screen. No separate KDS hardware needed.',
+    color: '#dc2626',
+    tiles: ['🍽️ Tables', '🧾 Orders', '👥 Staff', '📦 Menu', '📋 Audit', '📊 Reports'],
+    features: [
+      { icon:'🍽️', title:'Table & cover management', desc:'Open a table, add covers, and ring up courses — all from a single screen.' },
+      { icon:'🧾', title:'Order & kitchen flow', desc:'Orders route to the kitchen display automatically. No manual ticket writing.' },
+      { icon:'🍷', title:'Menu builder', desc:'Categories, modifiers (extras, swaps), happy hour pricing, and daily specials.' },
+      { icon:'💳', title:'Split-bill & tips', desc:'Split by item or equally. Tip prompts on screen. Gratuity line on receipt.' },
+      { icon:'🗑️', title:'Food waste capture', desc:'Log wastage by item and shift. AI flags when waste is rising above baseline.' },
+      { icon:'📊', title:'Cover & revenue reports', desc:'Average spend per cover, peak hours, and top-selling dishes — daily.' },
+    ],
+  },
+  {
+    id: 'repair', icon: '🔧', label: 'Repair',
+    tagline: 'Job in. Job tracked. Job done.',
+    desc: 'Full job-ticket workflow from device check-in through diagnosis, repair, and customer handover — with parts inventory built in.',
+    color: '#d97706',
+    tiles: ['🔧 Service Jobs', '📦 Parts', '👥 Engineers', '🧾 Quotes', '📋 History', '🏪 Branches'],
+    features: [
+      { icon:'🔧', title:'Service job tickets', desc:'Log device make/model, fault description, and customer details on check-in.' },
+      { icon:'📷', title:'Device scan & photos', desc:'Scan serial numbers or IMEI. Attach before/after photos to every job.' },
+      { icon:'🛠️', title:'Parts inventory', desc:'Track parts stock, auto-deduct on job completion, and reorder when low.' },
+      { icon:'💬', title:'Customer quotes', desc:'Generate a quote link customers can approve digitally before you start work.' },
+      { icon:'🏆', title:'Engineer skill matching', desc:'Assign jobs by engineer specialisation. Track jobs per tech and completion rate.' },
+      { icon:'🔒', title:'Warranty tracking', desc:'Log warranty period and alert cashiers when a device returns in-warranty.' },
+    ],
+  },
+  {
+    id: 'salon', icon: '💇', label: 'Salon',
+    tagline: 'Book it. Bill it. Build loyalty.',
+    desc: 'Run appointments alongside walk-in retail. Track stylist performance, client history, and product sales from one dashboard.',
+    color: '#7c3aed',
+    tiles: ['📅 Appointments', '🛒 Retail', '👥 Stylists', '📋 Client history', '💳 Payments', '📊 Reports'],
+    features: [
+      { icon:'📅', title:'Appointment booking', desc:'Schedule appointments per stylist. Walk-ins slot in without disrupting the book.' },
+      { icon:'💇', title:'Service menu', desc:'Set prices per service and stylist tier. Promotions and package deals built in.' },
+      { icon:'🛒', title:'Product retail', desc:'Sell retail products alongside services. Inventory tracked the same as any store.' },
+      { icon:'👤', title:'Client history', desc:'See every client\'s previous services, products bought, and stylist preferences.' },
+      { icon:'💰', title:'Tips & commissions', desc:'Tip collection on screen. Per-stylist commission rules calculated automatically.' },
+      { icon:'📊', title:'Stylist performance', desc:'Revenue, services, and product sales per stylist. Know your top earners daily.' },
+    ],
+  },
+  {
+    id: 'factory', icon: '🏭', label: 'Factory',
+    tagline: 'Every batch tracked. Nothing lost.',
+    desc: 'Capture intake, output, wastage, and dispatch at every stage. Approval workflows keep managers in control of production flow.',
+    color: '#059669',
+    tiles: ['📥 Captures', '✅ Approvals', '📦 Inventory', '🤖 Intelligence', '📋 Audit', '📊 Reports'],
+    features: [
+      { icon:'📥', title:'Production captures', desc:'Log intake, output, wastage, and dispatch with batch references and quantities.' },
+      { icon:'✅', title:'Approval workflow', desc:'Managers approve or reject each capture. Pending queue with lag-time tracking.' },
+      { icon:'📊', title:'Output vs intake ratio', desc:'AI monitors production efficiency and flags when yield drops below baseline.' },
+      { icon:'🗑️', title:'Wastage rate monitoring', desc:'Track wastage % per batch. AI alerts when rising above your historical average.' },
+      { icon:'🔍', title:'Batch-level traceability', desc:'Every capture linked to a batch reference — full chain from raw material to dispatch.' },
+      { icon:'🤖', title:'Factory intelligence', desc:'Claude AI analyses your production data and surfaces anomalies and bottlenecks.' },
+    ],
+  },
+  {
+    id: 'logistics', icon: '🚚', label: 'Logistics',
+    tagline: 'Every parcel. Every mile. Accounted for.',
+    desc: 'Manage your courier fleet and parcel pipeline — from booking through delivery confirmation — with real-time fleet visibility.',
+    color: '#0891b2',
+    tiles: ['📦 Parcels', '🚚 Fleet', '🗺 Routes', '📋 Handover', '📊 Reports', '🤖 Intelligence'],
+    features: [
+      { icon:'📦', title:'Parcel management', desc:'Book, scan, track, and confirm parcels across every status from received to delivered.' },
+      { icon:'🚚', title:'Fleet tracking', desc:'Monitor trucks by status — available, in transit, or maintenance. Assign loads.' },
+      { icon:'🗺️', title:'Route planning', desc:'Group parcels by destination. Assign routes to drivers and track completion.' },
+      { icon:'📷', title:'Photo proof of delivery', desc:'Drivers capture delivery photos. Stored against the parcel record permanently.' },
+      { icon:'💰', title:'Invoice & payment', desc:'Auto-generate logistics invoices. Track paid vs unpaid across your parcel book.' },
+      { icon:'🤖', title:'Delivery intelligence', desc:'AI flags high failure-rate routes, stuck parcels, and fleet utilisation anomalies.' },
+    ],
+  },
+]
+
 const DEMO_STEPS = [
   { label: 'Point & scan', desc: 'Point the camera at any barcode or QR code. No typing.' },
   { label: 'Instant recognition', desc: 'Product matched in your inventory in under a second.' },
@@ -44,6 +137,7 @@ export default function PosPage() {
   const [demoRunning, setDemoRunning] = useState(false)
   const [walkthroughStep, setWalkthroughStep] = useState(0)
   const [walkthroughPlaying, setWalkthroughPlaying] = useState(false)
+  const [sectorTab, setSectorTab] = useState('retail')
   const seatPrice = '£5'
 
   function playWalkthrough() {
@@ -82,6 +176,8 @@ export default function PosPage() {
         @keyframes pulseGreen { 0%,100% { box-shadow:0 0 0 0 rgba(74,222,128,.4) } 50% { box-shadow:0 0 0 10px rgba(74,222,128,0) } }
         .pulse-green { animation:pulseGreen 1.2s ease infinite }
         @keyframes spin { to { transform:rotate(360deg) } }
+        @media (max-width:767px) { .sector-features-grid { grid-template-columns:1fr !important } }
+        @media (min-width:640px) and (max-width:1023px) { .sector-features-grid { grid-template-columns:1fr 1fr !important } }
         @keyframes progressBar { from { width:0% } to { width:100% } }
         .progress-fill { animation: progressBar 8.8s linear both }
         @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
@@ -133,8 +229,11 @@ export default function PosPage() {
             <Link href="/signin" className="btn-primary" style={{ padding:'13px 28px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8, boxShadow:`0 4px 20px ${C.acc}40` }}>
               Start free trial
             </Link>
-            <a href="#features" style={{ padding:'13px 20px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:14, fontWeight:500, textDecoration:'none', display:'inline-flex', alignItems:'center' }}>
+            <a href="#features" style={{ padding:'13px 20px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:14, fontWeight:500, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8 }}>
               See features ↓
+            </a>
+            <a href="#sectors" style={{ padding:'13px 20px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:14, fontWeight:500, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8 }}>
+              🛒🍽️🔧 By sector
             </a>
           </div>
         </div>
@@ -418,6 +517,77 @@ export default function PosPage() {
               ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Sector showcase */}
+      <section id="sectors" style={{ background:C.bg, borderTop:`1px solid ${C.b}`, padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
+        <div style={{ maxWidth:1060, margin:'0 auto' }}>
+          <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16, textAlign:'center' }}>Your sector</div>
+          <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,36px)', fontWeight:700, textAlign:'center', marginBottom:12, letterSpacing:'-.03em', color:C.tx }}>
+            Tailored to how you work
+          </h2>
+          <p style={{ fontSize:'clamp(14px,1.6vw,17px)', color:C.tx2, lineHeight:1.7, maxWidth:560, margin:'0 auto 36px', textAlign:'center' }}>
+            One platform, six sectors. The PoS adapts its tiles, workflows, and intelligence to match your type of business.
+          </p>
+
+          {/* Sector tabs */}
+          <div style={{ display:'flex', flexWrap:'wrap', gap:8, justifyContent:'center', marginBottom:36 }}>
+            {SECTORS.map(s => {
+              const active = sectorTab === s.id
+              return (
+                <button key={s.id} onClick={() => setSectorTab(s.id)} style={{ display:'flex', alignItems:'center', gap:7, padding:'9px 18px', borderRadius:9999, border: active ? `2px solid ${s.color}` : `1px solid ${C.b2}`, background: active ? `${s.color}12` : C.sf, color: active ? s.color : C.tx2, fontSize:14, fontWeight: active ? 700 : 500, cursor:'pointer', transition:'all .2s ease', boxShadow: active ? `0 2px 12px ${s.color}25` : 'none' }}>
+                  <span style={{ fontSize:18 }}>{s.icon}</span>
+                  {s.label}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Active sector panel */}
+          {SECTORS.filter(s => s.id === sectorTab).map(sector => (
+            <div key={sector.id} className="pop-in" style={{ borderRadius:20, border:`1px solid ${C.b}`, background:C.sf, overflow:'hidden' }}>
+              {/* Header bar */}
+              <div style={{ background:`linear-gradient(135deg, ${sector.color}18 0%, ${sector.color}06 100%)`, borderBottom:`1px solid ${C.b}`, padding:'clamp(20px,3vw,28px) clamp(20px,3vw,32px)', display:'flex', flexWrap:'wrap', alignItems:'flex-start', justifyContent:'space-between', gap:20 }}>
+                <div>
+                  <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
+                    <span style={{ fontSize:28 }}>{sector.icon}</span>
+                    <span style={{ fontFamily:'var(--font-sora)', fontSize:22, fontWeight:800, color:C.tx }}>{sector.label}</span>
+                    <span style={{ fontSize:11, fontWeight:700, color:'#fff', background:sector.color, padding:'3px 10px', borderRadius:9999, letterSpacing:'.04em' }}>Sector</span>
+                  </div>
+                  <div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:sector.color, marginBottom:4 }}>{sector.tagline}</div>
+                  <p style={{ fontSize:14, color:C.tx2, margin:0, maxWidth:500, lineHeight:1.6 }}>{sector.desc}</p>
+                </div>
+                {/* Mini operations tile preview */}
+                <div style={{ display:'flex', flexWrap:'wrap', gap:6, maxWidth:320 }}>
+                  {sector.tiles.map((tile, i) => (
+                    <div key={i} style={{ display:'flex', alignItems:'center', gap:5, padding:'6px 12px', borderRadius:10, background: i === 0 ? sector.color : C.ev, border: i === 0 ? 'none' : `1px solid ${C.b}`, fontSize:12, fontWeight: i === 0 ? 700 : 500, color: i === 0 ? '#fff' : C.tx2 }}>
+                      {tile}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Feature grid */}
+              <div style={{ padding:'clamp(20px,3vw,28px) clamp(20px,3vw,32px)' }}>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }} className="sector-features-grid">
+                  {sector.features.map((f, i) => (
+                    <div key={i} style={{ padding:'16px', borderRadius:14, border:`1px solid ${C.b}`, background:C.bg, display:'flex', flexDirection:'column', gap:8 }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                        <span style={{ fontSize:20 }}>{f.icon}</span>
+                        <span style={{ fontFamily:'var(--font-sora)', fontSize:13, fontWeight:700, color:C.tx }}>{f.title}</span>
+                      </div>
+                      <p style={{ fontSize:12, color:C.tx2, lineHeight:1.6, margin:0 }}>{f.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <p style={{ textAlign:'center', fontSize:13, color:C.tx3, marginTop:20 }}>
+            All sectors share core features: inventory, staff, branches, tax, AI intelligence, and multi-currency.
+          </p>
         </div>
       </section>
 
