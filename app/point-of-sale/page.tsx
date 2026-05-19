@@ -10,14 +10,18 @@ const C = {
 }
 
 const FEATURES = [
-  { icon:'🧾', title:'Register & Checkout', desc:'Fast checkout with barcode scanning, split payments, layaways, refunds, and digital receipts. Works on tablet, phone, or desktop.', tag:'Core' },
+  { icon:'🧾', title:'Register & Checkout', desc:'Fast checkout with barcode scanning or manual search. Split payments, layaways, discounts, refunds, and digital receipts in any currency.', tag:'Core' },
+  { icon:'💱', title:'Any Currency, Any Country', desc:'Set your store currency to GBP, USD, EUR, NGN, KES, AED, INR, ZAR or 150+ others. Exchange rates, symbol formatting, and decimal rules handled automatically.', tag:'Global' },
   { icon:'📦', title:'Inventory Management', desc:'Real-time stock levels across every branch. Low-stock alerts, stock transfers, batch updates, and AI-powered reorder recommendations.', tag:'Smart' },
-  { icon:'🏪', title:'Multi-Branch', desc:'Run multiple locations from one dashboard. Per-branch reporting, staff, inventory, and tax settings — all synced in real time.', tag:'Scale' },
+  { icon:'🏪', title:'Multi-Branch', desc:'Run multiple locations — in the same country or across borders — from one dashboard. Per-branch currency, tax, inventory, and staff settings.', tag:'Scale' },
   { icon:'👥', title:'Staff & Shifts', desc:'Role-based access for cashiers and managers. Shift open/close with cash reconciliation, OTP login, and per-cashier performance tracking.', tag:'Team' },
-  { icon:'🧮', title:'Tax & Compliance', desc:'Multi-jurisdiction VAT handling, consolidated tax reports, and filing-ready previews. Syncs directly with Xero and QuickBooks.', tag:'Finance' },
-  { icon:'🔒', title:'GDPR & Privacy', desc:'One-click customer data export, deletion requests, consent logging, and configurable data-retention policies.', tag:'Trust' },
-  { icon:'🤖', title:'AI Intelligence', desc:'Anomaly detection on transactions, AI-driven supplier recommendations, sales pattern insights, and demand forecasting from your PoS data.', tag:'AI' },
-  { icon:'📱', title:'Works Everywhere', desc:'Responsive design runs on any device — iPad at the counter, phone for pop-ups, or desktop in the back office. No special hardware needed.', tag:'Flex' },
+  { icon:'🧮', title:'Tax & Compliance', desc:'VAT, GST, sales tax, and custom local tax rates. Multi-jurisdiction rules, consolidated reports, and filing-ready previews. Syncs to Xero and QuickBooks.', tag:'Finance' },
+  { icon:'🌍', title:'Localisation', desc:'Date formats, number separators, address formats, and receipt layouts automatically match your country. Right-to-left language support included.', tag:'Local' },
+  { icon:'💳', title:'Flexible Payments', desc:'Accept card, cash, mobile money (M-Pesa, MTN, Airtel), QR pay, and split payments. Works offline and syncs when reconnected.', tag:'Payments' },
+  { icon:'🤖', title:'AI Intelligence', desc:'Anomaly detection on transactions, AI-driven supplier recommendations, sales pattern insights, and demand forecasting — all from your PoS data.', tag:'AI' },
+  { icon:'📊', title:'Reports & Analytics', desc:'Daily, weekly, and monthly sales reports broken down by product, cashier, branch, and payment method. Export in your local currency.', tag:'Insights' },
+  { icon:'🔒', title:'Privacy & Compliance', desc:'GDPR, NDPR, POPIA, and PDPA ready. One-click customer data export, deletion requests, consent logging, and configurable retention policies.', tag:'Trust' },
+  { icon:'📱', title:'Works Everywhere', desc:'Runs on any device — iPad at the counter, Android phone for pop-ups, or desktop in the back office. No proprietary hardware, no lock-in.', tag:'Flex' },
 ]
 
 const WORKFLOW = [
@@ -74,7 +78,7 @@ export default function PosPage() {
           .demo-grid { grid-template-columns:1fr !important }
           .pos-hero-mock { display:none !important }
         }
-        @media (min-width:768px) and (max-width:1023px) {
+        @media (min-width:640px) and (max-width:1023px) {
           .features-grid { grid-template-columns:1fr 1fr !important }
         }
       `}</style>
@@ -325,22 +329,77 @@ export default function PosPage() {
         <div style={{ maxWidth:1060, margin:'0 auto' }}>
           <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16, textAlign:'center' }}>Features</div>
           <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,36px)', fontWeight:700, textAlign:'center', marginBottom:12, letterSpacing:'-.03em', color:C.tx }}>
-            Everything you need to sell
+            Built to sell anywhere in the world
           </h2>
-          <p style={{ fontSize:'clamp(14px,1.6vw,17px)', color:C.tx2, lineHeight:1.7, maxWidth:560, margin:'0 auto 44px', textAlign:'center' }}>
-            Not a bolt-on — a full point-of-sale system that feeds your business intelligence.
+          <p style={{ fontSize:'clamp(14px,1.6vw,17px)', color:C.tx2, lineHeight:1.7, maxWidth:580, margin:'0 auto 20px', textAlign:'center' }}>
+            One platform. Any country, any currency, any tax system. No extra setup — just pick your locale and start selling.
           </p>
+
+          {/* Global banner */}
+          <div style={{ borderRadius:16, background:`linear-gradient(135deg, #1a1916 0%, #252320 100%)`, border:`1px solid rgba(208,138,89,.2)`, padding:'clamp(18px,3vw,26px) clamp(20px,3vw,32px)', marginBottom:36, display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'space-between', gap:20 }}>
+            <div>
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
+                <span style={{ fontSize:20 }}>🌍</span>
+                <span style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:700, color:'#fff' }}>Works in 150+ countries</span>
+              </div>
+              <p style={{ fontSize:13, color:'rgba(255,255,255,.5)', margin:0, lineHeight:1.6, maxWidth:440 }}>
+                Set your store currency once. Prices, receipts, tax reports, and accounting exports all follow. Switch branches to different currencies without losing a thing.
+              </p>
+            </div>
+            {/* Currency ticker */}
+            <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+              {[
+                { sym:'£', name:'GBP', flag:'🇬🇧' },
+                { sym:'$', name:'USD', flag:'🇺🇸' },
+                { sym:'€', name:'EUR', flag:'🇪🇺' },
+                { sym:'₦', name:'NGN', flag:'🇳🇬' },
+                { sym:'KSh', name:'KES', flag:'🇰🇪' },
+                { sym:'د.إ', name:'AED', flag:'🇦🇪' },
+                { sym:'₹', name:'INR', flag:'🇮🇳' },
+                { sym:'R', name:'ZAR', flag:'🇿🇦' },
+                { sym:'¥', name:'JPY', flag:'🇯🇵' },
+                { sym:'৳', name:'BDT', flag:'🇧🇩' },
+              ].map((c, i) => (
+                <div key={i} style={{ display:'flex', alignItems:'center', gap:5, padding:'5px 10px', borderRadius:8, background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.08)' }}>
+                  <span style={{ fontSize:13 }}>{c.flag}</span>
+                  <span style={{ fontSize:12, fontWeight:700, color:'#fff', fontFamily:'var(--font-sora)' }}>{c.sym}</span>
+                  <span style={{ fontSize:10, color:'rgba(255,255,255,.35)' }}>{c.name}</span>
+                </div>
+              ))}
+              <div style={{ display:'flex', alignItems:'center', padding:'5px 12px', borderRadius:8, background:'rgba(208,138,89,.12)', border:`1px solid ${C.accBdr}` }}>
+                <span style={{ fontSize:12, color:C.acc, fontWeight:600 }}>+140 more</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Feature cards — 4 col, 3 rows */}
           <div className="features-grid" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
             {FEATURES.map((f, i) => (
-              <div key={i} className="card-hover" style={{ padding:'22px 18px', borderRadius:16, border:`1px solid ${C.b}`, background:C.bg, display:'flex', flexDirection:'column', gap:10 }}>
+              <div key={i} className="card-hover" style={{ padding:'22px 18px', borderRadius:16, border: f.tag === 'Global' ? `2px solid ${C.accBdr}` : `1px solid ${C.b}`, background: f.tag === 'Global' ? C.accBg : C.bg, display:'flex', flexDirection:'column', gap:10 }}>
                 <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                   <span style={{ fontSize:24 }}>{f.icon}</span>
-                  <span style={{ fontSize:10, fontWeight:700, color:C.acc, background:C.accBg, border:`1px solid ${C.accBdr}`, padding:'2px 8px', borderRadius:9999, textTransform:'uppercase', letterSpacing:'.05em' }}>{f.tag}</span>
+                  <span style={{ fontSize:10, fontWeight:700, color: f.tag === 'Global' ? C.acc : C.acc, background: f.tag === 'Global' ? `rgba(208,138,89,.18)` : C.accBg, border:`1px solid ${C.accBdr}`, padding:'2px 8px', borderRadius:9999, textTransform:'uppercase', letterSpacing:'.05em' }}>{f.tag}</span>
                 </div>
                 <div style={{ fontFamily:'var(--font-sora)', fontSize:15, fontWeight:700, color:C.tx }}>{f.title}</div>
                 <p style={{ fontSize:13, color:C.tx2, lineHeight:1.65, margin:0 }}>{f.desc}</p>
               </div>
             ))}
+          </div>
+
+          {/* Tax systems callout */}
+          <div style={{ marginTop:28, borderRadius:14, border:`1px solid ${C.b}`, background:C.bg, padding:'18px 24px', display:'flex', flexWrap:'wrap', alignItems:'center', gap:16, justifyContent:'space-between' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+              <span style={{ fontSize:22 }}>🧮</span>
+              <div>
+                <div style={{ fontSize:14, fontWeight:700, color:C.tx, marginBottom:2 }}>Every major tax system supported</div>
+                <div style={{ fontSize:12, color:C.tx3 }}>VAT · GST · Sales Tax · Withholding Tax · Custom rates — configured per branch, per country.</div>
+              </div>
+            </div>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+              {['🇬🇧 UK VAT','🇪🇺 EU VAT (OSS)','🇺🇸 US Sales Tax','🇳🇬 FIRS / VAT','🇰🇪 KRA / VAT','🇮🇳 GST','🇿🇦 SARS / VAT','🇦🇪 UAE VAT','🇦🇺 GST','Custom'].map((t, i) => (
+                <span key={i} style={{ fontSize:11, color:C.tx2, background:C.ev, padding:'3px 9px', borderRadius:6, fontWeight:500 }}>{t}</span>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -412,7 +471,7 @@ export default function PosPage() {
           <div style={{ textAlign:'left', maxWidth:340, margin:'0 auto 28px' }}>
             {[
               'Unlimited transactions',
-              'All 8 features included',
+              'All 12 features included',
               'Multi-branch at no extra cost',
               'AI intelligence from day one',
               'Xero & QuickBooks sync',
