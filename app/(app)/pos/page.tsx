@@ -73,7 +73,7 @@ interface InventoryItem {
 interface Location {
   id: string; name: string; address?: string; phone?: string; is_active: boolean
 }
-type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'branches' | 'audit' | 'map' | 'operations' | 'captures' | 'approvals' | 'intelligence' | 'logistics'
+type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'branches' | 'audit' | 'map' | 'operations' | 'captures' | 'approvals' | 'intelligence' | 'logistics' | 'customers' | 'promotions' | 'loyalty' | 'returns' | 'reports' | 'purchase_orders' | 'gift_cards' | 'integrations'
 type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
 type FilterModalType = { type: 'sales' | 'refunds' | 'low_stock' | 'cashier_detail'; title: string; cashier_id?: string } | null
 type TxDetailType = Transaction | null
@@ -1519,12 +1519,20 @@ export default function POSPage() {
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Stock management, sales tracking, and supplier orders.</div>
               </div>
               {tileGrid([
-                { icon: '📦', label: 'Inventory', tab: 'inventory' as Tab, desc: 'Stock levels & products',    badge: sectorAlertCount > 0 ? sectorAlertCount : null },
-                { icon: '🛒', label: 'Sales',     tab: 'overview' as Tab,  desc: 'Revenue & transactions' },
-                { icon: '👥', label: 'Staff',     tab: 'staff' as Tab,     desc: 'Cashiers & permissions' },
-                { icon: '🏪', label: 'Branches',  tab: 'branches' as Tab,  desc: 'Locations & stock by branch' },
-                { icon: '🗺️', label: 'Map',       tab: 'map' as Tab,       desc: 'Branch locations on map' },
-                { icon: '🔍', label: 'Audit',     tab: 'audit' as Tab,     desc: 'Transaction & change log' },
+                { icon: '📦', label: 'Inventory',       tab: 'inventory' as Tab,       desc: 'Stock levels & products',       badge: sectorAlertCount > 0 ? sectorAlertCount : null },
+                { icon: '🛒', label: 'Sales',           tab: 'overview' as Tab,        desc: 'Revenue & transactions' },
+                { icon: '👤', label: 'Customers',       tab: 'customers' as Tab,       desc: 'Profiles, history & segments' },
+                { icon: '🏷️', label: 'Promotions',      tab: 'promotions' as Tab,      desc: 'Discounts, coupons & deals' },
+                { icon: '⭐', label: 'Loyalty',          tab: 'loyalty' as Tab,         desc: 'Points, rewards & tiers' },
+                { icon: '↩️', label: 'Returns',          tab: 'returns' as Tab,         desc: 'Refunds, exchanges & credits' },
+                { icon: '📊', label: 'Reports',         tab: 'reports' as Tab,         desc: 'Sales, margins & insights' },
+                { icon: '📋', label: 'Purchase Orders', tab: 'purchase_orders' as Tab, desc: 'Supplier orders & receiving' },
+                { icon: '🎁', label: 'Gift Cards',      tab: 'gift_cards' as Tab,      desc: 'Issue, redeem & balances' },
+                { icon: '👥', label: 'Staff',           tab: 'staff' as Tab,           desc: 'Cashiers & permissions' },
+                { icon: '🏪', label: 'Branches',        tab: 'branches' as Tab,        desc: 'Locations & stock by branch' },
+                { icon: '🗺️', label: 'Map',             tab: 'map' as Tab,             desc: 'Branch locations on map' },
+                { icon: '🔗', label: 'Integrations',    tab: 'integrations' as Tab,    desc: 'Xero, payments & more' },
+                { icon: '🔍', label: 'Audit',           tab: 'audit' as Tab,           desc: 'Transaction & change log' },
               ])}
             </div>
           )
@@ -2719,6 +2727,313 @@ export default function POSPage() {
           </div>
         )}
       </div>
+
+        {/* ══════════════ CUSTOMERS TAB ══════════════ */}
+        {tab === 'customers' && (
+          <div style={{ maxWidth: 800 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>👤 Customers</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Customer profiles, purchase history and segments</div>
+              </div>
+              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+            </div>
+            {(() => {
+              const customerMap = new Map<string, { phone: string; name?: string; orders: number; total: number; lastVisit: string }>()
+              for (const tx of transactions) {
+                const c = tx.pos_customers
+                if (!c?.phone) continue
+                const existing = customerMap.get(c.phone)
+                if (existing) {
+                  existing.orders++
+                  existing.total += tx.total
+                  if (tx.created_at > existing.lastVisit) existing.lastVisit = tx.created_at
+                  if (c.name && !existing.name) existing.name = c.name
+                } else {
+                  customerMap.set(c.phone, { phone: c.phone, name: c.name, orders: 1, total: tx.total, lastVisit: tx.created_at })
+                }
+              }
+              const customers = Array.from(customerMap.values()).sort((a, b) => b.total - a.total)
+              if (customers.length === 0) return (
+                <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}>👤</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>No customers yet</div>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Customer profiles are created when you capture a phone number at the till.</div>
+                </div>
+              )
+              return (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 20 }}>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Total customers</div><div style={{ fontSize: 22, fontWeight: 800, color: ACC }}>{customers.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Repeat customers</div><div style={{ fontSize: 22, fontWeight: 800, color: GREEN }}>{customers.filter(c => c.orders > 1).length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Avg lifetime value</div><div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, customers.reduce((s, c) => s + c.total, 0) / customers.length)}</div></div>
+                  </div>
+                  <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 100px', padding: '10px 16px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                      <span>Customer</span><span style={{ textAlign: 'center' }}>Orders</span><span style={{ textAlign: 'right' }}>Spent</span><span style={{ textAlign: 'right' }}>Last visit</span>
+                    </div>
+                    {customers.slice(0, 30).map((c, i) => (
+                      <div key={c.phone} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 100px', padding: '10px 16px', borderTop: '1px solid var(--b)', background: 'var(--sf)', fontSize: 13, alignItems: 'center' }}>
+                        <div><div style={{ fontWeight: 600, color: 'var(--tx)' }}>{c.name || c.phone}</div>{c.name && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{c.phone}</div>}</div>
+                        <div style={{ textAlign: 'center', color: 'var(--tx3)' }}>{c.orders}</div>
+                        <div style={{ textAlign: 'right', fontWeight: 600 }}>{fmt(currencySymbol, c.total)}</div>
+                        <div style={{ textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>{new Date(c.lastVisit).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
+          </div>
+        )}
+
+        {/* ══════════════ PROMOTIONS TAB ══════════════ */}
+        {tab === 'promotions' && (
+          <div style={{ maxWidth: 800 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>🏷️ Promotions & Discounts</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Create and manage discounts, coupons and deals</div>
+              </div>
+              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+            </div>
+            <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>🏷️</div>
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Promotions engine</div>
+              <div style={{ fontSize: 13, color: 'var(--tx3)', maxWidth: 420, margin: '0 auto' }}>Schedule percentage or fixed discounts, BOGO offers, bundle deals and coupon codes — applied automatically at the till.</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginTop: 24, textAlign: 'left' }}>
+                {[
+                  { icon: '💲', title: '% & Fixed discounts', desc: 'Apply to items, categories or whole cart' },
+                  { icon: '🎟️', title: 'Coupon codes', desc: 'Generate & track promo codes' },
+                  { icon: '📦', title: 'BOGO & Bundles', desc: 'Buy-one-get-one & mix-and-match' },
+                  { icon: '⏰', title: 'Scheduled promos', desc: 'Auto-start & expire on set dates' },
+                  { icon: '👤', title: 'Customer pricing', desc: 'VIP or wholesale price tiers' },
+                  { icon: '📊', title: 'Promo analytics', desc: 'Track redemptions & uplift' },
+                ].map((f, i) => (
+                  <div key={i} style={{ background: 'var(--ev)', borderRadius: 10, padding: 14 }}>
+                    <div style={{ fontSize: 20, marginBottom: 6 }}>{f.icon}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{f.title}</div>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{f.desc}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════ LOYALTY TAB ══════════════ */}
+        {tab === 'loyalty' && (
+          <div style={{ maxWidth: 800 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>⭐ Loyalty Program</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Points, rewards and customer retention</div>
+              </div>
+              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+            </div>
+            <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>⭐</div>
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Loyalty & rewards</div>
+              <div style={{ fontSize: 13, color: 'var(--tx3)', maxWidth: 420, margin: '0 auto' }}>Reward repeat customers with a points program — earn on every purchase, redeem for discounts or free items.</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginTop: 24, textAlign: 'left' }}>
+                {[
+                  { icon: '🪙', title: 'Points earning', desc: 'Earn per spend or per visit' },
+                  { icon: '🎁', title: 'Rewards catalog', desc: 'Redeem for discounts or items' },
+                  { icon: '🏅', title: 'Tier levels', desc: 'Bronze, Silver, Gold, VIP' },
+                  { icon: '📱', title: 'Digital cards', desc: 'No plastic — phone number lookup' },
+                  { icon: '📈', title: 'Retention metrics', desc: 'Track return rate & churn' },
+                  { icon: '🔔', title: 'Auto rewards', desc: 'Birthday & milestone rewards' },
+                ].map((f, i) => (
+                  <div key={i} style={{ background: 'var(--ev)', borderRadius: 10, padding: 14 }}>
+                    <div style={{ fontSize: 20, marginBottom: 6 }}>{f.icon}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{f.title}</div>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{f.desc}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════ RETURNS TAB ══════════════ */}
+        {tab === 'returns' && (
+          <div style={{ maxWidth: 800 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>↩️ Returns & Exchanges</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Process refunds, exchanges and store credits</div>
+              </div>
+              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+            </div>
+            {(() => {
+              const returnTx = transactions.filter(t => t.status === 'refunded' || t.status === 'partially_refunded')
+              const totalRefunded = returnTx.reduce((s, t) => s + t.total, 0)
+              return (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 20 }}>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Total returns</div><div style={{ fontSize: 22, fontWeight: 800, color: returnTx.length > 0 ? RED : GREEN }}>{returnTx.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Amount refunded</div><div style={{ fontSize: 22, fontWeight: 800, color: totalRefunded > 0 ? RED : 'var(--tx)' }}>{fmt(currencySymbol, totalRefunded)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Return rate</div><div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)' }}>{transactions.length > 0 ? (returnTx.length / transactions.length * 100).toFixed(1) : '0'}%</div></div>
+                  </div>
+                  {returnTx.length === 0 ? (
+                    <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
+                      <div style={{ fontSize: 32, marginBottom: 12 }}>✅</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>No returns this period</div>
+                      <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Returns and exchanges will appear here when processed at the till.</div>
+                    </div>
+                  ) : (
+                    <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px', padding: '10px 16px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>
+                        <span>Items</span><span style={{ textAlign: 'right' }}>Amount</span><span style={{ textAlign: 'right' }}>Date</span>
+                      </div>
+                      {returnTx.slice(0, 20).map((tx, i) => (
+                        <div key={tx.id} onClick={() => setTxDetail(tx)} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px', padding: '10px 16px', borderTop: '1px solid var(--b)', background: 'var(--sf)', cursor: 'pointer', fontSize: 13, alignItems: 'center' }}>
+                          <div style={{ fontWeight: 500, color: 'var(--tx)' }}>{(tx.pos_items || []).map(i => i.name).filter(Boolean).join(', ') || 'Sale'}</div>
+                          <div style={{ textAlign: 'right', fontWeight: 600, color: RED }}>{fmt(currencySymbol, tx.total)}</div>
+                          <div style={{ textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>{new Date(tx.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+          </div>
+        )}
+
+        {/* ══════════════ REPORTS TAB ══════════════ */}
+        {tab === 'reports' && (
+          <div style={{ maxWidth: 800 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>📊 Reports</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Sales, inventory, margins and business insights</div>
+              </div>
+              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+              {[
+                { icon: '🛒', title: 'Sales report', desc: 'Revenue by product, category, staff & time period', action: () => setTab('overview') },
+                { icon: '📦', title: 'Inventory report', desc: 'Stock levels, valuation, dead stock & expiry', action: () => setTab('inventory') },
+                { icon: '💰', title: 'Profit & loss', desc: 'Revenue, costs and margin breakdown', action: () => setTab('overview') },
+                { icon: '🧾', title: 'Tax report', desc: 'VAT summary & MTD filing preview', action: () => window.open('about:blank') },
+                { icon: '👥', title: 'Staff performance', desc: 'Sales per cashier, shift totals & commission', action: () => setTab('staff') },
+                { icon: '↩️', title: 'Returns report', desc: 'Return rates, reasons & refund totals', action: () => setTab('returns') },
+                { icon: '👤', title: 'Customer report', desc: 'Acquisition, retention & lifetime value', action: () => setTab('customers') },
+                { icon: '📥', title: 'Export data', desc: 'Download CSV of transactions, inventory or customers', action: () => {} },
+              ].map((r, i) => (
+                <button key={i} onClick={r.action} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 20, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)} onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>
+                  <div style={{ fontSize: 24, marginBottom: 8 }}>{r.icon}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 4 }}>{r.title}</div>
+                  <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.4 }}>{r.desc}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════ PURCHASE ORDERS TAB ══════════════ */}
+        {tab === 'purchase_orders' && (
+          <div style={{ maxWidth: 800 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>📋 Purchase Orders</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Order stock from suppliers and track deliveries</div>
+              </div>
+              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+            </div>
+            <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Supplier orders</div>
+              <div style={{ fontSize: 13, color: 'var(--tx3)', maxWidth: 420, margin: '0 auto' }}>Create purchase orders, send to suppliers, receive stock and track back-orders — all linked to your inventory.</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginTop: 24, textAlign: 'left' }}>
+                {[
+                  { icon: '📝', title: 'Create POs', desc: 'Build orders from low-stock items' },
+                  { icon: '📧', title: 'Send to supplier', desc: 'Email or WhatsApp POs directly' },
+                  { icon: '📥', title: 'Receive stock', desc: 'Scan & confirm deliveries' },
+                  { icon: '🔄', title: 'Back-orders', desc: 'Track partial & pending items' },
+                  { icon: '🤖', title: 'Auto-reorder', desc: 'AI suggests when to restock' },
+                  { icon: '📊', title: 'Supplier insights', desc: 'Lead times & cost trends' },
+                ].map((f, i) => (
+                  <div key={i} style={{ background: 'var(--ev)', borderRadius: 10, padding: 14 }}>
+                    <div style={{ fontSize: 20, marginBottom: 6 }}>{f.icon}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{f.title}</div>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{f.desc}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════ GIFT CARDS TAB ══════════════ */}
+        {tab === 'gift_cards' && (
+          <div style={{ maxWidth: 800 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>🎁 Gift Cards</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Issue, redeem and track gift card balances</div>
+              </div>
+              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+            </div>
+            <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>🎁</div>
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Gift cards & store credit</div>
+              <div style={{ fontSize: 13, color: 'var(--tx3)', maxWidth: 420, margin: '0 auto' }}>Sell physical or digital gift cards, accept them as payment and track outstanding balances.</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginTop: 24, textAlign: 'left' }}>
+                {[
+                  { icon: '💳', title: 'Issue cards', desc: 'Physical or digital with unique codes' },
+                  { icon: '📱', title: 'Check balance', desc: 'Scan or enter code at till' },
+                  { icon: '💰', title: 'Accept as payment', desc: 'Full or partial redemption' },
+                  { icon: '🔄', title: 'Store credit', desc: 'Issue on returns instead of refund' },
+                  { icon: '📊', title: 'Liability report', desc: 'Track outstanding balances' },
+                  { icon: '🎨', title: 'Custom designs', desc: 'Branded cards for your store' },
+                ].map((f, i) => (
+                  <div key={i} style={{ background: 'var(--ev)', borderRadius: 10, padding: 14 }}>
+                    <div style={{ fontSize: 20, marginBottom: 6 }}>{f.icon}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{f.title}</div>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{f.desc}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════ INTEGRATIONS TAB ══════════════ */}
+        {tab === 'integrations' && (
+          <div style={{ maxWidth: 800 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>🔗 Integrations</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Connect your accounting, payments and marketing tools</div>
+              </div>
+              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
+              {[
+                { icon: '📘', title: 'Xero', desc: 'Auto-sync sales, refunds & tax to Xero', status: 'available', action: () => window.open('/api/pos/integrations/xero/connect', '_blank') },
+                { icon: '📗', title: 'QuickBooks', desc: 'Sync transactions to QuickBooks Online', status: 'coming_soon' },
+                { icon: '💳', title: 'M-Pesa', desc: 'Accept mobile money payments', status: 'available' },
+                { icon: '📧', title: 'Email marketing', desc: 'Sync customers to Mailchimp or Brevo', status: 'coming_soon' },
+                { icon: '📦', title: 'Shipping', desc: 'Connect DHL, Sendy or local couriers', status: 'coming_soon' },
+                { icon: '🛒', title: 'E-commerce', desc: 'Sync inventory with your online store', status: 'coming_soon' },
+              ].map((int, i) => (
+                <div key={i} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 20, position: 'relative' }}>
+                  {int.status === 'coming_soon' && <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 600, color: AMBER, background: 'rgba(202,138,4,.1)', padding: '2px 8px', borderRadius: 9999 }}>Coming soon</span>}
+                  {int.status === 'available' && <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 600, color: GREEN, background: 'rgba(22,163,74,.1)', padding: '2px 8px', borderRadius: 9999 }}>Available</span>}
+                  <div style={{ fontSize: 28, marginBottom: 10 }}>{int.icon}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 4 }}>{int.title}</div>
+                  <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.4, marginBottom: 12 }}>{int.desc}</div>
+                  {int.status === 'available' && int.action && (
+                    <button onClick={int.action} style={{ fontSize: 12, fontWeight: 600, color: ACC, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>Connect →</button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
       {/* ══════════════ MODALS ══════════════ */}
 
