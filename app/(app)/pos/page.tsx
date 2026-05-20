@@ -1362,12 +1362,13 @@ export default function POSPage() {
             position: 'relative', display: 'flex', flexDirection: 'column',
             minHeight: 110, cursor: 'pointer',
           }
-          const renderTile = (tile: { icon: string; label: string; desc: string; badge?: number | null; tab?: Tab; href?: string }, idx: number) => {
+          const renderTile = (tile: { icon: string; label: string; desc: string; badge?: number | null; tab?: Tab; href?: string; comingSoon?: boolean }, idx: number) => {
             const inner = (
               <>
                 {tile.badge ? <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 700, color: '#fff', background: RED, borderRadius: 9999, padding: '1px 6px' }}>{tile.badge}</span> : null}
-                <div style={{ fontSize: 22, marginBottom: 8, lineHeight: 1 }}>{tile.icon}</div>
-                <div style={{ fontWeight: 600, color: 'var(--tx)', fontSize: 13, lineHeight: 1.3 }}>{tile.label}</div>
+                {tile.comingSoon ? <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 9, fontWeight: 700, color: AMBER, background: 'rgba(202,138,4,.1)', borderRadius: 9999, padding: '2px 7px' }}>Soon</span> : null}
+                <div style={{ fontSize: 22, marginBottom: 8, lineHeight: 1, opacity: tile.comingSoon ? 0.5 : 1 }}>{tile.icon}</div>
+                <div style={{ fontWeight: 600, color: 'var(--tx)', fontSize: 13, lineHeight: 1.3, opacity: tile.comingSoon ? 0.6 : 1 }}>{tile.label}</div>
                 <div style={{ color: 'var(--tx3)', fontSize: 11, marginTop: 4, lineHeight: 1.4 }}>{tile.desc}</div>
               </>
             )
@@ -1488,8 +1489,18 @@ export default function POSPage() {
           if (sector === 'salon') return (
             <div style={{ maxWidth: 860 }}>
               {sectorPicker}
-              <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>💇 Salon & Bookings</div>
-              <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 4 }}>Salon module coming soon.</div>
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>💇 Salon & Bookings</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Appointments, walk-ins, stylist management, and client history.</div>
+              </div>
+              {tileGrid([
+                { icon: '🛒', label: 'Sales',      tab: 'overview' as Tab,   desc: 'Revenue & transactions' },
+                { icon: '👥', label: 'Staff',       tab: 'staff' as Tab,      desc: 'Stylists & roles' },
+                { icon: '📦', label: 'Products',    tab: 'inventory' as Tab,  desc: 'Retail products & supplies', badge: sectorAlertCount > 0 ? sectorAlertCount : null },
+                { icon: '👤', label: 'Clients',     tab: 'customers' as Tab,  desc: 'Client profiles & history' },
+                { icon: '🏪', label: 'Branches',    tab: 'branches' as Tab,   desc: 'Locations & stock' },
+                { icon: '🔍', label: 'Audit',       tab: 'audit' as Tab,      desc: 'Every action logged' },
+              ])}
             </div>
           )
 
@@ -1522,12 +1533,12 @@ export default function POSPage() {
                 { icon: '📦', label: 'Inventory',       tab: 'inventory' as Tab,       desc: 'Stock levels & products',       badge: sectorAlertCount > 0 ? sectorAlertCount : null },
                 { icon: '🛒', label: 'Sales',           tab: 'overview' as Tab,        desc: 'Revenue & transactions' },
                 { icon: '👤', label: 'Customers',       tab: 'customers' as Tab,       desc: 'Profiles, history & segments' },
-                { icon: '🏷️', label: 'Promotions',      tab: 'promotions' as Tab,      desc: 'Discounts, coupons & deals' },
-                { icon: '⭐', label: 'Loyalty',          tab: 'loyalty' as Tab,         desc: 'Points, rewards & tiers' },
+                { icon: '🏷️', label: 'Promotions',      tab: 'promotions' as Tab,      desc: 'Discounts, coupons & deals', comingSoon: true },
+                { icon: '⭐', label: 'Loyalty',          tab: 'loyalty' as Tab,         desc: 'Points, rewards & tiers', comingSoon: true },
                 { icon: '↩️', label: 'Returns',          tab: 'returns' as Tab,         desc: 'Refunds, exchanges & credits' },
                 { icon: '📊', label: 'Reports',         tab: 'reports' as Tab,         desc: 'Sales, margins & insights' },
-                { icon: '📋', label: 'Purchase Orders', tab: 'purchase_orders' as Tab, desc: 'Supplier orders & receiving' },
-                { icon: '🎁', label: 'Gift Cards',      tab: 'gift_cards' as Tab,      desc: 'Issue, redeem & balances' },
+                { icon: '📋', label: 'Purchase Orders', tab: 'purchase_orders' as Tab, desc: 'Supplier orders & receiving', comingSoon: true },
+                { icon: '🎁', label: 'Gift Cards',      tab: 'gift_cards' as Tab,      desc: 'Issue, redeem & balances', comingSoon: true },
                 { icon: '👥', label: 'Staff',           tab: 'staff' as Tab,           desc: 'Cashiers & permissions' },
                 { icon: '🏪', label: 'Branches',        tab: 'branches' as Tab,        desc: 'Locations & stock by branch' },
                 { icon: '🗺️', label: 'Map',             tab: 'map' as Tab,             desc: 'Branch locations on map' },
@@ -2288,7 +2299,7 @@ export default function POSPage() {
                 <div style={{ fontSize: 16, fontWeight: 700 }}>📷 Production Captures</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>All intake, output, wastage and dispatch records</div>
               </div>
-              <button onClick={() => setTab('operations')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
+              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
             </div>
             {factoryLoading
               ? <div style={{ color: 'var(--tx3)', fontSize: 13, padding: 24, textAlign: 'center' }}>Loading captures…</div>
@@ -2336,7 +2347,7 @@ export default function POSPage() {
                 <div style={{ fontSize: 16, fontWeight: 700 }}>✅ Pending Approvals</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Captures awaiting supervisor sign-off</div>
               </div>
-              <button onClick={() => setTab('operations')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
+              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
             </div>
             {factoryLoading
               ? <div style={{ color: 'var(--tx3)', fontSize: 13, padding: 24, textAlign: 'center' }}>Loading…</div>
@@ -2650,7 +2661,7 @@ export default function POSPage() {
                 <div style={{ fontSize: 16, fontWeight: 700 }}>🧠 Production Intelligence</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>AI-powered anomaly detection across your production floor</div>
               </div>
-              <button onClick={() => setTab('operations')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
+              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
             </div>
             {!factoryIntelligence && !factoryIntelLoading && (
               <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 28, textAlign: 'center' }}>
@@ -2800,6 +2811,7 @@ export default function POSPage() {
             <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
               <div style={{ fontSize: 32, marginBottom: 12 }}>🏷️</div>
               <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Promotions engine</div>
+              <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: AMBER, background: 'rgba(202,138,4,.1)', padding: '3px 10px', borderRadius: 9999, marginBottom: 12 }}>Coming soon</span>
               <div style={{ fontSize: 13, color: 'var(--tx3)', maxWidth: 420, margin: '0 auto' }}>Schedule percentage or fixed discounts, BOGO offers, bundle deals and coupon codes — applied automatically at the till.</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginTop: 24, textAlign: 'left' }}>
                 {[
@@ -2810,7 +2822,7 @@ export default function POSPage() {
                   { icon: '👤', title: 'Customer pricing', desc: 'VIP or wholesale price tiers' },
                   { icon: '📊', title: 'Promo analytics', desc: 'Track redemptions & uplift' },
                 ].map((f, i) => (
-                  <div key={i} style={{ background: 'var(--ev)', borderRadius: 10, padding: 14 }}>
+                  <div key={i} style={{ background: 'var(--ev)', borderRadius: 10, padding: 14, opacity: 0.6 }}>
                     <div style={{ fontSize: 20, marginBottom: 6 }}>{f.icon}</div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{f.title}</div>
                     <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{f.desc}</div>
@@ -2834,6 +2846,7 @@ export default function POSPage() {
             <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
               <div style={{ fontSize: 32, marginBottom: 12 }}>⭐</div>
               <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Loyalty & rewards</div>
+              <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: AMBER, background: 'rgba(202,138,4,.1)', padding: '3px 10px', borderRadius: 9999, marginBottom: 12 }}>Coming soon</span>
               <div style={{ fontSize: 13, color: 'var(--tx3)', maxWidth: 420, margin: '0 auto' }}>Reward repeat customers with a points program — earn on every purchase, redeem for discounts or free items.</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginTop: 24, textAlign: 'left' }}>
                 {[
@@ -2844,7 +2857,7 @@ export default function POSPage() {
                   { icon: '📈', title: 'Retention metrics', desc: 'Track return rate & churn' },
                   { icon: '🔔', title: 'Auto rewards', desc: 'Birthday & milestone rewards' },
                 ].map((f, i) => (
-                  <div key={i} style={{ background: 'var(--ev)', borderRadius: 10, padding: 14 }}>
+                  <div key={i} style={{ background: 'var(--ev)', borderRadius: 10, padding: 14, opacity: 0.6 }}>
                     <div style={{ fontSize: 20, marginBottom: 6 }}>{f.icon}</div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{f.title}</div>
                     <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{f.desc}</div>
@@ -2946,6 +2959,7 @@ export default function POSPage() {
             <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
               <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
               <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Supplier orders</div>
+              <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: AMBER, background: 'rgba(202,138,4,.1)', padding: '3px 10px', borderRadius: 9999, marginBottom: 12 }}>Coming soon</span>
               <div style={{ fontSize: 13, color: 'var(--tx3)', maxWidth: 420, margin: '0 auto' }}>Create purchase orders, send to suppliers, receive stock and track back-orders — all linked to your inventory.</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginTop: 24, textAlign: 'left' }}>
                 {[
@@ -2956,7 +2970,7 @@ export default function POSPage() {
                   { icon: '🤖', title: 'Auto-reorder', desc: 'AI suggests when to restock' },
                   { icon: '📊', title: 'Supplier insights', desc: 'Lead times & cost trends' },
                 ].map((f, i) => (
-                  <div key={i} style={{ background: 'var(--ev)', borderRadius: 10, padding: 14 }}>
+                  <div key={i} style={{ background: 'var(--ev)', borderRadius: 10, padding: 14, opacity: 0.6 }}>
                     <div style={{ fontSize: 20, marginBottom: 6 }}>{f.icon}</div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{f.title}</div>
                     <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{f.desc}</div>
@@ -2980,6 +2994,7 @@ export default function POSPage() {
             <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
               <div style={{ fontSize: 32, marginBottom: 12 }}>🎁</div>
               <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Gift cards & store credit</div>
+              <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: AMBER, background: 'rgba(202,138,4,.1)', padding: '3px 10px', borderRadius: 9999, marginBottom: 12 }}>Coming soon</span>
               <div style={{ fontSize: 13, color: 'var(--tx3)', maxWidth: 420, margin: '0 auto' }}>Sell physical or digital gift cards, accept them as payment and track outstanding balances.</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginTop: 24, textAlign: 'left' }}>
                 {[
@@ -2990,7 +3005,7 @@ export default function POSPage() {
                   { icon: '📊', title: 'Liability report', desc: 'Track outstanding balances' },
                   { icon: '🎨', title: 'Custom designs', desc: 'Branded cards for your store' },
                 ].map((f, i) => (
-                  <div key={i} style={{ background: 'var(--ev)', borderRadius: 10, padding: 14 }}>
+                  <div key={i} style={{ background: 'var(--ev)', borderRadius: 10, padding: 14, opacity: 0.6 }}>
                     <div style={{ fontSize: 20, marginBottom: 6 }}>{f.icon}</div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{f.title}</div>
                     <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{f.desc}</div>
@@ -3015,7 +3030,7 @@ export default function POSPage() {
               {[
                 { icon: '📘', title: 'Xero', desc: 'Auto-sync sales, refunds & tax to Xero', status: 'available', action: () => window.open('/api/pos/integrations/xero/connect', '_blank') },
                 { icon: '📗', title: 'QuickBooks', desc: 'Sync transactions to QuickBooks Online', status: 'coming_soon' },
-                { icon: '💳', title: 'M-Pesa', desc: 'Accept mobile money payments', status: 'available' },
+                { icon: '💳', title: 'M-Pesa', desc: 'Accept mobile money payments', status: 'available', action: () => setTab('overview') },
                 { icon: '📧', title: 'Email marketing', desc: 'Sync customers to Mailchimp or Brevo', status: 'coming_soon' },
                 { icon: '📦', title: 'Shipping', desc: 'Connect DHL, Sendy or local couriers', status: 'coming_soon' },
                 { icon: '🛒', title: 'E-commerce', desc: 'Sync inventory with your online store', status: 'coming_soon' },
