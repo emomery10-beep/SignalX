@@ -24,6 +24,7 @@ interface InventoryItem {
   stock_qty: number
   low_stock_threshold?: number
   unit?: string
+  expiry_date?: string | null
 }
 
 interface StaffSession {
@@ -92,6 +93,7 @@ export default function SellPage() {
   const [sendingReceipt, setSendingReceipt] = useState(false)
   const [receiptSent, setReceiptSent]   = useState(false)
   const [oversold, setOversold]         = useState<string[]>([])
+  const [expiryWarning, setExpiryWarning] = useState<string | null>(null)
 
   // Shift
   const [shiftOpen, setShiftOpen]     = useState<boolean | null>(null)
@@ -320,6 +322,18 @@ export default function SellPage() {
   }
 
   const addFromSearch = (item: InventoryItem) => {
+    if (item.expiry_date) {
+      const todayMs = new Date().setHours(0,0,0,0)
+      const daysToExpiry = Math.floor((new Date(item.expiry_date).getTime() - todayMs) / 86400000)
+      if (daysToExpiry < 0) {
+        setExpiryWarning(`⚠ "${item.name}" EXPIRED on ${new Date(item.expiry_date).toLocaleDateString('en-GB')} — do not sell`)
+        setTimeout(() => setExpiryWarning(null), 5000)
+        return // block adding expired items
+      } else if (daysToExpiry <= 7) {
+        setExpiryWarning(`⚠ "${item.name}" expires ${daysToExpiry === 0 ? 'TODAY' : `in ${daysToExpiry} day${daysToExpiry !== 1 ? 's' : ''}`}`)
+        setTimeout(() => setExpiryWarning(null), 4000)
+      }
+    }
     addToCart({ name: item.name, unit_price: item.sale_price, cost_price: item.cost_price || 0, inventory_id: item.id, unit: item.unit })
     setScreen('cart')
   }
@@ -638,14 +652,29 @@ export default function SellPage() {
             </div>
           )}
 
+          {expiryWarning && (
+            <div style={{ margin: '0 20px 10px', padding: '12px 16px', borderRadius: 12, background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.3)', fontSize: 13, fontWeight: 600, color: '#dc2626' }}>
+              {expiryWarning}
+            </div>
+          )}
+
           <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 20px' }}>
             {searchLoading && (
               <div style={{ textAlign: 'center', padding: '32px', color: '#6b6760', fontSize: 14 }}>Searching...</div>
             )}
-            {searchResults.map(item => (
-              <button key={item.id} onClick={() => addFromSearch(item)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: '#fff', borderRadius: 14, marginBottom: 8, border: '1px solid #e5e2dc', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+            {searchResults.map(item => {
+              const todayMs2 = new Date().setHours(0,0,0,0)
+              const daysToExp = item.expiry_date ? Math.floor((new Date(item.expiry_date).getTime() - todayMs2) / 86400000) : null
+              const isExpiredItem = daysToExp !== null && daysToExp < 0
+              const isExpiringSoonItem = daysToExp !== null && daysToExp >= 0 && daysToExp <= 7
+              return (
+              <button key={item.id} onClick={() => addFromSearch(item)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: isExpiredItem ? 'rgba(220,38,38,.04)' : '#fff', borderRadius: 14, marginBottom: 8, border: `1px solid ${isExpiredItem ? '#fca5a5' : '#e5e2dc'}`, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: '#1a1916' }}>{item.name}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: '#1a1916' }}>
+                    {item.name}
+                    {isExpiredItem && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: '#dc2626', background: 'rgba(220,38,38,.1)', padding: '1px 6px', borderRadius: 9999 }}>EXPIRED</span>}
+                    {isExpiringSoonItem && !isExpiredItem && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: '#f97316', background: 'rgba(249,115,22,.1)', padding: '1px 6px', borderRadius: 9999 }}>EXP {daysToExp === 0 ? 'TODAY' : `${daysToExp}d`}</span>}
+                  </div>
                   {item.sku && <div style={{ fontSize: 11, color: '#a39e97', marginTop: 1 }}>SKU: {item.sku}</div>}
                   <div style={{ fontSize: 11, marginTop: 3 }}>
                     {item.stock_qty <= 0
@@ -656,9 +685,10 @@ export default function SellPage() {
                     }
                   </div>
                 </div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: ACC, marginLeft: 12 }}>{sym}{item.sale_price.toFixed(2)}</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: isExpiredItem ? '#dc2626' : ACC, marginLeft: 12 }}>{sym}{item.sale_price.toFixed(2)}</div>
               </button>
-            ))}
+              )
+            })}
             {!searchLoading && searchResults.length === 0 && !searchQuery && (
               <div style={{ textAlign: 'center', padding: '48px 0', color: '#6b6760', fontSize: 14 }}>
                 Start typing to search your inventory

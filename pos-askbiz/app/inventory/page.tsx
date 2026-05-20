@@ -14,6 +14,7 @@ interface StaffSession { id: string; name: string; role: string; owner_id: strin
 interface InventoryItem {
   id: string; name: string; sale_price: number; stock_qty: number
   low_stock_threshold: number; last_sold_at: string | null; unit?: string
+  expiry_date?: string | null; batch_number?: string | null; supplier?: string | null; brand?: string | null; category?: string | null
 }
 
 export default function InventoryPage() {
@@ -25,10 +26,10 @@ export default function InventoryPage() {
   const [restocking, setRestocking] = useState<string | null>(null)
   const [restockQty, setRestockQty] = useState('')
   const [updateMode, setUpdateMode] = useState<'add' | 'set'>('add')
-  const [filter, setFilter]       = useState<'all' | 'low' | 'out'>('all')
+  const [filter, setFilter]       = useState<'all' | 'low' | 'out' | 'expiring'>('all')
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Camera
+  // Camera (old single-photo)
   const [recognizedProducts, setRecognizedProducts] = useState<any[]>([])
   const [editingRecognizedIndex, setEditingRecognizedIndex] = useState<number | null>(null)
   const [editingRecognizedData, setEditingRecognizedData] = useState<any>({})
@@ -40,6 +41,32 @@ export default function InventoryPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+
+  // Dual-photo scan
+  const [showScanModal, setShowScanModal]     = useState(false)
+  const [scanFront, setScanFront]             = useState<string | null>(null)
+  const [scanBack, setScanBack]               = useState<string | null>(null)
+  const [scanFrontThumb, setScanFrontThumb]   = useState<string | null>(null)
+  const [scanBackThumb, setScanBackThumb]     = useState<string | null>(null)
+  const [scanning, setScanning]               = useState(false)
+  const [scanStep, setScanStep]               = useState<'front' | 'back' | null>(null)
+  const [scanCameraOpen, setScanCameraOpen]   = useState(false)
+  const [scannedProduct, setScannedProduct]   = useState<any | null>(null)  // pre-filled form data
+  const [addForm, setAddForm]                 = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '', expiry_date: '', batch_number: '', supplier: '', brand: '', unit: 'item' })
+  const [showAddForm, setShowAddForm]         = useState(false)
+  const [savingNew, setSavingNew]             = useState(false)
+  const scanFrontRef  = useRef<HTMLInputElement>(null)
+  const scanBackRef   = useRef<HTMLInputElement>(null)
+  const scanVideoRef  = useRef<HTMLVideoElement>(null)
+  const scanCanvasRef = useRef<HTMLCanvasElement>(null)
+  const scanStreamRef = useRef<MediaStream | null>(null)
+
+  useEffect(() => {
+    if (scanCameraOpen && scanVideoRef.current && scanStreamRef.current) {
+      scanVideoRef.current.srcObject = scanStreamRef.current
+      scanVideoRef.current.play().catch(() => {})
+    }
+  }, [scanCameraOpen])
 
   useEffect(() => {
     const session = localStorage.getItem('pos_staff')
@@ -132,6 +159,123 @@ export default function InventoryPage() {
     setRecognizing(false)
   }
 
+  // ── Dual-photo scan helpers ──────────────────────────────────
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const r = new FileReader()
+      r.onload = () => resolve((r.result as string).split(',')[1])
+      r.onerror = reject
+      r.readAsDataURL(file)
+    })
+  const fileToThumb = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const r = new FileReader()
+      r.onload = () => resolve(r.result as string)
+      r.onerror = reject
+      r.readAsDataURL(file)
+    })
+
+  const handleScanFile = async (file: File, slot: 'front' | 'back') => {
+    const [b64, thumb] = await Promise.all([fileToBase64(file), fileToThumb(file)])
+    if (slot === 'front') { setScanFront(b64); setScanFrontThumb(thumb) }
+    else                  { setScanBack(b64);  setScanBackThumb(thumb)  }
+  }
+
+  const openScanCamera = async (slot: 'front' | 'back') => {
+    setScanStep(slot); setScanCameraOpen(true)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      scanStreamRef.current = stream
+      if (scanVideoRef.current) scanVideoRef.current.srcObject = stream
+    } catch { alert('Camera access denied'); setScanCameraOpen(false) }
+  }
+
+  const closeScanCamera = () => {
+    if (scanStreamRef.current) { scanStreamRef.current.getTracks().forEach(t => t.stop()); scanStreamRef.current = null }
+    setScanCameraOpen(false)
+  }
+
+  const captureScanPhoto = () => {
+    if (!scanVideoRef.current || !scanCanvasRef.current || !scanStep) return
+    const ctx = scanCanvasRef.current.getContext('2d')!
+    scanCanvasRef.current.width  = scanVideoRef.current.videoWidth
+    scanCanvasRef.current.height = scanVideoRef.current.videoHeight
+    ctx.drawImage(scanVideoRef.current, 0, 0)
+    scanCanvasRef.current.toBlob(async blob => {
+      if (!blob) return
+      await handleScanFile(new File([blob], 'scan.jpg', { type: 'image/jpeg' }), scanStep)
+      closeScanCamera()
+    }, 'image/jpeg', 0.9)
+  }
+
+  const runFullScan = async () => {
+    if (!scanFront || !staff) return
+    setScanning(true)
+    try {
+      const body: any = { front: scanFront }
+      if (scanBack) body.back = scanBack
+      const res = await fetch(`${API}/api/pos/scan-product-full`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-staff-id': staff.id, 'x-owner-id': staff.owner_id },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (!data.product) { alert(data.error || 'Could not read product'); setScanning(false); return }
+      const p = data.product
+      setAddForm({
+        name:                p.name         || '',
+        sale_price:          p.sale_price != null ? String(p.sale_price) : '',
+        cost_price:          '',
+        stock_qty:           '',
+        low_stock_threshold: '5',
+        category:            p.category     || '',
+        sku:                 p.sku          || '',
+        expiry_date:         p.expiry_date  || '',
+        batch_number:        p.batch_number || '',
+        supplier:            p.supplier     || '',
+        brand:               p.brand        || '',
+        unit:                p.unit         || 'item',
+      })
+      setShowScanModal(false)
+      setShowAddForm(true)
+      setScanFront(null); setScanBack(null); setScanFrontThumb(null); setScanBackThumb(null)
+    } catch { alert('Scan failed') }
+    setScanning(false)
+  }
+
+  const saveNewProduct = async () => {
+    if (!staff || !addForm.name || !addForm.sale_price) return
+    setSavingNew(true)
+    try {
+      const res = await fetch(`${API}/api/pos/inventory`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-staff-id': staff.id, 'x-owner-id': staff.owner_id },
+        body: JSON.stringify({
+          name: addForm.name,
+          sale_price: parseFloat(addForm.sale_price),
+          cost_price: parseFloat(addForm.cost_price || '0'),
+          stock_qty: parseInt(addForm.stock_qty || '0'),
+          low_stock_threshold: parseInt(addForm.low_stock_threshold || '5'),
+          category: addForm.category || null,
+          sku: addForm.sku || null,
+          expiry_date: addForm.expiry_date || null,
+          batch_number: addForm.batch_number || null,
+          supplier: addForm.supplier || null,
+          brand: addForm.brand || null,
+          unit: addForm.unit || 'item',
+        }),
+      })
+      const data = await res.json()
+      if (data.product) {
+        setItems(prev => [...prev, data.product])
+        setShowAddForm(false)
+        setAddForm({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '', expiry_date: '', batch_number: '', supplier: '', brand: '', unit: 'item' })
+      } else { alert(data.error || 'Save failed') }
+    } catch { alert('Save failed') }
+    setSavingNew(false)
+  }
+  // ────────────────────────────────────────────────────────────
+
   const handleRestock = async (item: InventoryItem) => {
     if (!restockQty || !staff) return
     const qty = parseFloat(restockQty)
@@ -147,16 +291,28 @@ export default function InventoryPage() {
     setRestocking(null); setRestockQty('')
   }
 
+  const todayMs = new Date().setHours(0,0,0,0)
   const filtered = items.filter(i => {
     if (filter === 'out') return i.stock_qty === 0
     if (filter === 'low') return i.stock_qty > 0 && i.stock_qty <= i.low_stock_threshold
+    if (filter === 'expiring') {
+      if (!i.expiry_date) return false
+      const days = Math.floor((new Date(i.expiry_date).getTime() - todayMs) / 86400000)
+      return days <= 30
+    }
     return true
   }).filter(i =>
     !searchQuery.trim() || i.name.toLowerCase().includes(searchQuery.trim().toLowerCase())
   )
 
-  const outCount  = items.filter(i => i.stock_qty === 0).length
-  const lowCount  = items.filter(i => i.stock_qty > 0 && i.stock_qty <= i.low_stock_threshold).length
+  const outCount      = items.filter(i => i.stock_qty === 0).length
+  const lowCount      = items.filter(i => i.stock_qty > 0 && i.stock_qty <= i.low_stock_threshold).length
+  const expiredCount  = items.filter(i => i.expiry_date && new Date(i.expiry_date).getTime() < todayMs).length
+  const expiringCount = items.filter(i => {
+    if (!i.expiry_date) return false
+    const d = Math.floor((new Date(i.expiry_date).getTime() - todayMs) / 86400000)
+    return d >= 0 && d <= 30
+  }).length
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b6760', fontSize: 14 }}>
@@ -173,10 +329,13 @@ export default function InventoryPage() {
           <div style={{ fontSize: 12, color: '#6b6760' }}>{staff?.name}</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <input ref={cameraInputRef} type="file" accept="image/*" onChange={e => { if (e.target.files?.[0]) handleImageCapture(e.target.files[0]) }} style={{ display: 'none' }} capture="environment" />
-          <input ref={fileInputRef} type="file" accept="image/*" onChange={e => { if (e.target.files?.[0]) handleImageCapture(e.target.files[0]) }} style={{ display: 'none' }} />
-          <button onClick={handleOpenCamera} disabled={recognizing} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e5e2dc', background: 'transparent', fontSize: 12, cursor: 'pointer', color: '#6b6760', opacity: recognizing ? 0.5 : 1 }}>
-            {recognizing ? 'Scanning...' : '📷 Scan'}
+          {/* Hidden file inputs for dual-photo scan */}
+          <input ref={scanFrontRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleScanFile(e.target.files[0], 'front') }} />
+          <input ref={scanBackRef}  type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleScanFile(e.target.files[0], 'back')  }} />
+
+          <button onClick={() => { setShowScanModal(true); setScanFront(null); setScanBack(null); setScanFrontThumb(null); setScanBackThumb(null) }}
+            style={{ padding: '6px 14px', borderRadius: 8, background: '#7c3aed', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+            📷 Add product
           </button>
 
           <button onClick={() => { localStorage.removeItem('pos_staff'); router.push('/') }}
@@ -187,12 +346,133 @@ export default function InventoryPage() {
       </div>
 
       {/* Alert summary */}
-      {(outCount > 0 || lowCount > 0) && (
+      {(outCount > 0 || lowCount > 0 || expiredCount > 0 || expiringCount > 0) && (
         <div style={{ margin: '8px 20px', padding: '12px 16px', borderRadius: 12, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)' }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#dc2626' }}>
-            {outCount > 0 && `${outCount} out of stock`}
-            {outCount > 0 && lowCount > 0 && ' · '}
-            {lowCount > 0 && `${lowCount} running low`}
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#dc2626', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {outCount > 0 && <span>{outCount} out of stock</span>}
+            {lowCount > 0 && <span style={{ color: '#ca8a04' }}>{lowCount} running low</span>}
+            {expiredCount > 0 && <span style={{ color: '#dc2626' }}>⚠ {expiredCount} EXPIRED — remove now</span>}
+            {expiringCount > 0 && <span style={{ color: '#f97316' }}>{expiringCount} expiring within 30 days</span>}
+          </div>
+        </div>
+      )}
+
+      {/* ── Dual-photo scan modal ── */}
+      {showScanModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '0 0 0' }} onClick={() => !scanning && setShowScanModal(false)}>
+          <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', padding: 24, width: '100%', maxWidth: 500, maxHeight: '92vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
+            <div style={{ width: 36, height: 4, borderRadius: 9999, background: '#e5e2dc', margin: '0 auto 20px' }} />
+
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#1a1916', marginBottom: 4 }}>📷 Scan product</div>
+            <div style={{ fontSize: 13, color: '#6b6760', marginBottom: 20 }}>
+              Photo the front — Claude fills in name, price, category, SKU.<br/>
+              Add the back for expiry date, batch number and supplier.
+            </div>
+
+            {/* Photo slots */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+              {/* Front */}
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#6b6760', marginBottom: 8, textTransform: 'uppercase' }}>Front <span style={{ color: '#ef4444' }}>*</span></div>
+                {scanFrontThumb ? (
+                  <div style={{ position: 'relative' }}>
+                    <img src={scanFrontThumb} alt="" style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', borderRadius: 12, border: '2.5px solid #7c3aed' }} />
+                    <button onClick={() => { setScanFront(null); setScanFrontThumb(null) }} style={{ position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: 999, background: 'rgba(0,0,0,.55)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 14 }}>×</button>
+                    <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 10, fontWeight: 700, background: '#7c3aed', color: '#fff', padding: '2px 7px', borderRadius: 999 }}>✓ FRONT</div>
+                  </div>
+                ) : (
+                  <div style={{ aspectRatio: '3/4', borderRadius: 12, border: '2px dashed #e5e2dc', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#f9f8f6' }}>
+                    <div style={{ fontSize: 26 }}>📦</div>
+                    <div style={{ fontSize: 11, color: '#a39e97', textAlign: 'center', padding: '0 8px' }}>Brand, name, price</div>
+                    <button onClick={() => openScanCamera('front')} style={{ padding: '6px 14px', borderRadius: 8, background: '#7c3aed', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>📷 Camera</button>
+                    <button onClick={() => scanFrontRef.current?.click()} style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid #e5e2dc', background: 'transparent', fontSize: 12, cursor: 'pointer', color: '#6b6760' }}>Upload</button>
+                  </div>
+                )}
+              </div>
+              {/* Back */}
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#6b6760', marginBottom: 8, textTransform: 'uppercase' }}>Back <span style={{ color: '#a39e97', fontWeight: 400 }}>(optional)</span></div>
+                {scanBackThumb ? (
+                  <div style={{ position: 'relative' }}>
+                    <img src={scanBackThumb} alt="" style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', borderRadius: 12, border: '2.5px solid #0891b2' }} />
+                    <button onClick={() => { setScanBack(null); setScanBackThumb(null) }} style={{ position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: 999, background: 'rgba(0,0,0,.55)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 14 }}>×</button>
+                    <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 10, fontWeight: 700, background: '#0891b2', color: '#fff', padding: '2px 7px', borderRadius: 999 }}>✓ BACK</div>
+                  </div>
+                ) : (
+                  <div style={{ aspectRatio: '3/4', borderRadius: 12, border: '2px dashed #e5e2dc', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#f9f8f6' }}>
+                    <div style={{ fontSize: 26 }}>🏷️</div>
+                    <div style={{ fontSize: 11, color: '#a39e97', textAlign: 'center', padding: '0 8px' }}>Expiry, batch, supplier</div>
+                    <button onClick={() => openScanCamera('back')} style={{ padding: '6px 14px', borderRadius: 8, background: '#0891b2', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>📷 Camera</button>
+                    <button onClick={() => scanBackRef.current?.click()} style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid #e5e2dc', background: 'transparent', fontSize: 12, cursor: 'pointer', color: '#6b6760' }}>Upload</button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <button onClick={runFullScan} disabled={!scanFront || scanning}
+              style={{ width: '100%', padding: '15px', borderRadius: 14, background: scanFront ? '#7c3aed' : '#e5e2dc', color: scanFront ? '#fff' : '#a39e97', border: 'none', fontSize: 15, fontWeight: 800, cursor: scanFront ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
+              {scanning ? '⏳ Reading...' : scanFront ? `✨ Scan & fill${scanBack ? ' (front + back)' : ' (front only)'}` : 'Take front photo first'}
+            </button>
+            {scanFront && !scanBack && (
+              <div style={{ fontSize: 11, color: '#a39e97', textAlign: 'center', marginTop: 8 }}>Add the back photo for expiry date, batch no. and supplier</div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── In-app camera for scan ── */}
+      {scanCameraOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 300, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ color: '#fff', fontSize: 13, fontWeight: 600, marginBottom: 10, opacity: 0.8 }}>
+            {scanStep === 'front' ? '📦 Front of product' : '🏷️ Back of product'}
+          </div>
+          <video ref={scanVideoRef} autoPlay playsInline style={{ width: '100%', maxWidth: 500, border: `3px solid ${scanStep === 'front' ? '#7c3aed' : '#0891b2'}` }} />
+          <canvas ref={scanCanvasRef} style={{ display: 'none' }} />
+          <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+            <button onClick={captureScanPhoto} style={{ padding: '13px 28px', borderRadius: 12, background: scanStep === 'front' ? '#7c3aed' : '#0891b2', color: '#fff', border: 'none', fontSize: 15, fontWeight: 800, cursor: 'pointer' }}>📸 Capture</button>
+            <button onClick={closeScanCamera} style={{ padding: '13px 20px', borderRadius: 12, border: '1px solid rgba(255,255,255,.3)', background: 'transparent', color: '#fff', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Add product form (pre-filled by scan or manual) ── */}
+      {showAddForm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => !savingNew && setShowAddForm(false)}>
+          <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', padding: 24, width: '100%', maxWidth: 500, maxHeight: '92vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
+            <div style={{ width: 36, height: 4, borderRadius: 9999, background: '#e5e2dc', margin: '0 auto 16px' }} />
+            <div style={{ fontSize: 17, fontWeight: 800, color: '#1a1916', marginBottom: 16 }}>Add product</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <input placeholder="Product name *" value={addForm.name} onChange={e => setAddForm(p => ({ ...p, name: e.target.value }))} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <input placeholder="Sale price *" type="number" value={addForm.sale_price} onChange={e => setAddForm(p => ({ ...p, sale_price: e.target.value }))} style={inputStyle} />
+                <input placeholder="Cost price" type="number" value={addForm.cost_price} onChange={e => setAddForm(p => ({ ...p, cost_price: e.target.value }))} style={inputStyle} />
+                <input placeholder="Starting qty" type="number" value={addForm.stock_qty} onChange={e => setAddForm(p => ({ ...p, stock_qty: e.target.value }))} style={inputStyle} />
+                <input placeholder="Low stock at" type="number" value={addForm.low_stock_threshold} onChange={e => setAddForm(p => ({ ...p, low_stock_threshold: e.target.value }))} style={inputStyle} />
+                <input placeholder="Brand" value={addForm.brand} onChange={e => setAddForm(p => ({ ...p, brand: e.target.value }))} style={inputStyle} />
+                <input placeholder="Supplier" value={addForm.supplier} onChange={e => setAddForm(p => ({ ...p, supplier: e.target.value }))} style={inputStyle} />
+                <input placeholder="Category" value={addForm.category} onChange={e => setAddForm(p => ({ ...p, category: e.target.value }))} style={inputStyle} />
+                <input placeholder="SKU / Barcode" value={addForm.sku} onChange={e => setAddForm(p => ({ ...p, sku: e.target.value }))} style={inputStyle} />
+                <input placeholder="Batch / lot no." value={addForm.batch_number} onChange={e => setAddForm(p => ({ ...p, batch_number: e.target.value }))} style={inputStyle} />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: '#6b6760', fontWeight: 600, display: 'block', marginBottom: 4 }}>Expiry date</label>
+                <input type="date" value={addForm.expiry_date} onChange={e => setAddForm(p => ({ ...p, expiry_date: e.target.value }))} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
+              </div>
+              <select value={addForm.unit} onChange={e => setAddForm(p => ({ ...p, unit: e.target.value }))} style={{ ...inputStyle, width: '100%' }}>
+                <option value="item">item</option>
+                <option value="kg">kg</option>
+                <option value="litre">litre</option>
+                <option value="pack">pack</option>
+                <option value="box">box</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+              <button onClick={saveNewProduct} disabled={!addForm.name || !addForm.sale_price || savingNew}
+                style={{ ...btnPrimary, flex: 1, opacity: !addForm.name || !addForm.sale_price || savingNew ? 0.5 : 1 }}>
+                {savingNew ? 'Saving...' : 'Add to inventory'}
+              </button>
+              <button onClick={() => setShowAddForm(false)} style={btnSecondary}>Cancel</button>
+            </div>
           </div>
         </div>
       )}
@@ -325,9 +605,14 @@ export default function InventoryPage() {
       </div>
 
       {/* Filter tabs */}
-      <div style={{ display: 'flex', gap: 8, padding: '12px 20px' }}>
-        {([['all', `All (${items.length})`], ['low', `Low (${lowCount})`], ['out', `Out (${outCount})`]] as [typeof filter, string][]).map(([f, label]) => (
-          <button key={f} onClick={() => setFilter(f)} style={{ padding: '7px 14px', borderRadius: 9999, fontSize: 12, fontWeight: 600, cursor: 'pointer', background: filter === f ? ACC : '#fff', color: filter === f ? '#fff' : '#6b6760', border: filter === f ? 'none' : '1px solid #e5e2dc' } as React.CSSProperties}>
+      <div style={{ display: 'flex', gap: 8, padding: '12px 20px', flexWrap: 'wrap' }}>
+        {([
+          ['all', `All (${items.length})`, ACC],
+          ['low', `Low (${lowCount})`, '#ca8a04'],
+          ['out', `Out (${outCount})`, '#dc2626'],
+          ['expiring', `Expiring (${expiredCount + expiringCount})`, '#f97316'],
+        ] as [typeof filter, string, string][]).map(([f, label, color]) => (
+          <button key={f} onClick={() => setFilter(f)} style={{ padding: '7px 14px', borderRadius: 9999, fontSize: 12, fontWeight: 600, cursor: 'pointer', background: filter === f ? color : '#fff', color: filter === f ? '#fff' : '#6b6760', border: filter === f ? 'none' : '1px solid #e5e2dc' } as React.CSSProperties}>
             {label}
           </button>
         ))}
@@ -346,13 +631,24 @@ export default function InventoryPage() {
             const status = isOut ? { label: 'Out', color: '#dc2626', bg: 'rgba(220,38,38,.08)' }
                          : isLow ? { label: 'Low', color: '#ca8a04', bg: 'rgba(234,179,8,.08)' }
                          :          { label: 'OK',  color: '#16a34a', bg: 'rgba(22,163,74,.08)' }
+            const daysToExpiry = item.expiry_date ? Math.floor((new Date(item.expiry_date).getTime() - todayMs) / 86400000) : null
+            const isExpired = daysToExpiry !== null && daysToExpiry < 0
+            const isExpiringSoon = daysToExpiry !== null && daysToExpiry >= 0 && daysToExpiry <= 30
 
             return (
-              <div key={item.id} style={{ background: '#fff', borderRadius: 14, border: '1px solid #e5e2dc', marginBottom: 10, overflow: 'hidden' }}>
+              <div key={item.id} style={{ background: isExpired ? 'rgba(220,38,38,.04)' : '#fff', borderRadius: 14, border: `1px solid ${isExpired ? '#fca5a5' : '#e5e2dc'}`, marginBottom: 10, overflow: 'hidden' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#1a1916', marginBottom: 2 }}>{item.name}</div>
-                    <div style={{ fontSize: 12, color: '#6b6760' }}>{sym}{item.sale_price.toFixed(2)} · {item.stock_qty}{item.unit === 'kg' ? ' kg' : ''} in stock</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#1a1916', marginBottom: 2 }}>
+                      {item.name}
+                      {isExpired && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: '#dc2626', background: 'rgba(220,38,38,.1)', padding: '2px 7px', borderRadius: 9999 }}>EXPIRED</span>}
+                      {isExpiringSoon && !isExpired && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: '#f97316', background: 'rgba(249,115,22,.1)', padding: '2px 7px', borderRadius: 9999 }}>EXP {daysToExpiry === 0 ? 'TODAY' : `${daysToExpiry}d`}</span>}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#6b6760' }}>
+                      {sym}{item.sale_price.toFixed(2)} · {item.stock_qty}{item.unit === 'kg' ? ' kg' : ''} in stock
+                      {item.expiry_date && <span style={{ marginLeft: 6, color: isExpired ? '#dc2626' : isExpiringSoon ? '#f97316' : '#a39e97' }}>· Exp {new Date(item.expiry_date).toLocaleDateString('en-GB')}</span>}
+                    </div>
+                    {(item.brand || item.supplier) && <div style={{ fontSize: 11, color: '#a39e97', marginTop: 1 }}>{[item.brand, item.supplier].filter(Boolean).join(' · ')}</div>}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: status.color, background: status.bg, padding: '3px 9px', borderRadius: 9999 }}>{status.label}</span>

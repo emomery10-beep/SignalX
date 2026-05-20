@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
   // fix #15 — validate each item
   for (const item of items) {
     if (!item.name?.trim())                      return NextResponse.json({ error: 'Item name required' }, { status: 400 })
-    if (typeof item.qty !== 'number' || item.qty <= 0 || !Number.isInteger(item.qty))
+    if (typeof item.qty !== 'number' || item.qty <= 0 || isNaN(item.qty))
                                                  return NextResponse.json({ error: `Invalid qty for "${item.name}"` }, { status: 400 })
     if (typeof item.unit_price !== 'number' || item.unit_price < 0)
                                                  return NextResponse.json({ error: `Invalid price for "${item.name}"` }, { status: 400 })

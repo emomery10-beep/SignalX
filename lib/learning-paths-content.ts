@@ -1,5 +1,6 @@
 // lib/learning-paths-content.ts
-// All AskBiz Academy Learning Paths — 106 tracks
+// All AskBiz Academy Learning Paths — 106+ tracks (+ BI Market Paths)
+import { BI_MARKET_LEARNING_PATHS } from './bi-learning-paths'
 
 export interface LearningPath {
   id: string
@@ -2220,14 +2221,21 @@ export const LEARNING_PATHS: LearningPath[] = [
   },
 ]
 
+// ── BI Market Learning Paths (Kenya · Nigeria · UK · EU · Grassroots) ────────
+// Appended separately to keep the main array readable
+export const ALL_LEARNING_PATHS: LearningPath[] = [
+  ...LEARNING_PATHS,
+  ...BI_MARKET_LEARNING_PATHS,
+]
+
 // ── Helper functions ────────────────────────────────────────────────────────
 export function getPath(id: string): LearningPath | undefined {
-  return LEARNING_PATHS.find(p => p.id === id)
+  return ALL_LEARNING_PATHS.find(p => p.id === id)
 }
 
 export function getPathsByLevel(level: string): LearningPath[] {
-  return LEARNING_PATHS.filter(p => p.level === level)
+  return ALL_LEARNING_PATHS.filter(p => p.level === level)
 }
 
-export const totalArticles = LEARNING_PATHS.reduce((s, p) => s + p.articles.length, 0)
+export const totalArticles = ALL_LEARNING_PATHS.reduce((s, p) => s + p.articles.length, 0)
 

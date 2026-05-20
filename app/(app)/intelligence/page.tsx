@@ -174,6 +174,9 @@ export default function IntelligencePage() {
     'Hire or use freelancers?',
   ]
 
+  // Sparkline data from score history
+  const scoreSparkline = scoreHistoryItems.map(h => Number(h.score) || 0)
+
   // KPI strip cards
   const kpiCards = [
     {
@@ -186,6 +189,7 @@ export default function IntelligencePage() {
         ? (health.score >= 65 ? '#22C55E' : health.score >= 45 ? '#F59E0B' : '#EF4444')
         : undefined,
       onClick: undefined,
+      sparkline: scoreSparkline.length > 1 ? scoreSparkline : undefined,
     },
     {
       label: 'Active Alerts',
@@ -201,11 +205,12 @@ export default function IntelligencePage() {
       trend: scoreDelta > 0 ? 'up' as const : scoreDelta < 0 ? 'down' as const : 'flat' as const,
       trendLabel: undefined,
       accentColor: scoreDelta > 0 ? '#22C55E' : scoreDelta < 0 ? '#EF4444' : undefined,
+      sparkline: scoreSparkline.length > 1 ? scoreSparkline : undefined,
     },
     {
       label: 'Data Sources',
       value: connectedCount || '—',
-      sub: connectedCount === 0 ? 'None connected yet' : `of 31 sources live`,
+      sub: connectedCount === 0 ? 'None connected yet' : `${connectedCount} of 31 sources live`,
       accentColor: connectedCount > 0 ? '#6366F1' : undefined,
       onClick: () => setTab('connections'),
     },
@@ -282,70 +287,162 @@ export default function IntelligencePage() {
 
         {/* ─── OVERVIEW ─── */}
         {tab === 'overview' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 720 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 760 }}>
 
-            {/* KPI strip */}
+            {/* ── Greeting (lightweight, not a card) ── */}
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--tx)', fontFamily: 'var(--font-sora, inherit)', lineHeight: 1.3 }}>
+                  {new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening'}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>
+                  {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                </div>
+              </div>
+            </div>
+
+            {/* ── Hero KPI section ── */}
             <KpiStrip cards={kpiCards} />
 
-            {/* Daily brief */}
+            {/* ── Daily brief ── */}
             <DailyBrief onAsk={askAskBiz}/>
 
-            {/* Health score */}
-            {loadingHealth ? (
-              <div style={{ height: 120, borderRadius: 16, background: 'var(--ev)', animation: 'shimmer 1.4s infinite' }}/>
-            ) : (
-              <BusinessHealthScore health={health} size="lg" showComponents onAsk={askAskBiz}/>
-            )}
-
-            {/* Charts row: trend + waterfall side by side */}
-            {scoreHistoryItems.length > 1 && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <MiniTrendChart history={scoreHistoryItems} label="30-Day Trend" height={52}/>
-                <RevenueWaterfall health={health} onAsk={askAskBiz}/>
+            {/* ── Analytics section ── */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Analytics</span>
+                </div>
+                <span style={{ fontSize: 11, color: 'var(--tx3)' }}>Last 30 days</span>
               </div>
-            )}
-            {scoreHistoryItems.length <= 1 && (
-              <RevenueWaterfall health={health} onAsk={askAskBiz}/>
-            )}
+              {scoreHistoryItems.length > 1 && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <MiniTrendChart history={scoreHistoryItems} label="Health Trend" height={64}/>
+                  <RevenueWaterfall health={health} onAsk={askAskBiz}/>
+                </div>
+              )}
+              {scoreHistoryItems.length <= 1 && (
+                <RevenueWaterfall health={health} onAsk={askAskBiz}/>
+              )}
+            </div>
 
-            {/* Active alerts preview */}
+            {/* ── Active alerts preview ── */}
             {anomalies.length > 0 && (
-              <div style={{ padding: '14px 16px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)' }}>
+              <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--sf) 0%, rgba(239,68,68,.02) 100%)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Active Alerts</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 3, height: 14, borderRadius: 2, background: '#EF4444' }} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Active Alerts</span>
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, color: '#EF4444',
+                      background: 'rgba(239,68,68,.1)', borderRadius: 6, padding: '1px 6px',
+                    }}>{anomalies.length}</span>
+                  </div>
                   <button
                     onClick={() => setTab('anomalies')}
-                    style={{ fontSize: 11, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+                    style={{ fontSize: 11, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
                   >
-                    View all ({anomalies.length})
+                    View all &rarr;
                   </button>
                 </div>
                 <AnomalyFeed anomalies={anomalies.slice(0, 3)} onAsk={askAskBiz} compact/>
               </div>
             )}
 
-            {/* Quick action cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 10 }}>
-              {[
-                { emoji: '📊', title: 'Ask about your data', sub: 'Plain English questions', action: () => askAskBiz('What is my best performing product by margin right now?') },
-                { emoji: '⚡', title: 'What if...?', sub: 'Scenario planning', action: () => setTab('sparring') },
-                { emoji: '📝', title: 'Log a decision', sub: 'AskBiz checks back in 6 weeks', action: () => setTab('decisions') },
-                { emoji: '🔗', title: 'Connections', sub: `${connectedCount} sources live`, action: () => setTab('connections') },
-                { emoji: '👥', title: 'Your team', sub: 'Role-based access', action: () => setTab('team') },
-                { emoji: '🧠', title: 'What I Know', sub: 'Facts AskBiz has learned', action: () => setTab('memory') },
-              ].map((card, i) => (
-                <button
-                  key={i}
-                  onClick={card.action}
-                  style={{ padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', transition: 'box-shadow 150ms' }}
-                  onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)' }}
-                  onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none' }}
-                >
-                  <div style={{ fontSize: 20, marginBottom: 6 }}>{card.emoji}</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 3 }}>{card.title}</div>
-                  <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{card.sub}</div>
-                </button>
-              ))}
+            {/* ── Command palette: quick actions ── */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <div style={{ width: 3, height: 14, borderRadius: 2, background: '#8B5CF6' }} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Quick Actions</span>
+              </div>
+
+              {/* Top row: primary actions (larger) */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+                {[
+                  {
+                    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+                    title: 'Ask about your data',
+                    sub: 'Ask any question in plain English',
+                    gradient: 'linear-gradient(135deg, rgba(99,102,241,.08) 0%, rgba(99,102,241,.02) 100%)',
+                    border: 'rgba(99,102,241,.18)',
+                    action: () => askAskBiz('What is my best performing product by margin right now?'),
+                  },
+                  {
+                    icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+                    title: 'What if...?',
+                    sub: 'Run scenario simulations with AI',
+                    gradient: 'linear-gradient(135deg, rgba(245,158,11,.08) 0%, rgba(245,158,11,.02) 100%)',
+                    border: 'rgba(245,158,11,.18)',
+                    action: () => setTab('sparring'),
+                  },
+                ].map((card, i) => (
+                  <button
+                    key={i}
+                    onClick={card.action}
+                    style={{
+                      padding: '18px 16px',
+                      borderRadius: 14,
+                      border: `1px solid ${card.border}`,
+                      background: card.gradient,
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      transition: 'box-shadow 200ms, transform 200ms',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 14,
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+                    onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}
+                  >
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 10,
+                      background: 'var(--sf)',
+                      border: `1px solid ${card.border}`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0,
+                    }}>
+                      {card.icon}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', marginBottom: 3 }}>{card.title}</div>
+                      <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4 }}>{card.sub}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Bottom row: secondary actions (compact grid) */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+                {[
+                  { emoji: '📝', title: 'Decisions', sub: 'Log & track', color: 'rgba(34,197,94,.06)', border: 'rgba(34,197,94,.15)', action: () => setTab('decisions') },
+                  { emoji: '🔗', title: 'Connect', sub: `${connectedCount} sources`, color: 'rgba(139,92,246,.06)', border: 'rgba(139,92,246,.15)', action: () => setTab('connections') },
+                  { emoji: '👥', title: 'Team', sub: 'Roles & access', color: 'rgba(236,72,153,.05)', border: 'rgba(236,72,153,.15)', action: () => setTab('team') },
+                  { emoji: '🧠', title: 'Memory', sub: 'Learned facts', color: 'rgba(6,182,212,.06)', border: 'rgba(6,182,212,.15)', action: () => setTab('memory') },
+                ].map((card, i) => (
+                  <button
+                    key={i}
+                    onClick={card.action}
+                    style={{
+                      padding: '14px 12px',
+                      borderRadius: 12,
+                      border: `1px solid ${card.border}`,
+                      background: card.color,
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      fontFamily: 'inherit',
+                      transition: 'box-shadow 200ms, transform 200ms',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.07)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+                    onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}
+                  >
+                    <div style={{ fontSize: 20, marginBottom: 6 }}>{card.emoji}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 2 }}>{card.title}</div>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{card.sub}</div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}

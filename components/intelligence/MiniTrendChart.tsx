@@ -25,7 +25,7 @@ function formatDate(h: HistoryPoint) {
   return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
-export default function MiniTrendChart({ history, label = '30-Day Trend', height = 48 }: MiniTrendChartProps) {
+export default function MiniTrendChart({ history, label = '30-Day Trend', height = 64 }: MiniTrendChartProps) {
   const [expanded, setExpanded] = useState(false)
   const [hovered, setHovered] = useState<number | null>(null)
 
@@ -48,53 +48,72 @@ export default function MiniTrendChart({ history, label = '30-Day Trend', height
       <div
         onClick={() => setExpanded(true)}
         style={{
-          padding: '14px 16px',
-          borderRadius: 14,
+          padding: '16px 18px',
+          borderRadius: 16,
           border: '1px solid var(--b)',
-          background: 'var(--sf)',
+          background: 'linear-gradient(180deg, var(--sf) 0%, rgba(99,102,241,.02) 100%)',
           cursor: 'pointer',
-          transition: 'box-shadow 150ms, border-color 150ms',
+          transition: 'box-shadow 200ms, border-color 200ms, transform 200ms',
           userSelect: 'none',
         }}
-        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.07)'; e.currentTarget.style.borderColor = '#6366F130' }}
-        onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--b)' }}
+        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.borderColor = '#6366F130'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+        onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.transform = 'none' }}
         title="Click to expand"
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
-            {label}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 12 }}>📉</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
+              {label}
+            </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: deltaColor }}>{deltaLabel} vs 30 days ago</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round">
+            <span style={{
+              fontSize: 11, fontWeight: 600, color: deltaColor,
+              background: delta >= 0 ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.1)',
+              borderRadius: 6, padding: '2px 7px',
+            }}>
+              {delta >= 0 ? '↑' : '↓'} {deltaLabel}
+            </span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round" style={{ opacity: 0.5 }}>
               <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
               <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
             </svg>
           </div>
         </div>
-        {/* Bar chart */}
+
+        {/* Current score callout */}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 10 }}>
+          <span style={{ fontSize: 22, fontWeight: 800, color: barColor(lastScore), fontFamily: 'var(--font-sora, inherit)' }}>{lastScore}</span>
+          <span style={{ fontSize: 11, color: 'var(--tx3)' }}>/100 today</span>
+        </div>
+
+        {/* Bar chart with gradient fills */}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height }} aria-hidden>
           {items.map((h, i) => {
             const sc = Number(h.score) || 0
             const pct = (sc - minScore) / range
             const ht = Math.max(4, pct * (height - 4) + 4)
+            const bc = barColor(sc)
+            const isLast = i === items.length - 1
             return (
               <div
                 key={i}
                 style={{
                   flex: 1,
                   height: ht,
-                  background: barColor(sc),
-                  borderRadius: '2px 2px 0 0',
-                  opacity: 0.8,
+                  background: `linear-gradient(180deg, ${bc} 0%, ${bc}88 100%)`,
+                  borderRadius: '3px 3px 0 0',
+                  opacity: isLast ? 1 : 0.7,
                   minWidth: 3,
                   transition: 'opacity 150ms',
+                  boxShadow: isLast ? `0 0 6px ${bc}40` : 'none',
                 }}
               />
             )
           })}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 10, color: 'var(--tx3)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 10, color: 'var(--tx3)' }}>
           <span>30 days ago</span><span>Today</span>
         </div>
       </div>

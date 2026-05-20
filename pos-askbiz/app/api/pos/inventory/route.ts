@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       sku:                 sku?.trim() || null,
       cost_price:          Number(cost_price) || 0,
       sale_price:          Number(sale_price) || 0,
-      stock_qty:           Math.max(0, parseInt(stock_qty) || 0),
+      stock_qty:           Math.max(0, parseFloat(stock_qty) || 0),
       low_stock_threshold: Math.max(1, parseInt(low_stock_threshold) || 5),
       unit:                unit || 'item',
       sector:              sector || null,
@@ -97,7 +97,7 @@ export async function PUT(req: NextRequest) {
     name:                (i.name || '').trim(),
     sale_price:          Number(i.sale_price) || 0,
     cost_price:          0,
-    stock_qty:           Math.max(0, parseInt(String(i.stock_qty)) || 0),
+    stock_qty:           Math.max(0, parseFloat(String(i.stock_qty)) || 0),
     low_stock_threshold: 5,
     unit:                i.unit || 'item',
   })).filter(r => r.name)
@@ -125,8 +125,8 @@ export async function PATCH(req: NextRequest) {
   // Restock — fix #24: coerce to number; fix #4: atomic increment via DB
   if (restock_qty !== undefined) {
     const qty = Number(restock_qty)
-    if (!Number.isInteger(qty) || qty <= 0) {
-      return NextResponse.json({ error: 'restock_qty must be a positive integer' }, { status: 400 })
+    if (isNaN(qty) || qty <= 0) {
+      return NextResponse.json({ error: 'restock_qty must be a positive number' }, { status: 400 })
     }
 
     // Atomic increment — avoids race condition from separate SELECT + UPDATE

@@ -89,20 +89,25 @@ export default function RevenueWaterfall({ health, onAsk }: RevenueWaterfallProp
     )
   }
 
+  const netMargin = bars.find(b => b.label === 'Net Margin')
+  const netMarginVal = netMargin ? netMargin.value.toFixed(0) : '—'
+
   const MiniWaterfall = ({ barH }: { barH: number }) => (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: barH }}>
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: barH }}>
       {bars.map((bar, i) => {
-        const w = Math.max(8, (Math.abs(bar.value) / maxAbs) * barH * 1.2)
+        const w = Math.max(10, (Math.abs(bar.value) / maxAbs) * barH * 1.2)
+        const c = COLORS[bar.type]
         return (
           <div
             key={i}
             style={{
               width: w,
               height: Math.max(4, (Math.abs(bar.value) / maxAbs) * barH),
-              background: COLORS[bar.type],
-              borderRadius: '3px 3px 0 0',
-              opacity: 0.8,
-              minWidth: 8,
+              background: `linear-gradient(180deg, ${c} 0%, ${c}88 100%)`,
+              borderRadius: '4px 4px 0 0',
+              opacity: bar.type === 'total' ? 1 : 0.75,
+              minWidth: 10,
+              boxShadow: bar.type === 'total' ? `0 0 8px ${c}30` : 'none',
             }}
           />
         )
@@ -116,34 +121,44 @@ export default function RevenueWaterfall({ health, onAsk }: RevenueWaterfallProp
       <div
         onClick={() => setExpanded(true)}
         style={{
-          padding: '14px 16px',
-          borderRadius: 14,
+          padding: '16px 18px',
+          borderRadius: 16,
           border: '1px solid var(--b)',
-          background: 'var(--sf)',
+          background: 'linear-gradient(180deg, var(--sf) 0%, rgba(99,102,241,.02) 100%)',
           cursor: 'pointer',
-          transition: 'box-shadow 150ms, border-color 150ms',
+          transition: 'box-shadow 200ms, border-color 200ms, transform 200ms',
         }}
-        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.07)'; e.currentTarget.style.borderColor = '#6366F130' }}
-        onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--b)' }}
+        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.borderColor = '#6366F130'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+        onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.transform = 'none' }}
         title="Click to expand"
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Revenue & Margin</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 12 }}>💰</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Revenue & Margin</span>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <div style={{ display: 'flex', gap: 8 }}>
               {[['#22C55E', 'Revenue'], ['#EF4444', 'Costs'], ['#6366F1', 'Margin']].map(([c, l]) => (
                 <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--tx3)' }}>
-                  <div style={{ width: 8, height: 8, borderRadius: 2, background: c }} />{l}
+                  <div style={{ width: 7, height: 7, borderRadius: 2, background: c }} />{l}
                 </div>
               ))}
             </div>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round" style={{ opacity: 0.5 }}>
               <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
               <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
             </svg>
           </div>
         </div>
-        <MiniWaterfall barH={52} />
+
+        {/* Net margin callout */}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 10 }}>
+          <span style={{ fontSize: 22, fontWeight: 800, color: '#6366F1', fontFamily: 'var(--font-sora, inherit)' }}>{netMarginVal}%</span>
+          <span style={{ fontSize: 11, color: 'var(--tx3)' }}>net margin</span>
+        </div>
+
+        <MiniWaterfall barH={64} />
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 10, color: 'var(--tx3)' }}>
           <span>Revenue</span><span>Net Margin</span>
         </div>

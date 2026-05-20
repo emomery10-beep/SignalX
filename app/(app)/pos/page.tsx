@@ -67,7 +67,8 @@ interface Transaction {
   pos_customers?: { phone: string; name?: string } | null
 }
 interface InventoryItem {
-  id: string; name: string; sku?: string; sale_price: number; cost_price: number; stock_qty: number; low_stock_threshold: number; unit?: string; last_sold_at: string | null; category?: string; sector?: string | null; active: boolean; location_id?: string; location?: { id: string; name: string } | null
+  id: string; name: string; sku?: string; sale_price: number; cost_price: number; stock_qty: number; low_stock_threshold: number; unit?: string; last_sold_at: string | null; category?: string; sector?: string | null; active: boolean; location_id?: string; location?: { id: string; name: string } | null;
+  expiry_date?: string | null; batch_number?: string | null; supplier?: string | null; brand?: string | null;
 }
 interface Location {
   id: string; name: string; address?: string; phone?: string; is_active: boolean
@@ -136,14 +137,15 @@ export default function POSPage() {
 
   // Inventory
   const [showAddProduct, setShowAddProduct] = useState(false)
-  const [newProduct, setNewProduct] = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '', sector: '' })
+  const [newProduct, setNewProduct] = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '', sector: '', expiry_date: '', batch_number: '', supplier: '', brand: '' })
   const [addingProduct, setAddingProduct] = useState(false)
   const [invSearch, setInvSearch] = useState('')
   const [invCategory, setInvCategory] = useState('all')
   const [invSector, setInvSector] = useState('all')
+  const [invStockFilter, setInvStockFilter] = useState<'all' | 'low' | 'out' | 'expiring'>('all')
   const [bulkTagging, setBulkTagging] = useState(false)
   const [editingProduct, setEditingProduct] = useState<InventoryItem | null>(null)
-  const [editProduct, setEditProduct] = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '', category: '', sector: '' })
+  const [editProduct, setEditProduct] = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '', category: '', sector: '', expiry_date: '', batch_number: '', supplier: '', brand: '' })
   const [editingProductSubmitting, setEditingProductSubmitting] = useState(false)
   const [restockId, setRestockId] = useState<string | null>(null)
   const [restockQty, setRestockQty] = useState('')
@@ -157,7 +159,7 @@ export default function POSPage() {
   const mapRef         = useRef<any>(null)
   const mapMarkersRef  = useRef<any[]>([])
 
-  // Camera
+  // Camera (existing — recognize for sell)
   const [recognizing, setRecognizing] = useState(false)
   const [recognizedProducts, setRecognizedProducts] = useState<any[]>([])
   const [editingRecognizedIndex, setEditingRecognizedIndex] = useState<number | null>(null)
@@ -169,6 +171,21 @@ export default function POSPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+
+  // Dual-photo product scan (add product)
+  const [showScanModal, setShowScanModal] = useState(false)
+  const [scanFront, setScanFront] = useState<string | null>(null)   // base64
+  const [scanBack, setScanBack]   = useState<string | null>(null)   // base64
+  const [scanFrontThumb, setScanFrontThumb] = useState<string | null>(null)
+  const [scanBackThumb, setScanBackThumb]   = useState<string | null>(null)
+  const [scanning, setScanning]   = useState(false)
+  const [scanStep, setScanStep]   = useState<'front' | 'back' | null>(null)  // which slot is being captured
+  const scanFrontRef = useRef<HTMLInputElement>(null)
+  const scanBackRef  = useRef<HTMLInputElement>(null)
+  const scanVideoRef  = useRef<HTMLVideoElement>(null)
+  const scanCanvasRef = useRef<HTMLCanvasElement>(null)
+  const scanStreamRef = useRef<MediaStream | null>(null)
+  const [scanCameraOpen, setScanCameraOpen] = useState(false)
 
   // Pagination
   const [txPage, setTxPage] = useState(0)
@@ -346,8 +363,9 @@ export default function POSPage() {
     [transactions, selectedSector, cashierSectorMap])
   const refundCount = refundedTx.length
   const prevRefunds = prevTransactions.filter(t => (t.status === 'refunded' || t.status === 'partially_refunded') && (selectedSector === 'all' || (t.cashier?.id ? cashierSectorMap[t.cashier.id] === selectedSector : selectedSector === 'retail'))).length
-  const lowStock = inventory.filter(i => i.stock_qty <= i.low_stock_threshold && i.stock_qty > 0)
-  const outOfStock = inventory.filter(i => i.stock_qty === 0)
+  const sectorFilteredInventory = selectedSector === 'all' ? inventory : inventory.filter(i => !i.sector || i.sector === selectedSector)
+  const lowStock = sectorFilteredInventory.filter(i => i.stock_qty <= i.low_stock_threshold && i.stock_qty > 0)
+  const outOfStock = sectorFilteredInventory.filter(i => i.stock_qty === 0)
   const alertCount = lowStock.length + outOfStock.length
 
   // Profit calc
@@ -430,12 +448,20 @@ export default function POSPage() {
 
   // Filtered inventory
   const filteredInventory = useMemo(() => {
+    const todayMs = new Date().setHours(0,0,0,0)
     let items = inventory
     if (invSearch) items = items.filter(i => i.name.toLowerCase().includes(invSearch.toLowerCase()) || (i.sku && i.sku.toLowerCase().includes(invSearch.toLowerCase())))
     if (invCategory !== 'all') items = items.filter(i => (i.category || 'Uncategorised') === invCategory)
     if (invSector !== 'all') items = items.filter(i => !i.sector || i.sector === invSector)
+    if (invStockFilter === 'low') items = items.filter(i => i.stock_qty > 0 && i.stock_qty <= i.low_stock_threshold)
+    if (invStockFilter === 'out') items = items.filter(i => i.stock_qty === 0)
+    if (invStockFilter === 'expiring') items = items.filter(i => {
+      if (!i.expiry_date) return false
+      const days = Math.floor((new Date(i.expiry_date).getTime() - todayMs) / 86400000)
+      return days <= 30
+    })
     return items
-  }, [inventory, invSearch, invCategory, invSector])
+  }, [inventory, invSearch, invCategory, invSector, invStockFilter])
 
   // P&L data
   const plData = useMemo(() => {
@@ -518,6 +544,10 @@ export default function POSPage() {
     if (showCameraPreview && videoRef.current && streamRef.current) { videoRef.current.srcObject = streamRef.current; videoRef.current.play().catch(() => {}) }
   }, [showCameraPreview])
 
+  useEffect(() => {
+    if (scanCameraOpen && scanVideoRef.current && scanStreamRef.current) { scanVideoRef.current.srcObject = scanStreamRef.current; scanVideoRef.current.play().catch(() => {}) }
+  }, [scanCameraOpen])
+
   const handleOpenCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
@@ -569,13 +599,106 @@ export default function POSPage() {
     setRecognizing(false)
   }
 
+  // ── Dual-photo scan helpers ──────────────────────────────────
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const r = new FileReader()
+      r.onload = () => resolve((r.result as string).split(',')[1])
+      r.onerror = reject
+      r.readAsDataURL(file)
+    })
+
+  const fileToThumb = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const r = new FileReader()
+      r.onload = () => resolve(r.result as string)
+      r.onerror = reject
+      r.readAsDataURL(file)
+    })
+
+  const handleScanFileSelected = async (file: File, slot: 'front' | 'back') => {
+    const [b64, thumb] = await Promise.all([fileToBase64(file), fileToThumb(file)])
+    if (slot === 'front') { setScanFront(b64); setScanFrontThumb(thumb) }
+    else                  { setScanBack(b64);  setScanBackThumb(thumb)  }
+  }
+
+  const openScanCamera = async (slot: 'front' | 'back') => {
+    setScanStep(slot)
+    setScanCameraOpen(true)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      scanStreamRef.current = stream
+      if (scanVideoRef.current) scanVideoRef.current.srcObject = stream
+    } catch { notify('Camera access denied', false); setScanCameraOpen(false) }
+  }
+
+  const closeScanCamera = () => {
+    if (scanStreamRef.current) { scanStreamRef.current.getTracks().forEach(t => t.stop()); scanStreamRef.current = null }
+    setScanCameraOpen(false)
+  }
+
+  const captureScanPhoto = () => {
+    if (!scanVideoRef.current || !scanCanvasRef.current || !scanStep) return
+    const ctx = scanCanvasRef.current.getContext('2d')!
+    scanCanvasRef.current.width  = scanVideoRef.current.videoWidth
+    scanCanvasRef.current.height = scanVideoRef.current.videoHeight
+    ctx.drawImage(scanVideoRef.current, 0, 0)
+    scanCanvasRef.current.toBlob(async blob => {
+      if (!blob) return
+      const file = new File([blob], 'scan.jpg', { type: 'image/jpeg' })
+      await handleScanFileSelected(file, scanStep)
+      closeScanCamera()
+    }, 'image/jpeg', 0.9)
+  }
+
+  const runFullScan = async () => {
+    if (!scanFront) return
+    setScanning(true)
+    try {
+      const body: any = { front: scanFront }
+      if (scanBack) body.back = scanBack
+      const res = await fetch('/api/pos/scan-product-full', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (!data.product) { notify(data.error || 'Could not read product', false); setScanning(false); return }
+
+      const p = data.product
+      // Auto-fill the add-product form and open it
+      setNewProduct({
+        name:                p.name        || '',
+        sale_price:          p.sale_price != null ? String(p.sale_price) : '',
+        cost_price:          '',
+        stock_qty:           '',
+        low_stock_threshold: '5',
+        category:            p.category    || '',
+        sku:                 p.sku         || '',
+        sector:              '',
+        expiry_date:         p.expiry_date || '',
+        batch_number:        p.batch_number || '',
+        supplier:            p.supplier    || '',
+        brand:               p.brand       || '',
+      })
+      setShowAddProduct(true)
+      setShowScanModal(false)
+      // Reset scan state
+      setScanFront(null); setScanBack(null)
+      setScanFrontThumb(null); setScanBackThumb(null)
+      notify(`Scanned: ${p.name || 'product'} — review and save`)
+    } catch { notify('Scan failed', false) }
+    setScanning(false)
+  }
+  // ────────────────────────────────────────────────────────────
+
   const handleAddProduct = async () => {
     if (!newProduct.name || !newProduct.sale_price) return
     setAddingProduct(true)
     try {
-      const res = await fetch('/api/pos/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newProduct.name, sale_price: parseFloat(newProduct.sale_price), cost_price: parseFloat(newProduct.cost_price || '0'), stock_qty: parseInt(newProduct.stock_qty || '0'), low_stock_threshold: parseInt(newProduct.low_stock_threshold || '5'), category: newProduct.category, sku: newProduct.sku, sector: newProduct.sector || null }) })
+      const res = await fetch('/api/pos/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newProduct.name, sale_price: parseFloat(newProduct.sale_price), cost_price: parseFloat(newProduct.cost_price || '0'), stock_qty: parseInt(newProduct.stock_qty || '0'), low_stock_threshold: parseInt(newProduct.low_stock_threshold || '5'), category: newProduct.category, sku: newProduct.sku, sector: newProduct.sector || null, expiry_date: newProduct.expiry_date || null, batch_number: newProduct.batch_number || null, supplier: newProduct.supplier || null, brand: newProduct.brand || null }) })
       const data = await res.json()
-      if (data.product) { setInventory(prev => [...prev, data.product]); setNewProduct({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '', sector: '' }); setShowAddProduct(false); notify(`${data.product.name} added`) }
+      if (data.product) { setInventory(prev => [...prev, data.product]); setNewProduct({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '', sector: '', expiry_date: '', batch_number: '', supplier: '', brand: '' }); setShowAddProduct(false); notify(`${data.product.name} added`) }
     } catch { notify('Failed to add product', false) }
     setAddingProduct(false)
   }
@@ -591,6 +714,11 @@ export default function POSPage() {
       if (editProduct.stock_qty) updates.stock_qty = parseInt(editProduct.stock_qty)
       if (editProduct.low_stock_threshold) updates.low_stock_threshold = parseInt(editProduct.low_stock_threshold)
       updates.sector = editProduct.sector || null
+      updates.expiry_date = editProduct.expiry_date || null
+      updates.batch_number = editProduct.batch_number || null
+      updates.supplier = editProduct.supplier || null
+      updates.brand = editProduct.brand || null
+      updates.category = editProduct.category || null
       const res = await fetch('/api/pos/inventory', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingProduct.id, ...updates }) })
       const data = await res.json()
       if (data.product) { setInventory(prev => prev.map(i => i.id === editingProduct.id ? data.product : i)); setEditingProduct(null); notify('Product updated') }
@@ -654,12 +782,13 @@ export default function POSPage() {
   const modalBox: React.CSSProperties = { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 101, background: 'var(--sf)', borderRadius: 20, padding: 28, width: '90%', maxWidth: 520, boxShadow: '0 20px 60px rgba(0,0,0,.2)', maxHeight: '85vh', overflowY: 'auto' }
 
   // ── Comparison badge ───────────────────────────────────
-  const CompBadge = ({ curr, prev }: { curr: number; prev: number }) => {
+  const CompBadge = ({ curr, prev, inverse }: { curr: number; prev: number; inverse?: boolean }) => {
     const pct = pctChange(curr, prev)
     if (pct === 0 && prev === 0 && curr === 0) return null
     const up = pct >= 0
+    const good = inverse ? !up : up
     return (
-      <span style={{ fontSize: 11, fontWeight: 600, color: up ? GREEN : RED, display: 'inline-flex', alignItems: 'center', gap: 2, marginTop: 4 }}>
+      <span style={{ fontSize: 11, fontWeight: 600, color: good ? GREEN : RED, display: 'inline-flex', alignItems: 'center', gap: 2, marginTop: 4 }}>
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" style={{ transform: up ? 'none' : 'rotate(180deg)' }}><path d="M12 19V5M5 12l7-7 7 7"/></svg>
         {Math.abs(pct).toFixed(0)}% vs prev
       </span>
@@ -940,10 +1069,10 @@ export default function POSPage() {
             {/* KPI row */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
               {[
-                { label: 'Revenue', value: `${fmt(currencySymbol, todayRevenue)}`, color: GREEN, prev: prevRevenue, curr: todayRevenue, type: 'sales' as const },
-                { label: 'Sales', value: todaySales.toString(), color: ACC, prev: prevSales, curr: todaySales, type: 'sales' as const },
-                { label: 'Refunds', value: refundCount.toString(), color: refundCount > 0 ? RED : 'var(--tx)', prev: prevRefunds, curr: refundCount, type: 'refunds' as const },
-                { label: 'Low stock', value: alertCount.toString(), color: alertCount > 0 ? RED : GREEN, prev: 0, curr: alertCount, type: 'low_stock' as const },
+                { label: 'Revenue', value: `${fmt(currencySymbol, todayRevenue)}`, color: GREEN, prev: prevRevenue, curr: todayRevenue, type: 'sales' as const, inverse: false },
+                { label: 'Sales', value: todaySales.toString(), color: ACC, prev: prevSales, curr: todaySales, type: 'sales' as const, inverse: false },
+                { label: 'Refunds', value: refundCount.toString(), color: refundCount > 0 ? RED : 'var(--tx)', prev: prevRefunds, curr: refundCount, type: 'refunds' as const, inverse: true },
+                { label: 'Low stock', value: alertCount.toString(), color: alertCount > 0 ? RED : GREEN, prev: 0, curr: alertCount, type: 'low_stock' as const, inverse: true },
               ].map((kpi, i) => (
                 <div key={i} onClick={() => setFilterModal({ type: kpi.type, title: kpi.label })}
                   style={{ ...cardStyle, cursor: 'pointer', transition: 'all 200ms' }}
@@ -951,7 +1080,7 @@ export default function POSPage() {
                   onMouseLeave={e => { (e.currentTarget.style as any).borderColor = 'var(--b)'; e.currentTarget.style.transform = 'scale(1)' }}>
                   <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{kpi.label}</div>
                   <div style={{ fontSize: 26, fontWeight: 800, color: kpi.color, letterSpacing: '-.02em' }}>{kpi.value}</div>
-                  {kpi.type !== 'low_stock' && <CompBadge curr={kpi.curr} prev={kpi.prev} />}
+                  {kpi.type !== 'low_stock' && <CompBadge curr={kpi.curr} prev={kpi.prev} inverse={kpi.inverse} />}
                 </div>
               ))}
             </div>
@@ -1093,6 +1222,67 @@ export default function POSPage() {
               </div>
             )}
 
+            {/* Inventory intelligence — Retail only */}
+            {selectedSector === 'retail' && inventory.length > 0 && (() => {
+              const todayMs = new Date().setHours(0,0,0,0)
+              const stockValue = inventory.reduce((s, i) => s + (i.cost_price || 0) * i.stock_qty, 0)
+              const retailValue = inventory.reduce((s, i) => s + i.sale_price * i.stock_qty, 0)
+              const expiredItems = inventory.filter(i => i.expiry_date && new Date(i.expiry_date).getTime() < todayMs)
+              const expiringSoon = inventory.filter(i => {
+                if (!i.expiry_date) return false
+                const d = Math.floor((new Date(i.expiry_date).getTime() - todayMs) / 86400000)
+                return d >= 0 && d <= 30
+              })
+              const deadStock = inventory.filter(i => !i.last_sold_at || (new Date().getTime() - new Date(i.last_sold_at).getTime()) > 90 * 86400000)
+              return (
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ ...sectionLabel, marginBottom: 12 }}>Inventory intelligence</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 16 }}>
+                    <div style={{ ...cardStyle, padding: 16 }}>
+                      <div style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600, marginBottom: 4 }}>STOCK VALUE (COST)</div>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, stockValue)}</div>
+                    </div>
+                    <div style={{ ...cardStyle, padding: 16 }}>
+                      <div style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600, marginBottom: 4 }}>RETAIL VALUE</div>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>{fmt(currencySymbol, retailValue)}</div>
+                    </div>
+                    {expiredItems.length > 0 && (
+                      <div style={{ ...cardStyle, padding: 16, border: `1px solid ${RED}` }}>
+                        <div style={{ fontSize: 11, color: RED, fontWeight: 600, marginBottom: 4 }}>EXPIRED</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: RED }}>{expiredItems.length}</div>
+                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>item{expiredItems.length !== 1 ? 's' : ''} need removing</div>
+                      </div>
+                    )}
+                    {expiringSoon.length > 0 && (
+                      <div style={{ ...cardStyle, padding: 16, border: `1px solid ${AMBER}` }}>
+                        <div style={{ fontSize: 11, color: AMBER, fontWeight: 600, marginBottom: 4 }}>EXPIRING SOON</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: AMBER }}>{expiringSoon.length}</div>
+                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>within 30 days</div>
+                      </div>
+                    )}
+                    {deadStock.length > 0 && (
+                      <div style={{ ...cardStyle, padding: 16 }}>
+                        <div style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600, marginBottom: 4 }}>SLOW / DEAD STOCK</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--tx)' }}>{deadStock.length}</div>
+                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>not sold in 90+ days</div>
+                      </div>
+                    )}
+                  </div>
+                  {expiredItems.length > 0 && (
+                    <div style={{ background: 'rgba(220,38,38,.06)', border: `1px solid ${RED}`, borderRadius: 10, padding: '12px 16px', marginBottom: 10 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: RED, marginBottom: 6 }}>⚠ Expired products — action required</div>
+                      {expiredItems.slice(0, 5).map(i => (
+                        <div key={i.id} style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 2 }}>
+                          {i.name} — expired {new Date(i.expiry_date!).toLocaleDateString('en-GB')} ({i.stock_qty} {i.unit || 'units'} in stock)
+                        </div>
+                      ))}
+                      {expiredItems.length > 5 && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 4 }}>+{expiredItems.length - 5} more — check Inventory tab</div>}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+
             {/* Recent transactions */}
             <div>
               <div style={sectionLabel}>Recent transactions</div>
@@ -1113,8 +1303,12 @@ export default function POSPage() {
                         onMouseEnter={e => { (e.currentTarget.style as any).background = 'rgba(208,138,89,.03)' }} onMouseLeave={e => { (e.currentTarget.style as any).background = 'var(--sf)' }}>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>
-                            {(tx.pos_items || []).slice(0, 2).map(i => i.name).join(', ')}
-                            {(tx.pos_items?.length ?? 0) > 2 && ` +${tx.pos_items.length - 2} more`}
+                            {(tx.pos_items || []).length > 0
+                              ? <>
+                                  {tx.pos_items.slice(0, 2).map(i => i.name).filter(Boolean).join(', ') || 'Sale'}
+                                  {tx.pos_items.length > 2 && ` +${tx.pos_items.length - 2} more`}
+                                </>
+                              : 'Sale'}
                           </div>
                           <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
                             {tx.cashier?.name || 'Owner'} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · {tx.payment_type}
@@ -1202,6 +1396,7 @@ export default function POSPage() {
                 { id: 'salon',      label: '💇 Salon' },
                 { id: 'retail',     label: '📦 Retail' },
                 { id: 'factory',    label: '🏭 Factory' },
+                { id: 'logistics',  label: '🚛 Logistics' },
               ].map(s => (
                 <button key={s.id} onClick={() => setSectorOverride(s.id === detectedSector ? null : s.id)}
                   style={{ padding: '5px 14px', borderRadius: 20, border: `1.5px solid ${sector === s.id ? ACC : 'var(--b)'}`,
@@ -1295,6 +1490,24 @@ export default function POSPage() {
               {sectorPicker}
               <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>💇 Salon & Bookings</div>
               <div style={{ fontSize: 13, color: 'var(--tx3)', marginTop: 4 }}>Salon module coming soon.</div>
+            </div>
+          )
+
+          if (sector === 'logistics') return (
+            <div style={{ maxWidth: 860 }}>
+              {sectorPicker}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>🚛 Logistics Operations</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Parcels, fleet, routes & revenue across all branches.</div>
+              </div>
+              {tileGrid([
+                { icon: '📦', label: 'Parcels',   tab: 'logistics' as Tab, desc: 'Track & manage parcels' },
+                { icon: '🚛', label: 'Fleet',     tab: 'logistics' as Tab, desc: 'Vehicles & maintenance' },
+                { icon: '🗺️', label: 'Routes',    tab: 'logistics' as Tab, desc: 'Delivery route planning' },
+                { icon: '💰', label: 'Revenue',   tab: 'logistics' as Tab, desc: 'Delivery income & invoices' },
+                { icon: '👥', label: 'Staff',     tab: 'staff' as Tab,     desc: 'Drivers & dispatchers' },
+                { icon: '🔍', label: 'Audit',     tab: 'audit' as Tab,     desc: 'Every action logged' },
+              ])}
             </div>
           )
 
@@ -1494,25 +1707,21 @@ export default function POSPage() {
           <div style={{ maxWidth: 900 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
               <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{filteredInventory.length} product{filteredInventory.length !== 1 ? 's' : ''}</div>
-              <div style={{ display: 'flex', gap: 8, position: 'relative', flexWrap: 'wrap' }}>
-                <input ref={cameraInputRef} type="file" accept="image/*" onChange={e => { if (e.target.files?.[0]) handleImageCapture(e.target.files[0]) }} style={{ display: 'none' }} capture="environment" />
-                <input ref={fileInputRef} type="file" accept="image/*" onChange={e => { if (e.target.files?.[0]) handleImageCapture(e.target.files[0]) }} style={{ display: 'none' }} />
-                <button onClick={() => setShowCameraMenu(!showCameraMenu)} disabled={recognizing} style={{ ...btnSecondary, opacity: recognizing ? 0.6 : 1, fontSize: 12 }}>
-                  {recognizing ? 'Reading...' : 'Scan products'}
+              {/* Hidden file inputs for dual-photo scan */}
+              <input ref={scanFrontRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleScanFileSelected(e.target.files[0], 'front') }} />
+              <input ref={scanBackRef}  type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleScanFileSelected(e.target.files[0], 'back')  }} />
+
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <button onClick={() => { setShowScanModal(true); setScanFront(null); setScanBack(null); setScanFrontThumb(null); setScanBackThumb(null) }} style={{ ...btnPrimary, fontSize: 12, background: '#7c3aed' }}>
+                  📷 Scan to add
                 </button>
-                {showCameraMenu && (
-                  <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, overflow: 'hidden', zIndex: 10, minWidth: 160 }}>
-                    <button onClick={handleOpenCamera} style={{ width: '100%', padding: '12px 16px', textAlign: 'left', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: 'var(--tx)', borderBottom: '1px solid var(--b)', fontFamily: 'inherit' }}>Take photo</button>
-                    <button onClick={() => { fileInputRef.current?.click(); setShowCameraMenu(false) }} style={{ width: '100%', padding: '12px 16px', textAlign: 'left', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: 'var(--tx)', fontFamily: 'inherit' }}>Upload file</button>
-                  </div>
-                )}
                 <button onClick={() => setShowBulkImport(true)} style={{ ...btnSecondary, fontSize: 12 }}>CSV import</button>
-                <button onClick={() => setShowAddProduct(true)} style={{ ...btnPrimary, fontSize: 12 }}>+ Add product</button>
+                <button onClick={() => setShowAddProduct(true)} style={{ ...btnSecondary, fontSize: 12 }}>+ Manual</button>
               </div>
             </div>
 
             {/* Search, category & sector filter */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
               <input placeholder="Search products..." value={invSearch} onChange={e => setInvSearch(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 180 }} />
               {categories.length > 2 && (
                 <select value={invCategory} onChange={e => setInvCategory(e.target.value)} style={{ ...inputStyle, minWidth: 140 }}>
@@ -1528,6 +1737,19 @@ export default function POSPage() {
                 <option value="logistics">🚚 Logistics</option>
                 <option value="salon">💇 Salon</option>
               </select>
+            </div>
+            {/* Stock status filter tabs */}
+            <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+              {(['all', 'low', 'out', 'expiring'] as const).map(f => {
+                const labels: Record<string, string> = { all: 'All', low: 'Low stock', out: 'Out of stock', expiring: 'Expiring soon' }
+                const colors: Record<string, string> = { all: ACC, low: AMBER, out: RED, expiring: '#f97316' }
+                const isActive = invStockFilter === f
+                return (
+                  <button key={f} onClick={() => setInvStockFilter(f)} style={{ padding: '5px 12px', borderRadius: 20, border: isActive ? `1.5px solid ${colors[f]}` : '1.5px solid var(--b)', background: isActive ? `${colors[f]}18` : 'transparent', color: isActive ? colors[f] : 'var(--tx3)', fontSize: 12, fontWeight: isActive ? 700 : 400, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}>
+                    {labels[f]}
+                  </button>
+                )
+              })}
             </div>
 
             {/* Bulk-tag banner — shown when untagged items exist */}
@@ -1568,6 +1790,116 @@ export default function POSPage() {
                 </div>
               )
             })()}
+
+            {/* ── Dual-photo scan modal ── */}
+            {showScanModal && (
+              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => !scanning && setShowScanModal(false)}>
+                <div style={{ background: 'var(--sf)', borderRadius: 20, padding: 28, maxWidth: 480, width: '100%', maxHeight: '92vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--tx)' }}>📷 Scan product</div>
+                    <button onClick={() => setShowScanModal(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--tx3)', padding: 4 }}>×</button>
+                  </div>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 24 }}>
+                    Take a photo of the front (and optionally the back) — Claude will fill in the product details automatically.
+                  </div>
+
+                  {/* Photo slots */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+                    {/* Front slot */}
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.06em' }}>Front <span style={{ color: '#ef4444' }}>*</span></div>
+                      {scanFrontThumb ? (
+                        <div style={{ position: 'relative' }}>
+                          <img src={scanFrontThumb} alt="front" style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', borderRadius: 12, display: 'block', border: '2px solid #7c3aed' }} />
+                          <button onClick={() => { setScanFront(null); setScanFrontThumb(null) }} style={{ position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: 999, background: 'rgba(0,0,0,.6)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                          <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 10, fontWeight: 700, color: '#fff', background: '#7c3aed', padding: '2px 8px', borderRadius: 999 }}>✓ FRONT</div>
+                        </div>
+                      ) : (
+                        <div style={{ aspectRatio: '3/4', borderRadius: 12, border: '2px dashed var(--b)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'var(--ev)', cursor: 'pointer' }}>
+                          <div style={{ fontSize: 28 }}>📦</div>
+                          <div style={{ fontSize: 12, color: 'var(--tx3)', textAlign: 'center' }}>Brand, name, price</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '80%' }}>
+                            <button onClick={() => openScanCamera('front')} style={{ padding: '7px 0', borderRadius: 8, background: '#7c3aed', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'inherit' }}>📷 Camera</button>
+                            <button onClick={() => scanFrontRef.current?.click()} style={{ padding: '7px 0', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>Upload</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Back slot */}
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.06em' }}>Back <span style={{ color: 'var(--tx3)', fontWeight: 400 }}>(optional)</span></div>
+                      {scanBackThumb ? (
+                        <div style={{ position: 'relative' }}>
+                          <img src={scanBackThumb} alt="back" style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', borderRadius: 12, display: 'block', border: '2px solid #0891b2' }} />
+                          <button onClick={() => { setScanBack(null); setScanBackThumb(null) }} style={{ position: 'absolute', top: 6, right: 6, width: 24, height: 24, borderRadius: 999, background: 'rgba(0,0,0,.6)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                          <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 10, fontWeight: 700, color: '#fff', background: '#0891b2', padding: '2px 8px', borderRadius: 999 }}>✓ BACK</div>
+                        </div>
+                      ) : (
+                        <div style={{ aspectRatio: '3/4', borderRadius: 12, border: '2px dashed var(--b)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'var(--ev)', cursor: 'pointer' }}>
+                          <div style={{ fontSize: 28 }}>🏷️</div>
+                          <div style={{ fontSize: 12, color: 'var(--tx3)', textAlign: 'center' }}>Expiry, batch, supplier</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '80%' }}>
+                            <button onClick={() => openScanCamera('back')} style={{ padding: '7px 0', borderRadius: 8, background: '#0891b2', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, fontFamily: 'inherit' }}>📷 Camera</button>
+                            <button onClick={() => scanBackRef.current?.click()} style={{ padding: '7px 0', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }}>Upload</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* What Claude will extract */}
+                  {!scanFront && (
+                    <div style={{ background: 'var(--ev)', borderRadius: 12, padding: '12px 16px', marginBottom: 20 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Claude will auto-fill:</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {['Name', 'Brand', 'Category', 'SKU/Barcode', 'Price'].map(f => (
+                          <span key={f} style={{ fontSize: 11, color: ACC, background: ACC_BG, padding: '2px 8px', borderRadius: 999 }}>{f}</span>
+                        ))}
+                        <span style={{ fontSize: 11, color: '#0891b2', background: 'rgba(8,145,178,.08)', padding: '2px 8px', borderRadius: 999 }}>Expiry date</span>
+                        <span style={{ fontSize: 11, color: '#0891b2', background: 'rgba(8,145,178,.08)', padding: '2px 8px', borderRadius: 999 }}>Batch no.</span>
+                        <span style={{ fontSize: 11, color: '#0891b2', background: 'rgba(8,145,178,.08)', padding: '2px 8px', borderRadius: 999 }}>Supplier</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 8 }}>Blue fields come from the back label</div>
+                    </div>
+                  )}
+
+                  {/* Scan button */}
+                  <button
+                    onClick={runFullScan}
+                    disabled={!scanFront || scanning}
+                    style={{ width: '100%', padding: '14px', borderRadius: 12, background: scanFront ? '#7c3aed' : 'var(--b)', color: scanFront ? '#fff' : 'var(--tx3)', border: 'none', fontSize: 15, fontWeight: 700, cursor: scanFront ? 'pointer' : 'not-allowed', fontFamily: 'inherit', transition: 'all .2s' }}
+                  >
+                    {scanning ? '⏳ Reading product...' : scanFront ? `✨ Scan & fill form${scanBack ? ' (front + back)' : ' (front only)'}` : 'Take front photo first'}
+                  </button>
+                  {scanFront && !scanBack && (
+                    <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', marginTop: 8 }}>
+                      Add the back photo to also get expiry date, batch number and supplier
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── In-app camera for scan modal ── */}
+            {scanCameraOpen && (
+              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.95)', zIndex: 300, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                <div style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 12, opacity: 0.8 }}>
+                  {scanStep === 'front' ? '📦 Point at the FRONT of the product' : '🏷️ Point at the BACK of the product'}
+                </div>
+                <video ref={scanVideoRef} autoPlay playsInline style={{ width: '100%', maxWidth: 500, borderRadius: 14, marginBottom: 16, border: `3px solid ${scanStep === 'front' ? '#7c3aed' : '#0891b2'}` }} />
+                <canvas ref={scanCanvasRef} style={{ display: 'none' }} />
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button onClick={captureScanPhoto} style={{ padding: '14px 32px', borderRadius: 12, background: scanStep === 'front' ? '#7c3aed' : '#0891b2', color: '#fff', border: 'none', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    📸 Capture
+                  </button>
+                  <button onClick={closeScanCamera} style={{ padding: '14px 24px', borderRadius: 12, border: '1px solid rgba(255,255,255,.3)', background: 'transparent', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Camera preview modal */}
             {showCameraPreview && (
@@ -1702,6 +2034,15 @@ export default function POSPage() {
                   <input placeholder="Cost price (optional)" type="number" value={newProduct.cost_price} onChange={e => setNewProduct(p => ({ ...p, cost_price: e.target.value }))} style={inputStyle} />
                   <input placeholder="Starting stock qty" type="number" value={newProduct.stock_qty} onChange={e => setNewProduct(p => ({ ...p, stock_qty: e.target.value }))} style={inputStyle} />
                   <input placeholder="Low stock alert at" type="number" value={newProduct.low_stock_threshold} onChange={e => setNewProduct(p => ({ ...p, low_stock_threshold: e.target.value }))} style={inputStyle} />
+                  <input placeholder="SKU / barcode (optional)" value={newProduct.sku} onChange={e => setNewProduct(p => ({ ...p, sku: e.target.value }))} style={inputStyle} />
+                  <input placeholder="Category (e.g. Oils)" value={newProduct.category} onChange={e => setNewProduct(p => ({ ...p, category: e.target.value }))} style={inputStyle} />
+                  <input placeholder="Brand" value={newProduct.brand} onChange={e => setNewProduct(p => ({ ...p, brand: e.target.value }))} style={inputStyle} />
+                  <input placeholder="Supplier" value={newProduct.supplier} onChange={e => setNewProduct(p => ({ ...p, supplier: e.target.value }))} style={inputStyle} />
+                  <input placeholder="Batch / lot number" value={newProduct.batch_number} onChange={e => setNewProduct(p => ({ ...p, batch_number: e.target.value }))} style={inputStyle} />
+                  <div style={{ gridColumn: '1/-1', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <label style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600 }}>Expiry date (optional)</label>
+                    <input type="date" value={newProduct.expiry_date} onChange={e => setNewProduct(p => ({ ...p, expiry_date: e.target.value }))} style={inputStyle} />
+                  </div>
                   <select value={newProduct.sector} onChange={e => setNewProduct(p => ({ ...p, sector: e.target.value }))} style={{ ...inputStyle, gridColumn: '1/-1' }}>
                     <option value="">All sectors (shared item)</option>
                     <option value="retail">🛒 Retail only</option>
@@ -1729,6 +2070,14 @@ export default function POSPage() {
                   <input placeholder="Cost price" type="number" value={editProduct.cost_price} onChange={e => setEditProduct(p => ({ ...p, cost_price: e.target.value }))} style={inputStyle} />
                   <input placeholder="Stock qty" type="number" value={editProduct.stock_qty} onChange={e => setEditProduct(p => ({ ...p, stock_qty: e.target.value }))} style={inputStyle} />
                   <input placeholder="Low stock threshold" type="number" value={editProduct.low_stock_threshold} onChange={e => setEditProduct(p => ({ ...p, low_stock_threshold: e.target.value }))} style={inputStyle} />
+                  <input placeholder="Category (e.g. Oils)" value={editProduct.category} onChange={e => setEditProduct(p => ({ ...p, category: e.target.value }))} style={inputStyle} />
+                  <input placeholder="Brand" value={editProduct.brand} onChange={e => setEditProduct(p => ({ ...p, brand: e.target.value }))} style={inputStyle} />
+                  <input placeholder="Supplier" value={editProduct.supplier} onChange={e => setEditProduct(p => ({ ...p, supplier: e.target.value }))} style={inputStyle} />
+                  <input placeholder="Batch / lot number" value={editProduct.batch_number} onChange={e => setEditProduct(p => ({ ...p, batch_number: e.target.value }))} style={inputStyle} />
+                  <div style={{ gridColumn: '1/-1', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <label style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600 }}>Expiry date</label>
+                    <input type="date" value={editProduct.expiry_date} onChange={e => setEditProduct(p => ({ ...p, expiry_date: e.target.value }))} style={inputStyle} />
+                  </div>
                   <select value={editProduct.sector} onChange={e => setEditProduct(p => ({ ...p, sector: e.target.value }))} style={{ ...inputStyle, gridColumn: '1/-1' }}>
                     <option value="">All sectors (shared item)</option>
                     <option value="retail">🛒 Retail only</option>
@@ -1764,17 +2113,26 @@ export default function POSPage() {
                   const isOut = item.stock_qty === 0
                   const isLow = !isOut && item.stock_qty <= item.low_stock_threshold
                   const profitPer = item.sale_price - (item.cost_price || 0)
+                  const today = new Date(); today.setHours(0,0,0,0)
+                  const expiryDate = item.expiry_date ? new Date(item.expiry_date) : null
+                  const daysToExpiry = expiryDate ? Math.floor((expiryDate.getTime() - today.getTime()) / 86400000) : null
+                  const isExpired = daysToExpiry !== null && daysToExpiry < 0
+                  const isExpiringSoon = daysToExpiry !== null && daysToExpiry >= 0 && daysToExpiry <= 30
                   return (
-                    <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 70px 70px 70px 110px', padding: '12px 16px', borderTop: i === 0 ? 'none' : '1px solid var(--b)', background: 'var(--sf)', alignItems: 'center' }}>
+                    <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 70px 70px 70px 110px', padding: '12px 16px', borderTop: i === 0 ? 'none' : '1px solid var(--b)', background: isExpired ? 'rgba(220,38,38,.03)' : 'var(--sf)', alignItems: 'center' }}>
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>
                           {item.name}
                           {isOut && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: RED, background: 'rgba(220,38,38,.08)', padding: '1px 6px', borderRadius: 9999 }}>OUT</span>}
                           {isLow && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: AMBER, background: 'rgba(234,179,8,.08)', padding: '1px 6px', borderRadius: 9999 }}>LOW</span>}
+                          {isExpired && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: RED, background: 'rgba(220,38,38,.1)', padding: '1px 6px', borderRadius: 9999 }}>EXPIRED</span>}
+                          {isExpiringSoon && !isExpired && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: AMBER, background: 'rgba(234,179,8,.1)', padding: '1px 6px', borderRadius: 9999 }}>EXP {daysToExpiry === 0 ? 'TODAY' : `${daysToExpiry}d`}</span>}
                         </div>
                         {item.location?.name && selectedLocation === 'all' && locations.length > 1 && <div style={{ fontSize: 10, color: ACC, fontWeight: 600 }}>{item.location.name}</div>}
                         {item.sku && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>SKU: {item.sku}</div>}
+                        {(item.brand || item.supplier) && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{[item.brand, item.supplier].filter(Boolean).join(' · ')}</div>}
                         {item.sector && <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', background: 'var(--b)', padding: '1px 6px', borderRadius: 9999, display: 'inline-block', marginTop: 2, textTransform: 'capitalize' }}>{item.sector}</div>}
+                        {expiryDate && !isExpired && !isExpiringSoon && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Exp {expiryDate.toLocaleDateString('en-GB')}</div>}
                         {item.last_sold_at && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Last sold {new Date(item.last_sold_at).toLocaleDateString('en-GB')}</div>}
                       </div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', textAlign: 'right' }}>{fmt(currencySymbol, item.sale_price)}</div>
@@ -1795,7 +2153,7 @@ export default function POSPage() {
                         )}
                       </div>
                       <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-                        <button onClick={() => { setEditingProduct(item); setEditProduct({ name: item.name, sale_price: item.sale_price.toString(), cost_price: (item.cost_price || 0).toString(), stock_qty: item.stock_qty.toString(), low_stock_threshold: item.low_stock_threshold.toString(), category: item.category || '', sector: item.sector || '' }) }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx2)' }}>Edit</button>
+                        <button onClick={() => { setEditingProduct(item); setEditProduct({ name: item.name, sale_price: item.sale_price.toString(), cost_price: (item.cost_price || 0).toString(), stock_qty: item.stock_qty.toString(), low_stock_threshold: item.low_stock_threshold.toString(), category: item.category || '', sector: item.sector || '', expiry_date: item.expiry_date || '', batch_number: item.batch_number || '', supplier: item.supplier || '', brand: item.brand || '' }) }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx2)' }}>Edit</button>
                         <button onClick={() => handleDeleteProduct(item)} style={{ padding: '4px 8px', borderRadius: 6, border: 'none', background: 'rgba(220,38,38,.08)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', color: RED }}>Remove</button>
                       </div>
                     </div>

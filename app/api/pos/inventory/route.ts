@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
 
   const service = createServiceClient()
   const body = await req.json()
-  const { name, sku, cost_price, sale_price, stock_qty, low_stock_threshold, unit, sector } = body
+  const { name, sku, cost_price, sale_price, stock_qty, low_stock_threshold, unit, sector, expiry_date, batch_number, supplier, brand, category } = body
   const locationId = auth.locationId || body.location_id || null
 
   if (!name?.trim()) return NextResponse.json({ error: 'name required' }, { status: 400 })
@@ -65,10 +65,15 @@ export async function POST(req: NextRequest) {
       sku:                 sku?.trim() || null,
       cost_price:          Number(cost_price) || 0,
       sale_price:          Number(sale_price) || 0,
-      stock_qty:           Math.max(0, parseInt(stock_qty) || 0),
+      stock_qty:           Math.max(0, parseFloat(stock_qty) || 0),
       low_stock_threshold: Math.max(1, parseInt(low_stock_threshold) || 5),
       unit:                unit || 'item',
       sector:              sector || null,
+      expiry_date:         expiry_date || null,
+      batch_number:        batch_number?.trim() || null,
+      supplier:            supplier?.trim() || null,
+      brand:               brand?.trim() || null,
+      category:            category?.trim() || null,
     })
     .select()
     .single()
@@ -125,8 +130,8 @@ export async function PATCH(req: NextRequest) {
   // Restock — fix #24: coerce to number; fix #4: atomic increment via DB
   if (restock_qty !== undefined) {
     const qty = Number(restock_qty)
-    if (!Number.isInteger(qty) || qty <= 0) {
-      return NextResponse.json({ error: 'restock_qty must be a positive integer' }, { status: 400 })
+    if (isNaN(qty) || qty <= 0) {
+      return NextResponse.json({ error: 'restock_qty must be a positive number' }, { status: 400 })
     }
 
     // Atomic increment — avoids race condition from separate SELECT + UPDATE
@@ -163,7 +168,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   // General field update — whitelist writable fields
-  const allowed = ['name', 'sku', 'cost_price', 'sale_price', 'stock_qty', 'low_stock_threshold', 'unit', 'active', 'sector']
+  const allowed = ['name', 'sku', 'cost_price', 'sale_price', 'stock_qty', 'low_stock_threshold', 'unit', 'active', 'sector', 'expiry_date', 'batch_number', 'supplier', 'brand', 'category']
   const updates: Record<string, unknown> = {}
   for (const key of allowed) {
     if (fields[key] !== undefined) updates[key] = fields[key]
