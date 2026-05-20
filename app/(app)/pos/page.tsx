@@ -1533,8 +1533,8 @@ export default function POSPage() {
                 { icon: '📦', label: 'Inventory',       tab: 'inventory' as Tab,       desc: 'Stock levels & products',       badge: sectorAlertCount > 0 ? sectorAlertCount : null },
                 { icon: '🛒', label: 'Sales',           tab: 'overview' as Tab,        desc: 'Revenue & transactions' },
                 { icon: '👤', label: 'Customers',       tab: 'customers' as Tab,       desc: 'Profiles, history & segments' },
-                { icon: '🏷️', label: 'Promotions',      tab: 'promotions' as Tab,      desc: 'Discounts, coupons & deals', comingSoon: true },
-                { icon: '⭐', label: 'Loyalty',          tab: 'loyalty' as Tab,         desc: 'Points, rewards & tiers', comingSoon: true },
+                { icon: '🏷️', label: 'Promotions',      tab: 'promotions' as Tab,      desc: 'Discounts, coupons & deals' },
+                { icon: '⭐', label: 'Loyalty',          tab: 'loyalty' as Tab,         desc: 'Points, rewards & tiers' },
                 { icon: '↩️', label: 'Returns',          tab: 'returns' as Tab,         desc: 'Refunds, exchanges & credits' },
                 { icon: '📊', label: 'Reports',         tab: 'reports' as Tab,         desc: 'Sales, margins & insights' },
                 { icon: '📋', label: 'Purchase Orders', tab: 'purchase_orders' as Tab, desc: 'Supplier orders & receiving', comingSoon: true },
@@ -2804,32 +2804,45 @@ export default function POSPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700 }}>🏷️ Promotions & Discounts</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Create and manage discounts, coupons and deals</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Track discounts applied across your sales</div>
               </div>
               <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
             </div>
-            <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>🏷️</div>
-              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Promotions engine</div>
-              <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: AMBER, background: 'rgba(202,138,4,.1)', padding: '3px 10px', borderRadius: 9999, marginBottom: 12 }}>Coming soon</span>
-              <div style={{ fontSize: 13, color: 'var(--tx3)', maxWidth: 420, margin: '0 auto' }}>Schedule percentage or fixed discounts, BOGO offers, bundle deals and coupon codes — applied automatically at the till.</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginTop: 24, textAlign: 'left' }}>
-                {[
-                  { icon: '💲', title: '% & Fixed discounts', desc: 'Apply to items, categories or whole cart' },
-                  { icon: '🎟️', title: 'Coupon codes', desc: 'Generate & track promo codes' },
-                  { icon: '📦', title: 'BOGO & Bundles', desc: 'Buy-one-get-one & mix-and-match' },
-                  { icon: '⏰', title: 'Scheduled promos', desc: 'Auto-start & expire on set dates' },
-                  { icon: '👤', title: 'Customer pricing', desc: 'VIP or wholesale price tiers' },
-                  { icon: '📊', title: 'Promo analytics', desc: 'Track redemptions & uplift' },
-                ].map((f, i) => (
-                  <div key={i} style={{ background: 'var(--ev)', borderRadius: 10, padding: 14, opacity: 0.6 }}>
-                    <div style={{ fontSize: 20, marginBottom: 6 }}>{f.icon}</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{f.title}</div>
-                    <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{f.desc}</div>
+            {(() => {
+              const discountedTx = transactions.filter(t => t.subtotal && t.total < t.subtotal)
+              const totalDiscount = discountedTx.reduce((s, t) => s + ((t.subtotal || t.total) - t.total), 0)
+              const avgDiscount = discountedTx.length > 0 ? totalDiscount / discountedTx.length : 0
+              return (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Discounted sales</div><div style={{ fontSize: 22, fontWeight: 800, color: ACC }}>{discountedTx.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Total discounts given</div><div style={{ fontSize: 22, fontWeight: 800, color: RED }}>{fmt(currencySymbol, totalDiscount)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Avg discount</div><div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, avgDiscount)}</div></div>
                   </div>
-                ))}
-              </div>
-            </div>
+                  {discountedTx.length === 0 ? (
+                    <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
+                      <div style={{ fontSize: 32, marginBottom: 12 }}>🏷️</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>No discounts this period</div>
+                      <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Discounted transactions will appear here when a sale is completed with a discount at the till.</div>
+                    </div>
+                  ) : (
+                    <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px 80px', padding: '10px 16px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                        <span>Items</span><span style={{ textAlign: 'right' }}>Subtotal</span><span style={{ textAlign: 'right' }}>Discount</span><span style={{ textAlign: 'right' }}>Date</span>
+                      </div>
+                      {discountedTx.slice(0, 20).map(tx => (
+                        <div key={tx.id} onClick={() => setTxDetail(tx)} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px 80px', padding: '10px 16px', borderTop: '1px solid var(--b)', background: 'var(--sf)', cursor: 'pointer', fontSize: 13, alignItems: 'center' }}>
+                          <div style={{ fontWeight: 500, color: 'var(--tx)' }}>{(tx.pos_items || []).map(i => i.name).filter(Boolean).join(', ') || 'Sale'}</div>
+                          <div style={{ textAlign: 'right', color: 'var(--tx3)' }}>{fmt(currencySymbol, tx.subtotal || tx.total)}</div>
+                          <div style={{ textAlign: 'right', fontWeight: 600, color: RED }}>-{fmt(currencySymbol, (tx.subtotal || tx.total) - tx.total)}</div>
+                          <div style={{ textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>{new Date(tx.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
           </div>
         )}
 
@@ -2838,33 +2851,70 @@ export default function POSPage() {
           <div style={{ maxWidth: 800 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>⭐ Loyalty Program</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Points, rewards and customer retention</div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>⭐ Customer Loyalty</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Repeat customers, retention and lifetime value</div>
               </div>
               <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
             </div>
-            <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>⭐</div>
-              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>Loyalty & rewards</div>
-              <span style={{ display: 'inline-block', fontSize: 10, fontWeight: 700, color: AMBER, background: 'rgba(202,138,4,.1)', padding: '3px 10px', borderRadius: 9999, marginBottom: 12 }}>Coming soon</span>
-              <div style={{ fontSize: 13, color: 'var(--tx3)', maxWidth: 420, margin: '0 auto' }}>Reward repeat customers with a points program — earn on every purchase, redeem for discounts or free items.</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginTop: 24, textAlign: 'left' }}>
-                {[
-                  { icon: '🪙', title: 'Points earning', desc: 'Earn per spend or per visit' },
-                  { icon: '🎁', title: 'Rewards catalog', desc: 'Redeem for discounts or items' },
-                  { icon: '🏅', title: 'Tier levels', desc: 'Bronze, Silver, Gold, VIP' },
-                  { icon: '📱', title: 'Digital cards', desc: 'No plastic — phone number lookup' },
-                  { icon: '📈', title: 'Retention metrics', desc: 'Track return rate & churn' },
-                  { icon: '🔔', title: 'Auto rewards', desc: 'Birthday & milestone rewards' },
-                ].map((f, i) => (
-                  <div key={i} style={{ background: 'var(--ev)', borderRadius: 10, padding: 14, opacity: 0.6 }}>
-                    <div style={{ fontSize: 20, marginBottom: 6 }}>{f.icon}</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{f.title}</div>
-                    <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{f.desc}</div>
+            {(() => {
+              const customerMap = new Map<string, { phone: string; name?: string; orders: number; total: number; firstVisit: string; lastVisit: string }>()
+              for (const tx of transactions) {
+                const c = tx.pos_customers
+                if (!c?.phone) continue
+                const existing = customerMap.get(c.phone)
+                if (existing) {
+                  existing.orders++
+                  existing.total += tx.total
+                  if (tx.created_at > existing.lastVisit) existing.lastVisit = tx.created_at
+                  if (tx.created_at < existing.firstVisit) existing.firstVisit = tx.created_at
+                  if (c.name && !existing.name) existing.name = c.name
+                } else {
+                  customerMap.set(c.phone, { phone: c.phone, name: c.name, orders: 1, total: tx.total, firstVisit: tx.created_at, lastVisit: tx.created_at })
+                }
+              }
+              const allCustomers = Array.from(customerMap.values())
+              const repeatCustomers = allCustomers.filter(c => c.orders > 1)
+              const topSpenders = [...allCustomers].sort((a, b) => b.total - a.total).slice(0, 10)
+              const avgLTV = allCustomers.length > 0 ? allCustomers.reduce((s, c) => s + c.total, 0) / allCustomers.length : 0
+              const repeatRate = allCustomers.length > 0 ? (repeatCustomers.length / allCustomers.length * 100) : 0
+              return (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Total customers</div><div style={{ fontSize: 22, fontWeight: 800, color: ACC }}>{allCustomers.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Repeat customers</div><div style={{ fontSize: 22, fontWeight: 800, color: GREEN }}>{repeatCustomers.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Repeat rate</div><div style={{ fontSize: 22, fontWeight: 800, color: repeatRate >= 20 ? GREEN : 'var(--tx)' }}>{repeatRate.toFixed(0)}%</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Avg lifetime value</div><div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, avgLTV)}</div></div>
                   </div>
-                ))}
-              </div>
-            </div>
+                  {allCustomers.length === 0 ? (
+                    <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
+                      <div style={{ fontSize: 32, marginBottom: 12 }}>⭐</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>No customer data yet</div>
+                      <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Loyalty insights appear when customers are captured at the till via phone number.</div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: 'var(--tx)' }}>Top customers by spend</div>
+                      <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 70px 90px 90px', padding: '10px 16px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                          <span>Customer</span><span style={{ textAlign: 'center' }}>Visits</span><span style={{ textAlign: 'right' }}>Total spent</span><span style={{ textAlign: 'right' }}>Last visit</span>
+                        </div>
+                        {topSpenders.map((c, i) => (
+                          <div key={c.phone} style={{ display: 'grid', gridTemplateColumns: '1fr 70px 90px 90px', padding: '10px 16px', borderTop: '1px solid var(--b)', background: 'var(--sf)', fontSize: 13, alignItems: 'center' }}>
+                            <div>
+                              <div style={{ fontWeight: 600, color: 'var(--tx)' }}>{c.name || c.phone}</div>
+                              {c.name && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{c.phone}</div>}
+                            </div>
+                            <div style={{ textAlign: 'center' }}><span style={{ background: c.orders > 1 ? 'rgba(22,163,74,.1)' : 'var(--ev)', color: c.orders > 1 ? GREEN : 'var(--tx3)', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 9999 }}>{c.orders}x</span></div>
+                            <div style={{ textAlign: 'right', fontWeight: 600 }}>{fmt(currencySymbol, c.total)}</div>
+                            <div style={{ textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>{new Date(c.lastVisit).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
           </div>
         )}
 
@@ -2874,34 +2924,36 @@ export default function POSPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700 }}>↩️ Returns & Exchanges</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Process refunds, exchanges and store credits</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Refunds processed at the till this period</div>
               </div>
               <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
             </div>
             {(() => {
               const returnTx = transactions.filter(t => t.status === 'refunded' || t.status === 'partially_refunded')
               const totalRefunded = returnTx.reduce((s, t) => s + t.total, 0)
+              const returnRate = transactions.length > 0 ? (returnTx.length / transactions.length * 100) : 0
               return (
                 <div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 20 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
                     <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Total returns</div><div style={{ fontSize: 22, fontWeight: 800, color: returnTx.length > 0 ? RED : GREEN }}>{returnTx.length}</div></div>
                     <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Amount refunded</div><div style={{ fontSize: 22, fontWeight: 800, color: totalRefunded > 0 ? RED : 'var(--tx)' }}>{fmt(currencySymbol, totalRefunded)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Return rate</div><div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)' }}>{transactions.length > 0 ? (returnTx.length / transactions.length * 100).toFixed(1) : '0'}%</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Return rate</div><div style={{ fontSize: 22, fontWeight: 800, color: returnRate > 5 ? RED : 'var(--tx)' }}>{returnRate.toFixed(1)}%</div></div>
                   </div>
                   {returnTx.length === 0 ? (
                     <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
                       <div style={{ fontSize: 32, marginBottom: 12 }}>✅</div>
                       <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>No returns this period</div>
-                      <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Returns and exchanges will appear here when processed at the till.</div>
+                      <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Refunds will appear here when processed via the till&apos;s refund flow.</div>
                     </div>
                   ) : (
                     <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px', padding: '10px 16px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>
-                        <span>Items</span><span style={{ textAlign: 'right' }}>Amount</span><span style={{ textAlign: 'right' }}>Date</span>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 100px 80px', padding: '10px 16px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
+                        <span>Items</span><span style={{ textAlign: 'center' }}>Status</span><span style={{ textAlign: 'right' }}>Amount</span><span style={{ textAlign: 'right' }}>Date</span>
                       </div>
-                      {returnTx.slice(0, 20).map((tx, i) => (
-                        <div key={tx.id} onClick={() => setTxDetail(tx)} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px', padding: '10px 16px', borderTop: '1px solid var(--b)', background: 'var(--sf)', cursor: 'pointer', fontSize: 13, alignItems: 'center' }}>
+                      {returnTx.slice(0, 20).map(tx => (
+                        <div key={tx.id} onClick={() => setTxDetail(tx)} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 100px 80px', padding: '10px 16px', borderTop: '1px solid var(--b)', background: 'var(--sf)', cursor: 'pointer', fontSize: 13, alignItems: 'center' }}>
                           <div style={{ fontWeight: 500, color: 'var(--tx)' }}>{(tx.pos_items || []).map(i => i.name).filter(Boolean).join(', ') || 'Sale'}</div>
+                          <div style={{ textAlign: 'center' }}><span style={{ fontSize: 10, fontWeight: 700, color: tx.status === 'refunded' ? RED : AMBER, background: tx.status === 'refunded' ? 'rgba(220,38,38,.08)' : 'rgba(202,138,4,.08)', padding: '2px 8px', borderRadius: 9999 }}>{tx.status === 'refunded' ? 'Full refund' : 'Partial'}</span></div>
                           <div style={{ textAlign: 'right', fontWeight: 600, color: RED }}>{fmt(currencySymbol, tx.total)}</div>
                           <div style={{ textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>{new Date(tx.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                         </div>
@@ -2924,25 +2976,43 @@ export default function POSPage() {
               </div>
               <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
-              {[
-                { icon: '🛒', title: 'Sales report', desc: 'Revenue by product, category, staff & time period', action: () => setTab('overview') },
-                { icon: '📦', title: 'Inventory report', desc: 'Stock levels, valuation, dead stock & expiry', action: () => setTab('inventory') },
-                { icon: '💰', title: 'Profit & loss', desc: 'Revenue, costs and margin breakdown', action: () => setTab('overview') },
-                { icon: '🧾', title: 'Tax report', desc: 'VAT summary & MTD filing preview', action: () => window.open('about:blank') },
-                { icon: '👥', title: 'Staff performance', desc: 'Sales per cashier, shift totals & commission', action: () => setTab('staff') },
-                { icon: '↩️', title: 'Returns report', desc: 'Return rates, reasons & refund totals', action: () => setTab('returns') },
-                { icon: '👤', title: 'Customer report', desc: 'Acquisition, retention & lifetime value', action: () => setTab('customers') },
-                { icon: '📥', title: 'Export data', desc: 'Download CSV of transactions, inventory or customers', action: () => {} },
-              ].map((r, i) => (
-                <button key={i} onClick={r.action} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 20, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)} onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>
-                  <div style={{ fontSize: 24, marginBottom: 8 }}>{r.icon}</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 4 }}>{r.title}</div>
-                  <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.4 }}>{r.desc}</div>
-                </button>
-              ))}
-            </div>
+            {(() => {
+              const totalRevenue = transactions.filter(t => t.status === 'completed').reduce((s, t) => s + t.total, 0)
+              const totalCost = transactions.filter(t => t.status === 'completed').reduce((s, t) => s + (t.pos_items || []).reduce((is, i) => is + (i.cost_price || 0) * i.qty, 0), 0)
+              const totalProfit = totalRevenue - totalCost
+              const inventoryValue = inventory.reduce((s, i) => s + i.cost_price * i.stock_qty, 0)
+              return (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Revenue</div><div style={{ fontSize: 18, fontWeight: 800, color: ACC }}>{fmt(currencySymbol, totalRevenue)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Gross profit</div><div style={{ fontSize: 18, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, totalProfit)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Margin</div><div style={{ fontSize: 18, fontWeight: 800, color: 'var(--tx)' }}>{totalRevenue > 0 ? (totalProfit / totalRevenue * 100).toFixed(1) : '0'}%</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Stock value</div><div style={{ fontSize: 18, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, inventoryValue)}</div></div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+                    {[
+                      { icon: '🛒', title: 'Sales report', desc: 'Revenue by product, category, staff & period', action: () => setTab('overview') },
+                      { icon: '📦', title: 'Inventory report', desc: 'Stock levels, valuation & dead stock', action: () => setTab('inventory') },
+                      { icon: '👥', title: 'Staff performance', desc: 'Sales per cashier, shift totals', action: () => setTab('staff') },
+                      { icon: '↩️', title: 'Returns report', desc: 'Return rates, reasons & refund totals', action: () => setTab('returns') },
+                      { icon: '👤', title: 'Customer report', desc: 'Retention, lifetime value & segments', action: () => setTab('customers') },
+                      { icon: '⭐', title: 'Loyalty report', desc: 'Repeat rate, top spenders & trends', action: () => setTab('loyalty') },
+                      { icon: '🏷️', title: 'Discounts report', desc: 'Promotions usage & discount totals', action: () => setTab('promotions') },
+                      { icon: '🔍', title: 'Audit trail', desc: 'Full change log & transaction history', action: () => setTab('audit') },
+                    ].map((r, i) => (
+                      <button key={i} onClick={r.action} style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: '16px 18px', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
+                        onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)} onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>
+                        <div style={{ fontSize: 24, flexShrink: 0 }}>{r.icon}</div>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{r.title}</div>
+                          <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2, lineHeight: 1.4 }}>{r.desc}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         )}
 
