@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { uploadId, targetColumn, horizonDays = 14, method = 'linear', name } = await request.json()
+  const { uploadId, targetColumn, horizonDays = 14, method = 'linear', name, confidence = 1.5 } = await request.json()
   if (!uploadId || !targetColumn) return NextResponse.json({ error: 'uploadId and targetColumn required' }, { status: 400 })
 
   // Load the parsed dataset
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const rows = upload.parsed_sample as Record<string, unknown>[]
-    const result = forecastFromDataset(rows, targetColumn, horizonDays, method)
+    const result = forecastFromDataset(rows, targetColumn, horizonDays, method, confidence)
 
     // Save forecast to DB
     const { data: saved } = await supabase.from('forecasts').insert({
