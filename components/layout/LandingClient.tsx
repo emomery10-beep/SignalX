@@ -406,8 +406,8 @@ function MiniCalcWidget() {
   const cHasResult = cCogs > 0
 
   const marginColor = (m: number) => m >= 30 ? '#22c55e' : m >= 15 ? '#e67e22' : '#e74c3c'
-  const inp: React.CSSProperties = { width:'100%', padding:'8px 10px', fontSize:13, border:`1px solid ${C.b2}`, borderRadius:8, background:C.bg, color:C.tx, fontFamily:'inherit', outline:'none', boxSizing:'border-box', transition:'border-color 150ms' }
-  const lbl: React.CSSProperties = { display:'block', fontSize:10, color:C.tx3, fontWeight:600, marginBottom:3, textTransform:'uppercase', letterSpacing:'.02em' }
+  const inp: React.CSSProperties = { width:'100%', padding:'6px 10px', fontSize:13, border:`1px solid ${C.b2}`, borderRadius:8, background:C.bg, color:C.tx, fontFamily:'inherit', outline:'none', boxSizing:'border-box', transition:'border-color 150ms' }
+  const lbl: React.CSSProperties = { display:'block', fontSize:10, color:C.tx3, fontWeight:600, marginBottom:1, textTransform:'uppercase', letterSpacing:'.02em' }
 
   return (
     <div className="fade-up mini-calc" style={{ maxWidth:480, width:'100%', background:C.sf, border:`1px solid ${C.b}`, borderRadius:16, overflow:'hidden', boxShadow:'0 4px 24px rgba(0,0,0,.07)' }}>
@@ -444,7 +444,7 @@ function MiniCalcWidget() {
       <div style={{ padding:'14px 18px 16px' }}>
         {tab === 'margin' ? (
           <>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
               <div><label style={lbl}>Cost ({sym})</label><input type="number" min="0" step="0.01" placeholder="4.50" style={inp} value={mc.cost} onChange={e => setMc(p => ({ ...p, cost: e.target.value }))} /></div>
               <div><label style={lbl}>Sale price ({sym})</label><input type="number" min="0" step="0.01" placeholder="9.99" style={inp} value={mc.revenue} onChange={e => setMc(p => ({ ...p, revenue: e.target.value }))} /></div>
               <div><label style={lbl}>Units sold</label><input type="number" min="0" step="1" placeholder="100" style={inp} value={mc.units} onChange={e => setMc(p => ({ ...p, units: e.target.value }))} /></div>
@@ -481,13 +481,13 @@ function MiniCalcWidget() {
           </>
         ) : (
           <>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:8 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:4 }}>
               <div><label style={lbl}>Materials ({sym})</label><input type="number" min="0" step="0.01" placeholder="3.00" style={inp} value={cg.materials} onChange={e => setCg(p => ({ ...p, materials: e.target.value }))} /></div>
               <div><label style={lbl}>Labour ({sym})</label><input type="number" min="0" step="0.01" placeholder="2.50" style={inp} value={cg.labour} onChange={e => setCg(p => ({ ...p, labour: e.target.value }))} /></div>
               <div><label style={lbl}>Shipping ({sym})</label><input type="number" min="0" step="0.01" placeholder="1.20" style={inp} value={cg.shipping} onChange={e => setCg(p => ({ ...p, shipping: e.target.value }))} /></div>
               <div><label style={lbl}>Packaging ({sym})</label><input type="number" min="0" step="0.01" placeholder="0.80" style={inp} value={cg.packaging} onChange={e => setCg(p => ({ ...p, packaging: e.target.value }))} /></div>
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
               <div><label style={lbl}>Sale price ({sym})</label><input type="number" min="0" step="0.01" placeholder="12.99" style={inp} value={cg.salePrice} onChange={e => setCg(p => ({ ...p, salePrice: e.target.value }))} /></div>
               <div><label style={lbl}>Units sold</label><input type="number" min="0" step="1" placeholder="100" style={inp} value={cg.units} onChange={e => setCg(p => ({ ...p, units: e.target.value }))} /></div>
             </div>
