@@ -370,85 +370,140 @@ function InteractiveDemo() {
 
 function MiniCalcWidget() {
   const [tab, setTab] = useState<'margin' | 'cogs'>('margin')
-  const [mc, setMc] = useState({ cost: '', revenue: '' })
-  const [cg, setCg] = useState({ materials: '', labour: '', shipping: '', salePrice: '' })
+  const [mc, setMc] = useState({ cost: '', revenue: '', units: '' })
+  const [cg, setCg] = useState({ materials: '', labour: '', shipping: '', packaging: '', salePrice: '', units: '' })
 
+  // Margin calc
   const mCost = parseFloat(mc.cost) || 0
   const mRev = parseFloat(mc.revenue) || 0
+  const mUnits = parseInt(mc.units) || 0
   const mProfit = mRev - mCost
   const mMargin = mRev > 0 ? (mProfit / mRev) * 100 : 0
   const mMarkup = mCost > 0 ? (mProfit / mCost) * 100 : 0
   const mHasResult = mCost > 0 && mRev > 0
 
+  // COGS calc
   const cMat = parseFloat(cg.materials) || 0
   const cLab = parseFloat(cg.labour) || 0
   const cShp = parseFloat(cg.shipping) || 0
+  const cPkg = parseFloat(cg.packaging) || 0
   const cSp  = parseFloat(cg.salePrice) || 0
-  const cCogs = cMat + cLab + cShp
+  const cUnits = parseInt(cg.units) || 0
+  const cCogs = cMat + cLab + cShp + cPkg
   const cGross = cSp - cCogs
   const cMargin = cSp > 0 ? (cGross / cSp) * 100 : 0
+  const cRatio = cSp > 0 ? (cCogs / cSp) * 100 : 0
   const cHasResult = cCogs > 0
 
-  const inp: React.CSSProperties = { width:'100%', padding:'7px 10px', fontSize:13, border:`1px solid ${C.b2}`, borderRadius:8, background:C.bg, color:C.tx, fontFamily:'inherit', outline:'none', boxSizing:'border-box' }
-  const lbl: React.CSSProperties = { display:'block', fontSize:10, color:C.tx3, fontWeight:600, marginBottom:3 }
+  const marginColor = (m: number) => m >= 30 ? '#22c55e' : m >= 15 ? '#e67e22' : '#e74c3c'
+  const inp: React.CSSProperties = { width:'100%', padding:'8px 10px', fontSize:13, border:`1px solid ${C.b2}`, borderRadius:8, background:C.bg, color:C.tx, fontFamily:'inherit', outline:'none', boxSizing:'border-box', transition:'border-color 150ms' }
+  const lbl: React.CSSProperties = { display:'block', fontSize:10, color:C.tx3, fontWeight:600, marginBottom:3, textTransform:'uppercase', letterSpacing:'.02em' }
 
   return (
-    <div className="fade-up mini-calc" style={{ maxWidth:420, width:'100%', background:C.sf, border:`1px solid ${C.b}`, borderRadius:14, overflow:'hidden', boxShadow:'0 2px 16px rgba(0,0,0,.05)' }}>
-      {/* Title */}
-      <div style={{ padding:'8px 16px 0', textAlign:'center' }}>
-        <span style={{ fontSize:11, fontWeight:700, fontFamily:'var(--font-sora)', color:C.tx2, letterSpacing:'.04em', textTransform:'uppercase' }}>⚡ Quick Calculator</span>
-      </div>
-      {/* Tabs */}
-      <div style={{ display:'flex', justifyContent:'center', borderBottom:`1px solid ${C.b}`, margin:'6px 0 0' }}>
-        {(['margin','cogs'] as const).map(id => (
-          <button key={id} onClick={() => setTab(id)}
-            style={{ flex:1, padding:'8px 0', fontSize:11, fontWeight:700, fontFamily:'var(--font-sora)', background:tab===id?C.sf:C.ev, color:tab===id?C.tx:C.tx3, border:'none', borderBottom:tab===id?`2px solid ${C.acc}`:'2px solid transparent', cursor:'pointer', transition:'all 150ms', textAlign:'center' }}>
-            {id==='margin'?'Profit Margin':'Cost of Goods'}
-          </button>
-        ))}
+    <div className="fade-up mini-calc" style={{ maxWidth:480, width:'100%', background:C.sf, border:`1px solid ${C.b}`, borderRadius:16, overflow:'hidden', boxShadow:'0 4px 24px rgba(0,0,0,.07)' }}>
+
+      {/* Centered tabs — pill style */}
+      <div style={{ display:'flex', justifyContent:'center', padding:'12px 16px 0' }}>
+        <div style={{ display:'inline-flex', borderRadius:9999, border:`1px solid ${C.b2}`, overflow:'hidden', background:C.ev }}>
+          {(['margin','cogs'] as const).map(id => (
+            <button key={id} onClick={() => setTab(id)}
+              style={{ padding:'7px 22px', fontSize:12, fontWeight:700, fontFamily:'var(--font-sora)', background:tab===id?C.acc:'transparent', color:tab===id?'#fff':C.tx3, border:'none', cursor:'pointer', transition:'all 150ms', letterSpacing:'-.01em', whiteSpace:'nowrap' }}>
+              {id==='margin'?'Profit Margin':'Cost of Goods'}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div style={{ padding:'14px 16px' }}>
+      <div style={{ padding:'14px 18px 16px' }}>
         {tab === 'margin' ? (
           <>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-              <div><label style={lbl}>Cost (£)</label><input type="number" min="0" step="0.01" placeholder="0.00" style={inp} value={mc.cost} onChange={e => setMc(p => ({ ...p, cost: e.target.value }))} /></div>
-              <div><label style={lbl}>Sale price (£)</label><input type="number" min="0" step="0.01" placeholder="0.00" style={inp} value={mc.revenue} onChange={e => setMc(p => ({ ...p, revenue: e.target.value }))} /></div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
+              <div><label style={lbl}>Cost (£)</label><input type="number" min="0" step="0.01" placeholder="4.50" style={inp} value={mc.cost} onChange={e => setMc(p => ({ ...p, cost: e.target.value }))} /></div>
+              <div><label style={lbl}>Sale price (£)</label><input type="number" min="0" step="0.01" placeholder="9.99" style={inp} value={mc.revenue} onChange={e => setMc(p => ({ ...p, revenue: e.target.value }))} /></div>
+              <div><label style={lbl}>Units sold</label><input type="number" min="0" step="1" placeholder="100" style={inp} value={mc.units} onChange={e => setMc(p => ({ ...p, units: e.target.value }))} /></div>
             </div>
+
             {mHasResult && (
-              <div style={{ display:'flex', justifyContent:'space-between', marginTop:10, padding:'8px 12px', background:C.ev, borderRadius:8 }}>
-                <div style={{ textAlign:'center' }}><div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:mMargin>=30?'#22c55e':mMargin>=15?'#e67e22':'#e74c3c' }}>{mMargin.toFixed(1)}%</div><div style={{ fontSize:9, color:C.tx3 }}>Margin</div></div>
-                <div style={{ textAlign:'center' }}><div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:C.tx }}>£{mProfit.toFixed(2)}</div><div style={{ fontSize:9, color:C.tx3 }}>Profit</div></div>
-                <div style={{ textAlign:'center' }}><div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:C.tx2 }}>{mMarkup.toFixed(1)}%</div><div style={{ fontSize:9, color:C.tx3 }}>Markup</div></div>
+              <div style={{ marginTop:12 }}>
+                {/* Visual margin bar */}
+                <div style={{ position:'relative', height:6, borderRadius:3, background:C.ev, overflow:'hidden', marginBottom:10 }}>
+                  <div style={{ position:'absolute', left:0, top:0, height:'100%', width:`${Math.min(mMargin, 100)}%`, borderRadius:3, background: `linear-gradient(90deg, ${marginColor(mMargin)}, ${marginColor(mMargin)}cc)`, transition:'width 300ms ease' }} />
+                </div>
+                <div style={{ display:'grid', gridTemplateColumns: mUnits > 0 ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr', gap:6 }}>
+                  <div style={{ textAlign:'center', padding:'8px 4px', background:C.ev, borderRadius:10 }}>
+                    <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:marginColor(mMargin) }}>{mMargin.toFixed(1)}%</div>
+                    <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:2 }}>MARGIN</div>
+                  </div>
+                  <div style={{ textAlign:'center', padding:'8px 4px', background:C.ev, borderRadius:10 }}>
+                    <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:C.tx }}>£{mProfit.toFixed(2)}</div>
+                    <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:2 }}>PROFIT</div>
+                  </div>
+                  <div style={{ textAlign:'center', padding:'8px 4px', background:C.ev, borderRadius:10 }}>
+                    <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:C.tx2 }}>{mMarkup.toFixed(0)}%</div>
+                    <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:2 }}>MARKUP</div>
+                  </div>
+                  {mUnits > 0 && (
+                    <div style={{ textAlign:'center', padding:'8px 4px', background:C.ev, borderRadius:10 }}>
+                      <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:'#22c55e' }}>£{(mProfit * mUnits).toLocaleString('en-GB', { minimumFractionDigits:0, maximumFractionDigits:0 })}</div>
+                      <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:2 }}>TOTAL PROFIT</div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </>
         ) : (
           <>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:8 }}>
-              <div><label style={lbl}>Materials</label><input type="number" min="0" step="0.01" placeholder="0" style={inp} value={cg.materials} onChange={e => setCg(p => ({ ...p, materials: e.target.value }))} /></div>
-              <div><label style={lbl}>Labour</label><input type="number" min="0" step="0.01" placeholder="0" style={inp} value={cg.labour} onChange={e => setCg(p => ({ ...p, labour: e.target.value }))} /></div>
-              <div><label style={lbl}>Shipping</label><input type="number" min="0" step="0.01" placeholder="0" style={inp} value={cg.shipping} onChange={e => setCg(p => ({ ...p, shipping: e.target.value }))} /></div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:8 }}>
+              <div><label style={lbl}>Materials (£)</label><input type="number" min="0" step="0.01" placeholder="3.00" style={inp} value={cg.materials} onChange={e => setCg(p => ({ ...p, materials: e.target.value }))} /></div>
+              <div><label style={lbl}>Labour (£)</label><input type="number" min="0" step="0.01" placeholder="2.50" style={inp} value={cg.labour} onChange={e => setCg(p => ({ ...p, labour: e.target.value }))} /></div>
+              <div><label style={lbl}>Shipping (£)</label><input type="number" min="0" step="0.01" placeholder="1.20" style={inp} value={cg.shipping} onChange={e => setCg(p => ({ ...p, shipping: e.target.value }))} /></div>
+              <div><label style={lbl}>Packaging (£)</label><input type="number" min="0" step="0.01" placeholder="0.80" style={inp} value={cg.packaging} onChange={e => setCg(p => ({ ...p, packaging: e.target.value }))} /></div>
             </div>
-            <div style={{ marginBottom:8 }}>
-              <label style={lbl}>Sale price (£)</label>
-              <input type="number" min="0" step="0.01" placeholder="0.00" style={inp} value={cg.salePrice} onChange={e => setCg(p => ({ ...p, salePrice: e.target.value }))} />
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+              <div><label style={lbl}>Sale price (£)</label><input type="number" min="0" step="0.01" placeholder="12.99" style={inp} value={cg.salePrice} onChange={e => setCg(p => ({ ...p, salePrice: e.target.value }))} /></div>
+              <div><label style={lbl}>Units sold</label><input type="number" min="0" step="1" placeholder="100" style={inp} value={cg.units} onChange={e => setCg(p => ({ ...p, units: e.target.value }))} /></div>
             </div>
+
             {cHasResult && (
-              <div style={{ display:'flex', justifyContent:'space-between', padding:'8px 12px', background:C.ev, borderRadius:8 }}>
-                <div style={{ textAlign:'center' }}><div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:'#e74c3c' }}>£{cCogs.toFixed(2)}</div><div style={{ fontSize:9, color:C.tx3 }}>COGS</div></div>
-                {cSp > 0 && <>
-                  <div style={{ textAlign:'center' }}><div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:cGross>=0?'#22c55e':'#e74c3c' }}>£{cGross.toFixed(2)}</div><div style={{ fontSize:9, color:C.tx3 }}>Profit</div></div>
-                  <div style={{ textAlign:'center' }}><div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:cMargin>=30?'#22c55e':cMargin>=15?'#e67e22':'#e74c3c' }}>{cMargin.toFixed(1)}%</div><div style={{ fontSize:9, color:C.tx3 }}>Margin</div></div>
-                </>}
+              <div style={{ marginTop:12 }}>
+                {/* Visual cost breakdown bar */}
+                {cSp > 0 && (
+                  <div style={{ position:'relative', height:6, borderRadius:3, background:C.ev, overflow:'hidden', marginBottom:10, display:'flex' }}>
+                    <div style={{ height:'100%', width:`${Math.min(cRatio, 100)}%`, background:'#e74c3c', borderRadius:'3px 0 0 3px', transition:'width 300ms ease' }} />
+                    <div style={{ height:'100%', flex:1, background:'#22c55e', borderRadius:'0 3px 3px 0', transition:'width 300ms ease' }} />
+                  </div>
+                )}
+                <div style={{ display:'grid', gridTemplateColumns: cUnits > 0 && cSp > 0 ? '1fr 1fr 1fr 1fr' : cSp > 0 ? '1fr 1fr 1fr' : '1fr', gap:6 }}>
+                  <div style={{ textAlign:'center', padding:'8px 4px', background:C.ev, borderRadius:10 }}>
+                    <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:'#e74c3c' }}>£{cCogs.toFixed(2)}</div>
+                    <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:2 }}>COGS/UNIT</div>
+                  </div>
+                  {cSp > 0 && <>
+                    <div style={{ textAlign:'center', padding:'8px 4px', background:C.ev, borderRadius:10 }}>
+                      <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:cGross>=0?'#22c55e':'#e74c3c' }}>£{cGross.toFixed(2)}</div>
+                      <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:2 }}>GROSS PROFIT</div>
+                    </div>
+                    <div style={{ textAlign:'center', padding:'8px 4px', background:C.ev, borderRadius:10 }}>
+                      <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:marginColor(cMargin) }}>{cMargin.toFixed(1)}%</div>
+                      <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:2 }}>MARGIN</div>
+                    </div>
+                  </>}
+                  {cUnits > 0 && cSp > 0 && (
+                    <div style={{ textAlign:'center', padding:'8px 4px', background:C.ev, borderRadius:10 }}>
+                      <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:'#22c55e' }}>£{(cGross * cUnits).toLocaleString('en-GB', { minimumFractionDigits:0, maximumFractionDigits:0 })}</div>
+                      <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:2 }}>TOTAL PROFIT</div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </>
         )}
-        <div style={{ marginTop:8, textAlign:'center' }}>
+        <div style={{ marginTop:10, textAlign:'center' }}>
           <Link href={tab==='margin'?'/free-tools/profit-margin-calculator':'/free-tools/cogs-calculator'}
             style={{ fontSize:11, color:C.acc, fontWeight:600, textDecoration:'none' }}>
-            Full {tab==='margin'?'Margin':'COGS'} calculator →
+            Open full {tab==='margin'?'Profit Margin':'COGS'} calculator →
           </Link>
         </div>
       </div>
@@ -669,7 +724,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       {/* Geo promo banner removed */}
 
       {/* ── HERO ─────────────────────────────────────────────── */}
-      <section style={{ maxWidth:1080, margin:'0 auto', padding:'clamp(36px,5vw,52px) clamp(16px,4vw,40px) clamp(32px,4vw,48px)', textAlign:'center' }}>
+      <section style={{ maxWidth:1080, margin:'0 auto', padding:'clamp(28px,4vw,42px) clamp(16px,4vw,40px) clamp(32px,4vw,48px)', textAlign:'center' }}>
 
         {/* Dual-product badge */}
         <div className="fade-up" style={{ display:'inline-flex', alignItems:'center', gap:0, borderRadius:9999, border:`1px solid ${C.b2}`, background:C.sf, fontSize:12, fontWeight:700, marginBottom:28, overflow:'hidden' }}>
