@@ -6,6 +6,23 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Force-revalidate sitemaps so Google always gets fresh content
+        source: '/sitemap/:path*',
+        headers: [
+          { key: 'Cache-Control',         value: 'public, max-age=0, must-revalidate' },
+          { key: 'CDN-Cache-Control',      value: 'max-age=0' },
+          { key: 'Vercel-CDN-Cache-Control', value: 'max-age=0' },
+        ],
+      },
+      {
+        source: '/sitemap.xml',
+        headers: [
+          { key: 'Cache-Control',         value: 'public, max-age=0, must-revalidate' },
+          { key: 'CDN-Cache-Control',      value: 'max-age=0' },
+          { key: 'Vercel-CDN-Cache-Control', value: 'max-age=0' },
+        ],
+      },
+      {
         // Apply CORS to every /api/pos/* route so pos.askbiz.co can call them
         source: '/api/pos/:path*',
         headers: [

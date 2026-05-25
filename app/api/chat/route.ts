@@ -500,6 +500,8 @@ export async function POST(request: NextRequest) {
     const brief     = briefRes.data?.[0] || null
     const locations = locRes.data || []
 
+    console.log('[POS DEBUG] user.id:', user.id, 'from:', from.toISOString(), 'to:', to.toISOString(), 'period:', periodLabel)
+    console.log('[POS DEBUG] txs:', txs.length, 'inv:', inv.length, 'staff:', staffList.length, 'txErr:', txRes.error?.message || 'none')
     if (txRes.error) console.error('POS tx query error:', txRes.error.message)
     if (invRes.error) console.error('POS inv query error:', invRes.error.message)
     if (shiftRes.error) console.error('Shift query error:', shiftRes.error.message)

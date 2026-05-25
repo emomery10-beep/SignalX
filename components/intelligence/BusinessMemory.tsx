@@ -124,7 +124,7 @@ export default function BusinessMemory({ onAsk }: Props) {
           </div>
 
           {/* Category filter */}
-          <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto', paddingBottom: 2 }}>
+          <div className="tab-strip" style={{ gap: 6, marginBottom: 16, paddingBottom: 2 }}>
             {categories.map(cat => {
               const cfg = CAT_CONFIG[cat]
               const active = activeCategory === cat

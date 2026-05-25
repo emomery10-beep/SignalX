@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
   // 30-day score history
   const { data: history } = await supabase
     .from('health_scores')
-    .select('score, label, color, created_at')
+    .select('score, label, color, components, summary, created_at')
     .eq('user_id', uid)
     .gte('created_at', new Date(Date.now() - 30 * 86400000).toISOString())
     .order('created_at', { ascending: true })

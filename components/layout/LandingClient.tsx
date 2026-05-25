@@ -256,15 +256,32 @@ function DemoScreen({ screen }: { screen: string }) {
 function InteractiveDemo() {
   const [active, setActive] = useState(0)
   const tickRef = useRef(0)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const id = window.setInterval(() => {
-      tickRef.current += 1
-      if (tickRef.current % 30 === 0) {
-        setActive(a => (a + 1) % DEMO_SLIDES.length)
-      }
-    }, 200)
-    return () => window.clearInterval(id)
+    let id: ReturnType<typeof window.setInterval> | null = null
+
+    const start = () => {
+      if (id) return
+      id = window.setInterval(() => {
+        tickRef.current += 1
+        if (tickRef.current % 30 === 0) {
+          setActive(a => (a + 1) % DEMO_SLIDES.length)
+        }
+      }, 200)
+    }
+
+    const stop = () => {
+      if (id) { window.clearInterval(id); id = null }
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => { entry.isIntersecting ? start() : stop() },
+      { threshold: 0.2 }
+    )
+
+    if (containerRef.current) observer.observe(containerRef.current)
+    return () => { stop(); observer.disconnect() }
   }, [])
 
   const slide = DEMO_SLIDES[active]
@@ -280,7 +297,7 @@ function InteractiveDemo() {
   }, [])
 
   return (
-    <div id="demo" style={{ maxWidth:1100, margin:'0 auto', padding:'0 clamp(16px,4vw,40px) clamp(40px,6vw,64px)' }}>
+    <div id="demo" ref={containerRef} style={{ maxWidth:1100, margin:'0 auto', padding:'0 clamp(16px,4vw,40px) clamp(40px,6vw,64px)' }}>
 
       {/* Main area: left text + right screen */}
       <div className="demo-layout" style={{ display:'grid', gridTemplateColumns:'1fr 1.3fr', gap:'clamp(24px,4vw,56px)', alignItems:'center', marginBottom:32 }}>
@@ -349,6 +366,92 @@ function InteractiveDemo() {
   )
 }
 
+// ── Mini Calculator Widget (compact, hero-inline) ──────────────────────────
+
+function MiniCalcWidget() {
+  const [tab, setTab] = useState<'margin' | 'cogs'>('margin')
+  const [mc, setMc] = useState({ cost: '', revenue: '' })
+  const [cg, setCg] = useState({ materials: '', labour: '', shipping: '', salePrice: '' })
+
+  const mCost = parseFloat(mc.cost) || 0
+  const mRev = parseFloat(mc.revenue) || 0
+  const mProfit = mRev - mCost
+  const mMargin = mRev > 0 ? (mProfit / mRev) * 100 : 0
+  const mMarkup = mCost > 0 ? (mProfit / mCost) * 100 : 0
+  const mHasResult = mCost > 0 && mRev > 0
+
+  const cMat = parseFloat(cg.materials) || 0
+  const cLab = parseFloat(cg.labour) || 0
+  const cShp = parseFloat(cg.shipping) || 0
+  const cSp  = parseFloat(cg.salePrice) || 0
+  const cCogs = cMat + cLab + cShp
+  const cGross = cSp - cCogs
+  const cMargin = cSp > 0 ? (cGross / cSp) * 100 : 0
+  const cHasResult = cCogs > 0
+
+  const inp: React.CSSProperties = { width:'100%', padding:'7px 10px', fontSize:13, border:`1px solid ${C.b2}`, borderRadius:8, background:C.bg, color:C.tx, fontFamily:'inherit', outline:'none', boxSizing:'border-box' }
+  const lbl: React.CSSProperties = { display:'block', fontSize:10, color:C.tx3, fontWeight:600, marginBottom:3 }
+
+  return (
+    <div className="fade-up mini-calc" style={{ maxWidth:420, margin:'0 auto', background:C.sf, border:`1px solid ${C.b}`, borderRadius:14, overflow:'hidden', boxShadow:'0 2px 16px rgba(0,0,0,.05)' }}>
+      {/* Tabs */}
+      <div style={{ display:'flex', borderBottom:`1px solid ${C.b}` }}>
+        {(['margin','cogs'] as const).map(id => (
+          <button key={id} onClick={() => setTab(id)}
+            style={{ flex:1, padding:'8px 0', fontSize:11, fontWeight:700, fontFamily:'var(--font-sora)', background:tab===id?C.sf:C.ev, color:tab===id?C.tx:C.tx3, border:'none', borderBottom:tab===id?`2px solid ${C.acc}`:'2px solid transparent', cursor:'pointer', transition:'all 150ms' }}>
+            {id==='margin'?'💰 Margin':'📦 COGS'}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ padding:'14px 16px' }}>
+        {tab === 'margin' ? (
+          <>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+              <div><label style={lbl}>Cost (£)</label><input type="number" min="0" step="0.01" placeholder="0.00" style={inp} value={mc.cost} onChange={e => setMc(p => ({ ...p, cost: e.target.value }))} /></div>
+              <div><label style={lbl}>Sale price (£)</label><input type="number" min="0" step="0.01" placeholder="0.00" style={inp} value={mc.revenue} onChange={e => setMc(p => ({ ...p, revenue: e.target.value }))} /></div>
+            </div>
+            {mHasResult && (
+              <div style={{ display:'flex', justifyContent:'space-between', marginTop:10, padding:'8px 12px', background:C.ev, borderRadius:8 }}>
+                <div style={{ textAlign:'center' }}><div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:mMargin>=30?'#22c55e':mMargin>=15?'#e67e22':'#e74c3c' }}>{mMargin.toFixed(1)}%</div><div style={{ fontSize:9, color:C.tx3 }}>Margin</div></div>
+                <div style={{ textAlign:'center' }}><div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:C.tx }}>£{mProfit.toFixed(2)}</div><div style={{ fontSize:9, color:C.tx3 }}>Profit</div></div>
+                <div style={{ textAlign:'center' }}><div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:C.tx2 }}>{mMarkup.toFixed(1)}%</div><div style={{ fontSize:9, color:C.tx3 }}>Markup</div></div>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:8 }}>
+              <div><label style={lbl}>Materials</label><input type="number" min="0" step="0.01" placeholder="0" style={inp} value={cg.materials} onChange={e => setCg(p => ({ ...p, materials: e.target.value }))} /></div>
+              <div><label style={lbl}>Labour</label><input type="number" min="0" step="0.01" placeholder="0" style={inp} value={cg.labour} onChange={e => setCg(p => ({ ...p, labour: e.target.value }))} /></div>
+              <div><label style={lbl}>Shipping</label><input type="number" min="0" step="0.01" placeholder="0" style={inp} value={cg.shipping} onChange={e => setCg(p => ({ ...p, shipping: e.target.value }))} /></div>
+            </div>
+            <div style={{ marginBottom:8 }}>
+              <label style={lbl}>Sale price (£)</label>
+              <input type="number" min="0" step="0.01" placeholder="0.00" style={inp} value={cg.salePrice} onChange={e => setCg(p => ({ ...p, salePrice: e.target.value }))} />
+            </div>
+            {cHasResult && (
+              <div style={{ display:'flex', justifyContent:'space-between', padding:'8px 12px', background:C.ev, borderRadius:8 }}>
+                <div style={{ textAlign:'center' }}><div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:'#e74c3c' }}>£{cCogs.toFixed(2)}</div><div style={{ fontSize:9, color:C.tx3 }}>COGS</div></div>
+                {cSp > 0 && <>
+                  <div style={{ textAlign:'center' }}><div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:cGross>=0?'#22c55e':'#e74c3c' }}>£{cGross.toFixed(2)}</div><div style={{ fontSize:9, color:C.tx3 }}>Profit</div></div>
+                  <div style={{ textAlign:'center' }}><div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:cMargin>=30?'#22c55e':cMargin>=15?'#e67e22':'#e74c3c' }}>{cMargin.toFixed(1)}%</div><div style={{ fontSize:9, color:C.tx3 }}>Margin</div></div>
+                </>}
+              </div>
+            )}
+          </>
+        )}
+        <div style={{ marginTop:8, textAlign:'center' }}>
+          <Link href={tab==='margin'?'/free-tools/profit-margin-calculator':'/free-tools/cogs-calculator'}
+            style={{ fontSize:11, color:C.acc, fontWeight:600, textDecoration:'none' }}>
+            Full {tab==='margin'?'Margin':'COGS'} calculator →
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── LandingInner ─────────────────────────────────────────────────────────────
 
 function LandingInner({ geo }: { geo: Geo | null }) {
@@ -368,13 +471,14 @@ function LandingInner({ geo }: { geo: Geo | null }) {
   const flag          = liveGeo?.flag              || geo?.flag        || ''
   const isRTL = lang === 'ar'
 
-  const geoCtaText = country ? `Start free — from ${growthPrice}/mo` : 'Start for free →'
+  const geoCtaText = 'Start free — no card needed'
   const geoSubText = country
     ? `No credit card · Prices from ${growthPrice}/mo · 2 minutes to set up`
     : 'No credit card · Takes 2 minutes to set up'
 
   useEffect(() => {
-    // Always fetch live geo on mount — overrides any CDN-cached server-rendered value
+    // Skip client-side geo fetch when server already provided geo via props
+    if (geo) return
     fetch('/api/geo').then(r => r.json()).then(d => {
       if (d.pricing) {
         setLiveGeo({
@@ -469,6 +573,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           .nav-mega-wrap { display:none !important }
           .hero-ctas { flex-direction:column !important }
           .hero-ctas a { width:100% !important; text-align:center !important; justify-content:center !important }
+          .mini-calc { max-width:100% !important }
           .hero-preview-grid { grid-template-columns:1fr !important }
           .pos-callout-mock { display:none !important }
         }
@@ -517,12 +622,14 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             </div>
           </div>
           <Link href="/signin" style={{ padding:'7px 14px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx, fontSize:13, fontWeight:500, textDecoration:'none' }}>Sign in</Link>
-          <Link href="/signin" className="btn-primary" style={{ padding:'7px 16px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none', boxShadow:`0 2px 12px ${C.acc}35` }}>Try free</Link>
+          <Link href="/signin?mode=signup" style={{ padding: '8px 18px', borderRadius: 9999, background: '#d08a59', color: '#fff', fontSize: 13, fontWeight: 700, textDecoration: 'none', fontFamily: 'var(--font-sora)' }}>
+            Get started free →
+          </Link>
         </div>
 
         {/* Mobile nav — hamburger + CTA */}
         <div className="nav-hamburger" style={{ display:'none', alignItems:'center', gap:10 }}>
-          <Link href="/signin" className="btn-primary" style={{ padding:'7px 16px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none', boxShadow:`0 2px 12px ${C.acc}35` }}>Try free</Link>
+          <Link href="/signin?mode=signup" className="btn-primary" style={{ padding:'7px 16px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none', boxShadow:`0 2px 12px ${C.acc}35` }}>Try free</Link>
           <button onClick={() => setMenuOpen(o => !o)} aria-label="Menu" style={{ width:40, height:40, borderRadius:10, border:`1px solid ${C.b}`, background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
             {menuOpen ? (
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.tx} strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -549,7 +656,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           ))}
         </div>
         <div style={{ marginTop:24, display:'flex', flexDirection:'column', gap:10 }}>
-          <Link href="/signin" onClick={() => setMenuOpen(false)} className="btn-primary" style={{ display:'block', padding:'14px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', textAlign:'center' }}>Start free</Link>
+          <Link href="/signin?mode=signup" onClick={() => setMenuOpen(false)} className="btn-primary" style={{ display:'block', padding:'14px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', textAlign:'center' }}>Start free</Link>
           <Link href="/signin" onClick={() => setMenuOpen(false)} style={{ display:'block', padding:'14px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:14, fontWeight:500, textDecoration:'none', textAlign:'center' }}>Sign in</Link>
         </div>
         <div style={{ marginTop:20, display:'flex', justifyContent:'center' }}><LanguageToggle/></div>
@@ -573,8 +680,8 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
         {/* H1 */}
         <h1 className="fade-up" style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(30px,5.5vw,60px)', fontWeight:700, lineHeight:1.07, letterSpacing:'-.04em', marginBottom:22, color:C.tx }}>
-          A full PoS system —<br/>
-          <span style={{ color:C.acc }}>built into your intelligence platform.</span>
+          Ask your business data anything.<br/>
+          <span style={{ color:C.acc }}>Get clear answers in seconds.</span>
         </h1>
 
         <p className="fade-up" style={{ fontSize:'clamp(15px,1.8vw,18px)', color:C.tx2, lineHeight:1.7, maxWidth:540, margin:'0 auto 10px' }}>
@@ -586,16 +693,27 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
         {/* CTAs */}
         <div className="fade-up hero-ctas" style={{ display:'flex', gap:10, flexWrap:'wrap', justifyContent:'center', marginBottom:12 }}>
-          <Link href="/signin" className="btn-primary" style={{ padding:'13px 26px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8, boxShadow:`0 2px 14px ${C.acc}40`, letterSpacing:'-.01em' }}>
+          <Link href="/signin?mode=signup" className="btn-primary" style={{ padding:'13px 26px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8, boxShadow:`0 2px 14px ${C.acc}40`, letterSpacing:'-.01em' }}>
             {geoCtaText}
           </Link>
           <Link href="/point-of-sale" style={{ padding:'13px 20px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:14, fontWeight:500, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:6 }}>
             🧾 See the PoS
           </Link>
         </div>
-        <p className="fade-up" style={{ fontSize:12, color:C.tx3, marginBottom:48 }}>
+        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', justifyContent: 'center', marginTop: 16, fontSize: 12, color: 'var(--tx3)' }}>
+          <span>🔒 Encrypted in transit & at rest</span>
+          <span>🇬🇧 UK data residency</span>
+          <span>✓ GDPR compliant</span>
+          <span>🆓 Free plan, no card needed</span>
+        </div>
+        <p className="fade-up" style={{ fontSize:12, color:C.tx3, marginBottom:28, marginTop:8 }}>
           {country ? `${flag} ${geoSubText}` : geoSubText} · PoS from {posPrice}/seat/mo
         </p>
+
+        {/* ── Mini calculator widget ── */}
+        <div className="fade-up" style={{ marginBottom:40 }}>
+          <MiniCalcWidget />
+        </div>
 
         {/* ── Dual product preview cards ── */}
         <div className="fade-up hero-preview-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, textAlign:'left', maxWidth:900, margin:'0 auto' }}>
@@ -765,7 +883,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               <p style={{ fontSize:15, color:C.tx2, lineHeight:1.7, marginBottom:28 }}>
                 Pre-filled from your connected data. Review, adjust, calculate. No spreadsheets.
               </p>
-              <Link href="/signin" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'11px 22px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:14, fontWeight:600, textDecoration:'none', boxShadow:`0 2px 12px ${C.acc}35` }}>
+              <Link href="/signin?mode=signup" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'11px 22px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:14, fontWeight:600, textDecoration:'none', boxShadow:`0 2px 12px ${C.acc}35` }}>
                 Open the tools →
               </Link>
             </div>
@@ -833,7 +951,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
 
         <div style={{ textAlign:'center', marginTop:36 }}>
-          <Link href="/signin" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'12px 24px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:14, fontWeight:700, textDecoration:'none', boxShadow:`0 3px 16px ${C.acc}40` }}>
+          <Link href="/signin?mode=signup" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'12px 24px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:14, fontWeight:700, textDecoration:'none', boxShadow:`0 3px 16px ${C.acc}40` }}>
             Try the PoS free →
           </Link>
           <p style={{ fontSize:12, color:C.tx3, marginTop:10 }}>{posPrice} per seat/month · Works on tablet or desktop</p>
@@ -944,7 +1062,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                 </div>
                 <p style={{ fontSize:12, color:C.tx3, margin:0, lineHeight:1.5 }}>Add to any Growth or Business plan.<br/>Each seat is one register or device.</p>
                 <div style={{ display:'flex', gap:10, marginTop:18, flexWrap:'wrap' }}>
-                  <Link href="/signin" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'10px 22px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none', boxShadow:`0 3px 16px ${C.acc}40` }}>
+                  <Link href="/signin?mode=signup" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'10px 22px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none', boxShadow:`0 3px 16px ${C.acc}40` }}>
                     Add to my plan →
                   </Link>
                   <Link href="/point-of-sale" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'10px 18px', borderRadius:9999, border:`1px solid ${C.accBdr}`, background:'transparent', color:C.acc, fontSize:13, fontWeight:600, textDecoration:'none' }}>
@@ -1011,7 +1129,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                     </div>
                   ))}
                 </div>
-                <Link href="/signin" className="btn-primary" style={{ display:'block', padding:'11px', borderRadius:10, border:plan.popular?'none':`1px solid ${C.b2}`, background:plan.popular?C.acc:'transparent', color:plan.popular?'#fff':C.tx2, fontSize:14, fontWeight:600, textDecoration:'none', textAlign:'center', boxShadow:plan.popular?`0 2px 12px ${C.acc}35`:'none' }}>
+                <Link href="/signin?mode=signup" className="btn-primary" style={{ display:'block', padding:'11px', borderRadius:10, border:plan.popular?'none':`1px solid ${C.b2}`, background:plan.popular?C.acc:'transparent', color:plan.popular?'#fff':C.tx2, fontSize:14, fontWeight:600, textDecoration:'none', textAlign:'center', boxShadow:plan.popular?`0 2px 12px ${C.acc}35`:'none' }}>
                   {plan.id==='free'?'Start for free':'Upgrade →'}
                 </Link>
               </div>
@@ -1125,7 +1243,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <p style={{ fontSize:16, color:'rgba(255,255,255,.65)', lineHeight:1.7, marginBottom:32 }}>
             Most founders are one question away from a decision that changes their month. Ask AskBiz.
           </p>
-          <Link href="/signin" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'14px 30px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:16, fontWeight:700, textDecoration:'none', boxShadow:`0 4px 24px ${C.acc}50`, letterSpacing:'-.01em' }}>
+          <Link href="/signin?mode=signup" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'14px 30px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:16, fontWeight:700, textDecoration:'none', boxShadow:`0 4px 24px ${C.acc}50`, letterSpacing:'-.01em' }}>
             {geoCtaText}
           </Link>
           <p style={{ fontSize:12, color:'rgba(255,255,255,.35)', marginTop:14 }}>No credit card · 2 minutes to set up · Cancel anytime</p>

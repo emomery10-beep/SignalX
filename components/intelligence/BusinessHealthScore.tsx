@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
 
 interface HealthComponent {
   name: string
@@ -75,8 +76,46 @@ function ScoreDial({ score, color, size }: { score: number; color: 'green' | 'am
   )
 }
 
+const SECTOR_COMP_NAMES: Record<string, Record<string, string>> = {
+  kitchen: { 'Margin Health': 'Food Cost', 'Revenue Trend': 'Covers Trend', 'Stock Position': 'Pantry Stock', 'Product Mix': 'Menu Mix' },
+  repair: { 'Margin Health': 'Repair Margins', 'Revenue Trend': 'Jobs Trend', 'Stock Position': 'Parts Stock', 'Product Mix': 'Service Mix' },
+  salon: { 'Margin Health': 'Service Margins', 'Revenue Trend': 'Bookings Trend', 'Stock Position': 'Product Stock', 'Product Mix': 'Service Mix' },
+  factory: { 'Margin Health': 'Unit Margins', 'Revenue Trend': 'Output Trend', 'Stock Position': 'Raw Materials', 'Product Mix': 'Product Lines' },
+  logistics: { 'Margin Health': 'Route Margins', 'Revenue Trend': 'Delivery Volume', 'Stock Position': 'Fleet Status', 'Product Mix': 'Service Mix' },
+  ecommerce: { 'Margin Health': 'Gross Margins', 'Revenue Trend': 'Orders Trend', 'Stock Position': 'Inventory Levels', 'Product Mix': 'SKU Mix' },
+  retail: { 'Margin Health': 'Product Margins', 'Revenue Trend': 'Sales Trend', 'Stock Position': 'Shelf Stock', 'Product Mix': 'Category Mix' },
+}
+
+function detectSectorFromBT(bt: string): string {
+  const t = (bt || '').toLowerCase()
+  if (['restaurant','cafe','café','bar','pub','takeaway','food','catering','bistro','diner','bakery','kitchen'].some(k => t.includes(k))) return 'kitchen'
+  if (['repair','phone','mobile','electronic','watch','laptop','computer'].some(k => t.includes(k))) return 'repair'
+  if (['salon','barber','barbershop','spa','beauty','clinic','nail'].some(k => t.includes(k))) return 'salon'
+  if (['factory','manufactur','production','warehouse','processing','packaging'].some(k => t.includes(k))) return 'factory'
+  if (['logistics','courier','delivery','shipping','transport','freight'].some(k => t.includes(k))) return 'logistics'
+  if (['ecommerce','e-commerce','online','shopify','woocommerce','amazon','etsy','dropship'].some(k => t.includes(k))) return 'ecommerce'
+  if (['retail','shop','store','supermarket','boutique','pharmacy','hardware'].some(k => t.includes(k))) return 'retail'
+  return 'default'
+}
+
 export default function BusinessHealthScore({ health, size = 'md', showComponents = false, onAsk }: Props) {
   const [expanded, setExpanded] = useState(false)
+  const [sectorKey, setSectorKey] = useState('default')
+
+  useEffect(() => {
+    const sb = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+    sb.auth.getUser().then(({ data }) => {
+      if (!data.user) return
+      sb.from('profiles').select('business_type').eq('id', data.user.id).single()
+        .then(({ data: profile }) => {
+          if (profile?.business_type) setSectorKey(detectSectorFromBT(profile.business_type))
+        })
+    })
+  }, [])
+
+  function sectorName(compName: string) {
+    return SECTOR_COMP_NAMES[sectorKey]?.[compName] || compName
+  }
 
   if (!health) {
     return (
@@ -135,7 +174,7 @@ export default function BusinessHealthScore({ health, size = 'md', showComponent
           {health.components.map((comp, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: STATUS_DOT[comp.status], flexShrink: 0 }}/>
-              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', minWidth: 110 }}>{comp.name}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', minWidth: 110 }}>{sectorName(comp.name)}</span>
               <div style={{ flex: 1, height: 4, background: 'var(--ov)', borderRadius: 2, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${(comp.score / 20) * 100}%`, background: STATUS_DOT[comp.status], borderRadius: 2, transition: 'width 0.8s var(--ease)' }}></div>
               </div>

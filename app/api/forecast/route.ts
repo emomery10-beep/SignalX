@@ -7,27 +7,39 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { uploadId, targetColumn, horizonDays = 14, method = 'linear', name, confidence = 1.5 } = await request.json()
-  if (!uploadId || !targetColumn) return NextResponse.json({ error: 'uploadId and targetColumn required' }, { status: 400 })
+  const { uploadId, sourceDatasetId, sourceRows, targetColumn, horizonDays = 14, method = 'linear', name, confidence = 1.5 } = await request.json()
+  if (!targetColumn) return NextResponse.json({ error: 'targetColumn required' }, { status: 400 })
+  if (!uploadId && !sourceDatasetId && !sourceRows) return NextResponse.json({ error: 'uploadId or sourceDatasetId required' }, { status: 400 })
 
-  // Load the parsed dataset
-  const { data: upload } = await supabase
-    .from('uploads')
-    .select('parsed_sample, filename')
-    .eq('id', uploadId)
-    .eq('user_id', user.id)
-    .single()
+  let rows: Record<string, unknown>[]
+  let datasetLabel = ''
 
-  if (!upload?.parsed_sample) return NextResponse.json({ error: 'Dataset not found or not yet parsed' }, { status: 404 })
+  if (sourceRows && Array.isArray(sourceRows)) {
+    // Pre-fetched source data passed directly
+    rows = sourceRows
+    datasetLabel = sourceDatasetId || 'source'
+  } else if (uploadId) {
+    // Load from uploads table
+    const { data: upload } = await supabase
+      .from('uploads')
+      .select('parsed_sample, filename')
+      .eq('id', uploadId)
+      .eq('user_id', user.id)
+      .single()
+    if (!upload?.parsed_sample) return NextResponse.json({ error: 'Dataset not found or not yet parsed' }, { status: 404 })
+    rows = upload.parsed_sample as Record<string, unknown>[]
+    datasetLabel = upload.filename || uploadId
+  } else {
+    return NextResponse.json({ error: 'No data source provided' }, { status: 400 })
+  }
 
   try {
-    const rows = upload.parsed_sample as Record<string, unknown>[]
     const result = forecastFromDataset(rows, targetColumn, horizonDays, method, confidence)
 
     // Save forecast to DB
     const { data: saved } = await supabase.from('forecasts').insert({
       user_id: user.id,
-      upload_id: uploadId,
+      upload_id: uploadId || null,
       name: name || `${targetColumn} forecast`,
       target_column: targetColumn,
       method,

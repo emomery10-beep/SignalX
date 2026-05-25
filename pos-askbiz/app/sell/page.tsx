@@ -127,7 +127,8 @@ export default function SellPage() {
     if (navigator.geolocation) {
       const doGeo = () => navigator.geolocation.getCurrentPosition(
         pos => setGeoCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => {} // silently ignore denial
+        () => {}, // silently ignore denial
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
       )
       doGeo()
       // Refresh every 60 s so coords stay current for long sessions
@@ -362,6 +363,18 @@ export default function SellPage() {
     setProcessing(true)
     setCheckoutError('')
     try {
+      // Attempt a fresh geo capture right before checkout (3s timeout)
+      let geo = geoCoords
+      if (!geo && navigator.geolocation) {
+        geo = await new Promise<{ lat: number; lng: number } | null>(resolve => {
+          const timer = setTimeout(() => resolve(null), 3000)
+          navigator.geolocation.getCurrentPosition(
+            pos => { clearTimeout(timer); const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }; setGeoCoords(coords); resolve(coords) },
+            () => { clearTimeout(timer); resolve(null) },
+            { enableHighAccuracy: false, timeout: 3000, maximumAge: 300000 }
+          )
+        })
+      }
       const res = await fetch(`${API}/api/pos/transactions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-owner-id': staff.owner_id, 'x-staff-id': staff.id },
@@ -372,7 +385,7 @@ export default function SellPage() {
           customer_phone:  customerPhone || null,
           discount_amount: discountAmt || null,
           amount_tendered: paymentType === 'cash' && tendered ? tendered : null,
-          notes:           [tableNumber ? `Table: ${tableNumber}` : '', geoCoords ? `|__geo:${geoCoords.lat.toFixed(6)},${geoCoords.lng.toFixed(6)}` : ''].filter(Boolean).join(' ') || undefined,
+          notes:           [tableNumber ? `Table: ${tableNumber}` : '', geo ? `|__geo:${geo.lat.toFixed(6)},${geo.lng.toFixed(6)}` : ''].filter(Boolean).join(' ') || undefined,
         }),
       })
       const data = await res.json()

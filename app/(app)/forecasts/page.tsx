@@ -7,6 +7,7 @@ import { detectNumericColumns } from '@/lib/forecast'
 import type { MethodComparison, DataStats } from '@/lib/forecast'
 
 interface Upload { id: string; filename: string; column_names: string[] }
+interface SourceDataset { id: string; name: string; sourceType: 'ecommerce' | 'pos'; columns: string[]; rowCount: number }
 interface ForecastResult {
   labels: string[]; actual: (number|null)[]; predicted: number[]
   upperBound: number[]; lowerBound: number[]
@@ -31,7 +32,10 @@ export default function ForecastsPage() {
 
   // Core state
   const [uploads, setUploads] = useState<Upload[]>([])
+  const [sourceDatasets, setSourceDatasets] = useState<SourceDataset[]>([])
   const [selectedUpload, setSelectedUpload] = useState<Upload | null>(null)
+  const [selectedSource, setSelectedSource] = useState<SourceDataset | null>(null)
+  const [sourceRows, setSourceRows] = useState<Record<string, unknown>[] | null>(null)
   const [targetColumn, setTargetColumn] = useState('')
   const [horizon, setHorizon] = useState(14)
   const [method, setMethod] = useState<Method>('auto')
@@ -74,12 +78,14 @@ export default function ForecastsPage() {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const [{ data: ups }, { data: forecasts }] = await Promise.all([
+      const [{ data: ups }, { data: forecasts }, sourcesRes] = await Promise.all([
         supabase.from('uploads').select('id, filename, column_names').eq('user_id', user.id).eq('status', 'parsed').order('created_at', { ascending: false }),
         supabase.from('forecasts').select('id, name, accuracy, method, created_at, target_column, horizon_days, result').eq('user_id', user.id).order('created_at', { ascending: false }).limit(15),
+        fetch('/api/forecast/sources').then(r => r.json()).catch(() => ({ datasets: [] })),
       ])
       setUploads(ups || [])
       setSavedForecasts(forecasts || [])
+      setSourceDatasets(sourcesRes.datasets || [])
     }
     load()
   }, [supabase])
@@ -211,12 +217,19 @@ export default function ForecastsPage() {
 
   // ── Actions ────────────────────────────────────────────────
   const runForecast = async () => {
-    if (!selectedUpload || !targetColumn) return
+    if ((!selectedUpload && !selectedSource) || !targetColumn) return
     setLoading(true); setError(''); setComparison(null); setActiveTab('overview'); setWhatIfResult(null); setOverlayForecasts([])
     try {
+      const body: Record<string, unknown> = { targetColumn, horizonDays: horizon, method, name: forecastName || undefined, confidence }
+      if (selectedUpload) {
+        body.uploadId = selectedUpload.id
+      } else if (selectedSource && sourceRows) {
+        body.sourceDatasetId = selectedSource.id
+        body.sourceRows = sourceRows
+      }
       const res = await fetch('/api/forecast', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uploadId: selectedUpload.id, targetColumn, horizonDays: horizon, method, name: forecastName || undefined, confidence }),
+        body: JSON.stringify(body),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
@@ -235,10 +248,13 @@ export default function ForecastsPage() {
   }
 
   const runComparison = async () => {
-    if (!selectedUpload || !targetColumn) return
+    if ((!selectedUpload && !selectedSource) || !targetColumn) return
     setComparingMethods(true)
     try {
-      const res = await fetch('/api/forecast/compare', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uploadId: selectedUpload.id, targetColumn, horizonDays: horizon }) })
+      const body: Record<string, unknown> = { targetColumn, horizonDays: horizon }
+      if (selectedUpload) body.uploadId = selectedUpload.id
+      else if (selectedSource && sourceRows) { body.sourceDatasetId = selectedSource.id; body.sourceRows = sourceRows }
+      const res = await fetch('/api/forecast/compare', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()
       if (res.ok) { setComparison(data); setActiveTab('comparison') }
     } catch { /* ignore */ }
@@ -246,12 +262,15 @@ export default function ForecastsPage() {
   }
 
   const runWhatIf = async () => {
-    if (!selectedUpload || !targetColumn || !result) return
+    if ((!selectedUpload && !selectedSource) || !targetColumn || !result) return
     setWhatIfLoading(true)
     try {
+      const body: Record<string, unknown> = { targetColumn, horizonDays: horizon, method: result.methodKey || 'linear', adjustments: { startPeriod: whatIfStart, endPeriod: whatIfEnd, changePct: whatIfChange }, confidence }
+      if (selectedUpload) body.uploadId = selectedUpload.id
+      else if (selectedSource && sourceRows) { body.sourceDatasetId = selectedSource.id; body.sourceRows = sourceRows }
       const res = await fetch('/api/forecast/whatif', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uploadId: selectedUpload.id, targetColumn, horizonDays: horizon, method: result.methodKey || 'linear', adjustments: { startPeriod: whatIfStart, endPeriod: whatIfEnd, changePct: whatIfChange }, confidence }),
+        body: JSON.stringify(body),
       })
       const data = await res.json()
       if (res.ok) setWhatIfResult(data)
@@ -401,10 +420,10 @@ export default function ForecastsPage() {
       </div>
 
       <div className="page-shell-body">
-        <div style={{ display: 'grid', gridTemplateColumns: 'min(300px,100%) 1fr', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'min(230px,100%) 1fr', gap: 14 }}>
 
           {/* ═══ LEFT SIDEBAR ═══ */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
 
             {/* ── Configuration ───────────────────────────────── */}
             <div style={card}>
@@ -412,21 +431,52 @@ export default function ForecastsPage() {
 
               <div style={formGroup}>
                 <label style={labelStyle}>Dataset</label>
-                <select style={selectStyle} value={selectedUpload?.id || ''} onChange={async (e) => {
-                  const up = uploads.find(u => u.id === e.target.value) || null
-                  setSelectedUpload(up); setTargetColumn(''); setResult(null); setComparison(null); setStats(null); setWhatIfResult(null); setOverlayForecasts([])
+                <select style={selectStyle} value={selectedUpload?.id || selectedSource?.id || ''} onChange={async (e) => {
+                  const val = e.target.value
+                  setTargetColumn(''); setResult(null); setComparison(null); setStats(null); setWhatIfResult(null); setOverlayForecasts([])
+                  setSelectedUpload(null); setSelectedSource(null); setSourceRows(null); setNumericColumns([])
+
+                  // Check if it's a source dataset
+                  const src = sourceDatasets.find(s => s.id === val)
+                  if (src) {
+                    setSelectedSource(src)
+                    setNumericColumns(src.columns)
+                    // Pre-fetch the aggregated rows
+                    try {
+                      const res = await fetch('/api/forecast/sources', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ datasetId: src.id, targetColumn: src.columns[0] }) })
+                      const data = await res.json()
+                      if (data.rows) { setSourceRows(data.rows); setNumericColumns(data.columns || src.columns) }
+                    } catch { /* use column list from GET */ }
+                    return
+                  }
+
+                  // Otherwise it's an upload
+                  const up = uploads.find(u => u.id === val) || null
+                  setSelectedUpload(up)
                   if (up) {
                     const { data } = await supabase.from('uploads').select('parsed_sample').eq('id', up.id).single()
                     if (data?.parsed_sample) setNumericColumns(detectNumericColumns(data.parsed_sample as Record<string, unknown>[]))
-                    else setNumericColumns([])
                   }
                 }}>
-                  <option value="">Choose a file…</option>
-                  {uploads.map(u => <option key={u.id} value={u.id}>{u.filename}</option>)}
+                  <option value="">Choose a dataset…</option>
+                  {sourceDatasets.length > 0 && (
+                    <optgroup label="Connected Sources">
+                      {sourceDatasets.map(s => (
+                        <option key={s.id} value={s.id}>
+                          {s.sourceType === 'pos' ? '🏪 ' : '🛒 '}{s.name} ({s.rowCount.toLocaleString()} records)
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {uploads.length > 0 && (
+                    <optgroup label="Uploaded Files">
+                      {uploads.map(u => <option key={u.id} value={u.id}>📄 {u.filename}</option>)}
+                    </optgroup>
+                  )}
                 </select>
               </div>
 
-              {selectedUpload && (
+              {(selectedUpload || selectedSource) && (
                 <div style={formGroup}>
                   <label style={labelStyle}>Column to forecast</label>
                   <select style={selectStyle} value={targetColumn} onChange={e => {
@@ -434,8 +484,8 @@ export default function ForecastsPage() {
                     if (e.target.value && selectedUpload) fetchStats(selectedUpload.id, e.target.value)
                   }}>
                     <option value="">Choose a column…</option>
-                    {numericColumns.length > 0 && <optgroup label="Numeric (recommended)">{numericColumns.map(c => <option key={c} value={c}>{c}</option>)}</optgroup>}
-                    {selectedUpload.column_names?.filter(c => !numericColumns.includes(c)).length > 0 && (
+                    {numericColumns.length > 0 && <optgroup label="Numeric (recommended)">{numericColumns.map(c => <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>)}</optgroup>}
+                    {selectedUpload && selectedUpload.column_names?.filter(c => !numericColumns.includes(c)).length > 0 && (
                       <optgroup label="Text (auto-detect numeric)">{selectedUpload.column_names?.filter(c => !numericColumns.includes(c)).map(c => <option key={c} value={c}>{c}</option>)}</optgroup>
                     )}
                   </select>
@@ -470,12 +520,12 @@ export default function ForecastsPage() {
               <div style={formGroup}>
                 <label style={labelStyle}>Confidence: {confidence === 1 ? '68%' : confidence === 1.5 ? '87%' : confidence === 2 ? '95%' : `${Math.round(confidence * 50)}%`}</label>
                 <input type="range" min="0.5" max="2.5" step="0.5" value={confidence} onChange={e => setConfidence(Number(e.target.value))} style={{ width: '100%', accentColor: '#9268f8' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}><span>Narrow</span><span>Wide</span></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--tx3)', marginTop: -2 }}><span>Narrow</span><span>Wide</span></div>
               </div>
 
               {error && <div style={{ color: '#f48080', fontSize: 12, marginBottom: 10, padding: '8px 10px', background: 'rgba(232,64,64,.08)', borderRadius: 8 }}>{error}</div>}
 
-              <button onClick={runForecast} disabled={loading || !selectedUpload || !targetColumn} style={primaryBtn(!!selectedUpload && !!targetColumn && !loading)}>
+              <button onClick={runForecast} disabled={loading || (!selectedUpload && !selectedSource) || !targetColumn} style={primaryBtn((!!selectedUpload || !!selectedSource) && !!targetColumn && !loading)}>
                 {loading ? <span style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}><Spinner /> Running…</span> : 'Run forecast →'}
               </button>
 
@@ -654,7 +704,7 @@ export default function ForecastsPage() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                         <div style={chartTitle}>{targetColumn} — {horizon}-day forecast {scenario !== 'base' && `(${scenario})`}</div>
                       </div>
-                      <canvas ref={chartRef} height={220}/>
+                      <canvas ref={chartRef} height={200}/>
                     </div>
                     <div style={{ ...card, padding: '14px 16px' }}>
                       <div style={{ ...chartTitle, marginBottom: 8 }}>AI summary</div>
@@ -869,22 +919,22 @@ function scenarioBtn(s: string, active: string): React.CSSProperties {
 }
 
 // ── Style constants ─────────────────────────────────────────
-const card: React.CSSProperties = { background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 14, padding: 18 }
-const sectionLabel: React.CSSProperties = { fontSize: 11, fontWeight: 500, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 14 }
-const formGroup: React.CSSProperties = { marginBottom: 12 }
-const labelStyle: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--tx2)', marginBottom: 5 }
-const selectStyle: React.CSSProperties = { fontFamily: 'inherit', fontSize: 13, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 10, padding: '9px 12px', outline: 'none', width: '100%' }
-const inputStyle: React.CSSProperties = { fontFamily: 'inherit', fontSize: 13, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 10, padding: '9px 12px', outline: 'none', width: '100%', boxSizing: 'border-box' }
+const card: React.CSSProperties = { background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, padding: '6px 8px' }
+const sectionLabel: React.CSSProperties = { fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 1, lineHeight: 1 }
+const formGroup: React.CSSProperties = { marginBottom: 3 }
+const labelStyle: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--tx2)', marginBottom: 0, lineHeight: 1, paddingBottom: 1 }
+const selectStyle: React.CSSProperties = { fontFamily: 'inherit', fontSize: 11, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 8, padding: '5px 8px', outline: 'none', width: '100%' }
+const inputStyle: React.CSSProperties = { fontFamily: 'inherit', fontSize: 11, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 8, padding: '5px 8px', outline: 'none', width: '100%', boxSizing: 'border-box', marginTop: 0 }
 const warningBox: React.CSSProperties = { marginTop: 5, fontSize: 11, color: '#f59e0b', lineHeight: 1.5, padding: '6px 8px', background: 'rgba(245,158,11,.06)', borderRadius: 6 }
 const chartTitle: React.CSSProperties = { fontSize: 11, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', fontWeight: 500 }
 const tdStyle: React.CSSProperties = { padding: '8px 10px', borderBottom: '1px solid var(--b)' }
 const thStyle: React.CSSProperties = { textAlign: 'left', padding: '8px 10px', borderBottom: '2px solid var(--b)', fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em', fontWeight: 500 }
 
 const primaryBtn = (enabled: boolean): React.CSSProperties => ({
-  width: '100%', padding: '11px', borderRadius: 9999, border: 'none',
+  width: '100%', padding: '6px', borderRadius: 9999, border: 'none',
   background: enabled ? '#1ed4ca' : 'var(--b2)', color: '#04080f',
-  fontFamily: 'inherit', fontSize: 13, fontWeight: 600,
-  cursor: enabled ? 'pointer' : 'not-allowed', marginTop: 4, transition: 'all .15s',
+  fontFamily: 'inherit', fontSize: 12, fontWeight: 600,
+  cursor: enabled ? 'pointer' : 'not-allowed', marginTop: 1, transition: 'all .15s',
 })
 
 const secondaryBtnStyle: React.CSSProperties = {

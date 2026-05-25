@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { resolvePosOwner } from '@/lib/pos-auth'
+import { resolvePosAuth } from '@/lib/pos-auth'
+import { logPosAudit } from '@/lib/pos-audit'
 
 /**
  * POST /api/pos/shift/open
@@ -14,8 +15,9 @@ import { resolvePosOwner } from '@/lib/pos-auth'
  *   opening_cash_balance: number (in pence/cents)
  */
 export async function POST(req: NextRequest) {
-  const ownerId = await resolvePosOwner(req)
-  if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  const auth = await resolvePosAuth(req)
+  if (!auth) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  const ownerId = auth.ownerId
 
   const service = createServiceClient()
   const body = await req.json()
@@ -58,6 +60,9 @@ export async function POST(req: NextRequest) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+
+  logPosAudit({ auth, event: 'shift.opened', entityType: 'shift', entityId: shift.id,
+    metadata: { cashier_id: cashier_id, location_id, opening_balance: opening_cash_balance } })
 
   return NextResponse.json({
     success: true,

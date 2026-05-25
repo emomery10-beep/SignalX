@@ -4,11 +4,19 @@ import Link from "next/link";
 import { AcademyArticle } from "@/lib/academy-types";
 import { academyArticles } from "@/lib/academy-content";
 
-interface Props {
-  article: AcademyArticle;
+interface BlogCrossLink {
+  slug: string;
+  title: string;
+  cluster: string;
+  readTime: number;
 }
 
-export default function AcademyArticleClient({ article }: Props) {
+interface Props {
+  article: AcademyArticle;
+  blogCrossLinks?: BlogCrossLink[];
+}
+
+export default function AcademyArticleClient({ article, blogCrossLinks = [] }: Props) {
   const related = academyArticles.filter((a) => article.relatedSlugs.includes(a.slug));
 
   const diffColor =
@@ -75,16 +83,37 @@ export default function AcademyArticleClient({ article }: Props) {
 
           {/* Article Sections */}
           {article.content.map((section, i) => (
-            <div key={i} style={{ marginBottom: 36 }}>
-              <h2
-                id={`section-${i}`}
-                style={{ fontFamily: "Sora, sans-serif", fontSize: 20, fontWeight: 700, color: "#1a1a2e", margin: "0 0 12px" }}
-              >
-                {section.heading}
-              </h2>
-              <p style={{ fontSize: 16, color: "#444", lineHeight: 1.8, margin: 0 }}>
-                {section.body}
-              </p>
+            <div key={i}>
+              <div style={{ marginBottom: 36 }}>
+                <h2
+                  id={`section-${i}`}
+                  style={{ fontFamily: "Sora, sans-serif", fontSize: 20, fontWeight: 700, color: "#1a1a2e", margin: "0 0 12px" }}
+                >
+                  {section.heading}
+                </h2>
+                <p style={{ fontSize: 16, color: "#444", lineHeight: 1.8, margin: 0 }}>
+                  {section.body}
+                </p>
+              </div>
+              {i === Math.floor(article.content.length / 2) - 1 && (
+                <div style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #2d2a40 100%)", borderRadius: 14, padding: "28px 24px", marginBottom: 36, textAlign: "center" }}>
+                  <p style={{ color: "#d08a59", fontFamily: "Sora, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 8px" }}>
+                    Free — no card needed
+                  </p>
+                  <p style={{ color: "#fff", fontFamily: "Sora, sans-serif", fontSize: 18, fontWeight: 700, margin: "0 0 8px", lineHeight: 1.3 }}>
+                    See this in action for your business
+                  </p>
+                  <p style={{ color: "rgba(255,255,255,.55)", fontSize: 14, margin: "0 0 20px", lineHeight: 1.5 }}>
+                    AskBiz tracks these metrics automatically — just connect your data and start asking questions.
+                  </p>
+                  <Link
+                    href="/signin?mode=signup"
+                    style={{ display: "inline-flex", alignItems: "center", background: "#d08a59", color: "#fff", padding: "11px 22px", borderRadius: 8, fontWeight: 700, fontSize: 14, textDecoration: "none", fontFamily: "Sora, sans-serif" }}
+                  >
+                    Start for free →
+                  </Link>
+                </div>
+              )}
             </div>
           ))}
 
@@ -114,6 +143,42 @@ export default function AcademyArticleClient({ article }: Props) {
                     {rel.title}
                     <span style={{ display: "block", color: "#999", fontSize: 11, marginTop: 6 }}>
                       {rel.readTime} min · {rel.difficulty}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Blog cross-links — boosts internal link graph between academy and blog */}
+          {blogCrossLinks.length > 0 && (
+            <div style={{ marginTop: 48, paddingTop: 32, borderTop: "1px solid #eee" }}>
+              <h2 style={{ fontFamily: "Sora, sans-serif", fontSize: 18, fontWeight: 700, color: "#1a1a2e", marginBottom: 20 }}>
+                Further Reading
+              </h2>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
+                {blogCrossLinks.map((post) => (
+                  <Link
+                    key={post.slug}
+                    href={`/blog/${post.slug}`}
+                    style={{
+                      display: "block",
+                      padding: "14px 16px",
+                      background: "#fff",
+                      borderRadius: 10,
+                      border: "1px solid #eee",
+                      textDecoration: "none",
+                      color: "#1a1a2e",
+                      fontSize: 14,
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    <span style={{ display: "block", color: "#d08a59", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+                      {post.cluster}
+                    </span>
+                    {post.title}
+                    <span style={{ display: "block", color: "#999", fontSize: 11, marginTop: 6 }}>
+                      {post.readTime} min read
                     </span>
                   </Link>
                 ))}
@@ -151,17 +216,17 @@ export default function AcademyArticleClient({ article }: Props) {
 
           {/* CTA box */}
           <div style={{ background: "#1a1a2e", borderRadius: 14, padding: 24, textAlign: "center" }}>
-            <p style={{ color: "#d08a59", fontFamily: "Sora, sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
-              AskBiz
+            <p style={{ color: "#d08a59", fontFamily: "Sora, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
+              Free — no card needed
             </p>
             <p style={{ color: "#fff", fontFamily: "Sora, sans-serif", fontSize: 16, fontWeight: 700, marginBottom: 10, lineHeight: 1.3 }}>
-              See these metrics for your business
+              See this data for your own business
             </p>
             <p style={{ color: "#b0b8c8", fontSize: 13, marginBottom: 20, lineHeight: 1.5 }}>
-              AskBiz connects to your data and surfaces insights like these automatically.
+              AskBiz connects to your existing tools and tracks metrics like these automatically — no spreadsheets needed.
             </p>
             <Link
-              href="/signup"
+              href="/signin"
               style={{
                 display: "block",
                 background: "#d08a59",
@@ -172,9 +237,21 @@ export default function AcademyArticleClient({ article }: Props) {
                 fontSize: 14,
                 textDecoration: "none",
                 fontFamily: "Sora, sans-serif",
+                marginBottom: 10,
               }}
             >
-              Start Free Trial
+              Start for free →
+            </Link>
+            <Link
+              href="/pricing"
+              style={{
+                display: "block",
+                color: "#b0b8c8",
+                fontSize: 12,
+                textDecoration: "none",
+              }}
+            >
+              See pricing & integrations
             </Link>
           </div>
         </aside>

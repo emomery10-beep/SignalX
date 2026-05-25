@@ -12,32 +12,55 @@ const SEVERITY_COLORS: Record<SignalSeverity, { bg: string; border: string; dot:
   blue:   { bg: 'rgba(99,102,241,.06)',  border: 'rgba(99,102,241,.3)',  dot: '#6366f1', text: '#6366f1' },
 }
 
-function SignalCard({ signal, onAction, isNew }: { signal: Signal; onAction: (s: string) => void; isNew: boolean }) {
-  const [dismissed, setDismissed] = useState(false)
-  const [visible, setVisible] = useState(false)
+// ── SignalCard ─────────────────────────────────────────────────────────────────
+function SignalCard({
+  signal, onAction, isNew, onDismiss,
+}: {
+  signal: Signal
+  onAction: (s: string) => void
+  isNew: boolean
+  onDismiss: (id: string) => void
+}) {
+  const [entered, setEntered]   = useState(false)  // slide-in done
+  const [exiting, setExiting]   = useState(false)  // exit animation in progress
   const c = SEVERITY_COLORS[signal.severity]
 
+  // Slide in on mount
   useEffect(() => {
-    // Slide in animation
-    const t = setTimeout(() => setVisible(true), 50)
+    const t = setTimeout(() => setEntered(true), 50)
     return () => clearTimeout(t)
   }, [])
 
-  if (dismissed) return null
+  const handleDismiss = () => {
+    if (exiting) return
+    setExiting(true)
+    // Wait for exit animation to finish, then tell parent
+    setTimeout(() => onDismiss(signal.id), 280)
+  }
 
   return (
-    <div style={{
-      background: c.bg,
-      border: `1px solid ${c.border}`,
-      borderRadius: 14,
-      padding: '14px 14px 12px',
-      marginBottom: 10,
-      transform: visible ? 'translateY(0)' : 'translateY(-12px)',
-      opacity: visible ? 1 : 0,
-      transition: 'transform 300ms cubic-bezier(.16,1,.3,1), opacity 300ms ease',
-      position: 'relative',
-      boxShadow: isNew ? `0 0 0 1px ${c.border}, 0 4px 20px ${c.bg}` : 'none',
-    }}>
+    <div
+      style={{
+        background: c.bg,
+        border: `1px solid ${c.border}`,
+        borderRadius: 14,
+        padding: '14px 14px 12px',
+        marginBottom: exiting ? 0 : 10,
+        position: 'relative',
+        boxShadow: isNew ? `0 0 0 1px ${c.border}, 0 4px 20px ${c.bg}` : 'none',
+        // Enter: slide down + fade in. Exit: fade out + lift up slightly
+        opacity:   exiting ? 0 : (entered ? 1 : 0),
+        transform: exiting
+          ? 'translateY(-6px) scale(0.98)'
+          : (entered ? 'translateY(0)' : 'translateY(-12px)'),
+        maxHeight: exiting ? 0 : 400,
+        overflow: 'hidden',
+        transition: exiting
+          ? 'opacity 220ms ease-out, transform 220ms ease-out, max-height 280ms ease-out, margin-bottom 280ms ease-out'
+          : 'transform 300ms cubic-bezier(.16,1,.3,1), opacity 300ms ease',
+        pointerEvents: exiting ? 'none' : 'auto',
+      }}
+    >
       {/* Severity dot + title row */}
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 7 }}>
         <div style={{
@@ -45,11 +68,10 @@ function SignalCard({ signal, onAction, isNew }: { signal: Signal; onAction: (s:
           flexShrink: 0, marginTop: 5,
           boxShadow: isNew ? `0 0 6px ${c.dot}` : 'none',
           animation: signal.severity === 'red' ? 'pulse 1.5s infinite' : 'none',
-        }}></div>
+        }} />
         <div style={{ fontFamily: 'var(--font-sora)', fontSize: 13, fontWeight: 600, color: 'var(--tx)', flex: 1, lineHeight: 1.4 }}>
           {signal.title}
         </div>
-        {/* Metric badge */}
         {signal.metric && (
           <span style={{ fontSize: 10, fontWeight: 700, color: c.text, background: c.bg, border: `1px solid ${c.border}`, borderRadius: 9999, padding: '2px 7px', flexShrink: 0, whiteSpace: 'nowrap' }}>
             {signal.metric}
@@ -79,21 +101,37 @@ function SignalCard({ signal, onAction, isNew }: { signal: Signal; onAction: (s:
           {signal.suggested_action} →
         </button>
         <button
-          onClick={() => setDismissed(true)}
+          onClick={handleDismiss}
           style={{
             fontSize: 12, padding: '5px 10px',
-            borderRadius: 9999, border: '1px solid var(--b)',
+            borderRadius: 9999,
+            border: '1px solid var(--b)',
             background: 'transparent', color: 'var(--tx3)',
             cursor: 'pointer', fontFamily: 'inherit',
+            transition: 'background 150ms, color 150ms',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'var(--ev)'
+            e.currentTarget.style.color = 'var(--tx2)'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.color = 'var(--tx3)'
           }}
         >
           Dismiss
         </button>
       </div>
 
-      {/* New indicator */}
+      {/* NEW badge */}
       {isNew && (
-        <div style={{ position: 'absolute', top: 10, right: 10, fontSize: 9, fontWeight: 700, color: c.text, background: c.bg, border: `1px solid ${c.border}`, borderRadius: 9999, padding: '2px 6px', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+        <div style={{
+          position: 'absolute', top: 10, right: 10,
+          fontSize: 9, fontWeight: 700, color: c.text,
+          background: c.bg, border: `1px solid ${c.border}`,
+          borderRadius: 9999, padding: '2px 6px',
+          letterSpacing: '.06em', textTransform: 'uppercase',
+        }}>
           NEW
         </div>
       )}
@@ -101,13 +139,31 @@ function SignalCard({ signal, onAction, isNew }: { signal: Signal; onAction: (s:
   )
 }
 
+// ── BusinessPulse panel ────────────────────────────────────────────────────────
 export default function BusinessPulse({ onActionClick }: Props) {
-  const [signals, setSignals] = useState<Signal[]>([])
-  const [loading, setLoading] = useState(true)
-  const [open, setOpen] = useState(true)
-  const [newIds, setNewIds] = useState<Set<string>>(new Set())
-  const prevIdsRef = useRef<Set<string>>(new Set())
-  const pollRef = useRef<NodeJS.Timeout | null>(null)
+  const [signals, setSignals]       = useState<Signal[]>([])
+  const [loading, setLoading]       = useState(true)
+  const [open, setOpen]             = useState(true)
+  const [newIds, setNewIds]         = useState<Set<string>>(new Set())
+  const prevIdsRef                  = useRef<Set<string>>(new Set())
+  const pollRef                     = useRef<NodeJS.Timeout | null>(null)
+
+  // Dismissed IDs — persisted in localStorage so they survive re-fetches and refreshes
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set()
+    try {
+      const raw = localStorage.getItem('bp_dismissed')
+      return raw ? new Set(JSON.parse(raw) as string[]) : new Set()
+    } catch { return new Set() }
+  })
+
+  const dismissSignal = (id: string) => {
+    setDismissedIds(prev => {
+      const next = new Set([...prev, id])
+      try { localStorage.setItem('bp_dismissed', JSON.stringify([...next])) } catch {}
+      return next
+    })
+  }
 
   const fetchSignals = async () => {
     try {
@@ -116,7 +172,7 @@ export default function BusinessPulse({ onActionClick }: Props) {
       const data = await res.json()
       const incoming: Signal[] = data.signals || []
 
-      // Detect new signals
+      // Detect brand-new signals
       const fresh = new Set(incoming.filter(s => !prevIdsRef.current.has(s.id)).map(s => s.id))
       if (fresh.size > 0) setNewIds(prev => new Set([...prev, ...fresh]))
 
@@ -129,20 +185,21 @@ export default function BusinessPulse({ onActionClick }: Props) {
 
   useEffect(() => {
     fetchSignals()
-    // Poll every 5 minutes for new signals
     pollRef.current = setInterval(fetchSignals, 5 * 60 * 1000)
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
   }, [])
 
-  // Clear "new" badge after 10 seconds
+  // Clear "NEW" badge after 10 s
   useEffect(() => {
     if (newIds.size === 0) return
-    const t = setTimeout(() => setNewIds(new Set()), 10000)
+    const t = setTimeout(() => setNewIds(new Set()), 10_000)
     return () => clearTimeout(t)
   }, [newIds])
 
-  const hasSignals = signals.length > 0
-  const redCount = signals.filter(s => s.severity === 'red').length
+  // Visible signals = fetched minus dismissed
+  const visibleSignals = signals.filter(s => !dismissedIds.has(s.id))
+  const hasSignals  = visibleSignals.length > 0
+  const redCount    = visibleSignals.filter(s => s.severity === 'red').length
 
   return (
     <div style={{
@@ -161,9 +218,16 @@ export default function BusinessPulse({ onActionClick }: Props) {
       {/* Header toggle */}
       <div
         onClick={() => setOpen(v => !v)}
-        style={{ padding: '12px 14px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', flexShrink: 0, userSelect: 'none', minHeight: 48 }}
-        onMouseEnter={e => e.currentTarget.style.background = 'var(--ev)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+        style={{
+          padding: '12px 14px',
+          borderBottom: '1px solid var(--b)',
+          display: 'flex', alignItems: 'center', gap: 8,
+          cursor: 'pointer', flexShrink: 0,
+          userSelect: 'none', minHeight: 48,
+          transition: 'background 150ms',
+        }}
+        onMouseEnter={e => (e.currentTarget.style.background = 'var(--ev)')}
+        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
       >
         {/* Pulse icon */}
         <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -171,16 +235,18 @@ export default function BusinessPulse({ onActionClick }: Props) {
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
           </svg>
           {redCount > 0 && (
-            <div style={{ position: 'absolute', top: -4, right: -4, width: 8, height: 8, borderRadius: '50%', background: '#ef4444', animation: 'pulse 1.5s infinite' }}></div>
+            <div style={{ position: 'absolute', top: -4, right: -4, width: 8, height: 8, borderRadius: '50%', background: '#ef4444', animation: 'pulse 1.5s infinite' }} />
           )}
         </div>
 
         {open && (
           <>
-            <span style={{ fontFamily: 'var(--font-sora)', fontSize: 13, fontWeight: 600, flex: 1, whiteSpace: 'nowrap' }}>Business Pulse</span>
+            <span style={{ fontFamily: 'var(--font-sora)', fontSize: 13, fontWeight: 600, flex: 1, whiteSpace: 'nowrap' }}>
+              Business Pulse
+            </span>
             {hasSignals && (
               <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 9999, background: redCount > 0 ? '#ef4444' : '#f59e0b', color: '#fff' }}>
-                {signals.length}
+                {visibleSignals.length}
               </span>
             )}
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round">
@@ -194,23 +260,20 @@ export default function BusinessPulse({ onActionClick }: Props) {
       {open && (
         <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px' }}>
           {loading ? (
-            // Skeleton
             [1, 2].map(i => (
-              <div key={i} style={{ height: 90, borderRadius: 14, background: 'var(--ev)', marginBottom: 10, opacity: 0.6 }}></div>
+              <div key={i} style={{ height: 90, borderRadius: 14, background: 'var(--ev)', marginBottom: 10, opacity: 0.6 }} />
             ))
           ) : hasSignals ? (
-            signals.map((signal, idx) => (
+            visibleSignals.map(signal => (
               <SignalCard
                 key={signal.id}
                 signal={signal}
                 isNew={newIds.has(signal.id)}
-                onAction={(prompt) => {
-                  onActionClick(prompt)
-                }}
+                onAction={onActionClick}
+                onDismiss={dismissSignal}
               />
             ))
           ) : (
-            // All clear state
             <div style={{ padding: '28px 16px', textAlign: 'center' }}>
               <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round">
@@ -234,11 +297,13 @@ export default function BusinessPulse({ onActionClick }: Props) {
         <div style={{ padding: '8px 12px', borderTop: '1px solid var(--b)', flexShrink: 0 }}>
           <button
             onClick={fetchSignals}
-            style={{ width: '100%', padding: '7px', borderRadius: 9, border: '1px solid var(--b)', background: 'transparent', fontSize: 11, color: 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}
+            style={{ width: '100%', padding: '7px', borderRadius: 9, border: '1px solid var(--b)', background: 'transparent', fontSize: 11, color: 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, transition: 'background 150ms' }}
             onMouseEnter={e => (e.currentTarget.style.background = 'var(--ev)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
             Run health check
           </button>
         </div>

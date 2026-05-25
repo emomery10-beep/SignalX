@@ -1,6 +1,7 @@
 // app/help/layout.tsx
 import type { Metadata } from "next";
 import StatusBanner from "@/components/help/StatusBanner";
+import "./help.css";
 
 const OG_IMAGE = "https://askbiz.co/api/og?title=Help%20Centre&category=AskBiz%20Documentation";
 

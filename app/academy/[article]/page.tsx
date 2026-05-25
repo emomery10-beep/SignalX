@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { academyArticles } from "@/lib/academy-content";
+import { getAllPosts } from "@/lib/blog-content";
 import AcademyArticleClient from "./AcademyArticleClient";
 
 interface Props {
@@ -11,22 +12,44 @@ export async function generateStaticParams() {
   return academyArticles.map((a) => ({ article: a.slug }));
 }
 
+// Transforms plain academy descriptions into click-worthy SERP hooks
+function enhanceAcademyDescription(article: { title: string; description: string; difficulty: string; category: string; readTime: number }): string {
+  const d = article.description
+  const t = article.title.toLowerCase()
+
+  // Already has a hook
+  if (/^\d|how |why |most |stop |never |\d%|[£$€]\d/.test(d.toLowerCase())) return d
+
+  if (t.includes(' vs ')) return `${d} Clear comparison with real business examples — ${article.readTime} min read.`
+  if (t.includes('what is') || t.includes('what are')) return `${d} Plain-English guide for SME owners and operators.`
+  if (t.includes('how to')) return `${d} Step-by-step — no jargon, no fluff.`
+
+  const diffSuffix: Record<string, string> = {
+    'Beginner':     'Start here — explained in plain English.',
+    'Intermediate': 'Practical guide with worked examples.',
+    'Advanced':     'Deep-dive for operators who want the full picture.',
+  }
+
+  return `${d} ${diffSuffix[article.difficulty] || 'Practical guide for SME operators.'}`
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const article = academyArticles.find((a) => a.slug === params.article);
   if (!article) return {};
 
   const ogImageUrl = `https://askbiz.co/api/og?title=${encodeURIComponent(article.title)}&category=${encodeURIComponent(article.category)}&difficulty=${encodeURIComponent(article.difficulty)}&readTime=${article.readTime}`;
+  const enhancedDesc = enhanceAcademyDescription(article);
 
   return {
     title: `${article.title} | AskBiz Academy`,
-    description: article.description,
+    description: enhancedDesc,
     keywords: article.keywords.join(", "),
     alternates: {
       canonical: `https://askbiz.co/academy/${article.slug}`,
     },
     openGraph: {
       title: article.title,
-      description: article.description,
+      description: enhancedDesc,
       url: `https://askbiz.co/academy/${article.slug}`,
       type: "article",
       siteName: "AskBiz Academy",
@@ -35,7 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     twitter: {
       card: "summary_large_image",
       title: article.title,
-      description: article.description,
+      description: enhancedDesc,
       images: [ogImageUrl],
     },
   };
@@ -122,6 +145,17 @@ export default function ArticlePage({ params }: Props) {
         }
       : null;
 
+  // Cross-link to blog articles: find blog posts relevant to this academy topic
+  const _academyWords = (article.title + ' ' + article.description + ' ' + article.keywords.join(' ')).toLowerCase()
+  const allPosts = getAllPosts()
+  const blogCrossLinks = allPosts
+    .filter(p => {
+      const postText = (p.title + ' ' + (p.metaDescription || '')).toLowerCase()
+      return article.keywords.some(kw => postText.includes(kw.toLowerCase()))
+    })
+    .slice(0, 4)
+    .map(p => ({ slug: p.slug, title: p.title, cluster: p.cluster, readTime: p.readTime }))
+
   return (
     <>
       <script
@@ -138,7 +172,7 @@ export default function ArticlePage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
         />
       )}
-      <AcademyArticleClient article={article} />
+      <AcademyArticleClient article={article} blogCrossLinks={blogCrossLinks} />
     </>
   );
 }

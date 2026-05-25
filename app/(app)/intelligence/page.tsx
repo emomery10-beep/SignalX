@@ -17,6 +17,8 @@ import IntegrationHub from '@/components/intelligence/IntegrationHub'
 import CfoMode from '@/components/intelligence/CfoMode'
 import RevenueWaterfall from '@/components/intelligence/RevenueWaterfall'
 import DecisionTimeline from '@/components/intelligence/DecisionTimeline'
+import TopProducts from '@/components/intelligence/TopProducts'
+import PosPulse from '@/components/intelligence/PosPulse'
 
 export default function IntelligencePage() {
   const router = useRouter()
@@ -47,6 +49,10 @@ export default function IntelligencePage() {
   const [sparringInput, setSparringInput] = useState('')
   const [sparringResponse, setSparringResponse] = useState('')
   const [sparringSending, setSparringSending] = useState(false)
+
+  // Contextual widget state
+  const [waterfallDrill, setWaterfallDrill] = useState<string | null>(null)
+  const [trendForceOpen, setTrendForceOpen] = useState(false)
 
   // Market Intelligence state
   const [mktQuery, setMktQuery] = useState('')
@@ -82,12 +88,16 @@ export default function IntelligencePage() {
       .finally(() => setLoadingHealth(false))
   }, [])
 
-  // Fetch connected sources count
+  // Fetch connected sources count (external sources + built-in POS)
   useEffect(() => {
-    fetch('/api/sources')
-      .then(r => r.ok ? r.json() : [])
-      .then(data => setConnectedCount(Array.isArray(data) ? data.length : 0))
-      .catch(() => setConnectedCount(0))
+    Promise.all([
+      fetch('/api/sources').then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch('/api/pos/transactions?limit=1').then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([sources, txns]) => {
+      const externalCount = Array.isArray(sources) ? sources.length : 0
+      const hasPosData = txns && ((Array.isArray(txns) && txns.length > 0) || (txns.transactions && txns.transactions.length > 0))
+      setConnectedCount(externalCount + (hasPosData ? 1 : 0))
+    })
   }, [])
 
   // Fetch decisions when decisions tab is active (lazy)
@@ -188,7 +198,7 @@ export default function IntelligencePage() {
       accentColor: health?.score != null
         ? (health.score >= 65 ? '#22C55E' : health.score >= 45 ? '#F59E0B' : '#EF4444')
         : undefined,
-      onClick: undefined,
+      onClick: () => askAskBiz('Break down my health score — what are the component scores and what should I focus on improving?'),
       sparkline: scoreSparkline.length > 1 ? scoreSparkline : undefined,
     },
     {
@@ -196,7 +206,7 @@ export default function IntelligencePage() {
       value: criticalCount + warningCount || '—',
       sub: criticalCount > 0 ? `${criticalCount} critical` : warningCount > 0 ? `${warningCount} warnings` : 'All clear',
       accentColor: criticalCount > 0 ? '#EF4444' : warningCount > 0 ? '#F59E0B' : '#22C55E',
-      onClick: canAlerts ? () => setTab('anomalies') : undefined,
+      onClick: () => setTab('anomalies'),
     },
     {
       label: '30-Day Trend',
@@ -206,11 +216,12 @@ export default function IntelligencePage() {
       trendLabel: undefined,
       accentColor: scoreDelta > 0 ? '#22C55E' : scoreDelta < 0 ? '#EF4444' : undefined,
       sparkline: scoreSparkline.length > 1 ? scoreSparkline : undefined,
+      onClick: () => setTrendForceOpen(true),
     },
     {
       label: 'Data Sources',
       value: connectedCount || '—',
-      sub: connectedCount === 0 ? 'None connected yet' : `${connectedCount} of 31 sources live`,
+      sub: connectedCount === 0 ? 'None connected yet' : connectedCount === 1 ? 'POS connected' : `${connectedCount} sources live`,
       accentColor: connectedCount > 0 ? '#6366F1' : undefined,
       onClick: () => setTab('connections'),
     },
@@ -238,20 +249,20 @@ export default function IntelligencePage() {
               </span>
             )}
           </div>
-          {health && <BusinessHealthScore health={health} size="sm" onAsk={askAskBiz}/>}
+          {/* Health score badge removed — shown in hero KPI card instead */}
         </div>
 
         {/* Tab bar */}
-        <div style={{ display: 'flex', gap: 0, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="tab-strip">
           {tabs.map(t => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
               style={{
-                padding: '8px 14px',
+                padding: '8px 12px',
                 border: 'none',
                 background: 'transparent',
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: tab === t.id ? 600 : 400,
                 color: tab === t.id ? '#6366F1' : 'var(--tx3)',
                 borderBottom: tab === t.id ? '2px solid #6366F1' : '2px solid transparent',
@@ -259,7 +270,7 @@ export default function IntelligencePage() {
                 fontFamily: 'inherit',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 6,
+                gap: 5,
                 whiteSpace: 'nowrap',
                 opacity: t.locked ? 0.6 : 1,
                 transition: 'color 150ms',
@@ -316,14 +327,55 @@ export default function IntelligencePage() {
                 </div>
                 <span style={{ fontSize: 11, color: 'var(--tx3)' }}>Last 30 days</span>
               </div>
+
+              {/* Row 1: Health Trend + Revenue Waterfall */}
               {scoreHistoryItems.length > 1 && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <MiniTrendChart history={scoreHistoryItems} label="Health Trend" height={64}/>
-                  <RevenueWaterfall health={health} onAsk={askAskBiz}/>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                  <MiniTrendChart history={scoreHistoryItems} label="Health Trend" height={100} onAsk={askAskBiz} forceExpanded={trendForceOpen} onClose={() => setTrendForceOpen(false)}/>
+                  <RevenueWaterfall health={health} onAsk={askAskBiz} onDrillChange={setWaterfallDrill}/>
                 </div>
               )}
               {scoreHistoryItems.length <= 1 && (
-                <RevenueWaterfall health={health} onAsk={askAskBiz}/>
+                <div style={{ marginBottom: 12 }}>
+                  <RevenueWaterfall health={health} onAsk={askAskBiz} onDrillChange={setWaterfallDrill}/>
+                </div>
+              )}
+
+              {/* Row 2: Top Products + POS Pulse (Sales/Stock) */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div style={{
+                  borderRadius: 18,
+                  transition: 'box-shadow 300ms ease, border-color 300ms ease',
+                  boxShadow: waterfallDrill && ['Revenue', 'COGS', 'Gross Profit'].includes(waterfallDrill) ? '0 0 0 2px #22C55E40, 0 4px 16px rgba(34,197,94,0.1)' : 'none',
+                }}>
+                  <TopProducts onAsk={askAskBiz} />
+                </div>
+                <div style={{
+                  borderRadius: 18,
+                  transition: 'box-shadow 300ms ease, border-color 300ms ease',
+                  boxShadow: waterfallDrill === 'Stock Cost' ? '0 0 0 2px #6366F140, 0 4px 16px rgba(99,102,241,0.1)' : 'none',
+                }}>
+                  <PosPulse onAsk={askAskBiz} />
+                </div>
+              </div>
+
+              {/* Contextual hint */}
+              {waterfallDrill && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '8px 14px', borderRadius: 10,
+                  background: 'rgba(99,102,241,.05)', border: '1px solid rgba(99,102,241,.12)',
+                  marginTop: 10, fontSize: 11, color: '#6366F1', fontWeight: 500,
+                  animation: 'fadeIn 200ms ease',
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                  {waterfallDrill === 'Revenue' && 'See your top revenue products highlighted above ↑'}
+                  {waterfallDrill === 'COGS' && 'Check top products above to see cost breakdown ↑'}
+                  {waterfallDrill === 'Gross Profit' && 'Top products above show margin % for each item ↑'}
+                  {waterfallDrill === 'Stock Cost' && 'POS Pulse above shows your stock health ↑'}
+                  {waterfallDrill === 'Operating' && 'Review products and stock for operating cost drivers ↑'}
+                  {waterfallDrill === 'Net Margin' && 'Both widgets above feed into your net margin calculation ↑'}
+                </div>
               )}
             </div>
 

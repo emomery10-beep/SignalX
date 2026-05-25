@@ -170,7 +170,7 @@ export default function FXRiskModeller() {
         <div className="fx-nav-inner">
           <Link href="/free-tools" className="fx-nav-back">← Free Tools</Link>
           <Link href="/" className="fx-nav-logo">AskBiz</Link>
-          <Link href="/" className="fx-nav-cta">Try AskBiz Free →</Link>
+          <Link href="/signin?mode=signup" className="fx-nav-cta">Try AskBiz Free →</Link>
         </div>
       </nav>
 
@@ -506,7 +506,21 @@ export default function FXRiskModeller() {
                 <p className="fx-result-cta-text">
                   <strong>Want this pre-filled with your real Shopify or Amazon products?</strong> AskBiz connects to your sales data and models FX risk across your entire catalogue automatically.
                 </p>
-                <Link href="/" className="fx-result-cta-btn">Try AskBiz Free →</Link>
+                <Link href="/signin?mode=signup" className="fx-result-cta-btn">Start free — no card needed →</Link>
+              </div>
+
+              <div style={{ background: "#fff8f3", border: "1.5px solid #f0d5b8", borderRadius: 14, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+                <div>
+                  <div style={{ fontFamily: "var(--font-head)", fontSize: 15, fontWeight: 700, color: "#1a1a2e", marginBottom: 4 }}>
+                    Want this calculated automatically on your real data?
+                  </div>
+                  <div style={{ fontSize: 13, color: "#6b6760" }}>
+                    AskBiz connects to Shopify, Amazon & QuickBooks — no spreadsheets needed.
+                  </div>
+                </div>
+                <a href="/signin?mode=signup" style={{ display: "inline-flex", alignItems: "center", background: "#d08a59", color: "#fff", padding: "10px 20px", borderRadius: 8, fontWeight: 700, fontSize: 14, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>
+                  Try free →
+                </a>
               </div>
             </div>
           ) : null}

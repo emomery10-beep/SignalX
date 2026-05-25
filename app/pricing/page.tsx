@@ -58,7 +58,7 @@ const PLANS = [
   },
   {
     name: 'Business',
-    price: 39,
+    price: 49,
     period: 'month',
     description: 'Everything in Growth plus team seats, Decision Memory, Competitor Watch, CFO Mode, and priority support.',
     highlight: false,
@@ -80,7 +80,7 @@ const PLANS = [
 
 const FAQS = [
   { q: 'Is the Free plan really free forever?', a: 'Yes — the Free plan is free forever with no credit card required. You get 10 questions per month, CSV/Excel uploads, Business Pulse score, and the ability to connect Shopify, Amazon, and more.' },
-  { q: 'What\'s the difference between Growth and Business?', a: 'Growth (£19/month) gives you unlimited questions and all the AI-powered tools pre-filled from your data. Business (£39/month) adds team seats for up to 5 members, Decision Memory, Competitor Watch, CFO Mode with board-ready reports, and priority support.' },
+  { q: 'What\'s the difference between Growth and Business?', a: 'Growth (£19/month) gives you unlimited questions and all the AI-powered tools pre-filled from your data. Business (£49/month) adds team seats for up to 5 members, Decision Memory, Competitor Watch, CFO Mode with board-ready reports, and priority support.' },
   { q: 'Can I cancel anytime?', a: 'Yes. Cancel anytime from your account settings. If you cancel a paid subscription, you keep access until the end of your billing period. You\'ll drop back to the Free plan automatically.' },
   { q: 'Do you offer annual billing?', a: 'Yes — pay annually and get 2 months free (equivalent to ~17% off). Switch to annual billing at any time from your account settings.' },
   { q: 'What happens to my data if I cancel?', a: 'Your data is retained for 30 days after cancellation, during which you can export everything. After 30 days, your data is permanently deleted.' },
@@ -165,6 +165,11 @@ export default function PricingPage() {
               >
                 {plan.cta} →
               </Link>
+              {plan.name === 'Free' && (
+                <p style={{ fontSize: 11, color: '#16a34a', textAlign: 'center', marginTop: 6, fontWeight: 600 }}>
+                  Free forever · No credit card · Upgrade anytime
+                </p>
+              )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
                 {plan.features.map((f, i) => (
                   <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
@@ -258,6 +263,18 @@ export default function PricingPage() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Money-back guarantee */}
+        <div style={{ textAlign: 'center', padding: '32px 24px', background: 'rgba(22,163,74,.04)', border: '1px solid rgba(22,163,74,.15)', borderRadius: 16, maxWidth: 600, margin: '0 auto 48px' }}>
+          <div style={{ fontSize: 28, marginBottom: 12 }}>🛡️</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--tx)', marginBottom: 8, fontFamily: 'var(--font-sora)' }}>
+            14-day money-back guarantee
+          </div>
+          <p style={{ fontSize: 14, color: 'var(--tx2)', lineHeight: 1.7, margin: 0 }}>
+            Try any paid plan completely risk-free. If AskBiz doesn't save you time in the first 14 days,
+            email us and we'll refund you in full — no questions asked.
+          </p>
         </div>
 
         {/* CTA */}

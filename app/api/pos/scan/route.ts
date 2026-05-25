@@ -92,6 +92,8 @@ Reply ONLY with valid JSON, nothing else:
     })
 
     const text = aiResponse.content[0].type === 'text' ? aiResponse.content[0].text.trim() : ''
+    console.log('[scan] Claude raw response:', text)
+    console.log('[scan] Image size:', Math.round(image.length / 1024), 'KB, hash:', image.substring(0, 20))
     const jsonMatch = text.match(/\{[\s\S]*?\}/)
     if (!jsonMatch) return json({ error: 'Could not identify product' }, 422)
 

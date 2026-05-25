@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import ServiceJobsTab from '@/components/pos/ServiceJobsTab'
 import RepairMetrics from '@/components/pos/RepairMetrics'
+import AuditTab from '@/components/pos/AuditTab'
 
 const ACC = '#d08a59'
 const ACC_BG = 'rgba(208,138,89,.08)'
@@ -61,7 +62,7 @@ interface StaffMember {
   id: string; name: string; phone: string; email?: string; role: 'cashier' | 'inventory' | 'repair' | 'engineer' | 'supervisor' | 'manager' | 'handler' | 'driver' | 'dispatcher' | 'branch_manager'; sector: string; sector_edit_count: number; active: boolean; last_login_at: string | null; has_pin?: boolean; location_id?: string; location?: { id: string; name: string } | null
 }
 interface Transaction {
-  id: string; total: number; subtotal?: number; payment_type: string; status: string; created_at: string; notes?: string
+  id: string; total: number; subtotal?: number; discount_amount?: number | null; amount_tendered?: number | null; payment_type: string; status: string; created_at: string; notes?: string; pos_location_id?: string | null
   cashier: { id?: string; name: string; role?: string } | null
   pos_items: { name: string; qty: number; unit_price: number; cost_price?: number; inventory_id?: string }[]
   pos_customers?: { phone: string; name?: string } | null
@@ -75,7 +76,7 @@ interface Location {
 }
 type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'branches' | 'audit' | 'map' | 'operations' | 'captures' | 'approvals' | 'intelligence' | 'logistics' | 'customers' | 'promotions' | 'loyalty' | 'returns' | 'reports' | 'purchase_orders' | 'gift_cards' | 'integrations'
 type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
-type FilterModalType = { type: 'sales' | 'refunds' | 'low_stock' | 'cashier_detail'; title: string; cashier_id?: string } | null
+type FilterModalType = { type: 'sales' | 'refunds' | 'low_stock' | 'cashier_detail' | 'gross_profit' | 'margin' | 'avg_sale' | 'staff_overview' | 'stock_item'; title: string; cashier_id?: string; item_id?: string } | null
 type TxDetailType = Transaction | null
 
 const SECTOR_BADGE_COLOR: Record<string, string> = { restaurant: '#d08a59', repair: '#6366f1', salon: '#ec4899', retail: '#22c55e', logistics: '#0891b2' }
@@ -363,7 +364,9 @@ export default function POSPage() {
     [transactions, selectedSector, cashierSectorMap])
   const refundCount = refundedTx.length
   const prevRefunds = prevTransactions.filter(t => (t.status === 'refunded' || t.status === 'partially_refunded') && (selectedSector === 'all' || (t.cashier?.id ? cashierSectorMap[t.cashier.id] === selectedSector : selectedSector === 'retail'))).length
-  const sectorFilteredInventory = selectedSector === 'all' ? inventory : inventory.filter(i => !i.sector || i.sector === selectedSector)
+  // Each sector is fully isolated — only items explicitly tagged to the sector are visible.
+  // 'all' shows everything so the owner gets a full cross-sector stock view.
+  const sectorFilteredInventory = selectedSector === 'all' ? inventory : inventory.filter(i => i.sector === selectedSector)
   const lowStock = sectorFilteredInventory.filter(i => i.stock_qty <= i.low_stock_threshold && i.stock_qty > 0)
   const outOfStock = sectorFilteredInventory.filter(i => i.stock_qty === 0)
   const alertCount = lowStock.length + outOfStock.length
@@ -446,13 +449,13 @@ export default function POSPage() {
     return ['all', ...Array.from(cats).sort()]
   }, [inventory])
 
-  // Filtered inventory
+  // Filtered inventory — base off sectorFilteredInventory so sector isolation is enforced
   const filteredInventory = useMemo(() => {
     const todayMs = new Date().setHours(0,0,0,0)
-    let items = inventory
+    let items = sectorFilteredInventory
     if (invSearch) items = items.filter(i => i.name.toLowerCase().includes(invSearch.toLowerCase()) || (i.sku && i.sku.toLowerCase().includes(invSearch.toLowerCase())))
     if (invCategory !== 'all') items = items.filter(i => (i.category || 'Uncategorised') === invCategory)
-    if (invSector !== 'all') items = items.filter(i => !i.sector || i.sector === invSector)
+    if (invSector !== 'all') items = items.filter(i => i.sector === invSector)
     if (invStockFilter === 'low') items = items.filter(i => i.stock_qty > 0 && i.stock_qty <= i.low_stock_threshold)
     if (invStockFilter === 'out') items = items.filter(i => i.stock_qty === 0)
     if (invStockFilter === 'expiring') items = items.filter(i => {
@@ -461,7 +464,7 @@ export default function POSPage() {
       return days <= 30
     })
     return items
-  }, [inventory, invSearch, invCategory, invSector, invStockFilter])
+  }, [sectorFilteredInventory, invSearch, invCategory, invSector, invStockFilter])
 
   // P&L data
   const plData = useMemo(() => {
@@ -696,7 +699,7 @@ export default function POSPage() {
     if (!newProduct.name || !newProduct.sale_price) return
     setAddingProduct(true)
     try {
-      const res = await fetch('/api/pos/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newProduct.name, sale_price: parseFloat(newProduct.sale_price), cost_price: parseFloat(newProduct.cost_price || '0'), stock_qty: parseInt(newProduct.stock_qty || '0'), low_stock_threshold: parseInt(newProduct.low_stock_threshold || '5'), category: newProduct.category, sku: newProduct.sku, sector: newProduct.sector || null, expiry_date: newProduct.expiry_date || null, batch_number: newProduct.batch_number || null, supplier: newProduct.supplier || null, brand: newProduct.brand || null }) })
+      const res = await fetch('/api/pos/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newProduct.name, sale_price: parseFloat(newProduct.sale_price), cost_price: parseFloat(newProduct.cost_price || '0'), stock_qty: parseInt(newProduct.stock_qty || '0'), low_stock_threshold: parseInt(newProduct.low_stock_threshold || '5'), category: newProduct.category, sku: newProduct.sku, sector: newProduct.sector || (selectedSector !== 'all' ? selectedSector : null), expiry_date: newProduct.expiry_date || null, batch_number: newProduct.batch_number || null, supplier: newProduct.supplier || null, brand: newProduct.brand || null }) })
       const data = await res.json()
       if (data.product) { setInventory(prev => [...prev, data.product]); setNewProduct({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '', sector: '', expiry_date: '', batch_number: '', supplier: '', brand: '' }); setShowAddProduct(false); notify(`${data.product.name} added`) }
     } catch { notify('Failed to add product', false) }
@@ -756,7 +759,10 @@ export default function POSPage() {
         const parts = line.split(',').map(p => p.trim())
         return { name: parts[0], sale_price: parseFloat(parts[1]) || 0, stock_qty: parseInt(parts[2]) || 0, unit: parts[3] || 'item' }
       }).filter(i => i.name)
-      const res = await fetch('/api/pos/inventory', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items }) })
+      const itemsWithSector = selectedSector !== 'all'
+        ? items.map((item: any) => ({ ...item, sector: item.sector || selectedSector }))
+        : items
+      const res = await fetch('/api/pos/inventory', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: itemsWithSector }) })
       const data = await res.json()
       if (data.products) { setInventory(prev => [...prev, ...data.products]); setShowBulkImport(false); setBulkCsv(''); notify(`${data.products.length} products imported`) }
       else notify(data.error || 'Import failed', false)
@@ -984,13 +990,14 @@ export default function POSPage() {
 
       <div className="page-shell-body">
         {/* Tabs */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid var(--b)', paddingBottom: 0, overflowX: 'auto' }}>
+        <div className="tab-strip" style={{ gap: 0, marginBottom: 24, borderBottom: '1px solid var(--b)', paddingBottom: 0 }}>
           {(['overview', 'services', 'staff', 'branches', 'map', 'audit'] as Tab[]).filter(Boolean).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
-              padding: '8px 16px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
+              padding: '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === t ? 'var(--sf)' : 'transparent', color: tab === t ? 'var(--tx)' : 'var(--tx3)',
               fontSize: 13, fontWeight: tab === t ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
               borderBottom: tab === t ? `2px solid ${ACC}` : '2px solid transparent',
+              flexShrink: 0,
             }}>
               {t === 'map' ? '🗺️ Map' : t === 'services' ? (() => {
                 const bt = (businessType || '').toLowerCase()
@@ -1005,10 +1012,11 @@ export default function POSPage() {
           ))}
           {(selectedSector === 'all' || selectedSector === 'logistics') && (
             <button onClick={() => setTab('logistics')} style={{
-              padding: '8px 16px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
+              padding: '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === 'logistics' ? 'var(--sf)' : 'transparent', color: tab === 'logistics' ? '#0891b2' : 'var(--tx3)',
               fontSize: 13, fontWeight: tab === 'logistics' ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
               borderBottom: tab === 'logistics' ? '2px solid #0891b2' : '2px solid transparent',
+              flexShrink: 0,
             }}>🚛 Logistics</button>
           )}
         </div>
@@ -1085,17 +1093,26 @@ export default function POSPage() {
               ))}
             </div>
 
-            {/* Profit / margin row */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
-              <div style={cardStyle}>
+            {/* Profit / margin row — clickable */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
+              <div onClick={() => setFilterModal({ type: 'gross_profit', title: 'Gross Profit Analysis' })}
+                style={{ ...cardStyle, cursor: 'pointer', transition: 'all 200ms' }}
+                onMouseEnter={e => { (e.currentTarget.style as any).borderColor = ACC; e.currentTarget.style.transform = 'scale(1.02)' }}
+                onMouseLeave={e => { (e.currentTarget.style as any).borderColor = 'var(--b)'; e.currentTarget.style.transform = 'scale(1)' }}>
                 <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Gross profit</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: grossProfit >= 0 ? GREEN : RED }}>{fmt(currencySymbol, grossProfit)}</div>
               </div>
-              <div style={cardStyle}>
+              <div onClick={() => setFilterModal({ type: 'margin', title: 'Margin Breakdown' })}
+                style={{ ...cardStyle, cursor: 'pointer', transition: 'all 200ms' }}
+                onMouseEnter={e => { (e.currentTarget.style as any).borderColor = ACC; e.currentTarget.style.transform = 'scale(1.02)' }}
+                onMouseLeave={e => { (e.currentTarget.style as any).borderColor = 'var(--b)'; e.currentTarget.style.transform = 'scale(1)' }}>
                 <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Margin</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: margin >= 20 ? GREEN : margin >= 10 ? AMBER : RED }}>{margin.toFixed(1)}%</div>
               </div>
-              <div style={cardStyle}>
+              <div onClick={() => setFilterModal({ type: 'avg_sale', title: 'Average Sale Analysis' })}
+                style={{ ...cardStyle, cursor: 'pointer', transition: 'all 200ms' }}
+                onMouseEnter={e => { (e.currentTarget.style as any).borderColor = ACC; e.currentTarget.style.transform = 'scale(1.02)' }}
+                onMouseLeave={e => { (e.currentTarget.style as any).borderColor = 'var(--b)'; e.currentTarget.style.transform = 'scale(1)' }}>
                 <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Avg sale</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, todaySales > 0 ? todayRevenue / todaySales : 0)}</div>
               </div>
@@ -1148,7 +1165,7 @@ export default function POSPage() {
             {/* Staff performance */}
             {cashierStats.length > 0 && (
               <div style={{ marginBottom: 24 }}>
-                <div style={sectionLabel}>Staff performance</div>
+                <div onClick={() => setFilterModal({ type: 'staff_overview', title: 'Staff Performance Overview' })} style={{ ...sectionLabel, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>Staff performance <span style={{ fontSize: 10, color: ACC, fontWeight: 600 }}>View all →</span></div>
                 {/* Mini bar chart for staff */}
                 <div style={{ ...cardStyle, marginBottom: 12 }}>
                   <MiniBarChart data={cashierStats.map(c => ({ label: c.name.split(' ')[0], value: c.revenue }))} color={ACC} height={70} />
@@ -1172,21 +1189,33 @@ export default function POSPage() {
               </div>
             )}
 
-            {/* Stock alerts */}
+            {/* Stock alerts — clickable items */}
             {(lowStock.length > 0 || outOfStock.length > 0) && (
               <div style={{ marginBottom: 24 }}>
                 <div style={sectionLabel}>Stock alerts</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {outOfStock.map(item => (
-                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)' }}>
+                    <div key={item.id} onClick={() => setFilterModal({ type: 'stock_item', title: item.name, item_id: item.id })}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)', cursor: 'pointer', transition: 'all 150ms' }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.01)'; e.currentTarget.style.borderColor = 'rgba(220,38,38,.4)' }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'rgba(220,38,38,.2)' }}>
                       <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>{item.name}</span>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: RED }}>OUT OF STOCK</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: RED }}>OUT OF STOCK</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={RED} strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                      </div>
                     </div>
                   ))}
                   {lowStock.map(item => (
-                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(234,179,8,.06)', border: '1px solid rgba(234,179,8,.25)' }}>
+                    <div key={item.id} onClick={() => setFilterModal({ type: 'stock_item', title: item.name, item_id: item.id })}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(234,179,8,.06)', border: '1px solid rgba(234,179,8,.25)', cursor: 'pointer', transition: 'all 150ms' }}
+                      onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.01)'; e.currentTarget.style.borderColor = 'rgba(234,179,8,.5)' }}
+                      onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'rgba(234,179,8,.25)' }}>
                       <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>{item.name}</span>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: AMBER }}>{item.stock_qty} left</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: AMBER }}>{item.stock_qty} left</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={AMBER} strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1348,8 +1377,13 @@ export default function POSPage() {
             : 'retail'
           const sector = sectorOverride || detectedSector
 
-          // Sector-specific alert count: items tagged to this sector + untagged (shared) items
-          const sectorInventory = inventory.filter(i => !i.sector || i.sector === sector)
+          // Badge count: only items explicitly tagged to this sector (untagged items
+          // are "shared" and would otherwise inflate every sector's badge identically).
+          // For retail/all — the default home — also include untagged items.
+          const isDefaultSector = sector === 'retail' || !sector
+          const sectorInventory = inventory.filter(i =>
+            isDefaultSector ? (!i.sector || i.sector === 'retail') : i.sector === sector
+          )
           const sectorAlertCount = sectorInventory.filter(i => i.stock_qty <= i.low_stock_threshold).length
 
           const ACC = '#d08a59'
@@ -1724,8 +1758,14 @@ export default function POSPage() {
         {/* ══════════════ INVENTORY TAB ══════════════ */}
         {tab === 'inventory' && (
           <div style={{ maxWidth: 900 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>📦 Inventory</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{filteredInventory.length} product{filteredInventory.length !== 1 ? 's' : ''}</div>
+              </div>
+              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-              <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{filteredInventory.length} product{filteredInventory.length !== 1 ? 's' : ''}</div>
               {/* Hidden file inputs for dual-photo scan */}
               <input ref={scanFrontRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleScanFileSelected(e.target.files[0], 'front') }} />
               <input ref={scanBackRef}  type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleScanFileSelected(e.target.files[0], 'back')  }} />
@@ -1747,15 +1787,17 @@ export default function POSPage() {
                   {categories.map(c => <option key={c} value={c}>{c === 'all' ? 'All categories' : c}</option>)}
                 </select>
               )}
-              <select value={invSector} onChange={e => setInvSector(e.target.value)} style={{ ...inputStyle, minWidth: 140 }}>
-                <option value="all">All sectors</option>
-                <option value="retail">🛒 Retail</option>
-                <option value="repair">🔧 Repair</option>
-                <option value="factory">🏭 Factory</option>
-                <option value="restaurant">🍴 Restaurant</option>
-                <option value="logistics">🚚 Logistics</option>
-                <option value="salon">💇 Salon</option>
-              </select>
+              {selectedSector === 'all' && (
+                <select value={invSector} onChange={e => setInvSector(e.target.value)} style={{ ...inputStyle, minWidth: 140 }}>
+                  <option value="all">All sectors</option>
+                  <option value="retail">🛒 Retail</option>
+                  <option value="repair">🔧 Repair</option>
+                  <option value="factory">🏭 Factory</option>
+                  <option value="restaurant">🍴 Restaurant</option>
+                  <option value="logistics">🚚 Logistics</option>
+                  <option value="salon">💇 Salon</option>
+                </select>
+              )}
             </div>
             {/* Stock status filter tabs */}
             <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
@@ -2062,15 +2104,24 @@ export default function POSPage() {
                     <label style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600 }}>Expiry date (optional)</label>
                     <input type="date" value={newProduct.expiry_date} onChange={e => setNewProduct(p => ({ ...p, expiry_date: e.target.value }))} style={inputStyle} />
                   </div>
-                  <select value={newProduct.sector} onChange={e => setNewProduct(p => ({ ...p, sector: e.target.value }))} style={{ ...inputStyle, gridColumn: '1/-1' }}>
-                    <option value="">All sectors (shared item)</option>
-                    <option value="retail">🛒 Retail only</option>
-                    <option value="repair">🔧 Repair only</option>
-                    <option value="factory">🏭 Factory only</option>
-                    <option value="restaurant">🍴 Restaurant only</option>
-                    <option value="logistics">🚚 Logistics only</option>
-                    <option value="salon">💇 Salon only</option>
-                  </select>
+                  {selectedSector !== 'all' ? (
+                    <div style={{ gridColumn: '1/-1', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--ev)', fontSize: 12, color: 'var(--tx2)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#d08a59', background: 'rgba(208,138,89,.12)', padding: '2px 8px', borderRadius: 9999, textTransform: 'uppercase' }}>
+                        {selectedSector}
+                      </span>
+                      <span>This item will be tagged to the <strong>{selectedSector}</strong> sector only.</span>
+                    </div>
+                  ) : (
+                    <select value={newProduct.sector} onChange={e => setNewProduct(p => ({ ...p, sector: e.target.value }))} style={{ ...inputStyle, gridColumn: '1/-1' }}>
+                      <option value="">All sectors (shared item)</option>
+                      <option value="retail">🛒 Retail only</option>
+                      <option value="repair">🔧 Repair only</option>
+                      <option value="factory">🏭 Factory only</option>
+                      <option value="restaurant">🍴 Restaurant only</option>
+                      <option value="logistics">🚚 Logistics only</option>
+                      <option value="salon">💇 Salon only</option>
+                    </select>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                   <button onClick={handleAddProduct} disabled={addingProduct} style={btnPrimary}>{addingProduct ? 'Adding...' : 'Add product'}</button>
@@ -2233,39 +2284,11 @@ export default function POSPage() {
 
         {/* ══════════════ AUDIT TAB ══════════════ */}
         {tab === 'audit' && (
-          <div style={{ maxWidth: 800 }}>
-            <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 16 }}>
-              All amendments and refunds are logged here automatically.
-              {selectedSector !== 'all' && <span style={{ marginLeft: 6, color: ACC, fontWeight: 600 }}>· filtered by {selectedSector}</span>}
-            </div>
-            {(() => {
-              const auditTx = transactions.filter(t => t.status !== 'completed' && txMatchesSector(t))
-              return auditTx.length === 0 ? (
-              <div style={{ ...cardStyle, textAlign: 'center', padding: 40 }}>
-                <div style={{ width: 56, height: 56, borderRadius: 14, background: 'rgba(22,163,74,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.8" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                </div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>Clean record</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No amendments or refunds{selectedSector !== 'all' ? ` for ${selectedSector}` : ''} yet.</div>
-              </div>
-            ) : (
-              <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
-                {auditTx.map((tx, i, arr) => (
-                  <div key={tx.id} style={{ padding: '14px 16px', borderBottom: i < arr.length - 1 ? '1px solid var(--b)' : 'none', background: 'var(--sf)', cursor: 'pointer' }} onClick={() => setTxDetail(tx)}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: tx.status === 'refunded' ? RED : AMBER, background: tx.status === 'refunded' ? 'rgba(220,38,38,.08)' : 'rgba(234,179,8,.08)', padding: '2px 8px', borderRadius: 9999, textTransform: 'uppercase' }}>{tx.status.replace('_', ' ')}</span>
-                        <span style={{ fontSize: 12, color: 'var(--tx3)' }}>Sale #{tx.id.slice(0, 8)}</span>
-                      </div>
-                      <span style={{ fontSize: 15, fontWeight: 700, color: RED }}>-{fmt(currencySymbol, tx.total)}</span>
-                    </div>
-                    <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tx.cashier?.name || 'Owner'} · {new Date(tx.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
-                  </div>
-                ))}
-              </div>
-            )
-            })()}
-          </div>
+          <AuditTab
+            selectedSector={selectedSector}
+            currencySymbol={currencySymbol}
+            onBack={() => setTab('services')}
+          />
         )}
         {tab === 'map' && (
           <div>
@@ -2466,9 +2489,9 @@ export default function POSPage() {
               ) : (
                 <>
                   {/* Sub-tabs */}
-                  <div style={{ display: 'flex', gap: 4, marginBottom: 16, borderBottom: '1px solid var(--b)' }}>
+                  <div className="tab-strip" style={{ gap: 4, marginBottom: 16, borderBottom: '1px solid var(--b)' }}>
                     {(['overview', 'parcels', 'fleet', 'routes', 'revenue'] as const).map(st => (
-                      <button key={st} onClick={() => setLogTab(st)} style={{ padding: '6px 14px', border: 'none', borderBottom: logTab === st ? `2px solid ${TEAL}` : '2px solid transparent', background: 'transparent', color: logTab === st ? TEAL : 'var(--tx3)', fontSize: 12, fontWeight: logTab === st ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>{st}</button>
+                      <button key={st} onClick={() => setLogTab(st)} style={{ padding: '6px 14px', border: 'none', borderBottom: logTab === st ? `2px solid ${TEAL}` : '2px solid transparent', background: 'transparent', color: logTab === st ? TEAL : 'var(--tx3)', fontSize: 12, fontWeight: logTab === st ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize', flexShrink: 0, whiteSpace: 'nowrap' }}>{st}</button>
                     ))}
                   </div>
 
@@ -2737,7 +2760,6 @@ export default function POSPage() {
             })()}
           </div>
         )}
-      </div>
 
         {/* ══════════════ CUSTOMERS TAB ══════════════ */}
         {tab === 'customers' && (
@@ -3099,11 +3121,11 @@ export default function POSPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
               {[
                 { icon: '📘', title: 'Xero', desc: 'Auto-sync sales, refunds & tax to Xero', status: 'available', action: () => window.open('/api/pos/integrations/xero/connect', '_blank') },
-                { icon: '📗', title: 'QuickBooks', desc: 'Sync transactions to QuickBooks Online', status: 'coming_soon' },
+                { icon: '📗', title: 'QuickBooks', desc: 'Sync transactions to QuickBooks Online', status: 'available', action: () => window.open('/api/auth/quickbooks', '_blank') },
                 { icon: '💳', title: 'M-Pesa', desc: 'Accept mobile money payments', status: 'available', action: () => setTab('overview') },
                 { icon: '📧', title: 'Email marketing', desc: 'Sync customers to Mailchimp or Brevo', status: 'coming_soon' },
-                { icon: '📦', title: 'Shipping', desc: 'Connect DHL, Sendy or local couriers', status: 'coming_soon' },
-                { icon: '🛒', title: 'E-commerce', desc: 'Sync inventory with your online store', status: 'coming_soon' },
+                { icon: '📦', title: 'Shipping', desc: 'Track shipments via 17Track, DHL & more', status: 'available', action: () => window.location.href = '/shipments' },
+                { icon: '🛒', title: 'E-commerce', desc: 'Connect Shopify, WooCommerce & more', status: 'available', action: () => window.location.href = '/sources' },
               ].map((int, i) => (
                 <div key={i} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 20, position: 'relative' }}>
                   {int.status === 'coming_soon' && <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 600, color: AMBER, background: 'rgba(202,138,4,.1)', padding: '2px 8px', borderRadius: 9999 }}>Coming soon</span>}
@@ -3123,49 +3145,142 @@ export default function POSPage() {
       {/* ══════════════ MODALS ══════════════ */}
 
       {/* Transaction detail modal */}
-      {txDetail && (
+      {txDetail && (() => {
+        const txItems = txDetail.pos_items || []
+        const computedSubtotal = txItems.reduce((s, it) => s + it.qty * it.unit_price, 0)
+        const subtotal = txDetail.subtotal ?? computedSubtotal
+        const discount = txDetail.discount_amount ?? 0
+        const tendered = txDetail.amount_tendered
+        const change = tendered ? tendered - txDetail.total : null
+        const totalCost = txItems.reduce((s, it) => s + (it.cost_price ? it.qty * it.cost_price : 0), 0)
+        const totalProfit = txItems.reduce((s, it) => it.cost_price ? s + (it.qty * it.unit_price - it.qty * it.cost_price) : s, 0)
+        const hasCostData = txItems.some(it => it.cost_price && it.cost_price > 0)
+        const marginPct = computedSubtotal > 0 ? (totalProfit / computedSubtotal * 100) : 0
+        const locName = txDetail.pos_location_id ? locations.find(l => l.id === txDetail.pos_location_id)?.name : null
+        const statusColor = txDetail.status === 'completed' ? GREEN : txDetail.status === 'refunded' ? RED : '#f59e0b'
+        const statusLabel = txDetail.status.replace('_', ' ')
+        const createdDate = new Date(txDetail.created_at)
+        const ago = Math.floor((Date.now() - createdDate.getTime()) / 60000)
+        const agoText = ago < 1 ? 'just now' : ago < 60 ? `${ago}m ago` : ago < 1440 ? `${Math.floor(ago / 60)}h ago` : `${Math.floor(ago / 1440)}d ago`
+        const paymentIcon = txDetail.payment_type === 'cash' ? '💵' : txDetail.payment_type === 'card' ? '💳' : '📱'
+
+        return (
         <>
           <div onClick={() => setTxDetail(null)} style={modalOverlay} />
-          <div style={modalBox}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ ...modalBox, maxWidth: 520 }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
               <div>
                 <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700 }}>Transaction details</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>#{txDetail.id.slice(0, 8)} · {new Date(txDetail.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
-              </div>
-              {txDetail.status !== 'completed' && <span style={{ fontSize: 11, fontWeight: 700, color: RED, background: 'rgba(220,38,38,.08)', padding: '4px 10px', borderRadius: 9999, textTransform: 'uppercase' }}>{txDetail.status.replace('_', ' ')}</span>}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Cashier<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{txDetail.cashier?.name || 'Owner'}</div></div>
-              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Payment<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2, textTransform: 'capitalize' }}>{txDetail.payment_type}</div></div>
-            </div>
-            {txDetail.pos_customers?.phone && <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 12 }}>Customer: {txDetail.pos_customers.name || txDetail.pos_customers.phone}</div>}
-            <div style={{ border: '1px solid var(--b)', borderRadius: 10, overflow: 'hidden', marginBottom: 16 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 50px 70px 70px', padding: '8px 14px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>
-                <span>Item</span><span style={{ textAlign: 'center' }}>Qty</span><span style={{ textAlign: 'right' }}>Unit</span><span style={{ textAlign: 'right' }}>Total</span>
-              </div>
-              {(txDetail.pos_items || []).map((item, i) => (
-                <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 50px 70px 70px', padding: '10px 14px', borderTop: '1px solid var(--b)', fontSize: 13 }}>
-                  <span style={{ color: 'var(--tx)', fontWeight: 500 }}>{item.name}</span>
-                  <span style={{ textAlign: 'center', color: 'var(--tx3)' }}>{item.qty}</span>
-                  <span style={{ textAlign: 'right', color: 'var(--tx3)' }}>{fmt(currencySymbol, item.unit_price)}</span>
-                  <span style={{ textAlign: 'right', fontWeight: 600 }}>{fmt(currencySymbol, item.qty * item.unit_price)}</span>
+                <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>
+                  #{txDetail.id.slice(0, 8)} · {createdDate.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} · <span style={{ color: 'var(--tx2)' }}>{agoText}</span>
                 </div>
-              ))}
+              </div>
+              <span style={{ fontSize: 11, fontWeight: 700, color: statusColor, background: statusColor + '14', padding: '4px 10px', borderRadius: 9999, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{statusLabel === 'completed' ? '✓ Completed' : statusLabel}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderTop: '2px solid var(--b)', fontSize: 16, fontWeight: 800 }}>
-              <span>Total</span>
-              <span>{fmt(currencySymbol, txDetail.total)}</span>
+
+            {/* Info grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: locName ? '1fr 1fr 1fr' : '1fr 1fr', gap: 12, marginBottom: 16 }}>
+              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Cashier<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{txDetail.cashier?.name || 'Owner'}{txDetail.cashier?.role ? <span style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 400, marginLeft: 6, textTransform: 'capitalize' }}>{txDetail.cashier.role}</span> : null}</div></div>
+              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Payment<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{paymentIcon} <span style={{ textTransform: 'capitalize' }}>{txDetail.payment_type}</span></div></div>
+              {locName && <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Branch<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>📍 {locName}</div></div>}
             </div>
-            {txDetail.notes && <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 8 }}>Note: {txDetail.notes}</div>}
-            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+
+            {/* Customer */}
+            {txDetail.pos_customers?.phone && (
+              <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 12, background: 'var(--ev)', padding: '8px 12px', borderRadius: 8 }}>
+                👤 Customer: <span style={{ fontWeight: 600, color: 'var(--tx)' }}>{txDetail.pos_customers.name || txDetail.pos_customers.phone}</span>
+                {txDetail.pos_customers.name && txDetail.pos_customers.phone && <span style={{ marginLeft: 8, fontSize: 11 }}>({txDetail.pos_customers.phone})</span>}
+              </div>
+            )}
+
+            {/* Line items */}
+            <div style={{ border: '1px solid var(--b)', borderRadius: 10, overflow: 'hidden', marginBottom: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: hasCostData ? '1fr 40px 65px 65px 65px' : '1fr 50px 70px 70px', padding: '8px 14px', background: 'var(--ev)', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>
+                <span>Item</span><span style={{ textAlign: 'center' }}>Qty</span><span style={{ textAlign: 'right' }}>Unit</span>{hasCostData && <span style={{ textAlign: 'right' }}>Profit</span>}<span style={{ textAlign: 'right' }}>Total</span>
+              </div>
+              {txItems.map((item, i) => {
+                const lineTotal = item.qty * item.unit_price
+                const lineProfit = item.cost_price ? lineTotal - item.qty * item.cost_price : null
+                return (
+                  <div key={i} style={{ display: 'grid', gridTemplateColumns: hasCostData ? '1fr 40px 65px 65px 65px' : '1fr 50px 70px 70px', padding: '10px 14px', borderTop: '1px solid var(--b)', fontSize: 13 }}>
+                    <span style={{ color: 'var(--tx)', fontWeight: 500 }}>{item.name}</span>
+                    <span style={{ textAlign: 'center', color: 'var(--tx3)' }}>{item.qty}</span>
+                    <span style={{ textAlign: 'right', color: 'var(--tx3)' }}>{fmt(currencySymbol, item.unit_price)}</span>
+                    {hasCostData && <span style={{ textAlign: 'right', fontSize: 12, color: lineProfit !== null ? (lineProfit >= 0 ? GREEN : RED) : 'var(--tx3)' }}>{lineProfit !== null ? fmt(currencySymbol, lineProfit) : '—'}</span>}
+                    <span style={{ textAlign: 'right', fontWeight: 600 }}>{fmt(currencySymbol, lineTotal)}</span>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Totals breakdown */}
+            <div style={{ background: 'var(--ev)', borderRadius: 10, padding: '12px 14px', marginBottom: 12 }}>
+              {(discount > 0 || (subtotal !== txDetail.total)) && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--tx3)', marginBottom: 6 }}>
+                  <span>Subtotal</span><span>{fmt(currencySymbol, subtotal)}</span>
+                </div>
+              )}
+              {discount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: RED, marginBottom: 6 }}>
+                  <span>Discount</span><span>−{fmt(currencySymbol, discount)}</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 800, color: 'var(--tx)', borderTop: (discount > 0 || subtotal !== txDetail.total) ? '2px solid var(--b)' : 'none', paddingTop: (discount > 0 || subtotal !== txDetail.total) ? 8 : 0 }}>
+                <span>Total</span><span>{fmt(currencySymbol, txDetail.total)}</span>
+              </div>
+              {tendered !== null && tendered !== undefined && tendered > 0 && (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--tx3)', marginTop: 6 }}>
+                    <span>Tendered</span><span>{fmt(currencySymbol, tendered)}</span>
+                  </div>
+                  {change !== null && change > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--tx3)' }}>
+                      <span>Change</span><span>{fmt(currencySymbol, change)}</span>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Profit summary — owner/manager only */}
+            {hasCostData && (
+              <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                <div style={{ flex: 1, background: totalProfit >= 0 ? 'rgba(34,197,94,.06)' : 'rgba(220,38,38,.06)', border: `1px solid ${totalProfit >= 0 ? 'rgba(34,197,94,.2)' : 'rgba(220,38,38,.2)'}`, borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Profit</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: totalProfit >= 0 ? GREEN : RED, marginTop: 2 }}>{fmt(currencySymbol, totalProfit)}</div>
+                </div>
+                <div style={{ flex: 1, background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Margin</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: marginPct >= 30 ? GREEN : marginPct >= 15 ? '#f59e0b' : RED, marginTop: 2 }}>{marginPct.toFixed(1)}%</div>
+                </div>
+                <div style={{ flex: 1, background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Cost</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--tx)', marginTop: 2 }}>{fmt(currencySymbol, totalCost)}</div>
+                </div>
+              </div>
+            )}
+
+            {/* Notes */}
+            {txDetail.notes && (
+              <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 12, padding: '8px 12px', background: 'rgba(251,191,36,.06)', border: '1px solid rgba(251,191,36,.15)', borderRadius: 8 }}>
+                📝 {txDetail.notes}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {txDetail.status === 'completed' && (
                 <button onClick={() => { setRefundTx(txDetail); setTxDetail(null); setRefundReason('') }} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid rgba(220,38,38,.25)', background: 'rgba(220,38,38,.06)', color: RED, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Process refund</button>
               )}
+              <button onClick={() => { const items = txDetail.pos_items || []; const lines = items.map(it => `${it.name} x${it.qty} = ${fmt(currencySymbol, it.qty * it.unit_price)}`).join('\n'); const msg = `Receipt #${txDetail.id.slice(0, 8)}\n${createdDate.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}\n\n${lines}\n\nTotal: ${fmt(currencySymbol, txDetail.total)}${discount > 0 ? `\nDiscount: ${fmt(currencySymbol, discount)}` : ''}${txDetail.notes ? `\nNote: ${txDetail.notes}` : ''}\n\nThank you!`; navigator.clipboard.writeText(msg); notify('Receipt copied to clipboard') }} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--ev)', color: 'var(--tx)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>📋 Copy receipt</button>
+              <button onClick={() => { const items = txDetail.pos_items || []; const lines = items.map(it => `${it.name} x${it.qty} = ${fmt(currencySymbol, it.qty * it.unit_price)}`).join('%0a'); const msg = `*Receipt %23${txDetail.id.slice(0, 8)}*%0a${createdDate.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}%0a%0a${lines}%0a%0a*Total: ${fmt(currencySymbol, txDetail.total)}*${discount > 0 ? `%0aDiscount: ${fmt(currencySymbol, discount)}` : ''}%0a%0aThank you!`; window.open(`https://wa.me/?text=${msg}`, '_blank') }} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid rgba(37,211,102,.25)', background: 'rgba(37,211,102,.06)', color: '#25d366', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>💬 WhatsApp</button>
               <button onClick={() => setTxDetail(null)} style={btnSecondary}>Close</button>
             </div>
           </div>
         </>
-      )}
+        )
+      })()}
 
       {/* Filter/drill-down modal */}
       {filterModal && (
@@ -3258,6 +3373,282 @@ export default function POSPage() {
                 </div>
               )
             })()}
+            {/* Gross Profit deep-dive */}
+            {filterModal.type === 'gross_profit' && (() => {
+              // Per-product profit breakdown
+              const productProfit = completedTx.flatMap(t => (t.pos_items || []).map(i => ({
+                name: i.name, qty: i.qty, revenue: i.unit_price * i.qty,
+                cost: (i.cost_price || 0) * i.qty, profit: (i.unit_price - (i.cost_price || 0)) * i.qty,
+                margin: i.unit_price > 0 ? ((i.unit_price - (i.cost_price || 0)) / i.unit_price * 100) : 0,
+              })))
+              const grouped: Record<string, { qty: number; revenue: number; cost: number; profit: number }> = {}
+              productProfit.forEach(p => {
+                if (!grouped[p.name]) grouped[p.name] = { qty: 0, revenue: 0, cost: 0, profit: 0 }
+                grouped[p.name].qty += p.qty; grouped[p.name].revenue += p.revenue
+                grouped[p.name].cost += p.cost; grouped[p.name].profit += p.profit
+              })
+              const sorted = Object.entries(grouped).sort((a, b) => b[1].profit - a[1].profit)
+              const lossMakers = sorted.filter(([, d]) => d.profit < 0)
+              return (
+                <div>
+                  {/* Summary cards */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Revenue</div><div style={{ fontSize: 18, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, todayRevenue)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Cost</div><div style={{ fontSize: 18, fontWeight: 800, color: RED }}>{fmt(currencySymbol, totalCost)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Profit</div><div style={{ fontSize: 18, fontWeight: 800, color: grossProfit >= 0 ? GREEN : RED }}>{fmt(currencySymbol, grossProfit)}</div></div>
+                  </div>
+                  {/* Visual bar */}
+                  <div style={{ marginBottom: 16, padding: '12px 14px', borderRadius: 10, background: 'var(--ev)' }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Revenue vs Cost</div>
+                    <div style={{ display: 'flex', height: 24, borderRadius: 6, overflow: 'hidden', background: 'var(--b)' }}>
+                      {todayRevenue > 0 && <div style={{ width: `${(totalCost / todayRevenue) * 100}%`, background: RED, transition: 'width .3s', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#fff', fontWeight: 700 }}>Cost</div>}
+                      {todayRevenue > 0 && <div style={{ flex: 1, background: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#fff', fontWeight: 700 }}>Profit {margin.toFixed(0)}%</div>}
+                    </div>
+                  </div>
+                  {/* Product breakdown */}
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Profit by product</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 280, overflowY: 'auto', marginBottom: lossMakers.length > 0 ? 14 : 0 }}>
+                    {sorted.slice(0, 15).map(([name, d]) => (
+                      <div key={name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 8, background: d.profit >= 0 ? 'rgba(22,163,74,.04)' : 'rgba(220,38,38,.04)', border: `1px solid ${d.profit >= 0 ? 'rgba(22,163,74,.15)' : 'rgba(220,38,38,.15)'}` }}>
+                        <div><div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{name}</div><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{d.qty} sold · {fmt(currencySymbol, d.revenue)} rev</div></div>
+                        <div style={{ textAlign: 'right' }}><div style={{ fontSize: 13, fontWeight: 700, color: d.profit >= 0 ? GREEN : RED }}>{fmt(currencySymbol, d.profit)}</div><div style={{ fontSize: 10, color: 'var(--tx3)' }}>{d.revenue > 0 ? (d.profit / d.revenue * 100).toFixed(0) : 0}% margin</div></div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Loss maker alert */}
+                  {lossMakers.length > 0 && (
+                    <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.15)' }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: RED, marginBottom: 4 }}>⚠️ {lossMakers.length} product{lossMakers.length > 1 ? 's' : ''} selling below cost</div>
+                      <div style={{ fontSize: 12, color: 'var(--tx2)' }}>Review pricing on items with negative margins to protect profitability.</div>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+
+            {/* Margin deep-dive */}
+            {filterModal.type === 'margin' && (() => {
+              const productMargins = completedTx.flatMap(t => (t.pos_items || []).map(i => ({
+                name: i.name, revenue: i.unit_price * i.qty, cost: (i.cost_price || 0) * i.qty,
+              })))
+              const grouped: Record<string, { revenue: number; cost: number }> = {}
+              productMargins.forEach(p => {
+                if (!grouped[p.name]) grouped[p.name] = { revenue: 0, cost: 0 }
+                grouped[p.name].revenue += p.revenue; grouped[p.name].cost += p.cost
+              })
+              const sorted = Object.entries(grouped).map(([name, d]) => ({
+                name, revenue: d.revenue, cost: d.cost, margin: d.revenue > 0 ? ((d.revenue - d.cost) / d.revenue * 100) : 0,
+              })).sort((a, b) => b.margin - a.margin)
+              const healthLabel = margin >= 40 ? 'Healthy' : margin >= 20 ? 'Moderate' : 'Low'
+              const healthColor = margin >= 40 ? GREEN : margin >= 20 ? AMBER : RED
+              return (
+                <div>
+                  {/* Overall margin gauge */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, padding: '14px 16px', borderRadius: 12, background: `${healthColor}08`, border: `1px solid ${healthColor}20` }}>
+                    <div style={{ width: 60, height: 60, borderRadius: '50%', border: `4px solid ${healthColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <span style={{ fontSize: 18, fontWeight: 800, color: healthColor }}>{margin.toFixed(0)}%</span>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: healthColor }}>{healthLabel} margin</div>
+                      <div style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.5 }}>
+                        {margin >= 40 ? 'Your margins are strong — focus on maintaining pricing power.' : margin >= 20 ? 'Margins are moderate — review your highest-cost items.' : 'Margins are thin — urgently review pricing and supplier costs.'}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Margin distribution */}
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Product margins — highest to lowest</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 320, overflowY: 'auto' }}>
+                    {sorted.map(p => {
+                      const mc = p.margin >= 40 ? GREEN : p.margin >= 20 ? AMBER : RED
+                      return (
+                        <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)' }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                            <div style={{ fontSize: 10, color: 'var(--tx3)' }}>Rev {fmt(currencySymbol, p.revenue)} · Cost {fmt(currencySymbol, p.cost)}</div>
+                          </div>
+                          <div style={{ width: 60, height: 6, borderRadius: 3, background: 'var(--ev)', overflow: 'hidden', flexShrink: 0 }}>
+                            <div style={{ height: '100%', width: `${Math.min(Math.max(p.margin, 0), 100)}%`, background: mc, borderRadius: 3 }} />
+                          </div>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: mc, minWidth: 40, textAlign: 'right' }}>{p.margin.toFixed(0)}%</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* Avg Sale deep-dive */}
+            {filterModal.type === 'avg_sale' && (() => {
+              const avgSale = todaySales > 0 ? todayRevenue / todaySales : 0
+              const saleSizes = completedTx.map(t => t.total).sort((a, b) => a - b)
+              const median = saleSizes.length > 0 ? saleSizes[Math.floor(saleSizes.length / 2)] : 0
+              const smallest = saleSizes[0] || 0
+              const largest = saleSizes[saleSizes.length - 1] || 0
+              // Distribution buckets
+              const buckets = [
+                { label: `< ${fmt(currencySymbol, avgSale * 0.5, 0)}`, min: 0, max: avgSale * 0.5, count: 0 },
+                { label: `${fmt(currencySymbol, avgSale * 0.5, 0)} - ${fmt(currencySymbol, avgSale, 0)}`, min: avgSale * 0.5, max: avgSale, count: 0 },
+                { label: `${fmt(currencySymbol, avgSale, 0)} - ${fmt(currencySymbol, avgSale * 1.5, 0)}`, min: avgSale, max: avgSale * 1.5, count: 0 },
+                { label: `> ${fmt(currencySymbol, avgSale * 1.5, 0)}`, min: avgSale * 1.5, max: Infinity, count: 0 },
+              ]
+              saleSizes.forEach(s => { const b = buckets.find(b => s >= b.min && s < b.max); if (b) b.count++ })
+              const maxBucket = Math.max(...buckets.map(b => b.count), 1)
+              // Items per transaction
+              const avgItems = completedTx.length > 0 ? completedTx.reduce((s, t) => s + (t.pos_items || []).reduce((is, i) => is + i.qty, 0), 0) / completedTx.length : 0
+              return (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Average</div><div style={{ fontSize: 16, fontWeight: 800, color: ACC }}>{fmt(currencySymbol, avgSale)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Median</div><div style={{ fontSize: 16, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, median)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Smallest</div><div style={{ fontSize: 16, fontWeight: 800, color: 'var(--tx3)' }}>{fmt(currencySymbol, smallest)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Largest</div><div style={{ fontSize: 16, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, largest)}</div></div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Avg items/sale</div><div style={{ fontSize: 16, fontWeight: 800, color: 'var(--tx)' }}>{avgItems.toFixed(1)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Total sales</div><div style={{ fontSize: 16, fontWeight: 800, color: ACC }}>{todaySales}</div></div>
+                  </div>
+                  {/* Distribution chart */}
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Sale size distribution</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
+                    {buckets.map((b, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ fontSize: 11, color: 'var(--tx3)', minWidth: 110, textAlign: 'right' }}>{b.label}</span>
+                        <div style={{ flex: 1, height: 20, background: 'var(--ev)', borderRadius: 4, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${(b.count / maxBucket) * 100}%`, background: ACC, borderRadius: 4, transition: 'width .3s', display: 'flex', alignItems: 'center', paddingLeft: 6 }}>
+                            {b.count > 0 && <span style={{ fontSize: 10, color: '#fff', fontWeight: 700 }}>{b.count}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Tips */}
+                  <div style={{ padding: '10px 14px', borderRadius: 10, background: ACC_BG, border: `1px solid ${ACC_BORDER}` }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: ACC, marginBottom: 4 }}>Tips to increase basket size</div>
+                    <div style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.6 }}>
+                      {avgItems < 2 ? 'Most sales have only 1 item — try bundle deals or "add-on" suggestions at checkout.' : 'Good item count per sale. Consider upselling premium variants to increase value.'}
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* Staff Overview deep-dive */}
+            {filterModal.type === 'staff_overview' && (() => {
+              const totalStaffRev = cashierStats.reduce((s, c) => s + c.revenue, 0)
+              const totalStaffSales = cashierStats.reduce((s, c) => s + c.sales, 0)
+              const topPerformer = cashierStats[0]
+              return (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Total staff</div><div style={{ fontSize: 18, fontWeight: 800, color: ACC }}>{cashierStats.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Total revenue</div><div style={{ fontSize: 18, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, totalStaffRev)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Avg per staff</div><div style={{ fontSize: 18, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, cashierStats.length > 0 ? totalStaffRev / cashierStats.length : 0)}</div></div>
+                  </div>
+                  {/* Chart */}
+                  <div style={{ ...cardStyle, marginBottom: 16 }}>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 8 }}>Revenue by staff</div>
+                    <MiniBarChart data={cashierStats.map(c => ({ label: c.name.split(' ')[0], value: c.revenue }))} color={ACC} height={80} />
+                  </div>
+                  {/* Leaderboard */}
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Leaderboard</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 300, overflowY: 'auto' }}>
+                    {cashierStats.map((c, i) => {
+                      const pct = totalStaffRev > 0 ? (c.revenue / totalStaffRev * 100) : 0
+                      return (
+                        <div key={c.id} onClick={() => setFilterModal({ type: 'cashier_detail', title: `${c.name}'s transactions`, cashier_id: c.name })}
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: i === 0 ? `1px solid ${ACC_BORDER}` : '1px solid var(--b)', background: i === 0 ? ACC_BG : 'var(--sf)', cursor: 'pointer', transition: 'all 150ms' }}
+                          onMouseEnter={e => { (e.currentTarget.style as any).borderColor = ACC }}
+                          onMouseLeave={e => { (e.currentTarget.style as any).borderColor = i === 0 ? ACC_BORDER : 'var(--b)' }}>
+                          <span style={{ fontSize: 14, width: 22, textAlign: 'center' }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`}</span>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{c.name}</div>
+                            <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{c.sales} sales · avg {fmt(currencySymbol, c.avgSale)} · {pct.toFixed(0)}% of revenue</div>
+                          </div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, c.revenue)}</div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* Stock item deep-dive */}
+            {filterModal.type === 'stock_item' && (() => {
+              const item = inventory.find(i => i.id === filterModal.item_id)
+              if (!item) return <div style={{ fontSize: 13, color: 'var(--tx3)', padding: 20, textAlign: 'center' }}>Item not found.</div>
+              const isOut = item.stock_qty === 0
+              const statusColor = isOut ? RED : AMBER
+              const profitPerUnit = item.sale_price - (item.cost_price || 0)
+              const itemMargin = item.sale_price > 0 ? (profitPerUnit / item.sale_price * 100) : 0
+              const stockValue = (item.cost_price || 0) * item.stock_qty
+              const retailValue = item.sale_price * item.stock_qty
+              // Recent sales of this item
+              const itemSales = completedTx.filter(t => (t.pos_items || []).some(p => p.inventory_id === item.id || p.name === item.name))
+              const totalQtySold = itemSales.flatMap(t => (t.pos_items || []).filter(p => p.inventory_id === item.id || p.name === item.name)).reduce((s, p) => s + p.qty, 0)
+              const itemRevenue = itemSales.flatMap(t => (t.pos_items || []).filter(p => p.inventory_id === item.id || p.name === item.name)).reduce((s, p) => s + p.unit_price * p.qty, 0)
+              const daysRemaining = totalQtySold > 0 ? Math.round(item.stock_qty / (totalQtySold / Math.max(1, completedTx.length > 0 ? 1 : 1))) : null
+              const isExpiring = item.expiry_date && new Date(item.expiry_date).getTime() < Date.now() + 30 * 86400000
+              return (
+                <div>
+                  {/* Status banner */}
+                  <div style={{ padding: '12px 14px', borderRadius: 10, background: `${statusColor}08`, border: `1px solid ${statusColor}20`, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: statusColor, flexShrink: 0 }} />
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: statusColor }}>{isOut ? 'Out of stock' : `Low stock — ${item.stock_qty} remaining`}</div>
+                      <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Threshold: {item.low_stock_threshold} units</div>
+                    </div>
+                  </div>
+                  {/* Detail grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Sale price</div><div style={{ fontSize: 16, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, item.sale_price)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Cost price</div><div style={{ fontSize: 16, fontWeight: 800, color: 'var(--tx3)' }}>{fmt(currencySymbol, item.cost_price || 0)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Profit/unit</div><div style={{ fontSize: 16, fontWeight: 800, color: profitPerUnit >= 0 ? GREEN : RED }}>{fmt(currencySymbol, profitPerUnit)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Margin</div><div style={{ fontSize: 16, fontWeight: 800, color: itemMargin >= 20 ? GREEN : itemMargin >= 10 ? AMBER : RED }}>{itemMargin.toFixed(0)}%</div></div>
+                  </div>
+                  {/* Stock & sales info */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Stock value</div><div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, stockValue)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Retail value</div><div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{fmt(currencySymbol, retailValue)}</div></div>
+                  </div>
+                  {/* Sales activity this period */}
+                  {totalQtySold > 0 && (
+                    <div style={{ padding: '10px 14px', borderRadius: 10, background: 'var(--ev)', marginBottom: 14 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>Sales this period</div>
+                      <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--tx2)' }}>
+                        <span><strong>{totalQtySold}</strong> units sold</span>
+                        <span><strong>{fmt(currencySymbol, itemRevenue)}</strong> revenue</span>
+                        <span>in <strong>{itemSales.length}</strong> transactions</span>
+                      </div>
+                    </div>
+                  )}
+                  {/* Extra info */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {item.sku && <div style={{ fontSize: 12, color: 'var(--tx2)' }}>SKU: <strong>{item.sku}</strong></div>}
+                    {item.category && <div style={{ fontSize: 12, color: 'var(--tx2)' }}>Category: <strong>{item.category}</strong></div>}
+                    {item.supplier && <div style={{ fontSize: 12, color: 'var(--tx2)' }}>Supplier: <strong>{item.supplier}</strong></div>}
+                    {item.brand && <div style={{ fontSize: 12, color: 'var(--tx2)' }}>Brand: <strong>{item.brand}</strong></div>}
+                    {item.expiry_date && (
+                      <div style={{ fontSize: 12, color: isExpiring ? RED : 'var(--tx2)' }}>
+                        {isExpiring ? '⚠️ ' : ''}Expires: <strong>{new Date(item.expiry_date).toLocaleDateString()}</strong>
+                      </div>
+                    )}
+                    {item.batch_number && <div style={{ fontSize: 12, color: 'var(--tx2)' }}>Batch: <strong>{item.batch_number}</strong></div>}
+                    {item.last_sold_at && <div style={{ fontSize: 12, color: 'var(--tx2)' }}>Last sold: <strong>{new Date(item.last_sold_at).toLocaleDateString()}</strong></div>}
+                  </div>
+                  {/* Action suggestion */}
+                  <div style={{ marginTop: 14, padding: '10px 14px', borderRadius: 10, background: `${statusColor}06`, border: `1px dashed ${statusColor}30` }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: statusColor, marginBottom: 4 }}>Recommended action</div>
+                    <div style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.5 }}>
+                      {isOut ? `This item is out of stock. ${totalQtySold > 0 ? `It sold ${totalQtySold} units recently — reorder urgently to avoid lost sales.` : 'Consider restocking if there is demand.'}` :
+                       `Stock is low at ${item.stock_qty} units (threshold: ${item.low_stock_threshold}). ${totalQtySold > 0 ? `At current sell rate, consider reordering soon.` : 'Monitor demand and reorder when needed.'}`}
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
+
             <button onClick={() => setFilterModal(null)} style={{ ...btnSecondary, marginTop: 16 }}>Close</button>
           </div>
         </>
@@ -3298,6 +3689,8 @@ export default function POSPage() {
           </div>
         </>
       )}
+
+      </div>
 
       {/* Inject keyframes for animations */}
       <style>{`

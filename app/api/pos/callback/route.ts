@@ -4,7 +4,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { randomBytes } from 'crypto'
 
 // Supabase redirects here after staff clicks magic link in email
-// e.g. https://www.askbiz.co/api/pos/callback?token_hash=xxx&type=magiclink
+// e.g. https://askbiz.co/api/pos/callback?token_hash=xxx&type=magiclink
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const token_hash = searchParams.get('token_hash')

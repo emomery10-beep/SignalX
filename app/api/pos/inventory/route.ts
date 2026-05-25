@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosOwner, resolvePosAuth } from '@/lib/pos-auth'
+import { logPosAudit } from '@/lib/pos-audit'
 
 // CORS handled globally by next.config.js
 export async function OPTIONS() {
@@ -31,8 +32,8 @@ export async function GET(req: NextRequest) {
   // Staff locked to branch; owner can filter or see all
   if (location_id) query = query.eq('location_id', location_id)
 
-  // Sector filter: return items tagged to this sector + untagged (shared) items
-  if (sector) query = query.or(`sector.eq.${sector},sector.is.null`)
+  // Sector filter: strict — only items explicitly tagged to this sector
+  if (sector) query = query.eq('sector', sector)
 
   if (search) {
     query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`)
@@ -118,8 +119,9 @@ export async function PUT(req: NextRequest) {
 
 // PATCH — update product fields or restock — fix #4 #10 #24
 export async function PATCH(req: NextRequest) {
-  const ownerId = await resolvePosOwner(req, 'inventory')
-  if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  const auth = await resolvePosAuth(req, 'inventory')
+  if (!auth) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  const ownerId = auth.ownerId
 
   const service = createServiceClient()
   const body = await req.json()
@@ -145,7 +147,7 @@ export async function PATCH(req: NextRequest) {
       // RPC may not exist yet — fall back to fetch-then-update (non-atomic but safe for low-concurrency use)
       const { data: current, error: fetchErr } = await service
         .from('inventory')
-        .select('stock_qty')
+        .select('stock_qty, name')
         .eq('id', id)
         .eq('owner_id', ownerId)
         .single()
@@ -161,9 +163,14 @@ export async function PATCH(req: NextRequest) {
         .single()
 
       if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 })
+      logPosAudit({ auth, event: 'inventory.restocked', entityType: 'inventory', entityId: id,
+        toValue: String(qty), metadata: { product_name: current.name, added_qty: qty, new_total: current.stock_qty + qty } })
       return NextResponse.json({ product: updated })
     }
 
+    // RPC succeeded — fire audit
+    logPosAudit({ auth, event: 'inventory.restocked', entityType: 'inventory', entityId: id,
+      toValue: String(qty), metadata: { product_name: (data as any)?.name, added_qty: qty } })
     return NextResponse.json({ product: data })
   }
 
@@ -187,5 +194,13 @@ export async function PATCH(req: NextRequest) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Log manual stock adjustment if stock_qty was explicitly changed
+  if (updates.stock_qty !== undefined) {
+    logPosAudit({ auth, event: 'inventory.adjusted', entityType: 'inventory', entityId: id,
+      toValue: String(updates.stock_qty),
+      metadata: { product_name: (data as any)?.name, new_qty: updates.stock_qty } })
+  }
+
   return NextResponse.json({ product: data })
 }

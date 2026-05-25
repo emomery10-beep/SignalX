@@ -160,19 +160,42 @@ export default function InventoryPage() {
   }
 
   // ── Dual-photo scan helpers ──────────────────────────────────
-  const fileToBase64 = (file: File): Promise<string> =>
+  // Resize image to max dimension and compress, return base64 (no prefix)
+  const fileToBase64 = (file: File, maxDim = 1200, quality = 0.75): Promise<string> =>
     new Promise((resolve, reject) => {
-      const r = new FileReader()
-      r.onload = () => resolve((r.result as string).split(',')[1])
-      r.onerror = reject
-      r.readAsDataURL(file)
+      const img = new Image()
+      img.onload = () => {
+        let w = img.width, h = img.height
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round(h * maxDim / w); w = maxDim }
+          else       { w = Math.round(w * maxDim / h); h = maxDim }
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = w; canvas.height = h
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+        resolve(canvas.toDataURL('image/jpeg', quality).split(',')[1])
+      }
+      img.onerror = reject
+      img.src = URL.createObjectURL(file)
     })
+  // Small thumbnail for preview
   const fileToThumb = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
-      const r = new FileReader()
-      r.onload = () => resolve(r.result as string)
-      r.onerror = reject
-      r.readAsDataURL(file)
+      const img = new Image()
+      img.onload = () => {
+        const maxT = 200
+        let w = img.width, h = img.height
+        if (w > maxT || h > maxT) {
+          if (w > h) { h = Math.round(h * maxT / w); w = maxT }
+          else       { w = Math.round(w * maxT / h); h = maxT }
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = w; canvas.height = h
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+        resolve(canvas.toDataURL('image/jpeg', 0.6))
+      }
+      img.onerror = reject
+      img.src = URL.createObjectURL(file)
     })
 
   const handleScanFile = async (file: File, slot: 'front' | 'back') => {
@@ -197,15 +220,26 @@ export default function InventoryPage() {
 
   const captureScanPhoto = () => {
     if (!scanVideoRef.current || !scanCanvasRef.current || !scanStep) return
+    // Resize to max 1200px to stay within Vercel's 4.5MB body limit
+    const vw = scanVideoRef.current.videoWidth
+    const vh = scanVideoRef.current.videoHeight
+    if (vw === 0 || vh === 0) { alert('Camera not ready — wait a moment'); return }
+    const maxDim = 1200
+    let cw = vw, ch = vh
+    if (vw > maxDim || vh > maxDim) {
+      if (vw > vh) { ch = Math.round(vh * maxDim / vw); cw = maxDim }
+      else         { cw = Math.round(vw * maxDim / vh); ch = maxDim }
+    }
+    scanCanvasRef.current.width = cw
+    scanCanvasRef.current.height = ch
     const ctx = scanCanvasRef.current.getContext('2d')!
-    scanCanvasRef.current.width  = scanVideoRef.current.videoWidth
-    scanCanvasRef.current.height = scanVideoRef.current.videoHeight
-    ctx.drawImage(scanVideoRef.current, 0, 0)
+    ctx.drawImage(scanVideoRef.current, 0, 0, cw, ch)
     scanCanvasRef.current.toBlob(async blob => {
       if (!blob) return
+      console.log('[Inventory Scan] Captured', Math.round(blob.size / 1024), 'KB for', scanStep)
       await handleScanFile(new File([blob], 'scan.jpg', { type: 'image/jpeg' }), scanStep)
       closeScanCamera()
-    }, 'image/jpeg', 0.9)
+    }, 'image/jpeg', 0.75)
   }
 
   const runFullScan = async () => {

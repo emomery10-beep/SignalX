@@ -7,17 +7,24 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { uploadId, targetColumn, horizonDays = 14, method = 'linear', adjustments, confidence = 1.5 } = await request.json()
-  if (!uploadId || !targetColumn || !adjustments) return NextResponse.json({ error: 'uploadId, targetColumn, and adjustments required' }, { status: 400 })
+  const { uploadId, sourceRows, targetColumn, horizonDays = 14, method = 'linear', adjustments, confidence = 1.5 } = await request.json()
+  if (!targetColumn || !adjustments) return NextResponse.json({ error: 'targetColumn and adjustments required' }, { status: 400 })
 
-  const { data: upload } = await supabase
-    .from('uploads').select('parsed_sample')
-    .eq('id', uploadId).eq('user_id', user.id).single()
+  let rows: Record<string, unknown>[]
 
-  if (!upload?.parsed_sample) return NextResponse.json({ error: 'Dataset not found' }, { status: 404 })
+  if (sourceRows && Array.isArray(sourceRows)) {
+    rows = sourceRows
+  } else if (uploadId) {
+    const { data: upload } = await supabase
+      .from('uploads').select('parsed_sample')
+      .eq('id', uploadId).eq('user_id', user.id).single()
+    if (!upload?.parsed_sample) return NextResponse.json({ error: 'Dataset not found' }, { status: 404 })
+    rows = upload.parsed_sample as Record<string, unknown>[]
+  } else {
+    return NextResponse.json({ error: 'No data source provided' }, { status: 400 })
+  }
 
   try {
-    const rows = upload.parsed_sample as Record<string, unknown>[]
     const result = whatIfFromDataset(rows, targetColumn, horizonDays, method, adjustments, confidence)
     return NextResponse.json(result)
   } catch (err: unknown) {

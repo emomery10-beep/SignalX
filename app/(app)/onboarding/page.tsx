@@ -105,6 +105,16 @@ export default function OnboardingPage() {
     if (idx > 0) setStep(STEPS[idx - 1])
   }
 
+  const skip = async () => {
+    setSaving(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      await supabase.from('profiles').update({ onboarding_complete: true, onboarded: true }).eq('id', user.id)
+      router.push('/home')
+    } catch (e) { console.error(e) } finally { setSaving(false) }
+  }
+
   const finish = async () => {
     setSaving(true)
     try {
@@ -257,6 +267,9 @@ export default function OnboardingPage() {
                 <button style={{ ...btn, background: EV, color: TX2, boxShadow: 'none' }} onClick={back}>← Back</button>
                 <button style={{ ...btn, opacity: canNext.business ? 1 : .5 }} onClick={next} disabled={!canNext.business}>Continue →</button>
               </div>
+              <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 13, cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }} onClick={skip}>
+                Skip setup — go straight to AskBiz
+              </button>
             </div>
           )}
 
@@ -318,6 +331,9 @@ export default function OnboardingPage() {
                 <button style={{ ...btn, background: EV, color: TX2, boxShadow: 'none' }} onClick={back}>← Back</button>
                 <button style={{ ...btn, opacity: canNext.sector ? 1 : .5 }} onClick={next} disabled={!canNext.sector}>Continue →</button>
               </div>
+              <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 13, cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }} onClick={skip}>
+                Skip setup — go straight to AskBiz
+              </button>
             </div>
           )}
 
@@ -368,6 +384,9 @@ export default function OnboardingPage() {
                 <button style={{ ...btn, background: EV, color: TX2, boxShadow: 'none' }} onClick={back}>← Back</button>
                 <button style={{ ...btn, opacity: canNext.export ? 1 : .5 }} onClick={next} disabled={!canNext.export}>Continue →</button>
               </div>
+              <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 13, cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }} onClick={skip}>
+                Skip setup — go straight to AskBiz
+              </button>
             </div>
           )}
 

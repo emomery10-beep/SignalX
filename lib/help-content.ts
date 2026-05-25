@@ -1,5 +1,6 @@
 // lib/help-content.ts
 // AskBiz Help Center — all content hardcoded, no database required
+import { EXPANDED_HELP_TOPICS, EXPANDED_HELP_ARTICLES } from './help-content-expansion';
 
 export interface HelpArticle {
   slug: string;
@@ -14369,6 +14370,10 @@ export const HELP_ARTICLES: HelpArticle[] = [
     related: ["pos-staff-roles-explained", "pos-factory-approvals", "pos-amending-transactions"],
   },
 ];
+
+// ─── MERGE EXPANDED HELP CONTENT ─────────────────────────────────────────────
+HELP_TOPICS.push(...EXPANDED_HELP_TOPICS);
+HELP_ARTICLES.push(...EXPANDED_HELP_ARTICLES);
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 

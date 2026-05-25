@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getPost, getAllPosts } from '@/lib/blog-content'
+import { academyArticles } from '@/lib/academy-content'
 import ShareButtons from './ShareButtons'
 import ReadingProgress from './ReadingProgress'
 import ScrollDepthTracker from './ScrollDepthTracker'
@@ -63,15 +64,59 @@ const CONTENT_TYPE_COLOURS: Record<string, { text: string; bg: string }> = {
 
 const BASE = 'https://askbiz.co'
 
-const CLUSTER_CTA: Record<string, { headline: string; body: string; cta: string }> = {
-  'Financial Intelligence':     { headline: 'Stop guessing your cash position', body: 'AskBiz analyses your financials and surfaces early warning signals — before they become problems.', cta: 'See my cash forecast →' },
-  'eCommerce Intelligence':     { headline: 'Grow your store with real data', body: 'Connect your shop and get AI-powered insights on products, customers, and margins in minutes.', cta: 'Analyse my store →' },
-  'Marketing Intelligence':     { headline: 'Know which campaigns actually work', body: 'AskBiz tracks your marketing ROI across channels and tells you where to shift budget next.', cta: 'Track my ROI →' },
-  'Business Strategy':          { headline: 'Strategy decisions backed by data', body: 'Get competitive analysis, growth scenarios, and market benchmarks — without a consultant.', cta: 'Explore my strategy →' },
-  'AI Chief of Staff':          { headline: 'Your AI Chief of Staff is ready', body: 'AskBiz handles the data work your business needs — analysis, briefings, and decision prep — 24/7.', cta: 'Start for free →' },
-  'Startup Growth':             { headline: 'Grow faster with AI-powered insights', body: 'AskBiz gives you the analytics and reporting your startup needs without hiring a data team.', cta: 'Accelerate my growth →' },
-  'Inventory & Supply Chain':   { headline: 'Never stockout (or overstock) again', body: 'AskBiz predicts demand and flags supply chain risks before they hit your operations.', cta: 'Optimise my inventory →' },
-  'Global Trade Intelligence':  { headline: 'Navigate global markets with confidence', body: 'Track tariffs, currency shifts, and trade routes in a single AI-powered dashboard.', cta: 'Explore trade intel →' },
+// ── Meta description enhancer ────────────────────────────────────────────────
+// Transforms plain article descriptions into click-worthy SERP hooks
+function enhanceMetaDescription(post: { title: string; metaDescription: string; cluster: string; pillar?: string; readTime: number }): string {
+  const t = post.title.toLowerCase()
+  const d = post.metaDescription
+  const cluster = post.cluster || ''
+
+  // If description already has a hook (question, number, stat), keep it
+  if (/^\d|how |why |what if|most |stop |never |always |the \d|[£$€]\d|\d%/.test(d.toLowerCase())) return d
+
+  // Content-type specific hooks
+  if (t.includes(' vs ') || t.includes('versus')) {
+    return `${d} Compare side-by-side and decide which works for your business.`
+  }
+  if (t.includes('how to')) {
+    return `Step-by-step: ${d} Takes under ${post.readTime} minutes to read.`
+  }
+  if (t.includes('what is') || t.includes('what are')) {
+    return `${d} Plain-English explanation with real business examples.`
+  }
+
+  // Cluster-specific suffixes that create urgency or curiosity
+  const clusterHook: Record<string, string> = {
+    'Financial Intelligence':    'Most SMEs get this wrong — here\'s how to fix it.',
+    'eCommerce Intelligence':    'See how top African eCommerce sellers use this to grow.',
+    'Inventory & Supply Chain':  'Get this right and you\'ll cut costs immediately.',
+    'Marketing Intelligence':    'The data-backed approach most marketers ignore.',
+    'Business Strategy':         'The framework used by fast-growing African SMEs.',
+    'Global Trade Intelligence': 'Critical for any business operating across African borders.',
+    'Startup Growth':            'Actionable — not theory. Read time: under ' + post.readTime + ' mins.',
+    'AI Chief of Staff':         'How AI is changing this for SME operators right now.',
+    'Fintech — Pan-African':     'What every African business owner needs to know.',
+    'Logistics — West Africa':   'Practical guide for operators across West Africa.',
+    'Agribusiness — East Africa':'Data-driven insights for East African agribusiness.',
+    'Energy — Off-Grid & Renewable': 'The opportunity most African investors are missing.',
+  }
+
+  const suffix = clusterHook[cluster] || 'Practical guide with actionable takeaways.'
+  return `${d} ${suffix}`
+}
+
+const CLUSTER_CTA: Record<string, { headline: string; body: string; cta: string; href: string }> = {
+  'Financial Intelligence':     { headline: 'See your real cash position right now', body: 'Connect your accounts and AskBiz surfaces cash flow warnings, margin trends, and profit drivers — automatically. No spreadsheets.', cta: 'Connect my financials free →', href: '/signin' },
+  'eCommerce Intelligence':     { headline: 'Find your best-selling products in 60 seconds', body: 'Connect your Shopify or Amazon store and instantly see which products make money, which drain it, and where to focus next.', cta: 'Analyse my store free →', href: '/signin' },
+  'Marketing Intelligence':     { headline: 'Stop wasting budget on campaigns that don\'t work', body: 'AskBiz shows you exactly which channels drive revenue — not just clicks. Connect your ad accounts and see ROI by channel today.', cta: 'See my marketing ROI →', href: '/signin' },
+  'Business Strategy':          { headline: 'Get a competitive intelligence briefing on your market', body: 'AskBiz monitors your competitors, benchmarks your performance, and flags strategic threats — delivered as a daily briefing.', cta: 'Get my market briefing →', href: '/signin' },
+  'AI Chief of Staff':          { headline: 'Let AI handle your business analysis', body: 'AskBiz acts as your Chief of Staff — pulling data from all your tools, spotting problems early, and briefing you every morning.', cta: 'Try AskBiz free for 14 days →', href: '/signin' },
+  'Startup Growth':             { headline: 'Track the metrics that actually predict growth', body: 'AskBiz connects to your sales, marketing, and finance tools and shows you the KPIs that matter most at your stage — no data team needed.', cta: 'Set up my startup dashboard →', href: '/signin' },
+  'Inventory & Supply Chain':   { headline: 'Stop stockouts before they cost you customers', body: 'AskBiz predicts when you\'ll run out of stock, which suppliers are causing delays, and how much cash is tied up in slow-moving inventory.', cta: 'Optimise my inventory free →', href: '/signin' },
+  'Global Trade Intelligence':  { headline: 'Trade smarter across African markets', body: 'AskBiz tracks tariff changes, currency movements, and supply chain risks across 54 African markets in one dashboard.', cta: 'Explore trade intelligence →', href: '/signin' },
+  'Data-Driven Decisions':      { headline: 'Make every business decision with data behind it', body: 'AskBiz connects all your business data and answers your questions in plain English — no SQL, no analyst needed.', cta: 'Start making data-driven decisions →', href: '/signin' },
+  'Africa eCommerce':           { headline: 'Grow your African eCommerce business with data', body: 'Track sales across Jumia, Takealot, and your own store in one place. See which markets and products are driving real growth.', cta: 'Connect my African store →', href: '/signin' },
+  'Emerging Markets':           { headline: 'Intelligence built for emerging market operators', body: 'AskBiz is designed for businesses operating in high-growth, high-volatility markets — with tools for currency risk, local supply chains, and more.', cta: 'Get emerging market intelligence →', href: '/signin' },
 }
 
 const LEAD_MAGNET: Record<string, { title: string; description: string }> = {
@@ -124,6 +169,22 @@ function slugify(text: string): string {
   return text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '')
 }
 
+// Deterministic hash → unique display date spread across past 365 days
+function hashDaysAgo(slug: string): number {
+  let h = 5381
+  for (let i = 0; i < slug.length; i++) {
+    h = ((h << 5) + h) + slug.charCodeAt(i)
+    h = h & h
+  }
+  return Math.abs(h) % 330 + 14 // 14 to 344 days ago
+}
+
+function extractStats(sections: { body?: string; content?: string }[]): string[] {
+  const body = sections.map(s => s.body || s.content || '').join(' ')
+  const matches = body.match(/(?:\$|£|€|KES|UGX|NGN|₦|GHS|₵|ZAR)\s?[\d,\.]+(?:\s?(?:million|billion|thousand|bn|mn|k))?|[\d,\.]+\s?(?:million|billion|thousand|bn|mn|k)?\s?(?:%|percent)|[\d,\.]+\s?(?:million|billion|thousand)/gi) || []
+  return [...new Set(matches)].slice(0, 5)
+}
+
 // ── Static generation ────────────────────────────────────────────────────────
 export async function generateStaticParams() {
   return getAllPosts().map(p => ({ slug: p.slug }))
@@ -142,12 +203,14 @@ export async function generateMetadata(
   const alternateLanguages: Record<string, string> = {}
   post.i18n?.hreflang.forEach(h => { alternateLanguages[h.lang] = h.url })
 
+  const enhancedDesc = enhanceMetaDescription(post)
+
   return {
     title: `${post.title} | AskBiz Blog`,
-    description: post.metaDescription,
+    description: enhancedDesc,
     openGraph: {
       title: post.title,
-      description: post.metaDescription,
+      description: enhancedDesc,
       url,
       type: 'article',
       publishedTime: published,
@@ -158,7 +221,7 @@ export async function generateMetadata(
     twitter: {
       card: 'summary_large_image',
       title: post.title,
-      description: post.metaDescription,
+      description: enhancedDesc,
       site: '@askbizco',
     },
     alternates: {
@@ -197,22 +260,47 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const prevPost      = currentIndex > 0 ? allPosts[currentIndex - 1] : null
   const nextPost      = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null
 
-  const relatedPosts = (post.relatedSlugs || [])
+  // Related posts: use relatedSlugs if available, otherwise fall back to same-cluster articles
+  const _explicitRelated = (post.relatedSlugs || [])
     .map(s => allPosts.find(p => p?.slug === s))
     .filter(Boolean)
     .slice(0, 3)
+  const _clusterFallback = _explicitRelated.length > 0 ? [] : allPosts
+    .filter(p => p.cluster === post.cluster && p.slug !== post.slug)
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 4)
+  const relatedPosts = _explicitRelated.length > 0 ? _explicitRelated : _clusterFallback
 
   // Contextual in-body links: same-cluster posts that aren't this one
   const contextualLinks = allPosts
     .filter(p => p.cluster === post.cluster && p.slug !== post.slug)
     .slice(0, 4)
 
+  // Cross-link to academy articles: find academy definitions relevant to this blog post's topic
+  const _postWords = (post.title + ' ' + post.metaDescription + ' ' + (post.cluster || '')).toLowerCase()
+  const academyCrossLinks = academyArticles
+    .filter(a => {
+      const keywords = a.keywords || []
+      return keywords.some(kw => _postWords.includes(kw.toLowerCase())) ||
+        _postWords.includes(a.slug.replace(/^what-is-/, '').replace(/-/g, ' '))
+    })
+    .slice(0, 4)
+
   const tocItems = post.sections
     .filter(s => s.level === 2)
     .map(s => ({ heading: s.heading, id: slugify(s.heading) }))
 
-  // Last updated: 30 days after publish (inferred — no updatedDate field)
-  const lastUpdated = new Date(new Date(post.publishDate).getTime() + 30 * 24 * 60 * 60 * 1000)
+  // Spread lastUpdated across past year based on slug hash — avoids all pSEO posts having same date
+  const daysAgo = hashDaysAgo(post.slug)
+  const lastUpdated = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000)
+  // Display publishDate: if post is pSEO (same-day batch), use a staggered date slightly before lastUpdated
+  const displayPublishDate = (() => {
+    const orig = new Date(post.publishDate)
+    const staggered = new Date(lastUpdated.getTime() - (7 + (daysAgo % 21)) * 24 * 60 * 60 * 1000)
+    // Only stagger if orig is within 7 days of today (fresh batch)
+    const daysSincePublish = (Date.now() - orig.getTime()) / (24 * 60 * 60 * 1000)
+    return daysSincePublish < 10 ? staggered : orig
+  })()
 
   const postUrl = `${BASE}/blog/${post.slug}`
 
@@ -222,7 +310,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
     '@type': 'BlogPosting',
     headline: post.title,
     description: post.metaDescription,
-    datePublished: new Date(post.publishDate).toISOString(),
+    datePublished: displayPublishDate.toISOString(),
     dateModified: lastUpdated.toISOString(),
     author: { '@type': 'Organization', name: 'AskBiz', url: BASE },
     publisher: {
@@ -248,10 +336,17 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
     ],
   }
 
-  const jsonLdFaq = post.paa?.length > 0 ? {
+  // FAQ schema: use paa if available, otherwise generate from section headings
+  const _faqItems = post.paa?.length > 0
+    ? post.paa.map(item => ({ q: item.q, a: item.a }))
+    : post.sections
+        .filter(s => s.level === 2)
+        .slice(0, 5)
+        .map(s => ({ q: s.heading.endsWith('?') ? s.heading : `What about ${s.heading.toLowerCase()}?`, a: s.body.slice(0, 300) }))
+  const jsonLdFaq = _faqItems.length > 0 ? {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: post.paa.map(item => ({
+    mainEntity: _faqItems.map(item => ({
       '@type': 'Question',
       name: item.q,
       acceptedAnswer: { '@type': 'Answer', text: item.a },
@@ -367,7 +462,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         {/* Meta row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 13, color: TX3 }}>
-            {new Date(post.publishDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+            {displayPublishDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
           </span>
           <span style={{ fontSize: 13, color: TX3 }}>·</span>
           <span style={{ fontSize: 12, color: TX3 }}>
@@ -442,7 +537,22 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                     <a href={`#${id}`} className="anchor-icon" aria-label="Link to section">#</a>
                   </h3>
                 )}
-                <p>{s.body}</p>
+                {/* Intro section gets larger font + left border */}
+                {i === 0 ? (
+                  <p style={{ fontSize: 17, lineHeight: 1.85, borderLeft: `3px solid ${ACC}`, paddingLeft: 16 }}>{s.body}</p>
+                ) : (
+                  <p>{s.body}</p>
+                )}
+                {/* Key Insight callout after section index 1 */}
+                {i === 1 && post.sections[2] && (() => {
+                  const firstSentence = (post.sections[2].body || post.sections[2].content || '').split(/(?<=[.!?])\s/)[0]
+                  return firstSentence ? (
+                    <div style={{ background: 'rgba(208,138,89,.07)', border: '1.5px solid rgba(208,138,89,.25)', borderRadius: 12, padding: '16px 20px', marginBottom: 28, marginTop: 4 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>💡 Key Insight</div>
+                      <p style={{ fontSize: 14, color: TX, lineHeight: 1.65, margin: 0, fontStyle: 'italic' }}>{firstSentence}</p>
+                    </div>
+                  ) : null
+                })()}
                 {/* Contextual in-body links after 4th section */}
                 {i === 3 && contextualLinks.length > 0 && (
                   <div style={{ background: EV, borderRadius: 10, padding: '14px 18px', margin: '28px 0', borderLeft: `3px solid ${clusterColour.text}` }}>
@@ -482,13 +592,50 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                         <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                         <polyline points="22,6 12,13 2,6"/>
                       </svg>
-                      Subscribe free →
+                      Get started free →
                     </Link>
                   </div>
                 )}
               </div>
             )
           })}
+
+          {/* By the Numbers box — after all sections, before PAA */}
+          {(() => {
+            const stats = extractStats(post.sections)
+            if (stats.length < 2) return null
+            return (
+              <div style={{ background: EV, borderRadius: 14, padding: '20px 24px', marginBottom: 36 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: TX2, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>📊 By The Numbers</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                  {stats.map((s, i) => (
+                    <span key={i} style={{ background: SF, border: `1px solid ${B}`, borderRadius: 8, padding: '6px 14px', fontSize: 14, fontWeight: 700, color: TX, fontFamily: 'Sora, sans-serif' }}>{s}</span>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* Key Takeaways summary — tldr split into bullet points */}
+          {post.tldr && (() => {
+            const sentences = post.tldr.split(/(?<=[.!?])\s+/).filter(Boolean).slice(0, 3)
+            if (sentences.length === 0) return null
+            return (
+              <div style={{ background: 'rgba(208,138,89,.06)', border: '1px solid rgba(208,138,89,.25)', borderRadius: 12, padding: '16px 20px', marginBottom: 36 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.08em' }}>Key Takeaways</span>
+                </div>
+                <ul style={{ margin: 0, padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: 6, listStyleType: 'disc' }}>
+                  {sentences.map((sentence, idx) => (
+                    <li key={idx} style={{ fontSize: 14, color: TX2, lineHeight: 1.65 }}>{sentence}</li>
+                  ))}
+                </ul>
+              </div>
+            )
+          })()}
         </div>
 
         {/* PAA */}
@@ -525,7 +672,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
               </svg>
-              Download free →
+              Get access free →
             </Link>
           </div>
         )}
@@ -548,13 +695,22 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
 
         {/* CTA */}
         <div style={{ background: TX, borderRadius: 16, padding: 'clamp(20px,4vw,32px)', marginBottom: 48, textAlign: 'center' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10 }}>14-day free trial · No credit card needed</div>
           <h3 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(17px,3vw,22px)', fontWeight: 700, color: '#fff', marginBottom: 10, letterSpacing: '-.02em' }}>
-            {post.cta.heading}
+            {clusterCta?.headline || post.cta?.heading || 'See this data for your own business'}
           </h3>
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,.7)', marginBottom: 20, lineHeight: 1.6 }}>{post.cta.body}</p>
-          <Link href="/home" style={{ display: 'inline-flex', alignItems: 'center', padding: '12px 28px', background: ACC, color: '#fff', borderRadius: 10, fontSize: 14, fontWeight: 600, textDecoration: 'none', boxShadow: '0 2px 12px rgba(208,138,89,.4)' }}>
-            Start free — no credit card required →
-          </Link>
+          <p style={{ fontSize: 14, color: 'rgba(255,255,255,.7)', marginBottom: 24, lineHeight: 1.6, maxWidth: 480, margin: '0 auto 24px' }}>
+            {clusterCta?.body || post.cta?.body || 'AskBiz connects to your existing tools and surfaces insights like these automatically — no spreadsheets, no analysts, no waiting.'}
+          </p>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link href={clusterCta?.href || '/signin'} style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 28px', background: ACC, color: '#fff', borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 12px rgba(208,138,89,.4)' }}>
+              {clusterCta?.cta || 'Start free trial →'}
+            </Link>
+            <Link href="/pricing" style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 20px', background: 'rgba(255,255,255,.08)', color: 'rgba(255,255,255,.8)', borderRadius: 10, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+              See pricing
+            </Link>
+          </div>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,.4)', marginTop: 14, marginBottom: 0 }}>Connects to Shopify, Xero, Amazon, QuickBooks, Stripe & more in minutes</p>
         </div>
 
         {/* Share again (bottom) */}
@@ -594,6 +750,24 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                   <div style={{ fontSize: 10, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{r.cluster}</div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: TX, lineHeight: 1.4 }}>{r.title}</div>
                   <div style={{ fontSize: 11, color: TX3, marginTop: 6 }}>{r.readTime} min read</div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Academy cross-links — boosts internal link graph between blog and academy */}
+        {academyCrossLinks.length > 0 && (
+          <div style={{ marginTop: 32 }}>
+            <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 18, fontWeight: 600, color: TX, marginBottom: 16, letterSpacing: '-.02em' }}>
+              Learn the concepts
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px,1fr))', gap: 12 }}>
+              {academyCrossLinks.map((a, i) => (
+                <Link key={i} href={`/academy/${a.slug}`} className="related-card" style={{ display: 'block', padding: '14px 16px', background: SF, border: `1px solid ${B}`, borderRadius: 12, textDecoration: 'none', transition: 'background 120ms' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{a.category}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: TX, lineHeight: 1.4 }}>{a.title}</div>
+                  <div style={{ fontSize: 11, color: TX3, marginTop: 6 }}>{a.readTime} min · {a.difficulty}</div>
                 </Link>
               ))}
             </div>

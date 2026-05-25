@@ -71,7 +71,7 @@ export default function VatCalculator() {
               <Link href="/free-tools" className="vc-nav-link">All Tools</Link>
               <Link href="/free-tools/landed-cost-calculator" className="vc-nav-link">Landed Cost</Link>
               <Link href="/free-tools/fx-risk-modeller" className="vc-nav-link">FX Risk</Link>
-              <Link href="/#pricing" className="vc-nav-cta">Try AskBiz Free →</Link>
+              <Link href="/signin?mode=signup" className="vc-nav-cta">Try AskBiz Free →</Link>
             </div>
           </div>
         </nav>
@@ -195,6 +195,20 @@ export default function VatCalculator() {
                   )}
                 </div>
               </div>
+
+              <div style={{ background: "#fff8f3", border: "1.5px solid #f0d5b8", borderRadius: 14, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+                <div>
+                  <div style={{ fontFamily: "var(--font-head)", fontSize: 15, fontWeight: 700, color: "#1a1a2e", marginBottom: 4 }}>
+                    Want this calculated automatically on your real data?
+                  </div>
+                  <div style={{ fontSize: 13, color: "#6b6760" }}>
+                    AskBiz connects to Shopify, Amazon & QuickBooks — no spreadsheets needed.
+                  </div>
+                </div>
+                <a href="/signin?mode=signup" style={{ display: "inline-flex", alignItems: "center", background: "#d08a59", color: "#fff", padding: "10px 20px", borderRadius: 8, fontWeight: 700, fontSize: 14, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>
+                  Try free →
+                </a>
+              </div>
             </div>
           </div>
         </section>
@@ -237,7 +251,7 @@ export default function VatCalculator() {
               support, tax audit trails, and HMRC-ready reports. Free to start.
             </p>
             <div className="vc-cta-actions">
-              <Link href="/" className="vc-cta-btn vc-cta-btn--primary">Try AskBiz Free →</Link>
+              <Link href="/signin?mode=signup" className="vc-cta-btn vc-cta-btn--primary">Start free — no card needed →</Link>
               <Link href="/free-tools" className="vc-cta-btn vc-cta-btn--ghost">All Free Tools</Link>
             </div>
           </div>

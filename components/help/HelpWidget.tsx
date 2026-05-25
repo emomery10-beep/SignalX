@@ -12,17 +12,20 @@ const TX3  = '#a39e97'
 const BD   = '#e8e6e1'
 const BG   = '#f9f8f6'
 
-// Map app sections to relevant help topic slugs
+// Map app sections to relevant help topic slugs (must match HELP_TOPICS slugs)
 const SECTION_MAP: [string, string][] = [
-  ['/intelligence', 'getting-started'],
-  ['/dashboards',   'dashboards-and-reports'],
-  ['/ask',          'ai-and-insights'],
-  ['/sources',      'data-and-integrations'],
-  ['/settings',     'account-and-settings'],
-  ['/billing',      'billing-and-plans'],
+  ['/intelligence', 'intelligence-alerts'],
+  ['/dashboards',   'data-analysis-reporting'],
+  ['/ask',          'ask-askbiz'],
+  ['/sources',      'connecting-data'],
+  ['/settings',     'settings-preferences'],
+  ['/billing',      'account-billing'],
   ['/tools',        'business-tools'],
-  ['/forecasts',    'forecasting'],
+  ['/forecasts',    'forecasting-planning'],
   ['/home',         'getting-started'],
+  ['/files',        'files-uploads'],
+  ['/templates',    'templates'],
+  ['/sell',         'point-of-sale'],
 ]
 
 const QUICK_LINKS = [

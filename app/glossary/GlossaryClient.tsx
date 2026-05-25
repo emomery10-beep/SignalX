@@ -617,7 +617,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
           glossary — automatically.
         </p>
         <Link
-          href="/signup"
+          href="/signin"
           style={{
             display: "inline-block",
             background: "#d08a59",

@@ -76,13 +76,23 @@ export default function DailyBrief({ onAsk }: Props) {
       ) : brief ? (
         <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {/* Improved */}
-          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          <div
+            onClick={() => onAsk?.(`Tell me more about this improvement: ${brief.improved}`)}
+            style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', borderRadius: 8, padding: '6px 8px', margin: '-6px -8px', transition: 'background 150ms' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(34,197,94,.06)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+          >
             <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>🟢</span>
             <p style={{ fontSize: 13, color: 'var(--tx)', margin: 0, lineHeight: 1.5 }}>{brief.improved}</p>
           </div>
 
           {/* Worsened */}
-          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          <div
+            onClick={() => onAsk?.(`Explain this issue and what I should do: ${brief.worsened}`)}
+            style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', borderRadius: 8, padding: '6px 8px', margin: '-6px -8px', transition: 'background 150ms' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,.04)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+          >
             <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>🔴</span>
             <p style={{ fontSize: 13, color: 'var(--tx)', margin: 0, lineHeight: 1.5 }}>{brief.worsened}</p>
           </div>

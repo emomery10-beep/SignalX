@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { createHash } from 'crypto'
+import { logPosAudit } from '@/lib/pos-audit'
+import type { PosAuthResult } from '@/lib/pos-auth'
 
 function hashPin(pin: string, staffId: string): string {
   return createHash('sha256').update(pin + staffId).digest('hex')
@@ -87,6 +89,14 @@ export async function POST(req: NextRequest) {
       await supabase.from('pos_staff').update({ pin_hash }).eq('id', data.id)
     }
 
+    // Audit: staff created
+    logPosAudit({
+      auth: { ownerId: user.id, staffId: null, role: null, locationId: null } as PosAuthResult,
+      event: 'staff.created',
+      entityType: 'staff', entityId: data.id,
+      metadata: { staff_name: data.name, role: data.role, sector: data.sector },
+    })
+
     return NextResponse.json({ staff: { ...data, has_pin: !!pin, pin_hash: undefined } })
   } catch (err: any) {
     return NextResponse.json({ error: 'Unexpected error', message: err.message }, { status: 500 })
@@ -170,6 +180,20 @@ export async function PATCH(req: NextRequest) {
       .single()
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    // Audit: deactivated, pin changed, or general update
+    const ownerAuth = { ownerId: user.id, staffId: null, role: null, locationId: null } as PosAuthResult
+    if (active === false) {
+      logPosAudit({ auth: ownerAuth, event: 'staff.deactivated', entityType: 'staff', entityId: id,
+        metadata: { staff_name: data.name } })
+    } else if (pin) {
+      logPosAudit({ auth: ownerAuth, event: 'staff.pin_changed', entityType: 'staff', entityId: id,
+        metadata: { staff_name: data.name } })
+    } else {
+      logPosAudit({ auth: ownerAuth, event: 'staff.updated', entityType: 'staff', entityId: id,
+        metadata: { staff_name: data.name, updated_fields: Object.keys(updates) } })
+    }
+
     return NextResponse.json({ staff: { ...data, has_pin: !!data.pin_hash, pin_hash: undefined } })
   } catch (err: any) {
     return NextResponse.json({ error: 'Unexpected error', message: err.message }, { status: 500 })

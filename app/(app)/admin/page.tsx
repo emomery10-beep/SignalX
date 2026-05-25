@@ -78,10 +78,28 @@ export default function AdminPage() {
   }
 
   const changePlan = async (userId: string, planId: string) => {
-    const { data: { session } } = await supabase.auth.getSession()
-    const res = await fetch('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) }, body: JSON.stringify({ action: 'change_plan', userId, planId }) })
-    const d = await res.json()
-    if (d.success) { setActionMsg('Plan updated to ' + planId); loadAll(); setTimeout(() => setActionMsg(''), 3000) }
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ action: 'change_plan', userId, planId }),
+      })
+      const d = await res.json()
+      if (d.success) {
+        setActionMsg('Plan updated to ' + planId)
+        loadAll()
+      } else {
+        setActionMsg('Failed to update plan: ' + (d.error || res.statusText))
+      }
+      setTimeout(() => setActionMsg(''), 4000)
+    } catch (err: any) {
+      setActionMsg('Error: ' + (err?.message || 'Network error'))
+      setTimeout(() => setActionMsg(''), 4000)
+    }
   }
 
   if (!authorized) return null
@@ -110,7 +128,7 @@ export default function AdminPage() {
           <button onClick={loadAll} style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>↻ Refresh</button>
         </div>
       </div>
-      <div style={{display:'flex',overflowX:'auto',borderBottom:'1px solid var(--b)',background:'var(--sf)',padding:'0 24px'}}>
+      <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',background:'var(--sf)',padding:'0 24px'}}>
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)} style={{padding:'12px 16px',border:'none',background:'transparent',fontSize:13,fontWeight:tab===t?600:400,color:tab===t?'#6366F1':'var(--tx3)',borderBottom:tab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>
             {t}{t==='Users'?` (${users.length})`:t==='Content'&&pc>0?` (${pc})`:t==='X Agent'&&xPending>0?` (${xPending})`:''}

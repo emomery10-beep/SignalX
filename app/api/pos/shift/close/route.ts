@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { resolvePosOwner } from '@/lib/pos-auth'
+import { resolvePosAuth } from '@/lib/pos-auth'
+import { logPosAudit } from '@/lib/pos-audit'
 
 /**
  * POST /api/pos/shift/close
@@ -15,8 +16,9 @@ import { resolvePosOwner } from '@/lib/pos-auth'
  *   variance_reason?: string (if discrepancy > threshold)
  */
 export async function POST(req: NextRequest) {
-  const ownerId = await resolvePosOwner(req)
-  if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  const auth = await resolvePosAuth(req)
+  if (!auth) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+  const ownerId = auth.ownerId
 
   const service = createServiceClient()
   const body = await req.json()
@@ -95,21 +97,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: closeError.message }, { status: 500 })
   }
 
-  // Create audit log entry
-  await service.from('pos_shift_audit_log').insert({
-    owner_id: ownerId,
-    shift_id,
-    event: 'shift_closed',
-    details_json: {
+  // Log to pos_audit_log so it shows in the Audit tab
+  logPosAudit({
+    auth,
+    event: 'shift.closed',
+    entityType: 'shift',
+    entityId: shift_id,
+    metadata: {
       opening_balance: shift.opening_balance,
-      closing_balance: physical_cash_count,
-      expected_balance: expectedCash,
-      variance: variance,
-      variance_reason,
-      cash_sales: cashSales,
+      cash_total:        cashSales,
+      closing_balance:   physical_cash_count,
+      expected_balance:  expectedCash,
+      variance,
+      variance_reason:   variance_reason || null,
       transaction_count: transactions?.length || 0,
+      status: closedShift.status,
     },
-    logged_at: new Date().toISOString(),
   })
 
   return NextResponse.json({

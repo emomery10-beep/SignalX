@@ -49,6 +49,7 @@ export default function Page() {
         body: "Upload your product data and ask AskBiz for a full margin breakdown. Takes 60 seconds."
       }}
       relatedPages={[
+        { href: '/free-tools/profit-margin-calculator', label: 'Free Profit Margin Calculator' },
         { href: '/business-intelligence-for-small-business', label: 'Business intelligence for SMEs' },
         { href: '/analyse-sales-data', label: 'Analyse sales data' },
         { href: '/stock-management-analytics', label: 'Stock management analytics' },

@@ -245,6 +245,7 @@ ${benchmarkIntelligence}
 ${webSearchIntelligence}${marketIntelligence}${expansionInstructions}
 
 LOCALISATION: Region: ${region || 'Global'} · Sectors: ${sectorHints || 'retail, distribution, logistics'} · Currency: ${currency}, symbol: ${symbol}
+IMPORTANT: Always use "${symbol}" as the currency symbol in ALL monetary values — kpi_cards, answer_text, chart labels, tables, recommendations. Never use $, £, or € unless "${symbol}" is that symbol.
 ${trendContext}
 ${businessMemory ? '\n' + businessMemory + '\n' : ''}
 ACTIVE DATA:
@@ -262,7 +263,7 @@ RESPOND ONLY WITH VALID JSON:
   "chart_labels": ["label1","label2"],
   "chart_values": [100,200],
   "chart_label": "Chart title",
-  "kpi_cards": [{"label":"Metric","value":"£1,234","trend":"up|down|neutral","status":"good|warning|risk"}],
+  "kpi_cards": [{"label":"Metric","value":"${symbol}1,234","trend":"up|down|neutral","status":"good|warning|risk"}],
   "table_headers": ["Col1","Col2"],
   "table_rows": [["val1","val2"]],
   "recommendations": ["Action with numbers","Action 2","Action 3"],

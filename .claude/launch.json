@@ -10,8 +10,8 @@
     },
     {
       "name": "askbiz-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev"],
       "port": 3000
     }
   ]

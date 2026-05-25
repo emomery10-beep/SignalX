@@ -224,15 +224,34 @@ export async function POST(request: NextRequest) {
   const { action, userId, planId } = await request.json()
 
   if (action === 'change_plan') {
-    // Update subscriptions table
-    const { error } = await supabase
+    // Check if subscription row exists
+    const { data: existing } = await supabase
       .from('subscriptions')
-      .upsert({ user_id: userId, plan_id: planId, status: 'active' }, { onConflict: 'user_id' })
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    let subError: any = null
+    if (existing) {
+      // Update existing subscription
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ plan_id: planId, status: 'active' })
+        .eq('user_id', userId)
+      subError = error
+    } else {
+      // Insert new subscription
+      const { error } = await supabase
+        .from('subscriptions')
+        .insert({ user_id: userId, plan_id: planId, status: 'active' })
+      subError = error
+    }
 
     // Also update profiles
-    await supabase.from('profiles').update({ plan_id: planId }).eq('id', userId)
+    const { error: profileError } = await supabase.from('profiles').update({ plan: planId, plan_id: planId }).eq('id', userId)
 
-    if (error) return NextResponse.json({ success: false, error: error.message })
+    if (subError) return NextResponse.json({ success: false, error: subError.message })
+    if (profileError) return NextResponse.json({ success: false, error: profileError.message })
     return NextResponse.json({ success: true })
   }
 

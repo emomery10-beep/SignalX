@@ -212,9 +212,9 @@ export default function AgentAdminPage() {
         </div>
 
         {/* Main tabs */}
-        <div style={{display:'flex',borderBottom:'1px solid var(--b)',marginBottom:24}}>
+        <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',marginBottom:24}}>
           {(['agent','x'] as const).map(t => (
-            <button key={t} onClick={()=>setMainTab(t)} style={{padding:'10px 20px',border:'none',background:'transparent',fontSize:13,fontWeight:mainTab===t?600:400,color:mainTab===t?'#6366F1':'var(--tx3)',borderBottom:mainTab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit'}}>
+            <button key={t} onClick={()=>setMainTab(t)} style={{padding:'10px 20px',border:'none',background:'transparent',fontSize:13,fontWeight:mainTab===t?600:400,color:mainTab===t?'#6366F1':'var(--tx3)',borderBottom:mainTab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit',flexShrink:0,whiteSpace:'nowrap'}}>
               {t === 'agent' ? '📊 Content Agent' : '𝕏 X Agent' + (xConnected===true?' ✓':'')}
             </button>
           ))}
@@ -288,9 +288,9 @@ export default function AgentAdminPage() {
               {xConnected===false && <div style={{padding:'5px 12px',borderRadius:9999,background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',fontSize:12,fontWeight:600,color:'#dc2626'}}>X not connected v2</div>}
             </div>
 
-            <div style={{display:'flex',borderBottom:'1px solid var(--b)',marginBottom:20}}>
+            <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',marginBottom:20}}>
               {(['search','results','queue','history'] as const).map(t => (
-                <button key={t} onClick={()=>setXTab(t)} style={{padding:'8px 16px',border:'none',background:'transparent',fontSize:12,fontWeight:xTab===t?600:400,color:xTab===t?'#6366F1':'var(--tx3)',borderBottom:xTab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit',textTransform:'capitalize'}}>
+                <button key={t} onClick={()=>setXTab(t)} style={{padding:'8px 16px',border:'none',background:'transparent',fontSize:12,fontWeight:xTab===t?600:400,color:xTab===t?'#6366F1':'var(--tx3)',borderBottom:xTab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit',textTransform:'capitalize',flexShrink:0,whiteSpace:'nowrap'}}>
                   {t}{t==='queue'&&xQueue.length>0?` (${xQueue.length})`:''}
                 </button>
               ))}

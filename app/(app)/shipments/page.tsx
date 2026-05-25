@@ -264,7 +264,7 @@ export default function ShipmentsPage() {
           )}
 
           {/* Filter tabs */}
-          <div style={{ display: 'flex', gap: 6, marginBottom: 16, borderBottom: '1px solid var(--b)' }}>
+          <div className="tab-strip" style={{ gap: 6, marginBottom: 16, borderBottom: '1px solid var(--b)' }}>
             {(['active', 'all', 'delivered'] as const).map(f => (
               <button key={f} onClick={() => setFilter(f)} style={{ padding: '8px 14px', border: 'none', background: 'transparent', fontSize: 12, fontWeight: filter === f ? 600 : 400, color: filter === f ? '#6366F1' : 'var(--tx3)', borderBottom: filter === f ? '2px solid #6366F1' : '2px solid transparent', cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize' }}>
                 {f}

@@ -1,4 +1,9 @@
 import { AcademyCategory, AcademyArticle } from "./academy-types";
+import { AFRICA_ACADEMY_BATCH1 } from './africa-academy-batch1';
+import { AFRICA_ACADEMY_BATCH2 } from './africa-academy-batch2';
+import { ALL_ACADEMY_PSEO } from './academy-pseo-index';
+
+const _africaAcademyArticles = [...AFRICA_ACADEMY_BATCH1, ...AFRICA_ACADEMY_BATCH2] as AcademyArticle[];
 
 export const academyCategories: AcademyCategory[] = [
   { slug: "business-intelligence-basics", title: "Business Intelligence Basics", description: "Master the core concepts behind BI — from KPIs to dashboards.", icon: "📊", color: "#d08a59", articleCount: 20 },
@@ -15036,3 +15041,19 @@ export const academyArticles: AcademyArticle[] = [
     ],
   },
 ];
+
+// ─── MERGE AFRICA ACADEMY CONTENT ────────────────────────────────────────────
+academyArticles.push(..._africaAcademyArticles);
+
+// ─── MERGE pSEO ACADEMY CONTENT (200 "What is" + 100 "X vs Y") ──────────────
+academyArticles.push(...ALL_ACADEMY_PSEO);
+
+// ─── DEDUPLICATE by slug (some articles exist in multiple sources) ────────────
+const _seenSlugs = new Set<string>();
+for (let i = academyArticles.length - 1; i >= 0; i--) {
+  if (_seenSlugs.has(academyArticles[i].slug)) {
+    academyArticles.splice(i, 1);
+  } else {
+    _seenSlugs.add(academyArticles[i].slug);
+  }
+}

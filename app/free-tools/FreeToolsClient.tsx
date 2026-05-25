@@ -61,6 +61,44 @@ const TOOLS = [
     popular: false,
   },
   {
+    href: "/free-tools/profit-margin-calculator",
+    icon: "💰",
+    title: "Profit Margin Calculator",
+    tagline: "What's your real margin after all costs?",
+    description:
+      "Calculate your true profit margin and markup per product. Add shipping, platform fees, and import duties to see the gap between your simplified margin and your real one. Compare multiple products side by side.",
+    features: [
+      "True margin after all costs",
+      "Margin vs markup comparison",
+      "Batch mode: compare products",
+      "Hidden cost gap detection",
+      "Monthly profit projection",
+      "12 currencies supported",
+    ],
+    cta: "Calculate Margin →",
+    color: "#16a34a",
+    popular: true,
+  },
+  {
+    href: "/free-tools/cogs-calculator",
+    icon: "🧮",
+    title: "COGS Calculator",
+    tagline: "What does each product really cost you?",
+    description:
+      "Calculate your true cost of goods sold per product. Add materials, labour, shipping, packaging, and allocated overhead. See your COGS ratio, gross profit, and how you compare to industry benchmarks.",
+    features: [
+      "Materials, labour, shipping & packaging",
+      "Overhead allocation per unit",
+      "COGS ratio and gross profit",
+      "Revenue waterfall breakdown",
+      "Industry benchmark comparison",
+      "Multi-product batch mode",
+    ],
+    cta: "Calculate COGS →",
+    color: "#7c3aed",
+    popular: false,
+  },
+  {
     href: "/free-tools/break-even-calculator",
     icon: "📐",
     title: "Break-Even Calculator",
@@ -151,6 +189,8 @@ export default function FreeToolsClient() {
               <Link href="/help" className="ft-nav-link">Help Center</Link>
               <Link href="/free-tools/landed-cost-calculator" className="ft-nav-link">Landed Cost</Link>
               <Link href="/free-tools/vat-calculator" className="ft-nav-link">VAT Calculator</Link>
+              <Link href="/free-tools/profit-margin-calculator" className="ft-nav-link">Margin Calculator</Link>
+              <Link href="/free-tools/cogs-calculator" className="ft-nav-link">COGS</Link>
               <Link href="/free-tools/break-even-calculator" className="ft-nav-link">Break-Even</Link>
               <Link href="/#pricing" className="ft-nav-cta">Try AskBiz Free →</Link>
             </div>
@@ -172,7 +212,7 @@ export default function FreeToolsClient() {
             <div className="ft-hero-stats">
               {[
                 ["30+", "Countries covered"],
-                ["4", "Free calculators"],
+                ["6", "Free calculators"],
                 ["12", "Currencies supported"],
                 ["Free", "No sign-up"],
               ].map(([val, label]) => (
@@ -303,6 +343,8 @@ export default function FreeToolsClient() {
                 ["/free-tools/landed-cost-calculator", "Landed Cost Calculator"],
                 ["/free-tools/fx-risk-modeller", "FX Risk Modeller"],
                 ["/free-tools/vat-calculator", "VAT Calculator"],
+                ["/free-tools/profit-margin-calculator", "Profit Margin Calculator"],
+                ["/free-tools/cogs-calculator", "COGS Calculator"],
                 ["/free-tools/break-even-calculator", "Break-Even Calculator"],
                 ["/help", "Help Center"],
                 ["/rules", "Rules & Policies"],

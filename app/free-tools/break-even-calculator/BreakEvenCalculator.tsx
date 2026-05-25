@@ -64,7 +64,7 @@ export default function BreakEvenCalculator() {
               <Link href="/free-tools" className="be-nav-link">All Tools</Link>
               <Link href="/free-tools/vat-calculator" className="be-nav-link">VAT Calculator</Link>
               <Link href="/free-tools/landed-cost-calculator" className="be-nav-link">Landed Cost</Link>
-              <Link href="/#pricing" className="be-nav-cta">Try AskBiz Free →</Link>
+              <Link href="/signin?mode=signup" className="be-nav-cta">Try AskBiz Free →</Link>
             </div>
           </div>
         </nav>
@@ -204,6 +204,20 @@ export default function BreakEvenCalculator() {
                       </table>
                     </div>
                   </div>
+
+                  <div style={{ background: "#fff8f3", border: "1.5px solid #f0d5b8", borderRadius: 14, padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+                    <div>
+                      <div style={{ fontFamily: "var(--font-head)", fontSize: 15, fontWeight: 700, color: "#1a1a2e", marginBottom: 4 }}>
+                        Want this calculated automatically on your real data?
+                      </div>
+                      <div style={{ fontSize: 13, color: "#6b6760" }}>
+                        AskBiz connects to Shopify, Amazon & QuickBooks — no spreadsheets needed.
+                      </div>
+                    </div>
+                    <a href="/signin?mode=signup" style={{ display: "inline-flex", alignItems: "center", background: "#d08a59", color: "#fff", padding: "10px 20px", borderRadius: 8, fontWeight: 700, fontSize: 14, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0 }}>
+                      Try free →
+                    </a>
+                  </div>
                 </>
               ) : (
                 <div className="be-result-card be-result-card--empty">
@@ -248,7 +262,7 @@ export default function BreakEvenCalculator() {
               per channel, and per market — using your actual numbers. Ask in plain English, get answers in seconds.
             </p>
             <div className="be-cta-actions">
-              <Link href="/" className="be-cta-btn be-cta-btn--primary">Try AskBiz Free →</Link>
+              <Link href="/signin?mode=signup" className="be-cta-btn be-cta-btn--primary">Start free — no card needed →</Link>
               <Link href="/free-tools" className="be-cta-btn be-cta-btn--ghost">All Free Tools</Link>
             </div>
           </div>

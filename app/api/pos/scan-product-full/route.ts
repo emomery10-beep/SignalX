@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosAuth } from '@/lib/pos-auth'
 
+// Allow larger body for image uploads
+export const maxDuration = 60
+
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
 }
@@ -79,6 +82,9 @@ Reply with ONLY valid JSON, no markdown, no other text:
 }`
 
   try {
+    console.log('[scan-product-full] front image size:', Math.round(front.length / 1024), 'KB', back ? ', back size: ' + Math.round(back.length / 1024) + ' KB' : '(no back)')
+    console.log('[scan-product-full] front hash (first 20 chars):', front.substring(0, 20))
+
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 600,
@@ -92,10 +98,16 @@ Reply with ONLY valid JSON, no markdown, no other text:
     })
 
     const text = response.content[0].type === 'text' ? response.content[0].text.trim() : ''
+    console.log('[scan-product-full] Claude raw response:', text)
+
     const jsonMatch = text.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) return NextResponse.json({ error: 'Could not read product from image' }, { status: 422 })
+    if (!jsonMatch) {
+      console.error('[scan-product-full] No JSON found in response')
+      return NextResponse.json({ error: 'Could not read product from image' }, { status: 422 })
+    }
 
     const product = JSON.parse(jsonMatch[0])
+    console.log('[scan-product-full] Parsed product:', JSON.stringify(product))
     return NextResponse.json({ product })
   } catch (err: any) {
     console.error('scan-product-full error:', err)

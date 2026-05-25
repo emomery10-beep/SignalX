@@ -27,6 +27,12 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
+  // ── POS domain: redirect root to /sell ─────────────────────────────────────
+  const host = request.headers.get('host') || ''
+  if (host.startsWith('pos.') && request.nextUrl.pathname === '/') {
+    return NextResponse.redirect(new URL('/sell', request.url))
+  }
+
   // ── Language detection ─────────────────────────────────────────────────────
   const existingLang = request.cookies.get('askbiz_lang')?.value
   if (!existingLang) {
@@ -63,5 +69,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/|sitemap).*)'],
 }

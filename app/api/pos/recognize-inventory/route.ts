@@ -3,6 +3,9 @@ import { createServiceClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosAuth } from '@/lib/pos-auth'
 
+// Allow more time for AI image processing
+export const maxDuration = 60
+
 // CORS handled globally by next.config.js
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
