@@ -368,8 +368,18 @@ function InteractiveDemo() {
 
 // ── Mini Calculator Widget (compact, hero-inline) ──────────────────────────
 
+const CURRENCIES = [
+  { code:'GBP', symbol:'£' }, { code:'USD', symbol:'$' }, { code:'EUR', symbol:'€' },
+  { code:'KES', symbol:'KSh' }, { code:'NGN', symbol:'₦' }, { code:'ZAR', symbol:'R' },
+  { code:'AED', symbol:'د.إ' }, { code:'INR', symbol:'₹' }, { code:'AUD', symbol:'A$' },
+  { code:'CAD', symbol:'C$' }, { code:'JPY', symbol:'¥' }, { code:'CHF', symbol:'Fr' },
+] as const
+
 function MiniCalcWidget() {
   const [tab, setTab] = useState<'margin' | 'cogs'>('margin')
+  const [cur, setCur] = useState(0) // index into CURRENCIES
+  const [showCur, setShowCur] = useState(false)
+  const sym = CURRENCIES[cur].symbol
   const [mc, setMc] = useState({ cost: '', revenue: '', units: '' })
   const [cg, setCg] = useState({ materials: '', labour: '', shipping: '', packaging: '', salePrice: '', units: '' })
 
@@ -402,8 +412,8 @@ function MiniCalcWidget() {
   return (
     <div className="fade-up mini-calc" style={{ maxWidth:480, width:'100%', background:C.sf, border:`1px solid ${C.b}`, borderRadius:16, overflow:'hidden', boxShadow:'0 4px 24px rgba(0,0,0,.07)' }}>
 
-      {/* Centered tabs — pill style */}
-      <div style={{ display:'flex', justifyContent:'center', padding:'12px 16px 0' }}>
+      {/* Tabs + currency selector row */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', padding:'12px 16px 0', gap:10 }}>
         <div style={{ display:'inline-flex', borderRadius:9999, border:`1px solid ${C.b2}`, overflow:'hidden', background:C.ev }}>
           {(['margin','cogs'] as const).map(id => (
             <button key={id} onClick={() => setTab(id)}
@@ -412,14 +422,31 @@ function MiniCalcWidget() {
             </button>
           ))}
         </div>
+        {/* Currency picker */}
+        <div style={{ position:'relative' }}>
+          <button onClick={() => setShowCur(!showCur)}
+            style={{ padding:'5px 8px', fontSize:11, fontWeight:600, fontFamily:'inherit', background:C.ev, border:`1px solid ${C.b2}`, borderRadius:6, cursor:'pointer', color:C.tx2, display:'flex', alignItems:'center', gap:3, whiteSpace:'nowrap' }}>
+            {sym} <span style={{ fontSize:8, opacity:.6 }}>▼</span>
+          </button>
+          {showCur && (
+            <div style={{ position:'absolute', top:'100%', right:0, marginTop:4, background:C.sf, border:`1px solid ${C.b}`, borderRadius:10, boxShadow:'0 8px 24px rgba(0,0,0,.12)', zIndex:10, padding:6, display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:2, minWidth:160 }}>
+              {CURRENCIES.map((c, i) => (
+                <button key={c.code} onClick={() => { setCur(i); setShowCur(false) }}
+                  style={{ padding:'5px 8px', fontSize:10, fontWeight:cur===i?700:500, fontFamily:'inherit', background:cur===i?C.acc:'transparent', color:cur===i?'#fff':C.tx2, border:'none', borderRadius:6, cursor:'pointer', textAlign:'center', whiteSpace:'nowrap' }}>
+                  {c.symbol} {c.code}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div style={{ padding:'14px 18px 16px' }}>
         {tab === 'margin' ? (
           <>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10 }}>
-              <div><label style={lbl}>Cost (£)</label><input type="number" min="0" step="0.01" placeholder="4.50" style={inp} value={mc.cost} onChange={e => setMc(p => ({ ...p, cost: e.target.value }))} /></div>
-              <div><label style={lbl}>Sale price (£)</label><input type="number" min="0" step="0.01" placeholder="9.99" style={inp} value={mc.revenue} onChange={e => setMc(p => ({ ...p, revenue: e.target.value }))} /></div>
+              <div><label style={lbl}>Cost ({sym})</label><input type="number" min="0" step="0.01" placeholder="4.50" style={inp} value={mc.cost} onChange={e => setMc(p => ({ ...p, cost: e.target.value }))} /></div>
+              <div><label style={lbl}>Sale price ({sym})</label><input type="number" min="0" step="0.01" placeholder="9.99" style={inp} value={mc.revenue} onChange={e => setMc(p => ({ ...p, revenue: e.target.value }))} /></div>
               <div><label style={lbl}>Units sold</label><input type="number" min="0" step="1" placeholder="100" style={inp} value={mc.units} onChange={e => setMc(p => ({ ...p, units: e.target.value }))} /></div>
             </div>
 
@@ -435,7 +462,7 @@ function MiniCalcWidget() {
                     <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:2 }}>MARGIN</div>
                   </div>
                   <div style={{ textAlign:'center', padding:'8px 4px', background:C.ev, borderRadius:10 }}>
-                    <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:C.tx }}>£{mProfit.toFixed(2)}</div>
+                    <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:C.tx }}>{sym}{mProfit.toFixed(2)}</div>
                     <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:2 }}>PROFIT</div>
                   </div>
                   <div style={{ textAlign:'center', padding:'8px 4px', background:C.ev, borderRadius:10 }}>
@@ -444,7 +471,7 @@ function MiniCalcWidget() {
                   </div>
                   {mUnits > 0 && (
                     <div style={{ textAlign:'center', padding:'8px 4px', background:C.ev, borderRadius:10 }}>
-                      <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:'#22c55e' }}>£{(mProfit * mUnits).toLocaleString('en-GB', { minimumFractionDigits:0, maximumFractionDigits:0 })}</div>
+                      <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:'#22c55e' }}>{sym}{(mProfit * mUnits).toLocaleString('en-GB', { minimumFractionDigits:0, maximumFractionDigits:0 })}</div>
                       <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:2 }}>TOTAL PROFIT</div>
                     </div>
                   )}
@@ -455,13 +482,13 @@ function MiniCalcWidget() {
         ) : (
           <>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:8 }}>
-              <div><label style={lbl}>Materials (£)</label><input type="number" min="0" step="0.01" placeholder="3.00" style={inp} value={cg.materials} onChange={e => setCg(p => ({ ...p, materials: e.target.value }))} /></div>
-              <div><label style={lbl}>Labour (£)</label><input type="number" min="0" step="0.01" placeholder="2.50" style={inp} value={cg.labour} onChange={e => setCg(p => ({ ...p, labour: e.target.value }))} /></div>
-              <div><label style={lbl}>Shipping (£)</label><input type="number" min="0" step="0.01" placeholder="1.20" style={inp} value={cg.shipping} onChange={e => setCg(p => ({ ...p, shipping: e.target.value }))} /></div>
-              <div><label style={lbl}>Packaging (£)</label><input type="number" min="0" step="0.01" placeholder="0.80" style={inp} value={cg.packaging} onChange={e => setCg(p => ({ ...p, packaging: e.target.value }))} /></div>
+              <div><label style={lbl}>Materials ({sym})</label><input type="number" min="0" step="0.01" placeholder="3.00" style={inp} value={cg.materials} onChange={e => setCg(p => ({ ...p, materials: e.target.value }))} /></div>
+              <div><label style={lbl}>Labour ({sym})</label><input type="number" min="0" step="0.01" placeholder="2.50" style={inp} value={cg.labour} onChange={e => setCg(p => ({ ...p, labour: e.target.value }))} /></div>
+              <div><label style={lbl}>Shipping ({sym})</label><input type="number" min="0" step="0.01" placeholder="1.20" style={inp} value={cg.shipping} onChange={e => setCg(p => ({ ...p, shipping: e.target.value }))} /></div>
+              <div><label style={lbl}>Packaging ({sym})</label><input type="number" min="0" step="0.01" placeholder="0.80" style={inp} value={cg.packaging} onChange={e => setCg(p => ({ ...p, packaging: e.target.value }))} /></div>
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-              <div><label style={lbl}>Sale price (£)</label><input type="number" min="0" step="0.01" placeholder="12.99" style={inp} value={cg.salePrice} onChange={e => setCg(p => ({ ...p, salePrice: e.target.value }))} /></div>
+              <div><label style={lbl}>Sale price ({sym})</label><input type="number" min="0" step="0.01" placeholder="12.99" style={inp} value={cg.salePrice} onChange={e => setCg(p => ({ ...p, salePrice: e.target.value }))} /></div>
               <div><label style={lbl}>Units sold</label><input type="number" min="0" step="1" placeholder="100" style={inp} value={cg.units} onChange={e => setCg(p => ({ ...p, units: e.target.value }))} /></div>
             </div>
 
@@ -476,12 +503,12 @@ function MiniCalcWidget() {
                 )}
                 <div style={{ display:'grid', gridTemplateColumns: cUnits > 0 && cSp > 0 ? '1fr 1fr 1fr 1fr' : cSp > 0 ? '1fr 1fr 1fr' : '1fr', gap:6 }}>
                   <div style={{ textAlign:'center', padding:'8px 4px', background:C.ev, borderRadius:10 }}>
-                    <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:'#e74c3c' }}>£{cCogs.toFixed(2)}</div>
+                    <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:'#e74c3c' }}>{sym}{cCogs.toFixed(2)}</div>
                     <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:2 }}>COGS/UNIT</div>
                   </div>
                   {cSp > 0 && <>
                     <div style={{ textAlign:'center', padding:'8px 4px', background:C.ev, borderRadius:10 }}>
-                      <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:cGross>=0?'#22c55e':'#e74c3c' }}>£{cGross.toFixed(2)}</div>
+                      <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:cGross>=0?'#22c55e':'#e74c3c' }}>{sym}{cGross.toFixed(2)}</div>
                       <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:2 }}>GROSS PROFIT</div>
                     </div>
                     <div style={{ textAlign:'center', padding:'8px 4px', background:C.ev, borderRadius:10 }}>
@@ -491,7 +518,7 @@ function MiniCalcWidget() {
                   </>}
                   {cUnits > 0 && cSp > 0 && (
                     <div style={{ textAlign:'center', padding:'8px 4px', background:C.ev, borderRadius:10 }}>
-                      <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:'#22c55e' }}>£{(cGross * cUnits).toLocaleString('en-GB', { minimumFractionDigits:0, maximumFractionDigits:0 })}</div>
+                      <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:'#22c55e' }}>{sym}{(cGross * cUnits).toLocaleString('en-GB', { minimumFractionDigits:0, maximumFractionDigits:0 })}</div>
                       <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:2 }}>TOTAL PROFIT</div>
                     </div>
                   )}
