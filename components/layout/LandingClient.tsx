@@ -451,9 +451,9 @@ function MiniCalcWidget() {
   const iHasResult = iCost > 0
 
   const marginColor = (m: number) => m >= 30 ? '#22c55e' : m >= 15 ? '#e67e22' : '#e74c3c'
-  const inp: React.CSSProperties = { width:'100%', padding:'14px 10px 5px', fontSize:13, border:`1px solid ${C.b2}`, borderRadius:8, background:C.bg, color:C.tx, fontFamily:'inherit', outline:'none', boxSizing:'border-box', transition:'border-color 150ms' }
+  const inp: React.CSSProperties = { width:'100%', padding:'18px 10px 4px', fontSize:13, border:`1px solid ${C.b2}`, borderRadius:8, background:C.bg, color:C.tx, fontFamily:'inherit', outline:'none', boxSizing:'border-box', transition:'border-color 150ms' }
   const fld: React.CSSProperties = { position:'relative' as const }
-  const lbl: React.CSSProperties = { position:'absolute' as const, top:3, left:10, fontSize:9, color:C.tx3, fontWeight:600, textTransform:'uppercase', letterSpacing:'.03em', pointerEvents:'none', zIndex:1 }
+  const lbl: React.CSSProperties = { position:'absolute' as const, top:4, left:10, fontSize:8, color:C.tx3, fontWeight:700, textTransform:'uppercase', letterSpacing:'.04em', pointerEvents:'none', zIndex:1, lineHeight:1 }
 
   // Reset industry fields when switching biz type
   const switchBiz = (b: BizType) => { setBiz(b); setIv({ a:'', b:'', c:'', d:'', price:'', units:'' }) }
@@ -505,9 +505,9 @@ function MiniCalcWidget() {
         {mode === 'margin' ? (
           <>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
-              <div style={fld}><label style={lbl}>Cost ({sym})</label><input type="number" min="0" step="0.01" placeholder="4.50" style={inp} value={mc.cost} onChange={e => setMc(p => ({ ...p, cost: e.target.value }))} /></div>
-              <div style={fld}><label style={lbl}>Sale price ({sym})</label><input type="number" min="0" step="0.01" placeholder="9.99" style={inp} value={mc.revenue} onChange={e => setMc(p => ({ ...p, revenue: e.target.value }))} /></div>
-              <div style={fld}><label style={lbl}>Units sold</label><input type="number" min="0" step="1" placeholder="100" style={inp} value={mc.units} onChange={e => setMc(p => ({ ...p, units: e.target.value }))} /></div>
+              <div style={fld}><label style={lbl}>Cost ({sym})</label><input type="number" min="0" step="0.01" style={inp} value={mc.cost} onChange={e => setMc(p => ({ ...p, cost: e.target.value }))} /></div>
+              <div style={fld}><label style={lbl}>Sale price ({sym})</label><input type="number" min="0" step="0.01" style={inp} value={mc.revenue} onChange={e => setMc(p => ({ ...p, revenue: e.target.value }))} /></div>
+              <div style={fld}><label style={lbl}>Units sold</label><input type="number" min="0" step="1" style={inp} value={mc.units} onChange={e => setMc(p => ({ ...p, units: e.target.value }))} /></div>
             </div>
             {mHasResult && (
               <div style={{ marginTop:10 }}>
@@ -542,12 +542,12 @@ function MiniCalcWidget() {
             {/* Dynamic industry fields */}
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:4 }}>
               {bt.fields.map(f => (
-                <div key={f.key} style={fld}><label style={lbl}>{f.label}{f.label.includes('%')?'':` (${sym})`}</label><input type="number" min="0" step="0.01" placeholder={f.ph} style={inp} value={(iv as Record<string,string>)[f.key]} onChange={e => setIv(p => ({ ...p, [f.key]: e.target.value }))} /></div>
+                <div key={f.key} style={fld}><label style={lbl}>{f.label}{f.label.includes('%')?'':` (${sym})`}</label><input type="number" min="0" step="0.01" style={inp} value={(iv as Record<string,string>)[f.key]} onChange={e => setIv(p => ({ ...p, [f.key]: e.target.value }))} /></div>
               ))}
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-              <div style={fld}><label style={lbl}>{bt.priceLabel} ({sym})</label><input type="number" min="0" step="0.01" placeholder={bt.pricePh} style={inp} value={iv.price} onChange={e => setIv(p => ({ ...p, price: e.target.value }))} /></div>
-              <div style={fld}><label style={lbl}>{bt.unitLabel}</label><input type="number" min="0" step="1" placeholder="100" style={inp} value={iv.units} onChange={e => setIv(p => ({ ...p, units: e.target.value }))} /></div>
+              <div style={fld}><label style={lbl}>{bt.priceLabel} ({sym})</label><input type="number" min="0" step="0.01" style={inp} value={iv.price} onChange={e => setIv(p => ({ ...p, price: e.target.value }))} /></div>
+              <div style={fld}><label style={lbl}>{bt.unitLabel}</label><input type="number" min="0" step="1" style={inp} value={iv.units} onChange={e => setIv(p => ({ ...p, units: e.target.value }))} /></div>
             </div>
 
             {iHasResult && (
