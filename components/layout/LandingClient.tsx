@@ -451,8 +451,8 @@ function MiniCalcWidget() {
   const iHasResult = iCost > 0
 
   const marginColor = (m: number) => m >= 30 ? '#22c55e' : m >= 15 ? '#e67e22' : '#e74c3c'
-  const inp: React.CSSProperties = { width:'100%', padding:'6px 10px', fontSize:13, border:`1px solid ${C.b2}`, borderRadius:8, background:C.bg, color:C.tx, fontFamily:'inherit', outline:'none', boxSizing:'border-box', transition:'border-color 150ms' }
-  const lbl: React.CSSProperties = { display:'block', fontSize:10, color:C.tx3, fontWeight:600, marginBottom:1, textTransform:'uppercase', letterSpacing:'.02em' }
+  const inp: React.CSSProperties = { width:'100%', padding:'5px 10px', fontSize:13, border:`1px solid ${C.b2}`, borderRadius:8, background:C.bg, color:C.tx, fontFamily:'inherit', outline:'none', boxSizing:'border-box', transition:'border-color 150ms' }
+  const lbl: React.CSSProperties = { display:'block', fontSize:10, color:C.tx3, fontWeight:600, marginBottom:0, lineHeight:1, paddingBottom:2, textTransform:'uppercase', letterSpacing:'.02em' }
 
   // Reset industry fields when switching biz type
   const switchBiz = (b: BizType) => { setBiz(b); setIv({ a:'', b:'', c:'', d:'', price:'', units:'' }) }
