@@ -420,6 +420,15 @@ function MiniCalcWidget() {
   const [cur, setCur] = useState(0)
   const [showCur, setShowCur] = useState(false)
   const sym = CURRENCIES[cur].symbol
+  const ref = useRef<HTMLDivElement>(null)
+
+  // Close currency dropdown on outside click
+  useEffect(() => {
+    if (!showCur) return
+    const close = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setShowCur(false) }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [showCur])
 
   // Margin mode
   const [mc, setMc] = useState({ cost: '', revenue: '', units: '' })
@@ -431,56 +440,59 @@ function MiniCalcWidget() {
   const mMarkup = mCost > 0 ? (mProfit / mCost) * 100 : 0
   const mHasResult = mCost > 0 && mRev > 0
 
-  // Industry mode — generic 4-field state
+  // Industry mode
   const [iv, setIv] = useState({ a:'', b:'', c:'', d:'', price:'', units:'' })
   const bt = BIZ_TYPES.find(b => b.id === biz)!
-  const iA = parseFloat(iv.a) || 0
-  const iB = parseFloat(iv.b) || 0
-  const iC = parseFloat(iv.c) || 0
-  const iD = parseFloat(iv.d) || 0
-  const iPrice = parseFloat(iv.price) || 0
-  const iUnits = parseInt(iv.units) || 0
-
-  // For repair: Labour (hrs) × Labour rate/hr; for restaurant: waste adds %
+  const iA = parseFloat(iv.a) || 0, iB = parseFloat(iv.b) || 0, iC = parseFloat(iv.c) || 0, iD = parseFloat(iv.d) || 0
+  const iPrice = parseFloat(iv.price) || 0, iUnits = parseInt(iv.units) || 0
   let iCost = iA + iB + iC + iD
-  if (biz === 'repair') iCost = iA + (iB * iC) + iD // parts + (hrs × rate) + diagnostic
-  if (biz === 'restaurant') iCost = (iA + iB + iC) * (1 + iD / 100) // ingredients+labour+packaging × (1 + waste%)
-
+  if (biz === 'repair') iCost = iA + (iB * iC) + iD
+  if (biz === 'restaurant') iCost = (iA + iB + iC) * (1 + iD / 100)
   const iGross = iPrice - iCost
   const iMargin = iPrice > 0 ? (iGross / iPrice) * 100 : 0
   const iHasResult = iCost > 0
 
-  const marginColor = (m: number) => m >= 30 ? '#22c55e' : m >= 15 ? '#e67e22' : '#e74c3c'
-  const inp: React.CSSProperties = { width:'100%', padding:'5px 10px', fontSize:13, border:`1px solid ${C.b2}`, borderRadius:8, background:C.bg, color:C.tx, fontFamily:'inherit', outline:'none', boxSizing:'border-box', transition:'border-color 150ms', marginTop:0 }
-  const fld: React.CSSProperties = {}
-  const lbl: React.CSSProperties = { display:'block', fontSize:9, color:C.tx3, fontWeight:700, textTransform:'uppercase', letterSpacing:'.03em', lineHeight:1, margin:'0 0 2px 2px' }
-
-  // Reset industry fields when switching biz type
+  const mc_ = (m: number) => m >= 30 ? '#22c55e' : m >= 15 ? '#e67e22' : '#e74c3c'
   const switchBiz = (b: BizType) => { setBiz(b); setIv({ a:'', b:'', c:'', d:'', price:'', units:'' }) }
 
-  return (
-    <div className="fade-up mini-calc" style={{ maxWidth:480, width:'100%', background:C.sf, border:`1px solid ${C.b}`, borderRadius:16, overflow:'hidden', boxShadow:'0 4px 24px rgba(0,0,0,.07)' }}>
+  /* ── Shared input helper — placeholder IS the label ── */
+  const I = (props: { placeholder: string; value: string; onChange: (v: string) => void; step?: string }) => (
+    <input type="number" min="0" step={props.step || '0.01'} placeholder={props.placeholder}
+      style={{ width:'100%', height:36, padding:'0 10px', fontSize:13, border:`1px solid ${C.b2}`, borderRadius:8, background:C.bg, color:C.tx, fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }}
+      value={props.value} onChange={e => props.onChange(e.target.value)} />
+  )
 
-      {/* Mode toggle + currency */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', padding:'10px 16px 0', gap:10 }}>
+  /* ── Result card helper ── */
+  const R = (props: { value: string; label: string; color: string }) => (
+    <div style={{ textAlign:'center', padding:'6px 2px', background:C.ev, borderRadius:8 }}>
+      <div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:props.color, lineHeight:1.2 }}>{props.value}</div>
+      <div style={{ fontSize:8, color:C.tx3, fontWeight:700, marginTop:2, textTransform:'uppercase', letterSpacing:'.03em' }}>{props.label}</div>
+    </div>
+  )
+
+  return (
+    <div ref={ref} className="fade-up mini-calc" style={{ maxWidth:480, width:'100%', background:C.sf, border:`1px solid ${C.b}`, borderRadius:16, overflow:'hidden', boxShadow:'0 4px 24px rgba(0,0,0,.07)' }}>
+
+      {/* ── Top bar: mode pills + currency ── */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', padding:'10px 14px 0', gap:8 }}>
         <div style={{ display:'inline-flex', borderRadius:9999, border:`1px solid ${C.b2}`, overflow:'hidden', background:C.ev }}>
           {([['margin','Profit Margin'],['industry','Cost of Goods']] as const).map(([id, label]) => (
             <button key={id} onClick={() => setMode(id as 'margin'|'industry')}
-              style={{ padding:'7px 20px', fontSize:12, fontWeight:700, fontFamily:'var(--font-sora)', background:mode===id?C.acc:'transparent', color:mode===id?'#fff':C.tx3, border:'none', cursor:'pointer', transition:'all 150ms', letterSpacing:'-.01em', whiteSpace:'nowrap' }}>
+              style={{ padding:'6px 18px', fontSize:11, fontWeight:700, fontFamily:'var(--font-sora)', background:mode===id?C.acc:'transparent', color:mode===id?'#fff':C.tx3, border:'none', cursor:'pointer', transition:'all 150ms' }}>
               {label}
             </button>
           ))}
         </div>
         <div style={{ position:'relative' }}>
           <button onClick={() => setShowCur(!showCur)}
-            style={{ padding:'5px 8px', fontSize:11, fontWeight:600, fontFamily:'inherit', background:C.ev, border:`1px solid ${C.b2}`, borderRadius:6, cursor:'pointer', color:C.tx2, display:'flex', alignItems:'center', gap:3, whiteSpace:'nowrap' }}>
-            {sym} <span style={{ fontSize:8, opacity:.6 }}>▼</span>
+            style={{ padding:'4px 7px', fontSize:10, fontWeight:600, fontFamily:'inherit', background:C.ev, border:`1px solid ${C.b2}`, borderRadius:6, cursor:'pointer', color:C.tx2, display:'flex', alignItems:'center', gap:2 }}>
+            {sym} <span style={{ fontSize:7, opacity:.5 }}>▼</span>
           </button>
           {showCur && (
-            <div style={{ position:'absolute', top:'100%', right:0, marginTop:4, background:C.sf, border:`1px solid ${C.b}`, borderRadius:10, boxShadow:'0 8px 24px rgba(0,0,0,.12)', zIndex:10, padding:6, display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:2, minWidth:160 }}>
+            <div style={{ position:'absolute', top:'100%', right:0, marginTop:4, background:C.sf, border:`1px solid ${C.b}`, borderRadius:10, boxShadow:'0 8px 24px rgba(0,0,0,.15)', zIndex:50, padding:6, display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:2, minWidth:156 }}>
               {CURRENCIES.map((c, i) => (
                 <button key={c.code} onClick={() => { setCur(i); setShowCur(false) }}
-                  style={{ padding:'5px 8px', fontSize:10, fontWeight:cur===i?700:500, fontFamily:'inherit', background:cur===i?C.acc:'transparent', color:cur===i?'#fff':C.tx2, border:'none', borderRadius:6, cursor:'pointer', textAlign:'center', whiteSpace:'nowrap' }}>
+                  style={{ padding:'4px 6px', fontSize:10, fontWeight:cur===i?700:500, fontFamily:'inherit', background:cur===i?C.acc:'transparent', color:cur===i?'#fff':C.tx2, border:'none', borderRadius:6, cursor:'pointer', textAlign:'center' }}>
                   {c.symbol} {c.code}
                 </button>
               ))}
@@ -489,105 +501,76 @@ function MiniCalcWidget() {
         </div>
       </div>
 
-      {/* Industry type chips — only shown in industry mode */}
+      {/* ── Industry chips ── */}
       {mode === 'industry' && (
-        <div style={{ display:'flex', justifyContent:'center', gap:4, padding:'8px 16px 0', flexWrap:'wrap' }}>
+        <div style={{ display:'flex', justifyContent:'center', gap:4, padding:'8px 12px 0', flexWrap:'wrap' }}>
           {BIZ_TYPES.map(b => (
             <button key={b.id} onClick={() => switchBiz(b.id)}
-              style={{ padding:'4px 10px', fontSize:10, fontWeight:biz===b.id?700:500, fontFamily:'inherit', background:biz===b.id?`${C.acc}18`:'transparent', color:biz===b.id?C.acc:C.tx3, border:`1px solid ${biz===b.id?C.acc:C.b2}`, borderRadius:9999, cursor:'pointer', transition:'all 150ms', whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:3 }}>
-              <span style={{ fontSize:11 }}>{b.icon}</span> {b.label}
+              style={{ padding:'3px 8px', fontSize:10, fontWeight:biz===b.id?700:500, fontFamily:'inherit', background:biz===b.id?`${C.acc}18`:'transparent', color:biz===b.id?C.acc:C.tx3, border:`1px solid ${biz===b.id?C.acc:C.b2}`, borderRadius:9999, cursor:'pointer', transition:'all 150ms', display:'flex', alignItems:'center', gap:3 }}>
+              <span style={{ fontSize:10 }}>{b.icon}</span> {b.label}
             </button>
           ))}
         </div>
       )}
 
-      <div style={{ padding:'10px 18px 14px' }}>
+      {/* ── Inputs ── */}
+      <div style={{ padding:'8px 14px 12px' }}>
         {mode === 'margin' ? (
           <>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
-              <div style={fld}><label style={lbl}>Cost ({sym})</label><input type="number" min="0" step="0.01" style={inp} value={mc.cost} onChange={e => setMc(p => ({ ...p, cost: e.target.value }))} /></div>
-              <div style={fld}><label style={lbl}>Sale price ({sym})</label><input type="number" min="0" step="0.01" style={inp} value={mc.revenue} onChange={e => setMc(p => ({ ...p, revenue: e.target.value }))} /></div>
-              <div style={fld}><label style={lbl}>Units sold</label><input type="number" min="0" step="1" style={inp} value={mc.units} onChange={e => setMc(p => ({ ...p, units: e.target.value }))} /></div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6 }}>
+              <I placeholder={`Cost (${sym})`} value={mc.cost} onChange={v => setMc(p => ({ ...p, cost: v }))} />
+              <I placeholder={`Sale price (${sym})`} value={mc.revenue} onChange={v => setMc(p => ({ ...p, revenue: v }))} />
+              <I placeholder="Units sold" value={mc.units} onChange={v => setMc(p => ({ ...p, units: v }))} step="1" />
             </div>
             {mHasResult && (
-              <div style={{ marginTop:10 }}>
-                <div style={{ position:'relative', height:5, borderRadius:3, background:C.ev, overflow:'hidden', marginBottom:8 }}>
-                  <div style={{ position:'absolute', left:0, top:0, height:'100%', width:`${Math.min(mMargin, 100)}%`, borderRadius:3, background: `linear-gradient(90deg, ${marginColor(mMargin)}, ${marginColor(mMargin)}cc)`, transition:'width 300ms ease' }} />
+              <div style={{ marginTop:8 }}>
+                <div style={{ height:4, borderRadius:2, background:C.ev, overflow:'hidden', marginBottom:6 }}>
+                  <div style={{ height:'100%', width:`${Math.min(mMargin, 100)}%`, borderRadius:2, background:mc_(mMargin), transition:'width 300ms' }} />
                 </div>
-                <div style={{ display:'grid', gridTemplateColumns: mUnits > 0 ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr', gap:5 }}>
-                  <div style={{ textAlign:'center', padding:'7px 4px', background:C.ev, borderRadius:10 }}>
-                    <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:700, color:marginColor(mMargin) }}>{mMargin.toFixed(1)}%</div>
-                    <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:1 }}>MARGIN</div>
-                  </div>
-                  <div style={{ textAlign:'center', padding:'7px 4px', background:C.ev, borderRadius:10 }}>
-                    <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:700, color:C.tx }}>{sym}{mProfit.toFixed(2)}</div>
-                    <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:1 }}>PROFIT</div>
-                  </div>
-                  <div style={{ textAlign:'center', padding:'7px 4px', background:C.ev, borderRadius:10 }}>
-                    <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:700, color:C.tx2 }}>{mMarkup.toFixed(0)}%</div>
-                    <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:1 }}>MARKUP</div>
-                  </div>
-                  {mUnits > 0 && (
-                    <div style={{ textAlign:'center', padding:'7px 4px', background:C.ev, borderRadius:10 }}>
-                      <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:700, color:'#22c55e' }}>{sym}{(mProfit * mUnits).toLocaleString('en-GB', { minimumFractionDigits:0, maximumFractionDigits:0 })}</div>
-                      <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:1 }}>TOTAL PROFIT</div>
-                    </div>
-                  )}
+                <div style={{ display:'grid', gridTemplateColumns: mUnits > 0 ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr', gap:4 }}>
+                  <R value={`${mMargin.toFixed(1)}%`} label="Margin" color={mc_(mMargin)} />
+                  <R value={`${sym}${mProfit.toFixed(2)}`} label="Profit" color={C.tx} />
+                  <R value={`${mMarkup.toFixed(0)}%`} label="Markup" color={C.tx2} />
+                  {mUnits > 0 && <R value={`${sym}${(mProfit * mUnits).toLocaleString('en-GB', { maximumFractionDigits:0 })}`} label="Total profit" color="#22c55e" />}
                 </div>
               </div>
             )}
           </>
         ) : (
           <>
-            {/* Dynamic industry fields */}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:4 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6 }}>
               {bt.fields.map(f => (
-                <div key={f.key} style={fld}><label style={lbl}>{f.label}{f.label.includes('%')?'':` (${sym})`}</label><input type="number" min="0" step="0.01" style={inp} value={(iv as Record<string,string>)[f.key]} onChange={e => setIv(p => ({ ...p, [f.key]: e.target.value }))} /></div>
+                <I key={f.key} placeholder={`${f.label}${f.label.includes('%') ? '' : ` (${sym})`}`} value={(iv as Record<string,string>)[f.key]} onChange={v => setIv(p => ({ ...p, [f.key]: v }))} />
               ))}
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-              <div style={fld}><label style={lbl}>{bt.priceLabel} ({sym})</label><input type="number" min="0" step="0.01" style={inp} value={iv.price} onChange={e => setIv(p => ({ ...p, price: e.target.value }))} /></div>
-              <div style={fld}><label style={lbl}>{bt.unitLabel}</label><input type="number" min="0" step="1" style={inp} value={iv.units} onChange={e => setIv(p => ({ ...p, units: e.target.value }))} /></div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+              <I placeholder={`${bt.priceLabel} (${sym})`} value={iv.price} onChange={v => setIv(p => ({ ...p, price: v }))} />
+              <I placeholder={bt.unitLabel} value={iv.units} onChange={v => setIv(p => ({ ...p, units: v }))} step="1" />
             </div>
-
             {iHasResult && (
-              <div style={{ marginTop:10 }}>
+              <div style={{ marginTop:8 }}>
                 {iPrice > 0 && (
-                  <div style={{ position:'relative', height:5, borderRadius:3, background:C.ev, overflow:'hidden', marginBottom:8, display:'flex' }}>
-                    <div style={{ height:'100%', width:`${Math.min(iPrice > 0 ? (iCost/iPrice)*100 : 0, 100)}%`, background:'#e74c3c', borderRadius:'3px 0 0 3px', transition:'width 300ms ease' }} />
-                    <div style={{ height:'100%', flex:1, background:'#22c55e', borderRadius:'0 3px 3px 0', transition:'width 300ms ease' }} />
+                  <div style={{ height:4, borderRadius:2, background:C.ev, overflow:'hidden', marginBottom:6, display:'flex' }}>
+                    <div style={{ height:'100%', width:`${Math.min((iCost/iPrice)*100, 100)}%`, background:'#e74c3c', borderRadius:'2px 0 0 2px', transition:'width 300ms' }} />
+                    <div style={{ height:'100%', flex:1, background:'#22c55e', borderRadius:'0 2px 2px 0' }} />
                   </div>
                 )}
-                <div style={{ display:'grid', gridTemplateColumns: iUnits > 0 && iPrice > 0 ? '1fr 1fr 1fr 1fr' : iPrice > 0 ? '1fr 1fr 1fr' : '1fr', gap:5 }}>
-                  <div style={{ textAlign:'center', padding:'7px 4px', background:C.ev, borderRadius:10 }}>
-                    <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:700, color:'#e74c3c' }}>{sym}{iCost.toFixed(2)}</div>
-                    <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:1 }}>{bt.resultLabel}</div>
-                  </div>
+                <div style={{ display:'grid', gridTemplateColumns: iUnits > 0 && iPrice > 0 ? '1fr 1fr 1fr 1fr' : iPrice > 0 ? '1fr 1fr 1fr' : '1fr', gap:4 }}>
+                  <R value={`${sym}${iCost.toFixed(2)}`} label={bt.resultLabel} color="#e74c3c" />
                   {iPrice > 0 && <>
-                    <div style={{ textAlign:'center', padding:'7px 4px', background:C.ev, borderRadius:10 }}>
-                      <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:700, color:iGross>=0?'#22c55e':'#e74c3c' }}>{sym}{iGross.toFixed(2)}</div>
-                      <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:1 }}>GROSS PROFIT</div>
-                    </div>
-                    <div style={{ textAlign:'center', padding:'7px 4px', background:C.ev, borderRadius:10 }}>
-                      <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:700, color:marginColor(iMargin) }}>{iMargin.toFixed(1)}%</div>
-                      <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:1 }}>MARGIN</div>
-                    </div>
+                    <R value={`${sym}${iGross.toFixed(2)}`} label="Gross profit" color={iGross >= 0 ? '#22c55e' : '#e74c3c'} />
+                    <R value={`${iMargin.toFixed(1)}%`} label="Margin" color={mc_(iMargin)} />
                   </>}
-                  {iUnits > 0 && iPrice > 0 && (
-                    <div style={{ textAlign:'center', padding:'7px 4px', background:C.ev, borderRadius:10 }}>
-                      <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:700, color:'#22c55e' }}>{sym}{(iGross * iUnits).toLocaleString('en-GB', { minimumFractionDigits:0, maximumFractionDigits:0 })}</div>
-                      <div style={{ fontSize:9, color:C.tx3, fontWeight:600, marginTop:1 }}>TOTAL PROFIT</div>
-                    </div>
-                  )}
+                  {iUnits > 0 && iPrice > 0 && <R value={`${sym}${(iGross * iUnits).toLocaleString('en-GB', { maximumFractionDigits:0 })}`} label="Total profit" color="#22c55e" />}
                 </div>
               </div>
             )}
           </>
         )}
-        <div style={{ marginTop:8, textAlign:'center' }}>
-          <Link href={mode==='margin'?'/free-tools/profit-margin-calculator':'/free-tools/cogs-calculator'}
-            style={{ fontSize:11, color:C.acc, fontWeight:600, textDecoration:'none' }}>
-            Open full {mode==='margin'?'Profit Margin':'COGS'} calculator →
+        <div style={{ marginTop:6, textAlign:'center' }}>
+          <Link href={mode==='margin' ? '/free-tools/profit-margin-calculator' : '/free-tools/cogs-calculator'}
+            style={{ fontSize:10, color:C.acc, fontWeight:600, textDecoration:'none' }}>
+            Open full {mode==='margin' ? 'Profit Margin' : 'COGS'} calculator →
           </Link>
         </div>
       </div>
