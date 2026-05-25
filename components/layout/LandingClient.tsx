@@ -393,13 +393,17 @@ function MiniCalcWidget() {
   const lbl: React.CSSProperties = { display:'block', fontSize:10, color:C.tx3, fontWeight:600, marginBottom:3 }
 
   return (
-    <div className="fade-up mini-calc" style={{ maxWidth:420, margin:'0 auto', background:C.sf, border:`1px solid ${C.b}`, borderRadius:14, overflow:'hidden', boxShadow:'0 2px 16px rgba(0,0,0,.05)' }}>
+    <div className="fade-up mini-calc" style={{ maxWidth:420, width:'100%', background:C.sf, border:`1px solid ${C.b}`, borderRadius:14, overflow:'hidden', boxShadow:'0 2px 16px rgba(0,0,0,.05)' }}>
+      {/* Title */}
+      <div style={{ padding:'8px 16px 0', textAlign:'center' }}>
+        <span style={{ fontSize:11, fontWeight:700, fontFamily:'var(--font-sora)', color:C.tx2, letterSpacing:'.04em', textTransform:'uppercase' }}>⚡ Quick Calculator</span>
+      </div>
       {/* Tabs */}
-      <div style={{ display:'flex', borderBottom:`1px solid ${C.b}` }}>
+      <div style={{ display:'flex', justifyContent:'center', borderBottom:`1px solid ${C.b}`, margin:'6px 0 0' }}>
         {(['margin','cogs'] as const).map(id => (
           <button key={id} onClick={() => setTab(id)}
-            style={{ flex:1, padding:'8px 0', fontSize:11, fontWeight:700, fontFamily:'var(--font-sora)', background:tab===id?C.sf:C.ev, color:tab===id?C.tx:C.tx3, border:'none', borderBottom:tab===id?`2px solid ${C.acc}`:'2px solid transparent', cursor:'pointer', transition:'all 150ms' }}>
-            {id==='margin'?'💰 Margin':'📦 COGS'}
+            style={{ flex:1, padding:'8px 0', fontSize:11, fontWeight:700, fontFamily:'var(--font-sora)', background:tab===id?C.sf:C.ev, color:tab===id?C.tx:C.tx3, border:'none', borderBottom:tab===id?`2px solid ${C.acc}`:'2px solid transparent', cursor:'pointer', transition:'all 150ms', textAlign:'center' }}>
+            {id==='margin'?'Profit Margin':'Cost of Goods'}
           </button>
         ))}
       </div>
@@ -665,7 +669,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       {/* Geo promo banner removed */}
 
       {/* ── HERO ─────────────────────────────────────────────── */}
-      <section style={{ maxWidth:1080, margin:'0 auto', padding:'clamp(52px,8vw,88px) clamp(16px,4vw,40px) clamp(32px,4vw,48px)', textAlign:'center' }}>
+      <section style={{ maxWidth:1080, margin:'0 auto', padding:'clamp(36px,5vw,52px) clamp(16px,4vw,40px) clamp(32px,4vw,48px)', textAlign:'center' }}>
 
         {/* Dual-product badge */}
         <div className="fade-up" style={{ display:'inline-flex', alignItems:'center', gap:0, borderRadius:9999, border:`1px solid ${C.b2}`, background:C.sf, fontSize:12, fontWeight:700, marginBottom:28, overflow:'hidden' }}>
@@ -711,7 +715,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </p>
 
         {/* ── Mini calculator widget ── */}
-        <div className="fade-up" style={{ marginBottom:40 }}>
+        <div className="fade-up" style={{ marginBottom:40, display:'flex', flexDirection:'column', alignItems:'center' }}>
           <MiniCalcWidget />
         </div>
 
