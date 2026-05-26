@@ -19,6 +19,12 @@ import RevenueWaterfall from '@/components/intelligence/RevenueWaterfall'
 import DecisionTimeline from '@/components/intelligence/DecisionTimeline'
 import TopProducts from '@/components/intelligence/TopProducts'
 import PosPulse from '@/components/intelligence/PosPulse'
+import DailyActions from '@/components/intelligence/DailyActions'
+import CashFlowCountdown from '@/components/intelligence/CashFlowCountdown'
+import CrossSectorIntel from '@/components/intelligence/CrossSectorIntel'
+import SupplierBrief from '@/components/intelligence/SupplierBrief'
+import PriceSensitivity from '@/components/intelligence/PriceSensitivity'
+import HealthTimeMachine from '@/components/intelligence/HealthTimeMachine'
 
 export default function IntelligencePage() {
   const router = useRouter()
@@ -70,7 +76,7 @@ export default function IntelligencePage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const t = params.get('tab')
-    const validTabs = ['overview','anomalies','decisions','team','sparring','shipments','courier','memory','market','connections','cfo']
+    const validTabs = ['overview','anomalies','decisions','team','sparring','shipments','courier','memory','market','connections','cfo','actions','cashflow']
     if (t && validTabs.includes(t)) setTab(t)
   }, [])
 
@@ -175,6 +181,8 @@ export default function IntelligencePage() {
     { id: 'market',       label: '🌍 Market' },
     { id: 'connections',  label: '🔗 Connect' },
     { id: 'cfo',          label: '🏛️ CFO',       locked: !canCfo },
+    { id: 'actions',      label: '⚡ Actions' },
+    { id: 'cashflow',     label: '💰 Cash Flow' },
   ]
 
   const sparringPrompts = [
@@ -317,6 +325,18 @@ export default function IntelligencePage() {
 
             {/* ── Daily brief ── */}
             <DailyBrief onAsk={askAskBiz}/>
+
+            {/* ── Today's Actions ── */}
+            <DailyActions onAsk={askAskBiz}/>
+
+            {/* ── Cash Flow Countdown ── */}
+            <CashFlowCountdown onAsk={askAskBiz}/>
+
+            {/* ── Cross-Sector Intel ── */}
+            <CrossSectorIntel onAsk={askAskBiz}/>
+
+            {/* ── Health Time Machine ── */}
+            <HealthTimeMachine onAsk={askAskBiz}/>
 
             {/* ── Analytics section ── */}
             <div>
@@ -685,6 +705,9 @@ export default function IntelligencePage() {
         {/* ─── MARKET ─── */}
         {tab === 'market' && (
           <div style={{ maxWidth: 720 }}>
+            <div style={{ marginBottom: 14 }}>
+              <CrossSectorIntel onAsk={askAskBiz} />
+            </div>
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>Market Intelligence</div>
               <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Real market prices, channels, and routes — merchant data + live web signals</div>
@@ -880,7 +903,27 @@ export default function IntelligencePage() {
           <div style={{ maxWidth: 720 }}>
             <FeatureGate planId={planId} feature="cfo_mode">
               <CfoMode health={health} onAsk={askAskBiz}/>
+              <div style={{ marginTop: 14 }}>
+                <SupplierBrief onAsk={askAskBiz}/>
+              </div>
+              <div style={{ marginTop: 14 }}>
+                <PriceSensitivity onAsk={askAskBiz}/>
+              </div>
             </FeatureGate>
+          </div>
+        )}
+
+        {/* ─── ACTIONS ─── */}
+        {tab === 'actions' && (
+          <div style={{ maxWidth: 720 }}>
+            <DailyActions onAsk={askAskBiz}/>
+          </div>
+        )}
+
+        {/* ─── CASH FLOW ─── */}
+        {tab === 'cashflow' && (
+          <div style={{ maxWidth: 720 }}>
+            <CashFlowCountdown onAsk={askAskBiz}/>
           </div>
         )}
 

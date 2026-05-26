@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
   const service = createServiceClient()
   const body = await req.json()
-  const { items, payment_type, customer_phone, notes, discount_amount, amount_tendered } = body
+  const { items, payment_type, customer_phone, notes, discount_amount, amount_tendered, shift_id } = body
 
   // Location: staff locked to their branch, owner can specify
   const txLocationId = auth.locationId || body.location_id || null
@@ -151,6 +151,7 @@ export async function POST(req: NextRequest) {
       amount_tendered: amount_tendered ? Number(amount_tendered) : null,
       status:          'completed',
       pos_location_id: txLocationId,
+      shift_id:        shift_id || null,
       notes:           notes || null,
     })
     .select('id')

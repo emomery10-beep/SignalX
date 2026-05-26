@@ -197,8 +197,36 @@ export async function PATCH(req: NextRequest) {
     // Link pos items
     if (posTx && txItems.length) {
       await service.from('pos_items').insert(
-        txItems.map((i: any) => ({ ...i, transaction_id: posTx.id, owner_id: auth.ownerId }))
+        txItems.map((i: any) => ({ ...i, transaction_id: posTx.id }))
       )
+    }
+
+    // Deduct inventory for menu items that have a linked inventory_id
+    const menuItemIds = (order.order_items || [])
+      .map((i: any) => i.menu_item_id).filter(Boolean)
+    if (menuItemIds.length) {
+      const { data: menuItems } = await service.from('restaurant_menu_items')
+        .select('id, inventory_id').in('id', menuItemIds)
+      const invMap: Record<string, string> = {}
+      for (const mi of menuItems || []) {
+        if (mi.inventory_id) invMap[mi.id] = mi.inventory_id
+      }
+      for (const oi of order.order_items || []) {
+        const inventoryId = invMap[oi.menu_item_id]
+        if (!inventoryId) continue
+        const { error: rpcErr } = await service.rpc('decrement_inventory_stock', {
+          p_id: inventoryId, p_owner_id: auth.ownerId, p_qty: oi.qty || 1,
+        })
+        if (rpcErr) {
+          const { data: inv } = await service.from('inventory')
+            .select('stock_qty').eq('id', inventoryId).eq('owner_id', auth.ownerId).single()
+          if (inv) {
+            await service.from('inventory')
+              .update({ stock_qty: Math.max(0, (inv.stock_qty || 0) - (oi.qty || 1)) })
+              .eq('id', inventoryId).eq('owner_id', auth.ownerId)
+          }
+        }
+      }
     }
 
     // Close order
@@ -218,9 +246,13 @@ export async function PATCH(req: NextRequest) {
 
     // Update loyalty points if customer linked
     if (order.customer_id) {
-      await service.from('pos_customers')
-        .update({ total_spent: service.rpc('increment', { row_id: order.customer_id, field: 'total_spent', amount: finalTotal }) as any })
-        .eq('id', order.customer_id)
+      const { data: cust } = await service.from('pos_customers')
+        .select('total_spent').eq('id', order.customer_id).single()
+      if (cust) {
+        await service.from('pos_customers')
+          .update({ total_spent: (cust.total_spent || 0) + finalTotal, last_seen_at: new Date().toISOString() })
+          .eq('id', order.customer_id)
+      }
     }
 
     return NextResponse.json({ success: true, pos_transaction_id: posTx?.id })

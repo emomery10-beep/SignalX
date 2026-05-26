@@ -42,9 +42,29 @@ export async function POST(req: NextRequest) {
 
   const now = new Date().toISOString()
 
+  // Helper: restore stock for refunded items
+  const restoreStock = async (items: { inventory_id?: string; qty: number }[]) => {
+    for (const item of items) {
+      if (!item.inventory_id) continue
+      const { error: rpcErr } = await service.rpc('decrement_inventory_stock', {
+        p_id: item.inventory_id, p_owner_id: ownerId, p_qty: -(item.qty),
+      })
+      if (rpcErr) {
+        const { data: inv } = await service.from('inventory')
+          .select('stock_qty').eq('id', item.inventory_id).eq('owner_id', ownerId).single()
+        if (inv) {
+          await service.from('inventory')
+            .update({ stock_qty: (inv.stock_qty || 0) + item.qty })
+            .eq('id', item.inventory_id).eq('owner_id', ownerId)
+        }
+      }
+    }
+  }
+
   if (full_refund || !item_ids?.length) {
     // Full refund — mark all items and transaction
-    const itemIds = (tx.pos_items as { id: string }[]).map((i) => i.id)
+    const allItems = tx.pos_items as { id: string; inventory_id?: string; qty: number }[]
+    const itemIds = allItems.map((i) => i.id)
     await service
       .from('pos_items')
       .update({ refunded: true, refunded_at: now, refund_reason: reason })
@@ -54,6 +74,9 @@ export async function POST(req: NextRequest) {
       .from('pos_transactions')
       .update({ status: 'refunded' })
       .eq('id', transaction_id)
+
+    // Restore stock for all items
+    await restoreStock(allItems)
 
     // Reverse the unified_data entry
     await service.from('unified_data').insert({
@@ -76,9 +99,12 @@ export async function POST(req: NextRequest) {
       .update({ status: 'partially_refunded' })
       .eq('id', transaction_id)
 
-    // Reverse partial amount
-    const refundedItems = (tx.pos_items as { id: string; line_total: number }[]).filter((i) => item_ids.includes(i.id))
-    const refundAmount  = refundedItems.reduce((s, i) => s + i.line_total, 0)
+    // Restore stock for refunded items only
+    const refundedItems = (tx.pos_items as { id: string; inventory_id?: string; qty: number; line_total: number }[])
+      .filter((i) => item_ids.includes(i.id))
+    await restoreStock(refundedItems)
+
+    const refundAmount = refundedItems.reduce((s, i) => s + i.line_total, 0)
 
     await service.from('unified_data').insert({
       user_id:       ownerId,

@@ -45,12 +45,14 @@ export async function POST(req: NextRequest) {
   // Get all transactions in this shift
   const { data: transactions } = await service
     .from('pos_transactions')
-    .select('total_amount')
+    .select('total, payment_type')
     .eq('shift_id', shift_id)
+    .eq('owner_id', ownerId)
+    .eq('status', 'completed')
 
   const cashSales = (transactions || [])
-    .filter((tx: any) => tx.payment_method === 'cash' || !tx.payment_method)
-    .reduce((sum: number, tx: any) => sum + (tx.total_amount || 0), 0)
+    .filter((tx: any) => tx.payment_type === 'cash' || !tx.payment_type)
+    .reduce((sum: number, tx: any) => sum + (tx.total || 0), 0)
 
   // Calculate expected cash
   const expectedCash = shift.opening_balance + cashSales

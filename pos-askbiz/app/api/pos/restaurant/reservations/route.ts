@@ -10,7 +10,7 @@ export async function OPTIONS() {
 
 // GET — reservations list for a date range
 export async function GET(req: NextRequest) {
-  const auth = await resolvePosAuth(req, 'inventory')
+  const auth = await resolvePosAuth(req, 'cashier')
   if (!auth) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
   const { searchParams } = new URL(req.url)
@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
 
 // POST — create reservation
 export async function POST(req: NextRequest) {
-  const auth = await resolvePosAuth(req, 'inventory')
+  const auth = await resolvePosAuth(req, 'cashier')
   if (!auth) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
   const { customer_name, customer_phone, customer_email, covers, reserved_at, duration_mins, table_id, notes } = await req.json()
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
 
 // PATCH — update status / assign table
 export async function PATCH(req: NextRequest) {
-  const auth = await resolvePosAuth(req, 'inventory')
+  const auth = await resolvePosAuth(req, 'cashier')
   if (!auth) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
   const { id, status, table_id, notes } = await req.json()
@@ -137,7 +137,7 @@ export async function PATCH(req: NextRequest) {
 
 // DELETE — cancel reservation
 export async function DELETE(req: NextRequest) {
-  const auth = await resolvePosAuth(req, 'inventory')
+  const auth = await resolvePosAuth(req, 'cashier')
   if (!auth) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
   const { searchParams } = new URL(req.url)

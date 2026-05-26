@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import CashierCopilot from '@/components/CashierCopilot'
 
 const ACC = '#d08a59'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
@@ -385,6 +386,7 @@ export default function SellPage() {
           customer_phone:  customerPhone || null,
           discount_amount: discountAmt || null,
           amount_tendered: paymentType === 'cash' && tendered ? tendered : null,
+          shift_id:        shiftId || null,
           notes:           [tableNumber ? `Table: ${tableNumber}` : '', geo ? `|__geo:${geo.lat.toFixed(6)},${geo.lng.toFixed(6)}` : ''].filter(Boolean).join(' ') || undefined,
         }),
       })
@@ -430,10 +432,14 @@ export default function SellPage() {
     setScreen('home')
   }
 
+  const copilot = staff ? (
+    <CashierCopilot screen={screen} cart={cart} customerPhone={customerPhone} ownerId={staff.owner_id} staffId={staff.id} />
+  ) : null
+
   // ─────────────────────────────────────────────────────────────
   // HOME SCREEN
   // ─────────────────────────────────────────────────────────────
-  if (screen === 'home') return (
+  if (screen === 'home') return (<>{copilot}
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f9f8f6' }}>
       {/* Header */}
       <div style={{ padding: '16px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -563,12 +569,12 @@ export default function SellPage() {
         </div>
       )}
     </div>
-  )
+  </>)
 
   // ─────────────────────────────────────────────────────────────
   // ADD ITEM SCREEN (Camera + Search tabs)
   // ─────────────────────────────────────────────────────────────
-  if (screen === 'add') return (
+  if (screen === 'add') return (<>{copilot}
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#000' }}>
       {/* Header */}
       <div style={{ padding: '16px 20px 0', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -711,12 +717,12 @@ export default function SellPage() {
         </div>
       )}
     </div>
-  )
+  </>)
 
   // ─────────────────────────────────────────────────────────────
   // CART SCREEN
   // ─────────────────────────────────────────────────────────────
-  if (screen === 'cart') return (
+  if (screen === 'cart') return (<>{copilot}
     <div style={{ minHeight: '100vh', background: '#f9f8f6', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '16px 20px 8px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => setScreen('home')} style={{ width: 36, height: 36, borderRadius: 10, background: '#fff', border: '1px solid #e5e2dc', color: '#1a1916', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
@@ -805,12 +811,12 @@ export default function SellPage() {
         )}
       </div>
     </div>
-  )
+  </>)
 
   // ─────────────────────────────────────────────────────────────
   // CHECKOUT SCREEN
   // ─────────────────────────────────────────────────────────────
-  if (screen === 'checkout') return (
+  if (screen === 'checkout') return (<>{copilot}
     <div style={{ minHeight: '100vh', background: '#f9f8f6', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '16px 20px 8px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => setScreen('cart')} style={{ width: 36, height: 36, borderRadius: 10, background: '#fff', border: '1px solid #e5e2dc', color: '#1a1916', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
@@ -934,12 +940,12 @@ export default function SellPage() {
         </button>
       </div>
     </div>
-  )
+  </>)
 
   // ─────────────────────────────────────────────────────────────
   // RECEIPT SCREEN
   // ─────────────────────────────────────────────────────────────
-  if (screen === 'receipt') return (
+  if (screen === 'receipt') return (<>{copilot}
     <div style={{ minHeight: '100vh', background: '#f9f8f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       <div style={{ width: '100%', maxWidth: 340, textAlign: 'center' }}>
         <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(22,163,74,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
@@ -1013,7 +1019,7 @@ export default function SellPage() {
         </button>
       </div>
     </div>
-  )
+  </>)
 
   return null
 }

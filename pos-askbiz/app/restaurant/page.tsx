@@ -2,6 +2,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import MenuMatrix from '@/components/MenuMatrix'
+import ShiftProfitability from '@/components/ShiftProfitability'
+import WhatsAppAutopilot from '@/components/WhatsAppAutopilot'
 
 const ACC = '#d08a59'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
@@ -326,6 +329,21 @@ export default function RestaurantHub() {
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Menu Engineering Matrix */}
+        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
+          <MenuMatrix sym={sym} />
+        </div>
+
+        {/* Shift Profitability */}
+        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
+          <ShiftProfitability sym={sym} />
+        </div>
+
+        {/* WhatsApp Autopilot */}
+        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
+          <WhatsAppAutopilot />
         </div>
 
         {/* Navigation tiles */}
