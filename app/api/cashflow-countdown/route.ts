@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrencySymbol } from '@/lib/get-currency'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -8,6 +9,8 @@ export async function GET() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const sym = await getCurrencySymbol(supabase, user.id)
 
   const now = new Date()
   const ninetyDaysAgo = new Date(now.getTime() - 90 * 86400000).toISOString().split('T')[0]
@@ -180,5 +183,6 @@ export async function GET() {
       has_ecommerce: (unified90?.length || 0) > 0,
       has_pos: (posTx90?.length || 0) > 0,
     },
+    currency_symbol: sym,
   })
 }

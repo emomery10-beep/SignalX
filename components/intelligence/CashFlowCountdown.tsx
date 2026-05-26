@@ -23,11 +23,12 @@ export default function CashFlowCountdown({ onAsk }: { onAsk?: (prompt: string) 
   const [data, setData] = useState<CashFlowData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [sym, setSym] = useState('£')
 
   useEffect(() => {
     fetch('/api/cashflow-countdown')
       .then(r => r.ok ? r.json() : Promise.reject())
-      .then(setData)
+      .then(d => { setData(d); if (d.currency_symbol) setSym(d.currency_symbol) })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, [])
@@ -56,8 +57,8 @@ export default function CashFlowCountdown({ onAsk }: { onAsk?: (prompt: string) 
   const maxAbs = Math.max(...weekly.map(w => Math.abs(w.net)), 1)
 
   const fmt = (n: number) => {
-    if (Math.abs(n) >= 1000) return `£${(n / 1000).toFixed(1)}k`
-    return `£${Math.round(n)}`
+    if (Math.abs(n) >= 1000) return `${sym}${(n / 1000).toFixed(1)}k`
+    return `${sym}${Math.round(n)}`
   }
 
   return (

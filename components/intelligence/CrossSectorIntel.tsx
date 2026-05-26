@@ -24,6 +24,7 @@ export default function CrossSectorIntel({ onAsk }: { onAsk?: (prompt: string) =
   const [userSector, setUserSector] = useState('')
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [sym, setSym] = useState('£')
 
   useEffect(() => {
     fetch('/api/cross-sector')
@@ -32,6 +33,7 @@ export default function CrossSectorIntel({ onAsk }: { onAsk?: (prompt: string) =
         setRankings(data.rankings || [])
         setComparisons(data.sector_comparisons || [])
         setUserSector(data.user_sector || '')
+        if (data.currency_symbol) setSym(data.currency_symbol)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -54,7 +56,7 @@ export default function CrossSectorIntel({ onAsk }: { onAsk?: (prompt: string) =
   if (rankings.length === 0) return null
 
   const fmt = (v: number, unit: string) => unit === '£'
-    ? (Math.abs(v) >= 1000 ? `£${(v / 1000).toFixed(1)}k` : `£${v.toFixed(0)}`)
+    ? (Math.abs(v) >= 1000 ? `${sym}${(v / 1000).toFixed(1)}k` : `${sym}${v.toFixed(0)}`)
     : `${v.toFixed(1)}%`
 
   return (

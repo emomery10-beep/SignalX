@@ -51,11 +51,13 @@ function fmt(n: number): string {
   return String(Math.round(n))
 }
 
+let _sym = '£'
 function fmtGBP(n: number): string {
-  return '£' + n.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+  return _sym + n.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
 }
 
-export default function SocialCommerce({ onAsk }: { onAsk: (prompt: string) => void }) {
+export default function SocialCommerce({ onAsk, sym = '£' }: { onAsk: (prompt: string) => void; sym?: string }) {
+  _sym = sym
   const router = useRouter()
   const [loading,        setLoading]        = useState(true)
   const [syncing,        setSyncing]        = useState(false)

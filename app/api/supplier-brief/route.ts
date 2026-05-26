@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrencySymbol } from '@/lib/get-currency'
 import Anthropic from '@anthropic-ai/sdk'
 
 export const runtime = 'nodejs'
@@ -12,6 +13,7 @@ export async function GET(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const sym = await getCurrencySymbol(supabase, user.id)
   const { searchParams } = new URL(req.url)
   const supplierName = searchParams.get('supplier')
 
@@ -113,12 +115,12 @@ export async function GET(req: NextRequest) {
   if (targetSupplier) {
     const signals = [
       `SUPPLIER: ${targetSupplier.name}`,
-      `Monthly spend: £${targetSupplier.monthly_spend} (${targetSupplier.spend_trend_pct > 0 ? '+' : ''}${targetSupplier.spend_trend_pct}% vs prev quarter)`,
+      `Monthly spend: ${sym}${targetSupplier.monthly_spend} (${targetSupplier.spend_trend_pct > 0 ? '+' : ''}${targetSupplier.spend_trend_pct}% vs prev quarter)`,
       `Products: ${targetSupplier.products.join(', ')}`,
-      `Avg cost price: £${targetSupplier.avg_cost_price}`,
+      `Avg cost price: ${sym}${targetSupplier.avg_cost_price}`,
       `Your margin on their products: ${targetSupplier.avg_margin}%`,
       `90-day volume: ${targetSupplier.total_units_90d} units`,
-      `Shipping costs: £${targetSupplier.shipping_90d}`,
+      `Shipping costs: ${sym}${targetSupplier.shipping_90d}`,
       `Dependency: ${targetSupplier.dependency_pct}% of total spend`,
       `Currencies: ${targetSupplier.currencies.join(', ')}`,
       targetSupplier.spend_trend_pct > 10 ? `⚠ Spend rising fast — costs may be increasing` : '',
@@ -150,6 +152,7 @@ Return ONLY valid JSON.` }],
     total_monthly_spend: totalSpend,
     brief: brief ? tryParse(brief) : null,
     brief_supplier: targetSupplier?.name || null,
+    currency_symbol: sym,
   })
 }
 

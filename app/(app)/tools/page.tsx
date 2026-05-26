@@ -15,7 +15,7 @@ const B   = 'rgba(0,0,0,.08)'
 const SF  = '#ffffff'
 const EV  = '#f3f2ef'
 
-const TOOLS = [
+function getTools(sym: string) { return [
   {
     id: 'fx', label: 'FX Risk Modeller', icon: '💱',
     colour: '#6366F1', bg: 'rgba(99,102,241,.08)', tags: ['Importers', 'Currency'],
@@ -54,7 +54,7 @@ const TOOLS = [
     colour: '#d08a59', bg: 'rgba(208,138,89,.08)', tags: ['Importers', 'Margin'],
     preview: (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {[['Product cost', '£12.40'], ['Freight', '£1.80'], ['Duty (12%)', '£1.49'], ['VAT (20%)', '£3.14']].map(([label, val]) => (
+        {[['Product cost', `${sym}12.40`], ['Freight', `${sym}1.80`], ['Duty (12%)', `${sym}1.49`], ['VAT (20%)', `${sym}3.14`]].map(([label, val]) => (
           <div key={label as string} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
             <span style={{ color: TX2 }}>{label}</span>
             <span style={{ fontWeight: 600, color: TX }}>{val}</span>
@@ -62,7 +62,7 @@ const TOOLS = [
         ))}
         <div style={{ borderTop: `1px solid ${B}`, paddingTop: 6, display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
           <span style={{ fontWeight: 700, color: TX }}>True landed cost</span>
-          <span style={{ fontWeight: 800, color: ACC, fontFamily: 'var(--font-sora)' }}>£18.83</span>
+          <span style={{ fontWeight: 800, color: ACC, fontFamily: 'var(--font-sora)' }}>{sym}18.83</span>
         </div>
       </div>
     ),
@@ -110,7 +110,7 @@ const TOOLS = [
           Search market prices…
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-          {[['Wireless earbuds', '£24.99', 'Amazon'], ['Running shoes', '£67.50', 'Zalando']].map(([p, price, ch]) => (
+          {[['Wireless earbuds', `${sym}24.99`, 'Amazon'], ['Running shoes', `${sym}67.50`, 'Zalando']].map(([p, price, ch]) => (
             <div key={p as string} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
               <span style={{ color: TX2 }}>{p}</span>
               <span style={{ fontWeight: 700, color: ACC }}>{price} <span style={{ color: TX3, fontWeight: 400 }}>· {ch}</span></span>
@@ -120,7 +120,7 @@ const TOOLS = [
       </div>
     ),
   },
-]
+] }
 
 export default function ToolsPage() {
   const router = useRouter()
@@ -134,6 +134,8 @@ export default function ToolsPage() {
   const [cardOrigin, setCardOrigin]     = useState({ x: '50%', y: '50%' })
   const gridRef = useRef<HTMLDivElement>(null)
 
+  const [sym, setSym] = useState('£')
+
   useEffect(() => {
     fetch('/api/health').then(r => r.ok ? r.json() : null).then(d => {
       if (d) {
@@ -143,6 +145,9 @@ export default function ToolsPage() {
     }).catch(() => {})
     fetch('/api/sources').then(r => r.ok ? r.json() : []).then(d => {
       setSourceCount(Array.isArray(d) ? d.length : 0)
+    }).catch(() => {})
+    fetch('/api/profile').then(r => r.ok ? r.json() : null).then(d => {
+      if (d?.currency_symbol) setSym(d.currency_symbol)
     }).catch(() => {})
   }, [])
 
@@ -181,7 +186,8 @@ export default function ToolsPage() {
     ? health.score >= 65 ? '#22c55e' : health.score >= 45 ? '#f59e0b' : '#ef4444'
     : TX3
 
-  const activeTool = TOOLS.find(t => t.id === expandedTool)
+  const tools = getTools(sym)
+  const activeTool = tools.find(t => t.id === expandedTool)
 
   return (
     <div className="page-shell">
@@ -213,7 +219,7 @@ export default function ToolsPage() {
 
         {/* Widget grid — always visible */}
         <div ref={gridRef} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 24 }}>
-          {TOOLS.map(tool => (
+          {tools.map(tool => (
             <div key={tool.id} onClick={e => openTool(tool.id, e)}
               onMouseEnter={e => {
                 const el = e.currentTarget as HTMLDivElement
@@ -327,11 +333,11 @@ export default function ToolsPage() {
 
             {/* Tool content — scrollable */}
             <div style={{ overflowY: 'auto', padding: '24px', flex: 1 }}>
-              {expandedTool === 'fx'        && <FXRisk onAsk={askAskBiz} />}
-              {expandedTool === 'suppliers' && <SupplierScorecard onAsk={askAskBiz} />}
-              {expandedTool === 'landed'    && <LandedCost onAsk={askAskBiz} />}
-              {expandedTool === 'export'    && <ExportMarkets onAsk={askAskBiz} />}
-              {expandedTool === 'social'    && <SocialCommerce onAsk={askAskBiz} />}
+              {expandedTool === 'fx'        && <FXRisk onAsk={askAskBiz} sym={sym} />}
+              {expandedTool === 'suppliers' && <SupplierScorecard onAsk={askAskBiz} sym={sym} />}
+              {expandedTool === 'landed'    && <LandedCost onAsk={askAskBiz} sym={sym} />}
+              {expandedTool === 'export'    && <ExportMarkets onAsk={askAskBiz} sym={sym} />}
+              {expandedTool === 'social'    && <SocialCommerce onAsk={askAskBiz} sym={sym} />}
               {expandedTool === 'market'    && (
                 <div>
                   <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
@@ -356,7 +362,7 @@ export default function ToolsPage() {
                             <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                               {(item.price != null || item.price_gbp != null) && (
                                 <span style={{ fontFamily: 'var(--font-sora)', fontWeight: 700, fontSize: 15, color: ACC }}>
-                                  {typeof (item.price ?? item.price_gbp) === 'number' ? `£${(item.price ?? item.price_gbp).toFixed(2)}` : item.price ?? item.price_gbp}
+                                  {typeof (item.price ?? item.price_gbp) === 'number' ? `${sym}${(item.price ?? item.price_gbp).toFixed(2)}` : item.price ?? item.price_gbp}
                                 </span>
                               )}
                               {item.channel && <span style={{ fontSize: 10, fontWeight: 700, color: '#0284c7', background: 'rgba(2,132,199,.08)', padding: '3px 9px', borderRadius: 9999, textTransform: 'uppercase', letterSpacing: '.06em' }}>{item.channel}</span>}

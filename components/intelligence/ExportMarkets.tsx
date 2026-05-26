@@ -67,7 +67,7 @@ function getLabel(score: number): { label: string; colour: string } {
 }
 
 // ── Main component ────────────────────────────────────────────
-export default function ExportMarkets({ onAsk }: { onAsk: (prompt: string) => void }) {
+export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: string) => void; sym?: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -313,7 +313,7 @@ export default function ExportMarkets({ onAsk }: { onAsk: (prompt: string) => vo
                       {[
                         { label: 'Population', value: `${detail.population}m` },
                         { label: 'GDP / capita', value: `$${detail.gdp_per_capita.toLocaleString()}` },
-                        { label: 'Min. first order', value: `£${detail.min_order.toLocaleString()}` },
+                        { label: 'Min. first order', value: `${sym}${detail.min_order.toLocaleString()}` },
                         { label: 'Entry route', value: detail.entry_route.split(',')[0].split(' or ')[0] },
                       ].map((item, i) => (
                         <div key={i} style={{ background: SF, borderRadius: 9, padding: '9px 11px', border: `1px solid ${B}` }}>

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrencySymbol } from '@/lib/get-currency'
 import Anthropic from '@anthropic-ai/sdk'
 
 export const runtime = 'nodejs'
@@ -11,6 +12,8 @@ export async function GET() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const sym = await getCurrencySymbol(supabase, user.id)
 
   const now = new Date()
   const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000).toISOString()
@@ -91,7 +94,7 @@ export async function GET() {
   }
 
   if (atRiskCustomers?.length) {
-    signals.push(`AT-RISK HIGH-VALUE CUSTOMERS (${atRiskCustomers.length}): ${atRiskCustomers.map(c => `${c.name || c.phone} — spent £${c.total_spent}, last seen ${Math.round((now.getTime() - new Date(c.last_seen_at).getTime()) / 86400000)} days ago`).join('; ')}`)
+    signals.push(`AT-RISK HIGH-VALUE CUSTOMERS (${atRiskCustomers.length}): ${atRiskCustomers.map(c => `${c.name || c.phone} — spent ${sym}${c.total_spent}, last seen ${Math.round((now.getTime() - new Date(c.last_seen_at).getTime()) / 86400000)} days ago`).join('; ')}`)
   }
 
   if (pendingDecisions?.length) {
@@ -100,12 +103,13 @@ export async function GET() {
 
   const dailyRevenue = (recentTx || []).reduce((s, t) => s + (t.total || 0), 0) / 7
   if (dailyRevenue > 0) {
-    signals.push(`CONTEXT: Average daily revenue this week: £${dailyRevenue.toFixed(2)} from ${Math.round((recentTx?.length || 0) / 7)} transactions/day`)
+    signals.push(`CONTEXT: Average daily revenue this week: ${sym}${dailyRevenue.toFixed(2)} from ${Math.round((recentTx?.length || 0) / 7)} transactions/day`)
   }
 
   if (signals.length === 0) {
     return NextResponse.json({
       actions: [{ title: 'All clear', why: 'No urgent actions detected today. Keep up the good work.', priority: 3, type: 'info' }],
+      currency_symbol: sym,
     })
   }
 
@@ -127,7 +131,7 @@ Return ONLY the JSON array, no markdown.` }],
 
     const text = (response.content[0] as { type: string; text: string }).text
     const actions = JSON.parse(text)
-    return NextResponse.json({ actions })
+    return NextResponse.json({ actions, currency_symbol: sym })
   } catch {
     const fallbackActions: any[] = []
     if (lowStock?.some(i => i.stock_qty <= 0)) fallbackActions.push({ title: `Restock ${lowStock.filter(i => i.stock_qty <= 0).length} out-of-stock items`, why: 'These items cannot be sold until restocked.', priority: 1, type: 'restock' })
@@ -137,6 +141,6 @@ Return ONLY the JSON array, no markdown.` }],
     if (staleSources?.length) fallbackActions.push({ title: `Reconnect ${staleSources.length} stale data sources`, why: 'Your analytics may be based on outdated data.', priority: 3, type: 'sync' })
     if (atRiskCustomers?.length) fallbackActions.push({ title: `Re-engage ${atRiskCustomers.length} high-value customers`, why: 'These customers have not visited in over 30 days.', priority: 3, type: 'customer' })
     if (pendingDecisions?.length) fallbackActions.push({ title: `Review ${pendingDecisions.length} pending decisions`, why: 'Decision check-ins are due this week.', priority: 3, type: 'decision' })
-    return NextResponse.json({ actions: fallbackActions.length ? fallbackActions : [{ title: 'All clear', why: 'No urgent actions detected.', priority: 3, type: 'info' }] })
+    return NextResponse.json({ actions: fallbackActions.length ? fallbackActions : [{ title: 'All clear', why: 'No urgent actions detected.', priority: 3, type: 'info' }], currency_symbol: sym })
   }
 }

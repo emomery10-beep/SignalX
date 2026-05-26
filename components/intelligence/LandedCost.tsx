@@ -42,8 +42,9 @@ const ORIGINS = [
   { code: 'OT', label: '🌍 Other' },
 ]
 
+let _sym = '£'
 function fmt(n: number): string {
-  return '£' + Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return _sym + Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 function fmtPct(n: number): string {
@@ -54,7 +55,8 @@ interface CostLine {
   id: string; label: string; value: string; pct: boolean
 }
 
-export default function LandedCost({ onAsk }: { onAsk: (prompt: string) => void }) {
+export default function LandedCost({ onAsk, sym = '£' }: { onAsk: (prompt: string) => void; sym?: string }) {
+  _sym = sym
   const [origin, setOrigin] = useState('CN')
   const [quantity, setQuantity] = useState('')
   const [unitCost, setUnitCost] = useState('')
@@ -147,13 +149,13 @@ export default function LandedCost({ onAsk }: { onAsk: (prompt: string) => void 
             <input style={inp} type="number" value={quantity} onChange={e => { setQuantity(e.target.value); setCalculated(false) }} placeholder="e.g. 500" />
           </div>
           <div>
-            <div style={{ fontSize: 12, color: TX3, marginBottom: 5 }}>Supplier price / unit (£)</div>
+            <div style={{ fontSize: 12, color: TX3, marginBottom: 5 }}>Supplier price / unit ({sym})</div>
             <input style={inp} type="number" value={unitCost} onChange={e => { setUnitCost(e.target.value); setCalculated(false) }} placeholder="e.g. 8.50" />
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
           <div>
-            <div style={{ fontSize: 12, color: TX3, marginBottom: 5 }}>Selling price / unit (£)</div>
+            <div style={{ fontSize: 12, color: TX3, marginBottom: 5 }}>Selling price / unit ({sym})</div>
             <input style={inp} type="number" value={sellingPrice} onChange={e => { setSellingPrice(e.target.value); setCalculated(false) }} placeholder="e.g. 24.99" />
           </div>
           <div>
@@ -181,9 +183,9 @@ export default function LandedCost({ onAsk }: { onAsk: (prompt: string) => void 
           {extras.map((e) => (
             <div key={e.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: 8, alignItems: 'center' }}>
               <input style={inp} value={e.label} onChange={ev => updateExtra(e.id, 'label', ev.target.value)} placeholder="Cost description" />
-              <input style={{ ...inp, paddingLeft: e.pct ? 11 : 22 }} type="number" value={e.value} onChange={ev => updateExtra(e.id, 'value', ev.target.value)} placeholder={e.pct ? '%' : '£'} />
+              <input style={{ ...inp, paddingLeft: e.pct ? 11 : 22 }} type="number" value={e.value} onChange={ev => updateExtra(e.id, 'value', ev.target.value)} placeholder={e.pct ? '%' : sym} />
               <button onClick={() => updateExtra(e.id, 'pct', !e.pct)} style={{ fontSize: 11, fontWeight: 600, color: e.pct ? ACC : TX3, background: e.pct ? 'rgba(208,138,89,.08)' : EV, border: `1px solid ${e.pct ? 'rgba(208,138,89,.3)' : B}`, borderRadius: 7, padding: '5px 8px', cursor: 'pointer', fontFamily: 'inherit' }}>
-                {e.pct ? '%' : '£'}
+                {e.pct ? '%' : sym}
               </button>
             </div>
           ))}
@@ -236,7 +238,7 @@ export default function LandedCost({ onAsk }: { onAsk: (prompt: string) => void 
           </div>
           {showVAT && <div style={{ fontSize: 12, color: TX3, marginTop: 8, lineHeight: 1.6 }}>Import VAT is paid at the border but recoverable on your next VAT return if you are VAT registered. It is a cash flow cost — typically 30-60 days — not a permanent cost.</div>}
           <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-            <button onClick={() => onAsk(`What is my true landed cost and margin? I import from ${origin} at £${unitCost}/unit, sell at £${sellingPrice}, duty rate ${dutyRate}%.`)} style={{ flex: 1, padding: '10px', background: ACC, color: '#fff', border: 'none', borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Ask AskBiz to analyse this →</button>
+            <button onClick={() => onAsk(`What is my true landed cost and margin? I import from ${origin} at ${sym}${unitCost}/unit, sell at ${sym}${sellingPrice}, duty rate ${dutyRate}%.`)} style={{ flex: 1, padding: '10px', background: ACC, color: '#fff', border: 'none', borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Ask AskBiz to analyse this →</button>
             <button onClick={() => { setCalculated(false); setResult(null) }} style={{ padding: '10px 14px', color: TX3, background: 'transparent', border: `1px solid ${B}`, borderRadius: 9, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Reset</button>
           </div>
         </div>

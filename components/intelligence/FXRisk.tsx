@@ -54,9 +54,9 @@ interface ScenarioResult {
   }>
 }
 
-function formatGBP(n: number): string {
-  if (Math.abs(n) >= 1000) return '£' + (n / 1000).toFixed(1) + 'k'
-  return '£' + Math.abs(n).toFixed(0)
+function formatCurrency(n: number, sym: string): string {
+  if (Math.abs(n) >= 1000) return sym + (n / 1000).toFixed(1) + 'k'
+  return sym + Math.abs(n).toFixed(0)
 }
 
 function calcScenarios(
@@ -94,7 +94,7 @@ function calcScenarios(
   })
 }
 
-export default function FXRisk({ onAsk }: { onAsk: (prompt: string) => void }) {
+export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) => void; sym?: string }) {
   const router = useRouter()
 
   // ── Inputs ──────────────────────────────────────────────────────────────────
@@ -135,8 +135,8 @@ export default function FXRisk({ onAsk }: { onAsk: (prompt: string) => void }) {
 
   const askDeep = useCallback(() => {
     const validLines = lines.filter(l => l.name.trim() && parseFloat(l.spend) > 0)
-    const linesSummary = validLines.map(l => `${l.name} (${l.margin}% margin, £${l.spend}/mo spend)`).join(', ')
-    const prompt = `Model the currency risk for my business. I import in ${importCurrency} and spend £${totalMonthlySpend} per month. My minimum acceptable margin is ${minMargin}%. Product lines: ${linesSummary || 'not specified'}. If sterling falls 10% against the ${importCurrency}, which product lines go below my minimum margin and what is the annual financial impact?`
+    const linesSummary = validLines.map(l => `${l.name} (${l.margin}% margin, ${sym}${l.spend}/mo spend)`).join(', ')
+    const prompt = `Model the currency risk for my business. I import in ${importCurrency} and spend ${sym}${totalMonthlySpend} per month. My minimum acceptable margin is ${minMargin}%. Product lines: ${linesSummary || 'not specified'}. If sterling falls 10% against the ${importCurrency}, which product lines go below my minimum margin and what is the annual financial impact?`
     onAsk(prompt)
   }, [lines, importCurrency, totalMonthlySpend, minMargin, onAsk])
 
@@ -190,7 +190,7 @@ export default function FXRisk({ onAsk }: { onAsk: (prompt: string) => void }) {
             </select>
           </div>
           <div>
-            <div style={{ fontSize: 12, color: TX3, marginBottom: 5, fontWeight: 500 }}>Monthly import spend (£)</div>
+            <div style={{ fontSize: 12, color: TX3, marginBottom: 5, fontWeight: 500 }}>Monthly import spend ({sym})</div>
             <input
               style={inp}
               type="number"
@@ -235,7 +235,7 @@ export default function FXRisk({ onAsk }: { onAsk: (prompt: string) => void }) {
                 <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: TX3 }}>%</span>
               </div>
               <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: TX3 }}>£</span>
+                <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: TX3 }}>{sym}</span>
                 <input
                   style={{ ...inp, paddingLeft: 22 }}
                   type="number"
@@ -288,7 +288,7 @@ export default function FXRisk({ onAsk }: { onAsk: (prompt: string) => void }) {
                   {atRiskLines.length} product line{atRiskLines.length > 1 ? 's' : ''} fall below your {minMargin}% minimum in a severe scenario
                 </div>
                 <div style={{ fontSize: 12, color: TX2, lineHeight: 1.5 }}>
-                  {atRiskLines.map(l => l.name).join(', ')} — annual impact up to {formatGBP(worstCase?.annualImpact || 0)} if sterling falls 15% against the {importCurrency}.
+                  {atRiskLines.map(l => l.name).join(', ')} — annual impact up to {formatCurrency(worstCase?.annualImpact || 0, sym)} if sterling falls 15% against the {importCurrency}.
                 </div>
               </div>
             </div>
@@ -312,10 +312,10 @@ export default function FXRisk({ onAsk }: { onAsk: (prompt: string) => void }) {
                   <span style={{ fontSize: 11, color: TX3 }}>−{s.pct}% GBP</span>
                 </div>
                 <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, color: s.colour, marginBottom: 2 }}>
-                  {formatGBP(s.annualImpact)}
+                  {formatCurrency(s.annualImpact, sym)}
                 </div>
                 <div style={{ fontSize: 11, color: TX3, marginBottom: 10 }}>annual margin impact</div>
-                <div style={{ fontSize: 11, color: TX3, marginBottom: 6 }}>+{formatGBP(s.costIncrease)}/mo extra costs</div>
+                <div style={{ fontSize: 11, color: TX3, marginBottom: 6 }}>+{formatCurrency(s.costIncrease, sym)}/mo extra costs</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {s.lines.map((l, j) => (
                     <div key={j} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11 }}>

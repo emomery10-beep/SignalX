@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrencySymbol } from '@/lib/get-currency'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -9,6 +10,7 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const sym = await getCurrencySymbol(supabase, user.id)
   const ninetyDaysAgo = new Date(Date.now() - 90 * 86400000).toISOString().split('T')[0]
   const fortyFiveDaysAgo = new Date(Date.now() - 45 * 86400000).toISOString().split('T')[0]
 
@@ -21,7 +23,7 @@ export async function GET() {
     .limit(5000)
 
   if (!records?.length) {
-    return NextResponse.json({ products: [], insights: [] })
+    return NextResponse.json({ products: [], insights: [], currency_symbol: sym })
   }
 
   // Group by product, split into two 45-day periods
@@ -128,7 +130,7 @@ export async function GET() {
   const lowMarginInelastic = inelastic.filter(p => p.margin_pct < 30)
   if (lowMarginInelastic.length > 0) {
     const potentialGain = lowMarginInelastic.reduce((s, p) => s + p.monthly_revenue * 0.05, 0)
-    insights.push(`${lowMarginInelastic.length} inelastic product${lowMarginInelastic.length > 1 ? 's have' : ' has'} margins under 30% — a 5% price increase could add ~£${Math.round(potentialGain)}/mo.`)
+    insights.push(`${lowMarginInelastic.length} inelastic product${lowMarginInelastic.length > 1 ? 's have' : ' has'} margins under 30% — a 5% price increase could add ~${sym}${Math.round(potentialGain)}/mo.`)
   }
 
   return NextResponse.json({
@@ -141,5 +143,6 @@ export async function GET() {
       inverse: inverse.length,
       stable: products.filter(p => p.sensitivity === 'stable').length,
     },
+    currency_symbol: sym,
   })
 }

@@ -65,7 +65,7 @@ export default function ExpansionPage() {
     <div className="page-shell">
 
       {/* Header */}
-      <div style={{ padding:'clamp(14px,4vw,20px) clamp(14px,3vw,24px) 16px', borderBottom: '1px solid var(--b)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+      <div className="page-shell-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 600 }}>Expansion Intelligence</div>
           <div style={{ fontSize: 13, color: 'var(--tx2)', marginTop: 3 }}>Product opportunities ranked by profit potential, demand evidence, and risk</div>
@@ -76,7 +76,7 @@ export default function ExpansionPage() {
         </button>
       </div>
 
-      <div style={{ padding:'clamp(14px,4vw,20px) clamp(14px,3vw,24px)', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div className="page-shell-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
         {/* KPI row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 12 }}>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrencySymbol } from '@/lib/get-currency'
 import Anthropic from '@anthropic-ai/sdk'
 
 export const runtime = 'nodejs'
@@ -12,6 +13,7 @@ export async function GET(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const sym = await getCurrencySymbol(supabase, user.id)
   const { searchParams } = new URL(req.url)
   const compareDate = searchParams.get('compare')
 
@@ -26,7 +28,7 @@ export async function GET(req: NextRequest) {
     .limit(500)
 
   if (!scores?.length) {
-    return NextResponse.json({ snapshots: [], timeline: [], analysis: null })
+    return NextResponse.json({ snapshots: [], timeline: [], analysis: null, currency_symbol: sym })
   }
 
   // Build weekly snapshots
@@ -118,6 +120,7 @@ Respond with plain text bullet points only, no markdown headers.` }],
     current: snapshots.length ? snapshots[snapshots.length - 1] : null,
     oldest: snapshots.length ? snapshots[0] : null,
     total_change: snapshots.length >= 2 ? snapshots[snapshots.length - 1].avg_score - snapshots[0].avg_score : 0,
+    currency_symbol: sym,
   })
 }
 

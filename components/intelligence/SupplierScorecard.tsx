@@ -67,7 +67,7 @@ function buildRecommendation(s: SupplierScore): string {
     if (s.customsHoldCount > 0) return `${s.customsHoldCount} customs hold${s.customsHoldCount > 1 ? 's' : ''} detected — review documentation requirements before next order.`
     return `On-time rate of ${s.onTimeRate.toFixed(0)}% is below acceptable. Raise with supplier and build 7-day safety stock buffer.`
   }
-  if (s.grade === 'D') return `Significant delays averaging ${s.avgDelayDays.toFixed(1)} days. Financial impact £${s.totalFinancialImpact.toFixed(0)}. Begin qualifying an alternative supplier.`
+  if (s.grade === 'D') return `Significant delays averaging ${s.avgDelayDays.toFixed(1)} days. Financial impact ${s.totalFinancialImpact.toFixed(0)}. Begin qualifying an alternative supplier.`
   return `Critical reliability failure. ${s.delayedCount} of ${s.shipmentCount} shipments delayed. Urgently diversify — this supplier is costing your business.`
 }
 
@@ -136,7 +136,7 @@ function ScoreBar({ value, max = 100, colour }: { value: number; max?: number; c
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function SupplierScorecard({ onAsk }: { onAsk: (prompt: string) => void }) {
+export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (prompt: string) => void; sym?: string }) {
   const [shipments, setShipments] = useState<Shipment[]>([])
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState('')
@@ -222,7 +222,7 @@ export default function SupplierScorecard({ onAsk }: { onAsk: (prompt: string) =
           { label: 'Suppliers tracked', value: String(suppliers.length),         colour: TX },
           { label: 'Avg score',         value: String(avgScore) + '/100',        colour: avgScore >= 70 ? '#16a34a' : avgScore >= 50 ? '#d97706' : '#dc2626' },
           { label: 'At risk',           value: String(atRisk.length),            colour: atRisk.length > 0 ? '#dc2626' : '#16a34a' },
-          { label: 'Total delay cost',  value: totalImpact > 0 ? `£${totalImpact.toFixed(0)}` : '£0', colour: totalImpact > 500 ? '#dc2626' : TX },
+          { label: 'Total delay cost',  value: totalImpact > 0 ? `${sym}${totalImpact.toFixed(0)}` : `${sym}0`, colour: totalImpact > 500 ? '#dc2626' : TX },
         ].map((k, i) => (
           <div key={i} style={{ background: SF, border: `1px solid ${B}`, borderRadius: 12, padding: '12px 14px' }}>
             <div style={{ fontSize: 11, color: TX3, marginBottom: 5, fontWeight: 500 }}>{k.label}</div>
@@ -298,7 +298,7 @@ export default function SupplierScorecard({ onAsk }: { onAsk: (prompt: string) =
                   {supplier.totalFinancialImpact > 0 && (
                     <>
                       <div style={{ fontSize: 11, color: TX3, marginBottom: 2 }}>Delay cost</div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#dc2626' }}>−£{supplier.totalFinancialImpact.toFixed(0)}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#dc2626' }}>−{sym}{supplier.totalFinancialImpact.toFixed(0)}</div>
                     </>
                   )}
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="2" strokeLinecap="round" style={{ marginTop: 6, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 200ms' }}>
@@ -324,8 +324,8 @@ export default function SupplierScorecard({ onAsk }: { onAsk: (prompt: string) =
                       { label: 'Delivered',         value: String(supplier.deliveredCount) },
                       { label: 'Delayed',           value: String(supplier.delayedCount),       warn: supplier.delayedCount > 0 },
                       { label: 'Customs holds',     value: String(supplier.customsHoldCount),   warn: supplier.customsHoldCount > 0 },
-                      { label: 'Total value',       value: supplier.totalValue > 0 ? `£${supplier.totalValue.toLocaleString()}` : '—' },
-                      { label: 'Financial impact',  value: supplier.totalFinancialImpact > 0 ? `−£${supplier.totalFinancialImpact.toFixed(0)}` : '£0', warn: supplier.totalFinancialImpact > 500 },
+                      { label: 'Total value',       value: supplier.totalValue > 0 ? `${sym}${supplier.totalValue.toLocaleString()}` : '—' },
+                      { label: 'Financial impact',  value: supplier.totalFinancialImpact > 0 ? `−${sym}${supplier.totalFinancialImpact.toFixed(0)}` : `${sym}0`, warn: supplier.totalFinancialImpact > 500 },
                     ].map((item, i) => (
                       <div key={i} style={{ background: SF, borderRadius: 9, padding: '9px 11px', border: `1px solid ${B}` }}>
                         <div style={{ fontSize: 11, color: TX3, marginBottom: 3 }}>{item.label}</div>
@@ -349,7 +349,7 @@ export default function SupplierScorecard({ onAsk }: { onAsk: (prompt: string) =
                   {/* Ask AskBiz */}
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <button
-                      onClick={() => onAsk(`Analyse ${supplier.name}'s delivery performance. They have a ${supplier.onTimeRate.toFixed(0)}% on-time rate, average delay of ${supplier.avgDelayDays.toFixed(1)} days, ${supplier.customsHoldCount} customs holds, and have cost me £${supplier.totalFinancialImpact.toFixed(0)} in financial impact. Should I find an alternative supplier?`)}
+                      onClick={() => onAsk(`Analyse ${supplier.name}'s delivery performance. They have a ${supplier.onTimeRate.toFixed(0)}% on-time rate, average delay of ${supplier.avgDelayDays.toFixed(1)} days, ${supplier.customsHoldCount} customs holds, and have cost me ${sym}${supplier.totalFinancialImpact.toFixed(0)} in financial impact. Should I find an alternative supplier?`)}
                       style={{ fontSize: 12, fontWeight: 600, color: ACC, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 9, padding: '7px 13px', cursor: 'pointer', fontFamily: 'inherit' }}
                     >
                       Ask AskBiz about this supplier →

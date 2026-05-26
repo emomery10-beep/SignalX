@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getCurrencySymbol } from '@/lib/get-currency'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -16,6 +17,7 @@ export async function GET() {
     .eq('id', user.id)
     .single()
 
+  const sym = await getCurrencySymbol(supabase, user.id)
   const userSector = profile?.sector_hints?.split(',')[0]?.trim() || profile?.business_type || 'retail'
   const userRegion = profile?.region || 'UK'
 
@@ -155,5 +157,6 @@ export async function GET() {
       has_pos: (userPosTx?.length || 0) > 0,
       sectors_available: allSectors.length,
     },
+    currency_symbol: sym,
   })
 }

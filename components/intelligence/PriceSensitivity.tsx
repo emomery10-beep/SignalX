@@ -24,6 +24,7 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
   const [summary, setSummary] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string | null>(null)
+  const [sym, setSym] = useState('£')
 
   useEffect(() => {
     fetch('/api/price-sensitivity')
@@ -32,6 +33,7 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
         setProducts(data.products || [])
         setInsights(data.insights || [])
         setSummary(data.summary || null)
+        if (data.currency_symbol) setSym(data.currency_symbol)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -119,7 +121,7 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
                   <span style={{ fontSize: 12 }}>{cfg.icon}</span>
                   <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{p.name}</span>
                 </div>
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>£{p.current_price.toFixed(2)}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{sym}{p.current_price.toFixed(2)}</span>
               </div>
               <div style={{ display: 'flex', gap: 12, fontSize: 10, color: 'var(--tx3)', marginBottom: p.opportunity ? 4 : 0 }}>
                 <span>

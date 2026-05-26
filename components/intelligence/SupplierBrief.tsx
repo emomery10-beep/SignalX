@@ -20,6 +20,7 @@ export default function SupplierBrief({ onAsk }: { onAsk?: (prompt: string) => v
   const [loading, setLoading] = useState(true)
   const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null)
   const [loadingBrief, setLoadingBrief] = useState(false)
+  const [sym, setSym] = useState('£')
 
   useEffect(() => {
     fetch('/api/supplier-brief')
@@ -28,6 +29,7 @@ export default function SupplierBrief({ onAsk }: { onAsk?: (prompt: string) => v
         setSuppliers(data.suppliers || [])
         setBrief(data.brief || null)
         setBriefSupplier(data.brief_supplier || '')
+        if (data.currency_symbol) setSym(data.currency_symbol)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -59,7 +61,7 @@ export default function SupplierBrief({ onAsk }: { onAsk?: (prompt: string) => v
 
   if (suppliers.length === 0) return null
 
-  const fmt = (n: number) => n >= 1000 ? `£${(n / 1000).toFixed(1)}k` : `£${n}`
+  const fmt = (n: number) => n >= 1000 ? `${sym}${(n / 1000).toFixed(1)}k` : `${sym}${n}`
 
   return (
     <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)' }}>
