@@ -590,7 +590,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
   const sym           = liveGeo?.pricing?.sym      || '£'
   const growthPrice   = liveGeo?.pricing?.growth   || '£19'
-  const businessPrice = liveGeo?.pricing?.business || '£49'
+  const businessPrice = liveGeo?.pricing?.business || '£39'
   const posPrice      = liveGeo?.pricing?.pos      || '£5'
   const country       = liveGeo?.country           || geo?.country    || ''
   const countryCode   = liveGeo?.countryCode       || geo?.countryCode || ''

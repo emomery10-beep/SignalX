@@ -1058,7 +1058,7 @@ function AccountPanel() {
         <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--b)' }}>
           <div>
             <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, color: 'var(--tx)', textTransform: 'capitalize', marginBottom: 3 }}>{plan} plan</div>
-            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{plan === 'free' ? 'No card required' : plan === 'growth' ? '£19 / month' : '£49 / month'}</div>
+            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{plan === 'free' ? 'No card required' : plan === 'growth' ? '£19 / month' : '£39 / month'}</div>
           </div>
           <a href="/billing" style={{ padding: '8px 18px', borderRadius: 'var(--r-md)', background: 'var(--acc)', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(208,138,89,.2)', flexShrink: 0 }}>
             {plan === 'free' ? 'Upgrade plan →' : 'Manage billing →'}

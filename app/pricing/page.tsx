@@ -58,7 +58,7 @@ const PLANS = [
   },
   {
     name: 'Business',
-    price: 49,
+    price: 39,
     period: 'month',
     description: 'Everything in Growth plus team seats, Decision Memory, Competitor Watch, CFO Mode, and priority support.',
     highlight: false,
@@ -80,7 +80,7 @@ const PLANS = [
 
 const FAQS = [
   { q: 'Is the Free plan really free forever?', a: 'Yes — the Free plan is free forever with no credit card required. You get 10 questions per month, CSV/Excel uploads, Business Pulse score, and the ability to connect Shopify, Amazon, and more.' },
-  { q: 'What\'s the difference between Growth and Business?', a: 'Growth (£19/month) gives you unlimited questions and all the AI-powered tools pre-filled from your data. Business (£49/month) adds team seats for up to 5 members, Decision Memory, Competitor Watch, CFO Mode with board-ready reports, and priority support.' },
+  { q: 'What\'s the difference between Growth and Business?', a: 'Growth (£19/month) gives you unlimited questions and all the AI-powered tools pre-filled from your data. Business (£39/month) adds team seats for up to 5 members, Decision Memory, Competitor Watch, CFO Mode with board-ready reports, and priority support.' },
   { q: 'Can I cancel anytime?', a: 'Yes. Cancel anytime from your account settings. If you cancel a paid subscription, you keep access until the end of your billing period. You\'ll drop back to the Free plan automatically.' },
   { q: 'Do you offer annual billing?', a: 'Yes — pay annually and get 2 months free (equivalent to ~17% off). Switch to annual billing at any time from your account settings.' },
   { q: 'What happens to my data if I cancel?', a: 'Your data is retained for 30 days after cancellation, during which you can export everything. After 30 days, your data is permanently deleted.' },
@@ -235,13 +235,17 @@ export default function PricingPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14 }}>
             {[
               { icon: '📊', title: 'Pre-built dashboards', desc: 'Revenue, margin, cash flow, and more — ready the moment you connect' },
+              { icon: '🤖', title: 'AI-powered answers', desc: 'Ask questions about your business in plain English' },
               { icon: '📬', title: 'Daily briefing', desc: 'Plain-English morning summary of your most important metrics' },
               { icon: '🔔', title: 'Anomaly alerts', desc: 'Get notified when something unusual happens in your data' },
-              { icon: '🤖', title: 'AI-powered answers', desc: 'Ask questions about your business in plain English' },
-              { icon: '📱', title: 'Mobile-friendly', desc: 'Access your metrics on any device, anywhere' },
-              { icon: '🔒', title: 'UK data residency', desc: 'Your data stays in the UK. GDPR compliant by design' },
+              { icon: '💰', title: 'Price sensitivity', desc: 'Find which products can sustain a price increase without losing sales' },
+              { icon: '📱', title: 'Social commerce', desc: 'TikTok Shop, Instagram, and Pinterest performance tracking' },
+              { icon: '🏭', title: 'Supplier management', desc: 'Auto-graded supplier scorecards, negotiation briefs, delay cost analysis' },
+              { icon: '💱', title: 'Landed cost & FX risk', desc: 'Import cost breakdowns with duty, VAT, shipping and currency hedging' },
+              { icon: '📋', title: 'CFO Mode', desc: 'Board-ready P&L, cash runway, margin analysis — included on Business plan' },
+              { icon: '💬', title: 'WhatsApp commerce', desc: 'Customers browse, order, and get updates via WhatsApp — fully integrated' },
               { icon: '🧾', title: 'Point of Sale', desc: 'Full register, inventory, multi-branch, staff shifts — £5/seat add-on' },
-              { icon: '🏪', title: 'Multi-branch PoS', desc: 'Per-location inventory, tax settings, and reporting across all your shops' },
+              { icon: '🔒', title: 'UK data residency', desc: 'Your data stays in the UK. GDPR compliant by design' },
             ].map((item, i) => (
               <div key={i} style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 12, padding: '18px 16px' }}>
                 <div style={{ fontSize: 24, marginBottom: 10 }}>{item.icon}</div>

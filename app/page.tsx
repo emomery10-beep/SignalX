@@ -42,14 +42,14 @@ const COUNTRY_NAMES: Record<string, string> = {
 }
 
 const PRICING_TIERS: Record<string, { growth: string; business: string; sym: string; pos: string }> = {
-  GB:  { growth: '£19',       business: '£49',       sym: '£',   pos: '£5'       },
-  IE:  { growth: '€19',       business: '€49',       sym: '€',   pos: '€5'       },
-  DE:  { growth: '€19',       business: '€49',       sym: '€',   pos: '€5'       },
-  FR:  { growth: '€19',       business: '€49',       sym: '€',   pos: '€5'       },
-  NL:  { growth: '€19',       business: '€49',       sym: '€',   pos: '€5'       },
-  ES:  { growth: '€19',       business: '€49',       sym: '€',   pos: '€5'       },
-  IT:  { growth: '€19',       business: '€49',       sym: '€',   pos: '€5'       },
-  US:  { growth: '$19',       business: '$49',       sym: '$',   pos: '$5'       },
+  GB:  { growth: '£19',       business: '£39',       sym: '£',   pos: '£5'       },
+  IE:  { growth: '€19',       business: '€39',       sym: '€',   pos: '€5'       },
+  DE:  { growth: '€19',       business: '€39',       sym: '€',   pos: '€5'       },
+  FR:  { growth: '€19',       business: '€39',       sym: '€',   pos: '€5'       },
+  NL:  { growth: '€19',       business: '€39',       sym: '€',   pos: '€5'       },
+  ES:  { growth: '€19',       business: '€39',       sym: '€',   pos: '€5'       },
+  IT:  { growth: '€19',       business: '€39',       sym: '€',   pos: '€5'       },
+  US:  { growth: '$19',       business: '$39',       sym: '$',   pos: '$5'       },
   CA:  { growth: 'CA$25',     business: 'CA$65',     sym: 'CA$', pos: 'CA$7'     },
   AU:  { growth: 'A$27',      business: 'A$75',      sym: 'A$',  pos: 'A$8'      },
   SG:  { growth: 'S$25',      business: 'S$65',      sym: 'S$',  pos: 'S$7'      },
@@ -65,7 +65,7 @@ const PRICING_TIERS: Record<string, { growth: string; business: string; sym: str
   BR:  { growth: 'R$ 95',     business: 'R$ 245',    sym: 'R$',  pos: 'R$ 25'    },
   MX:  { growth: 'MX$ 320',   business: 'MX$ 820',   sym: 'MX$', pos: 'MX$ 90'   },
   JP:  { growth: '¥2,800',    business: '¥7,200',    sym: '¥',   pos: '¥700'     },
-  DEFAULT: { growth: '$19',   business: '$49',        sym: '$',   pos: '$5'       },
+  DEFAULT: { growth: '$19',   business: '$39',        sym: '$',   pos: '$5'       },
 }
 
 export default async function LandingPage({ searchParams }: { searchParams: { code?: string; token_hash?: string; type?: string } }) {
@@ -203,7 +203,7 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
         {
           '@type': 'Question',
           name: 'How much does AskBiz cost?',
-          acceptedAnswer: { '@type': 'Answer', text: 'AskBiz has a free plan with 10 questions per month, a Growth plan at £19/month with unlimited questions and all core features, and a Business plan at £49/month with team seats, Decision Memory, Competitor Watch, and CFO Mode. All plans include API access.' },
+          acceptedAnswer: { '@type': 'Answer', text: 'AskBiz has a free plan with 10 questions per month, a Growth plan at £19/month with unlimited questions and all core features, and a Business plan at £39/month with team seats, Decision Memory, Competitor Watch, and CFO Mode. All plans include API access.' },
         },
         {
           '@type': 'Question',

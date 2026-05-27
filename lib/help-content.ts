@@ -838,7 +838,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     faq: [
       { q: "Can I skip the onboarding steps?", a: "You can skip Steps 5 (Export Markets) and 6 (Connect Data) and complete them later from /sources. Steps 1–4 are required to personalise your experience." },
       { q: "How do I re-run onboarding?", a: "Go to Account Settings → Business Profile and edit any field. Changing your sector or business type will prompt AskBiz to re-calibrate your benchmarks." },
-      { q: "Can I invite team members during onboarding?", a: "Team seats are available on the Business plan (£49/mo). You can invite members after onboarding from Account Settings → Team." },
+      { q: "Can I invite team members during onboarding?", a: "Team seats are available on the Business plan (£39/mo). You can invite members after onboarding from Account Settings → Team." },
     ],
     related: ["connect-first-data-source", "business-pulse-score-explained", "plans-comparison"],
   },
@@ -1124,7 +1124,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
   {
     slug: "plans-comparison",
     title: "Plans Comparison: Free, Growth & Business",
-    description: "Compare AskBiz Free, Growth (£19/mo), and Business (£49/mo) plans. Full feature breakdown, what each plan includes, and how to choose the right one.",
+    description: "Compare AskBiz Free, Growth (£19/mo), and Business (£39/mo) plans. Full feature breakdown, what each plan includes, and how to choose the right one.",
     topic: "Account & Billing",
     topicSlug: "account-billing",
     readTime: 5,
@@ -1145,8 +1145,8 @@ export const HELP_ARTICLES: HelpArticle[] = [
         body: "**Price:** £19/mo (or £15/mo billed annually)\n**Questions:** Unlimited\n**Data connectors:** All connectors (Shopify, Amazon, TikTok Shop, QuickBooks, Stripe, Square, and more)\n**Business Tools:** All tools, pre-filled from your connected data\n**Intelligence:** Business Pulse (6-hour update), anomaly alerts, Churn Intelligence\n**Daily Brief:** Included — delivered every morning\n**Social Commerce:** Full TikTok Shop, Instagram, Pinterest signals\n**Team seats:** Not included\n\nBest for: Growing product businesses that sell online and want proactive AI intelligence.",
       },
       {
-        heading: "Business Plan — £49/month",
-        body: "**Price:** £49/mo (or £39/mo billed annually)\n**Questions:** Unlimited\n**Data connectors:** All connectors + priority sync\n**Business Tools:** All tools + CFO Mode (advanced financial modelling)\n**Intelligence:** Real-time Business Pulse, all alerts + Decision Memory (6-week check-ins)\n**Daily Brief:** Included + team-specific briefs\n**Social Commerce:** Full + competitor social signals\n**Team seats:** Up to 5 team members included\n\nBest for: Multi-channel businesses, teams with multiple decision-makers, or founders who want a full AI Chief of Staff.",
+        heading: "Business Plan — £39/month",
+        body: "**Price:** £39/mo (or £39/mo billed annually)\n**Questions:** Unlimited\n**Data connectors:** All connectors + priority sync\n**Business Tools:** All tools + CFO Mode (advanced financial modelling)\n**Intelligence:** Real-time Business Pulse, all alerts + Decision Memory (6-week check-ins)\n**Daily Brief:** Included + team-specific briefs\n**Social Commerce:** Full + competitor social signals\n**Team seats:** Up to 5 team members included\n\nBest for: Multi-channel businesses, teams with multiple decision-makers, or founders who want a full AI Chief of Staff.",
       },
       {
         heading: "Annual Billing Discount",
@@ -1366,7 +1366,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "How proration works",
-        body: "When you upgrade mid-cycle, you are charged the prorated difference for the remaining days in your current billing period — you only pay for what you use.\n\n**Example:** You are on Growth (£19/month) and upgrade to Business (£49/month) on the 15th of a 30-day month:\n- Remaining days: 15 out of 30\n- Unused Growth credit: £19 × (15/30) = £9.50\n- Business charge for 15 days: £49 × (15/30) = £24.50\n- **Net charge today: £24.50 − £9.50 = £15.00**\n- Next renewal: full £49/month from today's date\n\nProration is calculated automatically and shown on your invoice. You can preview the proration amount before confirming an upgrade in **Settings → Billing → Upgrade Plan**.",
+        body: "When you upgrade mid-cycle, you are charged the prorated difference for the remaining days in your current billing period — you only pay for what you use.\n\n**Example:** You are on Growth (£19/month) and upgrade to Business (£39/month) on the 15th of a 30-day month:\n- Remaining days: 15 out of 30\n- Unused Growth credit: £19 × (15/30) = £9.50\n- Business charge for 15 days: £39 × (15/30) = £19.50\n- **Net charge today: £19.50 − £9.50 = £10.00**\n- Next renewal: full £39/month from today's date\n\nProration is calculated automatically and shown on your invoice. You can preview the proration amount before confirming an upgrade in **Settings → Billing → Upgrade Plan**.",
       },
       {
         heading: "Changing from monthly to annual billing",
@@ -1413,7 +1413,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
     ],
     faq: [
-      { q: "Can I share my AskBiz login with team members instead of buying extra seats?", a: "Sharing login credentials is not permitted under AskBiz's terms and creates security risks. Each user should have their own account so that access can be revoked individually and activity is attributed correctly. If cost is a concern, the Business plan at £49/month includes up to 10 seats — at a large team discount compared to individual seat pricing." },
+      { q: "Can I share my AskBiz login with team members instead of buying extra seats?", a: "Sharing login credentials is not permitted under AskBiz's terms and creates security risks. Each user should have their own account so that access can be revoked individually and activity is attributed correctly. If cost is a concern, the Business plan at £39/month includes up to 10 seats — at a large team discount compared to individual seat pricing." },
       { q: "I have seasonal staff who only need AskBiz access for 3 months. Do I pay for a full year?", a: "You pay for the seat for the months they are active, not the full year. On a monthly plan: add the seat when they join, remove it when they leave — you are charged only for the active months. On an annual plan: a seasonal seat added mid-year is charged on a prorated basis. Contact hello@askbiz.co if you have a predictable seasonal team pattern — we can advise on the most cost-efficient approach." },
     ],
     related: ["invite-team-member", "roles-and-permissions", "upgrade-downgrade"],
@@ -2581,7 +2581,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     content: [
       {
         heading: "API Availability",
-        body: "The AskBiz API is available on the **Business plan** (£49/mo). It allows developers to:\n- Query your Business Pulse score programmatically\n- Retrieve anomaly alerts\n- Pull Daily Brief content\n- Submit questions to the AskBiz AI and receive structured JSON responses\n- Push data from custom sources not covered by native connectors",
+        body: "The AskBiz API is available on the **Business plan** (£39/mo). It allows developers to:\n- Query your Business Pulse score programmatically\n- Retrieve anomaly alerts\n- Pull Daily Brief content\n- Submit questions to the AskBiz AI and receive structured JSON responses\n- Push data from custom sources not covered by native connectors",
       },
       {
         heading: "Base URL",

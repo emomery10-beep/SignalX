@@ -145,7 +145,7 @@ export const PLAN_FEATURES: Record<PlanId, PlanFeatures> = {
 export const PLAN_PRICES: Record<PlanId, { amount: number; display: string }> = {
   free:     { amount: 0,  display: '£0/month' },
   growth:   { amount: 19, display: '£19/month' },
-  business: { amount: 49, display: '£49/month' },
+  business: { amount: 39, display: '£39/month' },
 }
 
 export const PLAN_DESCRIPTIONS: Record<PlanId, string> = {

@@ -5,14 +5,14 @@ export const runtime = 'nodejs'
 
 // Formatted pricing strings per country (mirrors app/page.tsx PRICING_TIERS)
 const APP_PRICING: Record<string, { growth: string; business: string; sym: string; pos: string }> = {
-  GB:  { growth: '£19',        business: '£49',        sym: '£',   pos: '£5'        },
-  IE:  { growth: '€19',        business: '€49',        sym: '€',   pos: '€5'        },
-  DE:  { growth: '€19',        business: '€49',        sym: '€',   pos: '€5'        },
-  FR:  { growth: '€19',        business: '€49',        sym: '€',   pos: '€5'        },
-  NL:  { growth: '€19',        business: '€49',        sym: '€',   pos: '€5'        },
-  ES:  { growth: '€19',        business: '€49',        sym: '€',   pos: '€5'        },
-  IT:  { growth: '€19',        business: '€49',        sym: '€',   pos: '€5'        },
-  US:  { growth: '$19',        business: '$49',        sym: '$',   pos: '$5'        },
+  GB:  { growth: '£19',        business: '£39',        sym: '£',   pos: '£5'        },
+  IE:  { growth: '€19',        business: '€39',        sym: '€',   pos: '€5'        },
+  DE:  { growth: '€19',        business: '€39',        sym: '€',   pos: '€5'        },
+  FR:  { growth: '€19',        business: '€39',        sym: '€',   pos: '€5'        },
+  NL:  { growth: '€19',        business: '€39',        sym: '€',   pos: '€5'        },
+  ES:  { growth: '€19',        business: '€39',        sym: '€',   pos: '€5'        },
+  IT:  { growth: '€19',        business: '€39',        sym: '€',   pos: '€5'        },
+  US:  { growth: '$19',        business: '$39',        sym: '$',   pos: '$5'        },
   CA:  { growth: 'CA$25',      business: 'CA$65',      sym: 'CA$', pos: 'CA$7'      },
   AU:  { growth: 'A$27',       business: 'A$75',       sym: 'A$',  pos: 'A$8'       },
   SG:  { growth: 'S$25',       business: 'S$65',       sym: 'S$',  pos: 'S$7'       },
@@ -29,7 +29,7 @@ const APP_PRICING: Record<string, { growth: string; business: string; sym: strin
   MX:  { growth: 'MX$ 320',    business: 'MX$ 820',    sym: 'MX$', pos: 'MX$ 90'    },
   JP:  { growth: '¥2,800',     business: '¥7,200',     sym: '¥',   pos: '¥700'      },
   KR:  { growth: '₩22,000',    business: '₩59,000',    sym: '₩',   pos: '₩6,000'    },
-  DEFAULT: { growth: '$19',    business: '$49',         sym: '$',   pos: '$5'        },
+  DEFAULT: { growth: '$19',    business: '$39',         sym: '$',   pos: '$5'        },
 }
 
 export async function GET(request: NextRequest) {
