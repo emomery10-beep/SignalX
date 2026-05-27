@@ -919,12 +919,12 @@ function scenarioBtn(s: string, active: string): React.CSSProperties {
 }
 
 // ── Style constants ─────────────────────────────────────────
-const card: React.CSSProperties = { background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, padding: '6px 8px' }
-const sectionLabel: React.CSSProperties = { fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 1, lineHeight: 1 }
-const formGroup: React.CSSProperties = { marginBottom: 3 }
-const labelStyle: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--tx2)', marginBottom: 0, lineHeight: 1, paddingBottom: 1 }
-const selectStyle: React.CSSProperties = { fontFamily: 'inherit', fontSize: 11, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 8, padding: '5px 8px', outline: 'none', width: '100%' }
-const inputStyle: React.CSSProperties = { fontFamily: 'inherit', fontSize: 11, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 8, padding: '5px 8px', outline: 'none', width: '100%', boxSizing: 'border-box', marginTop: 0 }
+const card: React.CSSProperties = { background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, padding: '10px 12px' }
+const sectionLabel: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', margin: 0, lineHeight: 1 }
+const formGroup: React.CSSProperties = { marginTop: 6, marginBottom: 0 }
+const labelStyle: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--tx2)', margin: 0, padding: 0, lineHeight: 1 }
+const selectStyle: React.CSSProperties = { fontFamily: 'inherit', fontSize: 13, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 8, padding: '5px 8px', outline: 'none', width: '100%', marginTop: 1 }
+const inputStyle: React.CSSProperties = { fontFamily: 'inherit', fontSize: 13, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 8, padding: '5px 8px', outline: 'none', width: '100%', boxSizing: 'border-box', marginTop: 1 }
 const warningBox: React.CSSProperties = { marginTop: 5, fontSize: 11, color: '#f59e0b', lineHeight: 1.5, padding: '6px 8px', background: 'rgba(245,158,11,.06)', borderRadius: 6 }
 const chartTitle: React.CSSProperties = { fontSize: 11, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', fontWeight: 500 }
 const tdStyle: React.CSSProperties = { padding: '8px 10px', borderBottom: '1px solid var(--b)' }

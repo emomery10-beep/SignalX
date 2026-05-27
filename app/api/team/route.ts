@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { sendEmail, teamInviteEmail } from '@/lib/email'
 import { randomBytes } from 'crypto'
 
@@ -54,7 +54,9 @@ export async function POST(request: NextRequest) {
   const invite_token = randomBytes(32).toString('hex')
   const invite_expires_at = new Date(Date.now() + 7 * 86400000).toISOString()
 
-  const { data: member, error } = await supabase
+  // Use service role to bypass RLS (invited user has no user_id yet)
+  const admin = createServiceClient()
+  const { data: member, error } = await admin
     .from('team_members')
     .upsert({
       org_id: user.id,

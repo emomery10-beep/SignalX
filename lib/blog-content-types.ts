@@ -12,4 +12,7 @@ export interface BlogPost {
   readTime: number
   tldr: string
   sections: { heading: string; level: 2 | 3; body: string }[]
+  paa?: { q: string; a: string }[]
+  cta?: { heading: string; body: string }
+  relatedSlugs?: string[]
 }
