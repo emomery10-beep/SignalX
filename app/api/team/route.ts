@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
   const { data: member, error } = await admin
     .from('team_members')
     .upsert({
+      team_id: user.id,
       org_id: user.id,
       email,
       role,
