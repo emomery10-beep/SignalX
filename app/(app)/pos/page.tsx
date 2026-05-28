@@ -76,7 +76,7 @@ interface Location {
 }
 type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'branches' | 'audit' | 'map' | 'operations' | 'captures' | 'approvals' | 'intelligence' | 'logistics' | 'customers' | 'promotions' | 'loyalty' | 'returns' | 'reports' | 'purchase_orders' | 'gift_cards' | 'integrations'
 type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
-type FilterModalType = { type: 'sales' | 'refunds' | 'low_stock' | 'cashier_detail' | 'gross_profit' | 'margin' | 'avg_sale' | 'staff_overview' | 'stock_item'; title: string; cashier_id?: string; item_id?: string } | null
+type FilterModalType = { type: 'sales' | 'refunds' | 'low_stock' | 'cashier_detail' | 'gross_profit' | 'margin' | 'avg_sale' | 'staff_overview' | 'stock_item' | 'payment_breakdown' | 'branch_detail' | 'customer_history' | 'product_history'; title: string; cashier_id?: string; item_id?: string; payment_type?: string; branch_id?: string; customer_phone?: string; product_name?: string } | null
 type TxDetailType = Transaction | null
 
 const SECTOR_BADGE_COLOR: Record<string, string> = { restaurant: '#d08a59', repair: '#6366f1', salon: '#ec4899', retail: '#22c55e', logistics: '#0891b2' }
@@ -3179,18 +3179,19 @@ export default function POSPage() {
               <span style={{ fontSize: 11, fontWeight: 700, color: statusColor, background: statusColor + '14', padding: '4px 10px', borderRadius: 9999, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{statusLabel === 'completed' ? '✓ Completed' : statusLabel}</span>
             </div>
 
-            {/* Info grid */}
+            {/* Info grid — clickable for drill-downs */}
             <div style={{ display: 'grid', gridTemplateColumns: locName ? '1fr 1fr 1fr' : '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Cashier<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{txDetail.cashier?.name || 'Owner'}{txDetail.cashier?.role ? <span style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 400, marginLeft: 6, textTransform: 'capitalize' }}>{txDetail.cashier.role}</span> : null}</div></div>
-              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Payment<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{paymentIcon} <span style={{ textTransform: 'capitalize' }}>{txDetail.payment_type}</span></div></div>
-              {locName && <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Branch<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>📍 {locName}</div></div>}
+              <div onClick={() => { setTxDetail(null); setFilterModal({ type: 'cashier_detail', title: `${txDetail.cashier?.name || 'Owner'}'s transactions`, cashier_id: txDetail.cashier?.name || 'Owner' }) }} style={{ fontSize: 12, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>Cashier<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{txDetail.cashier?.name || 'Owner'}{txDetail.cashier?.role ? <span style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 400, marginLeft: 6, textTransform: 'capitalize' }}>{txDetail.cashier.role}</span> : null}</div><div style={{ fontSize: 9, color: ACC, fontWeight: 600, marginTop: 3 }}>View performance →</div></div>
+              <div onClick={() => { setTxDetail(null); setFilterModal({ type: 'payment_breakdown', title: `${txDetail.payment_type} payments`, payment_type: txDetail.payment_type }) }} style={{ fontSize: 12, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>Payment<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{paymentIcon} <span style={{ textTransform: 'capitalize' }}>{txDetail.payment_type}</span></div><div style={{ fontSize: 9, color: ACC, fontWeight: 600, marginTop: 3 }}>View all {txDetail.payment_type} →</div></div>
+              {locName && <div onClick={() => { setTxDetail(null); setFilterModal({ type: 'branch_detail', title: `${locName} branch`, branch_id: txDetail.pos_location_id }) }} style={{ fontSize: 12, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>Branch<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>📍 {locName}</div><div style={{ fontSize: 9, color: ACC, fontWeight: 600, marginTop: 3 }}>View branch →</div></div>}
             </div>
 
-            {/* Customer */}
+            {/* Customer — clickable */}
             {txDetail.pos_customers?.phone && (
-              <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 12, background: 'var(--ev)', padding: '8px 12px', borderRadius: 8 }}>
+              <div onClick={() => { setTxDetail(null); setFilterModal({ type: 'customer_history', title: `${txDetail.pos_customers.name || txDetail.pos_customers.phone}'s history`, customer_phone: txDetail.pos_customers.phone }) }} style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 12, background: 'var(--ev)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', border: '1px solid var(--b)' }}>
                 👤 Customer: <span style={{ fontWeight: 600, color: 'var(--tx)' }}>{txDetail.pos_customers.name || txDetail.pos_customers.phone}</span>
                 {txDetail.pos_customers.name && txDetail.pos_customers.phone && <span style={{ marginLeft: 8, fontSize: 11 }}>({txDetail.pos_customers.phone})</span>}
+                <span style={{ fontSize: 9, color: ACC, fontWeight: 600, marginLeft: 8 }}>View history →</span>
               </div>
             )}
 
@@ -3202,9 +3203,10 @@ export default function POSPage() {
               {txItems.map((item, i) => {
                 const lineTotal = item.qty * item.unit_price
                 const lineProfit = item.cost_price ? lineTotal - item.qty * item.cost_price : null
+                const matchedInv = inventory.find(inv => inv.name === item.name)
                 return (
-                  <div key={i} style={{ display: 'grid', gridTemplateColumns: hasCostData ? '1fr 40px 65px 65px 65px' : '1fr 50px 70px 70px', padding: '10px 14px', borderTop: '1px solid var(--b)', fontSize: 13 }}>
-                    <span style={{ color: 'var(--tx)', fontWeight: 500 }}>{item.name}</span>
+                  <div key={i} onClick={() => { if (matchedInv) { setTxDetail(null); setFilterModal({ type: 'product_history', title: item.name, product_name: item.name, item_id: matchedInv.id }) } }} style={{ display: 'grid', gridTemplateColumns: hasCostData ? '1fr 40px 65px 65px 65px' : '1fr 50px 70px 70px', padding: '10px 14px', borderTop: '1px solid var(--b)', fontSize: 13, cursor: matchedInv ? 'pointer' : 'default', transition: 'background .15s' }} onMouseEnter={e => { if (matchedInv) (e.currentTarget as HTMLElement).style.background = 'var(--ev)' }} onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
+                    <span style={{ color: matchedInv ? ACC : 'var(--tx)', fontWeight: 500, textDecoration: matchedInv ? 'underline' : 'none', textDecorationColor: matchedInv ? ACC + '40' : undefined, textUnderlineOffset: '2px' }}>{item.name}</span>
                     <span style={{ textAlign: 'center', color: 'var(--tx3)' }}>{item.qty}</span>
                     <span style={{ textAlign: 'right', color: 'var(--tx3)' }}>{fmt(currencySymbol, item.unit_price)}</span>
                     {hasCostData && <span style={{ textAlign: 'right', fontSize: 12, color: lineProfit !== null ? (lineProfit >= 0 ? GREEN : RED) : 'var(--tx3)' }}>{lineProfit !== null ? fmt(currencySymbol, lineProfit) : '—'}</span>}
@@ -3243,30 +3245,50 @@ export default function POSPage() {
               )}
             </div>
 
-            {/* Profit summary — owner/manager only */}
+            {/* Profit summary — clickable for deep-dives */}
             {hasCostData && (
               <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-                <div style={{ flex: 1, background: totalProfit >= 0 ? 'rgba(34,197,94,.06)' : 'rgba(220,38,38,.06)', border: `1px solid ${totalProfit >= 0 ? 'rgba(34,197,94,.2)' : 'rgba(220,38,38,.2)'}`, borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
+                <div onClick={() => { setTxDetail(null); setFilterModal({ type: 'gross_profit', title: 'Gross Profit Analysis' }) }} style={{ flex: 1, background: totalProfit >= 0 ? 'rgba(34,197,94,.06)' : 'rgba(220,38,38,.06)', border: `1px solid ${totalProfit >= 0 ? 'rgba(34,197,94,.2)' : 'rgba(220,38,38,.2)'}`, borderRadius: 8, padding: '8px 12px', textAlign: 'center', cursor: 'pointer', transition: 'transform .1s' }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)'} onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = ''}>
                   <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Profit</div>
                   <div style={{ fontSize: 15, fontWeight: 800, color: totalProfit >= 0 ? GREEN : RED, marginTop: 2 }}>{fmt(currencySymbol, totalProfit)}</div>
+                  <div style={{ fontSize: 8, color: ACC, fontWeight: 600, marginTop: 2 }}>Analyse →</div>
                 </div>
-                <div style={{ flex: 1, background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
+                <div onClick={() => { setTxDetail(null); setFilterModal({ type: 'margin', title: 'Margin Breakdown' }) }} style={{ flex: 1, background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 8, padding: '8px 12px', textAlign: 'center', cursor: 'pointer', transition: 'transform .1s' }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)'} onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = ''}>
                   <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Margin</div>
                   <div style={{ fontSize: 15, fontWeight: 800, color: marginPct >= 30 ? GREEN : marginPct >= 15 ? '#f59e0b' : RED, marginTop: 2 }}>{marginPct.toFixed(1)}%</div>
+                  <div style={{ fontSize: 8, color: ACC, fontWeight: 600, marginTop: 2 }}>Breakdown →</div>
                 </div>
-                <div style={{ flex: 1, background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
+                <div onClick={() => { setTxDetail(null); setFilterModal({ type: 'gross_profit', title: 'Cost Analysis' }) }} style={{ flex: 1, background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 8, padding: '8px 12px', textAlign: 'center', cursor: 'pointer', transition: 'transform .1s' }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)'} onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = ''}>
                   <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Cost</div>
                   <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--tx)', marginTop: 2 }}>{fmt(currencySymbol, totalCost)}</div>
+                  <div style={{ fontSize: 8, color: ACC, fontWeight: 600, marginTop: 2 }}>Analyse →</div>
                 </div>
               </div>
             )}
 
-            {/* Notes */}
-            {txDetail.notes && (
-              <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 12, padding: '8px 12px', background: 'rgba(251,191,36,.06)', border: '1px solid rgba(251,191,36,.15)', borderRadius: 8 }}>
-                📝 {txDetail.notes}
-              </div>
-            )}
+            {/* Geo location — clickable to open map */}
+            {txDetail.notes && (() => {
+              const geoMatch = txDetail.notes.match(/\|__geo:([-\d.]+),([-\d.]+)/)
+              const cleanNotes = txDetail.notes.replace(/\s*\|__geo:[^\s|]+/, '').trim()
+              return (
+                <>
+                  {geoMatch && (
+                    <div onClick={() => window.open(`https://www.google.com/maps?q=${geoMatch[1]},${geoMatch[2]}`, '_blank')} style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 8, padding: '8px 12px', background: 'rgba(99,102,241,.06)', border: '1px solid rgba(99,102,241,.15)', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 16 }}>📍</span>
+                      <div>
+                        <div style={{ fontSize: 11, color: 'var(--tx2)', fontWeight: 500 }}>Sale location: {geoMatch[1]}, {geoMatch[2]}</div>
+                        <div style={{ fontSize: 9, color: ACC, fontWeight: 600, marginTop: 1 }}>Open in Google Maps →</div>
+                      </div>
+                    </div>
+                  )}
+                  {cleanNotes && (
+                    <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 12, padding: '8px 12px', background: 'rgba(251,191,36,.06)', border: '1px solid rgba(251,191,36,.15)', borderRadius: 8 }}>
+                      📝 {cleanNotes}
+                    </div>
+                  )}
+                </>
+              )
+            })()}
 
             {/* Actions */}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -3649,9 +3671,199 @@ export default function POSPage() {
               )
             })()}
 
+            {/* Payment breakdown deep-dive */}
+            {filterModal.type === 'payment_breakdown' && (() => {
+              const payTypes = ['cash', 'card', 'mobile']
+              const payData = payTypes.map(pt => {
+                const txs = completedTx.filter(t => t.payment_type === pt)
+                return { type: pt, count: txs.length, revenue: txs.reduce((s, t) => s + t.total, 0), icon: pt === 'cash' ? '💵' : pt === 'card' ? '💳' : '📱' }
+              }).filter(p => p.count > 0)
+              const totalRev = payData.reduce((s, p) => s + p.revenue, 0)
+              const highlighted = filterModal.payment_type || ''
+              const highlightedTx = completedTx.filter(t => t.payment_type === highlighted)
+              return (
+                <div>
+                  <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+                    {payData.map(p => (
+                      <div key={p.type} style={{ flex: 1, ...cardStyle, border: p.type === highlighted ? `2px solid ${ACC}` : '1px solid var(--b)', textAlign: 'center' }}>
+                        <div style={{ fontSize: 20 }}>{p.icon}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'capitalize', color: 'var(--tx)', marginTop: 4 }}>{p.type}</div>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: ACC }}>{p.count}</div>
+                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{fmt(currencySymbol, p.revenue)}</div>
+                        <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{totalRev > 0 ? (p.revenue / totalRev * 100).toFixed(0) : 0}% of revenue</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{highlighted} transactions today</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 300, overflowY: 'auto' }}>
+                    {highlightedTx.map(tx => (
+                      <div key={tx.id} onClick={() => { setFilterModal(null); setTxDetail(tx) }} style={{ ...cardStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || 'Sale'}</div>
+                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tx.cashier?.name || 'Owner'} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
+                        </div>
+                        <div style={{ fontSize: 15, fontWeight: 700 }}>{fmt(currencySymbol, tx.total)}</div>
+                      </div>
+                    ))}
+                    {highlightedTx.length === 0 && <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>No {highlighted} transactions today.</div>}
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* Branch detail deep-dive */}
+            {filterModal.type === 'branch_detail' && (() => {
+              const branchTx = completedTx.filter(t => t.pos_location_id === filterModal.branch_id)
+              const branchRevenue = branchTx.reduce((s, t) => s + t.total, 0)
+              const branchAvg = branchTx.length > 0 ? branchRevenue / branchTx.length : 0
+              const branchProfit = branchTx.reduce((s, t) => s + (t.pos_items || []).reduce((ps, i) => ps + (i.cost_price ? (i.unit_price - i.cost_price) * i.qty : 0), 0), 0)
+              const branchHourly = Array.from({ length: 24 }, (_, i) => ({ label: `${i}:00`, value: 0 }))
+              branchTx.forEach(t => { const h = new Date(t.created_at).getHours(); branchHourly[h].value += t.total })
+              const activeHours = branchHourly.filter(h => h.value > 0)
+              const payBreakdown = ['cash', 'card', 'mobile'].map(pt => ({ type: pt, count: branchTx.filter(t => t.payment_type === pt).length })).filter(p => p.count > 0)
+              return (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Sales</div><div style={{ fontSize: 20, fontWeight: 800, color: ACC }}>{branchTx.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Revenue</div><div style={{ fontSize: 20, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, branchRevenue)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Avg sale</div><div style={{ fontSize: 20, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, branchAvg)}</div></div>
+                  </div>
+                  {branchProfit > 0 && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+                      <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Profit</div><div style={{ fontSize: 16, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, branchProfit)}</div></div>
+                      <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Payment mix</div><div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', marginTop: 4 }}>{payBreakdown.map(p => `${p.type === 'cash' ? '💵' : p.type === 'card' ? '💳' : '📱'} ${p.count}`).join('  ')}</div></div>
+                    </div>
+                  )}
+                  {activeHours.length > 0 && (
+                    <div style={{ ...cardStyle, marginBottom: 16 }}>
+                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>Revenue by hour</div>
+                      <MiniBarChart data={activeHours} color={ACC} height={60} />
+                    </div>
+                  )}
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Transactions</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 250, overflowY: 'auto' }}>
+                    {branchTx.map(tx => (
+                      <div key={tx.id} onClick={() => { setFilterModal(null); setTxDetail(tx) }} style={{ ...cardStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || 'Sale'}</div>
+                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tx.cashier?.name || 'Owner'} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
+                        </div>
+                        <div style={{ fontSize: 15, fontWeight: 700 }}>{fmt(currencySymbol, tx.total)}</div>
+                      </div>
+                    ))}
+                    {branchTx.length === 0 && <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>No sales at this branch today.</div>}
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* Customer history deep-dive */}
+            {filterModal.type === 'customer_history' && (() => {
+              const custPhone = filterModal.customer_phone
+              const custTx = completedTx.filter(t => t.pos_customers?.phone === custPhone)
+              const custRevenue = custTx.reduce((s, t) => s + t.total, 0)
+              const custAvg = custTx.length > 0 ? custRevenue / custTx.length : 0
+              const custItems = custTx.flatMap(t => (t.pos_items || []).map(i => i.name))
+              const favItems: Record<string, number> = {}
+              custItems.forEach(n => { favItems[n] = (favItems[n] || 0) + 1 })
+              const topItems = Object.entries(favItems).sort((a, b) => b[1] - a[1]).slice(0, 5)
+              return (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Visits today</div><div style={{ fontSize: 20, fontWeight: 800, color: ACC }}>{custTx.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Total spent</div><div style={{ fontSize: 20, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, custRevenue)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Avg order</div><div style={{ fontSize: 20, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, custAvg)}</div></div>
+                  </div>
+                  {topItems.length > 0 && (
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Favourite items</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {topItems.map(([name, count]) => (
+                          <span key={name} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 9999, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, color: ACC, fontWeight: 600 }}>{name} ×{count}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Orders</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 250, overflowY: 'auto' }}>
+                    {custTx.map(tx => (
+                      <div key={tx.id} onClick={() => { setFilterModal(null); setTxDetail(tx) }} style={{ ...cardStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || 'Sale'}</div>
+                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · {tx.payment_type}</div>
+                        </div>
+                        <div style={{ fontSize: 15, fontWeight: 700 }}>{fmt(currencySymbol, tx.total)}</div>
+                      </div>
+                    ))}
+                    {custTx.length === 0 && <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>No transactions found for this customer today.</div>}
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* Product history deep-dive */}
+            {filterModal.type === 'product_history' && (() => {
+              const prodName = filterModal.product_name
+              const item = inventory.find(i => i.id === filterModal.item_id || i.name === prodName)
+              const prodTx = completedTx.filter(t => (t.pos_items || []).some(p => p.name === prodName))
+              const totalQty = prodTx.flatMap(t => (t.pos_items || []).filter(p => p.name === prodName)).reduce((s, p) => s + p.qty, 0)
+              const totalRev = prodTx.flatMap(t => (t.pos_items || []).filter(p => p.name === prodName)).reduce((s, p) => s + p.unit_price * p.qty, 0)
+              const totalCostP = prodTx.flatMap(t => (t.pos_items || []).filter(p => p.name === prodName)).reduce((s, p) => s + (p.cost_price || 0) * p.qty, 0)
+              const prodProfit = totalRev - totalCostP
+              const prodMargin = totalRev > 0 ? (prodProfit / totalRev * 100) : 0
+              const hourly = Array.from({ length: 24 }, (_, i) => ({ label: `${i}:00`, value: 0 }))
+              prodTx.forEach(t => { const h = new Date(t.created_at).getHours(); const qty = (t.pos_items || []).filter(p => p.name === prodName).reduce((s, p) => s + p.qty, 0); hourly[h].value += qty })
+              const activeHours = hourly.filter(h => h.value > 0)
+              return (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Units sold</div><div style={{ fontSize: 20, fontWeight: 800, color: ACC }}>{totalQty}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Revenue</div><div style={{ fontSize: 20, fontWeight: 800, color: GREEN }}>{fmt(currencySymbol, totalRev)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Transactions</div><div style={{ fontSize: 20, fontWeight: 800, color: 'var(--tx)' }}>{prodTx.length}</div></div>
+                  </div>
+                  {totalCostP > 0 && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
+                      <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Profit</div><div style={{ fontSize: 16, fontWeight: 800, color: prodProfit >= 0 ? GREEN : RED }}>{fmt(currencySymbol, prodProfit)}</div></div>
+                      <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Margin</div><div style={{ fontSize: 16, fontWeight: 800, color: prodMargin >= 30 ? GREEN : prodMargin >= 15 ? AMBER : RED }}>{prodMargin.toFixed(0)}%</div></div>
+                      <div style={cardStyle}><div style={{ fontSize: 10, color: 'var(--tx3)' }}>Stock left</div><div style={{ fontSize: 16, fontWeight: 800, color: item && item.stock_qty <= (item.low_stock_threshold || 5) ? RED : 'var(--tx)' }}>{item?.stock_qty ?? '—'}</div></div>
+                    </div>
+                  )}
+                  {item && (
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+                      <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, background: 'var(--ev)', color: 'var(--tx2)' }}>Price: {fmt(currencySymbol, item.sale_price)}</span>
+                      {item.cost_price ? <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, background: 'var(--ev)', color: 'var(--tx2)' }}>Cost: {fmt(currencySymbol, item.cost_price)}</span> : null}
+                      {item.category ? <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, background: 'var(--ev)', color: 'var(--tx2)' }}>{item.category}</span> : null}
+                      {item.brand ? <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, background: 'var(--ev)', color: 'var(--tx2)' }}>{item.brand}</span> : null}
+                      {item.supplier ? <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, background: 'var(--ev)', color: 'var(--tx2)' }}>{item.supplier}</span> : null}
+                    </div>
+                  )}
+                  {activeHours.length > 0 && (
+                    <div style={{ ...cardStyle, marginBottom: 16 }}>
+                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>Units sold by hour</div>
+                      <MiniBarChart data={activeHours} color={ACC} height={60} />
+                    </div>
+                  )}
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Transactions containing this product</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 250, overflowY: 'auto' }}>
+                    {prodTx.map(tx => (
+                      <div key={tx.id} onClick={() => { setFilterModal(null); setTxDetail(tx) }} style={{ ...cardStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || 'Sale'}</div>
+                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tx.cashier?.name || 'Owner'} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
+                        </div>
+                        <div style={{ fontSize: 15, fontWeight: 700 }}>{fmt(currencySymbol, tx.total)}</div>
+                      </div>
+                    ))}
+                    {prodTx.length === 0 && <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>No sales of this product today.</div>}
+                  </div>
+                </div>
+              )
+            })()}
+
             <button onClick={() => setFilterModal(null)} style={{ ...btnSecondary, marginTop: 16 }}>Close</button>
           </div>
         </>
+
       )}
 
       {/* Refund modal */}
