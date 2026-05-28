@@ -113,6 +113,7 @@ export default function POSPage() {
   // Modals
   const [filterModal, setFilterModal] = useState<FilterModalType>(null)
   const [txDetail, setTxDetail] = useState<TxDetailType>(null)
+  const [lastTxDetail, setLastTxDetail] = useState<TxDetailType>(null)
   const [refundTx, setRefundTx] = useState<Transaction | null>(null)
   const [refundReason, setRefundReason] = useState('')
   const [refunding, setRefunding] = useState(false)
@@ -3181,14 +3182,14 @@ export default function POSPage() {
 
             {/* Info grid — clickable for drill-downs */}
             <div style={{ display: 'grid', gridTemplateColumns: locName ? '1fr 1fr 1fr' : '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              <div onClick={() => { setTxDetail(null); setFilterModal({ type: 'cashier_detail', title: `${txDetail.cashier?.name || 'Owner'}'s transactions`, cashier_id: txDetail.cashier?.name || 'Owner' }) }} style={{ fontSize: 12, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>Cashier<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{txDetail.cashier?.name || 'Owner'}{txDetail.cashier?.role ? <span style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 400, marginLeft: 6, textTransform: 'capitalize' }}>{txDetail.cashier.role}</span> : null}</div><div style={{ fontSize: 9, color: ACC, fontWeight: 600, marginTop: 3 }}>View performance →</div></div>
-              <div onClick={() => { setTxDetail(null); setFilterModal({ type: 'payment_breakdown', title: `${txDetail.payment_type} payments`, payment_type: txDetail.payment_type }) }} style={{ fontSize: 12, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>Payment<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{paymentIcon} <span style={{ textTransform: 'capitalize' }}>{txDetail.payment_type}</span></div><div style={{ fontSize: 9, color: ACC, fontWeight: 600, marginTop: 3 }}>View all {txDetail.payment_type} →</div></div>
-              {locName && <div onClick={() => { setTxDetail(null); setFilterModal({ type: 'branch_detail', title: `${locName} branch`, branch_id: txDetail.pos_location_id }) }} style={{ fontSize: 12, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>Branch<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>📍 {locName}</div><div style={{ fontSize: 9, color: ACC, fontWeight: 600, marginTop: 3 }}>View branch →</div></div>}
+              <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'cashier_detail', title: `${txDetail.cashier?.name || 'Owner'}'s transactions`, cashier_id: txDetail.cashier?.name || 'Owner' }) }} style={{ fontSize: 12, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>Cashier<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{txDetail.cashier?.name || 'Owner'}{txDetail.cashier?.role ? <span style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 400, marginLeft: 6, textTransform: 'capitalize' }}>{txDetail.cashier.role}</span> : null}</div><div style={{ fontSize: 9, color: ACC, fontWeight: 600, marginTop: 3 }}>View performance →</div></div>
+              <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'payment_breakdown', title: `${txDetail.payment_type} payments`, payment_type: txDetail.payment_type }) }} style={{ fontSize: 12, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>Payment<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{paymentIcon} <span style={{ textTransform: 'capitalize' }}>{txDetail.payment_type}</span></div><div style={{ fontSize: 9, color: ACC, fontWeight: 600, marginTop: 3 }}>View all {txDetail.payment_type} →</div></div>
+              {locName && <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'branch_detail', title: `${locName} branch`, branch_id: txDetail.pos_location_id }) }} style={{ fontSize: 12, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>Branch<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>📍 {locName}</div><div style={{ fontSize: 9, color: ACC, fontWeight: 600, marginTop: 3 }}>View branch →</div></div>}
             </div>
 
             {/* Customer — clickable */}
             {txDetail.pos_customers?.phone && (
-              <div onClick={() => { setTxDetail(null); setFilterModal({ type: 'customer_history', title: `${txDetail.pos_customers.name || txDetail.pos_customers.phone}'s history`, customer_phone: txDetail.pos_customers.phone }) }} style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 12, background: 'var(--ev)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', border: '1px solid var(--b)' }}>
+              <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'customer_history', title: `${txDetail.pos_customers.name || txDetail.pos_customers.phone}'s history`, customer_phone: txDetail.pos_customers.phone }) }} style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 12, background: 'var(--ev)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', border: '1px solid var(--b)' }}>
                 👤 Customer: <span style={{ fontWeight: 600, color: 'var(--tx)' }}>{txDetail.pos_customers.name || txDetail.pos_customers.phone}</span>
                 {txDetail.pos_customers.name && txDetail.pos_customers.phone && <span style={{ marginLeft: 8, fontSize: 11 }}>({txDetail.pos_customers.phone})</span>}
                 <span style={{ fontSize: 9, color: ACC, fontWeight: 600, marginLeft: 8 }}>View history →</span>
@@ -3205,7 +3206,7 @@ export default function POSPage() {
                 const lineProfit = item.cost_price ? lineTotal - item.qty * item.cost_price : null
                 const matchedInv = inventory.find(inv => inv.name === item.name)
                 return (
-                  <div key={i} onClick={() => { if (matchedInv) { setTxDetail(null); setFilterModal({ type: 'product_history', title: item.name, product_name: item.name, item_id: matchedInv.id }) } }} style={{ display: 'grid', gridTemplateColumns: hasCostData ? '1fr 40px 65px 65px 65px' : '1fr 50px 70px 70px', padding: '10px 14px', borderTop: '1px solid var(--b)', fontSize: 13, cursor: matchedInv ? 'pointer' : 'default', transition: 'background .15s' }} onMouseEnter={e => { if (matchedInv) (e.currentTarget as HTMLElement).style.background = 'var(--ev)' }} onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
+                  <div key={i} onClick={() => { if (matchedInv) { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'product_history', title: item.name, product_name: item.name, item_id: matchedInv.id }) } }} style={{ display: 'grid', gridTemplateColumns: hasCostData ? '1fr 40px 65px 65px 65px' : '1fr 50px 70px 70px', padding: '10px 14px', borderTop: '1px solid var(--b)', fontSize: 13, cursor: matchedInv ? 'pointer' : 'default', transition: 'background .15s' }} onMouseEnter={e => { if (matchedInv) (e.currentTarget as HTMLElement).style.background = 'var(--ev)' }} onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = ''}>
                     <span style={{ color: matchedInv ? ACC : 'var(--tx)', fontWeight: 500, textDecoration: matchedInv ? 'underline' : 'none', textDecorationColor: matchedInv ? ACC + '40' : undefined, textUnderlineOffset: '2px' }}>{item.name}</span>
                     <span style={{ textAlign: 'center', color: 'var(--tx3)' }}>{item.qty}</span>
                     <span style={{ textAlign: 'right', color: 'var(--tx3)' }}>{fmt(currencySymbol, item.unit_price)}</span>
@@ -3248,17 +3249,17 @@ export default function POSPage() {
             {/* Profit summary — clickable for deep-dives */}
             {hasCostData && (
               <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-                <div onClick={() => { setTxDetail(null); setFilterModal({ type: 'gross_profit', title: 'Gross Profit Analysis' }) }} style={{ flex: 1, background: totalProfit >= 0 ? 'rgba(34,197,94,.06)' : 'rgba(220,38,38,.06)', border: `1px solid ${totalProfit >= 0 ? 'rgba(34,197,94,.2)' : 'rgba(220,38,38,.2)'}`, borderRadius: 8, padding: '8px 12px', textAlign: 'center', cursor: 'pointer', transition: 'transform .1s' }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)'} onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = ''}>
+                <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'gross_profit', title: 'Gross Profit Analysis' }) }} style={{ flex: 1, background: totalProfit >= 0 ? 'rgba(34,197,94,.06)' : 'rgba(220,38,38,.06)', border: `1px solid ${totalProfit >= 0 ? 'rgba(34,197,94,.2)' : 'rgba(220,38,38,.2)'}`, borderRadius: 8, padding: '8px 12px', textAlign: 'center', cursor: 'pointer', transition: 'transform .1s' }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)'} onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = ''}>
                   <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Profit</div>
                   <div style={{ fontSize: 15, fontWeight: 800, color: totalProfit >= 0 ? GREEN : RED, marginTop: 2 }}>{fmt(currencySymbol, totalProfit)}</div>
                   <div style={{ fontSize: 8, color: ACC, fontWeight: 600, marginTop: 2 }}>Analyse →</div>
                 </div>
-                <div onClick={() => { setTxDetail(null); setFilterModal({ type: 'margin', title: 'Margin Breakdown' }) }} style={{ flex: 1, background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 8, padding: '8px 12px', textAlign: 'center', cursor: 'pointer', transition: 'transform .1s' }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)'} onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = ''}>
+                <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'margin', title: 'Margin Breakdown' }) }} style={{ flex: 1, background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 8, padding: '8px 12px', textAlign: 'center', cursor: 'pointer', transition: 'transform .1s' }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)'} onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = ''}>
                   <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Margin</div>
                   <div style={{ fontSize: 15, fontWeight: 800, color: marginPct >= 30 ? GREEN : marginPct >= 15 ? '#f59e0b' : RED, marginTop: 2 }}>{marginPct.toFixed(1)}%</div>
                   <div style={{ fontSize: 8, color: ACC, fontWeight: 600, marginTop: 2 }}>Breakdown →</div>
                 </div>
-                <div onClick={() => { setTxDetail(null); setFilterModal({ type: 'gross_profit', title: 'Cost Analysis' }) }} style={{ flex: 1, background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 8, padding: '8px 12px', textAlign: 'center', cursor: 'pointer', transition: 'transform .1s' }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)'} onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = ''}>
+                <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'gross_profit', title: 'Cost Analysis' }) }} style={{ flex: 1, background: 'var(--ev)', border: '1px solid var(--b)', borderRadius: 8, padding: '8px 12px', textAlign: 'center', cursor: 'pointer', transition: 'transform .1s' }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)'} onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = ''}>
                   <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700, letterSpacing: 1 }}>Cost</div>
                   <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--tx)', marginTop: 2 }}>{fmt(currencySymbol, totalCost)}</div>
                   <div style={{ fontSize: 8, color: ACC, fontWeight: 600, marginTop: 2 }}>Analyse →</div>
@@ -3860,7 +3861,12 @@ export default function POSPage() {
               )
             })()}
 
-            <button onClick={() => setFilterModal(null)} style={{ ...btnSecondary, marginTop: 16 }}>Close</button>
+            <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+              {lastTxDetail && (
+                <button onClick={() => { setFilterModal(null); setTxDetail(lastTxDetail); setLastTxDetail(null) }} style={{ padding: '10px 16px', borderRadius: 8, border: `1px solid ${ACC}30`, background: `${ACC}08`, color: ACC, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>← Back to transaction</button>
+              )}
+              <button onClick={() => { setFilterModal(null); setLastTxDetail(null) }} style={btnSecondary}>Close</button>
+            </div>
           </div>
         </>
 
