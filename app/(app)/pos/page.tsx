@@ -139,7 +139,7 @@ export default function POSPage() {
 
   // Inventory
   const [showAddProduct, setShowAddProduct] = useState(false)
-  const [newProduct, setNewProduct] = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '', sector: '', expiry_date: '', batch_number: '', supplier: '', brand: '' })
+  const [newProduct, setNewProduct] = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '', sector: '', expiry_date: '', batch_number: '', supplier: '', brand: '', unit: 'pcs' })
   const [addingProduct, setAddingProduct] = useState(false)
   const [invSearch, setInvSearch] = useState('')
   const [invCategory, setInvCategory] = useState('all')
@@ -147,7 +147,7 @@ export default function POSPage() {
   const [invStockFilter, setInvStockFilter] = useState<'all' | 'low' | 'out' | 'expiring'>('all')
   const [bulkTagging, setBulkTagging] = useState(false)
   const [editingProduct, setEditingProduct] = useState<InventoryItem | null>(null)
-  const [editProduct, setEditProduct] = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '', category: '', sector: '', expiry_date: '', batch_number: '', supplier: '', brand: '' })
+  const [editProduct, setEditProduct] = useState({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '', category: '', sector: '', expiry_date: '', batch_number: '', supplier: '', brand: '', unit: 'pcs' })
   const [editingProductSubmitting, setEditingProductSubmitting] = useState(false)
   const [restockId, setRestockId] = useState<string | null>(null)
   const [restockQty, setRestockQty] = useState('')
@@ -684,6 +684,7 @@ export default function POSPage() {
         batch_number:        p.batch_number || '',
         supplier:            p.supplier    || '',
         brand:               p.brand       || '',
+        unit:                p.unit        || 'pcs',
       })
       setShowAddProduct(true)
       setShowScanModal(false)
@@ -700,9 +701,9 @@ export default function POSPage() {
     if (!newProduct.name || !newProduct.sale_price) return
     setAddingProduct(true)
     try {
-      const res = await fetch('/api/pos/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newProduct.name, sale_price: parseFloat(newProduct.sale_price), cost_price: parseFloat(newProduct.cost_price || '0'), stock_qty: parseInt(newProduct.stock_qty || '0'), low_stock_threshold: parseInt(newProduct.low_stock_threshold || '5'), category: newProduct.category, sku: newProduct.sku, sector: newProduct.sector || (selectedSector !== 'all' ? selectedSector : null), expiry_date: newProduct.expiry_date || null, batch_number: newProduct.batch_number || null, supplier: newProduct.supplier || null, brand: newProduct.brand || null }) })
+      const res = await fetch('/api/pos/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newProduct.name, sale_price: parseFloat(newProduct.sale_price), cost_price: parseFloat(newProduct.cost_price || '0'), stock_qty: parseInt(newProduct.stock_qty || '0'), low_stock_threshold: parseInt(newProduct.low_stock_threshold || '5'), category: newProduct.category, sku: newProduct.sku, sector: newProduct.sector || (selectedSector !== 'all' ? selectedSector : null), expiry_date: newProduct.expiry_date || null, batch_number: newProduct.batch_number || null, supplier: newProduct.supplier || null, brand: newProduct.brand || null, unit: newProduct.unit || 'pcs' }) })
       const data = await res.json()
-      if (data.product) { setInventory(prev => [...prev, data.product]); setNewProduct({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '', sector: '', expiry_date: '', batch_number: '', supplier: '', brand: '' }); setShowAddProduct(false); notify(`${data.product.name} added`) }
+      if (data.product) { setInventory(prev => [...prev, data.product]); setNewProduct({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '', sector: '', expiry_date: '', batch_number: '', supplier: '', brand: '', unit: 'pcs' }); setShowAddProduct(false); notify(`${data.product.name} added`) }
     } catch { notify('Failed to add product', false) }
     setAddingProduct(false)
   }
@@ -723,6 +724,7 @@ export default function POSPage() {
       updates.supplier = editProduct.supplier || null
       updates.brand = editProduct.brand || null
       updates.category = editProduct.category || null
+      updates.unit = editProduct.unit || 'pcs'
       const res = await fetch('/api/pos/inventory', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingProduct.id, ...updates }) })
       const data = await res.json()
       if (data.product) { setInventory(prev => prev.map(i => i.id === editingProduct.id ? data.product : i)); setEditingProduct(null); notify('Product updated') }
@@ -2096,6 +2098,20 @@ export default function POSPage() {
                   <input placeholder="Cost price (optional)" type="number" value={newProduct.cost_price} onChange={e => setNewProduct(p => ({ ...p, cost_price: e.target.value }))} style={inputStyle} />
                   <input placeholder="Starting stock qty" type="number" value={newProduct.stock_qty} onChange={e => setNewProduct(p => ({ ...p, stock_qty: e.target.value }))} style={inputStyle} />
                   <input placeholder="Low stock alert at" type="number" value={newProduct.low_stock_threshold} onChange={e => setNewProduct(p => ({ ...p, low_stock_threshold: e.target.value }))} style={inputStyle} />
+                  <select value={newProduct.unit} onChange={e => setNewProduct(p => ({ ...p, unit: e.target.value }))} style={inputStyle}>
+                    <option value="pcs">Pieces (pcs)</option>
+                    <option value="kg">Kilograms (kg)</option>
+                    <option value="g">Grams (g)</option>
+                    <option value="l">Litres (l)</option>
+                    <option value="ml">Millilitres (ml)</option>
+                    <option value="m">Metres (m)</option>
+                    <option value="box">Boxes</option>
+                    <option value="pack">Packs</option>
+                    <option value="bag">Bags</option>
+                    <option value="bottle">Bottles</option>
+                    <option value="tin">Tins</option>
+                    <option value="dozen">Dozen</option>
+                  </select>
                   <input placeholder="SKU / barcode (optional)" value={newProduct.sku} onChange={e => setNewProduct(p => ({ ...p, sku: e.target.value }))} style={inputStyle} />
                   <input placeholder="Category (e.g. Oils)" value={newProduct.category} onChange={e => setNewProduct(p => ({ ...p, category: e.target.value }))} style={inputStyle} />
                   <input placeholder="Brand" value={newProduct.brand} onChange={e => setNewProduct(p => ({ ...p, brand: e.target.value }))} style={inputStyle} />
@@ -2141,6 +2157,20 @@ export default function POSPage() {
                   <input placeholder="Cost price" type="number" value={editProduct.cost_price} onChange={e => setEditProduct(p => ({ ...p, cost_price: e.target.value }))} style={inputStyle} />
                   <input placeholder="Stock qty" type="number" value={editProduct.stock_qty} onChange={e => setEditProduct(p => ({ ...p, stock_qty: e.target.value }))} style={inputStyle} />
                   <input placeholder="Low stock threshold" type="number" value={editProduct.low_stock_threshold} onChange={e => setEditProduct(p => ({ ...p, low_stock_threshold: e.target.value }))} style={inputStyle} />
+                  <select value={editProduct.unit} onChange={e => setEditProduct(p => ({ ...p, unit: e.target.value }))} style={inputStyle}>
+                    <option value="pcs">Pieces (pcs)</option>
+                    <option value="kg">Kilograms (kg)</option>
+                    <option value="g">Grams (g)</option>
+                    <option value="l">Litres (l)</option>
+                    <option value="ml">Millilitres (ml)</option>
+                    <option value="m">Metres (m)</option>
+                    <option value="box">Boxes</option>
+                    <option value="pack">Packs</option>
+                    <option value="bag">Bags</option>
+                    <option value="bottle">Bottles</option>
+                    <option value="tin">Tins</option>
+                    <option value="dozen">Dozen</option>
+                  </select>
                   <input placeholder="Category (e.g. Oils)" value={editProduct.category} onChange={e => setEditProduct(p => ({ ...p, category: e.target.value }))} style={inputStyle} />
                   <input placeholder="Brand" value={editProduct.brand} onChange={e => setEditProduct(p => ({ ...p, brand: e.target.value }))} style={inputStyle} />
                   <input placeholder="Supplier" value={editProduct.supplier} onChange={e => setEditProduct(p => ({ ...p, supplier: e.target.value }))} style={inputStyle} />
@@ -2224,7 +2254,7 @@ export default function POSPage() {
                         )}
                       </div>
                       <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-                        <button onClick={() => { setEditingProduct(item); setEditProduct({ name: item.name, sale_price: item.sale_price.toString(), cost_price: (item.cost_price || 0).toString(), stock_qty: item.stock_qty.toString(), low_stock_threshold: item.low_stock_threshold.toString(), category: item.category || '', sector: item.sector || '', expiry_date: item.expiry_date || '', batch_number: item.batch_number || '', supplier: item.supplier || '', brand: item.brand || '' }) }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx2)' }}>Edit</button>
+                        <button onClick={() => { setEditingProduct(item); setEditProduct({ name: item.name, sale_price: item.sale_price.toString(), cost_price: (item.cost_price || 0).toString(), stock_qty: item.stock_qty.toString(), low_stock_threshold: item.low_stock_threshold.toString(), category: item.category || '', sector: item.sector || '', expiry_date: item.expiry_date || '', batch_number: item.batch_number || '', supplier: item.supplier || '', brand: item.brand || '', unit: item.unit || 'pcs' }) }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx2)' }}>Edit</button>
                         <button onClick={() => handleDeleteProduct(item)} style={{ padding: '4px 8px', borderRadius: 6, border: 'none', background: 'rgba(220,38,38,.08)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', color: RED }}>Remove</button>
                       </div>
                     </div>
