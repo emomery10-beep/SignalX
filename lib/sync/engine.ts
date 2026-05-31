@@ -9,6 +9,7 @@ import {
   type UnifiedRecord
 } from './normaliser'
 import { normaliseAmazonOrder } from './amazon-normaliser'
+import { normaliseEbayOrder } from './ebay-normaliser'
 import {
   normaliseTikTokOrders, normaliseTikTokAnalytics,
   normaliseInstagramOrders, normaliseInstagramInsights,
@@ -352,6 +353,70 @@ async function syncAmazon(
   }
 }
 
+// ── eBay sync ────────────────────────────────────────────────
+async function syncEbay(
+  source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> },
+  supabase: ReturnType<typeof createServiceClient>
+): Promise<{ records: UnifiedRecord[]; error?: string }> {
+  let { access_token, refresh_token } = source.credentials
+  if (!access_token) return { records: [], error: 'Missing eBay credentials' }
+
+  try {
+    // Fetch orders from last 30 days
+    const createdFrom = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+    let res = await fetch(
+      `https://api.ebay.com/sell/fulfillment/v1/order?filter=creationdate:[${createdFrom}..] &limit=100`,
+      { headers: { Authorization: `Bearer ${access_token}`, Accept: 'application/json' } }
+    )
+
+    // Handle token expiry — refresh and retry
+    if (res.status === 401 && refresh_token) {
+      const newToken = await refreshEbayToken(String(refresh_token))
+      if (newToken) {
+        access_token = newToken
+        await supabase.from('connected_sources').update({
+          credentials: encryptCredentials({ ...source.credentials, access_token })
+        }).eq('id', source.id)
+        res = await fetch(
+          `https://api.ebay.com/sell/fulfillment/v1/order?filter=creationdate:[${createdFrom}..] &limit=100`,
+          { headers: { Authorization: `Bearer ${access_token}`, Accept: 'application/json' } }
+        )
+      }
+    }
+
+    if (!res.ok) throw new Error(`eBay API error: ${res.status}`)
+    const data = await res.json()
+    const orders = data?.orders || []
+    const records = (orders as Record<string, unknown>[]).flatMap(normaliseEbayOrder)
+    return { records }
+  } catch (e: unknown) {
+    return { records: [], error: e instanceof Error ? e.message : 'eBay sync failed' }
+  }
+}
+
+async function refreshEbayToken(refreshToken: string): Promise<string | null> {
+  try {
+    const credentials = Buffer.from(
+      `${process.env.EBAY_CLIENT_ID}:${process.env.EBAY_CLIENT_SECRET}`
+    ).toString('base64')
+    const res = await fetch('https://api.ebay.com/identity/v1/oauth2/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Basic ${credentials}`,
+      },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        scope: 'https://api.ebay.com/oauth/api_scope https://api.ebay.com/oauth/api_scope/sell.fulfillment https://api.ebay.com/oauth/api_scope/sell.inventory https://api.ebay.com/oauth/api_scope/sell.account https://api.ebay.com/oauth/api_scope/sell.finances https://api.ebay.com/oauth/api_scope/sell.analytics.readonly',
+      }),
+    })
+    if (!res.ok) return null
+    const { access_token } = await res.json()
+    return access_token
+  } catch { return null }
+}
+
 // ── Google Sheets sync with token refresh ────────────────────
 async function syncGoogleSheetsWithRefresh(
   source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> },
@@ -639,6 +704,9 @@ export async function runSync(userId?: string): Promise<SyncResult[]> {
         records = r.records; syncError = r.error
       } else if (source.source_type === 'amazon_fba') {
         const r = await syncAmazon(decryptedSource, supabase)
+        records = r.records; syncError = r.error
+      } else if (source.source_type === 'ebay') {
+        const r = await syncEbay(decryptedSource, supabase)
         records = r.records; syncError = r.error
       } else if (source.source_type === 'tiktok_shop') {
         const r = await syncTikTokShop(decryptedSource, source.user_id, supabase)

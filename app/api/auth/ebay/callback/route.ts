@@ -1,6 +1,5 @@
 // eBay OAuth 2.0 — Step 2: Exchange code for access token
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 import { runSync } from '@/lib/sync/engine'
 import { encryptCredentials } from '@/lib/crypto'
 
@@ -23,9 +22,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/sources?error=invalid_state', request.url))
   }
 
-  // eBay requires RuName as redirect_uri in token exchange too
+  // eBay requires Base64-encoded client_id:client_secret + RuName as redirect_uri
   const ruName = process.env.EBAY_RUNAME || ''
-  const credentials = Buffer.from(`${process.env.EBAY_CLIENT_ID}:${process.env.EBAY_CLIENT_SECRET}`).toString('base64')
+  const credentials = Buffer.from(
+    `${process.env.EBAY_CLIENT_ID}:${process.env.EBAY_CLIENT_SECRET}`
+  ).toString('base64')
 
   const tokenRes = await fetch('https://api.ebay.com/identity/v1/oauth2/token', {
     method: 'POST',
@@ -41,33 +42,46 @@ export async function GET(request: NextRequest) {
   })
 
   if (!tokenRes.ok) {
+    const errBody = await tokenRes.text().catch(() => 'unknown')
+    console.error('eBay token exchange failed:', tokenRes.status, errBody)
     return NextResponse.redirect(new URL('/sources?error=ebay_token_failed', request.url))
   }
 
   const { access_token, refresh_token } = await tokenRes.json()
 
-  // Get seller info for display name
-  const sellerRes = await fetch('https://api.ebay.com/sell/account/v1/seller', {
-    headers: { Authorization: `Bearer ${access_token}` },
-  })
-  const sellerData = sellerRes.ok ? await sellerRes.json() : {}
-  const displayName = sellerData.seller?.seller_id || 'eBay Store'
+  // Use service client to bypass RLS
+  const { createServiceClient } = await import('@/lib/supabase/server')
+  const supabase = createServiceClient()
 
-  const supabase = createClient()
-
+  // Remove existing eBay connection for this user, then insert fresh
   await supabase
     .from('connected_sources')
-    .upsert({
+    .delete()
+    .eq('user_id', userId)
+    .eq('source_type', 'ebay')
+
+  const { data: source, error: insertError } = await supabase
+    .from('connected_sources')
+    .insert({
       user_id: userId,
       source_type: 'ebay',
-      name: displayName,
+      name: 'eBay Store',
       status: 'active',
       credentials: encryptCredentials({ access_token, refresh_token }),
       config: {},
       sync_interval_minutes: 60,
-    }, { onConflict: 'user_id,source_type' })
+    })
+    .select()
+    .single()
 
-  try { await runSync(userId) } catch (_) {}
+  if (insertError) {
+    console.error('eBay insert failed:', insertError)
+    return NextResponse.redirect(new URL('/sources?error=ebay_save_failed', request.url))
+  }
+
+  if (source) {
+    try { await runSync(userId) } catch (_) {}
+  }
 
   return NextResponse.redirect(new URL('/sources?connected=ebay', request.url))
 }

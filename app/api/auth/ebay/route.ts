@@ -1,4 +1,4 @@
-// eBay OAuth 2.0 — Step 1
+// eBay OAuth 2.0 — Step 1: Redirect to eBay consent
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
@@ -15,23 +15,22 @@ export async function GET(request: NextRequest) {
 
   const state = Buffer.from(JSON.stringify({ userId: user.id })).toString('base64url')
 
-  // Only use the basic scope — sell.inventory.readonly requires eBay approval
+  const scopes = [
+    'https://api.ebay.com/oauth/api_scope',
+    'https://api.ebay.com/oauth/api_scope/sell.fulfillment',
+    'https://api.ebay.com/oauth/api_scope/sell.inventory',
+    'https://api.ebay.com/oauth/api_scope/sell.account',
+    'https://api.ebay.com/oauth/api_scope/sell.finances',
+    'https://api.ebay.com/oauth/api_scope/sell.analytics.readonly',
+  ].join(' ')
+
   const authUrl =
     `https://auth.ebay.com/oauth2/authorize` +
     `?client_id=${encodeURIComponent(clientId)}` +
     `&redirect_uri=${encodeURIComponent(ruName)}` +
     `&response_type=code` +
-    `&scope=${encodeURIComponent('https://api.ebay.com/oauth/api_scope')}` +
+    `&scope=${encodeURIComponent(scopes)}` +
     `&state=${state}`
-
-  // DEBUG — remove after confirming OAuth works
-  if (request.nextUrl.searchParams.get('debug') === '1') {
-    return NextResponse.json({
-      clientId,
-      ruName,
-      authUrl,
-    })
-  }
 
   return NextResponse.redirect(authUrl)
 }
