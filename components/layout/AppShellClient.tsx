@@ -159,18 +159,6 @@ function ProfilePanel({ user, onClose, onSignOut }: {
         </div>
 
         <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {/* Upgrade button — terracotta */}
-          <button
-            onClick={() => { onClose(); router.push('/billing') }}
-            style={{
-              padding: '11px', borderRadius: 11, border: 'none',
-              background: ACC, color: '#fff',
-              fontFamily: 'var(--font-sora)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(208,138,89,.3)',
-            }}
-          >
-            Upgrade plan →
-          </button>
           <button
             onClick={onSignOut}
             style={{ padding: '10px', borderRadius: 11, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontFamily: 'inherit', fontSize: 13, cursor: 'pointer' }}
@@ -435,27 +423,6 @@ export default function AppShellClient({ user, conversations, children }: {
               <div style={{ padding: '12px 8px', fontSize: 12, color: 'var(--tx3)', textAlign: 'center' }}>No conversations yet</div>
             )}
           </div>
-        </div>
-
-        {/* Upgrade — subtle outlined link */}
-        <div style={{ padding: '6px 10px 4px', borderTop: '1px solid var(--b)', flexShrink: 0 }}>
-          <Link
-            href="/billing"
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '7px 10px', borderRadius: 8,
-              border: `1px solid ${ACC_BORDER}`, background: ACC_BG2,
-              color: ACC, textDecoration: 'none', fontSize: 12, fontWeight: 600,
-              transition: 'opacity 150ms',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.opacity = '.8')}
-            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-          >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-            </svg>
-            Upgrade plan
-          </Link>
         </div>
 
         {/* User row — avatar terracotta */}

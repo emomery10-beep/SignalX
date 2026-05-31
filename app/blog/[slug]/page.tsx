@@ -286,7 +286,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
     })
     .slice(0, 4)
 
-  const tocItems = post.sections
+  const tocItems = (post.sections || [])
     .filter(s => s.level === 2)
     .map(s => ({ heading: s.heading, id: slugify(s.heading) }))
 
@@ -360,7 +360,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
     name: post.title,
     description: post.metaDescription,
     totalTime: `PT${post.readTime}M`,
-    step: post.sections
+    step: (post.sections || [])
       .filter(s => s.level === 2)
       .map((s, i) => ({
         '@type': 'HowToStep',
@@ -514,7 +514,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
           </div>
           <p style={{ fontSize: 14, color: TX2, lineHeight: 1.7, margin: '0 0 12px' }}>{post.tldr}</p>
           <ul style={{ margin: 0, padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: 5, listStyleType: 'disc' }}>
-            {post.sections.filter(s => s.level === 2).slice(0, 5).map((s, i) => (
+            {(post.sections || []).filter(s => s.level === 2).slice(0, 5).map((s, i) => (
               <li key={i} style={{ fontSize: 13, color: TX2, lineHeight: 1.55 }}>{s.heading}</li>
             ))}
           </ul>
@@ -522,7 +522,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
 
         {/* Body */}
         <div className="blog-body" style={{ fontSize: 15, color: TX2, lineHeight: 1.8 }}>
-          {post.sections.map((s, i) => {
+          {(post.sections || []).map((s, i) => {
             const id = slugify(s.heading)
             return (
               <div key={i}>
@@ -544,8 +544,8 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                   <p>{s.body}</p>
                 )}
                 {/* Key Insight callout after section index 1 */}
-                {i === 1 && post.sections[2] && (() => {
-                  const firstSentence = (post.sections[2].body || post.sections[2].content || '').split(/(?<=[.!?])\s/)[0]
+                {i === 1 && (post.sections || [])[2] && (() => {
+                  const firstSentence = (((post.sections || [])[2]?.body) || ((post.sections || [])[2]?.content) || '').split(/(?<=[.!?])\s/)[0]
                   return firstSentence ? (
                     <div style={{ background: 'rgba(208,138,89,.07)', border: '1.5px solid rgba(208,138,89,.25)', borderRadius: 12, padding: '16px 20px', marginBottom: 28, marginTop: 4 }}>
                       <div style={{ fontSize: 11, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>💡 Key Insight</div>
@@ -602,7 +602,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
 
           {/* By the Numbers box — after all sections, before PAA */}
           {(() => {
-            const stats = extractStats(post.sections)
+            const stats = extractStats(post.sections || [])
             if (stats.length < 2) return null
             return (
               <div style={{ background: EV, borderRadius: 14, padding: '20px 24px', marginBottom: 36 }}>
