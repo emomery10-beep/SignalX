@@ -91,6 +91,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // ── ACADEMY: categories + articles + learning paths ──────────────────────────
     { url: `${base}/academy`,                lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
     { url: `${base}/academy/learning-paths`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${base}/academy/learning-askbiz`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/academy/checklists`,     lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     ...academyCategories.map((cat) => ({
       url: `${base}/academy/category/${cat.slug}`,

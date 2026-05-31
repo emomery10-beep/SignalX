@@ -49,10 +49,16 @@ export async function GET(request: NextRequest) {
   const { createServiceClient } = await import('@/lib/supabase/server')
   const supabase = createServiceClient()
 
-  // Upsert the connected source
-  const { data: source, error: upsertError } = await supabase
+  // Remove any existing Shopify connection for this user, then insert fresh
+  await supabase
     .from('connected_sources')
-    .upsert({
+    .delete()
+    .eq('user_id', userId)
+    .eq('source_type', 'shopify')
+
+  const { data: source, error: insertError } = await supabase
+    .from('connected_sources')
+    .insert({
       user_id: userId,
       source_type: 'shopify',
       name: shopName,
@@ -60,13 +66,12 @@ export async function GET(request: NextRequest) {
       credentials: encryptCredentials({ access_token }),
       config: { shop_domain: shop },
       sync_interval_minutes: 60,
-      last_synced_at: null,
-    }, { onConflict: 'user_id,source_type' })
+    })
     .select()
     .single()
 
-  if (upsertError) {
-    console.error('Shopify upsert failed:', upsertError)
+  if (insertError) {
+    console.error('Shopify insert failed:', insertError)
     return NextResponse.redirect(new URL(`/sources?error=shopify_save_failed`, request.url))
   }
 

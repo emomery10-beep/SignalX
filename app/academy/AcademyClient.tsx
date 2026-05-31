@@ -239,6 +239,25 @@ export default function AcademyClient() {
             </button>
           </div>
 
+          {/* Learn AskBiz shortcut */}
+          <div style={{ padding: '4px 12px 8px' }}>
+            <Link
+              href="/academy/learning-askbiz"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '8px 12px', borderRadius: 8,
+                background: '#f0ebff', border: '1px solid #c4a8f540',
+                textDecoration: 'none', color: '#6c3fc5',
+              }}
+            >
+              <span style={{ fontSize: 16, flexShrink: 0 }}>🎓</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.3 }}>Learn AskBiz</div>
+                <div style={{ fontSize: 10, color: '#9575cd', lineHeight: 1.3 }}>30 step-by-step tutorials</div>
+              </div>
+            </Link>
+          </div>
+
           <div style={{ fontSize: 10, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.1em', padding: '10px 24px 6px' }}>
             Browse categories
           </div>
