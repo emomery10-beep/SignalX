@@ -684,6 +684,50 @@ import { batch198 } from './africa-business-batch-198'
 import { batch199 } from './africa-business-batch-199'
 import { batch200 } from './africa-business-batch-200'
 
+// Middle East business articles
+import { batch201 } from './middle-east-business-batch-201'
+import { batch202 } from './middle-east-business-batch-202'
+import { batch203 } from './middle-east-business-batch-203'
+import { batch204 } from './middle-east-business-batch-204'
+import { batch205 } from './middle-east-business-batch-205'
+import { batch206 } from './middle-east-business-batch-206'
+import { batch207 } from './middle-east-business-batch-207'
+import { batch208 } from './middle-east-business-batch-208'
+import { batch209 } from './middle-east-business-batch-209'
+import { batch210 } from './middle-east-business-batch-210'
+import { batch211 } from './middle-east-business-batch-211'
+import { batch212 } from './middle-east-business-batch-212'
+import { batch213 } from './middle-east-business-batch-213'
+import { batch214 } from './middle-east-business-batch-214'
+import { batch215 } from './middle-east-business-batch-215'
+import { batch216 } from './middle-east-business-batch-216'
+import { batch217 } from './middle-east-business-batch-217'
+import { batch218 } from './middle-east-business-batch-218'
+import { batch219 } from './middle-east-business-batch-219'
+import { batch220 } from './middle-east-business-batch-220'
+
+// China & US business articles
+import { batch221 } from './global-business-batch-221'
+import { batch222 } from './global-business-batch-222'
+import { batch223 } from './global-business-batch-223'
+import { batch224 } from './global-business-batch-224'
+import { batch225 } from './global-business-batch-225'
+import { batch226 } from './global-business-batch-226'
+import { batch227 } from './global-business-batch-227'
+import { batch228 } from './global-business-batch-228'
+import { batch229 } from './global-business-batch-229'
+import { batch230 } from './global-business-batch-230'
+import { batch231 } from './global-business-batch-231'
+import { batch232 } from './global-business-batch-232'
+import { batch233 } from './global-business-batch-233'
+import { batch234 } from './global-business-batch-234'
+import { batch235 } from './global-business-batch-235'
+import { batch236 } from './global-business-batch-236'
+import { batch237 } from './global-business-batch-237'
+import { batch238 } from './global-business-batch-238'
+import { batch239 } from './global-business-batch-239'
+import { batch240 } from './global-business-batch-240'
+
 export interface BlogPost {
   slug: string
   title: string
@@ -842,6 +886,16 @@ const ALL_POSTS = [
   ...batch186, ...batch187, ...batch188, ...batch189, ...batch190,
   ...batch191, ...batch192, ...batch193, ...batch194, ...batch195,
   ...batch196, ...batch197, ...batch198, ...batch199, ...batch200,
+  // Middle East market articles (500 articles, batches 201-220)
+  ...batch201, ...batch202, ...batch203, ...batch204, ...batch205,
+  ...batch206, ...batch207, ...batch208, ...batch209, ...batch210,
+  ...batch211, ...batch212, ...batch213, ...batch214, ...batch215,
+  ...batch216, ...batch217, ...batch218, ...batch219, ...batch220,
+  // China & US market articles (500 articles, batches 221-240)
+  ...batch221, ...batch222, ...batch223, ...batch224, ...batch225,
+  ...batch226, ...batch227, ...batch228, ...batch229, ...batch230,
+  ...batch231, ...batch232, ...batch233, ...batch234, ...batch235,
+  ...batch236, ...batch237, ...batch238, ...batch239, ...batch240,
 ]
 
 export function getAllPosts(): BlogPost[] {
