@@ -253,7 +253,7 @@ export default function AcademyClient() {
               <span style={{ fontSize: 16, flexShrink: 0 }}>🎓</span>
               <div>
                 <div style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.3 }}>Learn AskBiz</div>
-                <div style={{ fontSize: 10, color: '#9575cd', lineHeight: 1.3 }}>30 step-by-step tutorials</div>
+                <div style={{ fontSize: 10, color: '#9575cd', lineHeight: 1.3 }}>70 step-by-step tutorials</div>
               </div>
             </Link>
           </div>

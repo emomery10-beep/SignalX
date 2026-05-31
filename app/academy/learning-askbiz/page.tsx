@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { ASKBIZ_TRAINING_ARTICLES } from '@/lib/askbiz-training-articles'
 import { ASKBIZ_POS_TRAINING_ARTICLES } from '@/lib/askbiz-pos-training-articles'
+import { ASKBIZ_POS_RETAIL_ARTICLES } from '@/lib/askbiz-pos-retail-articles'
+import { ASKBIZ_POS_LOGISTICS_ARTICLES } from '@/lib/askbiz-pos-logistics-articles'
 
 const ACC = '#d08a59'
 const BG  = '#f9f8f6'
@@ -20,7 +22,9 @@ const DIFF_COLOR: Record<string, string> = {
 
 const GETTING_STARTED = ASKBIZ_TRAINING_ARTICLES
 const POS_ARTICLES = ASKBIZ_POS_TRAINING_ARTICLES
-const ARTICLES = [...GETTING_STARTED, ...POS_ARTICLES]
+const POS_RETAIL_ARTICLES = ASKBIZ_POS_RETAIL_ARTICLES
+const POS_LOGISTICS_ARTICLES = ASKBIZ_POS_LOGISTICS_ARTICLES
+const ARTICLES = [...GETTING_STARTED, ...POS_ARTICLES, ...POS_RETAIL_ARTICLES, ...POS_LOGISTICS_ARTICLES]
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -109,6 +113,8 @@ export default function LearningAskBizPage() {
         {([
           { label: '🚀 Getting Started', sublabel: 'Your first steps on the platform', articles: GETTING_STARTED, offset: 0 },
           { label: '🛒 Point of Sale', sublabel: 'Every POS feature, step by step', articles: POS_ARTICLES, offset: GETTING_STARTED.length },
+          { label: '🏪 POS Retail Section', sublabel: 'Products, stock, pricing, and supplier workflows', articles: POS_RETAIL_ARTICLES, offset: GETTING_STARTED.length + POS_ARTICLES.length },
+          { label: '🚚 POS Logistics Section', sublabel: 'Deliveries, drivers, fleet, and route management', articles: POS_LOGISTICS_ARTICLES, offset: GETTING_STARTED.length + POS_ARTICLES.length + POS_RETAIL_ARTICLES.length },
         ] as { label: string; sublabel: string; articles: typeof ARTICLES; offset: number }[]).map(({ label, sublabel, articles, offset }) => (
           <div key={label} style={{ marginBottom: 40 }}>
             <div style={{ marginBottom: 16 }}>
