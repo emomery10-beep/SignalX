@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   authUrl.searchParams.set('response_type', 'code')
   authUrl.searchParams.set('client_id', clientId)
   authUrl.searchParams.set('redirect_uri', redirectUri)
-  authUrl.searchParams.set('scope', 'listings_r transactions_r')
+  authUrl.searchParams.set('scope', 'listings_r transactions_r shops_r')
   authUrl.searchParams.set('state', state)
   authUrl.searchParams.set('code_challenge', codeChallenge)
   authUrl.searchParams.set('code_challenge_method', 'S256')

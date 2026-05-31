@@ -1,6 +1,5 @@
 // Etsy OAuth 2.0 with PKCE — Step 2: Exchange code for access token
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 import { runSync } from '@/lib/sync/engine'
 import { encryptCredentials } from '@/lib/crypto'
 
@@ -38,12 +37,14 @@ export async function GET(request: NextRequest) {
   })
 
   if (!tokenRes.ok) {
+    const errBody = await tokenRes.text().catch(() => 'unknown')
+    console.error('Etsy token exchange failed:', tokenRes.status, errBody)
     return NextResponse.redirect(new URL('/sources?error=etsy_token_failed', request.url))
   }
 
   const { access_token, refresh_token } = await tokenRes.json()
 
-  // Get user info for display name
+  // Get user/shop info for display name
   const userRes = await fetch('https://openapi.etsy.com/v3/application/users/me', {
     headers: {
       Authorization: `Bearer ${access_token}`,
@@ -51,23 +52,42 @@ export async function GET(request: NextRequest) {
     },
   })
   const userData = userRes.ok ? await userRes.json() : {}
-  const displayName = userData.login_name || 'Etsy Shop'
+  const shopName = userData.shop_name || userData.login_name || 'Etsy Shop'
+  const shopId = userData.shop_id || ''
 
-  const supabase = createClient()
+  // Use service client to bypass RLS
+  const { createServiceClient } = await import('@/lib/supabase/server')
+  const supabase = createServiceClient()
 
+  // Remove existing Etsy connection, then insert fresh
   await supabase
     .from('connected_sources')
-    .upsert({
+    .delete()
+    .eq('user_id', userId)
+    .eq('source_type', 'etsy')
+
+  const { data: source, error: insertError } = await supabase
+    .from('connected_sources')
+    .insert({
       user_id: userId,
       source_type: 'etsy',
-      name: displayName,
+      name: shopName,
       status: 'active',
       credentials: encryptCredentials({ access_token, refresh_token }),
-      config: {},
+      config: { shop_id: shopId },
       sync_interval_minutes: 60,
-    }, { onConflict: 'user_id,source_type' })
+    })
+    .select()
+    .single()
 
-  try { await runSync(userId) } catch (_) {}
+  if (insertError) {
+    console.error('Etsy insert failed:', insertError)
+    return NextResponse.redirect(new URL('/sources?error=etsy_save_failed', request.url))
+  }
+
+  if (source) {
+    try { await runSync(userId) } catch (_) {}
+  }
 
   return NextResponse.redirect(new URL('/sources?connected=etsy', request.url))
 }

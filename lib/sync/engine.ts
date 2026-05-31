@@ -10,6 +10,7 @@ import {
 } from './normaliser'
 import { normaliseAmazonOrder } from './amazon-normaliser'
 import { normaliseEbayOrder } from './ebay-normaliser'
+import { normaliseEtsyReceipt } from './etsy-normaliser'
 import {
   normaliseTikTokOrders, normaliseTikTokAnalytics,
   normaliseInstagramOrders, normaliseInstagramInsights,
@@ -417,6 +418,87 @@ async function refreshEbayToken(refreshToken: string): Promise<string | null> {
   } catch { return null }
 }
 
+// ── Etsy sync ────────────────────────────────────────────────
+async function syncEtsy(
+  source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> },
+  supabase: ReturnType<typeof createServiceClient>
+): Promise<{ records: UnifiedRecord[]; error?: string }> {
+  let { access_token, refresh_token } = source.credentials
+  const { shop_id } = source.config
+  if (!access_token) return { records: [], error: 'Missing Etsy credentials' }
+
+  const apiKey = process.env.ETSY_CLIENT_ID || ''
+  const headers = () => ({
+    Authorization: `Bearer ${access_token}`,
+    'x-api-key': apiKey,
+    Accept: 'application/json',
+  })
+
+  try {
+    // If we don't have shop_id, fetch it from /users/me
+    let resolvedShopId = shop_id ? String(shop_id) : ''
+    if (!resolvedShopId) {
+      const meRes = await fetch('https://openapi.etsy.com/v3/application/users/me', { headers: headers() })
+      if (meRes.ok) {
+        const me = await meRes.json()
+        resolvedShopId = String(me.shop_id || '')
+      }
+    }
+    if (!resolvedShopId) return { records: [], error: 'Could not determine Etsy shop ID' }
+
+    // Fetch recent receipts (orders) — last 30 days
+    const minCreated = Math.floor((Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000)
+    let res = await fetch(
+      `https://openapi.etsy.com/v3/application/shops/${resolvedShopId}/receipts?min_created=${minCreated}&limit=100`,
+      { headers: headers() }
+    )
+
+    // Handle token expiry
+    if (res.status === 401 && refresh_token) {
+      const newToken = await refreshEtsyToken(String(refresh_token))
+      if (newToken) {
+        access_token = newToken.access_token
+        await supabase.from('connected_sources').update({
+          credentials: encryptCredentials({
+            ...source.credentials,
+            access_token: newToken.access_token,
+            refresh_token: newToken.refresh_token,
+          })
+        }).eq('id', source.id)
+        res = await fetch(
+          `https://openapi.etsy.com/v3/application/shops/${resolvedShopId}/receipts?min_created=${minCreated}&limit=100`,
+          { headers: headers() }
+        )
+      }
+    }
+
+    if (!res.ok) throw new Error(`Etsy API error: ${res.status}`)
+    const data = await res.json()
+    const receipts = data?.results || []
+    const records = (receipts as Record<string, unknown>[]).flatMap(normaliseEtsyReceipt)
+    return { records }
+  } catch (e: unknown) {
+    return { records: [], error: e instanceof Error ? e.message : 'Etsy sync failed' }
+  }
+}
+
+async function refreshEtsyToken(refreshToken: string): Promise<{ access_token: string; refresh_token: string } | null> {
+  try {
+    const res = await fetch('https://api.etsy.com/v3/public/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        client_id: process.env.ETSY_CLIENT_ID!,
+        refresh_token: refreshToken,
+      }),
+    })
+    if (!res.ok) return null
+    const { access_token, refresh_token } = await res.json()
+    return { access_token, refresh_token }
+  } catch { return null }
+}
+
 // ── Google Sheets sync with token refresh ────────────────────
 async function syncGoogleSheetsWithRefresh(
   source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> },
@@ -707,6 +789,9 @@ export async function runSync(userId?: string): Promise<SyncResult[]> {
         records = r.records; syncError = r.error
       } else if (source.source_type === 'ebay') {
         const r = await syncEbay(decryptedSource, supabase)
+        records = r.records; syncError = r.error
+      } else if (source.source_type === 'etsy') {
+        const r = await syncEtsy(decryptedSource, supabase)
         records = r.records; syncError = r.error
       } else if (source.source_type === 'tiktok_shop') {
         const r = await syncTikTokShop(decryptedSource, source.user_id, supabase)
