@@ -582,6 +582,108 @@ import { TRADE_NEWS_BATCH_581 } from './trade-news-batch581'
 import { TRADE_NEWS_BATCH_582 } from './trade-news-batch582'
 import { TRADE_NEWS_BATCH_583 } from './trade-news-batch583'
 
+// African business article batches
+import { batch101 } from './africa-business-batch-101'
+import { batch102 } from './africa-business-batch-102'
+import { batch103 } from './africa-business-batch-103'
+import { batch104 } from './africa-business-batch-104'
+import { batch105 } from './africa-business-batch-105'
+import { batch106 } from './africa-business-batch-106'
+import { batch107 } from './africa-business-batch-107'
+import { batch108 } from './africa-business-batch-108'
+import { batch109 } from './africa-business-batch-109'
+import { batch110 } from './africa-business-batch-110'
+import { batch111 } from './africa-business-batch-111'
+import { batch112 } from './africa-business-batch-112'
+import { batch113 } from './africa-business-batch-113'
+import { batch114 } from './africa-business-batch-114'
+import { batch115 } from './africa-business-batch-115'
+import { batch116 } from './africa-business-batch-116'
+import { batch117 } from './africa-business-batch-117'
+import { batch118 } from './africa-business-batch-118'
+import { batch119 } from './africa-business-batch-119'
+import { batch120 } from './africa-business-batch-120'
+import { batch121 } from './africa-business-batch-121'
+import { batch122 } from './africa-business-batch-122'
+import { batch123 } from './africa-business-batch-123'
+import { batch124 } from './africa-business-batch-124'
+import { batch125 } from './africa-business-batch-125'
+import { batch126 } from './africa-business-batch-126'
+import { batch127 } from './africa-business-batch-127'
+import { batch128 } from './africa-business-batch-128'
+import { batch129 } from './africa-business-batch-129'
+import { batch130 } from './africa-business-batch-130'
+import { batch131 } from './africa-business-batch-131'
+import { batch132 } from './africa-business-batch-132'
+import { batch133 } from './africa-business-batch-133'
+import { batch134 } from './africa-business-batch-134'
+import { batch135 } from './africa-business-batch-135'
+import { batch136 } from './africa-business-batch-136'
+import { batch137 } from './africa-business-batch-137'
+import { batch138 } from './africa-business-batch-138'
+import { batch139 } from './africa-business-batch-139'
+import { batch140 } from './africa-business-batch-140'
+import { batch141 } from './africa-business-batch-141'
+import { batch142 } from './africa-business-batch-142'
+import { batch143 } from './africa-business-batch-143'
+import { batch144 } from './africa-business-batch-144'
+import { batch145 } from './africa-business-batch-145'
+import { batch146 } from './africa-business-batch-146'
+import { batch147 } from './africa-business-batch-147'
+import { batch148 } from './africa-business-batch-148'
+import { batch149 } from './africa-business-batch-149'
+import { batch150 } from './africa-business-batch-150'
+import { batch151 } from './africa-business-batch-151'
+import { batch152 } from './africa-business-batch-152'
+import { batch153 } from './africa-business-batch-153'
+import { batch154 } from './africa-business-batch-154'
+import { batch155 } from './africa-business-batch-155'
+import { batch156 } from './africa-business-batch-156'
+import { batch157 } from './africa-business-batch-157'
+import { batch158 } from './africa-business-batch-158'
+import { batch159 } from './africa-business-batch-159'
+import { batch160 } from './africa-business-batch-160'
+import { batch161 } from './africa-business-batch-161'
+import { batch162 } from './africa-business-batch-162'
+import { batch163 } from './africa-business-batch-163'
+import { batch164 } from './africa-business-batch-164'
+import { batch165 } from './africa-business-batch-165'
+import { batch166 } from './africa-business-batch-166'
+import { batch167 } from './africa-business-batch-167'
+import { batch168 } from './africa-business-batch-168'
+import { batch169 } from './africa-business-batch-169'
+import { batch170 } from './africa-business-batch-170'
+import { batch171 } from './africa-business-batch-171'
+import { batch172 } from './africa-business-batch-172'
+import { batch173 } from './africa-business-batch-173'
+import { batch174 } from './africa-business-batch-174'
+import { batch175 } from './africa-business-batch-175'
+import { batch176 } from './africa-business-batch-176'
+import { batch177 } from './africa-business-batch-177'
+import { batch178 } from './africa-business-batch-178'
+import { batch179 } from './africa-business-batch-179'
+import { batch180 } from './africa-business-batch-180'
+import { batch181 } from './africa-business-batch-181'
+import { batch182 } from './africa-business-batch-182'
+import { batch183 } from './africa-business-batch-183'
+import { batch184 } from './africa-business-batch-184'
+import { batch185 } from './africa-business-batch-185'
+import { batch186 } from './africa-business-batch-186'
+import { batch187 } from './africa-business-batch-187'
+import { batch188 } from './africa-business-batch-188'
+import { batch189 } from './africa-business-batch-189'
+import { batch190 } from './africa-business-batch-190'
+import { batch191 } from './africa-business-batch-191'
+import { batch192 } from './africa-business-batch-192'
+import { batch193 } from './africa-business-batch-193'
+import { batch194 } from './africa-business-batch-194'
+import { batch195 } from './africa-business-batch-195'
+import { batch196 } from './africa-business-batch-196'
+import { batch197 } from './africa-business-batch-197'
+import { batch198 } from './africa-business-batch-198'
+import { batch199 } from './africa-business-batch-199'
+import { batch200 } from './africa-business-batch-200'
+
 export interface BlogPost {
   slug: string
   title: string
@@ -719,6 +821,27 @@ const ALL_POSTS = [
   ...TRADE_NEWS_BATCH_571, ...TRADE_NEWS_BATCH_572, ...TRADE_NEWS_BATCH_573, ...TRADE_NEWS_BATCH_574, ...TRADE_NEWS_BATCH_575,
   ...TRADE_NEWS_BATCH_576, ...TRADE_NEWS_BATCH_577, ...TRADE_NEWS_BATCH_578, ...TRADE_NEWS_BATCH_579, ...TRADE_NEWS_BATCH_580,
   ...TRADE_NEWS_BATCH_581, ...TRADE_NEWS_BATCH_582, ...TRADE_NEWS_BATCH_583,
+  // African business articles (500 total across 5 regions and 50+ sectors)
+  ...batch101, ...batch102, ...batch103, ...batch104, ...batch105,
+  ...batch106, ...batch107, ...batch108, ...batch109, ...batch110,
+  ...batch111, ...batch112, ...batch113, ...batch114, ...batch115,
+  ...batch116, ...batch117, ...batch118, ...batch119, ...batch120,
+  ...batch121, ...batch122, ...batch123, ...batch124, ...batch125,
+  ...batch126, ...batch127, ...batch128, ...batch129, ...batch130,
+  ...batch131, ...batch132, ...batch133, ...batch134, ...batch135,
+  ...batch136, ...batch137, ...batch138, ...batch139, ...batch140,
+  ...batch141, ...batch142, ...batch143, ...batch144, ...batch145,
+  ...batch146, ...batch147, ...batch148, ...batch149, ...batch150,
+  ...batch151, ...batch152, ...batch153, ...batch154, ...batch155,
+  ...batch156, ...batch157, ...batch158, ...batch159, ...batch160,
+  ...batch161, ...batch162, ...batch163, ...batch164, ...batch165,
+  ...batch166, ...batch167, ...batch168, ...batch169, ...batch170,
+  ...batch171, ...batch172, ...batch173, ...batch174, ...batch175,
+  ...batch176, ...batch177, ...batch178, ...batch179, ...batch180,
+  ...batch181, ...batch182, ...batch183, ...batch184, ...batch185,
+  ...batch186, ...batch187, ...batch188, ...batch189, ...batch190,
+  ...batch191, ...batch192, ...batch193, ...batch194, ...batch195,
+  ...batch196, ...batch197, ...batch198, ...batch199, ...batch200,
 ]
 
 export function getAllPosts(): BlogPost[] {
