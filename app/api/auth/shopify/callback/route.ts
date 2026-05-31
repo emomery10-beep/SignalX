@@ -1,6 +1,5 @@
 // Shopify OAuth — Step 2: Exchange code for access token
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 import { runSync } from '@/lib/sync/engine'
 import { encryptCredentials } from '@/lib/crypto'
 
@@ -46,10 +45,12 @@ export async function GET(request: NextRequest) {
   const shopData = shopRes.ok ? await shopRes.json() : {}
   const shopName = shopData.shop?.name || shop
 
-  const supabase = createClient()
+  // Use service client to bypass RLS — userId comes from our signed state param
+  const { createServiceClient } = await import('@/lib/supabase/server')
+  const supabase = createServiceClient()
 
   // Upsert the connected source
-  const { data: source } = await supabase
+  const { data: source, error: upsertError } = await supabase
     .from('connected_sources')
     .upsert({
       user_id: userId,
@@ -63,6 +64,11 @@ export async function GET(request: NextRequest) {
     }, { onConflict: 'user_id,source_type' })
     .select()
     .single()
+
+  if (upsertError) {
+    console.error('Shopify upsert failed:', upsertError)
+    return NextResponse.redirect(new URL(`/sources?error=shopify_save_failed`, request.url))
+  }
 
   if (source) {
     // Kick off initial sync in background
