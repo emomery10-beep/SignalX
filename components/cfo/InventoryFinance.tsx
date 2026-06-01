@@ -40,7 +40,7 @@ export default function InventoryFinance({ onAsk }: Props) {
   const [products, setProducts] = useState<Product[]>([])
   const [summary, setSummary] = useState<Summary | null>(null)
   const [loading, setLoading] = useState(true)
-  const [sym, setSym] = useState('KSh')
+  const [sym, setSym] = useState('$')
   const [filter, setFilter] = useState<'all' | 'out' | 'low' | 'healthy'>('all')
 
   useEffect(() => {

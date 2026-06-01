@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { getRegionConfig } from '@/lib/region-config'
 
 interface Props {
   revenue: number
@@ -11,6 +12,7 @@ interface Props {
   hasEcommerce: boolean
   daysWithData: number
   currencySymbol: string
+  countryCode?: string | null
   onAsk?: (prompt: string) => void
 }
 
@@ -63,7 +65,7 @@ function computeCreditScore(props: Props): { total: number; maxTotal: number; gr
     maxScore: 20,
     detail: `Monthly revenue: ${fmt(props.revenue, props.currencySymbol)}`,
     status: revenueScore >= 16 ? 'good' : revenueScore >= 8 ? 'fair' : 'poor',
-    tip: revenueScore < 16 ? 'Consistent monthly revenue above KES 100K improves lending decisions. Avoid cash-only periods.' : 'Revenue level and consistency look strong for lending.',
+    tip: revenueScore < 16 ? 'Consistent monthly revenue improves lending decisions. Avoid cash-only periods.' : 'Revenue level and consistency look strong for lending.',
   })
 
   // 3. Profitability (max 20)
@@ -109,9 +111,9 @@ function computeCreditScore(props: Props): { total: number; maxTotal: number; gr
     label: 'Tax & Compliance',
     score: Math.min(complianceScore, 15),
     maxScore: 15,
-    detail: 'Based on eTIMS readiness and record-keeping consistency',
+    detail: 'Based on tax compliance readiness and record-keeping consistency',
     status: complianceScore >= 12 ? 'good' : complianceScore >= 7 ? 'fair' : 'poor',
-    tip: complianceScore < 12 ? 'Register on eTIMS and keep all receipts digital. Lenders check KRA compliance status.' : 'Compliance posture looks solid for lending applications.',
+    tip: complianceScore < 12 ? 'Register with your tax authority and keep all receipts digital. Lenders check compliance status.' : 'Compliance posture looks solid for lending applications.',
   })
 
   const total = factors.reduce((s, f) => s + f.score, 0)
@@ -122,9 +124,10 @@ function computeCreditScore(props: Props): { total: number; maxTotal: number; gr
 }
 
 export default function CreditReadiness(props: Props) {
-  const { currencySymbol: sym, onAsk } = props
+  const { currencySymbol: sym, countryCode, onAsk } = props
   const [expanded, setExpanded] = useState<string | null>(null)
   const result = computeCreditScore(props)
+  const region = getRegionConfig(countryCode)
 
   const gradeColor = result.grade === 'A' ? '#22C55E' : result.grade === 'B' ? '#22C55E' : result.grade === 'C' ? '#F59E0B' : '#EF4444'
   const ringPct = (result.total / result.maxTotal) * 100
@@ -140,7 +143,7 @@ export default function CreditReadiness(props: Props) {
         </div>
         {onAsk && (
           <button
-            onClick={() => onAsk(`My credit readiness score is ${result.total}/${result.maxTotal} (Grade ${result.grade}). ${result.factors.filter(f => f.status === 'poor').map(f => `${f.label}: ${f.score}/${f.maxScore}`).join(', ')}. What should I improve first to qualify for business loans in Kenya (KCB, Equity, Fuliza Biashara)?`)}
+            onClick={() => onAsk(`My credit readiness score is ${result.total}/${result.maxTotal} (Grade ${result.grade}). ${result.factors.filter(f => f.status === 'poor').map(f => `${f.label}: ${f.score}/${f.maxScore}`).join(', ')}. What should I improve first to qualify for business loans in ${region.countryName} (${region.lenders.slice(0, 3).map(l => l.name).join(', ')})?`)}
             style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >
             Ask AI
@@ -177,8 +180,8 @@ export default function CreditReadiness(props: Props) {
           </div>
           <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>
             {result.grade === 'A' || result.grade === 'B'
-              ? 'Your digital records and financial performance are strong enough for KCB, Equity, and Cooperative Bank SMB products.'
-              : 'Focus on the areas below to strengthen your profile. Mobile lenders (Fuliza, Tala Business) may be available now.'}
+              ? `Your digital records and financial performance are strong enough for ${region.lenders.filter(l => l.minGrade === 'B' || l.minGrade === 'A').map(l => l.name).join(', ')} products.`
+              : `Focus on the areas below to strengthen your profile. ${region.lenders.find(l => l.minGrade === 'C')?.name || 'Digital lenders'} may be available now.`}
           </div>
         </div>
       </div>
@@ -231,15 +234,14 @@ export default function CreditReadiness(props: Props) {
       <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)', background: 'rgba(99,102,241,.02)' }}>
         <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Available Lending Products</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <LenderRow name="Fuliza Biashara" range="Up to KES 3M" minGrade="C" currentGrade={result.grade} />
-          <LenderRow name="KCB Vooma" range="KES 50K–5M" minGrade="B" currentGrade={result.grade} />
-          <LenderRow name="Equity Biashara" range="KES 100K–10M" minGrade="B" currentGrade={result.grade} />
-          <LenderRow name="Cooperative Bank SME" range="KES 500K–50M" minGrade="A" currentGrade={result.grade} />
+          {region.lenders.map(lender => (
+            <LenderRow key={lender.name} name={lender.name} range={lender.range} minGrade={lender.minGrade} currentGrade={result.grade} />
+          ))}
         </div>
       </div>
 
       <div style={{ padding: '10px 18px', borderTop: '1px solid var(--b)', fontSize: 10, color: 'var(--tx3)', lineHeight: 1.5 }}>
-        Score is indicative only — actual lending decisions depend on additional factors. Maintaining clean eTIMS records and consistent digital transactions improves eligibility across all lenders.
+        Score is indicative only — actual lending decisions depend on additional factors. {region.complianceTip}
       </div>
     </div>
   )

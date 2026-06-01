@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getCurrencySymbol } from '@/lib/get-currency'
+import { getUserLocale } from '@/lib/get-currency'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const sym = await getCurrencySymbol(supabase, user.id)
+  const { currencySymbol: sym, countryCode } = await getUserLocale(supabase, user.id)
   const params = new URL(request.url).searchParams
   const now = new Date()
 
@@ -318,6 +318,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     period: { start, end, compStart, compEnd, key: periodKey },
     currency_symbol: sym,
+    country_code: countryCode,
     kpis,
     alerts,
     chart: chartData,

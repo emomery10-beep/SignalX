@@ -9,6 +9,7 @@ interface Insight {
 
 interface Props {
   data: any
+  countryCode?: string | null
   onAsk?: (prompt: string) => void
 }
 
@@ -18,7 +19,7 @@ const TYPE_CONFIG: Record<string, { color: string; bg: string; icon: string }> =
   action: { color: '#6366F1', bg: 'rgba(99,102,241,.06)', icon: '→' },
 }
 
-export default function CfoAiInsight({ data, onAsk }: Props) {
+export default function CfoAiInsight({ data, countryCode, onAsk }: Props) {
   const [insights, setInsights] = useState<Insight[]>([])
   const [loading, setLoading] = useState(false)
   const [loaded, setLoaded] = useState(false)
@@ -37,6 +38,7 @@ export default function CfoAiInsight({ data, onAsk }: Props) {
         alerts: data.alerts,
         logistics: data.logistics,
         sourceBreakdown: data.source_breakdown,
+        countryCode,
       }),
     })
       .then(r => r.ok ? r.json() : null)

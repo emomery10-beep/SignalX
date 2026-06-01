@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/sources?error=invalid_state', request.url))
   }
 
-  // Exchange code for access token
+  // Exchange code for expiring offline access token
   const tokenRes = await fetch(`https://${shop}/admin/oauth/access_token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
       client_id: process.env.SHOPIFY_CLIENT_ID,
       client_secret: process.env.SHOPIFY_CLIENT_SECRET,
       code,
+      expiring: 1,
     }),
   })
 
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/sources?error=shopify_token_failed', request.url))
   }
 
-  const { access_token } = await tokenRes.json()
+  const { access_token, refresh_token } = await tokenRes.json()
 
   // Get shop info for display name
   const shopRes = await fetch(`https://${shop}/admin/api/2025-01/shop.json`, {
@@ -97,7 +98,7 @@ export async function GET(request: NextRequest) {
       .from('pending_shopify_installs')
       .upsert({
         shop_domain: shop,
-        access_token: encryptCredentials({ access_token }),
+        access_token: encryptCredentials({ access_token, refresh_token }),
         shop_name: shopName,
         installed_at: new Date().toISOString(),
       }, { onConflict: 'shop_domain' })
@@ -123,7 +124,7 @@ export async function GET(request: NextRequest) {
       source_type: 'shopify',
       name: shopName,
       status: 'active',
-      credentials: encryptCredentials({ access_token }),
+      credentials: encryptCredentials({ access_token, refresh_token }),
       config: { shop_domain: shop },
       sync_interval_minutes: 60,
     })

@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
+import { getRegionConfig } from '@/lib/region-config'
 
 interface Receivable {
   id: string
@@ -14,6 +15,7 @@ interface Receivable {
 
 interface Props {
   currencySymbol: string
+  countryCode?: string | null
   onAsk?: (prompt: string) => void
   onTotalsChange?: (receivables: number, payables: number) => void
 }
@@ -31,7 +33,8 @@ const AGING_BUCKETS = [
   { key: 'overdue_90', label: '60+ days', color: '#EF4444' },
 ] as const
 
-export default function ReceivablesTracker({ currencySymbol: sym, onAsk, onTotalsChange }: Props) {
+export default function ReceivablesTracker({ currencySymbol: sym, countryCode, onAsk, onTotalsChange }: Props) {
+  const region = getRegionConfig(countryCode)
   const [view, setView] = useState<'receivables' | 'payables'>('receivables')
   const [items, setItems] = useState<Receivable[]>([])
   const [showAdd, setShowAdd] = useState(false)
@@ -131,7 +134,7 @@ export default function ReceivablesTracker({ currencySymbol: sym, onAsk, onTotal
         <div style={{ display: 'flex', gap: 6 }}>
           {onAsk && overdueAmount > 0 && (
             <button
-              onClick={() => onAsk(`I have ${fmt(overdueAmount, sym)} in overdue ${view}. Total outstanding: ${fmt(totalAmount, sym)}. What's the best strategy to collect overdue amounts in Kenya without damaging business relationships?`)}
+              onClick={() => onAsk(`I have ${fmt(overdueAmount, sym)} in overdue ${view}. Total outstanding: ${fmt(totalAmount, sym)}. What's the best strategy to collect overdue amounts in ${region.countryName} without damaging business relationships?`)}
               style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
             >
               Ask AI
@@ -285,7 +288,7 @@ export default function ReceivablesTracker({ currencySymbol: sym, onAsk, onTotal
 
       {/* Info banner */}
       <div style={{ padding: '10px 18px', borderTop: '1px solid var(--b)', background: 'rgba(245,158,11,.03)', fontSize: 10, color: 'var(--tx3)', lineHeight: 1.5 }}>
-        91% of East African SMEs are owed money outside agreed terms. Tracking receivables helps you forecast cash flow and prioritize collections.
+        {region.receivablesInsight}
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { getRegionConfig } from '@/lib/region-config'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -13,7 +14,8 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-  const { totals, comparison, inventory, cash, alerts, logistics, sourceBreakdown } = body
+  const { totals, comparison, inventory, cash, alerts, logistics, sourceBreakdown, countryCode } = body
+  const region = getRegionConfig(countryCode)
 
   const signals: string[] = []
 
@@ -61,7 +63,7 @@ export async function POST(req: NextRequest) {
       max_tokens: 400,
       messages: [{
         role: 'user',
-        content: `You are a CFO advisor for a small/medium business in East Africa. Analyze these financial metrics and provide exactly 3 actionable insights. Be specific with numbers. No fluff.
+        content: `You are a CFO advisor for a small/medium business in ${region.countryName}. Analyze these financial metrics and provide exactly 3 actionable insights. Be specific with numbers. Reference local context where relevant (${region.currencyCode}, local market conditions). No fluff.
 
 ${signals.join('\n')}
 

@@ -1,4 +1,5 @@
 'use client'
+import { getRegionConfig } from '@/lib/region-config'
 
 interface Props {
   revenue: number
@@ -7,6 +8,7 @@ interface Props {
   receivablesTotal: number
   payablesTotal: number
   currencySymbol: string
+  countryCode?: string | null
   onAsk?: (prompt: string) => void
 }
 
@@ -16,7 +18,8 @@ function fmt(n: number, sym: string): string {
   return `${sym}${Math.round(n).toLocaleString()}`
 }
 
-export default function WorkingCapitalCycle({ revenue, cogs, inventoryValue, receivablesTotal, payablesTotal, currencySymbol: sym, onAsk }: Props) {
+export default function WorkingCapitalCycle({ revenue, cogs, inventoryValue, receivablesTotal, payablesTotal, currencySymbol: sym, countryCode, onAsk }: Props) {
+  const region = getRegionConfig(countryCode)
   const dailyRevenue = revenue / 30
   const dailyCogs = cogs / 30
 
@@ -44,7 +47,7 @@ export default function WorkingCapitalCycle({ revenue, cogs, inventoryValue, rec
         </div>
         {onAsk && ccc > 0 && (
           <button
-            onClick={() => onAsk(`My working capital cycle: DIO ${dio} days, DSO ${dso} days, DPO ${dpo} days. Cash Conversion Cycle = ${ccc} days. Inventory value ${fmt(inventoryValue, sym)}, receivables ${fmt(receivablesTotal, sym)}, payables ${fmt(payablesTotal, sym)}. How can I shorten my cash conversion cycle as a Kenyan SMB?`)}
+            onClick={() => onAsk(`My working capital cycle: DIO ${dio} days, DSO ${dso} days, DPO ${dpo} days. Cash Conversion Cycle = ${ccc} days. Inventory value ${fmt(inventoryValue, sym)}, receivables ${fmt(receivablesTotal, sym)}, payables ${fmt(payablesTotal, sym)}. How can I shorten my cash conversion cycle as a ${region.smbLabel}?`)}
             style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >
             Ask AI
@@ -140,7 +143,7 @@ export default function WorkingCapitalCycle({ revenue, cogs, inventoryValue, rec
           {dso > 7 && (
             <TipRow
               color="#6366F1"
-              text={`Reduce DSO (${dso}d): Offer M-Pesa payment at point of sale, incentivize early payment, or tighten credit terms.`}
+              text={`Reduce DSO (${dso}d): Offer ${region.paymentMethods}, incentivize early payment, or tighten credit terms.`}
             />
           )}
           {dpo < 30 && (

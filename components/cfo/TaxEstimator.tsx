@@ -1,8 +1,9 @@
 'use client'
 import { useState } from 'react'
+import { getRegionConfig } from '@/lib/region-config'
 
 interface TaxEstimate {
-  vat: { amount: number; rate: number; due: string; daysUntil: number }
+  vat: { amount: number; rate: number; due: string; daysUntil: number; name: string }
   incomeTax: { amount: number; bracket: string; due: string; daysUntil: number }
   turnoverTax: { amount: number; rate: number; applicable: boolean }
   totalSetAside: number
@@ -14,6 +15,7 @@ interface Props {
   grossProfit: number
   netProfit: number
   currencySymbol: string
+  countryCode?: string | null
   onAsk?: (prompt: string) => void
 }
 
@@ -23,79 +25,74 @@ function fmt(n: number, sym: string): string {
   return `${sym}${Math.round(n).toLocaleString()}`
 }
 
-function getNextVatDue(): { due: string; daysUntil: number } {
+function getNextVatDue(dueDay: number): { due: string; daysUntil: number } {
   const now = new Date()
   const y = now.getFullYear()
   const m = now.getMonth()
-  // VAT due by 20th of following month
-  const dueDate = new Date(y, m + 1, 20)
+  const dueDate = new Date(y, m + 1, dueDay)
   const daysUntil = Math.ceil((dueDate.getTime() - now.getTime()) / 86400000)
   return { due: dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }), daysUntil }
 }
 
-function getNextIncomeTaxDue(): { due: string; daysUntil: number } {
+function getNextIncomeTaxDue(quarters: number[]): { due: string; daysUntil: number } {
   const now = new Date()
   const y = now.getFullYear()
-  // Income tax installments: 20th of 4th, 6th, 8th, 12th month of fiscal year
-  // Simplify: next quarter end + 20 days
-  const quarters = [
-    new Date(y, 3, 20),  // April 20
-    new Date(y, 5, 20),  // June 20
-    new Date(y, 8, 20),  // September 20
-    new Date(y, 11, 20), // December 20
-  ]
-  const next = quarters.find(d => d > now) || new Date(y + 1, 3, 20)
+  const dates = quarters.map(m => new Date(y, m, 20))
+  const next = dates.find(d => d > now) || new Date(y + 1, quarters[0], 20)
   const daysUntil = Math.ceil((next.getTime() - now.getTime()) / 86400000)
   return { due: next.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }), daysUntil }
 }
 
-function computeTax(revenue: number, netProfit: number): TaxEstimate {
-  const sym = 'KSh'
+function computeTax(revenue: number, netProfit: number, countryCode?: string | null): TaxEstimate {
+  const region = getRegionConfig(countryCode)
+  const tc = region.taxConfig
   const annualRevenue = revenue * 12
   const annualProfit = netProfit * 12
 
-  // VAT: 16% on taxable supplies (simplified — assume all revenue is taxable)
-  const vatRate = 0.16
+  const vatRate = tc.vatRate
   const vatAmount = Math.round(revenue * vatRate)
-  const vatDue = getNextVatDue()
+  const vatDue = getNextVatDue(tc.vatDueDay)
 
-  // Turnover Tax: 1.5% of gross if annual revenue KSh 1M-25M
-  const turnoverApplicable = annualRevenue >= 1_000_000 && annualRevenue <= 25_000_000
-  const turnoverTax = turnoverApplicable ? Math.round(revenue * 0.015) : 0
+  let turnoverApplicable = false
+  let turnoverTax = 0
+  if (tc.turnoverTax) {
+    turnoverApplicable = annualRevenue >= tc.turnoverTax.minRevenue && annualRevenue <= tc.turnoverTax.maxRevenue
+    turnoverTax = turnoverApplicable ? Math.round(revenue * tc.turnoverTax.rate) : 0
+  }
 
-  // Income Tax (simplified corporate rate 30%, or individual brackets)
-  // For SMBs, use 30% corporate rate on net profit
   let incomeTaxAmount = 0
   let bracket = ''
   if (annualProfit > 0) {
-    if (annualRevenue > 25_000_000) {
-      incomeTaxAmount = Math.round((netProfit * 0.30))
-      bracket = '30% corporate rate'
-    } else if (turnoverApplicable) {
-      incomeTaxAmount = 0 // Turnover tax replaces income tax
+    if (tc.turnoverTax && turnoverApplicable) {
+      incomeTaxAmount = 0
       bracket = 'Covered by turnover tax'
+    } else if (annualRevenue > (tc.turnoverTax?.maxRevenue || tc.smbThreshold || 0)) {
+      incomeTaxAmount = Math.round(netProfit * tc.corporateRate)
+      bracket = `${Math.round(tc.corporateRate * 100)}% corporate rate`
     } else {
-      incomeTaxAmount = Math.round(netProfit * 0.15)
-      bracket = '15% (below KSh 1M threshold)'
+      incomeTaxAmount = Math.round(netProfit * tc.smbRate)
+      bracket = `${Math.round(tc.smbRate * 100)}% SMB rate`
     }
   }
-  const incomeTaxDue = getNextIncomeTaxDue()
+  const incomeTaxDue = getNextIncomeTaxDue(tc.incomeTaxQuarters)
 
   const totalSetAside = vatAmount + incomeTaxAmount + turnoverTax
   const pctOfRevenue = revenue > 0 ? (totalSetAside / revenue) * 100 : 0
 
   return {
-    vat: { amount: vatAmount, rate: 16, ...vatDue },
+    vat: { amount: vatAmount, rate: Math.round(vatRate * 100), ...vatDue, name: tc.vatName },
     incomeTax: { amount: incomeTaxAmount, bracket, ...incomeTaxDue },
-    turnoverTax: { amount: turnoverTax, rate: 1.5, applicable: turnoverApplicable },
+    turnoverTax: { amount: turnoverTax, rate: tc.turnoverTax?.rate ? tc.turnoverTax.rate * 100 : 0, applicable: turnoverApplicable },
     totalSetAside,
     pctOfRevenue,
   }
 }
 
-export default function TaxEstimator({ revenue, grossProfit, netProfit, currencySymbol: sym, onAsk }: Props) {
+export default function TaxEstimator({ revenue, grossProfit, netProfit, currencySymbol: sym, countryCode, onAsk }: Props) {
   const [expanded, setExpanded] = useState(false)
-  const tax = computeTax(revenue, netProfit)
+  const tax = computeTax(revenue, netProfit, countryCode)
+  const region = getRegionConfig(countryCode)
+  const tc = region.taxConfig
 
   if (revenue === 0) return null
 
@@ -108,11 +105,11 @@ export default function TaxEstimator({ revenue, grossProfit, netProfit, currency
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#F59E0B' }} />
           <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>Tax & Compliance</span>
-          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>Kenya (KRA)</span>
+          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{region.countryName} ({tc.taxAuthorityShort})</span>
         </div>
         {onAsk && (
           <button
-            onClick={() => onAsk(`My monthly revenue is ${fmt(revenue, sym)}, net profit ${fmt(netProfit, sym)}. Estimated tax set-aside is ${fmt(tax.totalSetAside, sym)} (${Math.round(tax.pctOfRevenue)}% of revenue). Am I setting aside enough? What tax optimizations are available for Kenyan SMBs?`)}
+            onClick={() => onAsk(`My monthly revenue is ${fmt(revenue, sym)}, net profit ${fmt(netProfit, sym)}. Estimated tax set-aside is ${fmt(tax.totalSetAside, sym)} (${Math.round(tax.pctOfRevenue)}% of revenue). Am I setting aside enough? What tax optimizations are available for ${region.smbLabel}s?`)}
             style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >
             Ask AI
@@ -138,13 +135,13 @@ export default function TaxEstimator({ revenue, grossProfit, netProfit, currency
       {/* Tax obligations table */}
       <div style={{ padding: '0' }}>
         <TaxRow
-          label="VAT (16%)"
+          label={`${tax.vat.name} (${tax.vat.rate}%)`}
           amount={tax.vat.amount}
           sym={sym}
           dueDate={tax.vat.due}
           daysUntil={tax.vat.daysUntil}
           deadlineColor={deadlineColor(tax.vat.daysUntil)}
-          detail="16% on taxable supplies"
+          detail={`${tax.vat.rate}% on taxable supplies`}
         />
         <TaxRow
           label="Income Tax"
@@ -157,63 +154,63 @@ export default function TaxEstimator({ revenue, grossProfit, netProfit, currency
         />
         {tax.turnoverTax.applicable && (
           <TaxRow
-            label="Turnover Tax (1.5%)"
+            label={`Turnover Tax (${tax.turnoverTax.rate}%)`}
             amount={tax.turnoverTax.amount}
             sym={sym}
             dueDate={tax.vat.due}
             daysUntil={tax.vat.daysUntil}
             deadlineColor={deadlineColor(tax.vat.daysUntil)}
-            detail="1.5% of gross turnover (KSh 1M-25M annual)"
+            detail={`${tax.turnoverTax.rate}% of gross turnover`}
           />
         )}
       </div>
 
-      {/* eTIMS Compliance section */}
-      <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)', background: 'rgba(99,102,241,.02)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>eTIMS Compliance</div>
-          <button
-            onClick={() => setExpanded(!expanded)}
-            style={{ fontSize: 10, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}
-          >
-            {expanded ? 'Hide details' : 'Learn more'}
-          </button>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: expanded ? 10 : 0 }}>
-          <span style={{ fontSize: 12 }}>⚠️</span>
-          <span style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}>
-            From Jan 2026, KRA auto-rejects expenses without valid eTIMS receipts. 25% penalty + 1% monthly interest on non-compliance.
-          </span>
-        </div>
-
-        {expanded && (
-          <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.6, paddingTop: 8, borderTop: '1px solid var(--b)' }}>
-            <div style={{ marginBottom: 8 }}>
-              <strong style={{ color: 'var(--tx2)' }}>What you need:</strong>
-            </div>
-            <ul style={{ margin: 0, paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <li>Register on eTIMS (free via KRA portal)</li>
-              <li>Issue electronic invoices for ALL sales — transmitted to KRA in real-time</li>
-              <li>Every invoice must include: KRA PIN, QR code, item details, buyer PIN (for VAT claims)</li>
-              <li>Keep eTIMS receipts for ALL business expenses (otherwise KRA rejects them)</li>
-              <li>File monthly VAT returns by the 20th of the following month</li>
-            </ul>
-            <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.15)' }}>
-              <span style={{ fontSize: 10, color: '#22C55E', fontWeight: 600 }}>
-                Tip: Maintaining clean digital records improves your credit readiness score — lenders like Fuliza Biashara and KCB use transaction data to assess loans up to KES 3M+.
-              </span>
-            </div>
+      {/* Compliance section */}
+      {tc.complianceSystem && (
+        <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)', background: 'rgba(99,102,241,.02)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{tc.complianceSystem} Compliance</div>
+            <button
+              onClick={() => setExpanded(!expanded)}
+              style={{ fontSize: 10, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}
+            >
+              {expanded ? 'Hide details' : 'Learn more'}
+            </button>
           </div>
-        )}
-      </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: expanded ? 10 : 0 }}>
+            <span style={{ fontSize: 12 }}>&#9888;&#65039;</span>
+            <span style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}>
+              {tc.compliancePenalty}
+            </span>
+          </div>
+
+          {expanded && tc.complianceItems && (
+            <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.6, paddingTop: 8, borderTop: '1px solid var(--b)' }}>
+              <div style={{ marginBottom: 8 }}>
+                <strong style={{ color: 'var(--tx2)' }}>What you need:</strong>
+              </div>
+              <ul style={{ margin: 0, paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {tc.complianceItems.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ul>
+              <div style={{ marginTop: 10, padding: '8px 12px', borderRadius: 8, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.15)' }}>
+                <span style={{ fontSize: 10, color: '#22C55E', fontWeight: 600 }}>
+                  Tip: {region.complianceTip}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Filing calendar */}
       <div style={{ padding: '12px 18px', borderTop: '1px solid var(--b)' }}>
         <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Upcoming Deadlines</div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <DeadlineChip label="VAT Return" date={tax.vat.due} days={tax.vat.daysUntil} />
+          <DeadlineChip label={`${tax.vat.name} Return`} date={tax.vat.due} days={tax.vat.daysUntil} />
           <DeadlineChip label="Income Tax" date={tax.incomeTax.due} days={tax.incomeTax.daysUntil} />
-          <DeadlineChip label="Annual Return" date={`30 Jun ${new Date().getFullYear()}`} days={Math.ceil((new Date(new Date().getFullYear(), 5, 30).getTime() - Date.now()) / 86400000)} />
+          <DeadlineChip label="Annual Return" date={`${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][tc.annualReturnMonth]} ${new Date().getFullYear()}`} days={Math.ceil((new Date(new Date().getFullYear(), tc.annualReturnMonth, 30).getTime() - Date.now()) / 86400000)} />
         </div>
       </div>
     </div>

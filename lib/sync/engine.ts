@@ -65,6 +65,33 @@ async function upsertRecords(
   return { inserted, updated }
 }
 
+// ── Shopify: refresh expired access token ─────────────────────
+async function refreshShopifyToken(
+  sourceId: string,
+  shopDomain: string,
+  refreshToken: string,
+  supabase: ReturnType<typeof createServiceClient>
+): Promise<{ access_token: string; refresh_token: string } | null> {
+  const res = await fetch(`https://${shopDomain}/admin/oauth/access_token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: process.env.SHOPIFY_CLIENT_ID || '',
+      client_secret: process.env.SHOPIFY_CLIENT_SECRET || '',
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    }),
+  })
+  if (!res.ok) return null
+  const data = await res.json()
+  // Persist new tokens
+  await supabase
+    .from('connected_sources')
+    .update({ credentials: encryptCredentials({ access_token: data.access_token, refresh_token: data.refresh_token }) })
+    .eq('id', sourceId)
+  return { access_token: data.access_token, refresh_token: data.refresh_token }
+}
+
 // ── Shopify sync ──────────────────────────────────────────────
 async function syncShopify(
   source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> },
@@ -72,23 +99,31 @@ async function syncShopify(
   supabase: ReturnType<typeof createServiceClient>
 ): Promise<{ records: UnifiedRecord[]; error?: string }> {
   const { shop_domain } = source.config
-  const { access_token } = source.credentials
+  let { access_token, refresh_token } = source.credentials
 
   if (!shop_domain || !access_token) return { records: [], error: 'Missing shop domain or access token' }
 
-  const tokenStr = String(access_token)
-  console.log(`Shopify sync: shop=${shop_domain}, token_prefix=${tokenStr.substring(0, 8)}..., token_len=${tokenStr.length}`)
-
   try {
-    // Fetch last 250 orders
-    const res = await fetch(
+    let res = await fetch(
       `https://${shop_domain}/admin/api/2025-01/orders.json?status=any&limit=250`,
-      { headers: { 'X-Shopify-Access-Token': tokenStr } }
+      { headers: { 'X-Shopify-Access-Token': String(access_token) } }
     )
+
+    // If 401/403 and we have a refresh token, try refreshing
+    if ((res.status === 401 || res.status === 403) && refresh_token) {
+      const refreshed = await refreshShopifyToken(source.id, String(shop_domain), String(refresh_token), supabase)
+      if (refreshed) {
+        access_token = refreshed.access_token
+        res = await fetch(
+          `https://${shop_domain}/admin/api/2025-01/orders.json?status=any&limit=250`,
+          { headers: { 'X-Shopify-Access-Token': String(access_token) } }
+        )
+      }
+    }
+
     if (!res.ok) {
       const errBody = await res.text()
-      console.error(`Shopify API ${res.status} for ${shop_domain}: ${errBody}`)
-      throw new Error(`Shopify API error: ${res.status}`)
+      throw new Error(`Shopify API error: ${res.status} — ${errBody.substring(0, 200)}`)
     }
     const { orders } = await res.json()
     const records = (orders as Record<string, unknown>[]).flatMap(normaliseShopify)

@@ -24,6 +24,7 @@ import LogisticsOverview from './LogisticsOverview'
 
 interface SnapshotData {
   currency_symbol: string
+  country_code?: string | null
   kpis: any[]
   alerts: any[]
   chart: any[]
@@ -112,7 +113,8 @@ export default function CfoDashboard({ onAsk }: Props) {
     setPeriod(p)
   }
 
-  const sym = data?.currency_symbol || 'KSh'
+  const sym = data?.currency_symbol || '$'
+  const countryCode = data?.country_code || null
 
   const fmtCurrency = (n: number) => {
     if (Math.abs(n) >= 1_000_000) return `${sym}${(n / 1_000_000).toFixed(1)}M`
@@ -246,7 +248,7 @@ export default function CfoDashboard({ onAsk }: Props) {
 
           {/* AI Insights */}
           {!loading && data && (
-            <CfoAiInsight data={data} onAsk={onAsk} />
+            <CfoAiInsight data={data} countryCode={countryCode} onAsk={onAsk} />
           )}
 
           {/* Revenue by Source */}
@@ -367,6 +369,7 @@ export default function CfoDashboard({ onAsk }: Props) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <ReceivablesTracker
             currencySymbol={sym}
+            countryCode={countryCode}
             onAsk={onAsk}
             onTotalsChange={(r, p) => setRecTotals({ receivables: r, payables: p })}
           />
@@ -378,6 +381,7 @@ export default function CfoDashboard({ onAsk }: Props) {
               receivablesTotal={recTotals.receivables || data.receivables_summary?.total_receivables || 0}
               payablesTotal={recTotals.payables || data.receivables_summary?.total_payables || 0}
               currencySymbol={sym}
+              countryCode={countryCode}
               onAsk={onAsk}
             />
           )}
@@ -412,6 +416,7 @@ export default function CfoDashboard({ onAsk }: Props) {
               grossProfit={data.totals.gross_profit}
               netProfit={data.totals.net_profit}
               currencySymbol={sym}
+              countryCode={countryCode}
               onAsk={onAsk}
             />
           ) : (
@@ -451,6 +456,7 @@ export default function CfoDashboard({ onAsk }: Props) {
                 hasEcommerce={data.data_quality.has_ecommerce}
                 daysWithData={data.data_quality.days_with_data}
                 currencySymbol={sym}
+                countryCode={countryCode}
                 onAsk={onAsk}
               />
             </>
