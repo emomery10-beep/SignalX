@@ -62,11 +62,25 @@ export async function GET(request: NextRequest) {
   }
 
   if (!userId) {
-    // No logged-in user — redirect to signup with shop info so we can connect after
-    const pendingShop = encodeURIComponent(shop)
-    return NextResponse.redirect(
-      new URL(`/signin?shop=${pendingShop}&access_token_pending=true`, request.url)
-    )
+    // App Store install flow — no logged-in AskBiz user
+    // Store the token as a pending connection keyed by shop domain
+    // so we can link it when the merchant signs into AskBiz later
+    const { createServiceClient: createSvc } = await import('@/lib/supabase/server')
+    const svcClient = createSvc()
+    await svcClient
+      .from('pending_shopify_installs')
+      .upsert({
+        shop_domain: shop,
+        access_token: encryptCredentials({ access_token }),
+        shop_name: shopName,
+        installed_at: new Date().toISOString(),
+      }, { onConflict: 'shop_domain' })
+      .then(() => {})
+      .catch((err: unknown) => console.error('Failed to store pending install:', err))
+
+    // Redirect back to Shopify Admin as required for embedded apps
+    const shopSlug = shop.replace('.myshopify.com', '')
+    return NextResponse.redirect(`https://admin.shopify.com/store/${shopSlug}/apps/askbiz`)
   }
 
   // Remove any existing Shopify connection for this user, then insert fresh

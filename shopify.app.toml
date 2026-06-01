@@ -1,0 +1,18 @@
+client_id = "fd4d01bf4a164e7d67528f5ad5650d51"
+name = "AskBiz"
+application_url = "https://askbiz.co/api/shopify/install"
+embedded = true
+
+[auth]
+redirect_urls = ["https://askbiz.co/api/auth/shopify/callback"]
+
+[access_scopes]
+scopes = "read_customers,read_inventory,read_orders,read_products"
+use_legacy_install_flow = true
+
+[webhooks]
+api_version = "2026-04"
+
+[[webhooks.subscriptions]]
+compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+uri = "https://askbiz.co/api/webhooks/shopify/compliance"
