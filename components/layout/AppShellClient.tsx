@@ -456,17 +456,17 @@ export default function AppShellClient({ user, conversations, children }: {
         />
       )}
 
-      {/* Mobile top bar — hamburger only, top-left */}
+      {/* Mobile top bar — just the hamburger icon, no background/bar */}
       <div
         className="mobile-header"
         id="mobile-topbar"
-        style={{ display: 'none', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 97, background: 'var(--sf)', borderBottom: '1px solid var(--b)', padding: '6px 16px', alignItems: 'center' }}
+        style={{ display: 'none', position: 'fixed', top: 12, left: 12, zIndex: 97 }}
       >
         <button
           onClick={() => setSidebarOpen(v => !v)}
-          style={{ width: 36, height: 36, borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+          style={{ width: 36, height: 36, borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--tx)" strokeWidth="2" strokeLinecap="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--tx)" strokeWidth="2" strokeLinecap="round">
             <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
         </button>
