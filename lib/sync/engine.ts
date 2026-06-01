@@ -79,7 +79,7 @@ async function syncShopify(
   try {
     // Fetch last 250 orders
     const res = await fetch(
-      `https://${shop_domain}/admin/api/2024-01/orders.json?status=any&limit=250`,
+      `https://${shop_domain}/admin/api/2025-01/orders.json?status=any&limit=250`,
       { headers: { 'X-Shopify-Access-Token': String(access_token) } }
     )
     if (!res.ok) throw new Error(`Shopify API error: ${res.status}`)

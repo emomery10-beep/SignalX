@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
   const { access_token } = await tokenRes.json()
 
   // Get shop info for display name
-  const shopRes = await fetch(`https://${shop}/admin/api/2024-01/shop.json`, {
+  const shopRes = await fetch(`https://${shop}/admin/api/2025-01/shop.json`, {
     headers: { 'X-Shopify-Access-Token': access_token },
   })
   const shopData = shopRes.ok ? await shopRes.json() : {}
