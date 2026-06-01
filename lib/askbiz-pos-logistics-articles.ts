@@ -18,7 +18,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Navigating to the Logistics section",
-        body: "From the top navigation bar, click POS. In the sub-navigation, click Logistics. The dashboard loads showing your delivery operation's headline metrics. At the top, three filter controls let you focus the data: Branch (All Branches or a specific location), Sector (your business type, if multi-sector), and Date Range (Today, Yesterday, Last 7 days, Last 30 days, or custom). Set these before reading any numbers — leaving it on All Branches with a broad date range gives you the aggregate picture; narrowing to a single branch and today gives you the operational view."
+        body: "From the top navigation bar, click POS. In the sub-navigation, click Logistics. The dashboard loads showing your delivery operation's headline metrics. At the top, three filter controls let you focus the data: Branch (All Branches or a specific location), Sector (your business type, if multi-sector), and Date Range (Today, Yesterday, Last 7 days, Last 30 days, or custom). Set these before reading any numbers — leaving it on All Branches with a broad date range gives you the aggregate picture; narrowing to a single branch and today gives you the operational view.",
+        image: "/images/training/pos-logistics-overview.png"
       },
       {
         heading: "Parcel status overview",
@@ -62,7 +63,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Starting a delivery order",
-        body: "There are two ways to create a delivery order. From the till: open the till as normal, add items to the basket, then before completing payment select Delivery as the fulfilment method instead of Over Counter. From the Logistics tab: click New Delivery Order and build the order from scratch. The till method is more common for walk-in customers who pay for goods and want them delivered. The Logistics tab method is used for phone orders, pre-paid online orders, or B2B deliveries where the goods come from stock."
+        body: "There are two ways to create a delivery order. From the till: open the till as normal, add items to the basket, then before completing payment select Delivery as the fulfilment method instead of Over Counter. From the Logistics tab: click New Delivery Order and build the order from scratch. The till method is more common for walk-in customers who pay for goods and want them delivered. The Logistics tab method is used for phone orders, pre-paid online orders, or B2B deliveries where the goods come from stock.",
+        image: "/images/training/pos-logistics-parcels.png"
       },
       {
         heading: "Entering the customer and delivery address",
@@ -106,7 +108,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Creating a driver profile",
-        body: "Go to POS > Logistics > Drivers. Click Add Driver. Fill in: Full Name, Phone Number (used for customer-facing notifications — 'Your driver James will call on arrival'), Email Address (for app login), and Vehicle Type (motorcycle, car, van, bicycle — this affects which delivery zones they can cover). Set their Branch — the location they operate from. If your drivers work across multiple branches, set their primary branch here and allow multi-branch access in their permissions. Click Save and set an initial password."
+        body: "Go to POS > Logistics > Drivers. Click Add Driver. Fill in: Full Name, Phone Number (used for customer-facing notifications — 'Your driver James will call on arrival'), Email Address (for app login), and Vehicle Type (motorcycle, car, van, bicycle — this affects which delivery zones they can cover). Set their Branch — the location they operate from. If your drivers work across multiple branches, set their primary branch here and allow multi-branch access in their permissions. Click Save and set an initial password.",
+        image: "/images/training/pos-logistics-staff-drivers.png"
       },
       {
         heading: "The driver app",
@@ -150,7 +153,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "The delivery status timeline",
-        body: "Every delivery order in AskBiz moves through a defined status sequence: Created (order exists, not yet assigned), Assigned (driver allocated, not yet departed), In Transit (driver has picked up and is en route), Delivered (customer received the goods), or Failed (attempt made, unsuccessful). Each status change is timestamped automatically and logged to the order's audit trail. You can see the full timeline — including which staff member created the order, which driver was assigned, and when each status change occurred — by opening any delivery from the Logistics tab."
+        body: "Every delivery order in AskBiz moves through a defined status sequence: Created (order exists, not yet assigned), Assigned (driver allocated, not yet departed), In Transit (driver has picked up and is en route), Delivered (customer received the goods), or Failed (attempt made, unsuccessful). Each status change is timestamped automatically and logged to the order's audit trail. You can see the full timeline — including which staff member created the order, which driver was assigned, and when each status change occurred — by opening any delivery from the Logistics tab.",
+        image: "/images/training/pos-logistics-parcels.png"
       },
       {
         heading: "Tracking from the Logistics dashboard",
@@ -194,7 +198,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Why delivery zones matter",
-        body: "Without zones, your logistics operation accepts every delivery request regardless of distance or cost. A delivery 30 miles away might generate £5 in delivery fees but cost £25 in driver time and fuel — a significant loss. Delivery zones solve this by defining exactly where you deliver, at what fee, and with which vehicle type. When a customer address falls outside all defined zones, AskBiz flags it as undeliverable (or allows you to override and handle it as a special case)."
+        body: "Without zones, your logistics operation accepts every delivery request regardless of distance or cost. A delivery 30 miles away might generate £5 in delivery fees but cost £25 in driver time and fuel — a significant loss. Delivery zones solve this by defining exactly where you deliver, at what fee, and with which vehicle type. When a customer address falls outside all defined zones, AskBiz flags it as undeliverable (or allows you to override and handle it as a special case).",
+        image: "/images/training/pos-logistics-routes.png"
       },
       {
         heading: "Creating a delivery zone",
@@ -238,7 +243,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Setting up vehicle records",
-        body: "Go to POS > Logistics > Fleet. Click Add Vehicle. Enter: Vehicle Name or Registration (e.g. 'White Transit — AB21 XYZ'), Vehicle Type (Bicycle, Motorcycle, Car, Van, Truck), and Capacity — the maximum load the vehicle can carry. Capacity can be entered as weight (kg), volume (cubic metres), or parcel count — whichever metric you use to manage your loads. Set the Branch the vehicle is based at and assign it a primary driver (though vehicles can be driven by different people on different days). Save the vehicle record."
+        body: "Go to POS > Logistics > Fleet. Click Add Vehicle. Enter: Vehicle Name or Registration (e.g. 'White Transit — AB21 XYZ'), Vehicle Type (Bicycle, Motorcycle, Car, Van, Truck), and Capacity — the maximum load the vehicle can carry. Capacity can be entered as weight (kg), volume (cubic metres), or parcel count — whichever metric you use to manage your loads. Set the Branch the vehicle is based at and assign it a primary driver (though vehicles can be driven by different people on different days). Save the vehicle record.",
+        image: "/images/training/pos-logistics-fleet.png"
       },
       {
         heading: "Tracking vehicle utilisation",
@@ -282,7 +288,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "The three fee models",
-        body: "AskBiz supports three delivery fee models. Flat Rate: every delivery costs the same regardless of distance or order size — simple to communicate and easy for customers to understand. Distance-Based: the fee increases with distance from your depot — fair for drivers covering longer routes, but more complex to explain. Value-Based: the fee varies by order value — typically free above a threshold (£30, £50) and charged below it. You can combine models: flat rate by zone (Zone 1 = £3.99, Zone 2 = £5.99) with a free delivery threshold (any order over £50 gets free delivery regardless of zone)."
+        body: "AskBiz supports three delivery fee models. Flat Rate: every delivery costs the same regardless of distance or order size — simple to communicate and easy for customers to understand. Distance-Based: the fee increases with distance from your depot — fair for drivers covering longer routes, but more complex to explain. Value-Based: the fee varies by order value — typically free above a threshold (£30, £50) and charged below it. You can combine models: flat rate by zone (Zone 1 = £3.99, Zone 2 = £5.99) with a free delivery threshold (any order over £50 gets free delivery regardless of zone).",
+        image: "/images/training/pos-logistics-revenue.png"
       },
       {
         heading: "Setting up fee rules",
@@ -326,7 +333,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "How a delivery is marked as failed",
-        body: "From the driver's app, when a delivery cannot be completed, the driver taps Failed Attempt. They're prompted to select a reason: Customer Not Home, Wrong Address, Access Denied (locked building, gated community), Customer Refused Delivery, or Other. They can add a free-text note and optionally take a photo (of the door, the intercom, or any note left). This information is immediately visible in your Logistics dashboard under the Failed tab. The driver retains the goods and returns to depot unless you instruct otherwise."
+        body: "From the driver's app, when a delivery cannot be completed, the driver taps Failed Attempt. They're prompted to select a reason: Customer Not Home, Wrong Address, Access Denied (locked building, gated community), Customer Refused Delivery, or Other. They can add a free-text note and optionally take a photo (of the door, the intercom, or any note left). This information is immediately visible in your Logistics dashboard under the Failed tab. The driver retains the goods and returns to depot unless you instruct otherwise.",
+        image: "/images/training/pos-logistics-parcels.png"
       },
       {
         heading: "Notifying the customer",
@@ -370,7 +378,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Finding notification settings",
-        body: "Go to POS > Logistics > Settings > Notifications. This page lists all notification triggers — events in the delivery lifecycle that can send a message to the customer. Each trigger has a toggle (on/off), a message template, and a channel (SMS, Email, or both). Triggers include: Order Confirmed, Driver Assigned, Out for Delivery (dispatched), ETA Update (when arrival time changes significantly), Delivered, and Failed Attempt. Turn on the ones relevant to your operation and customise the message templates."
+        body: "Go to POS > Logistics > Settings > Notifications. This page lists all notification triggers — events in the delivery lifecycle that can send a message to the customer. Each trigger has a toggle (on/off), a message template, and a channel (SMS, Email, or both). Triggers include: Order Confirmed, Driver Assigned, Out for Delivery (dispatched), ETA Update (when arrival time changes significantly), Delivered, and Failed Attempt. Turn on the ones relevant to your operation and customise the message templates.",
+        image: "/images/training/pos-logistics-parcels.png"
       },
       {
         heading: "Writing effective notification messages",
@@ -414,7 +423,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Why proof of delivery matters",
-        body: "Without proof of delivery, any customer can claim their order never arrived — and you have no evidence to contradict them. This exposes you to refund demands for goods that were genuinely delivered. Proof of delivery (POD) closes this gap by capturing evidence at the moment of handover: a customer signature on the driver's screen, a photo of the goods at the delivery address, or a PIN code the customer confirms. POD is also a quality assurance tool — a driver who knows every delivery is recorded is more careful about handover standards."
+        body: "Without proof of delivery, any customer can claim their order never arrived — and you have no evidence to contradict them. This exposes you to refund demands for goods that were genuinely delivered. Proof of delivery (POD) closes this gap by capturing evidence at the moment of handover: a customer signature on the driver's screen, a photo of the goods at the delivery address, or a PIN code the customer confirms. POD is also a quality assurance tool — a driver who knows every delivery is recorded is more careful about handover standards.",
+        image: "/images/training/pos-logistics-parcels.png"
       },
       {
         heading: "Configuring POD requirements",
@@ -458,7 +468,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "When a customer wants to return by collection",
-        body: "Some customers can't or won't travel to your location to return goods — particularly for large items, elderly or mobility-limited customers, or businesses offering a premium returns service. A collection return means you send a driver to the customer's address to collect the goods. In AskBiz, this is called a Reverse Delivery or Collection Job. It works like an outbound delivery in reverse: you create a job, assign a driver, the driver collects the goods and brings them back to the depot, and the return is then processed."
+        body: "Some customers can't or won't travel to your location to return goods — particularly for large items, elderly or mobility-limited customers, or businesses offering a premium returns service. A collection return means you send a driver to the customer's address to collect the goods. In AskBiz, this is called a Reverse Delivery or Collection Job. It works like an outbound delivery in reverse: you create a job, assign a driver, the driver collects the goods and brings them back to the depot, and the return is then processed.",
+        image: "/images/training/pos-logistics-parcels.png"
       },
       {
         heading: "Creating a collection job",
@@ -502,7 +513,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Why time slots matter",
-        body: "The single biggest cause of failed deliveries is the customer not being home. Time slots solve this by giving the customer a say in when they receive their delivery. A customer who chose '2pm–4pm Tuesday' will make sure they're home at that time. Studies consistently show first-attempt success rates of 95%+ for slotted deliveries vs 75–80% for unscheduled 'anytime' deliveries. Beyond reducing failures, slots also let you plan routes more efficiently — you know exactly how many deliveries are happening in each time window, so you can allocate drivers accordingly."
+        body: "The single biggest cause of failed deliveries is the customer not being home. Time slots solve this by giving the customer a say in when they receive their delivery. A customer who chose '2pm–4pm Tuesday' will make sure they're home at that time. Studies consistently show first-attempt success rates of 95%+ for slotted deliveries vs 75–80% for unscheduled 'anytime' deliveries. Beyond reducing failures, slots also let you plan routes more efficiently — you know exactly how many deliveries are happening in each time window, so you can allocate drivers accordingly.",
+        image: "/images/training/pos-logistics-routes.png"
       },
       {
         heading: "Setting up time slots",
@@ -546,7 +558,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "When to use bulk dispatch",
-        body: "Individual dispatch (assigning one order at a time) is fine when orders trickle in throughout the day. But many businesses have a batch model: all morning orders are packed, and at 11am a driver takes the whole batch out at once. Doing this order-by-order takes several minutes and is prone to missing orders. Bulk dispatch does it in one operation: select all the orders for this driver's run, assign them together, and confirm — the driver gets all their stops at once in a single, route-optimised list."
+        body: "Individual dispatch (assigning one order at a time) is fine when orders trickle in throughout the day. But many businesses have a batch model: all morning orders are packed, and at 11am a driver takes the whole batch out at once. Doing this order-by-order takes several minutes and is prone to missing orders. Bulk dispatch does it in one operation: select all the orders for this driver's run, assign them together, and confirm — the driver gets all their stops at once in a single, route-optimised list.",
+        image: "/images/training/pos-logistics-operations-menu.png"
       },
       {
         heading: "Selecting orders for bulk dispatch",
@@ -590,7 +603,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Finding the driver performance report",
-        body: "Go to POS > Logistics > Reports > Driver Performance. Select a date range and use the Driver filter to view one driver or all drivers. The report table shows every driver with their key metrics for the period. At the top, fleet-level averages give you a benchmark: if the fleet average delivery success rate is 92%, a driver at 78% is significantly below average and needs attention; a driver at 97% is a model for others."
+        body: "Go to POS > Logistics > Reports > Driver Performance. Select a date range and use the Driver filter to view one driver or all drivers. The report table shows every driver with their key metrics for the period. At the top, fleet-level averages give you a benchmark: if the fleet average delivery success rate is 92%, a driver at 78% is significantly below average and needs attention; a driver at 97% is a model for others.",
+        image: "/images/training/pos-logistics-staff-drivers.png"
       },
       {
         heading: "Delivery success rate",
@@ -634,7 +648,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Enabling cash on delivery",
-        body: "Go to POS > Logistics > Settings > Payment Methods. Enable Cash on Delivery. Set any restrictions: maximum COD order value (to limit your risk on unverified customers), eligible zones (perhaps only within city limits where collections are easy to reconcile), or eligible customer types (e.g. only existing customers with a track record). Once enabled, COD appears as a payment option when creating delivery orders — the operator selects it instead of collecting payment upfront."
+        body: "Go to POS > Logistics > Settings > Payment Methods. Enable Cash on Delivery. Set any restrictions: maximum COD order value (to limit your risk on unverified customers), eligible zones (perhaps only within city limits where collections are easy to reconcile), or eligible customer types (e.g. only existing customers with a track record). Once enabled, COD appears as a payment option when creating delivery orders — the operator selects it instead of collecting payment upfront.",
+        image: "/images/training/pos-logistics-revenue.png"
       },
       {
         heading: "How COD orders appear to the driver",
@@ -678,7 +693,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "What is a delivery SLA?",
-        body: "A service level agreement (SLA) is a commitment about the quality of service you'll provide. For logistics, the most common SLA is a delivery time promise: 'Orders placed before 12pm are delivered the same day by 5pm.' Or for zone-based SLAs: 'Zone 1 deliveries are completed within 45 minutes of dispatch.' Breaking an SLA has consequences: for consumer customers, it damages trust and generates refund requests; for B2B clients with contractual SLAs, it may trigger penalties or service credits. AskBiz tracks every delivery against its SLA in real time."
+        body: "A service level agreement (SLA) is a commitment about the quality of service you'll provide. For logistics, the most common SLA is a delivery time promise: 'Orders placed before 12pm are delivered the same day by 5pm.' Or for zone-based SLAs: 'Zone 1 deliveries are completed within 45 minutes of dispatch.' Breaking an SLA has consequences: for consumer customers, it damages trust and generates refund requests; for B2B clients with contractual SLAs, it may trigger penalties or service credits. AskBiz tracks every delivery against its SLA in real time.",
+        image: "/images/training/pos-logistics-overview.png"
       },
       {
         heading: "Configuring SLAs",
@@ -722,7 +738,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Why integrate third-party platforms?",
-        body: "Many businesses use third-party delivery platforms (Uber Eats, Deliveroo, Glovo, Just Eat) alongside or instead of their own delivery fleet. Without integration, you're managing two separate systems: the platform's dashboard and AskBiz. Orders, stock, and revenue are disconnected. With integration, third-party orders flow into AskBiz automatically — reducing manual entry, keeping stock accurate, and giving you a unified revenue view across your own deliveries and third-party platforms."
+        body: "Many businesses use third-party delivery platforms (Uber Eats, Deliveroo, Glovo, Just Eat) alongside or instead of their own delivery fleet. Without integration, you're managing two separate systems: the platform's dashboard and AskBiz. Orders, stock, and revenue are disconnected. With integration, third-party orders flow into AskBiz automatically — reducing manual entry, keeping stock accurate, and giving you a unified revenue view across your own deliveries and third-party platforms.",
+        image: "/images/training/pos-logistics-fleet.png"
       },
       {
         heading: "Setting up an integration",
@@ -766,7 +783,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Getting to Logistics Reports",
-        body: "Go to POS > Logistics > Reports. The reports menu has several sub-sections. Start with Summary — this gives a high-level snapshot of your logistics operation for any date range: total orders created, total dispatched, total delivered, total failed, delivery revenue collected, average delivery time, and overall SLA compliance rate. Export the Summary as PDF for inclusion in a weekly operations report. The other sub-sections provide granular drill-downs into specific areas."
+        body: "Go to POS > Logistics > Reports. The reports menu has several sub-sections. Start with Summary — this gives a high-level snapshot of your logistics operation for any date range: total orders created, total dispatched, total delivered, total failed, delivery revenue collected, average delivery time, and overall SLA compliance rate. Export the Summary as PDF for inclusion in a weekly operations report. The other sub-sections provide granular drill-downs into specific areas.",
+        image: "/images/training/pos-logistics-revenue.png"
       },
       {
         heading: "Summary report — the weekly check",
@@ -810,7 +828,8 @@ export const ASKBIZ_POS_LOGISTICS_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Why end-of-day matters for logistics",
-        body: "Unlike till reconciliation (which is one operation per till), logistics reconciliation spans every driver, every parcel, and every COD payment. Leaving it undone means: stock discrepancies from unprocessed returns, COD cash not reconciled against driver records, and orders stuck in 'In Transit' status that are actually back at depot. The end-of-day process takes 15–30 minutes but prevents hours of confusion the following morning."
+        body: "Unlike till reconciliation (which is one operation per till), logistics reconciliation spans every driver, every parcel, and every COD payment. Leaving it undone means: stock discrepancies from unprocessed returns, COD cash not reconciled against driver records, and orders stuck in 'In Transit' status that are actually back at depot. The end-of-day process takes 15–30 minutes but prevents hours of confusion the following morning.",
+        image: "/images/training/pos-logistics-overview.png"
       },
       {
         heading: "Step 1 — Check all active deliveries",

@@ -18,7 +18,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Getting to the product catalogue",
-        body: "From the top navigation, go to POS > Operations > Retail > Products. This is the master list of every item your business sells. New installations show an empty list with an Add Product button in the top-right corner. Existing businesses with products already loaded will see their catalogue here, searchable by name, SKU, or barcode."
+        body: "From the top navigation, go to POS > Operations > Retail > Products. This is the master list of every item your business sells. New installations show an empty list with an Add Product button in the top-right corner. Existing businesses with products already loaded will see their catalogue here, searchable by name, SKU, or barcode.",
+        image: "/images/training/pos-retail-inventory.png"
       },
       {
         heading: "Adding a new product — basic details",
@@ -66,7 +67,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "What are variants and when do you need them?",
-        body: "A variant is a specific version of a product that differs in one or more attributes — typically size, colour, flavour, or pack quantity. Without variants, you'd need to create a separate product entry for every combination: 'Blue T-shirt Small', 'Blue T-shirt Medium', 'Blue T-shirt Large', 'Red T-shirt Small', and so on. With variants, you create one parent product ('T-shirt') and define its options. Stock is tracked separately per variant so you always know exactly how many of each size and colour you have."
+        body: "A variant is a specific version of a product that differs in one or more attributes — typically size, colour, flavour, or pack quantity. Without variants, you'd need to create a separate product entry for every combination: 'Blue T-shirt Small', 'Blue T-shirt Medium', 'Blue T-shirt Large', 'Red T-shirt Small', and so on. With variants, you create one parent product ('T-shirt') and define its options. Stock is tracked separately per variant so you always know exactly how many of each size and colour you have.",
+        image: "/images/training/pos-retail-inventory-list.png"
       },
       {
         heading: "Creating a variant group",
@@ -110,7 +112,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Why categories matter",
-        body: "Without categories, your product catalogue is one flat list. For a business with 50 products that's manageable; for one with 500 products it becomes a serious usability problem at the till. Categories solve this by grouping related products — Beverages, Snacks, Clothing, Electronics, or whatever fits your business. They also unlock category-level reporting: instead of scrolling through every individual product's performance, you can see at a glance that your Clothing department generated 42% of revenue last month."
+        body: "Without categories, your product catalogue is one flat list. For a business with 50 products that's manageable; for one with 500 products it becomes a serious usability problem at the till. Categories solve this by grouping related products — Beverages, Snacks, Clothing, Electronics, or whatever fits your business. They also unlock category-level reporting: instead of scrolling through every individual product's performance, you can see at a glance that your Clothing department generated 42% of revenue last month.",
+        image: "/images/training/pos-retail-menu.png"
       },
       {
         heading: "Creating a category",
@@ -154,7 +157,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Finding the Suppliers section",
-        body: "Go to POS > Operations > Retail > Suppliers. This page lists all your current suppliers. For a new account, it's empty. Click Add Supplier to create your first one."
+        body: "Go to POS > Operations > Retail > Suppliers. This page lists all your current suppliers. For a new account, it's empty. Click Add Supplier to create your first one.",
+        image: "/images/training/pos-retail-purchase-orders.png"
       },
       {
         heading: "Creating a supplier record",
@@ -198,7 +202,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Starting a purchase order",
-        body: "Go to POS > Operations > Retail > Purchase Orders. Click New Purchase Order. Select the Supplier from the dropdown — this pulls in the supplier's contact details and payment terms automatically. Set the Expected Delivery Date (useful for planning and for flagging overdue orders). Add an optional Reference number (e.g. your internal PO number or the supplier's quote number) and any Notes for the supplier."
+        body: "Go to POS > Operations > Retail > Purchase Orders. Click New Purchase Order. Select the Supplier from the dropdown — this pulls in the supplier's contact details and payment terms automatically. Set the Expected Delivery Date (useful for planning and for flagging overdue orders). Add an optional Reference number (e.g. your internal PO number or the supplier's quote number) and any Notes for the supplier.",
+        image: "/images/training/pos-retail-purchase-orders.png"
       },
       {
         heading: "Adding items to the order",
@@ -242,7 +247,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "When to run a stock take",
-        body: "Most retailers run a full stock take monthly or quarterly. Some run category-by-category counts on a rolling basis — counting Beverages this week, Snacks next week, so every category is counted once a month without needing to close the store for a full count. Run an unplanned stock take if you suspect theft, after a major delivery, or when stock discrepancies keep appearing in the POS alerts. The key principle: count often enough that discrepancies are caught while they're small."
+        body: "Most retailers run a full stock take monthly or quarterly. Some run category-by-category counts on a rolling basis — counting Beverages this week, Snacks next week, so every category is counted once a month without needing to close the store for a full count. Run an unplanned stock take if you suspect theft, after a major delivery, or when stock discrepancies keep appearing in the POS alerts. The key principle: count often enough that discrepancies are caught while they're small.",
+        image: "/images/training/pos-retail-inventory.png"
       },
       {
         heading: "Creating a new stock take",
@@ -286,7 +292,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "What price lists are for",
-        body: "Most retailers sell at one price to everyone. But many businesses have tiered pricing: a standard retail price for walk-in customers, a trade price for business customers who buy regularly, and a wholesale price for bulk buyers. Price lists in AskBiz let you define these tiers. Assign a price list to a customer and every time that customer is selected at the till, their prices override the standard ones automatically. No manual discounting needed — and no risk of a cashier forgetting to apply the agreed discount."
+        body: "Most retailers sell at one price to everyone. But many businesses have tiered pricing: a standard retail price for walk-in customers, a trade price for business customers who buy regularly, and a wholesale price for bulk buyers. Price lists in AskBiz let you define these tiers. Assign a price list to a customer and every time that customer is selected at the till, their prices override the standard ones automatically. No manual discounting needed — and no risk of a cashier forgetting to apply the agreed discount.",
+        image: "/images/training/pos-retail-inventory-list.png"
       },
       {
         heading: "Creating a price list",
@@ -330,7 +337,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "When to use stock transfers",
-        body: "Multi-branch businesses often have uneven stock distribution. Branch A might have 80 units of a product it's barely selling, while Branch B has run out of the same product. Rather than placing a new purchase order, a stock transfer moves the surplus from A to B. Transfers also handle planned resupply: a central warehouse sends weekly replenishments to retail branches. In AskBiz, every transfer is a tracked transaction — stock doesn't just appear or disappear, it moves with an audit trail."
+        body: "Multi-branch businesses often have uneven stock distribution. Branch A might have 80 units of a product it's barely selling, while Branch B has run out of the same product. Rather than placing a new purchase order, a stock transfer moves the surplus from A to B. Transfers also handle planned resupply: a central warehouse sends weekly replenishments to retail branches. In AskBiz, every transfer is a tracked transaction — stock doesn't just appear or disappear, it moves with an audit trail.",
+        image: "/images/training/pos-retail-operations.png"
       },
       {
         heading: "Creating a transfer request",
@@ -374,7 +382,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "What counts as wastage",
-        body: "Wastage covers any stock that leaves the business without generating revenue: food that expires before it's sold, products damaged in transit or on the shelf, items used for staff meals or sampling, goods lost to shoplifting, or inventory destroyed in an incident. If you don't record wastage, your stock count stays artificially high — AskBiz thinks you have 50 units when in reality you have 38 because 12 were damaged. This discrepancy compounds over time and makes your stock take comparisons meaningless."
+        body: "Wastage covers any stock that leaves the business without generating revenue: food that expires before it's sold, products damaged in transit or on the shelf, items used for staff meals or sampling, goods lost to shoplifting, or inventory destroyed in an incident. If you don't record wastage, your stock count stays artificially high — AskBiz thinks you have 50 units when in reality you have 38 because 12 were damaged. This discrepancy compounds over time and makes your stock take comparisons meaningless.",
+        image: "/images/training/pos-retail-inventory.png"
       },
       {
         heading: "Recording a write-off",
@@ -418,7 +427,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Compatible scanners",
-        body: "AskBiz POS works with any USB or Bluetooth barcode scanner that uses HID (Human Interface Device) mode — which covers the vast majority of retail scanners. The scanner acts like a keyboard: when it reads a barcode, it types the code into the active field. No drivers or special software are required. Plug in a USB scanner and it works immediately. For Bluetooth scanners, pair with the device running AskBiz the same way you'd pair any Bluetooth accessory. Supported barcode formats include EAN-13, EAN-8, UPC-A, UPC-E, Code 128, Code 39, and QR codes."
+        body: "AskBiz POS works with any USB or Bluetooth barcode scanner that uses HID (Human Interface Device) mode — which covers the vast majority of retail scanners. The scanner acts like a keyboard: when it reads a barcode, it types the code into the active field. No drivers or special software are required. Plug in a USB scanner and it works immediately. For Bluetooth scanners, pair with the device running AskBiz the same way you'd pair any Bluetooth accessory. Supported barcode formats include EAN-13, EAN-8, UPC-A, UPC-E, Code 128, Code 39, and QR codes.",
+        image: "/images/training/pos-retail-inventory-list.png"
       },
       {
         heading: "Assigning barcodes to products",
@@ -462,7 +472,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "What minimum stock level means",
-        body: "The minimum stock level (also called the reorder point) is the quantity at which AskBiz flags a product as low stock. When your on-hand quantity drops to or below this number, the product appears in the Stock Alerts section of the POS Overview with a count of remaining units. This is your signal to reorder. The right minimum level gives you enough time to place and receive a new order before you completely run out."
+        body: "The minimum stock level (also called the reorder point) is the quantity at which AskBiz flags a product as low stock. When your on-hand quantity drops to or below this number, the product appears in the Stock Alerts section of the POS Overview with a count of remaining units. This is your signal to reorder. The right minimum level gives you enough time to place and receive a new order before you completely run out.",
+        image: "/images/training/pos-retail-low-stock.png"
       },
       {
         heading: "Calculating the right minimum",
@@ -506,7 +517,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "When bulk import makes sense",
-        body: "If you're setting up AskBiz for the first time and already have your products in another system — a spreadsheet, an old POS, an accountancy package — bulk CSV import is far faster than adding products one by one. It's also useful for loading seasonal catalogue additions (e.g. 50 new Christmas products), updating prices across many items at once, or migrating from a competitor POS. For ongoing single-product additions, the manual form is usually quicker than creating a CSV."
+        body: "If you're setting up AskBiz for the first time and already have your products in another system — a spreadsheet, an old POS, an accountancy package — bulk CSV import is far faster than adding products one by one. It's also useful for loading seasonal catalogue additions (e.g. 50 new Christmas products), updating prices across many items at once, or migrating from a competitor POS. For ongoing single-product additions, the manual form is usually quicker than creating a CSV.",
+        image: "/images/training/pos-retail-inventory.png"
       },
       {
         heading: "Downloading the CSV template",
@@ -550,7 +562,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Why margin matters more than revenue",
-        body: "A product that generates £10,000 in revenue but costs £9,500 to produce is almost worthless — you've tied up cash and effort for a 5% margin. A product that generates £2,000 in revenue but only costs £400 to produce gives you a 80% margin and £1,600 of gross profit. Revenue is vanity; margin is the real measure of a product's contribution to your business. AskBiz's product margin tracking makes these calculations automatic — but only if every product has a cost price set."
+        body: "A product that generates £10,000 in revenue but costs £9,500 to produce is almost worthless — you've tied up cash and effort for a 5% margin. A product that generates £2,000 in revenue but only costs £400 to produce gives you a 80% margin and £1,600 of gross profit. Revenue is vanity; margin is the real measure of a product's contribution to your business. AskBiz's product margin tracking makes these calculations automatic — but only if every product has a cost price set.",
+        image: "/images/training/pos-retail-reports.png"
       },
       {
         heading: "Setting and maintaining cost prices",
@@ -594,7 +607,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Why images matter at the till",
-        body: "Imagine a clothing shop with 15 different T-shirts in similar colours. Without images, the cashier is searching by name alone — slow and prone to error. With product images, each item in the till's product grid has a visual thumbnail. The cashier can glance and confirm they've selected the right product in a second. Images also reduce training time: a new cashier can learn products visually rather than needing to memorise every name."
+        body: "Imagine a clothing shop with 15 different T-shirts in similar colours. Without images, the cashier is searching by name alone — slow and prone to error. With product images, each item in the till's product grid has a visual thumbnail. The cashier can glance and confirm they've selected the right product in a second. Images also reduce training time: a new cashier can learn products visually rather than needing to memorise every name.",
+        image: "/images/training/pos-retail-inventory-list.png"
       },
       {
         heading: "Uploading a product image",
@@ -634,7 +648,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "UK VAT rates at a glance",
-        body: "As of 2024, the UK has three VAT rates: Standard Rate (20%) — applies to most goods and services. Reduced Rate (5%) — applies to domestic fuel and power, children's car seats, and some other categories. Zero Rate (0%) — VAT is charged but at 0%, meaning no tax is collected. Zero-rated differs from Exempt (which means VAT doesn't apply at all) in accounting terms. Common zero-rated items: most food, children's clothing and footwear, books and newspapers, prescription medicines. If you're unsure about a specific product, consult HMRC's VAT rates guide or your accountant."
+        body: "As of 2024, the UK has three VAT rates: Standard Rate (20%) — applies to most goods and services. Reduced Rate (5%) — applies to domestic fuel and power, children's car seats, and some other categories. Zero Rate (0%) — VAT is charged but at 0%, meaning no tax is collected. Zero-rated differs from Exempt (which means VAT doesn't apply at all) in accounting terms. Common zero-rated items: most food, children's clothing and footwear, books and newspapers, prescription medicines. If you're unsure about a specific product, consult HMRC's VAT rates guide or your accountant.",
+        image: "/images/training/pos-retail-inventory.png"
       },
       {
         heading: "Setting the VAT rate on a product",
@@ -678,7 +693,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "What is a service item?",
-        body: "A service item is a non-physical product that you charge for but don't stock. Examples: a fitting fee for blinds or curtains, a delivery charge, an installation service, gift wrapping, a consultation fee, or a repair charge. In AskBiz, service items are set up almost identically to physical products, but with stock tracking disabled. This means they don't consume inventory when sold and don't appear in stock counts or low-stock alerts."
+        body: "A service item is a non-physical product that you charge for but don't stock. Examples: a fitting fee for blinds or curtains, a delivery charge, an installation service, gift wrapping, a consultation fee, or a repair charge. In AskBiz, service items are set up almost identically to physical products, but with stock tracking disabled. This means they don't consume inventory when sold and don't appear in stock counts or low-stock alerts.",
+        image: "/images/training/pos-retail-inventory-list.png"
       },
       {
         heading: "Creating a service item",
@@ -722,7 +738,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "How gift cards work in AskBiz",
-        body: "Gift cards in AskBiz work in two stages: selling and redemption. Selling: a customer buys a gift card — you create a gift card product (e.g. '£25 Gift Card') and sell it at the till. The revenue is recorded but the liability is also tracked — you owe the recipient £25 of goods. Redemption: the recipient comes in and pays for goods using the gift card. The cashier selects 'Gift Card' as the payment method, enters the card number, and AskBiz deducts the amount from the card's balance. If the balance covers the full purchase, no further payment is needed. If not, the customer pays the remainder by another method."
+        body: "Gift cards in AskBiz work in two stages: selling and redemption. Selling: a customer buys a gift card — you create a gift card product (e.g. '£25 Gift Card') and sell it at the till. The revenue is recorded but the liability is also tracked — you owe the recipient £25 of goods. Redemption: the recipient comes in and pays for goods using the gift card. The cashier selects 'Gift Card' as the payment method, enters the card number, and AskBiz deducts the amount from the card's balance. If the balance covers the full purchase, no further payment is needed. If not, the customer pays the remainder by another method.",
+        image: "/images/training/pos-retail-gift-cards.png"
       },
       {
         heading: "Creating a gift card product",
@@ -766,7 +783,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "The multi-branch model in AskBiz",
-        body: "Each branch in AskBiz has its own independent stock count, its own till sessions, its own staff, and its own performance metrics. At the same time, your product catalogue, suppliers, and price lists are shared across all branches — you define a product once and it's available everywhere. This means you manage your catalogue centrally (what products exist and at what price) while each branch manages its own inventory (how much of each product it has on hand)."
+        body: "Each branch in AskBiz has its own independent stock count, its own till sessions, its own staff, and its own performance metrics. At the same time, your product catalogue, suppliers, and price lists are shared across all branches — you define a product once and it's available everywhere. This means you manage your catalogue centrally (what products exist and at what price) while each branch manages its own inventory (how much of each product it has on hand).",
+        image: "/images/training/pos-retail-operations.png"
       },
       {
         heading: "Viewing stock across all branches",
@@ -810,7 +828,8 @@ export const ASKBIZ_POS_RETAIL_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Why end-of-month reporting matters",
-        body: "Your monthly management accounts need three stock-related numbers: opening stock value (what you had at the start of the month), purchases received (what you bought during the month), and closing stock value (what you have left). The difference — opening stock + purchases − closing stock — is your COGS (cost of goods sold). Gross profit = Revenue − COGS. Without accurate stock data, you can't calculate accurate gross profit. AskBiz tracks all three in real time."
+        body: "Your monthly management accounts need three stock-related numbers: opening stock value (what you had at the start of the month), purchases received (what you bought during the month), and closing stock value (what you have left). The difference — opening stock + purchases − closing stock — is your COGS (cost of goods sold). Gross profit = Revenue − COGS. Without accurate stock data, you can't calculate accurate gross profit. AskBiz tracks all three in real time.",
+        image: "/images/training/pos-retail-reports.png"
       },
       {
         heading: "Step 1 — Run a stock take on the last day of the month",

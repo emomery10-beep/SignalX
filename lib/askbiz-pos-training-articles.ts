@@ -19,7 +19,7 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
       {
         heading: "Finding your way to the POS Overview",
         body: "Click the POS tab in the top navigation bar. The Overview sub-tab loads by default. At the top you'll see three quick-action buttons: MTD VAT (month-to-date VAT report), Export CSV (download your sales data), and Open till (start a cashier session). Below those are the Branch and Sector filter dropdowns — set these to see numbers for a single location or business type rather than all combined.",
-        image: "/images/training/askbiz-pos-overview.png"
+        image: "/images/training/askbiz-pos-overview.png",
       },
       {
         heading: "Understanding the seven key metrics",
@@ -64,7 +64,7 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
       {
         heading: "Starting your day: the Open Till button",
         body: "The 'Open till' button sits in the top-right area of every POS screen. Clicking it opens the till interface where a cashier can begin processing sales. Each session requires a staff PIN — this ensures every transaction is attributed to the correct cashier, which feeds into the Staff Performance data on the Overview. If you're the manager, you can also open a till on behalf of a cashier by entering their PIN.",
-        image: "/images/training/11-pos-inventory.gif"
+        image: "/images/training/14-pos-register-till.gif",
       },
       {
         heading: "Setting an opening float",
@@ -104,7 +104,8 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Where to find Stock Alerts",
-        body: "Scroll to the bottom of the POS Overview tab. The Stock Alerts section lists every product that has hit or fallen below its minimum stock threshold. Products are colour-coded: red rows with 'OUT OF STOCK' mean zero units remain and the product cannot be sold. Amber rows show a unit count (e.g. '1 left', '5 left') — these products can still be sold but will run out soon. The count of low-stock items also appears in the 'Low stock' metric card at the top of the Overview."
+        body: "Scroll to the bottom of the POS Overview tab. The Stock Alerts section lists every product that has hit or fallen below its minimum stock threshold. Products are colour-coded: red rows with 'OUT OF STOCK' mean zero units remain and the product cannot be sold. Amber rows show a unit count (e.g. '1 left', '5 left') — these products can still be sold but will run out soon. The count of low-stock items also appears in the 'Low stock' metric card at the top of the Overview.",
+        image: "/images/training/05-alerts-overview.gif"
       },
       {
         heading: "Understanding the alert thresholds",
@@ -145,7 +146,7 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
       {
         heading: "Getting to Inventory",
         body: "Click POS in the top nav, then the Operations sub-tab. Select your business sector — Retail, Restaurant, Salon, etc. — and click Inventory. You'll see all your products listed with current stock levels. The badge on the Inventory card shows the total product count (e.g. '40'). Use the search bar to find a specific product quickly, or scroll through the full list.",
-        image: "/images/training/11-pos-inventory.gif"
+        image: "/images/training/pos-retail-inventory.png",
       },
       {
         heading: "Adding a new product",
@@ -189,7 +190,8 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Opening the Sales view",
-        body: "Go to POS > Operations > Retail > Sales. The Sales section shows Revenue and Transactions as headline numbers for your selected period, along with a chart of sales over time. Below that is a full transaction log. Each row shows the transaction date and time, the cashier who processed it, the items sold, the payment method (cash or card), and the total amount. Click any row to see the full receipt — every item, quantity, price, and any discount applied."
+        body: "Go to POS > Operations > Retail > Sales. The Sales section shows Revenue and Transactions as headline numbers for your selected period, along with a chart of sales over time. Below that is a full transaction log. Each row shows the transaction date and time, the cashier who processed it, the items sold, the payment method (cash or card), and the total amount. Click any row to see the full receipt — every item, quantity, price, and any discount applied.",
+        image: "/images/training/14-pos-register-till.gif"
       },
       {
         heading: "Filtering your sales data",
@@ -229,7 +231,8 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "How customer profiles are created",
-        body: "When a cashier processes a sale, they can optionally add the customer's name, phone number, or email. AskBiz creates a customer profile for that person and links every subsequent purchase made under the same contact details. Over time, each profile builds up a complete purchase history — every item bought, every transaction amount, visit dates, average spend, and total lifetime value. Customers who buy without providing contact details are recorded as anonymous sales."
+        body: "When a cashier processes a sale, they can optionally add the customer's name, phone number, or email. AskBiz creates a customer profile for that person and links every subsequent purchase made under the same contact details. Over time, each profile builds up a complete purchase history — every item bought, every transaction amount, visit dates, average spend, and total lifetime value. Customers who buy without providing contact details are recorded as anonymous sales.",
+        image: "/images/training/pos-retail-customers.png"
       },
       {
         heading: "Viewing individual customer profiles",
@@ -269,7 +272,8 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Getting to Promotions",
-        body: "Go to POS > Operations > Retail > Promotions. Click '+ New promotion'. You'll see options for the promotion type: percentage discount (e.g. 20% off), fixed amount discount (e.g. KSh 100 off), buy-one-get-one (BOGO), or a spend threshold offer (e.g. spend KSh 1,000 and get 10% off). Choose the type that fits your goal — most clearance sales use percentage discounts, while 'free gift with purchase' campaigns use BOGO."
+        body: "Go to POS > Operations > Retail > Promotions. Click '+ New promotion'. You'll see options for the promotion type: percentage discount (e.g. 20% off), fixed amount discount (e.g. KSh 100 off), buy-one-get-one (BOGO), or a spend threshold offer (e.g. spend KSh 1,000 and get 10% off). Choose the type that fits your goal — most clearance sales use percentage discounts, while 'free gift with purchase' campaigns use BOGO.",
+        image: "/images/training/pos-retail-promotions.png"
       },
       {
         heading: "Setting the scope: all products or specific items",
@@ -309,7 +313,8 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Setting up your loyalty programme",
-        body: "Go to POS > Operations > Retail > Loyalty. Click 'Enable loyalty programme'. Set your earn rate — how many points a customer earns per currency unit spent. For example, 1 point per KSh 10 spent means a KSh 500 purchase earns 50 points. Then set your redemption rate — how many points equal a KSh discount at checkout. A common ratio is 100 points = KSh 10 off, giving customers a 1% effective discount which is affordable for most businesses."
+        body: "Go to POS > Operations > Retail > Loyalty. Click 'Enable loyalty programme'. Set your earn rate — how many points a customer earns per currency unit spent. For example, 1 point per KSh 10 spent means a KSh 500 purchase earns 50 points. Then set your redemption rate — how many points equal a KSh discount at checkout. A common ratio is 100 points = KSh 10 off, giving customers a 1% effective discount which is affordable for most businesses.",
+        image: "/images/training/pos-retail-loyalty.png"
       },
       {
         heading: "Creating loyalty tiers",
@@ -349,7 +354,8 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Finding the original transaction",
-        body: "Go to POS > Operations > Retail > Returns. Click '+ New return'. Search for the original transaction by date, customer name, or transaction amount. Once you find it, click to open the receipt. You'll see every item from the original sale with checkboxes. Select the items being returned — you can return all items (full refund) or just some of them (partial refund)."
+        body: "Go to POS > Operations > Retail > Returns. Click '+ New return'. Search for the original transaction by date, customer name, or transaction amount. Once you find it, click to open the receipt. You'll see every item from the original sale with checkboxes. Select the items being returned — you can return all items (full refund) or just some of them (partial refund).",
+        image: "/images/training/pos-retail-returns.png"
       },
       {
         heading: "Processing a full refund",
@@ -389,7 +395,8 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Where to find POS Reports",
-        body: "Go to POS > Operations > Retail > Reports. You'll see a menu of report types. The key reports are: Sales Summary (total revenue, transactions, refunds, and average sale by period), Product Performance (sales and margin by product), Staff Performance (revenue and transactions by cashier), and Margin Analysis (gross profit and margin % by product or category). Each report loads for your default date range and can be filtered and re-run."
+        body: "Go to POS > Operations > Retail > Reports. You'll see a menu of report types. The key reports are: Sales Summary (total revenue, transactions, refunds, and average sale by period), Product Performance (sales and margin by product), Staff Performance (revenue and transactions by cashier), and Margin Analysis (gross profit and margin % by product or category). Each report loads for your default date range and can be filtered and re-run.",
+        image: "/images/training/pos-retail-reports.png"
       },
       {
         heading: "Reading the Sales Summary",
@@ -434,7 +441,7 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
       {
         heading: "The Staff tab: your team overview",
         body: "Go to POS and click the Staff sub-tab at the top. You'll see every staff member, their role, branch, whether their PIN is set, and their last login date. The header shows how many seats are in use vs your total (e.g. '2 of 2 seats used'). If you're at capacity, click 'Add seats' or 'Upgrade seats' to increase your limit. Each staff member has Edit and Deactivate buttons — deactivating a staff member prevents them from logging into the till without deleting their transaction history.",
-        image: "/images/training/askbiz-pos-overview.png"
+        image: "/images/training/pos-logistics-staff-drivers.png",
       },
       {
         heading: "Adding a new staff member",
@@ -474,7 +481,8 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "The Branches tab: your location list",
-        body: "Go to POS and click the Branches sub-tab. You'll see every branch listed with its name, whether it's the default location, how many staff members are assigned, and how many products are in its inventory. For example: 'town — Default location — 2 staff · 76 products' and 'Bondeni — 0 staff · 0 products'. Click Edit on any branch to update its name, address, contact details, and operating hours."
+        body: "Go to POS and click the Branches sub-tab. You'll see every branch listed with its name, whether it's the default location, how many staff members are assigned, and how many products are in its inventory. For example: 'town — Default location — 2 staff · 76 products' and 'Bondeni — 0 staff · 0 products'. Click Edit on any branch to update its name, address, contact details, and operating hours.",
+        image: "/images/training/pos-retail-operations.png"
       },
       {
         heading: "Adding a new branch",
@@ -514,7 +522,8 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "How geo-tagged sales work",
-        body: "Go to POS and click the Map sub-tab. If you see 'No geo-tagged sales in this period — cashiers must allow location access when checking out', it means location permissions haven't been granted on the cashier's device. The Map feature uses the browser's geolocation API — when a cashier processes a sale, the device records the GPS coordinates of that transaction. These coordinates are plotted on the map so you can see exactly where each sale happened."
+        body: "Go to POS and click the Map sub-tab. If you see 'No geo-tagged sales in this period — cashiers must allow location access when checking out', it means location permissions haven't been granted on the cashier's device. The Map feature uses the browser's geolocation API — when a cashier processes a sale, the device records the GPS coordinates of that transaction. These coordinates are plotted on the map so you can see exactly where each sale happened.",
+        image: "/images/training/pos-logistics-map.png"
       },
       {
         heading: "Enabling location access for cashiers",
@@ -554,7 +563,8 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Where to find the Audit Log",
-        body: "Go to POS and click the Audit sub-tab. The Audit Log shows a complete, tamper-proof record of everything that has happened in your POS — from the moment you first set it up. At the top, filter by event category: All (everything), Transactions (sales, refunds, voids), Jobs (scheduled tasks), Captures (payment captures), Inventory (stock changes, price edits), Staff (logins, PIN resets, deactivations), or Deliveries (logistics events). Set a time filter — All time, Today, or a custom date."
+        body: "Go to POS and click the Audit sub-tab. The Audit Log shows a complete, tamper-proof record of everything that has happened in your POS — from the moment you first set it up. At the top, filter by event category: All (everything), Transactions (sales, refunds, voids), Jobs (scheduled tasks), Captures (payment captures), Inventory (stock changes, price edits), Staff (logins, PIN resets, deactivations), or Deliveries (logistics events). Set a time filter — All time, Today, or a custom date.",
+        image: "/images/training/pos-overview.png"
       },
       {
         heading: "Investigating a discrepancy",
@@ -594,7 +604,8 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Accessing the Logistics Network",
-        body: "Go to POS and click the Logistics sub-tab. The Logistics Network page covers parcels, fleet management, route performance, and delivery revenue across all your branches. If you see 'Loading logistics data...' on first visit, click the Refresh button — the logistics module pulls live data from your connected delivery operations. If your business doesn't handle deliveries, this tab can be ignored; it's most relevant to courier businesses, delivery restaurants, and retail businesses that offer home delivery."
+        body: "Go to POS and click the Logistics sub-tab. The Logistics Network page covers parcels, fleet management, route performance, and delivery revenue across all your branches. If you see 'Loading logistics data...' on first visit, click the Refresh button — the logistics module pulls live data from your connected delivery operations. If your business doesn't handle deliveries, this tab can be ignored; it's most relevant to courier businesses, delivery restaurants, and retail businesses that offer home delivery.",
+        image: "/images/training/pos-logistics-overview.png"
       },
       {
         heading: "Tracking parcels and deliveries",
@@ -634,7 +645,8 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Using the Export CSV button",
-        body: "The Export CSV button appears at the top of every POS tab — Overview, Operations sub-sections, Staff, and Branches. Before clicking Export, set your filters: choose the Branch (All Branches or a specific one), the date range (e.g. Last 30 days for monthly reporting), and the Sector if applicable. Then click Export CSV. Your browser downloads a file immediately. Open it in Excel, Google Sheets, or any CSV-compatible tool. The file contains every visible column from the current view — no data is hidden or truncated."
+        body: "The Export CSV button appears at the top of every POS tab — Overview, Operations sub-sections, Staff, and Branches. Before clicking Export, set your filters: choose the Branch (All Branches or a specific one), the date range (e.g. Last 30 days for monthly reporting), and the Sector if applicable. Then click Export CSV. Your browser downloads a file immediately. Open it in Excel, Google Sheets, or any CSV-compatible tool. The file contains every visible column from the current view — no data is hidden or truncated.",
+        image: "/images/training/pos-overview.png"
       },
       {
         heading: "What each export contains",
@@ -675,7 +687,7 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
       {
         heading: "The sector selector in Operations",
         body: "Go to POS > Operations. At the top you'll see six pill buttons: Restaurant, Repair, Salon, Retail, Factory, and Logistics. These represent different business types. Click any pill to switch to that sector's Operations menu. The default is Retail — showing Inventory, Sales, Customers, Promotions, Loyalty, Returns, Reports, Purchase Orders, Gift Cards, Staff, Branches, Map, Integrations, and Audit. Other sectors replace some of these with industry-specific alternatives.",
-        image: "/images/training/11-pos-inventory.gif"
+        image: "/images/training/pos-retail-operations.png",
       },
       {
         heading: "Retail Operations",
@@ -715,7 +727,8 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Finding the Integrations page",
-        body: "Go to POS > Operations > Retail > Integrations. This page lists all available connections for your POS: accounting platforms (Xero, QuickBooks), payment terminals (card machine integration), e-commerce platforms (to sync online and offline inventory), and delivery platforms. Each integration shows its status — connected (green), disconnected (grey), or pending setup (amber). For most businesses, the most valuable integrations to set up first are accounting (Xero or QuickBooks) and payment terminals."
+        body: "Go to POS > Operations > Retail > Integrations. This page lists all available connections for your POS: accounting platforms (Xero, QuickBooks), payment terminals (card machine integration), e-commerce platforms (to sync online and offline inventory), and delivery platforms. Each integration shows its status — connected (green), disconnected (grey), or pending setup (amber). For most businesses, the most valuable integrations to set up first are accounting (Xero or QuickBooks) and payment terminals.",
+        image: "/images/training/pos-retail-operations.png"
       },
       {
         heading: "Connecting to Xero",
@@ -756,7 +769,7 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
       {
         heading: "Connecting POS data to the AI",
         body: "Your POS data is automatically available to AskBiz AI once you start processing sales through the till. Click the Ask tab in the top navigation. Type a question about your POS in the chat bar. AskBiz analyses your connected POS data and responds in plain English with the numbers, trends, or recommendations you asked for. The AI has access to transactions, inventory, staff performance, and all the data visible in your POS reports.",
-        image: "/images/training/03-ai-chat-ask.gif"
+        image: "/images/training/03-ai-chat-ask.gif",
       },
       {
         heading: "Good POS questions to start with",
@@ -797,7 +810,8 @@ export const ASKBIZ_POS_TRAINING_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Why end-of-day reconciliation matters",
-        body: "Reconciling your till at the end of every trading day is one of the most important controls in any retail or hospitality business. It catches cash discrepancies before they accumulate, deters internal theft, and gives you an accurate day's-end picture of your revenue split across cash and card. Without a daily close, small discrepancies compound — a £5 shortage every day is £1,825 a year. AskBiz POS makes the process quick: the system already knows every transaction, so reconciliation is a matter of counting your physical cash and comparing it against what the system expects."
+        body: "Reconciling your till at the end of every trading day is one of the most important controls in any retail or hospitality business. It catches cash discrepancies before they accumulate, deters internal theft, and gives you an accurate day's-end picture of your revenue split across cash and card. Without a daily close, small discrepancies compound — a £5 shortage every day is £1,825 a year. AskBiz POS makes the process quick: the system already knows every transaction, so reconciliation is a matter of counting your physical cash and comparing it against what the system expects.",
+        image: "/images/training/pos-overview.png"
       },
       {
         heading: "Step 1 — Count your physical cash first",

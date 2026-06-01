@@ -18,7 +18,8 @@ export const ASKBIZ_TRAINING_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Creating Your AskBiz Account",
-        body: "Visit askbiz.co and click 'Sign Up'. Enter your business email, create a strong password (mix of uppercase, lowercase, numbers, and symbols), and verify your email address. Once verified, you'll be able to log in and start setting up your business profile."
+        body: "Visit askbiz.co and click 'Sign Up'. Enter your business email, create a strong password (mix of uppercase, lowercase, numbers, and symbols), and verify your email address. Once verified, you'll be able to log in and start setting up your business profile.",
+        image: "/images/training/askbiz-signup-page.png"
       },
       {
         heading: "Logging In and First Login Steps",
@@ -57,7 +58,8 @@ export const ASKBIZ_TRAINING_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "What is Camera-First?",
-        body: "Traditional systems require you to manually enter product codes, scan barcodes, or search for items. AskBiz does it differently: you simply point your phone camera at a product, and AI instantly recognizes it. No typing. No searching. Just point and add. This is especially powerful in fast-paced environments like retail, restaurants, and repair shops where every second counts."
+        body: "Traditional systems require you to manually enter product codes, scan barcodes, or search for items. AskBiz does it differently: you simply point your phone camera at a product, and AI instantly recognizes it. No typing. No searching. Just point and add. This is especially powerful in fast-paced environments like retail, restaurants, and repair shops where every second counts.",
+        image: "/images/training/14-pos-register-till.gif"
       },
       {
         heading: "How to Use Camera-First in POS",
@@ -96,7 +98,8 @@ export const ASKBIZ_TRAINING_ARTICLES: AcademyArticle[] = [
     content: [
       {
         heading: "Accessing Business Settings",
-        body: "Click Settings in the top navigation bar. You'll see tabs for Business Profile, Location, Payment, Security, and Team. Business Profile is where you update your business name, type, description, and logo. Location tab lets you add multiple store locations and manage settings per location. Payment tab connects your payment processor for credit card and digital wallet processing."
+        body: "Click Settings in the top navigation bar. You'll see tabs for Business Profile, Location, Payment, Security, and Team. Business Profile is where you update your business name, type, description, and logo. Location tab lets you add multiple store locations and manage settings per location. Payment tab connects your payment processor for credit card and digital wallet processing.",
+        image: "/images/training/askbiz-dashboard-overview.png"
       },
       {
         heading: "Inviting Team Members",

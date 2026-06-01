@@ -901,13 +901,11 @@ const ALL_POSTS = [
 export function getAllPosts(): BlogPost[] {
   const seen = new Set<string>()
   return ALL_POSTS.filter((p): p is BlogPost => {
-    // Validate post has all required fields
+    // Validate post has minimum required fields for rendering
     if (!p || !p.slug || seen.has(p.slug)) return false
-    // Only include articles with complete data (sections, paa, cta)
+    // Articles must have sections (for blog body) and publishDate (for sitemap)
     if (!p.sections || !Array.isArray(p.sections) || p.sections.length === 0) return false
-    if (!p.paa || !Array.isArray(p.paa)) return false
-    if (!p.cta || !p.cta.heading || !p.cta.body) return false
-    if (!Array.isArray(p.relatedSlugs)) return false
+    if (!p.publishDate) return false
     seen.add(p.slug)
     return true
   })
