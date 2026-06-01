@@ -424,7 +424,7 @@ img {
   .main-content {
     margin-left: 0 !important;
     padding-top: 56px;
-    padding-bottom: 72px;
+    padding-bottom: 16px;
   }
   .desktop-sidebar {
     display: flex !important;
@@ -433,7 +433,7 @@ img {
     display: flex !important;
   }
   .mobile-bottom-nav {
-    display: flex !important;
+    display: none !important;
   }
   /* Larger tap targets on mobile */
   button, a {

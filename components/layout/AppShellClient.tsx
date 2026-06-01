@@ -456,32 +456,28 @@ export default function AppShellClient({ user, conversations, children }: {
         />
       )}
 
-      {/* Mobile top bar */}
+      {/* Mobile top bar — clean: plus (transparent) on left, hamburger on right */}
       <div
         className="mobile-header"
         id="mobile-topbar"
-        style={{ display: 'none', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 97, background: 'var(--sf)', borderBottom: '1px solid var(--b)', padding: '10px 16px', alignItems: 'center', gap: 10 }}
+        style={{ display: 'none', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 97, background: 'var(--sf)', borderBottom: '1px solid var(--b)', padding: '10px 16px', alignItems: 'center', justifyContent: 'space-between' }}
       >
         <button
-          onClick={() => setSidebarOpen(v => !v)}
-          style={{ width: 36, height: 36, borderRadius: 10, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+          onClick={newChat}
+          style={{ width: 36, height: 36, borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--tx)" strokeWidth="2" strokeLinecap="round">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--tx)" strokeWidth="2.2" strokeLinecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+        <button
+          onClick={() => setSidebarOpen(v => !v)}
+          style={{ width: 36, height: 36, borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--tx)" strokeWidth="2" strokeLinecap="round">
             <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
         </button>
-        <span style={{ fontFamily: 'var(--font-sora)', fontSize: 15, fontWeight: 700 }}>AskBiz</span>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <NotificationBell />
-          <button
-            onClick={newChat}
-            style={{ width: 36, height: 36, borderRadius: 10, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx)" strokeWidth="2" strokeLinecap="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-          </button>
-        </div>
       </div>
 
       {/* Main content */}
@@ -489,41 +485,7 @@ export default function AppShellClient({ user, conversations, children }: {
         {children}
       </div>
 
-      {/* Mobile bottom nav */}
-      <nav
-        className="mobile-bottom-nav"
-        style={{ display: 'none', position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 97, background: 'var(--sf)', borderTop: '1px solid var(--b)', padding: '6px 0 max(8px,env(safe-area-inset-bottom))' }}
-      >
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)' }}>
-          {[
-            { href: '/pos',          icon: 'M2 3h20v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V3z M8 21h8M12 17v4', label: 'POS',       id: 'pos' },
-            { href: '/ask',          icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', label: 'Ask',       id: 'ask' },
-            { href: '/intelligence', icon: 'M12 2L2 7l10 5 10-5-10-5z M2 17l10 5 10-5',                       label: 'Business',  id: 'monitor' },
-            { href: '/sources',      icon: 'M12 2c4.97 0 9 2.24 9 5s-4.03 5-9 5-9-2.24-9-5 4.03-5 9-5z M3 12c0 2.76 4.03 5 9 5s9-2.24 9-5', label: 'Data', id: 'sources' },
-          ].map(n => {
-            const active = pathname.startsWith(n.href)
-            const activeColor = navActiveColor(n.id)
-            return (
-              <Link
-                key={n.href}
-                href={n.href}
-                style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-                  padding: '6px 4px', textDecoration: 'none',
-                  color: active ? activeColor : 'var(--tx3)',
-                  fontSize: 10, fontWeight: active ? 600 : 400,
-                  transition: 'color .15s', minHeight: 48, justifyContent: 'center',
-                }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2 : 1.7} strokeLinecap="round" strokeLinejoin="round">
-                  <path d={n.icon}/>
-                </svg>
-                {n.label}
-              </Link>
-            )
-          })}
-        </div>
-      </nav>
+      {/* Mobile bottom nav removed — navigation via hamburger sidebar only */}
       <HelpWidget />
     </div>
   )

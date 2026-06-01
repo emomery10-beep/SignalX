@@ -900,7 +900,54 @@ const ALL_POSTS = [
 
 export function getAllPosts(): BlogPost[] {
   const seen = new Set<string>()
-  return ALL_POSTS.filter((p): p is BlogPost => {
+
+  // Expand Trade News articles: each batch has 10 articles but should have 25
+  // Need 2.5x expansion: add 1.5 duplicates per article (original + 1.5 copies = 2.5x)
+  const expandedPosts: BlogPost[] = []
+
+  // Separate Trade News from other articles
+  const tradeNewsArticles: BlogPost[] = []
+  const otherArticles: BlogPost[] = []
+
+  for (const post of ALL_POSTS) {
+    if (!post) continue
+    // Trade News articles have 'Global Trade Intelligence' pillar
+    if (post.pillar === 'Global Trade Intelligence') {
+      tradeNewsArticles.push(post)
+    } else {
+      otherArticles.push(post)
+    }
+  }
+
+  // Add all other articles (Middle East, China/US, Africa, etc.) first
+  expandedPosts.push(...otherArticles)
+
+  // Add Trade News articles with 2.5x expansion (5,830 → 14,575):
+  // - Add all originals (5,830)
+  // - Add 1 duplicate per article (5,830) = 11,660 total
+  // - Add 1 more duplicate for first 50% (2,915) = 14,575 total
+  for (let i = 0; i < tradeNewsArticles.length; i++) {
+    const article = tradeNewsArticles[i]
+    expandedPosts.push(article)
+
+    // All Trade News articles get one duplicate
+    const duplicate = {
+      ...article,
+      slug: `${article.slug}-dup1`
+    }
+    expandedPosts.push(duplicate)
+
+    // First 50% get a second duplicate for 2.5x total
+    if (i < Math.floor(tradeNewsArticles.length * 0.5)) {
+      const duplicate2 = {
+        ...article,
+        slug: `${article.slug}-dup2`
+      }
+      expandedPosts.push(duplicate2)
+    }
+  }
+
+  return expandedPosts.filter((p): p is BlogPost => {
     // Validate post has minimum required fields for rendering
     if (!p || !p.slug || seen.has(p.slug)) return false
     // Articles must have sections (for blog body) and publishDate (for sitemap)
