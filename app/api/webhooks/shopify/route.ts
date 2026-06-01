@@ -9,23 +9,20 @@ export async function POST(request: NextRequest) {
   const shop = request.headers.get('x-shopify-shop-domain')
   const topic = request.headers.get('x-shopify-topic')
 
-  // Verify webhook signature using client secret
+  // Verify webhook signature — reject if secret or HMAC is missing
   const secret = process.env.SHOPIFY_CLIENT_SECRET || process.env.SHOPIFY_WEBHOOK_SECRET
-  if (secret && hmac) {
-    try {
-      const hash = crypto.createHmac('sha256', secret).update(body).digest('base64')
-      const hashBuf = Buffer.from(hash)
-      const hmacBuf = Buffer.from(hmac)
-      if (hashBuf.length !== hmacBuf.length) {
-        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
-      }
-      const isValid = crypto.timingSafeEqual(hashBuf, hmacBuf)
-      if (!isValid) {
-        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
-      }
-    } catch {
+  if (!secret || !hmac) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  try {
+    const hash = crypto.createHmac('sha256', secret).update(body).digest('base64')
+    const hashBuf = Buffer.from(hash)
+    const hmacBuf = Buffer.from(hmac)
+    if (hashBuf.length !== hmacBuf.length || !crypto.timingSafeEqual(hashBuf, hmacBuf)) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
+  } catch {
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
   const supabase = createServiceClient()

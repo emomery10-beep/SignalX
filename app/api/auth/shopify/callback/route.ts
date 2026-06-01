@@ -2,9 +2,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { runSync } from '@/lib/sync/engine'
 import { encryptCredentials } from '@/lib/crypto'
+import crypto from 'crypto'
+
+function verifyCallbackHmac(params: URLSearchParams): boolean {
+  const hmac = params.get('hmac')
+  const secret = process.env.SHOPIFY_CLIENT_SECRET
+  if (!hmac || !secret) return false
+  const entries = Array.from(params.entries())
+    .filter(([key]) => key !== 'hmac')
+    .sort(([a], [b]) => a.localeCompare(b))
+  const message = entries.map(([k, v]) => `${k}=${v}`).join('&')
+  const hash = crypto.createHmac('sha256', secret).update(message).digest('hex')
+  try {
+    return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(hmac))
+  } catch {
+    return false
+  }
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
+
+  if (!verifyCallbackHmac(searchParams)) {
+    return NextResponse.redirect(new URL('/sources?error=invalid_signature', request.url))
+  }
+
   const code = searchParams.get('code')
   const state = searchParams.get('state')
   const shop = searchParams.get('shop')

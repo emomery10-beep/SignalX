@@ -5,10 +5,9 @@
 
 export const SHOPIFY_SCOPES = [
   'read_orders',
-  'read_products', 
+  'read_products',
   'read_inventory',
   'read_customers',
-  'read_analytics',
 ].join(',')
 
 // ── OAuth: Build the install/auth URL ────────────────────────

@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
   }
 
   const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/shopify/callback`
-  const scopes = 'read_orders,read_products,read_inventory,read_analytics,read_customers'
+  const scopes = 'read_orders,read_products,read_inventory,read_customers'
 
   // Use a nonce for state to prevent CSRF — we'll resolve the user in the callback
   const nonce = crypto.randomBytes(16).toString('hex')
