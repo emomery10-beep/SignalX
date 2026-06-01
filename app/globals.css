@@ -678,8 +678,27 @@ img {
   .rgrid-2 { grid-template-columns: 1fr; }
   .kpi-row  { grid-template-columns: repeat(2, 1fr); }
   .page-shell-header { padding: 12px 14px 10px; }
-  .page-shell-body   { padding: 14px 14px 80px; }
+  .page-shell-body   { padding: 14px 14px 32px; }
   .rcard    { padding: 14px; }
+
+  /* On mobile, page headers scroll with content instead of staying pinned */
+  .page-shell {
+    overflow: visible !important;
+    height: auto !important;
+  }
+  .page-shell-header {
+    flex-shrink: unset !important;
+  }
+  .page-shell-body {
+    overflow: visible !important;
+    flex: unset !important;
+  }
+
+  /* Same for inline-styled shells (intelligence, ask, etc.) */
+  .intelligence-shell {
+    overflow: visible !important;
+    height: auto !important;
+  }
 
   /* Hide non-essential table columns */
   .mobile-hide { display: none !important; }
