@@ -13,10 +13,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/sources?error=shopify_cancelled', request.url))
   }
 
-  let userId: string
+  let userId: string | undefined
+  let shopFromState: string | undefined
   try {
     const decoded = JSON.parse(Buffer.from(state, 'base64url').toString())
     userId = decoded.userId
+    shopFromState = decoded.shop
   } catch {
     return NextResponse.redirect(new URL('/sources?error=invalid_state', request.url))
   }
@@ -45,9 +47,27 @@ export async function GET(request: NextRequest) {
   const shopData = shopRes.ok ? await shopRes.json() : {}
   const shopName = shopData.shop?.name || shop
 
-  // Use service client to bypass RLS — userId comes from our signed state param
+  // Use service client to bypass RLS
   const { createServiceClient } = await import('@/lib/supabase/server')
   const supabase = createServiceClient()
+
+  // If no userId (App Store install flow), try to find user by checking current session
+  // or create a pending connection
+  if (!userId) {
+    // Try to get user from current session cookies
+    const { createClient } = await import('@/lib/supabase/server')
+    const sessionClient = createClient()
+    const { data: { user } } = await sessionClient.auth.getUser()
+    userId = user?.id
+  }
+
+  if (!userId) {
+    // No logged-in user — redirect to signup with shop info so we can connect after
+    const pendingShop = encodeURIComponent(shop)
+    return NextResponse.redirect(
+      new URL(`/signin?shop=${pendingShop}&access_token_pending=true`, request.url)
+    )
+  }
 
   // Remove any existing Shopify connection for this user, then insert fresh
   await supabase

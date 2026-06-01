@@ -47,41 +47,54 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/sources?error=ebay_token_failed', request.url))
   }
 
-  const { access_token, refresh_token } = await tokenRes.json()
+  const tokenData = await tokenRes.json()
+  const { access_token, refresh_token } = tokenData
 
-  // Use service client to bypass RLS
-  const { createServiceClient } = await import('@/lib/supabase/server')
-  const supabase = createServiceClient()
+  if (!access_token) {
+    console.error('eBay token response missing access_token:', JSON.stringify(tokenData))
+    return NextResponse.redirect(new URL('/sources?error=ebay_token_failed', request.url))
+  }
 
-  // Remove existing eBay connection for this user, then insert fresh
-  await supabase
-    .from('connected_sources')
-    .delete()
-    .eq('user_id', userId)
-    .eq('source_type', 'ebay')
+  try {
+    // Use service client to bypass RLS
+    const { createServiceClient } = await import('@/lib/supabase/server')
+    const supabase = createServiceClient()
 
-  const { data: source, error: insertError } = await supabase
-    .from('connected_sources')
-    .insert({
-      user_id: userId,
-      source_type: 'ebay',
-      name: 'eBay Store',
-      status: 'active',
-      credentials: encryptCredentials({ access_token, refresh_token }),
-      config: {},
-      sync_interval_minutes: 60,
-    })
-    .select()
-    .single()
+    // Remove existing eBay connection for this user, then insert fresh
+    await supabase
+      .from('connected_sources')
+      .delete()
+      .eq('user_id', userId)
+      .eq('source_type', 'ebay')
 
-  if (insertError) {
-    console.error('eBay insert failed:', insertError)
+    const encrypted = encryptCredentials({ access_token, refresh_token })
+
+    const { data: source, error: insertError } = await supabase
+      .from('connected_sources')
+      .insert({
+        user_id: userId,
+        source_type: 'ebay',
+        name: 'eBay Store',
+        status: 'active',
+        credentials: encrypted,
+        config: {},
+        sync_interval_minutes: 60,
+      })
+      .select()
+      .single()
+
+    if (insertError) {
+      console.error('eBay insert failed:', JSON.stringify(insertError))
+      return NextResponse.redirect(new URL('/sources?error=ebay_save_failed', request.url))
+    }
+
+    if (source) {
+      try { await runSync(userId) } catch (_) {}
+    }
+
+    return NextResponse.redirect(new URL('/sources?connected=ebay', request.url))
+  } catch (err) {
+    console.error('eBay save error:', err instanceof Error ? err.message : err)
     return NextResponse.redirect(new URL('/sources?error=ebay_save_failed', request.url))
   }
-
-  if (source) {
-    try { await runSync(userId) } catch (_) {}
-  }
-
-  return NextResponse.redirect(new URL('/sources?connected=ebay', request.url))
 }

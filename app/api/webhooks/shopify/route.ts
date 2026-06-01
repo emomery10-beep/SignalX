@@ -9,11 +9,12 @@ export async function POST(request: NextRequest) {
   const shop = request.headers.get('x-shopify-shop-domain')
   const topic = request.headers.get('x-shopify-topic')
 
-  // Verify webhook signature
-  const secret = process.env.SHOPIFY_WEBHOOK_SECRET
+  // Verify webhook signature using client secret
+  const secret = process.env.SHOPIFY_CLIENT_SECRET || process.env.SHOPIFY_WEBHOOK_SECRET
   if (secret && hmac) {
     const hash = crypto.createHmac('sha256', secret).update(body).digest('base64')
-    if (hash !== hmac) {
+    const isValid = crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(hmac))
+    if (!isValid) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
   }
