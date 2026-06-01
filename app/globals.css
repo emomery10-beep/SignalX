@@ -423,7 +423,7 @@ img {
 @media (max-width: 768px) {
   .main-content {
     margin-left: 0 !important;
-    padding-top: 56px;
+    padding-top: 48px;
     padding-bottom: 16px;
   }
   .desktop-sidebar {

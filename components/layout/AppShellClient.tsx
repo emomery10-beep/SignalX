@@ -456,20 +456,12 @@ export default function AppShellClient({ user, conversations, children }: {
         />
       )}
 
-      {/* Mobile top bar — clean: plus (transparent) on left, hamburger on right */}
+      {/* Mobile top bar — hamburger only, top-left */}
       <div
         className="mobile-header"
         id="mobile-topbar"
-        style={{ display: 'none', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 97, background: 'var(--sf)', borderBottom: '1px solid var(--b)', padding: '10px 16px', alignItems: 'center', justifyContent: 'space-between' }}
+        style={{ display: 'none', position: 'fixed', top: 0, left: 0, right: 0, zIndex: 97, background: 'var(--sf)', borderBottom: '1px solid var(--b)', padding: '6px 16px', alignItems: 'center' }}
       >
-        <button
-          onClick={newChat}
-          style={{ width: 36, height: 36, borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--tx)" strokeWidth="2.2" strokeLinecap="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-        </button>
         <button
           onClick={() => setSidebarOpen(v => !v)}
           style={{ width: 36, height: 36, borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}

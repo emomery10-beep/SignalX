@@ -237,32 +237,32 @@ export default function IntelligencePage() {
   ]
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: isMobile ? 'calc(100vh - 72px)' : '100vh', overflow: 'hidden' }} className="intelligence-shell">
+    <div style={{ display: 'flex', flexDirection: 'column', height: isMobile ? 'calc(100vh - 48px)' : '100vh', overflow: 'hidden' }} className="intelligence-shell">
 
-      {/* ── Header + tabs ── */}
-      <div style={{ flexShrink: 0, padding: '16px 20px 0', borderBottom: '1px solid var(--b)', background: 'var(--sf)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 9, background: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
+      {/* ── Header (scrolls away on mobile, pinned on desktop) ── */}
+      {!isMobile && (
+        <div style={{ flexShrink: 0, padding: '16px 20px 0', borderBottom: '1px solid var(--b)', background: 'var(--sf)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 9, background: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700 }}>Monitor</div>
+                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Health · Alerts · Decisions · Team · AI Sparring</div>
+              </div>
+              {criticalCount > 0 && (
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: '#EF4444', borderRadius: 9999, padding: '2px 8px' }}>
+                  {criticalCount} critical
+                </span>
+              )}
             </div>
-            <div>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700 }}>Monitor</div>
-              <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Health · Alerts · Decisions · Team · AI Sparring</div>
-            </div>
-            {criticalCount > 0 && (
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: '#EF4444', borderRadius: 9999, padding: '2px 8px' }}>
-                {criticalCount} critical
-              </span>
-            )}
           </div>
-          {/* Health score badge removed — shown in hero KPI card instead */}
-        </div>
 
-        {/* Tab bar */}
-        <div className="tab-strip">
+          {/* Tab bar */}
+          <div className="tab-strip">
           {tabs.map(t => (
             <button
               key={t.id}
@@ -301,9 +301,61 @@ export default function IntelligencePage() {
           ))}
         </div>
       </div>
+      )}
 
       {/* ── Tab content ── */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '16px 16px 24px' : '20px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '0 16px 24px' : '20px' }}>
+
+        {/* Mobile: header + tabs scroll with content */}
+        {isMobile && (
+          <div style={{ padding: '12px 0 0', marginBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 9, background: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700 }}>Monitor</div>
+                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Health · Alerts · Decisions · Team · AI Sparring</div>
+              </div>
+              {criticalCount > 0 && (
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: '#EF4444', borderRadius: 9999, padding: '2px 8px' }}>
+                  {criticalCount} critical
+                </span>
+              )}
+            </div>
+            <div className="tab-strip" style={{ borderBottom: '1px solid var(--b)', marginLeft: -16, marginRight: -16, paddingLeft: 16 }}>
+              {tabs.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  style={{
+                    padding: '8px 12px', border: 'none', background: 'transparent',
+                    fontSize: 12, fontWeight: tab === t.id ? 600 : 400,
+                    color: tab === t.id ? '#6366F1' : 'var(--tx3)',
+                    borderBottom: tab === t.id ? '2px solid #6366F1' : '2px solid transparent',
+                    cursor: 'pointer', fontFamily: 'inherit',
+                    display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap',
+                    opacity: t.locked ? 0.6 : 1, transition: 'color 150ms', flexShrink: 0,
+                  }}
+                >
+                  {t.label}
+                  {t.locked && !planLoading && (
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                  )}
+                  {t.badge ? (
+                    <span style={{ fontSize: 10, fontWeight: 700, background: '#EF4444', color: '#fff', borderRadius: 9999, padding: '1px 6px' }}>
+                      {t.badge}
+                    </span>
+                  ) : null}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* ─── OVERVIEW ─── */}
         {tab === 'overview' && (
