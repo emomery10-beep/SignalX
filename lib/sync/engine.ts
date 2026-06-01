@@ -76,15 +76,18 @@ async function syncShopify(
 
   if (!shop_domain || !access_token) return { records: [], error: 'Missing shop domain or access token' }
 
+  const tokenStr = String(access_token)
+  console.log(`Shopify sync: shop=${shop_domain}, token_prefix=${tokenStr.substring(0, 8)}..., token_len=${tokenStr.length}`)
+
   try {
     // Fetch last 250 orders
     const res = await fetch(
       `https://${shop_domain}/admin/api/2025-01/orders.json?status=any&limit=250`,
-      { headers: { 'X-Shopify-Access-Token': String(access_token) } }
+      { headers: { 'X-Shopify-Access-Token': tokenStr } }
     )
     if (!res.ok) {
       const errBody = await res.text()
-      console.error(`Shopify API ${res.status} for ${shop_domain}:`, errBody)
+      console.error(`Shopify API ${res.status} for ${shop_domain}: ${errBody}`)
       throw new Error(`Shopify API error: ${res.status}`)
     }
     const { orders } = await res.json()
