@@ -32,7 +32,7 @@ const SOURCES: SourceDef[] = [
   { id: 'wave',       label: 'Wave',        category: 'Accounting', desc: 'Invoices, receipts, payroll, accounting',        icon: '🌊', accent: '#1e88e5', color: 'rgba(30,136,229,.1)',  oauthFlow: false, hint: 'Paste your Wave API token from Wave › Settings › Developer', fields: [{ key: 'access_token', label: 'Access Token', placeholder: 'wave_xxxxxxxxxxxx', type: 'password', required: true }] },
 
   // ── Payments ──────────────────────────────────────────────────────────────
-  { id: 'stripe',     label: 'Stripe',      category: 'Payments', desc: 'Payments, payouts, refunds, transactions',         icon: '💳', accent: '#635bff', color: 'rgba(99,91,255,.1)',   oauthFlow: true,  hint: 'Redirects to Stripe Connect — read-only access',             fields: [] },
+  { id: 'stripe',     label: 'Stripe',      category: 'Payments', desc: 'Payments, payouts, refunds, transactions',         icon: '💳', accent: '#635bff', color: 'rgba(99,91,255,.1)',   oauthFlow: false, hint: 'Paste your Stripe secret or restricted key from Dashboard → Developers → API keys', fields: [{ key: 'secret_key', label: 'Secret Key', placeholder: 'sk_live_… or rk_live_…', type: 'password', required: true }] },
   { id: 'paypal',     label: 'PayPal',      category: 'Payments', desc: 'Transactions, payouts, refunds, disputes',         icon: '🅿️', accent: '#0070e0', color: 'rgba(0,112,224,.1)',   oauthFlow: true,  hint: 'Redirects to PayPal — read-only access',                     fields: [] },
   { id: 'gocardless', label: 'GoCardless',  category: 'Payments', desc: 'Direct debit payments, subscriptions, mandates',   icon: '🏦', accent: '#f46a35', color: 'rgba(244,106,53,.1)',  oauthFlow: true,  hint: 'Redirects to GoCardless — read-only access',                 fields: [] },
   { id: 'klarna',     label: 'Klarna',      category: 'Payments', desc: 'BNPL orders, conversion rates, settlements',       icon: '🌸', accent: '#ff6b8a', color: 'rgba(255,107,138,.1)', oauthFlow: false, hint: 'Paste your credentials from Klarna Merchant Portal › API Credentials', fields: [{ key: 'username', label: 'API Username (UID)', placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx', type: 'text', required: true }, { key: 'password', label: 'API Password', placeholder: 'xxxxxxxxxxxx', type: 'password', required: true }] },
@@ -74,7 +74,6 @@ const OAUTH_URL: Record<string, (f: Record<string, string>) => string> = {
   xero:             ()  => '/api/auth/xero',
   freeagent:        ()  => '/api/auth/freeagent',
   // Payments
-  stripe:           ()  => '/api/auth/stripe',
   paypal:           ()  => '/api/auth/paypal',
   gocardless:       ()  => '/api/auth/gocardless',
   // Marketing & Ads

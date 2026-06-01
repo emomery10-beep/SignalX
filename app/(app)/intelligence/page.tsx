@@ -15,6 +15,7 @@ import KpiStrip from '@/components/intelligence/KpiStrip'
 import MiniTrendChart from '@/components/intelligence/MiniTrendChart'
 import IntegrationHub from '@/components/intelligence/IntegrationHub'
 import CfoMode from '@/components/intelligence/CfoMode'
+import CfoDashboard from '@/components/cfo/CfoDashboard'
 import RevenueWaterfall from '@/components/intelligence/RevenueWaterfall'
 import DecisionTimeline from '@/components/intelligence/DecisionTimeline'
 import TopProducts from '@/components/intelligence/TopProducts'
@@ -76,7 +77,7 @@ export default function IntelligencePage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const t = params.get('tab')
-    const validTabs = ['overview','anomalies','decisions','team','sparring','shipments','courier','memory','market','connections','cfo','actions','cashflow']
+    const validTabs = ['overview','anomalies','decisions','team','sparring','shipments','courier','memory','market','connections','cfo','actions']
     if (t && validTabs.includes(t)) setTab(t)
   }, [])
 
@@ -182,7 +183,7 @@ export default function IntelligencePage() {
     { id: 'connections',  label: '🔗 Connect' },
     { id: 'cfo',          label: '🏛️ CFO',       locked: !canCfo },
     { id: 'actions',      label: '⚡ Actions' },
-    { id: 'cashflow',     label: '💰 Cash Flow' },
+    // Cash Flow merged into CFO dashboard
   ]
 
   const sparringPrompts = [
@@ -900,17 +901,9 @@ export default function IntelligencePage() {
 
         {/* ─── CFO MODE ─── */}
         {tab === 'cfo' && (
-          <div style={{ maxWidth: 720 }}>
-            <FeatureGate planId={planId} feature="cfo_mode">
-              <CfoMode health={health} onAsk={askAskBiz}/>
-              <div style={{ marginTop: 14 }}>
-                <SupplierBrief onAsk={askAskBiz}/>
-              </div>
-              <div style={{ marginTop: 14 }}>
-                <PriceSensitivity onAsk={askAskBiz}/>
-              </div>
-            </FeatureGate>
-          </div>
+          <FeatureGate planId={planId} feature="cfo_mode">
+            <CfoDashboard onAsk={askAskBiz} />
+          </FeatureGate>
         )}
 
         {/* ─── ACTIONS ─── */}
@@ -920,12 +913,7 @@ export default function IntelligencePage() {
           </div>
         )}
 
-        {/* ─── CASH FLOW ─── */}
-        {tab === 'cashflow' && (
-          <div style={{ maxWidth: 720 }}>
-            <CashFlowCountdown onAsk={askAskBiz}/>
-          </div>
-        )}
+        {/* Cash Flow merged into CFO dashboard */}
 
       </div>
     </div>

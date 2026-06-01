@@ -1,0 +1,225 @@
+'use client'
+import { useState } from 'react'
+
+interface Props {
+  data: {
+    totals: { revenue: number; cogs: number; gross_profit: number; fixed_costs: number; net_profit: number; gross_margin_pct: number; net_margin_pct: number }
+    comparison: { revenue: number; gross_profit: number; net_profit: number; gross_margin_pct: number }
+    inventory: { total_products: number; low_or_oos: number; stockout_rate: number; value_at_cost: number }
+    cash: { balance: number; runway_months: number | null; runway_status: string; daily_net_burn: number }
+    alerts: Array<{ type: string; severity: string; message: string }>
+  }
+  currencySymbol: string
+  onAsk?: (prompt: string) => void
+}
+
+function fmt(n: number, sym: string): string {
+  if (Math.abs(n) >= 1_000_000) return `${sym}${(n / 1_000_000).toFixed(1)}M`
+  if (Math.abs(n) >= 1_000) return `${sym}${(n / 1_000).toFixed(0)}K`
+  return `${sym}${Math.round(n).toLocaleString()}`
+}
+
+function pctDiff(curr: number, prev: number): { pct: number; dir: 'up' | 'down' | 'flat' } {
+  if (prev === 0) return { pct: 0, dir: 'flat' }
+  const pct = Math.round(((curr - prev) / Math.abs(prev)) * 100)
+  return { pct: Math.abs(pct), dir: pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat' }
+}
+
+function getWeekRange(): string {
+  const now = new Date()
+  const start = new Date(now)
+  start.setDate(start.getDate() - start.getDay() + 1)
+  const end = new Date(start)
+  end.setDate(end.getDate() + 6)
+  const fmtd = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  return `${fmtd(start)} – ${fmtd(end)}, ${now.getFullYear()}`
+}
+
+export default function WeeklyCfoDigest({ data, currencySymbol: sym, onAsk }: Props) {
+  const [emailSent, setEmailSent] = useState(false)
+  const t = data.totals
+  const c = data.comparison
+
+  const revChange = pctDiff(t.revenue, c.revenue)
+  const profitChange = pctDiff(t.net_profit, c.net_profit)
+  const criticalAlerts = data.alerts.filter(a => a.severity === 'critical')
+  const warningAlerts = data.alerts.filter(a => a.severity === 'warning')
+
+  const overallStatus = criticalAlerts.length > 0 ? 'critical' :
+    warningAlerts.length > 0 ? 'warning' :
+    t.net_profit >= 0 ? 'healthy' : 'concern'
+
+  const statusConfig = {
+    critical: { icon: '🔴', label: 'Needs Attention', color: '#EF4444', bg: 'rgba(239,68,68,.04)' },
+    warning: { icon: '🟡', label: 'Monitor', color: '#F59E0B', bg: 'rgba(245,158,11,.04)' },
+    healthy: { icon: '🟢', label: 'On Track', color: '#22C55E', bg: 'rgba(34,197,94,.04)' },
+    concern: { icon: '🟠', label: 'Review', color: '#F97316', bg: 'rgba(249,115,22,.04)' },
+  }[overallStatus]
+
+  const wins: string[] = []
+  const concerns: string[] = []
+
+  if (revChange.dir === 'up' && revChange.pct > 5) wins.push(`Revenue up ${revChange.pct}% vs prior period`)
+  if (t.gross_margin_pct >= 35) wins.push(`Healthy gross margin at ${t.gross_margin_pct}%`)
+  if (t.net_profit > 0 && profitChange.dir === 'up') wins.push(`Net profit growing — ${fmt(t.net_profit, sym)} this period`)
+  if (data.inventory.stockout_rate < 15) wins.push(`Low stockout rate (${data.inventory.stockout_rate}%)`)
+  if (data.cash.runway_status === 'strong') wins.push(`Strong cash runway: ${data.cash.runway_months} months`)
+
+  if (revChange.dir === 'down' && revChange.pct > 10) concerns.push(`Revenue down ${revChange.pct}% — investigate immediately`)
+  if (t.gross_margin_pct < 20) concerns.push(`Gross margin critically low at ${t.gross_margin_pct}%`)
+  if (t.net_profit < 0) concerns.push(`Operating at a net loss: ${fmt(t.net_profit, sym)}`)
+  if (data.inventory.stockout_rate > 40) concerns.push(`${data.inventory.stockout_rate}% stockout rate — revenue at risk`)
+  if (data.cash.runway_months != null && data.cash.runway_months < 3) concerns.push(`Cash runway below 3 months — ${data.cash.runway_months} months remaining`)
+
+  criticalAlerts.forEach(a => concerns.push(a.message))
+
+  const copyDigest = () => {
+    const text = [
+      `WEEKLY CFO DIGEST — ${getWeekRange()}`,
+      `Status: ${statusConfig.label}`,
+      '',
+      `FINANCIALS`,
+      `Revenue: ${fmt(t.revenue, sym)} (${revChange.dir === 'up' ? '+' : revChange.dir === 'down' ? '-' : ''}${revChange.pct}%)`,
+      `Gross Profit: ${fmt(t.gross_profit, sym)} (${t.gross_margin_pct}% margin)`,
+      `Net Profit: ${fmt(t.net_profit, sym)} (${t.net_margin_pct}% margin)`,
+      '',
+      `CASH`,
+      `Balance: ${data.cash.balance > 0 ? fmt(data.cash.balance, sym) : 'Not set'}`,
+      `Runway: ${data.cash.runway_months != null ? `${data.cash.runway_months} months` : 'N/A'}`,
+      '',
+      `INVENTORY`,
+      `${data.inventory.total_products} products, ${data.inventory.low_or_oos} low/OOS (${data.inventory.stockout_rate}% stockout)`,
+      '',
+      wins.length > 0 ? `WINS\n${wins.map(w => `+ ${w}`).join('\n')}` : '',
+      concerns.length > 0 ? `\nCONCERNS\n${concerns.map(c => `! ${c}`).join('\n')}` : '',
+      '',
+      'Generated by AskBiz CFO',
+    ].filter(Boolean).join('\n')
+
+    navigator.clipboard.writeText(text).then(() => {
+      setEmailSent(true)
+      setTimeout(() => setEmailSent(false), 3000)
+    })
+  }
+
+  return (
+    <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
+      {/* Header */}
+      <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>Weekly CFO Digest</span>
+          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{getWeekRange()}</span>
+        </div>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {onAsk && (
+            <button
+              onClick={() => onAsk(`Generate a detailed weekly CFO narrative for my business. Revenue: ${fmt(t.revenue, sym)}, Gross profit: ${fmt(t.gross_profit, sym)} (${t.gross_margin_pct}%), Net profit: ${fmt(t.net_profit, sym)} (${t.net_margin_pct}%). ${concerns.length > 0 ? `Key concerns: ${concerns.join('; ')}` : 'No critical concerns.'} ${wins.length > 0 ? `Wins: ${wins.join('; ')}` : ''} Provide actionable recommendations for the coming week.`)}
+              style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+            >
+              AI Narrative
+            </button>
+          )}
+          <button
+            onClick={copyDigest}
+            style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+          >
+            {emailSent ? 'Copied!' : 'Copy Digest'}
+          </button>
+        </div>
+      </div>
+
+      {/* Status banner */}
+      <div style={{ padding: '12px 18px', background: statusConfig.bg, borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ fontSize: 18 }}>{statusConfig.icon}</span>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: statusConfig.color }}>{statusConfig.label}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
+            {overallStatus === 'critical' ? `${criticalAlerts.length} critical issue${criticalAlerts.length > 1 ? 's' : ''} require immediate attention` :
+             overallStatus === 'warning' ? `${warningAlerts.length} area${warningAlerts.length > 1 ? 's' : ''} to monitor this week` :
+             overallStatus === 'healthy' ? 'Business metrics are within target ranges' :
+             'Review financials — operating at a loss this period'}
+          </div>
+        </div>
+      </div>
+
+      {/* Key metrics */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 1, background: 'var(--b)' }}>
+        <DigestMetric label="Revenue" value={fmt(t.revenue, sym)} change={revChange} />
+        <DigestMetric label="Gross Profit" value={fmt(t.gross_profit, sym)} change={pctDiff(t.gross_profit, c.gross_profit)} sub={`${t.gross_margin_pct}% margin`} />
+        <DigestMetric label="Net Profit" value={fmt(t.net_profit, sym)} change={profitChange} sub={`${t.net_margin_pct}% margin`} highlight={t.net_profit < 0} />
+      </div>
+
+      {/* Wins */}
+      {wins.length > 0 && (
+        <div style={{ padding: '12px 18px', borderTop: '1px solid var(--b)' }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#22C55E', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Wins This Period</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {wins.map((w, i) => (
+              <div key={i} style={{ display: 'flex', gap: 6, fontSize: 11, color: 'var(--tx2)' }}>
+                <span style={{ color: '#22C55E', flexShrink: 0 }}>+</span>
+                <span>{w}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Concerns */}
+      {concerns.length > 0 && (
+        <div style={{ padding: '12px 18px', borderTop: '1px solid var(--b)', background: 'rgba(239,68,68,.02)' }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Action Items</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {concerns.map((c, i) => (
+              <div key={i} style={{ display: 'flex', gap: 6, fontSize: 11, color: 'var(--tx2)' }}>
+                <span style={{ color: '#EF4444', flexShrink: 0 }}>!</span>
+                <span>{c}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Quick stats footer */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 1, background: 'var(--b)', borderTop: '1px solid var(--b)' }}>
+        <MiniStat label="Cash" value={data.cash.balance > 0 ? fmt(data.cash.balance, sym) : '—'} />
+        <MiniStat label="Runway" value={data.cash.runway_months != null ? `${data.cash.runway_months}mo` : '—'} />
+        <MiniStat label="Products" value={`${data.inventory.total_products}`} />
+        <MiniStat label="Stockout" value={`${data.inventory.stockout_rate}%`} />
+      </div>
+
+      <div style={{ padding: '8px 18px', fontSize: 9, color: 'var(--tx3)', textAlign: 'center', borderTop: '1px solid var(--b)' }}>
+        Auto-generated weekly digest · {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+      </div>
+    </div>
+  )
+}
+
+function DigestMetric({ label, value, change, sub, highlight }: {
+  label: string; value: string; change: { pct: number; dir: 'up' | 'down' | 'flat' }; sub?: string; highlight?: boolean
+}) {
+  return (
+    <div style={{ padding: '12px 14px', background: highlight ? 'rgba(239,68,68,.03)' : 'var(--sf)', textAlign: 'center' }}>
+      <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: highlight ? '#EF4444' : 'var(--tx)', fontVariantNumeric: 'tabular-nums', marginTop: 2 }}>{value}</div>
+      <div style={{ fontSize: 10, marginTop: 2 }}>
+        <span style={{
+          fontWeight: 600,
+          color: change.dir === 'up' ? '#22C55E' : change.dir === 'down' ? '#EF4444' : 'var(--tx3)',
+        }}>
+          {change.dir === 'up' ? '▲' : change.dir === 'down' ? '▼' : '–'} {change.pct}%
+        </span>
+        {sub && <span style={{ color: 'var(--tx3)', marginLeft: 4 }}>{sub}</span>}
+      </div>
+    </div>
+  )
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ padding: '8px 10px', background: 'var(--sf)', textAlign: 'center' }}>
+      <div style={{ fontSize: 8, color: 'var(--tx3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+    </div>
+  )
+}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { runSync } from '@/lib/sync/engine'
 import { decryptCredentials, encryptCredentials } from '@/lib/crypto'
+import { validateStripeKey } from '@/lib/connectors/stripe'
 
 export async function GET() {
   const supabase = createClient()
@@ -26,6 +27,13 @@ export async function POST(request: NextRequest) {
   const { source_type, name, credentials, config, sync_interval_minutes = 360 } = body
 
   if (!source_type || !name) return NextResponse.json({ error: 'source_type and name required' }, { status: 400 })
+
+  if (source_type === 'stripe') {
+    const key = credentials?.secret_key
+    if (!key) return NextResponse.json({ error: 'Stripe secret key is required' }, { status: 400 })
+    const valid = await validateStripeKey(key)
+    if (!valid) return NextResponse.json({ error: 'Invalid Stripe key — check it in your Stripe Dashboard → Developers → API keys' }, { status: 400 })
+  }
 
   // Encrypt credentials before storing
   const encryptedCreds = credentials ? encryptCredentials(credentials) : {}
@@ -100,18 +108,6 @@ async function revokeProviderToken(
           method: 'POST',
           headers: { Authorization: `Basic ${basicAuth}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ token }),
-        })
-      }
-    } else if (sourceType === 'stripe') {
-      const stripeUserId = String(creds.stripe_user_id || '')
-      if (stripeUserId) {
-        await fetch('https://connect.stripe.com/oauth/deauthorize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            client_id: process.env.STRIPE_CLIENT_ID || '',
-            stripe_user_id: stripeUserId,
-          }),
         })
       }
     } else if (sourceType === 'shopify') {
