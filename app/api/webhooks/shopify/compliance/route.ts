@@ -6,8 +6,15 @@ import crypto from 'crypto'
 function verifyHmac(body: string, hmacHeader: string | null): boolean {
   const secret = process.env.SHOPIFY_CLIENT_SECRET || ''
   if (!secret || !hmacHeader) return false
-  const hash = crypto.createHmac('sha256', secret).update(body).digest('base64')
-  return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(hmacHeader))
+  try {
+    const hash = crypto.createHmac('sha256', secret).update(body).digest('base64')
+    const hashBuf = Buffer.from(hash)
+    const hmacBuf = Buffer.from(hmacHeader)
+    if (hashBuf.length !== hmacBuf.length) return false
+    return crypto.timingSafeEqual(hashBuf, hmacBuf)
+  } catch {
+    return false
+  }
 }
 
 export async function POST(request: NextRequest) {
