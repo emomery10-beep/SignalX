@@ -20,7 +20,6 @@ export function buildShopifyAuthUrl(shop: string, state: string): string {
     scope: SHOPIFY_SCOPES,
     redirect_uri: redirectUri,
     state,
-    'grant_options[]': 'per-user',
   })
   // Normalise shop domain
   const cleanShop = shop.replace('https://', '').replace('http://', '').replace(/\/$/, '')
@@ -77,7 +76,7 @@ export async function fetchShopifyOrders(
       params.delete('fields')
     }
 
-    const res = await fetch(`https://${shopHost}/admin/api/2024-01/orders.json?${params}`, {
+    const res = await fetch(`https://${shopHost}/admin/api/2025-01/orders.json?${params}`, {
       headers: { 'X-Shopify-Access-Token': accessToken, 'Content-Type': 'application/json' },
     })
     if (!res.ok) break
@@ -103,7 +102,7 @@ export async function fetchShopifyProducts(
   const shopHost = cleanShop.includes('.myshopify.com') ? cleanShop : `${cleanShop}.myshopify.com`
 
   const res = await fetch(
-    `https://${shopHost}/admin/api/2024-01/products.json?limit=250&fields=id,title,variants,product_type,vendor,status`,
+    `https://${shopHost}/admin/api/2025-01/products.json?limit=250&fields=id,title,variants,product_type,vendor,status`,
     { headers: { 'X-Shopify-Access-Token': accessToken } }
   )
   if (!res.ok) return []

@@ -27,7 +27,7 @@ export async function exchangeShopifyCode(shop: string, code: string): Promise<s
 
 export async function fetchShopifyOrders(shop: string, token: string, limit = 250) {
   const res = await fetch(
-    `https://${shop}/admin/api/2024-01/orders.json?status=any&limit=${limit}&fields=id,created_at,line_items,total_price,subtotal_price,total_discounts,financial_status`,
+    `https://${shop}/admin/api/2025-01/orders.json?status=any&limit=${limit}&fields=id,created_at,line_items,total_price,subtotal_price,total_discounts,financial_status`,
     { headers: { 'X-Shopify-Access-Token': token } }
   )
   if (!res.ok) throw new Error(`Shopify orders fetch failed: ${res.status}`)
@@ -37,7 +37,7 @@ export async function fetchShopifyOrders(shop: string, token: string, limit = 25
 
 export async function fetchShopifyProducts(shop: string, token: string) {
   const res = await fetch(
-    `https://${shop}/admin/api/2024-01/products.json?limit=250&fields=id,title,variants,product_type,vendor`,
+    `https://${shop}/admin/api/2025-01/products.json?limit=250&fields=id,title,variants,product_type,vendor`,
     { headers: { 'X-Shopify-Access-Token': token } }
   )
   if (!res.ok) throw new Error(`Shopify products fetch failed: ${res.status}`)
@@ -47,7 +47,7 @@ export async function fetchShopifyProducts(shop: string, token: string) {
 
 export async function fetchShopifyInventory(shop: string, token: string) {
   const res = await fetch(
-    `https://${shop}/admin/api/2024-01/inventory_levels.json?limit=250`,
+    `https://${shop}/admin/api/2025-01/inventory_levels.json?limit=250`,
     { headers: { 'X-Shopify-Access-Token': token } }
   )
   if (!res.ok) throw new Error(`Shopify inventory fetch failed: ${res.status}`)

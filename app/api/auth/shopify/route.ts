@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   if (!clientId) return NextResponse.json({ error: 'Shopify not configured' }, { status: 500 })
 
   const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/shopify/callback`
-  const scopes = 'read_orders,read_products,read_inventory,read_analytics'
+  const scopes = 'read_orders,read_products,read_inventory,read_customers'
   const state = Buffer.from(JSON.stringify({ userId: user.id, shop: cleanShop })).toString('base64url')
 
   const authUrl = `https://${cleanShop}/admin/oauth/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`
