@@ -1,18 +1,21 @@
-client_id = "fd4d01bf4a164e7d67528f5ad5650d51"
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "caf6196aeee8533d2841950fcbe1f318"
 name = "AskBiz"
 application_url = "https://askbiz.co/api/shopify/install"
 embedded = true
 
-[auth]
-redirect_urls = ["https://askbiz.co/api/auth/shopify/callback"]
-
-[access_scopes]
-scopes = "read_customers,read_inventory,read_orders,read_products"
-use_legacy_install_flow = true
-
 [webhooks]
 api_version = "2026-04"
 
-[[webhooks.subscriptions]]
-compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
-uri = "https://askbiz.co/api/webhooks/shopify/compliance"
+  [[webhooks.subscriptions]]
+  uri = "https://askbiz.co/api/webhooks/shopify/compliance"
+  compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_customers,read_inventory,read_orders,read_products"
+use_legacy_install_flow = true
+
+[auth]
+redirect_urls = [ "https://askbiz.co/api/auth/shopify/callback" ]
