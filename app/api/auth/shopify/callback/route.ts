@@ -7,12 +7,16 @@ import crypto from 'crypto'
 function verifyCallbackHmac(params: URLSearchParams): boolean {
   const hmac = params.get('hmac')
   const secret = process.env.SHOPIFY_CLIENT_SECRET
-  if (!hmac || !secret) return false
+  if (!hmac || !secret) {
+    console.error('Callback HMAC: missing hmac or secret', { hasHmac: !!hmac, hasSecret: !!secret })
+    return false
+  }
   const entries = Array.from(params.entries())
     .filter(([key]) => key !== 'hmac')
     .sort(([a], [b]) => a.localeCompare(b))
   const message = entries.map(([k, v]) => `${k}=${v}`).join('&')
   const hash = crypto.createHmac('sha256', secret).update(message).digest('hex')
+  console.log('Callback HMAC debug:', { message: message.substring(0, 100), computed: hash.substring(0, 16), expected: hmac.substring(0, 16) })
   try {
     return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(hmac))
   } catch {
