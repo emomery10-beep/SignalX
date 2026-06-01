@@ -82,7 +82,11 @@ async function syncShopify(
       `https://${shop_domain}/admin/api/2025-01/orders.json?status=any&limit=250`,
       { headers: { 'X-Shopify-Access-Token': String(access_token) } }
     )
-    if (!res.ok) throw new Error(`Shopify API error: ${res.status}`)
+    if (!res.ok) {
+      const errBody = await res.text()
+      console.error(`Shopify API ${res.status} for ${shop_domain}:`, errBody)
+      throw new Error(`Shopify API error: ${res.status}`)
+    }
     const { orders } = await res.json()
     const records = (orders as Record<string, unknown>[]).flatMap(normaliseShopify)
     return { records }
