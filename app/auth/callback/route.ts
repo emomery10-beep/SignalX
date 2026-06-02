@@ -9,6 +9,8 @@ export async function GET(request: NextRequest) {
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type')
   const next = searchParams.get('next') ?? '/chat'
+  // If next is a Shopify link-pending route, always honour it (even for new users)
+  const isShopifyLink = next.startsWith('/api/shopify/link-pending')
 
   const supabase = createClient()
 
@@ -19,7 +21,7 @@ export async function GET(request: NextRequest) {
         await recordSignupIP(request, data.user.id, data.session?.access_token ? true : false)
         const profile = await supabase.from('profiles').select('onboarded').eq('id', data.user.id).single()
         const isNew = !profile.data?.onboarded
-        return NextResponse.redirect(`${origin}${isNew ? '/onboarding' : next}`)
+        return NextResponse.redirect(`${origin}${isShopifyLink ? next : (isNew ? '/onboarding' : next)}`)
       }
     }
 
@@ -29,7 +31,7 @@ export async function GET(request: NextRequest) {
         await recordSignupIP(request, data.user.id, false)
         const profile = await supabase.from('profiles').select('onboarded').eq('id', data.user.id).single()
         const isNew = !profile.data?.onboarded
-        return NextResponse.redirect(`${origin}${isNew ? '/onboarding' : next}`)
+        return NextResponse.redirect(`${origin}${isShopifyLink ? next : (isNew ? '/onboarding' : next)}`)
       }
     }
   } catch (_) {}

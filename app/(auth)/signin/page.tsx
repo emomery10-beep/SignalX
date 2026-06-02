@@ -19,7 +19,16 @@ export default function AuthPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  const getCallbackUrl = () => `${process.env.NEXT_PUBLIC_APP_URL || 'https://askbiz.co'}/auth/callback`
+  const shopifyShop = searchParams.get('ref') === 'shopify' ? searchParams.get('shop') : null
+
+  const getCallbackUrl = () => {
+    const base = `${process.env.NEXT_PUBLIC_APP_URL || 'https://askbiz.co'}/auth/callback`
+    // Pass shopify context through so auth callback can forward to link-pending
+    if (shopifyShop) return `${base}?next=${encodeURIComponent(`/api/shopify/link-pending?shop=${shopifyShop}`)}`
+    return base
+  }
+
+  const getPostAuthRedirect = () => shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/chat'
 
   const executeAuth = async (action: 'email' | 'google') => {
     setError(''); setSuccess(''); setLoading(true)
@@ -49,12 +58,12 @@ export default function AuthPage() {
           throw new Error('An account with this email already exists. Try signing in instead, or use a magic link.')
         }
 
-        if (data.session) { router.push('/onboarding') }
+        if (data.session) { router.push(shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/onboarding') }
         else { setSuccess(`Check your inbox at ${email} — click the link to activate your account.`) }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
-        router.push('/chat')
+        router.push(getPostAuthRedirect())
       }
     } catch (e: any) {
       const msg = e?.message || e?.error_description || (typeof e === 'string' ? e : 'Authentication failed')
