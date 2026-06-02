@@ -21,6 +21,9 @@ import CfoReportExport from './CfoReportExport'
 import SourceBreakdown from './SourceBreakdown'
 import CfoAiInsight from './CfoAiInsight'
 import LogisticsOverview from './LogisticsOverview'
+import PnlStatement from './PnlStatement'
+import MarginAnalysis from './MarginAnalysis'
+import CashFlowStatement from './CashFlowStatement'
 
 interface SnapshotData {
   currency_symbol: string
@@ -71,6 +74,28 @@ interface SnapshotData {
   receivables_summary?: {
     total_receivables: number; total_payables: number; overdue_receivables: number
   }
+  pnl_by_source?: Array<{
+    source: string; label: string; revenue: number; cogs: number
+    gross_profit: number; margin_pct: number; orders: number; pct_of_total: number
+  }>
+  pnl_monthly?: Array<{
+    month: string; revenue: number; cogs: number; fixed: number; net: number
+    gross_margin_pct: number; net_margin_pct: number
+  }>
+  margin_by_product?: Array<{
+    name: string; category: string; revenue: number; cogs: number
+    margin_pct: number; units: number; contribution: number
+  }>
+  margin_by_channel?: Array<{
+    source: string; label: string; revenue: number; cogs: number
+    gross_profit: number; margin_pct: number; orders: number; pct_of_total: number
+  }>
+  receivables_aging?: {
+    current: number; overdue_30: number; overdue_60: number; overdue_90: number
+  }
+  daily_cashflow?: Array<{
+    date: string; inflow: number; outflow: number; net: number
+  }>
 }
 
 const SUB_TABS = [
@@ -270,7 +295,14 @@ export default function CfoDashboard({ onAsk }: Props) {
       {subTab === 'pnl' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {!loading && data?.totals ? (
-            <PnlFull data={data} sym={sym} fmtCurrency={fmtCurrency} onAsk={onAsk} />
+            <PnlStatement
+              totals={data.totals}
+              comparison={data.comparison}
+              pnlMonthly={data.pnl_monthly}
+              pnlBySource={data.pnl_by_source}
+              currencySymbol={sym}
+              onAsk={onAsk}
+            />
           ) : loading ? (
             <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>Loading P&L data...</div>
           ) : (
@@ -284,72 +316,39 @@ export default function CfoDashboard({ onAsk }: Props) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <CashFlowCountdown onAsk={onAsk} />
 
-          {!loading && data?.cash && (
-            <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', padding: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>Cash Position</span>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
-                <CashMetric label="Cash Balance" value={data.cash.balance > 0 ? fmtCurrency(data.cash.balance) : 'Not set'} color={data.cash.balance > 0 ? '#22C55E' : 'var(--tx3)'} />
-                <CashMetric label="Monthly Fixed Costs" value={data.cash.monthly_fixed > 0 ? fmtCurrency(data.cash.monthly_fixed) : 'Not set'} color="#EF4444" />
-                <CashMetric label="Daily Net Burn" value={fmtCurrency(data.cash.daily_net_burn)} color={data.cash.daily_net_burn >= 0 ? '#22C55E' : '#EF4444'} />
-              </div>
-
-              {/* Waterfall */}
-              {data.totals.revenue > 0 && (
-                <WaterfallChart
-                  revenue={data.totals.revenue}
-                  cogs={data.totals.cogs}
-                  fixed={data.totals.fixed_costs}
-                  net={data.totals.net_profit}
-                  sym={sym}
-                  fmtCurrency={fmtCurrency}
-                />
-              )}
-            </div>
-          )}
+          {!loading && data?.totals ? (
+            <CashFlowStatement
+              totals={data.totals}
+              cash={data.cash}
+              dailyCashflow={data.daily_cashflow}
+              receivablesAging={data.receivables_aging}
+              receivablesSummary={data.receivables_summary}
+              currencySymbol={sym}
+              onAsk={onAsk}
+            />
+          ) : loading ? (
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>Loading cash flow data...</div>
+          ) : null}
         </div>
       )}
 
       {/* ─── MARGINS VIEW ─── */}
       {subTab === 'margins' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {!loading && data?.totals && data.totals.revenue > 0 && (
-            <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', padding: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                <div style={{ width: 3, height: 14, borderRadius: 2, background: '#F97316' }} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>Margin Overview</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-                <CashMetric label="Gross Margin" value={`${data.totals.gross_margin_pct}%`} color={data.totals.gross_margin_pct >= 35 ? '#22C55E' : data.totals.gross_margin_pct >= 20 ? '#F59E0B' : '#EF4444'} />
-                <CashMetric label="Net Margin" value={`${data.totals.net_margin_pct}%`} color={data.totals.net_margin_pct >= 10 ? '#22C55E' : data.totals.net_margin_pct >= 0 ? '#F59E0B' : '#EF4444'} />
-                <CashMetric label="COGS Ratio" value={`${data.totals.revenue > 0 ? Math.round((data.totals.cogs / data.totals.revenue) * 100) : 0}%`} color="#F97316" />
-              </div>
-
-              {/* Margin bar visual */}
-              <div style={{ marginTop: 16 }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Revenue Breakdown</div>
-                <div style={{ height: 28, borderRadius: 8, overflow: 'hidden', display: 'flex', background: 'var(--ev, #f3f2ef)' }}>
-                  {data.totals.revenue > 0 && (
-                    <>
-                      <div style={{ width: `${(data.totals.cogs / data.totals.revenue) * 100}%`, background: '#F97316', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ fontSize: 9, color: '#fff', fontWeight: 600 }}>COGS {Math.round((data.totals.cogs / data.totals.revenue) * 100)}%</span>
-                      </div>
-                      <div style={{ width: `${(data.totals.fixed_costs / data.totals.revenue) * 100}%`, background: '#EF4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {(data.totals.fixed_costs / data.totals.revenue) > 0.06 && (
-                          <span style={{ fontSize: 9, color: '#fff', fontWeight: 600 }}>Fixed {Math.round((data.totals.fixed_costs / data.totals.revenue) * 100)}%</span>
-                        )}
-                      </div>
-                      <div style={{ flex: 1, background: data.totals.net_profit >= 0 ? '#22C55E' : '#EF4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <span style={{ fontSize: 9, color: '#fff', fontWeight: 600 }}>Profit {Math.round(data.totals.net_margin_pct)}%</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
+          {!loading && data?.totals && data.totals.revenue > 0 ? (
+            <MarginAnalysis
+              totals={data.totals}
+              comparison={data.comparison}
+              marginByProduct={data.margin_by_product}
+              marginByChannel={data.margin_by_channel}
+              pnlMonthly={data.pnl_monthly}
+              currencySymbol={sym}
+              onAsk={onAsk}
+            />
+          ) : loading ? (
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>Loading margin data...</div>
+          ) : (
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>No data available. Connect a data source to analyze margins.</div>
           )}
 
           <PriceSensitivity onAsk={onAsk} />

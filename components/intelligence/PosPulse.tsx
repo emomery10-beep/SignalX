@@ -404,18 +404,18 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
           {hasSales ? (
             <>
               {/* Primary KPIs */}
-              <div style={{ display: 'flex', gap: 16, marginBottom: 10 }}>
-                <div>
+              <div style={{ display: 'flex', gap: 12, marginBottom: 10, overflow: 'hidden' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Today</div>
-                  <span style={{ fontSize: 22, fontWeight: 800, color: '#6366F1', fontFamily: 'var(--font-sora, inherit)', lineHeight: 1 }}>
+                  <span style={{ fontSize: 20, fontWeight: 800, color: '#6366F1', fontFamily: 'var(--font-sora, inherit)', lineHeight: 1, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {fmt(sales!.todayRevenue)}
                   </span>
                   <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{sales!.todayTxns} txns · {sales!.itemsSold > 0 ? `${Math.round(sales!.itemsSold / Math.max(1, sales!.weekTxns) * sales!.todayTxns)} items` : ''}</div>
                 </div>
-                <div style={{ width: 1, background: 'var(--b)' }} />
-                <div>
+                <div style={{ width: 1, background: 'var(--b)', flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>This Week</div>
-                  <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)', fontFamily: 'var(--font-sora, inherit)', lineHeight: 1 }}>
+                  <span style={{ fontSize: 20, fontWeight: 800, color: 'var(--tx)', fontFamily: 'var(--font-sora, inherit)', lineHeight: 1, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {fmt(sales!.weekRevenue)}
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
@@ -430,7 +430,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
               </div>
 
               {/* Compact KPI grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(70px, 1fr))', gap: 6, marginBottom: 10 }}>
                 <div style={{ padding: '6px 8px', borderRadius: 8, background: 'var(--ev)' }}>
                   <div style={{ fontSize: 8, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Daily avg</div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--tx)' }}>{fmt(dailyAvg)}</div>

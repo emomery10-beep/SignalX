@@ -187,9 +187,21 @@ export default function AppShellClient({ user, conversations, children }: {
   const [profileOpen, setProfileOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('sidebar_collapsed') === '1'
+    return false
+  })
   const [alertCount, setAlertCount] = useState(0)
   const [search, setSearch] = useState('')
   const [convOpen, setConvOpen] = useState(true)
+
+  const toggleCollapsed = () => {
+    setCollapsed(v => {
+      const next = !v
+      localStorage.setItem('sidebar_collapsed', next ? '1' : '0')
+      return next
+    })
+  }
 
   const isAdmin = user?.email === 'emomery10@gmail.com' || user?.email === 'emomery10@googlemail.com'
   const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -221,8 +233,42 @@ export default function AppShellClient({ user, conversations, children }: {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)', fontFamily: 'var(--font-dm, DM Sans)' }}>
 
+      {/* Desktop collapsed bar — hamburger + logo when sidebar is collapsed */}
+      <div
+        className="desktop-collapsed-bar"
+        style={{
+          position: 'fixed', top: 0, left: 0, width: 52, height: '100vh',
+          background: 'var(--sf)', borderRight: '1px solid var(--b)',
+          display: collapsed ? 'flex' : 'none', flexDirection: 'column', alignItems: 'center',
+          paddingTop: 12, gap: 8, zIndex: 99,
+        }}
+      >
+        <button
+          onClick={toggleCollapsed}
+          title="Expand sidebar"
+          style={{ width: 36, height: 36, borderRadius: 9, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'var(--ev)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--tx)" strokeWidth="2" strokeLinecap="round">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <Link href="/home" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
+          <div style={{ width: 28, height: 28, borderRadius: 7, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="13" height="13" viewBox="0 0 32 32" fill="none">
+              <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/>
+              <rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/>
+              <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
+              <path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+        </Link>
+        <NotificationBell />
+      </div>
+
       <aside
-        className="desktop-sidebar"
+        className={`desktop-sidebar ${collapsed ? 'desktop-sidebar-collapsed' : ''}`}
         id="sidebar"
         style={{
           width: 240, flexShrink: 0, background: 'var(--sf)',
@@ -247,7 +293,21 @@ export default function AppShellClient({ user, conversations, children }: {
             </div>
             <span style={{ fontFamily: 'var(--font-sora)', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
           </Link>
-          <NotificationBell />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button
+              onClick={toggleCollapsed}
+              title="Collapse sidebar"
+              className="collapse-btn"
+              style={{ width: 28, height: 28, borderRadius: 7, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, flexShrink: 0 }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--ev)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round">
+                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+              </svg>
+            </button>
+            <NotificationBell />
+          </div>
         </div>
 
         {/* Tab switcher — Home / Ask / Business (like Claude's Chat/Cowork/Code) */}
@@ -473,7 +533,7 @@ export default function AppShellClient({ user, conversations, children }: {
       </div>
 
       {/* Main content */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }} className="main-content">
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }} className={`main-content ${collapsed ? 'main-content-collapsed' : ''}`}>
         {children}
       </div>
 

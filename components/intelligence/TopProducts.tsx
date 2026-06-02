@@ -113,7 +113,7 @@ export default function TopProducts({ onAsk }: TopProductsProps) {
 
       {/* Expanded KPI summary */}
       {expanded && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12, animation: 'fadeIn 200ms ease' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: 8, marginBottom: 12, animation: 'fadeIn 200ms ease' }}>
           <div style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--ev)' }}>
             <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Products</div>
             <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--tx)' }}>{allProducts.length}</div>

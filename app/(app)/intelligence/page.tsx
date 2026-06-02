@@ -350,9 +350,13 @@ export default function IntelligencePage() {
 
               {/* Row 1: Health Trend + Revenue Waterfall */}
               {scoreHistoryItems.length > 1 && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-                  <MiniTrendChart history={scoreHistoryItems} label="Health Trend" height={100} onAsk={askAskBiz} forceExpanded={trendForceOpen} onClose={() => setTrendForceOpen(false)}/>
-                  <RevenueWaterfall health={health} onAsk={askAskBiz} onDrillChange={setWaterfallDrill}/>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 12, marginBottom: 12, alignItems: 'start' }}>
+                  <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                    <MiniTrendChart history={scoreHistoryItems} label="Health Trend" height={100} onAsk={askAskBiz} forceExpanded={trendForceOpen} onClose={() => setTrendForceOpen(false)}/>
+                  </div>
+                  <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                    <RevenueWaterfall health={health} onAsk={askAskBiz} onDrillChange={setWaterfallDrill}/>
+                  </div>
                 </div>
               )}
               {scoreHistoryItems.length <= 1 && (
@@ -362,16 +366,16 @@ export default function IntelligencePage() {
               )}
 
               {/* Row 2: Top Products + POS Pulse (Sales/Stock) */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 12, alignItems: 'start' }}>
                 <div style={{
-                  borderRadius: 18,
+                  borderRadius: 18, minWidth: 0, overflow: 'hidden',
                   transition: 'box-shadow 300ms ease, border-color 300ms ease',
                   boxShadow: waterfallDrill && ['Revenue', 'COGS', 'Gross Profit'].includes(waterfallDrill) ? '0 0 0 2px #22C55E40, 0 4px 16px rgba(34,197,94,0.1)' : 'none',
                 }}>
                   <TopProducts onAsk={askAskBiz} />
                 </div>
                 <div style={{
-                  borderRadius: 18,
+                  borderRadius: 18, minWidth: 0, overflow: 'hidden',
                   transition: 'box-shadow 300ms ease, border-color 300ms ease',
                   boxShadow: waterfallDrill === 'Stock Cost' ? '0 0 0 2px #6366F140, 0 4px 16px rgba(99,102,241,0.1)' : 'none',
                 }}>

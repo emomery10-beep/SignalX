@@ -898,11 +898,15 @@ const ALL_POSTS = [
   ...batch236, ...batch237, ...batch238, ...batch239, ...batch240,
 ]
 
-export function getAllPosts(): BlogPost[] {
-  const seen = new Set<string>()
+// Cache expanded posts so they're available for both sitemap and routing
+let expandedPostsCache: BlogPost[] | null = null
 
-  // Expand Trade News articles: each batch has 10 articles but should have 25
-  // Need 2.5x expansion: add 1.5 duplicates per article (original + 1.5 copies = 2.5x)
+function getExpandedPosts(): BlogPost[] {
+  if (expandedPostsCache !== null) {
+    return expandedPostsCache
+  }
+
+  const seen = new Set<string>()
   const expandedPosts: BlogPost[] = []
 
   // Separate Trade News from other articles
@@ -947,19 +951,24 @@ export function getAllPosts(): BlogPost[] {
     }
   }
 
-  return expandedPosts.filter((p): p is BlogPost => {
-    // Validate post has minimum required fields for rendering
+  // Filter and cache
+  expandedPostsCache = expandedPosts.filter((p): p is BlogPost => {
     if (!p || !p.slug || seen.has(p.slug)) return false
-    // Articles must have sections (for blog body) and publishDate (for sitemap)
     if (!p.sections || !Array.isArray(p.sections) || p.sections.length === 0) return false
     if (!p.publishDate) return false
     seen.add(p.slug)
     return true
   })
+
+  return expandedPostsCache
+}
+
+export function getAllPosts(): BlogPost[] {
+  return getExpandedPosts()
 }
 
 export function getPost(slug: string): BlogPost | undefined {
-  return ALL_POSTS.find(p => p && p.slug === slug)
+  return getExpandedPosts().find(p => p && p.slug === slug)
 }
 
 export function getPostsByCluster(cluster: string): BlogPost[] {

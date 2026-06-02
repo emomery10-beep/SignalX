@@ -412,10 +412,26 @@ img {
     display: flex !important;
     transform: translateX(0) !important;
   }
+  .desktop-sidebar.desktop-sidebar-collapsed {
+    display: none !important;
+  }
+  .main-content-collapsed {
+    margin-left: 52px !important;
+  }
   .mobile-header {
     display: none !important;
   }
   .mobile-bottom-nav {
+    display: none !important;
+  }
+}
+
+/* Hide collapse UI on mobile — mobile uses its own hamburger */
+@media (max-width: 768px) {
+  .desktop-collapsed-bar {
+    display: none !important;
+  }
+  .collapse-btn {
     display: none !important;
   }
 }

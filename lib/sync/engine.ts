@@ -127,6 +127,75 @@ async function syncShopify(
     }
     const { orders } = await res.json()
     const records = (orders as Record<string, unknown>[]).flatMap(normaliseShopify)
+
+    // Also fetch products for inventory data (even if there are no orders yet)
+    try {
+      const prodRes = await fetch(
+        `https://${shop_domain}/admin/api/2025-01/products.json?limit=250&fields=id,title,variants,product_type,vendor`,
+        { headers: { 'X-Shopify-Access-Token': String(access_token) } }
+      )
+      if (prodRes.ok) {
+        const { products } = await prodRes.json()
+        for (const p of (products || []) as Record<string, unknown>[]) {
+          const variants = (p.variants as Record<string, unknown>[]) || []
+          for (const v of variants) {
+            const price = Number(v.price) || 0
+            const cost = Number(v.cost) || 0 // Shopify variant cost field
+            const qty = Number(v.inventory_quantity) || 0
+            const sku = String(v.sku || '')
+            const variantTitle = String(v.title || 'Default')
+            const productName = `${p.title}${variantTitle !== 'Default Title' ? ` - ${variantTitle}` : ''}`
+            const sourceRecordId = `shopify_product_${p.id}_variant_${v.id}`
+
+            // Skip if we already have a more recent order record for this product
+            if (records.some(r => r.sku === sku && sku)) continue
+
+            const marginPct = price > 0 ? ((price - cost) / price) * 100 : 0
+            records.push({
+              record_date: new Date().toISOString().split('T')[0],
+              sku: sku || String(v.id),
+              product_name: String(productName),
+              category: String(p.product_type || ''),
+              variant: variantTitle === 'Default Title' ? '' : variantTitle,
+              supplier: String(p.vendor || ''),
+              units_sold: 0,
+              selling_price: price,
+              discount: 0,
+              gross_revenue: 0,
+              net_revenue: 0,
+              cost_price: cost,
+              shipping_cost: 0,
+              packaging_cost: 0,
+              marketplace_fee: 0,
+              tax: 0,
+              total_cost: cost,
+              gross_margin: Math.round(marginPct * 100) / 100,
+              net_margin: Math.round(marginPct * 100) / 100,
+              stock_level: qty,
+              stock_movement: 0,
+              low_stock_flag: qty > 0 && qty < 10,
+              damaged_stock: 0,
+              channel: 'shopify',
+              customer_region: '',
+              currency: String(v.presentment_prices?.[0]?.price?.currency_code || 'USD'),
+              ad_spend: 0,
+              campaign: '',
+              coupon_code: '',
+              coupon_discount: 0,
+              payment_status: 'inventory',
+              refund_amount: 0,
+              payout_amount: 0,
+              source_record_id: sourceRecordId,
+              source_type: 'shopify',
+              raw_data: { product_id: p.id, variant_id: v.id, ...v },
+            } as UnifiedRecord)
+          }
+        }
+      }
+    } catch (_) {
+      // Product fetch is supplemental — don't fail the whole sync
+    }
+
     return { records }
   } catch (e: unknown) {
     return { records: [], error: e instanceof Error ? e.message : 'Shopify sync failed' }

@@ -33,6 +33,10 @@ export async function GET(request: NextRequest) {
   const periodKey = params.get('period') || 'this_month'
   const { start, end, compStart, compEnd } = getDateRange(periodKey, now)
 
+  // 6-month lookback for pnl_monthly
+  const sixMonthsAgoDate = new Date(now.getFullYear(), now.getMonth() - 5, 1)
+  const sixMonthsAgo = sixMonthsAgoDate.toISOString().split('T')[0]
+
   const [
     { data: unified },
     { data: unifiedComp },
@@ -43,10 +47,12 @@ export async function GET(request: NextRequest) {
     { data: posProducts },
     { data: shipments },
     { data: receivables },
+    { data: unified6m },
+    { data: posTx6m },
   ] = await Promise.all([
     supabase
       .from('unified_data')
-      .select('record_date, gross_revenue, total_cost, gross_margin, cost_price, units_sold, product_title, product_category, source_type')
+      .select('record_date, gross_revenue, total_cost, gross_margin, cost_price, units_sold, product_name, category, source_type')
       .eq('user_id', user.id)
       .gte('record_date', start)
       .lte('record_date', end)
@@ -102,6 +108,22 @@ export async function GET(request: NextRequest) {
       .from('cfo_receivables')
       .select('type, amount, status')
       .eq('user_id', user.id),
+    supabase
+      .from('unified_data')
+      .select('record_date, gross_revenue, total_cost, cost_price, units_sold')
+      .eq('user_id', user.id)
+      .gte('record_date', sixMonthsAgo)
+      .lte('record_date', end)
+      .order('record_date', { ascending: true })
+      .limit(10000),
+    supabase
+      .from('pos_transactions')
+      .select('total, created_at')
+      .eq('owner_id', user.id)
+      .eq('status', 'completed')
+      .gte('created_at', sixMonthsAgo + 'T00:00:00')
+      .lte('created_at', end + 'T23:59:59')
+      .limit(10000),
   ])
 
   const overrides = (overridesRow?.overrides || {}) as Record<string, any>
@@ -315,6 +337,87 @@ export async function GET(request: NextRequest) {
     net: Math.round(d.revenue - d.cogs - (monthlyFixedCosts / 30)),
   }))
 
+  // --- pnl_monthly: 6-month P&L aggregation ---
+  const monthlyMap = new Map<string, { revenue: number; cogs: number }>()
+  for (const r of unified6m || []) {
+    const month = (r.record_date || '').slice(0, 7) // YYYY-MM
+    if (!month) continue
+    if (!monthlyMap.has(month)) monthlyMap.set(month, { revenue: 0, cogs: 0 })
+    const m = monthlyMap.get(month)!
+    m.revenue += r.gross_revenue || 0
+    m.cogs += r.total_cost || (r.cost_price || 0) * (r.units_sold || 0)
+  }
+  for (const tx of posTx6m || []) {
+    const month = (tx.created_at || '').slice(0, 7)
+    if (!month) continue
+    if (!monthlyMap.has(month)) monthlyMap.set(month, { revenue: 0, cogs: 0 })
+    monthlyMap.get(month)!.revenue += tx.total || 0
+  }
+  const pnlMonthly = Array.from(monthlyMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([month, v]) => {
+      const rev = Math.round(v.revenue)
+      const cogs = Math.round(v.cogs)
+      const gp = rev - cogs
+      const net = gp - Math.round(monthlyFixedCosts)
+      return {
+        month,
+        revenue: rev,
+        cogs,
+        fixed: Math.round(monthlyFixedCosts),
+        net,
+        gross_margin_pct: rev > 0 ? Math.round((gp / rev) * 1000) / 10 : 0,
+        net_margin_pct: rev > 0 ? Math.round((net / rev) * 1000) / 10 : 0,
+      }
+    })
+
+  // --- margin_by_product: per-product margin from unified data ---
+  const productMap = new Map<string, { category: string; revenue: number; cogs: number; units: number }>()
+  for (const r of unified || []) {
+    const name = r.product_name || 'Unknown'
+    if (!productMap.has(name)) productMap.set(name, { category: r.category || '', revenue: 0, cogs: 0, units: 0 })
+    const p = productMap.get(name)!
+    p.revenue += r.gross_revenue || 0
+    p.cogs += r.total_cost || (r.cost_price || 0) * (r.units_sold || 0)
+    p.units += r.units_sold || 0
+    if (!p.category && r.category) p.category = r.category
+  }
+  const marginByProduct = Array.from(productMap.entries())
+    .map(([name, p]) => ({
+      name,
+      category: p.category,
+      revenue: Math.round(p.revenue),
+      cogs: Math.round(p.cogs),
+      margin_pct: p.revenue > 0 ? Math.round(((p.revenue - p.cogs) / p.revenue) * 1000) / 10 : 0,
+      units: p.units,
+      contribution: totalRevenue > 0 ? Math.round((p.revenue / totalRevenue) * 1000) / 10 : 0,
+    }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 50)
+
+  // --- receivables_aging ---
+  const receivablesAging = { current: 0, overdue_30: 0, overdue_60: 0, overdue_90: 0 }
+  for (const r of receivableItems) {
+    if (r.type !== 'receivable') continue
+    const amt = r.amount || 0
+    if (r.status === 'current') receivablesAging.current += amt
+    else if (r.status === 'overdue_30') receivablesAging.overdue_30 += amt
+    else if (r.status === 'overdue_60') receivablesAging.overdue_60 += amt
+    else if (r.status === 'overdue_90') receivablesAging.overdue_90 += amt
+  }
+  receivablesAging.current = Math.round(receivablesAging.current)
+  receivablesAging.overdue_30 = Math.round(receivablesAging.overdue_30)
+  receivablesAging.overdue_60 = Math.round(receivablesAging.overdue_60)
+  receivablesAging.overdue_90 = Math.round(receivablesAging.overdue_90)
+
+  // --- daily_cashflow ---
+  const dailyCashflow = dailyData.map(d => ({
+    date: d.date,
+    inflow: Math.round(d.revenue),
+    outflow: Math.round(d.cogs + (monthlyFixedCosts / 30)),
+    net: Math.round(d.revenue - d.cogs - (monthlyFixedCosts / 30)),
+  }))
+
   return NextResponse.json({
     period: { start, end, compStart, compEnd, key: periodKey },
     currency_symbol: sym,
@@ -373,6 +476,12 @@ export async function GET(request: NextRequest) {
       total_payables: Math.round(totalPayables),
       overdue_receivables: Math.round(overdueReceivables),
     },
+    pnl_by_source: sourceBreakdown,
+    pnl_monthly: pnlMonthly,
+    margin_by_product: marginByProduct,
+    margin_by_channel: sourceBreakdown,
+    receivables_aging: receivablesAging,
+    daily_cashflow: dailyCashflow,
   })
 }
 
