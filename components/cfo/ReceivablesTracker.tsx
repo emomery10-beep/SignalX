@@ -11,6 +11,8 @@ interface Receivable {
   daysOverdue: number
   status: 'current' | 'overdue_30' | 'overdue_60' | 'overdue_90'
   notes?: string
+  source?: string  // 'pos', 'shopify', 'ebay', etc.
+  auto?: boolean   // true if auto-generated from connected sources
 }
 
 interface Props {
@@ -55,6 +57,8 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
           daysOverdue: r.days_overdue || 0,
           status: r.status || 'current',
           notes: r.notes || undefined,
+          source: r.source || undefined,
+          auto: r.auto || false,
         }))
         setItems(mapped)
       })
@@ -264,7 +268,19 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
             <div key={item.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 18px', borderTop: '1px solid var(--b)', gap: 10 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: bucket.color, flexShrink: 0 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx)' }}>{item.counterparty}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx)' }}>{item.counterparty}</span>
+                  {item.auto && item.source && (
+                    <span style={{
+                      fontSize: 9, fontWeight: 600, padding: '1px 5px', borderRadius: 4,
+                      background: item.source === 'pos' ? 'rgba(99,102,241,.1)' : item.source === 'shopify' ? 'rgba(150,191,72,.1)' : item.source === 'ebay' ? 'rgba(229,50,56,.1)' : 'rgba(208,138,89,.1)',
+                      color: item.source === 'pos' ? '#6366F1' : item.source === 'shopify' ? '#5A8A00' : item.source === 'ebay' ? '#E53238' : '#d08a59',
+                      textTransform: 'uppercase',
+                    }}>
+                      {item.source === 'pos' ? 'POS' : item.source === 'amazon_fba' ? 'Amazon' : item.source.charAt(0).toUpperCase() + item.source.slice(1)}
+                    </span>
+                  )}
+                </div>
                 <div style={{ fontSize: 10, color: 'var(--tx3)' }}>
                   Due {new Date(item.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                   {item.daysOverdue > 0 && <span style={{ color: '#EF4444', fontWeight: 600 }}> · {item.daysOverdue}d overdue</span>}
@@ -274,13 +290,15 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
                 {fmt(item.amount, sym)}
               </div>
-              <button
-                onClick={() => removeItem(item.id)}
-                style={{ fontSize: 12, color: 'var(--tx3)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 4px', lineHeight: 1 }}
-                title="Remove"
-              >
-                ×
-              </button>
+              {!item.auto && (
+                <button
+                  onClick={() => removeItem(item.id)}
+                  style={{ fontSize: 12, color: 'var(--tx3)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 4px', lineHeight: 1 }}
+                  title="Remove"
+                >
+                  ×
+                </button>
+              )}
             </div>
           )
         })}
