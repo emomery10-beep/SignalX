@@ -50,9 +50,9 @@ export async function GET(request: NextRequest) {
   }
 
   // Decrypt and re-encrypt under the user's context (same key, but mark as linked)
-  let credentials: { access_token: string; refresh_token?: string }
+  let credentials: { access_token: string }
   try {
-    credentials = decryptCredentials(pending.access_token) as { access_token: string; refresh_token?: string }
+    credentials = decryptCredentials(pending.access_token) as { access_token: string }
   } catch {
     return NextResponse.redirect(`${APP_URL}/sources?error=invalid_credentials`)
   }

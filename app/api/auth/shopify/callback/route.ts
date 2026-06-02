@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/sources?error=invalid_state', request.url))
   }
 
-  // Exchange code for expiring offline access token
+  // Exchange code for a permanent offline access token (no expiring flag — deprecated)
   const tokenRes = await fetch(`https://${shop}/admin/oauth/access_token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -57,7 +57,6 @@ export async function GET(request: NextRequest) {
       client_id: process.env.SHOPIFY_CLIENT_ID,
       client_secret: process.env.SHOPIFY_CLIENT_SECRET,
       code,
-      expiring: 1,
     }),
   })
 
