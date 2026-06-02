@@ -97,6 +97,28 @@ export default function AuthPage() {
       position: 'fixed', inset: 0, overflowY: 'auto',
     }}>
 
+      {/* Shopify install banner */}
+      {searchParams.get('ref') === 'shopify' && searchParams.get('shop') && (
+        <div style={{
+          width: '100%', maxWidth: 'min(420px, 100%)', marginBottom: 16,
+          background: 'rgba(150,191,72,.08)', border: '1px solid rgba(150,191,72,.3)',
+          borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'flex-start', gap: 10,
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
+            <path d="M15.5 2H8.5L2 8.5v7L8.5 22h7L22 15.5v-7L15.5 2z" stroke="#5A8A00" strokeWidth="1.8" strokeLinejoin="round"/>
+            <path d="M12 8v4M12 16h.01" stroke="#5A8A00" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#3a6600', marginBottom: 2 }}>
+              Shopify store connected: {searchParams.get('shop')}
+            </div>
+            <div style={{ fontSize: 12, color: '#5A8A00', lineHeight: 1.4 }}>
+              Sign in or create a free AskBiz account to link your Shopify store and start analysing your data.
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Logo */}
       <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 32, textDecoration: 'none', color: 'var(--tx)' }}>
         <div style={{ width: 36, height: 36, borderRadius: 10, background: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

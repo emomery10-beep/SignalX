@@ -105,9 +105,9 @@ export async function GET(request: NextRequest) {
       .then(() => {})
       .catch((err: unknown) => console.error('Failed to store pending install:', err))
 
-    // Redirect back to Shopify Admin as required for embedded apps
-    const shopSlug = shop.replace('.myshopify.com', '')
-    return NextResponse.redirect(`https://admin.shopify.com/store/${shopSlug}/apps/askbiz`)
+    // Redirect to AskBiz — prompt merchant to sign in or create account to link their store
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://askbiz.co'
+    return NextResponse.redirect(`${appUrl}/?ref=shopify&shop=${shop}&status=connect_account`)
   }
 
   // Remove any existing Shopify connection for this user, then insert fresh

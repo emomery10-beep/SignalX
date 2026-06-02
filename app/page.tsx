@@ -68,9 +68,11 @@ const PRICING_TIERS: Record<string, { growth: string; business: string; sym: str
   DEFAULT: { growth: '$19',   business: '$39',        sym: '$',   pos: '$5'       },
 }
 
-export default async function LandingPage({ searchParams }: { searchParams: { code?: string; token_hash?: string; type?: string } }) {
+export default async function LandingPage({ searchParams }: { searchParams: { code?: string; token_hash?: string; type?: string; ref?: string; shop?: string; status?: string } }) {
   if (searchParams.code) redirect(`/auth/callback?code=${searchParams.code}`)
   if (searchParams.token_hash && searchParams.type) redirect(`/auth/callback?token_hash=${searchParams.token_hash}&type=${searchParams.type}`)
+  // Shopify App Store install — redirect to sign-in with shop context
+  if (searchParams.ref === 'shopify' && searchParams.shop) redirect(`/signin?ref=shopify&shop=${searchParams.shop}&status=${searchParams.status || 'install'}`)
 
   const headersList = headers()
   const countryCode = headersList.get('x-vercel-ip-country') || 'US'
