@@ -94,9 +94,10 @@ export async function GET(request: NextRequest) {
       .limit(1)
       .single(),
     supabase
-      .from('pos_products')
-      .select('id, name, price, cost_price, stock_quantity, low_stock_threshold, category')
+      .from('inventory')
+      .select('id, name, sale_price, cost_price, stock_qty, low_stock_threshold, category')
       .eq('owner_id', user.id)
+      .eq('active', true)
       .limit(500),
     supabase
       .from('shipments')
@@ -190,15 +191,15 @@ export async function GET(request: NextRequest) {
   const compNetProfit = compGrossProfit - compFixed
   const compGrossMarginPct = compRevenue > 0 ? (compGrossProfit / compRevenue) * 100 : 0
 
-  // --- Inventory metrics ---
+  // --- Inventory metrics (table is 'inventory', fields: sale_price, stock_qty) ---
   const products = posProducts || []
   const totalProducts = products.length
   const lowOrOos = products.filter(p => {
     const threshold = p.low_stock_threshold || 5
-    return (p.stock_quantity || 0) <= threshold
+    return (p.stock_qty || 0) <= threshold
   }).length
-  const inventoryValueAtCost = products.reduce((s, p) => s + ((p.cost_price || 0) * (p.stock_quantity || 0)), 0)
-  const inventoryValueAtRetail = products.reduce((s, p) => s + ((p.price || 0) * (p.stock_quantity || 0)), 0)
+  const inventoryValueAtCost = products.reduce((s, p) => s + ((p.cost_price || 0) * (p.stock_qty || 0)), 0)
+  const inventoryValueAtRetail = products.reduce((s, p) => s + ((p.sale_price || 0) * (p.stock_qty || 0)), 0)
   const stockoutRate = totalProducts > 0 ? (lowOrOos / totalProducts) * 100 : 0
 
   // --- Cash runway ---

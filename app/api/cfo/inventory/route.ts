@@ -14,11 +14,12 @@ export async function GET(req: NextRequest) {
 
   // Fetch from both sources in parallel
   const [{ data: posProducts }, { data: unifiedProducts }] = await Promise.all([
-    // POS products catalog (direct inventory)
+    // POS inventory (the actual table is called 'inventory', not 'pos_products')
     supabase
-      .from('pos_products')
-      .select('id, name, category, price, cost_price, stock_quantity, low_stock_threshold, sku, supplier, active')
+      .from('inventory')
+      .select('id, name, category, sale_price, cost_price, stock_qty, low_stock_threshold, sku, supplier, active')
       .eq('owner_id', user.id)
+      .eq('active', true)
       .limit(500),
 
     // Ecommerce products from unified_data — get latest stock info per product
@@ -51,11 +52,11 @@ export async function GET(req: NextRequest) {
   const products: ProductItem[] = []
   const seenProducts = new Set<string>()
 
-  // Add POS products
+  // Add POS products (inventory table uses sale_price and stock_qty)
   for (const p of posProducts || []) {
-    const price = p.price || 0
+    const price = p.sale_price || 0
     const cost = p.cost_price || 0
-    const qty = p.stock_quantity ?? 0
+    const qty = p.stock_qty ?? 0
     const threshold = p.low_stock_threshold || 5
     const marginPct = price > 0 ? ((price - cost) / price) * 100 : 0
     const status: ProductItem['status'] = qty === 0 ? 'out' : qty <= threshold ? 'low' : 'healthy'

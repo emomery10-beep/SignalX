@@ -14,9 +14,10 @@ export async function GET(req: NextRequest) {
   const limit = Number(new URL(req.url).searchParams.get('limit')) || 500
 
   const { data: products } = await supabase
-    .from('pos_products')
-    .select('id, name, category, price, cost_price, stock_quantity, low_stock_threshold, sku, brand, supplier, active, image_url, last_sold_at')
+    .from('inventory')
+    .select('id, name, category, sale_price, cost_price, stock_qty, low_stock_threshold, sku, brand, supplier, active')
     .eq('owner_id', user.id)
+    .eq('active', true)
     .limit(limit)
 
   return NextResponse.json({
