@@ -4,6 +4,11 @@ import { createClient } from '@/lib/supabase/client'
 import ServiceJobsTab from '@/components/pos/ServiceJobsTab'
 import RepairMetrics from '@/components/pos/RepairMetrics'
 import AuditTab from '@/components/pos/AuditTab'
+import RestaurantTab from '@/components/pos/RestaurantTab'
+import RepairTab from '@/components/pos/RepairTab'
+import SalonTab from '@/components/pos/SalonTab'
+import RetailTab from '@/components/pos/RetailTab'
+import FactoryTab from '@/components/pos/FactoryTab'
 
 const ACC = '#d08a59'
 const ACC_BG = 'rgba(208,138,89,.08)'
@@ -74,7 +79,7 @@ interface InventoryItem {
 interface Location {
   id: string; name: string; address?: string; phone?: string; is_active: boolean
 }
-type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'branches' | 'audit' | 'map' | 'operations' | 'captures' | 'approvals' | 'intelligence' | 'logistics' | 'customers' | 'promotions' | 'loyalty' | 'returns' | 'reports' | 'purchase_orders' | 'gift_cards' | 'integrations'
+type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'branches' | 'audit' | 'map' | 'operations' | 'captures' | 'approvals' | 'intelligence' | 'logistics' | 'customers' | 'promotions' | 'loyalty' | 'returns' | 'reports' | 'purchase_orders' | 'gift_cards' | 'integrations' | 'restaurant' | 'repair' | 'salon' | 'retail' | 'factory'
 type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
 type FilterModalType = { type: 'sales' | 'refunds' | 'low_stock' | 'cashier_detail' | 'gross_profit' | 'margin' | 'avg_sale' | 'staff_overview' | 'stock_item' | 'payment_breakdown' | 'branch_detail' | 'customer_history' | 'product_history'; title: string; cashier_id?: string; item_id?: string; payment_type?: string; branch_id?: string; customer_phone?: string; product_name?: string } | null
 type TxDetailType = Transaction | null
@@ -336,6 +341,11 @@ export default function POSPage() {
   // Sync selectedSector → sectorOverride so Operations tab auto-switches
   useEffect(() => {
     if (selectedSector !== 'all') setSectorOverride(selectedSector)
+    // Sector-specific tabs only exist while their sector is selected. If the
+    // active tab is a sector tab that no longer matches, fall back to Overview
+    // so we never render a sector view with its tab button hidden.
+    const sectorTabs: Tab[] = ['restaurant', 'repair', 'salon', 'retail', 'factory']
+    setTab(prev => (sectorTabs.includes(prev) && prev !== selectedSector ? 'overview' : prev))
   }, [selectedSector])
 
   // Sector-filtered staff list
@@ -364,6 +374,11 @@ export default function POSPage() {
     transactions.filter(t => (t.status === 'refunded' || t.status === 'partially_refunded') && txMatchesSector(t)),
     [transactions, selectedSector, cashierSectorMap])
   const refundCount = refundedTx.length
+  // All transactions for the selected sector (any status) — fed to the dedicated
+  // sector analytics tabs so each one only sees its own sector's data.
+  const sectorTransactions = useMemo(() =>
+    transactions.filter(txMatchesSector),
+    [transactions, selectedSector, cashierSectorMap])
   const prevRefunds = prevTransactions.filter(t => (t.status === 'refunded' || t.status === 'partially_refunded') && (selectedSector === 'all' || (t.cashier?.id ? cashierSectorMap[t.cashier.id] === selectedSector : selectedSector === 'retail'))).length
   // Each sector is fully isolated — only items explicitly tagged to the sector are visible.
   // 'all' shows everything so the owner gets a full cross-sector stock view.
@@ -1022,6 +1037,21 @@ export default function POSPage() {
               flexShrink: 0,
             }}>🚛 Logistics</button>
           )}
+          {([
+            { id: 'restaurant' as Tab, label: '🍴 Restaurant', color: '#d08a59' },
+            { id: 'repair' as Tab,     label: '🔧 Repair',     color: '#6366f1' },
+            { id: 'salon' as Tab,      label: '💇 Salon',      color: '#ec4899' },
+            { id: 'retail' as Tab,     label: '📦 Retail',     color: '#22c55e' },
+            { id: 'factory' as Tab,    label: '🏭 Factory',    color: '#f59e0b' },
+          ]).filter(s => selectedSector === s.id).map(s => (
+            <button key={s.id} onClick={() => setTab(s.id)} style={{
+              padding: '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
+              background: tab === s.id ? 'var(--sf)' : 'transparent', color: tab === s.id ? s.color : 'var(--tx3)',
+              fontSize: 13, fontWeight: tab === s.id ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
+              borderBottom: tab === s.id ? `2px solid ${s.color}` : '2px solid transparent',
+              flexShrink: 0,
+            }}>{s.label}</button>
+          ))}
         </div>
 
         {/* ── Branch + Sector filters ── */}
@@ -2321,6 +2351,54 @@ export default function POSPage() {
             onBack={() => setTab('services')}
           />
         )}
+
+        {/* ══════════════ DEDICATED SECTOR ANALYTICS TABS ══════════════ */}
+        {tab === 'restaurant' && (
+          <RestaurantTab
+            currencySymbol={currencySymbol}
+            selectedLocation={selectedLocation}
+            transactions={sectorTransactions}
+            staff={filteredStaff}
+            inventory={sectorFilteredInventory}
+          />
+        )}
+        {tab === 'repair' && (
+          <RepairTab
+            currencySymbol={currencySymbol}
+            selectedLocation={selectedLocation}
+            transactions={sectorTransactions}
+            staff={filteredStaff}
+            inventory={sectorFilteredInventory}
+          />
+        )}
+        {tab === 'salon' && (
+          <SalonTab
+            currencySymbol={currencySymbol}
+            selectedLocation={selectedLocation}
+            transactions={sectorTransactions}
+            staff={filteredStaff}
+            inventory={sectorFilteredInventory}
+          />
+        )}
+        {tab === 'retail' && (
+          <RetailTab
+            currencySymbol={currencySymbol}
+            selectedLocation={selectedLocation}
+            transactions={sectorTransactions}
+            staff={filteredStaff}
+            inventory={sectorFilteredInventory}
+          />
+        )}
+        {tab === 'factory' && (
+          <FactoryTab
+            currencySymbol={currencySymbol}
+            selectedLocation={selectedLocation}
+            transactions={sectorTransactions}
+            staff={filteredStaff}
+            inventory={sectorFilteredInventory}
+          />
+        )}
+
         {tab === 'map' && (
           <div>
             <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

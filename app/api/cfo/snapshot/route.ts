@@ -49,6 +49,7 @@ export async function GET(request: NextRequest) {
     { data: receivables },
     { data: unified6m },
     { data: posTx6m },
+    { data: posItemRows },
   ] = await Promise.all([
     supabase
       .from('unified_data')
@@ -125,6 +126,15 @@ export async function GET(request: NextRequest) {
       .gte('created_at', sixMonthsAgo + 'T00:00:00')
       .lte('created_at', end + 'T23:59:59')
       .limit(10000),
+    // POS product-level sales (line items) for margin_by_product
+    supabase
+      .from('pos_transactions')
+      .select('created_at, status, pos_items!transaction_id(name, qty, unit_price, cost_price)')
+      .eq('owner_id', user.id)
+      .eq('status', 'completed')
+      .gte('created_at', start + 'T00:00:00')
+      .lte('created_at', end + 'T23:59:59')
+      .limit(5000),
   ])
 
   const overrides = (overridesRow?.overrides || {}) as Record<string, any>
@@ -372,7 +382,10 @@ export async function GET(request: NextRequest) {
       }
     })
 
-  // --- margin_by_product: per-product margin from unified data ---
+  // --- margin_by_product: per-product margin from BOTH ecommerce (unified_data)
+  //     and POS (pos_items) sales, so real POS products appear alongside any
+  //     ecommerce sales. Zero-sales catalog entries (e.g. unsold demo-store
+  //     products synced from a connected Shopify store) are filtered out below. ---
   const productMap = new Map<string, { category: string; revenue: number; cogs: number; units: number }>()
   for (const r of unified || []) {
     const name = r.product_name || 'Unknown'
@@ -383,7 +396,24 @@ export async function GET(request: NextRequest) {
     p.units += r.units_sold || 0
     if (!p.category && r.category) p.category = r.category
   }
+  // Merge POS line-item sales
+  for (const tx of posItemRows || []) {
+    const items = (tx as any).pos_items || []
+    for (const it of items) {
+      const name = it.name || 'Unknown'
+      const qty = Number(it.qty) || 0
+      const unitPrice = Number(it.unit_price) || 0
+      const costPrice = Number(it.cost_price) || 0
+      if (!productMap.has(name)) productMap.set(name, { category: 'POS', revenue: 0, cogs: 0, units: 0 })
+      const p = productMap.get(name)!
+      p.revenue += qty * unitPrice
+      p.cogs += qty * costPrice
+      p.units += qty
+    }
+  }
   const marginByProduct = Array.from(productMap.entries())
+    // Drop pure catalog noise: products that neither earned revenue nor sold a unit
+    .filter(([, p]) => p.revenue > 0 || p.units > 0)
     .map(([name, p]) => ({
       name,
       category: p.category,

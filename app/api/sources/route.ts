@@ -83,8 +83,21 @@ export async function DELETE(request: NextRequest) {
     await revokeProviderToken(source.source_type, creds, source.config as Record<string, unknown>)
   }
 
+  // Purge this source's synced rows so disconnecting actually cleans up —
+  // otherwise orphaned unified_data (e.g. a demo store's catalog) keeps
+  // surfacing in product/inventory/margin views. Scoped to source_id + user.
+  const { error: purgeErr, count: purged } = await supabase
+    .from('unified_data')
+    .delete({ count: 'exact' })
+    .eq('source_id', id)
+    .eq('user_id', user.id)
+  if (purgeErr) {
+    // Don't block the disconnect on cleanup failure — log and continue.
+    console.error('unified_data purge on source disconnect failed:', purgeErr.message)
+  }
+
   await supabase.from('connected_sources').delete().eq('id', id).eq('user_id', user.id)
-  return NextResponse.json({ deleted: true })
+  return NextResponse.json({ deleted: true, purged_records: purged ?? 0 })
 }
 
 async function revokeProviderToken(
