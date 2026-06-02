@@ -459,6 +459,67 @@ async function syncAmazon(
       await new Promise(r => setTimeout(r, 200))
     }
 
+    // Also fetch FBA inventory for stock levels
+    try {
+      const invRes = await fetch(
+        `${baseUrl}/fba/inventory/v1/summaries?details=true&granularityType=Marketplace&granularityId=${marketplace_id}&marketplaceIds=${marketplace_id}`,
+        { headers: getHeaders() }
+      )
+      if (invRes.ok) {
+        const invData = await invRes.json()
+        const inventories = invData?.payload?.inventorySummaries || []
+        for (const inv of inventories as Record<string, unknown>[]) {
+          const asin = String((inv as any).asin || '')
+          const sku = String((inv as any).sellerSku || asin)
+          if (!sku || allRecords.some(r => r.sku === sku)) continue
+
+          const qty = Number((inv as any).inventoryDetails?.fulfillableQuantity) || Number((inv as any).totalQuantity) || 0
+          const name = String((inv as any).productName || sku)
+
+          allRecords.push({
+            record_date: new Date().toISOString().split('T')[0],
+            sku,
+            product_name: name,
+            category: '',
+            variant: '',
+            supplier: '',
+            units_sold: 0,
+            selling_price: 0,
+            discount: 0,
+            gross_revenue: 0,
+            net_revenue: 0,
+            cost_price: 0,
+            shipping_cost: 0,
+            packaging_cost: 0,
+            marketplace_fee: 0,
+            tax: 0,
+            total_cost: 0,
+            gross_margin: 0,
+            net_margin: 0,
+            stock_level: qty,
+            stock_movement: 0,
+            low_stock_flag: qty > 0 && qty < 10,
+            damaged_stock: 0,
+            channel: 'amazon_fba',
+            customer_region: '',
+            currency: 'USD',
+            ad_spend: 0,
+            campaign: '',
+            coupon_code: '',
+            coupon_discount: 0,
+            payment_status: 'inventory',
+            refund_amount: 0,
+            payout_amount: 0,
+            source_record_id: `amazon_inventory_${sku}`,
+            source_type: 'amazon_fba',
+            raw_data: inv,
+          } as UnifiedRecord)
+        }
+      }
+    } catch (_) {
+      // Inventory fetch is supplemental
+    }
+
     return { records: allRecords }
   } catch (e: unknown) {
     return { records: [], error: e instanceof Error ? e.message : 'Amazon sync failed' }
@@ -500,6 +561,92 @@ async function syncEbay(
     const data = await res.json()
     const orders = data?.orders || []
     const records = (orders as Record<string, unknown>[]).flatMap(normaliseEbayOrder)
+
+    // Also fetch active inventory listings for stock data
+    try {
+      const invRes = await fetch(
+        'https://api.ebay.com/sell/inventory/v1/inventory_item?limit=200',
+        { headers: { Authorization: `Bearer ${access_token}`, Accept: 'application/json' } }
+      )
+      if (invRes.ok) {
+        const invData = await invRes.json()
+        const items = (invData?.inventoryItems || []) as Record<string, unknown>[]
+        for (const item of items) {
+          const sku = String((item as any).sku || '')
+          if (!sku || records.some(r => r.sku === sku)) continue
+
+          const product = (item as any).product || {}
+          const availability = (item as any).availability?.shipToLocationAvailability || {}
+          const qty = Number(availability.quantity) || 0
+          const price = 0 // eBay inventory API doesn't include price; set from offers below
+          const title = String(product.title || sku)
+
+          records.push({
+            record_date: new Date().toISOString().split('T')[0],
+            sku,
+            product_name: title,
+            category: String(product.aspects?.Category?.[0] || product.aspects?.Type?.[0] || ''),
+            variant: '',
+            supplier: '',
+            units_sold: 0,
+            selling_price: price,
+            discount: 0,
+            gross_revenue: 0,
+            net_revenue: 0,
+            cost_price: 0,
+            shipping_cost: 0,
+            packaging_cost: 0,
+            marketplace_fee: 0,
+            tax: 0,
+            total_cost: 0,
+            gross_margin: 0,
+            net_margin: 0,
+            stock_level: qty,
+            stock_movement: 0,
+            low_stock_flag: qty > 0 && qty < 5,
+            damaged_stock: 0,
+            channel: 'ebay',
+            customer_region: '',
+            currency: 'USD',
+            ad_spend: 0,
+            campaign: '',
+            coupon_code: '',
+            coupon_discount: 0,
+            payment_status: 'inventory',
+            refund_amount: 0,
+            payout_amount: 0,
+            source_record_id: `ebay_inventory_${sku}`,
+            source_type: 'ebay',
+            raw_data: item,
+          } as UnifiedRecord)
+        }
+      }
+    } catch (_) {
+      // Inventory fetch is supplemental — don't fail the whole sync
+    }
+
+    // Fetch active offers to get prices for inventory items
+    try {
+      const offersRes = await fetch(
+        'https://api.ebay.com/sell/inventory/v1/offer?limit=200',
+        { headers: { Authorization: `Bearer ${access_token}`, Accept: 'application/json' } }
+      )
+      if (offersRes.ok) {
+        const offersData = await offersRes.json()
+        const offers = (offersData?.offers || []) as Record<string, unknown>[]
+        for (const offer of offers) {
+          const sku = String((offer as any).sku || '')
+          const priceObj = (offer as any).pricingSummary?.price || {}
+          const price = Number(priceObj.value) || 0
+          const existing = records.find(r => r.sku === sku && r.source_type === 'ebay' && r.payment_status === 'inventory')
+          if (existing && price > 0) {
+            existing.selling_price = price
+            existing.value_at_retail = price * existing.stock_level
+          }
+        }
+      }
+    } catch (_) {}
+
     return { records }
   } catch (e: unknown) {
     return { records: [], error: e instanceof Error ? e.message : 'eBay sync failed' }
@@ -587,6 +734,70 @@ async function syncEtsy(
     const data = await res.json()
     const receipts = data?.results || []
     const records = (receipts as Record<string, unknown>[]).flatMap(normaliseEtsyReceipt)
+
+    // Also fetch active listings for inventory data
+    try {
+      const listRes = await fetch(
+        `https://openapi.etsy.com/v3/application/shops/${resolvedShopId}/listings/active?limit=100&includes=Images`,
+        { headers: headers() }
+      )
+      if (listRes.ok) {
+        const listData = await listRes.json()
+        const listings = (listData?.results || []) as Record<string, unknown>[]
+        for (const listing of listings) {
+          const listingId = String((listing as any).listing_id || '')
+          const title = String((listing as any).title || 'Unknown')
+          const sku = String((listing as any).sku?.[0] || listingId)
+          if (records.some(r => r.sku === sku && sku !== listingId)) continue
+
+          const price = Number((listing as any).price?.amount || 0) / Number((listing as any).price?.divisor || 100)
+          const qty = Number((listing as any).quantity) || 0
+          const category = String((listing as any).taxonomy?.name || (listing as any).tags?.[0] || '')
+
+          records.push({
+            record_date: new Date().toISOString().split('T')[0],
+            sku,
+            product_name: title,
+            category,
+            variant: '',
+            supplier: '',
+            units_sold: 0,
+            selling_price: price,
+            discount: 0,
+            gross_revenue: 0,
+            net_revenue: 0,
+            cost_price: 0,
+            shipping_cost: 0,
+            packaging_cost: 0,
+            marketplace_fee: 0,
+            tax: 0,
+            total_cost: 0,
+            gross_margin: 0,
+            net_margin: 0,
+            stock_level: qty,
+            stock_movement: 0,
+            low_stock_flag: qty > 0 && qty < 5,
+            damaged_stock: 0,
+            channel: 'etsy',
+            customer_region: '',
+            currency: String((listing as any).price?.currency_code || 'USD'),
+            ad_spend: 0,
+            campaign: '',
+            coupon_code: '',
+            coupon_discount: 0,
+            payment_status: 'inventory',
+            refund_amount: 0,
+            payout_amount: 0,
+            source_record_id: `etsy_listing_${listingId}`,
+            source_type: 'etsy',
+            raw_data: listing,
+          } as UnifiedRecord)
+        }
+      }
+    } catch (_) {
+      // Listing fetch is supplemental
+    }
+
     return { records }
   } catch (e: unknown) {
     return { records: [], error: e instanceof Error ? e.message : 'Etsy sync failed' }
