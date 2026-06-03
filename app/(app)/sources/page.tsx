@@ -220,18 +220,20 @@ export default function SourcesPage() {
   return (
     <div className="page-shell">
 
-      <div className="page-shell-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-        <div>
-          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 600 }}>Data Sources</div>
-          <div style={{ fontSize: 13, color: 'var(--tx2)', marginTop: 3 }}>Connect your platforms — AskBiz pulls live data automatically</div>
+      <div className="page-shell-header" style={{ minHeight: 'unset', padding: '8px 16px' }}>
+        {/* Left: data sources icon only */}
+        <div style={{ opacity: 0.35 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         </div>
-        {sources.length > 0 && (
-          <button onClick={() => syncSource('all')} disabled={syncing === 'all'}
-            style={{ padding: '7px 16px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', fontSize: 12, fontWeight: 600, color: 'var(--tx)', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-            {syncing === 'all' ? 'Syncing…' : 'Sync all'}
-          </button>
-        )}
+        {/* Right: icon-only ghost button */}
+        <div style={{ display: 'flex', gap: 4 }}>
+          {sources.length > 0 && (
+            <button onClick={() => syncSource('all')} disabled={syncing === 'all'} title="Sync all sources"
+              style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--tx3)', opacity: syncing === 'all' ? 0.25 : 0.45, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="page-shell-body">

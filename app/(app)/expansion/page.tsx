@@ -65,15 +65,18 @@ export default function ExpansionPage() {
     <div className="page-shell">
 
       {/* Header */}
-      <div className="page-shell-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 600 }}>Expansion Intelligence</div>
-          <div style={{ fontSize: 13, color: 'var(--tx2)', marginTop: 3 }}>Product opportunities ranked by profit potential, demand evidence, and risk</div>
+      <div className="page-shell-header" style={{ minHeight: 'unset', padding: '8px 16px' }}>
+        {/* Left: expansion icon only */}
+        <div style={{ opacity: 0.35 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
         </div>
-        <button onClick={runAnalysis} disabled={generating}
-          style={{ padding: '9px 18px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: generating ? .6 : 1, display: 'flex', alignItems: 'center', gap: 7 }}>
-          {generating ? '⟳ Analysing…' : '✦ Run new analysis'}
-        </button>
+        {/* Right: icon-only ghost button */}
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button onClick={runAnalysis} disabled={generating} title="Run new analysis"
+            style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--tx3)', opacity: generating ? 0.25 : 0.45, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+          </button>
+        </div>
       </div>
 
       <div className="page-shell-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>

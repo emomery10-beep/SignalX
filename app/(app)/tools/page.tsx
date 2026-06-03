@@ -191,15 +191,19 @@ export default function ToolsPage() {
 
   return (
     <div className="page-shell">
-      <div className="page-shell-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 600 }}>Business Tools</div>
-          <div style={{ fontSize: 13, color: TX2, marginTop: 3 }}>Live previews — click any tile to expand</div>
+      <div className="page-shell-header" style={{ minHeight: 'unset', padding: '8px 16px' }}>
+        {/* Left: tools icon only */}
+        <div style={{ opacity: 0.35 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
         </div>
-        <button onClick={() => askAskBiz('Which of my business tools should I use first based on my current data?')}
-          style={{ padding: '8px 16px', borderRadius: 9999, border: 'none', background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-          Ask AskBiz which tool to use →
-        </button>
+        {/* Right: icon-only ghost button */}
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button onClick={() => askAskBiz('Which of my business tools should I use first based on my current data?')}
+            title="Ask AskBiz which tool to use"
+            style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--tx3)', opacity: 0.45, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </button>
+        </div>
       </div>
 
       <div className="page-shell-body">

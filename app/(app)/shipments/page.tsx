@@ -163,32 +163,23 @@ export default function ShipmentsPage() {
         <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 999, padding: '10px 16px', borderRadius: 10, background: toast.ok ? 'rgba(34,197,94,.15)' : 'rgba(239,68,68,.15)', border: `1px solid ${toast.ok ? 'rgba(34,197,94,.3)' : 'rgba(239,68,68,.3)'}`, color: toast.ok ? '#16a34a' : '#dc2626', fontSize: 13, fontWeight: 500 }}>{toast.msg}</div>
       )}
 
-      <div className="page-shell-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 9, background: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>📦</div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700 }}>Shipments</span>
-              <PlanBadge plan={plan} />
-            </div>
-            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
-              {isFree ? '1 shipment · Status tracking only'
-                : isGrowth ? '5 shipments · Basic financial data'
-                : 'Unlimited · Full intelligence'}
-              {maxShipments !== Infinity && <span style={{ color: activeCount >= maxShipments ? '#dc2626' : 'var(--tx3)' }}> · {activeCount}/{maxShipments} used</span>}
-            </div>
-          </div>
+      <div className="page-shell-header" style={{ minHeight: 'unset', padding: '8px 16px' }}>
+        {/* Left: shipments icon only */}
+        <div style={{ opacity: 0.35 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        {/* Right: icon-only ghost buttons */}
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
           {activeCount >= maxShipments && maxShipments !== Infinity && (
-            <button onClick={() => router.push('/billing')} style={{ padding: '7px 14px', borderRadius: 9999, border: '1px solid rgba(99,102,241,.3)', background: 'rgba(99,102,241,.08)', color: '#6366F1', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-              Upgrade for more →
+            <button onClick={() => router.push('/billing')} title="Upgrade for more shipments" style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--tx3)', opacity: 0.45, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             </button>
           )}
           <button
             onClick={() => activeCount >= maxShipments && maxShipments !== Infinity ? router.push('/billing') : setShowAdd(true)}
-            style={{ padding: '8px 16px', borderRadius: 9999, border: 'none', background: activeCount >= maxShipments && maxShipments !== Infinity ? 'var(--b2)' : '#6366F1', color: activeCount >= maxShipments && maxShipments !== Infinity ? 'var(--tx3)' : '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-            {activeCount >= maxShipments && maxShipments !== Infinity ? '🔒 Limit reached' : '+ Add shipment'}
+            title={activeCount >= maxShipments && maxShipments !== Infinity ? 'Limit reached — upgrade' : 'Add shipment'}
+            style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--tx3)', opacity: 0.45, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
         </div>
       </div>

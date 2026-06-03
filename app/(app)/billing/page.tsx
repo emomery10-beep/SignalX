@@ -302,22 +302,10 @@ export default function BillingPage() {
   return (
     <div className="page-shell">
       {/* Header */}
-      <div className="page-shell-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <div>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 600 }}>Plans & Billing</div>
-            <div style={{ fontSize: 13, color: 'var(--tx2)', marginTop: 3, display: 'flex', alignItems: 'center', gap: 7 }}>
-              Current plan:
-              <span style={{ fontSize: 11, fontWeight: 700, color: currentBadge.colour, background: currentBadge.bg, borderRadius: 9999, padding: '2px 9px' }}>
-                {currentBadge.label}
-              </span>
-              {usage && limits?.questions > 0 && (
-                <span style={{ fontSize: 12, color: 'var(--tx3)' }}>
-                  · {usage.questions}/{limits.questions} questions used
-                </span>
-              )}
-            </div>
-          </div>
+      <div className="page-shell-header" style={{ minHeight: 'unset', padding: '8px 16px' }}>
+        {/* Left: billing icon only */}
+        <div style={{ opacity: 0.35 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
         </div>
       </div>
 

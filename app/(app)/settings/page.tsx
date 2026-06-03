@@ -1378,24 +1378,27 @@ export default function SettingsPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div className="page-shell-header" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => router.back()} style={{ width: 30, height: 30, borderRadius: 7, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx2)" strokeWidth="2" strokeLinecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-        </button>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700 }}>Settings</div>
-          {!isMobile && <div style={{ fontSize: 13, color: 'var(--tx2)', marginTop: 1 }}>Manage your account and preferences</div>}
+      <div className="page-shell-header" style={{ minHeight: 'unset', padding: '8px 16px' }}>
+        {/* Left: settings icon only */}
+        <div style={{ opacity: 0.35 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </div>
-        {/* Mobile section picker — replaces sidebar */}
-        {isMobile && (
-          <select
-            value={active}
-            onChange={e => setActive(e.target.value as Section)}
-            style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx)', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', maxWidth: 160 }}
-          >
-            {NAV.map(n => <option key={n.id} value={n.id}>{n.label}</option>)}
-          </select>
-        )}
+        {/* Right: back button + mobile section picker */}
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          <button onClick={() => router.back()} title="Go back" style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--tx3)', opacity: 0.45, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          </button>
+          {/* Mobile section picker — replaces sidebar */}
+          {isMobile && (
+            <select
+              value={active}
+              onChange={e => setActive(e.target.value as Section)}
+              style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx)', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', maxWidth: 160 }}
+            >
+              {NAV.map(n => <option key={n.id} value={n.id}>{n.label}</option>)}
+            </select>
+          )}
+        </div>
       </div>
 
       <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>

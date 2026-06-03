@@ -95,12 +95,13 @@ export default function AlertsPage() {
 
   return (
     <div className="page-shell">
-      <div className="page-shell-header" style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-        <div>
-          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 600 }}>Alerts</div>
-          <div style={{ fontSize: 13, color: 'var(--tx2)', marginTop: 3 }}>Get notified when your data crosses key thresholds</div>
+      <div className="page-shell-header" style={{ minHeight: 'unset', padding: '8px 16px' }}>
+        {/* Left: alerts icon only */}
+        <div style={{ opacity: 0.35 }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        {/* Right: icon-only ghost buttons */}
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
           {uploads.length > 0 && (
             <select style={{ fontFamily:'inherit', fontSize:12, color:'var(--tx)', background:'var(--ev)', border:'1px solid var(--b2)', borderRadius:10, padding:'7px 11px', outline:'none' }}
               onChange={e => setSelectedUpload(uploads.find(u=>u.id===e.target.value)||null)}>
@@ -108,9 +109,19 @@ export default function AlertsPage() {
               {uploads.map(u => <option key={u.id} value={u.id}>{u.filename}</option>)}
             </select>
           )}
-          {selectedUpload && <button onClick={autoDetect} style={outlineBtn}>Auto-detect alerts</button>}
-          {selectedUpload && <button onClick={evaluate} disabled={evaluating} style={outlineBtn}>{evaluating?'Checking…':'Run checks'}</button>}
-          <button onClick={() => setShowForm(true)} style={primaryBtn}>+ New alert</button>
+          {selectedUpload && (
+            <button onClick={autoDetect} title="Auto-detect alerts" style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--tx3)', opacity: 0.45, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+          )}
+          {selectedUpload && (
+            <button onClick={evaluate} disabled={evaluating} title="Run checks" style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--tx3)', opacity: 0.45, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </button>
+          )}
+          <button onClick={() => setShowForm(true)} title="New alert" style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--tx3)', opacity: 0.45, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
         </div>
       </div>
 
