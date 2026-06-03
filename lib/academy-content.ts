@@ -7,6 +7,7 @@ import { ASKBIZ_POS_TRAINING_ARTICLES } from './askbiz-pos-training-articles';
 import { ASKBIZ_POS_RETAIL_ARTICLES } from './askbiz-pos-retail-articles';
 import { ASKBIZ_POS_LOGISTICS_ARTICLES } from './askbiz-pos-logistics-articles';
 import { ASKBIZ_POS_TILL_ARTICLES } from './askbiz-pos-till-articles';
+import { ASKBIZ_POS_HACKS_ARTICLES } from './askbiz-pos-hacks-articles';
 
 const _africaAcademyArticles = [...AFRICA_ACADEMY_BATCH1, ...AFRICA_ACADEMY_BATCH2] as AcademyArticle[];
 
@@ -15053,6 +15054,7 @@ academyArticles.push(...ASKBIZ_POS_TRAINING_ARTICLES);
 academyArticles.push(...ASKBIZ_POS_RETAIL_ARTICLES);
 academyArticles.push(...ASKBIZ_POS_LOGISTICS_ARTICLES);
 academyArticles.push(...ASKBIZ_POS_TILL_ARTICLES);
+academyArticles.push(...ASKBIZ_POS_HACKS_ARTICLES);
 
 // ─── MERGE AFRICA ACADEMY CONTENT ────────────────────────────────────────────
 academyArticles.push(..._africaAcademyArticles);

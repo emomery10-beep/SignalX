@@ -6,6 +6,7 @@ import { ASKBIZ_POS_TRAINING_ARTICLES } from '@/lib/askbiz-pos-training-articles
 import { ASKBIZ_POS_RETAIL_ARTICLES } from '@/lib/askbiz-pos-retail-articles'
 import { ASKBIZ_POS_LOGISTICS_ARTICLES } from '@/lib/askbiz-pos-logistics-articles'
 import { ASKBIZ_POS_TILL_ARTICLES } from '@/lib/askbiz-pos-till-articles'
+import { ASKBIZ_POS_HACKS_ARTICLES } from '@/lib/askbiz-pos-hacks-articles'
 
 const ACC = '#d08a59'
 const BG  = '#f9f8f6'
@@ -26,7 +27,8 @@ const POS_ARTICLES = ASKBIZ_POS_TRAINING_ARTICLES
 const POS_RETAIL_ARTICLES = ASKBIZ_POS_RETAIL_ARTICLES
 const POS_LOGISTICS_ARTICLES = ASKBIZ_POS_LOGISTICS_ARTICLES
 const POS_TILL_ARTICLES = ASKBIZ_POS_TILL_ARTICLES
-const ARTICLES = [...GETTING_STARTED, ...POS_ARTICLES, ...POS_RETAIL_ARTICLES, ...POS_LOGISTICS_ARTICLES, ...POS_TILL_ARTICLES]
+const POS_HACKS_ARTICLES = ASKBIZ_POS_HACKS_ARTICLES
+const ARTICLES = [...GETTING_STARTED, ...POS_ARTICLES, ...POS_RETAIL_ARTICLES, ...POS_LOGISTICS_ARTICLES, ...POS_TILL_ARTICLES, ...POS_HACKS_ARTICLES]
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -118,6 +120,7 @@ export default function LearningAskBizPage() {
           { label: '🏪 POS Retail Section', sublabel: 'Products, stock, pricing, and supplier workflows', articles: POS_RETAIL_ARTICLES, offset: GETTING_STARTED.length + POS_ARTICLES.length },
           { label: '🚚 POS Logistics Section', sublabel: 'Deliveries, drivers, fleet, and route management', articles: POS_LOGISTICS_ARTICLES, offset: GETTING_STARTED.length + POS_ARTICLES.length + POS_RETAIL_ARTICLES.length },
           { label: '🛒 POS Till & Checkout', sublabel: 'Payments, discounts, receipts, cash management, and cashier tools', articles: POS_TILL_ARTICLES, offset: GETTING_STARTED.length + POS_ARTICLES.length + POS_RETAIL_ARTICLES.length + POS_LOGISTICS_ARTICLES.length },
+          { label: '⚡ POS Shortcuts & Hacks', sublabel: 'Power-user tips to work faster at the till and in the back office', articles: POS_HACKS_ARTICLES, offset: GETTING_STARTED.length + POS_ARTICLES.length + POS_RETAIL_ARTICLES.length + POS_LOGISTICS_ARTICLES.length + POS_TILL_ARTICLES.length },
         ] as { label: string; sublabel: string; articles: typeof ARTICLES; offset: number }[]).map(({ label, sublabel, articles, offset }) => (
           <div key={label} style={{ marginBottom: 40 }}>
             <div style={{ marginBottom: 16 }}>
