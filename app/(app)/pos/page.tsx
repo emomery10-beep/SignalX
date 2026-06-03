@@ -927,9 +927,6 @@ export default function POSPage() {
   // ── LOADING STATE ──────────────────────────────────────
   if (loading || posEnabled === null) return (
     <div className="page-shell">
-      <div className="page-shell-header" style={{ minHeight: 'unset', padding: '8px 16px' }}>
-        <div style={{ opacity: 0.25 }}><Skeleton w={18} h={18} r={4} /></div>
-      </div>
       <div className="page-shell-body">
         <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>{[1,2,3,4].map(i => <div key={i} style={{ flex: 1 }}><SkeletonCard /></div>)}</div>
         <Skeleton w="100%" h={200} r={12} />
@@ -940,11 +937,6 @@ export default function POSPage() {
   // ── POS NOT ENABLED ────────────────────────────────────
   if (!posEnabled) return (
     <div className="page-shell">
-      <div className="page-shell-header" style={{ minHeight: 'unset', padding: '8px 16px' }}>
-        <div style={{ opacity: 0.35 }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        </div>
-      </div>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
         <div style={{ maxWidth: 480, textAlign: 'center' }}>
           <div style={{ width: 80, height: 80, borderRadius: 20, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
@@ -980,29 +972,9 @@ export default function POSPage() {
     <div className="page-shell">
       {toast && <Toast msg={toast.msg} ok={toast.ok} onDone={() => setToast(null)} />}
 
-      {/* Header */}
-      <div className="page-shell-header" style={{ minHeight: 'unset', padding: '8px 16px' }}>
-        {/* Left: POS icon only — no title / date text */}
-        <div style={{ opacity: 0.35 }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        </div>
-        {/* Right: icon-only ghost buttons */}
-        <div style={{ display: 'flex', gap: 4 }}>
-          <button onClick={handleExportVAT} title="MTD VAT export" style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--tx3)', opacity: 0.45, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          </button>
-          <button onClick={handleExport} title="Export CSV" style={{ width: 32, height: 32, borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--tx3)', opacity: 0.45, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          </button>
-          <a href="https://pos.askbiz.co" target="_blank" rel="noopener noreferrer" title="Open till" style={{ width: 32, height: 32, borderRadius: 8, background: 'transparent', color: 'var(--tx3)', opacity: 0.45, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          </a>
-        </div>
-      </div>
-
       <div className="page-shell-body">
-        {/* Tabs */}
-        <div className="tab-strip" style={{ gap: 0, marginBottom: 24, borderBottom: '1px solid var(--b)', paddingBottom: 0 }}>
+        {/* Tabs + action icons in one flush row */}
+        <div className="tab-strip" style={{ gap: 0, marginBottom: 24, borderBottom: '1px solid var(--b)', paddingBottom: 0, alignItems: 'stretch' }}>
           {(['overview', 'services', 'staff', 'branches', 'map', 'audit'] as Tab[]).filter(Boolean).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
@@ -1046,6 +1018,19 @@ export default function POSPage() {
               flexShrink: 0,
             }}>{s.label}</button>
           ))}
+          {/* Push action icons to the far right of the tab strip */}
+          <div style={{ flex: 1 }} />
+          <div style={{ display: 'flex', gap: 2, alignItems: 'center', paddingBottom: 2 }}>
+            <button onClick={handleExportVAT} title="MTD VAT export" style={{ width: 28, height: 28, borderRadius: 7, border: 'none', background: 'transparent', color: 'var(--tx3)', opacity: 0.4, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </button>
+            <button onClick={handleExport} title="Export CSV" style={{ width: 28, height: 28, borderRadius: 7, border: 'none', background: 'transparent', color: 'var(--tx3)', opacity: 0.4, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+            <a href="https://pos.askbiz.co" target="_blank" rel="noopener noreferrer" title="Open till" style={{ width: 28, height: 28, borderRadius: 7, background: 'transparent', color: 'var(--tx3)', opacity: 0.4, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </a>
+          </div>
         </div>
 
         {/* ── Branch + Sector filters ── */}
