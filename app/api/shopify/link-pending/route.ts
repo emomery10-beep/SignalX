@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { decryptCredentials, encryptCredentials } from '@/lib/crypto'
 import { runSync } from '@/lib/sync/engine'
+import crypto from 'crypto'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://askbiz.co'
 
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
     const clientId = process.env.SHOPIFY_CLIENT_ID
     if (!clientId) return NextResponse.redirect(`${APP_URL}/sources?error=not_configured`)
 
-    const nonce = require('crypto').randomBytes(16).toString('hex')
+    const nonce = crypto.randomBytes(16).toString('hex')
     const state = Buffer.from(JSON.stringify({ nonce, shop, userId: user.id })).toString('base64url')
     const redirectUri = `${APP_URL}/api/auth/shopify/callback`
     const scopes = 'read_orders,read_products,read_inventory,read_customers'

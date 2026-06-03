@@ -4,19 +4,18 @@ import { runSync } from '@/lib/sync/engine'
 import { encryptCredentials } from '@/lib/crypto'
 import crypto from 'crypto'
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://askbiz.co'
+
 function verifyCallbackHmac(params: URLSearchParams): boolean {
   const hmac = params.get('hmac')
   const secret = process.env.SHOPIFY_CLIENT_SECRET
-  if (!hmac || !secret) {
-    console.error('Callback HMAC: missing hmac or secret', { hasHmac: !!hmac, hasSecret: !!secret })
-    return false
-  }
+  if (!hmac || !secret) return false
+
   const entries = Array.from(params.entries())
     .filter(([key]) => key !== 'hmac')
     .sort(([a], [b]) => a.localeCompare(b))
   const message = entries.map(([k, v]) => `${k}=${v}`).join('&')
   const hash = crypto.createHmac('sha256', secret).update(message).digest('hex')
-  console.log('Callback HMAC debug:', { message: message.substring(0, 100), computed: hash.substring(0, 16), expected: hmac.substring(0, 16) })
   try {
     return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(hmac))
   } catch {
@@ -28,7 +27,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
 
   if (!verifyCallbackHmac(searchParams)) {
-    return NextResponse.redirect(new URL('/sources?error=invalid_signature', request.url))
+    return NextResponse.redirect(`${APP_URL}/?ref=shopify&error=invalid_signature`)
   }
 
   const code = searchParams.get('code')
@@ -36,7 +35,7 @@ export async function GET(request: NextRequest) {
   const shop = searchParams.get('shop')
 
   if (!code || !state || !shop) {
-    return NextResponse.redirect(new URL('/sources?error=shopify_cancelled', request.url))
+    return NextResponse.redirect(`${APP_URL}/?ref=shopify&error=shopify_cancelled`)
   }
 
   let userId: string | undefined
@@ -46,10 +45,16 @@ export async function GET(request: NextRequest) {
     userId = decoded.userId
     shopFromState = decoded.shop
   } catch {
-    return NextResponse.redirect(new URL('/sources?error=invalid_state', request.url))
+    return NextResponse.redirect(`${APP_URL}/?ref=shopify&error=invalid_state`)
   }
 
-  // Exchange code for a permanent offline access token (no expiring flag — deprecated)
+  // Validate that the shop in state matches the shop in the callback params
+  // (prevents state substitution attacks; HMAC already covers parameter tampering)
+  if (shopFromState && shopFromState !== shop) {
+    return NextResponse.redirect(`${APP_URL}/?ref=shopify&error=shop_mismatch`)
+  }
+
+  // Exchange code for a permanent offline access token
   const tokenRes = await fetch(`https://${shop}/admin/oauth/access_token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -61,10 +66,14 @@ export async function GET(request: NextRequest) {
   })
 
   if (!tokenRes.ok) {
-    return NextResponse.redirect(new URL('/sources?error=shopify_token_failed', request.url))
+    return NextResponse.redirect(`${APP_URL}/?ref=shopify&error=shopify_token_failed`)
   }
 
-  const { access_token, refresh_token } = await tokenRes.json()
+  const { access_token } = await tokenRes.json()
+
+  if (!access_token) {
+    return NextResponse.redirect(`${APP_URL}/?ref=shopify&error=no_access_token`)
+  }
 
   // Get shop info for display name
   const shopRes = await fetch(`https://${shop}/admin/api/2025-01/shop.json`, {
@@ -78,9 +87,7 @@ export async function GET(request: NextRequest) {
   const supabase = createServiceClient()
 
   // If no userId (App Store install flow), try to find user by checking current session
-  // or create a pending connection
   if (!userId) {
-    // Try to get user from current session cookies
     const { createClient } = await import('@/lib/supabase/server')
     const sessionClient = createClient()
     const { data: { user } } = await sessionClient.auth.getUser()
@@ -88,25 +95,21 @@ export async function GET(request: NextRequest) {
   }
 
   if (!userId) {
-    // App Store install flow — no logged-in AskBiz user
+    // App Store install flow — no logged-in AskBiz user.
     // Store the token as a pending connection keyed by shop domain
-    // so we can link it when the merchant signs into AskBiz later
-    const { createServiceClient: createSvc } = await import('@/lib/supabase/server')
-    const svcClient = createSvc()
-    await svcClient
+    // so we can link it when the merchant signs into AskBiz later.
+    await supabase
       .from('pending_shopify_installs')
       .upsert({
         shop_domain: shop,
-        access_token: encryptCredentials({ access_token, refresh_token }),
+        access_token: encryptCredentials({ access_token }),
         shop_name: shopName,
         installed_at: new Date().toISOString(),
       }, { onConflict: 'shop_domain' })
       .then(() => {})
       .catch((err: unknown) => console.error('Failed to store pending install:', err))
 
-    // Redirect to AskBiz — prompt merchant to sign in or create account to link their store
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://askbiz.co'
-    return NextResponse.redirect(`${appUrl}/?ref=shopify&shop=${shop}&status=connect_account`)
+    return NextResponse.redirect(`${APP_URL}/signin?ref=shopify&shop=${shop}`)
   }
 
   // Remove any existing Shopify connection for this user, then insert fresh
@@ -123,7 +126,7 @@ export async function GET(request: NextRequest) {
       source_type: 'shopify',
       name: shopName,
       status: 'active',
-      credentials: encryptCredentials({ access_token, refresh_token }),
+      credentials: encryptCredentials({ access_token }),
       config: { shop_domain: shop },
       sync_interval_minutes: 60,
     })
@@ -132,13 +135,12 @@ export async function GET(request: NextRequest) {
 
   if (insertError) {
     console.error('Shopify insert failed:', insertError)
-    return NextResponse.redirect(new URL(`/sources?error=shopify_save_failed`, request.url))
+    return NextResponse.redirect(`${APP_URL}/sources?error=shopify_save_failed`)
   }
 
   if (source) {
-    // Kick off initial sync in background
     try { await runSync(userId) } catch (_) {}
   }
 
-  return NextResponse.redirect(new URL('/sources?connected=shopify', request.url))
+  return NextResponse.redirect(`${APP_URL}/sources?connected=shopify`)
 }
