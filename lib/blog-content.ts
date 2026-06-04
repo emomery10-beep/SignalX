@@ -728,6 +728,29 @@ import { batch238 } from './global-business-batch-238'
 import { batch239 } from './global-business-batch-239'
 import { batch240 } from './global-business-batch-240'
 
+// AskBiz 500 SEO Articles — integration blog batches
+import { INTEGRATION_BLOGS_BATCH_1 } from './integration-blogs-batch1'
+import { INTEGRATION_BLOGS_BATCH_2 } from './integration-blogs-batch2'
+import { INTEGRATION_BLOGS_BATCH_3_UK } from './integration-blogs-batch3-uk'
+import { INTEGRATION_BLOGS_BATCH_4_SINGAPORE } from './integration-blogs-batch4-singapore'
+import { INTEGRATION_BLOGS_BATCH_5_ASEAN } from './integration-blogs-batch5-asean'
+import { INTEGRATION_BLOGS_BATCH_6_ADVANCED_ANALYTICS } from './integration-blogs-batch6-advanced-analytics'
+import { INTEGRATION_BLOGS_BATCH_7_MOBILE } from './integration-blogs-batch7-mobile'
+import { BATCH_8_SUPPLY_CHAIN } from './integration-blogs-batch8-supply-chain'
+import { BATCH_9_CUSTOMER_RETENTION } from './integration-blogs-batch9-customer-retention'
+import { INTEGRATION_BLOGS_BATCH_10_FINANCIAL_PLANNING } from './integration-blogs-batch10-financial-planning'
+import { batch10PricingPosts } from './integration-blogs-batch10-pricing'
+import { BATCH_11_COMPLIANCE } from './integration-blogs-batch11-compliance'
+import { batch12AutomationPosts } from './integration-blogs-batch12-automation'
+import { batch13RestaurantPosts } from './integration-blogs-batch13-restaurant-fb'
+import { batch14DigitalMarketingPosts } from './integration-blogs-batch14-digital-marketing'
+import { batch15RepairServicesPosts } from './integration-blogs-batch15-repair-services'
+import { batch16FactoryManufacturingPosts } from './integration-blogs-batch16-factory-manufacturing'
+import { batch17LogisticsDeliveryPosts } from './integration-blogs-batch17-logistics-delivery'
+import { batch18CrisisResiliencePosts } from './integration-blogs-batch18-crisis-resilience'
+import { batch19MarketingAnalyticsPosts } from './integration-blogs-batch19-marketing-analytics'
+import { batch20GrowthScalingPosts } from './integration-blogs-batch20-growth-scaling'
+
 export interface BlogPost {
   slug: string
   title: string
@@ -896,6 +919,14 @@ const ALL_POSTS = [
   ...batch226, ...batch227, ...batch228, ...batch229, ...batch230,
   ...batch231, ...batch232, ...batch233, ...batch234, ...batch235,
   ...batch236, ...batch237, ...batch238, ...batch239, ...batch240,
+  // AskBiz 500 SEO Articles — integration blog batches (525 articles across 21 batches)
+  ...INTEGRATION_BLOGS_BATCH_1, ...INTEGRATION_BLOGS_BATCH_2, ...INTEGRATION_BLOGS_BATCH_3_UK,
+  ...INTEGRATION_BLOGS_BATCH_4_SINGAPORE, ...INTEGRATION_BLOGS_BATCH_5_ASEAN, ...INTEGRATION_BLOGS_BATCH_6_ADVANCED_ANALYTICS,
+  ...INTEGRATION_BLOGS_BATCH_7_MOBILE, ...BATCH_8_SUPPLY_CHAIN, ...BATCH_9_CUSTOMER_RETENTION,
+  ...INTEGRATION_BLOGS_BATCH_10_FINANCIAL_PLANNING, ...batch10PricingPosts, ...BATCH_11_COMPLIANCE,
+  ...batch12AutomationPosts, ...batch13RestaurantPosts, ...batch14DigitalMarketingPosts,
+  ...batch15RepairServicesPosts, ...batch16FactoryManufacturingPosts, ...batch17LogisticsDeliveryPosts,
+  ...batch18CrisisResiliencePosts, ...batch19MarketingAnalyticsPosts, ...batch20GrowthScalingPosts,
 ]
 
 // Cache expanded posts so they're available for both sitemap and routing
