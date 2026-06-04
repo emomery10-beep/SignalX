@@ -76,6 +76,62 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${APP_URL}/?ref=shopify&error=no_access_token`)
   }
 
+  // ── Shopify Billing API — create free $0 subscription ────────
+  // Required by Shopify App Store policy 1.2.1 even for free apps.
+  // A $0 recurring plan satisfies the requirement with no merchant charge.
+  const GQL_VERSION = '2025-01'
+  const FREE_PLAN_MUTATION = `
+    mutation appSubscriptionCreate($returnUrl: URL!) {
+      appSubscriptionCreate(
+        name: "AskBiz Free"
+        returnUrl: $returnUrl
+        test: false
+        lineItems: [{
+          plan: {
+            appRecurringPricingDetails: {
+              price: { amount: 0, currencyCode: USD }
+              interval: EVERY_30_DAYS
+            }
+          }
+        }]
+      ) {
+        userErrors { field message }
+        confirmationUrl
+        appSubscription { id status }
+      }
+    }
+  `
+  try {
+    const billingRes = await fetch(
+      `https://${shop}/admin/api/${GQL_VERSION}/graphql.json`,
+      {
+        method: 'POST',
+        headers: {
+          'X-Shopify-Access-Token': access_token,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: FREE_PLAN_MUTATION,
+          variables: {
+            returnUrl: `${APP_URL}/sources?connected=shopify&syncing=true`,
+          },
+        }),
+      }
+    )
+    if (billingRes.ok) {
+      const billingData = await billingRes.json()
+      const sub = billingData?.data?.appSubscriptionCreate
+      // If Shopify returns a confirmationUrl (non-zero plans), redirect merchant to approve.
+      // For $0 plans Shopify auto-activates — confirmationUrl will be null or unused.
+      if (sub?.confirmationUrl && sub.appSubscription?.status !== 'ACTIVE') {
+        return NextResponse.redirect(sub.confirmationUrl)
+      }
+    }
+  } catch (e) {
+    // Billing creation failure should not block the connection — log and continue
+    console.error('Shopify free subscription creation failed:', e)
+  }
+
   // Get shop info for display name
   const shopRes = await fetch(`https://${shop}/admin/api/2025-01/shop.json`, {
     headers: { 'X-Shopify-Access-Token': access_token },
