@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import LanguageToggle from '@/components/LanguageToggle'
 import { LanguageProvider, useLang } from '@/components/LanguageProvider'
 import type { Lang } from '@/lib/i18n'
 import { COUNTRY_TO_LANG } from '@/lib/i18n'
@@ -597,10 +596,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
   const flag          = liveGeo?.flag              || geo?.flag        || ''
   const isRTL = lang === 'ar'
 
-  const geoCtaText = 'Start free — no card needed'
+  const geoCtaText = 'Start 3-month free trial'
   const geoSubText = country
-    ? `No credit card · Prices from ${growthPrice}/mo · 2 minutes to set up`
-    : 'No credit card · Takes 2 minutes to set up'
+    ? `No credit card · 3 months free then from ${growthPrice}/mo · 2 minutes to set up`
+    : 'No credit card · 3 months free · Takes 2 minutes to set up'
 
   useEffect(() => {
     // Skip client-side geo fetch when server already provided geo via props
@@ -650,7 +649,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
   const FAQS = [
     { q: 'What is AskBiz?', a: 'AskBiz is a business intelligence tool for SME founders. You connect your Shopify, Amazon, or other platforms, then ask questions in plain English and get answers with your actual numbers.' },
     { q: 'How does it work without a data team?', a: 'You connect your store or upload a CSV. AskBiz handles everything — no SQL, no dashboards, no data engineering. You just ask.' },
-    { q: 'What\'s included in the free plan?', a: '10 questions per month, CSV upload, Business Pulse score, connect Shopify and Amazon, API access, and access to the FX Risk, Landed Cost, and Export Market tools with manual input. No credit card needed.' },
+    { q: 'What\'s included in the free plan?', a: '10 questions per month, CSV upload, Business Pulse score, connect Shopify and Amazon, API access, and access to the FX Risk, Landed Cost, and Export Market tools with manual input. No credit card needed. You can also try Growth and PoS free for 3 months — no card required.' },
     { q: 'What does "pre-filled from data" mean on Growth?', a: 'On Growth, the FX Risk, Landed Cost, and other tools automatically pull your real product costs, margins, and supplier data from your connected sources. You review and calculate — not re-enter.' },
     { q: 'Can I cancel anytime?', a: 'Yes — cancel in one click. You keep access until the end of your billing period.' },
     { q: 'How does the social commerce integration work?', a: 'Connect TikTok Shop, Instagram Shopping, or Pinterest from the Sources page. AskBiz tracks conversion rates, saves (demand signals), and alerts you when a product has high saves but no orders — before you sell out.' },
@@ -720,7 +719,6 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
         {/* Desktop nav */}
         <div className="nav-desktop" style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <LanguageToggle/>
           <a href="#pricing" className="nav-link" style={{ fontSize:13, color:C.tx2, textDecoration:'none', padding:'0 8px' }}>Pricing</a>
           <div className="nav-mega-wrap" style={{ position:'relative' }} onMouseEnter={(e)=>{const d=e.currentTarget.querySelector('.nav-mega') as HTMLElement;if(d)d.style.display='block'}} onMouseLeave={(e)=>{const d=e.currentTarget.querySelector('.nav-mega') as HTMLElement;if(d)d.style.display='none'}}>
             <span className="nav-link" style={{ fontSize:13, color:C.tx2, padding:'0 8px', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:3 }}>Resources <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg></span>
@@ -785,13 +783,17 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <Link href="/signin?mode=signup" onClick={() => setMenuOpen(false)} className="btn-primary" style={{ display:'block', padding:'14px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', textAlign:'center' }}>Start free</Link>
           <Link href="/signin" onClick={() => setMenuOpen(false)} style={{ display:'block', padding:'14px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:14, fontWeight:500, textDecoration:'none', textAlign:'center' }}>Sign in</Link>
         </div>
-        <div style={{ marginTop:20, display:'flex', justifyContent:'center' }}><LanguageToggle/></div>
       </div>
 
       {/* Geo promo banner removed */}
 
       {/* ── HERO ─────────────────────────────────────────────── */}
       <section style={{ maxWidth:1080, margin:'0 auto', padding:'clamp(28px,4vw,42px) clamp(16px,4vw,40px) clamp(32px,4vw,48px)', textAlign:'center' }}>
+
+        {/* Trial promo banner */}
+        <div className="fade-up" style={{ display:'inline-block', marginBottom:18, padding:'8px 22px', borderRadius:9999, background:'linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #4f46e5 100%)', color:'#fff', fontSize:14, fontWeight:700, letterSpacing:'-.01em', boxShadow:'0 4px 20px rgba(124,58,237,.35)' }}>
+          🎉 3 months free — no card required
+        </div>
 
         {/* Dual-product badge */}
         <div className="fade-up" style={{ display:'inline-flex', alignItems:'center', gap:0, borderRadius:9999, border:`1px solid ${C.b2}`, background:C.sf, fontSize:12, fontWeight:700, marginBottom:28, overflow:'hidden' }}>
@@ -814,7 +816,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           Every sale your register takes feeds directly into your AI. Ask questions, spot problems, act fast — from one place.
         </p>
         <p className="fade-up" style={{ fontSize:13, color:C.tx3, marginBottom:32 }}>
-          Connect Shopify, Amazon, QuickBooks or run the built-in PoS. Free to start — no card needed.
+          Connect Shopify, Amazon, QuickBooks or run the built-in PoS. Try Growth or PoS free for 3 months — no card needed.
         </p>
 
         {/* CTAs */}
@@ -830,7 +832,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <span>🔒 Encrypted in transit & at rest</span>
           <span>🇬🇧 UK data residency</span>
           <span>✓ GDPR compliant</span>
-          <span>🆓 Free plan, no card needed</span>
+          <span>🆓 3-month free trial, no card needed</span>
         </div>
         <p className="fade-up" style={{ fontSize:12, color:C.tx3, marginBottom:28, marginTop:8 }}>
           {country ? `${flag} ${geoSubText}` : geoSubText} · PoS from {posPrice}/seat/mo
@@ -1235,8 +1237,8 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             ].map((plan, i) => (
               <div key={i} style={{ borderRadius:18, border:plan.popular?`2px solid ${C.acc}`:`1px solid ${C.b}`, background:plan.popular?`rgba(208,138,89,.02)`:C.bg, padding:'22px 20px', position:'relative', display:'flex', flexDirection:'column' }}>
                 {plan.popular && (
-                  <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', padding:'3px 14px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:10, fontWeight:700, whiteSpace:'nowrap', textTransform:'uppercase', letterSpacing:'.06em', boxShadow:`0 2px 8px ${C.acc}40` }}>
-                    Most popular
+                  <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', padding:'3px 14px', borderRadius:9999, background:'linear-gradient(135deg, #7c3aed, #4f46e5)', color:'#fff', fontSize:10, fontWeight:700, whiteSpace:'nowrap', textTransform:'uppercase', letterSpacing:'.06em', boxShadow:'0 2px 8px rgba(124,58,237,.4)' }}>
+                    3 months free trial
                   </div>
                 )}
                 <div style={{ marginBottom:14 }}>
@@ -1256,7 +1258,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                   ))}
                 </div>
                 <Link href="/signin?mode=signup" className="btn-primary" style={{ display:'block', padding:'11px', borderRadius:10, border:plan.popular?'none':`1px solid ${C.b2}`, background:plan.popular?C.acc:'transparent', color:plan.popular?'#fff':C.tx2, fontSize:14, fontWeight:600, textDecoration:'none', textAlign:'center', boxShadow:plan.popular?`0 2px 12px ${C.acc}35`:'none' }}>
-                  {plan.id==='free'?'Start for free':'Upgrade →'}
+                  {plan.id==='free'?'Start for free':plan.id==='growth'?'Start free trial →':'Upgrade →'}
                 </Link>
               </div>
             ))}
