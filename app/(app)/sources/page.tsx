@@ -442,12 +442,13 @@ export default function SourcesPage() {
                 </div>
 
                 {/* Step guide */}
-                <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.8, background: 'var(--ev)', borderRadius: 9, padding: '10px 12px' }}>
-                  <strong style={{ color: 'var(--tx2)' }}>Quick setup (2 min):</strong><br/>
-                  1. Shopify Admin → <strong style={{ color: 'var(--tx)' }}>Settings → Apps → Develop apps</strong><br/>
-                  2. Click <strong style={{ color: 'var(--tx)' }}>Create an app</strong> → name it "AskBiz"<br/>
-                  3. Under <strong style={{ color: 'var(--tx)' }}>Configuration</strong> → enable: <em>read_orders, read_products, read_inventory, read_customers</em><br/>
-                  4. Click <strong style={{ color: 'var(--tx)' }}>Install app</strong> → copy the <strong style={{ color: 'var(--tx)' }}>Admin API access token</strong>
+                <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.9, background: 'var(--ev)', borderRadius: 9, padding: '10px 12px' }}>
+                  <strong style={{ color: 'var(--tx2)' }}>⚠️ Do this in YOUR store's Shopify Admin — not the Partner dashboard</strong><br/>
+                  1. Your Shopify Admin → <strong style={{ color: 'var(--tx)' }}>Settings → Apps → Develop apps</strong><br/>
+                  2. Click <strong style={{ color: 'var(--tx)' }}>Create an app</strong> → name it anything (e.g. "AskBiz")<br/>
+                  3. Click <strong style={{ color: 'var(--tx)' }}>Configure Admin API scopes</strong> → tick: <em>read_orders, read_products, read_inventory, read_customers</em> → <strong style={{ color: 'var(--tx)' }}>Save</strong><br/>
+                  4. Click <strong style={{ color: 'var(--tx)' }}>API credentials</strong> tab → click <strong style={{ color: 'var(--tx)' }}>Install app</strong><br/>
+                  5. Copy the <strong style={{ color: '#95bf47' }}>Admin API access token</strong> (starts with <code style={{ background:'var(--sf)', padding:'1px 4px', borderRadius:3 }}>shpat_</code>) — paste below
                 </div>
 
                 <div>
