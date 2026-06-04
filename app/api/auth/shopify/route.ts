@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 export async function GET(request: NextRequest) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.redirect(new URL('/signin', request.url))
+  if (!user) return NextResponse.redirect(new URL(`/signin?ref=shopify&shop=${encodeURIComponent(cleanShop)}`, request.url))
 
   const shop = request.nextUrl.searchParams.get('shop')
   if (!shop) return NextResponse.json({ error: 'shop parameter required' }, { status: 400 })

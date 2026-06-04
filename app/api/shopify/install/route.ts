@@ -15,7 +15,8 @@ function verifyShopifyRequest(params: URLSearchParams): boolean {
   const message = entries.map(([k, v]) => `${k}=${v}`).join('&')
   const hash = crypto.createHmac('sha256', secret).update(message).digest('hex')
   try {
-    return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(hmac))
+    // Use hex Buffers so lengths always match (both 32 bytes); avoids timingSafeEqual throw
+    return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(hmac, 'hex'))
   } catch {
     return false
   }
