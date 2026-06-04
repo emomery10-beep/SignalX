@@ -92,104 +92,170 @@ async function refreshShopifyToken(
   return { access_token: data.access_token, refresh_token: data.refresh_token }
 }
 
-// ── Shopify sync ──────────────────────────────────────────────
+// ── Shopify sync (GraphQL) ────────────────────────────────────
 async function syncShopify(
   source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> },
   userId: string,
   supabase: ReturnType<typeof createServiceClient>
 ): Promise<{ records: UnifiedRecord[]; error?: string }> {
   const { shop_domain } = source.config
-  let { access_token, refresh_token } = source.credentials
+  const { access_token } = source.credentials
 
   if (!shop_domain || !access_token) return { records: [], error: 'Missing shop domain or access token' }
 
-  try {
-    let res = await fetch(
-      `https://${shop_domain}/admin/api/2025-01/orders.json?status=any&limit=250`,
-      { headers: { 'X-Shopify-Access-Token': String(access_token) } }
-    )
+  const shop = String(shop_domain)
+  const token = String(access_token)
 
-    // If 401/403 and we have a refresh token, try refreshing
-    if ((res.status === 401 || res.status === 403) && refresh_token) {
-      const refreshed = await refreshShopifyToken(source.id, String(shop_domain), String(refresh_token), supabase)
-      if (refreshed) {
-        access_token = refreshed.access_token
-        res = await fetch(
-          `https://${shop_domain}/admin/api/2025-01/orders.json?status=any&limit=250`,
-          { headers: { 'X-Shopify-Access-Token': String(access_token) } }
-        )
+  // ── Inline GraphQL helper ─────────────────────────────────
+  const gql = async (query: string, variables: Record<string, unknown> = {}) => {
+    const res = await fetch(`https://${shop}/admin/api/2025-01/graphql.json`, {
+      method: 'POST',
+      headers: { 'X-Shopify-Access-Token': token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, variables }),
+    })
+    if (!res.ok) throw new Error(`Shopify GraphQL error: ${res.status}`)
+    const json = await res.json()
+    if (json.errors?.length) throw new Error(json.errors[0]?.message || 'GraphQL error')
+    return json.data as Record<string, unknown>
+  }
+
+  // ── Cursor-based paginator ────────────────────────────────
+  const fetchAll = async (query: string, key: string): Promise<Record<string, unknown>[]> => {
+    const nodes: Record<string, unknown>[] = []
+    let cursor: string | null = null
+    do {
+      const data = await gql(query, { cursor })
+      const conn = data[key] as {
+        edges: { node: Record<string, unknown> }[]
+        pageInfo: { hasNextPage: boolean; endCursor: string }
       }
-    }
+      nodes.push(...conn.edges.map(e => e.node))
+      cursor = conn.pageInfo.hasNextPage ? conn.pageInfo.endCursor : null
+    } while (cursor)
+    return nodes
+  }
 
-    if (!res.ok) {
-      const errBody = await res.text()
-      throw new Error(`Shopify API error: ${res.status} — ${errBody.substring(0, 200)}`)
-    }
-    const { orders } = await res.json()
-    const records = (orders as Record<string, unknown>[]).flatMap(normaliseShopify)
-
-    // Also fetch products for inventory data (even if there are no orders yet)
-    try {
-      const prodRes = await fetch(
-        `https://${shop_domain}/admin/api/2025-01/products.json?limit=250&fields=id,title,variants,product_type,vendor`,
-        { headers: { 'X-Shopify-Access-Token': String(access_token) } }
-      )
-      if (prodRes.ok) {
-        const { products } = await prodRes.json()
-        for (const p of (products || []) as Record<string, unknown>[]) {
-          const variants = (p.variants as Record<string, unknown>[]) || []
-          for (const v of variants) {
-            const price = Number(v.price) || 0
-            const cost = Number(v.cost) || 0 // Shopify variant cost field
-            const qty = Number(v.inventory_quantity) || 0
-            const sku = String(v.sku || '')
-            const variantTitle = String(v.title || 'Default')
-            const productName = `${p.title}${variantTitle !== 'Default Title' ? ` - ${variantTitle}` : ''}`
-            const sourceRecordId = `shopify_product_${p.id}_variant_${v.id}`
-
-            // Skip if we already have a more recent order record for this product
-            if (records.some(r => r.sku === sku && sku)) continue
-
-            const marginPct = price > 0 ? ((price - cost) / price) * 100 : 0
-            records.push({
-              record_date: new Date().toISOString().split('T')[0],
-              sku: sku || String(v.id),
-              product_name: String(productName),
-              category: String(p.product_type || ''),
-              variant: variantTitle === 'Default Title' ? '' : variantTitle,
-              supplier: String(p.vendor || ''),
-              units_sold: 0,
-              selling_price: price,
-              discount: 0,
-              gross_revenue: 0,
-              net_revenue: 0,
-              cost_price: cost,
-              shipping_cost: 0,
-              packaging_cost: 0,
-              marketplace_fee: 0,
-              tax: 0,
-              total_cost: cost,
-              gross_margin: Math.round(marginPct * 100) / 100,
-              net_margin: Math.round(marginPct * 100) / 100,
-              stock_level: qty,
-              stock_movement: 0,
-              low_stock_flag: qty > 0 && qty < 10,
-              damaged_stock: 0,
-              channel: 'shopify',
-              customer_region: '',
-              currency: String(v.presentment_prices?.[0]?.price?.currency_code || 'USD'),
-              ad_spend: 0,
-              campaign: '',
-              coupon_code: '',
-              coupon_discount: 0,
-              payment_status: 'inventory',
-              refund_amount: 0,
-              payout_amount: 0,
-              source_record_id: sourceRecordId,
-              source_type: 'shopify',
-              raw_data: { product_id: p.id, variant_id: v.id, ...v },
-            } as UnifiedRecord)
+  try {
+    // ── Orders ──────────────────────────────────────────────
+    const ORDERS_QUERY = `
+      query GetOrders($cursor: String) {
+        orders(first: 250, after: $cursor, query: "status:any") {
+          edges {
+            node {
+              id name createdAt displayFinancialStatus currencyCode
+              totalDiscountsSet { shopMoney { amount } }
+              totalTaxSet { shopMoney { amount } }
+              discountCodes
+              shippingAddress { countryCodeV2 }
+              shippingLines(first: 1) {
+                edges { node { originalPriceSet { shopMoney { amount } } } }
+              }
+              lineItems(first: 50) {
+                edges {
+                  node {
+                    id name quantity
+                    originalUnitPriceSet { shopMoney { amount } }
+                    totalDiscountSet { shopMoney { amount } }
+                    variant {
+                      id sku title inventoryQuantity
+                      inventoryItem { unitCost { amount } }
+                    }
+                  }
+                }
+              }
+            }
           }
+          pageInfo { hasNextPage endCursor }
+        }
+      }
+    `
+
+    const orders = await fetchAll(ORDERS_QUERY, 'orders')
+    const records = orders.flatMap(normaliseShopify)
+
+    // ── Products + inventory (supplemental) ─────────────────
+    try {
+      const PRODUCTS_QUERY = `
+        query GetProducts($cursor: String) {
+          products(first: 250, after: $cursor) {
+            edges {
+              node {
+                id title productType vendor
+                variants(first: 100) {
+                  edges {
+                    node {
+                      id sku title price inventoryQuantity
+                      inventoryItem { unitCost { amount } }
+                    }
+                  }
+                }
+              }
+            }
+            pageInfo { hasNextPage endCursor }
+          }
+        }
+      `
+
+      const products = await fetchAll(PRODUCTS_QUERY, 'products')
+
+      for (const p of products) {
+        const variantEdges = ((p.variants as Record<string, unknown>)
+          ?.edges as { node: Record<string, unknown> }[]) || []
+
+        for (const ve of variantEdges) {
+          const v = ve.node
+          const price = Number(v.price) || 0
+          const cost = Number(
+            ((v.inventoryItem as Record<string, unknown>)
+              ?.unitCost as Record<string, unknown>)?.amount
+          ) || 0
+          const qty = Number(v.inventoryQuantity) || 0
+          const sku = String(v.sku || '')
+          const variantTitle = String(v.title || 'Default Title')
+          const productName = `${p.title}${variantTitle !== 'Default Title' ? ` - ${variantTitle}` : ''}`
+          const sourceRecordId = `shopify_product_${p.id}_variant_${v.id}`
+
+          if (records.some(r => r.sku === sku && sku)) continue
+
+          const marginPct = price > 0 ? ((price - cost) / price) * 100 : 0
+          records.push({
+            record_date: new Date().toISOString().split('T')[0],
+            sku: sku || String(v.id),
+            product_name: String(productName),
+            category: String(p.productType || ''),
+            variant: variantTitle === 'Default Title' ? '' : variantTitle,
+            supplier: String(p.vendor || ''),
+            units_sold: 0,
+            selling_price: price,
+            discount: 0,
+            gross_revenue: 0,
+            net_revenue: 0,
+            cost_price: cost,
+            shipping_cost: 0,
+            packaging_cost: 0,
+            marketplace_fee: 0,
+            tax: 0,
+            total_cost: cost,
+            gross_margin: Math.round(marginPct * 100) / 100,
+            net_margin: Math.round(marginPct * 100) / 100,
+            stock_level: qty,
+            stock_movement: 0,
+            low_stock_flag: qty > 0 && qty < 10,
+            damaged_stock: 0,
+            channel: 'shopify',
+            customer_region: '',
+            currency: 'USD',
+            ad_spend: 0,
+            campaign: '',
+            coupon_code: '',
+            coupon_discount: 0,
+            payment_status: 'inventory',
+            refund_amount: 0,
+            payout_amount: 0,
+            source_record_id: sourceRecordId,
+            source_type: 'shopify',
+            raw_data: { product_id: p.id, variant_id: v.id, ...v },
+          } as UnifiedRecord)
         }
       }
     } catch (_) {

@@ -1,6 +1,6 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "caf6196aeee8533d2841950fcbe1f318"
+client_id = "3f04c3972b06d0d26e516818e7f4f607"
 name = "AskBiz"
 application_url = "https://askbiz.co/api/shopify/install"
 embedded = false

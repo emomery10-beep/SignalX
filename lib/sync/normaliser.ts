@@ -63,32 +63,59 @@ function safeDate(v: unknown): string {
 }
 
 // ── SHOPIFY ───────────────────────────────────────────────────
-// Maps Shopify orders API response
+// Maps Shopify GraphQL Admin API order nodes → UnifiedRecord[]
 export function normaliseShopify(order: Record<string, unknown>): UnifiedRecord[] {
   const records: UnifiedRecord[] = []
-  const lineItems = (order.line_items as Record<string, unknown>[]) || []
-  const currency = safeStr(order.currency) || 'USD'
-  const region = safeStr((order.shipping_address as Record<string, unknown>)?.country_code)
-  const paymentStatus = safeStr(order.financial_status)
-  const discount = safeNum((order.total_discounts as string))
-  const shippingCost = safeNum(((order.shipping_lines as Record<string, unknown>[])?.[0] as Record<string, unknown>)?.price)
-  const tax = safeNum(order.total_tax as string)
 
-  for (const item of lineItems) {
+  // GraphQL field paths (camelCase, nested edges/nodes)
+  const lineItemEdges = ((order.lineItems as Record<string, unknown>)
+    ?.edges as { node: Record<string, unknown> }[]) || []
+  const currency = safeStr(order.currencyCode) || 'USD'
+  const region = safeStr((order.shippingAddress as Record<string, unknown>)?.countryCodeV2)
+  const paymentStatus = safeStr(order.displayFinancialStatus)
+  const discount = safeNum(
+    ((order.totalDiscountsSet as Record<string, unknown>)
+      ?.shopMoney as Record<string, unknown>)?.amount
+  )
+  const shippingEdge = ((order.shippingLines as Record<string, unknown>)
+    ?.edges as { node: Record<string, unknown> }[])?.[0]
+  const shippingCost = safeNum(
+    ((shippingEdge?.node?.originalPriceSet as Record<string, unknown>)
+      ?.shopMoney as Record<string, unknown>)?.amount
+  )
+  const tax = safeNum(
+    ((order.totalTaxSet as Record<string, unknown>)
+      ?.shopMoney as Record<string, unknown>)?.amount
+  )
+  const discountCode = safeStr((order.discountCodes as string[])?.[0])
+  const count = lineItemEdges.length || 1
+
+  for (const edge of lineItemEdges) {
+    const item = edge.node
+    const variant = (item.variant as Record<string, unknown>) || {}
     const qty = safeNum(item.quantity)
-    const price = safeNum(item.price)
+    const price = safeNum(
+      ((item.originalUnitPriceSet as Record<string, unknown>)
+        ?.shopMoney as Record<string, unknown>)?.amount
+    )
     const totalPrice = qty * price
-    const itemDiscount = safeNum(item.total_discount)
+    const itemDiscount = safeNum(
+      ((item.totalDiscountSet as Record<string, unknown>)
+        ?.shopMoney as Record<string, unknown>)?.amount
+    )
     const netRev = totalPrice - itemDiscount
-    const costPrice = safeNum((item.cost as Record<string, unknown>)?.amount) // from inventory cost API
-    const marketplaceFee = netRev * 0.02 // Shopify 2% transaction fee estimate
+    const costPrice = safeNum(
+      ((variant.inventoryItem as Record<string, unknown>)
+        ?.unitCost as Record<string, unknown>)?.amount
+    )
+    const marketplaceFee = netRev * 0.02
 
     records.push({
-      record_date: safeDate(order.created_at),
-      sku: safeStr(item.sku) || safeStr(item.variant_id),
-      product_name: safeStr(item.name) || safeStr(item.title),
-      category: safeStr((item.properties as Record<string, unknown>[])?.[0]?.value) || '',
-      variant: safeStr(item.variant_title),
+      record_date: safeDate(order.createdAt),
+      sku: safeStr(variant.sku) || safeStr(variant.id),
+      product_name: safeStr(item.name),
+      category: '',
+      variant: safeStr(variant.title) === 'Default Title' ? '' : safeStr(variant.title),
       supplier: '',
       units_sold: qty,
       selling_price: price,
@@ -96,23 +123,23 @@ export function normaliseShopify(order: Record<string, unknown>): UnifiedRecord[
       gross_revenue: totalPrice,
       net_revenue: netRev,
       cost_price: costPrice,
-      shipping_cost: shippingCost / lineItems.length,
+      shipping_cost: shippingCost / count,
       packaging_cost: 0,
       marketplace_fee: marketplaceFee,
-      tax: tax / lineItems.length,
-      total_cost: costPrice + (shippingCost / lineItems.length) + marketplaceFee + (tax / lineItems.length),
+      tax: tax / count,
+      total_cost: costPrice + (shippingCost / count) + marketplaceFee + (tax / count),
       gross_margin: calcMargin(netRev, costPrice),
-      net_margin: calcMargin(netRev, costPrice + (shippingCost / lineItems.length) + marketplaceFee),
-      stock_level: safeNum((item.inventory_quantity as number)),
+      net_margin: calcMargin(netRev, costPrice + (shippingCost / count) + marketplaceFee),
+      stock_level: safeNum(variant.inventoryQuantity),
       stock_movement: -qty,
-      low_stock_flag: safeNum(item.inventory_quantity as number) < 10,
+      low_stock_flag: safeNum(variant.inventoryQuantity) < 10,
       damaged_stock: 0,
       channel: 'shopify',
       customer_region: region,
       currency,
       ad_spend: 0,
       campaign: '',
-      coupon_code: safeStr((order.discount_codes as Record<string, unknown>[])?.[0]?.code),
+      coupon_code: discountCode,
       coupon_discount: discount,
       payment_status: paymentStatus,
       refund_amount: 0,

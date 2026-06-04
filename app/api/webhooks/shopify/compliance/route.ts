@@ -7,9 +7,9 @@ function verifyHmac(body: string, hmacHeader: string | null): boolean {
   const secret = process.env.SHOPIFY_CLIENT_SECRET || ''
   if (!secret || !hmacHeader) return false
   try {
-    const hash = crypto.createHmac('sha256', secret).update(body).digest('base64')
-    const hashBuf = Buffer.from(hash)
-    const hmacBuf = Buffer.from(hmacHeader)
+    const hash = crypto.createHmac('sha256', secret).update(body, 'utf8').digest('base64')
+    const hashBuf = Buffer.from(hash.trim(), 'utf8')
+    const hmacBuf = Buffer.from(hmacHeader.trim(), 'utf8')
     if (hashBuf.length !== hmacBuf.length) return false
     return crypto.timingSafeEqual(hashBuf, hmacBuf)
   } catch {

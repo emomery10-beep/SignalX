@@ -123,6 +123,7 @@ export default function SourcesPage() {
   const [shopifyOauthShop,  setShopifyOauthShop]  = useState('')
   const [shopifyConnecting, setShopifyConnecting] = useState<'manual' | 'oauth' | null>(null)
   const [shopifyError,      setShopifyError]      = useState('')
+  const [shopifyTab,        setShopifyTab]        = useState<'oauth' | 'manual'>('oauth')
 
   useEffect(() => {
     loadSources()
@@ -149,7 +150,7 @@ export default function SourcesPage() {
   const openModal = (srcId: string) => {
     if (srcId === 'shopify') {
       setShopifyShop(''); setShopifyToken(''); setShopifyOauthShop('')
-      setShopifyError(''); setShopifyModal(true)
+      setShopifyError(''); setShopifyTab('oauth'); setShopifyModal(true)
       return
     }
     setModalFields({}); setModal(srcId)
@@ -403,140 +404,86 @@ export default function SourcesPage() {
         </div>
       </div>
 
-      {/* ── Shopify dual-connect modal ────────────────────────────────────────── */}
+      {/* ── Shopify connect modal ─────────────────────────────────────────────── */}
       {shopifyModal && (
         <div onClick={e => { if (e.target === e.currentTarget) setShopifyModal(false) }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: 'var(--sf)', borderRadius: 20, padding: 28, width: '100%', maxWidth: 760, border: '1px solid var(--b)', boxShadow: '0 24px 64px rgba(0,0,0,.18)' }}>
+          <div style={{ background: 'var(--sf)', borderRadius: 16, padding: 20, width: '100%', maxWidth: 380, border: '1px solid var(--b)', boxShadow: '0 16px 48px rgba(0,0,0,.18)' }}>
 
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(149,191,71,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>🛍️</div>
-              <div>
-                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 17, fontWeight: 700 }}>Connect Shopify</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>Choose how you want to connect your store</div>
-              </div>
-              <button onClick={() => setShopifyModal(false)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--tx3)', fontSize: 20, lineHeight: 1, padding: 4 }}>×</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <span style={{ fontSize: 20 }}>🛍️</span>
+              <span style={{ fontSize: 15, fontWeight: 700 }}>Connect Shopify</span>
+              <button onClick={() => setShopifyModal(false)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--tx3)', fontSize: 18, lineHeight: 1, padding: 2 }}>×</button>
             </div>
 
-            {/* Error banner */}
+            {/* Tabs */}
+            <div style={{ display: 'flex', gap: 4, background: 'var(--ev)', borderRadius: 9, padding: 3, marginBottom: 16 }}>
+              {(['oauth', 'manual'] as const).map(tab => (
+                <button key={tab} onClick={() => { setShopifyTab(tab); setShopifyError('') }}
+                  style={{ flex: 1, padding: '6px 0', borderRadius: 7, border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                    background: shopifyTab === tab ? 'var(--sf)' : 'transparent',
+                    color: shopifyTab === tab ? 'var(--tx)' : 'var(--tx3)',
+                    boxShadow: shopifyTab === tab ? '0 1px 4px rgba(0,0,0,.1)' : 'none',
+                  }}>
+                  {tab === 'oauth' ? 'One-click' : 'Manual token'}
+                </button>
+              ))}
+            </div>
+
+            {/* Error */}
             {shopifyError && (
-              <div style={{ padding: '10px 14px', borderRadius: 9, background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.25)', fontSize: 13, color: '#ef4444', marginBottom: 16 }}>
+              <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)', fontSize: 12, color: '#ef4444', marginBottom: 12 }}>
                 {shopifyError}
               </div>
             )}
 
-            {/* Two columns */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-
-              {/* LEFT — Manual token (recommended) */}
-              <div style={{ padding: 20, borderRadius: 14, border: '2px solid #95bf47', background: 'rgba(149,191,71,.04)', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 14, fontWeight: 700 }}>Manual Token</span>
-                    <span style={{ fontSize: 10, fontWeight: 700, background: '#95bf47', color: '#fff', borderRadius: 6, padding: '2px 7px', letterSpacing: '.04em', textTransform: 'uppercase' }}>Recommended</span>
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.6 }}>
-                    Create a custom app in your Shopify admin and paste the token here. Works independently of the Shopify App Store — no restrictions.
-                  </div>
-                </div>
-
-                {/* Step guide */}
-                <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.9, background: 'var(--ev)', borderRadius: 9, padding: '10px 12px' }}>
-                  <strong style={{ color: 'var(--tx2)' }}>⚠️ Do this in YOUR store's Shopify Admin — not the Partner dashboard</strong><br/>
-                  1. Your Shopify Admin → <strong style={{ color: 'var(--tx)' }}>Settings → Apps → Develop apps</strong><br/>
-                  2. Click <strong style={{ color: 'var(--tx)' }}>Create an app</strong> → name it anything (e.g. "AskBiz")<br/>
-                  3. Click <strong style={{ color: 'var(--tx)' }}>Configure Admin API scopes</strong> → tick: <em>read_orders, read_products, read_inventory, read_customers</em> → <strong style={{ color: 'var(--tx)' }}>Save</strong><br/>
-                  4. Click <strong style={{ color: 'var(--tx)' }}>API credentials</strong> tab → click <strong style={{ color: 'var(--tx)' }}>Install app</strong><br/>
-                  5. Copy the <strong style={{ color: '#95bf47' }}>Admin API access token</strong> (starts with <code style={{ background:'var(--sf)', padding:'1px 4px', borderRadius:3 }}>shpat_</code>) — paste below
-                </div>
-
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
-                    Store domain <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="mystore.myshopify.com"
-                    value={shopifyShop}
-                    onChange={e => setShopifyShop(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
-                    Admin API access token <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="shpat_xxxxxxxxxxxxxxxxxxxx"
-                    value={shopifyToken}
-                    onChange={e => setShopifyToken(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
-                  />
-                </div>
-
-                <button
-                  onClick={handleShopifyManual}
-                  disabled={shopifyConnecting === 'manual'}
-                  style={{ width: '100%', padding: 12, borderRadius: 10, border: 'none', background: '#95bf47', color: '#fff', fontSize: 14, fontWeight: 600, cursor: shopifyConnecting === 'manual' ? 'wait' : 'pointer', fontFamily: 'inherit', marginTop: 'auto' }}
-                >
-                  {shopifyConnecting === 'manual' ? 'Connecting…' : 'Connect with token'}
-                </button>
-
-                <p style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', margin: 0, lineHeight: 1.5 }}>
-                  🔒 Token is encrypted and stored securely. AskBiz has read-only access.
-                </p>
-              </div>
-
-              {/* RIGHT — OAuth one-click */}
-              <div style={{ padding: 20, borderRadius: 14, border: '1px solid var(--b)', background: 'var(--ev)', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>One-click OAuth</div>
-                  <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.6 }}>
-                    Redirects to Shopify where you approve access. Best if you prefer not to handle API tokens directly.
-                  </div>
-                </div>
-
-                <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.7, background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 9, padding: '10px 12px' }}>
-                  <strong style={{ color: 'var(--tx2)' }}>How it works:</strong><br/>
-                  1. Enter your store domain below<br/>
-                  2. You'll be redirected to Shopify<br/>
-                  3. Click <strong style={{ color: 'var(--tx)' }}>Install</strong> to approve read-only access<br/>
-                  4. You're redirected back to AskBiz — done
-                </div>
-
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
-                    Store domain <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="mystore.myshopify.com"
-                    value={shopifyOauthShop}
-                    onChange={e => setShopifyOauthShop(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleShopifyOAuth()}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
-                  />
-                </div>
-
-                <div style={{ flex: 1 }} />
-
-                <button
-                  onClick={handleShopifyOAuth}
-                  disabled={shopifyConnecting === 'oauth'}
-                  style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontSize: 14, fontWeight: 600, cursor: shopifyConnecting === 'oauth' ? 'wait' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-                >
-                  {shopifyConnecting === 'oauth' ? 'Redirecting…' : <><span>Connect via Shopify</span><span>→</span></>}
-                </button>
-
-                <p style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', margin: 0, lineHeight: 1.5 }}>
-                  🔒 Read-only access. AskBiz never stores your Shopify password.
-                </p>
-              </div>
+            {/* OAuth panel */}
+            <div style={{ display: shopifyTab === 'oauth' ? 'block' : 'none' }}>
+              <p style={{ fontSize: 12, color: 'var(--tx3)', margin: '0 0 12px', lineHeight: 1.5 }}>
+                Enter your store domain and you'll be redirected to Shopify to approve access in one click.
+              </p>
+              <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
+                Store domain <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="mystore.myshopify.com"
+                value={shopifyOauthShop}
+                onChange={e => setShopifyOauthShop(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleShopifyOAuth()}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }}
+              />
+              <button onClick={handleShopifyOAuth} disabled={shopifyConnecting === 'oauth'}
+                style={{ width: '100%', padding: '10px 0', borderRadius: 9, border: 'none', background: '#95bf47', color: '#fff', fontSize: 13, fontWeight: 600, cursor: shopifyConnecting === 'oauth' ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
+                {shopifyConnecting === 'oauth' ? 'Redirecting…' : 'Connect via Shopify →'}
+              </button>
             </div>
 
+            {/* Manual token panel */}
+            <div style={{ display: shopifyTab === 'manual' ? 'block' : 'none' }}>
+              <p style={{ fontSize: 12, color: 'var(--tx3)', margin: '0 0 12px', lineHeight: 1.5 }}>
+                Create a custom app in your Shopify Admin → Settings → Apps → Develop apps, then paste the <code style={{ fontSize: 11, background: 'var(--ev)', padding: '1px 4px', borderRadius: 3 }}>shpat_</code> token below.
+              </p>
+              <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
+                Store domain <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <input type="text" placeholder="mystore.myshopify.com" value={shopifyShop} onChange={e => setShopifyShop(e.target.value)}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
+              <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
+                Access token <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <input type="password" placeholder="shpat_xxxxxxxxxxxxxxxxxxxx" value={shopifyToken} onChange={e => setShopifyToken(e.target.value)}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
+              <button onClick={handleShopifyManual} disabled={shopifyConnecting === 'manual'}
+                style={{ width: '100%', padding: '10px 0', borderRadius: 9, border: 'none', background: '#95bf47', color: '#fff', fontSize: 13, fontWeight: 600, cursor: shopifyConnecting === 'manual' ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
+                {shopifyConnecting === 'manual' ? 'Connecting…' : 'Connect with token'}
+              </button>
+            </div>
+
+            <p style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', margin: '10px 0 0', lineHeight: 1.4 }}>
+              🔒 Read-only access. Credentials encrypted & stored securely.
+            </p>
           </div>
         </div>
       )}
