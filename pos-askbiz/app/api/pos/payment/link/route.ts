@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosOwner } from '@/lib/pos-auth'
-import { createPaymentLink } from '@/lib/paystack'
+import { createPaymentLink as createPaystackPaymentLink } from '@/lib/paystack'
+import { createPaymentLink as createStripePaymentLink } from '@/lib/stripe-connect'
 import QRCode from 'qrcode'
 
 /**
@@ -45,42 +46,70 @@ export async function POST(req: NextRequest) {
     // Get merchant's payment config
     const { data: config } = await service
       .from('merchant_payment_config')
-      .select('payment_provider, paystack_subaccount_id')
+      .select('payment_provider, paystack_subaccount_id, stripe_connected_account_id, country')
       .eq('owner_id', ownerId)
       .single()
 
-    if (!config || config.payment_provider !== 'paystack') {
+    if (!config) {
+      return NextResponse.json({ error: 'Payment configuration not found' }, { status: 400 })
+    }
+
+    if (config.payment_provider === 'none') {
       return NextResponse.json({ error: 'Card payments not configured' }, { status: 400 })
     }
 
-    // Create Paystack payment link
-    const link = await createPaymentLink({
-      amount: Math.round(transaction.total * 100), // Convert to kobo
-      currency: 'KES',
-      description: `AskBiz POS - Transaction ${transaction_id.slice(0, 8)}`,
-      metadata: {
-        transaction_id,
-        merchant_id: ownerId,
-        payment_method,
-      },
-    })
+    let link: { url: string; checkoutUrl?: string; reference?: string } | null = null
+
+    if (config.payment_provider === 'paystack' && config.paystack_subaccount_id) {
+      // Create Paystack payment link
+      link = await createPaystackPaymentLink({
+        amount: Math.round(transaction.total * 100), // Convert to kobo
+        currency: 'KES',
+        description: `AskBiz POS - Transaction ${transaction_id.slice(0, 8)}`,
+        metadata: {
+          transaction_id,
+          merchant_id: ownerId,
+          payment_method,
+        },
+      })
+    } else if (config.payment_provider === 'stripe' && config.stripe_connected_account_id) {
+      // Create Stripe payment link
+      const stripeLink = await createStripePaymentLink({
+        amount: Math.round(transaction.total * 100), // Convert to cents
+        currency: config.country?.toLowerCase() === 'gb' ? 'gbp' : 'usd',
+        description: `AskBiz POS - Transaction ${transaction_id.slice(0, 8)}`,
+        connected_account_id: config.stripe_connected_account_id,
+        metadata: {
+          transaction_id,
+          merchant_id: ownerId,
+          payment_method,
+        },
+      })
+      link = { checkoutUrl: stripeLink.url }
+    } else {
+      return NextResponse.json({ error: 'Payment provider not properly configured' }, { status: 400 })
+    }
 
     // Generate QR code as data URL
     let qrDataUrl: string | null = null
+    const checkoutUrl = link?.checkoutUrl || link?.url
     try {
-      qrDataUrl = await QRCode.toDataURL(link.checkoutUrl, {
-        errorCorrectionLevel: 'H',
-        type: 'image/png',
-        quality: 0.95,
-        margin: 1,
-        width: 300,
-      })
+      if (checkoutUrl) {
+        qrDataUrl = await QRCode.toDataURL(checkoutUrl, {
+          errorCorrectionLevel: 'H',
+          type: 'image/png',
+          quality: 0.95,
+          margin: 1,
+          width: 300,
+        })
+      }
     } catch (err) {
       console.error('[payment/link] QR generation failed:', err)
       // Continue without QR, customer can use the URL directly
     }
 
     // Store payment record
+    const externalRef = (link as any)?.reference || (link as any)?.id
     const { data: payment, error: paymentError } = await service
       .from('pos_payments')
       .insert({
@@ -88,8 +117,8 @@ export async function POST(req: NextRequest) {
         transaction_id,
         amount: transaction.total,
         payment_method: payment_method === 'apple_pay' ? 'apple_pay' : 'card',
-        provider: 'paystack',
-        external_reference: link.reference,
+        provider: config?.payment_provider || 'paystack',
+        external_reference: externalRef,
         status: 'pending',
       })
       .select()
@@ -103,8 +132,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       payment_id: payment.id,
-      reference: link.reference,
-      checkout_url: link.checkoutUrl,
+      reference: externalRef,
+      checkout_url: checkoutUrl,
       qr_code: qrDataUrl,
       amount: transaction.total,
       message: 'Payment link generated. Display QR code to customer.',

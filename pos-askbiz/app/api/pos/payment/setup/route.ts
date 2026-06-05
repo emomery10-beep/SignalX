@@ -107,7 +107,10 @@ export async function POST(req: NextRequest) {
           country,
           payment_provider: paymentProvider,
           paystack_subaccount_id: subaccountId,
-          paystack_business_name: business_name,
+          paystack_business_name: paymentProvider === 'paystack' ? business_name : null,
+          stripe_connected_account_id: stripeAccountId,
+          stripe_onboarding_url: onboardingUrl,
+          stripe_onboarding_complete: false,
           settlement_account: settlement_account || null,
           is_active: paymentProvider !== 'none',
         },
@@ -132,7 +135,7 @@ export async function POST(req: NextRequest) {
         paymentProvider === 'paystack'
           ? 'M-Pesa and card payments enabled'
           : paymentProvider === 'stripe'
-            ? 'Card payments enabled (complete Stripe onboarding)'
+            ? 'Card payments enabled. Complete onboarding to start accepting payments.'
             : 'No payment methods available in your region',
     })
   } catch (error: any) {
