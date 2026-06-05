@@ -25,6 +25,7 @@ import { ACADEMY_CFO_SAAS_BATCH_7_ARTICLES_61_TO_70 } from './academy-cfo-saas-b
 import { ACADEMY_CFO_SAAS_BATCH_8_ARTICLES_71_TO_80 } from './academy-cfo-saas-batch8-articles71to80';
 import { ACADEMY_CFO_SAAS_BATCH_9_ARTICLES_81_TO_90 } from './academy-cfo-saas-batch9-articles81to90';
 import { ACADEMY_CFO_SAAS_BATCH_10_ARTICLES_91_TO_100 } from './academy-cfo-saas-batch10-articles91to100';
+import { ACADEMY_CFO_SAAS_BATCH_11_ARTICLES_101_TO_110 } from './academy-cfo-saas-batch11-articles101to110';
 
 const _africaAcademyArticles = [...AFRICA_ACADEMY_BATCH1, ...AFRICA_ACADEMY_BATCH2] as AcademyArticle[];
 
@@ -15091,6 +15092,7 @@ academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_7_ARTICLES_61_TO_70 as AcademyAr
 academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_8_ARTICLES_71_TO_80 as AcademyArticle[]));
 academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_9_ARTICLES_81_TO_90 as AcademyArticle[]));
 academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_10_ARTICLES_91_TO_100 as AcademyArticle[]));
+academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_11_ARTICLES_101_TO_110 as AcademyArticle[]));
 
 // ─── MERGE AFRICA ACADEMY CONTENT ────────────────────────────────────────────
 academyArticles.push(..._africaAcademyArticles);
