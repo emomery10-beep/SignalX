@@ -15119,8 +15119,8 @@ academyArticles.push(...ASKBIZ_POS_REPORTS_ARTICLES);
 // academyArticles.push(...(ACADEMY_CFO_SAAS_BATCHES_20_TO_30 as AcademyArticle[]));
 // academyArticles.push(...(ACADEMY_CFO_SAAS_BATCHES_31_TO_50 as AcademyArticle[]));
 // academyArticles.push(...(ACADEMY_CFO_SAAS_BATCHES_51_TO_70 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_SAAS_BATCHES_71_TO_90 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_SAAS_BATCHES_91_TO_100 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCHES_71_TO_90 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCHES_91_TO_100 as AcademyArticle[]));
 
 // ─── MERGE AFRICA ACADEMY CONTENT ────────────────────────────────────────────
 academyArticles.push(..._africaAcademyArticles);
