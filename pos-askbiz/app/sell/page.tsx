@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import CashierCopilot from '@/components/CashierCopilot'
+import PosPaymentHandler from '@/components/PosPaymentHandler'
 
 const ACC = '#d08a59'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
@@ -95,6 +96,10 @@ export default function SellPage() {
   const [receiptSent, setReceiptSent]   = useState(false)
   const [oversold, setOversold]         = useState<string[]>([])
   const [expiryWarning, setExpiryWarning] = useState<string | null>(null)
+
+  // Digital payment flow
+  const [showPaymentHandler, setShowPaymentHandler] = useState(false)
+  const [paymentError, setPaymentError] = useState<string | null>(null)
 
   // Shift
   const [shiftOpen, setShiftOpen]     = useState<boolean | null>(null)
@@ -363,6 +368,7 @@ export default function SellPage() {
     if (!staff || cart.length === 0) return
     setProcessing(true)
     setCheckoutError('')
+    setPaymentError(null)
     try {
       // Attempt a fresh geo capture right before checkout (3s timeout)
       let geo = geoCoords
@@ -381,7 +387,7 @@ export default function SellPage() {
         headers: { 'Content-Type': 'application/json', 'x-owner-id': staff.owner_id, 'x-staff-id': staff.id },
         body: JSON.stringify({
           items:           cart,
-          payment_type:    paymentType,
+          payment_type:    paymentType === 'mobile' ? 'mpesa' : paymentType === 'card' ? 'card' : paymentType,
           cashier_id:      staff.id,
           customer_phone:  customerPhone || null,
           discount_amount: discountAmt || null,
@@ -395,9 +401,16 @@ export default function SellPage() {
         setLastTxId(data.transaction_id)
         setLastTotal(cartTotal)
         setOversold(data.oversold || [])
-        setTodaySales(s => s + 1)
-        setTodayRevenue(r => r + cartTotal)
-        setScreen('receipt')
+
+        // For digital payments, show payment handler
+        if (paymentType === 'card' || paymentType === 'mobile') {
+          setShowPaymentHandler(true)
+        } else {
+          // Cash payment - go straight to receipt
+          setTodaySales(s => s + 1)
+          setTodayRevenue(r => r + cartTotal)
+          setScreen('receipt')
+        }
       } else {
         setCheckoutError(data.error || 'Payment failed — please try again')
       }
@@ -429,6 +442,7 @@ export default function SellPage() {
     setOversold([]); setScanResult(null); setScanError('')
     setSearchQuery(''); setSearchResults([])
     setKgInputs({}); setCheckoutError(''); setGeoCoords(null)
+    setShowPaymentHandler(false); setPaymentError(null)
     setScreen('home')
   }
 
@@ -931,13 +945,40 @@ export default function SellPage() {
             ⚠ {checkoutError}
           </div>
         )}
-        <button
-          onClick={handleCheckout}
-          disabled={processing || (paymentType === 'cash' && !!amountTendered && tendered < cartTotal)}
-          style={{ width: '100%', padding: '18px', borderRadius: 14, background: ACC, color: '#fff', fontSize: 18, fontWeight: 800, border: 'none', cursor: processing ? 'wait' : 'pointer', opacity: (paymentType === 'cash' && !!amountTendered && tendered < cartTotal) ? 0.5 : 1 }}
-        >
-          {processing ? 'Processing...' : `Complete · ${sym}${cartTotal.toFixed(2)}`}
-        </button>
+        {paymentError && (
+          <div style={{ marginBottom: 10, padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.25)', fontSize: 13, color: '#dc2626', fontWeight: 500 }}>
+            ⚠ {paymentError}
+          </div>
+        )}
+        {showPaymentHandler && lastTxId ? (
+          <PosPaymentHandler
+            transactionId={lastTxId}
+            amount={cartTotal}
+            paymentType={paymentType === 'mobile' ? 'mpesa' : 'card'}
+            customerPhone={customerPhone}
+            ownerId={staff.owner_id}
+            staffId={staff.id}
+            currency={sym}
+            onPaymentComplete={() => {
+              setTodaySales(s => s + 1)
+              setTodayRevenue(r => r + cartTotal)
+              setShowPaymentHandler(false)
+              setScreen('receipt')
+            }}
+            onPaymentFailed={(error) => {
+              setPaymentError(error)
+              setShowPaymentHandler(false)
+            }}
+          />
+        ) : (
+          <button
+            onClick={handleCheckout}
+            disabled={processing || (paymentType === 'cash' && !!amountTendered && tendered < cartTotal)}
+            style={{ width: '100%', padding: '18px', borderRadius: 14, background: ACC, color: '#fff', fontSize: 18, fontWeight: 800, border: 'none', cursor: processing ? 'wait' : 'pointer', opacity: (paymentType === 'cash' && !!amountTendered && tendered < cartTotal) ? 0.5 : 1 }}
+          >
+            {processing ? 'Processing...' : `Complete · ${sym}${cartTotal.toFixed(2)}`}
+          </button>
+        )}
       </div>
     </div>
   </>)
