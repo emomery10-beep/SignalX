@@ -10,27 +10,36 @@ import { ASKBIZ_POS_TILL_ARTICLES } from './askbiz-pos-till-articles';
 import { ASKBIZ_POS_HACKS_ARTICLES } from './askbiz-pos-hacks-articles';
 import { ASKBIZ_POS_REPORTS_ARTICLES } from './askbiz-pos-reports-articles';
 // ─── CFO Dashboard Training (100 articles) ───────────────────────────────────
-import { ACADEMY_CFO_BATCH1 } from './academy-cfo-batch1';
-import { ACADEMY_CFO_BATCH_2 } from './academy-cfo-batch2';
-import { ACADEMY_CFO_BATCH_3 } from './academy-cfo-batch3';
-import { ACADEMY_CFO_BATCH_4 } from './academy-cfo-batch4';
+// NOTE: CFO batch files temporarily disabled for build — will be re-enabled when files are committed
+// import { ACADEMY_CFO_BATCH1 } from './academy-cfo-batch1';
+// import { ACADEMY_CFO_BATCH_2 } from './academy-cfo-batch2';
+// import { ACADEMY_CFO_BATCH_3 } from './academy-cfo-batch3';
+// import { ACADEMY_CFO_BATCH_4 } from './academy-cfo-batch4';
 // ─── SaaS CFO Training (1000 articles) ────────────────────────────────────────
-import { ACADEMY_CFO_SAAS_BATCH_1_ARTICLES_1_TO_10 } from './academy-cfo-saas-batch1-articles1to10';
-import { ACADEMY_CFO_SAAS_BATCH_2_ARTICLES_11_TO_20 } from './academy-cfo-saas-batch2-articles11to20';
-import { ACADEMY_CFO_SAAS_BATCH_3_ARTICLES_21_TO_30 } from './academy-cfo-saas-batch3-articles21to30';
-import { ACADEMY_CFO_SAAS_BATCH_4_ARTICLES_31_TO_40 } from './academy-cfo-saas-batch4-articles31to40';
-import { ACADEMY_CFO_SAAS_BATCH_5_ARTICLES_41_TO_50 } from './academy-cfo-saas-batch5-articles41to50';
-import { ACADEMY_CFO_SAAS_BATCH_6_ARTICLES_51_TO_60 } from './academy-cfo-saas-batch6-articles51to60';
-import { ACADEMY_CFO_SAAS_BATCH_7_ARTICLES_61_TO_70 } from './academy-cfo-saas-batch7-articles61to70';
-import { ACADEMY_CFO_SAAS_BATCH_8_ARTICLES_71_TO_80 } from './academy-cfo-saas-batch8-articles71to80';
-import { ACADEMY_CFO_SAAS_BATCH_9_ARTICLES_81_TO_90 } from './academy-cfo-saas-batch9-articles81to90';
-import { ACADEMY_CFO_SAAS_BATCH_10_ARTICLES_91_TO_100 } from './academy-cfo-saas-batch10-articles91to100';
-import { ACADEMY_CFO_SAAS_BATCH_11_ARTICLES_101_TO_110 } from './academy-cfo-saas-batch11-articles101to110';
-import { ACADEMY_CFO_SAAS_BATCH_12_ARTICLES_111_TO_120 } from './academy-cfo-saas-batch12-articles111to120';
-import { ACADEMY_CFO_SAAS_BATCH_13_ARTICLES_121_TO_130 } from './academy-cfo-saas-batch13-articles121to130';
-import { ACADEMY_CFO_SAAS_BATCH_14_ARTICLES_131_TO_140 } from './academy-cfo-saas-batch14-articles131to140';
-import { ACADEMY_CFO_SAAS_BATCH_15_ARTICLES_141_TO_150 } from './academy-cfo-saas-batch15-articles141to150';
-import { ACADEMY_CFO_SAAS_BATCH_16_ARTICLES_151_TO_160 } from './academy-cfo-saas-batch16-articles151to160';
+// import { ACADEMY_CFO_SAAS_BATCH_1_ARTICLES_1_TO_10 } from './academy-cfo-saas-batch1-articles1to10';
+// import { ACADEMY_CFO_SAAS_BATCH_2_ARTICLES_11_TO_20 } from './academy-cfo-saas-batch2-articles11to20';
+// import { ACADEMY_CFO_SAAS_BATCH_3_ARTICLES_21_TO_30 } from './academy-cfo-saas-batch3-articles21to30';
+// import { ACADEMY_CFO_SAAS_BATCH_4_ARTICLES_31_TO_40 } from './academy-cfo-saas-batch4-articles31to40';
+// import { ACADEMY_CFO_SAAS_BATCH_5_ARTICLES_41_TO_50 } from './academy-cfo-saas-batch5-articles41to50';
+// import { ACADEMY_CFO_SAAS_BATCH_6_ARTICLES_51_TO_60 } from './academy-cfo-saas-batch6-articles51to60';
+// import { ACADEMY_CFO_SAAS_BATCH_7_ARTICLES_61_TO_70 } from './academy-cfo-saas-batch7-articles61to70';
+// import { ACADEMY_CFO_SAAS_BATCH_8_ARTICLES_71_TO_80 } from './academy-cfo-saas-batch8-articles71to80';
+// import { ACADEMY_CFO_SAAS_BATCH_9_ARTICLES_81_TO_90 } from './academy-cfo-saas-batch9-articles81to90';
+// import { ACADEMY_CFO_SAAS_BATCH_10_ARTICLES_91_TO_100 } from './academy-cfo-saas-batch10-articles91to100';
+// import { ACADEMY_CFO_SAAS_BATCH_11_ARTICLES_101_TO_110 } from './academy-cfo-saas-batch11-articles101to110';
+// import { ACADEMY_CFO_SAAS_BATCH_12_ARTICLES_111_TO_120 } from './academy-cfo-saas-batch12-articles111to120';
+// import { ACADEMY_CFO_SAAS_BATCH_13_ARTICLES_121_TO_130 } from './academy-cfo-saas-batch13-articles121to130';
+// import { ACADEMY_CFO_SAAS_BATCH_14_ARTICLES_131_TO_140 } from './academy-cfo-saas-batch14-articles131to140';
+// import { ACADEMY_CFO_SAAS_BATCH_15_ARTICLES_141_TO_150 } from './academy-cfo-saas-batch15-articles141to150';
+// import { ACADEMY_CFO_SAAS_BATCH_16_ARTICLES_151_TO_160 } from './academy-cfo-saas-batch16-articles151to160';
+// import { ACADEMY_CFO_SAAS_BATCH_17_ARTICLES_161_TO_170 } from './academy-cfo-saas-batch17-articles161to170';
+// import { ACADEMY_CFO_SAAS_BATCH_18_ARTICLES_171_TO_180 } from './academy-cfo-saas-batch18-articles171to180';
+// import { ACADEMY_CFO_SAAS_BATCH_19_ARTICLES_181_TO_190 } from './academy-cfo-saas-batch19-articles181to190';
+// import { ACADEMY_CFO_SAAS_BATCHES_20_TO_30 } from './academy-cfo-saas-batches20to30';
+// import { ACADEMY_CFO_SAAS_BATCHES_31_TO_50 } from './academy-cfo-saas-batches31to50';
+// import { ACADEMY_CFO_SAAS_BATCHES_51_TO_70 } from './academy-cfo-saas-batches51to70';
+// import { ACADEMY_CFO_SAAS_BATCHES_71_TO_90 } from './academy-cfo-saas-batches71to90';
+// import { ACADEMY_CFO_SAAS_BATCHES_91_TO_100 } from './academy-cfo-saas-batches91to100';
 
 const _africaAcademyArticles = [...AFRICA_ACADEMY_BATCH1, ...AFRICA_ACADEMY_BATCH2] as AcademyArticle[];
 
@@ -15081,28 +15090,37 @@ academyArticles.push(...ASKBIZ_POS_HACKS_ARTICLES);
 academyArticles.push(...ASKBIZ_POS_REPORTS_ARTICLES);
 
 // ─── MERGE CFO DASHBOARD TRAINING (100 articles) ─────────────────────────────
-academyArticles.push(...(ACADEMY_CFO_BATCH1 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_BATCH_2 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_BATCH_3 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_BATCH_4 as AcademyArticle[]));
+// NOTE: CFO batch files temporarily disabled for build
+// academyArticles.push(...(ACADEMY_CFO_BATCH1 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_BATCH_2 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_BATCH_3 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_BATCH_4 as AcademyArticle[]));
 
 // ─── MERGE SAAS CFO TRAINING (1000 articles in batches of 10) ─────────────────
-academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_1_ARTICLES_1_TO_10 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_2_ARTICLES_11_TO_20 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_3_ARTICLES_21_TO_30 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_4_ARTICLES_31_TO_40 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_5_ARTICLES_41_TO_50 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_6_ARTICLES_51_TO_60 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_7_ARTICLES_61_TO_70 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_8_ARTICLES_71_TO_80 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_9_ARTICLES_81_TO_90 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_10_ARTICLES_91_TO_100 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_11_ARTICLES_101_TO_110 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_12_ARTICLES_111_TO_120 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_13_ARTICLES_121_TO_130 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_14_ARTICLES_131_TO_140 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_15_ARTICLES_141_TO_150 as AcademyArticle[]));
-academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_16_ARTICLES_151_TO_160 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_1_ARTICLES_1_TO_10 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_2_ARTICLES_11_TO_20 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_3_ARTICLES_21_TO_30 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_4_ARTICLES_31_TO_40 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_5_ARTICLES_41_TO_50 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_6_ARTICLES_51_TO_60 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_7_ARTICLES_61_TO_70 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_8_ARTICLES_71_TO_80 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_9_ARTICLES_81_TO_90 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_10_ARTICLES_91_TO_100 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_11_ARTICLES_101_TO_110 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_12_ARTICLES_111_TO_120 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_13_ARTICLES_121_TO_130 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_14_ARTICLES_131_TO_140 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_15_ARTICLES_141_TO_150 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_16_ARTICLES_151_TO_160 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_17_ARTICLES_161_TO_170 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_18_ARTICLES_171_TO_180 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_19_ARTICLES_181_TO_190 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCHES_20_TO_30 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCHES_31_TO_50 as AcademyArticle[]));
+// academyArticles.push(...(ACADEMY_CFO_SAAS_BATCHES_51_TO_70 as AcademyArticle[]));
+academyArticles.push(...(ACADEMY_CFO_SAAS_BATCHES_71_TO_90 as AcademyArticle[]));
+academyArticles.push(...(ACADEMY_CFO_SAAS_BATCHES_91_TO_100 as AcademyArticle[]));
 
 // ─── MERGE AFRICA ACADEMY CONTENT ────────────────────────────────────────────
 academyArticles.push(..._africaAcademyArticles);
