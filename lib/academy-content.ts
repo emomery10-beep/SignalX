@@ -26,6 +26,9 @@ import { ACADEMY_CFO_SAAS_BATCH_8_ARTICLES_71_TO_80 } from './academy-cfo-saas-b
 import { ACADEMY_CFO_SAAS_BATCH_9_ARTICLES_81_TO_90 } from './academy-cfo-saas-batch9-articles81to90';
 import { ACADEMY_CFO_SAAS_BATCH_10_ARTICLES_91_TO_100 } from './academy-cfo-saas-batch10-articles91to100';
 import { ACADEMY_CFO_SAAS_BATCH_11_ARTICLES_101_TO_110 } from './academy-cfo-saas-batch11-articles101to110';
+import { ACADEMY_CFO_SAAS_BATCH_12_ARTICLES_111_TO_120 } from './academy-cfo-saas-batch12-articles111to120';
+import { ACADEMY_CFO_SAAS_BATCH_13_ARTICLES_121_TO_130 } from './academy-cfo-saas-batch13-articles121to130';
+import { ACADEMY_CFO_SAAS_BATCH_14_ARTICLES_131_TO_140 } from './academy-cfo-saas-batch14-articles131to140';
 
 const _africaAcademyArticles = [...AFRICA_ACADEMY_BATCH1, ...AFRICA_ACADEMY_BATCH2] as AcademyArticle[];
 
@@ -15093,6 +15096,9 @@ academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_8_ARTICLES_71_TO_80 as AcademyAr
 academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_9_ARTICLES_81_TO_90 as AcademyArticle[]));
 academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_10_ARTICLES_91_TO_100 as AcademyArticle[]));
 academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_11_ARTICLES_101_TO_110 as AcademyArticle[]));
+academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_12_ARTICLES_111_TO_120 as AcademyArticle[]));
+academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_13_ARTICLES_121_TO_130 as AcademyArticle[]));
+academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_14_ARTICLES_131_TO_140 as AcademyArticle[]));
 
 // ─── MERGE AFRICA ACADEMY CONTENT ────────────────────────────────────────────
 academyArticles.push(..._africaAcademyArticles);
