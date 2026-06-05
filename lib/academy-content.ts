@@ -9,6 +9,16 @@ import { ASKBIZ_POS_LOGISTICS_ARTICLES } from './askbiz-pos-logistics-articles';
 import { ASKBIZ_POS_TILL_ARTICLES } from './askbiz-pos-till-articles';
 import { ASKBIZ_POS_HACKS_ARTICLES } from './askbiz-pos-hacks-articles';
 import { ASKBIZ_POS_REPORTS_ARTICLES } from './askbiz-pos-reports-articles';
+// ─── CFO Dashboard Training (100 articles) ───────────────────────────────────
+import { ACADEMY_CFO_BATCH1 } from './academy-cfo-batch1';
+import { ACADEMY_CFO_BATCH_2 } from './academy-cfo-batch2';
+import { ACADEMY_CFO_BATCH_3 } from './academy-cfo-batch3';
+import { ACADEMY_CFO_BATCH_4 } from './academy-cfo-batch4';
+// ─── SaaS CFO Training (1000 articles) ────────────────────────────────────────
+import { ACADEMY_CFO_SAAS_BATCH_1_ARTICLES_1_TO_10 } from './academy-cfo-saas-batch1-articles1to10';
+import { ACADEMY_CFO_SAAS_BATCH_2_ARTICLES_11_TO_20 } from './academy-cfo-saas-batch2-articles11to20';
+import { ACADEMY_CFO_SAAS_BATCH_3_ARTICLES_21_TO_30 } from './academy-cfo-saas-batch3-articles21to30';
+import { ACADEMY_CFO_SAAS_BATCH_4_ARTICLES_31_TO_40 } from './academy-cfo-saas-batch4-articles31to40';
 
 const _africaAcademyArticles = [...AFRICA_ACADEMY_BATCH1, ...AFRICA_ACADEMY_BATCH2] as AcademyArticle[];
 
@@ -22,7 +32,7 @@ export const academyCategories: AcademyCategory[] = [
   { slug: "inventory-supply-chain", title: "Inventory & Supply Chain", description: "Stock smarter — avoid stockouts and dead inventory.", icon: "📦", color: "#27ae60", articleCount: 20 },
   { slug: "marketing-intelligence", title: "Marketing Intelligence", description: "Measure what works and cut what doesn't.", icon: "📣", color: "#f39c12", articleCount: 20 },
   { slug: "ai-and-data", title: "AI & Data", description: "How AI and data science power modern business decisions.", icon: "🤖", color: "#1abc9c", articleCount: 20 },
-  { slug: "askbiz-tutorials", title: "AskBiz Tutorials", description: "Step-by-step guides to getting the most from AskBiz.", icon: "🎓", color: "#d08a59", articleCount: 20 },
+  { slug: "askbiz-tutorials", title: "AskBiz Tutorials", description: "Step-by-step guides to getting the most from AskBiz.", icon: "🎓", color: "#d08a59", articleCount: 120 },
 
 { slug: "business-strategy-growth", title: "Business Strategy & Growth", description: "Frameworks, metrics, and mental models for building and scaling a business.", icon: "💼", color: "#2c3e50", articleCount: 20 },
   { slug: "funding-and-investment", title: "Funding & Investment", description: "Understand funding options, investor terms, and how to raise capital for your business.", icon: "🏦", color: "#1a5276", articleCount: 20 },
@@ -15057,6 +15067,18 @@ academyArticles.push(...ASKBIZ_POS_LOGISTICS_ARTICLES);
 academyArticles.push(...ASKBIZ_POS_TILL_ARTICLES);
 academyArticles.push(...ASKBIZ_POS_HACKS_ARTICLES);
 academyArticles.push(...ASKBIZ_POS_REPORTS_ARTICLES);
+
+// ─── MERGE CFO DASHBOARD TRAINING (100 articles) ─────────────────────────────
+academyArticles.push(...(ACADEMY_CFO_BATCH1 as AcademyArticle[]));
+academyArticles.push(...(ACADEMY_CFO_BATCH_2 as AcademyArticle[]));
+academyArticles.push(...(ACADEMY_CFO_BATCH_3 as AcademyArticle[]));
+academyArticles.push(...(ACADEMY_CFO_BATCH_4 as AcademyArticle[]));
+
+// ─── MERGE SAAS CFO TRAINING (1000 articles in batches of 10) ─────────────────
+academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_1_ARTICLES_1_TO_10 as AcademyArticle[]));
+academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_2_ARTICLES_11_TO_20 as AcademyArticle[]));
+academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_3_ARTICLES_21_TO_30 as AcademyArticle[]));
+academyArticles.push(...(ACADEMY_CFO_SAAS_BATCH_4_ARTICLES_31_TO_40 as AcademyArticle[]));
 
 // ─── MERGE AFRICA ACADEMY CONTENT ────────────────────────────────────────────
 academyArticles.push(..._africaAcademyArticles);
