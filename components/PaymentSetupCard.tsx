@@ -48,6 +48,7 @@ export function PaymentSetupCard({ staff }: PaymentSetupCardProps) {
   const [error, setError] = useState<string>('')
   const [success, setSuccess] = useState(false)
   const [currentConfig, setCurrentConfig] = useState<any>(null)
+  const [showInstructions, setShowInstructions] = useState(false)
 
   const selectedCountryData = COUNTRY_OPTIONS.find(c => c.code === selectedCountry)
   const provider = selectedCountryData?.provider || 'none'
@@ -99,45 +100,33 @@ export function PaymentSetupCard({ staff }: PaymentSetupCardProps) {
   }
 
   return (
-    <div style={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb', padding: '24px', marginBottom: '24px' }}>
-      <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>
+    <div style={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb', padding: '12px', marginBottom: '12px' }}>
+      <h2 style={{ margin: '0 0 4px 0', fontSize: '14px', fontWeight: '600', color: '#1f2937' }}>
         💳 Payment Setup
       </h2>
-      <p style={{ margin: '0 0 20px 0', fontSize: '14px', color: '#6b7280' }}>
-        Set up card payments through Paystack (Africa) or Stripe (International)
-      </p>
 
       {currentConfig?.is_active ? (
-        <div style={{ padding: '16px', backgroundColor: '#d1fae5', borderRadius: '4px', border: '1px solid #a7f3d0', marginBottom: '20px' }}>
-          <div style={{ fontSize: '14px', color: '#065f46' }}>
-            <strong>✓ Payment Setup Active</strong>
-            <p style={{ margin: '8px 0 0 0', fontSize: '13px' }}>
-              Provider: <strong>{currentConfig.payment_provider === 'paystack' ? 'Paystack (M-Pesa & Cards)' : 'Stripe Connect'}</strong> for {currentConfig.country}
-            </p>
-            {currentConfig.payment_provider === 'stripe' && !currentConfig.stripe_onboarding_complete && (
-              <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: '#d97706' }}>
-                ⚠️ Please complete Stripe onboarding to start accepting payments
-              </p>
-            )}
-          </div>
+        <div style={{ padding: '6px 8px', backgroundColor: '#d1fae5', borderRadius: '4px', border: '1px solid #a7f3d0', marginBottom: '8px', fontSize: '12px', color: '#065f46' }}>
+          <strong>✓ Active:</strong> {currentConfig.payment_provider === 'paystack' ? 'Paystack' : 'Stripe'} for {currentConfig.country}
+          {currentConfig.payment_provider === 'stripe' && !currentConfig.stripe_onboarding_complete && ' (⚠️ Complete onboarding)'}
         </div>
       ) : null}
 
       {error && (
-        <div style={{ padding: '8px 12px', backgroundColor: '#fee2e2', borderRadius: '4px', border: '1px solid #fecaca', marginBottom: '16px', color: '#991b1b', fontSize: '13px' }}>
+        <div style={{ padding: '4px 8px', backgroundColor: '#fee2e2', borderRadius: '4px', border: '1px solid #fecaca', marginBottom: '8px', color: '#991b1b', fontSize: '12px' }}>
           ⚠️ {error}
         </div>
       )}
 
       {success && (
-        <div style={{ padding: '8px 12px', backgroundColor: '#d4edda', borderRadius: '4px', border: '1px solid #c3e6cb', marginBottom: '16px', color: '#155724', fontSize: '13px' }}>
-          ✓ {provider === 'stripe' ? 'Redirecting to Stripe onboarding...' : 'Payment setup successful! You can now accept payments.'}
+        <div style={{ padding: '4px 8px', backgroundColor: '#d4edda', borderRadius: '4px', border: '1px solid #c3e6cb', marginBottom: '8px', color: '#155724', fontSize: '12px' }}>
+          ✓ {provider === 'stripe' ? 'Redirecting to Stripe onboarding...' : 'Payment setup successful!'}
         </div>
       )}
 
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+        <div style={{ marginBottom: '8px' }}>
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#374151', marginBottom: '2px' }}>
             Country <span style={{ color: '#ef4444' }}>*</span>
           </label>
           <select
@@ -146,16 +135,17 @@ export function PaymentSetupCard({ staff }: PaymentSetupCardProps) {
             disabled={loading}
             style={{
               width: '100%',
-              padding: '10px 12px',
-              fontSize: '14px',
+              padding: '6px 8px',
+              fontSize: '12px',
               border: '1px solid #d1d5db',
-              borderRadius: '6px',
+              borderRadius: '4px',
               backgroundColor: '#fff',
               cursor: 'pointer',
               color: '#374151',
+              boxSizing: 'border-box',
             }}
           >
-            <option value="">Select your country</option>
+            <option value="">Select country</option>
             {COUNTRY_OPTIONS.map(country => (
               <option key={country.code} value={country.code}>
                 {country.name} ({country.provider === 'paystack' ? 'Paystack' : 'Stripe'})
@@ -165,15 +155,15 @@ export function PaymentSetupCard({ staff }: PaymentSetupCardProps) {
         </div>
 
         {selectedCountry && (
-          <div style={{ padding: '12px', backgroundColor: provider === 'paystack' ? '#fef3c7' : '#dbeafe', borderRadius: '4px', marginBottom: '16px', fontSize: '13px', color: provider === 'paystack' ? '#78350f' : '#1e40af' }}>
+          <div style={{ padding: '6px 8px', backgroundColor: provider === 'paystack' ? '#fef3c7' : '#dbeafe', borderRadius: '4px', marginBottom: '8px', fontSize: '11px', color: provider === 'paystack' ? '#78350f' : '#1e40af' }}>
             {provider === 'paystack'
-              ? '✓ This country uses Paystack. Customers can pay via M-Pesa or card.'
-              : '✓ This country uses Stripe Connect. You\'ll complete KYC verification and then accept card payments.'}
+              ? '✓ M-Pesa & card payments'
+              : '✓ Card payments (KYC verification required)'}
           </div>
         )}
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+        <div style={{ marginBottom: '8px' }}>
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#374151', marginBottom: '2px' }}>
             Business Name <span style={{ color: '#ef4444' }}>*</span>
           </label>
           <input
@@ -181,13 +171,13 @@ export function PaymentSetupCard({ staff }: PaymentSetupCardProps) {
             value={businessName}
             onChange={(e) => setBusinessName(e.target.value)}
             disabled={loading}
-            placeholder="Your business name"
+            placeholder="Business name"
             style={{
               width: '100%',
-              padding: '10px 12px',
-              fontSize: '14px',
+              padding: '6px 8px',
+              fontSize: '12px',
               border: '1px solid #d1d5db',
-              borderRadius: '6px',
+              borderRadius: '4px',
               backgroundColor: '#fff',
               boxSizing: 'border-box',
               color: '#374151',
@@ -195,8 +185,8 @@ export function PaymentSetupCard({ staff }: PaymentSetupCardProps) {
           />
         </div>
 
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '6px' }}>
+        <div style={{ marginBottom: '8px' }}>
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', color: '#374151', marginBottom: '2px' }}>
             Contact Phone
           </label>
           <input
@@ -207,10 +197,10 @@ export function PaymentSetupCard({ staff }: PaymentSetupCardProps) {
             placeholder="+254712345678"
             style={{
               width: '100%',
-              padding: '10px 12px',
-              fontSize: '14px',
+              padding: '6px 8px',
+              fontSize: '12px',
               border: '1px solid #d1d5db',
-              borderRadius: '6px',
+              borderRadius: '4px',
               backgroundColor: '#fff',
               boxSizing: 'border-box',
               color: '#374151',
@@ -218,75 +208,69 @@ export function PaymentSetupCard({ staff }: PaymentSetupCardProps) {
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={loading || !selectedCountry || !businessName}
-          style={{
-            width: '100%',
-            padding: '12px 16px',
-            backgroundColor: loading || !selectedCountry || !businessName ? '#d1d5db' : '#3b82f6',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: loading || !selectedCountry || !businessName ? 'not-allowed' : 'pointer',
-            transition: 'background-color 0.2s',
-          }}
-        >
-          {loading ? 'Setting up...' : 'Set Up Payment Method'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            type="submit"
+            disabled={loading || !selectedCountry || !businessName}
+            style={{
+              flex: 1,
+              padding: '8px 12px',
+              backgroundColor: loading || !selectedCountry || !businessName ? '#d1d5db' : '#3b82f6',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: '600',
+              cursor: loading || !selectedCountry || !businessName ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {loading ? 'Setting up...' : 'Setup'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowInstructions(!showInstructions)}
+            style={{
+              padding: '8px 12px',
+              backgroundColor: '#f3f4f6',
+              color: '#374151',
+              border: '1px solid #d1d5db',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: '600',
+              cursor: 'pointer',
+            }}
+          >
+            {showInstructions ? '▼ Hide' : '▶ Help'}
+          </button>
+        </div>
       </form>
 
-      <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
-        <p style={{ margin: '0 0 16px 0', fontWeight: '600', fontSize: '14px', color: '#1f2937' }}>📋 Setup Steps</p>
-
-        {provider === 'paystack' ? (
-          <div style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.6' }}>
-            <div style={{ marginBottom: '12px' }}>
-              <strong style={{ color: '#374151' }}>1. Fill in your details</strong>
-              <p style={{ margin: '4px 0 0 0' }}>Business name and contact phone</p>
+      {showInstructions && (
+        <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #e5e7eb', fontSize: '11px', color: '#6b7280', lineHeight: '1.4' }}>
+          {provider === 'paystack' ? (
+            <div>
+              <div style={{ marginBottom: '8px' }}><strong style={{ color: '#374151' }}>1.</strong> Fill in details</div>
+              <div style={{ marginBottom: '8px' }}><strong style={{ color: '#374151' }}>2.</strong> Click "Setup"</div>
+              <div style={{ marginBottom: '8px' }}><strong style={{ color: '#374151' }}>3.</strong> M-Pesa & cards enabled immediately</div>
+              <div style={{ padding: '6px 8px', backgroundColor: '#fef3c7', borderRadius: '3px', marginTop: '6px', color: '#92400e' }}>
+                💡 Fee: 1.5% (Paystack) + 2% (AskBiz) = 3.5% total
+              </div>
             </div>
-            <div style={{ marginBottom: '12px' }}>
-              <strong style={{ color: '#374151' }}>2. Click "Set Up Payment Method"</strong>
-              <p style={{ margin: '4px 0 0 0' }}>We'll create your Paystack account instantly</p>
+          ) : provider === 'stripe' ? (
+            <div>
+              <div style={{ marginBottom: '8px' }}><strong style={{ color: '#374151' }}>1.</strong> Fill in details</div>
+              <div style={{ marginBottom: '8px' }}><strong style={{ color: '#374151' }}>2.</strong> Click "Setup"</div>
+              <div style={{ marginBottom: '8px' }}><strong style={{ color: '#374151' }}>3.</strong> Complete KYC verification</div>
+              <div style={{ marginBottom: '8px' }}><strong style={{ color: '#374151' }}>4.</strong> Payments enabled automatically</div>
+              <div style={{ padding: '6px 8px', backgroundColor: '#dbeafe', borderRadius: '3px', marginTop: '6px', color: '#1e40af' }}>
+                💡 Fee: ~2.9% (Stripe) + 2% (AskBiz) = ~4.9% total
+              </div>
             </div>
-            <div style={{ marginBottom: '12px' }}>
-              <strong style={{ color: '#374151' }}>3. Start accepting payments</strong>
-              <p style={{ margin: '4px 0 0 0' }}>✓ M-Pesa and card payments ready immediately</p>
-            </div>
-            <div style={{ padding: '10px 12px', backgroundColor: '#fef3c7', borderRadius: '4px', marginTop: '12px', fontSize: '12px', color: '#92400e' }}>
-              💡 <strong>Paystack takes 1.5%</strong> + we take 2% = 3.5% total. You get 96.5% of each transaction.
-            </div>
-          </div>
-        ) : provider === 'stripe' ? (
-          <div style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.6' }}>
-            <div style={{ marginBottom: '12px' }}>
-              <strong style={{ color: '#374151' }}>1. Fill in your details</strong>
-              <p style={{ margin: '4px 0 0 0' }}>Business name and contact email</p>
-            </div>
-            <div style={{ marginBottom: '12px' }}>
-              <strong style={{ color: '#374151' }}>2. Click "Set Up Payment Method"</strong>
-              <p style={{ margin: '4px 0 0 0' }}>We'll redirect you to Stripe's verification form</p>
-            </div>
-            <div style={{ marginBottom: '12px' }}>
-              <strong style={{ color: '#374151' }}>3. Complete KYC verification</strong>
-              <p style={{ margin: '4px 0 0 0' }}>Stripe verifies your ID and business info (usually instant)</p>
-            </div>
-            <div style={{ marginBottom: '12px' }}>
-              <strong style={{ color: '#374151' }}>4. Automatic activation</strong>
-              <p style={{ margin: '4px 0 0 0' }}>✓ Card payments enabled once verified</p>
-            </div>
-            <div style={{ padding: '10px 12px', backgroundColor: '#dbeafe', borderRadius: '4px', marginTop: '12px', fontSize: '12px', color: '#1e40af' }}>
-              💡 <strong>Stripe takes 2.9% + $0.30</strong> per transaction + we take 2% = ~5.2% total. You get ~94.8%.
-            </div>
-          </div>
-        ) : (
-          <div style={{ fontSize: '13px', color: '#6b7280' }}>
-            <p>👆 Select your country above to see setup steps</p>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div style={{ fontSize: '11px', color: '#6b7280' }}>👆 Select country above</div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

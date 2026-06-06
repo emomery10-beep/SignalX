@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       try {
         const subaccount = await createSubAccount({
           business_name,
-          settlement_bank: '112', // Gulf African Bank Kenya
+          settlement_bank: '63041', // Gulf African Bank Kenya
           account_number: settlement_account?.phone || contact_phone || '',
           contact_email,
           contact_phone,
