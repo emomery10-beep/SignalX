@@ -871,6 +871,7 @@ export default function SellPage() {
           <PosCardPayment
             transactionId={lastTxId}
             amount={cartTotal}
+            currencySymbol={sym}
             ownerId={staff.owner_id}
             staffId={staff.id}
             onPaymentComplete={() => {
@@ -889,6 +890,7 @@ export default function SellPage() {
           <PosMobilePayment
             transactionId={lastTxId}
             amount={cartTotal}
+            currencySymbol={sym}
             ownerId={staff.owner_id}
             staffId={staff.id}
             customerPhone={customerPhone}
