@@ -42,6 +42,8 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
   const [showAdd, setShowAdd] = useState(false)
   const [loading, setLoading] = useState(true)
   const [newItem, setNewItem] = useState({ counterparty: '', amount: '', dueDate: '', notes: '' })
+  const [viewMode, setViewMode] = useState<'list' | 'grouped'>('grouped')
+  const [expandedCustomer, setExpandedCustomer] = useState<string | null>(null)
 
   const loadItems = useCallback(() => {
     fetch('/api/cfo/receivables')
@@ -127,6 +129,25 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
     return { ...bucket, amount: amt, pct: totalAmount > 0 ? (amt / totalAmount) * 100 : 0 }
   })
 
+  // Group by counterparty for grouped view
+  const grouped = (() => {
+    const map = new Map<string, { items: Receivable[]; total: number; maxOverdue: number; worstStatus: string }>()
+    for (const item of filtered) {
+      // Normalize: strip auto-generated suffixes for POS (use base name)
+      const key = item.counterparty
+      if (!map.has(key)) map.set(key, { items: [], total: 0, maxOverdue: 0, worstStatus: 'current' })
+      const g = map.get(key)!
+      g.items.push(item)
+      g.total += item.amount
+      g.maxOverdue = Math.max(g.maxOverdue, item.daysOverdue)
+      const statusOrder = ['current', 'overdue_30', 'overdue_60', 'overdue_90']
+      if (statusOrder.indexOf(item.status) > statusOrder.indexOf(g.worstStatus)) g.worstStatus = item.status
+    }
+    return Array.from(map.entries())
+      .map(([name, g]) => ({ name, ...g }))
+      .sort((a, b) => b.maxOverdue - a.maxOverdue || b.total - a.total)
+  })()
+
   return (
     <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
       {/* Header */}
@@ -154,22 +175,35 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
       </div>
 
       {/* Toggle */}
-      <div style={{ display: 'flex', padding: '10px 18px', gap: 4, borderBottom: '1px solid var(--b)' }}>
-        {(['receivables', 'payables'] as const).map(v => (
-          <button
-            key={v}
-            onClick={() => setView(v)}
-            style={{
-              padding: '5px 12px', borderRadius: 7, fontSize: 11, fontWeight: view === v ? 600 : 400,
-              border: view === v ? '1px solid #6366F1' : '1px solid var(--b)',
-              background: view === v ? 'rgba(99,102,241,.08)' : 'transparent',
-              color: view === v ? '#6366F1' : 'var(--tx3)',
+      <div style={{ display: 'flex', padding: '10px 18px', gap: 4, borderBottom: '1px solid var(--b)', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {(['receivables', 'payables'] as const).map(v => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              style={{
+                padding: '5px 12px', borderRadius: 7, fontSize: 11, fontWeight: view === v ? 600 : 400,
+                border: view === v ? '1px solid #6366F1' : '1px solid var(--b)',
+                background: view === v ? 'rgba(99,102,241,.08)' : 'transparent',
+                color: view === v ? '#6366F1' : 'var(--tx3)',
+                cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize',
+              }}
+            >
+              {v === 'receivables' ? 'Who Owes You' : 'What You Owe'}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {(['grouped', 'list'] as const).map(m => (
+            <button key={m} onClick={() => setViewMode(m)} style={{
+              padding: '5px 10px', borderRadius: 7, fontSize: 10, fontWeight: viewMode === m ? 600 : 400,
+              border: viewMode === m ? '1px solid #6366F1' : '1px solid var(--b)',
+              background: viewMode === m ? 'rgba(99,102,241,.08)' : 'transparent',
+              color: viewMode === m ? '#6366F1' : 'var(--tx3)',
               cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize',
-            }}
-          >
-            {v === 'receivables' ? 'Who Owes You' : 'What You Owe'}
-          </button>
-        ))}
+            }}>{m === 'grouped' ? 'By Customer' : 'All Items'}</button>
+          ))}
+        </div>
       </div>
 
       {/* Summary */}
@@ -256,13 +290,66 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
       )}
 
       {/* Items list */}
-      <div style={{ maxHeight: 300, overflowY: 'auto' }}>
+      <div style={{ maxHeight: 400, overflowY: 'auto' }}>
         {filtered.length === 0 && (
           <div style={{ padding: '24px 18px', textAlign: 'center', color: 'var(--tx3)', fontSize: 12 }}>
             No {view} tracked yet. Click "+ Add" to start tracking {view === 'receivables' ? 'who owes you' : 'what you owe'}.
           </div>
         )}
-        {filtered.sort((a, b) => b.daysOverdue - a.daysOverdue).map(item => {
+
+        {/* Grouped view */}
+        {viewMode === 'grouped' && grouped.map((group, gi) => {
+          const bucket = AGING_BUCKETS.find(b => b.key === group.worstStatus) || AGING_BUCKETS[0]
+          const isExpanded = expandedCustomer === group.name
+          return (
+            <div key={gi} style={{ borderTop: '1px solid var(--b)' }}>
+              <div
+                onClick={() => setExpandedCustomer(isExpanded ? null : group.name)}
+                style={{ display: 'flex', alignItems: 'center', padding: '10px 18px', gap: 10, cursor: 'pointer', transition: 'background 120ms' }}
+              >
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: bucket.color, flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{group.name}</div>
+                  <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 1 }}>
+                    {group.items.length} item{group.items.length !== 1 ? 's' : ''}
+                    {group.maxOverdue > 0 && <span style={{ color: '#EF4444', fontWeight: 600 }}> · {group.maxOverdue}d overdue</span>}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(group.total, sym)}</div>
+                </div>
+                <span style={{ fontSize: 10, color: 'var(--tx3)', flexShrink: 0 }}>{isExpanded ? '▲' : '▼'}</span>
+              </div>
+              {isExpanded && (
+                <div style={{ background: 'rgba(99,102,241,.02)', borderTop: '1px solid var(--b)' }}>
+                  {group.items.map(item => {
+                    const b = AGING_BUCKETS.find(x => x.key === item.status) || AGING_BUCKETS[0]
+                    return (
+                      <div key={item.id} style={{ display: 'flex', alignItems: 'center', padding: '8px 18px 8px 34px', gap: 10, borderBottom: '1px solid var(--b)' }}>
+                        <div style={{ width: 6, height: 6, borderRadius: '50%', background: b.color, flexShrink: 0 }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
+                            Due {new Date(item.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                            {item.daysOverdue > 0 && <span style={{ color: '#EF4444', fontWeight: 600 }}> · {item.daysOverdue}d overdue</span>}
+                            {item.notes && <span> · {item.notes}</span>}
+                            {item.source && <span style={{ marginLeft: 4, fontSize: 9, fontWeight: 600, color: '#6366F1', textTransform: 'uppercase' }}>{item.source}</span>}
+                          </div>
+                        </div>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: b.color, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>{fmt(item.amount, sym)}</span>
+                        {!item.auto && (
+                          <button onClick={() => removeItem(item.id)} style={{ fontSize: 12, color: 'var(--tx3)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 4px' }}>×</button>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })}
+
+        {/* List view */}
+        {viewMode === 'list' && filtered.sort((a, b) => b.daysOverdue - a.daysOverdue).map(item => {
           const bucket = AGING_BUCKETS.find(b => b.key === item.status) || AGING_BUCKETS[0]
           return (
             <div key={item.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 18px', borderTop: '1px solid var(--b)', gap: 10 }}>
@@ -295,9 +382,7 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
                   onClick={() => removeItem(item.id)}
                   style={{ fontSize: 12, color: 'var(--tx3)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 4px', lineHeight: 1 }}
                   title="Remove"
-                >
-                  ×
-                </button>
+                >×</button>
               )}
             </div>
           )

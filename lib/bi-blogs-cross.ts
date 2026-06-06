@@ -880,7 +880,7 @@ export const CROSS_BLOG_POSTS: BlogPost[] = [
       {
         heading: 'Month Three: When Habits Form and Data Compounds',
         level: 2,
-        body: `By month three, the daily BI routine is established. Checking yesterday's data is as natural as checking email. The low stock alerts are calibrated. The reports are familiar.\n\nAnd the data is compounding in value. Three months of sales history reveals seasonal patterns that weren't visible in the first month. Week-over-week trend data shows whether the business is accelerating or decelerating.\n\nBusiness decisions are now routinely data-informed:\n- "I ordered 30% more stock for this product because last month's data showed strong acceleration"\n- "I reduced staffing on Tuesday afternoons because the data shows we're consistently slow then"\n- "I raised prices on our top 5 products and sales barely moved — we found margin we didn't know we had"'
+        body: `By month three, the daily BI routine is established. Checking yesterday's data is as natural as checking email. The low stock alerts are calibrated. The reports are familiar.\n\nAnd the data is compounding in value. Three months of sales history reveals seasonal patterns that weren't visible in the first month. Week-over-week trend data shows whether the business is accelerating or decelerating.\n\nBusiness decisions are now routinely data-informed:\n- "I ordered 30% more stock for this product because last month's data showed strong acceleration"\n- "I reduced staffing on Tuesday afternoons because the data shows we're consistently slow then"\n- "I raised prices on our top 5 products and sales barely moved — we found margin we didn't know we had"`
       },
       {
         heading: 'Year One and Beyond: Transformation',

@@ -21,7 +21,6 @@ import DecisionTimeline from '@/components/intelligence/DecisionTimeline'
 import TopProducts from '@/components/intelligence/TopProducts'
 import PosPulse from '@/components/intelligence/PosPulse'
 import DailyActions from '@/components/intelligence/DailyActions'
-import CashFlowCountdown from '@/components/intelligence/CashFlowCountdown'
 import CrossSectorIntel from '@/components/intelligence/CrossSectorIntel'
 import SupplierBrief from '@/components/intelligence/SupplierBrief'
 import PriceSensitivity from '@/components/intelligence/PriceSensitivity'
@@ -38,7 +37,13 @@ export default function IntelligencePage() {
   const [loadingHealth, setLoadingHealth] = useState(true)
   const [scoreHistory, setScoreHistory] = useState<any[]>([])
   const [connectedCount, setConnectedCount] = useState(0)
+  const [totalSources] = useState(31)
   const [isMobile, setIsMobile] = useState(false)
+
+  // Overview summary state
+  const [cfoSnapshot, setCfoSnapshot] = useState<any>(null)
+  const [logisticsHealth, setLogisticsHealth] = useState<any>(null)
+  const [courierSummary, setCourierSummary] = useState<any>(null)
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -93,6 +98,49 @@ export default function IntelligencePage() {
         }
       })
       .finally(() => setLoadingHealth(false))
+  }, [])
+
+  // Fetch CFO snapshot for overview alerts
+  useEffect(() => {
+    fetch('/api/cfo/snapshot?period=this_month')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setCfoSnapshot(d) })
+      .catch(() => {})
+  }, [])
+
+  // Fetch logistics health for overview
+  useEffect(() => {
+    fetch('/api/logistics?view=health')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.health) setLogisticsHealth(d.health) })
+      .catch(() => {})
+  }, [])
+
+  // Fetch courier summary for overview
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/pos/parcels?limit=200').then(r => r.json()).catch(() => ({ parcels: [] })),
+      fetch('/api/pos/trucks').then(r => r.json()).catch(() => ({ trucks: [] })),
+    ]).then(([pData, tData]) => {
+      const parcels = pData.parcels || []
+      const trucks = tData.trucks || []
+      const inTransit = parcels.filter((p: any) => ['in_transit', 'out_for_delivery'].includes(p.status)).length
+      const delivered = parcels.filter((p: any) => ['delivered', 'collected'].includes(p.status)).length
+      const failed = parcels.filter((p: any) => p.status === 'failed_delivery').length
+      const completedTotal = delivered + failed
+      const now = Date.now()
+      const stuck = parcels.filter((p: any) => ['received', 'at_branch'].includes(p.status) && (now - new Date(p.created_at).getTime()) > 48 * 3600000).length
+      setCourierSummary({
+        total: parcels.length,
+        inTransit,
+        delivered,
+        failed,
+        deliveryRate: completedTotal > 0 ? Math.round((delivered / completedTotal) * 100) : 0,
+        stuck,
+        trucksActive: trucks.filter((t: any) => t.status === 'in_transit').length,
+        trucksTotal: trucks.length,
+      })
+    })
   }, [])
 
   // Fetch connected sources count (external sources + built-in POS)
@@ -172,6 +220,7 @@ export default function IntelligencePage() {
 
   const tabs = [
     { id: 'overview',     label: 'Overview' },
+    { id: 'cfo',          label: '🏛️ CFO',       locked: !canCfo },
     { id: 'anomalies',    label: 'Alerts',       badge: canAlerts ? (criticalCount + warningCount) : 0, locked: !canAlerts },
     { id: 'decisions',    label: 'Decisions',    locked: !canDecisions },
     { id: 'team',         label: 'Team' },
@@ -181,9 +230,7 @@ export default function IntelligencePage() {
     { id: 'memory',       label: '🧠 Memory' },
     { id: 'market',       label: '🌍 Market' },
     { id: 'connections',  label: '🔗 Connect' },
-    { id: 'cfo',          label: '🏛️ CFO',       locked: !canCfo },
     { id: 'actions',      label: '⚡ Actions' },
-    // Cash Flow merged into CFO dashboard
   ]
 
   const sparringPrompts = [
@@ -326,14 +373,168 @@ export default function IntelligencePage() {
             {/* ── Daily brief ── */}
             <DailyBrief onAsk={askAskBiz}/>
 
-            {/* ── Today's Actions ── */}
-            <DailyActions onAsk={askAskBiz}/>
+            {/* ── Critical Alerts (from CFO data) ── */}
+            {cfoSnapshot && (cfoSnapshot.alerts?.length > 0 || (cfoSnapshot.inventory?.stockout_rate > 40)) && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {cfoSnapshot.alerts?.slice(0, 3).map((alert: any, i: number) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '10px 14px', borderRadius: 12,
+                    background: alert.severity === 'critical' ? 'rgba(239,68,68,.06)' : 'rgba(245,158,11,.06)',
+                    border: `1px solid ${alert.severity === 'critical' ? 'rgba(239,68,68,.18)' : 'rgba(245,158,11,.18)'}`,
+                  }}>
+                    <span style={{ fontSize: 14 }}>{alert.severity === 'critical' ? '🔴' : '🟡'}</span>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx)', flex: 1 }}>{alert.message || alert.title}</span>
+                    <button
+                      onClick={() => setTab('cfo')}
+                      style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap' }}
+                    >View details</button>
+                  </div>
+                ))}
+                {cfoSnapshot.inventory?.stockout_rate > 40 && !cfoSnapshot.alerts?.some((a: any) => a.message?.includes('stock')) && (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '10px 14px', borderRadius: 12,
+                    background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.18)',
+                  }}>
+                    <span style={{ fontSize: 14 }}>🟡</span>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx)', flex: 1 }}>
+                      {Math.round(cfoSnapshot.inventory.stockout_rate)}% of products are low or out of stock ({cfoSnapshot.inventory.low_or_oos} of {cfoSnapshot.inventory.total_products})
+                    </span>
+                    <button
+                      onClick={() => setTab('cfo')}
+                      style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap' }}
+                    >View details</button>
+                  </div>
+                )}
+              </div>
+            )}
 
-            {/* ── Cash Flow Countdown ── */}
-            <CashFlowCountdown onAsk={askAskBiz}/>
+            {/* ── Today's Actions (compact — max 3) ── */}
+            <DailyActions onAsk={askAskBiz} limit={3} onViewAll={() => setTab('actions')}/>
 
-            {/* ── Cross-Sector Intel ── */}
-            <CrossSectorIntel onAsk={askAskBiz}/>
+            {/* ── Financial Summary ── */}
+            {cfoSnapshot?.totals && (
+              <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--sf) 0%, rgba(99,102,241,.02) 100%)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 3, height: 14, borderRadius: 2, background: '#10B981' }} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Financial Summary</span>
+                  </div>
+                  <button onClick={() => setTab('cfo')} style={{ fontSize: 11, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
+                    Open CFO →
+                  </button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10 }}>
+                  {[
+                    { label: 'Revenue', value: cfoSnapshot.totals.revenue, color: '#22C55E' },
+                    { label: 'Gross Profit', value: cfoSnapshot.totals.gross_profit, color: '#6366F1' },
+                    { label: 'Net Profit', value: cfoSnapshot.totals.net_profit, color: cfoSnapshot.totals.net_profit >= 0 ? '#10B981' : '#EF4444' },
+                    { label: 'Gross Margin', value: null, pct: cfoSnapshot.totals.gross_margin_pct, color: '#F59E0B' },
+                    { label: 'Net Margin', value: null, pct: cfoSnapshot.totals.net_margin_pct, color: cfoSnapshot.totals.net_margin_pct >= 0 ? '#10B981' : '#EF4444' },
+                  ].map((item, i) => {
+                    const sym = cfoSnapshot.currency_symbol || 'KSh'
+                    const fmtVal = item.value != null
+                      ? (Math.abs(item.value) >= 1000 ? `${sym}${(item.value / 1000).toFixed(1)}K` : `${sym}${Math.round(item.value).toLocaleString()}`)
+                      : `${item.pct != null ? item.pct.toFixed(0) : '—'}%`
+                    return (
+                      <div key={i} style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--sf)', border: '1px solid var(--b)', textAlign: 'center' }}>
+                        <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.04em' }}>{item.label}</div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: item.color, fontFamily: 'var(--font-sora, inherit)' }}>{fmtVal}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ── Shipping & Delivery ── */}
+            {(logisticsHealth || courierSummary) && (
+              <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--sf) 0%, rgba(6,182,212,.02) 100%)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                  <div style={{ width: 3, height: 14, borderRadius: 2, background: '#0891B2' }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Shipping & Delivery</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  {/* Shipments card */}
+                  {logisticsHealth && (
+                    <button
+                      onClick={() => setTab('shipments')}
+                      style={{
+                        padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)',
+                        textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', transition: 'box-shadow 200ms',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,.06)'}
+                      onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                        <span style={{ fontSize: 16 }}>📦</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>Shipments</span>
+                        <span style={{
+                          fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 9999,
+                          color: logisticsHealth.color === 'green' ? '#16a34a' : logisticsHealth.color === 'red' ? '#dc2626' : '#d97706',
+                          background: logisticsHealth.color === 'green' ? 'rgba(34,197,94,.1)' : logisticsHealth.color === 'red' ? 'rgba(239,68,68,.1)' : 'rgba(245,158,11,.1)',
+                        }}>{logisticsHealth.label}</span>
+                      </div>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora, inherit)', marginBottom: 4 }}>{logisticsHealth.score}<span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 400 }}>/100</span></div>
+                      <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4 }}>
+                        {logisticsHealth.active_shipments > 0 ? `${logisticsHealth.active_shipments} active · ${logisticsHealth.in_transit || 0} in transit` : 'No active shipments'}
+                      </div>
+                    </button>
+                  )}
+                  {/* Courier card */}
+                  {courierSummary && courierSummary.total > 0 && (
+                    <button
+                      onClick={() => setTab('courier')}
+                      style={{
+                        padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)',
+                        textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', transition: 'box-shadow 200ms',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,.06)'}
+                      onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                        <span style={{ fontSize: 16 }}>🚛</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>Courier</span>
+                        {courierSummary.stuck > 0 && (
+                          <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 9999, color: '#EF4444', background: 'rgba(239,68,68,.1)' }}>
+                            {courierSummary.stuck} stuck
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora, inherit)', marginBottom: 4 }}>{courierSummary.deliveryRate}%<span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 400 }}> delivery rate</span></div>
+                      <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4 }}>
+                        {courierSummary.inTransit} in transit · {courierSummary.delivered} delivered
+                      </div>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── Data Connection Health ── */}
+            {connectedCount < totalSources && connectedCount < 5 && (
+              <button
+                onClick={() => setTab('connections')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12, width: '100%',
+                  padding: '12px 16px', borderRadius: 12,
+                  background: 'rgba(99,102,241,.04)', border: '1px solid rgba(99,102,241,.12)',
+                  cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                }}
+              >
+                <span style={{ fontSize: 18 }}>🔗</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', marginBottom: 2 }}>
+                    Connect more data sources for better insights
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
+                    {connectedCount} of {totalSources} sources connected — add Shopify, QuickBooks, or more to unlock full intelligence
+                  </div>
+                </div>
+                <span style={{ fontSize: 11, color: '#6366F1', fontWeight: 600, whiteSpace: 'nowrap' }}>Connect →</span>
+              </button>
+            )}
 
             {/* ── Health Time Machine ── */}
             <HealthTimeMachine onAsk={askAskBiz}/>
@@ -492,10 +693,10 @@ export default function IntelligencePage() {
               {/* Bottom row: secondary actions (compact grid) */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
                 {[
-                  { emoji: '📝', title: 'Decisions', sub: 'Log & track', color: 'rgba(34,197,94,.06)', border: 'rgba(34,197,94,.15)', action: () => setTab('decisions') },
-                  { emoji: '🔗', title: 'Connect', sub: `${connectedCount} sources`, color: 'rgba(139,92,246,.06)', border: 'rgba(139,92,246,.15)', action: () => setTab('connections') },
-                  { emoji: '👥', title: 'Team', sub: 'Roles & access', color: 'rgba(236,72,153,.05)', border: 'rgba(236,72,153,.15)', action: () => setTab('team') },
-                  { emoji: '🧠', title: 'Memory', sub: 'Learned facts', color: 'rgba(6,182,212,.06)', border: 'rgba(6,182,212,.15)', action: () => setTab('memory') },
+                  { emoji: '📦', title: 'Ships', sub: 'Track shipments', color: 'rgba(34,197,94,.06)', border: 'rgba(34,197,94,.15)', action: () => setTab('shipments') },
+                  { emoji: '🚛', title: 'Courier', sub: 'Deliveries', color: 'rgba(8,145,178,.06)', border: 'rgba(8,145,178,.15)', action: () => setTab('courier') },
+                  { emoji: '🌍', title: 'Market', sub: 'Prices & intel', color: 'rgba(208,138,89,.06)', border: 'rgba(208,138,89,.15)', action: () => setTab('market') },
+                  { emoji: '🏛️', title: 'CFO', sub: 'Financials', color: 'rgba(99,102,241,.06)', border: 'rgba(99,102,241,.15)', action: () => setTab('cfo') },
                 ].map((card, i) => (
                   <button
                     key={i}

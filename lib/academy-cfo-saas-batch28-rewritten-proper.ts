@@ -1,0 +1,86 @@
+import { AcademyArticle } from "./academy-types";
+
+export const ACADEMY_CFO_SAAS_BATCH_28_REWRITTEN: AcademyArticle[] = [
+  {
+    slug: "strategic-planning-okrs-execution",
+    title: "Strategic Planning and OKRs: Setting Goals and Tracking Execution",
+    description: "Strategy without execution is fantasy. OKRs bridge the gap.",
+    category: "AskBiz Tutorials",
+    categorySlug: "askbiz-tutorials",
+    difficulty: "Advanced",
+    readTime: 6,
+    keywords: ["strategy", "OKRs", "goal setting", "planning", "execution"],
+    keyTakeaways: [
+      "OKRs = Objectives + Key Results. Objective: Qualitative (\"Dominate mid-market segment\"). Key Result: Quantitative (\"10 mid-market customers by year-end\", \"£2M ARR from mid-market\"). Most teams do OKRs wrong (set too many, or too easy). Right: 3-5 company OKRs, each team has 2-3 OKRs aligned to company. All should be ambitious (70% confidence = good, 90% = too easy).",
+      "Cadence: Annual OKRs (big picture), quarterly execution (3-month sprint), weekly/monthly reviews (tracking). If you set annual goals and don't review until December, too late to course-correct. Weekly check-ins keep teams aligned.",
+      "Common mistakes: (1) Too many OKRs (10+), (2) OKRs too easy (100% achieved = wrong), (3) No connection between levels (individual OKRs don't ladder up to company), (4) No review (set and forget), (5) Personal goals vs. team goals (mix them up). Fix: Fewer, harder OKRs + ruthless prioritization."
+    ],
+    content: [
+      {
+        heading: "Building OKR Frameworks and Aligning Teams",
+        body: "**OKR Structure**\n\nObjective (O): Qualitative, inspirational\n- \"Become the most trusted financial partner for SaaS founders\"\n- \"Dominate the mid-market segment\"\n- \"Build world-class product\"\n\nKey Results (KR): Quantitative, measurable, ambitious\n- \"10 mid-market customers (£2M+ ARR each)\"\n- \"£10M ARR from mid-market (vs. current £2M)\"\n- \"NPS 60+ (vs. current 40)\"\n- \"<3% monthly churn\"\n\nWhy both?\n- Objective: Inspires and aligns\n- Key Results: Measure success\n\nExample:\n\nObjective: Achieve product-market fit\nKey Results:\n1. NPS >50 (was 30)\n2. <3% monthly churn (was 5%)\n3. £5M ARR with >120% NRR (was £2M, 105% NRR)\n\n**OKR Setting Process**\n\nAnnual cycle (January):\n\nMonth 0 (December prior):\n- CEO/leadership defines company strategy\n- Review market, competition, opportunities\n- Set 3-5 company-level OKRs\n- Share with board\n\nMonth 1 (January, weeks 1-2):\n- CEO shares company OKRs with team\n- Departments draft their OKRs\n- Key: Each team OKR should ladder up to company OKR\n\nMonth 1 (weeks 3-4):\n- Alignment meetings (resolve conflicts)\n- Finalize OKRs\n- Communicate to all-hands\n\nMonth 2-12:\n- Monthly reviews (tracking progress)\n- Quarterly reviews (adjust if needed)\n- Roadblocks addressed\n\nMonth 13 (December):\n- Year-end review (% of OKRs achieved)\n- Retrospective (what worked, what didn't)\n- Prep for next year\n\n**Company vs. Team OKRs**\n\nExample company OKRs:\n\n1. Objective: Achieve product-market fit in mid-market\n   - KR1: £5M ARR (up from £3M)\n   - KR2: NPS >50\n   - KR3: <3% churn\n\n2. Objective: Build world-class team\n   - KR1: Hire 15 people\n   - KR2: Eradicate any low performers\n   - KR3: 4.0+ Glassdoor rating\n\n3. Objective: Increase profitability path\n   - KR1: 50% gross margin (up from 45%)\n   - KR2: CAC <£5k\n   - KR3: Payback <12 months\n\nTeam OKRs (ladder up):\n\nProduct team OKRs:\n1. Objective: Build for mid-market (supports company KR: £5M ARR, NPS >50)\n   - KR1: Ship 5 mid-market features (reporting, SSO, advanced analytics)\n   - KR2: Mid-market NPS >55\n   - KR3: Feature adoption >70%\n\n2. Objective: Improve profitability (supports company KR: 50% gross margin)\n   - KR1: Reduce cloud costs 20% (via optimization)\n   - KR2: Reduce support tickets 15% (via self-serve)\n   - KR3: Improve product stability (99.9% uptime, vs. 99.5%)\n\nSales team OKRs:\n1. Objective: Grow mid-market ARR (supports company KR: £5M ARR)\n   - KR1: 5 new mid-market customers (£300k+ ACV each)\n   - KR2: 30% win rate (vs. current 20%)\n   - KR3: <90 day sales cycle (vs. current 110)\n\n2. Objective: Reduce CAC (supports company KR: CAC <£5k)\n   - KR1: CAC down to £5k (vs. current £6k)\n   - KR2: Improve demo-to-close conversion 25% → 30%\n   - KR3: Launch partner channel (target: 20% of revenue from partners)\n\nEngineering team OKRs:\n1. Objective: Ship faster (supports product team features)\n   - KR1: Reduce time-to-market 30% (from 6 weeks to 4)\n   - KR2: Launch 2 new integrations (partners: Salesforce, HubSpot)\n   - KR3: Zero critical bugs (vs. current 3-5 per release)\n\n**Cascading OKRs**\n\nCompany → Departments → Individuals\n\nExample cascade:\n\nCompany: \"£5M mid-market ARR\"\n↓\nSales: \"5 mid-market customers (£250-300k ACV)\"\n↓\nSales Manager: \"Manage 2 enterprise AEs, each close 2-3 deals\"\n↓\nSales Rep: \"Close 2 deals (£250k+ ACV) by Q4\"\n\nWhy it matters:\n- Each person knows how they contribute\n- Alignment (everyone rowing same direction)\n- Accountability (can't say \"not my job\")\n\n**OKR Scoring and Review**\n\nScore each KR:\n- <50%: Miss (0.3)\n- 50-74%: Partial (0.5)\n- 75-99%: Hit (1.0)\n- 100%+: Exceeded (1.0, but maybe too easy next time)\n\nGoal: Average score 0.7 (70%)\n- Below 0.6: OKRs too easy (stretch more)\n- 0.7-0.8: Goldilocks (just right)\n- 0.9+: Too easy (make harder next time)\n\nExample review:\n\nCompany OKR 1: \"£5M ARR\"\n- KR1: £5M ARR → Achieved £4.5M (90% score)\n- KR2: NPS >50 → Achieved 52 (100% score)\n- KR3: <3% churn → Achieved 3.2% (50% score)\n- Average: 80% achievement\n\nInterpretation:\n- Strong progress (£4.5M is good)\n- NPS killed (exceeded)\n- Churn slightly high (just missed)\n- Overall: Well-aligned OKRs, good execution\n\n**Quarterly Execution**\n\nwithin annual OKRs:\n\nQ1: \"Achieve product-market fit signals\"\n- Metrics: NPS 45+, churn <4%, £1.2M ARR\n\nQ2: \"Scale mid-market acquisition\"\n- Metrics: 2 mid-market customers, £2M ARR\n\nQ3: \"Expand mid-market base\"\n- Metrics: 4 mid-market customers, £3.5M ARR\n\nQ4: \"Dominate mid-market segment\"\n- Metrics: 5 mid-market customers, £5M ARR\n\nWhy quarterly?\n- Annual too long (can't course-correct)\n- Monthly too short (no time to execute)\n- Quarterly: Right balance\n\n**Weekly/Monthly Reviews**\n\nMonthly:\n- Each team presents: Progress on OKRs (% complete)\n- Blockers: What's in the way\n- Adjustments: Do we need to course-correct\n\nExample:\n- Sales team: \"We're on track for £4.5M ARR (90% of annual goal)\"\n- Product team: \"NPS is 48 (on track for 50+ by year-end)\"\n- Ops team: \"Churn is 3.3% (slightly above 3% target, investigating\"\n\nMonthly decision:\n- Course-correct: If off track, adjust (more resources, scope change, pivot)\n- Celebrate: If on track, celebrate progress\n- Escalate: If blocking, get help from CEO\n\n**Common OKR Mistakes**\n\nMistake 1: Too many OKRs\n- 10+ company OKRs = everyone confused (what's actually important?)\n- Right: 3-5 (forces prioritization)\n\nMistake 2: OKRs too easy\n- Hit 95%+ of OKRs every quarter = not ambitious\n- Right: Hit 70% (stretch, but achievable)\n\nMistake 3: No connection between levels\n- Company OKR: \"£10M ARR\"\n- Engineering OKR: \"Hire 10 engineers\"\n- Missing connection (engineering supports delivery, but no direct linkage)\n\nMistake 4: Set and forget\n- Define OKRs in January, don't review until December\n- Too late to course-correct\n- Right: Weekly check-ins, monthly deep-dives, quarterly reviews\n\nMistake 5: OKRs not ambitious\n- \"Ship product features\" (too vague)\n- \"Improve NPS 1 point\" (too easy)\n- Right: \"Ship 5 enterprise features\", \"Improve NPS from 40 to 55\""
+      }
+    ],
+    relatedSlugs: [
+      "organizational-scaling-founder-to-ceo",
+      "financial-planning-budgeting-saas-team",
+      "product-management-prioritization-saas"
+    ],
+    faq: [
+      {
+        q: "How many OKRs should I have?",
+        a: "3-5 company OKRs. Each with 2-3 key results. Too many = confusing. Each team should have 2-3 OKRs aligned to company."
+      },
+      {
+        q: "What's a good OKR achievement score?",
+        a: "70% (some hit, some partial). 90%+ = too easy. Below 60% = misaligned or too hard. Adjust next quarter."
+      },
+      {
+        q: "How often should I review OKRs?",
+        a: "Weekly (status), monthly (deep dive), quarterly (formal review + adjust for next quarter). Annual is too long to wait."
+      }
+    ],
+    videoUrl: ""
+  },
+  {
+    slug: "data-driven-decision-making-analytics",
+    title: "Data-Driven Decision Making: Building Analytics Infrastructure",
+    description: "Decisions without data are gut feelings. Build analytics to decide better.",
+    category: "AskBiz Tutorials",
+    categorySlug: "askbiz-tutorials",
+    difficulty: "Intermediate",
+    readTime: 6,
+    keywords: ["analytics", "data", "dashboards", "business intelligence", "metrics"],
+    keyTakeaways: [
+      "Analytics stack cost: £200-2k/month tools, 1 FTE analyst (£80-120k). ROI: If analytics drives 5% improvement in CAC (£6k → £5.7k) on £1M marketing spend (167 customers), saves 8 customers × £30k LTV = £240k value vs. £100k cost = 2.4x ROI. Analytics pays for itself.",
+      "Key metrics to track: Revenue funnel (signups, trials, paid), unit economics (CAC, LTV, payback), retention (churn, NRR), team health (growth, productivity). Build dashboards for each (not one mega-dashboard). Each team owns their dashboard.",
+      "Red flags in data: (1) Metric moving wrong direction 2+ months, (2) Metrics not connected (revenue up, but NPS down = problem), (3) No one looking at data (dashboards exist, nobody reads them), (4) Decisions made without data (CEO gut feel overrides metrics). Fix: Weekly metric reviews, connect metrics to strategy, make data-driven culture."
+    ],
+    content: [
+      {
+        heading: "Building Analytics Dashboards and Driving Decisions from Data",
+        body: "**Analytics Stack**\n\nSmall (£0-3M ARR):\n- Google Analytics (free): Website traffic\n- Spreadsheet (free): Manual tracking of metrics\n- Free tier tools: Basic analytics\n- Total cost: £0-500/month\n\nGrowth (£3-10M ARR):\n- Google Analytics (free)\n- Mixpanel or Amplitude (£500-1500/month): Product analytics\n- Looker or Tableau (free tier or £500-1000/month): Dashboards\n- Custom data: ETL (extract, transform, load) with Zapier (£50-200/month)\n- Total cost: £1-2k/month\n\nScale (£10M+ ARR):\n- Full analytics warehouse: Snowflake (£500-2000/month)\n- Advanced analytics: Looker or Tableau (£2000-5000/month)\n- Data engineering: Custom pipelines (engineering time)\n- Business intelligence team: 1-3 people (£200-400k)\n- Total cost: £3-10k/month\n\n**Key Dashboards**\n\nDashboard 1: Revenue Health\n- MRR (month-to-date recurring revenue)\n- ARR (annualized recurring revenue)\n- MRR growth % (month-over-month)\n- New ARR (from new customers)\n- Expansion ARR (from existing customers)\n- Churn ARR (from departing customers)\n\nWhy it matters: CEO's north star\n\nDashboard 2: Unit Economics\n- CAC (customer acquisition cost)\n- LTV (customer lifetime value)\n- Payback period (months to break even)\n- Magic number (growth efficiency)\n- LTV:CAC ratio (profitability ratio)\n- Gross margin\n\nWhy it matters: Can we afford to grow?\n\nDashboard 3: Sales Pipeline\n- Pipeline created (new opportunities)\n- Pipeline by stage (prospecting, demo, proposal, closing)\n- Win rate % (% of deals that close)\n- Sales cycle (days from first touch to close)\n- Forecast (predicted revenue next 3 months)\n\nWhy it matters: Will we hit quota?\n\nDashboard 4: Product Health\n- Signups (new users)\n- Activation (% reaching aha moment)\n- Retention (D7, D30, D90)\n- NPS (net promoter score)\n- Feature adoption\n- Churn by cohort\n\nWhy it matters: Is product resonating?\n\nDashboard 5: Team Health\n- Headcount (total and by function)\n- Burn rate (cash spent per month)\n- Runway (months of cash remaining)\n- Revenue per employee\n- Turnover rate\n\nWhy it matters: Is team sustainable?\n\n**Building Dashboards**\n\nStep 1: Pick tool (Looker, Tableau, Metabase)\n- Looker: Most powerful, most expensive (£2-5k/month)\n- Tableau: Good balance (£1-2k/month)\n- Metabase: Simple, free or cheap (£100-300/month)\n\nStep 2: Connect data sources\n- CRM (Salesforce, HubSpot)\n- Product (Mixpanel, Amplitude, custom)\n- Finance (accounting software, spreadsheet)\n- HR (Lattice, Workday)\n\nStep 3: Build dashboards\n- Revenue health (1 dashboard)\n- Sales pipeline (1 dashboard)\n- Product metrics (1 dashboard)\n- Team health (1 dashboard)\n- Custom per-department dashboards (5+)\n\nStep 4: Set refresh cadence\n- Daily: Revenue, pipeline (real-time)\n- Weekly: Product metrics, team health\n- Monthly: All metrics (full review)\n\n**Metrics That Matter**\n\nDon't track everything. Pick 10-15 key metrics:\n\nMetric | Cadence | Target | Action if miss\n---|---|---|---\nMRR | Weekly | 10% growth | Investigate acquisition or churn\nCAC | Monthly | <£5k | Improve targeting or conversion\nLTV | Monthly | >£30k | Improve retention or expansion\nChurn | Weekly | <4% | Launch retention program\nNPS | Monthly | >40 | Fix product quality\nSales cycle | Weekly | <90 days | Improve sales process\nProduct adoption | Weekly | >60% | Improve onboarding\nRunway | Monthly | >12 months | Cost control or fundraise\nHeadcount | Monthly | Per plan | Adjust hiring\nBurn rate | Monthly | Per plan | Cost control\n\n**Using Data to Make Decisions**\n\nExample 1: Churn increasing\n- Data shows: Churn 3% → 4% (month-over-month)\n- Decision trigger: "Need to understand why\"\n- Analysis: Cohort analysis, NPS drop, support tickets up\n- Finding: Recent product change broke feature for 10% of customers\n- Decision: Revert change, improve testing\n- Timeline: 1 week to fix\n\nExample 2: Sales cycle lengthening\n- Data shows: Sales cycle 90 days → 110 days\n- Decision trigger: \"May miss quarterly forecast\"\n- Analysis: Pipeline stage analysis, rep performance\n- Finding: Two reps slow (below 90-day average), others on track\n- Decision: Sales training for those two reps\n- Timeline: 2-4 weeks to see improvement\n\nExample 3: CAC increasing\n- Data shows: CAC £5k → £6k (month-over-month)\n- Decision trigger: \"Getting less efficient\"\n- Analysis: Channel breakdown, conversion analysis\n- Finding: All channels' CAC up (not channel-specific)\n- Decision: Likely market saturation or seasonal, increase budget 20% to get same volume\n- Timeline: Next month\n\n**Avoiding Data Pitfalls**\n\nPitfall 1: Vanity metrics\n- Tracking: Total signups, page views, user sessions\n- Problem: Doesn't correlate with revenue or retention\n- Fix: Track MRR, CAC, LTV, churn (metrics that matter)\n\nPitfall 2: Cherry-picking data\n- Example: \"We had great week!\" (pick best week, ignore overall trend)\n- Problem: Makes you miss trends\n- Fix: Always show trend (week-over-week, month-over-month)\n\nPitfall 3: Too many metrics\n- Tracking: 50+ metrics\n- Problem: Can't see signal in noise\n- Fix: Track 10-15 key metrics (clear priorities)\n\nPitfall 4: No context\n- Metric: \"MRR up 5%\" (is this good?)\n- Problem: No baseline, no target\n- Fix: \"MRR up 5% (target 10%, below goal - investigate)\"\n\nPitfall 5: Backward-looking only\n- Tracking: What happened last month\n- Problem: Too late to course-correct\n- Fix: Add forecasting (predict next month, adjust now)\n\n**Data Governance**\n\nAs you scale:\n\n1. Define data owners\n   - Who's responsible for each metric?\n   - Example: CFO owns CAC, Product manager owns NPS\n   - Owners accountable for accuracy\n\n2. Document definitions\n   - What's an MQL? (depends on company)\n   - What's an ARR customer? (6-month minimum contract?)\n   - Document so everyone uses same definition\n\n3. Establish review cadence\n   - Weekly: Revenue, pipeline, product metrics\n   - Monthly: Full company metrics, board reporting\n   - Quarterly: Strategy review (adjust based on metrics)\n\n4. Automate calculation\n   - Don't manually calculate metrics (error-prone)\n   - Build dashboards that calculate automatically\n   - Data engineers maintain pipelines\n\n5. Audit accuracy\n   - Spot-check (random sample of data)\n   - Monthly: Verify top metrics are correct\n   - Fix bugs in calculations"
+      }
+    ],
+    relatedSlugs: [
+      "revenue-operations-saas-alignment",
+      "financial-planning-budgeting-saas-team",
+      "strategic-planning-okrs-execution"
+    ],
+    faq: [
+      {
+        q: "What analytics tools should I use?",
+        a: "Small: Google Analytics + spreadsheet (free). Growth: Mixpanel (£500-1500/month) + Looker (£500-1000/month). Scale: Snowflake (£500-2000/month) + Looker (£2-5k/month)."
+      },
+      {
+        q: "How many metrics should I track?",
+        a: "10-15 key metrics (not 50+). MRR, CAC, LTV, churn, NPS, sales cycle, adoption, runway. One per category, clear ownership."
+      },
+      {
+        q: "How often should I review metrics?",
+        a: "Weekly (watch for trends), monthly (deep dive), quarterly (strategy review). Daily too noisy, yearly too late."
+      }
+    ],
+    videoUrl: ""
+  }
+];

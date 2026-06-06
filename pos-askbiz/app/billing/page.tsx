@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { SeatsUpgradeButton } from '@/components/SeatsUpgradeButton'
-import { PaymentSetupCard } from '@/components/PaymentSetupCard'
 
 const API = process.env.NEXT_PUBLIC_API_URL || ''
 
@@ -141,9 +140,6 @@ function BillingPageContent() {
             </ul>
           </div>
         </div>
-
-        {/* Payment Setup */}
-        {staff && <PaymentSetupCard staff={staff} />}
       </div>
     </div>
   )

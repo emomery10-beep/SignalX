@@ -7,7 +7,10 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { uploadId, targetColumn } = await request.json()
+  let body: Record<string, unknown>
+  try { body = await request.json() } catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }) }
+  const uploadId = body.uploadId as string | undefined
+  const targetColumn = body.targetColumn as string | undefined
   if (!uploadId || !targetColumn) return NextResponse.json({ error: 'uploadId and targetColumn required' }, { status: 400 })
 
   const { data: upload } = await supabase

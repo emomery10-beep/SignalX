@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     signals.push(`Fixed Costs: ${totals.fixed_costs}, Net Profit: ${totals.net_profit} (${totals.net_margin_pct}%)`)
   }
 
-  if (comparison) {
+  if (comparison && totals) {
     signals.push(`PRIOR PERIOD:`)
     signals.push(`Revenue: ${comparison.revenue}, Gross Profit: ${comparison.gross_profit} (${comparison.gross_margin_pct}%)`)
     const revChange = comparison.revenue > 0 ? Math.round(((totals.revenue - comparison.revenue) / comparison.revenue) * 100) : 0
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-haiku-4-5',
       max_tokens: 400,
       messages: [{
         role: 'user',
@@ -72,7 +72,9 @@ Return ONLY valid JSON.`
       }],
     })
 
-    const text = (response.content[0] as { type: string; text: string }).text
+    const block = response.content[0]
+    const text = block?.type === 'text' ? block.text : ''
+    if (!text) return NextResponse.json({ insights: [] })
     const match = text.match(/\{[\s\S]*\}/)
     const parsed = match ? JSON.parse(match[0]) : { insights: [] }
 

@@ -47,14 +47,59 @@ export async function GET() {
 
   const period = new Date().toISOString().slice(0, 7)
 
-  const [{ data: sub }, { data: usage }, { data: plans }, { data: profile }] = await Promise.all([
+  const [{ data: sub }, { data: usage }, { data: plans }, { data: profile }, { data: trials }] = await Promise.all([
     supabase.from('subscriptions').select('*, plans(*)').eq('user_id', user.id).single(),
     supabase.from('usage').select('*').eq('user_id', user.id).eq('period', period).single(),
     supabase.from('plans').select('*').eq('is_active', true).order('sort_order'),
-    supabase.from('profiles').select('pos_enabled, pos_seat_count, currency').eq('id', user.id).single(),
+    supabase.from('profiles').select('pos_enabled, pos_seat_count, pos_stripe_subscription_id, currency').eq('id', user.id).single(),
+    supabase.from('trials').select('*').eq('user_id', user.id),
   ])
 
-  const plan = (sub as { plans?: Record<string, unknown> } | null)?.plans as {
+  const now = new Date()
+  const trialsList = (trials || []) as { trial_type: string; started_at: string; ends_at: string; converted: boolean }[]
+  const posTrial = trialsList.find(t => t.trial_type === 'pos')
+  const growthTrial = trialsList.find(t => t.trial_type === 'growth')
+
+  // Expire trials that have passed their end date
+  const posTrialActive = posTrial && !posTrial.converted && new Date(posTrial.ends_at) > now
+  const posTrialExpired = posTrial && !posTrial.converted && new Date(posTrial.ends_at) <= now
+  const growthTrialActive = growthTrial && !growthTrial.converted && new Date(growthTrial.ends_at) > now
+  const growthTrialExpired = growthTrial && !growthTrial.converted && new Date(growthTrial.ends_at) <= now
+
+  // Handle PoS trial expiry: disable PoS if no paid subscription
+  const profileData = profile as { pos_enabled?: boolean; pos_seat_count?: number; pos_stripe_subscription_id?: string; currency?: string } | null
+  let posEnabled = profileData?.pos_enabled ?? false
+  let posSeatCount = profileData?.pos_seat_count ?? 0
+
+  if (posTrialExpired && posEnabled) {
+    const hasPaidPos = !!profileData?.pos_stripe_subscription_id
+    if (!hasPaidPos) {
+      await supabase.from('profiles').update({ pos_enabled: false, pos_seat_count: 0 }).eq('id', user.id)
+      posEnabled = false
+      posSeatCount = 0
+    }
+  }
+
+  // Handle Growth trial expiry: downgrade to free if no paid subscription
+  const subData = sub as { plan_id?: string; stripe_subscription_id?: string; payment_provider?: string; plans?: Record<string, unknown> } | null
+  let effectivePlanId = subData?.plan_id || 'free'
+
+  if (growthTrialExpired && effectivePlanId === 'growth') {
+    const hasPaidSub = !!subData?.stripe_subscription_id || subData?.payment_provider === 'pesapal'
+    if (!hasPaidSub) {
+      await Promise.all([
+        supabase.from('subscriptions').update({ plan_id: 'free', updated_at: now.toISOString() }).eq('user_id', user.id),
+        supabase.from('profiles').update({ plan_id: 'free' }).eq('id', user.id),
+      ])
+      effectivePlanId = 'free'
+    }
+  }
+
+  // Resolve plan features based on effective plan (may differ from DB if trial expired)
+  const allPlans = (plans || []) as { id: string; question_limit: number; upload_limit: number; forecast_limit: number; alert_limit: number; expansion_intel: boolean; live_sync: boolean; api_access: boolean; name: string }[]
+  const effectivePlan = allPlans.find(p => p.id === effectivePlanId) || null
+
+  const plan = effectivePlan as {
     question_limit: number; upload_limit: number; forecast_limit: number
     alert_limit: number; expansion_intel: boolean; live_sync: boolean
     api_access: boolean; name: string
@@ -70,8 +115,19 @@ export async function GET() {
   const softWarning = qPct >= 80 && qPct < 100
   const limitReached = ql !== -1 && qUsed >= ql
 
+  // Build trial info for frontend
+  const calcDaysLeft = (endsAt: string) => Math.max(0, Math.ceil((new Date(endsAt).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+
+  const trialInfo: Record<string, { active: boolean; daysLeft: number; endsAt: string; expired: boolean; used: boolean }> = {}
+  if (posTrial) {
+    trialInfo.pos = { active: !!posTrialActive, daysLeft: posTrialActive ? calcDaysLeft(posTrial.ends_at) : 0, endsAt: posTrial.ends_at, expired: !!posTrialExpired, used: true }
+  }
+  if (growthTrial) {
+    trialInfo.growth = { active: !!growthTrialActive, daysLeft: growthTrialActive ? calcDaysLeft(growthTrial.ends_at) : 0, endsAt: growthTrial.ends_at, expired: !!growthTrialExpired, used: true }
+  }
+
   return NextResponse.json({
-    subscription: sub,
+    subscription: { ...sub, plan_id: effectivePlanId },
     plan: plan,
     usage: { questions: qUsed, uploads: uUsed, period },
     limits: { questions: ql, uploads: ul },
@@ -92,10 +148,11 @@ export async function GET() {
     },
     plans: plans || [],
     pos: {
-      enabled:   (profile as { pos_enabled?: boolean } | null)?.pos_enabled   ?? false,
-      seatCount: (profile as { pos_seat_count?: number } | null)?.pos_seat_count ?? 0,
+      enabled:   posEnabled,
+      seatCount: posSeatCount,
     },
-    userCurrency: (profile as { currency?: string } | null)?.currency || 'GBP',
+    trials: trialInfo,
+    userCurrency: profileData?.currency || 'GBP',
   })
 }
 
@@ -133,6 +190,63 @@ async function handlePost(request: NextRequest) {
       plan_needed: plan || 'growth',
     })
     return NextResponse.json({ logged: true })
+  }
+
+  // Start free trial (no card required)
+  if (action === 'start_trial') {
+    const trialType = body.type as string
+    if (trialType !== 'pos' && trialType !== 'growth') {
+      return NextResponse.json({ error: 'Invalid trial type' }, { status: 400 })
+    }
+
+    // Check if user already used this trial
+    const { data: existing } = await supabase
+      .from('trials')
+      .select('id, converted')
+      .eq('user_id', user.id)
+      .eq('trial_type', trialType)
+      .single()
+
+    if (existing) {
+      return NextResponse.json({ error: 'You have already used this free trial' }, { status: 400 })
+    }
+
+    const now = new Date()
+    const endsAt = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000)
+
+    // Insert trial record
+    const { error: trialErr } = await supabase.from('trials').insert({
+      user_id: user.id,
+      trial_type: trialType,
+      started_at: now.toISOString(),
+      ends_at: endsAt.toISOString(),
+    })
+    if (trialErr) {
+      return NextResponse.json({ error: 'Could not start trial' }, { status: 500 })
+    }
+
+    if (trialType === 'pos') {
+      // Enable PoS with up to 5 seats
+      await supabase.from('profiles').update({
+        pos_enabled: true,
+        pos_seat_count: 5,
+      }).eq('id', user.id)
+    }
+
+    if (trialType === 'growth') {
+      // Upgrade to Growth plan (no Stripe subscription)
+      await Promise.all([
+        supabase.from('subscriptions').update({
+          plan_id: 'growth',
+          status: 'trialing',
+          trial_ends_at: endsAt.toISOString(),
+          updated_at: now.toISOString(),
+        }).eq('user_id', user.id),
+        supabase.from('profiles').update({ plan_id: 'growth' }).eq('id', user.id),
+      ])
+    }
+
+    return NextResponse.json({ success: true, trial_type: trialType, ends_at: endsAt.toISOString() })
   }
 
   // Get or create Stripe customer

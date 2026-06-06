@@ -108,6 +108,10 @@ export default function BillingPage() {
   const [posSeats,     setPosSeats]     = useState(1)
   const [posLoading,   setPosLoading]   = useState(false)
   const [posSuccess,   setPosSuccess]   = useState(false)
+  // Trials
+  const [trials,       setTrials]       = useState<Record<string, { active: boolean; daysLeft: number; endsAt: string; expired: boolean; used: boolean }>>({})
+  const [trialLoading, setTrialLoading] = useState('')
+  const [trialSuccess, setTrialSuccess] = useState('')
   // Kenyan user detection + PesaPal
   const [isKenyan,          setIsKenyan]          = useState(false)
   const [pesapalLoading,    setPesapalLoading]    = useState('')
@@ -130,6 +134,7 @@ export default function BillingPage() {
             setPosSeatCount(data.pos.seatCount)
             if (data.pos.seatCount > 0) setPosSeats(data.pos.seatCount)
           }
+          if (data.trials) setTrials(data.trials)
           // Detect Kenyan user from profile currency
           const uc = (data.userCurrency || '').toUpperCase()
           if (uc === 'KES') setIsKenyan(true)
@@ -241,6 +246,39 @@ export default function BillingPage() {
     } catch {
       alert('Something went wrong. Please try again.')
     } finally { setPesapalLoading('') }
+  }
+
+  const handleStartTrial = async (type: 'pos' | 'growth') => {
+    setTrialLoading(type)
+    try {
+      const res = await fetch('/api/billing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'start_trial', type }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setTrialSuccess(type)
+        setTimeout(() => setTrialSuccess(''), 6000)
+        // Reload billing data
+        const refresh = await fetch('/api/billing')
+        if (refresh.ok) {
+          const d = await refresh.json()
+          setCurrentPlan(d.subscription?.plan_id || 'free')
+          setUsage(d.usage)
+          setLimits(d.limits)
+          if (d.pos) {
+            setPosEnabled(d.pos.enabled)
+            setPosSeatCount(d.pos.seatCount)
+            if (d.pos.seatCount > 0) setPosSeats(d.pos.seatCount)
+          }
+          if (d.trials) setTrials(d.trials)
+        }
+      } else {
+        alert(data.error || 'Something went wrong')
+      }
+    } catch { alert('Something went wrong. Please try again.') }
+    finally { setTrialLoading('') }
   }
 
   const handlePesapalPosCheckout = async () => {
@@ -373,21 +411,65 @@ export default function BillingPage() {
                   ))}
                 </div>
 
-                <button
-                  onClick={() => isKenyan ? handlePesapalCheckout(plan.id) : handleUpgrade(plan.id)}
-                  disabled={isCurrent || plan.id === 'free' || loading === plan.id || pesapalLoading === plan.id}
-                  style={{
-                    width: '100%', padding: '11px', borderRadius: 10,
-                    border: isCurrent || plan.id === 'free' ? `1px solid ${B}` : 'none',
-                    background: isCurrent || plan.id === 'free' ? 'transparent' : plan.colour,
-                    color: isCurrent || plan.id === 'free' ? 'var(--tx3)' : '#fff',
-                    fontSize: 14, fontWeight: 600, cursor: isCurrent || plan.id === 'free' ? 'default' : 'pointer',
-                    fontFamily: 'inherit',
-                    boxShadow: isCurrent || plan.id === 'free' ? 'none' : `0 2px 12px ${plan.colour}35`,
-                  }}
-                >
-                  {(loading === plan.id || pesapalLoading === plan.id) ? 'Loading…' : isCurrent ? 'Current plan' : plan.id === 'free' ? 'Free forever' : `Upgrade to ${plan.name} →`}
-                </button>
+                {/* Trial badge */}
+                {plan.id === 'growth' && trials.growth?.active && (
+                  <div style={{ marginBottom: 10, padding: '8px 12px', borderRadius: 10, background: 'rgba(99,102,241,.06)', border: '1px solid rgba(99,102,241,.15)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366F1', animation: 'pulse 2s infinite' }} />
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#6366F1' }}>Trial active · {trials.growth.daysLeft} day{trials.growth.daysLeft !== 1 ? 's' : ''} left</span>
+                  </div>
+                )}
+                {plan.id === 'growth' && trials.growth?.expired && (
+                  <div style={{ marginBottom: 10, padding: '8px 12px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.15)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#dc2626' }}>Trial ended — subscribe to continue</span>
+                  </div>
+                )}
+
+                {(() => {
+                  const isTrialing = plan.id === 'growth' && trials.growth?.active
+                  const canTrial = plan.id === 'growth' && !trials.growth?.used && !isCurrent
+                  const trialExpired = plan.id === 'growth' && trials.growth?.expired
+
+                  if (canTrial) {
+                    return (
+                      <button
+                        onClick={() => handleStartTrial('growth')}
+                        disabled={trialLoading === 'growth'}
+                        style={{
+                          width: '100%', padding: '11px', borderRadius: 10, border: 'none',
+                          background: 'linear-gradient(135deg, #6366F1, #8b5cf6)',
+                          color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                          fontFamily: 'inherit', boxShadow: '0 2px 12px rgba(99,102,241,.35)',
+                        }}
+                      >
+                        {trialLoading === 'growth' ? 'Starting…' : 'Start 3-month free trial →'}
+                      </button>
+                    )
+                  }
+
+                  return (
+                    <button
+                      onClick={() => isKenyan ? handlePesapalCheckout(plan.id) : handleUpgrade(plan.id)}
+                      disabled={(!trialExpired && isCurrent) || plan.id === 'free' || loading === plan.id || pesapalLoading === plan.id}
+                      style={{
+                        width: '100%', padding: '11px', borderRadius: 10,
+                        border: (!trialExpired && isCurrent) || plan.id === 'free' ? `1px solid ${B}` : 'none',
+                        background: (!trialExpired && isCurrent) || plan.id === 'free' ? 'transparent' : plan.colour,
+                        color: (!trialExpired && isCurrent) || plan.id === 'free' ? 'var(--tx3)' : '#fff',
+                        fontSize: 14, fontWeight: 600, cursor: (!trialExpired && isCurrent) || plan.id === 'free' ? 'default' : 'pointer',
+                        fontFamily: 'inherit',
+                        boxShadow: (!trialExpired && isCurrent) || plan.id === 'free' ? 'none' : `0 2px 12px ${plan.colour}35`,
+                      }}
+                    >
+                      {(loading === plan.id || pesapalLoading === plan.id) ? 'Loading…'
+                        : isTrialing ? `Subscribe to ${plan.name} →`
+                        : trialExpired ? `Subscribe to ${plan.name} →`
+                        : isCurrent ? 'Current plan'
+                        : plan.id === 'free' ? 'Free forever'
+                        : `Upgrade to ${plan.name} →`}
+                    </button>
+                  )
+                })()}
+
               </div>
             )
           })}
@@ -415,7 +497,7 @@ export default function BillingPage() {
             </div>
 
             <p style={{ fontSize: 13, color: TX2, marginBottom: 16, lineHeight: 1.6 }}>
-              Use the buttons below to upgrade your plan or add POS staff seats. You'll be redirected to PesaPal's secure checkout — pay with M-Pesa, Airtel Money, or card.
+              Start with a free 3-month trial, or pay below via M-Pesa, Airtel Money, or card through PesaPal.
             </p>
 
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -461,6 +543,20 @@ export default function BillingPage() {
           </div>
         )}
 
+        {/* Trial success toasts */}
+        {trialSuccess === 'pos' && (
+          <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+            <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500 }}>POS trial started! Your staff can log in at pos.askbiz.co — 90 days free, up to 5 users.</span>
+          </div>
+        )}
+        {trialSuccess === 'growth' && (
+          <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+            <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500 }}>Growth trial started! You have full access to all Growth features for 90 days.</span>
+          </div>
+        )}
+
         {/* POS success toast */}
         {posSuccess && (
           <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -478,18 +574,102 @@ export default function BillingPage() {
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                 </div>
                 <span style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, color: ACC }}>Point of Sale Seats</span>
-                {posEnabled && (
+                {posEnabled && trials.pos?.active && (
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#6366F1', background: 'rgba(99,102,241,.1)', borderRadius: 9999, padding: '2px 8px' }}>Trial · {trials.pos.daysLeft} day{trials.pos.daysLeft !== 1 ? 's' : ''} left · {posSeatCount} seat{posSeatCount !== 1 ? 's' : ''}</span>
+                )}
+                {posEnabled && !trials.pos?.active && (
                   <span style={{ fontSize: 10, fontWeight: 700, color: '#16a34a', background: 'rgba(34,197,94,.1)', borderRadius: 9999, padding: '2px 8px' }}>Active · {posSeatCount} seat{posSeatCount !== 1 ? 's' : ''}</span>
                 )}
               </div>
               <p style={{ fontSize: 13, color: TX2, margin: 0, lineHeight: 1.6, maxWidth: 480 }}>
-                Add cashier and inventory staff to your shop at <strong>{isKenyan ? 'KSh 500' : '£5'}/seat/month</strong>. Each seat lets one staff member log in to <a href="https://pos.askbiz.co" target="_blank" rel="noreferrer" style={{ color: ACC, textDecoration: 'none' }}>pos.askbiz.co</a> via email or WhatsApp OTP on their own phone. The owner dashboard is always included — seats are for additional staff only.
+                {trials.pos?.active
+                  ? <>Your POS trial is active with up to 5 staff seats. Each staff member can log in to <a href="https://pos.askbiz.co" target="_blank" rel="noreferrer" style={{ color: ACC, textDecoration: 'none' }}>pos.askbiz.co</a> via email or WhatsApp OTP.</>
+                  : <>Try POS free for 3 months (up to 5 staff), or subscribe at <strong>{isKenyan ? 'KSh 500' : '£5'}/seat/month</strong>. Each seat lets one staff member log in to <a href="https://pos.askbiz.co" target="_blank" rel="noreferrer" style={{ color: ACC, textDecoration: 'none' }}>pos.askbiz.co</a> via email or WhatsApp OTP on their own phone.</>
+                }
               </p>
             </div>
 
             {posEnabled ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', flexShrink: 0 }}>
-                {/* Seat stepper for amendment */}
+                {trials.pos?.active ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 12, color: TX3 }}>5 seats included in trial</span>
+                    <button
+                      onClick={isKenyan ? handlePesapalPosCheckout : handlePosCheckout}
+                      disabled={posLoading}
+                      style={{ padding: '10px 20px', borderRadius: 10, border: `1px solid rgba(208,138,89,.4)`, background: 'transparent', color: ACC, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: posLoading ? .6 : 1 }}
+                    >
+                      {posLoading ? 'Loading…' : 'Subscribe now →'}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {/* Seat stepper for amendment */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 0, border: `1px solid rgba(208,138,89,.3)`, borderRadius: 10, overflow: 'hidden', background: SF }}>
+                      <button
+                        onClick={() => setPosSeats(s => Math.max(1, s - 1))}
+                        style={{ width: 36, height: 36, border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: ACC, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >−</button>
+                      <div style={{ width: 44, textAlign: 'center', fontSize: 14, fontWeight: 700, color: TX }}>
+                        {posSeats}
+                      </div>
+                      <button
+                        onClick={() => setPosSeats(s => Math.min(50, s + 1))}
+                        style={{ width: 36, height: 36, border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: ACC, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >+</button>
+                    </div>
+
+                    {posSeats > posSeatCount ? (
+                      <button
+                        onClick={handlePosCheckout}
+                        disabled={posLoading}
+                        style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 2px 10px rgba(208,138,89,.3)`, opacity: posLoading ? .6 : 1 }}
+                      >
+                        {posLoading ? 'Loading…' : `Add ${posSeats - posSeatCount} seat${posSeats - posSeatCount !== 1 ? 's' : ''} →`}
+                      </button>
+                    ) : (
+                      <button onClick={handleManagePos} disabled={posLoading} style={{ padding: '10px 20px', borderRadius: 10, border: `1px solid rgba(208,138,89,.4)`, background: 'transparent', color: ACC, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: posLoading ? .6 : 1 }}>
+                        {posLoading ? 'Loading…' : 'Manage subscription →'}
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            ) : null}
+          </div>
+
+          {!posEnabled && (
+            <div style={{ marginTop: 20 }}>
+              {/* Trial expired notice */}
+              {trials.pos?.expired && (
+                <div style={{ marginBottom: 14, padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.15)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: '#dc2626' }}>Your free trial has ended — subscribe below to keep using POS</span>
+                </div>
+              )}
+
+              {/* Free trial button (only if never trialled) */}
+              {!trials.pos?.used && (
+                <div style={{ marginBottom: 14 }}>
+                  <button
+                    onClick={() => handleStartTrial('pos')}
+                    disabled={trialLoading === 'pos'}
+                    style={{
+                      padding: '12px 24px', borderRadius: 10, border: 'none',
+                      background: 'linear-gradient(135deg, #d08a59, #e6a06a)',
+                      color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                      fontFamily: 'inherit', boxShadow: '0 2px 12px rgba(208,138,89,.35)',
+                      opacity: trialLoading === 'pos' ? .6 : 1,
+                    }}
+                  >
+                    {trialLoading === 'pos' ? 'Starting…' : 'Start 3-month free trial (up to 5 staff) →'}
+                  </button>
+                  <div style={{ fontSize: 12, color: TX3, marginTop: 6 }}>No card required · Full POS access for 90 days</div>
+                </div>
+              )}
+
+              {/* Paid seat purchase */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+                {/* Seat stepper */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 0, border: `1px solid rgba(208,138,89,.3)`, borderRadius: 10, overflow: 'hidden', background: SF }}>
                   <button
                     onClick={() => setPosSeats(s => Math.max(1, s - 1))}
@@ -504,53 +684,19 @@ export default function BillingPage() {
                   >+</button>
                 </div>
 
-                {posSeats > posSeatCount ? (
-                  <button
-                    onClick={handlePosCheckout}
-                    disabled={posLoading}
-                    style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 2px 10px rgba(208,138,89,.3)`, opacity: posLoading ? .6 : 1 }}
-                  >
-                    {posLoading ? 'Loading…' : `Add ${posSeats - posSeatCount} seat${posSeats - posSeatCount !== 1 ? 's' : ''} →`}
-                  </button>
-                ) : (
-                  <button onClick={handleManagePos} disabled={posLoading} style={{ padding: '10px 20px', borderRadius: 10, border: `1px solid rgba(208,138,89,.4)`, background: 'transparent', color: ACC, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: posLoading ? .6 : 1 }}>
-                    {posLoading ? 'Loading…' : 'Manage subscription →'}
-                  </button>
-                )}
-              </div>
-            ) : null}
-          </div>
-
-          {!posEnabled && (
-
-            <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-              {/* Seat stepper */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 0, border: `1px solid rgba(208,138,89,.3)`, borderRadius: 10, overflow: 'hidden', background: SF }}>
-                <button
-                  onClick={() => setPosSeats(s => Math.max(1, s - 1))}
-                  style={{ width: 36, height: 36, border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: ACC, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >−</button>
-                <div style={{ width: 44, textAlign: 'center', fontSize: 14, fontWeight: 700, color: TX }}>
-                  {posSeats}
+                <div style={{ fontSize: 13, color: TX2 }}>
+                  {posSeats} seat{posSeats !== 1 ? 's' : ''} ·{' '}
+                  <strong style={{ color: TX }}>{isKenyan ? `KSh ${(posSeats * 500).toLocaleString()}` : `£${posSeats * 5}`}/month</strong>
                 </div>
+
                 <button
-                  onClick={() => setPosSeats(s => Math.min(50, s + 1))}
-                  style={{ width: 36, height: 36, border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: ACC, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >+</button>
+                  onClick={isKenyan ? handlePesapalPosCheckout : handlePosCheckout}
+                  disabled={posLoading}
+                  style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 2px 10px rgba(208,138,89,.3)`, opacity: posLoading ? .6 : 1 }}
+                >
+                  {posLoading ? 'Loading…' : `Add ${posSeats} seat${posSeats !== 1 ? 's' : ''} →`}
+                </button>
               </div>
-
-              <div style={{ fontSize: 13, color: TX2 }}>
-                {posSeats} seat{posSeats !== 1 ? 's' : ''} ·{' '}
-                <strong style={{ color: TX }}>{isKenyan ? `KSh ${(posSeats * 500).toLocaleString()}` : `£${posSeats * 5}`}/month</strong>
-              </div>
-
-              <button
-                onClick={isKenyan ? handlePesapalPosCheckout : handlePosCheckout}
-                disabled={posLoading}
-                style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 2px 10px rgba(208,138,89,.3)`, opacity: posLoading ? .6 : 1 }}
-              >
-                {posLoading ? 'Loading…' : `Add ${posSeats} seat${posSeats !== 1 ? 's' : ''} →`}
-              </button>
             </div>
           )}
 
@@ -646,7 +792,7 @@ export default function BillingPage() {
             { q: 'How does social commerce work?',           a: 'Connect TikTok Shop, Instagram Shopping, or Pinterest from the Sources page. AskBiz tracks conversion rates, saves (demand signals), and which products are going viral — and alerts you when a product has high saves but no orders.' },
             { q: 'How does churn intelligence work?',        a: 'AskBiz scans your customer data monthly and scores each customer by churn risk based on days since last order and purchase frequency. At-risk customers appear in a retention priority list, and you can ask AskBiz why any specific customer is flagged.' },
             { q: 'How do team seats work?',                  a: 'Business plan includes up to 5 team members. Each person gets their own login with a role — owner, admin, analyst, accountant, buyer, or viewer.' },
-            { q: 'How do POS seats work?',                   a: `POS seats are a separate add-on at ${isKenyan ? 'KSh 500' : '£5'}/seat/month — available on any plan. Each seat lets one cashier or inventory staff member log in to pos.askbiz.co via email or WhatsApp OTP on their own phone. The owner dashboard is always included free.` },
+            { q: 'How do POS seats work?',                   a: `Start with a free 3-month trial — up to 5 staff, no card required. After the trial, POS seats are ${isKenyan ? 'KSh 500' : '£5'}/seat/month. Each seat lets one cashier or inventory staff member log in to pos.askbiz.co via email or WhatsApp OTP on their own phone. The owner dashboard is always included free.` },
             { q: 'Are prices in my local currency?',         a: isKenyan ? 'Yes — prices are shown in Kenyan Shillings (KES). You can pay via M-Pesa, Airtel Money, or card through PesaPal.' : 'Prices are shown in GBP. At checkout, Stripe automatically converts to your local currency at the current exchange rate.' },
             { q: 'Is my data safe?',                         a: 'Your data is encrypted at rest and in transit. We never use your business data to train AI models.' },
           ].map((faq, i) => (

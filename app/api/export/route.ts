@@ -61,8 +61,8 @@ export async function GET() {
         'Content-Disposition': `attachment; filename="askbiz-data-export-${new Date().toISOString().slice(0,10)}.json"`,
       },
     })
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[export]', err)
-    return NextResponse.json({ error: err?.message }, { status: 500 })
+    return NextResponse.json({ error: 'Export failed. Please try again.' }, { status: 500 })
   }
 }

@@ -9,6 +9,7 @@ import RepairTab from '@/components/pos/RepairTab'
 import SalonTab from '@/components/pos/SalonTab'
 import RetailTab from '@/components/pos/RetailTab'
 import FactoryTab from '@/components/pos/FactoryTab'
+import PaymentsTab from '@/components/pos/PaymentsTab'
 
 const ACC = '#d08a59'
 const ACC_BG = 'rgba(208,138,89,.08)'
@@ -79,7 +80,7 @@ interface InventoryItem {
 interface Location {
   id: string; name: string; address?: string; phone?: string; is_active: boolean
 }
-type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'branches' | 'audit' | 'map' | 'operations' | 'captures' | 'approvals' | 'intelligence' | 'logistics' | 'customers' | 'promotions' | 'loyalty' | 'returns' | 'reports' | 'purchase_orders' | 'gift_cards' | 'integrations' | 'restaurant' | 'repair' | 'salon' | 'retail' | 'factory'
+type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'branches' | 'audit' | 'map' | 'operations' | 'captures' | 'approvals' | 'intelligence' | 'logistics' | 'customers' | 'promotions' | 'loyalty' | 'returns' | 'reports' | 'purchase_orders' | 'gift_cards' | 'integrations' | 'restaurant' | 'repair' | 'salon' | 'retail' | 'factory' | 'payments'
 type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
 type FilterModalType = { type: 'sales' | 'refunds' | 'low_stock' | 'cashier_detail' | 'gross_profit' | 'margin' | 'avg_sale' | 'staff_overview' | 'stock_item' | 'payment_breakdown' | 'branch_detail' | 'customer_history' | 'product_history'; title: string; cashier_id?: string; item_id?: string; payment_type?: string; branch_id?: string; customer_phone?: string; product_name?: string } | null
 type TxDetailType = Transaction | null
@@ -975,7 +976,7 @@ export default function POSPage() {
       <div className="page-shell-body">
         {/* Tabs + action icons in one flush row */}
         <div className="tab-strip" style={{ gap: 0, marginBottom: 24, borderBottom: '1px solid var(--b)', paddingBottom: 0, alignItems: 'stretch' }}>
-          {(['overview', 'services', 'staff', 'branches', 'map', 'audit'] as Tab[]).filter(Boolean).map(t => (
+          {(['overview', 'services', 'staff', 'branches', 'map', 'audit', 'payments'] as Tab[]).filter(Boolean).map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === t ? 'var(--sf)' : 'transparent', color: tab === t ? 'var(--tx)' : 'var(--tx3)',
@@ -2368,6 +2369,12 @@ export default function POSPage() {
             inventory={sectorFilteredInventory}
           />
         )}
+        {tab === 'payments' && (
+          <PaymentsTab
+            currencySymbol={currencySymbol}
+            staff={staff}
+          />
+        )}
         {tab === 'factory' && (
           <FactoryTab
             currencySymbol={currencySymbol}
@@ -3271,12 +3278,12 @@ export default function POSPage() {
             <div style={{ display: 'grid', gridTemplateColumns: locName ? '1fr 1fr 1fr' : '1fr 1fr', gap: 12, marginBottom: 16 }}>
               <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'cashier_detail', title: `${txDetail.cashier?.name || 'Owner'}'s transactions`, cashier_id: txDetail.cashier?.name || 'Owner' }) }} style={{ fontSize: 12, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>Cashier<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{txDetail.cashier?.name || 'Owner'}{txDetail.cashier?.role ? <span style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 400, marginLeft: 6, textTransform: 'capitalize' }}>{txDetail.cashier.role}</span> : null}</div><div style={{ fontSize: 9, color: ACC, fontWeight: 600, marginTop: 3 }}>View performance →</div></div>
               <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'payment_breakdown', title: `${txDetail.payment_type} payments`, payment_type: txDetail.payment_type }) }} style={{ fontSize: 12, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>Payment<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{paymentIcon} <span style={{ textTransform: 'capitalize' }}>{txDetail.payment_type}</span></div><div style={{ fontSize: 9, color: ACC, fontWeight: 600, marginTop: 3 }}>View all {txDetail.payment_type} →</div></div>
-              {locName && <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'branch_detail', title: `${locName} branch`, branch_id: txDetail.pos_location_id }) }} style={{ fontSize: 12, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>Branch<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>📍 {locName}</div><div style={{ fontSize: 9, color: ACC, fontWeight: 600, marginTop: 3 }}>View branch →</div></div>}
+              {locName && <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'branch_detail', title: `${locName} branch`, branch_id: txDetail.pos_location_id ?? undefined }) }} style={{ fontSize: 12, color: 'var(--tx3)', cursor: 'pointer', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', transition: 'border-color .15s' }}>Branch<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>📍 {locName}</div><div style={{ fontSize: 9, color: ACC, fontWeight: 600, marginTop: 3 }}>View branch →</div></div>}
             </div>
 
             {/* Customer — clickable */}
             {txDetail.pos_customers?.phone && (
-              <div onClick={() => { setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'customer_history', title: `${txDetail.pos_customers.name || txDetail.pos_customers.phone}'s history`, customer_phone: txDetail.pos_customers.phone }) }} style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 12, background: 'var(--ev)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', border: '1px solid var(--b)' }}>
+              <div onClick={() => { const c = txDetail.pos_customers!; setLastTxDetail(txDetail); setTxDetail(null); setFilterModal({ type: 'customer_history', title: `${c.name || c.phone}'s history`, customer_phone: c.phone }) }} style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 12, background: 'var(--ev)', padding: '8px 12px', borderRadius: 8, cursor: 'pointer', border: '1px solid var(--b)' }}>
                 👤 Customer: <span style={{ fontWeight: 600, color: 'var(--tx)' }}>{txDetail.pos_customers.name || txDetail.pos_customers.phone}</span>
                 {txDetail.pos_customers.name && txDetail.pos_customers.phone && <span style={{ marginLeft: 8, fontSize: 11 }}>({txDetail.pos_customers.phone})</span>}
                 <span style={{ fontSize: 9, color: ACC, fontWeight: 600, marginLeft: 8 }}>View history →</span>

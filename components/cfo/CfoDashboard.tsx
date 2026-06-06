@@ -8,6 +8,7 @@ import CashFlowCountdown from '@/components/intelligence/CashFlowCountdown'
 import SupplierBrief from '@/components/intelligence/SupplierBrief'
 import PriceSensitivity from '@/components/intelligence/PriceSensitivity'
 import ScenarioPlanner from './ScenarioPlanner'
+import CfoForecasts from './CfoForecasts'
 import CostBreakdown from './CostBreakdown'
 import InventoryFinance from './InventoryFinance'
 import TaxEstimator from './TaxEstimator'
@@ -24,6 +25,11 @@ import LogisticsOverview from './LogisticsOverview'
 import PnlStatement from './PnlStatement'
 import MarginAnalysis from './MarginAnalysis'
 import CashFlowStatement from './CashFlowStatement'
+import RollingCashForecast from './RollingCashForecast'
+import ContributionMarginWaterfall from './ContributionMarginWaterfall'
+import BudgetVsActual from './BudgetVsActual'
+import ExpensesTab from './ExpensesTab'
+import ReceiptScanner from './ReceiptScanner'
 
 interface SnapshotData {
   currency_symbol: string
@@ -105,6 +111,8 @@ const SUB_TABS = [
   { id: 'margins', label: 'Margins' },
   { id: 'inventory', label: 'Inventory' },
   { id: 'receivables', label: 'Receivables' },
+  { id: 'expenses', label: 'Expenses' },
+  { id: 'budget', label: 'Budget' },
   { id: 'forecasts', label: 'Forecasts' },
   { id: 'tax', label: 'Tax' },
   { id: 'reports', label: 'Reports' },
@@ -122,6 +130,7 @@ export default function CfoDashboard({ onAsk }: Props) {
   const [data, setData] = useState<SnapshotData | null>(null)
   const [loading, setLoading] = useState(true)
   const [recTotals, setRecTotals] = useState<{ receivables: number; payables: number }>({ receivables: 0, payables: 0 })
+  const [quickScanOpen, setQuickScanOpen] = useState(false)
 
   const fetchData = useCallback((p: string) => {
     setLoading(true)
@@ -314,6 +323,16 @@ export default function CfoDashboard({ onAsk }: Props) {
       {/* ─── CASH FLOW VIEW ─── */}
       {subTab === 'cashflow' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {!loading && data?.daily_cashflow && data.daily_cashflow.length > 0 && (
+            <RollingCashForecast
+              dailyCashflow={data.daily_cashflow}
+              cashBalance={data.cash.balance}
+              monthlyFixed={data.cash.monthly_fixed}
+              currencySymbol={sym}
+              onAsk={onAsk}
+            />
+          )}
+
           <CashFlowCountdown onAsk={onAsk} />
 
           {!loading && data?.totals ? (
@@ -323,6 +342,7 @@ export default function CfoDashboard({ onAsk }: Props) {
               dailyCashflow={data.daily_cashflow}
               receivablesAging={data.receivables_aging}
               receivablesSummary={data.receivables_summary}
+              sourceBreakdown={data.source_breakdown}
               currencySymbol={sym}
               onAsk={onAsk}
             />
@@ -349,6 +369,14 @@ export default function CfoDashboard({ onAsk }: Props) {
             <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>Loading margin data...</div>
           ) : (
             <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>No data available. Connect a data source to analyze margins.</div>
+          )}
+
+          {!loading && data?.margin_by_channel && data.margin_by_channel.length > 0 && (
+            <ContributionMarginWaterfall
+              channels={data.margin_by_channel}
+              currencySymbol={sym}
+              onAsk={onAsk}
+            />
           )}
 
           <PriceSensitivity onAsk={onAsk} />
@@ -387,20 +415,46 @@ export default function CfoDashboard({ onAsk }: Props) {
         </div>
       )}
 
+      {/* ─── EXPENSES VIEW ─── */}
+      {subTab === 'expenses' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <ExpensesTab currencySymbol={sym} onAsk={onAsk} />
+        </div>
+      )}
+
+      {/* ─── BUDGET VIEW ─── */}
+      {subTab === 'budget' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {!loading && data?.totals ? (
+            <BudgetVsActual
+              totals={data.totals}
+              pnlMonthly={data.pnl_monthly}
+              currencySymbol={sym}
+              period={period}
+              onAsk={onAsk}
+            />
+          ) : loading ? (
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>Loading...</div>
+          ) : (
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>Connect a data source to track budget vs actuals.</div>
+          )}
+        </div>
+      )}
+
       {/* ─── FORECASTS VIEW ─── */}
       {subTab === 'forecasts' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {!loading && data?.totals ? (
-            <ScenarioPlanner
-              baseRevenue={data.totals.revenue}
-              baseCogs={data.totals.cogs}
-              baseFixed={data.totals.fixed_costs}
-              cashBalance={data.cash.balance}
+            <CfoForecasts
+              pnlMonthly={data.pnl_monthly ?? []}
+              totals={data.totals}
+              cash={data.cash}
+              dailyCashflow={data.daily_cashflow}
               currencySymbol={sym}
             />
           ) : (
             <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>
-              {loading ? 'Loading...' : 'Connect a data source to use the scenario planner.'}
+              {loading ? 'Loading...' : 'Connect a data source to view forecasts.'}
             </div>
           )}
         </div>
@@ -425,6 +479,34 @@ export default function CfoDashboard({ onAsk }: Props) {
           )}
         </div>
       )}
+
+      {/* ─── FLOATING CAMERA BUTTON ─── */}
+      <div style={{ position: 'fixed', bottom: 80, right: 20, zIndex: 50 }}>
+        {quickScanOpen && (
+          <div style={{ position: 'absolute', bottom: 52, right: 0, width: 340 }}>
+            <ReceiptScanner
+              currencySymbol={sym}
+              onConfirm={async (expense) => {
+                try {
+                  await fetch('/api/cfo/expenses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(expense) })
+                  setQuickScanOpen(false)
+                  setSubTab('expenses' as SubTab)
+                } catch {}
+              }}
+              onCancel={() => setQuickScanOpen(false)}
+            />
+          </div>
+        )}
+        <button
+          onClick={() => setQuickScanOpen(v => !v)}
+          title="Scan a receipt"
+          style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: '#6366F1', color: '#fff', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(99,102,241,.4)', transition: 'transform 150ms, box-shadow 150ms' }}
+          onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(99,102,241,.5)' }}
+          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(99,102,241,.4)' }}
+        >
+          📷
+        </button>
+      </div>
 
       {/* ─── REPORTS VIEW ─── */}
       {subTab === 'reports' && (

@@ -38,6 +38,41 @@ const TYPE_STYLE: Record<ChangeType, { label: string; bg: string; color: string;
 
 const RELEASES: Release[] = [
   {
+    version: '2.13.0',
+    date: '2026-06-04',
+    summary: 'Critical Shopify OAuth fix, proper 404 status codes for dynamic pages, and 3-month free trial promotion on landing page.',
+    changes: [
+      { type: 'fixed',    text: 'Shopify OAuth route returned 500 due to variable used before declaration — prevented store connection during app review' },
+      { type: 'fixed',    text: 'Blog posts with invalid slugs returned HTTP 200 instead of 404 — now correctly returns 404 via Next.js notFound()' },
+      { type: 'fixed',    text: 'Point of Sale sector pages returned HTTP 200 for nonexistent sectors — now returns proper 404' },
+      { type: 'fixed',    text: 'Point of Sale feature pages returned HTTP 200 for nonexistent features — now returns proper 404' },
+      { type: 'improved', text: 'Landing page hero — added prominent purple "3 months free — no card required" banner above the fold' },
+      { type: 'improved', text: 'Landing page CTA updated from "Start free — no card needed" to "Start 3-month free trial"' },
+      { type: 'improved', text: 'Pricing section Growth card badge changed from "Most popular" to "3 months free trial" with purple gradient' },
+      { type: 'improved', text: 'Growth plan CTA in pricing section updated to "Start free trial" with direct signup link' },
+      { type: 'improved', text: 'Trust badges, subtitle, and geo sub-text all updated to reflect the 3-month free trial offer' },
+      { type: 'improved', text: 'FAQ updated to mention 3-month free trial for Growth and PoS' },
+    ],
+  },
+  {
+    version: '2.12.0',
+    date: '2026-06-04',
+    summary: '3-month free trials for Growth plan and Point of Sale — no card required. Works for both Stripe and M-Pesa/PesaPal users.',
+    changes: [
+      { type: 'new',      text: '3-month free trial for Growth plan — full Growth features (unlimited questions, daily brief, social commerce, churn intelligence) with no card upfront' },
+      { type: 'new',      text: '3-month free trial for Point of Sale — up to 5 seats included, no card or M-Pesa required' },
+      { type: 'new',      text: 'Trials table in database — tracks trial type, start/end dates, and conversion status per user' },
+      { type: 'new',      text: 'Trial activation API — POST /api/billing with action "start_trial" for both PoS and Growth trials' },
+      { type: 'new',      text: 'Billing page trial UI — start buttons for eligible users, active trial badges with days remaining, expired trial notices' },
+      { type: 'new',      text: 'Trial conversion tracking — Stripe webhook and PesaPal callback both mark trials as converted on payment' },
+      { type: 'improved', text: 'Billing API GET now fetches trial state, auto-expires trials, and returns trial info to frontend' },
+      { type: 'improved', text: 'PoS trial locks seat stepper to 5 seats with "included in trial" label — paid users can have up to 50' },
+      { type: 'improved', text: 'Growth trial expiry check now correctly handles PesaPal-paid users (was only checking for Stripe subscription)' },
+      { type: 'improved', text: 'usePlan hook extended with TrialInfo interface — components can check trial.active, trial.daysLeft, trial.expired' },
+      { type: 'fixed',    text: 'Growth trial expiry would incorrectly downgrade PesaPal/M-Pesa subscribers who had no Stripe subscription ID' },
+    ],
+  },
+  {
     version: '2.11.0',
     date: '2026-05-19',
     summary: 'Point of Sale marketing page, global currency support, interactive demos, geo-aware PoS pricing, and full logistics API.',

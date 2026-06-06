@@ -707,7 +707,7 @@ async function syncEbay(
           const existing = records.find(r => r.sku === sku && r.source_type === 'ebay' && r.payment_status === 'inventory')
           if (existing && price > 0) {
             existing.selling_price = price
-            existing.value_at_retail = price * existing.stock_level
+            ;(existing as unknown as Record<string, unknown>).value_at_retail = price * existing.stock_level
           }
         }
       }

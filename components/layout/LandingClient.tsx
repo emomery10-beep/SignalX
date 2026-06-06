@@ -258,7 +258,7 @@ function InteractiveDemo() {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    let id: ReturnType<typeof window.setInterval> | null = null
+    let id: number | null = null
 
     const start = () => {
       if (id) return

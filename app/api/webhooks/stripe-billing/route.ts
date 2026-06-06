@@ -69,6 +69,8 @@ export async function POST(request: NextRequest) {
             pos_seat_count:              seats,
             pos_stripe_subscription_id:  session.subscription as string,
           }).eq('id', userId)
+          // Mark PoS trial as converted
+          await supabase.from('trials').update({ converted: true }).eq('user_id', userId).eq('trial_type', 'pos')
           break
         }
 
@@ -82,6 +84,10 @@ export async function POST(request: NextRequest) {
           stripe_subscription_id: session.subscription as string,
           status: 'active',
         })
+        // Mark Growth trial as converted if applicable
+        if (plan === 'growth' || plan === 'business') {
+          await supabase.from('trials').update({ converted: true }).eq('user_id', userId).eq('trial_type', 'growth')
+        }
         break
       }
 

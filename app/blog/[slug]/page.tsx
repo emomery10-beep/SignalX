@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
 import { getPost, getAllPosts } from '@/lib/blog-content'
 import { academyArticles } from '@/lib/academy-content'
 import ShareButtons from './ShareButtons'
@@ -237,15 +238,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const post = getPost(params.slug)
 
   if (!post) {
-    return (
-      <div style={{ minHeight: '100vh', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'DM Sans, sans-serif' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 48, marginBottom: 16, color: TX3 }}>404</div>
-          <div style={{ fontSize: 18, color: TX2, marginBottom: 20 }}>Article not found</div>
-          <Link href="/blog" style={{ color: ACC, textDecoration: 'none', fontWeight: 600 }}>← Back to blog</Link>
-        </div>
-      </div>
-    )
+    notFound()
   }
 
   const clusterColour  = CLUSTER_COLOURS[post.cluster] || { text: ACC, bg: 'rgba(208,138,89,.1)' }
@@ -281,14 +274,14 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const academyCrossLinks = academyArticles
     .filter(a => {
       const keywords = a.keywords || []
-      return keywords.some(kw => _postWords.includes(kw.toLowerCase())) ||
+      return keywords.some(kw => _postWords.includes((kw || '').toLowerCase())) ||
         _postWords.includes(a.slug.replace(/^what-is-/, '').replace(/-/g, ' '))
     })
     .slice(0, 4)
 
   const tocItems = (post.sections || [])
     .filter(s => s.level === 2)
-    .map(s => ({ heading: s.heading, id: slugify(s.heading) }))
+    .map(s => ({ heading: s.heading, id: slugify(s.heading || '') }))
 
   // Spread lastUpdated across past year based on slug hash — avoids all pSEO posts having same date
   const daysAgo = hashDaysAgo(post.slug)
@@ -342,7 +335,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
     : post.sections
         .filter(s => s.level === 2)
         .slice(0, 5)
-        .map(s => ({ q: s.heading.endsWith('?') ? s.heading : `What about ${s.heading.toLowerCase()}?`, a: s.body.slice(0, 300) }))
+        .map(s => ({ q: (s.heading || '').endsWith('?') ? s.heading : `What about ${(s.heading || '').toLowerCase()}?`, a: (s.body || '').slice(0, 300) }))
   const jsonLdFaq = _faqItems.length > 0 ? {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -545,7 +538,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                 )}
                 {/* Key Insight callout after section index 1 */}
                 {i === 1 && (post.sections || [])[2] && (() => {
-                  const firstSentence = (((post.sections || [])[2]?.body) || ((post.sections || [])[2]?.content) || '').split(/(?<=[.!?])\s/)[0]
+                  const firstSentence = ((post.sections || [])[2]?.body || '').split(/(?<=[.!?])\s/)[0]
                   return firstSentence ? (
                     <div style={{ background: 'rgba(208,138,89,.07)', border: '1.5px solid rgba(208,138,89,.25)', borderRadius: 12, padding: '16px 20px', marginBottom: 28, marginTop: 4 }}>
                       <div style={{ fontSize: 11, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>💡 Key Insight</div>

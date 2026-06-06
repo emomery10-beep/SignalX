@@ -50,6 +50,8 @@ export async function GET(request: NextRequest) {
           .from('profiles')
           .update({ pos_enabled: true, pos_seat_count: seats })
           .eq('id', userId)
+        // Mark PoS trial as converted
+        await supabaseAdmin.from('trials').update({ converted: true }).eq('user_id', userId).eq('trial_type', 'pos')
       } else {
         await supabaseAdmin
           .from('subscriptions')
@@ -61,6 +63,10 @@ export async function GET(request: NextRequest) {
             current_period_start: new Date().toISOString(),
             current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           }, { onConflict: 'user_id' })
+        // Mark Growth trial as converted if applicable
+        if (plan === 'growth' || plan === 'business') {
+          await supabaseAdmin.from('trials').update({ converted: true }).eq('user_id', userId).eq('trial_type', 'growth')
+        }
       }
 
       console.log(`[pesapal-callback] Payment completed: ${orderTrackingId} → ${plan} for ${userId}`)

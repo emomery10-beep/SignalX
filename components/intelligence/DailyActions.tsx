@@ -19,7 +19,7 @@ const PRIORITY_LABEL: Record<number, { label: string; color: string; bg: string 
   3: { label: 'This week', color: '#6366F1', bg: 'rgba(99,102,241,.08)' },
 }
 
-export default function DailyActions({ onAsk }: { onAsk?: (prompt: string) => void }) {
+export default function DailyActions({ onAsk, limit, onViewAll }: { onAsk?: (prompt: string) => void; limit?: number; onViewAll?: () => void }) {
   const [actions, setActions] = useState<Action[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -35,7 +35,9 @@ export default function DailyActions({ onAsk }: { onAsk?: (prompt: string) => vo
 
   const dismiss = (idx: number) => setDismissed(prev => new Set(prev).add(idx))
 
-  const visible = actions.filter((_, i) => !dismissed.has(i))
+  const allVisible = actions.filter((_, i) => !dismissed.has(i))
+  const visible = limit ? allVisible.slice(0, limit) : allVisible
+  const hasMore = limit ? allVisible.length > limit : false
 
   if (loading) {
     return (
@@ -53,9 +55,9 @@ export default function DailyActions({ onAsk }: { onAsk?: (prompt: string) => vo
     )
   }
 
-  if (error || visible.length === 0) return null
+  if (error || allVisible.length === 0) return null
 
-  const urgentCount = visible.filter(a => a.priority === 1).length
+  const urgentCount = allVisible.filter(a => a.priority === 1).length
 
   return (
     <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--sf) 0%, rgba(139,92,246,.02) 100%)' }}>
@@ -69,7 +71,7 @@ export default function DailyActions({ onAsk }: { onAsk?: (prompt: string) => vo
             </span>
           )}
         </div>
-        <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{visible.length} action{visible.length !== 1 ? 's' : ''}</span>
+        <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{allVisible.length} action{allVisible.length !== 1 ? 's' : ''}</span>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -111,6 +113,20 @@ export default function DailyActions({ onAsk }: { onAsk?: (prompt: string) => vo
           )
         })}
       </div>
+
+      {hasMore && onViewAll && (
+        <button
+          onClick={onViewAll}
+          style={{
+            display: 'block', width: '100%', marginTop: 10, padding: '8px 0',
+            border: 'none', background: 'transparent', color: '#6366F1',
+            fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+            textAlign: 'center',
+          }}
+        >
+          View all {allVisible.length} actions →
+        </button>
+      )}
     </div>
   )
 }

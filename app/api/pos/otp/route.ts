@@ -16,9 +16,36 @@ function hashPin(pin: string, staffId: string): string {
   return createHash('sha256').update(pin + staffId).digest('hex')
 }
 
+// ── In-memory rate limiter for PIN attempts ───────────────────
+// { emailKey: { count, resetAt } }
+const pinAttempts = new Map<string, { count: number; resetAt: number }>()
+const MAX_ATTEMPTS = 5
+const WINDOW_MS = 5 * 60 * 1000 // 5-minute window
+
+function checkPinRateLimit(email: string): { allowed: boolean; remaining: number } {
+  const now = Date.now()
+  const key = email.trim().toLowerCase()
+  const rec = pinAttempts.get(key)
+  if (!rec || now > rec.resetAt) {
+    pinAttempts.set(key, { count: 1, resetAt: now + WINDOW_MS })
+    return { allowed: true, remaining: MAX_ATTEMPTS - 1 }
+  }
+  rec.count += 1
+  if (rec.count > MAX_ATTEMPTS) return { allowed: false, remaining: 0 }
+  return { allowed: true, remaining: MAX_ATTEMPTS - rec.count }
+}
+
+function clearPinRateLimit(email: string) {
+  pinAttempts.delete(email.trim().toLowerCase())
+}
+
 export async function POST(req: NextRequest) {
   const supabase = createServiceClient()
-  const { action, email, pin } = await req.json()
+  let body: Record<string, unknown>
+  try { body = await req.json() } catch { return json({ error: 'Invalid request' }, 400) }
+  const action = String(body.action ?? '')
+  const email = String(body.email ?? '')
+  const pin = body.pin
 
   if (!email?.trim()) return json({ error: 'email required' }, 400)
 
@@ -41,10 +68,14 @@ export async function POST(req: NextRequest) {
   if (action === 'verify_pin') {
     if (!pin) return json({ error: 'PIN required' }, 400)
 
+    // Rate limit: max 5 attempts per 5 minutes per email
+    const limit = checkPinRateLimit(String(email))
+    if (!limit.allowed) return json({ error: 'Too many PIN attempts. Please wait 5 minutes.' }, 429)
+
     const { data: staff } = await supabase
       .from('pos_staff')
       .select('id, name, role, owner_id, active, pin_hash, location_id')
-      .eq('email', email.trim().toLowerCase())
+      .eq('email', String(email).trim().toLowerCase())
       .eq('active', true)
       .maybeSingle()
 
@@ -53,6 +84,9 @@ export async function POST(req: NextRequest) {
 
     const expected = hashPin(String(pin), staff.id)
     if (expected !== staff.pin_hash) return json({ error: 'Incorrect PIN' }, 401)
+
+    // Clear rate limit on successful auth
+    clearPinRateLimit(String(email))
 
     // Fetch owner currency
     const { data: profile } = await supabase

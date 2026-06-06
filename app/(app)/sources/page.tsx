@@ -382,6 +382,10 @@ export default function SourcesPage() {
                           <span style={{ fontSize: 11, fontWeight: 600, color: '#22c55e', background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.25)', borderRadius: 9999, padding: '3px 10px', letterSpacing: '.04em', textTransform: 'uppercase', flexShrink: 0 }}>
                             Connected
                           </span>
+                        ) : src.id === 'shopify' ? (
+                          <span style={{ fontSize: 11, fontWeight: 600, color: '#f59e0b', background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.25)', borderRadius: 9999, padding: '3px 10px', letterSpacing: '.04em', textTransform: 'uppercase', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                            Coming Soon
+                          </span>
                         ) : (
                           <button
                             onClick={() => openModal(src.id)}

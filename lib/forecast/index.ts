@@ -312,7 +312,7 @@ export function forecast(
   const labels = generateDateLabels(n, horizonPoints)
   const actual: (number | null)[] = [...data, ...Array(horizonPoints).fill(null)]
   const dec = decompose(data)
-  const bt = backtestMethod(data, method === 'auto' ? 'linear' : method)
+  const bt = backtestMethod(data, (method as string) === 'auto' ? 'linear' : method)
   const dq = assessDataQuality(data, data.length)
   const anomalies = detectAnomalies(data, predicted.slice(0, n))
 

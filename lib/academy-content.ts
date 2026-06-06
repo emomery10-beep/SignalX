@@ -80,6 +80,21 @@ import batch102Articles from './academy-cfo-saas-batch102-rewritten-proper';
 import batch103Articles from './academy-cfo-saas-batch103-rewritten-proper';
 import batch104Articles from './academy-cfo-saas-batch104-rewritten-proper';
 import batch105Articles from './academy-cfo-saas-batch105-rewritten-proper';
+import batch106Articles from './academy-cfo-saas-batch106-rewritten-proper';
+import batch107Articles from './academy-cfo-saas-batch107-rewritten-proper';
+import batch108Articles from './academy-cfo-saas-batch108-rewritten-proper';
+import batch109Articles from './academy-cfo-saas-batch109-rewritten-proper';
+import batch110Articles from './academy-cfo-saas-batch110-rewritten-proper';
+import batch111Articles from './academy-cfo-saas-batch111-rewritten-proper';
+import batch112Articles from './academy-cfo-saas-batch112-rewritten-proper';
+import batch113Articles from './academy-cfo-saas-batch113-rewritten-proper';
+import batch114Articles from './academy-cfo-saas-batch114-rewritten-proper';
+import batch115Articles from './academy-cfo-saas-batch115-rewritten-proper';
+import batch116Articles from './academy-cfo-saas-batch116-rewritten-proper';
+import batch117Articles from './academy-cfo-saas-batch117-rewritten-proper';
+import batch118Articles from './academy-cfo-saas-batch118-rewritten-proper';
+import batch119Articles from './academy-cfo-saas-batch119-rewritten-proper';
+import batch120Articles from './academy-cfo-saas-batch120-rewritten-proper';
 
 const _africaAcademyArticles = [...AFRICA_ACADEMY_BATCH1, ...AFRICA_ACADEMY_BATCH2] as AcademyArticle[];
 
@@ -93,7 +108,7 @@ export const academyCategories: AcademyCategory[] = [
   { slug: "inventory-supply-chain", title: "Inventory & Supply Chain", description: "Stock smarter — avoid stockouts and dead inventory.", icon: "📦", color: "#27ae60", articleCount: 20 },
   { slug: "marketing-intelligence", title: "Marketing Intelligence", description: "Measure what works and cut what doesn't.", icon: "📣", color: "#f39c12", articleCount: 20 },
   { slug: "ai-and-data", title: "AI & Data", description: "How AI and data science power modern business decisions.", icon: "🤖", color: "#1abc9c", articleCount: 20 },
-  { slug: "askbiz-tutorials", title: "AskBiz Tutorials", description: "Step-by-step guides to getting the most from AskBiz (including 15 SaaS CFO Academy articles from batches 91-105).", icon: "🎓", color: "#d08a59", articleCount: 135 },
+  { slug: "askbiz-tutorials", title: "AskBiz Tutorials", description: "Step-by-step guides to getting the most from AskBiz (including 30 SaaS CFO Academy articles from batches 91-120).", icon: "🎓", color: "#d08a59", articleCount: 150 },
 
 { slug: "business-strategy-growth", title: "Business Strategy & Growth", description: "Frameworks, metrics, and mental models for building and scaling a business.", icon: "💼", color: "#2c3e50", articleCount: 20 },
   { slug: "funding-and-investment", title: "Funding & Investment", description: "Understand funding options, investor terms, and how to raise capital for your business.", icon: "🏦", color: "#1a5276", articleCount: 20 },
@@ -15191,6 +15206,21 @@ academyArticles.push(...batch102Articles);
 academyArticles.push(...batch103Articles);
 academyArticles.push(...batch104Articles);
 academyArticles.push(...batch105Articles);
+academyArticles.push(...batch106Articles);
+academyArticles.push(...batch107Articles);
+academyArticles.push(...batch108Articles);
+academyArticles.push(...batch109Articles);
+academyArticles.push(...batch110Articles);
+academyArticles.push(...batch111Articles);
+academyArticles.push(...batch112Articles);
+academyArticles.push(...batch113Articles);
+academyArticles.push(...batch114Articles);
+academyArticles.push(...batch115Articles);
+academyArticles.push(...batch116Articles);
+academyArticles.push(...batch117Articles);
+academyArticles.push(...batch118Articles);
+academyArticles.push(...batch119Articles);
+academyArticles.push(...batch120Articles);
 
 // ─── MERGE CFO DASHBOARD TRAINING (100 articles) ─────────────────────────────
 // NOTE: CFO batch files temporarily disabled for build

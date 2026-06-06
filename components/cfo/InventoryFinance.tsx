@@ -65,10 +65,11 @@ export default function InventoryFinance({ onAsk }: Props) {
   const [byCategory, setByCategory] = useState<CategoryBreakdown[]>([])
   const [loading, setLoading] = useState(true)
   const [sym, setSym] = useState('$')
-  const [filter, setFilter] = useState<'all' | 'out' | 'low' | 'healthy'>('all')
+  const [filter, setFilter] = useState<'all' | 'out' | 'low' | 'healthy' | 'slow' | 'risk'>('all')
   const [sourceFilter, setSourceFilter] = useState<string | null>(null)
-  const [sortKey, setSortKey] = useState<'value' | 'margin' | 'stock' | 'units'>('value')
+  const [sortKey, setSortKey] = useState<'value' | 'margin' | 'stock' | 'units' | 'dio'>('value')
   const [viewMode, setViewMode] = useState<'products' | 'categories'>('products')
+  const [expandedProduct, setExpandedProduct] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/cfo/inventory')
@@ -108,9 +109,24 @@ export default function InventoryFinance({ onAsk }: Props) {
     )
   }
 
+  // Compute DIO and days remaining per product (assumes 30-day sales period)
+  const productsWithDio = products.map(p => {
+    const dailySales = p.units_sold > 0 ? p.units_sold / 30 : 0
+    const daysRemaining = dailySales > 0 ? Math.round(p.stock_quantity / dailySales) : null
+    const dio = daysRemaining // same concept: days of inventory outstanding
+    const isSlowMoving = daysRemaining != null && daysRemaining > 90
+    const isStockoutRisk = daysRemaining != null && daysRemaining > 0 && daysRemaining < 14 && p.status !== 'out'
+    return { ...p, dio, daysRemaining, isSlowMoving, isStockoutRisk }
+  })
+
+  const slowMoving = productsWithDio.filter(p => p.isSlowMoving)
+  const stockoutRisk = productsWithDio.filter(p => p.isStockoutRisk)
+
   // Apply filters
-  let filtered = products
-  if (filter !== 'all') filtered = filtered.filter(p => p.status === filter)
+  let filtered = productsWithDio
+  if (filter === 'out' || filter === 'low' || filter === 'healthy') filtered = filtered.filter(p => p.status === filter)
+  else if (filter === 'slow') filtered = filtered.filter(p => p.isSlowMoving)
+  else if (filter === 'risk') filtered = filtered.filter(p => p.isStockoutRisk)
   if (sourceFilter) filtered = filtered.filter(p => p.source === sourceFilter)
 
   // Apply sort
@@ -120,6 +136,7 @@ export default function InventoryFinance({ onAsk }: Props) {
       case 'margin': return b.margin_pct - a.margin_pct
       case 'stock': return a.stock_quantity - b.stock_quantity
       case 'units': return b.units_sold - a.units_sold
+      case 'dio': return (b.dio ?? 9999) - (a.dio ?? 9999)
       default: return 0
     }
   })
@@ -128,6 +145,31 @@ export default function InventoryFinance({ onAsk }: Props) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+      {/* Risk Alerts */}
+      {(stockoutRisk.length > 0 || slowMoving.length > 0) && (
+        <div style={{ borderRadius: 12, border: '1px solid rgba(239,68,68,.2)', background: 'rgba(239,68,68,.03)', padding: '12px 16px' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#EF4444', marginBottom: 8 }}>⚠ Inventory Alerts</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {stockoutRisk.map((p, i) => (
+              <div key={i} style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.15)', fontSize: 10 }}>
+                <span style={{ color: '#EF4444', fontWeight: 600 }}>🔴 {p.name}</span>
+                <span style={{ color: 'var(--tx3)', marginLeft: 4 }}>{p.daysRemaining}d stock left</span>
+              </div>
+            ))}
+            {slowMoving.slice(0, 5).map((p, i) => (
+              <div key={i} style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.15)', fontSize: 10 }}>
+                <span style={{ color: '#F59E0B', fontWeight: 600 }}>🟡 {p.name}</span>
+                <span style={{ color: 'var(--tx3)', marginLeft: 4 }}>{p.daysRemaining}d DIO · slow-moving</span>
+              </div>
+            ))}
+            {slowMoving.length > 5 && (
+              <div style={{ padding: '4px 10px', fontSize: 10, color: 'var(--tx3)' }}>+{slowMoving.length - 5} more slow-moving</div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Summary Card */}
       <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
         <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -263,8 +305,15 @@ export default function InventoryFinance({ onAsk }: Props) {
       <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
         {/* Filters row */}
         <div style={{ padding: '10px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
-          <div style={{ display: 'flex', gap: 4 }}>
-            {([['all', 'All'], ['out', 'Out of Stock'], ['low', 'Low Stock'], ['healthy', 'Healthy']] as const).map(([key, label]) => (
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {([
+              ['all', 'All'],
+              ['out', 'Out of Stock'],
+              ['low', 'Low Stock'],
+              ['healthy', 'Healthy'],
+              ['risk', `🔴 Stockout Risk (${stockoutRisk.length})`],
+              ['slow', `🟡 Slow-Moving (${slowMoving.length})`],
+            ] as const).map(([key, label]) => (
               <button
                 key={key}
                 onClick={() => setFilter(key)}
@@ -313,7 +362,7 @@ export default function InventoryFinance({ onAsk }: Props) {
         {/* Sort row */}
         <div style={{ padding: '6px 18px', borderBottom: '1px solid var(--b)', display: 'flex', gap: 4, fontSize: 10, color: 'var(--tx3)' }}>
           <span>Sort by:</span>
-          {([['value', 'Value'], ['margin', 'Margin'], ['stock', 'Stock Level'], ['units', 'Units Sold']] as const).map(([key, label]) => (
+          {([['value', 'Value'], ['margin', 'Margin'], ['stock', 'Stock Level'], ['units', 'Units Sold'], ['dio', 'DIO']] as const).map(([key, label]) => (
             <button
               key={key}
               onClick={() => setSortKey(key)}
@@ -335,57 +384,86 @@ export default function InventoryFinance({ onAsk }: Props) {
             Showing {Math.min(sorted.length, 30)} of {sorted.length} products
             {sourceFilter && <span> · Filtered: <strong>{sourceFilter}</strong> <button onClick={() => setSourceFilter(null)} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, fontFamily: 'inherit' }}>clear</button></span>}
           </div>
-          <div style={{ maxHeight: 400, overflowY: 'auto' }}>
-            {sorted.slice(0, 30).map((p, i) => (
-              <div
-                key={i}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '8px 0',
-                  borderBottom: '1px solid var(--b)',
-                }}
-              >
-                <div style={{
-                  width: 8, height: 8, borderRadius: '50%',
-                  background: p.status === 'out' ? '#EF4444' : p.status === 'low' ? '#F59E0B' : '#22C55E',
-                  flexShrink: 0,
-                }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {p.name}
-                    </span>
-                    <span style={{
-                      fontSize: 8, fontWeight: 600, padding: '1px 4px', borderRadius: 3,
-                      background: SOURCE_COLORS[p.source] ? `${SOURCE_COLORS[p.source]}18` : 'rgba(107,114,128,.1)',
-                      color: SOURCE_COLORS[p.source] || '#6B7280',
+          <div style={{ maxHeight: 500, overflowY: 'auto' }}>
+            {sorted.slice(0, 50).map((p, i) => {
+              const isExpanded = expandedProduct === p.name
+              return (
+                <div key={i} style={{ borderBottom: '1px solid var(--b)' }}>
+                  <div
+                    onClick={() => setExpandedProduct(isExpanded ? null : p.name)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', cursor: 'pointer' }}
+                  >
+                    <div style={{
+                      width: 8, height: 8, borderRadius: '50%',
+                      background: p.status === 'out' ? '#EF4444' : p.status === 'low' ? '#F59E0B' : '#22C55E',
                       flexShrink: 0,
-                    }}>
-                      {p.source}
-                    </span>
+                    }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {p.name}
+                        </span>
+                        <span style={{
+                          fontSize: 8, fontWeight: 600, padding: '1px 4px', borderRadius: 3,
+                          background: SOURCE_COLORS[p.source] ? `${SOURCE_COLORS[p.source]}18` : 'rgba(107,114,128,.1)',
+                          color: SOURCE_COLORS[p.source] || '#6B7280', flexShrink: 0,
+                        }}>{p.source}</span>
+                        {p.isStockoutRisk && <span style={{ fontSize: 8, fontWeight: 700, color: '#EF4444', background: 'rgba(239,68,68,.1)', padding: '1px 4px', borderRadius: 3 }}>RISK</span>}
+                        {p.isSlowMoving && <span style={{ fontSize: 8, fontWeight: 700, color: '#F59E0B', background: 'rgba(245,158,11,.1)', padding: '1px 4px', borderRadius: 3 }}>SLOW</span>}
+                      </div>
+                      <div style={{ fontSize: 10, color: 'var(--tx3)', display: 'flex', gap: 8, marginTop: 1, flexWrap: 'wrap' }}>
+                        <span>{p.stock_quantity} units</span>
+                        {p.daysRemaining != null && <span style={{ color: p.isStockoutRisk ? '#EF4444' : p.isSlowMoving ? '#F59E0B' : 'var(--tx3)', fontWeight: p.isStockoutRisk || p.isSlowMoving ? 600 : 400 }}>{p.daysRemaining}d remaining</span>}
+                        <span style={{ color: p.margin_pct >= 40 ? '#22C55E' : p.margin_pct >= 20 ? '#F59E0B' : '#EF4444' }}>{p.margin_pct}% margin</span>
+                        {p.units_sold > 0 && <span>{p.units_sold} sold/mo</span>}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>
+                        {fmt(p.value_at_cost, sym)}
+                      </div>
+                      <div style={{ fontSize: 9, color: 'var(--tx3)' }}>tied up</div>
+                    </div>
+                    <span style={{ fontSize: 10, color: 'var(--tx3)', flexShrink: 0 }}>{isExpanded ? '▲' : '▼'}</span>
                   </div>
-                  <div style={{ fontSize: 10, color: 'var(--tx3)', display: 'flex', gap: 8, marginTop: 1 }}>
-                    <span>{p.stock_quantity} units</span>
-                    <span>{sym}{p.cost_price.toFixed(0)} cost</span>
-                    <span style={{ color: p.margin_pct >= 40 ? '#22C55E' : p.margin_pct >= 20 ? '#F59E0B' : '#EF4444' }}>{p.margin_pct}% margin</span>
-                    {p.units_sold > 0 && <span>{p.units_sold} sold</span>}
-                    {p.category !== 'Uncategorized' && <span>{p.category}</span>}
-                  </div>
+
+                  {/* Expanded drill-down */}
+                  {isExpanded && (
+                    <div style={{ padding: '10px 14px 14px', background: 'rgba(99,102,241,.02)', borderTop: '1px solid var(--b)', borderRadius: '0 0 8px 8px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
+                        <DrillMetric label="Cost Price" value={`${sym}${p.cost_price.toFixed(2)}`} />
+                        <DrillMetric label="Sale Price" value={`${sym}${p.price.toFixed(2)}`} />
+                        <DrillMetric label="Margin" value={`${p.margin_pct}%`} color={p.margin_pct >= 40 ? '#22C55E' : p.margin_pct >= 20 ? '#F59E0B' : '#EF4444'} />
+                        <DrillMetric label="Stock Qty" value={String(p.stock_quantity)} />
+                        <DrillMetric label="Units Sold" value={p.units_sold > 0 ? `${p.units_sold}/mo` : '—'} />
+                        <DrillMetric label="DIO" value={p.daysRemaining != null ? `${p.daysRemaining} days` : '—'} color={p.isStockoutRisk ? '#EF4444' : p.isSlowMoving ? '#F59E0B' : '#22C55E'} />
+                        <DrillMetric label="Value at Cost" value={fmt(p.value_at_cost, sym)} />
+                        <DrillMetric label="Value at Retail" value={fmt(p.value_at_retail, sym)} />
+                        <DrillMetric label="Category" value={p.category} />
+                      </div>
+                      {p.sku && <div style={{ fontSize: 10, color: 'var(--tx3)' }}>SKU: {p.sku}</div>}
+                      {p.isStockoutRisk && <div style={{ fontSize: 10, color: '#EF4444', fontWeight: 600, marginTop: 4 }}>⚠ Only {p.daysRemaining} days of stock remaining — reorder now</div>}
+                      {p.isSlowMoving && <div style={{ fontSize: 10, color: '#F59E0B', fontWeight: 600, marginTop: 4 }}>⚠ {p.daysRemaining} day DIO — consider discounting or bundling to move stock</div>}
+                    </div>
+                  )}
                 </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>
-                    {fmt(p.value_at_cost, sym)}
-                  </div>
-                  <div style={{ fontSize: 9, color: 'var(--tx3)' }}>tied up</div>
-                </div>
-              </div>
-            ))}
+              )
+            })}
             {sorted.length === 0 && (
               <div style={{ padding: 16, textAlign: 'center', color: 'var(--tx3)', fontSize: 12 }}>No products match your filters</div>
             )}
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function DrillMetric({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <div style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid var(--b)', background: 'var(--sf)' }}>
+      <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 11, fontWeight: 600, color: color || 'var(--tx)' }}>{value}</div>
     </div>
   )
 }

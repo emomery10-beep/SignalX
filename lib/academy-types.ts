@@ -30,4 +30,6 @@ export interface AcademyArticle {
   content: AcademyArticleSection[];
   relatedSlugs: string[];
   faq?: AcademyArticleFAQ[];
+  /** YouTube video URL or ID — if present, a watch-first embed is shown above the article body */
+  videoUrl?: string;
 }

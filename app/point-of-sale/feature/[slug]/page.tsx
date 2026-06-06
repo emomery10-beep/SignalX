@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, notFound } from 'next/navigation'
 import { POS_FEATURES } from '@/lib/pos-features'
 import PosScreenMockup from '@/components/pos/PosScreenMockup'
 
@@ -27,13 +27,9 @@ export default function FeaturePage() {
   const posPrice = pricing?.pos || '£5'
   const growthPrice = pricing?.growth || '£19'
 
-  if (!feature) return (
-    <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
-      <div style={{ fontSize: 48 }}>🔍</div>
-      <h1 style={{ fontSize: 24, fontWeight: 700, color: C.tx }}>Feature not found</h1>
-      <Link href="/point-of-sale#features" style={{ color: C.acc, textDecoration: 'none' }}>← Back to features</Link>
-    </div>
-  )
+  if (!feature) {
+    notFound()
+  }
 
   const otherFeatures = POS_FEATURES.filter(f => f.slug !== slug).slice(0, 6)
 

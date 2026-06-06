@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, notFound } from 'next/navigation'
 import { SECTORS } from '@/lib/pos-sectors'
 import PosScreenMockup from '@/components/pos/PosScreenMockup'
 
@@ -35,13 +35,7 @@ export default function SectorPage() {
   const growthPrice = pricing?.growth || '£19'
 
   if (!sector) {
-    return (
-      <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
-        <div style={{ fontSize: 48 }}>🔍</div>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: C.tx }}>Sector not found</h1>
-        <Link href="/point-of-sale" style={{ color: C.acc, textDecoration: 'none', fontSize: 15 }}>← Back to Point of Sale</Link>
-      </div>
-    )
+    notFound()
   }
 
   const otherSectors = SECTORS.filter(s => s.id !== sector.id)

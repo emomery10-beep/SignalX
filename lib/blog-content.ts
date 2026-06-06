@@ -768,6 +768,7 @@ export interface BlogPost {
   paa: Array<{ q: string; a: string }>
   cta: { heading: string; body: string }
   relatedSlugs: string[]
+  i18n?: { hreflang: { lang: string; url: string }[] }
 }
 
 const ALL_POSTS = [

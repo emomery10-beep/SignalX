@@ -7,7 +7,15 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { uploadId, sourceRows, targetColumn, horizonDays = 14, method = 'linear', adjustments, confidence = 1.5 } = await request.json()
+  let body: Record<string, unknown>
+  try { body = await request.json() } catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }) }
+  const uploadId = body.uploadId as string | undefined
+  const sourceRows = body.sourceRows as Record<string, unknown>[] | undefined
+  const targetColumn = body.targetColumn as string | undefined
+  const horizonDays = (body.horizonDays as number | undefined) ?? 14
+  const method = ((body.method as string | undefined) ?? 'linear') as 'linear' | 'moving_avg' | 'seasonal' | 'exponential'
+  const adjustments = body.adjustments as { startPeriod: number; endPeriod: number; changePct: number }
+  const confidence = (body.confidence as number | undefined) ?? 1.5
   if (!targetColumn || !adjustments) return NextResponse.json({ error: 'targetColumn and adjustments required' }, { status: 400 })
 
   let rows: Record<string, unknown>[]

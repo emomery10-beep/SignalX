@@ -33,7 +33,9 @@ export async function GET(request: NextRequest) {
   const periodKey = params.get('period') || 'this_month'
   const { start, end, compStart, compEnd } = getDateRange(periodKey, now)
 
-  // 6-month lookback for pnl_monthly
+  // 6-month lookback for pnl_monthly — always anchored to TODAY, not the period's end date
+  // so that "Last Month" view doesn't truncate the forecast window
+  const todayStr = now.toISOString().split('T')[0]
   const sixMonthsAgoDate = new Date(now.getFullYear(), now.getMonth() - 5, 1)
   const sixMonthsAgo = sixMonthsAgoDate.toISOString().split('T')[0]
 
@@ -50,11 +52,15 @@ export async function GET(request: NextRequest) {
     { data: unified6m },
     { data: posTx6m },
     { data: posItemRows },
+    { data: posItems6m },
+    { data: cfoExpenses },
+    { data: cfoExpenses6m },
   ] = await Promise.all([
     supabase
       .from('unified_data')
       .select('record_date, gross_revenue, total_cost, gross_margin, cost_price, units_sold, product_name, category, source_type')
       .eq('user_id', user.id)
+      .neq('source_type', 'pos')                    // POS revenue captured via pos_transactions — exclude to prevent double-counting
       .gte('record_date', start)
       .lte('record_date', end)
       .order('record_date', { ascending: true })
@@ -63,6 +69,7 @@ export async function GET(request: NextRequest) {
       .from('unified_data')
       .select('record_date, gross_revenue, total_cost, cost_price, units_sold, source_type')
       .eq('user_id', user.id)
+      .neq('source_type', 'pos')                    // same guard for comparison period
       .gte('record_date', compStart)
       .lte('record_date', compEnd)
       .limit(5000),
@@ -114,8 +121,9 @@ export async function GET(request: NextRequest) {
       .from('unified_data')
       .select('record_date, gross_revenue, total_cost, cost_price, units_sold')
       .eq('user_id', user.id)
+      .neq('source_type', 'pos')                    // exclude POS — captured via pos_transactions
       .gte('record_date', sixMonthsAgo)
-      .lte('record_date', end)
+      .lte('record_date', todayStr)
       .order('record_date', { ascending: true })
       .limit(10000),
     supabase
@@ -124,9 +132,9 @@ export async function GET(request: NextRequest) {
       .eq('owner_id', user.id)
       .eq('status', 'completed')
       .gte('created_at', sixMonthsAgo + 'T00:00:00')
-      .lte('created_at', end + 'T23:59:59')
+      .lte('created_at', todayStr + 'T23:59:59')      // always today, not period end
       .limit(10000),
-    // POS product-level sales (line items) for margin_by_product
+    // Stage 1a: POS line items — current period (for COGS + margin_by_product)
     supabase
       .from('pos_transactions')
       .select('created_at, status, pos_items!transaction_id(name, qty, unit_price, cost_price)')
@@ -135,11 +143,52 @@ export async function GET(request: NextRequest) {
       .gte('created_at', start + 'T00:00:00')
       .lte('created_at', end + 'T23:59:59')
       .limit(5000),
+    // Stage 1b: POS line items — 6-month window (for pnl_monthly COGS)
+    supabase
+      .from('pos_transactions')
+      .select('created_at, pos_items!transaction_id(qty, cost_price)')
+      .eq('owner_id', user.id)
+      .eq('status', 'completed')
+      .gte('created_at', sixMonthsAgo + 'T00:00:00')
+      .lte('created_at', todayStr + 'T23:59:59')      // always today, not period end
+      .limit(10000),
+    // Stage 2a: tracked expenses — current period (additive to fixed costs)
+    supabase
+      .from('cfo_expenses')
+      .select('date, amount')
+      .eq('user_id', user.id)
+      .gte('date', start)
+      .lte('date', end),
+    // Stage 2b: tracked expenses — 6-month window (for pnl_monthly fixed costs)
+    supabase
+      .from('cfo_expenses')
+      .select('date, amount')
+      .eq('user_id', user.id)
+      .gte('date', sixMonthsAgo)
+      .lte('date', todayStr),                          // always today, not period end
   ])
 
   const overrides = (overridesRow?.overrides || {}) as Record<string, any>
   const monthlyFixedCosts = overrides.monthly_fixed_costs || overrides.monthlyFixedCosts || 0
   const cashBalance = overrides.cash_balance || overrides.cashBalance || 0
+
+  // --- Stage 2: Sum tracked expenses for current period (additive to fixed costs) ---
+  const trackedExpensesTotal = (cfoExpenses || []).reduce((s, e) => s + (e.amount || 0), 0)
+
+  // --- Stage 1: Build a date→COGS map from POS line items (current period) ---
+  const posItemCogsMap = new Map<string, number>()
+  for (const tx of posItemRows || []) {
+    const date = ((tx as any).created_at || '').split('T')[0]
+    if (!date) continue
+    const items = (tx as any).pos_items || []
+    let txCogs = 0
+    for (const it of items) {
+      txCogs += (Number(it.qty) || 0) * (Number(it.cost_price) || 0)
+    }
+    if (txCogs > 0) {
+      posItemCogsMap.set(date, (posItemCogsMap.get(date) || 0) + txCogs)
+    }
+  }
 
   // --- Aggregate current period ---
   const dailyMap = new Map<string, { revenue: number; cogs: number }>()
@@ -165,13 +214,22 @@ export async function GET(request: NextRequest) {
     const date = (tx.created_at || '').split('T')[0]
     if (!date) continue
     if (!dailyMap.has(date)) dailyMap.set(date, { revenue: 0, cogs: 0 })
-    dailyMap.get(date)!.revenue += tx.total || 0
+    const posRev = tx.total || 0
+    dailyMap.get(date)!.revenue += posRev
 
     if (!sourceMap.has('pos')) sourceMap.set('pos', { revenue: 0, cogs: 0, orders: 0 })
     const posSource = sourceMap.get('pos')!
-    posSource.revenue += tx.total || 0
+    posSource.revenue += posRev
     posSource.orders += 1
   }
+  // Inject POS COGS once per date (not once per transaction — avoids double-counting)
+  for (const [date, cogs] of posItemCogsMap.entries()) {
+    if (!dailyMap.has(date)) dailyMap.set(date, { revenue: 0, cogs: 0 })
+    dailyMap.get(date)!.cogs += cogs
+  }
+  // Set total POS COGS on sourceMap in one pass
+  const totalPosCogs = Array.from(posItemCogsMap.values()).reduce((s, c) => s + c, 0)
+  if (sourceMap.has('pos')) sourceMap.get('pos')!.cogs = totalPosCogs
 
   const dailyData = Array.from(dailyMap.entries())
     .sort(([a], [b]) => a.localeCompare(b))
@@ -180,7 +238,9 @@ export async function GET(request: NextRequest) {
   const totalRevenue = dailyData.reduce((s, d) => s + d.revenue, 0)
   const totalCogs = dailyData.reduce((s, d) => s + d.cogs, 0)
   const periodDays = Math.max(daysBetween(start, end), 1)
-  const fixedCostsForPeriod = (monthlyFixedCosts / 30) * periodDays
+  // Stage 2: fixed costs = overhead estimate (pro-rated) + actual tracked expenses
+  const overheadForPeriod = (monthlyFixedCosts / 30) * periodDays
+  const fixedCostsForPeriod = overheadForPeriod + trackedExpensesTotal
   const grossProfit = totalRevenue - totalCogs
   const netProfit = grossProfit - fixedCostsForPeriod
   const grossMarginPct = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0
@@ -213,7 +273,9 @@ export async function GET(request: NextRequest) {
   const stockoutRate = totalProducts > 0 ? (lowOrOos / totalProducts) * 100 : 0
 
   // --- Cash runway ---
-  const dailyNetBurn = (totalRevenue / periodDays) - (totalCogs / periodDays) - (monthlyFixedCosts / 30)
+  // dailyFixed = overhead estimate + tracked expenses averaged over the period
+  const dailyFixed = (overheadForPeriod + trackedExpensesTotal) / periodDays
+  const dailyNetBurn = (totalRevenue / periodDays) - (totalCogs / periodDays) - dailyFixed
   let runwayMonths: number | null = null
   let runwayStatus: 'critical' | 'warning' | 'healthy' | 'strong' | 'unknown' = 'unknown'
   if (cashBalance > 0 && dailyNetBurn < 0) {
@@ -253,7 +315,7 @@ export async function GET(request: NextRequest) {
   // Sparkline: cumulative daily values for trend visualization
   const revenueSparkline = dailyData.map(d => d.revenue)
   const grossProfitSparkline = dailyData.map(d => d.revenue - d.cogs)
-  const netSparkline = dailyData.map(d => d.revenue - d.cogs - (monthlyFixedCosts / 30))
+  const netSparkline = dailyData.map(d => d.revenue - d.cogs - dailyFixed)
 
   const kpis = [
     {
@@ -344,9 +406,29 @@ export async function GET(request: NextRequest) {
     date: d.date,
     revenue: Math.round(d.revenue),
     cogs: Math.round(d.cogs),
-    fixed: Math.round((monthlyFixedCosts / 30)),
-    net: Math.round(d.revenue - d.cogs - (monthlyFixedCosts / 30)),
+    fixed: Math.round(dailyFixed),
+    net: Math.round(d.revenue - d.cogs - dailyFixed),
   }))
+
+  // --- Stage 1b + 2b: Build month→COGS map from POS line items (6-month) ---
+  const posItems6mCogsMap = new Map<string, number>()
+  for (const tx of posItems6m || []) {
+    const month = ((tx as any).created_at || '').slice(0, 7)
+    if (!month) continue
+    const items = (tx as any).pos_items || []
+    for (const it of items) {
+      const cogs = (Number(it.qty) || 0) * (Number(it.cost_price) || 0)
+      if (cogs > 0) posItems6mCogsMap.set(month, (posItems6mCogsMap.get(month) || 0) + cogs)
+    }
+  }
+
+  // Build month→tracked expenses map (6-month)
+  const expensesMonthMap = new Map<string, number>()
+  for (const e of cfoExpenses6m || []) {
+    const month = (e.date || '').slice(0, 7)
+    if (!month) continue
+    expensesMonthMap.set(month, (expensesMonthMap.get(month) || 0) + (e.amount || 0))
+  }
 
   // --- pnl_monthly: 6-month P&L aggregation ---
   const monthlyMap = new Map<string, { revenue: number; cogs: number }>()
@@ -362,20 +444,30 @@ export async function GET(request: NextRequest) {
     const month = (tx.created_at || '').slice(0, 7)
     if (!month) continue
     if (!monthlyMap.has(month)) monthlyMap.set(month, { revenue: 0, cogs: 0 })
+    // Stage 1b: add POS COGS for this month
     monthlyMap.get(month)!.revenue += tx.total || 0
   }
+  // Inject POS COGS into monthly map
+  for (const [month, cogs] of posItems6mCogsMap.entries()) {
+    if (!monthlyMap.has(month)) monthlyMap.set(month, { revenue: 0, cogs: 0 })
+    monthlyMap.get(month)!.cogs += cogs
+  }
+
   const pnlMonthly = Array.from(monthlyMap.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([month, v]) => {
       const rev = Math.round(v.revenue)
       const cogs = Math.round(v.cogs)
       const gp = rev - cogs
-      const net = gp - Math.round(monthlyFixedCosts)
+      // Stage 2b: fixed = overhead estimate + tracked expenses for this month
+      const monthExpenses = expensesMonthMap.get(month) || 0
+      const fixed = Math.round(monthlyFixedCosts + monthExpenses)
+      const net = gp - fixed
       return {
         month,
         revenue: rev,
         cogs,
-        fixed: Math.round(monthlyFixedCosts),
+        fixed,
         net,
         gross_margin_pct: rev > 0 ? Math.round((gp / rev) * 1000) / 10 : 0,
         net_margin_pct: rev > 0 ? Math.round((net / rev) * 1000) / 10 : 0,
@@ -445,8 +537,8 @@ export async function GET(request: NextRequest) {
   const dailyCashflow = dailyData.map(d => ({
     date: d.date,
     inflow: Math.round(d.revenue),
-    outflow: Math.round(d.cogs + (monthlyFixedCosts / 30)),
-    net: Math.round(d.revenue - d.cogs - (monthlyFixedCosts / 30)),
+    outflow: Math.round(d.cogs + dailyFixed),
+    net: Math.round(d.revenue - d.cogs - dailyFixed),
   }))
 
   return NextResponse.json({
@@ -481,7 +573,9 @@ export async function GET(request: NextRequest) {
     },
     cash: {
       balance: cashBalance,
-      monthly_fixed: monthlyFixedCosts,
+      monthly_fixed: monthlyFixedCosts,           // overhead estimate only (for Scenario Planner base)
+      monthly_fixed_total: Math.round(monthlyFixedCosts + trackedExpensesTotal), // overhead + tracked expenses
+      tracked_expenses_total: Math.round(trackedExpensesTotal),
       runway_months: runwayMonths,
       runway_status: runwayStatus,
       daily_net_burn: Math.round(dailyNetBurn * 100) / 100,

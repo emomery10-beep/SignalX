@@ -46,7 +46,7 @@ async function recordSignupIP(request: NextRequest, userId: string, isReturning:
     const country = request.headers.get('x-vercel-ip-country') || null
 
     // Hash the IP — never store raw IP (GDPR compliant)
-    const ipHash = createHash('sha256').update(ip + process.env.IP_HASH_SALT || 'signalx-salt').digest('hex')
+    const ipHash = createHash('sha256').update(ip + (process.env.IP_HASH_SALT || 'signalx-salt')).digest('hex')
 
     const serviceClient = createServiceClient()
 
