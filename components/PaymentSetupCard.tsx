@@ -48,37 +48,9 @@ export function PaymentSetupCard({ staff }: PaymentSetupCardProps) {
   const [error, setError] = useState<string>('')
   const [success, setSuccess] = useState(false)
   const [currentConfig, setCurrentConfig] = useState<any>(null)
-  const [loadingConfig, setLoadingConfig] = useState(true)
 
   const selectedCountryData = COUNTRY_OPTIONS.find(c => c.code === selectedCountry)
   const provider = selectedCountryData?.provider || 'none'
-
-  useEffect(() => {
-    loadPaymentConfig()
-  }, [])
-
-  const loadPaymentConfig = async () => {
-    if (!staff?.owner_id) return
-
-    try {
-      const response = await fetch('/api/pos/payment/config', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setCurrentConfig(data)
-        if (data.country) {
-          setSelectedCountry(data.country)
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load payment config:', err)
-    } finally {
-      setLoadingConfig(false)
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -135,11 +107,7 @@ export function PaymentSetupCard({ staff }: PaymentSetupCardProps) {
         Set up card payments through Paystack (Africa) or Stripe (International)
       </p>
 
-      {loadingConfig ? (
-        <div style={{ padding: '16px', backgroundColor: '#fef3c7', borderRadius: '4px', color: '#78350f', fontSize: '14px' }}>
-          Loading payment configuration...
-        </div>
-      ) : currentConfig?.is_active ? (
+      {currentConfig?.is_active ? (
         <div style={{ padding: '16px', backgroundColor: '#d1fae5', borderRadius: '4px', border: '1px solid #a7f3d0', marginBottom: '20px' }}>
           <div style={{ fontSize: '14px', color: '#065f46' }}>
             <strong>✓ Payment Setup Active</strong>
