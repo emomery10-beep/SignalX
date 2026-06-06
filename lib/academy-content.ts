@@ -71,6 +71,11 @@ import batch97Articles from './academy-cfo-saas-batch97-rewritten-proper';
 import batch98Articles from './academy-cfo-saas-batch98-rewritten-proper';
 import batch99Articles from './academy-cfo-saas-batch99-rewritten-proper';
 import batch100Articles from './academy-cfo-saas-batch100-rewritten-proper';
+import batch101Articles from './academy-cfo-saas-batch101-rewritten-proper';
+import batch102Articles from './academy-cfo-saas-batch102-rewritten-proper';
+import batch103Articles from './academy-cfo-saas-batch103-rewritten-proper';
+import batch104Articles from './academy-cfo-saas-batch104-rewritten-proper';
+import batch105Articles from './academy-cfo-saas-batch105-rewritten-proper';
 
 const _africaAcademyArticles = [...AFRICA_ACADEMY_BATCH1, ...AFRICA_ACADEMY_BATCH2] as AcademyArticle[];
 
@@ -84,7 +89,7 @@ export const academyCategories: AcademyCategory[] = [
   { slug: "inventory-supply-chain", title: "Inventory & Supply Chain", description: "Stock smarter — avoid stockouts and dead inventory.", icon: "📦", color: "#27ae60", articleCount: 20 },
   { slug: "marketing-intelligence", title: "Marketing Intelligence", description: "Measure what works and cut what doesn't.", icon: "📣", color: "#f39c12", articleCount: 20 },
   { slug: "ai-and-data", title: "AI & Data", description: "How AI and data science power modern business decisions.", icon: "🤖", color: "#1abc9c", articleCount: 20 },
-  { slug: "askbiz-tutorials", title: "AskBiz Tutorials", description: "Step-by-step guides to getting the most from AskBiz (including 331 SaaS CFO Academy articles from batches 68-100).", icon: "🎓", color: "#d08a59", articleCount: 454 },
+  { slug: "askbiz-tutorials", title: "AskBiz Tutorials", description: "Step-by-step guides to getting the most from AskBiz (including 336 SaaS CFO Academy articles from batches 68-105).", icon: "🎓", color: "#d08a59", articleCount: 459 },
 
 { slug: "business-strategy-growth", title: "Business Strategy & Growth", description: "Frameworks, metrics, and mental models for building and scaling a business.", icon: "💼", color: "#2c3e50", articleCount: 20 },
   { slug: "funding-and-investment", title: "Funding & Investment", description: "Understand funding options, investor terms, and how to raise capital for your business.", icon: "🏦", color: "#1a5276", articleCount: 20 },
@@ -15175,6 +15180,11 @@ academyArticles.push(...batch97Articles);
 academyArticles.push(...batch98Articles);
 academyArticles.push(...batch99Articles);
 academyArticles.push(...batch100Articles);
+academyArticles.push(...batch101Articles);
+academyArticles.push(...batch102Articles);
+academyArticles.push(...batch103Articles);
+academyArticles.push(...batch104Articles);
+academyArticles.push(...batch105Articles);
 
 // ─── MERGE CFO DASHBOARD TRAINING (100 articles) ─────────────────────────────
 // NOTE: CFO batch files temporarily disabled for build
