@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useStore } from '@/store'
@@ -1375,9 +1375,63 @@ export default function SettingsPage() {
   }
 
   const activeItem = NAV.find(n => n.id === active)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const mobileNavRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!mobileNavOpen) return
+    const handleClick = (e: MouseEvent) => {
+      if (mobileNavRef.current && !mobileNavRef.current.contains(e.target as Node)) setMobileNavOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [mobileNavOpen])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+
+      {/* Mobile nav bar */}
+      {isMobile && (
+        <div ref={mobileNavRef} style={{ position: 'relative', borderBottom: '1px solid var(--b)', padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {activeItem && (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                <path d={activeItem.icon}/>
+              </svg>
+            )}
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)' }}>{activeItem?.label}</span>
+          </div>
+          <button
+            onClick={() => setMobileNavOpen(o => !o)}
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px 6px', borderRadius: 'var(--r-md)', display: 'flex', alignItems: 'center', gap: 4 }}
+            aria-label="Open settings menu"
+          >
+            {[0,1,2].map(i => (
+              <span key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--tx2)', opacity: 0.6 }}/>
+            ))}
+          </button>
+
+          {mobileNavOpen && (
+            <div style={{ position: 'absolute', top: '100%', right: 12, zIndex: 50, background: 'var(--bg)', border: '1px solid var(--b)', borderRadius: 'var(--r-lg)', boxShadow: '0 8px 24px rgba(0,0,0,.12)', padding: '6px 4px', minWidth: 200 }}>
+              {NAV.map(item => {
+                const isActive = item.id === active
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => { setActive(item.id); setMobileNavOpen(false) }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 12px', borderRadius: 'var(--r-md)', border: 'none', background: isActive ? 'rgba(208,138,89,.1)' : 'transparent', color: isActive ? 'var(--acc)' : 'var(--tx2)', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' as const, fontSize: 13, fontWeight: isActive ? 600 : 500 }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <path d={item.icon}/>
+                    </svg>
+                    {item.label}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
         {/* Sidebar — desktop only */}

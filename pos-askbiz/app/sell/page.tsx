@@ -2,7 +2,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import CashierCopilot from '@/components/CashierCopilot'
-import PosPaymentHandler from '@/components/PosPaymentHandler'
+import PosCardPayment from '@/components/PosCardPayment'
+import PosMobilePayment from '@/components/PosMobilePayment'
 
 const ACC = '#d08a59'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
@@ -97,8 +98,7 @@ export default function SellPage() {
   const [oversold, setOversold]         = useState<string[]>([])
   const [expiryWarning, setExpiryWarning] = useState<string | null>(null)
 
-  // Digital payment flow
-  const [showPaymentHandler, setShowPaymentHandler] = useState(false)
+  // Payment state
   const [paymentError, setPaymentError] = useState<string | null>(null)
 
   // Shift
@@ -402,15 +402,13 @@ export default function SellPage() {
         setLastTotal(cartTotal)
         setOversold(data.oversold || [])
 
-        // For digital payments, show payment handler
-        if (paymentType === 'card' || paymentType === 'mobile') {
-          setShowPaymentHandler(true)
-        } else {
-          // Cash payment - go straight to receipt
+        // For cash payment, go straight to receipt
+        if (paymentType === 'cash') {
           setTodaySales(s => s + 1)
           setTodayRevenue(r => r + cartTotal)
           setScreen('receipt')
         }
+        // For card/mobile, payment components will render inline and handle completion
       } else {
         setCheckoutError(data.error || 'Payment failed — please try again')
       }
@@ -868,6 +866,43 @@ export default function SellPage() {
           </div>
         </div>
 
+        {/* Card Payment Prompt */}
+        {paymentType === 'card' && lastTxId && (
+          <PosCardPayment
+            transactionId={lastTxId}
+            amount={cartTotal}
+            ownerId={staff.owner_id}
+            staffId={staff.id}
+            onPaymentComplete={() => {
+              setTodaySales(s => s + 1)
+              setTodayRevenue(r => r + cartTotal)
+              setScreen('receipt')
+            }}
+            onPaymentFailed={(error) => {
+              setPaymentError(error)
+            }}
+          />
+        )}
+
+        {/* Mobile Payment Prompt (M-Pesa) */}
+        {paymentType === 'mobile' && lastTxId && (
+          <PosMobilePayment
+            transactionId={lastTxId}
+            amount={cartTotal}
+            ownerId={staff.owner_id}
+            staffId={staff.id}
+            customerPhone={customerPhone}
+            onPaymentComplete={() => {
+              setTodaySales(s => s + 1)
+              setTodayRevenue(r => r + cartTotal)
+              setScreen('receipt')
+            }}
+            onPaymentFailed={(error) => {
+              setPaymentError(error)
+            }}
+          />
+        )}
+
         {/* Cash tendered → change */}
         {paymentType === 'cash' && (
           <div style={{ marginBottom: 14, padding: '16px', background: '#fff', borderRadius: 14, border: '1px solid #e5e2dc' }}>
@@ -950,35 +985,13 @@ export default function SellPage() {
             ⚠ {paymentError}
           </div>
         )}
-        {showPaymentHandler && lastTxId ? (
-          <PosPaymentHandler
-            transactionId={lastTxId}
-            amount={cartTotal}
-            paymentType={paymentType === 'mobile' ? 'mpesa' : 'card'}
-            customerPhone={customerPhone}
-            ownerId={staff.owner_id}
-            staffId={staff.id}
-            currency={sym}
-            onPaymentComplete={() => {
-              setTodaySales(s => s + 1)
-              setTodayRevenue(r => r + cartTotal)
-              setShowPaymentHandler(false)
-              setScreen('receipt')
-            }}
-            onPaymentFailed={(error) => {
-              setPaymentError(error)
-              setShowPaymentHandler(false)
-            }}
-          />
-        ) : (
-          <button
-            onClick={handleCheckout}
-            disabled={processing || (paymentType === 'cash' && !!amountTendered && tendered < cartTotal)}
-            style={{ width: '100%', padding: '18px', borderRadius: 14, background: ACC, color: '#fff', fontSize: 18, fontWeight: 800, border: 'none', cursor: processing ? 'wait' : 'pointer', opacity: (paymentType === 'cash' && !!amountTendered && tendered < cartTotal) ? 0.5 : 1 }}
-          >
-            {processing ? 'Processing...' : `Complete · ${sym}${cartTotal.toFixed(2)}`}
-          </button>
-        )}
+        <button
+          onClick={handleCheckout}
+          disabled={processing || (paymentType === 'cash' && !!amountTendered && tendered < cartTotal)}
+          style={{ width: '100%', padding: '18px', borderRadius: 14, background: ACC, color: '#fff', fontSize: 18, fontWeight: 800, border: 'none', cursor: processing ? 'wait' : 'pointer', opacity: (paymentType === 'cash' && !!amountTendered && tendered < cartTotal) ? 0.5 : 1 }}
+        >
+          {processing ? 'Processing...' : `Complete · ${sym}${cartTotal.toFixed(2)}`}
+        </button>
       </div>
     </div>
   </>)
