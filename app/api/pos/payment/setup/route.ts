@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       try {
         const subaccount = await createSubAccount({
           business_name,
-          settlement_bank: '994', // Kenya M-Pesa (Safaricom)
+          settlement_bank: '280', // Safaricom M-Pesa
           account_number: settlement_account?.phone || contact_phone || '',
           contact_email,
           contact_phone,
