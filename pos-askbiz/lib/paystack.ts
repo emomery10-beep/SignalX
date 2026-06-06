@@ -4,10 +4,11 @@
  */
 
 const API_URL = 'https://api.paystack.co'
-const SECRET_KEY = process.env.PAYSTACK_SECRET_KEY!
 
-if (!SECRET_KEY) {
-  throw new Error('PAYSTACK_SECRET_KEY not configured')
+function getSecretKey() {
+  const key = process.env.PAYSTACK_SECRET_KEY
+  if (!key) throw new Error('PAYSTACK_SECRET_KEY not configured')
+  return key
 }
 
 interface SubAccountParams {
@@ -44,7 +45,7 @@ async function request(method: string, path: string, body?: unknown) {
   const res = await fetch(`${API_URL}${path}`, {
     method,
     headers: {
-      'Authorization': `Bearer ${SECRET_KEY}`,
+      'Authorization': `Bearer ${getSecretKey()}`,
       'Content-Type': 'application/json',
     },
     body: body ? JSON.stringify(body) : undefined,
