@@ -56,10 +56,10 @@ export async function POST(req: NextRequest) {
           percentage_charge: 2, // AskBiz takes 2% platform fee
         })
         subaccountId = subaccount.subaccountCode
-      } catch (err) {
+      } catch (err: any) {
         console.error('[payment/setup] Failed to create Paystack subaccount:', err)
         return NextResponse.json(
-          { error: 'Failed to create payment account. Please contact support.' },
+          { error: `Paystack error: ${err.message || 'Failed to create payment account'}` },
           { status: 500 }
         )
       }
