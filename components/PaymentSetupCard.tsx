@@ -124,14 +124,14 @@ export function PaymentSetupCard({ staff }: PaymentSetupCardProps) {
       ) : null}
 
       {error && (
-        <div style={{ padding: '12px 16px', backgroundColor: '#fee2e2', borderRadius: '4px', border: '1px solid #fecaca', marginBottom: '16px', color: '#991b1b', fontSize: '14px' }}>
-          {error}
+        <div style={{ padding: '8px 12px', backgroundColor: '#fee2e2', borderRadius: '4px', border: '1px solid #fecaca', marginBottom: '16px', color: '#991b1b', fontSize: '13px' }}>
+          ⚠️ {error}
         </div>
       )}
 
       {success && (
-        <div style={{ padding: '12px 16px', backgroundColor: '#d4edda', borderRadius: '4px', border: '1px solid #c3e6cb', marginBottom: '16px', color: '#155724', fontSize: '14px' }}>
-          ✓ Payment setup successful! {provider === 'stripe' ? 'Redirecting to Stripe onboarding...' : 'You can now accept payments.'}
+        <div style={{ padding: '8px 12px', backgroundColor: '#d4edda', borderRadius: '4px', border: '1px solid #c3e6cb', marginBottom: '16px', color: '#155724', fontSize: '13px' }}>
+          ✓ {provider === 'stripe' ? 'Redirecting to Stripe onboarding...' : 'Payment setup successful! You can now accept payments.'}
         </div>
       )}
 
@@ -238,14 +238,54 @@ export function PaymentSetupCard({ staff }: PaymentSetupCardProps) {
         </button>
       </form>
 
-      <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '4px', marginTop: '16px', fontSize: '13px', color: '#6b7280' }}>
-        <p style={{ margin: '0 0 8px 0', fontWeight: '500', color: '#374151' }}>How it works:</p>
-        <ul style={{ margin: '0', paddingLeft: '20px' }}>
-          <li>Select your country to automatically set up the right payment provider</li>
-          <li>Paystack: Accept M-Pesa and card payments in Africa (instant setup)</li>
-          <li>Stripe: Accept card payments internationally (requires KYC verification)</li>
-          <li>We take a 2% platform fee on all transactions</li>
-        </ul>
+      <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+        <p style={{ margin: '0 0 16px 0', fontWeight: '600', fontSize: '14px', color: '#1f2937' }}>📋 Setup Steps</p>
+
+        {provider === 'paystack' ? (
+          <div style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.6' }}>
+            <div style={{ marginBottom: '12px' }}>
+              <strong style={{ color: '#374151' }}>1. Fill in your details</strong>
+              <p style={{ margin: '4px 0 0 0' }}>Business name and contact phone</p>
+            </div>
+            <div style={{ marginBottom: '12px' }}>
+              <strong style={{ color: '#374151' }}>2. Click "Set Up Payment Method"</strong>
+              <p style={{ margin: '4px 0 0 0' }}>We'll create your Paystack account instantly</p>
+            </div>
+            <div style={{ marginBottom: '12px' }}>
+              <strong style={{ color: '#374151' }}>3. Start accepting payments</strong>
+              <p style={{ margin: '4px 0 0 0' }}>✓ M-Pesa and card payments ready immediately</p>
+            </div>
+            <div style={{ padding: '10px 12px', backgroundColor: '#fef3c7', borderRadius: '4px', marginTop: '12px', fontSize: '12px', color: '#92400e' }}>
+              💡 <strong>Paystack takes 1.5%</strong> + we take 2% = 3.5% total. You get 96.5% of each transaction.
+            </div>
+          </div>
+        ) : provider === 'stripe' ? (
+          <div style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.6' }}>
+            <div style={{ marginBottom: '12px' }}>
+              <strong style={{ color: '#374151' }}>1. Fill in your details</strong>
+              <p style={{ margin: '4px 0 0 0' }}>Business name and contact email</p>
+            </div>
+            <div style={{ marginBottom: '12px' }}>
+              <strong style={{ color: '#374151' }}>2. Click "Set Up Payment Method"</strong>
+              <p style={{ margin: '4px 0 0 0' }}>We'll redirect you to Stripe's verification form</p>
+            </div>
+            <div style={{ marginBottom: '12px' }}>
+              <strong style={{ color: '#374151' }}>3. Complete KYC verification</strong>
+              <p style={{ margin: '4px 0 0 0' }}>Stripe verifies your ID and business info (usually instant)</p>
+            </div>
+            <div style={{ marginBottom: '12px' }}>
+              <strong style={{ color: '#374151' }}>4. Automatic activation</strong>
+              <p style={{ margin: '4px 0 0 0' }}>✓ Card payments enabled once verified</p>
+            </div>
+            <div style={{ padding: '10px 12px', backgroundColor: '#dbeafe', borderRadius: '4px', marginTop: '12px', fontSize: '12px', color: '#1e40af' }}>
+              💡 <strong>Stripe takes 2.9% + $0.30</strong> per transaction + we take 2% = ~5.2% total. You get ~94.8%.
+            </div>
+          </div>
+        ) : (
+          <div style={{ fontSize: '13px', color: '#6b7280' }}>
+            <p>👆 Select your country above to see setup steps</p>
+          </div>
+        )}
       </div>
     </div>
   )
