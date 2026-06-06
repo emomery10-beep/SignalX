@@ -1,6 +1,8 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import PosCardPayment from '@/components/PosCardPayment'
+import PosMobilePayment from '@/components/PosMobilePayment'
 
 const ACC = '#d08a59'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
@@ -53,7 +55,8 @@ export default function SellPage() {
   const [scanError, setScanError]   = useState('')
 
   // Checkout state
-  const [paymentType, setPaymentType]   = useState<'cash' | 'card'>('cash')
+  const [paymentType, setPaymentType]   = useState<'cash' | 'card' | 'mobile'>('cash')
+  const [paymentError, setPaymentError] = useState<string | null>(null)
   const [customerPhone, setCustomerPhone] = useState('')
   const [processing, setProcessing]     = useState(false)
   const [lastTxId, setLastTxId]         = useState('')
@@ -286,9 +289,12 @@ export default function SellPage() {
       setProcessing(false)
       if (data.transaction_id) {
         setLastTxId(data.transaction_id)
-        setTodaySales(s => s + 1)
-        setTodayRevenue(r => r + cartTotal)
-        setScreen('receipt')
+        if (paymentType === 'cash') {
+          setTodaySales(s => s + 1)
+          setTodayRevenue(r => r + cartTotal)
+          setScreen('receipt')
+        }
+        // card/mobile: stay on checkout, payment components render below
       }
     } catch {
       setProcessing(false)
@@ -561,18 +567,45 @@ export default function SellPage() {
           <div style={{ fontSize: 13, color: '#6b6760', marginTop: 4 }}>{cart.length} item{cart.length > 1 ? 's' : ''}</div>
         </div>
 
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1916', marginBottom: 10 }}>Payment method</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            {(['cash', 'card'] as const).map(type => (
-              <button key={type} onClick={() => setPaymentType(type)} style={{ padding: '16px', borderRadius: 14, border: `2px solid ${paymentType === type ? ACC : '#e5e2dc'}`, background: paymentType === type ? `rgba(208,138,89,.08)` : '#fff', color: paymentType === type ? ACC : '#6b6760', fontSize: 16, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize' }}>
-                {type === 'cash' ? 'Cash' : 'Card'}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+            {([['cash', '💵 Cash'], ['card', '💳 Card'], ['mobile', '📱 Mobile']] as const).map(([type, label]) => (
+              <button key={type} onClick={() => setPaymentType(type)} style={{ padding: '13px 8px', borderRadius: 12, border: `2px solid ${paymentType === type ? ACC : '#e5e2dc'}`, background: paymentType === type ? 'rgba(208,138,89,.08)' : '#fff', color: paymentType === type ? ACC : '#6b6760', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                {label}
               </button>
             ))}
           </div>
         </div>
 
-        <div style={{ marginBottom: 24 }}>
+        {/* Card payment prompt — auto-renders after transaction created */}
+        {paymentType === 'card' && lastTxId && (
+          <PosCardPayment
+            transactionId={lastTxId}
+            amount={cartTotal}
+            currencySymbol={sym}
+            ownerId={staff!.owner_id}
+            staffId={staff!.id}
+            onPaymentComplete={() => { setTodaySales(s => s + 1); setTodayRevenue(r => r + cartTotal); setScreen('receipt') }}
+            onPaymentFailed={(err) => setPaymentError(err)}
+          />
+        )}
+
+        {/* Mobile / M-Pesa prompt */}
+        {paymentType === 'mobile' && lastTxId && (
+          <PosMobilePayment
+            transactionId={lastTxId}
+            amount={cartTotal}
+            currencySymbol={sym}
+            ownerId={staff!.owner_id}
+            staffId={staff!.id}
+            customerPhone={customerPhone}
+            onPaymentComplete={() => { setTodaySales(s => s + 1); setTodayRevenue(r => r + cartTotal); setScreen('receipt') }}
+            onPaymentFailed={(err) => setPaymentError(err)}
+          />
+        )}
+
+        <div style={{ marginBottom: 20, marginTop: 14 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1916', marginBottom: 6 }}>Customer phone (optional)</div>
           <div style={{ fontSize: 12, color: '#6b6760', marginBottom: 8 }}>To send a WhatsApp receipt</div>
           <input
@@ -586,13 +619,20 @@ export default function SellPage() {
       </div>
 
       <div style={{ padding: '16px 20px 40px', background: '#fff', borderTop: '1px solid #e5e2dc' }}>
-        <button
-          onClick={handleCheckout}
-          disabled={processing}
-          style={{ width: '100%', padding: '18px', borderRadius: 14, background: ACC, color: '#fff', fontSize: 18, fontWeight: 800, border: 'none', cursor: processing ? 'wait' : 'pointer' }}
-        >
-          {processing ? 'Processing...' : `Complete sale · ${sym}${cartTotal.toFixed(2)}`}
-        </button>
+        {paymentError && (
+          <div style={{ marginBottom: 10, padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)', fontSize: 13, color: '#dc2626' }}>
+            ⚠ {paymentError}
+          </div>
+        )}
+        {!lastTxId && (
+          <button
+            onClick={handleCheckout}
+            disabled={processing}
+            style={{ width: '100%', padding: '18px', borderRadius: 14, background: ACC, color: '#fff', fontSize: 18, fontWeight: 800, border: 'none', cursor: processing ? 'wait' : 'pointer' }}
+          >
+            {processing ? 'Processing...' : `Complete · ${sym}${cartTotal.toFixed(2)}`}
+          </button>
+        )}
       </div>
     </div>
   )
