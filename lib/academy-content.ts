@@ -38,29 +38,33 @@ import batch64Articles from './academy-cfo-saas-batch64-rewritten-proper';
 import batch65Articles from './academy-cfo-saas-batch65-rewritten-proper';
 import batch66Articles from './academy-cfo-saas-batch66-rewritten-proper';
 import batch67Articles from './academy-cfo-saas-batch67-rewritten-proper';
-import batch68Articles from './academy-cfo-saas-batch68-rewritten-proper';
-import batch69Articles from './academy-cfo-saas-batch69-rewritten-proper';
-import batch70Articles from './academy-cfo-saas-batch70-rewritten-proper';
-import batch71Articles from './academy-cfo-saas-batch71-rewritten-proper';
-import batch72Articles from './academy-cfo-saas-batch72-rewritten-proper';
-import batch73Articles from './academy-cfo-saas-batch73-rewritten-proper';
-import batch74Articles from './academy-cfo-saas-batch74-rewritten-proper';
-import batch75Articles from './academy-cfo-saas-batch75-rewritten-proper';
-import batch76Articles from './academy-cfo-saas-batch76-rewritten-proper';
-import batch77Articles from './academy-cfo-saas-batch77-rewritten-proper';
-import batch78Articles from './academy-cfo-saas-batch78-rewritten-proper';
-import batch79Articles from './academy-cfo-saas-batch79-rewritten-proper';
-import batch80Articles from './academy-cfo-saas-batch80-rewritten-proper';
-import batch81Articles from './academy-cfo-saas-batch81-rewritten-proper';
-import batch82Articles from './academy-cfo-saas-batch82-rewritten-proper';
-import batch83Articles from './academy-cfo-saas-batch83-rewritten-proper';
-import batch84Articles from './academy-cfo-saas-batch84-rewritten-proper';
-import batch85Articles from './academy-cfo-saas-batch85-rewritten-proper';
-import batch86Articles from './academy-cfo-saas-batch86-rewritten-proper';
-import batch87Articles from './academy-cfo-saas-batch87-rewritten-proper';
-import batch88Articles from './academy-cfo-saas-batch88-rewritten-proper';
-import batch89Articles from './academy-cfo-saas-batch89-rewritten-proper';
-import batch90Articles from './academy-cfo-saas-batch90-rewritten-proper';
+// NOTE: Batches 50-90 exist locally but not committed to git. Commented out to fix build.
+// Uncomment when these batches are committed to git.
+// import batch50Articles from './academy-cfo-saas-batch50-rewritten-proper';
+// ... batches 51-67 omitted for brevity ...
+// import batch68Articles from './academy-cfo-saas-batch68-rewritten-proper';
+// import batch69Articles from './academy-cfo-saas-batch69-rewritten-proper';
+// import batch70Articles from './academy-cfo-saas-batch70-rewritten-proper';
+// import batch71Articles from './academy-cfo-saas-batch71-rewritten-proper';
+// import batch72Articles from './academy-cfo-saas-batch72-rewritten-proper';
+// import batch73Articles from './academy-cfo-saas-batch73-rewritten-proper';
+// import batch74Articles from './academy-cfo-saas-batch74-rewritten-proper';
+// import batch75Articles from './academy-cfo-saas-batch75-rewritten-proper';
+// import batch76Articles from './academy-cfo-saas-batch76-rewritten-proper';
+// import batch77Articles from './academy-cfo-saas-batch77-rewritten-proper';
+// import batch78Articles from './academy-cfo-saas-batch78-rewritten-proper';
+// import batch79Articles from './academy-cfo-saas-batch79-rewritten-proper';
+// import batch80Articles from './academy-cfo-saas-batch80-rewritten-proper';
+// import batch81Articles from './academy-cfo-saas-batch81-rewritten-proper';
+// import batch82Articles from './academy-cfo-saas-batch82-rewritten-proper';
+// import batch83Articles from './academy-cfo-saas-batch83-rewritten-proper';
+// import batch84Articles from './academy-cfo-saas-batch84-rewritten-proper';
+// import batch85Articles from './academy-cfo-saas-batch85-rewritten-proper';
+// import batch86Articles from './academy-cfo-saas-batch86-rewritten-proper';
+// import batch87Articles from './academy-cfo-saas-batch87-rewritten-proper';
+// import batch88Articles from './academy-cfo-saas-batch88-rewritten-proper';
+// import batch89Articles from './academy-cfo-saas-batch89-rewritten-proper';
+// import batch90Articles from './academy-cfo-saas-batch90-rewritten-proper';
 import batch91Articles from './academy-cfo-saas-batch91-rewritten-proper';
 import batch92Articles from './academy-cfo-saas-batch92-rewritten-proper';
 import batch93Articles from './academy-cfo-saas-batch93-rewritten-proper';
@@ -89,7 +93,7 @@ export const academyCategories: AcademyCategory[] = [
   { slug: "inventory-supply-chain", title: "Inventory & Supply Chain", description: "Stock smarter — avoid stockouts and dead inventory.", icon: "📦", color: "#27ae60", articleCount: 20 },
   { slug: "marketing-intelligence", title: "Marketing Intelligence", description: "Measure what works and cut what doesn't.", icon: "📣", color: "#f39c12", articleCount: 20 },
   { slug: "ai-and-data", title: "AI & Data", description: "How AI and data science power modern business decisions.", icon: "🤖", color: "#1abc9c", articleCount: 20 },
-  { slug: "askbiz-tutorials", title: "AskBiz Tutorials", description: "Step-by-step guides to getting the most from AskBiz (including 336 SaaS CFO Academy articles from batches 68-105).", icon: "🎓", color: "#d08a59", articleCount: 459 },
+  { slug: "askbiz-tutorials", title: "AskBiz Tutorials", description: "Step-by-step guides to getting the most from AskBiz (including 15 SaaS CFO Academy articles from batches 91-105).", icon: "🎓", color: "#d08a59", articleCount: 135 },
 
 { slug: "business-strategy-growth", title: "Business Strategy & Growth", description: "Frameworks, metrics, and mental models for building and scaling a business.", icon: "💼", color: "#2c3e50", articleCount: 20 },
   { slug: "funding-and-investment", title: "Funding & Investment", description: "Understand funding options, investor terms, and how to raise capital for your business.", icon: "🏦", color: "#1a5276", articleCount: 20 },
@@ -15125,51 +15129,53 @@ academyArticles.push(...ASKBIZ_POS_TILL_ARTICLES);
 academyArticles.push(...ASKBIZ_POS_HACKS_ARTICLES);
 academyArticles.push(...ASKBIZ_POS_REPORTS_ARTICLES);
 
-// ─── MERGE SAAS CFO TRAINING ARTICLES (BATCHES 50-67, 297 articles) ─────────
+// ─── MERGE SAAS CFO TRAINING ARTICLES (BATCHES 50-90) ──────────────────────
+// NOTE: Batches 50-90 exist locally but not yet committed to git.
+// Commented out to fix build. Uncomment when batches are committed.
 // Batches 48-49 not yet committed; will be added when ready
 // academyArticles.push(...batch48Articles);
 // academyArticles.push(...batch49Articles);
-academyArticles.push(...batch50Articles);
-academyArticles.push(...batch51Articles);
-academyArticles.push(...batch52Articles);
-academyArticles.push(...batch53Articles);
-academyArticles.push(...batch54Articles);
-academyArticles.push(...batch55Articles);
-academyArticles.push(...batch56Articles);
-academyArticles.push(...batch57Articles);
-academyArticles.push(...batch58Articles);
-academyArticles.push(...batch59Articles);
-academyArticles.push(...batch60Articles);
-academyArticles.push(...batch61Articles);
-academyArticles.push(...batch62Articles);
-academyArticles.push(...batch63Articles);
-academyArticles.push(...batch64Articles);
-academyArticles.push(...batch65Articles);
-academyArticles.push(...batch66Articles);
-academyArticles.push(...batch67Articles);
-academyArticles.push(...batch68Articles);
-academyArticles.push(...batch69Articles);
-academyArticles.push(...batch70Articles);
-academyArticles.push(...batch71Articles);
-academyArticles.push(...batch72Articles);
-academyArticles.push(...batch73Articles);
-academyArticles.push(...batch74Articles);
-academyArticles.push(...batch75Articles);
-academyArticles.push(...batch76Articles);
-academyArticles.push(...batch77Articles);
-academyArticles.push(...batch78Articles);
-academyArticles.push(...batch79Articles);
-academyArticles.push(...batch80Articles);
-academyArticles.push(...batch81Articles);
-academyArticles.push(...batch82Articles);
-academyArticles.push(...batch83Articles);
-academyArticles.push(...batch84Articles);
-academyArticles.push(...batch85Articles);
-academyArticles.push(...batch86Articles);
-academyArticles.push(...batch87Articles);
-academyArticles.push(...batch88Articles);
-academyArticles.push(...batch89Articles);
-academyArticles.push(...batch90Articles);
+// academyArticles.push(...batch50Articles);
+// academyArticles.push(...batch51Articles);
+// academyArticles.push(...batch52Articles);
+// academyArticles.push(...batch53Articles);
+// academyArticles.push(...batch54Articles);
+// academyArticles.push(...batch55Articles);
+// academyArticles.push(...batch56Articles);
+// academyArticles.push(...batch57Articles);
+// academyArticles.push(...batch58Articles);
+// academyArticles.push(...batch59Articles);
+// academyArticles.push(...batch60Articles);
+// academyArticles.push(...batch61Articles);
+// academyArticles.push(...batch62Articles);
+// academyArticles.push(...batch63Articles);
+// academyArticles.push(...batch64Articles);
+// academyArticles.push(...batch65Articles);
+// academyArticles.push(...batch66Articles);
+// academyArticles.push(...batch67Articles);
+// academyArticles.push(...batch68Articles);
+// academyArticles.push(...batch69Articles);
+// academyArticles.push(...batch70Articles);
+// academyArticles.push(...batch71Articles);
+// academyArticles.push(...batch72Articles);
+// academyArticles.push(...batch73Articles);
+// academyArticles.push(...batch74Articles);
+// academyArticles.push(...batch75Articles);
+// academyArticles.push(...batch76Articles);
+// academyArticles.push(...batch77Articles);
+// academyArticles.push(...batch78Articles);
+// academyArticles.push(...batch79Articles);
+// academyArticles.push(...batch80Articles);
+// academyArticles.push(...batch81Articles);
+// academyArticles.push(...batch82Articles);
+// academyArticles.push(...batch83Articles);
+// academyArticles.push(...batch84Articles);
+// academyArticles.push(...batch85Articles);
+// academyArticles.push(...batch86Articles);
+// academyArticles.push(...batch87Articles);
+// academyArticles.push(...batch88Articles);
+// academyArticles.push(...batch89Articles);
+// academyArticles.push(...batch90Articles);
 academyArticles.push(...batch91Articles);
 academyArticles.push(...batch92Articles);
 academyArticles.push(...batch93Articles);
