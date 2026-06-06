@@ -100,6 +100,36 @@ import batch122Articles from './academy-cfo-saas-batch122-rewritten-proper';
 import batch123Articles from './academy-cfo-saas-batch123-rewritten-proper';
 import batch124Articles from './academy-cfo-saas-batch124-rewritten-proper';
 import batch125Articles from './academy-cfo-saas-batch125-rewritten-proper';
+import batch126Articles from './academy-cfo-saas-batch126-rewritten-proper';
+import batch127Articles from './academy-cfo-saas-batch127-rewritten-proper';
+import batch128Articles from './academy-cfo-saas-batch128-rewritten-proper';
+import batch129Articles from './academy-cfo-saas-batch129-rewritten-proper';
+import batch130Articles from './academy-cfo-saas-batch130-rewritten-proper';
+import batch131Articles from './academy-cfo-saas-batch131-rewritten-proper';
+import batch132Articles from './academy-cfo-saas-batch132-rewritten-proper';
+import batch133Articles from './academy-cfo-saas-batch133-rewritten-proper';
+import batch134Articles from './academy-cfo-saas-batch134-rewritten-proper';
+import batch135Articles from './academy-cfo-saas-batch135-rewritten-proper';
+import batch136Articles from './academy-cfo-saas-batch136-rewritten-proper';
+import batch137Articles from './academy-cfo-saas-batch137-rewritten-proper';
+import batch138Articles from './academy-cfo-saas-batch138-rewritten-proper';
+import batch139Articles from './academy-cfo-saas-batch139-rewritten-proper';
+import batch140Articles from './academy-cfo-saas-batch140-rewritten-proper';
+import batch141Articles from './academy-cfo-saas-batch141-rewritten-proper';
+import batch142Articles from './academy-cfo-saas-batch142-rewritten-proper';
+import batch143Articles from './academy-cfo-saas-batch143-rewritten-proper';
+import batch144Articles from './academy-cfo-saas-batch144-rewritten-proper';
+import batch145Articles from './academy-cfo-saas-batch145-rewritten-proper';
+import batch146Articles from './academy-cfo-saas-batch146-rewritten-proper';
+import batch147Articles from './academy-cfo-saas-batch147-rewritten-proper';
+import batch148Articles from './academy-cfo-saas-batch148-rewritten-proper';
+import batch149Articles from './academy-cfo-saas-batch149-rewritten-proper';
+import batch150Articles from './academy-cfo-saas-batch150-rewritten-proper';
+import batch151Articles from './academy-cfo-saas-batch151-rewritten-proper';
+import batch152Articles from './academy-cfo-saas-batch152-rewritten-proper';
+import batch153Articles from './academy-cfo-saas-batch153-rewritten-proper';
+import batch154Articles from './academy-cfo-saas-batch154-rewritten-proper';
+import batch155Articles from './academy-cfo-saas-batch155-rewritten-proper';
 
 const _africaAcademyArticles = [...AFRICA_ACADEMY_BATCH1, ...AFRICA_ACADEMY_BATCH2] as AcademyArticle[];
 
@@ -113,7 +143,7 @@ export const academyCategories: AcademyCategory[] = [
   { slug: "inventory-supply-chain", title: "Inventory & Supply Chain", description: "Stock smarter — avoid stockouts and dead inventory.", icon: "📦", color: "#27ae60", articleCount: 20 },
   { slug: "marketing-intelligence", title: "Marketing Intelligence", description: "Measure what works and cut what doesn't.", icon: "📣", color: "#f39c12", articleCount: 20 },
   { slug: "ai-and-data", title: "AI & Data", description: "How AI and data science power modern business decisions.", icon: "🤖", color: "#1abc9c", articleCount: 20 },
-  { slug: "askbiz-tutorials", title: "AskBiz Tutorials", description: "Step-by-step guides to getting the most from AskBiz (including 35 SaaS CFO Academy articles from batches 91-125).", icon: "🎓", color: "#d08a59", articleCount: 155 },
+  { slug: "askbiz-tutorials", title: "AskBiz Tutorials", description: "Step-by-step guides to getting the most from AskBiz (including 65 SaaS CFO Academy articles from batches 91-155).", icon: "🎓", color: "#d08a59", articleCount: 185 },
 
 { slug: "business-strategy-growth", title: "Business Strategy & Growth", description: "Frameworks, metrics, and mental models for building and scaling a business.", icon: "💼", color: "#2c3e50", articleCount: 20 },
   { slug: "funding-and-investment", title: "Funding & Investment", description: "Understand funding options, investor terms, and how to raise capital for your business.", icon: "🏦", color: "#1a5276", articleCount: 20 },
@@ -15231,6 +15261,36 @@ academyArticles.push(...batch122Articles);
 academyArticles.push(...batch123Articles);
 academyArticles.push(...batch124Articles);
 academyArticles.push(...batch125Articles);
+academyArticles.push(...batch126Articles);
+academyArticles.push(...batch127Articles);
+academyArticles.push(...batch128Articles);
+academyArticles.push(...batch129Articles);
+academyArticles.push(...batch130Articles);
+academyArticles.push(...batch131Articles);
+academyArticles.push(...batch132Articles);
+academyArticles.push(...batch133Articles);
+academyArticles.push(...batch134Articles);
+academyArticles.push(...batch135Articles);
+academyArticles.push(...batch136Articles);
+academyArticles.push(...batch137Articles);
+academyArticles.push(...batch138Articles);
+academyArticles.push(...batch139Articles);
+academyArticles.push(...batch140Articles);
+academyArticles.push(...batch141Articles);
+academyArticles.push(...batch142Articles);
+academyArticles.push(...batch143Articles);
+academyArticles.push(...batch144Articles);
+academyArticles.push(...batch145Articles);
+academyArticles.push(...batch146Articles);
+academyArticles.push(...batch147Articles);
+academyArticles.push(...batch148Articles);
+academyArticles.push(...batch149Articles);
+academyArticles.push(...batch150Articles);
+academyArticles.push(...batch151Articles);
+academyArticles.push(...batch152Articles);
+academyArticles.push(...batch153Articles);
+academyArticles.push(...batch154Articles);
+academyArticles.push(...batch155Articles);
 
 // ─── MERGE CFO DASHBOARD TRAINING (100 articles) ─────────────────────────────
 // NOTE: CFO batch files temporarily disabled for build

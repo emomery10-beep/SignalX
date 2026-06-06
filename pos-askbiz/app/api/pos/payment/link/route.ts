@@ -46,12 +46,20 @@ export async function POST(req: NextRequest) {
     // Get merchant's payment config
     const { data: config } = await service
       .from('merchant_payment_config')
-      .select('payment_provider, paystack_subaccount_id, stripe_connected_account_id, country')
+      .select('payment_provider, paystack_subaccount_id, stripe_connected_account_id, country, is_active, stripe_onboarding_complete')
       .eq('owner_id', ownerId)
       .single()
 
     if (!config) {
       return NextResponse.json({ error: 'Payment configuration not found' }, { status: 400 })
+    }
+
+    if (!config.is_active) {
+      return NextResponse.json({ error: 'Payment provider not yet active. Complete setup first.' }, { status: 400 })
+    }
+
+    if (config.payment_provider === 'stripe' && !config.stripe_onboarding_complete) {
+      return NextResponse.json({ error: 'Stripe verification pending. Check your email for next steps.' }, { status: 400 })
     }
 
     if (config.payment_provider === 'none') {

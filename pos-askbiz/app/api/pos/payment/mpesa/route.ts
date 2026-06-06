@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     // Get merchant's payment config
     const { data: config, error: configError } = await service
       .from('merchant_payment_config')
-      .select('payment_provider, paystack_subaccount_id')
+      .select('payment_provider, paystack_subaccount_id, is_active')
       .eq('owner_id', ownerId)
       .single()
 
@@ -57,6 +57,10 @@ export async function POST(req: NextRequest) {
         { error: 'M-Pesa payments not configured for this merchant' },
         { status: 400 }
       )
+    }
+
+    if (!config.is_active) {
+      return NextResponse.json({ error: 'Payment provider not yet active. Complete setup first.' }, { status: 400 })
     }
 
     // Normalize phone number

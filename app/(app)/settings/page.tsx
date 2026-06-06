@@ -1392,7 +1392,7 @@ export default function SettingsPage() {
 
       {/* Mobile nav bar */}
       {isMobile && (
-        <div ref={mobileNavRef} style={{ position: 'relative', borderBottom: '1px solid var(--b)', padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <div ref={mobileNavRef} style={{ position: 'relative', borderBottom: '1px solid var(--b)', padding: '10px 16px 10px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {activeItem && (
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
