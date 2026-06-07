@@ -273,10 +273,10 @@ Starting MRR: £1M
 - NRR: 105%
 
 Waterfall visualization:
-```
+\`\`\`
 £1M (start) → +£150K (expansion) → −£100K (churn) → £1.05M (end)
      100%         +15%                −10%            105% NRR
-```
+\`\`\`
 
 This makes it clear: Expansion (+15%) exceeds churn (−10%), yielding net +5% NRR.
 

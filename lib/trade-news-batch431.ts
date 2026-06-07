@@ -2,253 +2,253 @@ import { BlogPost } from './blog-content'
 
 export const TRADE_NEWS_BATCH_431: BlogPost[] = [
   {
-    slug: "us-china-tariffs-pricing-margin-impact-batch-431-01",
-    title: "US-China Tariffs: Pricing & Margin Impact Strategy",
-    metaDescription: "US-China Tariffs: Pricing & Margin Impact Strategy - Trade and supply chain intelligence",
+    slug: "section-232-steel-aluminum-batch-431-01",
+    title: "Section 232 Steel and Aluminum Tariffs",
+    metaDescription: "Section 232 Steel and Aluminum Tariffs - Practical trade intelligence for importers and exporters",
     cluster: "US-China Tariffs",
     pillar: "Global Trade Intelligence",
-    publishDate: "2026-05-28",
+    publishDate: "2026-01-19",
     readTime: 7,
-    tldr: "Business intelligence article on US-China Tariffs. AskBiz provides real-time trade data and analytics.",
+    tldr: "Navigate the 25% steel and 10% aluminum tariffs that affect thousands of downstream manufacturers",
     sections: [
-      { heading: "The Margin Squeeze Problem", level: 2 as const, body: "A textile importer I know nearly lost everything when tariffs jumped from 12% to 25% overnight. Suddenly, a £10 shirt cost them £2.50 more to import. They had two choices: absorb the cost and watch margins disappear, or pass it to retailers who'd already locked in prices. Tariffs aren't just a government policy—they're a margin killer that catches importers unprepared. Most importers don't see tariff changes coming until it's too late. Real-time tracking of tariff schedules, proposed changes, and category reclassifications means you can adjust pricing, find alternatives, or negotiate long-term contracts before the hammer drops. The difference between knowing about a tariff change a month early versus a day before? Hundreds of thousands in lost margin." },
-      { heading: "Pricing Strategy Under Tariff Pressure", level: 2 as const, body: "When tariffs shift, you need a pricing strategy that protects margins without losing volume. Some importers increase prices immediately to lock in customer commitment before increases hit. Others negotiate price-adjustment clauses that let them pass tariff increases through over 90 days rather than absorbing them instantly. The best importers use tariff tracking to anticipate moves 6-12 months out, adjusting prices preemptively rather than reactively. This requires visibility into tariff pipelines—proposed rate changes, temporary tariff holidays, and category reclassifications that could shift your product's tariff treatment. Companies that master pricing under tariff uncertainty maintain margins even when others collapse." },
-      { heading: "Timing Inventory Around Tariff Changes", level: 2 as const, body: "Smart importers use tariff intelligence to time inventory buys. If you know a tariff rate increase is coming in 60 days, you build inventory now at the lower rate, then sell through the higher-cost goods at higher prices once the increase hits. This requires precise timing—order too early and you have carrying costs, order too late and you miss the window. Companies that master this strategy can offset tariff increases entirely through smart inventory timing. The inventory build becomes not a cost but a competitive advantage." }
+      { heading: "Section 232 Steel and Aluminum Tariffs", level: 2 as const, body: "Section 232 imposes 25% on steel and 10% on aluminum imports from most countries. Exclusions exist for specific products not available domestically. Impact extends far beyond steel mills — any manufacturer using steel or aluminum inputs faces higher costs. Downstream impact: $75B in additional costs across US manufacturing." },
+      { heading: "Applying for Product Exclusions", level: 2 as const, body: "File exclusion requests through the BIS portal at 232exclusions.bis.doc.gov. Include: HTS code, product specifications, annual volume, domestic sourcing attempts, and price impact. Processing time: 3-6 months. Objection period allows domestic producers to contest. Approval rate: approximately 35-40%." },
+      { heading: "Managing Cost Pass-Through to Customers", level: 2 as const, body: "Most importers cannot absorb 25% steel tariffs. Pass-through strategies: tariff surcharges (transparent, separate line item), price increases (embedded in product price), or contract renegotiation (split the cost 50/50 with customers). The most successful approach: surcharges that automatically adjust with tariff changes." }
     ],
     paa: [
-      { q: "How does this topic affect my business?", a: "Understanding these dynamics helps you optimize costs, manage risk, and stay ahead of competitors. Real-time intelligence is key." },
-      { q: "What metrics should I monitor?", a: "Track the specific indicators relevant to your supply chain, market, and business model. AskBiz monitors 100+ metrics automatically." },
-      { q: "How can I implement these strategies?", a: "Start with visibility into your current state, identify your biggest risks and opportunities, then build your improvement plan." }
+      { q: "What is the business impact of section 232 steel and aluminum tariffs?", a: "Navigate the 25% steel and 10% aluminum tariffs that affect thousands of downstream manufacturers" },
+      { q: "How can I prepare my business?", a: "Start with visibility into your current exposure, benchmark against industry peers, and build a 90-day action plan targeting the highest-impact improvements first." },
+      { q: "What tools help manage this?", a: "AskBiz monitors trade conditions and provides real-time intelligence. Combine with customs management software, supply chain visibility platforms, and financial hedging tools for comprehensive coverage." }
     ],
     cta: {
       heading: "Get Real-Time Trade Intelligence",
-      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free—no credit card required."
+      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free — no credit card required."
     },
-    relatedSlugs: ["us-china-tariffs-pricing-margin-impact"]
+    relatedSlugs: ["customs-bond-requirements", "duty-drawback-reexports", "trade-compliance-technology"]
   },
   {
-    slug: "us-china-tariffs-supplier-diversification-batch-431-02",
-    title: "US-China Tariffs: Pricing & Margin Impact Strategy",
-    metaDescription: "US-China Tariffs: Pricing & Margin Impact Strategy - Trade and supply chain intelligence",
+    slug: "de-minimis-section-321-batch-431-02",
+    title: "De Minimis Threshold and Section 321 Entries",
+    metaDescription: "De Minimis Threshold and Section 321 Entries - Practical trade intelligence for importers and exporters",
     cluster: "US-China Tariffs",
     pillar: "Global Trade Intelligence",
-    publishDate: "2026-05-28",
+    publishDate: "2026-01-19",
     readTime: 7,
-    tldr: "Business intelligence article on US-China Tariffs. AskBiz provides real-time trade data and analytics.",
+    tldr: "Shipments under $800 enter duty-free — how businesses legally use de minimis thresholds",
     sections: [
-      { heading: "The Margin Squeeze Problem", level: 2 as const, body: "A textile importer I know nearly lost everything when tariffs jumped from 12% to 25% overnight. Suddenly, a £10 shirt cost them £2.50 more to import. They had two choices: absorb the cost and watch margins disappear, or pass it to retailers who'd already locked in prices. Tariffs aren't just a government policy—they're a margin killer that catches importers unprepared. Most importers don't see tariff changes coming until it's too late. Real-time tracking of tariff schedules, proposed changes, and category reclassifications means you can adjust pricing, find alternatives, or negotiate long-term contracts before the hammer drops. The difference between knowing about a tariff change a month early versus a day before? Hundreds of thousands in lost margin." },
-      { heading: "Pricing Strategy Under Tariff Pressure", level: 2 as const, body: "When tariffs shift, you need a pricing strategy that protects margins without losing volume. Some importers increase prices immediately to lock in customer commitment before increases hit. Others negotiate price-adjustment clauses that let them pass tariff increases through over 90 days rather than absorbing them instantly. The best importers use tariff tracking to anticipate moves 6-12 months out, adjusting prices preemptively rather than reactively. This requires visibility into tariff pipelines—proposed rate changes, temporary tariff holidays, and category reclassifications that could shift your product's tariff treatment. Companies that master pricing under tariff uncertainty maintain margins even when others collapse." },
-      { heading: "Timing Inventory Around Tariff Changes", level: 2 as const, body: "Smart importers use tariff intelligence to time inventory buys. If you know a tariff rate increase is coming in 60 days, you build inventory now at the lower rate, then sell through the higher-cost goods at higher prices once the increase hits. This requires precise timing—order too early and you have carrying costs, order too late and you miss the window. Companies that master this strategy can offset tariff increases entirely through smart inventory timing. The inventory build becomes not a cost but a competitive advantage." }
+      { heading: "De Minimis Threshold and Section 321 Entries", level: 2 as const, body: "Section 321 allows shipments valued at $800 or less to enter the US duty-free and with minimal customs formalities. E-commerce companies have leveraged this by shipping directly from foreign warehouses to individual consumers. However, Section 301 tariff goods and certain restricted items don't qualify for de minimis treatment." },
+      { heading: "Legitimate vs Abusive Use of De Minimis", level: 2 as const, body: "Legitimate: direct-to-consumer shipments from overseas that genuinely fall under $800 per package per person per day. Abusive: splitting larger shipments into sub-$800 packages (structuring), using multiple consignees at the same address, or misrepresenting values. CBP is increasingly scrutinizing de minimis entries — penalties for abuse include seizure and fines." },
+      { heading: "Impact of Proposed De Minimis Reform", level: 2 as const, body: "Congress is considering lowering the threshold or eliminating de minimis for certain countries. If passed, this would affect millions of packages daily and fundamentally change cross-border e-commerce economics. Companies relying on de minimis should model the impact of a $200 threshold or complete elimination." }
     ],
     paa: [
-      { q: "How does this topic affect my business?", a: "Understanding these dynamics helps you optimize costs, manage risk, and stay ahead of competitors. Real-time intelligence is key." },
-      { q: "What metrics should I monitor?", a: "Track the specific indicators relevant to your supply chain, market, and business model. AskBiz monitors 100+ metrics automatically." },
-      { q: "How can I implement these strategies?", a: "Start with visibility into your current state, identify your biggest risks and opportunities, then build your improvement plan." }
+      { q: "What is the business impact of de minimis threshold and section 321 entries?", a: "Shipments under $800 enter duty-free — how businesses legally use de minimis thresholds" },
+      { q: "How can I prepare my business?", a: "Start with visibility into your current exposure, benchmark against industry peers, and build a 90-day action plan targeting the highest-impact improvements first." },
+      { q: "What tools help manage this?", a: "AskBiz monitors trade conditions and provides real-time intelligence. Combine with customs management software, supply chain visibility platforms, and financial hedging tools for comprehensive coverage." }
     ],
     cta: {
       heading: "Get Real-Time Trade Intelligence",
-      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free—no credit card required."
+      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free — no credit card required."
     },
-    relatedSlugs: ["us-china-tariffs-pricing-margin-impact"]
+    relatedSlugs: ["bonded-warehouse-strategies", "section-201-safeguard-tariffs", "tariff-engineering-redesign"]
   },
   {
-    slug: "us-china-tariffs-currency-hedging-batch-431-03",
-    title: "US-China Tariffs: Pricing & Margin Impact Strategy",
-    metaDescription: "US-China Tariffs: Pricing & Margin Impact Strategy - Trade and supply chain intelligence",
+    slug: "retaliatory-tariffs-exports-batch-431-03",
+    title: "Retaliatory Tariffs on US Exports to China",
+    metaDescription: "Retaliatory Tariffs on US Exports to China - Practical trade intelligence for importers and exporters",
     cluster: "US-China Tariffs",
     pillar: "Global Trade Intelligence",
-    publishDate: "2026-05-28",
+    publishDate: "2026-01-19",
     readTime: 7,
-    tldr: "Business intelligence article on US-China Tariffs. AskBiz provides real-time trade data and analytics.",
+    tldr: "China's retaliatory tariffs affect $110B of US exports — how exporters can adapt",
     sections: [
-      { heading: "The Margin Squeeze Problem", level: 2 as const, body: "A textile importer I know nearly lost everything when tariffs jumped from 12% to 25% overnight. Suddenly, a £10 shirt cost them £2.50 more to import. They had two choices: absorb the cost and watch margins disappear, or pass it to retailers who'd already locked in prices. Tariffs aren't just a government policy—they're a margin killer that catches importers unprepared. Most importers don't see tariff changes coming until it's too late. Real-time tracking of tariff schedules, proposed changes, and category reclassifications means you can adjust pricing, find alternatives, or negotiate long-term contracts before the hammer drops. The difference between knowing about a tariff change a month early versus a day before? Hundreds of thousands in lost margin." },
-      { heading: "Pricing Strategy Under Tariff Pressure", level: 2 as const, body: "When tariffs shift, you need a pricing strategy that protects margins without losing volume. Some importers increase prices immediately to lock in customer commitment before increases hit. Others negotiate price-adjustment clauses that let them pass tariff increases through over 90 days rather than absorbing them instantly. The best importers use tariff tracking to anticipate moves 6-12 months out, adjusting prices preemptively rather than reactively. This requires visibility into tariff pipelines—proposed rate changes, temporary tariff holidays, and category reclassifications that could shift your product's tariff treatment. Companies that master pricing under tariff uncertainty maintain margins even when others collapse." },
-      { heading: "Timing Inventory Around Tariff Changes", level: 2 as const, body: "Smart importers use tariff intelligence to time inventory buys. If you know a tariff rate increase is coming in 60 days, you build inventory now at the lower rate, then sell through the higher-cost goods at higher prices once the increase hits. This requires precise timing—order too early and you have carrying costs, order too late and you miss the window. Companies that master this strategy can offset tariff increases entirely through smart inventory timing. The inventory build becomes not a cost but a competitive advantage." }
+      { heading: "Retaliatory Tariffs on US Exports to China", level: 2 as const, body: "China imposed retaliatory tariffs of 5-25% on $110B of US goods including soybeans, pork, automobiles, and chemicals. US agricultural exports to China dropped 50% in the first year. Companies exporting to China must factor retaliatory tariffs into pricing, seek alternative markets, and lobby for exclusions through Chinese MOFCOM." },
+      { heading: "Finding Alternative Export Markets", level: 2 as const, body: "When China closed, other markets opened. US soybean exports redirected to Brazil (which then exported more to China). US pork found markets in Japan and South Korea. The lesson: don't rely on one export market. Diversify to 3-5 major markets so no single country's tariffs can devastate your business." },
+      { heading: "Using China's Tariff Exclusion Process", level: 2 as const, body: "China has its own exclusion process through MOFCOM. Chinese importers (your customers) can apply for exclusions on US goods they cannot source elsewhere. Success requires your Chinese buyer to demonstrate no viable alternative exists. Provide them with technical specifications and comparisons to support their application." }
     ],
     paa: [
-      { q: "How does this topic affect my business?", a: "Understanding these dynamics helps you optimize costs, manage risk, and stay ahead of competitors. Real-time intelligence is key." },
-      { q: "What metrics should I monitor?", a: "Track the specific indicators relevant to your supply chain, market, and business model. AskBiz monitors 100+ metrics automatically." },
-      { q: "How can I implement these strategies?", a: "Start with visibility into your current state, identify your biggest risks and opportunities, then build your improvement plan." }
+      { q: "What is the business impact of retaliatory tariffs on us exports to china?", a: "China's retaliatory tariffs affect $110B of US exports — how exporters can adapt" },
+      { q: "How can I prepare my business?", a: "Start with visibility into your current exposure, benchmark against industry peers, and build a 90-day action plan targeting the highest-impact improvements first." },
+      { q: "What tools help manage this?", a: "AskBiz monitors trade conditions and provides real-time intelligence. Combine with customs management software, supply chain visibility platforms, and financial hedging tools for comprehensive coverage." }
     ],
     cta: {
       heading: "Get Real-Time Trade Intelligence",
-      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free—no credit card required."
+      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free — no credit card required."
     },
-    relatedSlugs: ["us-china-tariffs-pricing-margin-impact"]
+    relatedSlugs: ["section-301-rate-changes", "antidumping-countervailing-duties", "country-of-origin-marking"]
   },
   {
-    slug: "us-china-tariffs-competitive-monitoring-batch-431-04",
-    title: "US-China Tariffs: Pricing & Margin Impact Strategy",
-    metaDescription: "US-China Tariffs: Pricing & Margin Impact Strategy - Trade and supply chain intelligence",
+    slug: "tariff-engineering-redesign-batch-431-04",
+    title: "Tariff Engineering and Product Redesign",
+    metaDescription: "Tariff Engineering and Product Redesign - Practical trade intelligence for importers and exporters",
     cluster: "US-China Tariffs",
     pillar: "Global Trade Intelligence",
-    publishDate: "2026-05-28",
+    publishDate: "2026-01-19",
     readTime: 7,
-    tldr: "Business intelligence article on US-China Tariffs. AskBiz provides real-time trade data and analytics.",
+    tldr: "Redesign products to qualify for lower tariff classifications — legal, effective, and widely practiced",
     sections: [
-      { heading: "The Margin Squeeze Problem", level: 2 as const, body: "A textile importer I know nearly lost everything when tariffs jumped from 12% to 25% overnight. Suddenly, a £10 shirt cost them £2.50 more to import. They had two choices: absorb the cost and watch margins disappear, or pass it to retailers who'd already locked in prices. Tariffs aren't just a government policy—they're a margin killer that catches importers unprepared. Most importers don't see tariff changes coming until it's too late. Real-time tracking of tariff schedules, proposed changes, and category reclassifications means you can adjust pricing, find alternatives, or negotiate long-term contracts before the hammer drops. The difference between knowing about a tariff change a month early versus a day before? Hundreds of thousands in lost margin." },
-      { heading: "Pricing Strategy Under Tariff Pressure", level: 2 as const, body: "When tariffs shift, you need a pricing strategy that protects margins without losing volume. Some importers increase prices immediately to lock in customer commitment before increases hit. Others negotiate price-adjustment clauses that let them pass tariff increases through over 90 days rather than absorbing them instantly. The best importers use tariff tracking to anticipate moves 6-12 months out, adjusting prices preemptively rather than reactively. This requires visibility into tariff pipelines—proposed rate changes, temporary tariff holidays, and category reclassifications that could shift your product's tariff treatment. Companies that master pricing under tariff uncertainty maintain margins even when others collapse." },
-      { heading: "Timing Inventory Around Tariff Changes", level: 2 as const, body: "Smart importers use tariff intelligence to time inventory buys. If you know a tariff rate increase is coming in 60 days, you build inventory now at the lower rate, then sell through the higher-cost goods at higher prices once the increase hits. This requires precise timing—order too early and you have carrying costs, order too late and you miss the window. Companies that master this strategy can offset tariff increases entirely through smart inventory timing. The inventory build becomes not a cost but a competitive advantage." }
+      { heading: "Tariff Engineering and Product Redesign", level: 2 as const, body: "Tariff engineering means modifying a product's design, material composition, or assembly sequence to qualify for a lower-duty HTS classification. Example: a polyester jacket with a cotton lining might face 27% duty; add enough cotton to the outer shell and it reclassifies as cotton (16% duty). Savings: 11% on every unit." },
+      { heading: "Legal Boundaries of Tariff Engineering", level: 2 as const, body: "Tariff engineering is legal when the product genuinely changes classification through material modification. It becomes illegal when changes are cosmetic or reversed after importation. The test: would a customs officer examining the product agree it belongs in the claimed classification? If the modification is genuine and permanent, it's legitimate." },
+      { heading: "Case Studies in Successful Tariff Engineering", level: 2 as const, body: "Converse moved shoe eyelets to the sole, reclassifying shoes from 37.5% to 8.5% duty. Peanut butter imported with sugar content above 65% classifies as confectionery (5%) rather than peanut preparation (17%). A lighting company added a timer, reclassifying from 3.9% to 2.8%. Small design changes, massive duty savings." }
     ],
     paa: [
-      { q: "How does this topic affect my business?", a: "Understanding these dynamics helps you optimize costs, manage risk, and stay ahead of competitors. Real-time intelligence is key." },
-      { q: "What metrics should I monitor?", a: "Track the specific indicators relevant to your supply chain, market, and business model. AskBiz monitors 100+ metrics automatically." },
-      { q: "How can I implement these strategies?", a: "Start with visibility into your current state, identify your biggest risks and opportunities, then build your improvement plan." }
+      { q: "What is the business impact of tariff engineering and product redesign?", a: "Redesign products to qualify for lower tariff classifications — legal, effective, and widely practiced" },
+      { q: "How can I prepare my business?", a: "Start with visibility into your current exposure, benchmark against industry peers, and build a 90-day action plan targeting the highest-impact improvements first." },
+      { q: "What tools help manage this?", a: "AskBiz monitors trade conditions and provides real-time intelligence. Combine with customs management software, supply chain visibility platforms, and financial hedging tools for comprehensive coverage." }
     ],
     cta: {
       heading: "Get Real-Time Trade Intelligence",
-      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free—no credit card required."
+      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free — no credit card required."
     },
-    relatedSlugs: ["us-china-tariffs-pricing-margin-impact"]
+    relatedSlugs: ["section-301-rate-changes", "antidumping-countervailing-duties", "country-of-origin-marking"]
   },
   {
-    slug: "us-china-tariffs-scenario-planning-batch-431-05",
-    title: "US-China Tariffs: Pricing & Margin Impact Strategy",
-    metaDescription: "US-China Tariffs: Pricing & Margin Impact Strategy - Trade and supply chain intelligence",
+    slug: "antidumping-countervailing-duties-batch-431-05",
+    title: "Antidumping and Countervailing Duties",
+    metaDescription: "Antidumping and Countervailing Duties - Practical trade intelligence for importers and exporters",
     cluster: "US-China Tariffs",
     pillar: "Global Trade Intelligence",
-    publishDate: "2026-05-28",
+    publishDate: "2026-01-19",
     readTime: 7,
-    tldr: "Business intelligence article on US-China Tariffs. AskBiz provides real-time trade data and analytics.",
+    tldr: "AD/CVD duties can add 50-500% to import costs — how to check exposure and manage risk",
     sections: [
-      { heading: "The Margin Squeeze Problem", level: 2 as const, body: "A textile importer I know nearly lost everything when tariffs jumped from 12% to 25% overnight. Suddenly, a £10 shirt cost them £2.50 more to import. They had two choices: absorb the cost and watch margins disappear, or pass it to retailers who'd already locked in prices. Tariffs aren't just a government policy—they're a margin killer that catches importers unprepared. Most importers don't see tariff changes coming until it's too late. Real-time tracking of tariff schedules, proposed changes, and category reclassifications means you can adjust pricing, find alternatives, or negotiate long-term contracts before the hammer drops. The difference between knowing about a tariff change a month early versus a day before? Hundreds of thousands in lost margin." },
-      { heading: "Pricing Strategy Under Tariff Pressure", level: 2 as const, body: "When tariffs shift, you need a pricing strategy that protects margins without losing volume. Some importers increase prices immediately to lock in customer commitment before increases hit. Others negotiate price-adjustment clauses that let them pass tariff increases through over 90 days rather than absorbing them instantly. The best importers use tariff tracking to anticipate moves 6-12 months out, adjusting prices preemptively rather than reactively. This requires visibility into tariff pipelines—proposed rate changes, temporary tariff holidays, and category reclassifications that could shift your product's tariff treatment. Companies that master pricing under tariff uncertainty maintain margins even when others collapse." },
-      { heading: "Timing Inventory Around Tariff Changes", level: 2 as const, body: "Smart importers use tariff intelligence to time inventory buys. If you know a tariff rate increase is coming in 60 days, you build inventory now at the lower rate, then sell through the higher-cost goods at higher prices once the increase hits. This requires precise timing—order too early and you have carrying costs, order too late and you miss the window. Companies that master this strategy can offset tariff increases entirely through smart inventory timing. The inventory build becomes not a cost but a competitive advantage." }
+      { heading: "Antidumping and Countervailing Duties", level: 2 as const, body: "Antidumping duties apply when foreign goods are sold below fair value. Countervailing duties offset foreign government subsidies. Combined AD/CVD rates on Chinese goods can reach 200-500%. Affected products: steel, aluminum, solar panels, furniture, tires, and hundreds more. Always check ITC orders before sourcing from any country." },
+      { heading: "Checking AD/CVD Orders Before Sourcing", level: 2 as const, body: "Before placing any order, search the ITC AD/CVD database at www.usitc.gov. Enter your HTS code and source country. If an order exists, you'll face preliminary duties (often 50-200%) deposited at entry, with final rates determined in annual reviews. Failing to check AD/CVD exposure before committing to a supplier is one of the costliest sourcing mistakes." },
+      { heading: "Scope Inquiries and Circumvention", level: 2 as const, body: "If your product is borderline — similar to but not exactly like an AD/CVD-covered product — request a scope ruling from Commerce. This takes 6-12 months but provides certainty. Circumvention (routing through third countries to avoid AD/CVD) is illegal and increasingly enforced. CBP uses production records, transshipment analysis, and factory audits to detect it." }
     ],
     paa: [
-      { q: "How does this topic affect my business?", a: "Understanding these dynamics helps you optimize costs, manage risk, and stay ahead of competitors. Real-time intelligence is key." },
-      { q: "What metrics should I monitor?", a: "Track the specific indicators relevant to your supply chain, market, and business model. AskBiz monitors 100+ metrics automatically." },
-      { q: "How can I implement these strategies?", a: "Start with visibility into your current state, identify your biggest risks and opportunities, then build your improvement plan." }
+      { q: "What is the business impact of antidumping and countervailing duties?", a: "AD/CVD duties can add 50-500% to import costs — how to check exposure and manage risk" },
+      { q: "How can I prepare my business?", a: "Start with visibility into your current exposure, benchmark against industry peers, and build a 90-day action plan targeting the highest-impact improvements first." },
+      { q: "What tools help manage this?", a: "AskBiz monitors trade conditions and provides real-time intelligence. Combine with customs management software, supply chain visibility platforms, and financial hedging tools for comprehensive coverage." }
     ],
     cta: {
       heading: "Get Real-Time Trade Intelligence",
-      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free—no credit card required."
+      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free — no credit card required."
     },
-    relatedSlugs: ["us-china-tariffs-pricing-margin-impact"]
+    relatedSlugs: ["section-301-rate-changes", "tariff-engineering-redesign", "country-of-origin-marking"]
   },
   {
-    slug: "us-china-tariffs-pricing-margin-impact-batch-431-06",
-    title: "US-China Tariffs: Pricing & Margin Impact Strategy",
-    metaDescription: "US-China Tariffs: Pricing & Margin Impact Strategy - Trade and supply chain intelligence",
+    slug: "customs-bond-requirements-batch-431-06",
+    title: "Customs Bond Requirements and Management",
+    metaDescription: "Customs Bond Requirements and Management - Practical trade intelligence for importers and exporters",
     cluster: "US-China Tariffs",
     pillar: "Global Trade Intelligence",
-    publishDate: "2026-05-28",
+    publishDate: "2026-01-20",
     readTime: 7,
-    tldr: "Business intelligence article on US-China Tariffs. AskBiz provides real-time trade data and analytics.",
+    tldr: "Every importer needs a customs bond — understand the types, costs, and risk management implications",
     sections: [
-      { heading: "The Margin Squeeze Problem", level: 2 as const, body: "A textile importer I know nearly lost everything when tariffs jumped from 12% to 25% overnight. Suddenly, a £10 shirt cost them £2.50 more to import. They had two choices: absorb the cost and watch margins disappear, or pass it to retailers who'd already locked in prices. Tariffs aren't just a government policy—they're a margin killer that catches importers unprepared. Most importers don't see tariff changes coming until it's too late. Real-time tracking of tariff schedules, proposed changes, and category reclassifications means you can adjust pricing, find alternatives, or negotiate long-term contracts before the hammer drops. The difference between knowing about a tariff change a month early versus a day before? Hundreds of thousands in lost margin." },
-      { heading: "Pricing Strategy Under Tariff Pressure", level: 2 as const, body: "When tariffs shift, you need a pricing strategy that protects margins without losing volume. Some importers increase prices immediately to lock in customer commitment before increases hit. Others negotiate price-adjustment clauses that let them pass tariff increases through over 90 days rather than absorbing them instantly. The best importers use tariff tracking to anticipate moves 6-12 months out, adjusting prices preemptively rather than reactively. This requires visibility into tariff pipelines—proposed rate changes, temporary tariff holidays, and category reclassifications that could shift your product's tariff treatment. Companies that master pricing under tariff uncertainty maintain margins even when others collapse." },
-      { heading: "Timing Inventory Around Tariff Changes", level: 2 as const, body: "Smart importers use tariff intelligence to time inventory buys. If you know a tariff rate increase is coming in 60 days, you build inventory now at the lower rate, then sell through the higher-cost goods at higher prices once the increase hits. This requires precise timing—order too early and you have carrying costs, order too late and you miss the window. Companies that master this strategy can offset tariff increases entirely through smart inventory timing. The inventory build becomes not a cost but a competitive advantage." }
+      { heading: "Customs Bond Requirements and Management", level: 2 as const, body: "A customs bond guarantees payment of duties, taxes, and fees to CBP. Single-entry bonds cover one shipment; continuous bonds cover all entries for one year. Continuous bonds are required if you import more than $2,500/year. Bond amount: typically 10% of duties paid in the prior 12 months, minimum $50,000." },
+      { heading: "When Your Bond Gets Insufficient", level: 2 as const, body: "If your duty payments exceed your bond amount, CBP issues an insufficiency notice. You have 30 days to increase bond coverage or face entry delays. Tariff increases (like Section 301) can suddenly make bonds insufficient. Review bond amounts quarterly against actual duty spend. A $50K bond with $600K in annual duties is a problem waiting to happen." },
+      { heading: "Bond Claims and Liquidated Damages", level: 2 as const, body: "CBP can make claims against your bond for: late duty payment, missing entry documentation, marking violations, and liquidated damages. Common triggers: late filing (penalty: 2x duty), failure to redeliver (penalty: 3x value of merchandise). Protect yourself with compliance programs and customs broker oversight." }
     ],
     paa: [
-      { q: "How does this topic affect my business?", a: "Understanding these dynamics helps you optimize costs, manage risk, and stay ahead of competitors. Real-time intelligence is key." },
-      { q: "What metrics should I monitor?", a: "Track the specific indicators relevant to your supply chain, market, and business model. AskBiz monitors 100+ metrics automatically." },
-      { q: "How can I implement these strategies?", a: "Start with visibility into your current state, identify your biggest risks and opportunities, then build your improvement plan." }
+      { q: "What is the business impact of customs bond requirements and management?", a: "Every importer needs a customs bond — understand the types, costs, and risk management implications" },
+      { q: "How can I prepare my business?", a: "Start with visibility into your current exposure, benchmark against industry peers, and build a 90-day action plan targeting the highest-impact improvements first." },
+      { q: "What tools help manage this?", a: "AskBiz monitors trade conditions and provides real-time intelligence. Combine with customs management software, supply chain visibility platforms, and financial hedging tools for comprehensive coverage." }
     ],
     cta: {
       heading: "Get Real-Time Trade Intelligence",
-      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free—no credit card required."
+      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free — no credit card required."
     },
-    relatedSlugs: ["us-china-tariffs-pricing-margin-impact"]
+    relatedSlugs: ["bonded-warehouse-strategies", "section-201-safeguard-tariffs", "retaliatory-tariffs-exports"]
   },
   {
-    slug: "us-china-tariffs-supplier-diversification-batch-431-07",
-    title: "US-China Tariffs: Pricing & Margin Impact Strategy",
-    metaDescription: "US-China Tariffs: Pricing & Margin Impact Strategy - Trade and supply chain intelligence",
+    slug: "isf-filing-requirements-batch-431-07",
+    title: "Importer Security Filing Requirements",
+    metaDescription: "Importer Security Filing Requirements - Practical trade intelligence for importers and exporters",
     cluster: "US-China Tariffs",
     pillar: "Global Trade Intelligence",
-    publishDate: "2026-05-28",
+    publishDate: "2026-01-20",
     readTime: 7,
-    tldr: "Business intelligence article on US-China Tariffs. AskBiz provides real-time trade data and analytics.",
+    tldr: "ISF 10+2 filing is mandatory for ocean shipments — late or inaccurate filings trigger $5,000+ penalties",
     sections: [
-      { heading: "The Margin Squeeze Problem", level: 2 as const, body: "A textile importer I know nearly lost everything when tariffs jumped from 12% to 25% overnight. Suddenly, a £10 shirt cost them £2.50 more to import. They had two choices: absorb the cost and watch margins disappear, or pass it to retailers who'd already locked in prices. Tariffs aren't just a government policy—they're a margin killer that catches importers unprepared. Most importers don't see tariff changes coming until it's too late. Real-time tracking of tariff schedules, proposed changes, and category reclassifications means you can adjust pricing, find alternatives, or negotiate long-term contracts before the hammer drops. The difference between knowing about a tariff change a month early versus a day before? Hundreds of thousands in lost margin." },
-      { heading: "Pricing Strategy Under Tariff Pressure", level: 2 as const, body: "When tariffs shift, you need a pricing strategy that protects margins without losing volume. Some importers increase prices immediately to lock in customer commitment before increases hit. Others negotiate price-adjustment clauses that let them pass tariff increases through over 90 days rather than absorbing them instantly. The best importers use tariff tracking to anticipate moves 6-12 months out, adjusting prices preemptively rather than reactively. This requires visibility into tariff pipelines—proposed rate changes, temporary tariff holidays, and category reclassifications that could shift your product's tariff treatment. Companies that master pricing under tariff uncertainty maintain margins even when others collapse." },
-      { heading: "Timing Inventory Around Tariff Changes", level: 2 as const, body: "Smart importers use tariff intelligence to time inventory buys. If you know a tariff rate increase is coming in 60 days, you build inventory now at the lower rate, then sell through the higher-cost goods at higher prices once the increase hits. This requires precise timing—order too early and you have carrying costs, order too late and you miss the window. Companies that master this strategy can offset tariff increases entirely through smart inventory timing. The inventory build becomes not a cost but a competitive advantage." }
+      { heading: "Importer Security Filing Requirements", level: 2 as const, body: "The Importer Security Filing (ISF or 10+2) must be filed at least 24 hours before ocean cargo is loaded onto a vessel destined for the US. Ten data elements from the importer, two from the carrier. Late filing: $5,000 penalty per occurrence. Inaccurate filing: $5,000 penalty. No filing: cargo hold and potential seizure." },
+      { heading: "Getting ISF Data from Suppliers on Time", level: 2 as const, body: "The biggest ISF challenge: getting accurate data from overseas suppliers 48+ hours before vessel loading. Required data includes manufacturer name and address, seller, buyer, HTS codes, and container stuffing location. Build ISF requirements into purchase orders. Suppliers who can't provide timely data cost you in penalties." },
+      { heading: "ISF Penalty Mitigation Strategies", level: 2 as const, body: "If you receive a penalty notice, you can petition for mitigation within 60 days. First-time penalties are often reduced 50-75% with a strong compliance narrative. Document your ISF procedures, training records, and corrective actions. Repeat offenders get minimal relief. Invest in automation — manual ISF processes fail at scale." }
     ],
     paa: [
-      { q: "How does this topic affect my business?", a: "Understanding these dynamics helps you optimize costs, manage risk, and stay ahead of competitors. Real-time intelligence is key." },
-      { q: "What metrics should I monitor?", a: "Track the specific indicators relevant to your supply chain, market, and business model. AskBiz monitors 100+ metrics automatically." },
-      { q: "How can I implement these strategies?", a: "Start with visibility into your current state, identify your biggest risks and opportunities, then build your improvement plan." }
+      { q: "What is the business impact of importer security filing requirements?", a: "ISF 10+2 filing is mandatory for ocean shipments — late or inaccurate filings trigger $5,000+ penalties" },
+      { q: "How can I prepare my business?", a: "Start with visibility into your current exposure, benchmark against industry peers, and build a 90-day action plan targeting the highest-impact improvements first." },
+      { q: "What tools help manage this?", a: "AskBiz monitors trade conditions and provides real-time intelligence. Combine with customs management software, supply chain visibility platforms, and financial hedging tools for comprehensive coverage." }
     ],
     cta: {
       heading: "Get Real-Time Trade Intelligence",
-      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free—no credit card required."
+      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free — no credit card required."
     },
-    relatedSlugs: ["us-china-tariffs-pricing-margin-impact"]
+    relatedSlugs: ["antidumping-countervailing-duties", "duty-drawback-reexports", "trade-compliance-technology"]
   },
   {
-    slug: "us-china-tariffs-currency-hedging-batch-431-08",
-    title: "US-China Tariffs: Pricing & Margin Impact Strategy",
-    metaDescription: "US-China Tariffs: Pricing & Margin Impact Strategy - Trade and supply chain intelligence",
+    slug: "uflpa-forced-labor-compliance-batch-431-08",
+    title: "Forced Labor Import Restrictions UFLPA",
+    metaDescription: "Forced Labor Import Restrictions UFLPA - Practical trade intelligence for importers and exporters",
     cluster: "US-China Tariffs",
     pillar: "Global Trade Intelligence",
-    publishDate: "2026-05-28",
+    publishDate: "2026-01-20",
     readTime: 7,
-    tldr: "Business intelligence article on US-China Tariffs. AskBiz provides real-time trade data and analytics.",
+    tldr: "The Uyghur Forced Labor Prevention Act creates a rebuttable presumption that Xinjiang goods involve forced labor",
     sections: [
-      { heading: "The Margin Squeeze Problem", level: 2 as const, body: "A textile importer I know nearly lost everything when tariffs jumped from 12% to 25% overnight. Suddenly, a £10 shirt cost them £2.50 more to import. They had two choices: absorb the cost and watch margins disappear, or pass it to retailers who'd already locked in prices. Tariffs aren't just a government policy—they're a margin killer that catches importers unprepared. Most importers don't see tariff changes coming until it's too late. Real-time tracking of tariff schedules, proposed changes, and category reclassifications means you can adjust pricing, find alternatives, or negotiate long-term contracts before the hammer drops. The difference between knowing about a tariff change a month early versus a day before? Hundreds of thousands in lost margin." },
-      { heading: "Pricing Strategy Under Tariff Pressure", level: 2 as const, body: "When tariffs shift, you need a pricing strategy that protects margins without losing volume. Some importers increase prices immediately to lock in customer commitment before increases hit. Others negotiate price-adjustment clauses that let them pass tariff increases through over 90 days rather than absorbing them instantly. The best importers use tariff tracking to anticipate moves 6-12 months out, adjusting prices preemptively rather than reactively. This requires visibility into tariff pipelines—proposed rate changes, temporary tariff holidays, and category reclassifications that could shift your product's tariff treatment. Companies that master pricing under tariff uncertainty maintain margins even when others collapse." },
-      { heading: "Timing Inventory Around Tariff Changes", level: 2 as const, body: "Smart importers use tariff intelligence to time inventory buys. If you know a tariff rate increase is coming in 60 days, you build inventory now at the lower rate, then sell through the higher-cost goods at higher prices once the increase hits. This requires precise timing—order too early and you have carrying costs, order too late and you miss the window. Companies that master this strategy can offset tariff increases entirely through smart inventory timing. The inventory build becomes not a cost but a competitive advantage." }
+      { heading: "Forced Labor Import Restrictions UFLPA", level: 2 as const, body: "UFLPA presumes all goods from China's Xinjiang region — or produced by entities on the UFLPA Entity List — are made with forced labor and are banned from US import. To import, you must prove by clear and convincing evidence that forced labor was not used anywhere in the supply chain. This applies to raw materials through finished goods." },
+      { heading: "Supply Chain Mapping for UFLPA Compliance", level: 2 as const, body: "Map your supply chain to the raw material level. If any component — cotton, polysilicon, tomatoes, or hundreds of other materials — originates in Xinjiang or involves Entity List companies, you need documentation proving forced labor-free sourcing. This often requires third-party audits, supplier certifications, and traceability systems." },
+      { heading: "What Happens When CBP Detains Your Shipment", level: 2 as const, body: "If CBP detains goods under UFLPA, you have 30 days to provide evidence of forced labor-free production. Required: supply chain maps, audit reports, worker payment records, sourcing documentation. If evidence is insufficient, goods are excluded (returned or destroyed). Detention rates are increasing — prepare documentation before shipping, not after detention." }
     ],
     paa: [
-      { q: "How does this topic affect my business?", a: "Understanding these dynamics helps you optimize costs, manage risk, and stay ahead of competitors. Real-time intelligence is key." },
-      { q: "What metrics should I monitor?", a: "Track the specific indicators relevant to your supply chain, market, and business model. AskBiz monitors 100+ metrics automatically." },
-      { q: "How can I implement these strategies?", a: "Start with visibility into your current state, identify your biggest risks and opportunities, then build your improvement plan." }
+      { q: "What is the business impact of forced labor import restrictions uflpa?", a: "The Uyghur Forced Labor Prevention Act creates a rebuttable presumption that Xinjiang goods involve forced labor" },
+      { q: "How can I prepare my business?", a: "Start with visibility into your current exposure, benchmark against industry peers, and build a 90-day action plan targeting the highest-impact improvements first." },
+      { q: "What tools help manage this?", a: "AskBiz monitors trade conditions and provides real-time intelligence. Combine with customs management software, supply chain visibility platforms, and financial hedging tools for comprehensive coverage." }
     ],
     cta: {
       heading: "Get Real-Time Trade Intelligence",
-      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free—no credit card required."
+      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free — no credit card required."
     },
-    relatedSlugs: ["us-china-tariffs-pricing-margin-impact"]
+    relatedSlugs: ["antidumping-countervailing-duties", "duty-drawback-reexports", "trade-compliance-technology"]
   },
   {
-    slug: "us-china-tariffs-competitive-monitoring-batch-431-09",
-    title: "US-China Tariffs: Pricing & Margin Impact Strategy",
-    metaDescription: "US-China Tariffs: Pricing & Margin Impact Strategy - Trade and supply chain intelligence",
+    slug: "customs-audit-preparation-batch-431-09",
+    title: "Customs Audit Preparation and Response",
+    metaDescription: "Customs Audit Preparation and Response - Practical trade intelligence for importers and exporters",
     cluster: "US-China Tariffs",
     pillar: "Global Trade Intelligence",
-    publishDate: "2026-05-28",
+    publishDate: "2026-01-20",
     readTime: 7,
-    tldr: "Business intelligence article on US-China Tariffs. AskBiz provides real-time trade data and analytics.",
+    tldr: "CBP audits can span 5 years of entries — how to prepare and what to expect during a focused assessment",
     sections: [
-      { heading: "The Margin Squeeze Problem", level: 2 as const, body: "A textile importer I know nearly lost everything when tariffs jumped from 12% to 25% overnight. Suddenly, a £10 shirt cost them £2.50 more to import. They had two choices: absorb the cost and watch margins disappear, or pass it to retailers who'd already locked in prices. Tariffs aren't just a government policy—they're a margin killer that catches importers unprepared. Most importers don't see tariff changes coming until it's too late. Real-time tracking of tariff schedules, proposed changes, and category reclassifications means you can adjust pricing, find alternatives, or negotiate long-term contracts before the hammer drops. The difference between knowing about a tariff change a month early versus a day before? Hundreds of thousands in lost margin." },
-      { heading: "Pricing Strategy Under Tariff Pressure", level: 2 as const, body: "When tariffs shift, you need a pricing strategy that protects margins without losing volume. Some importers increase prices immediately to lock in customer commitment before increases hit. Others negotiate price-adjustment clauses that let them pass tariff increases through over 90 days rather than absorbing them instantly. The best importers use tariff tracking to anticipate moves 6-12 months out, adjusting prices preemptively rather than reactively. This requires visibility into tariff pipelines—proposed rate changes, temporary tariff holidays, and category reclassifications that could shift your product's tariff treatment. Companies that master pricing under tariff uncertainty maintain margins even when others collapse." },
-      { heading: "Timing Inventory Around Tariff Changes", level: 2 as const, body: "Smart importers use tariff intelligence to time inventory buys. If you know a tariff rate increase is coming in 60 days, you build inventory now at the lower rate, then sell through the higher-cost goods at higher prices once the increase hits. This requires precise timing—order too early and you have carrying costs, order too late and you miss the window. Companies that master this strategy can offset tariff increases entirely through smart inventory timing. The inventory build becomes not a cost but a competitive advantage." }
+      { heading: "Customs Audit Preparation and Response", level: 2 as const, body: "CBP conducts focused assessments targeting specific compliance areas: classification, valuation, marking, FTA claims, or AD/CVD. They typically review 3-5 years of entries and can impose penalties of 20-40% of lost revenue. Companies with prior disclosure programs fare much better — voluntary disclosure before an audit reduces penalties by 50-75%." },
+      { heading: "Internal Compliance Reviews", level: 2 as const, body: "Run your own audit annually. Pull 50-100 random entries and verify: correct HTS classification, proper valuation, accurate country of origin, valid FTA certificates, and proper marking. If you find errors, file prior disclosures immediately. Finding your own mistakes before CBP does is always cheaper." },
+      { heading: "Responding to a CBP Request for Information", level: 2 as const, body: "When CBP sends a CF-28 (Request for Information) or CF-29 (Notice of Action), respond within 30 days. Late responses escalate to formal investigations. Engage a customs attorney if the inquiry involves significant duty exposure. Never ignore CBP correspondence — it never gets better with time." }
     ],
     paa: [
-      { q: "How does this topic affect my business?", a: "Understanding these dynamics helps you optimize costs, manage risk, and stay ahead of competitors. Real-time intelligence is key." },
-      { q: "What metrics should I monitor?", a: "Track the specific indicators relevant to your supply chain, market, and business model. AskBiz monitors 100+ metrics automatically." },
-      { q: "How can I implement these strategies?", a: "Start with visibility into your current state, identify your biggest risks and opportunities, then build your improvement plan." }
+      { q: "What is the business impact of customs audit preparation and response?", a: "CBP audits can span 5 years of entries — how to prepare and what to expect during a focused assessment" },
+      { q: "How can I prepare my business?", a: "Start with visibility into your current exposure, benchmark against industry peers, and build a 90-day action plan targeting the highest-impact improvements first." },
+      { q: "What tools help manage this?", a: "AskBiz monitors trade conditions and provides real-time intelligence. Combine with customs management software, supply chain visibility platforms, and financial hedging tools for comprehensive coverage." }
     ],
     cta: {
       heading: "Get Real-Time Trade Intelligence",
-      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free—no credit card required."
+      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free — no credit card required."
     },
-    relatedSlugs: ["us-china-tariffs-pricing-margin-impact"]
+    relatedSlugs: ["bonded-warehouse-strategies", "section-201-safeguard-tariffs", "retaliatory-tariffs-exports"]
   },
   {
-    slug: "us-china-tariffs-scenario-planning-batch-431-10",
-    title: "US-China Tariffs: Pricing & Margin Impact Strategy",
-    metaDescription: "US-China Tariffs: Pricing & Margin Impact Strategy - Trade and supply chain intelligence",
+    slug: "usmca-rules-of-origin-batch-431-10",
+    title: "USMCA Rules of Origin for China Alternatives",
+    metaDescription: "USMCA Rules of Origin for China Alternatives - Practical trade intelligence for importers and exporters",
     cluster: "US-China Tariffs",
     pillar: "Global Trade Intelligence",
-    publishDate: "2026-05-28",
+    publishDate: "2026-01-20",
     readTime: 7,
-    tldr: "Business intelligence article on US-China Tariffs. AskBiz provides real-time trade data and analytics.",
+    tldr: "Source from Mexico under USMCA to avoid China tariffs — but only if you meet rules of origin requirements",
     sections: [
-      { heading: "The Margin Squeeze Problem", level: 2 as const, body: "A textile importer I know nearly lost everything when tariffs jumped from 12% to 25% overnight. Suddenly, a £10 shirt cost them £2.50 more to import. They had two choices: absorb the cost and watch margins disappear, or pass it to retailers who'd already locked in prices. Tariffs aren't just a government policy—they're a margin killer that catches importers unprepared. Most importers don't see tariff changes coming until it's too late. Real-time tracking of tariff schedules, proposed changes, and category reclassifications means you can adjust pricing, find alternatives, or negotiate long-term contracts before the hammer drops. The difference between knowing about a tariff change a month early versus a day before? Hundreds of thousands in lost margin." },
-      { heading: "Pricing Strategy Under Tariff Pressure", level: 2 as const, body: "When tariffs shift, you need a pricing strategy that protects margins without losing volume. Some importers increase prices immediately to lock in customer commitment before increases hit. Others negotiate price-adjustment clauses that let them pass tariff increases through over 90 days rather than absorbing them instantly. The best importers use tariff tracking to anticipate moves 6-12 months out, adjusting prices preemptively rather than reactively. This requires visibility into tariff pipelines—proposed rate changes, temporary tariff holidays, and category reclassifications that could shift your product's tariff treatment. Companies that master pricing under tariff uncertainty maintain margins even when others collapse." },
-      { heading: "Timing Inventory Around Tariff Changes", level: 2 as const, body: "Smart importers use tariff intelligence to time inventory buys. If you know a tariff rate increase is coming in 60 days, you build inventory now at the lower rate, then sell through the higher-cost goods at higher prices once the increase hits. This requires precise timing—order too early and you have carrying costs, order too late and you miss the window. Companies that master this strategy can offset tariff increases entirely through smart inventory timing. The inventory build becomes not a cost but a competitive advantage." }
+      { heading: "USMCA Rules of Origin for China Alternatives", level: 2 as const, body: "USMCA provides duty-free treatment for goods meeting rules of origin: typically 75% regional value content (RVC) for autos, product-specific rules for other goods. Moving production from China to Mexico only provides USMCA benefits if sufficient value is added in North America. Simple assembly may not qualify." },
+      { heading: "Calculating Regional Value Content", level: 2 as const, body: "Two methods: Transaction Value (TV) = (Transaction Value - Non-Originating Materials) / Transaction Value × 100. Net Cost (NC) = (Net Cost - Non-Originating Materials) / Net Cost × 100. TV method is simpler but NC method can yield higher RVC for capital-intensive operations. Choose the method that gives you the highest qualifying percentage." },
+      { heading: "When Mexican Assembly Doesn't Qualify", level: 2 as const, body: "If you ship Chinese components to Mexico for simple assembly, the finished product may still be Chinese origin. USMCA requires substantial transformation or sufficient RVC. Screwdriver assembly operations — where components are merely bolted together — typically don't qualify. You need genuine manufacturing processes that add significant value." }
     ],
     paa: [
-      { q: "How does this topic affect my business?", a: "Understanding these dynamics helps you optimize costs, manage risk, and stay ahead of competitors. Real-time intelligence is key." },
-      { q: "What metrics should I monitor?", a: "Track the specific indicators relevant to your supply chain, market, and business model. AskBiz monitors 100+ metrics automatically." },
-      { q: "How can I implement these strategies?", a: "Start with visibility into your current state, identify your biggest risks and opportunities, then build your improvement plan." }
+      { q: "What is the business impact of usmca rules of origin for china alternatives?", a: "Source from Mexico under USMCA to avoid China tariffs — but only if you meet rules of origin requirements" },
+      { q: "How can I prepare my business?", a: "Start with visibility into your current exposure, benchmark against industry peers, and build a 90-day action plan targeting the highest-impact improvements first." },
+      { q: "What tools help manage this?", a: "AskBiz monitors trade conditions and provides real-time intelligence. Combine with customs management software, supply chain visibility platforms, and financial hedging tools for comprehensive coverage." }
     ],
     cta: {
       heading: "Get Real-Time Trade Intelligence",
-      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free—no credit card required."
+      body: "AskBiz monitors global trade conditions 24/7. Track tariffs, currencies, supply chains, and compliance requirements. Start free — no credit card required."
     },
-    relatedSlugs: ["us-china-tariffs-supplier-diversification"]
+    relatedSlugs: ["section-301-rate-changes", "tariff-engineering-redesign", "country-of-origin-marking"]
   }
 ]

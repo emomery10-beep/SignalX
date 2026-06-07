@@ -117,7 +117,7 @@ Effective dashboard has:
 
 Example dashboard layout:
 
-```
+\`\`\`
 ┌─────────────────────────────────────────────────────────┐
 │  ARR                │  MRR               │  Churn rate    │
 │  £5.2M → £5.8M      │  £433K → £450K     │  3.2% → 2.8%   │
@@ -131,7 +131,7 @@ Example dashboard layout:
 │  ↓ improving        │  ↑ healthy         │  ↓ improving   │
 │  [███░░░░░░] 30%    │  [██████░░░░] 86%  │  [███████░░░░] 68% │
 └─────────────────────────────────────────────────────────┘
-```
+\`\`\`
 
 Red/yellow/green status:
 - Green: On track or better (within 10% of target)
