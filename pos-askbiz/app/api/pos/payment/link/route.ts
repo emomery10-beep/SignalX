@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     // Get merchant's payment config
     const { data: config } = await service
       .from('merchant_payment_config')
-      .select('payment_provider, paystack_subaccount_id, stripe_connected_account_id, country, is_active, stripe_onboarding_complete')
+      .select('payment_provider, paystack_subaccount_id, settlement_account, stripe_connected_account_id, country, is_active, stripe_onboarding_complete')
       .eq('owner_id', ownerId)
       .single()
 
@@ -58,35 +58,49 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Payment provider not yet active. Complete setup first.' }, { status: 400 })
     }
 
-    if (config.payment_provider === 'stripe' && !config.stripe_onboarding_complete) {
-      return NextResponse.json({ error: 'Stripe verification pending. Check your email for next steps.' }, { status: 400 })
-    }
+    // Detect active providers from stored data — not just payment_provider field,
+    // because a merchant may have both Paystack + Stripe (Stripe added later).
+    const hasPaystack = config.payment_provider === 'paystack' ||
+      !!(config.paystack_subaccount_id) ||
+      (config.settlement_account as any)?.type === 'mpesa'
 
-    if (config.payment_provider === 'none') {
-      return NextResponse.json({ error: 'Card payments not configured' }, { status: 400 })
+    const hasStripe = !!(config.stripe_connected_account_id) && config.stripe_onboarding_complete
+
+    // Prefer Stripe if fully onboarded, otherwise fall back to Paystack
+    const useStripe = hasStripe
+    const usePaystack = !useStripe && hasPaystack
+
+    if (!useStripe && !usePaystack) {
+      // Stripe exists but KYC not done — nudge merchant
+      if (config.stripe_connected_account_id && !config.stripe_onboarding_complete) {
+        return NextResponse.json({ error: 'Stripe verification pending. Complete Stripe onboarding in the admin Payments tab.' }, { status: 400 })
+      }
+      return NextResponse.json({ error: 'Card payments not configured. Set up a payment provider in the admin Payments tab.' }, { status: 400 })
     }
 
     let link: { url: string; checkoutUrl?: string; reference?: string } | null = null
 
-    if (config.payment_provider === 'paystack' && config.paystack_subaccount_id) {
-      // Create Paystack payment link
+    if (usePaystack) {
+      // Paystack payment link — works with or without a subaccount
+      // (subaccount adds split payments but isn't required for basic links)
       link = await createPaystackPaymentLink({
-        amount: Math.round(transaction.total * 100), // Convert to kobo
+        amount: Math.round(transaction.total * 100),
         currency: 'KES',
         description: `AskBiz POS - Transaction ${transaction_id.slice(0, 8)}`,
         metadata: {
           transaction_id,
           merchant_id: ownerId,
           payment_method,
+          subaccount: config.paystack_subaccount_id || undefined,
         },
       })
-    } else if (config.payment_provider === 'stripe' && config.stripe_connected_account_id) {
-      // Create Stripe payment link
+    } else if (useStripe) {
+      // Stripe payment link
       const stripeLink = await createStripePaymentLink({
-        amount: Math.round(transaction.total * 100), // Convert to cents
+        amount: Math.round(transaction.total * 100),
         currency: config.country?.toLowerCase() === 'gb' ? 'gbp' : 'usd',
         description: `AskBiz POS - Transaction ${transaction_id.slice(0, 8)}`,
-        connected_account_id: config.stripe_connected_account_id,
+        connected_account_id: config.stripe_connected_account_id!,
         metadata: {
           transaction_id,
           merchant_id: ownerId,
@@ -94,8 +108,6 @@ export async function POST(req: NextRequest) {
         },
       })
       link = { checkoutUrl: stripeLink.url }
-    } else {
-      return NextResponse.json({ error: 'Payment provider not properly configured' }, { status: 400 })
     }
 
     // Generate QR code as data URL

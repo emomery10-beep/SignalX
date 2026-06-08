@@ -132,7 +132,7 @@ export async function fetchCostProfile(
       .single()
 
     const { data: sources } = await supabase
-      .from('data_sources')
+      .from('connected_sources')
       .select('source_type')
       .eq('user_id', userId)
       .eq('status', 'active')

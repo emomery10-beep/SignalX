@@ -44,16 +44,21 @@ export const EXPANDED_HELP_TOPICS: HelpTopic[] = [
   {
     slug: "mobile-money",
     title: "Mobile Money Payments",
-    description: "Set up M-Pesa, MTN MoMo, Airtel Money, and QR code payments for your POS.",
+    description: "Set up M-Pesa, MTN MoMo, Airtel Money, QR code payments, payment provider setup, and multi-provider configuration for your POS.",
     icon: "📱",
     color: "#1abc9c",
     articles: [
+      "pos-payment-setup-guide",
+      "pos-multi-provider-payments",
+      "pos-bank-settlement-setup",
       "pos-mpesa-integration",
       "pos-mtn-momo-integration",
       "pos-airtel-money-integration",
       "pos-mobile-money-reconciliation",
       "pos-mobile-money-reports",
       "pos-qr-code-payments",
+      "pos-mobile-payment-checkout",
+      "pos-card-payment-checkout",
     ],
   },
   {
@@ -114,7 +119,7 @@ export const EXPANDED_HELP_TOPICS: HelpTopic[] = [
   {
     slug: "advanced-intelligence",
     title: "Advanced Intelligence",
-    description: "Competitor watch, benchmarking, churn prediction, product expansion scoring, What If scenarios, and CFO mode.",
+    description: "Competitor watch, benchmarking, churn prediction, product expansion scoring, What If scenarios, CFO mode, EBITDA valuation, and natural-language business questions.",
     icon: "🧠",
     color: "#8e44ad",
     articles: [
@@ -126,6 +131,8 @@ export const EXPANDED_HELP_TOPICS: HelpTopic[] = [
       "churn-prediction-setup",
       "what-if-scenarios",
       "cfo-mode-guide",
+      "ebitda-valuation-guide",
+      "asking-business-questions",
     ],
   },
   {
@@ -1563,6 +1570,175 @@ export const EXPANDED_HELP_ARTICLES: HelpArticle[] = [
     related: ["pos-per-location-tax", "audit-trail-guide", "consent-logging"],
     keywords: ["tax", "filing", "preview", "VAT", "return", "compliance"],
     lastUpdated: "2026-05-21",
+  },
+
+  // ══ PAYMENT SETUP & MULTI-PROVIDER ═══════════════════════════════════════════
+
+  {
+    slug: "pos-payment-setup-guide",
+    title: "Setting Up Payment Processing",
+    description: "Configure Paystack or Stripe for your POS, choose settlement method, and go live with card and mobile payments.",
+    topic: "Mobile Money Payments",
+    topicSlug: "mobile-money",
+    readTime: 4,
+    popular: true,
+    content: [
+      { heading: "How payment setup works", body: "AskBiz automatically selects the right payment provider based on your country. African countries (Kenya, Nigeria, Ghana, Uganda, Tanzania, Rwanda, South Africa) use Paystack — supporting M-Pesa, mobile money, and local cards. International countries (UK, US, EU, Australia, Canada, Singapore, Japan, and more) use Stripe — supporting Apple Pay, Google Pay, and international cards. You configure once in POS > Payments and the system handles routing." },
+      { heading: "Setting up Paystack (Africa)", body: "Go to POS > Payments and click Set Up Payments. Select your country. Enter your business name and email. For settlement, choose how you want to receive funds: M-Pesa (enter your phone number — available in Kenya, Uganda, Tanzania, Rwanda) or Bank Account (select your bank from the dropdown and enter your account number). The system fetches available banks from Paystack automatically. Click Submit and your payment processing is live within minutes." },
+      { heading: "Choosing M-Pesa vs bank settlement", body: "M-Pesa settlement sends funds directly to your M-Pesa wallet — instant and convenient for small businesses. Bank settlement deposits to your bank account — better for businesses that need formal records or process high volumes. In Kenya, you can also settle to a Paybill or Till number. The system shows the correct options based on your country — countries without M-Pesa only see bank settlement options." },
+      { heading: "Setting up Stripe (International)", body: "For international countries, select your country and enter your business details. Click Submit and you will be redirected to Stripe's onboarding flow to complete KYC verification — this includes identity verification, bank account details, and business documentation. Once complete, you can accept Apple Pay, Google Pay, and international cards. Stripe onboarding typically takes 10-15 minutes." },
+      { heading: "Verifying your setup", body: "After setup, return to POS > Payments. You will see a status card showing your active provider, country, and whether onboarding is complete. For Stripe, a pending KYC badge appears until you finish the Stripe onboarding flow. For Paystack, the setup is instant and your status shows Active immediately. Test with a small transaction to confirm everything works." },
+    ],
+    faq: [
+      { q: "Which countries use Paystack vs Stripe?", a: "Kenya, Nigeria, Ghana, Uganda, Tanzania, Rwanda, and South Africa use Paystack. UK, US, EU countries, Australia, Canada, Singapore, Hong Kong, Japan, and Malaysia use Stripe." },
+      { q: "Can I change my settlement method later?", a: "Yes. Go to POS > Payments and update your settlement details. Changes take effect from the next settlement cycle." },
+      { q: "What fees do I pay?", a: "Paystack charges a percentage per transaction (varies by country — typically 1.5-3%). Stripe charges 2.9% + fixed fee. AskBiz adds a 2% platform fee on Paystack transactions. All fees are shown transparently in your payment reports." },
+    ],
+    related: ["pos-multi-provider-payments", "pos-mpesa-integration", "pos-mobile-money-reconciliation"],
+    keywords: ["payment setup", "Paystack", "Stripe", "settlement", "onboarding", "M-Pesa", "bank account"],
+    lastUpdated: "2026-06-07",
+  },
+
+  {
+    slug: "pos-multi-provider-payments",
+    title: "Using Multiple Payment Providers (Paystack + Stripe)",
+    description: "Accept both local African payments and international cards by connecting Paystack and Stripe together.",
+    topic: "Mobile Money Payments",
+    topicSlug: "mobile-money",
+    readTime: 3,
+    content: [
+      { heading: "Why use both providers?", body: "Some businesses need both local and international payment acceptance. A Kenyan e-commerce store might use Paystack for M-Pesa and local cards (cheapest for domestic customers) while also accepting Apple Pay and Google Pay via Stripe for international buyers. AskBiz supports running both providers simultaneously — the system routes transactions to the correct provider based on the payment method selected at checkout." },
+      { heading: "Adding Stripe to an existing Paystack setup", body: "If you already have Paystack configured, go to POS > Payments. You will see an + Connect Stripe button. Click it to start the Stripe onboarding process. Your existing Paystack configuration remains untouched — Stripe is added alongside it. After completing Stripe KYC, your payment provider shows as Both in your configuration." },
+      { heading: "How routing works", body: "When a customer pays via M-Pesa or local mobile money, the transaction routes through Paystack. When a customer pays with Apple Pay, Google Pay, or an international card, it routes through Stripe. Cash payments are recorded locally without either provider. Your reports show a unified view across all providers with a breakdown by payment method." },
+      { heading: "Settlement with dual providers", body: "Each provider settles independently. Paystack settles to your configured M-Pesa or bank account. Stripe settles to the bank account you provided during Stripe onboarding. You receive two separate settlement streams. AskBiz's reconciliation tools track both and present a unified cash flow view." },
+    ],
+    faq: [
+      { q: "Is there an extra fee for using both?", a: "No extra AskBiz fee. You pay each provider's standard transaction fees only on transactions processed through them." },
+      { q: "Can I disable one provider later?", a: "Yes. Contact support to deactivate a provider while keeping the other active." },
+      { q: "Do I need two bank accounts?", a: "No. Both providers can settle to the same bank account, though Paystack also supports M-Pesa settlement." },
+    ],
+    related: ["pos-payment-setup-guide", "pos-mpesa-integration", "pos-mobile-money-reports"],
+    keywords: ["multi-provider", "Paystack", "Stripe", "dual payments", "Apple Pay", "Google Pay", "international"],
+    lastUpdated: "2026-06-07",
+  },
+
+  {
+    slug: "pos-bank-settlement-setup",
+    title: "Selecting Your Settlement Bank",
+    description: "Choose your settlement bank from Paystack's supported banks and configure account details for payouts.",
+    topic: "Mobile Money Payments",
+    topicSlug: "mobile-money",
+    readTime: 2,
+    content: [
+      { heading: "How bank selection works", body: "When you set up Paystack and choose bank settlement, AskBiz fetches the list of available banks from Paystack's API for your country. Kenya shows Kenyan banks and M-Pesa options, Nigeria shows Nigerian banks (NUBANs), Ghana shows Ghanaian banks, and so on. The list includes both traditional banks and mobile money providers classified as banks." },
+      { heading: "Selecting your bank", body: "From the payment setup form, choose Bank Account as your settlement type. A dropdown appears with all active banks for your country. Search or scroll to find your bank. Enter your account number. Double-check the account number — incorrect details delay settlements. For M-Pesa settlement (Kenya, Uganda, Tanzania, Rwanda), choose M-Pesa and enter your phone number instead." },
+      { heading: "Supported countries and channels", body: "Nigeria: all NUBAN-compatible banks. Kenya: banks plus M-Pesa (Safaricom). Ghana: all Ghana Interbank Payment and Settlement System banks. South Africa: major banks. Uganda, Tanzania, Rwanda: processed via the Kenya channel with local mobile money support. The bank list updates automatically — new banks added by Paystack appear in your dropdown without any action needed." },
+    ],
+    faq: [
+      { q: "What if my bank is not listed?", a: "The list includes all banks active on Paystack. If yours is missing, it may not yet be integrated with Paystack in your country. Contact support for alternatives." },
+      { q: "Can I use a mobile money account instead of a bank?", a: "Yes. In countries that support it (Kenya, Uganda, Tanzania, Rwanda), select M-Pesa as your settlement type and enter your phone number." },
+    ],
+    related: ["pos-payment-setup-guide", "pos-mpesa-integration", "pos-mobile-money-reconciliation"],
+    keywords: ["bank", "settlement", "payout", "Paystack", "NUBAN", "account number"],
+    lastUpdated: "2026-06-07",
+  },
+
+  // ══ EBITDA & VALUATION ═══════════════════════════════════════════════════════
+
+  {
+    slug: "ebitda-valuation-guide",
+    title: "Understanding EBITDA & Business Valuation",
+    description: "See your EBITDA, valuation multiple, and estimated business value in the CFO Dashboard.",
+    topic: "Advanced Intelligence",
+    topicSlug: "advanced-intelligence",
+    readTime: 4,
+    content: [
+      { heading: "What is EBITDA?", body: "EBITDA stands for Earnings Before Interest, Taxes, Depreciation, and Amortisation. It measures your business's operating profitability before accounting adjustments. AskBiz calculates EBITDA automatically from your P&L data: Revenue minus COGS minus Operating Expenses (excluding interest, tax, depreciation, and amortisation). This is the metric most investors and acquirers use to value small and medium businesses." },
+      { heading: "Where to find it", body: "The EBITDA & Valuation card appears in two places: the CFO Dashboard overview tab (below the headline metrics) and the P&L tab (below the profit and loss statement). It shows your current-period EBITDA, EBITDA margin percentage, month-over-month trend, and an estimated valuation range based on industry multiples for your country and sector." },
+      { heading: "How valuation is calculated", body: "AskBiz applies industry-standard EBITDA multiples to estimate your business value. The multiple varies by country, industry, and growth rate — typically 3-8x for African SMEs and 5-15x for high-growth tech businesses. The card shows a range (low to high estimate) based on conservative and optimistic multiples. This is an indicative estimate, not a formal valuation — it helps you understand your business's approximate worth." },
+      { heading: "Using EBITDA for decisions", body: "Track EBITDA monthly to see whether your operational profitability is improving or declining. A rising EBITDA with stable revenue means you are controlling costs well. A falling EBITDA despite revenue growth means costs are outpacing income. If you are considering selling your business or raising investment, the valuation estimate gives you a starting point for negotiations." },
+      { heading: "Comparison and trends", body: "The card shows how your EBITDA compares to the previous period — percentage change and absolute difference. If monthly P&L data is available, AskBiz shows a trailing trend so you can spot whether EBITDA is on an upward or downward trajectory. This is the same data investors would ask for during due diligence." },
+    ],
+    faq: [
+      { q: "Is this a formal business valuation?", a: "No. It is an indicative estimate based on standard multiples. For a formal valuation, engage a qualified valuator — but the AskBiz estimate gives you a useful benchmark." },
+      { q: "What EBITDA multiple does AskBiz use?", a: "Multiples vary by country and industry. AskBiz uses region-specific ranges — typically 3-8x for African SMEs. The card shows both conservative and optimistic estimates." },
+      { q: "Do I need specific data connected?", a: "You need revenue and cost data in AskBiz — either via connected sources (Stripe, Shopify, etc.) or uploaded CSV data. The more complete your cost data, the more accurate the EBITDA calculation." },
+    ],
+    related: ["cfo-mode-guide", "what-if-scenarios", "benchmarking-guide"],
+    keywords: ["EBITDA", "valuation", "business value", "multiple", "CFO", "investor", "acquisition"],
+    lastUpdated: "2026-06-07",
+  },
+
+  // ══ AI BUSINESS QUESTIONS ═══════════════════════════════════════════════════
+
+  {
+    slug: "asking-business-questions",
+    title: "Asking AskBiz About Your Business Performance",
+    description: "Ask natural-language questions about revenue, sales, growth, trends, and financial summaries.",
+    topic: "Advanced Intelligence",
+    topicSlug: "advanced-intelligence",
+    readTime: 3,
+    content: [
+      { heading: "What you can ask", body: "AskBiz now understands a much wider range of business questions beyond just cost and margin queries. You can ask about: revenue and sales (today, this week, this month, last month, year-over-year), P&L summaries, cash flow, top and worst performing products, growth trends, month-over-month comparisons, average order value, and financial health snapshots. Questions like How is my business doing? or Give me a revenue breakdown trigger the full financial context automatically." },
+      { heading: "Revenue and sales questions", body: "Ask: What were my sales today? How much revenue did I make this month? Compare this month to last month. What is my total revenue this week? The AI pulls your actual transaction data from connected sources — Stripe, Paystack, Shopify, Amazon, POS — and gives specific numbers, not generic advice." },
+      { heading: "Performance and trend questions", body: "Ask: What is my month-over-month growth? Show me my revenue trend. What is my average order value? Which products are selling best? Which are worst? How has my performance changed over the last 6 months? The AI analyses your historical data and presents trends with specific numbers and percentage changes." },
+      { heading: "Provider-specific questions", body: "Ask about specific data sources: What is my Stripe revenue? Show me Paystack transactions this week. How are my Shopify sales? What are my Amazon orders? The AI filters responses to the specific provider you mention, so you can drill into individual channels without confusion." },
+      { heading: "Financial summary questions", body: "For a quick business overview, ask: Give me a financial summary. What are my numbers? How is my business performing? P&L this quarter. Cash flow status. The AI returns a structured response covering revenue, costs, margins, and trends — similar to what a CFO would prepare for a weekly standup." },
+    ],
+    faq: [
+      { q: "Do I need to use specific keywords?", a: "No. AskBiz understands natural language. Ask however feels natural — it detects the intent from your question." },
+      { q: "What data does it use to answer?", a: "AskBiz uses all your connected sources: Stripe, Paystack, Shopify, Amazon, POS transactions, uploaded CSVs, and any other integrated data." },
+      { q: "Can I ask about specific time periods?", a: "Yes. Mention the period — today, this week, last month, Q1, year-to-date — and the AI scopes the answer accordingly." },
+    ],
+    related: ["cfo-mode-guide", "ebitda-valuation-guide", "forecast-setup-guide"],
+    keywords: ["questions", "revenue", "sales", "performance", "trends", "growth", "financial summary", "P&L", "AOV"],
+    lastUpdated: "2026-06-07",
+  },
+
+  // ══ POS CHECKOUT UX ═══════════════════════════════════════════════════════════
+
+  {
+    slug: "pos-mobile-payment-checkout",
+    title: "M-Pesa Checkout at the POS",
+    description: "Process M-Pesa payments at the cashier with instant STK push and phone number entry.",
+    topic: "Mobile Money Payments",
+    topicSlug: "mobile-money",
+    readTime: 2,
+    content: [
+      { heading: "How M-Pesa checkout works", body: "When your cashier selects Mobile as the payment method during checkout, a phone number field appears immediately. The cashier enters the customer's M-Pesa number (07XX XXX XXX format) before tapping the payment button. The checkout button changes to show Send M-Pesa with the total amount — making it clear what will happen. Once tapped, the STK push is sent automatically to the customer's phone." },
+      { heading: "Auto-send STK push", body: "After the transaction is created, AskBiz automatically sends the M-Pesa STK push to the entered phone number — no extra step required. The customer sees the payment prompt on their phone within seconds. They enter their M-Pesa PIN to confirm. The POS waits for confirmation and moves to the receipt screen once payment is confirmed. This flow takes under 30 seconds from tapping Send M-Pesa to receipt." },
+      { heading: "Payment method buttons", body: "The checkout screen now shows context-specific button labels: Send M-Pesa for mobile payments, Charge Card for card payments, and Complete for cash payments. This removes ambiguity for the cashier — they always know what action the button will perform before tapping it." },
+      { heading: "Handling failures", body: "If the STK push fails (wrong number, insufficient funds, timeout), an error message appears below the checkout area. The cashier can re-enter the phone number and try again, or switch to a different payment method. The transaction record stays open until payment completes or the sale is cancelled." },
+    ],
+    faq: [
+      { q: "Can I use any phone number format?", a: "Enter the number in local format starting with 07. The system strips formatting automatically before sending the STK push." },
+      { q: "What if the customer does not have their phone?", a: "Switch to Cash or Card payment method. You can change payment type at any time before payment completes." },
+      { q: "Does the phone number get saved to the customer profile?", a: "If a customer is linked to the sale, the phone number used for M-Pesa payment can be viewed in their transaction history." },
+    ],
+    related: ["pos-mpesa-integration", "pos-payment-setup-guide", "pos-making-a-sale"],
+    keywords: ["M-Pesa", "checkout", "STK push", "cashier", "POS", "mobile payment", "phone number"],
+    lastUpdated: "2026-06-07",
+  },
+
+  {
+    slug: "pos-card-payment-checkout",
+    title: "Card Payments at the POS",
+    description: "Process card payments through Stripe at your cashier terminal with one-tap checkout.",
+    topic: "Mobile Money Payments",
+    topicSlug: "mobile-money",
+    readTime: 2,
+    content: [
+      { heading: "How card checkout works", body: "When the cashier selects Card as the payment method and taps Charge Card, the transaction is created and the card payment component appears. This connects to your Stripe account (configured in POS > Payments) to process the charge. The customer taps, inserts, or swipes their card on your terminal. Once confirmed, the POS moves directly to the receipt screen." },
+      { heading: "Supported card types", body: "With Stripe, you accept Visa, Mastercard, American Express, and local card networks. Apple Pay and Google Pay are also supported if you have enabled them during Stripe setup. Contactless (NFC) payments work on supported terminals. All major card types process instantly with confirmation in under 5 seconds." },
+      { heading: "Payment confirmation flow", body: "After tapping Charge Card, the Complete button disappears — preventing double-charges. The payment component shows a processing state. On success, the cashier sees a confirmation and the screen transitions to the receipt. On failure, an error message appears and the cashier can retry or switch payment methods." },
+    ],
+    faq: [
+      { q: "Do I need a physical card terminal?", a: "It depends on your setup. For in-person taps, yes. For online/manual entry, the POS can process card-not-present transactions through Stripe." },
+      { q: "What if the card is declined?", a: "An error message appears. The cashier can ask the customer to try another card or switch to cash/M-Pesa payment." },
+    ],
+    related: ["pos-payment-setup-guide", "pos-multi-provider-payments", "pos-making-a-sale"],
+    keywords: ["card payment", "Stripe", "Apple Pay", "Google Pay", "terminal", "checkout", "POS"],
+    lastUpdated: "2026-06-07",
   },
 ];
 

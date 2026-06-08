@@ -11,6 +11,7 @@ interface PosMobilePaymentProps {
   ownerId: string
   staffId: string
   customerPhone?: string
+  autoSend?: boolean
   onPaymentComplete: () => void
   onPaymentFailed: (error: string) => void
 }
@@ -22,6 +23,7 @@ export default function PosMobilePayment({
   ownerId,
   staffId,
   customerPhone = '',
+  autoSend = false,
   onPaymentComplete,
   onPaymentFailed,
 }: PosMobilePaymentProps) {
@@ -29,12 +31,18 @@ export default function PosMobilePayment({
   const [status, setStatus] = useState<'idle' | 'sending' | 'waiting' | 'completed' | 'failed'>('idle')
   const [phoneInput, setPhoneInput] = useState(customerPhone)
   const [paymentId, setPaymentId] = useState<string | null>(null)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    // Auto-focus phone input
-    if (status === 'idle') inputRef.current?.focus()
-  }, [status])
+    // If autoSend and phone already provided, fire immediately
+    if (autoSend && customerPhone && status === 'idle') {
+      sendMpesaPrompt(customerPhone)
+    } else if (status === 'idle') {
+      inputRef.current?.focus()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Listen to Supabase Realtime for payment updates
   useEffect(() => {
@@ -55,6 +63,7 @@ export default function PosMobilePayment({
           onPaymentComplete()
         } else if (payment.status === 'failed') {
           setStatus('failed')
+          setErrorMsg('Payment failed. Please try again.')
           onPaymentFailed('Payment failed. Please try again.')
         }
       })
@@ -73,6 +82,7 @@ export default function PosMobilePayment({
       if (attempts > 90) {
         clearInterval(timer)
         setStatus('failed')
+        setErrorMsg('Payment timed out. Please try again.')
         onPaymentFailed('Payment timed out. Please try again.')
         return
       }
@@ -89,6 +99,7 @@ export default function PosMobilePayment({
         } else if (data.status === 'failed') {
           clearInterval(timer)
           setStatus('failed')
+          setErrorMsg('Payment declined.')
           onPaymentFailed('Payment declined.')
         }
       } catch {}
@@ -113,9 +124,12 @@ export default function PosMobilePayment({
     } catch {}
   }
 
-  const sendMpesaPrompt = async () => {
-    if (!phoneInput.trim()) return
+  const sendMpesaPrompt = async (overridePhone?: string) => {
+    const phone = overridePhone || phoneInput
+    if (!phone.trim()) return
+    if (overridePhone) setPhoneInput(overridePhone)
     setStatus('sending')
+    setErrorMsg(null)
 
     try {
       const res = await fetch(`${API}/api/pos/payment/mpesa`, {
@@ -127,23 +141,23 @@ export default function PosMobilePayment({
         },
         body: JSON.stringify({
           transaction_id: transactionId,
-          customer_phone: phoneInput,
+          customer_phone: phone,
           amount,
         }),
       })
 
       const data = await res.json()
       if (!res.ok || !data.success) {
-        setStatus('failed')
-        onPaymentFailed(data.error || 'Could not send M-Pesa prompt')
+        setStatus('idle')
+        setErrorMsg(data.error || 'Could not send M-Pesa prompt')
         return
       }
 
       setPaymentId(data.payment_id)
       setStatus('waiting')
     } catch (err: any) {
-      setStatus('failed')
-      onPaymentFailed(err.message || 'Network error')
+      setStatus('idle')
+      setErrorMsg(err.message || 'Network error')
     }
   }
 
@@ -164,18 +178,24 @@ export default function PosMobilePayment({
           Ask customer for their M-Pesa number
         </div>
 
+        {errorMsg && (
+          <div style={{ marginBottom: 10, padding: '10px 12px', background: 'rgba(220,38,38,.07)', border: '1px solid rgba(220,38,38,.2)', borderRadius: 10, fontSize: 12, color: '#dc2626', fontWeight: 500 }}>
+            ⚠ {errorMsg}
+          </div>
+        )}
+
         <input
           ref={inputRef}
           type="tel"
           placeholder="07XX XXX XXX"
           value={phoneInput}
           onChange={(e) => setPhoneInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && phoneInput && sendMpesaPrompt()}
+          onKeyDown={(e) => e.key === 'Enter' && phoneInput && sendMpesaPrompt(undefined)}
           style={{
             width: '100%',
             padding: '14px 16px',
             borderRadius: 12,
-            border: '2px solid #e5e2dc',
+            border: `2px solid ${errorMsg ? 'rgba(220,38,38,.4)' : '#e5e2dc'}`,
             fontSize: 20,
             fontWeight: 700,
             fontFamily: 'inherit',
@@ -189,7 +209,7 @@ export default function PosMobilePayment({
         />
 
         <button
-          onClick={sendMpesaPrompt}
+          onClick={() => sendMpesaPrompt()}
           disabled={!phoneInput.trim()}
           style={{
             width: '100%',
@@ -211,7 +231,7 @@ export default function PosMobilePayment({
         </button>
 
         <div style={{ marginTop: 10, fontSize: 11, color: '#9ca3af', textAlign: 'center' }}>
-          Customer will get a popup on their phone to confirm payment
+          Customer will get a popup on their phone to enter their M-Pesa PIN
         </div>
       </div>
     </div>
@@ -255,7 +275,7 @@ export default function PosMobilePayment({
         </div>
 
         <button
-          onClick={() => setStatus('idle')}
+          onClick={() => { setStatus('idle'); setErrorMsg(null) }}
           style={{ fontSize: 12, color: '#6b6760', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
         >
           Wrong number? Send again
@@ -277,10 +297,11 @@ export default function PosMobilePayment({
   if (status === 'failed') return (
     <div style={{ marginTop: 14, padding: '20px 16px', background: 'rgba(220,38,38,.05)', border: '1px solid rgba(220,38,38,.2)', borderRadius: 16, textAlign: 'center' }}>
       <div style={{ fontSize: 28, marginBottom: 8 }}>❌</div>
-      <div style={{ fontSize: 14, fontWeight: 600, color: '#dc2626', marginBottom: 12 }}>
+      <div style={{ fontSize: 14, fontWeight: 600, color: '#dc2626', marginBottom: 8 }}>
         Payment failed or timed out
       </div>
-      <button onClick={() => setStatus('idle')} style={{ padding: '10px 20px', borderRadius: 10, background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
+      {errorMsg && <div style={{ fontSize: 12, color: '#dc2626', marginBottom: 12 }}>{errorMsg}</div>}
+      <button onClick={() => { setStatus('idle'); setErrorMsg(null) }} style={{ padding: '10px 20px', borderRadius: 10, background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
         Try again
       </button>
     </div>

@@ -750,6 +750,7 @@ export async function POST(request: NextRequest) {
     cfoMode: !!cfoMode,
     posContext: posContext || undefined,
     benchmarkContext: benchmarkContext || undefined,
+    costContext: costContext || undefined,
   })
 
   // Save user message

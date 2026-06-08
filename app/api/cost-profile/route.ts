@@ -98,7 +98,7 @@ export async function GET() {
 
   // 2. Pull connected sources
   const { data: sources } = await supabase
-    .from('data_sources')
+    .from('connected_sources')
     .select('source_type, status')
     .eq('user_id', user.id)
     .eq('status', 'active')

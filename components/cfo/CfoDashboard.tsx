@@ -23,6 +23,7 @@ import SourceBreakdown from './SourceBreakdown'
 import CfoAiInsight from './CfoAiInsight'
 import LogisticsOverview from './LogisticsOverview'
 import PnlStatement from './PnlStatement'
+import EbitdaValuation from './EbitdaValuation'
 import MarginAnalysis from './MarginAnalysis'
 import CashFlowStatement from './CashFlowStatement'
 import RollingCashForecast from './RollingCashForecast'
@@ -269,6 +270,61 @@ export default function CfoDashboard({ onAsk }: Props) {
             </div>
           )}
 
+          {/* EBITDA Summary (compact — full widget lives on P&L tab) */}
+          {!loading && data?.totals && data.totals.revenue > 0 && (() => {
+            const netP = data.totals.net_profit
+            const estTax = netP > 0 ? Math.round(netP * 0.15) : 0
+            const estInt = Math.round(data.totals.revenue * 0.02)
+            const estDep = Math.round(data.totals.fixed_costs * 0.05)
+            const estAmo = Math.round(data.totals.fixed_costs * 0.03)
+            const ebitdaVal = netP + estTax + estInt + estDep + estAmo
+            const ebitdaMarginVal = data.totals.revenue > 0 ? (ebitdaVal / data.totals.revenue) * 100 : 0
+            const priorEbitdaVal = data.comparison.net_profit + estTax + estInt + estDep + estAmo
+            const ebitdaChg = priorEbitdaVal !== 0 ? ((ebitdaVal - priorEbitdaVal) / Math.abs(priorEbitdaVal)) * 100 : null
+            return (
+              <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
+                <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>EBITDA</span>
+                    {ebitdaVal > 0 && (
+                      <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
+                        background: ebitdaMarginVal >= 20 ? 'rgba(34,197,94,.1)' : ebitdaMarginVal >= 10 ? 'rgba(245,158,11,.1)' : 'rgba(239,68,68,.1)',
+                        color: ebitdaMarginVal >= 20 ? '#22C55E' : ebitdaMarginVal >= 10 ? '#F59E0B' : '#EF4444' }}>
+                        {ebitdaMarginVal.toFixed(1)}% margin
+                      </span>
+                    )}
+                  </div>
+                  <button onClick={() => setSubTab('pnl')}
+                    style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
+                    Full EBITDA analysis →
+                  </button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--b)' }}>
+                  <div style={{ padding: '12px 14px', background: 'var(--sf)', textAlign: 'center' }}>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>EBITDA</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: ebitdaVal >= 0 ? '#22C55E' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{fmtCurrency(ebitdaVal)}</div>
+                    {ebitdaChg != null && (
+                      <div style={{ fontSize: 10, fontWeight: 600, color: ebitdaChg > 0 ? '#22C55E' : ebitdaChg < 0 ? '#EF4444' : 'var(--tx3)', marginTop: 2 }}>
+                        {ebitdaChg > 0 ? '▲' : ebitdaChg < 0 ? '▼' : '–'} {Math.abs(ebitdaChg).toFixed(1)}% vs prior
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ padding: '12px 14px', background: 'var(--sf)', textAlign: 'center' }}>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Margin</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: ebitdaMarginVal >= 20 ? '#22C55E' : ebitdaMarginVal >= 10 ? '#F59E0B' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{ebitdaMarginVal.toFixed(1)}%</div>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{ebitdaMarginVal >= 20 ? 'Healthy' : ebitdaMarginVal >= 10 ? 'Moderate' : 'Needs attention'}</div>
+                  </div>
+                  <div style={{ padding: '12px 14px', background: 'var(--sf)', textAlign: 'center' }}>
+                    <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Valuation (5x)</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: '#6366F1', fontVariantNumeric: 'tabular-nums' }}>{fmtCurrency(ebitdaVal * 5)}</div>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>Avg. SME multiple</div>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+
           {/* Cost Breakdown */}
           {!loading && data?.totals && data.totals.revenue > 0 && (
             <CostBreakdown
@@ -304,14 +360,24 @@ export default function CfoDashboard({ onAsk }: Props) {
       {subTab === 'pnl' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {!loading && data?.totals ? (
-            <PnlStatement
-              totals={data.totals}
-              comparison={data.comparison}
-              pnlMonthly={data.pnl_monthly}
-              pnlBySource={data.pnl_by_source}
-              currencySymbol={sym}
-              onAsk={onAsk}
-            />
+            <>
+              <PnlStatement
+                totals={data.totals}
+                comparison={data.comparison}
+                pnlMonthly={data.pnl_monthly}
+                pnlBySource={data.pnl_by_source}
+                currencySymbol={sym}
+                onAsk={onAsk}
+              />
+              <EbitdaValuation
+                totals={data.totals}
+                comparison={data.comparison}
+                pnlMonthly={data.pnl_monthly}
+                currencySymbol={sym}
+                countryCode={countryCode}
+                onAsk={onAsk}
+              />
+            </>
           ) : loading ? (
             <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>Loading P&L data...</div>
           ) : (

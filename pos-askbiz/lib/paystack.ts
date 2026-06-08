@@ -102,8 +102,11 @@ export async function initiateStkPush(params: InitiateStkParams) {
   const result = await request('POST', '/charge', {
     email: params.email,
     amount: params.amount,
-    phone: params.phone,
-    provider: 'mpesa',
+    currency: 'KES',
+    mobile_money: {
+      phone: params.phone,
+      provider: 'mpesa',
+    },
     metadata: {
       ...params.metadata,
       channel: 'pos_stk_push',
@@ -122,20 +125,18 @@ export async function initiateStkPush(params: InitiateStkParams) {
  * Customer scans QR, pays via Paystack checkout
  */
 export async function createPaymentLink(params: PaymentLinkParams) {
-  const result = await request('POST', '/paymentrequest', {
-    customer: {
-      email: params.metadata?.email || 'customer@askbiz.co',
-    },
+  const result = await request('POST', '/transaction/initialize', {
+    email: (params.metadata?.email as string) || 'customer@askbiz.co',
     amount: params.amount,
     currency: params.currency || 'KES',
-    description: params.description,
+    channels: ['card', 'mobile_money', 'bank_transfer'],
     metadata: params.metadata,
   })
 
   return {
-    checkoutUrl: result.data.checkout_url,
+    checkoutUrl: result.data.authorization_url,
     reference: result.data.reference,
-    qrCode: result.data.qr_code, // May be null; generate via QR code library
+    qrCode: null, // Generated from the URL on our side
   }
 }
 

@@ -97,9 +97,8 @@ export default function SellPage() {
   const [receiptSent, setReceiptSent]   = useState(false)
   const [oversold, setOversold]         = useState<string[]>([])
   const [expiryWarning, setExpiryWarning] = useState<string | null>(null)
-
-  // Payment state
-  const [paymentError, setPaymentError] = useState<string | null>(null)
+  const [mpesaPhone, setMpesaPhone]       = useState('')
+  const [paymentError, setPaymentError]   = useState<string | null>(null)
 
   // Shift
   const [shiftOpen, setShiftOpen]     = useState<boolean | null>(null)
@@ -368,7 +367,6 @@ export default function SellPage() {
     if (!staff || cart.length === 0) return
     setProcessing(true)
     setCheckoutError('')
-    setPaymentError(null)
     try {
       // Attempt a fresh geo capture right before checkout (3s timeout)
       let geo = geoCoords
@@ -387,9 +385,9 @@ export default function SellPage() {
         headers: { 'Content-Type': 'application/json', 'x-owner-id': staff.owner_id, 'x-staff-id': staff.id },
         body: JSON.stringify({
           items:           cart,
-          payment_type:    paymentType === 'mobile' ? 'mpesa' : paymentType === 'card' ? 'card' : paymentType,
+          payment_type:    paymentType === 'mobile' ? 'mpesa' : paymentType,
           cashier_id:      staff.id,
-          customer_phone:  customerPhone || null,
+          customer_phone:  paymentType === 'mobile' ? (mpesaPhone || customerPhone || null) : (customerPhone || null),
           discount_amount: discountAmt || null,
           amount_tendered: paymentType === 'cash' && tendered ? tendered : null,
           shift_id:        shiftId || null,
@@ -401,14 +399,12 @@ export default function SellPage() {
         setLastTxId(data.transaction_id)
         setLastTotal(cartTotal)
         setOversold(data.oversold || [])
-
-        // For cash payment, go straight to receipt
         if (paymentType === 'cash') {
           setTodaySales(s => s + 1)
           setTodayRevenue(r => r + cartTotal)
           setScreen('receipt')
         }
-        // For card/mobile, payment components will render inline and handle completion
+        // card/mobile: stay here — payment component below handles completion
       } else {
         setCheckoutError(data.error || 'Payment failed — please try again')
       }
@@ -440,7 +436,6 @@ export default function SellPage() {
     setOversold([]); setScanResult(null); setScanError('')
     setSearchQuery(''); setSearchResults([])
     setKgInputs({}); setCheckoutError(''); setGeoCoords(null)
-    setShowPaymentHandler(false); setPaymentError(null)
     setScreen('home')
   }
 
@@ -859,50 +854,35 @@ export default function SellPage() {
           <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1916', marginBottom: 8 }}>Payment method</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
             {([['cash', '💵 Cash'], ['card', '💳 Card'], ['mobile', '📱 Mobile']] as const).map(([type, label]) => (
-              <button key={type} onClick={() => setPaymentType(type)} style={{ padding: '13px 8px', borderRadius: 12, border: `2px solid ${paymentType === type ? ACC : '#e5e2dc'}`, background: paymentType === type ? 'rgba(208,138,89,.08)' : '#fff', color: paymentType === type ? ACC : '#6b6760', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              <button key={type} onClick={() => { setPaymentType(type); setLastTxId(''); setPaymentError(null); }} style={{ padding: '13px 8px', borderRadius: 12, border: `2px solid ${paymentType === type ? ACC : '#e5e2dc'}`, background: paymentType === type ? 'rgba(208,138,89,.08)' : '#fff', color: paymentType === type ? ACC : '#6b6760', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 {label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Card Payment Prompt */}
-        {paymentType === 'card' && lastTxId && (
-          <PosCardPayment
-            transactionId={lastTxId}
-            amount={cartTotal}
-            currencySymbol={sym}
-            ownerId={staff.owner_id}
-            staffId={staff.id}
-            onPaymentComplete={() => {
-              setTodaySales(s => s + 1)
-              setTodayRevenue(r => r + cartTotal)
-              setScreen('receipt')
-            }}
-            onPaymentFailed={(error) => {
-              setPaymentError(error)
-            }}
-          />
+        {/* M-Pesa phone input — shows immediately when Mobile selected */}
+        {paymentType === 'mobile' && !lastTxId && (
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1916', marginBottom: 6 }}>M-Pesa / Mobile wallet number</div>
+            <input type="tel" placeholder="07XX XXX XXX" value={mpesaPhone} onChange={e => setMpesaPhone(e.target.value)}
+              style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid #e5e2dc', fontSize: 15, fontFamily: 'inherit', background: '#fff', color: '#1a1916', boxSizing: 'border-box' }} />
+          </div>
         )}
 
-        {/* Mobile Payment Prompt (M-Pesa) */}
+        {/* Card payment — shows after transaction created */}
+        {paymentType === 'card' && lastTxId && (
+          <PosCardPayment transactionId={lastTxId} amount={cartTotal} currencySymbol={sym} ownerId={staff.owner_id} staffId={staff.id}
+            onPaymentComplete={() => { setTodaySales(s => s + 1); setTodayRevenue(r => r + cartTotal); setScreen('receipt') }}
+            onPaymentFailed={(e) => setPaymentError(e)} />
+        )}
+
+        {/* M-Pesa STK push — shows after transaction created, auto-sends prompt */}
         {paymentType === 'mobile' && lastTxId && (
-          <PosMobilePayment
-            transactionId={lastTxId}
-            amount={cartTotal}
-            currencySymbol={sym}
-            ownerId={staff.owner_id}
-            staffId={staff.id}
-            customerPhone={customerPhone}
-            onPaymentComplete={() => {
-              setTodaySales(s => s + 1)
-              setTodayRevenue(r => r + cartTotal)
-              setScreen('receipt')
-            }}
-            onPaymentFailed={(error) => {
-              setPaymentError(error)
-            }}
-          />
+          <PosMobilePayment transactionId={lastTxId} amount={cartTotal} currencySymbol={sym} ownerId={staff.owner_id} staffId={staff.id}
+            customerPhone={mpesaPhone} autoSend={!!mpesaPhone}
+            onPaymentComplete={() => { setTodaySales(s => s + 1); setTodayRevenue(r => r + cartTotal); setScreen('receipt') }}
+            onPaymentFailed={(e) => setPaymentError(e)} />
         )}
 
         {/* Cash tendered → change */}
@@ -987,13 +967,18 @@ export default function SellPage() {
             ⚠ {paymentError}
           </div>
         )}
-        <button
-          onClick={handleCheckout}
-          disabled={processing || (paymentType === 'cash' && !!amountTendered && tendered < cartTotal)}
-          style={{ width: '100%', padding: '18px', borderRadius: 14, background: ACC, color: '#fff', fontSize: 18, fontWeight: 800, border: 'none', cursor: processing ? 'wait' : 'pointer', opacity: (paymentType === 'cash' && !!amountTendered && tendered < cartTotal) ? 0.5 : 1 }}
-        >
-          {processing ? 'Processing...' : `Complete · ${sym}${cartTotal.toFixed(2)}`}
-        </button>
+        {!lastTxId && (
+          <button
+            onClick={handleCheckout}
+            disabled={processing || (paymentType === 'cash' && !!amountTendered && tendered < cartTotal)}
+            style={{ width: '100%', padding: '18px', borderRadius: 14, background: ACC, color: '#fff', fontSize: 18, fontWeight: 800, border: 'none', cursor: processing ? 'wait' : 'pointer', opacity: (paymentType === 'cash' && !!amountTendered && tendered < cartTotal) ? 0.5 : 1 }}
+          >
+            {processing ? 'Processing...' :
+              paymentType === 'mobile' ? `📲 Send M-Pesa · ${sym}${cartTotal.toFixed(2)}` :
+              paymentType === 'card'   ? `💳 Charge Card · ${sym}${cartTotal.toFixed(2)}` :
+                                        `Complete · ${sym}${cartTotal.toFixed(2)}`}
+          </button>
+        )}
       </div>
     </div>
   </>)

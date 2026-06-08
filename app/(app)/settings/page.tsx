@@ -525,6 +525,7 @@ function AddressPanel() {
   const [address, setAddress] = useState<AddressState>({ business_name: '', phone: '', address: '', town: '', county: '', postcode: '' })
   const [saving, setSaving]   = useState(false)
   const [saved, setSaved]     = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [errors, setErrors]   = useState<Partial<Record<keyof AddressState, string>>>({})
   const [loaded, setLoaded]   = useState(false)
 
@@ -541,11 +542,13 @@ function AddressPanel() {
     if (!address.town.trim())    errs.town    = 'Required'
     if (!address.postcode.trim()) errs.postcode = 'Required'
     if (Object.keys(errs).length) { setErrors(errs); return }
-    setErrors({}); setSaving(true)
+    setErrors({}); setSaving(true); setSaveError('')
     try {
       const res = await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(address) })
       if (res.ok) { setSaved(true); setTimeout(() => setSaved(false), 2500) }
-    } finally { setSaving(false) }
+      else { const d = await res.json().catch(() => null); setSaveError(d?.error || 'Failed to save address') }
+    } catch { setSaveError('Network error — please try again') }
+    finally { setSaving(false) }
   }
 
   const addressComplete = !!(address.address.trim() && address.town.trim() && address.postcode.trim())
@@ -598,6 +601,7 @@ function AddressPanel() {
           </div>
           <div style={{ padding: '0 20px 16px' }}>
             <SaveRow onClick={save} saving={saving} saved={saved} label="Save address"/>
+            {saveError && <div style={{ fontSize: 12, color: '#dc2626', marginTop: 8 }}>{saveError}</div>}
           </div>
         </Card>
       )}

@@ -48,11 +48,18 @@ export async function POST(req: NextRequest) {
     // Get merchant's payment config
     const { data: config, error: configError } = await service
       .from('merchant_payment_config')
-      .select('payment_provider, paystack_subaccount_id, is_active')
+      .select('payment_provider, paystack_subaccount_id, settlement_account, is_active')
       .eq('owner_id', ownerId)
       .single()
 
-    if (configError || !config || config.payment_provider !== 'paystack') {
+    // Paystack is active if payment_provider='paystack', OR a subaccount exists,
+    // OR settlement_account indicates M-Pesa (covers merchants who added Stripe later,
+    // which keeps payment_provider='paystack' but settlement_account still shows mpesa)
+    const hasPaystack = config?.payment_provider === 'paystack' ||
+      !!(config?.paystack_subaccount_id) ||
+      (config?.settlement_account as any)?.type === 'mpesa'
+
+    if (configError || !config || !hasPaystack) {
       return NextResponse.json(
         { error: 'M-Pesa payments not configured for this merchant' },
         { status: 400 }
@@ -63,11 +70,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Payment provider not yet active. Complete setup first.' }, { status: 400 })
     }
 
-    // Normalize phone number
+    // Normalize phone to international format without + (254XXXXXXXXX)
+    // Paystack M-Pesa STK push requires this format for Kenya
     let phone = customer_phone.replace(/[\s\-()]/g, '')
-    if (phone.startsWith('+')) phone = phone.slice(1)
-    if (phone.startsWith('0')) phone = `254${phone.slice(1)}`
-    if (!phone.startsWith('254')) phone = `254${phone}`
+    if (phone.startsWith('+254')) phone = phone.slice(1)          // +254... → 254...
+    else if (phone.startsWith('254')) phone = phone               // already good
+    else if (phone.startsWith('0')) phone = `254${phone.slice(1)}` // 07... → 2547...
+    else phone = `254${phone}`                                     // 7... → 2547...
+
+    // Basic validation — must be 12 digits (254 + 9 digits)
+    if (!/^254\d{9}$/.test(phone)) {
+      return NextResponse.json({ error: 'Please enter a valid Kenyan phone number (e.g. 0712 345 678)' }, { status: 400 })
+    }
 
     // Initiate STK Push via Paystack
     const stk = await initiateStkPush({

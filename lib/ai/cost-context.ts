@@ -8,6 +8,7 @@ import type { CostProfile } from '@/app/api/cost-profile/route'
 
 // ── Intent detection ──────────────────────────────────────────
 const COST_PATTERNS = [
+  // ── Original cost / margin keywords ──
   /landed cost/i,
   /true cost/i,
   /cost per unit/i,
@@ -38,6 +39,51 @@ const COST_PATTERNS = [
   /buying price/i,
   /how much.*cost/i,
   /what.*margin/i,
+  // ── General business / financial questions ──
+  /how.*business/i,
+  /business.*doing/i,
+  /business.*going/i,
+  /business.*perform/i,
+  /how.*things.*going/i,
+  /my revenue/i,
+  /my sales/i,
+  /total revenue/i,
+  /total sales/i,
+  /sales.*today/i,
+  /sales.*this week/i,
+  /sales.*this month/i,
+  /revenue.*today/i,
+  /revenue.*this week/i,
+  /revenue.*this month/i,
+  /revenue.*last/i,
+  /sales.*last/i,
+  /how much.*(made|earned|sold|revenue|sales|income)/i,
+  /what.*(revenue|sales|income|earnings|turnover)/i,
+  /give me.*(numbers|breakdown|summary|overview|report|snapshot)/i,
+  /financial.*(summary|overview|report|snapshot|health|status)/i,
+  /p.?&.?l/i,
+  /profit.*(loss|and loss)/i,
+  /cash.?flow/i,
+  /top.*(product|seller|selling)/i,
+  /best.*(product|seller|selling)/i,
+  /worst.*(product|seller|selling)/i,
+  /break.*down/i,
+  /stripe.*(data|revenue|sales|payment|charge|transaction|payout)/i,
+  /paystack.*(data|revenue|sales|payment|transaction)/i,
+  /shopify.*(data|revenue|sales|order)/i,
+  /amazon.*(data|revenue|sales|order)/i,
+  /my.*data/i,
+  /my.*numbers/i,
+  /my.*performance/i,
+  /earning/i,
+  /turnover/i,
+  /growth/i,
+  /trend/i,
+  /month.*over.*month/i,
+  /year.*over.*year/i,
+  /compare.*(month|week|period|quarter)/i,
+  /average.*order/i,
+  /aov/i,
 ]
 
 export function detectCostIntent(text: string): boolean {
@@ -132,7 +178,7 @@ export async function fetchCostProfile(
       .single()
 
     const { data: sources } = await supabase
-      .from('data_sources')
+      .from('connected_sources')
       .select('source_type')
       .eq('user_id', userId)
       .eq('status', 'active')

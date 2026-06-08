@@ -57,6 +57,7 @@ export const HELP_TOPICS: HelpTopic[] = [
       "understanding-your-data-sources",
       "reports-vs-dashboards",
       "getting-support",
+      "using-the-help-centre",
     ],
   },
   {
@@ -9489,6 +9490,57 @@ export const HELP_ARTICLES: HelpArticle[] = [
       { q: "What are your support hours?", a: "Core hours are Monday–Friday, 8am–6pm GMT. Urgent emails (marked [URGENT]) are monitored outside these hours. Enterprise customers have 24/7 emergency support." },
     ],
     related: ["onboarding-guide", "first-5-minutes", "data-not-syncing"],
+  },
+
+  // ─── NEW: Using the Help Centre ─────────────────────────────────────────────
+  {
+    slug: "using-the-help-centre",
+    title: "How to Use the Help Centre — Step by Step",
+    description: "A complete guide to finding answers in the AskBiz Help Centre — the floating widget, search, contextual suggestions, full help page, articles, FAQs, and keyboard shortcuts.",
+    topic: "Getting Started",
+    topicSlug: "getting-started",
+    readTime: 4,
+    popular: true,
+    keywords: ["help centre", "help widget", "search help", "find answers", "FAQ", "glossary", "how to use help", "support", "help button"],
+    lastUpdated: "2026-06-07",
+    content: [
+      {
+        heading: "Step 1 — Open the Help Widget",
+        body: "On every page in AskBiz, you will see an orange circle with a question mark in the bottom-right corner of your screen. This is the Help Widget. Tap or click it to open a compact help panel without leaving the page you are on.\n\nThe panel slides open above the button and gives you instant access to search, contextual suggestions, and quick links — all without navigating away from your current work.",
+      },
+      {
+        heading: "Step 2 — Search for answers",
+        body: "At the top of the Help Widget is a search bar. Start typing your question or topic — for example \"M-Pesa setup\", \"EBITDA\", \"payment methods\", or \"how to add staff\". Results appear live as you type, showing the top 5 matching articles.\n\nEach result displays the topic category in orange (e.g. Mobile Money Payments) and the article title below it. Click any result to go directly to the full article.\n\nTip: Search for what you are trying to do, not error messages. \"Connect Shopify\" finds better results than \"Error 403\".",
+      },
+      {
+        heading: "Step 3 — Use contextual suggestions",
+        body: "If you do not search, the Help Widget automatically suggests articles relevant to the page you are currently viewing. For example:\n\n- On the POS / Sell page → you see POS-related help articles\n- On Settings → you see account and configuration articles\n- On the Intelligence page → you see alerts and analytics articles\n- On the Ask page → you see articles about asking AskBiz questions\n- On the Dashboard → you see data analysis and reporting articles\n\nThis means the most relevant help is always one tap away, without you needing to know what to search for. If no page-specific match exists, the widget shows popular articles instead.",
+      },
+      {
+        heading: "Step 4 — Use the Quick Links",
+        body: "Below the contextual suggestions, the widget shows three Quick Links:\n\n- **Getting started** — takes you to the Getting Started topic with setup guides and onboarding walkthroughs\n- **FAQ** — a dedicated FAQ page answering the most common questions across all topics\n- **Glossary** — definitions of business and AskBiz-specific terms (EBITDA, churn, anomaly detection, STK push, etc.)\n\nThese are useful when you are new to AskBiz or encounter a term you do not recognise.",
+      },
+      {
+        heading: "Step 5 — Open the Full Help Centre",
+        body: "At the bottom of the widget, click Full Help Centre → to open the complete help page at /help. This gives you the full browsable experience:\n\n- **Search bar** at the top with autocomplete suggestions — use Cmd+K (Mac) or Ctrl+K (Windows) to focus the search bar from anywhere on the page\n- **Topic cards** — coloured cards for each major topic (Getting Started, Point of Sale, Mobile Money, Intelligence, Privacy, etc.). Click a topic to filter articles to that category\n- **All articles** — browse every article with pagination (20 articles per page). Scroll down and click Load More to see additional articles\n- **NEW badges** — articles updated in the last 45 days show a NEW tag so you can spot recently added or updated content",
+      },
+      {
+        heading: "Step 6 — Read an article",
+        body: "Each help article is a dedicated page with:\n\n- **Breadcrumb** at the top showing the topic category — click it to see all articles in that topic\n- **Title and description** — what the article covers\n- **Read time** — estimated minutes to read the full article\n- **Sections** — the article is broken into clear sections with headings. Each section covers one concept or step. Scroll through them in order, or jump to the section you need\n- **FAQ accordion** — at the bottom, frequently asked questions specific to this topic. Click a question to expand the answer\n- **Related articles** — links to other articles on related topics, so you can keep exploring without going back to search",
+      },
+      {
+        heading: "Step 7 — Close the widget and keep working",
+        body: "Click the orange button again (now showing ×) to close the Help Widget and return to your work. The widget remembers nothing between opens — each time you open it, it starts fresh with contextual suggestions for your current page.\n\nIf you navigated to a full help article, use your browser's back button or the AskBiz sidebar to return to where you were working.",
+      },
+    ],
+    faq: [
+      { q: "Is there a keyboard shortcut to open help?", a: "On the full Help Centre page (/help), press Cmd+K (Mac) or Ctrl+K (Windows) to jump to the search bar. Press Escape to close the autocomplete dropdown. The floating widget is opened by clicking the ? button — there is no keyboard shortcut for it currently." },
+      { q: "Can I search from the full Help Centre page?", a: "Yes. The full Help Centre page has its own search bar at the top with autocomplete. It searches across all article titles, descriptions, content, and keywords." },
+      { q: "What does the NEW badge mean?", a: "Articles updated or added within the last 45 days show a NEW badge on the Help Centre page. This helps you spot recently added guides for new features." },
+      { q: "Why do I see different suggestions on different pages?", a: "The Help Widget is context-aware. It detects which section of AskBiz you are using and shows the most relevant articles for that section. On the POS page, you see POS articles. On the Intelligence page, you see intelligence articles." },
+      { q: "What if I cannot find an answer?", a: "If search and browsing do not answer your question, click Email support at the bottom of the Help Widget to contact hello@askbiz.co. Include your account email and a description of what you need help with." },
+    ],
+    related: ["getting-support", "first-5-minutes", "onboarding-guide"],
   },
 
   // ─── NEW: Reports vs Dashboards ───────────────────────────────────────────
