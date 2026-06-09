@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import VoiceVisualizer from '@/components/chat/VoiceVisualizer'
-import BusinessPulse from '@/components/BusinessPulse'
+// BusinessPulse merged into NotificationBell
 import HumanFirstSearch from '@/components/chat/HumanFirstSearch'
 import PulseBar from '@/components/chat/PulseBar'
 import { useVoice } from '@/hooks/useVoice'
@@ -37,6 +37,7 @@ export default function ChatPage() {
   const [input, setInput] = useState('')
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [uploadedFile, setUploadedFile] = useState<{ name: string; summary: string; sample: unknown[] } | null>(null)
+  const [connectedSources, setConnectedSources] = useState<{ source_type: string; status: string }[]>([])
   const [uploading, setUploading] = useState(false)
   const [isLoading, setIsLoadingLocal] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
@@ -55,6 +56,16 @@ export default function ChatPage() {
   }, [])
 
   const isMobile = winW < 600
+
+  // Fetch connected data sources on mount
+  useEffect(() => {
+    fetch('/api/sources', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : [])
+      .then(sources => { if (Array.isArray(sources) && sources.length > 0) setConnectedSources(sources) })
+      .catch(() => {})
+  }, [])
+
+  const hasConnectedData = connectedSources.length > 0 || !!uploadedFile
 
   const getOrCreateConversation = async (firstMessage: string) => {
     if (conversationId) return conversationId
@@ -287,7 +298,7 @@ export default function ChatPage() {
   const isEmpty = messages.length === 0
   const tavilyActive = /news|latest|recent|trend|competitor|market|regulation|eu ai act|gdpr|vat|tariff|customs|inflation|hot product|what.s selling/i.test(input)
   const userState: 'noData' | 'dataConnected' | 'marketActive' =
-    tavilyActive ? 'marketActive' : uploadedFile ? 'dataConnected' : 'noData'
+    tavilyActive ? 'marketActive' : hasConnectedData ? 'dataConnected' : 'noData'
   const lastResultForPulse = session.lastResult as AIResult | null
 
   return (
@@ -509,6 +520,14 @@ export default function ChatPage() {
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', display: 'inline-block', boxShadow: '0 0 6px #22C55E' }}/>
                 Connected: {uploadedFile.name}
               </span>
+            ) : connectedSources.length > 0 ? (
+              <span style={{ color: '#22C55E', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', display: 'inline-block', boxShadow: '0 0 6px #22C55E' }}/>
+                {connectedSources.length} source{connectedSources.length !== 1 ? 's' : ''} connected ·{' '}
+                <Link href="/sources" style={{ color: '#6366F1', textDecoration: 'none', fontWeight: 500 }}>
+                  Manage
+                </Link>
+              </span>
             ) : (
               <span style={{ color: 'var(--tx3)', display: 'flex', alignItems: 'center', gap: 5 }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--b2)', display: 'inline-block' }}/>
@@ -524,15 +543,7 @@ export default function ChatPage() {
 
       </div>
 
-      {/* ── BUSINESS PULSE SIDEBAR ── */}
-      {!isMobile && (
-        <BusinessPulse
-          onActionClick={(prompt) => {
-            setInput(prompt)
-            setTimeout(() => sendMessage(prompt), 400)
-          }}
-        />
-      )}
+      {/* Business Pulse moved to NotificationBell dropdown */}
 
     </div>
   )
