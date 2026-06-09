@@ -26,6 +26,8 @@ const SECTION_MAP: [string, string][] = [
   ['/files',        'files-uploads'],
   ['/templates',    'templates'],
   ['/sell',         'point-of-sale'],
+  ['/pos',          'mobile-money'],
+  ['/cfo',          'advanced-intelligence'],
 ]
 
 const QUICK_LINKS = [
