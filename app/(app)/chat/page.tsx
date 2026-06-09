@@ -22,12 +22,71 @@ interface Message {
   timestamp: Date
 }
 
-const TOOL_CARDS = [
+const DEFAULT_CARDS = [
   { icon: '💱', title: 'FX Risk', desc: 'Model currency drops before they hit your margin', query: 'Model what happens to my margin if GBP falls 10% against my import currency' },
   { icon: '🏭', title: 'Supplier Score', desc: 'Grade every supplier on delivery and impact', query: 'Score my suppliers by on-time delivery rate and financial impact' },
   { icon: '🧮', title: 'Landed Cost', desc: 'True cost: supplier price + freight + duty + FX', query: 'Calculate my true landed cost including freight, duty, VAT and FX buffer' },
   { icon: '🌍', title: 'Export Markets', desc: 'Find the best country to expand into next', query: 'Which export market should I expand into next based on my product?' },
 ]
+const SOURCE_CARDS: Record<string, { icon: string; title: string; desc: string; query: string }[]> = {
+  pos: [
+    { icon: '📊', title: "Today's Sales", desc: 'Live revenue and transaction count', query: "What are my POS sales today? Show revenue, transaction count, and top products." },
+    { icon: '⭐', title: 'Top Products', desc: 'Best sellers this week', query: "What are my top 10 selling products this week by revenue and quantity?" },
+    { icon: '👥', title: 'Staff Performance', desc: 'Who sold the most?', query: "Show me staff performance — sales per cashier, average transaction value, and transaction count." },
+    { icon: '📦', title: 'Stock Check', desc: 'Low inventory alerts', query: "Which products are running low on stock? Show items below reorder point." },
+  ],
+  stripe: [
+    { icon: '💳', title: 'Stripe Revenue', desc: 'Payments and payouts', query: "Show me my Stripe revenue this month — total charges, refunds, and net revenue." },
+    { icon: '📈', title: 'Growth Trend', desc: 'Month-over-month change', query: "Compare my Stripe revenue this month vs last month. What's the growth rate?" },
+    { icon: '🔄', title: 'Failed Payments', desc: 'Recovery opportunities', query: "How many failed payments did I have this month? What's the total lost revenue?" },
+    { icon: '💰', title: 'Average Order', desc: 'AOV and trends', query: "What is my average order value this month and how does it compare to last month?" },
+  ],
+  shopify: [
+    { icon: '🛒', title: 'Shopify Sales', desc: 'Orders and revenue today', query: "Show me my Shopify sales today — orders, revenue, and top products." },
+    { icon: '📦', title: 'Inventory', desc: 'Low stock alerts', query: "Which Shopify products are running low on inventory? Show items with less than 10 units." },
+    { icon: '🔁', title: 'Returns', desc: 'Refund rate this month', query: "What is my Shopify return and refund rate this month? Which products have the highest return rate?" },
+    { icon: '🏆', title: 'Best Sellers', desc: 'Top products this week', query: "What are my best selling Shopify products this week by revenue?" },
+  ],
+  xero: [
+    { icon: '📋', title: 'P&L Summary', desc: 'Profit and loss snapshot', query: "Give me a profit and loss summary for this month from my Xero data." },
+    { icon: '💵', title: 'Cash Flow', desc: 'Money in vs money out', query: "What does my cash flow look like? Show money in, money out, and net position." },
+    { icon: '📑', title: 'Invoices', desc: 'Outstanding and overdue', query: "How many outstanding invoices do I have? What's the total overdue amount?" },
+    { icon: '📊', title: 'Expenses', desc: 'Cost breakdown by category', query: "Break down my expenses by category this month. What are my biggest cost areas?" },
+  ],
+  quickbooks: [
+    { icon: '📋', title: 'P&L Summary', desc: 'Profit and loss snapshot', query: "Give me a profit and loss summary for this month from my QuickBooks data." },
+    { icon: '💵', title: 'Cash Flow', desc: 'Money in vs money out', query: "What does my cash flow look like from QuickBooks?" },
+    { icon: '📑', title: 'Invoices', desc: 'Outstanding and overdue', query: "How many outstanding invoices do I have in QuickBooks?" },
+    { icon: '📊', title: 'Expenses', desc: 'Cost breakdown', query: "Break down my expenses by category this month from QuickBooks." },
+  ],
+  amazon_fba: [
+    { icon: '📦', title: 'Amazon Sales', desc: 'Orders and revenue', query: "Show me my Amazon FBA sales this month — orders, revenue, and top ASINs." },
+    { icon: '🏷️', title: 'FBA Fees', desc: 'Fee breakdown', query: "Break down my Amazon FBA fees this month — fulfilment, storage, referral." },
+    { icon: '⭐', title: 'Top ASINs', desc: 'Best performers', query: "What are my top 10 Amazon products by profit after FBA fees?" },
+    { icon: '📉', title: 'Returns', desc: 'Return rate by product', query: "Which Amazon products have the highest return rate?" },
+  ],
+}
+const CFO_CARDS = [
+  { icon: '📋', title: 'P&L Summary', desc: 'Revenue, costs, and net profit', query: "Give me a detailed profit and loss summary for this month with month-over-month comparison." },
+  { icon: '💰', title: 'EBITDA', desc: 'Operating earnings and valuation', query: "What is my current EBITDA and EBITDA margin? Estimate my business valuation." },
+  { icon: '💵', title: 'Cash Flow', desc: 'Inflows, outflows, runway', query: "Show me my cash flow — money in, money out, and months of runway." },
+  { icon: '📈', title: 'Growth Metrics', desc: 'MoM revenue and margin trends', query: "Show month-over-month revenue growth and margin trends for the last 6 months." },
+]
+function getSmartCards(types: string[], cfo?: boolean): typeof DEFAULT_CARDS {
+  if (cfo) return CFO_CARDS
+  if (types.length === 0) return DEFAULT_CARDS
+  if (types.length === 1 && SOURCE_CARDS[types[0]]) return SOURCE_CARDS[types[0]]
+  const cards: typeof DEFAULT_CARDS = []
+  for (const t of types) {
+    const pool = SOURCE_CARDS[t]
+    if (!pool) continue
+    const take = cards.length === 0 ? 2 : 1
+    cards.push(...pool.slice(0, take))
+    if (cards.length >= 4) break
+  }
+  while (cards.length < 4) cards.push(DEFAULT_CARDS[cards.length % DEFAULT_CARDS.length])
+  return cards.slice(0, 4)
+}
 
 export default function ChatPage() {
   const router = useRouter()
@@ -37,7 +96,7 @@ export default function ChatPage() {
   const [input, setInput] = useState('')
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [uploadedFile, setUploadedFile] = useState<{ name: string; summary: string; sample: unknown[] } | null>(null)
-  const [connectedSources, setConnectedSources] = useState<{ source_type: string; status: string }[]>([])
+  const [connectedSources, setConnectedSources] = useState<{ source_type: string; status: string; last_synced_at?: string }[]>([])
   const [uploading, setUploading] = useState(false)
   const [isLoading, setIsLoadingLocal] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
@@ -66,6 +125,18 @@ export default function ChatPage() {
   }, [])
 
   const hasConnectedData = connectedSources.length > 0 || !!uploadedFile
+  const sourceTypes = [...new Set(connectedSources.map(s => s.source_type))]
+  const SOURCE_LABELS: Record<string, string> = { stripe: 'Stripe', shopify: 'Shopify', amazon_fba: 'Amazon', xero: 'Xero', quickbooks: 'QuickBooks', pos: 'POS', csv: 'CSV' }
+  const sourceLabel = sourceTypes.map(t => SOURCE_LABELS[t] || t).join(' · ')
+  const oldestSync = connectedSources.reduce((oldest, s) => {
+    if (!s.last_synced_at) return oldest
+    const d = new Date(s.last_synced_at).getTime()
+    return d < oldest ? d : oldest
+  }, Date.now())
+  const syncStale = connectedSources.length > 0 && (Date.now() - oldestSync) > 24 * 60 * 60 * 1000
+  const syncAgo = connectedSources.length > 0 && oldestSync < Date.now()
+    ? (() => { const h = Math.floor((Date.now() - oldestSync) / 3600000); return h < 1 ? 'just now' : h < 24 ? `${h}h ago` : `${Math.floor(h / 24)}d ago` })()
+    : null
 
   const getOrCreateConversation = async (firstMessage: string) => {
     if (conversationId) return conversationId
@@ -383,7 +454,7 @@ export default function ChatPage() {
                   <>
                     {/* Specialist tool cards */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, width: '100%', maxWidth: 460, marginBottom: 14 }} className="animate-fade-up stagger-3">
-                      {TOOL_CARDS.map(card => (
+                      {getSmartCards(sourceTypes, settings.cfoMode).map(card => (
                         <button
                           key={card.title}
                           onClick={() => sendMessage(card.query)}
@@ -521,11 +592,11 @@ export default function ChatPage() {
                 Connected: {uploadedFile.name}
               </span>
             ) : connectedSources.length > 0 ? (
-              <span style={{ color: '#22C55E', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', display: 'inline-block', boxShadow: '0 0 6px #22C55E' }}/>
-                {connectedSources.length} source{connectedSources.length !== 1 ? 's' : ''} connected ·{' '}
+              <span style={{ color: syncStale ? '#F59E0B' : '#22C55E', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: syncStale ? '#F59E0B' : '#22C55E', display: 'inline-block', boxShadow: syncStale ? '0 0 6px #F59E0B' : '0 0 6px #22C55E' }}/>
+                {sourceLabel} connected{syncAgo ? ` · synced ${syncAgo}` : ''}{syncStale ? ' ⚠️' : ''} ·{' '}
                 <Link href="/sources" style={{ color: '#6366F1', textDecoration: 'none', fontWeight: 500 }}>
-                  Manage
+                  {syncStale ? 'Re-sync' : 'Manage'}
                 </Link>
               </span>
             ) : (

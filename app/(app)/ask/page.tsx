@@ -22,12 +22,85 @@ interface Message {
   timestamp: Date
 }
 
-const TOOL_CARDS = [
+// Default cards when no sources are connected
+const DEFAULT_CARDS = [
   { icon: '💱', title: 'Currency Risk', desc: 'What happens if the pound drops?', query: 'Model what happens to my margin if GBP falls 10% against my import currency' },
   { icon: '🏭', title: 'My Suppliers', desc: 'Who is the most reliable?', query: 'Score my suppliers by on-time delivery rate and financial impact' },
   { icon: '🧮', title: 'True Cost', desc: 'What does shipping actually cost me?', query: 'Calculate my true landed cost including freight, duty, VAT and FX buffer' },
   { icon: '🌍', title: 'New Markets', desc: 'Where should I sell next?', query: 'Which export market should I expand into next based on my product?' },
 ]
+
+// Source-specific prompt cards — shown when we know what's connected
+const SOURCE_CARDS: Record<string, { icon: string; title: string; desc: string; query: string }[]> = {
+  pos: [
+    { icon: '📊', title: "Today's Sales", desc: 'Live revenue and transaction count', query: "What are my POS sales today? Show revenue, transaction count, and top products." },
+    { icon: '⭐', title: 'Top Products', desc: 'Best sellers this week', query: "What are my top 10 selling products this week by revenue and quantity?" },
+    { icon: '👥', title: 'Staff Performance', desc: 'Who sold the most?', query: "Show me staff performance — sales per cashier, average transaction value, and transaction count." },
+    { icon: '📦', title: 'Stock Check', desc: 'Low inventory alerts', query: "Which products are running low on stock? Show items below reorder point." },
+  ],
+  stripe: [
+    { icon: '💳', title: 'Stripe Revenue', desc: 'Payments and payouts', query: "Show me my Stripe revenue this month — total charges, refunds, and net revenue." },
+    { icon: '📈', title: 'Growth Trend', desc: 'Month-over-month change', query: "Compare my Stripe revenue this month vs last month. What's the growth rate?" },
+    { icon: '🔄', title: 'Failed Payments', desc: 'Recovery opportunities', query: "How many failed payments did I have this month? What's the total lost revenue?" },
+    { icon: '💰', title: 'Average Order', desc: 'AOV and trends', query: "What is my average order value this month and how does it compare to last month?" },
+  ],
+  shopify: [
+    { icon: '🛒', title: 'Shopify Sales', desc: 'Orders and revenue today', query: "Show me my Shopify sales today — orders, revenue, and top products." },
+    { icon: '📦', title: 'Inventory', desc: 'Low stock alerts', query: "Which Shopify products are running low on inventory? Show items with less than 10 units." },
+    { icon: '🔁', title: 'Returns', desc: 'Refund rate this month', query: "What is my Shopify return and refund rate this month? Which products have the highest return rate?" },
+    { icon: '🏆', title: 'Best Sellers', desc: 'Top products this week', query: "What are my best selling Shopify products this week by revenue?" },
+  ],
+  xero: [
+    { icon: '📋', title: 'P&L Summary', desc: 'Profit and loss snapshot', query: "Give me a profit and loss summary for this month from my Xero data." },
+    { icon: '💵', title: 'Cash Flow', desc: 'Money in vs money out', query: "What does my cash flow look like? Show money in, money out, and net position." },
+    { icon: '📑', title: 'Invoices', desc: 'Outstanding and overdue', query: "How many outstanding invoices do I have? What's the total overdue amount?" },
+    { icon: '📊', title: 'Expenses', desc: 'Cost breakdown by category', query: "Break down my expenses by category this month. What are my biggest cost areas?" },
+  ],
+  quickbooks: [
+    { icon: '📋', title: 'P&L Summary', desc: 'Profit and loss snapshot', query: "Give me a profit and loss summary for this month from my QuickBooks data." },
+    { icon: '💵', title: 'Cash Flow', desc: 'Money in vs money out', query: "What does my cash flow look like from QuickBooks? Show money in, money out, and net position." },
+    { icon: '📑', title: 'Invoices', desc: 'Outstanding and overdue', query: "How many outstanding invoices do I have in QuickBooks? Total overdue amount?" },
+    { icon: '📊', title: 'Expenses', desc: 'Cost breakdown by category', query: "Break down my expenses by category this month from QuickBooks." },
+  ],
+  amazon_fba: [
+    { icon: '📦', title: 'Amazon Sales', desc: 'Orders and revenue', query: "Show me my Amazon FBA sales this month — orders, revenue, and top ASINs." },
+    { icon: '🏷️', title: 'FBA Fees', desc: 'Fee breakdown and impact', query: "Break down my Amazon FBA fees this month — fulfilment, storage, referral. What percentage of revenue goes to fees?" },
+    { icon: '⭐', title: 'Top ASINs', desc: 'Best performers', query: "What are my top 10 Amazon products by profit after FBA fees?" },
+    { icon: '📉', title: 'Returns', desc: 'Return rate by product', query: "Which Amazon products have the highest return rate? Show return rate and reason breakdown." },
+  ],
+}
+
+const CFO_CARDS = [
+  { icon: '📋', title: 'P&L Summary', desc: 'Revenue, costs, and net profit', query: "Give me a detailed profit and loss summary for this month. Include revenue, COGS, gross profit, operating expenses, and net profit with month-over-month comparison." },
+  { icon: '💰', title: 'EBITDA', desc: 'Operating earnings and valuation', query: "What is my current EBITDA and EBITDA margin? How does it compare to last month? Estimate my business valuation based on EBITDA multiples." },
+  { icon: '💵', title: 'Cash Flow', desc: 'Inflows, outflows, runway', query: "Show me my cash flow — money in, money out, net position, and how many months of runway I have at the current burn rate." },
+  { icon: '📈', title: 'Growth Metrics', desc: 'MoM revenue and margin trends', query: "Show my month-over-month revenue growth, gross margin trend, and net margin trend for the last 6 months." },
+]
+
+// Pick the best 4 cards based on what sources are connected
+function getSmartCards(types: string[], cfo?: boolean): typeof DEFAULT_CARDS {
+  if (cfo) return CFO_CARDS
+  if (types.length === 0) return DEFAULT_CARDS
+
+  // If only one source, show all 4 cards for that source
+  if (types.length === 1 && SOURCE_CARDS[types[0]]) return SOURCE_CARDS[types[0]]
+
+  // Multiple sources: pick 2 from the primary (first connected), 1 each from next two
+  const cards: typeof DEFAULT_CARDS = []
+  for (const t of types) {
+    const pool = SOURCE_CARDS[t]
+    if (!pool) continue
+    const take = cards.length === 0 ? 2 : 1
+    cards.push(...pool.slice(0, take))
+    if (cards.length >= 4) break
+  }
+
+  // Pad with defaults if we don't have 4
+  while (cards.length < 4) {
+    cards.push(DEFAULT_CARDS[cards.length % DEFAULT_CARDS.length])
+  }
+  return cards.slice(0, 4)
+}
 
 export default function AskPage() {
   const router = useRouter()
@@ -37,12 +110,15 @@ export default function AskPage() {
   const [input, setInput] = useState('')
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [uploadedFile, setUploadedFile] = useState<{ name: string; summary: string; sample: unknown[] } | null>(null)
-  const [connectedSources, setConnectedSources] = useState<{ source_type: string; status: string }[]>([])
+  const [connectedSources, setConnectedSources] = useState<{ source_type: string; status: string; last_synced_at?: string }[]>([])
   const [uploading, setUploading] = useState(false)
   const [isLoading, setIsLoadingLocal] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [winW, setWinW] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200)
+  const [savedPrompts, setSavedPrompts] = useState<{ label: string; query: string }[]>([])
+  const [showSavePrompt, setShowSavePrompt] = useState(false)
+  const [promptLabel, setPromptLabel] = useState('')
   const chatRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -65,7 +141,39 @@ export default function AskPage() {
       .catch(() => {})
   }, [])
 
+  // Load saved prompts from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('askbiz_saved_prompts')
+      if (stored) setSavedPrompts(JSON.parse(stored))
+    } catch {}
+  }, [])
+
+  const savePrompt = (label: string, query: string) => {
+    const next = [...savedPrompts, { label, query }]
+    setSavedPrompts(next)
+    try { localStorage.setItem('askbiz_saved_prompts', JSON.stringify(next)) } catch {}
+  }
+
+  const deletePrompt = (idx: number) => {
+    const next = savedPrompts.filter((_, i) => i !== idx)
+    setSavedPrompts(next)
+    try { localStorage.setItem('askbiz_saved_prompts', JSON.stringify(next)) } catch {}
+  }
+
   const hasConnectedData = connectedSources.length > 0 || !!uploadedFile
+  const sourceTypes = [...new Set(connectedSources.map(s => s.source_type))]
+  const SOURCE_LABELS: Record<string, string> = { stripe: 'Stripe', shopify: 'Shopify', amazon_fba: 'Amazon', xero: 'Xero', quickbooks: 'QuickBooks', pos: 'POS', csv: 'CSV' }
+  const sourceLabel = sourceTypes.map(t => SOURCE_LABELS[t] || t).join(' · ')
+  const oldestSync = connectedSources.reduce((oldest, s) => {
+    if (!s.last_synced_at) return oldest
+    const d = new Date(s.last_synced_at).getTime()
+    return d < oldest ? d : oldest
+  }, Date.now())
+  const syncStale = connectedSources.length > 0 && (Date.now() - oldestSync) > 24 * 60 * 60 * 1000
+  const syncAgo = connectedSources.length > 0 && oldestSync < Date.now()
+    ? (() => { const h = Math.floor((Date.now() - oldestSync) / 3600000); return h < 1 ? 'just now' : h < 24 ? `${h}h ago` : `${Math.floor(h / 24)}d ago` })()
+    : null
 
   const getOrCreateConversation = async (firstMessage: string) => {
     if (conversationId) return conversationId
@@ -407,7 +515,7 @@ export default function AskPage() {
                   <>
                     {/* Specialist tool cards */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, width: '100%', maxWidth: 460, marginBottom: 14 }} className="animate-fade-up stagger-3">
-                      {TOOL_CARDS.map(card => (
+                      {getSmartCards(sourceTypes, settings.cfoMode).map(card => (
                         <button
                           key={card.title}
                           onClick={() => sendMessage(card.query)}
@@ -421,6 +529,30 @@ export default function AskPage() {
                         </button>
                       ))}
                     </div>
+
+                    {/* Saved prompts */}
+                    {savedPrompts.length > 0 && (
+                      <div style={{ width: '100%', maxWidth: 460, marginBottom: 14 }} className="animate-fade-up stagger-4">
+                        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Saved prompts</div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                          {savedPrompts.map((sp, i) => (
+                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <button onClick={() => sendMessage(sp.query)}
+                                style={{ padding: '5px 12px', borderRadius: 9999, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx2)', fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 140ms' }}
+                                onMouseEnter={e => { e.currentTarget.style.borderColor = '#d08a59'; e.currentTarget.style.color = '#d08a59' }}
+                                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.color = 'var(--tx2)' }}
+                              >
+                                🔖 {sp.label}
+                              </button>
+                              <button onClick={() => deletePrompt(i)}
+                                style={{ width: 18, height: 18, borderRadius: '50%', border: 'none', background: 'transparent', color: 'var(--tx3)', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit' }}
+                                title="Remove saved prompt"
+                              >×</button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Connect data CTA */}
                     <div style={{ width: '100%', maxWidth: 460, padding: '12px 16px', borderRadius: 12, border: '1px dashed var(--b2)', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }} className="animate-fade-up stagger-4">
@@ -449,8 +581,22 @@ export default function AskPage() {
                 </div>
                 <div style={{ flex: 1, maxWidth: '88%', display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
                   {msg.role === 'user' ? (
-                    <div style={{ padding: '10px 14px', borderRadius: 13, borderBottomRightRadius: 3, background: 'var(--acc)', color: '#fff', fontSize: 13, lineHeight: 1.5 }}>
-                      {msg.content}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 4, justifyContent: 'flex-end' }}>
+                      <button
+                        onClick={() => {
+                          if (savedPrompts.some(sp => sp.query === msg.content)) return
+                          setShowSavePrompt(true)
+                          setPromptLabel('')
+                          ;(window as any).__askbiz_save_query = msg.content
+                        }}
+                        title={savedPrompts.some(sp => sp.query === msg.content) ? 'Already saved' : 'Save this prompt'}
+                        style={{ marginTop: 6, background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: savedPrompts.some(sp => sp.query === msg.content) ? 'var(--acc)' : 'var(--tx3)', fontSize: 13, opacity: savedPrompts.some(sp => sp.query === msg.content) ? 1 : 0.5, transition: 'opacity 150ms' }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                        onMouseLeave={e => e.currentTarget.style.opacity = savedPrompts.some(sp => sp.query === msg.content) ? '1' : '0.5'}
+                      >🔖</button>
+                      <div style={{ padding: '10px 14px', borderRadius: 13, borderBottomRightRadius: 3, background: 'var(--acc)', color: '#fff', fontSize: 13, lineHeight: 1.5 }}>
+                        {msg.content}
+                      </div>
                     </div>
                   ) : (
                     msg.content.startsWith('__LIMIT_REACHED__') ? (
@@ -541,11 +687,11 @@ export default function AskPage() {
                 Connected: {uploadedFile.name}
               </span>
             ) : connectedSources.length > 0 ? (
-              <span style={{ color: '#22C55E', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', display: 'inline-block', boxShadow: '0 0 6px #22C55E' }}/>
-                {connectedSources.length} source{connectedSources.length !== 1 ? 's' : ''} connected ·{' '}
+              <span style={{ color: syncStale ? '#F59E0B' : '#22C55E', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: syncStale ? '#F59E0B' : '#22C55E', display: 'inline-block', boxShadow: syncStale ? '0 0 6px #F59E0B' : '0 0 6px #22C55E' }}/>
+                {sourceLabel} connected{syncAgo ? ` · synced ${syncAgo}` : ''}{syncStale ? ' ⚠️' : ''} ·{' '}
                 <Link href="/sources" style={{ color: '#6366F1', textDecoration: 'none', fontWeight: 500 }}>
-                  Manage
+                  {syncStale ? 'Re-sync' : 'Manage'}
                 </Link>
               </span>
             ) : (
@@ -564,6 +710,37 @@ export default function AskPage() {
       </div>
 
       {/* Business Pulse moved to NotificationBell dropdown */}
+
+      {/* Save prompt dialog */}
+      {showSavePrompt && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.35)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={() => setShowSavePrompt(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--sf)', borderRadius: 16, padding: '24px 28px', width: 340, boxShadow: '0 12px 40px rgba(0,0,0,.18)', border: '1px solid var(--b)' }}>
+            <div style={{ fontSize: 15, fontWeight: 700, fontFamily: 'var(--font-sora)', marginBottom: 4 }}>Save prompt</div>
+            <p style={{ fontSize: 12, color: 'var(--tx3)', margin: '0 0 14px' }}>Give it a short label so you can reuse it.</p>
+            <input
+              autoFocus
+              value={promptLabel}
+              onChange={e => setPromptLabel(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && promptLabel.trim()) { savePrompt(promptLabel.trim(), (window as any).__askbiz_save_query || ''); setShowSavePrompt(false) } }}
+              placeholder="e.g. Weekly revenue check"
+              style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--b)', fontSize: 13, fontFamily: 'inherit', outline: 'none', background: 'var(--bg)' }}
+            />
+            <div style={{ display: 'flex', gap: 8, marginTop: 14, justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowSavePrompt(false)}
+                style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)', fontSize: 12, fontFamily: 'inherit', cursor: 'pointer' }}>
+                Cancel
+              </button>
+              <button
+                disabled={!promptLabel.trim()}
+                onClick={() => { savePrompt(promptLabel.trim(), (window as any).__askbiz_save_query || ''); setShowSavePrompt(false) }}
+                style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: promptLabel.trim() ? 'var(--acc)' : 'var(--b)', color: '#fff', fontSize: 12, fontWeight: 600, fontFamily: 'inherit', cursor: promptLabel.trim() ? 'pointer' : 'default' }}>
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   )

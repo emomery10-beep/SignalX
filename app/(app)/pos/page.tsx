@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import ServiceJobsTab from '@/components/pos/ServiceJobsTab'
 import RepairMetrics from '@/components/pos/RepairMetrics'
@@ -89,8 +90,20 @@ const SECTOR_BADGE_COLOR: Record<string, string> = { restaurant: '#d08a59', repa
 
 export default function POSPage() {
   const supabase = createClient()
-  // Modal state for recognized products from camera
-  const [tab, setTab] = useState<Tab>('overview')
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  // Read tab from URL (?tab=payments), default to 'overview'
+  const urlTab = searchParams.get('tab') as Tab | null
+  const [tab, setTab] = useState<Tab>(urlTab || 'overview')
+
+  // Keep URL in sync when tab changes
+  const handleSetTab = useCallback((t: Tab) => {
+    setTab(t)
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', t)
+    router.replace(`?${params.toString()}`, { scroll: false })
+  }, [searchParams, router])
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [prevTransactions, setPrevTransactions] = useState<Transaction[]>([])
@@ -977,7 +990,7 @@ export default function POSPage() {
         {/* Tabs + action icons in one flush row */}
         <div className="tab-strip" style={{ gap: 0, marginBottom: 24, borderBottom: '1px solid var(--b)', paddingBottom: 0, alignItems: 'stretch' }}>
           {(['overview', 'services', 'staff', 'branches', 'map', 'audit', 'payments'] as Tab[]).filter(Boolean).map(t => (
-            <button key={t} onClick={() => setTab(t)} style={{
+            <button key={t} onClick={() => handleSetTab(t)} style={{
               padding: '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === t ? 'var(--sf)' : 'transparent', color: tab === t ? 'var(--tx)' : 'var(--tx3)',
               fontSize: 13, fontWeight: tab === t ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
@@ -996,7 +1009,7 @@ export default function POSPage() {
             </button>
           ))}
           {(selectedSector === 'all' || selectedSector === 'logistics') && (
-            <button onClick={() => setTab('logistics')} style={{
+            <button onClick={() => handleSetTab('logistics')} style={{
               padding: '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === 'logistics' ? 'var(--sf)' : 'transparent', color: tab === 'logistics' ? '#0891b2' : 'var(--tx3)',
               fontSize: 13, fontWeight: tab === 'logistics' ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
@@ -1011,7 +1024,7 @@ export default function POSPage() {
             { id: 'retail' as Tab,     label: '📦 Retail',     color: '#22c55e' },
             { id: 'factory' as Tab,    label: '🏭 Factory',    color: '#f59e0b' },
           ]).filter(s => selectedSector === s.id).map(s => (
-            <button key={s.id} onClick={() => setTab(s.id)} style={{
+            <button key={s.id} onClick={() => handleSetTab(s.id)} style={{
               padding: '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', whiteSpace: 'nowrap',
               background: tab === s.id ? 'var(--sf)' : 'transparent', color: tab === s.id ? s.color : 'var(--tx3)',
               fontSize: 13, fontWeight: tab === s.id ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
@@ -1129,6 +1142,24 @@ export default function POSPage() {
                 <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Avg sale</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)' }}>{fmt(currencySymbol, todaySales > 0 ? todayRevenue / todaySales : 0)}</div>
               </div>
+            </div>
+
+            {/* Ask AskBiz about POS data */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+              {[
+                { label: '📊 Analyse today', query: `My POS today: ${fmt(currencySymbol, todayRevenue)} revenue, ${todaySales} sales, ${margin.toFixed(1)}% margin, ${refundCount} refunds. Analyse this — is it a good day? What should I focus on?` },
+                { label: '⭐ Top products', query: 'What are my top 10 selling POS products this week by revenue and quantity?' },
+                { label: '👥 Staff ranking', query: 'Rank my POS staff by sales performance — revenue per cashier, transaction count, and average sale value.' },
+                { label: '📦 Stock alerts', query: 'Which products are running low on stock or have expiry warnings? Show items I need to reorder.' },
+              ].map(btn => (
+                <button key={btn.label} onClick={() => { router.push('/ask'); setTimeout(() => window.dispatchEvent(new CustomEvent('askbiz:send', { detail: btn.query })), 400) }}
+                  style={{ padding: '7px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx2)', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms', whiteSpace: 'nowrap' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#6366F1'; e.currentTarget.style.color = '#6366F1'; e.currentTarget.style.background = 'rgba(99,102,241,.04)' }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.color = 'var(--tx2)'; e.currentTarget.style.background = 'var(--sf)' }}
+                >
+                  {btn.label}
+                </button>
+              ))}
             </div>
 
             {/* Repair metrics */}
@@ -1425,7 +1456,7 @@ export default function POSPage() {
                 onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>{inner}</a>
             )
             return (
-              <button key={idx} onClick={() => setTab(tile.tab!)} style={tileStyle}
+              <button key={idx} onClick={() => handleSetTab(tile.tab!)} style={tileStyle}
                 onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
                 onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>{inner}</button>
             )
@@ -1776,7 +1807,7 @@ export default function POSPage() {
                 <div style={{ fontSize: 16, fontWeight: 700 }}>📦 Inventory</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{filteredInventory.length} product{filteredInventory.length !== 1 ? 's' : ''}</div>
               </div>
-              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
               {/* Hidden file inputs for dual-photo scan */}
@@ -2328,7 +2359,7 @@ export default function POSPage() {
           <AuditTab
             selectedSector={selectedSector}
             currencySymbol={currencySymbol}
-            onBack={() => setTab('services')}
+            onBack={() => handleSetTab('services')}
           />
         )}
 
@@ -2417,7 +2448,7 @@ export default function POSPage() {
                 <div style={{ fontSize: 16, fontWeight: 700 }}>📷 Production Captures</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>All intake, output, wastage and dispatch records</div>
               </div>
-              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
             </div>
             {factoryLoading
               ? <div style={{ color: 'var(--tx3)', fontSize: 13, padding: 24, textAlign: 'center' }}>Loading captures…</div>
@@ -2465,7 +2496,7 @@ export default function POSPage() {
                 <div style={{ fontSize: 16, fontWeight: 700 }}>✅ Pending Approvals</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Captures awaiting supervisor sign-off</div>
               </div>
-              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
             </div>
             {factoryLoading
               ? <div style={{ color: 'var(--tx3)', fontSize: 13, padding: 24, textAlign: 'center' }}>Loading…</div>
@@ -2779,7 +2810,7 @@ export default function POSPage() {
                 <div style={{ fontSize: 16, fontWeight: 700 }}>🧠 Production Intelligence</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>AI-powered anomaly detection across your production floor</div>
               </div>
-              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back</button>
             </div>
             {!factoryIntelligence && !factoryIntelLoading && (
               <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 28, textAlign: 'center' }}>
@@ -2864,7 +2895,7 @@ export default function POSPage() {
                 <div style={{ fontSize: 16, fontWeight: 700 }}>👤 Customers</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Customer profiles, purchase history and segments</div>
               </div>
-              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
             </div>
             {(() => {
               const customerMap = new Map<string, { phone: string; name?: string; orders: number; total: number; lastVisit: string }>()
@@ -2923,7 +2954,7 @@ export default function POSPage() {
                 <div style={{ fontSize: 16, fontWeight: 700 }}>🏷️ Promotions & Discounts</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Track discounts applied across your sales</div>
               </div>
-              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
             </div>
             {(() => {
               const discountedTx = transactions.filter(t => t.subtotal && t.total < t.subtotal)
@@ -2971,7 +3002,7 @@ export default function POSPage() {
                 <div style={{ fontSize: 16, fontWeight: 700 }}>⭐ Customer Loyalty</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Repeat customers, retention and lifetime value</div>
               </div>
-              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
             </div>
             {(() => {
               const customerMap = new Map<string, { phone: string; name?: string; orders: number; total: number; firstVisit: string; lastVisit: string }>()
@@ -3043,7 +3074,7 @@ export default function POSPage() {
                 <div style={{ fontSize: 16, fontWeight: 700 }}>↩️ Returns & Exchanges</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Refunds processed at the till this period</div>
               </div>
-              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
             </div>
             {(() => {
               const returnTx = transactions.filter(t => t.status === 'refunded' || t.status === 'partially_refunded')
@@ -3091,7 +3122,7 @@ export default function POSPage() {
                 <div style={{ fontSize: 16, fontWeight: 700 }}>📊 Reports</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Sales, inventory, margins and business insights</div>
               </div>
-              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
             </div>
             {(() => {
               const totalRevenue = transactions.filter(t => t.status === 'completed').reduce((s, t) => s + t.total, 0)
@@ -3108,14 +3139,14 @@ export default function POSPage() {
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
                     {[
-                      { icon: '🛒', title: 'Sales report', desc: 'Revenue by product, category, staff & period', action: () => setTab('overview') },
-                      { icon: '📦', title: 'Inventory report', desc: 'Stock levels, valuation & dead stock', action: () => setTab('inventory') },
-                      { icon: '👥', title: 'Staff performance', desc: 'Sales per cashier, shift totals', action: () => setTab('staff') },
-                      { icon: '↩️', title: 'Returns report', desc: 'Return rates, reasons & refund totals', action: () => setTab('returns') },
-                      { icon: '👤', title: 'Customer report', desc: 'Retention, lifetime value & segments', action: () => setTab('customers') },
-                      { icon: '⭐', title: 'Loyalty report', desc: 'Repeat rate, top spenders & trends', action: () => setTab('loyalty') },
-                      { icon: '🏷️', title: 'Discounts report', desc: 'Promotions usage & discount totals', action: () => setTab('promotions') },
-                      { icon: '🔍', title: 'Audit trail', desc: 'Full change log & transaction history', action: () => setTab('audit') },
+                      { icon: '🛒', title: 'Sales report', desc: 'Revenue by product, category, staff & period', action: () => handleSetTab('overview') },
+                      { icon: '📦', title: 'Inventory report', desc: 'Stock levels, valuation & dead stock', action: () => handleSetTab('inventory') },
+                      { icon: '👥', title: 'Staff performance', desc: 'Sales per cashier, shift totals', action: () => handleSetTab('staff') },
+                      { icon: '↩️', title: 'Returns report', desc: 'Return rates, reasons & refund totals', action: () => handleSetTab('returns') },
+                      { icon: '👤', title: 'Customer report', desc: 'Retention, lifetime value & segments', action: () => handleSetTab('customers') },
+                      { icon: '⭐', title: 'Loyalty report', desc: 'Repeat rate, top spenders & trends', action: () => handleSetTab('loyalty') },
+                      { icon: '🏷️', title: 'Discounts report', desc: 'Promotions usage & discount totals', action: () => handleSetTab('promotions') },
+                      { icon: '🔍', title: 'Audit trail', desc: 'Full change log & transaction history', action: () => handleSetTab('audit') },
                     ].map((r, i) => (
                       <button key={i} onClick={r.action} style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: '16px 18px', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
                         onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)} onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>
@@ -3141,7 +3172,7 @@ export default function POSPage() {
                 <div style={{ fontSize: 16, fontWeight: 700 }}>📋 Purchase Orders</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Order stock from suppliers and track deliveries</div>
               </div>
-              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
             </div>
             <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
               <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
@@ -3176,7 +3207,7 @@ export default function POSPage() {
                 <div style={{ fontSize: 16, fontWeight: 700 }}>🎁 Gift Cards</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Issue, redeem and track gift card balances</div>
               </div>
-              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
             </div>
             <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
               <div style={{ fontSize: 32, marginBottom: 12 }}>🎁</div>
@@ -3211,13 +3242,13 @@ export default function POSPage() {
                 <div style={{ fontSize: 16, fontWeight: 700 }}>🔗 Integrations</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Connect your accounting, payments and marketing tools</div>
               </div>
-              <button onClick={() => setTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
+              <button onClick={() => handleSetTab('services')} style={{ fontSize: 12, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>← Back</button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
               {[
                 { icon: '📘', title: 'Xero', desc: 'Auto-sync sales, refunds & tax to Xero', status: 'available', action: () => window.open('/api/pos/integrations/xero/connect', '_blank') },
                 { icon: '📗', title: 'QuickBooks', desc: 'Sync transactions to QuickBooks Online', status: 'available', action: () => window.open('/api/auth/quickbooks', '_blank') },
-                { icon: '💳', title: 'M-Pesa', desc: 'Accept mobile money payments', status: 'available', action: () => setTab('overview') },
+                { icon: '💳', title: 'M-Pesa', desc: 'Accept mobile money payments', status: 'available', action: () => handleSetTab('overview') },
                 { icon: '📧', title: 'Email marketing', desc: 'Sync customers to Mailchimp or Brevo', status: 'coming_soon' },
                 { icon: '📦', title: 'Shipping', desc: 'Track shipments via 17Track, DHL & more', status: 'available', action: () => window.location.href = '/shipments' },
                 { icon: '🛒', title: 'E-commerce', desc: 'Connect Shopify, WooCommerce & more', status: 'available', action: () => window.location.href = '/sources' },
