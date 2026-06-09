@@ -8,8 +8,12 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Try POS data first (live), then fall back to CSV uploads
+  // Try POS data first (live), then connected sources, then CSV uploads
   let signals: Signal[] = await runPOSSignals(user.id)
+
+  if (signals.length === 0) {
+    signals = await runSourceSignals(user.id)
+  }
 
   if (signals.length === 0) {
     signals = await runHealthCheckFromUpload(user.id, supabase)
@@ -18,6 +22,106 @@ export async function GET() {
   return NextResponse.json({ signals }, {
     headers: { 'Cache-Control': 'no-store' }
   })
+}
+
+const SOURCE_LABELS: Record<string, string> = {
+  stripe: 'Stripe', shopify: 'Shopify', amazon_fba: 'Amazon FBA',
+  xero: 'Xero', quickbooks: 'QuickBooks', pos: 'POS', csv: 'CSV', ebay: 'eBay',
+}
+
+async function runSourceSignals(userId: string): Promise<Signal[]> {
+  try {
+    const service = createServiceClient()
+    const { data: sources } = await service
+      .from('connected_sources')
+      .select('source_type, status, last_synced_at, created_at')
+      .eq('user_id', userId)
+
+    if (!sources || sources.length === 0) return []
+
+    const signals: Signal[] = []
+    const now = Date.now()
+
+    // Check for stale syncs (> 24h)
+    const staleSources = sources.filter(s => {
+      if (!s.last_synced_at) return true
+      return (now - new Date(s.last_synced_at).getTime()) > 24 * 60 * 60 * 1000
+    })
+
+    if (staleSources.length > 0) {
+      const names = staleSources.map(s => SOURCE_LABELS[s.source_type] || s.source_type).join(', ')
+      signals.push({
+        id: `stale-sync-${userId}`,
+        title: `${names} data is stale`,
+        description: `Your ${names} ${staleSources.length > 1 ? 'connections haven\'t' : 'connection hasn\'t'} synced in over 24 hours. Answers may be outdated.`,
+        severity: 'yellow',
+        suggested_action: 'Re-sync now',
+        prompt: `Check my ${names} data — when was my last sync and is my data up to date?`,
+        metric: `${staleSources.length} stale`,
+        created_at: new Date().toISOString(),
+      })
+    }
+
+    // Check for errored/disconnected sources
+    const errorSources = sources.filter(s => s.status === 'error' || s.status === 'disconnected')
+    if (errorSources.length > 0) {
+      const names = errorSources.map(s => SOURCE_LABELS[s.source_type] || s.source_type).join(', ')
+      signals.push({
+        id: `error-source-${userId}`,
+        title: `${names} connection issue`,
+        description: `Your ${names} integration needs attention — it may have been disconnected or encountered an error.`,
+        severity: 'red',
+        suggested_action: 'Fix connection',
+        prompt: `What's wrong with my ${names} connection? How do I reconnect?`,
+        metric: 'Disconnected',
+        created_at: new Date().toISOString(),
+      })
+    }
+
+    // Proactive insight prompts based on source types
+    const types = new Set(sources.map(s => s.source_type))
+
+    if (types.has('stripe') && signals.length === 0) {
+      signals.push({
+        id: `stripe-insight-${userId}`,
+        title: 'Weekly revenue check available',
+        description: 'Your Stripe data is connected. Ask for a revenue breakdown, failed payment analysis, or churn risk report.',
+        severity: 'blue',
+        suggested_action: 'Analyse revenue',
+        prompt: 'Give me a detailed Stripe revenue breakdown for the past 7 days. Include failed payments, refunds, and net revenue.',
+        created_at: new Date().toISOString(),
+      })
+    }
+
+    if (types.has('shopify') && signals.length === 0) {
+      signals.push({
+        id: `shopify-insight-${userId}`,
+        title: 'Sales performance ready',
+        description: 'Your Shopify store is connected. Ask about top products, conversion rates, or inventory levels.',
+        severity: 'blue',
+        suggested_action: 'Check sales',
+        prompt: 'What are my top selling Shopify products this week? Include revenue, units sold, and any products with declining sales.',
+        created_at: new Date().toISOString(),
+      })
+    }
+
+    if ((types.has('xero') || types.has('quickbooks')) && signals.length === 0) {
+      signals.push({
+        id: `accounting-insight-${userId}`,
+        title: 'Financial health check ready',
+        description: 'Your accounting data is connected. Ask about cash flow, profit margins, or upcoming expenses.',
+        severity: 'blue',
+        suggested_action: 'Run health check',
+        prompt: 'Give me a financial health check — current cash position, monthly burn rate, and any concerning expense trends.',
+        created_at: new Date().toISOString(),
+      })
+    }
+
+    return signals
+  } catch (err) {
+    console.error('Source signal check error:', err)
+    return []
+  }
 }
 
 async function runPOSSignals(userId: string): Promise<Signal[]> {

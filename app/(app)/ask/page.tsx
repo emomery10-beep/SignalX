@@ -554,8 +554,8 @@ export default function AskPage() {
                       </div>
                     )}
 
-                    {/* Connect data CTA */}
-                    <div style={{ width: '100%', maxWidth: 460, padding: '12px 16px', borderRadius: 12, border: '1px dashed var(--b2)', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }} className="animate-fade-up stagger-4">
+                    {/* Connect data CTA — only when no sources connected */}
+                    {!hasConnectedData && <div style={{ width: '100%', maxWidth: 460, padding: '12px 16px', borderRadius: 12, border: '1px dashed var(--b2)', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }} className="animate-fade-up stagger-4">
                       <div style={{ textAlign: 'left' }}>
                         <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', marginBottom: 2 }}>Get answers with your actual numbers</div>
                         <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Connect Shopify, Amazon, QuickBooks or upload a CSV</div>
@@ -566,7 +566,7 @@ export default function AskPage() {
                       >
                         Connect →
                       </Link>
-                    </div>
+                    </div>}
                   </>
                 )}
               </div>
