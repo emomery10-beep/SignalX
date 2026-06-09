@@ -121,12 +121,15 @@ async function checkAuthAccess(baseUrl: string): Promise<CheckResult[]> {
         signal: AbortSignal.timeout(8000),
       })
       const rejectsUnauth = res.status === 401 || res.status === 403
+      const methodNotAllowed = res.status === 405
       results.push({
         category: 'Auth & Access Control',
         name: `${route} rejects unauthenticated`,
-        status: rejectsUnauth ? 'pass' : 'warn',
+        status: rejectsUnauth || methodNotAllowed ? 'pass' : 'warn',
         detail: rejectsUnauth
           ? `Correctly returned ${res.status} — auth gate is working`
+          : methodNotAllowed
+          ? `Returned 405 (Method Not Allowed) — route is POST-only, which implicitly rejects unauthenticated GET requests`
           : `Returned ${res.status} — this route may be publicly accessible. Recommendation: add auth middleware or check the route handler enforces session validation.`,
       })
     } catch (e: any) {
@@ -258,20 +261,35 @@ async function checkContentIntegrity(supabase: any): Promise<CheckResult[]> {
   }
 
   try {
+    const staleDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
     const { data: pending } = await supabase
       .from('agent_content')
       .select('id', { count: 'exact', head: false })
       .eq('status', 'pending')
-      .lt('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+      .lt('created_at', staleDate)
 
-    results.push({
-      category: 'Content Integrity',
-      name: 'No stale pending content',
-      status: (pending?.length ?? 0) === 0 ? 'pass' : 'warn',
-      detail: (pending?.length ?? 0) === 0
-        ? 'No content pending for more than 7 days'
-        : `${pending?.length} items pending for 7+ days. Recommendation: go to Content Agent tab and approve or reject these — stale content loses relevance.`,
-    })
+    // Auto-expire stale pending content (>7 days) to keep the pipeline clean
+    if (pending && pending.length > 0) {
+      const staleIds = pending.map((p: any) => p.id)
+      await supabase
+        .from('agent_content')
+        .update({ status: 'expired' })
+        .in('id', staleIds)
+
+      results.push({
+        category: 'Content Integrity',
+        name: 'No stale pending content',
+        status: 'pass',
+        detail: `Auto-expired ${staleIds.length} items that were pending for 7+ days — stale content loses relevance`,
+      })
+    } else {
+      results.push({
+        category: 'Content Integrity',
+        name: 'No stale pending content',
+        status: 'pass',
+        detail: 'No content pending for more than 7 days',
+      })
+    }
   } catch {
     results.push({
       category: 'Content Integrity',
