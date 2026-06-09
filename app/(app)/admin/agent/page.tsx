@@ -33,7 +33,7 @@ export default function AgentAdminPage() {
   const supabase = createClient()
   const [authorized, setAuthorized] = useState(false)
   const [loading, setLoading]       = useState(true)
-  const [mainTab, setMainTab]       = useState<'agent'|'x'>('agent')
+  const [mainTab, setMainTab]       = useState<'agent'|'x'|'security'>('agent')
 
   // Agent state
   const [items, setItems]           = useState<AgentItem[]>([])
@@ -58,6 +58,13 @@ export default function AgentAdminPage() {
   const [editId, setEditId]         = useState<string|null>(null)
   const [editText, setEditText]     = useState('')
   const [posting, setPosting]       = useState<string|null>(null)
+
+  // Security agent state
+  const [secRunning, setSecRunning] = useState(false)
+  const [secReport, setSecReport] = useState<any>(null)
+  const [secHistory, setSecHistory] = useState<any[]>([])
+  const [secExpanded, setSecExpanded] = useState<string|null>(null)
+  const [secExporting, setSecExporting] = useState(false)
 
   const [toast, setToast] = useState<{msg:string;ok:boolean}|null>(null)
   const showToast = (msg: string, ok = true) => { setToast({msg,ok}); setTimeout(()=>setToast(null), 3500) }
@@ -95,6 +102,69 @@ export default function AgentAdminPage() {
   }
 
   useEffect(() => { if (authorized && mainTab === 'x' && xTab === 'queue') loadXQueue() }, [authorized, mainTab, xTab])
+
+  const loadSecHistory = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin/security-audit?action=history', {
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+      })
+      const d = await res.json()
+      setSecHistory(d.audits || [])
+      if (d.audits?.length > 0 && !secReport) setSecReport(d.audits[0].report)
+    } catch {}
+  }
+
+  useEffect(() => { if (authorized && mainTab === 'security') loadSecHistory() }, [authorized, mainTab])
+
+  const runSecurityAudit = async () => {
+    setSecRunning(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin/security-audit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ action: 'run' }),
+      })
+      const d = await res.json()
+      if (d.success) {
+        setSecReport(d.report)
+        showToast(`Audit complete — ${d.report.passed}/${d.report.total_checks} passed`)
+        loadSecHistory()
+      } else showToast(d.error || 'Audit failed', false)
+    } catch (e: any) { showToast(e.message, false) }
+    finally { setSecRunning(false) }
+  }
+
+  const exportSecurityCsv = async (runId?: string) => {
+    setSecExporting(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const params = new URLSearchParams({ action: 'export' })
+      if (runId) params.set('runId', runId)
+      const res = await fetch(`/api/admin/security-audit?${params}`, {
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+      })
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `askbiz-security-audit-${new Date().toISOString().slice(0, 10)}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+      showToast('CSV exported')
+    } catch (e: any) { showToast(e.message, false) }
+    finally { setSecExporting(false) }
+  }
+
+  const SEC_STATUS = {
+    pass: { bg: 'rgba(34,197,94,.1)', border: 'rgba(34,197,94,.3)', color: '#16a34a', label: 'PASS', icon: '✓' },
+    warn: { bg: 'rgba(245,158,11,.1)', border: 'rgba(245,158,11,.3)', color: '#d97706', label: 'WARNING', icon: '⚠' },
+    fail: { bg: 'rgba(239,68,68,.1)', border: 'rgba(239,68,68,.3)', color: '#dc2626', label: 'FAIL', icon: '✗' },
+  }
 
   const runAgent = async () => {
     setRunning(true); setRunLog(['Starting agent...'])
@@ -201,7 +271,8 @@ export default function AgentAdminPage() {
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:24,flexWrap:'wrap',gap:12}}>
           <div>
             <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4}}>
-              <h1 style={{fontSize:20,fontWeight:700,fontFamily:'var(--font-sora)',margin:0}}>Growth Agent</h1>
+              <button onClick={()=>router.push('/admin')} style={{padding:'4px 10px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>← Back</button>
+              <h1 style={{fontSize:20,fontWeight:700,fontFamily:'var(--font-sora)',margin:0}}>Agents</h1>
               <span style={{fontSize:11,padding:'2px 8px',borderRadius:9999,background:'rgba(99,102,241,.1)',color:'#6366F1',fontWeight:600}}>Admin Only</span>
             </div>
             <p style={{fontSize:13,color:'var(--tx3)',margin:0}}>Runs daily at 6am UTC · Scout → Analyse → Write → Review</p>
@@ -213,9 +284,9 @@ export default function AgentAdminPage() {
 
         {/* Main tabs */}
         <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',marginBottom:24}}>
-          {(['agent','x'] as const).map(t => (
-            <button key={t} onClick={()=>setMainTab(t)} style={{padding:'10px 20px',border:'none',background:'transparent',fontSize:13,fontWeight:mainTab===t?600:400,color:mainTab===t?'#6366F1':'var(--tx3)',borderBottom:mainTab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit',flexShrink:0,whiteSpace:'nowrap'}}>
-              {t === 'agent' ? '📊 Content Agent' : '𝕏 X Agent' + (xConnected===true?' ✓':'')}
+          {([['agent','📊 Content Agent'],['x','𝕏 X Agent'+(xConnected===true?' ✓':'')],['security','🛡 Security & GDPR']] as const).map(([t,label]) => (
+            <button key={t} onClick={()=>setMainTab(t as any)} style={{padding:'10px 20px',border:'none',background:'transparent',fontSize:13,fontWeight:mainTab===t?600:400,color:mainTab===t?'#6366F1':'var(--tx3)',borderBottom:mainTab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit',flexShrink:0,whiteSpace:'nowrap'}}>
+              {label}
             </button>
           ))}
         </div>
@@ -419,6 +490,138 @@ export default function AgentAdminPage() {
                   <p style={{fontSize:12,color:'#6366F1',margin:0,lineHeight:1.5,borderLeft:'2px solid #6366F1',paddingLeft:8}}>{item.generated_reply}</p>
                 </div>
               ))
+            )}
+          </>
+        )}
+
+        {/* ── SECURITY & GDPR TAB ── */}
+        {mainTab === 'security' && (
+          <>
+            {/* Header row */}
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,flexWrap:'wrap',gap:10}}>
+              <div>
+                <div style={{fontSize:14,fontWeight:600,color:'var(--tx)'}}>Security & GDPR Audit</div>
+                <div style={{fontSize:12,color:'var(--tx3)',marginTop:2}}>Automated weekly on Mondays · 8 check categories · Reports stored for compliance evidence</div>
+              </div>
+              <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                <button onClick={()=>exportSecurityCsv()} disabled={secExporting || secHistory.length===0} style={{padding:'8px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,fontWeight:500,cursor:secHistory.length===0?'not-allowed':'pointer',fontFamily:'inherit',opacity:secHistory.length===0?0.5:1}}>
+                  {secExporting?'Exporting...':'📥 Export All CSV'}
+                </button>
+                <button onClick={runSecurityAudit} disabled={secRunning} style={{padding:'8px 16px',borderRadius:9999,border:'none',background:secRunning?'var(--b)':'#6366F1',color:secRunning?'var(--tx3)':'#fff',fontSize:12,fontWeight:600,cursor:secRunning?'wait':'pointer',fontFamily:'inherit'}}>
+                  {secRunning?'Running Audit...':'Run Audit Now'}
+                </button>
+              </div>
+            </div>
+
+            {/* Current report */}
+            {secReport && (
+              <>
+                {/* Summary cards */}
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))',gap:10,marginBottom:20}}>
+                  {[
+                    {label:'Overall',value:SEC_STATUS[secReport.overall_status as keyof typeof SEC_STATUS]?.label||'—',color:SEC_STATUS[secReport.overall_status as keyof typeof SEC_STATUS]?.color||'var(--tx)'},
+                    {label:'Total Checks',value:secReport.total_checks,color:'var(--tx)'},
+                    {label:'Passed',value:secReport.passed,color:'#16a34a'},
+                    {label:'Warnings',value:secReport.warnings,color:'#d97706'},
+                    {label:'Failures',value:secReport.failures,color:'#dc2626'},
+                    {label:'Duration',value:secReport.duration_ms+'ms',color:'var(--tx3)'},
+                  ].map(({label,value,color})=>(
+                    <div key={label} style={{padding:14,borderRadius:12,border:'1px solid var(--b)',background:'var(--sf)'}}>
+                      <div style={{fontSize:10,fontWeight:600,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>{label}</div>
+                      <div style={{fontSize:20,fontWeight:700,fontFamily:'var(--font-sora)',color}}>{value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Category breakdown */}
+                {secReport.categories?.map((cat: any) => {
+                  const st = SEC_STATUS[cat.status as keyof typeof SEC_STATUS]
+                  const isExpanded = secExpanded === cat.category
+                  return (
+                    <div key={cat.category} style={{marginBottom:10,borderRadius:12,border:`1px solid ${st?.border||'var(--b)'}`,overflow:'hidden',background:'var(--sf)'}}>
+                      <div
+                        onClick={()=>setSecExpanded(isExpanded?null:cat.category)}
+                        style={{padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',background:st?.bg||'transparent'}}
+                        onMouseEnter={e=>e.currentTarget.style.opacity='0.85'}
+                        onMouseLeave={e=>e.currentTarget.style.opacity='1'}
+                      >
+                        <div style={{display:'flex',alignItems:'center',gap:10}}>
+                          <span style={{fontSize:14,fontWeight:700,color:st?.color}}>{st?.icon}</span>
+                          <span style={{fontSize:13,fontWeight:600,color:'var(--tx)'}}>{cat.category}</span>
+                          <span style={{fontSize:11,color:'var(--tx3)'}}>{cat.checks.length} checks</span>
+                        </div>
+                        <div style={{display:'flex',alignItems:'center',gap:8}}>
+                          <span style={{fontSize:11,fontWeight:600,color:st?.color,background:st?.bg,border:`1px solid ${st?.border}`,padding:'2px 10px',borderRadius:9999}}>{st?.label}</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round" style={{transform:isExpanded?'rotate(180deg)':'none',transition:'transform 150ms'}}><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                      </div>
+                      {isExpanded && (
+                        <div style={{borderTop:`1px solid ${st?.border||'var(--b)'}`}}>
+                          {cat.checks.map((check: any, i: number) => {
+                            const cst = SEC_STATUS[check.status as keyof typeof SEC_STATUS]
+                            return (
+                              <div key={i} style={{padding:'10px 16px',borderBottom:i<cat.checks.length-1?'1px solid var(--b)':'none',display:'flex',alignItems:'flex-start',gap:10}}>
+                                <span style={{fontSize:12,fontWeight:700,color:cst?.color,flexShrink:0,marginTop:1}}>{cst?.icon}</span>
+                                <div style={{flex:1,minWidth:0}}>
+                                  <div style={{fontSize:12,fontWeight:500,color:'var(--tx)',marginBottom:2}}>{check.name}</div>
+                                  <div style={{fontSize:11,color:'var(--tx3)',lineHeight:1.5}}>{check.detail}</div>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+
+                {/* Sub-processors */}
+                {secReport.sub_processors && (
+                  <div style={{marginTop:16,padding:16,borderRadius:12,border:'1px solid var(--b)',background:'var(--sf)'}}>
+                    <div style={{fontSize:12,fontWeight:700,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:10}}>GDPR Sub-Processors</div>
+                    <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                      {secReport.sub_processors.map((sp: string) => (
+                        <span key={sp} style={{padding:'4px 10px',borderRadius:9999,background:'rgba(99,102,241,.06)',border:'1px solid rgba(99,102,241,.15)',fontSize:11,color:'#6366F1',fontWeight:500}}>{sp}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {!secReport && !secRunning && (
+              <div style={{textAlign:'center',padding:'60px 0',color:'var(--tx3)'}}>
+                <div style={{fontSize:32,marginBottom:12}}>🛡</div>
+                <div style={{fontSize:14,fontWeight:500,marginBottom:4}}>No audit reports yet</div>
+                <div style={{fontSize:12}}>Run your first security & GDPR audit to generate a report.</div>
+              </div>
+            )}
+
+            {/* Audit history */}
+            {secHistory.length > 0 && (
+              <div style={{marginTop:24}}>
+                <div style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:12}}>Audit History</div>
+                <div style={{borderRadius:12,border:'1px solid var(--b)',overflow:'hidden',background:'var(--sf)'}}>
+                  {secHistory.map((audit: any) => {
+                    const st = SEC_STATUS[audit.overall_status as keyof typeof SEC_STATUS]
+                    return (
+                      <div key={audit.run_id} style={{padding:'12px 16px',borderBottom:'1px solid var(--b)',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:8}}>
+                        <div style={{display:'flex',alignItems:'center',gap:10}}>
+                          <span style={{fontSize:11,fontWeight:600,color:st?.color,background:st?.bg,border:`1px solid ${st?.border}`,padding:'2px 10px',borderRadius:9999}}>{st?.icon} {st?.label}</span>
+                          <span style={{fontSize:12,color:'var(--tx2)'}}>{audit.passed}/{audit.total_checks} passed</span>
+                          {audit.failures > 0 && <span style={{fontSize:11,color:'#dc2626',fontWeight:500}}>{audit.failures} failures</span>}
+                          {audit.warnings > 0 && <span style={{fontSize:11,color:'#d97706',fontWeight:500}}>{audit.warnings} warnings</span>}
+                        </div>
+                        <div style={{display:'flex',alignItems:'center',gap:8}}>
+                          <span style={{fontSize:11,color:'var(--tx3)'}}>{new Date(audit.created_at).toLocaleString('en-GB')}</span>
+                          <button onClick={()=>{setSecReport(audit.report);window.scrollTo({top:0,behavior:'smooth'})}} style={{padding:'4px 10px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:11,cursor:'pointer',fontFamily:'inherit'}}>View</button>
+                          <button onClick={()=>exportSecurityCsv(audit.run_id)} style={{padding:'4px 10px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:11,cursor:'pointer',fontFamily:'inherit'}}>CSV</button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
             )}
           </>
         )}
