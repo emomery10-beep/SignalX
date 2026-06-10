@@ -52,17 +52,6 @@ export async function POST(req: NextRequest) {
         .eq('id', transactionId)
         .eq('owner_id', ownerId)
 
-      // Also update pos_payments so Realtime subscription fires
-      await service
-        .from('pos_payments')
-        .update({
-          status: 'completed',
-          external_receipt: paymentIntent.id,
-          completed_at: new Date().toISOString(),
-        })
-        .eq('transaction_id', transactionId)
-        .eq('status', 'pending')
-
       break
     }
 

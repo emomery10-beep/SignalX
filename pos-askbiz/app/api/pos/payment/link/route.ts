@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   const service = createServiceClient()
   const body = await req.json()
-  const { transaction_id, payment_method = 'card', force_provider } = body
+  const { transaction_id, payment_method = 'card' } = body
 
   if (!transaction_id) {
     return NextResponse.json({ error: 'transaction_id required' }, { status: 400 })
@@ -66,9 +66,9 @@ export async function POST(req: NextRequest) {
 
     const hasStripe = !!(config.stripe_connected_account_id) && config.stripe_onboarding_complete
 
-    // Prefer Stripe if fully onboarded — but respect force_provider override from cashier
-    const useStripe = force_provider === 'stripe' ? hasStripe : (force_provider === 'paystack' ? false : hasStripe)
-    const usePaystack = force_provider === 'paystack' ? hasPaystack : (!useStripe && hasPaystack)
+    // Prefer Stripe if fully onboarded, otherwise fall back to Paystack
+    const useStripe = hasStripe
+    const usePaystack = !useStripe && hasPaystack
 
     if (!useStripe && !usePaystack) {
       // Stripe exists but KYC not done — nudge merchant
@@ -87,31 +87,18 @@ export async function POST(req: NextRequest) {
         amount: Math.round(transaction.total * 100),
         currency: 'KES',
         description: `AskBiz POS - Transaction ${transaction_id.slice(0, 8)}`,
-        // Pass as proper Paystack subaccount param (not just metadata) so funds split correctly
-        subaccount: config.paystack_subaccount_id || undefined,
         metadata: {
           transaction_id,
           merchant_id: ownerId,
           payment_method,
+          subaccount: config.paystack_subaccount_id || undefined,
         },
       })
     } else if (useStripe) {
-      // Map country code → Stripe currency
-      const COUNTRY_CURRENCY: Record<string, string> = {
-        gb: 'gbp', us: 'usd', ie: 'eur', de: 'eur', fr: 'eur', nl: 'eur',
-        be: 'eur', at: 'eur', es: 'eur', it: 'eur', pt: 'eur', fi: 'eur',
-        se: 'sek', no: 'nok', dk: 'dkk', pl: 'pln', cz: 'czk',
-        au: 'aud', nz: 'nzd', ca: 'cad', sg: 'sgd', hk: 'hkd',
-        jp: 'jpy', my: 'myr',
-        // Africa
-        ke: 'kes', ng: 'ngn', gh: 'ghs', ug: 'ugx', tz: 'tzs', rw: 'rwf', za: 'zar',
-      }
-      const stripeCurrency = COUNTRY_CURRENCY[config.country?.toLowerCase() || ''] || 'usd'
-
       // Stripe payment link
       const stripeLink = await createStripePaymentLink({
         amount: Math.round(transaction.total * 100),
-        currency: stripeCurrency,
+        currency: config.country?.toLowerCase() === 'gb' ? 'gbp' : 'usd',
         description: `AskBiz POS - Transaction ${transaction_id.slice(0, 8)}`,
         connected_account_id: config.stripe_connected_account_id!,
         metadata: {
@@ -120,7 +107,7 @@ export async function POST(req: NextRequest) {
           payment_method,
         },
       })
-      link = { checkoutUrl: stripeLink.url, id: stripeLink.id }
+      link = { checkoutUrl: stripeLink.url }
     }
 
     // Generate QR code as data URL
@@ -150,7 +137,7 @@ export async function POST(req: NextRequest) {
         transaction_id,
         amount: transaction.total,
         payment_method: payment_method === 'apple_pay' ? 'apple_pay' : 'card',
-        provider: useStripe ? 'stripe' : 'paystack',
+        provider: config?.payment_provider || 'paystack',
         external_reference: externalRef,
         status: 'pending',
       })
@@ -169,7 +156,6 @@ export async function POST(req: NextRequest) {
       checkout_url: checkoutUrl,
       qr_code: qrDataUrl,
       amount: transaction.total,
-      provider: useStripe ? 'stripe' : 'paystack',
       message: 'Payment link generated. Display QR code to customer.',
     })
   } catch (error: any) {

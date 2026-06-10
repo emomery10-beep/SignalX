@@ -60,26 +60,11 @@ export async function POST(req: NextRequest) {
 
       if (paymentError || !payment) {
         // Try to find by payment intent ID
-        let paymentByIntent: any = null
-        const { data: pbi1 } = await service
+        const { data: paymentByIntent } = await service
           .from('pos_payments')
           .select('id, owner_id, transaction_id, status')
           .eq('external_reference', data.payment_intent || data.id)
           .single()
-        paymentByIntent = pbi1
-
-        // Fallback: find by transaction_id from Stripe metadata
-        if (!paymentByIntent && data.metadata?.transaction_id) {
-          const { data: pbi2 } = await service
-            .from('pos_payments')
-            .select('id, owner_id, transaction_id, status')
-            .eq('transaction_id', data.metadata.transaction_id)
-            .eq('status', 'pending')
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single()
-          paymentByIntent = pbi2
-        }
 
         if (!paymentByIntent) {
           console.warn(`[stripe/webhook] Payment not found for charge ${chargeId}`)
