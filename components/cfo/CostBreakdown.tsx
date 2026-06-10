@@ -149,33 +149,39 @@ export default function CostBreakdown({ revenue, cogs, fixedCosts, currencySymbo
       </div>
 
       {/* Revenue breakdown bar */}
-      <div style={{ marginTop: 16 }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Where every {sym}100 goes</div>
-        <div style={{ height: 24, borderRadius: 6, overflow: 'hidden', display: 'flex', background: 'var(--ev, #e5e5e5)' }}>
-          {revenue > 0 && items.map(item => (
-            <div
-              key={item.label}
-              style={{
-                width: `${item.pctOfRevenue}%`, background: item.color,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'width 300ms ease',
-              }}
-            >
-              {item.pctOfRevenue > 8 && (
-                <span style={{ fontSize: 9, color: '#fff', fontWeight: 600 }}>{sym}{Math.round(item.pctOfRevenue)}</span>
-              )}
-            </div>
-          ))}
-          {revenue > 0 && netProfit > 0 && (
-            <div style={{
-              flex: 1, background: '#22C55E',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <span style={{ fontSize: 9, color: '#fff', fontWeight: 600 }}>{sym}{Math.round((netProfit / revenue) * 100)} profit</span>
+      {revenue > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Where every {sym}100 goes</div>
+          <div style={{ height: 24, borderRadius: 6, overflow: 'hidden', display: 'flex', background: 'var(--ev, #e5e5e5)' }}>
+            {(() => {
+              const totalPct = items.reduce((s, i) => s + i.pctOfRevenue, 0)
+              const scale = totalPct > 100 ? 100 / totalPct : 1
+              return (
+                <>
+                  {items.map(item => {
+                    const w = item.pctOfRevenue * scale
+                    return (
+                      <div key={item.label} style={{ width: `${w}%`, background: item.color, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'width 300ms ease', flexShrink: 0 }}>
+                        {w > 8 && <span style={{ fontSize: 9, color: '#fff', fontWeight: 600 }}>{sym}{Math.round(item.pctOfRevenue)}</span>}
+                      </div>
+                    )
+                  })}
+                  {netProfit > 0 && (
+                    <div style={{ flex: 1, background: '#22C55E', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ fontSize: 9, color: '#fff', fontWeight: 600 }}>{sym}{Math.round((netProfit / revenue) * 100)} profit</span>
+                    </div>
+                  )}
+                </>
+              )
+            })()}
+          </div>
+          {netProfit < 0 && (
+            <div style={{ fontSize: 10, color: '#EF4444', marginTop: 4, fontWeight: 500 }}>
+              Costs exceed revenue by {sym}{Math.round(Math.abs(netProfit / revenue) * 100)} per {sym}100 earned
             </div>
           )}
         </div>
-      </div>
+      )}
     </div>
   )
 }
