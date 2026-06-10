@@ -1,4 +1,5 @@
 'use client'
+import 'leaflet/dist/leaflet.css'
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -815,9 +816,9 @@ export default function POSPage() {
   const btnPrimary: React.CSSProperties = { padding: '9px 16px', borderRadius: 8, background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
   const btnSecondary: React.CSSProperties = { padding: '9px 16px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx2)' }
   const cardStyle: React.CSSProperties = { padding: 16, borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)' }
-  const sectionLabel: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' as const, letterSpacing: '.08em', marginBottom: 12 }
+  const sectionLabel: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 12 }
   const modalOverlay: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', zIndex: 100 }
-  const modalBox: React.CSSProperties = { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 101, background: 'var(--sf)', borderRadius: 20, padding: 28, width: '90%', maxWidth: 520, boxShadow: '0 20px 60px rgba(0,0,0,.2)', maxHeight: '85vh', overflowY: 'auto' }
+  const modalBox: React.CSSProperties = { position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 101, background: 'var(--sf)', borderRadius: 14, padding: 28, width: '90%', maxWidth: 520, boxShadow: '0 8px 32px rgba(0,0,0,.14)', maxHeight: '85vh', overflowY: 'auto' }
 
   // ── Comparison badge ───────────────────────────────────
   const CompBadge = ({ curr, prev, inverse }: { curr: number; prev: number; inverse?: boolean }) => {
@@ -835,36 +836,27 @@ export default function POSPage() {
 
   // ── Leaflet map lifecycle ──────────────────────────────
   useEffect(() => {
-    if (tab !== 'map') {
+    if (tab !== 'map' || loading) {
       if (mapRef.current) { mapRef.current.remove(); mapRef.current = null }
       return
     }
-    if (!document.getElementById('lf-css')) {
-      const link = document.createElement('link')
-      link.id = 'lf-css'; link.rel = 'stylesheet'
-      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
-      document.head.appendChild(link)
-    }
-    // Use setTimeout to guarantee React has committed the tab's DOM before Leaflet mounts
-    const doInit = () => {
-      const L = (window as any).L
-      if (!L || !mapDivRef.current || mapRef.current) return
+    if (!mapDivRef.current || mapRef.current) return
+    let cancelled = false
+    const init = async () => {
+      const mod = await import('leaflet')
+      const L = mod.default || mod
+      if (cancelled || !mapDivRef.current || mapRef.current) return
       const map = L.map(mapDivRef.current, { center: [20, 0], zoom: 2 })
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap', maxZoom: 19,
       }).addTo(map)
       mapRef.current = map
       mapMarkersRef.current = []
+      ;(window as any).L = L
     }
-    const t = setTimeout(() => {
-      if (document.getElementById('lf-js')) { doInit(); return }
-      const script = document.createElement('script')
-      script.id = 'lf-js'; script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
-      script.async = true; script.onload = doInit
-      document.head.appendChild(script)
-    }, 80) // 80ms — enough for React commit + first paint
-    return () => clearTimeout(t)
-  }, [tab])
+    init()
+    return () => { cancelled = true }
+  }, [tab, loading])
 
   // ── Render map markers whenever geo points change ──────
   useEffect(() => {
@@ -953,7 +945,7 @@ export default function POSPage() {
     <div className="page-shell">
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
         <div style={{ maxWidth: 480, textAlign: 'center' }}>
-          <div style={{ width: 80, height: 80, borderRadius: 20, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+          <div style={{ width: 80, height: 80, borderRadius: 14, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           </div>
           <div style={{ fontFamily: 'var(--font-sora)', fontSize: 24, fontWeight: 700, marginBottom: 12 }}>Point of Sale</div>
@@ -1153,8 +1145,8 @@ export default function POSPage() {
                 { label: '📦 Stock alerts', query: 'Which products are running low on stock or have expiry warnings? Show items I need to reorder.' },
               ].map(btn => (
                 <button key={btn.label} onClick={() => { router.push('/ask'); setTimeout(() => window.dispatchEvent(new CustomEvent('askbiz:send', { detail: btn.query })), 400) }}
-                  style={{ padding: '7px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx2)', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms', whiteSpace: 'nowrap' }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#6366F1'; e.currentTarget.style.color = '#6366F1'; e.currentTarget.style.background = 'rgba(99,102,241,.04)' }}
+                  style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx2)', fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms', whiteSpace: 'nowrap' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = ACC; e.currentTarget.style.color = ACC; e.currentTarget.style.background = ACC_BG }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.color = 'var(--tx2)'; e.currentTarget.style.background = 'var(--sf)' }}
                 >
                   {btn.label}
@@ -1478,7 +1470,7 @@ export default function POSPage() {
                 { id: 'logistics',  label: '🚛 Logistics' },
               ].map(s => (
                 <button key={s.id} onClick={() => setSectorOverride(s.id === detectedSector ? null : s.id)}
-                  style={{ padding: '5px 14px', borderRadius: 20, border: `1.5px solid ${sector === s.id ? ACC : 'var(--b)'}`,
+                  style={{ padding: '5px 14px', borderRadius: 8, border: `1.5px solid ${sector === s.id ? ACC : 'var(--b)'}`,
                     background: sector === s.id ? ACC : 'var(--sf)', color: sector === s.id ? '#fff' : 'var(--tx3)',
                     fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                   {s.label}
@@ -1850,7 +1842,7 @@ export default function POSPage() {
                 const colors: Record<string, string> = { all: ACC, low: AMBER, out: RED, expiring: '#f97316' }
                 const isActive = invStockFilter === f
                 return (
-                  <button key={f} onClick={() => setInvStockFilter(f)} style={{ padding: '5px 12px', borderRadius: 20, border: isActive ? `1.5px solid ${colors[f]}` : '1.5px solid var(--b)', background: isActive ? `${colors[f]}18` : 'transparent', color: isActive ? colors[f] : 'var(--tx3)', fontSize: 12, fontWeight: isActive ? 700 : 400, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}>
+                  <button key={f} onClick={() => setInvStockFilter(f)} style={{ padding: '5px 12px', borderRadius: 8, border: isActive ? `1.5px solid ${colors[f]}` : '1.5px solid var(--b)', background: isActive ? `${colors[f]}18` : 'transparent', color: isActive ? colors[f] : 'var(--tx3)', fontSize: 12, fontWeight: isActive ? 700 : 400, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}>
                     {labels[f]}
                   </button>
                 )
@@ -1899,7 +1891,7 @@ export default function POSPage() {
             {/* ── Dual-photo scan modal ── */}
             {showScanModal && (
               <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => !scanning && setShowScanModal(false)}>
-                <div style={{ background: 'var(--sf)', borderRadius: 20, padding: 28, maxWidth: 480, width: '100%', maxHeight: '92vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
+                <div style={{ background: 'var(--sf)', borderRadius: 14, padding: 28, maxWidth: 480, width: '100%', maxHeight: '92vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
 
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                     <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--tx)' }}>📷 Scan product</div>
