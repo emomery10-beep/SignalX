@@ -38,7 +38,7 @@ export default function CaseStudiesClient() {
           <h1 style={{ fontFamily: "var(--font-sora)", fontSize: "clamp(28px,4.5vw,44px)", fontWeight: 800, color: "#fff", margin: "0 0 14px", letterSpacing: "-.025em", lineHeight: 1.15 }}>
             Real Results from<br />Real Businesses
           </h1>
-          <p style={{ color: "rgba(255,255,255,.5)", fontSize: 17, margin: 0, lineHeight: 1.6 }}>
+          <p style={{ color: "rgba(255,255,255,.72)", fontSize: 17, margin: 0, lineHeight: 1.6 }}>
             See how SME founders use AskBiz to grow revenue, cut costs, and make better decisions with their data.
           </p>
         </div>
@@ -88,7 +88,7 @@ export default function CaseStudiesClient() {
           <h2 style={{ fontFamily: "var(--font-sora)", fontSize: 24, fontWeight: 700, color: "#fff", margin: "0 0 12px" }}>
             Ready to Write Your Own Success Story?
           </h2>
-          <p style={{ fontSize: 15, color: "rgba(255,255,255,.5)", margin: "0 0 24px", lineHeight: 1.6 }}>
+          <p style={{ fontSize: 15, color: "rgba(255,255,255,.72)", margin: "0 0 24px", lineHeight: 1.6 }}>
             Join thousands of SME founders who use AskBiz to make data-driven decisions. Free to start.
           </p>
           <Link href="/signin" style={{ display: "inline-flex", padding: "13px 28px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 15, fontWeight: 700, textDecoration: "none" }}>

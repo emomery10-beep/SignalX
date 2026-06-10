@@ -58,18 +58,7 @@ button, a, label, [role="button"] {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Grid texture */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(0,0,0,.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,0,0,.04) 1px, transparent 1px);
-  background-size: 54px 54px;
-  pointer-events: none;
-  z-index: 0;
-}
+/* dot grid removed — was an AI template tell */
 
 /* ── Scrollbars ─────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -205,7 +194,7 @@ button:not([disabled]),
 button:not([disabled]):hover,
 .btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(0,0,0,.10);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
 }
 button:not([disabled]):active,
 .btn:active {
@@ -224,12 +213,12 @@ button:not([disabled]):active,
 }
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(0,0,0,.10);
+  box-shadow: 0 2px 8px rgba(0,0,0,.07);
   border-color: rgba(99,102,241,.25);
 }
 .card-hover:active {
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(0,0,0,.08);
+  box-shadow: none;
   transition-duration: .1s;
 }
 

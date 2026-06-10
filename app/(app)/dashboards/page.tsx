@@ -366,8 +366,8 @@ export default function DashboardPage() {
           100% { transform: translate(-50%,-50%) scale(1); }
         }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
-        .dash-widget { cursor:pointer; transition:transform 200ms, box-shadow 200ms, border-color 200ms; }
-        .dash-widget:hover { transform:translateY(-3px); box-shadow:0 8px 28px rgba(0,0,0,.1); }
+        .dash-widget { cursor:pointer; transition:transform 200ms, border-color 200ms; }
+        .dash-widget:hover { transform:translateY(-2px); border-color:rgba(208,138,89,.3) !important; }
         .dash-tab { padding:7px 16px; border-radius:9999px; border:1px solid var(--b2); background:transparent; color:var(--tx2); font-family:inherit; font-size:13px; cursor:pointer; transition:all 150ms; }
         .dash-tab.active { border-color:rgba(208,138,89,.4); background:rgba(208,138,89,.1); color:var(--acc); font-weight:600; }
       `}</style>
@@ -426,7 +426,7 @@ export default function DashboardPage() {
                 key={widget.id}
                 className="dash-widget"
                 onClick={e => openExpand(widget, e)}
-                style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 18, padding: 20, position: 'relative', overflow: 'hidden' }}
+                style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 20, position: 'relative', overflow: 'hidden' }}
               >
                 {/* Accent glow */}
                 <div style={{ position: 'absolute', top: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: widget.accentBg, filter: 'blur(24px)', pointerEvents: 'none' }}/>
@@ -555,8 +555,8 @@ export default function DashboardPage() {
               width: 'min(780px, 94vw)',
               maxHeight: '86vh',
               background: 'var(--sf)',
-              borderRadius: 20,
-              boxShadow: '0 32px 80px rgba(0,0,0,.35)',
+              borderRadius: 14,
+              boxShadow: '0 8px 32px rgba(0,0,0,.18)',
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',

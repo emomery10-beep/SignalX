@@ -255,7 +255,7 @@ export default function TransparencyPage() {
         .tr-back-link:hover { color:rgba(255,255,255,.8); border-color:rgba(255,255,255,.25); }
         .tr-hero-badge { display:inline-block; background:rgba(59,130,246,.2); border:1px solid rgba(59,130,246,.35); color:#93c5fd; font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; padding:5px 14px; border-radius:100px; }
         .tr-hero-title { font-family:var(--font-head); font-size:clamp(26px,5vw,46px); font-weight:700; color:#fff; margin:0 0 14px; line-height:1.15; letter-spacing:-.02em; }
-        .tr-hero-sub { color:rgba(255,255,255,.5); font-size:16px; margin:0 0 32px; line-height:1.65; }
+        .tr-hero-sub { color:rgba(255,255,255,.72); font-size:16px; margin:0 0 32px; line-height:1.65; }
         .tr-hero-sub strong { color:rgba(255,255,255,.75); }
 
         /* Search */

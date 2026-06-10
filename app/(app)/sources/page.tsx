@@ -412,7 +412,7 @@ export default function SourcesPage() {
       {shopifyModal && (
         <div onClick={e => { if (e.target === e.currentTarget) setShopifyModal(false) }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: 'var(--sf)', borderRadius: 16, padding: 20, width: '100%', maxWidth: 380, border: '1px solid var(--b)', boxShadow: '0 16px 48px rgba(0,0,0,.18)' }}>
+          <div style={{ background: 'var(--sf)', borderRadius: 14, padding: 20, width: '100%', maxWidth: 380, boxShadow: '0 8px 32px rgba(0,0,0,.18)' }}>
 
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>

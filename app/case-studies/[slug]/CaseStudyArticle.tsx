@@ -101,7 +101,7 @@ export default function CaseStudyArticle({ slug }: { slug: string }) {
           <h2 style={{ fontFamily: "var(--font-sora)", fontSize: 22, fontWeight: 700, color: "#fff", margin: "0 0 10px" }}>
             Get Results Like {cs.company}
           </h2>
-          <p style={{ fontSize: 14, color: "rgba(255,255,255,.5)", margin: "0 0 20px", lineHeight: 1.6 }}>
+          <p style={{ fontSize: 14, color: "rgba(255,255,255,.72)", margin: "0 0 20px", lineHeight: 1.6 }}>
             Connect your data and start asking questions in plain English. Free to start — no card needed.
           </p>
           <Link href="/signin" style={{ display: "inline-flex", padding: "12px 26px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 14, fontWeight: 700, textDecoration: "none" }}>

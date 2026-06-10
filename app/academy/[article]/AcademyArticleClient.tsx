@@ -125,7 +125,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
                   <p style={{ color: "#fff", fontFamily: "Sora, sans-serif", fontSize: 18, fontWeight: 700, margin: "0 0 8px", lineHeight: 1.3 }}>
                     See this in action for your business
                   </p>
-                  <p style={{ color: "rgba(255,255,255,.55)", fontSize: 14, margin: "0 0 20px", lineHeight: 1.5 }}>
+                  <p style={{ color: "rgba(255,255,255,.72)", fontSize: 14, margin: "0 0 20px", lineHeight: 1.5 }}>
                     AskBiz tracks these metrics automatically — just connect your data and start asking questions.
                   </p>
                   <Link
