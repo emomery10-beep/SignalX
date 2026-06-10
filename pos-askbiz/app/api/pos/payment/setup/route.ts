@@ -5,6 +5,34 @@ import { createSubAccount } from '@/lib/paystack'
 import { createConnectedAccount, generateOnboardingLink } from '@/lib/stripe-connect'
 
 /**
+ * GET /api/pos/payment/setup
+ * Returns the current payment config for this merchant (used by POS sell page to check Stripe verified etc.)
+ */
+export async function GET(req: NextRequest) {
+  const ownerId = await resolvePosOwner(req)
+  if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+
+  const service = createServiceClient()
+  const { data: config } = await service
+    .from('merchant_payment_config')
+    .select('payment_provider, paystack_subaccount_id, stripe_connected_account_id, stripe_onboarding_complete, is_active, country, settlement_account')
+    .eq('owner_id', ownerId)
+    .maybeSingle()
+
+  if (!config) return NextResponse.json({ configured: false })
+
+  return NextResponse.json({
+    configured: true,
+    payment_provider: config.payment_provider,
+    is_active: config.is_active,
+    country: config.country,
+    has_subaccount: !!config.paystack_subaccount_id,
+    stripe_onboarding_complete: !!config.stripe_onboarding_complete,
+    has_stripe: !!config.stripe_connected_account_id,
+  })
+}
+
+/**
  * POST /api/pos/payment/setup
  *
  * Merchant onboarding: configure payment provider based on country

@@ -93,27 +93,27 @@ export default function RepairMetrics({ currencySymbol, selectedLocation }: Prop
   }
 
   return (
-    <div style={{ marginBottom: 24 }}>
+    <div className="pos-screen" style={{ marginBottom: 24 }}>
       <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 10 }}>Repair Services</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
-        <div style={cardStyle}>
+        <div className="pos-reveal" style={cardStyle}>
           <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Active jobs</div>
           <div style={{ fontSize: 22, fontWeight: 800, color: metrics.active_jobs > 0 ? ACC : 'var(--tx)' }}>{metrics.active_jobs}</div>
           <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>
             {metrics.intake > 0 && `${metrics.intake} intake · `}{metrics.in_progress > 0 && `${metrics.in_progress} in progress · `}{metrics.completed > 0 && `${metrics.completed} ready`}
           </div>
         </div>
-        <div style={cardStyle}>
+        <div className="pos-reveal" style={cardStyle}>
           <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Collected today</div>
           <div style={{ fontSize: 22, fontWeight: 800, color: metrics.collected_today > 0 ? GREEN : 'var(--tx)' }}>{metrics.collected_today}</div>
         </div>
-        <div style={cardStyle}>
+        <div className="pos-reveal" style={cardStyle}>
           <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Repair revenue</div>
           <div style={{ fontSize: 22, fontWeight: 800, color: metrics.revenue_today > 0 ? GREEN : 'var(--tx)' }}>{fmt(currencySymbol, metrics.revenue_today)}</div>
           <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>today</div>
         </div>
         {metrics.avg_turnaround_hours !== null && (
-          <div style={cardStyle}>
+          <div className="pos-reveal" style={cardStyle}>
             <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Avg turnaround</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: metrics.avg_turnaround_hours <= 24 ? GREEN : metrics.avg_turnaround_hours <= 72 ? AMBER : RED }}>
               {metrics.avg_turnaround_hours < 24 ? `${metrics.avg_turnaround_hours}h` : `${Math.round(metrics.avg_turnaround_hours / 24)}d`}
@@ -121,7 +121,7 @@ export default function RepairMetrics({ currencySymbol, selectedLocation }: Prop
           </div>
         )}
         {metrics.warranty_claims > 0 && (
-          <div style={cardStyle}>
+          <div className="pos-reveal" style={cardStyle}>
             <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Warranty claims</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: RED }}>{metrics.warranty_claims}</div>
           </div>

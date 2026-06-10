@@ -138,7 +138,7 @@ export default function ReservationsPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/restaurant')} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 18 }}>←</button>
@@ -197,11 +197,11 @@ export default function ReservationsPage() {
               </span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {dayRes.map(res => {
+              {dayRes.map((res, idx) => {
                 const cfg = STATUS_CONFIG[res.status] || STATUS_CONFIG.confirmed
                 const isToday = fmtDate(res.reserved_at) === 'Today'
                 return (
-                  <div key={res.id} style={{ background: '#1e293b', border: `1px solid ${isToday ? '#334155' : '#1e293b'}`, borderRadius: 10, padding: '14px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
+                  <div key={res.id} className="pos-item" style={{ background: '#1e293b', border: `1px solid ${isToday ? '#334155' : '#1e293b'}`, borderRadius: 10, padding: '14px 16px', display: 'flex', gap: 14, alignItems: 'center', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                     {/* Time */}
                     <div style={{ textAlign: 'center', minWidth: 52, flexShrink: 0 }}>
                       <div style={{ fontWeight: 800, fontSize: 16, color: ACC, fontVariantNumeric: 'tabular-nums' }}>{fmtTime(res.reserved_at)}</div>
@@ -228,11 +228,11 @@ export default function ReservationsPage() {
                     {(res.status === 'confirmed' || res.status === 'pending') && (
                       <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                         <button onClick={() => updateStatus(res.id, 'seated')} disabled={actioning === res.id}
-                          style={{ background: ACC, border: 'none', color: '#fff', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                          style={{ background: ACC, border: 'none', color: '#fff', padding: '6px 12px', borderRadius: 6, cursor: actioning === res.id ? 'not-allowed' : 'pointer', fontSize: 12, fontWeight: 600, opacity: actioning === res.id ? 0.5 : 1 }}>
                           {actioning === res.id ? '...' : 'Seat'}
                         </button>
                         <button onClick={() => updateStatus(res.id, 'no_show')} disabled={actioning === res.id}
-                          style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>
+                          style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '6px 10px', borderRadius: 6, cursor: actioning === res.id ? 'not-allowed' : 'pointer', fontSize: 12, opacity: actioning === res.id ? 0.5 : 1 }}>
                           No-show
                         </button>
                         <button onClick={() => cancel(res.id)}
@@ -243,7 +243,7 @@ export default function ReservationsPage() {
                     )}
                     {res.status === 'seated' && (
                       <button onClick={() => updateStatus(res.id, 'completed')} disabled={actioning === res.id}
-                        style={{ background: '#22c55e', border: 'none', color: '#fff', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600, flexShrink: 0 }}>
+                        style={{ background: '#22c55e', border: 'none', color: '#fff', padding: '6px 12px', borderRadius: 6, cursor: actioning === res.id ? 'not-allowed' : 'pointer', fontSize: 12, fontWeight: 600, flexShrink: 0, opacity: actioning === res.id ? 0.5 : 1 }}>
                         Complete
                       </button>
                     )}
@@ -258,7 +258,7 @@ export default function ReservationsPage() {
       {/* Add Reservation Modal */}
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 20 }}>
-          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: '100%', maxWidth: 440 }}>
+          <div className="pos-sheet" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: '100%', maxWidth: 440 }}>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 18 }}>New Reservation</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
@@ -310,6 +310,7 @@ export default function ReservationsPage() {
                 Cancel
               </button>
               <button onClick={createReservation} disabled={saving || !form.customer_name || !form.reserved_at}
+                className="pos-btn-primary"
                 style={{ flex: 2, background: '#22c55e', border: 'none', color: '#fff', padding: '11px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, opacity: (!form.customer_name || !form.reserved_at) ? 0.5 : 1 }}>
                 {saving ? 'Saving...' : '📅 Confirm Booking'}
               </button>

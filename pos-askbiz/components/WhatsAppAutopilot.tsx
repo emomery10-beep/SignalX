@@ -90,7 +90,7 @@ export default function WhatsAppAutopilot({ ownerId, staffId }: { ownerId?: stri
   const enabledCount = rules.filter(r => r.enabled).length
 
   return (
-    <div style={{ padding: '16px 20px' }}>
+    <div className="pos-screen" style={{ padding: '16px 20px' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div>
@@ -108,7 +108,7 @@ export default function WhatsAppAutopilot({ ownerId, staffId }: { ownerId?: stri
       </div>
 
       {!waConfigured && (
-        <div style={{
+        <div className="pos-banner" style={{
           padding: '10px 14px', borderRadius: 10, marginBottom: 14,
           background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)',
           fontSize: 12, color: '#F59E0B',
@@ -119,17 +119,18 @@ export default function WhatsAppAutopilot({ ownerId, staffId }: { ownerId?: stri
 
       {/* Rules */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {rules.map(rule => {
+        {rules.map((rule, idx) => {
           const meta = TRIGGER_META[rule.trigger] || { label: rule.trigger, icon: '📱', description: '' }
           const isSaving = saving === rule.id
           return (
-            <div key={rule.id} style={{
+            <div key={rule.id} className="pos-item" style={{
               display: 'flex', alignItems: 'center', gap: 10,
               padding: '12px 14px', borderRadius: 12,
               background: rule.enabled ? 'rgba(37,211,102,.06)' : '#1e1e1e',
               border: `1px solid ${rule.enabled ? 'rgba(37,211,102,.2)' : '#2a2a2a'}`,
               opacity: isSaving ? 0.6 : 1,
               transition: 'all 200ms',
+              animationDelay: `${Math.min(idx, 8) * 40}ms`,
             }}>
               <span style={{ fontSize: 20, flexShrink: 0 }}>{meta.icon}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -148,9 +149,10 @@ export default function WhatsAppAutopilot({ ownerId, staffId }: { ownerId?: stri
                 style={{
                   width: 44, height: 24, borderRadius: 12, border: 'none',
                   background: rule.enabled ? '#25D366' : '#444',
-                  cursor: 'pointer', position: 'relative',
+                  cursor: isSaving ? 'not-allowed' : 'pointer', position: 'relative',
                   transition: 'background 200ms',
                   flexShrink: 0,
+                  opacity: isSaving ? 0.5 : 1,
                 }}
               >
                 <div style={{

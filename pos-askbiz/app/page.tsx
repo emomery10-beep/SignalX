@@ -62,7 +62,7 @@ function LoginPageContent() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', background: '#f9f8f6' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', background: 'var(--pos-bg)' }}>
       <div style={{ width: '100%', maxWidth: 360 }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
@@ -71,38 +71,39 @@ function LoginPageContent() {
               <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
             </svg>
           </div>
-          <div style={{ fontWeight: 800, fontSize: 22, letterSpacing: '-.02em', color: '#1a1916' }}>AskBiz POS</div>
-          <div style={{ fontSize: 13, color: '#6b6760', marginTop: 4 }}>Staff login</div>
+          <div style={{ fontWeight: 800, fontSize: 22, letterSpacing: '-.02em', color: 'var(--pos-ink)' }}>AskBiz POS</div>
+          <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginTop: 4 }}>Staff login</div>
         </div>
 
         {step === 'email' ? (
           <div>
-            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6, color: '#1a1916' }}>Email address</div>
-            <div style={{ fontSize: 13, color: '#6b6760', marginBottom: 16 }}>Enter your work email to continue.</div>
+            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6, color: 'var(--pos-ink)' }}>Email address</div>
+            <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 16 }}>Enter your work email to continue.</div>
             <input
               type="email"
               placeholder="you@email.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleCheckEmail()}
-              style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1.5px solid #e5e2dc', fontSize: 16, fontFamily: 'inherit', background: '#fff', color: '#1a1916', boxSizing: 'border-box' as const, outline: 'none' }}
+              style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1.5px solid var(--pos-border)', fontSize: 16, fontFamily: 'inherit', background: 'var(--pos-surface)', color: 'var(--pos-ink)', boxSizing: 'border-box' as const, outline: 'none' }}
               autoComplete="email"
               inputMode="email"
               autoFocus
             />
-            {error && <div style={{ fontSize: 13, color: '#dc2626', marginTop: 8 }}>{error}</div>}
+            {error && <div className="pos-banner" role="alert" style={{ fontSize: 13, color: 'var(--pos-danger)', marginTop: 8 }}>{error}</div>}
             <button
               onClick={handleCheckEmail}
               disabled={loading || !email.trim()}
-              style={{ width: '100%', marginTop: 16, padding: '15px', borderRadius: 12, background: ACC, color: '#fff', fontSize: 16, fontWeight: 700, border: 'none', cursor: loading ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: !email.trim() ? 0.5 : 1 }}
+              className="pos-btn-primary"
+              style={{ width: '100%', marginTop: 16, padding: '15px', borderRadius: 12, background: ACC, color: 'var(--pos-surface)', fontSize: 16, fontWeight: 700, border: 'none', cursor: loading ? 'wait' : !email.trim() ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: !email.trim() ? 0.5 : 1 }}
             >
               {loading ? 'Checking...' : 'Continue →'}
             </button>
           </div>
         ) : (
           <div>
-            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4, color: '#1a1916' }}>Hi {staffName} 👋</div>
-            <div style={{ fontSize: 13, color: '#6b6760', marginBottom: 16 }}>Enter your PIN to sign in.</div>
+            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4, color: 'var(--pos-ink)' }}>Hi {staffName} 👋</div>
+            <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 16 }}>Enter your PIN to sign in.</div>
             <input
               type="password"
               inputMode="numeric"
@@ -111,20 +112,21 @@ function LoginPageContent() {
               onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
               onKeyDown={e => e.key === 'Enter' && handleVerifyPin()}
               maxLength={8}
-              style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1.5px solid #e5e2dc', fontSize: 24, letterSpacing: 8, fontFamily: 'inherit', background: '#fff', color: '#1a1916', boxSizing: 'border-box' as const, outline: 'none', textAlign: 'center' }}
+              style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: '1.5px solid var(--pos-border)', fontSize: 24, letterSpacing: 8, fontFamily: 'inherit', background: 'var(--pos-surface)', color: 'var(--pos-ink)', boxSizing: 'border-box' as const, outline: 'none', textAlign: 'center' }}
               autoFocus
             />
-            {error && <div style={{ fontSize: 13, color: '#dc2626', marginTop: 8 }}>{error}</div>}
+            {error && <div className="pos-banner" role="alert" style={{ fontSize: 13, color: 'var(--pos-danger)', marginTop: 8 }}>{error}</div>}
             <button
               onClick={handleVerifyPin}
               disabled={loading || !pin.trim()}
-              style={{ width: '100%', marginTop: 16, padding: '15px', borderRadius: 12, background: ACC, color: '#fff', fontSize: 16, fontWeight: 700, border: 'none', cursor: loading ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: !pin.trim() ? 0.5 : 1 }}
+              className="pos-btn-primary"
+              style={{ width: '100%', marginTop: 16, padding: '15px', borderRadius: 12, background: ACC, color: 'var(--pos-surface)', fontSize: 16, fontWeight: 700, border: 'none', cursor: loading ? 'wait' : !pin.trim() ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: !pin.trim() ? 0.5 : 1 }}
             >
               {loading ? 'Signing in...' : 'Sign in →'}
             </button>
             <button
               onClick={() => { setStep('email'); setError(''); setPin('') }}
-              style={{ width: '100%', marginTop: 10, padding: '12px', borderRadius: 12, background: 'transparent', border: '1px solid #e5e2dc', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', color: '#6b6760' }}
+              style={{ width: '100%', marginTop: 10, padding: '12px', borderRadius: 12, background: 'transparent', border: '1px solid var(--pos-border)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--pos-muted)' }}
             >
               Use a different email
             </button>
@@ -137,7 +139,7 @@ function LoginPageContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>}>
+    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)', fontSize: 14 }}>Loading login…</div>}>
       <LoginPageContent />
     </Suspense>
   )

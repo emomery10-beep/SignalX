@@ -154,7 +154,7 @@ export default function FloorPlan() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/restaurant')} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 18 }}>←</button>
@@ -164,6 +164,7 @@ export default function FloorPlan() {
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           <button onClick={() => router.push('/restaurant/orders?new=1')}
+            className="pos-btn-primary"
             style={{ background: ACC, border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
             + New Order
           </button>
@@ -211,7 +212,7 @@ export default function FloorPlan() {
               backgroundSize: `${CELL}px ${CELL}px`,
             }}
           >
-            {displayTables.map(table => {
+            {displayTables.map((table, idx) => {
               const st = TABLE_STATUS[table.status] || TABLE_STATUS.available
               const isCircle = table.shape === 'circle'
               const w = table.width * CELL - 8
@@ -219,10 +220,12 @@ export default function FloorPlan() {
               return (
                 <div
                   key={table.id}
+                  className="pos-item"
                   draggable
                   onDragStart={e => handleDragStart(e, table.id)}
                   onClick={() => setSelected(selected?.id === table.id ? null : table)}
                   style={{
+                    animationDelay: `${Math.min(idx, 8) * 40}ms`,
                     position: 'absolute',
                     left: table.x_pos * CELL + 4,
                     top:  table.y_pos * CELL + 4,
@@ -264,7 +267,7 @@ export default function FloorPlan() {
 
             {/* Current Order */}
             {selected.current_order && (
-              <div style={{ background: '#0f172a', borderRadius: 8, padding: 12, marginBottom: 16 }}>
+              <div className="pos-reveal" style={{ background: '#0f172a', borderRadius: 8, padding: 12, marginBottom: 16 }}>
                 <div style={{ fontWeight: 600, fontSize: 13, color: '#e2e8f0', marginBottom: 8 }}>
                   Current Order · {selected.current_order.covers} covers
                 </div>
@@ -284,6 +287,7 @@ export default function FloorPlan() {
                     View Order
                   </button>
                   <button onClick={() => router.push(`/restaurant/orders?pay=${selected.current_order?.id}`)}
+                    className="pos-btn-primary"
                     style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '8px', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
                     Pay Bill
                   </button>
@@ -318,6 +322,7 @@ export default function FloorPlan() {
             {/* New Order for this table */}
             {selected.status !== 'occupied' && (
               <button onClick={() => router.push(`/restaurant/orders?new=1&table=${selected.id}`)}
+                className="pos-btn-primary"
                 style={{ width: '100%', background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, marginBottom: 8 }}>
                 + New Order for {selected.name}
               </button>
@@ -334,7 +339,7 @@ export default function FloorPlan() {
       {/* Add Table Modal */}
       {showAddTable && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: 340 }}>
+          <div className="pos-sheet" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: 340 }}>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Add Table</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
@@ -365,7 +370,8 @@ export default function FloorPlan() {
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
               <button onClick={() => setShowAdd(false)} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>Cancel</button>
               <button onClick={addTable} disabled={saving || !newTable.name.trim()}
-                style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>
+                className="pos-btn-primary"
+                style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: saving || !newTable.name.trim() ? 'not-allowed' : 'pointer', fontWeight: 700, opacity: saving || !newTable.name.trim() ? 0.5 : 1 }}>
                 {saving ? 'Adding...' : 'Add Table'}
               </button>
             </div>

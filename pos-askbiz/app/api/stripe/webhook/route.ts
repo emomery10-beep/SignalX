@@ -39,89 +39,120 @@ export async function POST(req: NextRequest) {
 
     const service = createServiceClient()
 
-    // Handle payment confirmation events
+    // Handle Checkout Session completion (used by POS card/Apple Pay flow)
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as any
+      const sessionId = session.id
+      const transactionId = session.metadata?.transaction_id
+
+      if (!sessionId) {
+        console.warn('[stripe/webhook] No session ID in checkout.session.completed')
+        return NextResponse.json({ status: 'processed' })
+      }
+
+      // Find payment by external_reference (the cs_... session ID stored at link creation)
+      let payment: any = null
+      const { data: p1 } = await service
+        .from('pos_payments')
+        .select('id, owner_id, transaction_id, status')
+        .eq('external_reference', sessionId)
+        .single()
+      payment = p1
+
+      // Fallback: find by transaction_id from metadata
+      if (!payment && transactionId) {
+        const { data: p2 } = await service
+          .from('pos_payments')
+          .select('id, owner_id, transaction_id, status')
+          .eq('transaction_id', transactionId)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+        payment = p2
+      }
+
+      if (!payment) {
+        console.warn(`[stripe/webhook] Payment not found for session ${sessionId}`)
+        return NextResponse.json({ status: 'processed' })
+      }
+
+      if (payment.status === 'completed') {
+        return NextResponse.json({ status: 'processed' })
+      }
+
+      await service
+        .from('pos_payments')
+        .update({ status: 'completed', external_receipt: sessionId, completed_at: new Date().toISOString() })
+        .eq('id', payment.id)
+
+      await service
+        .from('pos_transactions')
+        .update({ payment_status: 'paid', payment_type: 'card' })
+        .eq('id', payment.transaction_id)
+        .eq('owner_id', payment.owner_id)
+
+      return NextResponse.json({ status: 'processed' })
+    }
+
+    // Handle legacy charge/payment_intent events (older integrations)
     if (event.type === 'charge.succeeded' || event.type === 'payment_intent.succeeded') {
       const data = event.data.object as any
       const chargeId = data.id || data.charges?.data?.[0]?.id
-      const amount = data.amount
-      const accountId = data.connected_account ? data.connected_account : null
 
       if (!chargeId) {
         console.warn('[stripe/webhook] No charge ID found')
         return NextResponse.json({ status: 'processed' })
       }
 
-      // Find payment by external reference (Stripe charge ID or payment intent ID)
-      const { data: payment, error: paymentError } = await service
+      let payment: any = null
+      const { data: p1 } = await service
         .from('pos_payments')
         .select('id, owner_id, transaction_id, status')
         .eq('external_reference', chargeId)
         .single()
+      payment = p1
 
-      if (paymentError || !payment) {
-        // Try to find by payment intent ID
-        const { data: paymentByIntent } = await service
+      if (!payment) {
+        const { data: p2 } = await service
           .from('pos_payments')
           .select('id, owner_id, transaction_id, status')
           .eq('external_reference', data.payment_intent || data.id)
           .single()
+        payment = p2
+      }
 
-        if (!paymentByIntent) {
-          console.warn(`[stripe/webhook] Payment not found for charge ${chargeId}`)
-          return NextResponse.json({ status: 'processed' })
-        }
-
-        // Update payment record
-        await service
+      if (!payment && data.metadata?.transaction_id) {
+        const { data: p3 } = await service
           .from('pos_payments')
-          .update({
-            status: 'completed',
-            external_receipt: chargeId,
-            completed_at: new Date().toISOString(),
-          })
-          .eq('id', paymentByIntent.id)
+          .select('id, owner_id, transaction_id, status')
+          .eq('transaction_id', data.metadata.transaction_id)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+        payment = p3
+      }
 
-        // Update transaction
-        await service
-          .from('pos_transactions')
-          .update({
-            payment_status: 'paid',
-            payment_type: 'card',
-          })
-          .eq('id', paymentByIntent.transaction_id)
-          .eq('owner_id', paymentByIntent.owner_id)
-
+      if (!payment) {
+        console.warn(`[stripe/webhook] Payment not found for charge ${chargeId}`)
         return NextResponse.json({ status: 'processed' })
       }
 
-      // Update payment record
-      const { error: updateError } = await service
+      if (payment.status === 'completed') {
+        return NextResponse.json({ status: 'processed' })
+      }
+
+      await service
         .from('pos_payments')
-        .update({
-          status: 'completed',
-          external_receipt: chargeId,
-          completed_at: new Date().toISOString(),
-        })
+        .update({ status: 'completed', external_receipt: chargeId, completed_at: new Date().toISOString() })
         .eq('id', payment.id)
 
-      if (updateError) {
-        console.error('[stripe/webhook] Failed to update payment:', updateError)
-        return NextResponse.json({ status: 'processed' })
-      }
-
-      // Update transaction payment status
-      const { error: txError } = await service
+      await service
         .from('pos_transactions')
-        .update({
-          payment_status: 'paid',
-          payment_type: 'card',
-        })
+        .update({ payment_status: 'paid', payment_type: 'card' })
         .eq('id', payment.transaction_id)
         .eq('owner_id', payment.owner_id)
-
-      if (txError) {
-        console.error('[stripe/webhook] Failed to update transaction:', txError)
-      }
     }
 
     // Return 200 OK to acknowledge receipt

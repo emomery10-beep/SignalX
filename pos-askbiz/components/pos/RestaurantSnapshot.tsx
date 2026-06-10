@@ -114,7 +114,7 @@ export default function RestaurantSnapshot({ currencySymbol }: { currencySymbol:
       <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Today's Snapshot</div>
 
       {alerts.length > 0 && (
-        <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '8px 12px', marginBottom: 12, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+        <div className="pos-banner" role="alert" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '8px 12px', marginBottom: 12, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
           {alerts.map(a => (
             <span key={a} style={{ fontSize: 12, color: '#ef4444', fontWeight: 600 }}>⚠ {a}</span>
           ))}
@@ -137,7 +137,7 @@ export default function RestaurantSnapshot({ currencySymbol }: { currencySymbol:
       )}
 
       <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-        <button onClick={() => router.push('/restaurant')}
+        <button className="pos-btn-primary" onClick={() => router.push('/restaurant')}
           style={{ background: ACC, border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
           Open Restaurant Hub →
         </button>

@@ -181,7 +181,7 @@ export default function RetailStocktake() {
   const td: React.CSSProperties = { padding: '12px', fontSize: 13, borderBottom: '1px solid #1e293b' }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={() => router.push('/retail')} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>←</button>
@@ -197,14 +197,14 @@ export default function RetailStocktake() {
 
       <div style={{ padding: '24px', maxWidth: 1100, margin: '0 auto' }}>
         {/* Summary cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 20 }}>
+        <div className="pos-reveal" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 20 }}>
           <SummaryCard label="Items in Count" value={`${rows.length}`} />
           <SummaryCard label="Counted" value={`${countedRows.length}`} />
           <SummaryCard label="Variance Units" value={`${varianceUnits > 0 ? '+' : ''}${varianceUnits}`} status={varianceUnits === 0 ? 'good' : 'warn'} />
           <SummaryCard label="Variance Value" value={`${varianceValue < 0 ? '-' : ''}${sym}${Math.abs(varianceValue).toFixed(2)}`} status={varianceValue === 0 ? 'good' : 'bad'} />
         </div>
 
-        {scanMsg && <div style={{ background: '#1e293b', border: `1px solid ${ACC}40`, borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#e2e8f0' }}>{scanMsg}</div>}
+        {scanMsg && <div className="pos-banner" style={{ background: '#1e293b', border: `1px solid ${ACC}40`, borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#e2e8f0' }}>{scanMsg}</div>}
 
         {/* Add products */}
         <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 16, marginBottom: 16 }}>
@@ -212,7 +212,7 @@ export default function RetailStocktake() {
           <input placeholder="Search to add an item…" value={search} onChange={e => setSearch(e.target.value)} style={{ ...inp, width: '100%' }} />
           {search && (
             <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {candidates.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>No matches</div>}
+              {candidates.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>No matches — try a different name or SKU</div>}
               {candidates.map(i => (
                 <button key={i.id} onClick={() => { addRow(i); setSearch('') }} style={{ textAlign: 'left', background: '#0f172a', border: '1px solid #334155', borderRadius: 8, padding: '10px 14px', cursor: 'pointer', color: '#f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
                   <span>{i.name} <span style={{ color: '#64748b' }}>{i.sku || ''}</span></span>
@@ -231,13 +231,13 @@ export default function RetailStocktake() {
             </tr></thead>
             <tbody>
               {rows.length === 0 && <tr><td style={td} colSpan={5}><span style={{ color: '#64748b' }}>{loading ? 'Loading…' : 'No items yet — scan a shelf or search to add products.'}</span></td></tr>}
-              {rows.map(r => {
+              {rows.map((r, idx) => {
                 const sys = r.item.stock_qty ?? 0
                 const cnt = r.counted === '' ? null : parseInt(r.counted)
                 const diff = cnt == null || isNaN(cnt) ? null : cnt - sys
                 const mismatch = diff != null && diff !== 0
                 return (
-                  <tr key={r.item.id} style={{ background: mismatch ? 'rgba(239,68,68,0.07)' : 'transparent' }}>
+                  <tr key={r.item.id} className="pos-item" style={{ background: mismatch ? 'rgba(239,68,68,0.07)' : 'transparent', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                     <td style={{ ...td, fontWeight: 600 }}>{r.item.name}<div style={{ fontSize: 11, color: '#64748b', fontWeight: 400 }}>{r.item.sku || r.item.category || ''}</div></td>
                     <td style={td}>{sys}</td>
                     <td style={td}><input value={r.counted} onChange={e => setCount(r.item.id, e.target.value)} placeholder="—" inputMode="numeric" style={{ ...inp, width: 80, padding: '6px 8px' }} /></td>
@@ -250,9 +250,9 @@ export default function RetailStocktake() {
           </table>
         </div>
 
-        {submitMsg && <div style={{ marginBottom: 12, fontSize: 13, color: submitMsg.includes('✓') ? '#22c55e' : '#f59e0b' }}>{submitMsg}</div>}
+        {submitMsg && <div className="pos-banner" style={{ marginBottom: 12, fontSize: 13, color: submitMsg.includes('✓') ? '#22c55e' : '#f59e0b' }}>{submitMsg}</div>}
 
-        <button onClick={submitAdjustments} disabled={submitting || countedRows.length === 0} style={{ width: '100%', background: countedRows.length === 0 ? '#334155' : ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: countedRows.length === 0 ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 15, opacity: submitting ? 0.6 : 1 }}>
+        <button className="pos-btn-primary" onClick={submitAdjustments} disabled={submitting || countedRows.length === 0} style={{ width: '100%', background: countedRows.length === 0 ? '#334155' : ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: countedRows.length === 0 ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 15, opacity: submitting || countedRows.length === 0 ? 0.5 : 1 }}>
           {submitting ? 'Saving…' : `Submit Adjustments (${countedRows.length})`}
         </button>
       </div>
@@ -263,7 +263,7 @@ export default function RetailStocktake() {
       {/* Scan modal */}
       {showScan && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 50 }} onClick={closeScan}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: '100%', maxWidth: 480 }}>
+          <div className="pos-sheet" onClick={e => e.stopPropagation()} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: '100%', maxWidth: 480 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ fontWeight: 700, fontSize: 17, color: ACC }}>Scan Shelf</div>
               <button onClick={closeScan} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 20, cursor: 'pointer' }}>✕</button>

@@ -124,7 +124,7 @@ export default function ApprovalsPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -139,10 +139,10 @@ export default function ApprovalsPage() {
 
       <div style={{ padding: '24px', maxWidth: 900, margin: '0 auto' }}>
         {error && (
-          <div style={{ background: '#7f1d1d', border: `1px solid ${BAD}`, borderRadius: 10, padding: '12px 16px', marginBottom: 16, color: '#fee2e2', fontSize: 13 }}>{error}</div>
+          <div className="pos-banner" style={{ background: '#7f1d1d', border: `1px solid ${BAD}`, borderRadius: 10, padding: '12px 16px', marginBottom: 16, color: '#fee2e2', fontSize: 13 }}>{error}</div>
         )}
         {patchUnsupported && (
-          <div style={{ background: '#451a03', border: `1px solid ${WARN}`, borderRadius: 10, padding: '12px 16px', marginBottom: 16, color: '#fde68a', fontSize: 13 }}>
+          <div className="pos-banner" style={{ background: '#451a03', border: `1px solid ${WARN}`, borderRadius: 10, padding: '12px 16px', marginBottom: 16, color: '#fde68a', fontSize: 13 }}>
             Note: this server build does not expose a PATCH endpoint for captures. Approvals cannot be recorded until it is enabled.
           </div>
         )}
@@ -150,18 +150,18 @@ export default function ApprovalsPage() {
         {loading ? (
           <div style={{ padding: 60, textAlign: 'center', color: '#64748b', fontSize: 13 }}>Loading pending captures…</div>
         ) : captures.length === 0 ? (
-          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 60, textAlign: 'center' }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
+          <div className="pos-reveal" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 60, textAlign: 'center' }}>
+            <div className="pos-success-icon" style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
             <div style={{ fontSize: 16, fontWeight: 700 }}>All caught up</div>
             <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>No captures are waiting for approval.</div>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {captures.map(c => {
+            {captures.map((c, idx) => {
               const meta = TYPE_META[c.type]
               const working = busy === c.id
               return (
-                <div key={c.id} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 16, display: 'flex', gap: 16 }}>
+                <div key={c.id} className="pos-item" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 16, display: 'flex', gap: 16, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                   {/* thumbnail */}
                   {c.photo_url ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
@@ -184,12 +184,12 @@ export default function ApprovalsPage() {
 
                     {/* actions */}
                     <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-                      <button onClick={() => decide(c, 'approved')} disabled={working || patchUnsupported}
-                        style={{ background: working ? '#334155' : GOOD, border: 'none', color: working ? '#94a3b8' : '#062b14', padding: '10px 20px', borderRadius: 8, cursor: working || patchUnsupported ? 'default' : 'pointer', fontWeight: 700, fontSize: 14, opacity: patchUnsupported ? 0.5 : 1 }}>
+                      <button onClick={() => decide(c, 'approved')} disabled={working || patchUnsupported} className="pos-btn-primary"
+                        style={{ background: working ? '#334155' : GOOD, border: 'none', color: working ? '#94a3b8' : '#062b14', padding: '10px 20px', borderRadius: 8, cursor: working || patchUnsupported ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 14, opacity: working || patchUnsupported ? 0.5 : 1 }}>
                         {working ? '…' : '✓ Approve'}
                       </button>
                       <button onClick={() => { setRejecting(c); setReason(''); setError(null) }} disabled={working || patchUnsupported}
-                        style={{ background: 'transparent', border: `1px solid ${BAD}`, color: BAD, padding: '10px 20px', borderRadius: 8, cursor: working || patchUnsupported ? 'default' : 'pointer', fontWeight: 700, fontSize: 14, opacity: patchUnsupported ? 0.5 : 1 }}>
+                        style={{ background: 'transparent', border: `1px solid ${BAD}`, color: BAD, padding: '10px 20px', borderRadius: 8, cursor: working || patchUnsupported ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 14, opacity: working || patchUnsupported ? 0.5 : 1 }}>
                         ✕ Reject
                       </button>
                     </div>
@@ -204,7 +204,7 @@ export default function ApprovalsPage() {
       {/* Reject modal */}
       {rejecting && (
         <div onClick={() => !busy && setRejecting(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1e293b', borderRadius: 16, padding: 24, width: '100%', maxWidth: 440, border: `1px solid ${BAD}55` }}>
+          <div onClick={e => e.stopPropagation()} className="pos-sheet" style={{ background: '#1e293b', borderRadius: 16, padding: 24, width: '100%', maxWidth: 440, border: `1px solid ${BAD}55` }}>
             <div style={{ fontSize: 17, fontWeight: 800, marginBottom: 4 }}>Reject capture</div>
             <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 16 }}>{TYPE_META[rejecting.type].icon} {rejecting.product_name || 'Unspecified'} · {rejecting.quantity ?? '—'} {rejecting.batch_ref || ''}</div>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>Reason *</label>
@@ -212,8 +212,8 @@ export default function ApprovalsPage() {
               style={{ width: '100%', padding: '12px 14px', background: '#0f172a', border: '1px solid #334155', borderRadius: 10, color: '#f1f5f9', fontSize: 14, outline: 'none', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'system-ui, sans-serif' }} />
             {error && <div style={{ color: BAD, fontSize: 13, marginTop: 10 }}>{error}</div>}
             <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-              <button onClick={() => setRejecting(null)} disabled={!!busy} style={{ flex: 1, background: '#334155', border: 'none', color: '#e2e8f0', padding: '12px', borderRadius: 10, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>Cancel</button>
-              <button onClick={submitReject} disabled={!!busy} style={{ flex: 1, background: BAD, border: 'none', color: '#fff', padding: '12px', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>{busy ? 'Rejecting…' : 'Confirm Reject'}</button>
+              <button onClick={() => setRejecting(null)} disabled={!!busy} style={{ flex: 1, background: '#334155', border: 'none', color: '#e2e8f0', padding: '12px', borderRadius: 10, cursor: busy ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: 14, opacity: busy ? 0.5 : 1 }}>Cancel</button>
+              <button onClick={submitReject} disabled={!!busy} style={{ flex: 1, background: BAD, border: 'none', color: '#fff', padding: '12px', borderRadius: 10, cursor: busy ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 14, opacity: busy ? 0.5 : 1 }}>{busy ? 'Rejecting…' : 'Confirm reject'}</button>
             </div>
           </div>
         </div>

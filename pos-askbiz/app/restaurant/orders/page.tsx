@@ -181,7 +181,7 @@ function OrdersPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/restaurant')} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 18 }}>←</button>
@@ -201,19 +201,20 @@ function OrdersPage() {
           {!loading && orders.length === 0 && (
             <div style={{ padding: 30, textAlign: 'center', color: '#64748b' }}>
               <div style={{ fontSize: 32, marginBottom: 8 }}>🍽️</div>
-              <div>No active orders</div>
+              <div>No active orders — tap &ldquo;+ New Order&rdquo; to start one</div>
             </div>
           )}
-          {orders.map(order => {
+          {orders.map((order, idx) => {
             const st = STATUS_BADGE[order.status] || STATUS_BADGE.open
             const isSelected = selected?.id === order.id
             return (
-              <div key={order.id}
+              <button key={order.id} type="button" className="pos-item"
                 onClick={() => { setSelected(order); setView('active') }}
-                style={{
+                style={{ animationDelay: `${Math.min(idx, 8) * 40}ms`,
                   padding: '14px 16px', borderBottom: '1px solid #1e293b', cursor: 'pointer',
                   background: isSelected ? '#1e293b' : 'transparent',
                   borderLeft: isSelected ? `3px solid ${ACC}` : '3px solid transparent',
+                  width: '100%', textAlign: 'left', borderTop: 'none', borderRight: 'none',
                 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                   <div style={{ fontWeight: 700, fontSize: 15 }}>
@@ -226,7 +227,7 @@ function OrdersPage() {
                   <span style={{ color: ACC, fontWeight: 600 }}>{sym}{order.total?.toFixed(2)}</span>
                 </div>
                 <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>{elapsed(order.seated_at)}</div>
-              </div>
+              </button>
             )
           })}
         </div>
@@ -247,18 +248,18 @@ function OrdersPage() {
                     style={{ background: '#334155', border: 'none', color: '#e2e8f0', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
                     + Add Items
                   </button>
-                  <button onClick={() => setView('pay')}
+                  <button onClick={() => setView('pay')} className="pos-btn-primary"
                     style={{ background: ACC, border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>
                     Pay Bill
                   </button>
                 </div>
               </div>
 
-              {selected.order_items?.map(item => {
+              {selected.order_items?.map((item, idx) => {
                 const st = item.status
                 const stColor = st === 'ready' ? '#22c55e' : st === 'preparing' ? '#f59e0b' : st === 'served' ? '#64748b' : '#94a3b8'
                 return (
-                  <div key={item.id} style={{ background: '#1e293b', borderRadius: 10, padding: '12px 14px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div key={item.id} className="pos-item" style={{ animationDelay: `${Math.min(idx, 8) * 40}ms`, background: '#1e293b', borderRadius: 10, padding: '12px 14px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span style={{ background: '#0f172a', color: ACC, fontWeight: 800, fontSize: 18, borderRadius: 6, padding: '2px 10px', minWidth: 36, textAlign: 'center' }}>{item.qty}</span>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 600, fontSize: 14 }}>{item.name}</div>
@@ -355,8 +356,8 @@ function OrdersPage() {
                 ))}
                 <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
                   <button onClick={() => setView('active')} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>Cancel</button>
-                  <button onClick={sendOrder} disabled={!cart.length || saving}
-                    style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>
+                  <button onClick={sendOrder} disabled={!cart.length || saving} className="pos-btn-primary"
+                    style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: (!cart.length || saving) ? 'not-allowed' : 'pointer', fontWeight: 700, opacity: (!cart.length || saving) ? 0.5 : 1 }}>
                     {saving ? '...' : '🍳 Send to Kitchen'}
                   </button>
                 </div>
@@ -366,7 +367,7 @@ function OrdersPage() {
 
           {/* Pay */}
           {view === 'pay' && selected && (
-            <div style={{ maxWidth: 420, margin: '0 auto' }}>
+            <div className="pos-sheet" style={{ maxWidth: 420, margin: '0 auto' }}>
               <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 16 }}>Pay — {selected.table?.name || 'Order'}</div>
               <div style={{ background: '#1e293b', borderRadius: 12, padding: 16, marginBottom: 16 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#94a3b8', fontSize: 14, marginBottom: 8 }}>
@@ -394,8 +395,8 @@ function OrdersPage() {
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
                 <button onClick={() => setView('active')} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '14px', borderRadius: 10, cursor: 'pointer' }}>Back</button>
-                <button onClick={payOrder} disabled={paying}
-                  style={{ flex: 2, background: '#22c55e', border: 'none', color: '#fff', padding: '14px', borderRadius: 10, cursor: 'pointer', fontWeight: 800, fontSize: 16 }}>
+                <button onClick={payOrder} disabled={paying} className="pos-btn-primary"
+                  style={{ flex: 2, background: '#22c55e', border: 'none', color: '#fff', padding: '14px', borderRadius: 10, cursor: paying ? 'not-allowed' : 'pointer', fontWeight: 800, fontSize: 16, opacity: paying ? 0.5 : 1 }}>
                   {paying ? 'Processing...' : `✓ Charge ${sym}${Math.max(0, (selected.subtotal || 0) - discount).toFixed(2)}`}
                 </button>
               </div>

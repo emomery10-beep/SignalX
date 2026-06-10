@@ -31,6 +31,7 @@ interface InitiateStkParams {
   email: string
   amount: number // In kobo
   phone: string
+  subaccount?: string // Paystack subaccount code — routes funds to merchant
   metadata?: Record<string, unknown>
 }
 
@@ -38,6 +39,7 @@ interface PaymentLinkParams {
   amount: number // In kobo
   currency?: string // Default 'KES'
   description?: string
+  subaccount?: string // Paystack subaccount code — routes funds to merchant
   metadata?: Record<string, unknown>
 }
 
@@ -107,6 +109,11 @@ export async function initiateStkPush(params: InitiateStkParams) {
       phone: params.phone,
       provider: 'mpesa',
     },
+    // Route funds to merchant's subaccount with AskBiz taking platform %
+    ...(params.subaccount ? {
+      subaccount: params.subaccount,
+      bearer: 'subaccount', // Merchant bears Paystack fee; AskBiz keeps full platform cut
+    } : {}),
     metadata: {
       ...params.metadata,
       channel: 'pos_stk_push',
@@ -130,6 +137,11 @@ export async function createPaymentLink(params: PaymentLinkParams) {
     amount: params.amount,
     currency: params.currency || 'KES',
     channels: ['card', 'mobile_money', 'bank_transfer'],
+    // Route funds to merchant's subaccount with AskBiz taking platform %
+    ...(params.subaccount ? {
+      subaccount: params.subaccount,
+      bearer: 'subaccount', // Merchant bears Paystack fee; AskBiz keeps full platform cut
+    } : {}),
     metadata: params.metadata,
   })
 

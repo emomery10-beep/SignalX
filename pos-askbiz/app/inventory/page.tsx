@@ -2,11 +2,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
-const inputStyle: React.CSSProperties = { padding: '9px 12px', borderRadius: 8, border: '1px solid #e5e2dc', fontSize: 13, fontFamily: 'inherit', background: '#f9f8f6', color: '#1a1916' }
-const btnPrimary: React.CSSProperties = { padding: '9px 16px', borderRadius: 8, background: '#d08a59', color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
-const btnSecondary: React.CSSProperties = { padding: '9px 16px', borderRadius: 8, border: '1px solid #e5e2dc', background: 'transparent', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: '#6b6760' }
+const inputStyle: React.CSSProperties = { padding: '9px 12px', borderRadius: 8, border: '1px solid var(--pos-border)', fontSize: 13, fontFamily: 'inherit', background: 'var(--pos-bg)', color: 'var(--pos-ink)' }
+const btnPrimary: React.CSSProperties = { padding: '9px 16px', borderRadius: 8, background: 'var(--pos-accent)', color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
+const btnSecondary: React.CSSProperties = { padding: '9px 16px', borderRadius: 8, border: '1px solid var(--pos-border)', background: 'transparent', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--pos-muted)' }
 
-const ACC = '#d08a59'
+const ACC = 'var(--pos-accent)'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
 // Force redeploy
 
@@ -61,6 +61,11 @@ export default function InventoryPage() {
   const scanCanvasRef = useRef<HTMLCanvasElement>(null)
   const scanStreamRef = useRef<MediaStream | null>(null)
 
+  // Inline error states — replaces alert() calls
+  const [cameraError, setCameraError] = useState('')
+  const [scanError,   setScanError]   = useState('')
+  const [saveError,   setSaveError]   = useState('')
+
   useEffect(() => {
     if (scanCameraOpen && scanVideoRef.current && scanStreamRef.current) {
       scanVideoRef.current.srcObject = scanStreamRef.current
@@ -107,7 +112,7 @@ export default function InventoryPage() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       streamRef.current = stream
       if (videoRef.current) videoRef.current.srcObject = stream
-    } catch { alert('Could not access camera') }
+    } catch { setCameraError('Could not access camera. Check that the browser has camera permission.') }
   }
 
   const handleCloseCamera = () => {
@@ -210,7 +215,7 @@ export default function InventoryPage() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       scanStreamRef.current = stream
       if (scanVideoRef.current) scanVideoRef.current.srcObject = stream
-    } catch { alert('Camera access denied'); setScanCameraOpen(false) }
+    } catch { setCameraError('Camera access denied. Allow camera access in your browser settings.'); setScanCameraOpen(false) }
   }
 
   const closeScanCamera = () => {
@@ -223,7 +228,7 @@ export default function InventoryPage() {
     // Resize to max 1200px to stay within Vercel's 4.5MB body limit
     const vw = scanVideoRef.current.videoWidth
     const vh = scanVideoRef.current.videoHeight
-    if (vw === 0 || vh === 0) { alert('Camera not ready — wait a moment'); return }
+    if (vw === 0 || vh === 0) { setCameraError('Camera not ready — wait a moment and try again'); return }
     const maxDim = 1200
     let cw = vw, ch = vh
     if (vw > maxDim || vh > maxDim) {
@@ -236,7 +241,7 @@ export default function InventoryPage() {
     ctx.drawImage(scanVideoRef.current, 0, 0, cw, ch)
     scanCanvasRef.current.toBlob(async blob => {
       if (!blob) return
-      console.log('[Inventory Scan] Captured', Math.round(blob.size / 1024), 'KB for', scanStep)
+      // scan captured
       await handleScanFile(new File([blob], 'scan.jpg', { type: 'image/jpeg' }), scanStep)
       closeScanCamera()
     }, 'image/jpeg', 0.75)
@@ -254,7 +259,7 @@ export default function InventoryPage() {
         body: JSON.stringify(body),
       })
       const data = await res.json()
-      if (!data.product) { alert(data.error || 'Could not read product'); setScanning(false); return }
+      if (!data.product) { setScanError(data.error || 'Could not read product — try better lighting or a clearer photo'); setScanning(false); return }
       const p = data.product
       setAddForm({
         name:                p.name         || '',
@@ -273,7 +278,7 @@ export default function InventoryPage() {
       setShowScanModal(false)
       setShowAddForm(true)
       setScanFront(null); setScanBack(null); setScanFrontThumb(null); setScanBackThumb(null)
-    } catch { alert('Scan failed') }
+    } catch { setScanError('Scan failed — check your connection and try again') }
     setScanning(false)
   }
 
@@ -304,8 +309,8 @@ export default function InventoryPage() {
         setItems(prev => [...prev, data.product])
         setShowAddForm(false)
         setAddForm({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '', expiry_date: '', batch_number: '', supplier: '', brand: '', unit: 'item' })
-      } else { alert(data.error || 'Save failed') }
-    } catch { alert('Save failed') }
+      } else { setSaveError(data.error || 'Save failed — please check your inputs and try again') }
+    } catch { setSaveError('Save failed — check your connection and try again') }
     setSavingNew(false)
   }
   // ────────────────────────────────────────────────────────────
@@ -349,18 +354,18 @@ export default function InventoryPage() {
   }).length
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b6760', fontSize: 14 }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)', fontSize: 14 }}>
       Loading inventory...
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9f8f6', display: 'flex', flexDirection: 'column' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <div style={{ padding: '20px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontWeight: 800, fontSize: 18, color: '#1a1916' }}>Inventory</div>
-          <div style={{ fontSize: 12, color: '#6b6760' }}>{staff?.name}</div>
+          <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--pos-ink)' }}>Inventory</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{staff?.name}</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {/* Hidden file inputs for dual-photo scan */}
@@ -373,7 +378,7 @@ export default function InventoryPage() {
           </button>
 
           <button onClick={() => { localStorage.removeItem('pos_staff'); router.push('/') }}
-            style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #e5e2dc', background: 'transparent', fontSize: 12, cursor: 'pointer', color: '#6b6760' }}>
+            style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--pos-border)', background: 'transparent', fontSize: 12, cursor: 'pointer', color: 'var(--pos-muted)' }}>
             Sign out
           </button>
         </div>
@@ -381,12 +386,12 @@ export default function InventoryPage() {
 
       {/* Alert summary */}
       {(outCount > 0 || lowCount > 0 || expiredCount > 0 || expiringCount > 0) && (
-        <div style={{ margin: '8px 20px', padding: '12px 16px', borderRadius: 12, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)' }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#dc2626', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        <div className="pos-banner" role="alert" style={{ margin: '8px 20px', padding: '12px 16px', borderRadius: 12, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)' }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-danger)', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {outCount > 0 && <span>{outCount} out of stock</span>}
             {lowCount > 0 && <span style={{ color: '#ca8a04' }}>{lowCount} running low</span>}
-            {expiredCount > 0 && <span style={{ color: '#dc2626' }}>⚠ {expiredCount} EXPIRED — remove now</span>}
-            {expiringCount > 0 && <span style={{ color: '#f97316' }}>{expiringCount} expiring within 30 days</span>}
+            {expiredCount > 0 && <span style={{ color: 'var(--pos-danger)' }}>⚠ {expiredCount} EXPIRED — remove now</span>}
+            {expiringCount > 0 && <span style={{ color: 'var(--pos-warning)' }}>{expiringCount} expiring within 30 days</span>}
           </div>
         </div>
       )}
@@ -394,11 +399,11 @@ export default function InventoryPage() {
       {/* ── Dual-photo scan modal ── */}
       {showScanModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '0 0 0' }} onClick={() => !scanning && setShowScanModal(false)}>
-          <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', padding: 24, width: '100%', maxWidth: 500, maxHeight: '92vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
-            <div style={{ width: 36, height: 4, borderRadius: 9999, background: '#e5e2dc', margin: '0 auto 20px' }} />
+          <div className="pos-sheet" style={{ background: 'var(--pos-surface)', borderRadius: '20px 20px 0 0', padding: 24, width: '100%', maxWidth: 500, maxHeight: '92vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
+            <div style={{ width: 36, height: 4, borderRadius: 9999, background: 'var(--pos-border)', margin: '0 auto 20px' }} />
 
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#1a1916', marginBottom: 4 }}>📷 Scan product</div>
-            <div style={{ fontSize: 13, color: '#6b6760', marginBottom: 20 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', marginBottom: 4 }}>📷 Scan product</div>
+            <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 20 }}>
               Photo the front — Claude fills in name, price, category, SKU.<br/>
               Add the back for expiry date, batch number and supplier.
             </div>
@@ -407,7 +412,7 @@ export default function InventoryPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
               {/* Front */}
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#6b6760', marginBottom: 8, textTransform: 'uppercase' }}>Front <span style={{ color: '#ef4444' }}>*</span></div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--pos-muted)', marginBottom: 8, textTransform: 'uppercase' }}>Front <span style={{ color: '#ef4444' }}>*</span></div>
                 {scanFrontThumb ? (
                   <div style={{ position: 'relative' }}>
                     <img src={scanFrontThumb} alt="" style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', borderRadius: 12, border: '2.5px solid #7c3aed' }} />
@@ -415,17 +420,17 @@ export default function InventoryPage() {
                     <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 10, fontWeight: 700, background: '#7c3aed', color: '#fff', padding: '2px 7px', borderRadius: 999 }}>✓ FRONT</div>
                   </div>
                 ) : (
-                  <div style={{ aspectRatio: '3/4', borderRadius: 12, border: '2px dashed #e5e2dc', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#f9f8f6' }}>
+                  <div style={{ aspectRatio: '3/4', borderRadius: 12, border: '2px dashed #e5e2dc', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'var(--pos-bg)' }}>
                     <div style={{ fontSize: 26 }}>📦</div>
-                    <div style={{ fontSize: 11, color: '#a39e97', textAlign: 'center', padding: '0 8px' }}>Brand, name, price</div>
+                    <div style={{ fontSize: 11, color: 'var(--pos-hint)', textAlign: 'center', padding: '0 8px' }}>Brand, name, price</div>
                     <button onClick={() => openScanCamera('front')} style={{ padding: '6px 14px', borderRadius: 8, background: '#7c3aed', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>📷 Camera</button>
-                    <button onClick={() => scanFrontRef.current?.click()} style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid #e5e2dc', background: 'transparent', fontSize: 12, cursor: 'pointer', color: '#6b6760' }}>Upload</button>
+                    <button onClick={() => scanFrontRef.current?.click()} style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid var(--pos-border)', background: 'transparent', fontSize: 12, cursor: 'pointer', color: 'var(--pos-muted)' }}>Upload</button>
                   </div>
                 )}
               </div>
               {/* Back */}
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#6b6760', marginBottom: 8, textTransform: 'uppercase' }}>Back <span style={{ color: '#a39e97', fontWeight: 400 }}>(optional)</span></div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--pos-muted)', marginBottom: 8, textTransform: 'uppercase' }}>Back <span style={{ color: 'var(--pos-hint)', fontWeight: 400 }}>(optional)</span></div>
                 {scanBackThumb ? (
                   <div style={{ position: 'relative' }}>
                     <img src={scanBackThumb} alt="" style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', borderRadius: 12, border: '2.5px solid #0891b2' }} />
@@ -433,22 +438,28 @@ export default function InventoryPage() {
                     <div style={{ position: 'absolute', bottom: 6, left: 6, fontSize: 10, fontWeight: 700, background: '#0891b2', color: '#fff', padding: '2px 7px', borderRadius: 999 }}>✓ BACK</div>
                   </div>
                 ) : (
-                  <div style={{ aspectRatio: '3/4', borderRadius: 12, border: '2px dashed #e5e2dc', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#f9f8f6' }}>
+                  <div style={{ aspectRatio: '3/4', borderRadius: 12, border: '2px dashed #e5e2dc', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'var(--pos-bg)' }}>
                     <div style={{ fontSize: 26 }}>🏷️</div>
-                    <div style={{ fontSize: 11, color: '#a39e97', textAlign: 'center', padding: '0 8px' }}>Expiry, batch, supplier</div>
+                    <div style={{ fontSize: 11, color: 'var(--pos-hint)', textAlign: 'center', padding: '0 8px' }}>Expiry, batch, supplier</div>
                     <button onClick={() => openScanCamera('back')} style={{ padding: '6px 14px', borderRadius: 8, background: '#0891b2', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>📷 Camera</button>
-                    <button onClick={() => scanBackRef.current?.click()} style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid #e5e2dc', background: 'transparent', fontSize: 12, cursor: 'pointer', color: '#6b6760' }}>Upload</button>
+                    <button onClick={() => scanBackRef.current?.click()} style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid var(--pos-border)', background: 'transparent', fontSize: 12, cursor: 'pointer', color: 'var(--pos-muted)' }}>Upload</button>
                   </div>
                 )}
               </div>
             </div>
 
-            <button onClick={runFullScan} disabled={!scanFront || scanning}
-              style={{ width: '100%', padding: '15px', borderRadius: 14, background: scanFront ? '#7c3aed' : '#e5e2dc', color: scanFront ? '#fff' : '#a39e97', border: 'none', fontSize: 15, fontWeight: 800, cursor: scanFront ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
+            <button onClick={runFullScan} disabled={!scanFront || scanning} className="pos-btn-primary"
+              style={{ width: '100%', padding: '15px', borderRadius: 14, background: scanFront ? '#7c3aed' : 'var(--pos-border)', color: scanFront ? '#fff' : 'var(--pos-hint)', border: 'none', fontSize: 15, fontWeight: 800, cursor: scanFront ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
               {scanning ? '⏳ Reading...' : scanFront ? `✨ Scan & fill${scanBack ? ' (front + back)' : ' (front only)'}` : 'Take front photo first'}
             </button>
             {scanFront && !scanBack && (
-              <div style={{ fontSize: 11, color: '#a39e97', textAlign: 'center', marginTop: 8 }}>Add the back photo for expiry date, batch no. and supplier</div>
+              <div style={{ fontSize: 11, color: 'var(--pos-hint)', textAlign: 'center', marginTop: 8 }}>Add the back photo for expiry date, batch no. and supplier</div>
+            )}
+            {(scanError || cameraError) && (
+              <div className="pos-banner" role="alert" style={{ marginTop: 12, padding: '10px 14px', borderRadius: 8, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)', fontSize: 13, color: 'var(--pos-danger)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <span>{scanError || cameraError}</span>
+                <button onClick={() => { setScanError(''); setCameraError('') }} aria-label="Dismiss" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--pos-danger)', fontSize: 16, lineHeight: 1, padding: '0 2px' }}>×</button>
+              </div>
             )}
           </div>
         </div>
@@ -472,9 +483,9 @@ export default function InventoryPage() {
       {/* ── Add product form (pre-filled by scan or manual) ── */}
       {showAddForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => !savingNew && setShowAddForm(false)}>
-          <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', padding: 24, width: '100%', maxWidth: 500, maxHeight: '92vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
-            <div style={{ width: 36, height: 4, borderRadius: 9999, background: '#e5e2dc', margin: '0 auto 16px' }} />
-            <div style={{ fontSize: 17, fontWeight: 800, color: '#1a1916', marginBottom: 16 }}>Add product</div>
+          <div className="pos-sheet" style={{ background: 'var(--pos-surface)', borderRadius: '20px 20px 0 0', padding: 24, width: '100%', maxWidth: 500, maxHeight: '92vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
+            <div style={{ width: 36, height: 4, borderRadius: 9999, background: 'var(--pos-border)', margin: '0 auto 16px' }} />
+            <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--pos-ink)', marginBottom: 16 }}>Add product</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <input placeholder="Product name *" value={addForm.name} onChange={e => setAddForm(p => ({ ...p, name: e.target.value }))} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -489,7 +500,7 @@ export default function InventoryPage() {
                 <input placeholder="Batch / lot no." value={addForm.batch_number} onChange={e => setAddForm(p => ({ ...p, batch_number: e.target.value }))} style={inputStyle} />
               </div>
               <div>
-                <label style={{ fontSize: 11, color: '#6b6760', fontWeight: 600, display: 'block', marginBottom: 4 }}>Expiry date</label>
+                <label style={{ fontSize: 11, color: 'var(--pos-muted)', fontWeight: 600, display: 'block', marginBottom: 4 }}>Expiry date</label>
                 <input type="date" value={addForm.expiry_date} onChange={e => setAddForm(p => ({ ...p, expiry_date: e.target.value }))} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
               </div>
               <select value={addForm.unit} onChange={e => setAddForm(p => ({ ...p, unit: e.target.value }))} style={{ ...inputStyle, width: '100%' }}>
@@ -500,8 +511,14 @@ export default function InventoryPage() {
                 <option value="box">box</option>
               </select>
             </div>
+            {saveError && (
+              <div className="pos-banner" role="alert" style={{ marginTop: 12, padding: '10px 14px', borderRadius: 8, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)', fontSize: 13, color: 'var(--pos-danger)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <span>{saveError}</span>
+                <button onClick={() => setSaveError('')} aria-label="Dismiss" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--pos-danger)', fontSize: 16, lineHeight: 1, padding: '0 2px' }}>×</button>
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button onClick={saveNewProduct} disabled={!addForm.name || !addForm.sale_price || savingNew}
+              <button onClick={saveNewProduct} disabled={!addForm.name || !addForm.sale_price || savingNew} className="pos-btn-primary"
                 style={{ ...btnPrimary, flex: 1, opacity: !addForm.name || !addForm.sale_price || savingNew ? 0.5 : 1 }}>
                 {savingNew ? 'Saving...' : 'Add to inventory'}
               </button>
@@ -526,43 +543,43 @@ export default function InventoryPage() {
       {/* Edit modal for recognized products */}
       {editingRecognizedIndex !== null && recognizedProducts.length > 0 && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 99, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setEditingRecognizedIndex(null)}>
-          <div style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 500, width: '100%', maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#1a1916', marginBottom: 20, marginTop: 0 }}>Edit product details</h3>
+          <div className="pos-sheet" style={{ background: 'var(--pos-surface)', borderRadius: 16, padding: 24, maxWidth: 500, width: '100%', maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 20, marginTop: 0 }}>Edit product details</h3>
 
             {/* Product name (editable) */}
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b6760', marginBottom: 6 }}>Product name</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>Product name</label>
               <input type="text" value={editingRecognizedData.name || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, name: e.target.value })} style={{ ...inputStyle, width: '100%' }} placeholder="Enter product name" />
             </div>
 
             {/* SKU / Barcode */}
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b6760', marginBottom: 6 }}>SKU / Barcode {editingRecognizedData.barcode_number ? '(auto-detected)' : ''}</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>SKU / Barcode {editingRecognizedData.barcode_number ? '(auto-detected)' : ''}</label>
               <input type="text" placeholder="e.g. 8718924509127" value={editingRecognizedData.sku || editingRecognizedData.barcode_number || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, sku: e.target.value })} style={{ ...inputStyle, width: '100%' }} />
-              {editingRecognizedData.barcode_detected && <div style={{ fontSize: 11, color: '#d08a59', marginTop: 4 }}>✓ Barcode detected in image</div>}
+              {editingRecognizedData.barcode_detected && <div style={{ fontSize: 11, color: 'var(--pos-accent)', marginTop: 4 }}>✓ Barcode detected in image</div>}
             </div>
 
             {/* Cost price */}
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b6760', marginBottom: 6 }}>Cost price (purchase price)</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>Cost price (purchase price)</label>
               <input type="number" placeholder="0.00" value={editingRecognizedData.cost_price || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, cost_price: e.target.value })} style={{ ...inputStyle, width: '100%' }} step="0.01" />
             </div>
 
             {/* Sale price */}
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b6760', marginBottom: 6 }}>Sale price (selling price)</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>Sale price (selling price)</label>
               <input type="number" placeholder="0.00" value={editingRecognizedData.sale_price || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, sale_price: e.target.value })} style={{ ...inputStyle, width: '100%' }} step="0.01" />
             </div>
 
             {/* Quantity */}
             <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b6760', marginBottom: 6 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>
                 Starting stock quantity {editingRecognizedData.unit === 'kg' ? '(kg)' : ''}
               </label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input type="number" value={editingRecognizedData.stock_qty || 1} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, stock_qty: e.target.value })} style={{ ...inputStyle, flex: 1 }} min="0" step={editingRecognizedData.unit === 'kg' ? '0.1' : '1'} />
                 {editingRecognizedData.unit === 'kg' && (
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#d08a59', background: 'rgba(208,138,89,.1)', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(208,138,89,.2)', whiteSpace: 'nowrap' }}>kg</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-accent)', background: 'rgba(208,138,89,.1)', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(208,138,89,.2)', whiteSpace: 'nowrap' }}>kg</span>
                 )}
               </div>
             </div>
@@ -570,7 +587,7 @@ export default function InventoryPage() {
             {/* Margin preview */}
             {editingRecognizedData.cost_price && editingRecognizedData.sale_price && (
               <div style={{ background: '#f0f0f0', padding: 12, borderRadius: 8, marginBottom: 20, fontSize: 12 }}>
-                <div style={{ color: '#6b6760', marginBottom: 4 }}>Margin: <strong style={{ color: '#d08a59' }}>{((parseFloat(editingRecognizedData.sale_price) - parseFloat(editingRecognizedData.cost_price || 0)) / parseFloat(editingRecognizedData.sale_price || 1) * 100).toFixed(1)}%</strong></div>
+                <div style={{ color: 'var(--pos-muted)', marginBottom: 4 }}>Margin: <strong style={{ color: 'var(--pos-accent)' }}>{((parseFloat(editingRecognizedData.sale_price) - parseFloat(editingRecognizedData.cost_price || 0)) / parseFloat(editingRecognizedData.sale_price || 1) * 100).toFixed(1)}%</strong></div>
                 <div style={{ color: '#999', fontSize: 11 }}>Profit per unit: {(parseFloat(editingRecognizedData.sale_price) - parseFloat(editingRecognizedData.cost_price || 0)).toFixed(2)}</div>
               </div>
             )}
@@ -615,7 +632,7 @@ export default function InventoryPage() {
                   console.error('Error:', err)
                 }
                 setAddingProduct(false)
-              }} disabled={!editingRecognizedData.sale_price || addingProduct} style={{ ...btnPrimary, flex: 1, opacity: !editingRecognizedData.sale_price || addingProduct ? 0.5 : 1 }}>{addingProduct ? 'Adding...' : 'Add to inventory'}</button>
+              }} disabled={!editingRecognizedData.sale_price || addingProduct} className="pos-btn-primary" style={{ ...btnPrimary, flex: 1, opacity: !editingRecognizedData.sale_price || addingProduct ? 0.5 : 1 }}>{addingProduct ? 'Adding...' : 'Add to inventory'}</button>
               <button onClick={() => { setEditingRecognizedIndex(null); setRecognizedProducts([]) }} style={btnSecondary}>Done</button>
             </div>
           </div>
@@ -625,15 +642,15 @@ export default function InventoryPage() {
       {/* Search bar */}
       <div style={{ padding: '8px 20px 4px' }}>
         <div style={{ position: 'relative' }}>
-          <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1916" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke='var(--pos-ink)' strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
           <input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search products..."
-            style={{ width: '100%', padding: '10px 12px 10px 36px', borderRadius: 10, border: '1.5px solid #e5e2dc', fontSize: 14, fontFamily: 'inherit', background: '#fff', color: '#1a1916', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '10px 12px 10px 36px', borderRadius: 10, border: '1.5px solid var(--pos-border)', fontSize: 14, fontFamily: 'inherit', background: 'var(--pos-surface)', color: 'var(--pos-ink)', boxSizing: 'border-box' }}
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: '#a39e97', padding: 2 }}>×</button>
+            <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--pos-hint)', padding: 2 }}>×</button>
           )}
         </div>
       </div>
@@ -643,10 +660,10 @@ export default function InventoryPage() {
         {([
           ['all', `All (${items.length})`, ACC],
           ['low', `Low (${lowCount})`, '#ca8a04'],
-          ['out', `Out (${outCount})`, '#dc2626'],
-          ['expiring', `Expiring (${expiredCount + expiringCount})`, '#f97316'],
+          ['out', `Out (${outCount})`, 'var(--pos-danger)'],
+          ['expiring', `Expiring (${expiredCount + expiringCount})`, 'var(--pos-warning)'],
         ] as [typeof filter, string, string][]).map(([f, label, color]) => (
-          <button key={f} onClick={() => setFilter(f)} style={{ padding: '7px 14px', borderRadius: 9999, fontSize: 12, fontWeight: 600, cursor: 'pointer', background: filter === f ? color : '#fff', color: filter === f ? '#fff' : '#6b6760', border: filter === f ? 'none' : '1px solid #e5e2dc' } as React.CSSProperties}>
+          <button key={f} onClick={() => setFilter(f)} style={{ padding: '7px 14px', borderRadius: 9999, fontSize: 12, fontWeight: 600, cursor: 'pointer', background: filter === f ? color : '#fff', color: filter === f ? '#fff' : 'var(--pos-muted)', border: filter === f ? 'none' : '1px solid #e5e2dc' } as React.CSSProperties}>
             {label}
           </button>
         ))}
@@ -655,34 +672,34 @@ export default function InventoryPage() {
       {/* Inventory list */}
       <div style={{ flex: 1, padding: '4px 20px 32px', overflowY: 'auto' }}>
         {filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: '#6b6760', fontSize: 14 }}>
+          <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--pos-muted)', fontSize: 14 }}>
             No items in this filter
           </div>
         ) : (
-          filtered.map(item => {
+          filtered.map((item, idx) => {
             const isOut = item.stock_qty === 0
             const isLow = !isOut && item.stock_qty <= item.low_stock_threshold
-            const status = isOut ? { label: 'Out', color: '#dc2626', bg: 'rgba(220,38,38,.08)' }
+            const status = isOut ? { label: 'Out', color: 'var(--pos-danger)', bg: 'rgba(220,38,38,.08)' }
                          : isLow ? { label: 'Low', color: '#ca8a04', bg: 'rgba(234,179,8,.08)' }
-                         :          { label: 'OK',  color: '#16a34a', bg: 'rgba(22,163,74,.08)' }
+                         :          { label: 'OK',  color: 'var(--pos-success)', bg: 'rgba(22,163,74,.08)' }
             const daysToExpiry = item.expiry_date ? Math.floor((new Date(item.expiry_date).getTime() - todayMs) / 86400000) : null
             const isExpired = daysToExpiry !== null && daysToExpiry < 0
             const isExpiringSoon = daysToExpiry !== null && daysToExpiry >= 0 && daysToExpiry <= 30
 
             return (
-              <div key={item.id} style={{ background: isExpired ? 'rgba(220,38,38,.04)' : '#fff', borderRadius: 14, border: `1px solid ${isExpired ? '#fca5a5' : '#e5e2dc'}`, marginBottom: 10, overflow: 'hidden' }}>
+              <div key={item.id} className="pos-item" style={{ background: isExpired ? 'rgba(220,38,38,.04)' : '#fff', borderRadius: 14, border: `1px solid ${isExpired ? '#fca5a5' : 'var(--pos-border)'}`, marginBottom: 10, overflow: 'hidden', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#1a1916', marginBottom: 2 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 2 }}>
                       {item.name}
-                      {isExpired && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: '#dc2626', background: 'rgba(220,38,38,.1)', padding: '2px 7px', borderRadius: 9999 }}>EXPIRED</span>}
-                      {isExpiringSoon && !isExpired && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: '#f97316', background: 'rgba(249,115,22,.1)', padding: '2px 7px', borderRadius: 9999 }}>EXP {daysToExpiry === 0 ? 'TODAY' : `${daysToExpiry}d`}</span>}
+                      {isExpired && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: 'var(--pos-danger)', background: 'rgba(220,38,38,.1)', padding: '2px 7px', borderRadius: 9999 }}>EXPIRED</span>}
+                      {isExpiringSoon && !isExpired && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: 'var(--pos-warning)', background: 'rgba(249,115,22,.1)', padding: '2px 7px', borderRadius: 9999 }}>EXP {daysToExpiry === 0 ? 'TODAY' : `${daysToExpiry}d`}</span>}
                     </div>
-                    <div style={{ fontSize: 12, color: '#6b6760' }}>
+                    <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>
                       {sym}{item.sale_price.toFixed(2)} · {item.stock_qty}{item.unit === 'kg' ? ' kg' : ''} in stock
-                      {item.expiry_date && <span style={{ marginLeft: 6, color: isExpired ? '#dc2626' : isExpiringSoon ? '#f97316' : '#a39e97' }}>· Exp {new Date(item.expiry_date).toLocaleDateString('en-GB')}</span>}
+                      {item.expiry_date && <span style={{ marginLeft: 6, color: isExpired ? 'var(--pos-danger)' : isExpiringSoon ? 'var(--pos-warning)' : 'var(--pos-hint)' }}>· Exp {new Date(item.expiry_date).toLocaleDateString('en-GB')}</span>}
                     </div>
-                    {(item.brand || item.supplier) && <div style={{ fontSize: 11, color: '#a39e97', marginTop: 1 }}>{[item.brand, item.supplier].filter(Boolean).join(' · ')}</div>}
+                    {(item.brand || item.supplier) && <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginTop: 1 }}>{[item.brand, item.supplier].filter(Boolean).join(' · ')}</div>}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: status.color, background: status.bg, padding: '3px 9px', borderRadius: 9999 }}>{status.label}</span>
@@ -696,15 +713,15 @@ export default function InventoryPage() {
                 {restocking === item.id && (
                   <div style={{ padding: '0 16px 14px' }}>
                     {/* Add / Set toggle */}
-                    <div style={{ display: 'flex', borderRadius: 9, overflow: 'hidden', border: '1.5px solid #e5e2dc', marginBottom: 10, background: '#f9f8f6' }}>
+                    <div style={{ display: 'flex', borderRadius: 9, overflow: 'hidden', border: '1.5px solid var(--pos-border)', marginBottom: 10, background: 'var(--pos-bg)' }}>
                       {(['add', 'set'] as const).map(mode => (
                         <button key={mode} onClick={() => { setUpdateMode(mode); setRestockQty('') }}
-                          style={{ flex: 1, padding: '8px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', background: updateMode === mode ? ACC : 'transparent', color: updateMode === mode ? '#fff' : '#6b6760', transition: 'all 0.15s' }}>
+                          style={{ flex: 1, padding: '8px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', background: updateMode === mode ? ACC : 'transparent', color: updateMode === mode ? '#fff' : 'var(--pos-muted)', transition: 'all 0.15s' }}>
                           {mode === 'add' ? '＋ Add stock' : '✎ Set total'}
                         </button>
                       ))}
                     </div>
-                    <div style={{ fontSize: 11, color: '#a39e97', marginBottom: 8 }}>
+                    <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginBottom: 8 }}>
                       {updateMode === 'add'
                         ? `Current: ${item.stock_qty}${item.unit === 'kg' ? ' kg' : ''} → will become ${(item.stock_qty + (parseFloat(restockQty) || 0)).toFixed(item.unit === 'kg' ? 2 : 0)}${item.unit === 'kg' ? ' kg' : ''}`
                         : `Will override current stock (${item.stock_qty}${item.unit === 'kg' ? ' kg' : ''}) with new value`}
@@ -718,11 +735,11 @@ export default function InventoryPage() {
                           onChange={e => setRestockQty(e.target.value)}
                           step={item.unit === 'kg' ? '0.1' : '1'}
                           min="0"
-                          style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #e5e2dc', fontSize: 15, fontFamily: 'inherit', background: '#f9f8f6', color: '#1a1916', boxSizing: 'border-box' }}
+                          style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid var(--pos-border)', fontSize: 15, fontFamily: 'inherit', background: 'var(--pos-bg)', color: 'var(--pos-ink)', boxSizing: 'border-box' }}
                           autoFocus
                         />
                         {item.unit === 'kg' && (
-                          <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 12, fontWeight: 700, color: '#d08a59' }}>kg</span>
+                          <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 12, fontWeight: 700, color: 'var(--pos-accent)' }}>kg</span>
                         )}
                       </div>
                       <button onClick={() => handleRestock(item)} style={{ padding: '10px 20px', borderRadius: 10, background: ACC, color: '#fff', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>

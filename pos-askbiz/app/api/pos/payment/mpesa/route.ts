@@ -70,16 +70,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Payment provider not yet active. Complete setup first.' }, { status: 400 })
     }
 
-    // Normalize phone to international format without + (254XXXXXXXXX)
-    // Paystack M-Pesa STK push requires this format for Kenya
+    // Normalize phone to +254XXXXXXXXX — Paystack Kenya M-Pesa requires + prefix
     let phone = customer_phone.replace(/[\s\-()]/g, '')
-    if (phone.startsWith('+254')) phone = phone.slice(1)          // +254... → 254...
-    else if (phone.startsWith('254')) phone = phone               // already good
-    else if (phone.startsWith('0')) phone = `254${phone.slice(1)}` // 07... → 2547...
-    else phone = `254${phone}`                                     // 7... → 2547...
+    if (phone.startsWith('+254')) phone = phone                    // already correct
+    else if (phone.startsWith('254')) phone = `+${phone}`          // 254... → +254...
+    else if (phone.startsWith('0')) phone = `+254${phone.slice(1)}` // 07... → +2547...
+    else phone = `+254${phone}`                                     // 7... → +2547...
 
-    // Basic validation — must be 12 digits (254 + 9 digits)
-    if (!/^254\d{9}$/.test(phone)) {
+    // Basic validation — must be +254 followed by 9 digits
+    if (!/^\+254\d{9}$/.test(phone)) {
       return NextResponse.json({ error: 'Please enter a valid Kenyan phone number (e.g. 0712 345 678)' }, { status: 400 })
     }
 
@@ -88,6 +87,9 @@ export async function POST(req: NextRequest) {
       email: `customer@pos-${transaction_id.slice(0, 8)}.askbiz.co`,
       amount: Math.round(transaction.total * 100), // Convert to kobo
       phone,
+      // Pass subaccount so Paystack splits funds to merchant automatically.
+      // If no subaccount (M-Pesa-only merchant), funds land in AskBiz main account.
+      subaccount: config.paystack_subaccount_id || undefined,
       metadata: {
         transaction_id,
         merchant_id: ownerId,

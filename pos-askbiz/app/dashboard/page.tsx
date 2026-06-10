@@ -80,18 +80,18 @@ function Badge({ status }: { status: string }) {
 
 function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={{ background: '#fff', border: '1px solid #e5e2dc', borderRadius: 14, padding: '18px 20px', ...style }}>
+    <div style={{ background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 14, padding: '18px 20px', ...style }}>
       {children}
     </div>
   )
 }
 
-function StatTile({ label, value, color = '#1a1916', sub }: { label: string; value: string | number; color?: string; sub?: string }) {
+function StatTile({ label, value, color = 'var(--pos-ink)', sub }: { label: string; value: string | number; color?: string; sub?: string }) {
   return (
     <Card>
-      <div style={{ fontSize: 12, color: '#6b6760', fontWeight: 500, marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 12, color: 'var(--pos-muted)', fontWeight: 500, marginBottom: 6 }}>{label}</div>
       <div style={{ fontSize: 26, fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: '#6b6760', marginTop: 4 }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginTop: 4 }}>{sub}</div>}
     </Card>
   )
 }
@@ -139,12 +139,12 @@ function EngineerDashboard({ session, notify }: { session: StaffSession; notify:
           <span style={{ fontWeight: 700, fontSize: 15 }}>My Jobs</span>
           <button onClick={load} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>↻ Refresh</button>
         </div>
-        {loading ? <div style={{ color: '#6b6760', fontSize: 13 }}>Loading…</div> : jobs.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '32px 0', color: '#6b6760', fontSize: 14 }}>No jobs assigned to you</div>
+        {loading ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>Loading…</div> : jobs.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--pos-muted)', fontSize: 14 }}>No jobs assigned to you yet</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {jobs.map(job => (
-              <div key={job.id} style={{ padding: '14px 16px', borderRadius: 10, border: '1px solid #e5e2dc', background: '#f9f8f6' }}>
+            {jobs.map((job, idx) => (
+              <div key={job.id} className="pos-item" style={{ padding: '14px 16px', borderRadius: 10, border: '1px solid var(--pos-border)', background: 'var(--pos-bg)', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
@@ -152,9 +152,9 @@ function EngineerDashboard({ session, notify }: { session: StaffSession; notify:
                       <Badge status={job.status} />
                     </div>
                     <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{job.device_model || 'Unknown device'}</div>
-                    <div style={{ fontSize: 12, color: '#6b6760', marginBottom: 2 }}>{job.fault_description}</div>
-                    {job.customer_name && <div style={{ fontSize: 11, color: '#6b6760' }}>👤 {job.customer_name}</div>}
-                    <div style={{ fontSize: 11, color: '#6b6760', marginTop: 2 }}>{timeAgo(job.created_at)}</div>
+                    <div style={{ fontSize: 12, color: 'var(--pos-muted)', marginBottom: 2 }}>{job.fault_description}</div>
+                    {job.customer_name && <div style={{ fontSize: 11, color: 'var(--pos-muted)' }}>👤 {job.customer_name}</div>}
+                    <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginTop: 2 }}>{timeAgo(job.created_at)}</div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {job.status === 'accepted' && (
@@ -218,24 +218,24 @@ function RepairDashboard({ session, notify }: { session: StaffSession; notify: (
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
           {['all', 'intake', 'quoted', 'accepted', 'in_progress', 'completed'].map(s => (
             <button key={s} onClick={() => setFilter(s)}
-              style={{ padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: `1px solid ${filter === s ? ACC : '#e5e2dc'}`, background: filter === s ? ACC_LIGHT : 'transparent', color: filter === s ? ACC : '#6b6760', textTransform: 'capitalize' }}>
+              style={{ padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: `1px solid ${filter === s ? ACC : 'var(--pos-border)'}`, background: filter === s ? ACC_LIGHT : 'transparent', color: filter === s ? ACC : 'var(--pos-muted)', textTransform: 'capitalize' }}>
               {s.replace('_', ' ')}
             </button>
           ))}
         </div>
-        {loading ? <div style={{ color: '#6b6760', fontSize: 13 }}>Loading…</div> : jobs.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '28px 0', color: '#6b6760', fontSize: 13 }}>No jobs found</div>
+        {loading ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>Loading…</div> : jobs.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '28px 0', color: 'var(--pos-muted)', fontSize: 13 }}>No jobs found for this filter</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {jobs.map(job => (
-              <div key={job.id} style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #e5e2dc', background: '#f9f8f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+            {jobs.map((job, idx) => (
+              <div key={job.id} className="pos-item" style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid var(--pos-border)', background: 'var(--pos-bg)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                 <div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 3 }}>
                     <span style={{ fontWeight: 700, color: ACC, fontSize: 13 }}>#{job.ticket_number}</span>
                     <Badge status={job.status} />
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{job.device_model || '—'}</div>
-                  <div style={{ fontSize: 12, color: '#6b6760' }}>{job.customer_name || 'No customer'} · {timeAgo(job.created_at)}</div>
+                  <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{job.customer_name || 'No customer'} · {timeAgo(job.created_at)}</div>
                 </div>
                 {job.quoted_price != null && (
                   <div style={{ fontWeight: 700, fontSize: 14, color: GREEN }}>{fmt(session.currency_symbol, job.quoted_price)}</div>
@@ -301,26 +301,26 @@ function SupervisorDashboard({ session, notify }: { session: StaffSession; notif
           <span style={{ fontWeight: 700, fontSize: 15 }}>Pending Captures</span>
           <button onClick={load} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>↻ Refresh</button>
         </div>
-        {loading ? <div style={{ color: '#6b6760', fontSize: 13 }}>Loading…</div> : captures.length === 0 ? (
+        {loading ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>Loading…</div> : captures.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '24px 0', color: GREEN, fontSize: 14 }}>✓ All captures reviewed</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {captures.map(cap => (
-              <div key={cap.id} style={{ borderRadius: 10, border: '1px solid #e5e2dc', overflow: 'hidden' }}>
+            {captures.map((cap, idx) => (
+              <div key={cap.id} className="pos-item" style={{ borderRadius: 10, border: '1px solid var(--pos-border)', overflow: 'hidden', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                 <div style={{ display: 'flex', gap: 12, padding: '12px 14px', alignItems: 'flex-start' }}>
                   {cap.storage === 'supabase' && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={cap.photo_url} alt="capture" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid #e5e2dc' }} />
+                    <img src={cap.photo_url} alt="capture" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, flexShrink: 0, border: '1px solid var(--pos-border)' }} />
                   )}
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
                       <span style={{ fontWeight: 700, fontSize: 13, textTransform: 'capitalize', color: ACC }}>{cap.type}</span>
-                      {cap.product_name && <span style={{ fontSize: 12, color: '#6b6760' }}>{cap.product_name}</span>}
-                      {cap.batch_ref && <span style={{ fontSize: 11, color: '#6b6760', background: '#f0ede8', padding: '1px 6px', borderRadius: 4 }}>Batch: {cap.batch_ref}</span>}
+                      {cap.product_name && <span style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{cap.product_name}</span>}
+                      {cap.batch_ref && <span style={{ fontSize: 11, color: 'var(--pos-muted)', background: '#f0ede8', padding: '1px 6px', borderRadius: 4 }}>Batch: {cap.batch_ref}</span>}
                     </div>
-                    {cap.quantity != null && <div style={{ fontSize: 12, color: '#6b6760' }}>Qty: {cap.quantity}</div>}
-                    {cap.notes && <div style={{ fontSize: 12, color: '#6b6760', fontStyle: 'italic' }}>{cap.notes}</div>}
-                    <div style={{ fontSize: 11, color: '#6b6760', marginTop: 4 }}>
+                    {cap.quantity != null && <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>Qty: {cap.quantity}</div>}
+                    {cap.notes && <div style={{ fontSize: 12, color: 'var(--pos-muted)', fontStyle: 'italic' }}>{cap.notes}</div>}
+                    <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginTop: 4 }}>
                       By {cap.captured_by_staff?.name || 'Unknown'} · {timeAgo(cap.created_at)}
                     </div>
                   </div>
@@ -334,17 +334,17 @@ function SupervisorDashboard({ session, notify }: { session: StaffSession; notif
                   )}
                 </div>
                 {rejectId === cap.id && (
-                  <div style={{ padding: '0 14px 12px', borderTop: '1px solid #e5e2dc', paddingTop: 10 }}>
+                  <div style={{ padding: '0 14px 12px', borderTop: '1px solid var(--pos-border)', paddingTop: 10 }}>
                     <input placeholder="Reason for rejection…" value={rejectReason} onChange={e => setRejectReason(e.target.value)}
-                      style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #e5e2dc', fontSize: 13, marginBottom: 8, boxSizing: 'border-box' }} />
+                      style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--pos-border)', fontSize: 13, marginBottom: 8, boxSizing: 'border-box' }} />
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button disabled={!rejectReason.trim() || actioning === cap.id}
                         onClick={() => actOnCapture(cap.id, 'rejected', rejectReason)}
-                        style={{ padding: '6px 16px', borderRadius: 8, border: 'none', background: RED, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: (!rejectReason.trim() || actioning === cap.id) ? 0.5 : 1 }}>
+                        style={{ padding: '6px 16px', borderRadius: 8, border: 'none', background: RED, color: '#fff', fontSize: 12, fontWeight: 700, cursor: !rejectReason.trim() || actioning === cap.id ? 'not-allowed' : 'pointer', opacity: (!rejectReason.trim() || actioning === cap.id) ? 0.5 : 1 }}>
                         Reject
                       </button>
                       <button onClick={() => setRejectId(null)}
-                        style={{ padding: '6px 16px', borderRadius: 8, border: '1px solid #e5e2dc', background: 'transparent', color: '#6b6760', fontSize: 12, cursor: 'pointer' }}>
+                        style={{ padding: '6px 16px', borderRadius: 8, border: '1px solid var(--pos-border)', background: 'transparent', color: 'var(--pos-muted)', fontSize: 12, cursor: 'pointer' }}>
                         Cancel
                       </button>
                     </div>
@@ -362,7 +362,7 @@ function SupervisorDashboard({ session, notify }: { session: StaffSession; notif
           {Object.entries(jobCounts).map(([status, count]) => (
             <div key={status} style={{ padding: '8px 14px', borderRadius: 10, background: (STATUS_COLOR[status] || '#6b7280') + '12', border: `1px solid ${STATUS_COLOR[status] || '#6b7280'}25`, textAlign: 'center' }}>
               <div style={{ fontSize: 20, fontWeight: 700, color: STATUS_COLOR[status] || '#6b7280' }}>{count}</div>
-              <div style={{ fontSize: 10, color: '#6b6760', textTransform: 'capitalize' }}>{status.replace('_', ' ')}</div>
+              <div style={{ fontSize: 10, color: 'var(--pos-muted)', textTransform: 'capitalize' }}>{status.replace('_', ' ')}</div>
             </div>
           ))}
         </div>
@@ -424,14 +424,14 @@ function ManagerDashboard({ session, notify }: { session: StaffSession; notify: 
 
       <Card>
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Jobs by Status</div>
-        {loading ? <div style={{ color: '#6b6760', fontSize: 13 }}>Loading…</div> : (
+        {loading ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>Loading…</div> : (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {['intake', 'quoted', 'accepted', 'in_progress', 'completed', 'collected', 'cancelled'].map(status => {
               const n = jobCounts[status] || 0
               return (
                 <div key={status} style={{ padding: '8px 14px', borderRadius: 10, background: STATUS_COLOR[status] + '12', border: `1px solid ${STATUS_COLOR[status]}25`, textAlign: 'center', minWidth: 56 }}>
                   <div style={{ fontSize: 22, fontWeight: 700, color: STATUS_COLOR[status] }}>{n}</div>
-                  <div style={{ fontSize: 10, color: '#6b6760', textTransform: 'capitalize', marginTop: 2 }}>{status.replace('_', ' ')}</div>
+                  <div style={{ fontSize: 10, color: 'var(--pos-muted)', textTransform: 'capitalize', marginTop: 2 }}>{status.replace('_', ' ')}</div>
                 </div>
               )
             })}
@@ -441,13 +441,13 @@ function ManagerDashboard({ session, notify }: { session: StaffSession; notify: 
 
       <Card>
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Today's Transactions</div>
-        {txns.length === 0 ? <div style={{ color: '#6b6760', fontSize: 13 }}>No transactions today</div> : (
+        {txns.length === 0 ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>No transactions yet today</div> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {txns.slice(0, 8).map(t => (
-              <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 8, background: '#f9f8f6', border: '1px solid #e5e2dc' }}>
+            {txns.slice(0, 8).map((t, idx) => (
+              <div key={t.id} className="pos-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 8, background: 'var(--pos-bg)', border: '1px solid var(--pos-border)', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                 <div>
                   <span style={{ fontSize: 13, fontWeight: 600 }}>{t.payment_type?.toUpperCase()}</span>
-                  <span style={{ fontSize: 11, color: '#6b6760', marginLeft: 8 }}>{timeAgo(t.created_at)}</span>
+                  <span style={{ fontSize: 11, color: 'var(--pos-muted)', marginLeft: 8 }}>{timeAgo(t.created_at)}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Badge status={t.status} />
@@ -455,7 +455,7 @@ function ManagerDashboard({ session, notify }: { session: StaffSession; notify: 
                 </div>
               </div>
             ))}
-            {txns.length > 8 && <div style={{ fontSize: 12, color: '#6b6760', textAlign: 'center' }}>+{txns.length - 8} more</div>}
+            {txns.length > 8 && <div style={{ fontSize: 12, color: 'var(--pos-muted)', textAlign: 'center' }}>+{txns.length - 8} more</div>}
           </div>
         )}
       </Card>
@@ -493,8 +493,8 @@ export default function DashboardPage() {
   }
 
   if (!ready || !session) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9f8f6' }}>
-      <div style={{ color: '#6b6760', fontSize: 14 }}>Loading…</div>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }}>
+      <div style={{ color: 'var(--pos-muted)', fontSize: 14 }}>Loading…</div>
     </div>
   )
 
@@ -519,9 +519,9 @@ export default function DashboardPage() {
   const roleLabel = ROLE_LABEL[session.role] || session.role
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9f8f6', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       {/* Header */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #e5e2dc', padding: '0 20px', position: 'sticky', top: 0, zIndex: 100 }}>
+      <div style={{ background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '0 20px', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: 680, margin: '0 auto', height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 32, height: 32, borderRadius: 8, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -530,7 +530,7 @@ export default function DashboardPage() {
               </svg>
             </div>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1916', lineHeight: 1.2 }}>{session.name}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--pos-ink)', lineHeight: 1.2 }}>{session.name}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: roleColor, display: 'inline-block' }} />
                 <span style={{ fontSize: 11, color: roleColor, fontWeight: 600 }}>{roleLabel}</span>
@@ -538,7 +538,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <button onClick={logout}
-            style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #e5e2dc', background: 'transparent', color: '#6b6760', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
+            style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid var(--pos-border)', background: 'transparent', color: 'var(--pos-muted)', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
             Sign out
           </button>
         </div>
@@ -547,8 +547,8 @@ export default function DashboardPage() {
       {/* Content */}
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '20px 16px 60px' }}>
         <div style={{ marginBottom: 18 }}>
-          <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: '#1a1916' }}>{roleLabel} Dashboard</h1>
-          <div style={{ fontSize: 13, color: '#6b6760', marginTop: 2 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: 'var(--pos-ink)' }}>{roleLabel} Dashboard</h1>
+          <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginTop: 2 }}>
             {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
           </div>
         </div>

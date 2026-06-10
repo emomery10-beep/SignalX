@@ -10,6 +10,8 @@ interface PosCardPaymentProps {
   currencySymbol?: string
   ownerId: string
   staffId: string
+  stripeVerified?: boolean
+  defaultProvider?: 'stripe' | 'paystack'
   onPaymentComplete: () => void
   onPaymentFailed: (error: string) => void
 }
@@ -20,6 +22,8 @@ export default function PosCardPayment({
   currencySymbol = '£',
   ownerId,
   staffId,
+  stripeVerified: _stripeVerified,
+  defaultProvider: _defaultProvider,
   onPaymentComplete,
   onPaymentFailed,
 }: PosCardPaymentProps) {
@@ -78,7 +82,7 @@ export default function PosCardPayment({
         return
       }
       try {
-        const res = await fetch(`${API}/api/pos/payment/status?reference=${paymentRef}`, {
+        const res = await fetch(`${API}/api/pos/payment/status?payment_id=${paymentRef}`, {
           headers: { 'x-owner-id': ownerId, 'x-staff-id': staffId },
         })
         const data = await res.json()
@@ -134,7 +138,7 @@ export default function PosCardPayment({
       }
       setQrCode(data.qr_code)
       setCheckoutUrl(data.checkout_url)
-      setPaymentRef(data.reference || data.payment_id)
+      setPaymentRef(data.payment_id || data.reference)
       setStatus('waiting')
     } catch (err: any) {
       setStatus('failed')

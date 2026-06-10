@@ -3,7 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-10-16',
+  apiVersion: '2024-04-10',
 })
 
 /**
@@ -31,6 +31,50 @@ export async function POST(req: NextRequest) {
 
   // Handle events
   switch (event.type) {
+    case 'checkout.session.completed': {
+      const session = event.data.object as any
+      const transactionId = session.metadata?.transaction_id
+      const ownerId = session.metadata?.owner_id
+
+      if (transactionId) {
+        await service
+          .from('pos_payments')
+          .update({ status: 'completed', external_receipt: session.id, completed_at: new Date().toISOString() })
+          .eq('transaction_id', transactionId)
+          .eq('status', 'pending')
+
+        if (ownerId) {
+          await service
+            .from('pos_transactions')
+            .update({ payment_status: 'paid', payment_type: 'card' })
+            .eq('id', transactionId)
+            .eq('owner_id', ownerId)
+        }
+      } else if (session.id) {
+        const { data: payment } = await service
+          .from('pos_payments')
+          .select('id, owner_id, transaction_id')
+          .eq('external_reference', session.id)
+          .eq('status', 'pending')
+          .single()
+
+        if (payment) {
+          await service
+            .from('pos_payments')
+            .update({ status: 'completed', external_receipt: session.id, completed_at: new Date().toISOString() })
+            .eq('id', payment.id)
+
+          await service
+            .from('pos_transactions')
+            .update({ payment_status: 'paid', payment_type: 'card' })
+            .eq('id', payment.transaction_id)
+            .eq('owner_id', payment.owner_id)
+        }
+      }
+
+      break
+    }
+
     case 'payment_intent.succeeded': {
       const paymentIntent = event.data.object as Stripe.PaymentIntent
 
@@ -51,6 +95,17 @@ export async function POST(req: NextRequest) {
         })
         .eq('id', transactionId)
         .eq('owner_id', ownerId)
+
+      // Also update pos_payments so Realtime subscription fires
+      await service
+        .from('pos_payments')
+        .update({
+          status: 'completed',
+          external_receipt: paymentIntent.id,
+          completed_at: new Date().toISOString(),
+        })
+        .eq('transaction_id', transactionId)
+        .eq('status', 'pending')
 
       break
     }

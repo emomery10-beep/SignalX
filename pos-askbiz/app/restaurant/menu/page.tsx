@@ -144,13 +144,14 @@ export default function MenuPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/restaurant')} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 18 }}>←</button>
         <div style={{ fontWeight: 700, fontSize: 16, color: ACC }}>🍽️ Menu Management</div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           <button onClick={() => { setShowAdd(true); setNewItem(blankItem()) }}
+            className="pos-btn-primary"
             style={{ background: ACC, border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>+ Add Item</button>
           <button onClick={() => setShowCat(true)}
             style={{ background: '#334155', border: 'none', color: '#e2e8f0', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>+ Category</button>
@@ -159,7 +160,7 @@ export default function MenuPage() {
 
       {/* 86 Board */}
       {eightySix.length > 0 && (
-        <div style={{ background: '#7f1d1d', border: 'none', borderBottom: '1px solid #ef4444', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="pos-banner" style={{ background: '#7f1d1d', border: 'none', borderBottom: '1px solid #ef4444', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ color: '#fca5a5', fontWeight: 700, fontSize: 13 }}>🚫 86 Board:</span>
           <span style={{ color: '#fecaca', fontSize: 13 }}>{eightySix.map(e => e.item_name).join(' · ')}</span>
         </div>
@@ -197,11 +198,12 @@ export default function MenuPage() {
           )}
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
-            {displayItems.map(item => (
-              <div key={item.id} style={{
+            {displayItems.map((item, idx) => (
+              <div key={item.id} className="pos-item" style={{
                 background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 16,
                 opacity: !item.available || item.eighty_sixed ? 0.6 : 1,
                 borderLeft: item.eighty_sixed ? '3px solid #ef4444' : '3px solid transparent',
+                animationDelay: `${Math.min(idx, 8) * 40}ms`,
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                   <div style={{ flex: 1 }}>
@@ -255,7 +257,7 @@ export default function MenuPage() {
       {/* Edit Item Modal */}
       {editing && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 20 }}>
-          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: 480, maxHeight: '90vh', overflow: 'auto' }}>
+          <div className="pos-sheet" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: 480, maxHeight: '90vh', overflow: 'auto' }}>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Edit — {editing.name}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Name</label>
@@ -288,6 +290,7 @@ export default function MenuPage() {
               <button onClick={() => deleteItem(editing.id)} style={{ background: 'none', border: '1px solid #ef4444', color: '#ef4444', padding: '10px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>Delete</button>
               <button onClick={() => setEditing(null)} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>Cancel</button>
               <button onClick={async () => { await updateItem(editing.id, editing); setEditing(null) }}
+                className="pos-btn-primary"
                 style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>
                 Save Changes
               </button>
@@ -299,7 +302,7 @@ export default function MenuPage() {
       {/* Add Item Modal */}
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 20 }}>
-          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: 440, maxHeight: '90vh', overflow: 'auto' }}>
+          <div className="pos-sheet" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: 440, maxHeight: '90vh', overflow: 'auto' }}>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Add Menu Item</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Name *</label>
@@ -329,7 +332,8 @@ export default function MenuPage() {
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
               <button onClick={() => setShowAdd(false)} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>Cancel</button>
               <button onClick={saveItem} disabled={saving || !newItem.name?.trim()}
-                style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>
+                className="pos-btn-primary"
+                style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: saving || !newItem.name?.trim() ? 'not-allowed' : 'pointer', fontWeight: 700, opacity: saving || !newItem.name?.trim() ? 0.5 : 1 }}>
                 {saving ? 'Saving...' : 'Add to Menu'}
               </button>
             </div>
@@ -340,7 +344,7 @@ export default function MenuPage() {
       {/* Add Category Modal */}
       {showAddCat && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: 340 }}>
+          <div className="pos-sheet" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: 340 }}>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Add Category</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Name *</label>
@@ -351,7 +355,8 @@ export default function MenuPage() {
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
               <button onClick={() => setShowCat(false)} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>Cancel</button>
               <button onClick={saveCat} disabled={saving || !newCat.name.trim()}
-                style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>
+                className="pos-btn-primary"
+                style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: saving || !newCat.name.trim() ? 'not-allowed' : 'pointer', fontWeight: 700, opacity: saving || !newCat.name.trim() ? 0.5 : 1 }}>
                 {saving ? 'Saving...' : 'Add Category'}
               </button>
             </div>

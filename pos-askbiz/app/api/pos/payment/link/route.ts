@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Card payments not configured. Set up a payment provider in the admin Payments tab.' }, { status: 400 })
     }
 
-    let link: { url: string; checkoutUrl?: string; reference?: string } | null = null
+    let link: { url?: string; checkoutUrl?: string; reference?: string; id?: string } | null = null
 
     if (usePaystack) {
       // Paystack payment link — works with or without a subaccount
@@ -87,18 +87,28 @@ export async function POST(req: NextRequest) {
         amount: Math.round(transaction.total * 100),
         currency: 'KES',
         description: `AskBiz POS - Transaction ${transaction_id.slice(0, 8)}`,
+        subaccount: config.paystack_subaccount_id || undefined,
         metadata: {
           transaction_id,
           merchant_id: ownerId,
           payment_method,
-          subaccount: config.paystack_subaccount_id || undefined,
         },
       })
     } else if (useStripe) {
       // Stripe payment link
+      const COUNTRY_CURRENCY: Record<string, string> = {
+        gb: 'gbp', us: 'usd', ie: 'eur', de: 'eur', fr: 'eur', nl: 'eur',
+        be: 'eur', at: 'eur', es: 'eur', it: 'eur', pt: 'eur', fi: 'eur',
+        se: 'sek', no: 'nok', dk: 'dkk', pl: 'pln', cz: 'czk',
+        au: 'aud', nz: 'nzd', ca: 'cad', sg: 'sgd', hk: 'hkd',
+        jp: 'jpy', my: 'myr',
+        ke: 'kes', ng: 'ngn', gh: 'ghs', ug: 'ugx', tz: 'tzs', rw: 'rwf', za: 'zar',
+      }
+      const stripeCurrency = COUNTRY_CURRENCY[config.country?.toLowerCase() || ''] || 'usd'
+
       const stripeLink = await createStripePaymentLink({
         amount: Math.round(transaction.total * 100),
-        currency: config.country?.toLowerCase() === 'gb' ? 'gbp' : 'usd',
+        currency: stripeCurrency,
         description: `AskBiz POS - Transaction ${transaction_id.slice(0, 8)}`,
         connected_account_id: config.stripe_connected_account_id!,
         metadata: {
@@ -107,7 +117,7 @@ export async function POST(req: NextRequest) {
           payment_method,
         },
       })
-      link = { checkoutUrl: stripeLink.url }
+      link = { checkoutUrl: stripeLink.url, id: stripeLink.id }
     }
 
     // Generate QR code as data URL
@@ -129,7 +139,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Store payment record
-    const externalRef = (link as any)?.reference || (link as any)?.id
+    const externalRef = link?.reference || link?.id
     const { data: payment, error: paymentError } = await service
       .from('pos_payments')
       .insert({
@@ -137,7 +147,7 @@ export async function POST(req: NextRequest) {
         transaction_id,
         amount: transaction.total,
         payment_method: payment_method === 'apple_pay' ? 'apple_pay' : 'card',
-        provider: config?.payment_provider || 'paystack',
+        provider: useStripe ? 'stripe' : 'paystack',
         external_reference: externalRef,
         status: 'pending',
       })

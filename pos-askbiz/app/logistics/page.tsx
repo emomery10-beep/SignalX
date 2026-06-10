@@ -605,17 +605,17 @@ export default function LogisticsPage() {
   }
 
   // ── Styles ───────────────────────────────────────────────
-  const inputStyle: React.CSSProperties = { width: '100%', padding: '12px 14px', borderRadius: 10, border: '1.5px solid #e5e2dc', fontSize: 15, fontFamily: 'inherit', background: '#fff', color: '#1a1916', boxSizing: 'border-box', outline: 'none' }
+  const inputStyle: React.CSSProperties = { width: '100%', padding: '12px 14px', borderRadius: 10, border: '1.5px solid var(--pos-border)', fontSize: 15, fontFamily: 'inherit', background: 'var(--pos-surface)', color: 'var(--pos-ink)', boxSizing: 'border-box', outline: 'none' }
   const btnPrimary: React.CSSProperties = { flex: 1, padding: '14px', borderRadius: 12, background: ACC, color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
-  const btnSecondary: React.CSSProperties = { flex: 1, padding: '14px', borderRadius: 12, background: 'transparent', color: '#6b6760', fontSize: 14, fontWeight: 600, border: '1.5px solid #e5e2dc', cursor: 'pointer', fontFamily: 'inherit' }
+  const btnSecondary: React.CSSProperties = { flex: 1, padding: '14px', borderRadius: 12, background: 'transparent', color: 'var(--pos-muted)', fontSize: 14, fontWeight: 600, border: '1.5px solid var(--pos-border)', cursor: 'pointer', fontFamily: 'inherit' }
 
-  if (!staff) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9f8f6' }}>Loading…</div>
+  if (!staff) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }}>Loading…</div>
 
   // ═══════════════════════════════════════════════════════════
   // CAMERA HOME SCREEN
   // ═══════════════════════════════════════════════════════════
   if (screen === 'camera') return (
-    <div style={{ minHeight: '100vh', background: '#000', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#000', display: 'flex', flexDirection: 'column', position: 'relative' }}>
       {/* Top bar */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -647,7 +647,7 @@ export default function LogisticsPage() {
 
         {/* Scan error */}
         {scanError && (
-          <div style={{ position: 'absolute', bottom: 120, left: 16, right: 16, background: 'rgba(220,38,38,.9)', borderRadius: 12, padding: '12px 16px', color: '#fff', fontSize: 13, textAlign: 'center' }}>
+          <div className="pos-banner" style={{ position: 'absolute', bottom: 120, left: 16, right: 16, background: 'rgba(220,38,38,.9)', borderRadius: 12, padding: '12px 16px', color: '#fff', fontSize: 13, textAlign: 'center' }}>
             {scanError}
             <button onClick={resetToCamera} style={{ display: 'block', margin: '8px auto 0', background: 'rgba(255,255,255,.2)', border: 'none', borderRadius: 8, padding: '6px 16px', color: '#fff', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
               Try again
@@ -697,22 +697,22 @@ export default function LogisticsPage() {
     const conf = Math.round((scanResult.confidence || 0) * 100)
 
     return (
-      <div style={{ minHeight: '100vh', background: '#f9f8f6', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
         {/* Header */}
-        <div style={{ background: '#fff', borderBottom: '1px solid #e5e2dc', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={resetToCamera} style={{ width: 36, height: 36, borderRadius: 10, background: '#f4f3f1', border: 'none', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1916' }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--pos-ink)' }}>
               {dt === 'waybill' ? '📦 Waybill detected' : dt === 'invoice' ? '🧾 Invoice detected' : '🧾 Receipt detected'}
             </div>
-            <div style={{ fontSize: 12, color: '#6b6760' }}>{conf}% confidence</div>
+            <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{conf}% confidence</div>
           </div>
         </div>
 
         {/* Captured image thumbnail */}
         {capturedImage && (
-          <div style={{ padding: '12px 20px 0' }}>
-            <img src={capturedImage} alt="scan" style={{ width: '100%', borderRadius: 12, maxHeight: 160, objectFit: 'cover', border: '1px solid #e5e2dc' }} />
+          <div className="pos-reveal" style={{ padding: '12px 20px 0' }}>
+            <img src={capturedImage} alt="scan" style={{ width: '100%', borderRadius: 12, maxHeight: 160, objectFit: 'cover', border: '1px solid var(--pos-border)' }} />
           </div>
         )}
 
@@ -735,7 +735,7 @@ export default function LogisticsPage() {
             <Field label="Total amount" value={editFields.total_amount} onChange={v => setEditFields(p => ({ ...p, total_amount: v }))} inputMode="decimal" />
             <Field label="Currency" value={editFields.currency || 'KES'} onChange={v => setEditFields(p => ({ ...p, currency: v }))} />
             <Field label="Date" value={editFields.date} onChange={v => setEditFields(p => ({ ...p, date: v }))} />
-            <div style={{ fontSize: 12, color: '#6b6760' }}>
+            <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>
               Category:
               <select value={editFields.category || ''} onChange={e => setEditFields(p => ({ ...p, category: e.target.value || null }))} style={{ ...inputStyle, marginTop: 4 }}>
                 <option value="">— Select —</option>
@@ -761,7 +761,7 @@ export default function LogisticsPage() {
           {scanError && <div style={{ color: RED, fontSize: 13, textAlign: 'center' }}>{scanError}</div>}
 
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-            <button onClick={handleConfirm} disabled={saving} style={{ ...btnPrimary, opacity: saving ? 0.6 : 1 }}>
+            <button className="pos-btn-primary" onClick={handleConfirm} disabled={saving} style={{ ...btnPrimary, opacity: saving ? 0.6 : 1 }}>
               {saving ? 'Saving…' : '✓ Confirm'}
             </button>
             <button onClick={resetToCamera} style={btnSecondary}>Re-scan</button>
@@ -775,12 +775,12 @@ export default function LogisticsPage() {
   // PARCELS LIST (Release mode — Out)
   // ═══════════════════════════════════════════════════════════
   if (screen === 'parcels') return (
-    <div style={{ minHeight: '100vh', background: '#f9f8f6', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <div style={{ background: '#fff', borderBottom: '1px solid #e5e2dc', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <div style={{ background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={resetToCamera} style={{ width: 36, height: 36, borderRadius: 10, background: '#f4f3f1', border: 'none', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 15, fontWeight: 700 }}>📤 Release Parcel</div>
-          <div style={{ fontSize: 12, color: '#6b6760' }}>Search by name, phone, or tracking #</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>Search by name, phone, or tracking #</div>
         </div>
       </div>
 
@@ -795,17 +795,17 @@ export default function LogisticsPage() {
       </div>
 
       <div style={{ padding: '0 20px' }}>
-        {searchLoading && <div style={{ color: '#6b6760', fontSize: 13, padding: '12px 0' }}>Searching…</div>}
+        {searchLoading && <div style={{ color: 'var(--pos-muted)', fontSize: 13, padding: '12px 0' }}>Searching…</div>}
         {!searchLoading && searchQuery && parcels.length === 0 && (
-          <div style={{ color: '#6b6760', fontSize: 13, padding: '12px 0', textAlign: 'center' }}>No parcels found at this branch</div>
+          <div style={{ color: 'var(--pos-muted)', fontSize: 13, padding: '12px 0', textAlign: 'center' }}>No parcels found at this branch</div>
         )}
-        {parcels.map(p => (
-          <button key={p.id} onClick={() => { setSelectedParcel(p); setCollectName(p.receiver_name || ''); setScreen('release') }}
-            style={{ width: '100%', background: '#fff', border: '1px solid #e5e2dc', borderRadius: 12, padding: '14px 16px', marginBottom: 8, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {parcels.map((p, idx) => (
+          <button key={p.id} className="pos-item" onClick={() => { setSelectedParcel(p); setCollectName(p.receiver_name || ''); setScreen('release') }}
+            style={{ width: '100%', background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 12, padding: '14px 16px', marginBottom: 8, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', justifyContent: 'space-between', alignItems: 'center', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1916' }}>{p.tracking_number}</div>
-              <div style={{ fontSize: 13, color: '#6b6760', marginTop: 2 }}>To: {p.receiver_name || '—'} {p.receiver_phone ? `· ${p.receiver_phone}` : ''}</div>
-              <div style={{ fontSize: 12, color: '#9b9690', marginTop: 2 }}>{p.description || '—'} · {timeAgo(p.created_at)}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--pos-ink)' }}>{p.tracking_number}</div>
+              <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginTop: 2 }}>To: {p.receiver_name || '—'} {p.receiver_phone ? `· ${p.receiver_phone}` : ''}</div>
+              <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 2 }}>{p.description || '—'} · {timeAgo(p.created_at)}</div>
             </div>
             <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: (STATUS_COLOR[p.status] || '#6b7280') + '18', color: STATUS_COLOR[p.status] || '#6b7280' }}>
               {STATUS_LABEL[p.status] || p.status}
@@ -820,18 +820,18 @@ export default function LogisticsPage() {
   // RELEASE CONFIRM
   // ═══════════════════════════════════════════════════════════
   if (screen === 'release' && selectedParcel) return (
-    <div style={{ minHeight: '100vh', background: '#f9f8f6', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <div style={{ background: '#fff', borderBottom: '1px solid #e5e2dc', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <div style={{ background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => setScreen('parcels')} style={{ width: 36, height: 36, borderRadius: 10, background: '#f4f3f1', border: 'none', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
         <div style={{ fontSize: 15, fontWeight: 700 }}>Release {selectedParcel.tracking_number}</div>
       </div>
 
       <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ background: '#fff', border: '1px solid #e5e2dc', borderRadius: 14, padding: '16px 18px' }}>
-          <div style={{ fontSize: 12, color: '#6b6760', marginBottom: 8 }}>Parcel details</div>
+        <div style={{ background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 14, padding: '16px 18px' }}>
+          <div style={{ fontSize: 12, color: 'var(--pos-muted)', marginBottom: 8 }}>Parcel details</div>
           <div style={{ fontSize: 14, fontWeight: 600 }}>{selectedParcel.receiver_name || '—'}</div>
-          <div style={{ fontSize: 13, color: '#6b6760' }}>{selectedParcel.receiver_phone || ''}</div>
-          <div style={{ fontSize: 13, color: '#6b6760', marginTop: 4 }}>{selectedParcel.description || '—'}</div>
+          <div style={{ fontSize: 13, color: 'var(--pos-muted)' }}>{selectedParcel.receiver_phone || ''}</div>
+          <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginTop: 4 }}>{selectedParcel.description || '—'}</div>
           {selectedParcel.fee_charged ? (
             <div style={{ fontSize: 14, fontWeight: 700, color: ACC, marginTop: 8 }}>Fee: KES {selectedParcel.fee_charged.toLocaleString()}</div>
           ) : null}
@@ -842,7 +842,7 @@ export default function LogisticsPage() {
         {scanError && <div style={{ color: RED, fontSize: 13, textAlign: 'center' }}>{scanError}</div>}
 
         <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-          <button onClick={handleRelease} disabled={saving} style={{ ...btnPrimary, opacity: saving ? 0.6 : 1 }}>
+          <button className="pos-btn-primary" onClick={handleRelease} disabled={saving} style={{ ...btnPrimary, opacity: saving ? 0.6 : 1 }}>
             {saving ? 'Releasing…' : '✓ Release Parcel'}
           </button>
           <button onClick={() => setScreen('parcels')} style={btnSecondary}>Back</button>
@@ -855,14 +855,14 @@ export default function LogisticsPage() {
   // SUCCESS SCREEN
   // ═══════════════════════════════════════════════════════════
   if (screen === 'success') return (
-    <div style={{ minHeight: '100vh', background: '#f9f8f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <div style={{ width: 72, height: 72, borderRadius: 36, background: 'rgba(22,163,74,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5" /></svg>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <div style={{ width: 72, height: 72, borderRadius: 36, background: 'var(--pos-success-pale)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+        <svg className="pos-success-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5" /></svg>
       </div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: '#1a1916', marginBottom: 4 }}>{successMsg}</div>
+      <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--pos-ink)', marginBottom: 4 }}>{successMsg}</div>
       {successTracking && <div style={{ fontSize: 16, color: ACC, fontWeight: 700, marginBottom: 8 }}>{successTracking}</div>}
-      <div style={{ fontSize: 13, color: '#6b6760', marginBottom: 32 }}>📦 {todayIn} received · {todayOut} released today</div>
-      <button onClick={resetToCamera} style={{ ...btnPrimary, width: '100%', maxWidth: 320 }}>
+      <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 32 }}>📦 {todayIn} received · {todayOut} released today</div>
+      <button className="pos-btn-primary" onClick={resetToCamera} style={{ ...btnPrimary, width: '100%', maxWidth: 320 }}>
         {staff?.role === 'driver' ? '← Back to my parcels' : '📷 Scan next'}
       </button>
     </div>
@@ -872,22 +872,22 @@ export default function LogisticsPage() {
   // DRIVER HOME
   // ═══════════════════════════════════════════════════════════
   if (screen === 'driver_home') return (
-    <div style={{ minHeight: '100vh', background: '#f9f8f6', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       {/* Header */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #e5e2dc', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ fontSize: 16 }}>🚛</span>
           </div>
           <div>
             <div style={{ fontSize: 15, fontWeight: 700 }}>{staff?.name}</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#6b6760' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--pos-muted)' }}>
               <div style={{ width: 6, height: 6, borderRadius: 3, background: geoCoords ? GREEN : AMBER }} />
               Driver · {myParcels.length} parcels
             </div>
           </div>
         </div>
-        <button onClick={() => { localStorage.removeItem('pos_staff'); router.push('/') }} style={{ background: '#f4f3f1', border: 'none', borderRadius: 8, padding: '6px 12px', color: '#6b6760', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Sign out</button>
+        <button onClick={() => { localStorage.removeItem('pos_staff'); router.push('/') }} style={{ background: '#f4f3f1', border: 'none', borderRadius: 8, padding: '6px 12px', color: 'var(--pos-muted)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Sign out</button>
       </div>
 
       <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -909,20 +909,20 @@ export default function LogisticsPage() {
         </div>
 
         {/* My parcels */}
-        <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1916', marginTop: 4 }}>My Parcels</div>
-        {driverLoading && <div style={{ color: '#6b6760', fontSize: 13 }}>Loading…</div>}
+        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--pos-ink)', marginTop: 4 }}>My Parcels</div>
+        {driverLoading && <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>Loading…</div>}
         {!driverLoading && myParcels.length === 0 && (
-          <div style={{ background: '#fff', border: '1px solid #e5e2dc', borderRadius: 12, padding: '24px 16px', textAlign: 'center', color: '#6b6760', fontSize: 13 }}>
+          <div style={{ background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 12, padding: '24px 16px', textAlign: 'center', color: 'var(--pos-muted)', fontSize: 13 }}>
             No parcels assigned to you yet
           </div>
         )}
-        {myParcels.map(p => (
-          <div key={p.id} style={{ background: '#fff', border: '1px solid #e5e2dc', borderRadius: 12, padding: '14px 16px' }}>
+        {myParcels.map((p, idx) => (
+          <div key={p.id} className="pos-item" style={{ background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 12, padding: '14px 16px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700 }}>{p.tracking_number}</div>
-                <div style={{ fontSize: 13, color: '#6b6760', marginTop: 2 }}>To: {p.receiver_name || '—'} · {p.destination_city || ''}</div>
-                {p.description && <div style={{ fontSize: 12, color: '#9b9690', marginTop: 2 }}>{p.description}</div>}
+                <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginTop: 2 }}>To: {p.receiver_name || '—'} · {p.destination_city || ''}</div>
+                {p.description && <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 2 }}>{p.description}</div>}
               </div>
               <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20, background: (STATUS_COLOR[p.status] || '#6b7280') + '18', color: STATUS_COLOR[p.status] || '#6b7280', whiteSpace: 'nowrap' }}>
                 {STATUS_LABEL[p.status] || p.status}
@@ -930,7 +930,7 @@ export default function LogisticsPage() {
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {['assigned', 'loaded'].includes(p.status) && (
-                <button onClick={() => handlePickup(p)} disabled={saving} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: ACC, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                <button onClick={() => handlePickup(p)} disabled={saving} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: ACC, color: '#fff', fontSize: 12, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: saving ? 0.5 : 1 }}>
                   📷 Pick up
                 </button>
               )}
@@ -956,7 +956,7 @@ export default function LogisticsPage() {
   // DRIVER DELIVER — camera + confirm
   // ═══════════════════════════════════════════════════════════
   if (screen === 'driver_deliver' && selectedParcel) return (
-    <div style={{ minHeight: '100vh', background: '#000', display: 'flex', flexDirection: 'column' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#000', display: 'flex', flexDirection: 'column' }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => { stopCamera(); setScreen('driver_home') }} style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,.15)', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
         <div style={{ background: 'rgba(255,255,255,.15)', backdropFilter: 'blur(10px)', borderRadius: 20, padding: '6px 14px' }}>
@@ -986,7 +986,7 @@ export default function LogisticsPage() {
   // DRIVER CHECKPOINT — quick snap + GPS
   // ═══════════════════════════════════════════════════════════
   if (screen === 'driver_checkpoint' && selectedParcel) return (
-    <div style={{ minHeight: '100vh', background: '#000', display: 'flex', flexDirection: 'column' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#000', display: 'flex', flexDirection: 'column' }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => { stopCamera(); setScreen('driver_home') }} style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,.15)', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
         <div style={{ background: 'rgba(255,255,255,.15)', backdropFilter: 'blur(10px)', borderRadius: 20, padding: '6px 14px' }}>
@@ -1016,20 +1016,20 @@ export default function LogisticsPage() {
   // DRIVER FAILED DELIVERY
   // ═══════════════════════════════════════════════════════════
   if (screen === 'driver_fail' && selectedParcel) return (
-    <div style={{ minHeight: '100vh', background: '#f9f8f6', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <div style={{ background: '#fff', borderBottom: '1px solid #e5e2dc', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <div style={{ background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => setScreen('driver_home')} style={{ width: 36, height: 36, borderRadius: 10, background: '#f4f3f1', border: 'none', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
         <div>
           <div style={{ fontSize: 15, fontWeight: 700, color: RED }}>Failed Delivery</div>
-          <div style={{ fontSize: 12, color: '#6b6760' }}>{selectedParcel.tracking_number} · {selectedParcel.receiver_name}</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{selectedParcel.tracking_number} · {selectedParcel.receiver_name}</div>
         </div>
       </div>
       <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1916' }}>Reason</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)' }}>Reason</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {FAIL_REASONS.map(r => (
             <button key={r} onClick={() => setFailReason(r)}
-              style={{ padding: '8px 14px', borderRadius: 20, border: failReason === r ? `2px solid ${RED}` : '1.5px solid #e5e2dc', background: failReason === r ? 'rgba(220,38,38,.08)' : '#fff', color: failReason === r ? RED : '#1a1916', fontSize: 13, fontWeight: failReason === r ? 700 : 500, cursor: 'pointer', fontFamily: 'inherit' }}>
+              style={{ padding: '8px 14px', borderRadius: 20, border: failReason === r ? `2px solid ${RED}` : '1.5px solid var(--pos-border)', background: failReason === r ? 'var(--pos-danger-pale)' : 'var(--pos-surface)', color: failReason === r ? RED : 'var(--pos-ink)', fontSize: 13, fontWeight: failReason === r ? 700 : 500, cursor: 'pointer', fontFamily: 'inherit' }}>
               {r}
             </button>
           ))}
@@ -1053,8 +1053,8 @@ export default function LogisticsPage() {
   if (screen === 'inspection') {
     // If no truck selected yet, show truck picker
     if (!selectedTruck) return (
-      <div style={{ minHeight: '100vh', background: '#f9f8f6', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-        <div style={{ background: '#fff', borderBottom: '1px solid #e5e2dc', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+        <div style={{ background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={() => setScreen('driver_home')} style={{ width: 36, height: 36, borderRadius: 10, background: '#f4f3f1', border: 'none', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
           <div style={{ fontSize: 15, fontWeight: 700 }}>🔍 Vehicle Inspection</div>
         </div>
@@ -1062,18 +1062,18 @@ export default function LogisticsPage() {
           <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
             {(['pre_trip', 'post_trip'] as const).map(t => (
               <button key={t} onClick={() => setInspectionType(t)}
-                style={{ flex: 1, padding: '10px', borderRadius: 10, border: inspectionType === t ? `2px solid ${ACC}` : '1.5px solid #e5e2dc', background: inspectionType === t ? ACC_LIGHT : '#fff', color: inspectionType === t ? ACC : '#1a1916', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                {t === 'pre_trip' ? '🌅 Pre-trip' : '🌆 Post-trip'}
+                style={{ flex: 1, padding: '10px', borderRadius: 10, border: inspectionType === t ? `2px solid ${ACC}` : '1.5px solid var(--pos-border)', background: inspectionType === t ? ACC_LIGHT : 'var(--pos-surface)', color: inspectionType === t ? ACC : 'var(--pos-ink)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+  {t === 'pre_trip' ? '🌅 Pre-trip' : '🌆 Post-trip'}
               </button>
             ))}
           </div>
           <div style={{ fontSize: 13, fontWeight: 600 }}>Select truck</div>
-          {trucks.length === 0 && <div style={{ color: '#6b6760', fontSize: 13 }}>No trucks available</div>}
+          {trucks.length === 0 && <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>No trucks available</div>}
           {trucks.map(t => (
             <button key={t.id} onClick={() => { setSelectedTruck(t); startCamera() }}
-              style={{ width: '100%', background: '#fff', border: '1px solid #e5e2dc', borderRadius: 12, padding: '14px 16px', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
+              style={{ width: '100%', background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 12, padding: '14px 16px', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
               <div style={{ fontSize: 15, fontWeight: 700 }}>{t.plate_number}</div>
-              {t.make_model && <div style={{ fontSize: 12, color: '#6b6760' }}>{t.make_model}</div>}
+              {t.make_model && <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{t.make_model}</div>}
             </button>
           ))}
         </div>
@@ -1083,7 +1083,7 @@ export default function LogisticsPage() {
     // Guided photo capture
     const step = INSPECTION_STEPS[inspectionStep]
     return (
-      <div style={{ minHeight: '100vh', background: '#000', display: 'flex', flexDirection: 'column' }}>
+      <div className="pos-screen" style={{ minHeight: '100vh', background: '#000', display: 'flex', flexDirection: 'column' }}>
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, padding: '12px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <button onClick={() => { stopCamera(); setSelectedTruck(null); setScreen('driver_home') }} style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,.15)', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
@@ -1120,12 +1120,12 @@ export default function LogisticsPage() {
   // INSPECTION REVIEW — after all 6 photos
   // ═══════════════════════════════════════════════════════════
   if (screen === 'inspection_done') return (
-    <div style={{ minHeight: '100vh', background: '#f9f8f6', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <div style={{ background: '#fff', borderBottom: '1px solid #e5e2dc', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+      <div style={{ background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => { setScreen('driver_home'); setSelectedTruck(null) }} style={{ width: 36, height: 36, borderRadius: 10, background: '#f4f3f1', border: 'none', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
         <div>
           <div style={{ fontSize: 15, fontWeight: 700 }}>Review Inspection</div>
-          <div style={{ fontSize: 12, color: '#6b6760' }}>{selectedTruck?.plate_number} · {inspectionType === 'pre_trip' ? 'Pre-trip' : 'Post-trip'}</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{selectedTruck?.plate_number} · {inspectionType === 'pre_trip' ? 'Pre-trip' : 'Post-trip'}</div>
         </div>
       </div>
 
@@ -1135,11 +1135,11 @@ export default function LogisticsPage() {
           {INSPECTION_STEPS.map(s => (
             <div key={s.key} style={{ position: 'relative' }}>
               {inspectionPhotos[s.key] ? (
-                <img src={inspectionPhotos[s.key]} alt={s.label} style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', borderRadius: 10, border: '1px solid #e5e2dc' }} />
+                <img src={inspectionPhotos[s.key]} alt={s.label} style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', borderRadius: 10, border: '1px solid var(--pos-border)' }} />
               ) : (
-                <div style={{ width: '100%', aspectRatio: '4/3', borderRadius: 10, background: '#f4f3f1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#6b6760' }}>Missing</div>
+                <div style={{ width: '100%', aspectRatio: '4/3', borderRadius: 10, background: '#f4f3f1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'var(--pos-muted)' }}>Missing</div>
               )}
-              <div style={{ fontSize: 10, color: '#6b6760', textAlign: 'center', marginTop: 4 }}>{s.icon} {s.label}</div>
+              <div style={{ fontSize: 10, color: 'var(--pos-muted)', textAlign: 'center', marginTop: 4 }}>{s.icon} {s.label}</div>
             </div>
           ))}
         </div>
@@ -1149,7 +1149,7 @@ export default function LogisticsPage() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {['Tyre wear', 'Body damage', 'Light broken', 'Mirror damaged', 'Cargo area dirty', 'Fluid leak', 'Brake issue'].map(issue => (
             <button key={issue} onClick={() => setFlaggedIssues(prev => prev.includes(issue) ? prev.filter(i => i !== issue) : [...prev, issue])}
-              style={{ padding: '6px 12px', borderRadius: 20, border: flaggedIssues.includes(issue) ? `2px solid ${RED}` : '1.5px solid #e5e2dc', background: flaggedIssues.includes(issue) ? 'rgba(220,38,38,.08)' : '#fff', color: flaggedIssues.includes(issue) ? RED : '#1a1916', fontSize: 12, fontWeight: flaggedIssues.includes(issue) ? 700 : 500, cursor: 'pointer', fontFamily: 'inherit' }}>
+              style={{ padding: '6px 12px', borderRadius: 20, border: flaggedIssues.includes(issue) ? `2px solid ${RED}` : '1.5px solid var(--pos-border)', background: flaggedIssues.includes(issue) ? 'var(--pos-danger-pale)' : 'var(--pos-surface)', color: flaggedIssues.includes(issue) ? RED : 'var(--pos-ink)', fontSize: 12, fontWeight: flaggedIssues.includes(issue) ? 700 : 500, cursor: 'pointer', fontFamily: 'inherit' }}>
               {issue}
             </button>
           ))}
@@ -1160,7 +1160,7 @@ export default function LogisticsPage() {
         {scanError && <div style={{ color: RED, fontSize: 13, textAlign: 'center' }}>{scanError}</div>}
 
         <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-          <button onClick={submitInspection} disabled={saving}
+          <button className="pos-btn-primary" onClick={submitInspection} disabled={saving}
             style={{ ...btnPrimary, background: flaggedIssues.length > 0 ? AMBER : GREEN, opacity: saving ? 0.6 : 1 }}>
             {saving ? 'Saving…' : flaggedIssues.length > 0 ? `⚠ Submit with ${flaggedIssues.length} issue${flaggedIssues.length !== 1 ? 's' : ''}` : '✓ Submit — all clear'}
           </button>
@@ -1178,12 +1178,12 @@ function Field({ label, value, onChange, inputMode }: {
 }) {
   return (
     <div>
-      <div style={{ fontSize: 12, color: '#6b6760', marginBottom: 4, fontWeight: 500 }}>{label}</div>
+      <div style={{ fontSize: 12, color: 'var(--pos-muted)', marginBottom: 4, fontWeight: 500 }}>{label}</div>
       <input
         value={value || ''}
         onChange={e => onChange(e.target.value)}
         inputMode={inputMode as any}
-        style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid #e5e2dc', fontSize: 15, fontFamily: 'inherit', background: '#fff', color: '#1a1916', boxSizing: 'border-box', outline: 'none' }}
+        style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid var(--pos-border)', fontSize: 15, fontFamily: 'inherit', background: 'var(--pos-surface)', color: 'var(--pos-ink)', boxSizing: 'border-box', outline: 'none' }}
       />
     </div>
   )

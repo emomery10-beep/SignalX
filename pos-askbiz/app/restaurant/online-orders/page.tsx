@@ -164,7 +164,7 @@ export default function OnlineOrdersPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/restaurant')} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 18 }}>←</button>
@@ -221,7 +221,7 @@ export default function OnlineOrdersPage() {
 
         {/* Order cards */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {filtered.map(order => {
+          {filtered.map((order, idx) => {
             const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending
             const isPending  = order.status === 'pending'
             const isAccepted = order.status === 'accepted'
@@ -229,7 +229,7 @@ export default function OnlineOrdersPage() {
             const urgencyColor = isPending ? '#ef4444' : cfg.color
 
             return (
-              <div key={order.id} style={{ background: '#1e293b', border: `2px solid ${isPending ? '#ef4444' : '#334155'}`, borderRadius: 12, overflow: 'hidden' }}>
+              <div key={order.id} className="pos-item" style={{ background: '#1e293b', border: `2px solid ${isPending ? '#ef4444' : '#334155'}`, borderRadius: 12, overflow: 'hidden', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                 {/* Card header */}
                 <div style={{ background: cfg.bg, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                   <div>
@@ -268,24 +268,24 @@ export default function OnlineOrdersPage() {
                     {isPending && (
                       <>
                         <button onClick={() => accept(order.id)} disabled={actioning === order.id}
-                          style={{ flex: 2, background: '#22c55e', border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
+                          className="pos-btn-primary" style={{ flex: 2, background: '#22c55e', border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: actioning === order.id ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 14, opacity: actioning === order.id ? 0.5 : 1 }}>
                           {actioning === order.id ? '...' : '✓ Accept'}
                         </button>
                         <button onClick={() => reject(order.id)} disabled={actioning === order.id}
-                          style={{ flex: 1, background: '#334155', border: 'none', color: '#ef4444', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+                          style={{ flex: 1, background: '#334155', border: 'none', color: '#ef4444', padding: '10px', borderRadius: 8, cursor: actioning === order.id ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: 13, opacity: actioning === order.id ? 0.5 : 1 }}>
                           Reject
                         </button>
                       </>
                     )}
                     {isAccepted && (
                       <button onClick={() => markReady(order.id)} disabled={actioning === order.id}
-                        style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
+                        style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: actioning === order.id ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 14, opacity: actioning === order.id ? 0.5 : 1 }}>
                         {actioning === order.id ? '...' : '🔔 Mark Ready'}
                       </button>
                     )}
                     {isReady && (
                       <button onClick={() => markCollected(order.id)} disabled={actioning === order.id}
-                        style={{ flex: 1, background: '#22c55e', border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
+                        style={{ flex: 1, background: '#22c55e', border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: actioning === order.id ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 14, opacity: actioning === order.id ? 0.5 : 1 }}>
                         {actioning === order.id ? '...' : '✅ Collected'}
                       </button>
                     )}
@@ -299,7 +299,7 @@ export default function OnlineOrdersPage() {
         {!loading && filtered.length === 0 && filterStatus !== 'pending' && (
           <div style={{ textAlign: 'center', padding: 60, color: '#64748b' }}>
             <div style={{ fontSize: 40, marginBottom: 8 }}>📱</div>
-            <div>No orders with this status.</div>
+            <div>No orders with this status yet.</div>
           </div>
         )}
       </div>
@@ -307,7 +307,7 @@ export default function OnlineOrdersPage() {
       {/* Add Manual Order Modal */}
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 20 }}>
-          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto' }}>
+          <div className="pos-sheet" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Add Phone/Walk-in Order</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -361,7 +361,7 @@ export default function OnlineOrdersPage() {
             <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
               <button onClick={() => setShowAdd(false)} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '11px', borderRadius: 8, cursor: 'pointer' }}>Cancel</button>
               <button onClick={saveManualOrder} disabled={saving || !addForm.customer_name}
-                style={{ flex: 2, background: ACC, border: 'none', color: '#fff', padding: '11px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, opacity: !addForm.customer_name ? 0.5 : 1 }}>
+                className="pos-btn-primary" style={{ flex: 2, background: ACC, border: 'none', color: '#fff', padding: '11px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, opacity: !addForm.customer_name ? 0.5 : 1 }}>
                 {saving ? '...' : '+ Add Order'}
               </button>
             </div>

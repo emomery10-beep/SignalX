@@ -185,7 +185,7 @@ export default function SalonProducts() {
   const card: React.CSSProperties = { background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20, marginBottom: 20 }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -200,7 +200,7 @@ export default function SalonProducts() {
       <div style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
         {/* Low stock alerts */}
         {lowStock.length > 0 && (
-          <div style={{ background: '#451a03', border: `1px solid ${C.warn}`, borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          <div className="pos-banner" style={{ background: '#451a03', border: `1px solid ${C.warn}`, borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <span style={{ fontSize: 18 }}>⚠️</span>
             <div>
               <div style={{ fontWeight: 700, color: C.warn, fontSize: 13 }}>Low Stock — {lowStock.length} item{lowStock.length !== 1 ? 's' : ''}</div>
@@ -223,12 +223,12 @@ export default function SalonProducts() {
                 <div>Name</div><div>Stock</div><div>Price</div><div>Cost</div><div>Margin</div><div>Units Sold</div>
               </div>
               {loading && <div style={{ padding: 20, color: C.dim, fontSize: 13 }}>Loading…</div>}
-              {!loading && filtered.length === 0 && <div style={{ padding: 20, color: C.dim, fontSize: 13, textAlign: 'center' }}>No products found.</div>}
-              {filtered.map(p => {
+              {!loading && filtered.length === 0 && <div style={{ padding: 20, color: C.dim, fontSize: 13, textAlign: 'center' }}>{search.trim() ? 'No products match your search.' : 'No products yet — add your first product to get started.'}</div>}
+              {filtered.map((p, idx) => {
                 const m = margin(p)
                 const low = p.stock_qty <= (p.low_stock_threshold || 5)
                 return (
-                  <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '2fr 0.8fr 0.9fr 0.9fr 0.8fr 0.9fr', gap: 8, padding: '12px 20px', borderBottom: '1px solid #283548', fontSize: 13, alignItems: 'center' }}>
+                  <div key={p.id} className="pos-item" style={{ display: 'grid', gridTemplateColumns: '2fr 0.8fr 0.9fr 0.9fr 0.8fr 0.9fr', gap: 8, padding: '12px 20px', borderBottom: '1px solid #283548', fontSize: 13, alignItems: 'center', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                     <div style={{ fontWeight: 600 }}>{p.name}{p.sku && <span style={{ color: C.dim, fontWeight: 400, marginLeft: 6, fontSize: 11 }}>{p.sku}</span>}</div>
                     <div style={{ color: low ? C.bad : '#e2e8f0', fontWeight: low ? 700 : 400 }}>{p.stock_qty}{low && ' ⚠️'}</div>
                     <div>{sym}{(p.sale_price || 0).toFixed(2)}</div>
@@ -248,7 +248,7 @@ export default function SalonProducts() {
           <div style={{ fontSize: 12, color: C.dim, marginBottom: 14 }}>Track professional-use product per service to capture cost-per-service.</div>
 
           {scanError && (
-            <div style={{ background: '#451a03', border: `1px solid ${C.warn}`, borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: '#fcd34d' }}>⚠️ {scanError}</div>
+            <div className="pos-banner" style={{ background: '#451a03', border: `1px solid ${C.warn}`, borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: '#fcd34d' }}>⚠️ {scanError}</div>
           )}
           {scanActive && (
             <div style={{ marginBottom: 14 }}>
@@ -265,14 +265,14 @@ export default function SalonProducts() {
             <input style={inputStyle} placeholder="Linked service" value={form.service} onChange={e => setForm({ ...form, service: e.target.value })} />
             <div style={{ display: 'flex', gap: 8 }}>
               {!scanActive && <button type="button" onClick={startScan} style={{ background: '#334155', border: 'none', color: '#e2e8f0', padding: '9px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>📷 Scan</button>}
-              <button type="submit" style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Log</button>
+              <button type="submit" className="pos-btn-primary" style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Log</button>
             </div>
           </form>
 
           {usage.length > 0 && (
             <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {usage.map(u => (
-                <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '10px 14px', fontSize: 13 }}>
+              {usage.map((u, idx) => (
+                <div key={u.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '10px 14px', fontSize: 13, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                   <span style={{ fontWeight: 600, flex: 1 }}>{u.product_name}</span>
                   <span style={{ color: C.muted }}>{u.amount_used ? `${u.amount_used}${u.unit || ''}` : '—'}</span>
                   <span style={{ color: C.muted }}>{u.service_name || 'General'}</span>

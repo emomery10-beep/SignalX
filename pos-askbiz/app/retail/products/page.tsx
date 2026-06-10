@@ -208,7 +208,7 @@ function RetailProducts() {
   const td: React.CSSProperties = { padding: '12px', fontSize: 13, borderBottom: '1px solid #1e293b' }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={() => router.push('/retail')} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>←</button>
@@ -218,7 +218,7 @@ function RetailProducts() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => { setShowAdd(true); setStage('idle') }} style={{ background: ACC, border: 'none', color: '#fff', padding: '10px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+          <button className="pos-btn-primary" onClick={() => { setShowAdd(true); setStage('idle') }} style={{ background: ACC, border: 'none', color: '#fff', padding: '10px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
             📷 Add by Photo
           </button>
         </div>
@@ -248,12 +248,12 @@ function RetailProducts() {
             <tbody>
               {loading && <tr><td style={td} colSpan={8}><span style={{ color: '#64748b' }}>Loading…</span></td></tr>}
               {!loading && filtered.length === 0 && <tr><td style={td} colSpan={8}><span style={{ color: '#64748b' }}>No products found</span></td></tr>}
-              {filtered.map(i => {
+              {filtered.map((i, idx) => {
                 const low = typeof i.stock_qty === 'number' && i.stock_qty <= (i.low_stock_threshold ?? 5)
                 const m = margin(i)
                 const editing = editId === i.id
                 return (
-                  <tr key={i.id} style={{ background: low ? 'rgba(245,158,11,0.06)' : 'transparent' }}>
+                  <tr key={i.id} className="pos-item" style={{ background: low ? 'rgba(245,158,11,0.06)' : 'transparent', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                     <td style={{ ...td, fontWeight: 600 }}>{i.name}</td>
                     <td style={{ ...td, color: '#94a3b8' }}>{i.sku || '—'}</td>
                     <td style={{ ...td, color: '#94a3b8' }}>{i.category || '—'}</td>
@@ -292,7 +292,7 @@ function RetailProducts() {
       {/* Add / Camera modal */}
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 50 }} onClick={closeAdd}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto' }}>
+          <div className="pos-sheet" onClick={e => e.stopPropagation()} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ fontWeight: 700, fontSize: 17, color: ACC }}>Add Product</div>
               <button onClick={closeAdd} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 20, cursor: 'pointer' }}>✕</button>
@@ -362,19 +362,19 @@ function RetailProducts() {
                   <Field label="Stock qty"><input value={draft.stock_qty} onChange={e => setDraft({ ...draft, stock_qty: e.target.value })} style={inp} inputMode="numeric" /></Field>
                   <Field label="Low-stock alert"><input value={draft.low_stock_threshold} onChange={e => setDraft({ ...draft, low_stock_threshold: e.target.value })} style={inp} inputMode="numeric" /></Field>
                 </div>
-                <button onClick={saveDraft} disabled={stage === 'saving'} style={{ background: ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: 'pointer', fontWeight: 700, fontSize: 15, opacity: stage === 'saving' ? 0.6 : 1 }}>
+                <button className="pos-btn-primary" onClick={saveDraft} disabled={stage === 'saving'} style={{ background: ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: 'pointer', fontWeight: 700, fontSize: 15, opacity: stage === 'saving' ? 0.6 : 1 }}>
                   {stage === 'saving' ? 'Saving…' : 'Save Product'}
                 </button>
               </div>
             )}
 
             {stage === 'done' && (
-              <div style={{ textAlign: 'center', padding: '30px 0' }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
+              <div className="pos-reveal" style={{ textAlign: 'center', padding: '30px 0' }}>
+                <div className="pos-success-icon" style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
                 <div style={{ fontWeight: 700, fontSize: 17 }}>Product added</div>
                 <div style={{ color: '#64748b', fontSize: 13, marginTop: 6, marginBottom: 20 }}>{draft.name} is now in your catalog.</div>
                 <div style={{ display: 'flex', gap: 10 }}>
-                  <button onClick={() => { setDraft(emptyDraft); setScanMsg(''); setStage('idle') }} style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: 'pointer', fontWeight: 600 }}>Add Another</button>
+                  <button className="pos-btn-primary" onClick={() => { setDraft(emptyDraft); setScanMsg(''); setStage('idle') }} style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: 'pointer', fontWeight: 600 }}>Add Another</button>
                   <button onClick={closeAdd} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '14px 20px', borderRadius: 12, cursor: 'pointer' }}>Done</button>
                 </div>
               </div>

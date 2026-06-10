@@ -37,7 +37,7 @@ export default function PosPaymentHandler({
 
   // Listen to Supabase Realtime for payment updates
   useEffect(() => {
-    if (!transactionId || status !== 'processing') return
+    if (!transactionId || !isProcessing) return
 
     const channel = supabase
       .channel(`pos_payments_${transactionId}`)
@@ -197,10 +197,11 @@ export default function PosPaymentHandler({
   }
 
   // M-Pesa flow
+  const isProcessing = status === 'processing'
   if (paymentType === 'mpesa') {
     return (
-      <div style={{ marginBottom: 14, padding: '16px', background: '#fff', borderRadius: 14, border: '1px solid #e5e2dc' }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1916', marginBottom: 8 }}>
+      <div className="pos-sheet" style={{ marginBottom: 14, padding: '16px', background: 'var(--pos-surface)', borderRadius: 14, border: '1px solid var(--pos-border)' }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 8 }}>
           M-Pesa Payment
         </div>
         {status === 'idle' && (
@@ -210,43 +211,45 @@ export default function PosPaymentHandler({
               placeholder="Customer M-Pesa number"
               value={phoneInput}
               onChange={(e) => setPhoneInput(e.target.value)}
-              disabled={status === 'processing'}
+              disabled={isProcessing}
               style={{
                 width: '100%',
                 padding: '11px 14px',
                 borderRadius: 10,
-                border: '1.5px solid #e5e2dc',
+                border: '1.5px solid var(--pos-border)',
                 fontSize: 15,
                 fontFamily: 'inherit',
-                background: '#fff',
-                color: '#1a1916',
+                background: 'var(--pos-surface)',
+                color: 'var(--pos-ink)',
                 boxSizing: 'border-box',
                 marginBottom: 8,
               }}
             />
             <button
               onClick={initiateM2pesa}
-              disabled={!phoneInput || status === 'processing'}
+              disabled={!phoneInput || isProcessing}
+              className="pos-btn-primary"
               style={{
                 width: '100%',
                 padding: '11px 14px',
                 borderRadius: 10,
-                background: phoneInput && status !== 'processing' ? '#16a34a' : '#ccc',
+                background: phoneInput && !isProcessing ? 'var(--pos-success)' : '#ccc',
                 color: '#fff',
                 fontSize: 14,
                 fontWeight: 600,
                 border: 'none',
-                cursor: phoneInput && status !== 'processing' ? 'pointer' : 'not-allowed',
+                cursor: phoneInput && !isProcessing ? 'pointer' : 'not-allowed',
+                opacity: !phoneInput || isProcessing ? 0.5 : 1,
               }}
             >
-              Send STK Push
+              Send STK push
             </button>
           </>
         )}
         {status === 'processing' && (
           <div style={{ padding: '12px', background: 'rgba(59, 130, 246, 0.05)', borderRadius: 8, textAlign: 'center' }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#1a1916' }}>Processing M-Pesa payment...</div>
-            <div style={{ fontSize: 12, color: '#6b6760', marginTop: 4 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--pos-ink)' }}>Processing M-Pesa payment...</div>
+            <div style={{ fontSize: 12, color: 'var(--pos-muted)', marginTop: 4 }}>
               Check customer's phone for the prompt
             </div>
           </div>
@@ -262,6 +265,7 @@ export default function PosPaymentHandler({
         {status === 'idle' && (
           <button
             onClick={initiateCard}
+            className="pos-btn-primary"
             style={{
               width: '100%',
               padding: '13px 14px',
@@ -278,10 +282,10 @@ export default function PosPaymentHandler({
           </button>
         )}
         {status === 'processing' && (
-          <div style={{ padding: '16px', background: '#fff', borderRadius: 14, border: '1px solid #e5e2dc' }}>
+          <div className="pos-reveal" style={{ padding: '16px', background: 'var(--pos-surface)', borderRadius: 14, border: '1px solid var(--pos-border)' }}>
             {qrCode ? (
               <>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1916', marginBottom: 12, textAlign: 'center' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 12, textAlign: 'center' }}>
                   Scan to pay
                 </div>
                 <img
@@ -289,12 +293,12 @@ export default function PosPaymentHandler({
                   alt="Payment QR"
                   style={{ width: '100%', maxWidth: 240, height: 'auto', borderRadius: 8, margin: '0 auto 12px' }}
                 />
-                <div style={{ fontSize: 12, color: '#6b6760', textAlign: 'center' }}>
+                <div style={{ fontSize: 12, color: 'var(--pos-muted)', textAlign: 'center' }}>
                   Customer scans with their phone · Tap Apple Pay or card
                 </div>
               </>
             ) : (
-              <div style={{ textAlign: 'center', padding: '20px', color: '#6b6760' }}>
+              <div style={{ textAlign: 'center', padding: '20px', color: 'var(--pos-muted)' }}>
                 <div>Generating QR code...</div>
               </div>
             )}

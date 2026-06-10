@@ -204,7 +204,7 @@ export default function FactoryCapturePage() {
   const meta = type ? TYPE_META[type] : null
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Hidden file input fallback (always mounted) */}
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileInput} style={{ display: 'none' }} />
       <canvas ref={canvasRef} style={{ display: 'none' }} />
@@ -238,11 +238,11 @@ export default function FactoryCapturePage() {
         {/* ── STAGE 1: select type ───────────────────────────── */}
         {stage === 'select_type' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            {(Object.keys(TYPE_META) as CaptureType[]).map(t => {
+            {(Object.keys(TYPE_META) as CaptureType[]).map((t, idx) => {
               const m = TYPE_META[t]
               return (
-                <button key={t} onClick={() => pickType(t)}
-                  style={{ background: '#1e293b', border: `2px solid ${m.color}55`, borderRadius: 16, padding: '28px 18px', cursor: 'pointer', textAlign: 'center', transition: 'border-color 0.15s, transform 0.1s' }}
+                <button key={t} onClick={() => pickType(t)} className="pos-item"
+                  style={{ background: '#1e293b', border: `2px solid ${m.color}55`, borderRadius: 16, padding: '28px 18px', cursor: 'pointer', textAlign: 'center', transition: 'border-color 0.15s, transform 0.1s', animationDelay: `${Math.min(idx, 8) * 40}ms` }}
                   onMouseEnter={e => (e.currentTarget.style.borderColor = m.color)}
                   onMouseLeave={e => (e.currentTarget.style.borderColor = `${m.color}55`)}
                 >
@@ -338,10 +338,10 @@ export default function FactoryCapturePage() {
             <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={meta.notesPlaceholder} rows={3}
               style={{ ...inputStyle, resize: 'vertical', fontFamily: 'system-ui, sans-serif' }} />
 
-            {error && <div style={{ color: BAD, fontSize: 13, marginTop: 14 }}>{error}</div>}
+            {error && <div className="pos-banner" role="alert" style={{ color: BAD, fontSize: 13, marginTop: 14 }}>{error}</div>}
 
-            <button onClick={submit} disabled={submitting}
-              style={{ width: '100%', marginTop: 20, background: submitting ? '#334155' : ACC, border: 'none', color: submitting ? '#94a3b8' : '#1a1206', padding: '16px', borderRadius: 12, cursor: submitting ? 'default' : 'pointer', fontWeight: 800, fontSize: 16 }}>
+            <button onClick={submit} disabled={submitting} className="pos-btn-primary"
+              style={{ width: '100%', marginTop: 20, background: submitting ? '#334155' : ACC, border: 'none', color: submitting ? '#94a3b8' : '#1a1206', padding: '16px', borderRadius: 12, cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.5 : 1, fontWeight: 800, fontSize: 16 }}>
               {submitting ? 'Submitting…' : `Submit ${meta.label} Capture`}
             </button>
             <div style={{ fontSize: 11, color: '#64748b', textAlign: 'center', marginTop: 10 }}>Will be submitted for supervisor approval.</div>
@@ -350,14 +350,14 @@ export default function FactoryCapturePage() {
 
         {/* ── STAGE 4: done ──────────────────────────────────── */}
         {stage === 'done' && meta && (
-          <div style={{ textAlign: 'center', paddingTop: 30 }}>
-            <div style={{ width: 84, height: 84, borderRadius: '50%', background: `${GOOD}22`, border: `2px solid ${GOOD}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 42, margin: '0 auto 20px' }}>✓</div>
+          <div className="pos-reveal" style={{ textAlign: 'center', paddingTop: 30 }}>
+            <div className="pos-success-icon" style={{ width: 84, height: 84, borderRadius: '50%', background: `${GOOD}22`, border: `2px solid ${GOOD}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 42, margin: '0 auto 20px' }}>✓</div>
             <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>Capture Logged</div>
             <div style={{ fontSize: 14, color: '#94a3b8', marginBottom: 4 }}>{meta.icon} {meta.label} · {resolvedProduct} · {quantity} {unit}</div>
             <div style={{ display: 'inline-block', background: `${ACC}22`, color: ACC, padding: '6px 16px', borderRadius: 20, fontSize: 13, fontWeight: 700, marginTop: 8 }}>⏳ Pending approval</div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '32px auto 0' }}>
-              <button onClick={resetAll} style={{ background: ACC, border: 'none', color: '#1a1206', padding: '16px', borderRadius: 12, cursor: 'pointer', fontWeight: 800, fontSize: 16 }}>📸 New Capture</button>
+              <button onClick={resetAll} className="pos-btn-primary" style={{ background: ACC, border: 'none', color: '#1a1206', padding: '16px', borderRadius: 12, cursor: 'pointer', fontWeight: 800, fontSize: 16 }}>📸 New Capture</button>
               <button onClick={() => router.push('/factory/production')} style={{ background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0', padding: '14px', borderRadius: 12, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>View Production Log</button>
               <button onClick={() => router.push('/factory')} style={{ background: 'none', border: 'none', color: '#64748b', padding: '8px', cursor: 'pointer', fontSize: 13 }}>← Back to Factory hub</button>
             </div>

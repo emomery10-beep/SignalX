@@ -45,6 +45,35 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ transactions })
 }
 
+// PATCH — finalise a pending transaction after card/mobile payment resolves
+// status='paid'  → mark completed + paid
+// status='failed' → mark void + failed (removes it from sales records)
+export async function PATCH(req: NextRequest) {
+  const auth = await resolvePosAuth(req)
+  if (!auth) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+
+  const service = createServiceClient()
+  const { transaction_id, status } = await req.json()
+  if (!transaction_id) return NextResponse.json({ error: 'transaction_id required' }, { status: 400 })
+
+  const allowed = ['paid', 'failed']
+  if (!allowed.includes(status)) return NextResponse.json({ error: 'status must be paid or failed' }, { status: 400 })
+
+  const updates = status === 'paid'
+    ? { status: 'completed', payment_status: 'paid' }
+    : { status: 'void', payment_status: 'failed' }
+
+  const { error } = await service
+    .from('pos_transactions')
+    .update(updates)
+    .eq('id', transaction_id)
+    .eq('owner_id', auth.ownerId)
+    .eq('status', 'pending') // safety: only touch pending — never overwrite a completed transaction
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
+}
+
 // POST — cashier creates a new completed sale
 export async function POST(req: NextRequest) {
   const auth = await resolvePosAuth(req)
@@ -53,7 +82,7 @@ export async function POST(req: NextRequest) {
 
   const service = createServiceClient()
   const body = await req.json()
-  const { items, payment_type, customer_phone, notes, discount_amount, amount_tendered, shift_id } = body
+  const { items, payment_type, customer_phone, notes, discount_amount, amount_tendered, shift_id, initial_payment_status } = body
 
   // Location: staff locked to their branch, owner can specify
   const txLocationId = auth.locationId || body.location_id || null
@@ -149,7 +178,9 @@ export async function POST(req: NextRequest) {
       total,
       payment_type,
       amount_tendered: amount_tendered ? Number(amount_tendered) : null,
-      status:          'completed',
+      // cash = completed immediately; card/mobile = pending until payment webhook/polling confirms
+      status:          initial_payment_status === 'paid' ? 'completed' : 'pending',
+      payment_status:  initial_payment_status === 'paid' ? 'paid' : 'pending',
       pos_location_id: txLocationId,
       shift_id:        shift_id || null,
       notes:           notes || null,

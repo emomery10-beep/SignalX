@@ -20,6 +20,7 @@ export function SeatsUpgradeButton({
   const [selectedSeats, setSelectedSeats] = useState(currentSeats)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
 
   const additionalSeats = selectedSeats - currentSeats
   const monthlyCost = Math.abs(additionalSeats) * (SEAT_PRICE_MONTHLY / 100)
@@ -92,7 +93,7 @@ export function SeatsUpgradeButton({
       }
 
       const result = await response.json()
-      alert(`Downgrade successful! Your plan will update next billing cycle.\nMonthly savings: £${monthlyCost.toFixed(2)}`)
+      setSuccessMessage(`Downgrade successful! Your plan will update next billing cycle. Monthly savings: £${monthlyCost.toFixed(2)}`)
       setShowDowngrade(false)
       setSelectedSeats(currentSeats)
     } catch (err: any) {
@@ -104,6 +105,13 @@ export function SeatsUpgradeButton({
 
   return (
     <div style={{ marginTop: '24px' }}>
+      {/* Success banner */}
+      {successMessage && (
+        <div role="status" className="pos-banner" style={{ marginBottom: '16px', padding: '12px 16px', borderRadius: '10px', background: 'rgba(22,163,74,.06)', border: '1px solid rgba(22,163,74,.25)', fontSize: '13px', color: '#15803d', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+          <span><span className="pos-success-icon">✓</span> {successMessage}</span>
+          <button onClick={() => setSuccessMessage('')} aria-label="Dismiss" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#15803d', fontSize: '16px', lineHeight: 1, padding: '0 2px' }}>×</button>
+        </div>
+      )}
       {/* Button Group */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
         <button
@@ -115,7 +123,7 @@ export function SeatsUpgradeButton({
           }}
           style={{
             padding: '10px 16px',
-            backgroundColor: showUpgrade ? '#3b82f6' : '#fff',
+            backgroundColor: showUpgrade ? '#3b82f6' : 'var(--pos-surface)',
             color: showUpgrade ? '#fff' : '#3b82f6',
             border: '2px solid #3b82f6',
             borderRadius: '6px',
@@ -137,7 +145,7 @@ export function SeatsUpgradeButton({
             }}
             style={{
               padding: '10px 16px',
-              backgroundColor: showDowngrade ? '#f97316' : '#fff',
+              backgroundColor: showDowngrade ? '#f97316' : 'var(--pos-surface)',
               color: showDowngrade ? '#fff' : '#f97316',
               border: '2px solid #f97316',
               borderRadius: '6px',
@@ -154,6 +162,7 @@ export function SeatsUpgradeButton({
       {/* Error Message */}
       {error && (
         <div
+          className="pos-banner"
           style={{
             padding: '12px',
             backgroundColor: '#fee2e2',
@@ -170,6 +179,7 @@ export function SeatsUpgradeButton({
       {/* Upgrade Panel */}
       {showUpgrade && (
         <div
+          className="pos-sheet"
           style={{
             padding: '20px',
             backgroundColor: '#eff6ff',
@@ -230,6 +240,7 @@ export function SeatsUpgradeButton({
           <button
             onClick={handleUpgrade}
             disabled={loading}
+            className="pos-btn-primary"
             style={{
               width: '100%',
               padding: '12px',
@@ -240,6 +251,7 @@ export function SeatsUpgradeButton({
               cursor: loading ? 'not-allowed' : 'pointer',
               fontSize: '14px',
               fontWeight: '600',
+              opacity: loading ? 0.5 : 1,
             }}
           >
             {loading ? 'Processing...' : `Upgrade to ${selectedSeats} Seats`}
@@ -250,6 +262,7 @@ export function SeatsUpgradeButton({
       {/* Downgrade Panel */}
       {showDowngrade && (
         <div
+          className="pos-sheet"
           style={{
             padding: '20px',
             backgroundColor: '#fff7ed',
@@ -314,6 +327,7 @@ export function SeatsUpgradeButton({
           <button
             onClick={handleDowngrade}
             disabled={loading}
+            className="pos-btn-primary"
             style={{
               width: '100%',
               padding: '12px',
@@ -324,6 +338,7 @@ export function SeatsUpgradeButton({
               cursor: loading ? 'not-allowed' : 'pointer',
               fontSize: '14px',
               fontWeight: '600',
+              opacity: loading ? 0.5 : 1,
             }}
           >
             {loading ? 'Processing...' : `Downgrade to ${selectedSeats} Seat${selectedSeats !== 1 ? 's' : ''}`}

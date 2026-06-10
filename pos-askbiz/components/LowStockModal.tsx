@@ -24,6 +24,7 @@ export function LowStockModal({ isOpen, onClose, ownerId, ownerEmail }: LowStock
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
   const [askingClaude, setAskingClaude] = useState(false)
   const [claudeResponse, setClaudeResponse] = useState<string>('')
+  const [selectionError, setSelectionError] = useState('')
 
   useEffect(() => {
     if (isOpen) {
@@ -50,9 +51,10 @@ export function LowStockModal({ isOpen, onClose, ownerId, ownerEmail }: LowStock
     const itemsToOrder = items.filter((item) => selectedItems.has(item.id) || selectedItems.size === 0)
 
     if (itemsToOrder.length === 0) {
-      alert('Please select items to ask Claude about')
+      setSelectionError('Please select items to ask Claude about')
       return
     }
+    setSelectionError('')
 
     setAskingClaude(true)
 
@@ -104,8 +106,9 @@ export function LowStockModal({ isOpen, onClose, ownerId, ownerEmail }: LowStock
       onClick={onClose}
     >
       <div
+        className="pos-sheet"
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: 'var(--pos-surface)',
           borderRadius: '12px',
           maxWidth: '800px',
           width: '90%',
@@ -144,9 +147,11 @@ export function LowStockModal({ isOpen, onClose, ownerId, ownerEmail }: LowStock
           <>
             {/* Items List */}
             <div style={{ marginBottom: '24px' }}>
-              {items.map((item) => (
-                <div
+              {items.map((item, idx) => (
+                <button
+                  type="button"
                   key={item.id}
+                  className="pos-item"
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -156,6 +161,9 @@ export function LowStockModal({ isOpen, onClose, ownerId, ownerEmail }: LowStock
                     marginBottom: '12px',
                     border: '1px solid #e5e7eb',
                     cursor: 'pointer',
+                    animationDelay: `${Math.min(idx, 8) * 40}ms`,
+                    width: '100%',
+                    textAlign: 'left',
                   }}
                   onClick={() => toggleItem(item.id)}
                 >
@@ -176,7 +184,7 @@ export function LowStockModal({ isOpen, onClose, ownerId, ownerEmail }: LowStock
                     style={{
                       fontSize: '13px',
                       fontWeight: '600',
-                      color: '#dc2626',
+                      color: 'var(--pos-danger)',
                       backgroundColor: '#fee2e2',
                       padding: '6px 12px',
                       borderRadius: '6px',
@@ -184,13 +192,14 @@ export function LowStockModal({ isOpen, onClose, ownerId, ownerEmail }: LowStock
                   >
                     {Math.max(0, (item.reorder_qty || 10) - item.qty)} more needed
                   </div>
-                </div>
+                </button>
               ))}
             </div>
 
             {/* Claude Response Section */}
             {claudeResponse && (
               <div
+                className="pos-reveal"
                 style={{
                   backgroundColor: '#f0f9ff',
                   border: '1px solid #bfdbfe',
@@ -207,9 +216,17 @@ export function LowStockModal({ isOpen, onClose, ownerId, ownerEmail }: LowStock
               </div>
             )}
 
+            {/* Selection error */}
+            {selectionError && (
+              <div className="pos-banner" role="alert" style={{ marginBottom: '12px', padding: '10px 14px', borderRadius: '8px', background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)', fontSize: '13px', color: 'var(--pos-danger)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                <span>{selectionError}</span>
+                <button onClick={() => setSelectionError('')} aria-label="Dismiss" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--pos-danger)', fontSize: '16px', lineHeight: 1, padding: '0 2px' }}>×</button>
+              </div>
+            )}
             {/* Action Buttons */}
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
+                className="pos-btn-primary"
                 onClick={handleAskClaude}
                 disabled={askingClaude}
                 style={{
@@ -221,7 +238,7 @@ export function LowStockModal({ isOpen, onClose, ownerId, ownerEmail }: LowStock
                   borderRadius: '8px',
                   fontWeight: '600',
                   cursor: askingClaude ? 'not-allowed' : 'pointer',
-                  opacity: askingClaude ? 0.7 : 1,
+                  opacity: askingClaude ? 0.5 : 1,
                 }}
               >
                 {askingClaude ? 'Asking Claude...' : `🤖 Ask Claude for Suppliers (${selectedItems.size === 0 ? 'All' : selectedItems.size})`}

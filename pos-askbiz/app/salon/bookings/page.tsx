@@ -198,7 +198,7 @@ export default function SalonBookings() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -230,7 +230,7 @@ export default function SalonBookings() {
               <input style={inputStyle} type="time" value={form.time} onChange={e => setForm({ ...form, time: e.target.value })} />
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-              <button type="submit" style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Save Booking</button>
+              <button type="submit" className="pos-btn-primary" style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Save Booking</button>
               <button type="button" onClick={() => setShowForm(false)} style={{ background: '#334155', border: 'none', color: C.muted, padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>Cancel</button>
             </div>
           </form>
@@ -241,8 +241,8 @@ export default function SalonBookings() {
           <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 16, marginBottom: 24 }}>
             <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 14 }}>Scheduled Appointments</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {dayAppointments.map(a => (
-                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '8px 12px' }}>
+              {dayAppointments.map((a, idx) => (
+                <div key={a.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '8px 12px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                   <span style={{ color: ACC, fontWeight: 700, width: 48 }}>{fmtTime(a.scheduled_at)}</span>
                   <span style={{ flex: 1, fontSize: 13 }}>{a.client?.name || 'Walk-in'} {a.client?.phone && <span style={{ color: C.dim }}>· {a.client.phone}</span>}</span>
                   <span style={{ fontSize: 12, color: C.muted }}>{a.service_name} · {a.stylist?.name || 'Unassigned'}</span>
@@ -316,10 +316,10 @@ export default function SalonBookings() {
           </div>
           {loading && <div style={{ padding: 20, color: C.dim, fontSize: 13 }}>Loading…</div>}
           {!loading && filtered.length === 0 && <div style={{ padding: 20, color: C.dim, fontSize: 13, textAlign: 'center' }}>No appointments match the filters.</div>}
-          {filtered.map(tx => {
+          {filtered.map((tx, idx) => {
             const badge = statusBadge[tx.status] || { bg: '#334155', fg: C.muted, label: tx.status || '—' }
             return (
-              <div key={tx.id} style={{ display: 'grid', gridTemplateColumns: '80px 1.4fr 1.6fr 1.2fr 1fr 1fr 110px', gap: 8, padding: '12px 16px', borderBottom: '1px solid #283548', fontSize: 13, alignItems: 'center' }}>
+              <div key={tx.id} className="pos-item" style={{ display: 'grid', gridTemplateColumns: '80px 1.4fr 1.6fr 1.2fr 1fr 1fr 110px', gap: 8, padding: '12px 16px', borderBottom: '1px solid #283548', fontSize: 13, alignItems: 'center', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                 <div style={{ color: ACC, fontWeight: 700 }}>{fmtTime(tx.created_at)}</div>
                 <div>{tx.pos_customers?.name || tx.pos_customers?.phone || <span style={{ color: C.dim }}>Walk-in</span>}</div>
                 <div style={{ color: '#e2e8f0' }}>{serviceNames(tx)}</div>
@@ -345,8 +345,8 @@ export default function SalonBookings() {
                 {noShows
                   .slice()
                   .sort((a, b) => +new Date(b.scheduled_at) - +new Date(a.scheduled_at))
-                  .map(a => (
-                    <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '8px 12px', fontSize: 13 }}>
+                  .map((a, idx) => (
+                    <div key={a.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '8px 12px', fontSize: 13, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                       <span style={{ color: C.bad, fontWeight: 700, width: 110 }}>{new Date(a.scheduled_at).toLocaleDateString([], { day: '2-digit', month: 'short' })} {fmtTime(a.scheduled_at)}</span>
                       <span style={{ flex: 1 }}>{a.client?.name || 'Walk-in'}</span>
                       <span style={{ color: C.muted }}>{a.service_name} · {a.stylist?.name || 'Unassigned'}</span>

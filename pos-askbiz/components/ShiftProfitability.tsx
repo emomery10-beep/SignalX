@@ -79,7 +79,7 @@ export default function ShiftProfitability({ ownerId, staffId, sym = '£' }: { o
   const fmtTime = (d: string) => new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 
   return (
-    <div style={{ padding: '16px 20px' }}>
+    <div className="pos-screen" style={{ padding: '16px 20px' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div>
@@ -98,7 +98,7 @@ export default function ShiftProfitability({ ownerId, staffId, sym = '£' }: { o
       </div>
 
       {/* Summary cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
+      <div className="pos-reveal" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
         <StatBox label="Avg Score" value={`${summary.avg_score}`} sub="/100" color={GRADE_COLOR[summary.avg_score >= 80 ? 'A' : summary.avg_score >= 65 ? 'B' : summary.avg_score >= 50 ? 'C' : 'D']} />
         <StatBox label="Rev/Hour" value={fmt(summary.avg_rev_per_hour)} color="#6366F1" />
         <StatBox label="Avg Margin" value={`${summary.avg_margin}%`} color={summary.avg_margin >= 40 ? '#10B981' : '#F59E0B'} />
@@ -122,11 +122,12 @@ export default function ShiftProfitability({ ownerId, staffId, sym = '£' }: { o
       {/* Shifts list */}
       {view === 'shifts' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {shifts.slice(0, 15).map(sh => (
-            <div key={sh.shift_id} style={{
+          {shifts.slice(0, 15).map((sh, idx) => (
+            <div key={sh.shift_id} className="pos-item" style={{
               display: 'flex', alignItems: 'center', gap: 10,
               padding: '10px 12px', borderRadius: 12,
               background: '#1e1e1e', border: '1px solid #2a2a2a',
+              animationDelay: `${Math.min(idx, 8) * 40}ms`,
             }}>
               {/* Grade badge */}
               <div style={{
@@ -166,11 +167,12 @@ export default function ShiftProfitability({ ownerId, staffId, sym = '£' }: { o
           {leaderboard.map((entry, i) => {
             const grade = entry.avg_score >= 80 ? 'A' : entry.avg_score >= 65 ? 'B' : entry.avg_score >= 50 ? 'C' : entry.avg_score >= 35 ? 'D' : 'F'
             return (
-              <div key={entry.name} style={{
+              <div key={entry.name} className="pos-item" style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '10px 12px', borderRadius: 12,
                 background: i === 0 ? 'rgba(16,185,129,.06)' : '#1e1e1e',
                 border: `1px solid ${i === 0 ? 'rgba(16,185,129,.2)' : '#2a2a2a'}`,
+                animationDelay: `${Math.min(i, 8) * 40}ms`,
               }}>
                 <span style={{ fontSize: 16, fontWeight: 700, color: i === 0 ? '#10B981' : i === 1 ? '#6366F1' : '#999', width: 24, textAlign: 'center' }}>
                   {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`}

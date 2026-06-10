@@ -4,8 +4,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 const ACC = '#d08a59'
 const ACC_BG = 'rgba(208,138,89,.08)'
 const ACC_BORDER = 'rgba(208,138,89,.2)'
-const GREEN = '#16a34a'
-const RED = '#dc2626'
+const GREEN = 'var(--pos-success)'
+const RED = 'var(--pos-danger)'
 const AMBER = '#ca8a04'
 
 type JobStatus = 'intake' | 'quoted' | 'accepted' | 'in_progress' | 'completed' | 'collected' | 'cancelled'
@@ -404,7 +404,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
 
   // ── NEW JOB FORM ──────────────────────────────────────────
   if (view === 'new_job') return (
-    <div>
+    <div className="pos-screen">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
         <button onClick={() => { setView('queue'); stopCamera() }} style={{ ...btnSecondary, padding: '6px 14px' }}>← Back</button>
         <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700 }}>New Service Job</div>
@@ -414,12 +414,12 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
       <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, border: `1px solid ${ACC_BORDER}`, background: ACC_BG }}>
         <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Scan Device Label</div>
         {!scanning ? (
-          <button onClick={startCamera} style={btnPrimary}>📷 Open Camera</button>
+          <button onClick={startCamera} style={btnPrimary} className="pos-btn-primary">📷 Open Camera</button>
         ) : (
           <div>
             <video ref={videoRef} style={{ width: '100%', maxWidth: 400, borderRadius: 8 }} playsInline muted />
             <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-              <button onClick={captureAndScan} style={btnPrimary}>📸 Capture & Scan</button>
+              <button onClick={captureAndScan} style={btnPrimary} className="pos-btn-primary">📸 Capture & Scan</button>
               <button onClick={stopCamera} style={btnSecondary}>Cancel</button>
             </div>
           </div>
@@ -427,7 +427,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
         <canvas ref={canvasRef} style={{ display: 'none' }} />
 
         {scanResult && (
-          <div style={{ marginTop: 12, padding: 12, borderRadius: 8, background: 'var(--sf)', border: '1px solid var(--b)' }}>
+          <div className="pos-reveal" style={{ marginTop: 12, padding: 12, borderRadius: 8, background: 'var(--sf)', border: '1px solid var(--b)' }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: GREEN, marginBottom: 6 }}>Device Identified (confidence: {scanResult.confidence}%)</div>
             <div style={{ fontSize: 13 }}>{scanResult.model || 'Unknown'}{scanResult.storage ? ` · ${scanResult.storage}` : ''}{scanResult.color ? ` · ${scanResult.color}` : ''}</div>
             {scanResult.serial && <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>Serial: {scanResult.serial}</div>}
@@ -509,15 +509,15 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
 
       {/* Add Another Device prompt */}
       {showAddAnother && lastCreatedJob && (
-        <div style={{ marginTop: 16, padding: 16, borderRadius: 12, border: `1px solid ${GREEN}40`, background: 'rgba(22,163,74,.05)' }}>
+        <div className="pos-banner" style={{ marginTop: 16, padding: 16, borderRadius: 12, border: `1px solid ${GREEN}40`, background: 'rgba(22,163,74,.05)' }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: GREEN, marginBottom: 6 }}>
-            Job {lastCreatedJob.ticket_number} created successfully
+            <span className="pos-success-icon">✓</span> Job {lastCreatedJob.ticket_number} created successfully
           </div>
           <div style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 12 }}>
             Same customer ({formData.customer_name || formData.customer_phone || 'Walk-in'}) dropping off another device?
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={() => { setShowAddAnother(false); setLastCreatedJob(null) }} style={btnPrimary}>
+            <button onClick={() => { setShowAddAnother(false); setLastCreatedJob(null) }} style={btnPrimary} className="pos-btn-primary">
               + Add Another Device
             </button>
             <button onClick={() => { setShowAddAnother(false); setLastCreatedJob(null); setFormData({ customer_phone: '', customer_name: '', device_model: '', device_serial: '', device_description: '', fault_description: '', preset_id: '', quoted_price: '', estimated_minutes: '', intake_photo_url: '' }); setView('queue') }} style={btnSecondary}>
@@ -529,7 +529,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
 
       {!showAddAnother && (
         <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-          <button onClick={createJob} style={btnPrimary}>Create Job</button>
+          <button onClick={createJob} style={btnPrimary} className="pos-btn-primary">Create Job</button>
           <button onClick={() => setView('queue')} style={btnSecondary}>Cancel</button>
         </div>
       )}
@@ -544,7 +544,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
     const noCheckoutPhoto = !j.checkout_photo_url && ['completed'].includes(j.status)
 
     return (
-      <div>
+      <div className="pos-screen">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
           <button onClick={() => { setView('queue'); setSelectedJob(null) }} style={{ ...btnSecondary, padding: '6px 14px' }}>← Back</button>
           <div style={{ flex: 1 }}>
@@ -613,7 +613,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
 
         {/* Warranty info */}
         {j.warranty_expires_at && (
-          <div style={{ padding: 14, borderRadius: 10, border: `1px solid ${GREEN}40`, background: 'rgba(22,163,74,.05)', marginBottom: 16 }}>
+          <div className="pos-reveal" style={{ padding: 14, borderRadius: 10, border: `1px solid ${GREEN}40`, background: 'rgba(22,163,74,.05)', marginBottom: 16 }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: GREEN, marginBottom: 4 }}>Warranty</div>
             <div style={{ fontSize: 13 }}>
               Expires: {new Date(j.warranty_expires_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -640,7 +640,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
           <div style={{ marginBottom: 16 }}>
             <video ref={checkoutVideoRef} style={{ width: '100%', maxWidth: 400, borderRadius: 8 }} playsInline muted />
             <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-              <button onClick={() => captureCheckoutPhoto(j.id)} style={btnPrimary}>📸 Capture</button>
+              <button onClick={() => captureCheckoutPhoto(j.id)} style={btnPrimary} className="pos-btn-primary">📸 Capture</button>
               <button onClick={() => { checkoutStreamRef.current?.getTracks().forEach(t => t.stop()); setCaptureCheckout(false) }} style={btnSecondary}>Cancel</button>
             </div>
           </div>
@@ -654,20 +654,20 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
             <button onClick={() => {
               const price = prompt('Enter quoted price:')
               if (price) updateJob(j.id, { status: 'quoted', quoted_price: Number(price) })
-            }} style={btnPrimary}>Set Quote</button>
+            }} style={btnPrimary} className="pos-btn-primary">Set Quote</button>
           )}
           {j.status === 'quoted' && (
             <>
-              <button onClick={() => updateJob(j.id, { status: 'accepted' })} style={btnPrimary}>Customer Accepted</button>
+              <button onClick={() => updateJob(j.id, { status: 'accepted' })} style={btnPrimary} className="pos-btn-primary">Customer Accepted</button>
               <button onClick={() => sendQuoteLink(j.id)} style={btnSecondary}>Send Quote via SMS</button>
             </>
           )}
           {j.status === 'accepted' && j.assigned_to && (
-            <button onClick={() => updateJob(j.id, { status: 'in_progress' })} style={btnPrimary}>Start Repair</button>
+            <button onClick={() => updateJob(j.id, { status: 'in_progress' })} style={btnPrimary} className="pos-btn-primary">Start Repair</button>
           )}
           {j.status === 'in_progress' && (
             <>
-              <button onClick={() => updateJob(j.id, { status: 'completed' })} style={{ ...btnPrimary, background: GREEN }}>Mark Complete</button>
+              <button onClick={() => updateJob(j.id, { status: 'completed' })} style={{ ...btnPrimary, background: GREEN }} className="pos-btn-primary">Mark Complete</button>
               <button onClick={() => {
                 const notes = prompt('Describe additional issues:')
                 const price = prompt('New quoted price:')
@@ -676,7 +676,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
             </>
           )}
           {j.status === 'completed' && (
-            <button onClick={() => updateJob(j.id, { status: 'collected' })} style={{ ...btnPrimary, background: GREEN }}>Customer Collected & Paid</button>
+            <button onClick={() => updateJob(j.id, { status: 'collected' })} style={{ ...btnPrimary, background: GREEN }} className="pos-btn-primary">Customer Collected & Paid</button>
           )}
           {!['collected', 'cancelled'].includes(j.status) && (
             <button onClick={() => {
@@ -705,11 +705,11 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
           {historyLoading ? (
             <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Loading...</div>
           ) : history.length === 0 ? (
-            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No history yet</div>
+            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No history yet — status changes will appear here</div>
           ) : (
             <div style={{ borderLeft: `2px solid ${ACC_BORDER}`, paddingLeft: 16 }}>
               {history.map((h, i) => (
-                <div key={h.id} style={{ marginBottom: i < history.length - 1 ? 16 : 0, position: 'relative' }}>
+                <div key={h.id} className="pos-item" style={{ marginBottom: i < history.length - 1 ? 16 : 0, position: 'relative', animationDelay: `${Math.min(i, 8) * 40}ms` }}>
                   <div style={{ position: 'absolute', left: -21, top: 4, width: 10, height: 10, borderRadius: '50%', background: ACC, border: '2px solid var(--sf)' }} />
                   <div style={{ fontSize: 12, fontWeight: 600 }}>
                     {h.from_status ? <><StatusBadge status={h.from_status as JobStatus} /> → </> : null}
@@ -728,13 +728,13 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
         {/* Photos */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {j.intake_photo_url && (
-            <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)' }}>
+            <div className="pos-reveal" style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)' }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>Intake Photo</div>
               <img src={j.intake_photo_url} alt="Intake" style={{ width: '100%', borderRadius: 8, maxHeight: 200, objectFit: 'cover' }} />
             </div>
           )}
           {j.checkout_photo_url && (
-            <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)' }}>
+            <div className="pos-reveal" style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)' }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>Checkout Photo</div>
               <img src={j.checkout_photo_url} alt="Checkout" style={{ width: '100%', borderRadius: 8, maxHeight: 200, objectFit: 'cover' }} />
             </div>
@@ -746,10 +746,10 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
 
   // ── JOB QUEUE (default view) ──────────────────────────────
   return (
-    <div>
+    <div className="pos-screen">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
         <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, flex: 1 }}>Service Jobs</div>
-        <button onClick={() => setView('new_job')} style={btnPrimary}>+ New Job</button>
+        <button onClick={() => setView('new_job')} style={btnPrimary} className="pos-btn-primary">+ New Job</button>
       </div>
 
       {/* Filters */}
@@ -785,9 +785,9 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {jobs.map(j => (
-            <div key={j.id} onClick={() => openJobDetail(j)}
-              style={{ padding: 14, borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', cursor: 'pointer', transition: 'border-color .15s', display: 'flex', alignItems: 'center', gap: 14 }}
+          {jobs.map((j, idx) => (
+            <button key={j.id} type="button" onClick={() => openJobDetail(j)} className="pos-item"
+              style={{ padding: 14, borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', cursor: 'pointer', transition: 'border-color .15s', display: 'flex', alignItems: 'center', gap: 14, animationDelay: `${Math.min(idx, 8) * 40}ms`, width: '100%', textAlign: 'left', fontFamily: 'inherit' }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
               onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b)')}>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -808,7 +808,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
                 {j.quoted_price && <div style={{ fontSize: 14, fontWeight: 700 }}>{fmt(currencySymbol, j.quoted_price)}</div>}
                 <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{timeAgo(j.created_at)}</div>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}

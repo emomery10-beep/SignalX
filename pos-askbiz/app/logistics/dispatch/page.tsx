@@ -202,42 +202,42 @@ export default function DispatchPage() {
     await loadAll(staff)
   }
 
-  if (!ready) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9f8f6' }}>Loading…</div>
+  if (!ready) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }}>Loading…</div>
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9f8f6', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       {/* Header */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #e5e2dc', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/logistics')} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', padding: 0 }}>←</button>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#1a1916' }}>🚛 Dispatch</div>
-          <div style={{ fontSize: 11, color: '#6b6760' }}>{staff?.name} · {parcels.length} total parcels</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--pos-ink)' }}>🚛 Dispatch</div>
+          <div style={{ fontSize: 11, color: 'var(--pos-muted)' }}>{staff?.name} · {parcels.length} total parcels</div>
         </div>
         <button onClick={() => staff && loadAll(staff)} style={{ background: ACC_LIGHT, color: ACC, border: `1px solid ${ACC_BORDER}`, borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>↻ Refresh</button>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid #e5e2dc', background: '#fff' }}>
+      <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--pos-border)', background: 'var(--pos-surface)' }}>
         {(['pending', 'assigned', 'transit', 'arrived'] as Tab[]).map(t => (
           <button key={t} onClick={() => { setTab(t); setSelected(new Set()); setBulkMode(false) }}
-            style={{ flex: 1, padding: '10px 4px', border: 'none', background: tab === t ? ACC_LIGHT : 'transparent', borderBottom: tab === t ? `2px solid ${ACC}` : '2px solid transparent', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: tab === t ? ACC : '#6b6760', textTransform: 'capitalize' }}>
-            {t} <span style={{ background: tab === t ? ACC : '#e5e2dc', color: tab === t ? '#fff' : '#6b6760', borderRadius: 10, padding: '1px 6px', fontSize: 10, marginLeft: 4 }}>{tabCounts[t]}</span>
+            style={{ flex: 1, padding: '10px 4px', border: 'none', background: tab === t ? ACC_LIGHT : 'transparent', borderBottom: tab === t ? `2px solid ${ACC}` : '2px solid transparent', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: tab === t ? ACC : 'var(--pos-muted)', textTransform: 'capitalize' }}>
+            {t} <span style={{ background: tab === t ? ACC : 'var(--pos-border)', color: tab === t ? 'var(--pos-surface)' : 'var(--pos-muted)', borderRadius: 10, padding: '1px 6px', fontSize: 10, marginLeft: 4 }}>{tabCounts[t]}</span>
           </button>
         ))}
       </div>
 
       {/* Search */}
-      <div style={{ padding: '8px 16px', background: '#fff' }}>
+      <div style={{ padding: '8px 16px', background: 'var(--pos-surface)' }}>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tracking, name, city…"
-          style={{ width: '100%', padding: '8px 12px', border: `1px solid #e5e2dc`, borderRadius: 8, fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+          style={{ width: '100%', padding: '8px 12px', border: `1px solid var(--pos-border)`, borderRadius: 8, fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
       </div>
 
       {/* Bulk controls for pending tab */}
       {tab === 'pending' && filtered.length > 0 && (
-        <div style={{ padding: '8px 16px', background: '#fff', borderBottom: '1px solid #e5e2dc', display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ padding: '8px 16px', background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', display: 'flex', gap: 8, alignItems: 'center' }}>
           <button onClick={() => { setBulkMode(!bulkMode); setSelected(new Set()) }}
-            style={{ background: bulkMode ? RED : ACC, color: '#fff', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
-            {bulkMode ? '✕ Cancel' : '☐ Bulk Assign'}
+            style={{ background: bulkMode ? 'var(--pos-danger)' : ACC, color: 'var(--pos-surface)', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+              {bulkMode ? '✕ Cancel' : '☐ Bulk assign'}
           </button>
           {bulkMode && selected.size > 0 && (
             <span style={{ fontSize: 12, fontWeight: 700, color: ACC }}>{selected.size} selected</span>
@@ -248,11 +248,11 @@ export default function DispatchPage() {
       {/* Parcel list */}
       <div style={{ padding: '8px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#6b6760' }}>Loading parcels…</div>
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--pos-muted)' }}>Loading parcels…</div>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#6b6760', fontSize: 13 }}>No parcels in this category</div>
-        ) : filtered.map(p => (
-          <div key={p.id} style={{ background: '#fff', borderRadius: 12, padding: 12, border: `1px solid ${selected.has(p.id) ? ACC : '#e5e2dc'}`, boxShadow: selected.has(p.id) ? `0 0 0 2px ${ACC_BORDER}` : 'none' }}>
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--pos-muted)', fontSize: 13 }}>No parcels in this category yet</div>
+        ) : filtered.map((p, idx) => (
+          <div key={p.id} className="pos-item" style={{ background: 'var(--pos-surface)', borderRadius: 12, padding: 12, border: `1px solid ${selected.has(p.id) ? ACC : 'var(--pos-border)'}`, boxShadow: selected.has(p.id) ? `0 0 0 2px ${ACC_BORDER}` : 'none', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
               {bulkMode && tab === 'pending' && (
                 <input type="checkbox" checked={selected.has(p.id)} onChange={() => {
@@ -261,18 +261,18 @@ export default function DispatchPage() {
                   setSelected(s)
                 }} style={{ width: 18, height: 18, accentColor: ACC }} />
               )}
-              <span style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: '#1a1916' }}>{p.tracking_number}</span>
+              <span style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)' }}>{p.tracking_number}</span>
               <span style={{ marginLeft: 'auto', background: `${STATUS_COLOR[p.status] || '#6b6760'}18`, color: STATUS_COLOR[p.status] || '#6b6760', padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700 }}>{STATUS_LABEL[p.status] || p.status}</span>
             </div>
 
-            <div style={{ fontSize: 12, color: '#6b6760', lineHeight: 1.5 }}>
+            <div style={{ fontSize: 12, color: 'var(--pos-muted)', lineHeight: 1.5 }}>
               <div>📦 {p.description || 'No description'} {p.weight_kg ? `· ${p.weight_kg}kg` : ''}</div>
               <div>👤 {p.sender_name || '—'} → {p.receiver_name || '—'}</div>
               <div>📍 {p.destination_city || p.destination_branch?.name || '—'}</div>
               {p.truck && <div>🚛 {p.truck.plate_number}</div>}
               {p.driver && <div>🧑‍✈️ {p.driver.name}</div>}
               {p.route && <div>🛤️ {p.route.name}</div>}
-              <div style={{ fontSize: 11, color: '#9b978f', marginTop: 2 }}>{timeAgo(p.created_at)}</div>
+              <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginTop: 2 }}>{timeAgo(p.created_at)}</div>
             </div>
 
             {/* Actions */}
@@ -286,7 +286,7 @@ export default function DispatchPage() {
               {tab === 'assigned' && (
                 <>
                   <button onClick={() => markLoaded(p.id)} style={{ background: '#6366f1', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Mark Loaded</button>
-                  <button onClick={() => markDispatched(p.id)} style={{ background: GREEN, color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Dispatch ✓</button>
+                  <button onClick={() => markDispatched(p.id)} className="pos-btn-primary" style={{ background: 'var(--pos-success)', color: 'var(--pos-surface)', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Dispatch ✓</button>
                 </>
               )}
             </div>
@@ -296,29 +296,29 @@ export default function DispatchPage() {
 
       {/* Bulk assign bottom bar */}
       {bulkMode && selected.size > 0 && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: '#fff', borderTop: `2px solid ${ACC}`, padding: 16, zIndex: 100 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1916', marginBottom: 8 }}>Assign {selected.size} parcels</div>
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--pos-surface)', borderTop: `2px solid ${ACC}`, padding: 16, zIndex: 100 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 8 }}>Assign {selected.size} parcels</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <select value={selTruck} onChange={e => setSelTruck(e.target.value)} style={{ padding: '8px 12px', border: '1px solid #e5e2dc', borderRadius: 8, fontSize: 13 }}>
+            <select value={selTruck} onChange={e => setSelTruck(e.target.value)} style={{ padding: '8px 12px', border: '1px solid var(--pos-border)', borderRadius: 8, fontSize: 13 }}>
               <option value="">Select truck…</option>
               {trucks.filter(t => t.status === 'available').map(t => (
                 <option key={t.id} value={t.id}>{t.plate_number} {t.make_model ? `(${t.make_model})` : ''}</option>
               ))}
             </select>
-            <select value={selDriver} onChange={e => setSelDriver(e.target.value)} style={{ padding: '8px 12px', border: '1px solid #e5e2dc', borderRadius: 8, fontSize: 13 }}>
+            <select value={selDriver} onChange={e => setSelDriver(e.target.value)} style={{ padding: '8px 12px', border: '1px solid var(--pos-border)', borderRadius: 8, fontSize: 13 }}>
               <option value="">Select driver…</option>
               {drivers.map(d => (
                 <option key={d.id} value={d.id}>{d.name}</option>
               ))}
             </select>
-            <select value={selRoute} onChange={e => setSelRoute(e.target.value)} style={{ padding: '8px 12px', border: '1px solid #e5e2dc', borderRadius: 8, fontSize: 13 }}>
+            <select value={selRoute} onChange={e => setSelRoute(e.target.value)} style={{ padding: '8px 12px', border: '1px solid var(--pos-border)', borderRadius: 8, fontSize: 13 }}>
               <option value="">Select route (optional)…</option>
               {routes.map(r => (
                 <option key={r.id} value={r.id}>{r.name || `${r.origin?.name} → ${r.destination?.name}`}</option>
               ))}
             </select>
-            <button onClick={handleBulkDispatch} disabled={bulkSaving || !selTruck || !selDriver}
-              style={{ background: (!selTruck || !selDriver) ? '#ccc' : ACC, color: '#fff', border: 'none', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 800, cursor: (!selTruck || !selDriver) ? 'default' : 'pointer' }}>
+            <button onClick={handleBulkDispatch} disabled={bulkSaving || !selTruck || !selDriver} className="pos-btn-primary"
+              style={{ background: (!selTruck || !selDriver) ? '#ccc' : ACC, color: 'var(--pos-surface)', border: 'none', borderRadius: 10, padding: '12px', fontSize: 14, fontWeight: 800, cursor: (!selTruck || !selDriver) ? 'not-allowed' : 'pointer', opacity: (!selTruck || !selDriver) ? 0.5 : 1 }}>
               {bulkSaving ? 'Assigning…' : `Assign ${selected.size} parcels`}
             </button>
           </div>
@@ -328,43 +328,43 @@ export default function DispatchPage() {
       {/* Single assign modal */}
       {assigning && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', borderRadius: '16px 16px 0 0', padding: 20, width: '100%', maxWidth: 500, maxHeight: '80vh', overflow: 'auto' }}>
+          <div className="pos-sheet" style={{ background: 'var(--pos-surface)', borderRadius: '16px 16px 0 0', padding: 20, width: '100%', maxWidth: 500, maxHeight: '80vh', overflow: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#1a1916' }}>Assign {assigning.tracking_number}</div>
-              <button onClick={() => setAssigning(null)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: '#6b6760' }}>×</button>
+              <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--pos-ink)' }}>Assign {assigning.tracking_number}</div>
+              <button onClick={() => setAssigning(null)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: 'var(--pos-muted)' }}>×</button>
             </div>
 
-            <div style={{ fontSize: 12, color: '#6b6760', marginBottom: 16 }}>
+            <div style={{ fontSize: 12, color: 'var(--pos-muted)', marginBottom: 16 }}>
               <div>📦 {assigning.description || '—'} {assigning.weight_kg ? `· ${assigning.weight_kg}kg` : ''}</div>
               <div>📍 {assigning.receiver_name} — {assigning.destination_city || assigning.destination_branch?.name || '—'}</div>
             </div>
 
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#1a1916', marginBottom: 4 }}>Truck *</label>
-            <select value={selTruck} onChange={e => setSelTruck(e.target.value)} style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e2dc', borderRadius: 8, fontSize: 13, marginBottom: 12, boxSizing: 'border-box' }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 4 }}>Truck *</label>
+            <select value={selTruck} onChange={e => setSelTruck(e.target.value)} style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--pos-border)', borderRadius: 8, fontSize: 13, marginBottom: 12, boxSizing: 'border-box' }}>
               <option value="">Select truck…</option>
               {trucks.filter(t => t.status === 'available' || t.id === assigning.assigned_truck_id).map(t => (
                 <option key={t.id} value={t.id}>{t.plate_number} {t.make_model ? `(${t.make_model})` : ''}</option>
               ))}
             </select>
 
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#1a1916', marginBottom: 4 }}>Driver *</label>
-            <select value={selDriver} onChange={e => setSelDriver(e.target.value)} style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e2dc', borderRadius: 8, fontSize: 13, marginBottom: 12, boxSizing: 'border-box' }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 4 }}>Driver *</label>
+            <select value={selDriver} onChange={e => setSelDriver(e.target.value)} style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--pos-border)', borderRadius: 8, fontSize: 13, marginBottom: 12, boxSizing: 'border-box' }}>
               <option value="">Select driver…</option>
               {drivers.map(d => (
                 <option key={d.id} value={d.id}>{d.name}</option>
               ))}
             </select>
 
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#1a1916', marginBottom: 4 }}>Route</label>
-            <select value={selRoute} onChange={e => setSelRoute(e.target.value)} style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e2dc', borderRadius: 8, fontSize: 13, marginBottom: 16, boxSizing: 'border-box' }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 4 }}>Route</label>
+            <select value={selRoute} onChange={e => setSelRoute(e.target.value)} style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--pos-border)', borderRadius: 8, fontSize: 13, marginBottom: 16, boxSizing: 'border-box' }}>
               <option value="">Select route (optional)…</option>
               {routes.map(r => (
                 <option key={r.id} value={r.id}>{r.name || `${r.origin?.name} → ${r.destination?.name}`}</option>
               ))}
             </select>
 
-            <button onClick={handleAssign} disabled={saving || !selTruck || !selDriver}
-              style={{ width: '100%', background: (!selTruck || !selDriver) ? '#ccc' : ACC, color: '#fff', border: 'none', borderRadius: 10, padding: '14px', fontSize: 15, fontWeight: 800, cursor: (!selTruck || !selDriver) ? 'default' : 'pointer' }}>
+            <button onClick={handleAssign} disabled={saving || !selTruck || !selDriver} className="pos-btn-primary"
+              style={{ width: '100%', background: (!selTruck || !selDriver) ? '#ccc' : ACC, color: 'var(--pos-surface)', border: 'none', borderRadius: 10, padding: '14px', fontSize: 15, fontWeight: 800, cursor: (!selTruck || !selDriver) ? 'not-allowed' : 'pointer', opacity: (!selTruck || !selDriver) ? 0.5 : 1 }}>
               {saving ? 'Assigning…' : 'Assign Parcel'}
             </button>
           </div>

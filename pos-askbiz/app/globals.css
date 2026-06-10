@@ -1,0 +1,186 @@
+/* ─── Design tokens ─────────────────────────────────────────────────────────
+   Single source of truth for the POS colour palette.
+   All inline-style hex values should reference these. ───────────────────── */
+:root {
+  /* Surfaces */
+  --pos-bg:          #f9f8f6;
+  --pos-surface:     #ffffff;
+  --pos-border:      #e5e2dc;
+
+  /* Ink */
+  --pos-ink:         #1a1916;
+  --pos-muted:       #6b6760;   /* 5.62:1 on white — passes AA */
+  --pos-hint:        #78736d;   /* 4.70:1 on white — was #a39e97 (2.66:1 FAIL) */
+
+  /* Accent */
+  --pos-accent:      #d08a59;
+  --pos-accent-pale: rgba(208, 138, 89, 0.08);
+  --pos-accent-ring: rgba(208, 138, 89, 0.25);
+
+  /* Semantic */
+  --pos-danger:         #dc2626;
+  --pos-danger-pale:    rgba(220, 38, 38, 0.06);
+  --pos-danger-ring:    rgba(220, 38, 38, 0.25);
+
+  --pos-success:        #16a34a;
+  --pos-success-pale:   rgba(22, 163, 74, 0.08);
+  --pos-success-ring:   rgba(22, 163, 74, 0.2);
+
+  --pos-warning:        #f97316;
+}
+
+/* ─── Focus rings ────────────────────────────────────────────────────────────
+   Restore keyboard focus indicators suppressed by inline outline:none.
+   :focus-visible only fires for keyboard / sequential navigation, so mouse
+   users never see the ring — cashiers using touch/tap are unaffected.
+   !important overrides inline styles. ──────────────────────────────────────── */
+*:focus-visible {
+  outline: 2px solid #d08a59 !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}
+
+/* ─── Animation easing tokens ───────────────────────────────────────────────
+   Match animate.md: ease-out-quint for confident entrances,
+   ease-out-quart for state changes. No bounce, no elastic. ─────────────────── */
+:root {
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo:  cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─── Button press feedback ──────────────────────────────────────────────────
+   100ms scale-down on :active gives cashiers immediate tap confirmation.
+   Applied to every <button> — overridden per-class when needed. ────────────── */
+button {
+  transition: transform 100ms var(--ease-out-quint),
+              opacity   100ms ease;
+}
+button:active {
+  transform: scale(0.96);
+  opacity: 0.88;
+}
+
+/* Large primary CTA buttons — slightly smaller scale down */
+.pos-btn-primary:active {
+  transform: scale(0.97) !important;
+  opacity: 0.92 !important;
+}
+
+/* Qty ± buttons — more pronounced tap feel */
+.pos-qty-btn {
+  transition: transform 80ms var(--ease-out-quint),
+              background 120ms ease !important;
+}
+.pos-qty-btn:active {
+  transform: scale(0.84) !important;
+  opacity: 1 !important;
+}
+
+/* Payment / selector tabs — smooth color crossfade */
+.pos-tab {
+  transition: border-color  180ms var(--ease-out-quart),
+              background    180ms var(--ease-out-quart),
+              color         180ms var(--ease-out-quart) !important;
+}
+
+/* ─── Sheet modal slide-up ───────────────────────────────────────────────────
+   Shift modal, payment sheet — slide up from bottom + fade. ────────────────── */
+@keyframes pos-sheet-in {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.pos-sheet {
+  animation: pos-sheet-in 280ms var(--ease-out-quint) both;
+}
+
+/* ─── Alert banners ─────────────────────────────────────────────────────────
+   Geo error, checkout error, save error — slide down from above + fade. ───── */
+@keyframes pos-banner-in {
+  from { transform: translateY(-8px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.pos-banner {
+  animation: pos-banner-in 220ms var(--ease-out-quart) both;
+}
+
+/* ─── Screen entrance ────────────────────────────────────────────────────────
+   Fade only — transform would create a containing block that breaks
+   position:fixed modals inside the screen. ─────────────────────────────────── */
+@keyframes pos-screen-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.pos-screen {
+  animation: pos-screen-in 240ms var(--ease-out-quint) both;
+}
+
+/* ─── QR / card reveal ──────────────────────────────────────────────────────
+   QR code and payment card pop-in — scale up from 92% + fade. ─────────────── */
+@keyframes pos-reveal {
+  from { transform: scale(0.92); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+.pos-reveal {
+  animation: pos-reveal 260ms var(--ease-out-quint) both;
+}
+
+/* ─── Cart item appear ───────────────────────────────────────────────────────
+   New items slide in from the left when added to cart. ──────────────────────── */
+@keyframes pos-item-in {
+  from { transform: translateX(-8px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+.pos-item {
+  animation: pos-item-in 200ms var(--ease-out-quart) both;
+}
+
+/* ─── Success pop ───────────────────────────────────────────────────────────
+   Receipt/success screen icon — scale up with a confident snap. ─────────────── */
+@keyframes pos-success-pop {
+  0%   { transform: scale(0.6); opacity: 0; }
+  65%  { transform: scale(1.08); }
+  100% { transform: scale(1);   opacity: 1; }
+}
+.pos-success-icon {
+  animation: pos-success-pop 380ms var(--ease-out-quint) both;
+}
+
+/* ─── Input focus transitions ───────────────────────────────────────────────
+   Inputs get a smooth border-color lift on focus. The outline is handled by
+   :focus-visible above; this adds the border-color crossfade for inputs that
+   have inline outline:none (most of them). ──────────────────────────────────── */
+input, textarea, select {
+  transition: border-color 150ms var(--ease-out-quart);
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--pos-accent) !important;
+}
+
+/* ─── Interactive list items ────────────────────────────────────────────────
+   pos-item items that are inside a button or have cursor:pointer get a
+   subtle background lift on hover — same warmth as pos-accent-pale. ─────────── */
+button.pos-item:hover,
+a.pos-item:hover,
+[role="button"].pos-item:hover {
+  background: var(--pos-accent-pale) !important;
+  transition: background 120ms ease;
+}
+
+/* ─── Button hover brightening ───────────────────────────────────────────────
+   Primary accent buttons brighten slightly on hover before the press.
+   Using filter rather than color so it works with any background value. ──────── */
+.pos-btn-primary:hover {
+  filter: brightness(1.06);
+  transition: filter 150ms ease, transform 100ms var(--ease-out-quint), opacity 100ms ease;
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────────────────────
+   Honour the OS accessibility preference. ──────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

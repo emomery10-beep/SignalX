@@ -139,7 +139,7 @@ export default function RestaurantHub() {
   ]
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
@@ -162,11 +162,11 @@ export default function RestaurantHub() {
 
         {/* Pending Online Orders — top alert */}
         {pendingOnline.length > 0 && (
-          <div style={{ background: '#7f1d1d', border: '1px solid #ef4444', borderRadius: 12, padding: 16, marginBottom: 24 }}>
+          <div className="pos-banner" style={{ background: '#7f1d1d', border: '1px solid #ef4444', borderRadius: 12, padding: 16, marginBottom: 24 }}>
             <div style={{ fontWeight: 700, color: '#fca5a5', marginBottom: 12 }}>⚠️ Online Orders Awaiting Acceptance</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {pendingOnline.map(o => (
-                <div key={o.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.3)', padding: '10px 14px', borderRadius: 8 }}>
+              {pendingOnline.map((o, idx) => (
+                <div key={o.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.3)', padding: '10px 14px', borderRadius: 8, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                   <div>
                     <span style={{ fontWeight: 600, color: '#fff' }}>{o.customer_name || 'Customer'}</span>
                     <span style={{ color: '#fca5a5', marginLeft: 8 }}>{sym}{o.total?.toFixed(2)}</span>
@@ -175,7 +175,8 @@ export default function RestaurantHub() {
                   <button
                     onClick={() => acceptOnline(o.id)}
                     disabled={accepting === o.id}
-                    style={{ background: ACC, border: 'none', color: '#fff', padding: '6px 16px', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}
+                    className="pos-btn-primary"
+                    style={{ background: ACC, border: 'none', color: '#fff', padding: '6px 16px', borderRadius: 6, cursor: accepting === o.id ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: 13, opacity: accepting === o.id ? 0.5 : 1 }}
                   >
                     {accepting === o.id ? '...' : 'Accept'}
                   </button>
@@ -234,7 +235,7 @@ export default function RestaurantHub() {
 
         {/* Daily Brief card */}
         {brief && (
-          <div style={{ background: '#1e293b', border: `1px solid ${ACC}40`, borderRadius: 12, padding: '18px 20px', marginBottom: 24, display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+          <div className="pos-reveal" style={{ background: '#1e293b', border: `1px solid ${ACC}40`, borderRadius: 12, padding: '18px 20px', marginBottom: 24, display: 'flex', gap: 20, alignItems: 'flex-start' }}>
             {/* Health score ring */}
             <div style={{ flexShrink: 0, textAlign: 'center' }}>
               <svg width={64} height={64} viewBox="0 0 64 64">
@@ -305,7 +306,7 @@ export default function RestaurantHub() {
                 </div>
               ))}
             </div>
-            <button onClick={() => router.push('/restaurant/floor')} style={{ width: '100%', background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
+            <button onClick={() => router.push('/restaurant/floor')} className="pos-btn-primary" style={{ width: '100%', background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
               Open Floor Plan →
             </button>
           </div>
@@ -316,7 +317,7 @@ export default function RestaurantHub() {
             {topDishes.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>No orders yet today</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {topDishes.map((dish, i) => (
-                <div key={dish.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div key={dish.name} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 10, animationDelay: `${Math.min(i, 8) * 40}ms` }}>
                   <span style={{ color: '#64748b', fontSize: 12, width: 16, textAlign: 'right' }}>{i + 1}</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600 }}>{dish.name}</div>
@@ -348,9 +349,10 @@ export default function RestaurantHub() {
 
         {/* Navigation tiles */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
-          {nav.map(n => (
+          {nav.map((n, idx) => (
             <button key={n.href} onClick={() => router.push(n.href)}
-              style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: '18px 16px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s' }}
+              className="pos-item"
+              style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: '18px 16px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s', animationDelay: `${Math.min(idx, 8) * 40}ms` }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = ACC)}
               onMouseLeave={e => (e.currentTarget.style.borderColor = '#334155')}
             >

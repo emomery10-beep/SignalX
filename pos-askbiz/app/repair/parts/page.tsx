@@ -104,7 +104,7 @@ export default function RepairParts() {
   if (!ready) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: MUTED, fontFamily: 'system-ui, sans-serif' }}>Loading…</div>
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/repair')} style={{ background: '#334155', border: 'none', color: MUTED, width: 36, height: 36, borderRadius: 8, cursor: 'pointer', fontSize: 16 }}>←</button>
@@ -120,7 +120,7 @@ export default function RepairParts() {
       <div style={{ padding: 20, maxWidth: 1100, margin: '0 auto' }}>
         {/* Add form */}
         {showForm && (
-          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 18, marginBottom: 18 }}>
+          <div className="pos-sheet" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 18, marginBottom: 18 }}>
             <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>Add a part</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
               <div><label style={labelStyle}>Part name *</label><input style={inputStyle} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. iPhone 13 screen" /></div>
@@ -131,9 +131,9 @@ export default function RepairParts() {
               <div><label style={labelStyle}>Reorder point</label><input style={inputStyle} inputMode="numeric" value={form.low_stock_threshold} onChange={e => setForm(f => ({ ...f, low_stock_threshold: e.target.value }))} placeholder="5" /></div>
               <div><label style={labelStyle}>Supplier</label><input style={inputStyle} value={form.supplier} onChange={e => setForm(f => ({ ...f, supplier: e.target.value }))} placeholder="Supplier name" /></div>
             </div>
-            {formError && <div style={{ color: BAD, fontSize: 13, marginTop: 12 }}>{formError}</div>}
+            {formError && <div className="pos-banner" role="alert" style={{ color: BAD, fontSize: 13, marginTop: 12 }}>{formError}</div>}
             <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-              <button onClick={addPart} disabled={saving} style={{ padding: '11px 22px', borderRadius: 9, background: ACC, color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 14, opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save part'}</button>
+              <button onClick={addPart} disabled={saving} className="pos-btn-primary" style={{ padding: '11px 22px', borderRadius: 9, background: ACC, color: '#fff', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 14, opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save part'}</button>
               <button onClick={() => setShowForm(false)} style={{ padding: '11px 22px', borderRadius: 9, background: '#334155', color: MUTED, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>Cancel</button>
             </div>
           </div>
@@ -166,10 +166,10 @@ export default function RepairParts() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map(p => {
+                  {filtered.map((p, idx) => {
                     const low = isLow(p)
                     return (
-                      <tr key={p.id} style={{ background: low ? 'rgba(239,68,68,.06)' : 'transparent' }}>
+                      <tr key={p.id} className="pos-item" style={{ background: low ? 'rgba(239,68,68,.06)' : 'transparent', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                         <td style={{ ...td, fontWeight: 600, color: '#f1f5f9' }}>{p.name}</td>
                         <td style={{ ...td, color: MUTED }}>{p.sku || '—'}</td>
                         <td style={{ ...td, textAlign: 'right' }}>

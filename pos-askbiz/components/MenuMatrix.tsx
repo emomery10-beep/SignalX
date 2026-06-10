@@ -72,7 +72,7 @@ export default function MenuMatrix({ ownerId, staffId, sym = '£' }: { ownerId?:
   const filtered = filter ? items.filter(i => i.quadrant === filter) : items
 
   return (
-    <div style={{ padding: '16px 20px' }}>
+    <div className="pos-screen" style={{ padding: '16px 20px' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div>
@@ -92,7 +92,7 @@ export default function MenuMatrix({ ownerId, staffId, sym = '£' }: { ownerId?:
       </div>
 
       {/* Quadrant summary cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
+      <div className="pos-reveal" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
         {(['star', 'plowhorse', 'puzzle', 'dog'] as const).map(q => {
           const cfg = QUADRANT[q]
           const count = summary[`${q}s` as keyof MatrixSummary] as number || (q === 'star' ? summary.stars : 0)
@@ -127,10 +127,11 @@ export default function MenuMatrix({ ownerId, staffId, sym = '£' }: { ownerId?:
         {filtered.map((item, i) => {
           const cfg = QUADRANT[item.quadrant]
           return (
-            <div key={i} style={{
+            <div key={i} className="pos-item" style={{
               display: 'flex', alignItems: 'center', gap: 10,
               padding: '10px 12px', borderRadius: 12,
               background: '#1e1e1e', border: '1px solid #2a2a2a',
+              animationDelay: `${Math.min(i, 8) * 40}ms`,
             }}>
               <span style={{ fontSize: 16, flexShrink: 0 }}>{cfg.icon}</span>
               <div style={{ flex: 1, minWidth: 0 }}>

@@ -179,7 +179,7 @@ export default function SalonClients() {
   const current = useMemo(() => clients.find(c => c.key === selected) || null, [clients, selected])
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -208,11 +208,11 @@ export default function SalonClients() {
               </div>
               {loading && <div style={{ padding: 20, color: C.dim, fontSize: 13 }}>Loading…</div>}
               {!loading && filtered.length === 0 && <div style={{ padding: 20, color: C.dim, fontSize: 13, textAlign: 'center' }}>No clients found. Clients appear from saved profiles or once linked to a transaction.</div>}
-              {filtered.map(c => {
+              {filtered.map((c, idx) => {
                 const seg = segment(c)
                 return (
-                  <div key={c.key} onClick={() => setSelected(c.key)}
-                    style={{ display: 'grid', gridTemplateColumns: '2fr 1.3fr 0.8fr 1fr 1.2fr 90px', gap: 8, padding: '12px 16px', borderBottom: '1px solid #283548', fontSize: 13, alignItems: 'center', cursor: 'pointer' }}
+                  <button key={c.key} type="button" className="pos-item" onClick={() => setSelected(c.key)}
+                    style={{ display: 'grid', gridTemplateColumns: '2fr 1.3fr 0.8fr 1fr 1.2fr 90px', gap: 8, padding: '12px 16px', borderBottom: '1px solid #283548', fontSize: 13, alignItems: 'center', cursor: 'pointer', animationDelay: `${Math.min(idx, 8) * 40}ms`, width: '100%', background: 'transparent', border: 'none', color: 'inherit', textAlign: 'left', fontFamily: 'inherit' }}
                     onMouseEnter={e => (e.currentTarget.style.background = '#243044')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
@@ -222,7 +222,7 @@ export default function SalonClients() {
                     <div style={{ fontWeight: 700 }}>{sym}{c.totalSpend.toFixed(2)}</div>
                     <div style={{ color: C.muted }}>{fmtDate(c.lastVisit)}</div>
                     <div><span style={{ background: seg.color + '22', color: seg.color, borderRadius: 12, padding: '3px 9px', fontSize: 11, fontWeight: 700 }}>{seg.label}</span></div>
-                  </div>
+                  </button>
                 )
               })}
             </div>
@@ -490,7 +490,7 @@ function ClientProfile({ client, sym, onClientPersisted }: { client: Client; sym
 
         {/* Camera viewport */}
         {camError && (
-          <div style={{ background: '#451a03', border: `1px solid ${C.warn}`, borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: '#fcd34d' }}>
+          <div className="pos-banner" role="alert" style={{ background: '#451a03', border: `1px solid ${C.warn}`, borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: '#fcd34d' }}>
             ⚠️ {camError}
           </div>
         )}
@@ -545,8 +545,8 @@ function ClientProfile({ client, sym, onClientPersisted }: { client: Client; sym
         <div style={{ fontSize: 11, color: C.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Client Notes</div>
         <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Allergies, preferences, scalp sensitivity, conversation notes…" style={taArea} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
-          <button onClick={saveNotes} style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 20px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Save</button>
-          {savedFlash && <span style={{ color: C.good, fontSize: 13 }}>✓ Saved</span>}
+          <button className="pos-btn-primary" onClick={saveNotes} style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 20px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Save</button>
+          {savedFlash && <span className="pos-success-icon" style={{ color: C.good, fontSize: 13 }}>✓ Saved</span>}
         </div>
       </div>
 
@@ -554,8 +554,8 @@ function ClientProfile({ client, sym, onClientPersisted }: { client: Client; sym
       <div style={card}>
         <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Visit History</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {client.txs.slice().sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at)).map(t => (
-            <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '10px 14px' }}>
+          {client.txs.slice().sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at)).map((t, idx) => (
+            <div key={t.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '10px 14px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
               <div style={{ fontSize: 13, color: ACC, fontWeight: 600, width: 110 }}>{fmtDate(t.created_at)}</div>
               <div style={{ flex: 1, fontSize: 13, color: '#e2e8f0' }}>{(t.pos_items || []).map(i => i.name).join(', ') || 'Service'}</div>
               <div style={{ fontSize: 12, color: C.muted }}>{t.cashier?.name || '—'}</div>

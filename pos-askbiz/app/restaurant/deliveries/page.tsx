@@ -253,7 +253,7 @@ export default function DeliveriesPage() {
   const totalInvoice    = items.reduce((s, it) => s + (it.line_total || 0), 0)
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/restaurant')} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 18 }}>←</button>
@@ -271,7 +271,7 @@ export default function DeliveriesPage() {
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 20px' }}>
         {/* Error */}
         {error && (
-          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, color: '#fca5a5', fontSize: 13 }}>
+          <div className="pos-banner" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, color: '#fca5a5', fontSize: 13 }}>
             ⚠ {error}
             <button onClick={() => setError(null)} style={{ float: 'right', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 16 }}>×</button>
           </div>
@@ -286,7 +286,7 @@ export default function DeliveriesPage() {
               Point your camera at a supplier invoice or delivery note. Claude will extract every line item, match it to your menu, and let you update food costs in one tap.
             </div>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button onClick={openCamera}
+              <button onClick={openCamera} className="pos-btn-primary"
                 style={{ background: ACC, border: 'none', color: '#fff', padding: '14px 28px', borderRadius: 12, cursor: 'pointer', fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8 }}>
                 📷 Take Photo
               </button>
@@ -384,11 +384,12 @@ export default function DeliveriesPage() {
                 const marginColor = margin === null ? '#64748b' : margin >= 65 ? '#22c55e' : margin >= 50 ? '#f59e0b' : '#ef4444'
 
                 return (
-                  <div key={idx} style={{
+                  <div key={idx} className="pos-item" style={{
                     background: '#1e293b',
                     border: `1px solid ${item.confirmed ? ACC : '#334155'}`,
                     borderRadius: 10, padding: '14px 16px',
                     opacity: !item.matched ? 0.7 : 1,
+                    animationDelay: `${Math.min(idx, 8) * 40}ms`,
                   }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                       {/* Checkbox — only for matched items */}
@@ -479,7 +480,7 @@ export default function DeliveriesPage() {
               <button onClick={reset} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '10px 18px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
                 Cancel
               </button>
-              <button onClick={confirmUpdates} disabled={confirmedCount === 0 || confirming}
+              <button onClick={confirmUpdates} disabled={confirmedCount === 0 || confirming} className="pos-btn-primary"
                 style={{ background: confirmedCount > 0 ? '#22c55e' : '#334155', border: 'none', color: '#fff', padding: '10px 20px', borderRadius: 8, cursor: confirmedCount > 0 ? 'pointer' : 'default', fontWeight: 700, fontSize: 13, opacity: confirmedCount === 0 ? 0.5 : 1 }}>
                 {confirming ? 'Saving...' : `✓ Confirm ${confirmedCount > 0 ? confirmedCount + ' update' + (confirmedCount !== 1 ? 's' : '') : ''}`}
               </button>
@@ -497,14 +498,14 @@ export default function DeliveriesPage() {
 
         {/* ── DONE STAGE ── */}
         {stage === 'done' && (
-          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-            <div style={{ fontSize: 64, marginBottom: 16 }}>✅</div>
+          <div className="pos-reveal" style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <div className="pos-success-icon" style={{ fontSize: 64, marginBottom: 16 }}>✅</div>
             <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 8, color: '#22c55e' }}>{doneMsg}</div>
             <div style={{ fontSize: 14, color: '#64748b', marginBottom: 32 }}>
               Margins recalculated. Price data added to the collective intelligence pool.
             </div>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button onClick={reset}
+              <button onClick={reset} className="pos-btn-primary"
                 style={{ background: ACC, border: 'none', color: '#fff', padding: '12px 24px', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
                 Scan Another Delivery
               </button>

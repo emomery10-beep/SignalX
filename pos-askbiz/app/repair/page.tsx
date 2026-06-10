@@ -144,7 +144,7 @@ export default function RepairHub() {
   const recent = [...jobs].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 10)
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -154,7 +154,7 @@ export default function RepairHub() {
             <div style={{ fontSize: 12, color: MUTED }}>Workshop operations dashboard</div>
           </div>
         </div>
-        <button onClick={() => router.push('/repair/intake')} style={{ background: ACC, border: 'none', color: '#fff', padding: '10px 18px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+        <button onClick={() => router.push('/repair/intake')} className="pos-btn-primary" style={{ background: ACC, border: 'none', color: '#fff', padding: '10px 18px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
           📸 New Intake
         </button>
       </div>
@@ -162,8 +162,8 @@ export default function RepairHub() {
       <div style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
         {/* KPI Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
-          {kpis.map(kpi => (
-            <div key={kpi.label} style={{ background: '#1e293b', border: `1px solid ${kpi.status ? statusColor[kpi.status] + '40' : '#334155'}`, borderRadius: 12, padding: '14px 16px' }}>
+          {kpis.map((kpi, idx) => (
+            <div key={kpi.label} className="pos-reveal" style={{ background: '#1e293b', border: `1px solid ${kpi.status ? statusColor[kpi.status] + '40' : '#334155'}`, borderRadius: 12, padding: '14px 16px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
               <div style={{ fontSize: 11, color: DIM, textTransform: 'uppercase', letterSpacing: 1 }}>{kpi.label}</div>
               <div style={{ fontSize: 22, fontWeight: 700, color: kpi.status ? statusColor[kpi.status] : '#f1f5f9', margin: '4px 0' }}>{kpi.value}</div>
               {kpi.sub && <div style={{ fontSize: 11, color: DIM }}>{kpi.sub}</div>}
@@ -197,9 +197,10 @@ export default function RepairHub() {
           {loading && jobs.length === 0 && <div style={{ color: DIM, fontSize: 13 }}>Loading…</div>}
           {!loading && recent.length === 0 && <div style={{ color: DIM, fontSize: 13, padding: '20px 0', textAlign: 'center' }}>No repair tickets yet. Start with a new intake.</div>}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {recent.map(j => (
+            {recent.map((j, idx) => (
               <button key={j.id} onClick={() => router.push('/repair/tickets')}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0f172a', border: '1px solid #334155', borderRadius: 8, padding: '12px 14px', cursor: 'pointer', textAlign: 'left' }}>
+                className="pos-item"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0f172a', border: '1px solid #334155', borderRadius: 8, padding: '12px 14px', cursor: 'pointer', textAlign: 'left', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#f1f5f9' }}>
                     {j.device_model || 'Unknown device'}

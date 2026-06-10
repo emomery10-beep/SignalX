@@ -109,7 +109,7 @@ export default function ProductionLogPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -128,8 +128,8 @@ export default function ProductionLogPage() {
           <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20, marginBottom: 20 }}>
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>Yield Summary <span style={{ fontSize: 12, color: '#64748b', fontWeight: 400 }}>output ÷ intake per product</span></div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
-              {yields.map(y => (
-                <div key={y.product} style={{ background: '#0f172a', borderRadius: 8, padding: '12px 14px' }}>
+              {yields.map((y, idx) => (
+                <div key={y.product} className="pos-item" style={{ background: '#0f172a', borderRadius: 8, padding: '12px 14px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{y.product}</div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 4 }}>
                     <span style={{ fontSize: 20, fontWeight: 700, color: y.pct == null ? '#94a3b8' : y.pct >= 90 ? GOOD : y.pct >= 70 ? WARN : BAD }}>
@@ -179,11 +179,12 @@ export default function ProductionLogPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map(c => {
+                  {filtered.map((c, idx) => {
                     const meta = TYPE_META[c.type]
                     return (
                       <tr key={c.id} onClick={() => setDetail(c)}
-                        style={{ borderTop: '1px solid #334155', cursor: 'pointer' }}
+                        className="pos-item"
+                        style={{ borderTop: '1px solid #334155', cursor: 'pointer', animationDelay: `${Math.min(idx, 8) * 40}ms` }}
                         onMouseEnter={e => (e.currentTarget.style.background = '#0f172a')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
@@ -211,7 +212,7 @@ export default function ProductionLogPage() {
       {/* Detail drawer */}
       {detail && (
         <div onClick={() => setDetail(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1e293b', borderRadius: '16px 16px 0 0', padding: 24, width: '100%', maxWidth: 560, maxHeight: '88vh', overflow: 'auto', borderTop: `3px solid ${TYPE_META[detail.type].color}` }}>
+          <div onClick={e => e.stopPropagation()} className="pos-sheet" style={{ background: '#1e293b', borderRadius: '16px 16px 0 0', padding: 24, width: '100%', maxWidth: 560, maxHeight: '88vh', overflow: 'auto', borderTop: `3px solid ${TYPE_META[detail.type].color}` }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <span style={{ background: `${TYPE_META[detail.type].color}22`, color: TYPE_META[detail.type].color, padding: '5px 12px', borderRadius: 8, fontSize: 14, fontWeight: 700 }}>{TYPE_META[detail.type].icon} {TYPE_META[detail.type].label}</span>
               <button onClick={() => setDetail(null)} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 24, cursor: 'pointer' }}>×</button>
@@ -222,7 +223,7 @@ export default function ProductionLogPage() {
               <img src={detail.photo_url} alt="capture" style={{ width: '100%', borderRadius: 12, marginBottom: 16, border: '1px solid #334155' }} />
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+            <div className="pos-reveal" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
               <Field label="Product" value={detail.product_name || '—'} />
               <Field label="Quantity" value={`${detail.quantity ?? '—'} ${detail.batch_ref || ''}`.trim()} />
               <Field label="Status" value={detail.status} valueColor={STATUS_COLOR[detail.status]} />

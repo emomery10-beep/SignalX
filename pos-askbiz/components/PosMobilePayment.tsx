@@ -35,7 +35,6 @@ export default function PosMobilePayment({
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    // If autoSend and phone already provided, fire immediately
     if (autoSend && customerPhone && status === 'idle') {
       sendMpesaPrompt(customerPhone)
     } else if (status === 'idle') {
@@ -44,7 +43,7 @@ export default function PosMobilePayment({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Listen to Supabase Realtime for payment updates
+  // Supabase Realtime for payment updates
   useEffect(() => {
     if (!transactionId || status !== 'waiting') return
 
@@ -83,7 +82,7 @@ export default function PosMobilePayment({
         clearInterval(timer)
         setStatus('failed')
         setErrorMsg('Payment timed out. Please try again.')
-        onPaymentFailed('Payment timed out. Please try again.')
+        onPaymentFailed('Payment timed out.')
         return
       }
       try {
@@ -167,7 +166,6 @@ export default function PosMobilePayment({
   // Idle — enter phone number
   if (status === 'idle') return (
     <div style={{ marginTop: 14 }}>
-      {/* Amount banner */}
       <div style={{ padding: '12px 16px', background: GREEN, borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>M-Pesa payment</span>
         <span style={{ color: '#fff', fontSize: 22, fontWeight: 900 }}>{currencySymbol}{amount.toFixed(2)}</span>
@@ -230,7 +228,7 @@ export default function PosMobilePayment({
           📲 Send M-Pesa prompt
         </button>
 
-        <div style={{ marginTop: 10, fontSize: 11, color: '#9ca3af', textAlign: 'center' }}>
+        <div style={{ marginTop: 10, fontSize: 11, color: '#78736d', textAlign: 'center' }}>
           Customer will get a popup on their phone to enter their M-Pesa PIN
         </div>
       </div>
@@ -246,7 +244,7 @@ export default function PosMobilePayment({
     </div>
   )
 
-  // Waiting for customer to approve on phone
+  // Waiting for customer PIN
   if (status === 'waiting') return (
     <div style={{ marginTop: 14 }}>
       <div style={{ padding: '12px 16px', background: GREEN, borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

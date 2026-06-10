@@ -109,7 +109,7 @@ export default function LaborPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/restaurant')} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 18 }}>←</button>
@@ -124,7 +124,7 @@ export default function LaborPage() {
               {d === 1 ? 'Today' : `${d}d`}
             </button>
           ))}
-          <button onClick={() => setShowClock(true)}
+          <button className="pos-btn-primary" onClick={() => setShowClock(true)}
             style={{ background: ACC, border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
             Clock In
           </button>
@@ -152,12 +152,12 @@ export default function LaborPage() {
           <div style={{ marginBottom: 24 }}>
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: '#22c55e' }}>🟢 Currently Clocked In</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {activeShifts.map(shift => {
+              {activeShifts.map((shift, idx) => {
                 const hours = liveHours(shift)
                 const cost  = liveCost(shift)
                 const elapsed = Math.floor((Date.now() - new Date(shift.clock_in).getTime()) / 60000)
                 return (
-                  <div key={shift.id} style={{ background: '#1e293b', border: '1px solid #14532d', borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div key={shift.id} className="pos-item" style={{ background: '#1e293b', border: '1px solid #14532d', borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                     <div style={{ fontSize: 24 }}>{ROLE_ICONS[shift.role] || '👤'}</div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 700, fontSize: 15 }}>{shift.staff?.name || 'Staff'}</div>
@@ -196,8 +196,8 @@ export default function LaborPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {completedShifts.map(shift => (
-                    <tr key={shift.id} style={{ borderTop: '1px solid #1e293b' }}>
+                  {completedShifts.map((shift, idx) => (
+                    <tr key={shift.id} className="pos-item" style={{ borderTop: '1px solid #1e293b', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                       <td style={{ padding: '10px 14px', fontSize: 14, fontWeight: 600 }}>{shift.staff?.name || '—'}</td>
                       <td style={{ padding: '10px 14px', fontSize: 13, color: '#94a3b8' }}>{ROLE_ICONS[shift.role]} {shift.role}</td>
                       <td style={{ padding: '10px 14px', fontSize: 12, color: '#94a3b8', fontVariantNumeric: 'tabular-nums' }}>
@@ -229,7 +229,7 @@ export default function LaborPage() {
       {/* Clock In Modal */}
       {showClockIn && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: 380 }}>
+          <div className="pos-sheet" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: 380 }}>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Clock In Staff</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
@@ -258,8 +258,8 @@ export default function LaborPage() {
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
               <button onClick={() => setShowClock(false)} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>Cancel</button>
-              <button onClick={clockIn} disabled={saving || !clockInForm.staff_id}
-                style={{ flex: 1, background: '#22c55e', border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>
+              <button className="pos-btn-primary" onClick={clockIn} disabled={saving || !clockInForm.staff_id}
+                style={{ flex: 1, background: '#22c55e', border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: saving || !clockInForm.staff_id ? 'not-allowed' : 'pointer', fontWeight: 700, opacity: saving || !clockInForm.staff_id ? 0.5 : 1 }}>
                 {saving ? '...' : '🟢 Clock In Now'}
               </button>
             </div>

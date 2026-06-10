@@ -150,7 +150,7 @@ export default function RepairTickets() {
   if (!ready) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: MUTED, fontFamily: 'system-ui, sans-serif' }}>Loading…</div>
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/repair')} style={{ background: '#334155', border: 'none', color: MUTED, width: 36, height: 36, borderRadius: 8, cursor: 'pointer', fontSize: 16 }}>←</button>
@@ -190,8 +190,8 @@ export default function RepairTickets() {
                     <span style={{ fontSize: 12, color: DIM }}>{colJobs.length}</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {colJobs.map(j => (
-                      <button key={j.id} onClick={() => openDetail(j)} style={{ ...card, padding: '12px 14px', textAlign: 'left', cursor: 'pointer' }}>
+                    {colJobs.map((j, idx) => (
+                      <button key={j.id} onClick={() => openDetail(j)} className="pos-item" style={{ ...card, padding: '12px 14px', textAlign: 'left', cursor: 'pointer', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: '#f1f5f9' }}>{j.device_model || 'Unknown device'}</div>
                         <div style={{ fontSize: 11, color: MUTED, marginTop: 3 }}>{j.customer_name || 'Walk-in'} · #{j.ticket_number}</div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 11, color: DIM }}>
@@ -201,7 +201,7 @@ export default function RepairTickets() {
                         {j.assigned_staff && <div style={{ fontSize: 10, color: DIM, marginTop: 4 }}>👤 {j.assigned_staff.name}</div>}
                       </button>
                     ))}
-                    {colJobs.length === 0 && <div style={{ fontSize: 11, color: DIM, textAlign: 'center', padding: '12px 0' }}>—</div>}
+                    {colJobs.length === 0 && <div style={{ fontSize: 11, color: DIM, textAlign: 'center', padding: '12px 0' }}>No tickets here</div>}
                   </div>
                 </div>
               )
@@ -212,8 +212,8 @@ export default function RepairTickets() {
         {/* LIST VIEW */}
         {view === 'list' && filtered.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {filtered.map(j => (
-              <button key={j.id} onClick={() => openDetail(j)} style={{ ...card, padding: '14px 16px', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14 }}>
+            {filtered.map((j, idx) => (
+              <button key={j.id} onClick={() => openDetail(j)} className="pos-item" style={{ ...card, padding: '14px 16px', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 600 }}>{j.device_model || 'Unknown device'} <span style={{ color: DIM, fontWeight: 400 }}>#{j.ticket_number}</span></div>
                   <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{j.customer_name || 'Walk-in'} · {j.fault_description?.slice(0, 60) || '—'}</div>
@@ -231,7 +231,7 @@ export default function RepairTickets() {
       {/* DETAIL DRAWER */}
       {selected && (
         <div onClick={() => setSelected(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 50, display: 'flex', justifyContent: 'flex-end' }}>
-          <div onClick={e => e.stopPropagation()} style={{ width: 'min(480px, 100%)', height: '100%', background: '#0f172a', borderLeft: '1px solid #334155', overflowY: 'auto' }}>
+          <div onClick={e => e.stopPropagation()} className="pos-sheet" style={{ width: 'min(480px, 100%)', height: '100%', background: '#0f172a', borderLeft: '1px solid #334155', overflowY: 'auto' }}>
             {/* drawer header */}
             <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 2 }}>
               <div>
@@ -249,6 +249,7 @@ export default function RepairTickets() {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
                   {(NEXT_STATUS[selected.status] || []).map(t => (
                     <button key={t.value} onClick={() => changeStatus(t.value)} disabled={updating}
+                      className={t.value === 'cancelled' ? undefined : 'pos-btn-primary'}
                       style={{ padding: '9px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', opacity: updating ? 0.6 : 1, background: t.value === 'cancelled' ? '#334155' : ACC, color: t.value === 'cancelled' ? MUTED : '#fff' }}>
                       {t.label}
                     </button>

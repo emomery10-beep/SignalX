@@ -196,7 +196,7 @@ export default function WastePage() {
   const estCost = (parseFloat(form.cost_per_unit) || 0) * (parseFloat(form.qty) || 1)
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/restaurant')} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 18 }}>←</button>
@@ -306,11 +306,11 @@ export default function WastePage() {
               <div>
                 <div style={{ fontWeight: 600, fontSize: 13, color: '#64748b', marginBottom: 10 }}>Recent Entries</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {logs.slice(0, 30).map(log => {
+                  {logs.slice(0, 30).map((log, idx) => {
                     const reasonLabel = REASONS.find(r => r.value === log.reason)?.label || log.reason
                     const color = REASON_COLORS[log.reason] || '#64748b'
                     return (
-                      <div key={log.id} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div key={log.id} className="pos-item" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 12, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                         <div style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, background: color, flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontWeight: 600, fontSize: 14 }}>{log.item_name}</div>
@@ -360,7 +360,7 @@ export default function WastePage() {
             )}
 
             {recognized && stage === 'review' && (
-              <div style={{ background: 'rgba(208,138,89,0.08)', border: '1px solid rgba(208,138,89,0.2)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>
+              <div className="pos-reveal" style={{ background: 'rgba(208,138,89,0.08)', border: '1px solid rgba(208,138,89,0.2)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>
                 🤖 Claude says: <strong>{recognized.item_name}</strong> · {recognized.confidence}% confidence
                 {recognized.notes && <div style={{ color: '#94a3b8', marginTop: 2 }}>{recognized.notes}</div>}
               </div>
@@ -423,8 +423,8 @@ export default function WastePage() {
                 style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '11px', borderRadius: 8, cursor: 'pointer' }}>
                 Cancel
               </button>
-              <button onClick={save} disabled={saving || !form.item_name}
-                style={{ flex: 2, background: '#ef4444', border: 'none', color: '#fff', padding: '11px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14, opacity: !form.item_name ? 0.5 : 1 }}>
+              <button onClick={save} disabled={saving || !form.item_name} className="pos-btn-primary"
+                style={{ flex: 2, background: '#ef4444', border: 'none', color: '#fff', padding: '11px', borderRadius: 8, cursor: saving || !form.item_name ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 14, opacity: saving || !form.item_name ? 0.5 : 1 }}>
                 {saving ? 'Saving...' : '🗑️ Log Waste'}
               </button>
             </div>

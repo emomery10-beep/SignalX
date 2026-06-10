@@ -117,25 +117,25 @@ export default function BranchDashboardPage() {
     parcels.reduce<Record<string, number>>((acc, p) => { acc[p.status] = (acc[p.status] || 0) + 1; return acc }, {})
   ).sort((a, b) => b[1] - a[1])
 
-  if (!ready) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9f8f6' }}>Loading…</div>
+  if (!ready) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }}>Loading…</div>
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9f8f6', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       {/* Header */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #e5e2dc', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#1a1916' }}>📊 Branch Dashboard</div>
-          <div style={{ fontSize: 11, color: '#6b6760' }}>{staff?.name} · Branch Manager</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--pos-ink)' }}>📊 Branch Dashboard</div>
+          <div style={{ fontSize: 11, color: 'var(--pos-muted)' }}>{staff?.name} · Branch Manager</div>
         </div>
         <button onClick={() => router.push('/logistics/dispatch')} style={{ background: ACC_LIGHT, color: ACC, border: `1px solid ${ACC_BORDER}`, borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>🚛 Dispatch</button>
         <button onClick={() => staff && loadAll(staff)} style={{ background: ACC_LIGHT, color: ACC, border: `1px solid ${ACC_BORDER}`, borderRadius: 8, padding: '6px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>↻</button>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid #e5e2dc', background: '#fff' }}>
+      <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--pos-border)', background: 'var(--pos-surface)' }}>
         {(['overview', 'parcels', 'fleet', 'revenue'] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            style={{ flex: 1, padding: '10px 4px', border: 'none', background: tab === t ? ACC_LIGHT : 'transparent', borderBottom: tab === t ? `2px solid ${ACC}` : '2px solid transparent', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: tab === t ? ACC : '#6b6760', textTransform: 'capitalize' }}>
+            style={{ flex: 1, padding: '10px 4px', border: 'none', background: tab === t ? ACC_LIGHT : 'transparent', borderBottom: tab === t ? `2px solid ${ACC}` : '2px solid transparent', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: tab === t ? ACC : 'var(--pos-muted)', textTransform: 'capitalize' }}>
             {t === 'overview' ? '📋 Overview' : t === 'parcels' ? '📦 Parcels' : t === 'fleet' ? '🚛 Fleet' : '💰 Revenue'}
           </button>
         ))}
@@ -143,7 +143,7 @@ export default function BranchDashboardPage() {
 
       <div style={{ padding: 16 }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: '#6b6760' }}>Loading dashboard…</div>
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--pos-muted)' }}>Loading dashboard…</div>
         ) : tab === 'overview' ? (
           <>
             {/* KPI Cards */}
@@ -155,40 +155,40 @@ export default function BranchDashboardPage() {
             </div>
 
             {/* Revenue summary */}
-            <div style={{ background: '#fff', borderRadius: 12, padding: 14, border: '1px solid #e5e2dc', marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1916', marginBottom: 8 }}>💰 Revenue</div>
+            <div className="pos-reveal" style={{ background: 'var(--pos-surface)', borderRadius: 12, padding: 14, border: '1px solid var(--pos-border)', marginBottom: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 8 }}>💰 Revenue</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ fontSize: 12, color: '#6b6760' }}>Today</span>
+                <span style={{ fontSize: 12, color: 'var(--pos-muted)' }}>Today</span>
                 <span style={{ fontSize: 13, fontWeight: 700, color: GREEN }}>{currency} {todayRevenue.toLocaleString()}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ fontSize: 12, color: '#6b6760' }}>Total</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#1a1916' }}>{currency} {totalRevenue.toLocaleString()}</span>
+                <span style={{ fontSize: 12, color: 'var(--pos-muted)' }}>Total</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)' }}>{currency} {totalRevenue.toLocaleString()}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 12, color: '#6b6760' }}>Unpaid</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: unpaid > 0 ? RED : '#6b6760' }}>{currency} {unpaid.toLocaleString()}</span>
+                <span style={{ fontSize: 12, color: 'var(--pos-muted)' }}>Unpaid</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: unpaid > 0 ? RED : 'var(--pos-muted)' }}>{currency} {unpaid.toLocaleString()}</span>
               </div>
             </div>
 
             {/* Status breakdown */}
-            <div style={{ background: '#fff', borderRadius: 12, padding: 14, border: '1px solid #e5e2dc', marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1916', marginBottom: 10 }}>📊 Status Breakdown</div>
+            <div className="pos-reveal" style={{ background: 'var(--pos-surface)', borderRadius: 12, padding: 14, border: '1px solid var(--pos-border)', marginBottom: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 10 }}>📊 Status Breakdown</div>
               {statusBreakdown.map(([status, count]) => (
                 <div key={status} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: 4, background: STATUS_COLOR[status] || '#6b6760', flexShrink: 0 }} />
-                  <span style={{ flex: 1, fontSize: 12, color: '#6b6760' }}>{STATUS_LABEL[status] || status}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: '#1a1916' }}>{count}</span>
+                  <div style={{ width: 8, height: 8, borderRadius: 4, background: STATUS_COLOR[status] || 'var(--pos-muted)', flexShrink: 0 }} />
+                  <span style={{ flex: 1, fontSize: 12, color: 'var(--pos-muted)' }}>{STATUS_LABEL[status] || status}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--pos-ink)' }}>{count}</span>
                   <div style={{ width: 60, height: 6, background: '#f0ede8', borderRadius: 3, overflow: 'hidden' }}>
-                    <div style={{ width: `${Math.min((count / parcels.length) * 100, 100)}%`, height: '100%', background: STATUS_COLOR[status] || '#6b6760', borderRadius: 3 }} />
+                    <div style={{ width: `${Math.min((count / parcels.length) * 100, 100)}%`, height: '100%', background: STATUS_COLOR[status] || 'var(--pos-muted)', borderRadius: 3 }} />
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Fleet at a glance */}
-            <div style={{ background: '#fff', borderRadius: 12, padding: 14, border: '1px solid #e5e2dc', marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1916', marginBottom: 10 }}>🚛 Fleet</div>
+            <div className="pos-reveal" style={{ background: 'var(--pos-surface)', borderRadius: 12, padding: 14, border: '1px solid var(--pos-border)', marginBottom: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 10 }}>🚛 Fleet</div>
               <div style={{ display: 'flex', gap: 12 }}>
                 <FleetPill label="Available" count={trucksAvailable} color={GREEN} />
                 <FleetPill label="In Transit" count={trucksInTransit} color="#6366f1" />
@@ -197,14 +197,14 @@ export default function BranchDashboardPage() {
             </div>
 
             {/* Recent activity */}
-            <div style={{ background: '#fff', borderRadius: 12, padding: 14, border: '1px solid #e5e2dc' }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1916', marginBottom: 10 }}>🕒 Recent Parcels</div>
-              {parcels.slice(0, 8).map(p => (
-                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid #f0ede8' }}>
-                  <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: '#1a1916' }}>{p.tracking_number}</span>
-                  <span style={{ flex: 1, fontSize: 11, color: '#6b6760', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.receiver_name || p.destination_city || '—'}</span>
-                  <span style={{ background: `${STATUS_COLOR[p.status] || '#6b6760'}18`, color: STATUS_COLOR[p.status] || '#6b6760', padding: '1px 6px', borderRadius: 4, fontSize: 9, fontWeight: 700 }}>{STATUS_LABEL[p.status] || p.status}</span>
-                  <span style={{ fontSize: 10, color: '#9b978f', whiteSpace: 'nowrap' }}>{timeAgo(p.created_at)}</span>
+            <div className="pos-reveal" style={{ background: 'var(--pos-surface)', borderRadius: 12, padding: 14, border: '1px solid var(--pos-border)' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 10 }}>🕒 Recent Parcels</div>
+              {parcels.slice(0, 8).map((p, idx) => (
+                <div key={p.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid #f0ede8', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                  <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: 'var(--pos-ink)' }}>{p.tracking_number}</span>
+                  <span style={{ flex: 1, fontSize: 11, color: 'var(--pos-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.receiver_name || p.destination_city || '—'}</span>
+                  <span style={{ background: `${STATUS_COLOR[p.status] || 'var(--pos-muted)'}18`, color: STATUS_COLOR[p.status] || 'var(--pos-muted)', padding: '1px 6px', borderRadius: 4, fontSize: 9, fontWeight: 700 }}>{STATUS_LABEL[p.status] || p.status}</span>
+                  <span style={{ fontSize: 10, color: 'var(--pos-hint)', whiteSpace: 'nowrap' }}>{timeAgo(p.created_at)}</span>
                 </div>
               ))}
             </div>
@@ -225,10 +225,10 @@ export default function BranchDashboardPage() {
 
 function StatCard({ label, value, sub, color }: { label: string; value: number; sub: string; color: string }) {
   return (
-    <div style={{ background: '#fff', borderRadius: 12, padding: 14, border: '1px solid #e5e2dc' }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: '#6b6760', marginBottom: 2 }}>{label}</div>
+    <div style={{ background: 'var(--pos-surface)', borderRadius: 12, padding: 14, border: '1px solid var(--pos-border)' }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 2 }}>{label}</div>
       <div style={{ fontSize: 28, fontWeight: 800, color }}>{value}</div>
-      <div style={{ fontSize: 10, color: '#9b978f' }}>{sub}</div>
+      <div style={{ fontSize: 10, color: 'var(--pos-hint)' }}>{sub}</div>
     </div>
   )
 }
@@ -237,7 +237,7 @@ function FleetPill({ label, count, color }: { label: string; count: number; colo
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
       <div style={{ width: 10, height: 10, borderRadius: 5, background: color }} />
-      <span style={{ fontSize: 12, color: '#6b6760' }}>{label}</span>
+      <span style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{label}</span>
       <span style={{ fontSize: 14, fontWeight: 800, color }}>{count}</span>
     </div>
   )
@@ -265,26 +265,26 @@ function ParcelList({ parcels, currency }: { parcels: Parcel[]; currency: string
     <div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…"
-          style={{ flex: 1, padding: '8px 12px', border: '1px solid #e5e2dc', borderRadius: 8, fontSize: 13, outline: 'none' }} />
+          style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--pos-border)', borderRadius: 8, fontSize: 13, outline: 'none' }} />
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-          style={{ padding: '8px 10px', border: '1px solid #e5e2dc', borderRadius: 8, fontSize: 12 }}>
+          style={{ padding: '8px 10px', border: '1px solid var(--pos-border)', borderRadius: 8, fontSize: 12 }}>
           <option value="">All</option>
           {statuses.map(s => <option key={s} value={s}>{STATUS_LABEL[s] || s}</option>)}
         </select>
       </div>
-      <div style={{ fontSize: 11, color: '#6b6760', marginBottom: 8 }}>{filtered.length} parcels</div>
-      {filtered.map(p => (
-        <div key={p.id} style={{ background: '#fff', borderRadius: 10, padding: 10, border: '1px solid #e5e2dc', marginBottom: 8 }}>
+      <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginBottom: 8 }}>{filtered.length} parcels</div>
+      {filtered.map((p, idx) => (
+        <div key={p.id} className="pos-item" style={{ background: 'var(--pos-surface)', borderRadius: 10, padding: 10, border: '1px solid var(--pos-border)', marginBottom: 8, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
             <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700 }}>{p.tracking_number}</span>
-            <span style={{ marginLeft: 'auto', background: `${STATUS_COLOR[p.status] || '#6b6760'}18`, color: STATUS_COLOR[p.status] || '#6b6760', padding: '1px 6px', borderRadius: 4, fontSize: 9, fontWeight: 700 }}>{STATUS_LABEL[p.status] || p.status}</span>
+            <span style={{ marginLeft: 'auto', background: `${STATUS_COLOR[p.status] || 'var(--pos-muted)'}18`, color: STATUS_COLOR[p.status] || 'var(--pos-muted)', padding: '1px 6px', borderRadius: 4, fontSize: 9, fontWeight: 700 }}>{STATUS_LABEL[p.status] || p.status}</span>
           </div>
-          <div style={{ fontSize: 11, color: '#6b6760', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 11, color: 'var(--pos-muted)', lineHeight: 1.5 }}>
             <div>{p.sender_name || '—'} → {p.receiver_name || '—'}</div>
             <div>📍 {p.destination_city || p.destination_branch?.name || '—'} {p.weight_kg ? `· ${p.weight_kg}kg` : ''}</div>
             {p.fee_charged ? <div>💰 {currency} {p.fee_charged.toLocaleString()} · {p.payment_status || '—'}</div> : null}
             {p.truck && <div>🚛 {p.truck.plate_number} {p.driver ? `· ${p.driver.name}` : ''}</div>}
-            <div style={{ fontSize: 10, color: '#9b978f' }}>{timeAgo(p.created_at)}</div>
+            <div style={{ fontSize: 10, color: 'var(--pos-hint)' }}>{timeAgo(p.created_at)}</div>
           </div>
         </div>
       ))}
@@ -299,30 +299,30 @@ function FleetView({ trucks, parcels }: { trucks: Truck[]; parcels: Parcel[] }) 
     available: { bg: `${GREEN}18`, color: GREEN, label: 'Available' },
     in_transit: { bg: '#6366f118', color: '#6366f1', label: 'In Transit' },
     maintenance: { bg: `${RED}18`, color: RED, label: 'Maintenance' },
-  }[s] || { bg: '#e5e2dc', color: '#6b6760', label: s })
+  }[s] || { bg: 'var(--pos-border)', color: 'var(--pos-muted)', label: s })
 
   return (
     <div>
-      <div style={{ fontSize: 11, color: '#6b6760', marginBottom: 8 }}>{trucks.length} trucks</div>
-      {trucks.map(t => {
+      <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginBottom: 8 }}>{trucks.length} trucks</div>
+      {trucks.map((t, idx) => {
         const st = statusStyle(t.status)
         const tp = truckParcels(t.id)
         return (
-          <div key={t.id} style={{ background: '#fff', borderRadius: 10, padding: 12, border: '1px solid #e5e2dc', marginBottom: 8 }}>
+          <div key={t.id} className="pos-item" style={{ background: 'var(--pos-surface)', borderRadius: 10, padding: 12, border: '1px solid var(--pos-border)', marginBottom: 8, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span style={{ fontSize: 14, fontWeight: 800, color: '#1a1916' }}>{t.plate_number}</span>
-              {t.make_model && <span style={{ fontSize: 11, color: '#6b6760' }}>{t.make_model}</span>}
+              <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--pos-ink)' }}>{t.plate_number}</span>
+              {t.make_model && <span style={{ fontSize: 11, color: 'var(--pos-muted)' }}>{t.make_model}</span>}
               <span style={{ marginLeft: 'auto', background: st.bg, color: st.color, padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700 }}>{st.label}</span>
             </div>
             {tp.length > 0 && (
-              <div style={{ fontSize: 11, color: '#6b6760' }}>
+              <div style={{ fontSize: 11, color: 'var(--pos-muted)' }}>
                 📦 {tp.length} parcel{tp.length !== 1 ? 's' : ''} — {tp.map(p => p.tracking_number).join(', ')}
               </div>
             )}
           </div>
         )
       })}
-      {trucks.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: '#6b6760', fontSize: 13 }}>No trucks registered yet</div>}
+      {trucks.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: 'var(--pos-muted)', fontSize: 13 }}>No trucks registered yet</div>}
     </div>
   )
 }
@@ -355,8 +355,8 @@ function RevenueView({ parcels, currency }: { parcels: Parcel[]; currency: strin
   return (
     <div>
       {/* Period breakdown */}
-      <div style={{ background: '#fff', borderRadius: 12, padding: 14, border: '1px solid #e5e2dc', marginBottom: 12 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1916', marginBottom: 10 }}>📈 Revenue by Period</div>
+      <div style={{ background: 'var(--pos-surface)', borderRadius: 12, padding: 14, border: '1px solid var(--pos-border)', marginBottom: 12 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 10 }}>📈 Revenue by Period</div>
         <Row label="Today" count={todayP.length} amount={sum(todayP)} currency={currency} />
         <Row label="Last 7 days" count={weekP.length} amount={sum(weekP)} currency={currency} />
         <Row label="This month" count={monthP.length} amount={sum(monthP)} currency={currency} />
@@ -364,24 +364,24 @@ function RevenueView({ parcels, currency }: { parcels: Parcel[]; currency: strin
       </div>
 
       {/* Payment status */}
-      <div style={{ background: '#fff', borderRadius: 12, padding: 14, border: '1px solid #e5e2dc', marginBottom: 12 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1916', marginBottom: 10 }}>💳 Payment Status</div>
+      <div style={{ background: 'var(--pos-surface)', borderRadius: 12, padding: 14, border: '1px solid var(--pos-border)', marginBottom: 12 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 10 }}>💳 Payment Status</div>
         <Row label="Paid" count={paid.length} amount={sum(paid)} currency={currency} color={GREEN} />
         <Row label="Unpaid" count={unpaid.length} amount={sum(unpaid)} currency={currency} color={RED} />
         <Row label="Partial" count={partial.length} amount={sum(partial)} currency={currency} color={AMBER} />
       </div>
 
       {/* Revenue by destination */}
-      <div style={{ background: '#fff', borderRadius: 12, padding: 14, border: '1px solid #e5e2dc' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1916', marginBottom: 10 }}>🗺️ Revenue by Destination</div>
+      <div style={{ background: 'var(--pos-surface)', borderRadius: 12, padding: 14, border: '1px solid var(--pos-border)' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 10 }}>🗺️ Revenue by Destination</div>
         {byCity.map(([city, data]) => (
           <div key={city} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-            <span style={{ flex: 1, fontSize: 12, color: '#6b6760' }}>{city}</span>
-            <span style={{ fontSize: 11, color: '#9b978f' }}>{data.count} pkgs</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#1a1916' }}>{currency} {data.revenue.toLocaleString()}</span>
+            <span style={{ flex: 1, fontSize: 12, color: 'var(--pos-muted)' }}>{city}</span>
+            <span style={{ fontSize: 11, color: 'var(--pos-hint)' }}>{data.count} pkgs</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--pos-ink)' }}>{currency} {data.revenue.toLocaleString()}</span>
           </div>
         ))}
-        {byCity.length === 0 && <div style={{ fontSize: 12, color: '#9b978f' }}>No data yet</div>}
+        {byCity.length === 0 && <div style={{ fontSize: 12, color: 'var(--pos-hint)' }}>No data yet</div>}
       </div>
     </div>
   )
@@ -391,9 +391,9 @@ function Row({ label, count, amount, currency, color, bold }: { label: string; c
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
       {color && <div style={{ width: 8, height: 8, borderRadius: 4, background: color, flexShrink: 0 }} />}
-      <span style={{ flex: 1, fontSize: 12, color: '#6b6760', fontWeight: bold ? 700 : 400 }}>{label}</span>
-      <span style={{ fontSize: 11, color: '#9b978f' }}>{count} pkgs</span>
-      <span style={{ fontSize: 12, fontWeight: bold ? 800 : 700, color: color || '#1a1916' }}>{currency} {amount.toLocaleString()}</span>
+      <span style={{ flex: 1, fontSize: 12, color: 'var(--pos-muted)', fontWeight: bold ? 700 : 400 }}>{label}</span>
+      <span style={{ fontSize: 11, color: 'var(--pos-hint)' }}>{count} pkgs</span>
+      <span style={{ fontSize: 12, fontWeight: bold ? 800 : 700, color: color || 'var(--pos-ink)' }}>{currency} {amount.toLocaleString()}</span>
     </div>
   )
 }

@@ -81,7 +81,7 @@ export default function CashierCopilot({ screen, cart, customerPhone, ownerId, s
   }
 
   return (
-    <div style={{
+    <div className="pos-sheet" style={{
       position: 'fixed', bottom: 20, right: 20, zIndex: 9999,
       width: 300, maxHeight: 360,
       borderRadius: 16, overflow: 'hidden',
@@ -113,7 +113,7 @@ export default function CashierCopilot({ screen, cart, customerPhone, ownerId, s
             <span style={{ fontSize: 12, color: '#999' }}>Thinking...</span>
           </div>
         ) : tip ? (
-          <div style={{ fontSize: 13, color: '#e0e0e0', lineHeight: 1.5 }}>{tip}</div>
+          <div className="pos-reveal" style={{ fontSize: 13, color: '#e0e0e0', lineHeight: 1.5 }}>{tip}</div>
         ) : (
           <div style={{ fontSize: 12, color: '#777' }}>Ask me anything about your sale, stock, or customers.</div>
         )}
@@ -151,6 +151,7 @@ export default function CashierCopilot({ screen, cart, customerPhone, ownerId, s
           }}
         />
         <button
+          className="pos-btn-primary"
           onClick={handleAsk}
           disabled={loading || !question.trim()}
           style={{

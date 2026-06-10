@@ -149,7 +149,7 @@ export default function FactoryHub() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -171,7 +171,7 @@ export default function FactoryHub() {
 
       <div style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
         {/* Primary CTA */}
-        <button onClick={() => router.push('/factory/capture')}
+        <button className="pos-btn-primary" onClick={() => router.push('/factory/capture')}
           style={{ width: '100%', background: ACC, border: 'none', color: '#1a1206', padding: '16px', borderRadius: 12, cursor: 'pointer', fontWeight: 800, fontSize: 16, marginBottom: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
           📸 New Production Capture
         </button>
@@ -214,10 +214,10 @@ export default function FactoryHub() {
             <div style={{ color: '#64748b', fontSize: 13, padding: '20px 0', textAlign: 'center' }}>No captures yet. Tap “New Production Capture” to log one.</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {recent.map(c => {
+              {recent.map((c, idx) => {
                 const meta = TYPE_META[c.type]
                 return (
-                  <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '10px 14px' }}>
+                  <div key={c.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '10px 14px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                     <span style={{ background: `${meta.color}22`, color: meta.color, padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>{meta.icon} {meta.label}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.product_name || 'Unspecified product'}</div>

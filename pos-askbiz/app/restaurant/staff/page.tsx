@@ -82,7 +82,7 @@ export default function StaffPerformancePage() {
   const maxHours   = Math.max(...shifts.map(s => s.total_hours), 1)
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
@@ -118,8 +118,8 @@ export default function StaffPerformancePage() {
               { label: 'Labour Hours',  value: `${summary.total_labour_hours.toFixed(1)}h` },
               { label: 'Labour Cost',   value: `${sym}${summary.total_labour_cost.toFixed(2)}` },
               { label: 'Rev / Labour Hr', value: `${sym}${summary.revenue_per_labour_hour.toFixed(2)}` },
-            ].map(k => (
-              <div key={k.label} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 10, padding: '12px 14px' }}>
+            ].map((k, idx) => (
+              <div key={k.label} className="pos-item" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 10, padding: '12px 14px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                 <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>{k.label}</div>
                 <div style={{ fontSize: 20, fontWeight: 700, color: ACC, marginTop: 4 }}>{k.value}</div>
               </div>
@@ -142,7 +142,7 @@ export default function StaffPerformancePage() {
 
         {/* Server performance table */}
         {!loading && tab === 'servers' && (
-          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
+          <div className="pos-reveal" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
             {servers.length === 0 ? (
               <div style={{ padding: 32, textAlign: 'center', color: '#64748b' }}>No server data for this period</div>
             ) : (
@@ -156,7 +156,7 @@ export default function StaffPerformancePage() {
                 </thead>
                 <tbody>
                   {servers.map((s, i) => (
-                    <tr key={s.server_id || s.server_name} style={{ borderTop: '1px solid #334155' }}>
+                    <tr key={s.server_id || s.server_name} className="pos-item" style={{ borderTop: '1px solid #334155', animationDelay: `${Math.min(i, 8) * 40}ms` }}>
                       <td style={{ padding: '14px 16px', color: i === 0 ? '#f59e0b' : '#64748b', fontWeight: 700, fontSize: 13 }}>
                         {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
                       </td>
@@ -183,7 +183,7 @@ export default function StaffPerformancePage() {
 
         {/* Shift / labour table */}
         {!loading && tab === 'shifts' && (
-          <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
+          <div className="pos-reveal" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
             {shifts.length === 0 ? (
               <div style={{ padding: 32, textAlign: 'center', color: '#64748b' }}>No shift data for this period</div>
             ) : (
@@ -196,8 +196,8 @@ export default function StaffPerformancePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {shifts.map(s => (
-                    <tr key={s.staff_id} style={{ borderTop: '1px solid #334155' }}>
+                  {shifts.map((s, idx) => (
+                    <tr key={s.staff_id} className="pos-item" style={{ borderTop: '1px solid #334155', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                       <td style={{ padding: '14px 16px' }}>
                         <div style={{ fontWeight: 600, fontSize: 14 }}>{s.name}</div>
                         <div style={{ height: 4, background: '#0f172a', borderRadius: 2, marginTop: 6, width: 120 }}>

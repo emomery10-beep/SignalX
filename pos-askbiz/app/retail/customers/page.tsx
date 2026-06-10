@@ -107,7 +107,7 @@ export default function RetailCustomers() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/retail')} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>←</button>
         <div>
@@ -137,9 +137,9 @@ export default function RetailCustomers() {
                 </tr></thead>
                 <tbody>
                   {loading && <tr><td style={td} colSpan={6}><span style={{ color: '#64748b' }}>Loading…</span></td></tr>}
-                  {!loading && filtered.length === 0 && <tr><td style={td} colSpan={6}><span style={{ color: '#64748b' }}>No customers found</span></td></tr>}
-                  {filtered.map(c => (
-                    <tr key={c.key} onClick={() => setSelected(c)} style={{ cursor: 'pointer' }}
+                  {!loading && filtered.length === 0 && <tr><td style={td} colSpan={6}><span style={{ color: '#64748b' }}>{search || segFilter !== 'all' ? 'No customers match your filter' : 'No customers yet — they will appear after the first transaction'}</span></td></tr>}
+                  {filtered.map((c, idx) => (
+                    <tr key={c.key} className="pos-item" onClick={() => setSelected(c)} style={{ cursor: 'pointer', animationDelay: `${Math.min(idx, 8) * 40}ms` }}
                       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(34,197,94,0.06)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <td style={{ ...td, fontWeight: 600 }}>{c.name}<div style={{ fontSize: 11, color: '#64748b', fontWeight: 400 }}>{c.phone || '—'}</div></td>
@@ -162,14 +162,14 @@ export default function RetailCustomers() {
               {topSpenders.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>No data yet</div>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {topSpenders.map((c, i) => (
-                  <div key={c.key} onClick={() => setSelected(c)} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                  <button key={c.key} type="button" className="pos-item" onClick={() => setSelected(c)} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', animationDelay: `${Math.min(i, 8) * 40}ms`, background: 'none', border: 'none', width: '100%', textAlign: 'left', padding: 0, color: 'inherit' }}>
                     <span style={{ color: '#64748b', width: 16, textAlign: 'right', fontSize: 12 }}>{i + 1}</span>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{c.name}</div>
                       <div style={{ fontSize: 11, color: '#64748b' }}>{c.orders} orders</div>
                     </div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: ACC }}>{sym}{c.spend.toFixed(0)}</div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -180,7 +180,7 @@ export default function RetailCustomers() {
       {/* Detail drawer */}
       {selected && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'flex-end', zIndex: 50 }} onClick={() => setSelected(null)}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#1e293b', borderLeft: '1px solid #334155', width: '100%', maxWidth: 440, height: '100%', overflowY: 'auto', padding: 24 }}>
+          <div className="pos-sheet" onClick={e => e.stopPropagation()} style={{ background: '#1e293b', borderLeft: '1px solid #334155', width: '100%', maxWidth: 440, height: '100%', overflowY: 'auto', padding: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
               <div>
                 <div style={{ fontSize: 20, fontWeight: 700 }}>{selected.name}</div>
@@ -198,10 +198,10 @@ export default function RetailCustomers() {
 
             <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12 }}>Purchase History</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {selected.txns.map(t => {
+              {selected.txns.map((t, idx) => {
                 const items = (t.pos_items || [])
                 return (
-                  <div key={t.id} style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 10, padding: '12px 14px' }}>
+                  <div key={t.id} className="pos-item" style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 10, padding: '12px 14px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: items.length ? 8 : 0 }}>
                       <span style={{ fontSize: 12, color: '#94a3b8' }}>{t.created_at ? new Date(t.created_at).toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}</span>
                       <span style={{ fontSize: 14, fontWeight: 700, color: ACC }}>{sym}{(t.total || 0).toFixed(2)}</span>

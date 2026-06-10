@@ -108,7 +108,7 @@ export default function RetailHub() {
   ]
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>📦 Retail</div>
@@ -122,8 +122,8 @@ export default function RetailHub() {
       <div style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
         {/* KPI Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
-          {kpis.map(kpi => (
-            <div key={kpi.label} style={{ background: '#1e293b', border: `1px solid ${kpi.status ? statusColor[kpi.status] + '40' : '#334155'}`, borderRadius: 12, padding: '14px 16px' }}>
+          {kpis.map((kpi, idx) => (
+            <div key={kpi.label} className="pos-reveal" style={{ background: '#1e293b', border: `1px solid ${kpi.status ? statusColor[kpi.status] + '40' : '#334155'}`, borderRadius: 12, padding: '14px 16px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
               <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>{kpi.label}</div>
               <div style={{ fontSize: 22, fontWeight: 700, color: kpi.status ? statusColor[kpi.status] : '#f1f5f9', margin: '4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{kpi.value}</div>
               {kpi.sub && <div style={{ fontSize: 11, color: '#64748b' }}>{kpi.sub}</div>}
@@ -153,10 +153,10 @@ export default function RetailHub() {
             {loading && recent.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>Loading…</div>}
             {!loading && recent.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>No sales yet</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {recent.map(t => {
+              {recent.map((t, idx) => {
                 const count = (t.pos_items || []).reduce((s, it) => s + (it.qty || it.quantity || 1), 0)
                 return (
-                  <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0f172a', padding: '10px 14px', borderRadius: 8 }}>
+                  <div key={t.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0f172a', padding: '10px 14px', borderRadius: 8, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{t.pos_customers?.name || 'Walk-in'}</div>
                       <div style={{ fontSize: 11, color: '#64748b' }}>
@@ -177,11 +177,11 @@ export default function RetailHub() {
             </div>
             {lowStock.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>All items well stocked</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {lowStock.map(i => {
+              {lowStock.map((i, idx) => {
                 const q = i.stock_qty ?? 0
                 const col = q <= 0 ? '#ef4444' : '#f59e0b'
                 return (
-                  <div key={i.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0f172a', padding: '10px 14px', borderRadius: 8 }}>
+                  <div key={i.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0f172a', padding: '10px 14px', borderRadius: 8, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{i.name}</div>
                       <div style={{ fontSize: 11, color: '#64748b' }}>{i.sku || i.category || '—'}</div>

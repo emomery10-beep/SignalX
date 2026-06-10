@@ -21,6 +21,7 @@ export function UnifiedSearch({ ownerId, ownerEmail, compact = false }: UnifiedS
   const [result, setResult] = useState<SearchResult | null>(null)
   const [history, setHistory] = useState<SearchResult[]>([])
   const [showHistory, setShowHistory] = useState(false)
+  const [copied, setCopied] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const handleSearch = async (e?: React.FormEvent) => {
@@ -90,6 +91,7 @@ export function UnifiedSearch({ ownerId, ownerEmail, compact = false }: UnifiedS
             border: 'none',
             borderRadius: '6px',
             cursor: loading ? 'not-allowed' : 'pointer',
+            opacity: loading ? 0.5 : 1,
             fontWeight: '600',
             fontSize: '13px',
           }}
@@ -102,7 +104,7 @@ export function UnifiedSearch({ ownerId, ownerEmail, compact = false }: UnifiedS
 
   // Full page search
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '20px' }}>
+    <div className="pos-screen" style={{ maxWidth: '900px', margin: '0 auto', padding: '20px' }}>
       {/* Search Header */}
       <div style={{ marginBottom: '32px' }}>
         <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', fontWeight: '800', color: '#1f2937' }}>
@@ -142,6 +144,7 @@ export function UnifiedSearch({ ownerId, ownerEmail, compact = false }: UnifiedS
         <button
           type="submit"
           disabled={loading}
+          className="pos-btn-primary"
           style={{
             padding: '14px 28px',
             backgroundColor: '#6366f1',
@@ -181,6 +184,7 @@ export function UnifiedSearch({ ownerId, ownerEmail, compact = false }: UnifiedS
             {history.map((h, i) => (
               <button
                 key={i}
+                className="pos-item"
                 onClick={() => {
                   setQuery(h.query)
                   setResult(h)
@@ -196,6 +200,7 @@ export function UnifiedSearch({ ownerId, ownerEmail, compact = false }: UnifiedS
                   cursor: 'pointer',
                   fontSize: '13px',
                   color: '#1f2937',
+                  animationDelay: `${Math.min(i, 8) * 40}ms`,
                 }}
               >
                 {h.query}
@@ -245,12 +250,12 @@ export function UnifiedSearch({ ownerId, ownerEmail, compact = false }: UnifiedS
 
       {/* Results */}
       {result && (
-        <div style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '24px' }}>
+        <div className="pos-reveal" style={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '24px' }}>
           {/* Query Echo */}
           <div style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #e5e7eb' }}>
             <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Query</div>
             <div style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937' }}>{result.query}</div>
-            <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '8px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--pos-hint)', marginTop: '8px' }}>
               Sources: {result.sources.join(' • ')} | {new Date(result.timestamp).toLocaleTimeString()}
             </div>
           </div>
@@ -279,22 +284,25 @@ export function UnifiedSearch({ ownerId, ownerEmail, compact = false }: UnifiedS
             <button
               onClick={() => {
                 if (navigator.clipboard) {
-                  navigator.clipboard.writeText(result.response)
-                  alert('Copied to clipboard!')
+                  navigator.clipboard.writeText(result.response).then(() => {
+                    setCopied(true)
+                    setTimeout(() => setCopied(false), 2000)
+                  })
                 }
               }}
               style={{
                 padding: '10px 16px',
-                backgroundColor: '#dbeafe',
-                border: '1px solid #bfdbfe',
+                backgroundColor: copied ? '#dcfce7' : '#dbeafe',
+                border: `1px solid ${copied ? '#86efac' : '#bfdbfe'}`,
                 borderRadius: '6px',
                 cursor: 'pointer',
                 fontSize: '13px',
                 fontWeight: '600',
-                color: '#1e40af',
+                color: copied ? '#15803d' : '#1e40af',
+                transition: 'background-color 0.2s, color 0.2s',
               }}
             >
-              Copy Result
+              {copied ? '✓ Copied!' : 'Copy Result'}
             </button>
           </div>
         </div>

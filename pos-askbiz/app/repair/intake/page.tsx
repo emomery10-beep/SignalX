@@ -287,7 +287,7 @@ export default function RepairIntake() {
   const stageLabels = ['Scan', 'Condition', 'Details', 'Done']
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* shared hidden elements */}
       <canvas ref={canvasRef} style={{ display: 'none' }} />
       <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFileInput} style={{ display: 'none' }} />
@@ -353,7 +353,7 @@ export default function RepairIntake() {
 
             {/* warranty alert */}
             {warrantyInfo && (
-              <div style={{ ...card, borderColor: warrantyInfo.is_under_warranty ? GOOD : WARN, background: warrantyInfo.is_under_warranty ? 'rgba(34,197,94,.08)' : 'rgba(245,158,11,.08)' }}>
+              <div className="pos-banner" style={{ ...card, borderColor: warrantyInfo.is_under_warranty ? GOOD : WARN, background: warrantyInfo.is_under_warranty ? 'rgba(34,197,94,.08)' : 'rgba(245,158,11,.08)' }}>
                 <div style={{ fontWeight: 700, fontSize: 13, color: warrantyInfo.is_under_warranty ? GOOD : WARN }}>
                   {warrantyInfo.is_under_warranty ? '✓ Under warranty' : 'Warranty expired'}
                 </div>
@@ -397,7 +397,7 @@ export default function RepairIntake() {
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => { stopCamera(); setStage('condition_photos') }} style={btnPrimary}>Next: Condition →</button>
+              <button className="pos-btn-primary" onClick={() => { stopCamera(); setStage('condition_photos') }} style={btnPrimary}>Next: Condition →</button>
               <button onClick={skipScan} style={btnSecondary}>Skip scan</button>
             </div>
           </>
@@ -436,7 +436,7 @@ export default function RepairIntake() {
               {photos.length > 0 && (
                 <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
                   {photos.map((p, i) => (
-                    <div key={i} style={{ position: 'relative', width: 76 }}>
+                    <div key={i} className="pos-item" style={{ position: 'relative', width: 76, animationDelay: `${Math.min(i, 8) * 40}ms` }}>
                       <img src={p.dataUrl} alt={p.label} style={{ width: 76, height: 76, objectFit: 'cover', borderRadius: 8, border: '1px solid #334155' }} />
                       <div style={{ fontSize: 9, color: MUTED, textAlign: 'center', marginTop: 2 }}>{p.label}</div>
                       <button onClick={() => removePhoto(i)} style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: 10, background: BAD, color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12, lineHeight: 1 }}>×</button>
@@ -475,7 +475,7 @@ export default function RepairIntake() {
 
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => { stopCamera(); setStage('device_scan') }} style={btnSecondary}>← Back</button>
-              <button onClick={() => { stopCamera(); setStage('details') }} style={btnPrimary}>Next: Details →</button>
+              <button className="pos-btn-primary" onClick={() => { stopCamera(); setStage('details') }} style={btnPrimary}>Next: Details →</button>
             </div>
           </>
         )}
@@ -528,19 +528,19 @@ export default function RepairIntake() {
               <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>{photos.length} photo{photos.length === 1 ? '' : 's'} · {checklist.filter(c => c.result !== 'untested').length}/{checklist.length} checks done</div>
             </div>
 
-            {submitError && <div style={{ color: BAD, fontSize: 13 }}>{submitError}</div>}
+            {submitError && <div className="pos-banner" style={{ color: BAD, fontSize: 13 }}>{submitError}</div>}
 
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setStage('condition_photos')} style={btnSecondary}>← Back</button>
-              <button onClick={submit} disabled={submitting} style={{ ...btnPrimary, opacity: submitting ? 0.6 : 1 }}>{submitting ? 'Creating…' : '✓ Create Ticket'}</button>
+              <button className="pos-btn-primary" onClick={submit} disabled={submitting} style={{ ...btnPrimary, opacity: submitting ? 0.6 : 1 }}>{submitting ? 'Creating…' : '✓ Create ticket'}</button>
             </div>
           </>
         )}
 
         {/* ══ STAGE 4: DONE ══ */}
         {stage === 'done' && (
-          <div style={{ ...card, textAlign: 'center', padding: '40px 24px' }}>
-            <div style={{ width: 72, height: 72, borderRadius: 36, background: 'rgba(34,197,94,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+          <div className="pos-sheet pos-reveal" style={{ ...card, textAlign: 'center', padding: '40px 24px' }}>
+            <div className="pos-success-icon" style={{ width: 72, height: 72, borderRadius: 36, background: 'rgba(34,197,94,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={GOOD} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5" /></svg>
             </div>
             <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>Ticket created</div>
@@ -549,7 +549,7 @@ export default function RepairIntake() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '0 auto' }}>
               <button onClick={() => window.print()} style={{ ...btnSecondary, flex: 'none' }}>🖨 Print ticket</button>
               <button onClick={() => router.push('/repair/tickets')} style={{ ...btnSecondary, flex: 'none' }}>🎫 View tickets</button>
-              <button onClick={resetAll} style={{ ...btnPrimary, flex: 'none' }}>📸 New intake</button>
+              <button className="pos-btn-primary" onClick={resetAll} style={{ ...btnPrimary, flex: 'none' }}>📸 New intake</button>
             </div>
           </div>
         )}

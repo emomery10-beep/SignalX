@@ -77,28 +77,28 @@ function BillingPageContent() {
     }
   }, [searchParams])
 
-  const handleLogout = () => {
+  const handleSignOut = () => {
     localStorage.removeItem('pos_staff')
     router.push('/')
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', backgroundColor: 'var(--pos-bg)' }}>
       {/* Header */}
-      <div style={{ backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', padding: '16px 0' }}>
+      <div style={{ backgroundColor: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '16px 0' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1 style={{ margin: 0, fontSize: '28px', fontWeight: '700', color: '#1f2937' }}>💳 Plans & Billing</h1>
+          <h1 style={{ margin: 0, fontSize: '28px', fontWeight: '700', color: 'var(--pos-ink)' }}>💳 Plans & Billing</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {staff && <span style={{ fontSize: '14px', color: '#666' }}>{staff.name}</span>}
-            <button onClick={handleLogout} style={{ padding: '8px 16px', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: '#374151' }}>
-              Logout
+            {staff && <span style={{ fontSize: '14px', color: 'var(--pos-muted)' }}>{staff.name}</span>}
+            <button type="button" onClick={handleSignOut} style={{ padding: '8px 16px', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: 'var(--pos-ink)' }}>
+              Sign out
             </button>
           </div>
         </div>
       </div>
 
       {upgradeMessage && (
-        <div style={{ padding: '12px 16px', backgroundColor: upgradeMessage.includes('successful') ? '#d4edda' : '#f8d7da', color: upgradeMessage.includes('successful') ? '#155724' : '#721c24', borderRadius: '6px', margin: '16px', border: `1px solid ${upgradeMessage.includes('successful') ? '#c3e6cb' : '#f5c6cb'}` }}>
+        <div className="pos-banner" style={{ padding: '12px 16px', backgroundColor: upgradeMessage.includes('successful') ? '#d4edda' : '#f8d7da', color: upgradeMessage.includes('successful') ? '#155724' : '#721c24', borderRadius: '6px', margin: '16px', border: `1px solid ${upgradeMessage.includes('successful') ? '#c3e6cb' : '#f5c6cb'}` }}>
           {upgradeMessage}
         </div>
       )}
@@ -106,10 +106,10 @@ function BillingPageContent() {
       {/* Main Content */}
       <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '32px 20px' }}>
         {/* Point of Sale Seats */}
-        <div style={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb', padding: '24px', marginBottom: '24px' }}>
+        <div className="pos-reveal" style={{ backgroundColor: 'var(--pos-surface)', borderRadius: '8px', border: '1px solid var(--pos-border)', padding: '24px', marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <div>
-              <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600', color: '#1f2937' }}>Point of Sale Seats</h2>
+              <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600', color: 'var(--pos-ink)' }}>Point of Sale Seats</h2>
               <span style={{ display: 'inline-block', padding: '4px 8px', backgroundColor: '#d1fae5', color: '#065f46', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>
                 Active - {seatsActive} seat{seatsActive !== 1 ? 's' : ''}
               </span>
@@ -147,7 +147,7 @@ function BillingPageContent() {
 
 export default function BillingPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</div>}>
+    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>Loading billing…</div>}>
       <BillingPageContent />
     </Suspense>
   )

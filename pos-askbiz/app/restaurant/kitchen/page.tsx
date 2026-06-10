@@ -107,7 +107,7 @@ export default function KitchenDisplay() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0a0f1a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       {/* KDS Header */}
       <div style={{ background: '#0f172a', borderBottom: '2px solid #1e293b', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/restaurant')} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 20 }}>←</button>
@@ -149,22 +149,23 @@ export default function KitchenDisplay() {
 
         {!loading && activeTickets.length === 0 && (
           <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 60 }}>
-            <div style={{ fontSize: 48, marginBottom: 8 }}>✅</div>
+            <div className="pos-success-icon" style={{ fontSize: 48, marginBottom: 8 }}>✅</div>
             <div style={{ color: '#22c55e', fontWeight: 700, fontSize: 18 }}>All clear!</div>
             <div style={{ color: '#64748b', fontSize: 14 }}>No pending tickets for this station.</div>
           </div>
         )}
 
-        {activeTickets.map(ticket => {
+        {activeTickets.map((ticket, idx) => {
           const age = liveAge(ticket)
           const color = ageColor(age, ticket.station)
           const isInProgress = ticket.status === 'in_progress'
           return (
-            <div key={ticket.id} style={{
+            <div key={ticket.id} className="pos-item" style={{
               background: '#0f172a',
               border: `2px solid ${color}`,
               borderRadius: 12,
               overflow: 'hidden',
+              animationDelay: `${Math.min(idx, 8) * 40}ms`,
             }}>
               {/* Ticket Header */}
               <div style={{ background: color + '20', padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -209,13 +210,15 @@ export default function KitchenDisplay() {
                   </button>
                 )}
                 <button
+                  className="pos-btn-primary"
                   onClick={() => bumpTicket(ticket.id)}
                   disabled={bumping === ticket.id}
                   style={{
                     flex: 1, background: color, border: 'none', color: '#fff',
-                    padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14,
+                    padding: '10px', borderRadius: 8, cursor: bumping === ticket.id ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 14,
+                    opacity: bumping === ticket.id ? 0.5 : 1,
                   }}>
-                  {bumping === ticket.id ? '...' : '✓ BUMP'}
+                  {bumping === ticket.id ? '...' : '✓ Bump'}
                 </button>
               </div>
             </div>
@@ -223,8 +226,8 @@ export default function KitchenDisplay() {
         })}
 
         {/* Done tickets (greyed out, recall available) */}
-        {showDone && doneTickets.map(ticket => (
-          <div key={ticket.id} style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, overflow: 'hidden', opacity: 0.5 }}>
+        {showDone && doneTickets.map((ticket, idx) => (
+          <div key={ticket.id} className="pos-item" style={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 12, overflow: 'hidden', opacity: 0.5, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
             <div style={{ background: '#22c55e20', padding: '10px 14px', display: 'flex', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 15, color: '#94a3b8' }}>{ticket.table_name}</div>
