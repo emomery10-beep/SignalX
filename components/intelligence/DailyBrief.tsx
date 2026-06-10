@@ -56,7 +56,7 @@ export default function DailyBrief({ onAsk }: Props) {
             </svg>
           </div>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#6366F1', letterSpacing: '.04em', textTransform: 'uppercase' }}>Daily Brief</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#6366F1' }}>Daily Brief</div>
             <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{today}</div>
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function DailyBrief({ onAsk }: Props) {
             {onAsk && (
               <button
                 onClick={() => onAsk(brief.action)}
-                style={{ fontSize: 11, color: '#6366F1', background: 'transparent', border: '1px solid rgba(99,102,241,.3)', borderRadius: 9999, padding: '3px 9px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+                style={{ fontSize: 11, color: '#6366F1', background: 'transparent', border: '1px solid rgba(99,102,241,.3)', borderRadius: 6, padding: '3px 9px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
                 Ask AskBiz
               </button>
             )}

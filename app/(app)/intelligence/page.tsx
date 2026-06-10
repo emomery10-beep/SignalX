@@ -439,7 +439,7 @@ export default function IntelligencePage() {
                       : `${item.pct != null ? item.pct.toFixed(0) : '—'}%`
                     return (
                       <div key={i} style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--sf)', border: '1px solid var(--b)', textAlign: 'center' }}>
-                        <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.04em' }}>{item.label}</div>
+                        <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{item.label}</div>
                         <div style={{ fontSize: 16, fontWeight: 700, color: item.color, fontFamily: 'var(--font-sora, inherit)' }}>{fmtVal}</div>
                       </div>
                     )
@@ -569,16 +569,16 @@ export default function IntelligencePage() {
               {/* Row 2: Top Products + POS Pulse (Sales/Stock) */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 12, alignItems: 'start' }}>
                 <div style={{
-                  borderRadius: 18, minWidth: 0, overflow: 'hidden',
+                  borderRadius: 12, minWidth: 0, overflow: 'hidden',
                   transition: 'box-shadow 300ms ease, border-color 300ms ease',
-                  boxShadow: waterfallDrill && ['Revenue', 'COGS', 'Gross Profit'].includes(waterfallDrill) ? '0 0 0 2px #22C55E40, 0 4px 16px rgba(34,197,94,0.1)' : 'none',
+                  boxShadow: waterfallDrill && ['Revenue', 'COGS', 'Gross Profit'].includes(waterfallDrill) ? '0 0 0 2px #22C55E40' : 'none',
                 }}>
                   <TopProducts onAsk={askAskBiz} />
                 </div>
                 <div style={{
-                  borderRadius: 18, minWidth: 0, overflow: 'hidden',
+                  borderRadius: 12, minWidth: 0, overflow: 'hidden',
                   transition: 'box-shadow 300ms ease, border-color 300ms ease',
-                  boxShadow: waterfallDrill === 'Stock Cost' ? '0 0 0 2px #6366F140, 0 4px 16px rgba(99,102,241,0.1)' : 'none',
+                  boxShadow: waterfallDrill === 'Stock Cost' ? '0 0 0 2px #6366F140' : 'none',
                 }}>
                   <PosPulse onAsk={askAskBiz} />
                 </div>

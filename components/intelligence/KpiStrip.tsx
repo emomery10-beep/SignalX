@@ -173,7 +173,7 @@ export default function KpiStrip({ cards }: { cards: KpiCard[] }) {
             {/* Text */}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.1em' }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)' }}>
                   {hero.label}
                 </span>
                 {hero.trend && hero.trendLabel && (
@@ -224,7 +224,7 @@ export default function KpiStrip({ cards }: { cards: KpiCard[] }) {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 {icon && <span style={{ fontSize: 12 }}>{icon}</span>}
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)' }}>
                   {card.label}
                 </span>
               </div>
