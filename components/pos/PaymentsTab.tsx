@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { PaymentSetupCard } from '@/components/PaymentSetupCard'
 import { StripeSetupCard } from '@/components/StripeSetupCard'
+import DunningRecovery from './DunningRecovery'
 
 interface PaymentsTabProps {
   currencySymbol: string
@@ -12,7 +14,63 @@ interface PaymentsTabProps {
 export default function PaymentsTab({ currencySymbol, staff }: PaymentsTabProps) {
   const ownerStaff = staff?.[0] || null
   const [config, setConfig] = useState<any>(null)
+  const searchParams = useSearchParams()
+  const [stripeVerifyMsg, setStripeVerifyMsg] = useState<string | null>(null)
   const [stripeResuming, setStripeResuming] = useState(false)
+  const [fixingSubaccount, setFixingSubaccount] = useState(false)
+  const [fixSubaccountMsg, setFixSubaccountMsg] = useState<string | null>(null)
+  const [fixPhone, setFixPhone] = useState('')
+  const [needsFixPhone, setNeedsFixPhone] = useState(false)
+
+  // Auto-verify Stripe when returning from onboarding
+  useEffect(() => {
+    if (searchParams.get('stripe_setup_complete') !== 'true') return
+    if (!ownerStaff) return
+    const ownerId = ownerStaff.owner_id || ownerStaff.id
+    fetch('/api/pos/payment/stripe-verify', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'x-owner-id': ownerId },
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.verified) {
+          setStripeVerifyMsg('✅ Stripe verified! International payments now active.')
+          setConfig((c: any) => c ? { ...c, stripe_onboarding_complete: true } : c)
+        } else {
+          setStripeVerifyMsg('⚠ Stripe verification still pending — Stripe may take a few minutes to confirm.')
+        }
+      })
+      .catch(() => {})
+  }, [searchParams, ownerStaff])
+
+  const fixSubaccount = async (phone?: string) => {
+    if (fixingSubaccount || !ownerStaff) return
+    setFixingSubaccount(true)
+    setFixSubaccountMsg(null)
+    try {
+      const res = await fetch('/api/pos/payment/setup', {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'x-owner-id': ownerStaff.owner_id || ownerStaff.id },
+        body: JSON.stringify(phone ? { mpesa_phone: phone } : {}),
+      })
+      const data = await res.json()
+      if (data.success || data.already_exists) {
+        setFixSubaccountMsg('✅ Splits fixed! Platform fee now active on all payments.')
+        setNeedsFixPhone(false)
+        setConfig((c: any) => ({ ...c, has_subaccount: true }))
+      } else if (data.error === 'PHONE_REQUIRED') {
+        setNeedsFixPhone(true)
+      } else {
+        setFixSubaccountMsg(`⚠ ${data.error || 'Could not create subaccount.'}`)
+      }
+    } catch {
+      setFixSubaccountMsg('⚠ Network error — please try again.')
+    } finally {
+      setFixingSubaccount(false)
+    }
+  }
 
   const resumeStripeOnboarding = useCallback(async () => {
     if (stripeResuming) return
@@ -47,6 +105,12 @@ export default function PaymentsTab({ currencySymbol, staff }: PaymentsTabProps)
           Configure payment providers and enable customers to pay via Paystack or Stripe
         </p>
       </div>
+
+      {stripeVerifyMsg && (
+        <div style={{ marginBottom: 16, padding: '10px 14px', background: stripeVerifyMsg.startsWith('✅') ? 'rgba(16,185,129,.08)' : 'rgba(245,158,11,.08)', border: `1px solid ${stripeVerifyMsg.startsWith('✅') ? 'rgba(16,185,129,.3)' : 'rgba(245,158,11,.3)'}`, borderRadius: 10, fontSize: 13, color: stripeVerifyMsg.startsWith('✅') ? '#059669' : '#d97706', fontWeight: 600 }}>
+          {stripeVerifyMsg}
+        </div>
+      )}
 
       {staffProps ? (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'flex-start' }}>
@@ -110,6 +174,45 @@ export default function PaymentsTab({ currencySymbol, staff }: PaymentsTabProps)
       ) : (
         <div style={{ padding: '24px', backgroundColor: 'var(--sf)', borderRadius: '8px', border: '1px solid var(--b)', color: 'var(--tx3)', textAlign: 'center' }}>
           Loading payment configuration...
+        </div>
+      )}
+
+      {/* ── Payment Recovery (Dunning) ── */}
+      <div style={{ marginTop: 24 }}>
+        <DunningRecovery currencySymbol={currencySymbol} />
+      </div>
+
+      {/* ── Fix Splits banner — Paystack active but no subaccount set up ── */}
+      {paystackActive && config?.has_subaccount === false && (
+        <div style={{ marginTop: 16, padding: '12px 14px', background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.3)', borderRadius: 12, maxWidth: 400 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#d97706', marginBottom: 4 }}>⚠ Platform splits not active</div>
+          <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 10 }}>
+            Payments are going to the main account without splitting. Fix this to automatically route AskBiz's 2% platform fee on every transaction.
+          </div>
+          {needsFixPhone && (
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 6 }}>Enter your M-Pesa number to link:</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input type="tel" placeholder="07XXXXXXXX" value={fixPhone} onChange={e => setFixPhone(e.target.value)}
+                  style={{ flex: 1, fontSize: 13, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx)' }} />
+                <button onClick={() => fixSubaccount(fixPhone)} disabled={fixingSubaccount || !fixPhone}
+                  style={{ fontSize: 13, fontWeight: 600, padding: '6px 14px', borderRadius: 8, background: '#f59e0b', color: '#fff', border: 'none', cursor: 'pointer' }}>
+                  {fixingSubaccount ? '...' : 'Link'}
+                </button>
+              </div>
+            </div>
+          )}
+          {fixSubaccountMsg && (
+            <div style={{ fontSize: 12, marginBottom: 8, color: fixSubaccountMsg.startsWith('✅') ? '#059669' : '#dc2626' }}>
+              {fixSubaccountMsg}
+            </div>
+          )}
+          {!needsFixPhone && !fixSubaccountMsg && (
+            <button onClick={() => fixSubaccount()} disabled={fixingSubaccount}
+              style={{ fontSize: 13, fontWeight: 600, padding: '7px 16px', borderRadius: 8, background: '#f59e0b', color: '#fff', border: 'none', cursor: fixingSubaccount ? 'default' : 'pointer', opacity: fixingSubaccount ? 0.7 : 1 }}>
+              {fixingSubaccount ? 'Fixing...' : 'Fix Splits Now'}
+            </button>
+          )}
         </div>
       )}
     </div>

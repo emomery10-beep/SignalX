@@ -57,6 +57,8 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
   const [success, setSuccess] = useState(false)
   const [currentConfig, setCurrentConfig] = useState<any>(null)
   const [configLoading, setConfigLoading] = useState(true)
+  const [fixingSubaccount, setFixingSubaccount] = useState(false)
+  const [fixSubaccountMsg, setFixSubaccountMsg] = useState<string | null>(null)
 
   // Paystack-specific fields
   const [banks, setBanks] = useState<Bank[]>([])
@@ -78,7 +80,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
       headers: { 'x-owner-id': staff.owner_id },
     })
       .then(r => r.json())
-      .then(data => { if (data.configured) { setCurrentConfig(data); onConfigLoaded?.(data) } })
+      .then(data => { console.log('[PaymentSetupCard] config:', data); if (data.configured) { setCurrentConfig(data); onConfigLoaded?.(data) } })
       .catch(() => {})
       .finally(() => setConfigLoading(false))
   }, [staff?.owner_id])
@@ -193,6 +195,39 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
       setError(err.message || 'An error occurred')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const [fixPhone, setFixPhone] = useState<string>('')
+  const [needsFixPhone, setNeedsFixPhone] = useState(false)
+
+  const fixSubaccount = async (phone?: string) => {
+    if (fixingSubaccount) return
+    setFixingSubaccount(true)
+    setFixSubaccountMsg(null)
+    try {
+      const res = await fetch('/api/pos/payment/setup', {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'x-owner-id': staff.owner_id },
+        body: JSON.stringify(phone ? { mpesa_phone: phone } : {}),
+      })
+      const data = await res.json()
+      if (data.success || data.already_exists) {
+        setFixSubaccountMsg('✅ Splits fixed! Platform fee now active on all payments.')
+        setNeedsFixPhone(false)
+        setCurrentConfig((c: any) => ({ ...c, has_subaccount: true, needs_subaccount_fix: false }))
+        onConfigLoaded?.({ ...currentConfig, has_subaccount: true, needs_subaccount_fix: false })
+      } else if (data.error === 'PHONE_REQUIRED') {
+        setNeedsFixPhone(true)
+        setFixSubaccountMsg(null)
+      } else {
+        setFixSubaccountMsg(`⚠ ${data.error || 'Could not create subaccount — Paystack may need to verify your M-Pesa number.'}`)
+      }
+    } catch {
+      setFixSubaccountMsg('⚠ Network error — please try again.')
+    } finally {
+      setFixingSubaccount(false)
     }
   }
 

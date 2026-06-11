@@ -118,28 +118,28 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
         {/* Gross Margin */}
         <div style={{ ...cardStyle, padding: '14px 16px' }}>
-          <div style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.5px' }}>Gross Margin</div>
+          <div style={{ fontSize: 11, color: 'var(--tx2)', fontWeight: 600, marginBottom: 6 }}>Gross Margin</div>
           <div style={{ fontSize: 22, fontWeight: 700, color: marginColor(totals.gross_margin_pct), ...tabNum }}>{totals.gross_margin_pct.toFixed(1)}%</div>
           <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4, ...tabNum }}>{fmt(totals.gross_profit)} profit</div>
         </div>
 
         {/* Net Margin */}
         <div style={{ ...cardStyle, padding: '14px 16px' }}>
-          <div style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.5px' }}>Net Margin</div>
+          <div style={{ fontSize: 11, color: 'var(--tx2)', fontWeight: 600, marginBottom: 6 }}>Net Margin</div>
           <div style={{ fontSize: 22, fontWeight: 700, color: netMarginColor(totals.net_margin_pct), ...tabNum }}>{totals.net_margin_pct.toFixed(1)}%</div>
           <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4, ...tabNum }}>{fmt(totals.net_profit)} net</div>
         </div>
 
         {/* COGS Ratio */}
         <div style={{ ...cardStyle, padding: '14px 16px' }}>
-          <div style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.5px' }}>COGS Ratio</div>
+          <div style={{ fontSize: 11, color: 'var(--tx2)', fontWeight: 600, marginBottom: 6 }}>COGS Ratio</div>
           <div style={{ fontSize: 22, fontWeight: 700, color: ORANGE, ...tabNum }}>{cogsRatio.toFixed(1)}%</div>
           <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4, ...tabNum }}>{fmt(totals.cogs)} costs</div>
         </div>
 
         {/* Margin Change */}
         <div style={{ ...cardStyle, padding: '14px 16px' }}>
-          <div style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.5px' }}>Margin Change</div>
+          <div style={{ fontSize: 11, color: 'var(--tx2)', fontWeight: 600, marginBottom: 6 }}>Margin Change</div>
           <div style={{ fontSize: 22, fontWeight: 700, color: marginDelta >= 0 ? GREEN : RED, ...tabNum }}>
             {marginDelta >= 0 ? '+' : ''}{marginDelta.toFixed(1)}pp
           </div>
@@ -151,32 +151,48 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
       <div style={{ ...cardStyle }}>
         {sectionHeader('Revenue Breakdown', ORANGE)}
         <div style={{ padding: '14px 18px' }}>
-          <div style={{ height: 32, borderRadius: 8, overflow: 'hidden', display: 'flex', background: 'var(--ev, #e5e5e5)' }}>
-            {cogsRatio > 0 && (
-              <div
-                title={`COGS: ${cogsRatio.toFixed(1)}%`}
-                style={{ width: `${cogsRatio}%`, background: RED, display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: cogsRatio > 8 ? undefined : 0 }}
-              >
-                {cogsRatio > 8 && <span style={{ fontSize: 10, color: '#fff', fontWeight: 600, ...tabNum }}>COGS {cogsRatio.toFixed(0)}%</span>}
-              </div>
-            )}
-            {fixedRatio > 0 && (
-              <div
-                title={`Fixed Costs: ${fixedRatio.toFixed(1)}%`}
-                style={{ width: `${fixedRatio}%`, background: ORANGE, display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: fixedRatio > 8 ? undefined : 0 }}
-              >
-                {fixedRatio > 8 && <span style={{ fontSize: 10, color: '#fff', fontWeight: 600, ...tabNum }}>Fixed {fixedRatio.toFixed(0)}%</span>}
-              </div>
-            )}
-            {profitRatio > 0 && (
-              <div
-                title={`Profit: ${profitRatio.toFixed(1)}%`}
-                style={{ width: `${profitRatio}%`, background: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: profitRatio > 8 ? undefined : 0 }}
-              >
-                {profitRatio > 8 && <span style={{ fontSize: 10, color: '#fff', fontWeight: 600, ...tabNum }}>Profit {profitRatio.toFixed(0)}%</span>}
-              </div>
-            )}
-          </div>
+          {(() => {
+            const totalCostPct = cogsRatio + fixedRatio + Math.max(profitRatio, 0)
+            const scale = totalCostPct > 100 ? 100 / totalCostPct : 1
+            const cogsW = cogsRatio * scale
+            const fixedW = fixedRatio * scale
+            const profitW = Math.max(profitRatio, 0) * scale
+            return (
+              <>
+                <div style={{ height: 32, borderRadius: 8, overflow: 'hidden', display: 'flex', background: 'var(--ev, #e5e5e5)' }}>
+                  {cogsRatio > 0 && (
+                    <div
+                      title={`COGS: ${cogsRatio.toFixed(1)}%`}
+                      style={{ width: `${cogsW}%`, background: RED, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                    >
+                      {cogsW > 8 && <span style={{ fontSize: 10, color: '#fff', fontWeight: 600, ...tabNum }}>COGS {cogsRatio.toFixed(0)}%</span>}
+                    </div>
+                  )}
+                  {fixedRatio > 0 && (
+                    <div
+                      title={`Fixed Costs: ${fixedRatio.toFixed(1)}%`}
+                      style={{ width: `${fixedW}%`, background: ORANGE, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                    >
+                      {fixedW > 8 && <span style={{ fontSize: 10, color: '#fff', fontWeight: 600, ...tabNum }}>Fixed {fixedRatio.toFixed(0)}%</span>}
+                    </div>
+                  )}
+                  {profitRatio > 0 && (
+                    <div
+                      title={`Profit: ${profitRatio.toFixed(1)}%`}
+                      style={{ width: `${profitW}%`, background: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                    >
+                      {profitW > 8 && <span style={{ fontSize: 10, color: '#fff', fontWeight: 600, ...tabNum }}>Profit {profitRatio.toFixed(0)}%</span>}
+                    </div>
+                  )}
+                </div>
+                {profitRatio < 0 && (
+                  <div style={{ fontSize: 10, color: '#EF4444', marginTop: 4, fontWeight: 500 }}>
+                    Costs exceed revenue by {Math.abs(profitRatio).toFixed(1)}% — operating at a loss
+                  </div>
+                )}
+              </>
+            )
+          })()}
           <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{ width: 8, height: 8, borderRadius: 2, background: RED }} />
@@ -341,7 +357,7 @@ export default function MarginAnalysis({ totals, comparison, marginByProduct, ma
                       style={{
                         padding: '10px 12px', textAlign: key === 'name' || key === 'category' ? 'left' : 'right',
                         fontSize: 10, fontWeight: 600, color: 'var(--tx3)', cursor: 'pointer',
-                        textTransform: 'uppercase', letterSpacing: '.5px', whiteSpace: 'nowrap', userSelect: 'none',
+                        whiteSpace: 'nowrap', userSelect: 'none',
                       }}
                     >
                       {label}{sortArrow(key)}

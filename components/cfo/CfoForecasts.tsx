@@ -35,6 +35,7 @@ interface Props {
   cash: CashData
   dailyCashflow?: DailyCashflow[]
   currencySymbol: string
+  onAsk?: (prompt: string) => void
 }
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -308,7 +309,7 @@ function WaterfallChart({ items, width, height, sym }: {
 }
 
 // ── Main Component ───────────────────────────────────────────
-export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, currencySymbol: sym }: Props) {
+export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, currencySymbol: sym, onAsk }: Props) {
   const [horizon, setHorizon] = useState<HorizonId>('3m')
   const months = HORIZONS.find(h => h.id === horizon)!.months
 
@@ -693,6 +694,82 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
           <WaterfallChart items={waterfall} width={700} height={240} sym={sym} />
         </div>
       )}
+
+      {/* ── AI Pattern Detection ─── */}
+      {completedMonths.length >= 3 && (() => {
+        const revs = completedMonths.map(m => m.revenue)
+        const n = revs.length
+
+        // Detect patterns
+        const patterns: Array<{ icon: string; label: string; detail: string; color: string }> = []
+
+        // Growth trend
+        const firstHalf = revs.slice(0, Math.floor(n / 2))
+        const secondHalf = revs.slice(Math.floor(n / 2))
+        const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length
+        const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length
+        const growthPct = firstAvg > 0 ? ((secondAvg - firstAvg) / firstAvg) * 100 : 0
+        if (growthPct > 10) patterns.push({ icon: '📈', label: 'Upward Trend', detail: `Revenue growing ~${growthPct.toFixed(0)}% across the period`, color: '#22c55e' })
+        else if (growthPct < -10) patterns.push({ icon: '📉', label: 'Declining Trend', detail: `Revenue declining ~${Math.abs(growthPct).toFixed(0)}% — investigate root cause`, color: '#ef4444' })
+        else patterns.push({ icon: '➡️', label: 'Stable Revenue', detail: 'Revenue is relatively flat — look for growth levers', color: '#f59e0b' })
+
+        // Seasonality (if enough months)
+        if (n >= 6) {
+          const avg = revs.reduce((a, b) => a + b, 0) / n
+          const peaks = revs.filter(r => r > avg * 1.2).length
+          const troughs = revs.filter(r => r < avg * 0.8).length
+          if (peaks >= 2 && troughs >= 1) {
+            patterns.push({ icon: '🔄', label: 'Seasonal Pattern Detected', detail: `${peaks} peak month${peaks > 1 ? 's' : ''} and ${troughs} trough${troughs > 1 ? 's' : ''} — plan inventory and cash accordingly`, color: '#6366F1' })
+          }
+        }
+
+        // Margin compression
+        const margins = completedMonths.map(m => m.gross_margin_pct)
+        if (margins.length >= 3) {
+          const marginStart = margins.slice(0, 2).reduce((a, b) => a + b, 0) / 2
+          const marginEnd = margins.slice(-2).reduce((a, b) => a + b, 0) / 2
+          if (marginEnd < marginStart - 3) {
+            patterns.push({ icon: '⚠️', label: 'Margin Compression', detail: `Gross margin dropped from ${marginStart.toFixed(1)}% to ${marginEnd.toFixed(1)}% — rising COGS or pricing pressure`, color: '#ef4444' })
+          } else if (marginEnd > marginStart + 3) {
+            patterns.push({ icon: '✅', label: 'Margin Expansion', detail: `Gross margin improved from ${marginStart.toFixed(1)}% to ${marginEnd.toFixed(1)}% — good cost control or pricing power`, color: '#22c55e' })
+          }
+        }
+
+        // Volatility
+        const avg = revs.reduce((a, b) => a + b, 0) / n
+        const cv = avg > 0 ? Math.sqrt(revs.reduce((s, r) => s + Math.pow(r - avg, 2), 0) / n) / avg : 0
+        if (cv > 0.3) patterns.push({ icon: '🎢', label: 'High Volatility', detail: `Revenue varies significantly (CV: ${(cv * 100).toFixed(0)}%) — consider smoothing with subscriptions or retainers`, color: '#f59e0b' })
+
+        if (patterns.length === 0) return null
+
+        return (
+          <div style={{ background: 'var(--sf, #fff)', border: '1px solid var(--b, #e8e6e1)', borderRadius: 12, padding: 16 }}>
+            <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>Pattern Detection</div>
+                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Automatically identified from your financial data</div>
+              </div>
+              {onAsk && (
+                <button onClick={() => onAsk(`Patterns detected in my financials: ${patterns.map(p => `${p.label}: ${p.detail}`).join('. ')}. Based on these patterns, what should I do next?`)}
+                  style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit', flexShrink: 0 }}>
+                  Ask AI
+                </button>
+              )}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {patterns.map((p, i) => (
+                <div key={i} style={{ display: 'flex', gap: 10, padding: '10px 12px', borderRadius: 8, border: `1px solid ${p.color}20`, background: `${p.color}06` }}>
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>{p.icon}</span>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{p.label}</div>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4 }}>{p.detail}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── Scenario Planner (existing) ─── */}
       <div style={{ borderTop: '1px solid var(--b, #e8e6e1)', paddingTop: 16 }}>

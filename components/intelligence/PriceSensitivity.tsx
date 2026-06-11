@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 interface Product {
   sku: string; name: string; channel: string
@@ -107,10 +107,20 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
         })}
       </div>
 
+      {/* P&L Impact Simulator */}
+      {products.length > 0 && (
+        <PriceImpactSimulator products={products} sym={sym} />
+      )}
+
       {/* Product list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {filtered.slice(0, 12).map(p => {
           const cfg = SENSITIVITY_CONFIG[p.sensitivity] || SENSITIVITY_CONFIG.stable
+          // Margin-based price suggestion
+          const targetMargin = 40
+          const suggestedPrice = p.margin_pct < targetMargin && p.sensitivity !== 'elastic'
+            ? p.current_price * (1 + (targetMargin - p.margin_pct) / 100)
+            : null
           return (
             <div key={p.sku} style={{
               padding: '8px 10px', borderRadius: 10,
@@ -123,7 +133,7 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
                 </div>
                 <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{sym}{p.current_price.toFixed(2)}</span>
               </div>
-              <div style={{ display: 'flex', gap: 12, fontSize: 10, color: 'var(--tx3)', marginBottom: p.opportunity ? 4 : 0 }}>
+              <div style={{ display: 'flex', gap: 12, fontSize: 10, color: 'var(--tx3)', marginBottom: p.opportunity || suggestedPrice ? 4 : 0 }}>
                 <span>
                   Price {p.price_change_pct > 0 ? '↑' : p.price_change_pct < 0 ? '↓' : '→'}
                   <span style={{ color: p.price_change_pct > 0 ? '#EF4444' : p.price_change_pct < 0 ? '#10B981' : 'var(--tx3)' }}>
@@ -136,8 +146,13 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
                     {' '}{Math.abs(p.volume_change_pct)}%
                   </span>
                 </span>
-                <span>Margin: {p.margin_pct}%</span>
+                <span>Margin: <span style={{ fontWeight: 600, color: p.margin_pct >= 40 ? '#10B981' : p.margin_pct >= 20 ? '#F59E0B' : '#EF4444' }}>{p.margin_pct}%</span></span>
               </div>
+              {suggestedPrice && (
+                <div style={{ fontSize: 10, color: '#10B981', fontWeight: 600, paddingLeft: 18, marginBottom: p.opportunity ? 2 : 0 }}>
+                  💰 Suggested price for {targetMargin}% margin: {sym}{suggestedPrice.toFixed(2)} (+{((suggestedPrice - p.current_price) / p.current_price * 100).toFixed(1)}%)
+                </div>
+              )}
               {p.opportunity && (
                 <div style={{ fontSize: 10, color: '#6366F1', fontWeight: 600, paddingLeft: 18 }}>
                   💡 {p.opportunity}
@@ -146,6 +161,73 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
             </div>
           )
         })}
+      </div>
+    </div>
+  )
+}
+
+function PriceImpactSimulator({ products, sym }: { products: Product[]; sym: string }) {
+  const [pctChange, setPctChange] = useState(5)
+
+  const impact = useMemo(() => {
+    const totalRevenue = products.reduce((s, p) => s + p.monthly_revenue, 0)
+    let newRevenue = 0
+    let opportunities = 0
+
+    products.forEach(p => {
+      const priceMultiplier = 1 + pctChange / 100
+      // Estimate volume impact based on elasticity
+      const volumeMultiplier = 1 - (p.elasticity * (pctChange / 100))
+      const newRev = p.monthly_revenue * priceMultiplier * Math.max(volumeMultiplier, 0.3)
+      newRevenue += newRev
+      if (newRev > p.monthly_revenue) opportunities++
+    })
+
+    const revDelta = newRevenue - totalRevenue
+    const pctDelta = totalRevenue > 0 ? (revDelta / totalRevenue) * 100 : 0
+
+    return { totalRevenue, newRevenue, revDelta, pctDelta, opportunities }
+  }, [products, pctChange])
+
+  const fmtN = (n: number) => {
+    const abs = Math.abs(n)
+    if (abs >= 1_000_000) return `${n < 0 ? '-' : ''}${sym}${(abs / 1_000_000).toFixed(1)}M`
+    if (abs >= 1_000) return `${n < 0 ? '-' : ''}${sym}${(abs / 1_000).toFixed(1)}K`
+    return `${n < 0 ? '-' : ''}${sym}${Math.round(abs)}`
+  }
+
+  return (
+    <div style={{ padding: 12, borderRadius: 10, border: '1px solid var(--b)', background: 'var(--ev, #f9f9f8)', marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>P&L Impact Simulator</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: impact.revDelta >= 0 ? '#10B981' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>
+          {impact.revDelta >= 0 ? '+' : ''}{fmtN(impact.revDelta)}/mo
+        </span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+        <span style={{ fontSize: 10, color: 'var(--tx3)', flexShrink: 0 }}>Price change:</span>
+        <input type="range" min={-20} max={20} step={1} value={pctChange}
+          onChange={e => setPctChange(Number(e.target.value))}
+          style={{ flex: 1, accentColor: '#6366F1' }}
+        />
+        <span style={{ fontSize: 12, fontWeight: 700, color: pctChange >= 0 ? '#10B981' : '#EF4444', minWidth: 40, textAlign: 'right' }}>
+          {pctChange > 0 ? '+' : ''}{pctChange}%
+        </span>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center', fontSize: 10 }}>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmtN(impact.totalRevenue)}</div>
+          <div style={{ color: 'var(--tx3)' }}>Current</div>
+        </div>
+        <div style={{ fontSize: 16, color: 'var(--tx3)', alignSelf: 'center' }}>→</div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 13, color: impact.revDelta >= 0 ? '#10B981' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{fmtN(impact.newRevenue)}</div>
+          <div style={{ color: 'var(--tx3)' }}>Projected</div>
+        </div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 13, color: impact.revDelta >= 0 ? '#10B981' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{impact.pctDelta >= 0 ? '+' : ''}{impact.pctDelta.toFixed(1)}%</div>
+          <div style={{ color: 'var(--tx3)' }}>Change</div>
+        </div>
       </div>
     </div>
   )

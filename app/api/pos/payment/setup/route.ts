@@ -45,6 +45,10 @@ export async function GET(req: NextRequest) {
 
   const hasStripe = !!(config.stripe_connected_account_id)
 
+  // Show fix banner for any Paystack-active merchant without a subaccount
+  // (previously required settlement_account.type === 'mpesa' which was too strict)
+  const needsSubaccount = hasPaystack && config.is_active && !config.paystack_subaccount_id
+
   return NextResponse.json({
     configured: true,
     payment_provider: config.payment_provider,
@@ -54,6 +58,8 @@ export async function GET(req: NextRequest) {
     stripe_onboarding_complete: config.stripe_onboarding_complete,
     country: config.country,
     business_name: config.paystack_business_name,
+    has_subaccount: !!config.paystack_subaccount_id,
+    needs_subaccount_fix: needsSubaccount, // true = M-Pesa active but no split configured
   })
 }
 
@@ -163,8 +169,36 @@ export async function POST(req: NextRequest) {
       const isMobileMoney = settlement_account?.type === 'mpesa' ||
         (settlement_bank && MOBILE_MONEY_CODES.includes(settlement_bank))
 
-      if (!isMobileMoney) {
-        // Bank account → try to create Paystack subaccount
+      if (isMobileMoney) {
+        // M-Pesa merchant — create a Paystack subaccount using MPESA bank code
+        // so platform splits work automatically (AskBiz keeps 2% platform fee)
+        const rawPhone = settlement_account?.phone || contact_phone || ''
+        let mpesaPhone = rawPhone.toString().replace(/[\s\-()]/g, '')
+        // Normalise to 07XXXXXXXXX (local format Paystack expects for MPESA bank code)
+        if (mpesaPhone.startsWith('+254')) mpesaPhone = `0${mpesaPhone.slice(4)}`
+        else if (mpesaPhone.startsWith('254')) mpesaPhone = `0${mpesaPhone.slice(3)}`
+        if (!mpesaPhone.startsWith('0')) mpesaPhone = `0${mpesaPhone}`
+
+        if (mpesaPhone && /^0\d{9}$/.test(mpesaPhone)) {
+          try {
+            const subaccount = await createSubAccount({
+              business_name,
+              settlement_bank: 'MPESA',   // Paystack Kenya M-Pesa bank code
+              account_number: mpesaPhone, // 07XXXXXXXXX format
+              contact_email,
+              contact_phone: mpesaPhone,
+              percentage_charge: 2,       // AskBiz 2% platform fee
+            })
+            subaccountId = subaccount.subaccountCode
+            console.log(`[payment/setup] M-Pesa subaccount created: ${subaccountId}`)
+          } catch (err: any) {
+            // Paystack may reject if account not yet verified — log and continue
+            // Splits won't work until subaccount is created, but payments still go through
+            console.warn(`[payment/setup] M-Pesa subaccount creation failed (${err.message}) — proceeding without split`)
+          }
+        }
+      } else {
+        // Bank account → create Paystack subaccount
         try {
           const bankCode = settlement_bank || settlement_account?.bank_code
           const acctNumber = account_number || ''
@@ -193,7 +227,6 @@ export async function POST(req: NextRequest) {
           )
         }
       }
-      // M-Pesa: subaccountId stays null — payments flow through main Paystack account
 
       const { error: configError } = await service
         .from('merchant_payment_config')
@@ -221,9 +254,12 @@ export async function POST(req: NextRequest) {
         country,
         business_name,
         is_active: true,
+        subaccount_created: !!subaccountId,
         onboarding_url: null,
         message: isMobileMoney
-          ? 'M-Pesa and card payments enabled'
+          ? subaccountId
+            ? 'M-Pesa payments enabled with automatic splits'
+            : 'M-Pesa payments enabled (splits pending — Paystack may need to verify your M-Pesa account)'
           : 'Card and bank payments enabled',
       })
     }
@@ -235,5 +271,72 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('[payment/setup] error:', error)
     return NextResponse.json({ error: error.message || 'Setup failed' }, { status: 500 })
+  }
+}
+
+/**
+ * PATCH /api/pos/payment/setup
+ *
+ * Retroactively create a Paystack subaccount for an existing merchant
+ * who currently has paystack_subaccount_id = null (e.g. M-Pesa-only setup
+ * that was done before subaccount creation was supported).
+ */
+export async function PATCH(req: NextRequest) {
+  const ownerId = await resolvePosOwner(req)
+  if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+
+  const service = createServiceClient()
+
+  // Load existing config
+  const { data: config } = await service
+    .from('merchant_payment_config')
+    .select('paystack_subaccount_id, paystack_business_name, settlement_account, country, is_active')
+    .eq('owner_id', ownerId)
+    .single()
+
+  if (!config) return NextResponse.json({ error: 'No payment config found' }, { status: 404 })
+  if (config.paystack_subaccount_id) {
+    return NextResponse.json({ already_exists: true, subaccount_id: config.paystack_subaccount_id })
+  }
+
+  const body = await req.json().catch(() => ({}))
+  const contact_email = body.contact_email || `merchant-${ownerId.slice(0, 8)}@askbiz.co`
+  const business_name = body.business_name || config.paystack_business_name || 'AskBiz Merchant'
+
+  const settlementAccount = config.settlement_account as any
+  // Accept phone from request body as fallback (e.g. when settlement_account is missing or structured differently)
+  const rawPhone = settlementAccount?.phone || body.mpesa_phone || ''
+  let mpesaPhone = rawPhone.toString().replace(/[\s\-()]/g, '')
+  if (mpesaPhone.startsWith('+254')) mpesaPhone = `0${mpesaPhone.slice(4)}`
+  else if (mpesaPhone.startsWith('254')) mpesaPhone = `0${mpesaPhone.slice(3)}`
+  if (!mpesaPhone.startsWith('0')) mpesaPhone = `0${mpesaPhone}`
+
+  if (!mpesaPhone || !/^0\d{9}$/.test(mpesaPhone)) {
+    return NextResponse.json({ error: 'PHONE_REQUIRED' }, { status: 400 })
+  }
+
+  try {
+    const subaccount = await createSubAccount({
+      business_name,
+      settlement_bank: 'MPESA',
+      account_number: mpesaPhone,
+      contact_email,
+      contact_phone: mpesaPhone,
+      percentage_charge: 2,
+    })
+
+    await service
+      .from('merchant_payment_config')
+      .update({ paystack_subaccount_id: subaccount.subaccountCode })
+      .eq('owner_id', ownerId)
+
+    return NextResponse.json({
+      success: true,
+      subaccount_id: subaccount.subaccountCode,
+      message: 'M-Pesa subaccount created — splits now active',
+    })
+  } catch (err: any) {
+    console.error('[payment/setup PATCH] Subaccount creation failed:', err)
+    return NextResponse.json({ error: err.message || 'Failed to create subaccount' }, { status: 500 })
   }
 }

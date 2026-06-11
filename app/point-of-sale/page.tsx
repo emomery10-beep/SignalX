@@ -123,10 +123,8 @@ export default function PosPage() {
       {/* Hero */}
       <section className="pos-hero-grid" style={{ maxWidth:1100, margin:'0 auto', padding:'clamp(56px,8vw,100px) clamp(16px,4vw,40px) clamp(40px,6vw,72px)', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'clamp(32px,5vw,64px)', alignItems:'center' }}>
         <div>
-          <div className="fade-up" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 12px', borderRadius:9999, background:C.accBg, border:`1px solid ${C.accBdr}`, fontSize:12, color:C.acc, fontWeight:600, marginBottom:24 }}>
-            🧾 Point of Sale
-          </div>
-          <h1 className="fade-up" style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(30px,4.5vw,48px)', fontWeight:700, lineHeight:1.1, letterSpacing:'-.035em', marginBottom:20, color:C.tx }}>
+          <p className="fade-up" style={{ fontSize:11, fontWeight:700, color:C.acc, letterSpacing:'.16em', textTransform:'uppercase', marginBottom:20 }}>Point of Sale</p>
+          <h1 className="fade-up" style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(30px,4.5vw,48px)', fontWeight:700, lineHeight:1.1, letterSpacing:'-.03em', marginBottom:20, color:C.tx }}>
             A full PoS system,<br/>
             <span style={{ color:C.acc }}>powered by AI.</span>
           </h1>
@@ -136,21 +134,21 @@ export default function PosPage() {
           <p className="fade-up" style={{ fontSize:13, color:C.tx3, marginBottom:32, lineHeight:1.6 }}>
             {seatPrice}/seat per month · Works on tablet, phone, or desktop · No special hardware
           </p>
-          <div className="fade-up" style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
-            <Link href="/signin" className="btn-primary" style={{ padding:'13px 28px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8, boxShadow:`0 4px 20px ${C.acc}40` }}>
+          <div className="fade-up" style={{ display:'flex', gap:12, flexWrap:'wrap', alignItems:'center' }}>
+            <Link href="/signin" className="btn-primary" style={{ padding:'13px 28px', borderRadius:10, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8 }}>
               Start free trial
             </Link>
-            <a href="#features" style={{ padding:'13px 20px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:14, fontWeight:500, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8 }}>
+            <a href="#features" style={{ fontSize:14, color:C.tx2, fontWeight:500, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:5, borderBottom:`1px solid ${C.b2}`, paddingBottom:1 }}>
               See features ↓
             </a>
-            <a href="#sectors" style={{ padding:'13px 20px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:14, fontWeight:500, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8 }}>
-              🛒🍽️🔧 By sector
+            <a href="#sectors" style={{ fontSize:14, color:C.tx2, fontWeight:500, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:5, borderBottom:`1px solid ${C.b2}`, paddingBottom:1 }}>
+              By sector →
             </a>
           </div>
         </div>
 
         {/* Mock register UI */}
-        <div className="pos-hero-mock fade-up" style={{ background:C.sf, borderRadius:20, border:`1px solid ${C.b}`, padding:24, boxShadow:'0 12px 40px rgba(0,0,0,.06)' }}>
+        <div className="pos-hero-mock fade-up" style={{ background:C.sf, borderRadius:12, border:`1px solid ${C.b2}`, padding:24 }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
             <div style={{ fontSize:13, fontWeight:700, color:C.tx }}>Register — Shift #104</div>
             <div style={{ fontSize:11, color:'#16a34a', fontWeight:600, background:'rgba(22,163,74,.08)', padding:'3px 10px', borderRadius:9999 }}>● Live</div>
@@ -189,11 +187,10 @@ export default function PosPage() {
       {/* Camera-first Demo */}
       <section style={{ background:`linear-gradient(160deg, #0f0f0e 0%, #1a1916 100%)`, padding:'clamp(56px,7vw,92px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:1060, margin:'0 auto' }}>
-          <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16, textAlign:'center' }}>How it feels</div>
           <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(24px,3.5vw,38px)', fontWeight:700, textAlign:'center', marginBottom:12, letterSpacing:'-.03em', color:'#fff' }}>
             Scan. Add. Done.
           </h2>
-          <p style={{ fontSize:'clamp(14px,1.6vw,17px)', color:'rgba(255,255,255,.55)', lineHeight:1.7, maxWidth:520, margin:'0 auto 52px', textAlign:'center' }}>
+          <p style={{ fontSize:'clamp(14px,1.6vw,17px)', color:'rgba(255,255,255,.72)', lineHeight:1.7, maxWidth:520, margin:'0 auto 52px', textAlign:'center' }}>
             No manual entry. Point, scan, checkout — the entire sale takes seconds.
           </p>
 
@@ -354,7 +351,6 @@ export default function PosPage() {
       {/* Features */}
       <section id="features" style={{ background:C.sf, borderTop:`1px solid ${C.b}`, borderBottom:`1px solid ${C.b}`, padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:1060, margin:'0 auto' }}>
-          <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16, textAlign:'center' }}>Features</div>
           <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,36px)', fontWeight:700, textAlign:'center', marginBottom:12, letterSpacing:'-.03em', color:C.tx }}>
             Built to sell anywhere in the world
           </h2>
@@ -369,7 +365,7 @@ export default function PosPage() {
                 <span style={{ fontSize:20 }}>🌍</span>
                 <span style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:700, color:'#fff' }}>Works in 150+ countries</span>
               </div>
-              <p style={{ fontSize:13, color:'rgba(255,255,255,.5)', margin:0, lineHeight:1.6, maxWidth:440 }}>
+              <p style={{ fontSize:13, color:'rgba(255,255,255,.72)', margin:0, lineHeight:1.6, maxWidth:440 }}>
                 Set your store currency once. Prices, receipts, tax reports, and accounting exports all follow. Switch branches to different currencies without losing a thing.
               </p>
             </div>
@@ -403,11 +399,8 @@ export default function PosPage() {
           <div className="features-grid" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
             {FEATURES.map((f, i) => (
               <Link key={i} href={`/point-of-sale/feature/${(f as any).slug}`} style={{ textDecoration:'none' }}>
-                <div className="card-hover" style={{ padding:'22px 18px', borderRadius:16, border: f.tag === 'Global' ? `2px solid ${C.accBdr}` : `1px solid ${C.b}`, background: f.tag === 'Global' ? C.accBg : C.bg, display:'flex', flexDirection:'column', gap:10, height:'100%', position:'relative', cursor:'pointer' }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                    <span style={{ fontSize:24 }}>{f.icon}</span>
-                    <span style={{ fontSize:10, fontWeight:700, color:C.acc, background: f.tag === 'Global' ? `rgba(208,138,89,.18)` : C.accBg, border:`1px solid ${C.accBdr}`, padding:'2px 8px', borderRadius:9999, textTransform:'uppercase', letterSpacing:'.05em' }}>{f.tag}</span>
-                  </div>
+                <div className="card-hover" style={{ padding:'22px 18px', borderRadius:14, border:`1px solid ${C.b}`, background:C.bg, display:'flex', flexDirection:'column', gap:10, height:'100%', position:'relative', cursor:'pointer' }}>
+                  <span style={{ fontSize:22 }}>{f.icon}</span>
                   <div style={{ fontFamily:'var(--font-sora)', fontSize:15, fontWeight:700, color:C.tx }}>{f.title}</div>
                   <p style={{ fontSize:13, color:C.tx2, lineHeight:1.65, margin:0, flex:1 }}>{f.desc}</p>
                   <div style={{ fontSize:11, color:C.acc, fontWeight:600, marginTop:4 }}>Learn more →</div>
@@ -437,7 +430,6 @@ export default function PosPage() {
       {/* Sector showcase */}
       <section id="sectors" style={{ background:C.bg, borderTop:`1px solid ${C.b}`, padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:1060, margin:'0 auto' }}>
-          <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16, textAlign:'center' }}>Your sector</div>
           <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,36px)', fontWeight:700, textAlign:'center', marginBottom:12, letterSpacing:'-.03em', color:C.tx }}>
             Tailored to how you work
           </h2>
@@ -467,7 +459,6 @@ export default function PosPage() {
                   <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
                     <span style={{ fontSize:28 }}>{sector.icon}</span>
                     <span style={{ fontFamily:'var(--font-sora)', fontSize:22, fontWeight:800, color:C.tx }}>{sector.label}</span>
-                    <span style={{ fontSize:11, fontWeight:700, color:'#fff', background:sector.color, padding:'3px 10px', borderRadius:9999, letterSpacing:'.04em' }}>Sector</span>
                   </div>
                   <div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:sector.color, marginBottom:4 }}>{sector.tagline}</div>
                   <p style={{ fontSize:14, color:C.tx2, margin:0, maxWidth:500, lineHeight:1.6 }}>{sector.desc}</p>
@@ -510,14 +501,13 @@ export default function PosPage() {
 
       {/* How it works */}
       <section style={{ maxWidth:900, margin:'0 auto', padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
-        <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16, textAlign:'center' }}>How it works</div>
         <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,34px)', fontWeight:700, textAlign:'center', marginBottom:48, letterSpacing:'-.03em', color:C.tx }}>
           From shift open to close
         </h2>
         <div className="workflow-grid" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:20 }}>
           {WORKFLOW.map((s, i) => (
-            <div key={i} style={{ textAlign:'center' }}>
-              <div style={{ width:40, height:40, borderRadius:'50%', background:C.acc, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px', fontFamily:'var(--font-sora)', fontSize:16, fontWeight:800 }}>{s.step}</div>
+            <div key={i} style={{ borderTop:`2px solid ${i === 0 ? C.acc : C.b}`, paddingTop:18 }}>
+              <div style={{ fontFamily:'var(--font-sora)', fontSize:11, fontWeight:700, color:C.acc, marginBottom:10, letterSpacing:'.06em' }}>{s.step}</div>
               <div style={{ fontFamily:'var(--font-sora)', fontSize:14, fontWeight:700, color:C.tx, marginBottom:8 }}>{s.title}</div>
               <p style={{ fontSize:13, color:C.tx2, lineHeight:1.6, margin:0 }}>{s.desc}</p>
             </div>
@@ -528,7 +518,6 @@ export default function PosPage() {
       {/* Comparison */}
       <section style={{ background:C.sf, borderTop:`1px solid ${C.b}`, borderBottom:`1px solid ${C.b}`, padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:800, margin:'0 auto' }}>
-          <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16, textAlign:'center' }}>Why askbiz PoS</div>
           <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,34px)', fontWeight:700, textAlign:'center', marginBottom:44, letterSpacing:'-.03em', color:C.tx }}>
             More than a register
           </h2>
@@ -557,7 +546,6 @@ export default function PosPage() {
       {/* Setup walkthrough */}
       <section style={{ background:C.bg, borderTop:`1px solid ${C.b}`, padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:980, margin:'0 auto' }}>
-          <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16, textAlign:'center' }}>Setup in minutes</div>
           <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,36px)', fontWeight:700, textAlign:'center', marginBottom:12, letterSpacing:'-.03em', color:C.tx }}>
             Add a cashier or inventory user<br/>in under 2 minutes
           </h2>
@@ -788,16 +776,13 @@ export default function PosPage() {
 
       {/* Pricing */}
       <section id="pricing" style={{ maxWidth:600, margin:'0 auto', padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
-        <div style={{ fontSize:11, fontWeight:700, color:C.acc, textTransform:'uppercase', letterSpacing:'.12em', marginBottom:16, textAlign:'center' }}>Pricing</div>
         <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,34px)', fontWeight:700, textAlign:'center', marginBottom:8, letterSpacing:'-.03em', color:C.tx }}>
           Simple per-seat pricing
         </h2>
         <p style={{ textAlign:'center', fontSize:14, color:C.tx2, marginBottom:36 }}>Add PoS to any Growth or Business plan.</p>
 
-        <div style={{ borderRadius:20, border:`2px solid ${C.acc}`, background:C.sf, padding:'32px 28px', textAlign:'center', position:'relative' }}>
-          <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', padding:'3px 14px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em' }}>
-            Add-on
-          </div>
+        <div style={{ borderRadius:14, border:`2px solid ${C.acc}`, background:`${C.acc}05`, padding:'32px 28px', textAlign:'center' }}>
+          <div style={{ fontSize:11, fontWeight:700, color:C.acc, letterSpacing:'.12em', textTransform:'uppercase', marginBottom:16 }}>Add-on</div>
           <div style={{ fontFamily:'var(--font-sora)', fontSize:42, fontWeight:800, color:C.tx, letterSpacing:'-.03em', marginBottom:4 }}>
             {seatPrice}<span style={{ fontSize:16, fontWeight:500, color:C.tx3 }}>/seat/month</span>
           </div>
@@ -819,7 +804,7 @@ export default function PosPage() {
               </div>
             ))}
           </div>
-          <Link href="/signin" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'13px 32px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', boxShadow:`0 4px 20px ${C.acc}40` }}>
+          <Link href="/signin" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'13px 32px', borderRadius:10, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none' }}>
             Start free trial
           </Link>
           <p style={{ fontSize:12, color:C.tx3, marginTop:12 }}>Free during trial · No credit card needed</p>
@@ -827,16 +812,20 @@ export default function PosPage() {
       </section>
 
       {/* CTA */}
-      <section style={{ background:C.sf, borderTop:`1px solid ${C.b}`, padding:'clamp(52px,7vw,80px) clamp(16px,4vw,40px)', textAlign:'center' }}>
-        <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,34px)', fontWeight:700, letterSpacing:'-.03em', color:C.tx, marginBottom:14 }}>
-          Ready to sell smarter?
-        </h2>
-        <p style={{ fontSize:'clamp(14px,1.6vw,17px)', color:C.tx2, lineHeight:1.7, maxWidth:480, margin:'0 auto 28px' }}>
-          Set up your first register in under 5 minutes. No hardware needed — just sign in and start selling.
-        </p>
-        <Link href="/signin" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'14px 32px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', boxShadow:`0 4px 20px ${C.acc}40` }}>
+      <section style={{ background:C.sf, borderTop:`1px solid ${C.b}`, padding:'clamp(40px,5vw,64px) clamp(16px,4vw,40px)' }}>
+      <div style={{ maxWidth:1100, margin:'0 auto', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:24, borderTop:`2px solid ${C.tx}`, paddingTop:'clamp(32px,4vw,48px)' }}>
+        <div>
+          <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(20px,2.5vw,28px)', fontWeight:700, letterSpacing:'-.03em', color:C.tx, marginBottom:8 }}>
+            Ready to sell smarter?
+          </h2>
+          <p style={{ fontSize:15, color:C.tx2, lineHeight:1.6, maxWidth:420, margin:0 }}>
+            Set up your first register in under 5 minutes. No hardware needed — just sign in and start selling.
+          </p>
+        </div>
+        <Link href="/signin" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'14px 32px', borderRadius:10, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', whiteSpace:'nowrap', flexShrink:0 }}>
           Get started free →
         </Link>
+      </div>
       </section>
 
       {/* Footer */}

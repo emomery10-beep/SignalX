@@ -151,11 +151,11 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--b)' }}>
-                <th style={{ textAlign: 'left', padding: '8px 18px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em' }}>Line Item</th>
-                <th style={{ textAlign: 'right', padding: '8px 14px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em' }}>Budget</th>
-                <th style={{ textAlign: 'right', padding: '8px 14px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em' }}>Actual</th>
-                <th style={{ textAlign: 'right', padding: '8px 14px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em' }}>Variance</th>
-                <th style={{ textAlign: 'right', padding: '8px 18px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em' }}>% Var</th>
+                <th style={{ textAlign: 'left', padding: '8px 18px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>Line Item</th>
+                <th style={{ textAlign: 'right', padding: '8px 14px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>Budget</th>
+                <th style={{ textAlign: 'right', padding: '8px 14px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>Actual</th>
+                <th style={{ textAlign: 'right', padding: '8px 14px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>Variance</th>
+                <th style={{ textAlign: 'right', padding: '8px 18px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>% Var</th>
               </tr>
             </thead>
             <tbody>
@@ -222,7 +222,8 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
             {uniqueLines.filter(l => l.key !== 'net_profit').map(line => {
               const b = budget[line.key]
               if (b === 0) return null
-              const pct = Math.min((line.actual / b) * 100, 150)
+              const rawPct = b > 0 ? (line.actual / b) * 100 : 0
+              const pct = Math.min(rawPct, 100)
               const color = line.isNeg
                 ? (line.actual <= b ? '#22C55E' : '#EF4444')
                 : (line.actual >= b ? '#22C55E' : '#EF4444')
@@ -230,7 +231,7 @@ export default function BudgetVsActual({ totals, pnlMonthly, currencySymbol: sym
                 <div key={line.key}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                     <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--tx)' }}>{line.label}</span>
-                    <span style={{ fontSize: 11, fontWeight: 600, color }}>{pct.toFixed(0)}% of budget</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color }}>{rawPct.toFixed(0)}% of budget</span>
                   </div>
                   <div style={{ height: 10, borderRadius: 5, background: 'var(--ev, #f3f2ef)', overflow: 'hidden' }}>
                     <div style={{

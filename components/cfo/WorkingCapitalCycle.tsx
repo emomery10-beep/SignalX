@@ -29,7 +29,7 @@ export default function WorkingCapitalCycle({ revenue, cogs, inventoryValue, rec
   const ccc = dio + dso - dpo
 
   const maxDays = Math.max(dio + dso, dpo, 60)
-  const barScale = (d: number) => Math.max((d / maxDays) * 100, 4)
+  const barScale = (d: number) => d === 0 ? 0 : Math.max((d / maxDays) * 100, 4)
 
   const cccColor = ccc <= 0 ? '#22C55E' : ccc <= 30 ? '#F59E0B' : '#EF4444'
   const cccStatus = ccc <= 0 ? 'Excellent — cash comes in before going out' :
@@ -57,7 +57,7 @@ export default function WorkingCapitalCycle({ revenue, cogs, inventoryValue, rec
 
       {/* CCC Hero */}
       <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--b)', background: ccc <= 0 ? 'rgba(34,197,94,.03)' : ccc <= 30 ? 'rgba(245,158,11,.03)' : 'rgba(239,68,68,.03)' }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>
           Cash Conversion Cycle
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
@@ -71,7 +71,7 @@ export default function WorkingCapitalCycle({ revenue, cogs, inventoryValue, rec
 
       {/* Formula visual */}
       <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--b)' }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 12 }}>
           DIO + DSO − DPO = CCC
         </div>
 
@@ -130,45 +130,105 @@ export default function WorkingCapitalCycle({ revenue, cogs, inventoryValue, rec
         </div>
       </div>
 
-      {/* Improvement tips */}
+      {/* Quantified Action Suggestions */}
       <div style={{ padding: '14px 18px' }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>How to Improve</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {dio > 15 && (
-            <TipRow
-              color="#F97316"
-              text={`Reduce DIO (${dio}d): Move slow stock faster with promotions, or reduce order sizes for slow-moving items.`}
-            />
-          )}
-          {dso > 7 && (
-            <TipRow
-              color="#6366F1"
-              text={`Reduce DSO (${dso}d): Offer ${region.paymentMethods}, incentivize early payment, or tighten credit terms.`}
-            />
-          )}
-          {dpo < 30 && (
-            <TipRow
-              color="#22C55E"
-              text={`Extend DPO (${dpo}d): Negotiate longer payment terms with suppliers — 30-45 days is standard for established relationships.`}
-            />
-          )}
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>Actionable Improvements</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {dio > 15 && (() => {
+            const targetDio = Math.max(dio - 10, 10)
+            const cashFreed = dailyCogs * (dio - targetDio)
+            return (
+              <ActionCard
+                color="#F97316"
+                title={`Reduce DIO from ${dio}d → ${targetDio}d`}
+                impact={`Frees up ${fmt(cashFreed, sym)} in working capital`}
+                actions={[
+                  'Run clearance on slow-moving stock (items > 60 days)',
+                  'Reduce reorder quantities for bottom 20% products',
+                  `Move to just-in-time for fast-moving items`,
+                ]}
+              />
+            )
+          })()}
+          {dso > 7 && (() => {
+            const targetDso = Math.max(dso - 7, 3)
+            const cashFreed = dailyRevenue * (dso - targetDso)
+            return (
+              <ActionCard
+                color="#6366F1"
+                title={`Reduce DSO from ${dso}d → ${targetDso}d`}
+                impact={`Accelerates ${fmt(cashFreed, sym)} in collections`}
+                actions={[
+                  `Offer ${region.paymentMethods} for faster settlement`,
+                  'Send payment reminders at day 3, 7, and 14',
+                  `Offer 2% early-payment discount (saves ${fmt(receivablesTotal * 0.02, sym)} but accelerates cash)`,
+                ]}
+              />
+            )
+          })()}
+          {dpo < 30 && (() => {
+            const targetDpo = 30
+            const cashGained = dailyCogs * (targetDpo - dpo)
+            return (
+              <ActionCard
+                color="#22C55E"
+                title={`Extend DPO from ${dpo}d → ${targetDpo}d`}
+                impact={`Retains ${fmt(cashGained, sym)} longer in your account`}
+                actions={[
+                  'Negotiate net-30 terms with top 3 suppliers',
+                  'Consolidate orders for volume-based term extensions',
+                  'Use scheduled payments instead of immediate settlement',
+                ]}
+              />
+            )
+          })()}
           {ccc <= 0 && (
-            <TipRow
+            <ActionCard
               color="#22C55E"
-              text="Your cash cycle is negative — you collect cash before paying suppliers. This is an ideal position. Maintain supplier relationships to keep these terms."
+              title="Cash cycle is negative — excellent position"
+              impact="You collect cash before paying suppliers"
+              actions={[
+                'Maintain supplier relationships to keep these terms',
+                'Consider offering early-pay discounts to suppliers for additional savings',
+                'Reinvest the float into growth or interest-bearing instruments',
+              ]}
             />
           )}
+          {ccc > 0 && (() => {
+            const totalCashTiedUp = dailyRevenue * ccc
+            return (
+              <div style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid rgba(99,102,241,.15)', background: 'rgba(99,102,241,.04)', marginTop: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>Total cash tied up in cycle</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#6366F1', fontVariantNumeric: 'tabular-nums' }}>{fmt(totalCashTiedUp, sym)}</span>
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>
+                  Reducing CCC by 10 days frees up ~{fmt(dailyRevenue * 10, sym)} in working capital
+                </div>
+              </div>
+            )
+          })()}
         </div>
       </div>
     </div>
   )
 }
 
-function TipRow({ color, text }: { color: string; text: string }) {
+function ActionCard({ color, title, impact, actions }: { color: string; title: string; impact: string; actions: string[] }) {
   return (
-    <div style={{ display: 'flex', gap: 8, fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}>
-      <div style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0, marginTop: 5 }} />
-      <span>{text}</span>
+    <div style={{ padding: '10px 12px', borderRadius: 8, border: `1px solid ${color}25`, background: `${color}06` }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{title}</span>
+      </div>
+      <div style={{ fontSize: 11, fontWeight: 600, color, marginBottom: 6 }}>{impact}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {actions.map((a, i) => (
+          <div key={i} style={{ display: 'flex', gap: 6, fontSize: 10, color: 'var(--tx2)', lineHeight: 1.4 }}>
+            <span style={{ color: 'var(--tx3)', flexShrink: 0 }}>{i + 1}.</span>
+            <span>{a}</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

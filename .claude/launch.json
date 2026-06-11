@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "pos-upgrade-preview",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["/tmp/pos-upgrade/server.js"],
+      "port": 7788
+    },
+    {
       "name": "pos-askbiz",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
@@ -13,7 +19,7 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["next", "dev"],
       "port": 3000,
-      "autoPort": true
+      "autoPort": false
     }
   ]
 }

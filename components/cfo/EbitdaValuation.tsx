@@ -472,7 +472,7 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
         {/* KPI Strip */}
         <div style={{ display: 'grid', gridTemplateColumns: metricMode === 'both' ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', gap: 1, background: 'var(--b)' }}>
           <div style={{ padding: '14px 12px', background: 'var(--sf)', textAlign: 'center' }}>
-            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>EBITDA</div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>EBITDA</div>
             <div style={{ fontSize: 18, fontWeight: 700, color: ebitda >= 0 ? GREEN : RED, fontVariantNumeric: 'tabular-nums' }}>{fmt(ebitda, sym)}</div>
             {ebitdaChange != null && (
               <div style={{ fontSize: 10, fontWeight: 600, color: ebitdaChange > 0 ? GREEN : ebitdaChange < 0 ? RED : 'var(--tx3)', marginTop: 2 }}>
@@ -482,18 +482,18 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
           </div>
           {(metricMode === 'sde' || metricMode === 'both') && (
             <div style={{ padding: '14px 12px', background: 'var(--sf)', textAlign: 'center' }}>
-              <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>SDE</div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>SDE</div>
               <div style={{ fontSize: 18, fontWeight: 700, color: sde >= 0 ? CYAN : RED, fontVariantNumeric: 'tabular-nums' }}>{fmt(sde, sym)}</div>
               <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>+ owner comp</div>
             </div>
           )}
           <div style={{ padding: '14px 12px', background: 'var(--sf)', textAlign: 'center' }}>
-            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Margin</div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>Margin</div>
             <div style={{ fontSize: 18, fontWeight: 700, color: ebitdaMargin >= 20 ? GREEN : ebitdaMargin >= 10 ? AMBER : RED, fontVariantNumeric: 'tabular-nums' }}>{ebitdaMargin.toFixed(1)}%</div>
             <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{ebitdaMargin >= 20 ? 'Healthy' : ebitdaMargin >= 10 ? 'Moderate' : 'Needs attention'}</div>
           </div>
           <div style={{ padding: '14px 12px', background: 'var(--sf)', textAlign: 'center' }}>
-            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Valuation ({multiple}x)</div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>Valuation ({multiple}x)</div>
             <div style={{ fontSize: 18, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{fmt(valuation, sym)}</div>
             <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{primaryLabel} × {multiple}</div>
           </div>
@@ -502,7 +502,7 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
         {/* EBITDA Breakdown */}
         <div style={{ padding: '16px 18px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>EBITDA Breakdown</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)' }}>EBITDA Breakdown</div>
             <div style={{ fontSize: 9, color: 'var(--tx3)', fontStyle: 'italic' }}>Click any value to edit</div>
           </div>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>

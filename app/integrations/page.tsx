@@ -38,28 +38,20 @@ export default function IntegrationsPage() {
         <Link href="/signin" style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>Try free →</Link>
       </nav>
 
-      {/* Hero */}
-      <section style={{ background: SF, borderBottom: `1px solid ${BD}`, padding: 'clamp(48px,6vw,80px) clamp(16px,4vw,32px)', textAlign: 'center' }}>
-        <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(26px,4vw,42px)', fontWeight: 700, color: TX, letterSpacing: '-.03em', marginBottom: 14 }}>
-          Connect all your business tools
-        </h1>
-        <p style={{ fontSize: 16, color: TX2, maxWidth: 520, margin: '0 auto 32px', lineHeight: 1.7 }}>
-          AskBiz connects to the tools you already use — eCommerce platforms, accounting software, ad networks, and payment processors — and turns that data into insight automatically.
-        </p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: ACC, background: ACC + '15', border: `1px solid ${ACC}30`, borderRadius: 9999, padding: '6px 16px' }}>
-            {INTEGRATIONS.length}+ integrations
-          </span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#27ae60', background: '#27ae6015', border: '1px solid #27ae6030', borderRadius: 9999, padding: '6px 16px' }}>
-            Under 10 min to connect
-          </span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#2980b9', background: '#2980b915', border: '1px solid #2980b930', borderRadius: 9999, padding: '6px 16px' }}>
-            More added every month
-          </span>
+      {/* Hero — left-aligned, no pills */}
+      <section style={{ background: SF, borderBottom: `1px solid ${BD}`, padding: 'clamp(40px,5vw,64px) clamp(16px,4vw,32px)' }}>
+        <div style={{ maxWidth: 1060, margin: '0 auto' }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: ACC, letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 14 }}>Integrations</p>
+          <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(26px,3.5vw,42px)', fontWeight: 700, color: TX, letterSpacing: '-.03em', marginBottom: 14, maxWidth: 560 }}>
+            Your data, already connected.
+          </h1>
+          <p style={{ fontSize: 15, color: TX2, maxWidth: 480, lineHeight: 1.7, marginBottom: 0 }}>
+            {INTEGRATIONS.length}+ integrations — eCommerce, accounting, ad networks, and payment processors. Connects in under 10 minutes. New platforms added every month.
+          </p>
         </div>
       </section>
 
-      <div style={{ maxWidth: 1060, margin: '0 auto', padding: 'clamp(40px,5vw,64px) clamp(16px,4vw,32px)' }}>
+      <div style={{ maxWidth: 1060, margin: '0 auto', padding: 'clamp(40px,5vw,56px) clamp(16px,4vw,32px)' }}>
 
         {/* Popular */}
         <div style={{ marginBottom: 56 }}>

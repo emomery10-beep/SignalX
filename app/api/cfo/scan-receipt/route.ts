@@ -49,7 +49,7 @@ TASK: Extract the following from the receipt:
 1. Vendor / merchant name (the business that issued the receipt)
 2. Date of the transaction (format as YYYY-MM-DD, use today if not visible)
 3. Total amount paid (numbers only, no currency symbol)
-4. Best expense category from this list: "Rent / Lease", "Payroll", "Utilities", "Software / SaaS", "Marketing & Ads", "Supplies", "Travel", "Meals & Entertainment", "Shipping", "Professional Services", "Equipment", "Insurance", "Taxes & Fees", "Other"
+4. Best expense category from this list: "Supplier / Stock Purchase", "Rent / Lease", "Payroll", "Utilities", "Software / SaaS", "Marketing & Ads", "Supplies", "Travel", "Meals & Entertainment", "Shipping", "Professional Services", "Equipment", "Insurance", "Taxes & Fees", "Other"
 5. Brief notes (one line summary of what was purchased, or empty string if unclear)
 6. Confidence score 0-100 (how well you could read the receipt)
 

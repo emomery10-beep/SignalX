@@ -95,7 +95,7 @@ export default function PrivacyPage() {
         <div style={{ marginBottom: 48 }}>
           <Link href="/" style={{ fontSize: 13, color: 'var(--tx3)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>← Back to AskBiz</Link>
           <h1 style={{ fontFamily: 'var(--font-sora)', fontSize: 32, fontWeight: 700, marginBottom: 8, letterSpacing: '-.025em' }}>Privacy Policy</h1>
-          <p style={{ fontSize: 14, color: 'var(--tx3)' }}>AskBiz Ltd · Effective date: 10 April 2026 · Last updated: 9 May 2026</p>
+          <p style={{ fontSize: 14, color: 'var(--tx3)' }}>AskBiz Ltd · Effective date: 10 April 2026 · Last updated: 10 June 2026</p>
         </div>
 
         <Section title="1. Who We Are">
@@ -107,7 +107,11 @@ export default function PrivacyPage() {
           <P><strong>Account data:</strong> Your name, email address, business type, and country when you register.</P>
           <P><strong>Usage data:</strong> Questions asked, files uploaded (metadata only — not content), features used, and session information.</P>
           <P><strong>Technical data:</strong> IP address hash (SHA-256 — raw IP never stored), browser type, and device information for fraud prevention and security.</P>
-          <P><strong>Payment data:</strong> Processed entirely by Stripe. We never see or store your card details.</P>
+          <P><strong>Payment data:</strong> Processed by Stripe (card payments) and mobile money providers including M-Pesa, MTN Mobile Money, and Airtel Money (where available). We never see or store your card details or mobile money PINs.</P>
+          <P><strong>Camera and image data:</strong> If you use AskBiz POS camera scanning (barcode or price tag recognition), images are processed in real time on your device and via our AI pipeline. Raw images are never stored — only the extracted product data (name, price, barcode) is retained.</P>
+          <P><strong>Logistics and delivery data:</strong> If you use the AskBiz POS logistics module, we process parcel tracking information, delivery routes, vehicle inspection photos, driver handover records, and delivery addresses. Delivery addresses are retained for the duration of the shipment plus 90 days.</P>
+          <P><strong>Location data:</strong> We use IP-based geolocation to detect your country for currency localisation and pricing display. We do not use GPS or precise location tracking. Your raw IP address is never stored (see Technical data above).</P>
+          <P><strong>Trial data:</strong> If you activate a free trial (Growth plan or POS), we store the trial type, start date, end date, and conversion status to manage your subscription.</P>
           <P><strong>With your consent only — Financial data:</strong> If you opt in to financial data personalisation (see Section 6), we store aggregated financial metrics from your uploaded files.</P>
         </Section>
 
@@ -118,6 +122,10 @@ export default function PrivacyPage() {
             <Li>Processing your subscription payments via Stripe</Li>
             <Li>Preventing fraud and abuse (IP hash analysis)</Li>
             <Li>Sending service-related emails (account confirmations, billing receipts)</Li>
+            <Li>Processing camera images for barcode and price tag scanning (POS module)</Li>
+            <Li>Managing logistics, parcel tracking, and delivery routes (POS logistics module)</Li>
+            <Li>Detecting your country via IP geolocation for currency and pricing localisation</Li>
+            <Li>Managing free trial eligibility, duration, and conversion tracking</Li>
             <Li>With your consent: personalising AI answers using your financial data</Li>
             <Li>With your consent: improving AI accuracy using anonymised sector data</Li>
           </ul>
@@ -141,6 +149,10 @@ export default function PrivacyPage() {
                   ['Payment processing', 'Contract performance', 'GDPR Art. 6(1)(b)'],
                   ['Financial data personalisation', 'Explicit consent', 'GDPR Art. 6(1)(a)'],
                   ['AI training and sector trends', 'Explicit consent', 'GDPR Art. 6(1)(a)'],
+                  ['Camera image processing (POS scanning)', 'Contract performance', 'GDPR Art. 6(1)(b)'],
+                  ['Logistics and delivery tracking', 'Contract performance', 'GDPR Art. 6(1)(b)'],
+                  ['IP geolocation for currency localisation', 'Legitimate interest', 'GDPR Art. 6(1)(f)'],
+                  ['Free trial management', 'Contract performance', 'GDPR Art. 6(1)(b)'],
                   ['Service improvement analytics', 'Legitimate interest', 'GDPR Art. 6(1)(f)'],
                 ].map((row, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid var(--b)', background: i % 2 === 0 ? 'var(--sf)' : 'var(--bg)' }}>
@@ -230,6 +242,9 @@ export default function PrivacyPage() {
             <Li><strong>Stripe</strong> — payment processing (PCI DSS Level 1)</Li>
             <Li><strong>Resend</strong> — transactional email delivery (USA — Standard Contractual Clauses apply). Used only for account and billing emails.</Li>
             <Li><strong>WhatsApp/Meta</strong> — receipt delivery for AskBiz POS module (USA — Meta Data Processing Agreement and Standard Contractual Clauses apply). Customer phone numbers are transmitted only when customer opts in to receipt delivery; never stored by AskBiz after 30 days.</Li>
+            <Li><strong>Safaricom (M-Pesa)</strong> — mobile money payment processing for Kenyan and East African users (Kenya — Safaricom Data Processing Terms apply). Only transaction reference and amount are transmitted; M-Pesa PINs are never seen or stored by AskBiz.</Li>
+            <Li><strong>MTN Mobile Money / Airtel Money</strong> — mobile money payment processing for West and Central African users (regional — respective Data Processing Terms apply). Only transaction reference and amount are transmitted.</Li>
+            <Li><strong>PesaPal</strong> — payment gateway for M-Pesa and mobile money transactions (Kenya — PesaPal Data Processing Agreement applies). Processes payment callbacks and subscription conversions.</Li>
           </ul>
           <P>We never sell your data. We never share your data with advertisers. We never share individual business data with other AskBiz users.</P>
         </Section>
@@ -256,6 +271,11 @@ export default function PrivacyPage() {
                   ['POS transaction history', 'Indefinite (accounting/tax requirement)', 'Business owner can export or request deletion via privacy@askbiz.co'],
                   ['POS customer phone numbers', '30 days', 'Automated deletion'],
                   ['POS staff PIN records', '90 days (failed login attempts only)', 'Automated deletion'],
+                  ['POS camera scan images', 'Not stored (real-time processing only)', 'Immediate — images never leave device/session'],
+                  ['POS logistics and delivery data', '12 months after delivery completion', 'Automated deletion'],
+                  ['POS vehicle inspection photos', '6 months', 'Automated deletion'],
+                  ['Free trial records', '12 months after trial end', 'Automated deletion'],
+                  ['Offline mode local data', 'Until synced to server', 'Synced and cleared automatically'],
                   ['Deleted account data', '30-day grace period', 'Permanent after 30 days'],
                 ].map((row, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid var(--b)', background: i % 2 === 0 ? 'var(--sf)' : 'var(--bg)' }}>
@@ -317,8 +337,53 @@ export default function PrivacyPage() {
             </ul>
           </div>
 
+          <div style={{ marginTop: 20, marginBottom: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: 'var(--tx)' }}>📷 Camera Scanning</div>
+            <ul style={{ paddingLeft: 24 }}>
+              <Li><strong>Data collected:</strong> Camera images of barcodes, price tags, and product labels</Li>
+              <Li><strong>Purpose:</strong> Real-time product recognition for barcode lookup and price tag extraction</Li>
+              <Li><strong>Legal basis:</strong> Contract performance (core POS scanning feature)</Li>
+              <Li><strong>Processing:</strong> Images are processed in real time via our AI pipeline. Raw images are never stored on our servers — only the extracted data (product name, price, barcode number) is retained</Li>
+              <Li><strong>Camera permission:</strong> Your browser will ask for camera access. You can revoke this at any time in your browser settings. Camera access is only used during active scanning sessions</Li>
+              <Li><strong>Your rights:</strong> You can disable camera scanning at any time and manually enter product details instead</Li>
+            </ul>
+          </div>
+
+          <div style={{ marginTop: 20, marginBottom: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: 'var(--tx)' }}>🚚 Logistics &amp; Delivery</div>
+            <ul style={{ paddingLeft: 24 }}>
+              <Li><strong>Data collected:</strong> Parcel tracking numbers, delivery addresses, route information, vehicle inspection photos, driver handover records, and delivery timestamps</Li>
+              <Li><strong>Purpose:</strong> Parcel tracking, delivery route management, vehicle inspection compliance, and logistics invoicing</Li>
+              <Li><strong>Legal basis:</strong> Contract performance (logistics module functionality)</Li>
+              <Li><strong>Retention:</strong> Logistics data retained for 12 months after delivery completion. Vehicle inspection photos retained for 6 months. Delivery addresses retained for shipment duration plus 90 days</Li>
+              <Li><strong>Your rights:</strong> You can export all logistics data. You can request deletion of completed delivery records subject to local record-keeping requirements. Contact privacy@askbiz.co</Li>
+            </ul>
+          </div>
+
+          <div style={{ marginTop: 20, marginBottom: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: 'var(--tx)' }}>📱 Offline Mode</div>
+            <ul style={{ paddingLeft: 24 }}>
+              <Li><strong>Data stored locally:</strong> During internet outages, cash sale transactions are stored in your browser&apos;s local storage</Li>
+              <Li><strong>Purpose:</strong> Ensure business continuity when connectivity is temporarily lost</Li>
+              <Li><strong>Sync behaviour:</strong> Locally stored transactions are automatically synced to our servers when connectivity resumes, then cleared from local storage</Li>
+              <Li><strong>Security:</strong> Local data is only accessible within your authenticated browser session</Li>
+            </ul>
+          </div>
+
+          <div style={{ marginTop: 20, marginBottom: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: 'var(--tx)' }}>💰 Mobile Money Payments</div>
+            <ul style={{ paddingLeft: 24 }}>
+              <Li><strong>Supported providers:</strong> M-Pesa (Safaricom), MTN Mobile Money, Airtel Money — via PesaPal payment gateway</Li>
+              <Li><strong>Data collected:</strong> Transaction reference number, payment amount, and confirmation status</Li>
+              <Li><strong>Purpose:</strong> Processing subscription payments and POS seat purchases in markets where card payments are not widely available</Li>
+              <Li><strong>Legal basis:</strong> Contract performance (payment processing)</Li>
+              <Li><strong>Security:</strong> Mobile money PINs are entered directly on the provider&apos;s platform — AskBiz never sees, transmits, or stores your mobile money PIN</Li>
+              <Li><strong>Your rights:</strong> All mobile money transaction records follow the same retention and export policies as card payment records</Li>
+            </ul>
+          </div>
+
           <P style={{ marginTop: 24, padding: '16px 18px', borderRadius: 12, background: 'rgba(22,163,74,.06)', borderLeft: '4px solid #16a34a' }}>
-            <strong>Summary:</strong> The POS module processes personal data transparently with clear legal bases and user rights. Customer phone numbers are optional and automatically deleted after 30 days. Transaction history is retained for accounting compliance but can be exported or deleted upon request. Staff PINs are securely hashed and never visible to other users.
+            <strong>Summary:</strong> The POS module processes personal data transparently with clear legal bases and user rights. Customer phone numbers are optional and automatically deleted after 30 days. Transaction history is retained for accounting compliance but can be exported or deleted upon request. Staff PINs are securely hashed and never visible to other users. Camera images are processed in real time and never stored. Logistics data is retained for 12 months after delivery. Mobile money PINs are never seen by AskBiz.
           </P>
         </Section>
 

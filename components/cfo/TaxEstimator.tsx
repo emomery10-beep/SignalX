@@ -204,6 +204,53 @@ export default function TaxEstimator({ revenue, grossProfit, netProfit, currency
         </div>
       )}
 
+      {/* Proactive tax-saving suggestions */}
+      <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)' }}>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Tax-Saving Opportunities</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {netProfit > 0 && tax.incomeTax.amount > 0 && (
+            <TaxSavingTip
+              title="Pension / Retirement Contributions"
+              saving={fmt(Math.min(netProfit * 0.15, tax.incomeTax.amount * 0.3), sym)}
+              description={`Contributing to a ${tc.pensionName || 'pension scheme'} reduces taxable income. Up to ${tc.pensionMaxPct || 15}% of profits is typically deductible.`}
+              color="#22C55E"
+            />
+          )}
+          {revenue > 50000 && !tc.turnoverTax?.applicable && (
+            <TaxSavingTip
+              title="Capital Allowances"
+              saving={fmt(Math.round(revenue * 0.02 * (tc.smbRate || 0.19)), sym)}
+              description="Equipment, computers, and vehicles purchased for business use can reduce taxable profit through capital allowances."
+              color="#22C55E"
+            />
+          )}
+          {grossProfit > 0 && tc.vatRate > 0 && (
+            <TaxSavingTip
+              title={`Claim ${tc.vatName} Input Credits`}
+              saving={fmt(Math.round(grossProfit * 0.03 * tc.vatRate), sym)}
+              description={`Ensure all business purchases have valid ${tc.vatName} receipts. Many SMBs miss 2-5% of claimable input ${tc.vatName}.`}
+              color="#6366F1"
+            />
+          )}
+          {tax.turnoverTax.applicable && netProfit > revenue * 0.1 && (
+            <TaxSavingTip
+              title="Consider Opting for Income Tax"
+              saving={fmt(Math.max(0, tax.turnoverTax.amount - Math.round(netProfit * tc.smbRate)), sym)}
+              description={`With ${Math.round((netProfit / revenue) * 100)}% net margin, standard income tax on profits may be lower than ${tax.turnoverTax.rate}% turnover tax.`}
+              color="#F59E0B"
+            />
+          )}
+          {netProfit > 0 && (
+            <TaxSavingTip
+              title="Timing Expenses Before Year-End"
+              saving={fmt(Math.round(netProfit * 0.05 * (tc.smbRate || 0.19)), sym)}
+              description="Bringing forward planned purchases (stock, equipment, marketing) into the current period reduces this year's tax bill."
+              color="#6366F1"
+            />
+          )}
+        </div>
+      </div>
+
       {/* Filing calendar */}
       <div style={{ padding: '12px 18px', borderTop: '1px solid var(--b)' }}>
         <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Upcoming Deadlines</div>
@@ -251,6 +298,18 @@ function DeadlineChip({ label, date, days }: { label: string; date: string; days
       <div style={{ fontSize: 11, fontWeight: 700, color, marginTop: 2 }}>
         {days <= 0 ? 'OVERDUE' : `${days}d`}
       </div>
+    </div>
+  )
+}
+
+function TaxSavingTip({ title, saving, description, color }: { title: string; saving: string; description: string; color: string }) {
+  return (
+    <div style={{ padding: '10px 12px', borderRadius: 8, border: `1px solid ${color}20`, background: `${color}06` }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{title}</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>Save ~{saving}</span>
+      </div>
+      <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.4 }}>{description}</div>
     </div>
   )
 }

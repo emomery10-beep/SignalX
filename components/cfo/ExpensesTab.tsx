@@ -42,6 +42,9 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
     vendor: '', date: new Date().toISOString().split('T')[0], amount: 0, category: 'Other', notes: '',
   })
 
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState<Omit<ScannedExpense, 'confidence'>>({ vendor: '', date: '', amount: 0, category: 'Other', notes: '' })
+
   const showToast = (msg: string) => {
     setToast(msg)
     setTimeout(() => setToast(null), 3000)
@@ -108,6 +111,37 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
       const res = await fetch(`/api/cfo/expenses?id=${id}`, { method: 'DELETE' })
       if (res.ok) { await fetchExpenses(); showToast('Expense deleted') }
     } catch {}
+  }
+
+  const startEdit = (e: Expense) => {
+    setEditingId(e.id)
+    setEditForm({ vendor: e.vendor, date: e.date, amount: e.amount, category: e.category, notes: e.notes || '' })
+  }
+
+  const cancelEdit = () => setEditingId(null)
+
+  const saveEdit = async () => {
+    if (!editingId) return
+    setSaving(true)
+    try {
+      const res = await fetch('/api/cfo/expenses', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: editingId, ...editForm }),
+      })
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        showToast(`❌ ${errData?.error || 'Update failed'}`)
+        setSaving(false)
+        return
+      }
+      await fetchExpenses()
+      setEditingId(null)
+      showToast('✓ Expense updated')
+    } catch {
+      showToast('❌ Failed to update')
+    }
+    setSaving(false)
   }
 
   // ── Filtering & sorting ──
@@ -340,7 +374,7 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
       ) : (
         <div style={{ borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
           {/* Table header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 100px 90px 32px', gap: 4, padding: '8px 14px', background: 'var(--ev)', borderBottom: '1px solid var(--b)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 100px 90px 60px', gap: 4, padding: '8px 14px', background: 'var(--ev)', borderBottom: '1px solid var(--b)' }}>
             {[
               { key: 'date' as SortKey, label: 'Date' },
               { key: 'vendor' as SortKey, label: 'Vendor / Category' },
@@ -355,25 +389,61 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
           </div>
 
           {/* Rows */}
-          {filtered.map((e, i) => (
-            <div key={e.id} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 100px 90px 32px', gap: 4, padding: '10px 14px', borderTop: i > 0 ? '1px solid var(--b)' : undefined, alignItems: 'center', background: undefined }}>
-              <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{e.date}</span>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.vendor}</div>
-                {e.notes && <div style={{ fontSize: 10, color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.notes}</div>}
+          {filtered.map((e, i) => {
+            const isEditing = editingId === e.id
+            const rowStyle: React.CSSProperties = {
+              display: 'grid',
+              gridTemplateColumns: '100px 1fr 100px 90px 60px',
+              gap: 4,
+              padding: isEditing ? '10px 14px 12px' : '10px 14px',
+              borderTop: i > 0 ? '1px solid var(--b)' : undefined,
+              alignItems: isEditing ? 'start' : 'center',
+              background: isEditing ? `${INDIGO}04` : undefined,
+            }
+            const cellInput: React.CSSProperties = {
+              width: '100%', fontSize: 12, color: 'var(--tx)', background: 'var(--sf)',
+              border: '1px solid var(--b)', borderRadius: 6, padding: '5px 8px',
+              fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
+            }
+            return (
+              <div key={e.id} style={rowStyle}>
+                {isEditing ? (
+                  <>
+                    <input type="date" value={editForm.date} onChange={ev => setEditForm(p => ({ ...p, date: ev.target.value }))} style={cellInput} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <input value={editForm.vendor} onChange={ev => setEditForm(p => ({ ...p, vendor: ev.target.value }))} placeholder="Vendor" style={cellInput} />
+                      <input value={editForm.notes} onChange={ev => setEditForm(p => ({ ...p, notes: ev.target.value }))} placeholder="Notes (optional)" style={{ ...cellInput, fontSize: 11 }} />
+                    </div>
+                    <select value={editForm.category} onChange={ev => setEditForm(p => ({ ...p, category: ev.target.value }))} style={{ ...cellInput, cursor: 'pointer' }}>
+                      {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <input type="number" min="0" step="0.01" value={editForm.amount || ''} onChange={ev => setEditForm(p => ({ ...p, amount: Number(ev.target.value) }))} placeholder="0.00" style={{ ...cellInput, textAlign: 'right' }} />
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <button onClick={saveEdit} disabled={saving || !editForm.vendor} title="Save" style={{ flex: 1, height: 28, borderRadius: 6, border: 'none', background: INDIGO, color: '#fff', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (!editForm.vendor || saving) ? 0.5 : 1 }}>✓</button>
+                      <button onClick={cancelEdit} title="Cancel" style={{ flex: 1, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{e.date}</span>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.vendor}</div>
+                      {e.notes && <div style={{ fontSize: 10, color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.notes}</div>}
+                    </div>
+                    <span style={{ fontSize: 10, color: 'var(--tx3)', padding: '2px 6px', borderRadius: 5, background: 'var(--ev)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.category}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: RED, textAlign: 'right' }}>{fmt(e.amount)}</span>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <button onClick={() => startEdit(e)} title="Edit" style={{ flex: 1, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✎</button>
+                      <button onClick={() => deleteExpense(e.id)} title="Delete" style={{ flex: 1, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                    </div>
+                  </>
+                )}
               </div>
-              <span style={{ fontSize: 10, color: 'var(--tx3)', padding: '2px 6px', borderRadius: 5, background: 'var(--ev)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.category}</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: RED, textAlign: 'right' }}>{fmt(e.amount)}</span>
-              <button
-                onClick={() => deleteExpense(e.id)}
-                style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-                title="Delete"
-              >×</button>
-            </div>
-          ))}
+            )
+          })}
 
           {/* Footer total */}
-          <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 100px 90px 32px', gap: 4, padding: '10px 14px', borderTop: '2px solid var(--b)', background: 'var(--ev)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 100px 90px 60px', gap: 4, padding: '10px 14px', borderTop: '2px solid var(--b)', background: 'var(--ev)' }}>
             <div />
             <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)' }}>{filtered.length} expenses</span>
             <div />

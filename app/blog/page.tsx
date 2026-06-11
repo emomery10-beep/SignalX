@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo, Suspense } from 'react'
+import { useState, useMemo, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { getAllPosts } from '@/lib/blog-content'
@@ -192,9 +192,24 @@ const PAGE_SIZE = 20
 // ── Inner component (needs useSearchParams → requires Suspense wrapper) ──────
 function BlogContent() {
   const searchParams   = useSearchParams()
-  const posts          = getAllPosts()
+  const staticPosts    = getAllPosts()
+  const [agentPosts, setAgentPosts] = useState<ReturnType<typeof getAllPosts>>([])
   const initCluster    = searchParams.get('cluster')
   const initPillar     = searchParams.get('pillar')
+
+  useEffect(() => {
+    fetch('/api/blog/published')
+      .then(r => r.json())
+      .then(d => {
+        if (d.posts?.length) {
+          const slugs = new Set(staticPosts.map(p => p.slug))
+          setAgentPosts(d.posts.filter((p: { slug: string }) => p.slug && !slugs.has(p.slug)))
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const posts = useMemo(() => [...agentPosts, ...staticPosts], [agentPosts, staticPosts])
 
   const [active,           setActive]           = useState<string | null>(initCluster)
   const [activePillar,     setActivePillar]     = useState<string | null>(initPillar)

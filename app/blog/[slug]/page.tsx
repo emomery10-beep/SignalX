@@ -1,8 +1,25 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getPost, getAllPosts } from '@/lib/blog-content'
+import { getPost, getAllPosts, type BlogPost } from '@/lib/blog-content'
 import { academyArticles } from '@/lib/academy-content'
+
+export const dynamicParams = true
+
+async function getPostWithFallback(slug: string): Promise<BlogPost | null> {
+  const staticPost = getPost(slug)
+  if (staticPost) return staticPost
+
+  try {
+    const base = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'
+    const res = await fetch(`${base}/api/blog/published?slug=${encodeURIComponent(slug)}`, { next: { revalidate: 300 } })
+    if (!res.ok) return null
+    const data = await res.json()
+    return data.post || null
+  } catch {
+    return null
+  }
+}
 import ShareButtons from './ShareButtons'
 import ReadingProgress from './ReadingProgress'
 import ScrollDepthTracker from './ScrollDepthTracker'
@@ -195,7 +212,7 @@ export async function generateStaticParams() {
 export async function generateMetadata(
   { params }: { params: { slug: string } }
 ): Promise<Metadata> {
-  const post = getPost(params.slug)
+  const post = await getPostWithFallback(params.slug)
   if (!post) return { title: 'Article not found | AskBiz Blog' }
 
   const url = `${BASE}/blog/${post.slug}`
@@ -234,8 +251,8 @@ export async function generateMetadata(
 }
 
 // ── Page ─────────────────────────────────────────────────────────────────────
-export default function BlogPostPage({ params }: { params: { slug: string } }) {
-  const post = getPost(params.slug)
+export default async function BlogPostPage({ params }: { params: { slug: string } }) {
+  const post = await getPostWithFallback(params.slug)
 
   if (!post) {
     notFound()
@@ -516,7 +533,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         {/* Body */}
         <div className="blog-body" style={{ fontSize: 15, color: TX2, lineHeight: 1.8 }}>
           {(post.sections || []).map((s, i) => {
-            const id = slugify(s.heading)
+            const id = slugify(s.heading || '')
             return (
               <div key={i}>
                 {s.level === 2 ? (

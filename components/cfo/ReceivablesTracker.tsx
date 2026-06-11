@@ -221,10 +221,10 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
       {/* Aging bar */}
       {totalAmount > 0 && (
         <div style={{ padding: '12px 18px', borderTop: '1px solid var(--b)' }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Aging</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Aging</div>
           <div style={{ height: 20, borderRadius: 6, overflow: 'hidden', display: 'flex', background: 'var(--ev, #e5e5e5)' }}>
             {agingData.map(b => b.pct > 0 ? (
-              <div key={b.key} style={{ width: `${b.pct}%`, background: b.color, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'width 300ms' }}>
+              <div key={b.key} style={{ width: `${Math.min(b.pct, 100)}%`, background: b.color, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'width 300ms' }}>
                 {b.pct > 12 && <span style={{ fontSize: 8, color: '#fff', fontWeight: 600 }}>{fmt(b.amount, sym)}</span>}
               </div>
             ) : null)}

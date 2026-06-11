@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
     { data: unifiedComp },
     { data: posTx },
     { data: posTxComp },
+    { data: posItemsComp },
     { data: overridesRow },
     { data: latestHealth },
     { data: posProducts },
@@ -84,6 +85,15 @@ export async function GET(request: NextRequest) {
     supabase
       .from('pos_transactions')
       .select('total, created_at, status')
+      .eq('owner_id', user.id)
+      .eq('status', 'completed')
+      .gte('created_at', compStart + 'T00:00:00')
+      .lte('created_at', compEnd + 'T23:59:59')
+      .limit(5000),
+    // Comparison period POS line items — needed to compute comp-period COGS accurately
+    supabase
+      .from('pos_transactions')
+      .select('created_at, pos_items!transaction_id(qty, cost_price)')
       .eq('owner_id', user.id)
       .eq('status', 'completed')
       .gte('created_at', compStart + 'T00:00:00')
@@ -152,17 +162,17 @@ export async function GET(request: NextRequest) {
       .gte('created_at', sixMonthsAgo + 'T00:00:00')
       .lte('created_at', todayStr + 'T23:59:59')      // always today, not period end
       .limit(10000),
-    // Stage 2a: tracked expenses — current period (additive to fixed costs)
+    // Stage 2a: tracked expenses — current period (split by category into COGS or fixed costs)
     supabase
       .from('cfo_expenses')
-      .select('date, amount')
+      .select('date, amount, category')
       .eq('user_id', user.id)
       .gte('date', start)
       .lte('date', end),
-    // Stage 2b: tracked expenses — 6-month window (for pnl_monthly fixed costs)
+    // Stage 2b: tracked expenses — 6-month window (for pnl_monthly)
     supabase
       .from('cfo_expenses')
-      .select('date, amount')
+      .select('date, amount, category')
       .eq('user_id', user.id)
       .gte('date', sixMonthsAgo)
       .lte('date', todayStr),                          // always today, not period end
@@ -172,8 +182,14 @@ export async function GET(request: NextRequest) {
   const monthlyFixedCosts = overrides.monthly_fixed_costs || overrides.monthlyFixedCosts || 0
   const cashBalance = overrides.cash_balance || overrides.cashBalance || 0
 
-  // --- Stage 2: Sum tracked expenses for current period (additive to fixed costs) ---
-  const trackedExpensesTotal = (cfoExpenses || []).reduce((s, e) => s + (e.amount || 0), 0)
+  // --- Stage 2: Split tracked expenses — supplier purchases → COGS, everything else → fixed costs ---
+  const COGS_CATEGORIES = new Set(['Supplier / Stock Purchase'])
+  const trackedExpensesTotal = (cfoExpenses || [])
+    .filter(e => !COGS_CATEGORIES.has(e.category))
+    .reduce((s, e) => s + (e.amount || 0), 0)
+  const trackedCogsTotal = (cfoExpenses || [])
+    .filter(e => COGS_CATEGORIES.has(e.category))
+    .reduce((s, e) => s + (e.amount || 0), 0)
 
   // --- Stage 1: Build a date→COGS map from POS line items (current period) ---
   const posItemCogsMap = new Map<string, number>()
@@ -228,17 +244,21 @@ export async function GET(request: NextRequest) {
     dailyMap.get(date)!.cogs += cogs
   }
   // Set total POS COGS on sourceMap in one pass
-  const totalPosCogs = Array.from(posItemCogsMap.values()).reduce((s, c) => s + c, 0)
-  if (sourceMap.has('pos')) sourceMap.get('pos')!.cogs = totalPosCogs
+  const totalPosItemCogs = Array.from(posItemCogsMap.values()).reduce((s, c) => s + c, 0)
+  if (sourceMap.has('pos')) sourceMap.get('pos')!.cogs = totalPosItemCogs
 
   const dailyData = Array.from(dailyMap.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, v]) => ({ date, ...v }))
 
   const totalRevenue = dailyData.reduce((s, d) => s + d.revenue, 0)
-  const totalCogs = dailyData.reduce((s, d) => s + d.cogs, 0)
+  // Only add expense-tracked COGS when POS has no cost-price data — prevents double-counting
+  // for merchants whose POS already records COGS via product cost prices.
+  const totalPosCogs = dailyData.reduce((s, d) => s + d.cogs, 0)
+  const totalCogs = totalPosCogs > 0 ? totalPosCogs : totalPosCogs + trackedCogsTotal
+  // (totalPosItemCogs is used above for sourceMap only — totalPosCogs includes all COGS sources)
   const periodDays = Math.max(daysBetween(start, end), 1)
-  // Stage 2: fixed costs = overhead estimate (pro-rated) + actual tracked expenses
+  // Stage 2: fixed costs = overhead estimate (pro-rated) + non-COGS tracked expenses
   const overheadForPeriod = (monthlyFixedCosts / 30) * periodDays
   const fixedCostsForPeriod = overheadForPeriod + trackedExpensesTotal
   const grossProfit = totalRevenue - totalCogs
@@ -255,6 +275,14 @@ export async function GET(request: NextRequest) {
   for (const tx of posTxComp || []) {
     compRevenue += tx.total || 0
   }
+  // Add comparison-period POS COGS from line items (mirrors current-period logic)
+  let compPosCogs = 0
+  for (const tx of posItemsComp || []) {
+    for (const it of (tx as any).pos_items || []) {
+      compPosCogs += (Number(it.qty) || 0) * (Number(it.cost_price) || 0)
+    }
+  }
+  compCogs = compPosCogs > 0 ? compPosCogs : compCogs
   const compGrossProfit = compRevenue - compCogs
   const compPeriodDays = Math.max(daysBetween(compStart, compEnd), 1)
   const compFixed = (monthlyFixedCosts / 30) * compPeriodDays
@@ -422,12 +450,17 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Build month→tracked expenses map (6-month)
-  const expensesMonthMap = new Map<string, number>()
+  // Build month→tracked expenses map (6-month), split by category
+  const expensesMonthMap = new Map<string, number>()   // fixed costs
+  const cogsExpensesMonthMap = new Map<string, number>() // supplier purchases → COGS
   for (const e of cfoExpenses6m || []) {
     const month = (e.date || '').slice(0, 7)
     if (!month) continue
-    expensesMonthMap.set(month, (expensesMonthMap.get(month) || 0) + (e.amount || 0))
+    if (COGS_CATEGORIES.has(e.category)) {
+      cogsExpensesMonthMap.set(month, (cogsExpensesMonthMap.get(month) || 0) + (e.amount || 0))
+    } else {
+      expensesMonthMap.set(month, (expensesMonthMap.get(month) || 0) + (e.amount || 0))
+    }
   }
 
   // --- pnl_monthly: 6-month P&L aggregation ---
@@ -457,9 +490,12 @@ export async function GET(request: NextRequest) {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([month, v]) => {
       const rev = Math.round(v.revenue)
-      const cogs = Math.round(v.cogs)
+      const cogsSales = Math.round(v.cogs)
+      const monthCogs = cogsExpensesMonthMap.get(month) || 0
+      // Same rule: only use expense COGS when POS has no cost-price data for this month
+      const cogs = cogsSales > 0 ? cogsSales : cogsSales + monthCogs
       const gp = rev - cogs
-      // Stage 2b: fixed = overhead estimate + tracked expenses for this month
+      // Stage 2b: fixed = overhead estimate + non-COGS tracked expenses for this month
       const monthExpenses = expensesMonthMap.get(month) || 0
       const fixed = Math.round(monthlyFixedCosts + monthExpenses)
       const net = gp - fixed

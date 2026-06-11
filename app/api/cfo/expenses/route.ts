@@ -96,6 +96,41 @@ export async function POST(req: NextRequest) {
   return json({ expense: data }, 201)
 }
 
+// PATCH — update an existing expense
+export async function PATCH(req: NextRequest) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return json({ error: 'Unauthorised' }, 401)
+
+  let body: { id: string; vendor?: string; date?: string; amount?: number; category?: string; notes?: string }
+  try {
+    body = await req.json()
+  } catch {
+    return json({ error: 'Invalid JSON body' }, 400)
+  }
+
+  const { id, ...fields } = body
+  if (!id) return json({ error: 'id is required' }, 400)
+
+  const updates: Record<string, unknown> = {}
+  if (fields.vendor !== undefined) updates.vendor = fields.vendor.trim()
+  if (fields.date !== undefined) updates.date = fields.date
+  if (fields.amount !== undefined) updates.amount = fields.amount
+  if (fields.category !== undefined) updates.category = fields.category
+  if (fields.notes !== undefined) updates.notes = fields.notes || null
+
+  const { data, error } = await supabase
+    .from('cfo_expenses')
+    .update(updates)
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .select('id, vendor, date, amount, category, notes, receipt_url, created_at')
+    .single()
+
+  if (error) return json({ error: error.message }, 500)
+  return json({ expense: data })
+}
+
 // DELETE — remove an expense by id
 export async function DELETE(req: NextRequest) {
   const supabase = createClient()

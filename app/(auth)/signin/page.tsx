@@ -30,13 +30,16 @@ export default function AuthPage() {
 
   const getPostAuthRedirect = () => shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/chat'
 
-  const executeAuth = async (action: 'email' | 'google') => {
+  const executeAuth = async (action: 'email' | 'google' | 'apple' | 'azure') => {
     setError(''); setSuccess(''); setLoading(true)
     try {
-      if (action === 'google') {
+      if (action === 'google' || action === 'apple' || action === 'azure') {
         const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: { redirectTo: getCallbackUrl() }
+          provider: action,
+          options: {
+            redirectTo: getCallbackUrl(),
+            ...(action === 'azure' && { scopes: 'email profile openid User.Read' }),
+          }
         })
         if (error) throw error
         return
@@ -71,8 +74,28 @@ export default function AuthPage() {
     } finally { setLoading(false) }
   }
 
-  const triggerAuth = (action: 'email' | 'google') => {
+  const triggerAuth = (action: 'email' | 'google' | 'apple' | 'azure') => {
     executeAuth(action)
+  }
+
+  const handlePasskeySignIn = async () => {
+    setError(''); setSuccess(''); setLoading(true)
+    try {
+      const { data, error } = await (supabase.auth as any).signInWithPasskey()
+      if (error) throw error
+      if (data?.session) {
+        router.push(getPostAuthRedirect())
+      }
+    } catch (e: any) {
+      const msg = e?.message || e?.error_description || 'Passkey sign-in failed'
+      const fullText = `${msg} ${e?.name || ''}`
+      // Ignore user-cancelled or timed-out WebAuthn prompts
+      if (fullText.match(/cancell?ed|AbortError|NotAllowedError|timed out|not allowed/i)) {
+        // User dismissed the passkey prompt — no error to show
+      } else {
+        setError(msg)
+      }
+    } finally { setLoading(false) }
   }
 
   const handleMagicLink = async () => {
@@ -177,12 +200,29 @@ export default function AuthPage() {
           {mode === 'signin' ? 'Sign in to your AskBiz account' : '10 free questions every month — no card needed'}
         </p>
 
-        {/* Google */}
+        {/* Social sign-in */}
         <button onClick={() => triggerAuth('google')} disabled={loading}
-          style={{ width: '100%', padding: '0 16px', height: 44, borderRadius: 10, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, marginBottom: 16, transition: 'all 150ms' }}>
+          style={{ width: '100%', padding: '0 16px', height: 44, borderRadius: 10, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, marginBottom: 10, transition: 'all 150ms' }}>
           <svg width="17" height="17" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
           Continue with Google
         </button>
+        <button onClick={() => triggerAuth('azure')} disabled={loading}
+          style={{ width: '100%', padding: '0 16px', height: 44, borderRadius: 10, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, marginBottom: 10, transition: 'all 150ms' }}>
+          <svg width="17" height="17" viewBox="0 0 23 23" fill="none"><path fill="#f25022" d="M1 1h10v10H1z"/><path fill="#00a4ef" d="M1 12h10v10H1z"/><path fill="#7fba00" d="M12 1h10v10H12z"/><path fill="#ffb900" d="M12 12h10v10H12z"/></svg>
+          Continue with Microsoft
+        </button>
+        {mode === 'signin' && (
+          <button onClick={handlePasskeySignIn} disabled={loading}
+            style={{ width: '100%', padding: '0 16px', height: 44, borderRadius: 10, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, marginBottom: 16, transition: 'all 150ms' }}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <circle cx="12" cy="16" r="1"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Sign in with Passkey
+          </button>
+        )}
+        {mode === 'signup' && <div style={{ marginBottom: 6 }}/>}
 
         {/* Divider */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
@@ -219,13 +259,23 @@ export default function AuthPage() {
 
         {/* Inline consent for signup */}
         {mode === 'signup' && (
-          <p style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', marginTop: 8, lineHeight: 1.5 }}>
-            By creating an account you agree to our{' '}
-            <a href="/terms" style={{ color: 'var(--tx2)', textDecoration: 'underline' }}>Terms</a>{' '}
-            and{' '}
-            <a href="/privacy" style={{ color: 'var(--tx2)', textDecoration: 'underline' }}>Privacy Policy</a>
-            , consent to data processing for AI insights, and confirm you are 13+ (16 in the EU).
-          </p>
+          <div style={{ marginTop: 8 }}>
+            <p style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.6, marginBottom: 6 }}>
+              By creating an account you agree to our{' '}
+              <a href="/terms" style={{ color: 'var(--tx2)', textDecoration: 'underline' }}>Terms of Service</a>{' '}
+              and{' '}
+              <a href="/privacy" style={{ color: 'var(--tx2)', textDecoration: 'underline' }}>Privacy Policy</a>
+              , and confirm you are 13+ (16 in the EU/UK).
+            </p>
+            <p style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.6, margin: 0 }}>
+              You consent to data processing for AI-powered business insights, including: analysis of uploaded files,
+              IP-based geolocation for currency detection, and optional POS features such as camera scanning,
+              logistics tracking, and mobile money payments (M-Pesa, MTN, Airtel). Camera images are processed
+              in real time and never stored. See our{' '}
+              <a href="/privacy" style={{ color: 'var(--tx2)', textDecoration: 'underline' }}>Privacy Policy</a>{' '}
+              for full details.
+            </p>
+          </div>
         )}
 
         {/* Magic link */}

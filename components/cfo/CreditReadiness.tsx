@@ -230,9 +230,82 @@ export default function CreditReadiness(props: Props) {
         })}
       </div>
 
+      {/* DSCR & Debt Capacity */}
+      <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)' }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>Debt Service Coverage</div>
+        {(() => {
+          const annualNetIncome = props.revenue * 12 * (props.netMarginPct / 100)
+          const estimatedDebtService = props.revenue * 12 * 0.1 // assume 10% of annual revenue as potential debt service
+          const dscr = estimatedDebtService > 0 ? annualNetIncome / estimatedDebtService : 0
+          const maxDebtService = annualNetIncome * 0.4 // max 40% of net income to debt
+          const dscrColor = dscr >= 1.5 ? '#22C55E' : dscr >= 1.0 ? '#F59E0B' : '#EF4444'
+          const dscrLabel = dscr >= 1.5 ? 'Strong' : dscr >= 1.0 ? 'Adequate' : 'Weak'
+          return (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--b)', borderRadius: 8, overflow: 'hidden', marginBottom: 12 }}>
+              <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
+                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 3 }}>DSCR</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: dscrColor, fontVariantNumeric: 'tabular-nums' }}>{dscr.toFixed(2)}x</div>
+                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{dscrLabel}</div>
+              </div>
+              <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
+                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 3 }}>Max Debt Service</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(maxDebtService / 12, sym)}/mo</div>
+                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>40% of net income</div>
+              </div>
+              <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
+                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 3 }}>Borrowing Capacity</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#6366F1', fontVariantNumeric: 'tabular-nums' }}>{fmt(maxDebtService * 3, sym)}</div>
+                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>Est. at ~3yr term</div>
+              </div>
+            </div>
+          )
+        })()}
+        <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.4, padding: '6px 0' }}>
+          DSCR (Debt Service Coverage Ratio) measures ability to service debt. Lenders typically require 1.25x+. Estimates based on current net income.
+        </div>
+      </div>
+
+      {/* Financing comparison */}
+      <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)' }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>Financing Options Comparison</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {[
+            { type: 'Revenue-Based', rate: '6-12%', speed: '1-3 days', best: 'Seasonal businesses', minGrade: 'C' },
+            { type: 'Invoice Factoring', rate: '2-5%', speed: '24 hours', best: 'B2B with receivables', minGrade: 'C' },
+            { type: 'Term Loan', rate: '8-18%', speed: '1-4 weeks', best: 'Growth investment', minGrade: 'B' },
+            { type: 'Overdraft / LOC', rate: '10-20%', speed: '1-2 weeks', best: 'Cash flow gaps', minGrade: 'B' },
+            { type: 'Asset Finance', rate: '5-12%', speed: '1-2 weeks', best: 'Equipment purchase', minGrade: 'C' },
+          ].map(opt => {
+            const gradeOrder = ['F', 'D', 'C', 'B', 'A']
+            const eligible = gradeOrder.indexOf(result.grade) >= gradeOrder.indexOf(opt.minGrade)
+            return (
+              <div key={opt.type} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: 8, alignItems: 'center', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', opacity: eligible ? 1 : 0.5 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{opt.type}</div>
+                  <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{opt.best}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{opt.rate}</div>
+                  <div style={{ fontSize: 8, color: 'var(--tx3)' }}>Cost</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{opt.speed}</div>
+                  <div style={{ fontSize: 8, color: 'var(--tx3)' }}>Speed</div>
+                </div>
+                <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
+                  background: eligible ? 'rgba(34,197,94,.08)' : 'rgba(239,68,68,.06)',
+                  color: eligible ? '#22C55E' : '#EF4444' }}>
+                  {eligible ? 'Eligible' : `Grade ${opt.minGrade}+`}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
       {/* Lender products */}
       <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)', background: 'rgba(99,102,241,.02)' }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Available Lending Products</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>Available Lending Products</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {region.lenders.map(lender => (
             <LenderRow key={lender.name} name={lender.name} range={lender.range} minGrade={lender.minGrade} currentGrade={result.grade} />

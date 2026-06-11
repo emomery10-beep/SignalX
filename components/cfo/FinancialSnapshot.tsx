@@ -102,14 +102,9 @@ export default function FinancialSnapshot({ kpis, currencySymbol, loading, onNav
             onMouseEnter={isClickable ? (e) => { e.currentTarget.style.borderColor = '#6366F1'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(99,102,241,.12)' } : undefined}
             onMouseLeave={isClickable ? (e) => { e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.boxShadow = 'none' } : undefined}
           >
-            <div style={{
-              position: 'absolute', top: 0, left: 0, width: 3, height: '100%',
-              background: color, borderRadius: '12px 0 0 12px',
-            }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{
-                fontSize: 10, fontWeight: 600, color: 'var(--tx3)',
-                textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6,
+                fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6,
               }}>
                 {kpi.label}
               </div>

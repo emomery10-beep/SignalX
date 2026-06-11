@@ -126,11 +126,11 @@ export default function KpiScorecard({ revenue, grossMarginPct, netMarginPct, ru
 
       {/* Header row */}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 60px', padding: '8px 18px', borderBottom: '1px solid var(--b)', background: 'var(--ev, #f9f9f8)' }}>
-        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>KPI</div>
-        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'right' }}>Target</div>
-        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'right' }}>Actual</div>
-        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'center' }}>Status</div>
-        <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'center' }}>Trend</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)' }}>KPI</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textAlign: 'right' }}>Target</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textAlign: 'right' }}>Actual</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textAlign: 'center' }}>Status</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textAlign: 'center' }}>Trend</div>
       </div>
 
       {/* KPI rows */}

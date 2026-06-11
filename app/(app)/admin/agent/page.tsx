@@ -33,7 +33,7 @@ export default function AgentAdminPage() {
   const supabase = createClient()
   const [authorized, setAuthorized] = useState(false)
   const [loading, setLoading]       = useState(true)
-  const [mainTab, setMainTab]       = useState<'agent'|'x'|'security'>('agent')
+  const [mainTab, setMainTab]       = useState<'agent'|'x'|'security'>('security')
 
   // Agent state
   const [items, setItems]           = useState<AgentItem[]>([])
@@ -284,7 +284,7 @@ export default function AgentAdminPage() {
 
         {/* Main tabs */}
         <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',marginBottom:24}}>
-          {([['agent','📊 Content Agent'],['x','𝕏 X Agent'+(xConnected===true?' ✓':'')],['security','🛡 Security & GDPR']] as const).map(([t,label]) => (
+          {([['security','🛡 Security & GDPR']] as const).map(([t,label]) => (
             <button key={t} onClick={()=>setMainTab(t as any)} style={{padding:'10px 20px',border:'none',background:'transparent',fontSize:13,fontWeight:mainTab===t?600:400,color:mainTab===t?'#6366F1':'var(--tx3)',borderBottom:mainTab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit',flexShrink:0,whiteSpace:'nowrap'}}>
               {label}
             </button>

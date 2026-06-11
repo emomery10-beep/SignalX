@@ -12,8 +12,12 @@ import ApiKeys from '@/components/settings/ApiKeys'
 interface ConsentState {
   data_consent: boolean
   training_consent: boolean
+  camera_consent: boolean
+  logistics_consent: boolean
   data_consent_at: string | null
   training_consent_at: string | null
+  camera_consent_at: string | null
+  logistics_consent_at: string | null
 }
 
 interface AddressState {
@@ -206,10 +210,14 @@ function sourceMeta(type: string) {
 
 function ProfilePanel({ onSignOut }: { onSignOut: () => void }) {
   const { user } = useStore()
+  const supabase = createClient()
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName]   = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved]   = useState(false)
+  const [passkeyStatus, setPasskeyStatus] = useState<'idle' | 'enrolling' | 'enrolled' | 'error'>('idle')
+  const [passkeyError, setPasskeyError] = useState('')
+  const [hasPasskey, setHasPasskey] = useState(false)
 
   useEffect(() => {
     fetch('/api/profile').then(r => r.json()).then(d => {
@@ -218,6 +226,18 @@ function ProfilePanel({ onSignOut }: { onSignOut: () => void }) {
         setLastName(d.last_name  || '')
       }
     })
+    // Check if user already has a passkey registered
+    const auth = supabase.auth as any
+    const listFn = auth.passkey?.list || auth.listPasskeys
+    if (typeof listFn === 'function') {
+      listFn.call(auth).then((res: any) => {
+        console.log('[Passkey] list result:', JSON.stringify(res))
+        const passkeys = res?.data?.passkeys || res?.data || []
+        if (Array.isArray(passkeys) && passkeys.length > 0) {
+          setHasPasskey(true)
+        }
+      }).catch((e: any) => console.warn('[Passkey] list error:', e))
+    }
   }, [])
 
   const save = async () => {
@@ -226,6 +246,40 @@ function ProfilePanel({ onSignOut }: { onSignOut: () => void }) {
       await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ first_name: firstName.trim(), last_name: lastName.trim() }) })
       setSaved(true); setTimeout(() => setSaved(false), 2500)
     } finally { setSaving(false) }
+  }
+
+  const enrollPasskey = async () => {
+    setPasskeyStatus('enrolling'); setPasskeyError('')
+    try {
+      const auth = supabase.auth as any
+      let result: any
+
+      if (typeof auth.registerPasskey === 'function') {
+        result = await auth.registerPasskey()
+        console.log('[Passkey] registerPasskey result:', JSON.stringify(result, null, 2))
+      } else {
+        throw new Error('Passkey registration is not available in this SDK version.')
+      }
+
+      if (result?.error) {
+        throw result.error
+      }
+
+      // Success — passkey registered
+      setPasskeyStatus('enrolled')
+      setHasPasskey(true)
+    } catch (e: any) {
+      const msg = e?.message || e?.msg || e?.name || 'Failed to register passkey'
+      const fullText = `${msg} ${e?.name || ''} ${e?.code || ''}`
+      console.error('[Passkey registration error]', e)
+      // Ignore user-cancelled or timed-out WebAuthn prompts
+      if (fullText.match(/cancell?ed|AbortError|NotAllowedError|timed out|not allowed/i)) {
+        setPasskeyStatus('idle')
+      } else {
+        setPasskeyError(msg)
+        setPasskeyStatus('error')
+      }
+    }
   }
 
   const initials = user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || '?'
@@ -270,7 +324,28 @@ function ProfilePanel({ onSignOut }: { onSignOut: () => void }) {
       <Card>
         <CardHeader title="Sign-in methods"/>
         <SettingRow label="Google" description="Sign in with your Google account" right={<span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.08)', color: '#16a34a', fontWeight: 600, border: '1px solid rgba(34,197,94,.2)' }}>Connected</span>}/>
-        <SettingRow label="Email magic link" description="Sign in with a one-time link sent to your email" border={false} right={<span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.08)', color: '#16a34a', fontWeight: 600, border: '1px solid rgba(34,197,94,.2)' }}>Connected</span>}/>
+        <SettingRow label="Email magic link" description="Sign in with a one-time link sent to your email" right={<span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.08)', color: '#16a34a', fontWeight: 600, border: '1px solid rgba(34,197,94,.2)' }}>Connected</span>}/>
+        <SettingRow
+          label="Passkey"
+          description="Sign in with Face ID, Touch ID, or a security key"
+          border={false}
+          right={
+            hasPasskey || passkeyStatus === 'enrolled' ? (
+              <span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.08)', color: '#16a34a', fontWeight: 600, border: '1px solid rgba(34,197,94,.2)' }}>Registered</span>
+            ) : (
+              <button
+                onClick={enrollPasskey}
+                disabled={passkeyStatus === 'enrolling'}
+                style={{ fontSize: 12, padding: '6px 14px', borderRadius: 'var(--rf)', background: 'var(--acc)', color: '#fff', fontWeight: 600, border: 'none', cursor: passkeyStatus === 'enrolling' ? 'not-allowed' : 'pointer', opacity: passkeyStatus === 'enrolling' ? .6 : 1, fontFamily: 'inherit' }}
+              >
+                {passkeyStatus === 'enrolling' ? 'Registering…' : 'Register passkey'}
+              </button>
+            )
+          }
+        />
+        {passkeyError && (
+          <div style={{ padding: '8px 20px 12px', fontSize: 12, color: '#f48080' }}>{passkeyError}</div>
+        )}
       </Card>
 
       <button
@@ -925,58 +1000,101 @@ function APIPanel() {
 }
 
 function PrivacyPanel() {
-  const [consent, setConsent] = useState<ConsentState>({ data_consent: true, training_consent: true, data_consent_at: null, training_consent_at: null })
+  const [consent, setConsent] = useState<ConsentState>({ data_consent: true, training_consent: true, camera_consent: true, logistics_consent: true, data_consent_at: null, training_consent_at: null, camera_consent_at: null, logistics_consent_at: null })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetch('/api/consent').then(r => r.json()).then(d => {
-      if (d.consent) setConsent({ ...d.consent, data_consent: d.consent.data_consent ?? true, training_consent: d.consent.training_consent ?? true })
+      if (d.consent) setConsent({
+        ...d.consent,
+        data_consent: d.consent.data_consent ?? true,
+        training_consent: d.consent.training_consent ?? true,
+        camera_consent: d.consent.camera_consent ?? true,
+        logistics_consent: d.consent.logistics_consent ?? true,
+      })
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
 
-  const save = async (dc: boolean, tc: boolean) => {
-    await fetch('/api/consent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data_consent: dc, training_consent: tc }) })
+  const save = async (updates: Partial<ConsentState>) => {
+    await fetch('/api/consent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updates) })
   }
 
-  const toggle = (type: 'data' | 'training') => {
+  const toggle = (type: 'data' | 'training' | 'camera' | 'logistics') => {
     if (type === 'data') {
-      const n = !consent.data_consent; setConsent(c => ({ ...c, data_consent: n })); save(n, consent.training_consent)
+      const n = !consent.data_consent; setConsent(c => ({ ...c, data_consent: n })); save({ data_consent: n, training_consent: consent.training_consent, camera_consent: consent.camera_consent, logistics_consent: consent.logistics_consent })
+    } else if (type === 'training') {
+      const n = !consent.training_consent; setConsent(c => ({ ...c, training_consent: n })); save({ data_consent: consent.data_consent, training_consent: n, camera_consent: consent.camera_consent, logistics_consent: consent.logistics_consent })
+    } else if (type === 'camera') {
+      const n = !consent.camera_consent; setConsent(c => ({ ...c, camera_consent: n })); save({ data_consent: consent.data_consent, training_consent: consent.training_consent, camera_consent: n, logistics_consent: consent.logistics_consent })
     } else {
-      const n = !consent.training_consent; setConsent(c => ({ ...c, training_consent: n })); save(consent.data_consent, n)
+      const n = !consent.logistics_consent; setConsent(c => ({ ...c, logistics_consent: n })); save({ data_consent: consent.data_consent, training_consent: consent.training_consent, camera_consent: consent.camera_consent, logistics_consent: n })
     }
   }
 
   return (
     <div>
-      <PanelHeader title="Privacy & data" description="Control how AskBiz uses your business data. Both settings are optional and can be changed at any time."/>
+      <PanelHeader title="Privacy & data" description="Control how AskBiz uses your business data. All settings are optional and can be changed at any time."/>
 
       {loading ? (
         <div style={{ height: 160, borderRadius: 'var(--r-lg)', background: 'var(--ev)', marginBottom: 16 }}/>
       ) : (
-        <Card>
-          <CardHeader title="Data preferences"/>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--b)' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>Financial data personalisation</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5 }}>Store aggregated financial metrics to personalise AI answers. No individual transactions are ever stored.</div>
-                {consent.data_consent_at && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>Consented {new Date(consent.data_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+        <>
+          <Card>
+            <CardHeader title="Data preferences"/>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--b)' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>Financial data personalisation</div>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5 }}>Store aggregated financial metrics to personalise AI answers. No individual transactions are ever stored.</div>
+                  {consent.data_consent_at && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>Consented {new Date(consent.data_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+                </div>
+                <Toggle value={consent.data_consent} onChange={() => toggle('data')}/>
               </div>
-              <Toggle value={consent.data_consent} onChange={() => toggle('data')}/>
             </div>
-          </div>
-          <div style={{ padding: '16px 20px' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>Help improve AskBiz AI</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5 }}>Use fully anonymised interactions to improve AI accuracy. Your business is never identifiable.</div>
-                {consent.training_consent_at && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>Consented {new Date(consent.training_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+            <div style={{ padding: '16px 20px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>Help improve AskBiz AI</div>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5 }}>Use fully anonymised interactions to improve AI accuracy. Your business is never identifiable.</div>
+                  {consent.training_consent_at && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>Consented {new Date(consent.training_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+                </div>
+                <Toggle value={consent.training_consent} onChange={() => toggle('training')} color="#8c6fe0"/>
               </div>
-              <Toggle value={consent.training_consent} onChange={() => toggle('training')} color="#8c6fe0"/>
             </div>
+          </Card>
+
+          <Card>
+            <CardHeader title="POS data processing"/>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--b)' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>Camera scanning</div>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5 }}>Allow AskBiz POS to access your device camera for barcode and price tag scanning. Images are processed in real time and never stored on our servers.</div>
+                  {consent.camera_consent_at && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>Consented {new Date(consent.camera_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+                </div>
+                <Toggle value={consent.camera_consent} onChange={() => toggle('camera')} color="#16a34a"/>
+              </div>
+            </div>
+            <div style={{ padding: '16px 20px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>Logistics &amp; delivery tracking</div>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5 }}>Process parcel tracking, delivery routes, vehicle inspection photos, and driver handover records. Logistics data is retained for 12 months after delivery completion.</div>
+                  {consent.logistics_consent_at && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>Consented {new Date(consent.logistics_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+                </div>
+                <Toggle value={consent.logistics_consent} onChange={() => toggle('logistics')} color="#d08a59"/>
+              </div>
+            </div>
+          </Card>
+
+          <div style={{ padding: '14px 16px', background: 'var(--ev)', borderRadius: 'var(--r-md)', marginBottom: 16 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Payment processing</div>
+            <p style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.6, margin: 0 }}>
+              Card payments are processed by Stripe. Mobile money payments (M-Pesa, MTN, Airtel) are processed via PesaPal. AskBiz never sees or stores your card details or mobile money PINs.
+            </p>
           </div>
-        </Card>
+        </>
       )}
 
       <p style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.6, margin: 0 }}>
@@ -1337,6 +1455,25 @@ function CompliancePanel() {
           </p>
           <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 9, background: 'var(--ev)', fontSize: 12, color: 'var(--tx3)' }}>
             Staff OTP codes expire after <strong>10 minutes</strong> and are deleted after use. Phone numbers are stored only to authenticate your team — they are not used for marketing.
+          </div>
+        </div>
+      </Card>
+
+      {/* Logistics & camera data */}
+      <Card>
+        <CardHeader title="POS logistics &amp; camera data"/>
+        <div style={{ padding: '16px 20px' }}>
+          <p style={{ fontSize: 13, color: 'var(--tx3)', margin: 0, lineHeight: 1.6, marginBottom: 10 }}>
+            The POS logistics module processes delivery addresses, parcel tracking data, route information, and vehicle inspection photos. Camera scanning processes barcode and price tag images in real time without storing raw images.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 8 }}>
+            {STATUS_BADGE('Camera images not stored', true)}
+            {STATUS_BADGE('Logistics data: 12-month retention', true)}
+            {STATUS_BADGE('Vehicle photos: 6-month retention', true)}
+            {STATUS_BADGE('Offline data synced & cleared', true)}
+          </div>
+          <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 9, background: 'var(--ev)', fontSize: 12, color: 'var(--tx3)' }}>
+            Offline mode stores transactions locally in your browser during internet outages. Data is automatically synced and cleared when connectivity resumes. Mobile money payments (M-Pesa, MTN, Airtel) are processed via PesaPal — AskBiz never sees your mobile money PIN.
           </div>
         </div>
       </Card>

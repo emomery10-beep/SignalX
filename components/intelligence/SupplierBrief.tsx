@@ -79,10 +79,58 @@ export default function SupplierBrief({ onAsk }: { onAsk?: (prompt: string) => v
         )}
       </div>
 
+      {/* Negotiation leverage summary */}
+      {suppliers.length > 0 && (() => {
+        const totalSpend = suppliers.reduce((s, sup) => s + sup.monthly_spend, 0)
+        const highDep = suppliers.filter(s => s.dependency_pct > 30)
+        const lowMargin = suppliers.filter(s => s.avg_margin < 25).sort((a, b) => a.avg_margin - b.avg_margin)
+        const risingCost = suppliers.filter(s => s.spend_trend_pct > 10).sort((a, b) => b.spend_trend_pct - a.spend_trend_pct)
+        const potentialSavings5pct = totalSpend * 0.05
+
+        return (
+          <div style={{ padding: 12, borderRadius: 10, border: '1px solid rgba(16,185,129,.15)', background: 'rgba(16,185,129,.04)', marginBottom: 12 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#10B981', textTransform: 'uppercase', marginBottom: 6 }}>Negotiation Leverage</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, textAlign: 'center', marginBottom: 8 }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(totalSpend)}</div>
+                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>Monthly spend</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#10B981', fontVariantNumeric: 'tabular-nums' }}>{fmt(potentialSavings5pct)}</div>
+                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>5% saving target</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#10B981', fontVariantNumeric: 'tabular-nums' }}>{fmt(potentialSavings5pct * 12)}</div>
+                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>Annual impact</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {highDep.length > 0 && (
+                <div style={{ fontSize: 10, color: '#F59E0B', lineHeight: 1.4 }}>
+                  ⚠️ <strong>Concentration risk:</strong> {highDep.map(s => `${s.name} (${s.dependency_pct}%)`).join(', ')} — diversify to strengthen negotiation position
+                </div>
+              )}
+              {lowMargin.length > 0 && (
+                <div style={{ fontSize: 10, color: '#EF4444', lineHeight: 1.4 }}>
+                  📉 <strong>Low-margin suppliers:</strong> {lowMargin.slice(0, 2).map(s => `${s.name} (${s.avg_margin}%)`).join(', ')} — prioritize for renegotiation
+                </div>
+              )}
+              {risingCost.length > 0 && (
+                <div style={{ fontSize: 10, color: '#EF4444', lineHeight: 1.4 }}>
+                  📈 <strong>Rising costs:</strong> {risingCost.slice(0, 2).map(s => `${s.name} (+${s.spend_trend_pct}%)`).join(', ')} — lock in rates or find alternatives
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Supplier list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: brief ? 14 : 0 }}>
         {suppliers.slice(0, 6).map(s => {
           const isSelected = briefSupplier === s.name
+          // Discount suggestion
+          const discountSuggestion = s.monthly_spend > 500 ? Math.min(Math.round(s.monthly_spend * 0.05), s.monthly_spend * 0.1) : 0
           return (
             <button
               key={s.name}
@@ -96,7 +144,14 @@ export default function SupplierBrief({ onAsk }: { onAsk?: (prompt: string) => v
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{s.name}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{s.name}</span>
+                  {discountSuggestion > 0 && (
+                    <span style={{ fontSize: 9, color: '#10B981', background: 'rgba(16,185,129,.1)', borderRadius: 4, padding: '1px 5px', fontWeight: 600 }}>
+                      Save ~{fmt(discountSuggestion)}/mo
+                    </span>
+                  )}
+                </div>
                 <div style={{ fontSize: 10, color: 'var(--tx3)' }}>
                   {s.product_count} products • {fmt(s.monthly_spend)}/mo • {s.avg_margin}% margin
                 </div>

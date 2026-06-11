@@ -290,7 +290,7 @@ export default function RollingCashForecast({ dailyCashflow, cashBalance, monthl
           </div>
           {selectedWeekData.items.length > 0 && (
             <div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 6 }}>Known Cash Flows</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Known Cash Flows</div>
               {selectedWeekData.items.map((item, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '4px 0', borderBottom: i < selectedWeekData.items.length - 1 ? '1px solid var(--b)' : undefined }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -330,7 +330,7 @@ export default function RollingCashForecast({ dailyCashflow, cashBalance, monthl
 function MiniMetric({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, marginBottom: 2 }}>{label}</div>
       <div style={{ fontSize: 13, fontWeight: 700, color }}>{value}</div>
     </div>
   )
@@ -339,7 +339,7 @@ function MiniMetric({ label, value, color }: { label: string; value: string; col
 function SummaryCell({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div style={{ padding: '10px 12px', background: 'var(--sf)', textAlign: 'center' }}>
-      <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, marginBottom: 2 }}>{label}</div>
       <div style={{ fontSize: 14, fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
     </div>
   )

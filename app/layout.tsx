@@ -6,6 +6,7 @@ import { LanguageProvider } from '@/components/LanguageProvider'
 import CookieConsent from '@/components/CookieConsent'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import type { Lang } from '@/lib/i18n'
+import { ThemeProvider } from 'next-themes'
 
 const sora = Sora({
   subsets: ['latin'],
@@ -52,10 +53,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang={lang} suppressHydrationWarning>
       <body className={`${sora.variable} ${dm.variable} ${mono.variable}`}>
         <GoogleAnalytics measurementId="G-ELBCMBBMEC" />
-        <LanguageProvider initialLang={lang}>
-          {children}
-        </LanguageProvider>
-        <CookieConsent />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <LanguageProvider initialLang={lang}>
+            {children}
+          </LanguageProvider>
+          <CookieConsent />
+        </ThemeProvider>
       </body>
     </html>
   )

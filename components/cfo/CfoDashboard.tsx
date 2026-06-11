@@ -7,7 +7,6 @@ import CfoAlerts from './CfoAlerts'
 import CashFlowCountdown from '@/components/intelligence/CashFlowCountdown'
 import SupplierBrief from '@/components/intelligence/SupplierBrief'
 import PriceSensitivity from '@/components/intelligence/PriceSensitivity'
-import ScenarioPlanner from './ScenarioPlanner'
 import CfoForecasts from './CfoForecasts'
 import CostBreakdown from './CostBreakdown'
 import InventoryFinance from './InventoryFinance'
@@ -31,6 +30,15 @@ import ContributionMarginWaterfall from './ContributionMarginWaterfall'
 import BudgetVsActual from './BudgetVsActual'
 import ExpensesTab from './ExpensesTab'
 import ReceiptScanner from './ReceiptScanner'
+import HiringSimulator from './HiringSimulator'
+import DynamicBreakEven from './DynamicBreakEven'
+import ExitReadiness from './ExitReadiness'
+import IndustryBenchmarks from './IndustryBenchmarks'
+import UnitEconomics from './UnitEconomics'
+import ChurnAnalytics from './ChurnAnalytics'
+import FinancingReadiness from './FinancingReadiness'
+import ThreeWayForecast from './ThreeWayForecast'
+import RecoveredRevenue from './RecoveredRevenue'
 
 interface SnapshotData {
   currency_symbol: string
@@ -64,6 +72,8 @@ interface SnapshotData {
   cash: {
     balance: number
     monthly_fixed: number
+    monthly_fixed_total: number   // overhead + tracked expenses (true burn rate)
+    tracked_expenses_total: number
     runway_months: number | null
     runway_status: string
     daily_net_burn: number
@@ -188,7 +198,8 @@ export default function CfoDashboard({ onAsk }: Props) {
         </div>
 
         {/* Sub-tab navigation */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 12, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+        <div style={{ position: 'relative', marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
           {SUB_TABS.map(t => (
             <button
               key={t.id}
@@ -206,6 +217,9 @@ export default function CfoDashboard({ onAsk }: Props) {
               {t.label}
             </button>
           ))}
+          </div>
+          {/* Right-fade gradient — hints that more tabs are scrollable */}
+          <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 40, background: 'linear-gradient(to right, transparent, var(--bg, #f9f8f6))', pointerEvents: 'none' }} />
         </div>
 
         {/* Period selector */}
@@ -252,10 +266,10 @@ export default function CfoDashboard({ onAsk }: Props) {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--b)' }}>
-                      <th style={{ textAlign: 'left', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}></th>
-                      <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Amount</th>
-                      <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>% Rev</th>
-                      <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>vs Prior</th>
+                      <th style={{ textAlign: 'left', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}></th>
+                      <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>Amount</th>
+                      <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>% Rev</th>
+                      <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>vs Prior</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -302,7 +316,7 @@ export default function CfoDashboard({ onAsk }: Props) {
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--b)' }}>
                   <div style={{ padding: '12px 14px', background: 'var(--sf)', textAlign: 'center' }}>
-                    <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>EBITDA</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 3 }}>EBITDA</div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: ebitdaVal >= 0 ? '#22C55E' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{fmtCurrency(ebitdaVal)}</div>
                     {ebitdaChg != null && (
                       <div style={{ fontSize: 10, fontWeight: 600, color: ebitdaChg > 0 ? '#22C55E' : ebitdaChg < 0 ? '#EF4444' : 'var(--tx3)', marginTop: 2 }}>
@@ -311,12 +325,12 @@ export default function CfoDashboard({ onAsk }: Props) {
                     )}
                   </div>
                   <div style={{ padding: '12px 14px', background: 'var(--sf)', textAlign: 'center' }}>
-                    <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Margin</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 3 }}>Margin</div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: ebitdaMarginVal >= 20 ? '#22C55E' : ebitdaMarginVal >= 10 ? '#F59E0B' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{ebitdaMarginVal.toFixed(1)}%</div>
                     <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{ebitdaMarginVal >= 20 ? 'Healthy' : ebitdaMarginVal >= 10 ? 'Moderate' : 'Needs attention'}</div>
                   </div>
                   <div style={{ padding: '12px 14px', background: 'var(--sf)', textAlign: 'center' }}>
-                    <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>Valuation (5x)</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 3 }}>Valuation (5x)</div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: '#6366F1', fontVariantNumeric: 'tabular-nums' }}>{fmtCurrency(ebitdaVal * 5)}</div>
                     <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>Avg. SME multiple</div>
                   </div>
@@ -336,6 +350,16 @@ export default function CfoDashboard({ onAsk }: Props) {
             />
           )}
 
+          {/* Dynamic Break-Even */}
+          {!loading && data?.totals && data.totals.revenue > 0 && (
+            <DynamicBreakEven
+              totals={data.totals}
+              pnlMonthly={data.pnl_monthly}
+              currencySymbol={sym}
+              onAsk={onAsk}
+            />
+          )}
+
           {/* AI Insights */}
           {!loading && data && (
             <CfoAiInsight data={data} countryCode={countryCode} onAsk={onAsk} />
@@ -350,6 +374,9 @@ export default function CfoDashboard({ onAsk }: Props) {
           {!loading && data?.logistics && (
             <LogisticsOverview data={data.logistics} currencySymbol={sym} onAsk={onAsk} />
           )}
+
+          {/* Payment Recovery summary */}
+          <RecoveredRevenue currencySymbol={sym} onAsk={onAsk} />
 
           {/* Cash Flow section */}
           <CashFlowCountdown onAsk={onAsk} />
@@ -377,6 +404,12 @@ export default function CfoDashboard({ onAsk }: Props) {
                 countryCode={countryCode}
                 onAsk={onAsk}
               />
+              <DynamicBreakEven
+                totals={data.totals}
+                pnlMonthly={data.pnl_monthly}
+                currencySymbol={sym}
+                onAsk={onAsk}
+              />
             </>
           ) : loading ? (
             <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>Loading P&L data...</div>
@@ -393,7 +426,7 @@ export default function CfoDashboard({ onAsk }: Props) {
             <RollingCashForecast
               dailyCashflow={data.daily_cashflow}
               cashBalance={data.cash.balance}
-              monthlyFixed={data.cash.monthly_fixed}
+              monthlyFixed={data.cash.monthly_fixed_total ?? data.cash.monthly_fixed}
               currencySymbol={sym}
               onAsk={onAsk}
             />
@@ -445,6 +478,25 @@ export default function CfoDashboard({ onAsk }: Props) {
             />
           )}
 
+          {!loading && data?.totals && data.totals.revenue > 0 && (
+            <UnitEconomics
+              totals={data.totals}
+              marginByProduct={data.margin_by_product}
+              currencySymbol={sym}
+              onAsk={onAsk}
+            />
+          )}
+
+          {!loading && data?.totals && data.totals.revenue > 0 && (
+            <ChurnAnalytics
+              totals={data.totals}
+              pnlMonthly={data.pnl_monthly}
+              marginByChannel={data.margin_by_channel}
+              currencySymbol={sym}
+              onAsk={onAsk}
+            />
+          )}
+
           <PriceSensitivity onAsk={onAsk} />
           <SupplierBrief onAsk={onAsk} />
         </div>
@@ -475,6 +527,15 @@ export default function CfoDashboard({ onAsk }: Props) {
               payablesTotal={recTotals.payables || data.receivables_summary?.total_payables || 0}
               currencySymbol={sym}
               countryCode={countryCode}
+              onAsk={onAsk}
+            />
+          )}
+          {!loading && data?.totals && data.totals.revenue > 0 && (
+            <FinancingReadiness
+              totals={data.totals}
+              cash={data.cash}
+              receivablesSummary={data.receivables_summary}
+              currencySymbol={sym}
               onAsk={onAsk}
             />
           )}
@@ -511,13 +572,30 @@ export default function CfoDashboard({ onAsk }: Props) {
       {subTab === 'forecasts' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {!loading && data?.totals ? (
-            <CfoForecasts
-              pnlMonthly={data.pnl_monthly ?? []}
-              totals={data.totals}
-              cash={data.cash}
-              dailyCashflow={data.daily_cashflow}
-              currencySymbol={sym}
-            />
+            <>
+              <CfoForecasts
+                pnlMonthly={data.pnl_monthly ?? []}
+                totals={data.totals}
+                cash={data.cash}
+                dailyCashflow={data.daily_cashflow}
+                currencySymbol={sym}
+                onAsk={onAsk}
+              />
+              <HiringSimulator
+                totals={data.totals}
+                cash={data.cash}
+                currencySymbol={sym}
+                onAsk={onAsk}
+              />
+              <ThreeWayForecast
+                pnlMonthly={data.pnl_monthly ?? []}
+                totals={data.totals}
+                cash={data.cash}
+                receivablesSummary={data.receivables_summary}
+                currencySymbol={sym}
+                onAsk={onAsk}
+              />
+            </>
           ) : (
             <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>
               {loading ? 'Loading...' : 'Connect a data source to view forecasts.'}
@@ -606,6 +684,22 @@ export default function CfoDashboard({ onAsk }: Props) {
                 countryCode={countryCode}
                 onAsk={onAsk}
               />
+              <ExitReadiness
+                totals={data.totals}
+                cash={data.cash}
+                comparison={data.comparison}
+                pnlMonthly={data.pnl_monthly}
+                dataQuality={data.data_quality}
+                currencySymbol={sym}
+                onAsk={onAsk}
+              />
+              <IndustryBenchmarks
+                totals={data.totals}
+                cash={data.cash}
+                inventory={data.inventory}
+                currencySymbol={sym}
+                onAsk={onAsk}
+              />
             </>
           ) : (
             <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>
@@ -642,7 +736,7 @@ function PnlRow({ label, amount, pctRev, change, sym, bold, negative, border, hi
         {fmtAmt(amount)}
       </td>
       <td style={{ padding: '7px 0', textAlign: 'right', color: 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>
-        {pctRev > 0 ? `${Math.round(pctRev)}%` : ''}
+        {pctRev > 0 && isFinite(pctRev) ? `${Math.round(pctRev)}%` : ''}
       </td>
       <td style={{ padding: '7px 0', textAlign: 'right' }}>
         {change != null && (
@@ -679,11 +773,11 @@ function PnlFull({ data, sym, fmtCurrency, onAsk }: { data: SnapshotData; sym: s
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
           <thead>
             <tr style={{ borderBottom: '2px solid var(--b)' }}>
-              <th style={{ textAlign: 'left', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', width: '35%' }}></th>
-              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Current</th>
-              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>% of Rev</th>
-              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Prior Period</th>
-              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Change</th>
+              <th style={{ textAlign: 'left', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, width: '35%' }}></th>
+              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>Current</th>
+              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>% of Rev</th>
+              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>Prior Period</th>
+              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>Change</th>
             </tr>
           </thead>
           <tbody>
@@ -735,7 +829,7 @@ function FullPnlRow({ label, current, pctRev, prior, change, sym, bold, negative
         {fmtAmt(current)}
       </td>
       <td style={{ padding: '8px 0', textAlign: 'right', color: 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>
-        {pctRev > 0 ? `${Math.round(pctRev)}%` : ''}
+        {pctRev > 0 && isFinite(pctRev) ? `${Math.round(pctRev)}%` : ''}
       </td>
       <td style={{ padding: '8px 0', textAlign: 'right', color: 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>
         {prior != null ? fmtAmt(prior) : ''}
@@ -759,7 +853,7 @@ function renderChange(change: number | null | undefined) {
 function CashMetric({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'center' }}>
-      <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 3, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
+      <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 3, fontWeight: 500 }}>{label}</div>
       <div style={{ fontSize: 16, fontWeight: 700, color }}>{value}</div>
     </div>
   )
@@ -779,7 +873,7 @@ function WaterfallChart({ revenue, cogs, fixed, net, sym, fmtCurrency }: {
 
   return (
     <div style={{ marginTop: 12 }}>
-      <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Cash Flow Waterfall</div>
+      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 10 }}>Cash Flow Waterfall</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {items.map(item => (
           <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

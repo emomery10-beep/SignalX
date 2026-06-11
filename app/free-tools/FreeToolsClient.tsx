@@ -197,34 +197,17 @@ export default function FreeToolsClient() {
           </div>
         </nav>
 
-        {/* ── Hero ── */}
+        {/* ── Hero — left-aligned, no badge, no stats row, no blobs ── */}
         <section className="ft-hero">
           <div className="ft-hero-inner">
-            <div className="ft-hero-badge">Free Tools — No Sign-Up Required</div>
+            <p className="ft-hero-label">Free tools · No sign-up required</p>
             <h1 className="ft-hero-title">
-              Know Your True Costs<br />
-              <span className="ft-hero-accent">Before You Order</span>
+              Know your true costs<br />before you order.
             </h1>
             <p className="ft-hero-sub">
               Free calculators for importers, exporters, and business owners. Landed cost, FX risk,
-              VAT, and break-even analysis — in seconds, with no account needed.
+              VAT, and break-even analysis — in seconds, no account needed.
             </p>
-            <div className="ft-hero-stats">
-              {[
-                ["30+", "Countries covered"],
-                ["6", "Free calculators"],
-                ["12", "Currencies supported"],
-                ["Free", "No sign-up"],
-              ].map(([val, label]) => (
-                <div key={label} className="ft-hero-stat">
-                  <span className="ft-hero-stat-val">{val}</span>
-                  <span className="ft-hero-stat-label">{label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="ft-hero-deco" aria-hidden>
-            <div className="ft-blob b1"/><div className="ft-blob b2"/>
           </div>
         </section>
 
@@ -234,8 +217,7 @@ export default function FreeToolsClient() {
             <h2 id="tools-heading" className="ft-section-title">Choose a Tool</h2>
             <div className="ft-tool-grid">
               {TOOLS.map((tool) => (
-                <div key={tool.href} className="ft-tool-card" style={{ "--tc": tool.color } as React.CSSProperties}>
-                  {tool.popular && <div className="ft-tool-popular">Most used</div>}
+                <div key={tool.href} className="ft-tool-card">
                   <div className="ft-tool-icon" aria-hidden>{tool.icon}</div>
                   <h3 className="ft-tool-title">{tool.title}</h3>
                   <p className="ft-tool-tagline">{tool.tagline}</p>
@@ -385,38 +367,27 @@ export default function FreeToolsClient() {
         .ft-nav-cta { font-size: 13px; font-weight: 700; background: var(--acc); color: #fff; padding: 8px 16px; border-radius: 8px; text-decoration: none; transition: background .15s; }
         .ft-nav-cta:hover { background: var(--acc-dark); }
 
-        /* Hero */
-        .ft-hero { position: relative; overflow: hidden; background: linear-gradient(150deg, #1a1916 0%, #2d2a26 55%, #1a2030 100%); padding: 80px 24px 100px; text-align: center; }
-        .ft-hero-inner { position: relative; z-index: 2; max-width: 680px; margin: 0 auto; }
-        .ft-hero-badge { display: inline-block; background: rgba(208,138,89,.18); border: 1px solid rgba(208,138,89,.3); color: #e8a87a; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; padding: 5px 14px; border-radius: 100px; margin-bottom: 24px; }
-        .ft-hero-title { font-family: var(--font-head); font-size: clamp(30px, 5vw, 52px); font-weight: 800; color: #fff; margin: 0 0 16px; line-height: 1.12; letter-spacing: -.025em; }
-        .ft-hero-accent { color: var(--acc); }
-        .ft-hero-sub { color: rgba(255,255,255,.55); font-size: 18px; margin: 0 0 40px; line-height: 1.6; }
-        .ft-hero-stats { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; }
-        .ft-hero-stat { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-        .ft-hero-stat-val { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: #fff; }
-        .ft-hero-stat-label { font-size: 12px; color: rgba(255,255,255,.45); text-transform: uppercase; letter-spacing: .05em; }
-        .ft-hero-deco { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
-        .ft-blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .12; }
-        .b1 { width: 500px; height: 500px; background: var(--acc); top: -150px; left: -150px; }
-        .b2 { width: 400px; height: 400px; background: #3b82f6; bottom: -100px; right: -100px; }
+        /* Hero — left-aligned, clean light background */
+        .ft-hero { background: var(--sf); border-bottom: 1px solid var(--b); padding: clamp(48px,6vw,80px) 24px; }
+        .ft-hero-inner { max-width: 1100px; margin: 0 auto; }
+        .ft-hero-label { font-size: 11px; font-weight: 700; color: var(--acc); letter-spacing: .16em; text-transform: uppercase; margin: 0 0 16px; }
+        .ft-hero-title { font-family: var(--font-head); font-size: clamp(28px, 4vw, 48px); font-weight: 700; color: var(--tx); margin: 0 0 16px; line-height: 1.08; letter-spacing: -.03em; max-width: 540px; }
+        .ft-hero-sub { color: var(--tx2); font-size: 15px; margin: 0; line-height: 1.7; max-width: 420px; }
 
         /* Tools section */
         .ft-tools { padding: 72px 24px; }
         .ft-tools-inner { max-width: 1100px; margin: 0 auto; }
         .ft-section-title { font-family: var(--font-head); font-size: 26px; font-weight: 700; color: var(--tx); margin: 0 0 32px; letter-spacing: -.01em; }
         .ft-tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 24px; }
-        .ft-tool-card { background: var(--sf); border: 1.5px solid var(--b); border-radius: var(--r); padding: 36px; position: relative; overflow: hidden; transition: box-shadow .2s, transform .2s; }
-        .ft-tool-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
-        .ft-tool-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--tc); }
-        .ft-tool-popular { position: absolute; top: 20px; right: 20px; background: var(--acc-light); color: var(--acc-dark); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 100px; text-transform: uppercase; letter-spacing: .06em; }
+        .ft-tool-card { background: var(--sf); border: 1px solid var(--b); border-radius: var(--r); padding: 36px; position: relative; overflow: hidden; transition: box-shadow .2s, transform .2s; }
+        .ft-tool-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
         .ft-tool-icon { font-size: 40px; margin-bottom: 16px; display: block; }
         .ft-tool-title { font-family: var(--font-head); font-size: 22px; font-weight: 700; color: var(--tx); margin: 0 0 6px; }
         .ft-tool-tagline { font-size: 14px; font-weight: 600; color: var(--tx3); margin: 0 0 14px; }
         .ft-tool-desc { font-size: 15px; color: var(--tx2); line-height: 1.65; margin: 0 0 20px; }
         .ft-tool-features { list-style: none; margin: 0 0 28px; padding: 0; display: flex; flex-direction: column; gap: 7px; }
         .ft-tool-features li { font-size: 14px; color: var(--tx2); display: flex; align-items: center; gap: 8px; }
-        .ft-tool-features span { color: var(--tc); font-weight: 700; }
+        .ft-tool-features span { color: var(--acc); font-weight: 700; }
         .ft-tool-cta { display: inline-flex; align-items: center; justify-content: center; width: 100%; padding: 14px; border-radius: 10px; color: #fff; font-size: 15px; font-weight: 700; text-decoration: none; transition: opacity .15s, transform .15s; }
         .ft-tool-cta:hover { opacity: .9; transform: translateY(-1px); }
 
@@ -447,7 +418,7 @@ export default function FreeToolsClient() {
         .ft-cta-section { background: linear-gradient(135deg, #1a1916 0%, #2d2a26 100%); padding: 72px 24px; }
         .ft-cta-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 40px; flex-wrap: wrap; }
         .ft-cta-title { font-family: var(--font-head); font-size: 26px; font-weight: 700; color: #fff; margin: 0 0 12px; }
-        .ft-cta-sub { font-size: 15px; color: rgba(255,255,255,.5); line-height: 1.65; margin: 0; max-width: 560px; }
+        .ft-cta-sub { font-size: 15px; color: rgba(255,255,255,.72); line-height: 1.65; margin: 0; max-width: 560px; }
         .ft-cta-actions { display: flex; gap: 12px; flex-shrink: 0; flex-wrap: wrap; }
         .ft-cta-btn { display: inline-flex; align-items: center; padding: 13px 24px; border-radius: 10px; font-size: 15px; font-weight: 700; text-decoration: none; transition: all .2s; }
         .ft-cta-btn--primary { background: var(--acc); color: #fff; }

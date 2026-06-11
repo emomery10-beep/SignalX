@@ -7,10 +7,14 @@ const RED = '#EF4444'
 const YELLOW = '#F59E0B'
 
 export const EXPENSE_CATEGORIES = [
+  'Supplier / Stock Purchase',
   'Rent / Lease', 'Payroll', 'Utilities', 'Software / SaaS', 'Marketing & Ads',
   'Supplies', 'Travel', 'Meals & Entertainment', 'Shipping', 'Professional Services',
   'Equipment', 'Insurance', 'Taxes & Fees', 'Other',
 ]
+
+// Expense categories that represent cost of goods — routed to COGS, not fixed costs
+export const COGS_EXPENSE_CATEGORIES = new Set(['Supplier / Stock Purchase'])
 
 export interface ScannedExpense {
   vendor: string
