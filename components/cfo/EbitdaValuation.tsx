@@ -379,21 +379,27 @@ export default function EbitdaValuation({ totals, comparison, pnlMonthly, curren
   const sde = adjustedEbitda + ownerComp
 
   // ── Which metric to value with ──
-  const usesSde = metricMode === 'sde' || (metricMode === 'both' && sde > 0 && annualizedValue(sde) < 5_000_000)
-  const primaryMetric = usesSde ? sde : adjustedEbitda > ebitda ? adjustedEbitda : ebitda
-  const primaryLabel = usesSde ? 'SDE' : adjustedEbitda > ebitda ? 'Adj. EBITDA' : 'EBITDA'
-
-  function annualizedValue(periodVal: number) {
+  // annualizedValue takes an explicit includeOwnerComp flag to avoid a TDZ:
+  // usesSde calls annualizedValue during its own const initialisation, so
+  // the function must NOT close over usesSde – it would access it in the
+  // Temporal Dead Zone and throw "Cannot access 'usesSde' before init".
+  function annualizedValue(periodVal: number, includeOwnerComp = false) {
     if (pnlMonthly && pnlMonthly.length > 0) {
       const months = pnlMonthly.length
-      const addBackPerMonth = (interest + tax + depreciation + amortization + totalAcceptedAddBacks + (usesSde ? ownerComp : 0)) / months
+      const addBackPerMonth = (interest + tax + depreciation + amortization + totalAcceptedAddBacks + (includeOwnerComp ? ownerComp : 0)) / months
       const total = pnlMonthly.reduce((s, m) => s + m.net + addBackPerMonth, 0)
       return (total / months) * 12
     }
     return periodVal * 12
   }
 
-  const annualized = annualizedValue(primaryMetric)
+  // When checking the SDE threshold we're evaluating the SDE value (which already
+  // includes ownerComp), so pass includeOwnerComp=true for that call only.
+  const usesSde = metricMode === 'sde' || (metricMode === 'both' && sde > 0 && annualizedValue(sde, true) < 5_000_000)
+  const primaryMetric = usesSde ? sde : adjustedEbitda > ebitda ? adjustedEbitda : ebitda
+  const primaryLabel = usesSde ? 'SDE' : adjustedEbitda > ebitda ? 'Adj. EBITDA' : 'EBITDA'
+
+  const annualized = annualizedValue(primaryMetric, usesSde)
   const valuation = primaryMetric * multiple
   const annualizedValuation = annualized * multiple
 
