@@ -7,7 +7,7 @@ const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
 const PLAN_COLORS: Record<string, string> = {
   free: '#94a3b8', growth: '#f59e0b', business: '#8b5cf6', enterprise: '#10b981',
 }
-const TABS = ['Overview','Revenue','Users','Activity','Content','Costs','Growth'] as const
+const TABS = ['Overview','Revenue','Users','Activity','Costs','Growth'] as const
 type Tab = typeof TABS[number]
 
 function KV({ label, value, sub, color }: { label: string; value: any; sub?: string; color?: string }) {
@@ -18,173 +18,6 @@ function KV({ label, value, sub, color }: { label: string; value: any; sub?: str
       {sub && <div style={{fontSize:12,color:'var(--tx3)'}}>{sub}</div>}
     </div>
   )
-}
-
-function ContentReviewTab({ agentContent, onRefresh }: { agentContent: any[]; onRefresh: () => void }) {
-  const [filter, setFilter] = useState<'all'|'pending'|'published'|'rejected'>('pending')
-  const [preview, setPreview] = useState<any>(null)
-  const [acting, setActing] = useState<string | null>(null)
-  const [editTitle, setEditTitle] = useState('')
-  const [editSections, setEditSections] = useState<{heading:string;level:2|3;body:string}[]>([])
-  const [triggerLoading, setTriggerLoading] = useState(false)
-  const supabase = createClient()
-
-  const blogs = agentContent.filter(c => c.type === 'blog')
-  const filtered = filter === 'all' ? blogs : blogs.filter(c => c.status === filter)
-  const pc = blogs.filter(c => c.status === 'pending').length
-  const pub = blogs.filter(c => c.status === 'published').length
-  const rej = blogs.filter(c => c.status === 'rejected').length
-
-  const openPreview = (item: any) => {
-    setPreview(item)
-    setEditTitle(item.content?.title || '')
-    setEditSections(item.content?.sections ? JSON.parse(JSON.stringify(item.content.sections)) : [])
-  }
-
-  const handleAction = async (id: string, action: 'approve' | 'reject') => {
-    setActing(id)
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const body: any = { id, action }
-      if (action === 'approve' && preview) {
-        body.content = { ...preview.content, title: editTitle, sections: editSections }
-      }
-      await fetch('/api/agent/approve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
-        body: JSON.stringify(body),
-      })
-      setPreview(null)
-      onRefresh()
-    } finally { setActing(null) }
-  }
-
-  const triggerScout = async () => {
-    setTriggerLoading(true)
-    try {
-      await fetch(`/api/agent/blog-scout?secret=${encodeURIComponent('dev-test')}`)
-      onRefresh()
-    } finally { setTriggerLoading(false) }
-  }
-
-  return <>
-    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))',gap:12,marginBottom:20}}>
-      <KV label="Pending" value={pc} sub="Awaiting review" color="#f59e0b" />
-      <KV label="Published" value={pub} sub="Live on blog" color="#10b981" />
-      <KV label="Rejected" value={rej} sub="Declined" color="#f87171" />
-      <KV label="Total Blogs" value={blogs.length} sub="All agent blogs" />
-    </div>
-
-    <div style={{display:'flex',gap:8,marginBottom:16,flexWrap:'wrap',alignItems:'center'}}>
-      {(['pending','published','rejected','all'] as const).map(f => (
-        <button key={f} onClick={() => setFilter(f)} style={{padding:'6px 14px',borderRadius:8,border:'1px solid',borderColor:filter===f?'#6366F1':'var(--b)',background:filter===f?'rgba(99,102,241,.08)':'var(--sf)',color:filter===f?'#6366F1':'var(--tx3)',fontSize:12,fontWeight:500,cursor:'pointer',fontFamily:'inherit',textTransform:'capitalize'}}>
-          {f}{f==='pending'&&pc>0?` (${pc})`:f==='published'?` (${pub})`:f==='rejected'?` (${rej})`:''}
-        </button>
-      ))}
-      <div style={{flex:1}} />
-      <button onClick={triggerScout} disabled={triggerLoading} style={{padding:'8px 16px',borderRadius:8,border:'1px solid #6366F1',background:'#6366F1',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit',opacity:triggerLoading?.6:1}}>
-        {triggerLoading ? 'Generating...' : 'Run Blog Scout Now'}
-      </button>
-    </div>
-
-    <div style={{borderRadius:14,border:'1px solid var(--b)',overflow:'hidden',background:'var(--sf)'}}>
-      {filtered.length === 0 ? (
-        <div style={{textAlign:'center',padding:40,color:'var(--tx3)'}}>No {filter === 'all' ? '' : filter} blogs yet</div>
-      ) : filtered.map(item => {
-        const blog = item.content || {}
-        return (
-          <div key={item.id} style={{padding:'14px 16px',borderBottom:'1px solid var(--b)',display:'flex',alignItems:'center',gap:12,flexWrap:'wrap',cursor:'pointer'}} onClick={() => openPreview(item)}>
-            <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:6,background:item.status==='pending'?'rgba(245,158,11,.1)':item.status==='published'?'rgba(16,185,129,.1)':'rgba(148,163,184,.1)',color:item.status==='pending'?'#f59e0b':item.status==='published'?'#10b981':'#94a3b8'}}>{item.status}</span>
-            <span style={{fontSize:11,padding:'2px 8px',borderRadius:6,background:'rgba(99,102,241,.08)',color:'#6366F1',fontWeight:500}}>{blog.cluster || 'Uncategorised'}</span>
-            <span style={{fontSize:13,color:'var(--tx)',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontWeight:500}}>{blog.title || item.source_title || 'Untitled'}</span>
-            <span style={{fontSize:11,color:'var(--tx3)'}}>{blog.readTime ? `${blog.readTime} min` : ''}</span>
-            <span style={{fontSize:11,color:'var(--tx3)'}}>{new Date(item.created_at).toLocaleDateString('en-GB')}</span>
-            {item.status === 'pending' && (
-              <div style={{display:'flex',gap:6}} onClick={e => e.stopPropagation()}>
-                <button onClick={() => handleAction(item.id, 'approve')} disabled={acting===item.id} style={{padding:'4px 12px',borderRadius:6,border:'none',background:'#10b981',color:'#fff',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise</button>
-                <button onClick={() => handleAction(item.id, 'reject')} disabled={acting===item.id} style={{padding:'4px 12px',borderRadius:6,border:'1px solid var(--b)',background:'var(--sf)',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
-              </div>
-            )}
-          </div>
-        )
-      })}
-    </div>
-
-    {preview && (
-      <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:20}} onClick={() => setPreview(null)}>
-        <div style={{background:'var(--sf)',borderRadius:16,maxWidth:800,width:'100%',maxHeight:'90vh',overflow:'auto',padding:0}} onClick={e => e.stopPropagation()}>
-          <div style={{padding:'20px 24px',borderBottom:'1px solid var(--b)',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,background:'var(--sf)',zIndex:1,borderRadius:'16px 16px 0 0'}}>
-            <div style={{display:'flex',alignItems:'center',gap:8}}>
-              <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:6,background:preview.status==='pending'?'rgba(245,158,11,.1)':preview.status==='published'?'rgba(16,185,129,.1)':'rgba(148,163,184,.1)',color:preview.status==='pending'?'#f59e0b':preview.status==='published'?'#10b981':'#94a3b8'}}>{preview.status}</span>
-              <span style={{fontSize:11,color:'var(--tx3)'}}>{preview.content?.cluster} / {preview.content?.pillar}</span>
-            </div>
-            <div style={{display:'flex',gap:8,alignItems:'center'}}>
-              {preview.status === 'pending' && <>
-                <button onClick={() => handleAction(preview.id, 'approve')} disabled={acting===preview.id} style={{padding:'6px 16px',borderRadius:8,border:'none',background:'#10b981',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise & Publish</button>
-                <button onClick={() => handleAction(preview.id, 'reject')} disabled={acting===preview.id} style={{padding:'6px 16px',borderRadius:8,border:'1px solid var(--b)',background:'var(--sf)',color:'#f87171',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
-              </>}
-              <button onClick={() => setPreview(null)} style={{padding:'6px 10px',borderRadius:8,border:'1px solid var(--b)',background:'var(--sf)',color:'var(--tx3)',fontSize:14,cursor:'pointer',fontFamily:'inherit',lineHeight:1}}>×</button>
-            </div>
-          </div>
-
-          <div style={{padding:'24px'}}>
-            {preview.status === 'pending' ? (
-              <input value={editTitle} onChange={e => setEditTitle(e.target.value)} style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:8,padding:'8px 12px',width:'100%',marginBottom:16,background:'transparent'}} />
-            ) : (
-              <h1 style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',marginBottom:16}}>{preview.content?.title}</h1>
-            )}
-
-            {preview.content?.tldr && (
-              <div style={{padding:'12px 16px',borderRadius:10,background:'rgba(99,102,241,.05)',border:'1px solid rgba(99,102,241,.15)',marginBottom:20,fontSize:13,color:'var(--tx2)',lineHeight:1.6}}>
-                <strong style={{color:'#6366F1',fontSize:11,textTransform:'uppercase',letterSpacing:'.06em'}}>TL;DR</strong><br/>{preview.content.tldr}
-              </div>
-            )}
-
-            <div style={{display:'flex',gap:12,marginBottom:20,flexWrap:'wrap',fontSize:11,color:'var(--tx3)'}}>
-              <span>{preview.content?.readTime} min read</span>
-              <span>{preview.content?.publishDate}</span>
-              {preview.source_url && <a href={preview.source_url} target="_blank" rel="noopener noreferrer" style={{color:'#6366F1',textDecoration:'none'}}>Source article →</a>}
-            </div>
-
-            {(preview.status === 'pending' ? editSections : preview.content?.sections || []).map((sec: any, i: number) => (
-              <div key={i} style={{marginBottom:24}}>
-                {preview.status === 'pending' ? (
-                  <>
-                    <input value={sec.heading} onChange={e => { const s = [...editSections]; s[i] = {...s[i], heading: e.target.value}; setEditSections(s) }} style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:6,padding:'6px 10px',width:'100%',marginBottom:8,background:'transparent'}} />
-                    <textarea value={sec.body} onChange={e => { const s = [...editSections]; s[i] = {...s[i], body: e.target.value}; setEditSections(s) }} rows={5} style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:6,padding:'8px 10px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent'}} />
-                  </>
-                ) : (
-                  <>
-                    <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',marginBottom:8}}>{sec.heading}</h2>
-                    <p style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)'}}>{sec.body}</p>
-                  </>
-                )}
-              </div>
-            ))}
-
-            {preview.content?.paa?.length > 0 && (
-              <div style={{marginTop:24,padding:'16px',borderRadius:10,border:'1px solid var(--b)',background:'rgba(0,0,0,.02)'}}>
-                <h3 style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:12}}>People Also Ask</h3>
-                {preview.content.paa.map((qa: any, i: number) => (
-                  <div key={i} style={{marginBottom:12}}>
-                    <div style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:4}}>{qa.q}</div>
-                    <div style={{fontSize:12,color:'var(--tx2)',lineHeight:1.6}}>{qa.a}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {preview.content?.cta && (
-              <div style={{marginTop:24,padding:'16px',borderRadius:10,background:'rgba(99,102,241,.06)',border:'1px solid rgba(99,102,241,.15)'}}>
-                <div style={{fontSize:14,fontWeight:600,color:'#6366F1',marginBottom:4}}>{preview.content.cta.heading}</div>
-                <div style={{fontSize:12,color:'var(--tx2)'}}>{preview.content.cta.body}</div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    )}
-  </>
 }
 
 export default function AdminPage() {
@@ -199,7 +32,6 @@ export default function AdminPage() {
   const [search, setSearch] = useState('')
   const [actionMsg, setActionMsg] = useState('')
   const [xActivity, setXActivity] = useState<any[]>([])
-  const [agentContent, setAgentContent] = useState<any[]>([])
   const [signups, setSignups] = useState<any[]>([])
   const [stripeData, setStripeData] = useState<any>(null)
 
@@ -226,7 +58,6 @@ export default function AdminPage() {
         setUsers(d.users || [])
         setCandidates(d.candidates || [])
         setXActivity(d.xActivity || [])
-        setAgentContent(d.agentContent || [])
         setStripeData(d.stripe || null)
         const days: Record<string, number> = {}
         const now = new Date()
@@ -278,7 +109,7 @@ export default function AdminPage() {
   const conv = stats?.totalUsers > 0 ? ((payingCount / stats.totalUsers) * 100).toFixed(1) : '0'
   const xPosted = xActivity.filter(x => x.status === 'posted').length
   const xPending = xActivity.filter(x => x.status === 'pending').length
-  const pc = agentContent.filter(c => c.status === 'pending').length
+  // Content tab removed — blog review lives at /admin/agent (Alice Watson)
   const counts = signups.map(s => s.count as number)
   const maxS = counts.length > 0 ? Math.max(...counts, 1) : 1
 
@@ -298,7 +129,7 @@ export default function AdminPage() {
       <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',background:'var(--sf)',padding:'0 24px'}}>
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)} style={{padding:'12px 16px',border:'none',background:'transparent',fontSize:13,fontWeight:tab===t?600:400,color:tab===t?'#6366F1':'var(--tx3)',borderBottom:tab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>
-            {t}{t==='Users'?` (${users.length})`:t==='Content'&&pc>0?` (${pc})`:''}
+            {t}{t==='Users'?` (${users.length})`:''}
           </button>
         ))}
       </div>
@@ -335,7 +166,7 @@ export default function AdminPage() {
               </div>
               <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)'}}>
                 <div style={{fontSize:13,fontWeight:600,marginBottom:16}}>Quick Stats</div>
-                {[{label:'Content Pending',value:pc,color:'#6366F1'},{label:'Upgrade Candidates',value:candidates.length,color:'#10b981'}].map(({label,value,color}) => (
+                {[{label:'Upgrade Candidates',value:candidates.length,color:'#10b981'}].map(({label,value,color}) => (
                   <div key={label} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--b)',fontSize:13}}>
                     <span style={{color:'var(--tx2)'}}>{label}</span>
                     <span style={{fontWeight:700,color}}>{value}</span>
@@ -488,7 +319,7 @@ export default function AdminPage() {
             </div>
           </>}
 
-          {tab==='Content' && <ContentReviewTab agentContent={agentContent} onRefresh={loadAll} />}
+          {/* Content review moved to /admin/agent (Alice Watson) */}
 
           {tab==='Costs' && <>
             <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
@@ -549,7 +380,7 @@ export default function AdminPage() {
               <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Growth Levers</div>
               {[
                 {action:'Email upgrade candidates',detail:candidates.length+' users at 7-9 questions',cta:'View',onClick:()=>setTab('Revenue'),color:'#f59e0b'},
-                {action:'Content agent',detail:pc+' pieces pending approval',cta:'Review',onClick:()=>setTab('Content'),color:'#6366F1'},
+                {action:'Blog agent (Alice)',detail:'Manage via /admin/agent',cta:'Open',onClick:()=>router.push('/admin/agent'),color:'#6366F1'},
               ].map(({action,detail,cta,onClick,color})=>(
                 <div key={action} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 0',borderBottom:'1px solid var(--b)',flexWrap:'wrap',gap:8}}>
                   <div>
