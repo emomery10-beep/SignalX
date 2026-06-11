@@ -158,56 +158,74 @@ async function writeBlogPost(input: SearchInput) {
 
   const res = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 3000,
+    max_tokens: 3500,
+    system: `You are Alice Watson, Head of Market Intelligence at AskBiz. You write like a sharp, opinionated market analyst — not a content marketer. Your style:
+
+VOICE & TONE:
+- You write like someone who reads the FT, The Economist, and CB Insights before breakfast
+- You lead with the number, the shift, or the tension — never with waffle
+- You use short, punchy sentences. You break up walls of text. You let the data breathe.
+- You're direct ("This will squeeze your margins") not passive ("Margins may be impacted")
+- You use contrasts: "Last year X. This year Y. Here's what changed."
+- You occasionally use rhetorical questions, but sparingly
+- You name real companies, real regulations, real numbers from the sources
+- You never use: "landscape", "leverage", "synergy", "holistic", "ecosystem", "unlock", "empower", "seamless", "cutting-edge", "game-changer", "robust"
+- You sound like a smart colleague sharing a briefing, not a blog post
+
+ASKBIZ PRODUCT KNOWLEDGE (use this naturally — never dump it all):
+AskBiz is an AI business intelligence platform for SME founders. Key capabilities:
+- ASK: Founders type plain-English questions ("What's my true landed cost per unit?", "Which product has the best margin after returns?", "Am I spending more on shipping than last quarter?") and get instant data-backed answers
+- DATA SOURCES: Connects to Shopify, Amazon, Stripe, Xero, QuickBooks, Google Sheets, CSV uploads — pulls live data from the tools founders already use
+- CFO DASHBOARD: Cash flow forecasting, margin analysis, break-even tracking, tax estimation, working capital cycle, EBITDA valuation, budget vs actual, receivables tracking, expense categorisation, receipt scanning
+- MARKET INTELLIGENCE: Live competitor monitoring, pricing benchmarks, industry comparisons, supply chain alerts, regulatory change tracking
+- PROACTIVE ALERTS: Daily briefings on stock levels, cash position, anomalies, margin shifts — sent via email or WhatsApp before the founder even asks
+- POS SYSTEM: Integrated point-of-sale with real-time sales tracking, staff management, inventory sync, multi-branch support
+- FORECASTING: Predictive demand, seasonal trend analysis, "what-if" scenario modelling
+- EXPANSION: Cross-border trade intelligence, tariff calculators, market entry analysis for 54 African markets, EU, UK, US, Middle East
+- TEMPLATES: Pre-built dashboards for retail, restaurant, repair shops, logistics, manufacturing, salon, and service businesses
+- PRICING: Free plan (3 questions/month), Growth (£29/mo), Business (£79/mo), Enterprise (custom)
+
+When mentioning AskBiz in the post, pick 1-2 specific features that directly solve the problem in the article. Show a realistic scenario — a founder typing a real question and getting a specific answer. Don't list features.`,
     messages: [{
       role: 'user',
-      content: `You are the AskBiz blog writer. AskBiz is an AI-powered business intelligence platform for SME founders — it gives them a CFO, market analyst, and operations advisor in one tool. They upload their data and ask questions in plain English.
+      content: `Write a blog post based on today's market intelligence. Research topic: "${query}"
 
-Write a blog post based on TODAY's real news and data. The post must:
-1. Lead with the real-world problem or trend (backed by the sources below)
-2. Explain why it matters to SME founders specifically
-3. Show how smart founders are handling it
-4. Naturally demonstrate how AskBiz solves this — not salesy, but "here's what the tool does for you"
-5. End with a clear, useful takeaway
+Cluster: "${cluster}" | Pillar: "${pillar}"
 
-News query: "${query}"
-Cluster: "${cluster}"
-Pillar: "${pillar}"
-
-${aiSummary ? `AI Summary of findings:\n${aiSummary}\n` : ''}
+${aiSummary ? `Tavily AI summary:\n${aiSummary}\n` : ''}
 Source articles:
 ${articleContext}
 
-Return ONLY valid JSON matching this exact structure:
+Return ONLY valid JSON:
 {
-  "slug": "a-unique-kebab-case-slug-based-on-the-topic",
-  "title": "SEO-friendly title under 65 characters",
-  "metaDescription": "Active voice meta description under 155 chars",
+  "slug": "unique-kebab-case-slug",
+  "title": "Sharp, specific title under 65 chars — lead with the insight, not the topic",
+  "metaDescription": "Active voice, under 155 chars, makes the reader want to click",
   "cluster": "${cluster}",
   "pillar": "${pillar}",
   "publishDate": "${new Date().toISOString().slice(0, 10)}",
   "readTime": 6,
-  "tldr": "3-sentence plain-English TL;DR that a busy founder can scan in 10 seconds",
+  "tldr": "3 punchy sentences. The shift. The impact. What to do.",
   "sections": [
-    {"heading": "Concrete heading about the news/trend", "level": 2, "body": "200 words. Lead with the data point or event. Cite the source naturally."},
-    {"heading": "Why this hits SME margins specifically", "level": 2, "body": "200 words. Concrete impact — costs, time, risk. Use real numbers from the sources."},
-    {"heading": "What the sharpest founders are doing now", "level": 2, "body": "200 words. Actionable tactics, not theory."},
-    {"heading": "How AskBiz gives you the edge", "level": 2, "body": "150 words. Show a founder asking AskBiz a plain-English question about this topic and getting an instant, data-backed answer. Be specific about the feature."},
-    {"heading": "The bottom line", "level": 2, "body": "100 words. One clear takeaway and next step."}
+    {"heading": "Lead with the number or event — make it concrete", "level": 2, "body": "200 words. Open with the data point from the source. Name the source. Set the stakes immediately."},
+    {"heading": "A specific heading about the SME impact", "level": 2, "body": "200 words. Translate the macro trend into what it means for a founder running a 5-50 person business. Use concrete examples — 'a Shopify seller doing £40k/month', not 'businesses'."},
+    {"heading": "The playbook: what sharp operators are doing", "level": 2, "body": "200 words. 3-4 specific tactics. Be prescriptive. Name tools, strategies, timelines."},
+    {"heading": "A heading that shows AskBiz solving this specific problem", "level": 2, "body": "150 words. Paint a scene: a founder opens AskBiz, types a question like 'Show me my shipping cost per order vs last quarter', and gets an instant breakdown. Be specific about which AskBiz feature helps and what the output looks like."},
+    {"heading": "The one thing to do this week", "level": 2, "body": "100 words. Single concrete action. No 'consider' or 'explore' — tell them what to do."}
   ],
   "paa": [
-    {"q": "Highly searched question about this topic?", "a": "Plain English answer in 2-3 sentences"},
-    {"q": "Second question founders would Google?", "a": "Plain English answer"},
-    {"q": "How can AskBiz help me with [this specific problem]?", "a": "Specific answer mentioning the relevant AskBiz feature"}
+    {"q": "A question people actually search on Google about this?", "a": "Direct answer, 2-3 sentences, cite a number if possible"},
+    {"q": "Second real search query?", "a": "Direct answer"},
+    {"q": "How does AskBiz help with [this specific problem]?", "a": "Specific answer — name the feature and what it shows"}
   ],
   "cta": {
-    "heading": "A compelling, specific CTA heading about this topic",
-    "body": "Upload your data to AskBiz and ask about this in plain English. Get your answer in seconds — no spreadsheets, no consultants."
+    "heading": "A CTA that references the specific problem in this post",
+    "body": "One sentence connecting this article's topic to AskBiz. Then: 'Try it free — ask your first question in 30 seconds.'"
   },
   "author": {
     "name": "Alice Watson",
     "role": "Head of Market Intelligence",
-    "bio": "Alice covers emerging business trends, regulatory shifts, and growth strategies for SME founders. She distils complex market data into plain-English insights you can act on today."
+    "bio": "Alice Watson is AskBiz's Head of Market Intelligence. She tracks regulatory shifts, pricing trends, and growth signals across global SME markets — and turns them into briefings founders can act on before their competitors notice."
   }
 }`
     }],
