@@ -7,7 +7,7 @@ const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
 const PLAN_COLORS: Record<string, string> = {
   free: '#94a3b8', growth: '#f59e0b', business: '#8b5cf6', enterprise: '#10b981',
 }
-const TABS = ['Overview','Revenue','Users','Activity','Content','Costs','Growth','X Agent'] as const
+const TABS = ['Overview','Revenue','Users','Activity','Content','Costs','Growth'] as const
 type Tab = typeof TABS[number]
 
 function KV({ label, value, sub, color }: { label: string; value: any; sub?: string; color?: string }) {
@@ -298,7 +298,7 @@ export default function AdminPage() {
       <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',background:'var(--sf)',padding:'0 24px'}}>
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)} style={{padding:'12px 16px',border:'none',background:'transparent',fontSize:13,fontWeight:tab===t?600:400,color:tab===t?'#6366F1':'var(--tx3)',borderBottom:tab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>
-            {t}{t==='Users'?` (${users.length})`:t==='Content'&&pc>0?` (${pc})`:t==='X Agent'&&xPending>0?` (${xPending})`:''}
+            {t}{t==='Users'?` (${users.length})`:t==='Content'&&pc>0?` (${pc})`:''}
           </button>
         ))}
       </div>
@@ -335,7 +335,7 @@ export default function AdminPage() {
               </div>
               <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)'}}>
                 <div style={{fontSize:13,fontWeight:600,marginBottom:16}}>Quick Stats</div>
-                {[{label:'X Replies Posted',value:xPosted,color:'#1d9bf0'},{label:'X Pending',value:xPending,color:'#f59e0b'},{label:'Content Pending',value:pc,color:'#6366F1'},{label:'Upgrade Candidates',value:candidates.length,color:'#10b981'}].map(({label,value,color}) => (
+                {[{label:'Content Pending',value:pc,color:'#6366F1'},{label:'Upgrade Candidates',value:candidates.length,color:'#10b981'}].map(({label,value,color}) => (
                   <div key={label} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--b)',fontSize:13}}>
                     <span style={{color:'var(--tx2)'}}>{label}</span>
                     <span style={{fontWeight:700,color}}>{value}</span>
@@ -549,7 +549,6 @@ export default function AdminPage() {
               <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Growth Levers</div>
               {[
                 {action:'Email upgrade candidates',detail:candidates.length+' users at 7-9 questions',cta:'View',onClick:()=>setTab('Revenue'),color:'#f59e0b'},
-                {action:'X Agent engagement',detail:xPosted+' posted, '+xPending+' pending',cta:'Manage',onClick:()=>setTab('X Agent'),color:'#1d9bf0'},
                 {action:'Content agent',detail:pc+' pieces pending approval',cta:'Review',onClick:()=>setTab('Content'),color:'#6366F1'},
               ].map(({action,detail,cta,onClick,color})=>(
                 <div key={action} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 0',borderBottom:'1px solid var(--b)',flexWrap:'wrap',gap:8}}>

@@ -33,7 +33,7 @@ export default function AgentAdminPage() {
   const supabase = createClient()
   const [authorized, setAuthorized] = useState(false)
   const [loading, setLoading]       = useState(true)
-  const [mainTab, setMainTab]       = useState<'agent'|'x'|'security'>('security')
+  const [mainTab, setMainTab]       = useState<'alice'|'agent'|'x'|'security'>('alice')
 
   // Agent state
   const [items, setItems]           = useState<AgentItem[]>([])
@@ -58,6 +58,16 @@ export default function AgentAdminPage() {
   const [editId, setEditId]         = useState<string|null>(null)
   const [editText, setEditText]     = useState('')
   const [posting, setPosting]       = useState<string|null>(null)
+
+  // Alice blog scout state
+  const [aliceItems, setAliceItems] = useState<any[]>([])
+  const [aliceFilter, setAliceFilter] = useState<'pending'|'published'|'rejected'|'all'>('pending')
+  const [aliceRunning, setAliceRunning] = useState(false)
+  const [aliceRunLog, setAliceRunLog] = useState<string[]>([])
+  const [alicePreview, setAlicePreview] = useState<any>(null)
+  const [aliceActing, setAliceActing] = useState<string|null>(null)
+  const [aliceEditTitle, setAliceEditTitle] = useState('')
+  const [aliceEditSections, setAliceEditSections] = useState<{heading:string;level:2|3;body:string}[]>([])
 
   // Security agent state
   const [secRunning, setSecRunning] = useState(false)
@@ -116,6 +126,53 @@ export default function AgentAdminPage() {
   }
 
   useEffect(() => { if (authorized && mainTab === 'security') loadSecHistory() }, [authorized, mainTab])
+
+  const loadAliceItems = useCallback(async () => {
+    const q = supabase.from('agent_content').select('*').eq('type', 'blog').order('created_at', { ascending: false })
+    if (aliceFilter !== 'all') q.eq('status', aliceFilter)
+    const { data } = await q.limit(50)
+    setAliceItems(data || [])
+  }, [aliceFilter])
+
+  useEffect(() => { if (authorized && mainTab === 'alice') loadAliceItems() }, [authorized, mainTab, loadAliceItems])
+
+  const runAliceScout = async () => {
+    setAliceRunning(true); setAliceRunLog(['Alice is scanning for today\'s stories...'])
+    try {
+      const res = await fetch('/api/agent/blog-scout?secret=dev-test')
+      const data = await res.json()
+      setAliceRunLog(data.log || [String(data.error || 'Unknown error')])
+      if (data.success) { showToast(`Alice drafted ${data.blogsGenerated} blog posts`); loadAliceItems() }
+      else showToast('Scout failed — check log', false)
+    } catch (e) { setAliceRunLog([`Error: ${String(e)}`]); showToast('Scout failed', false) }
+    finally { setAliceRunning(false) }
+  }
+
+  const openAlicePreview = (item: any) => {
+    setAlicePreview(item)
+    setAliceEditTitle(item.content?.title || '')
+    setAliceEditSections(item.content?.sections ? JSON.parse(JSON.stringify(item.content.sections)) : [])
+  }
+
+  const handleAliceAction = async (id: string, action: 'approve'|'reject') => {
+    setAliceActing(id)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const body: any = { id, action }
+      if (action === 'approve' && alicePreview) {
+        body.content = { ...alicePreview.content, title: aliceEditTitle, sections: aliceEditSections }
+      }
+      const res = await fetch('/api/agent/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (data.success) { showToast(action === 'approve' ? 'Published to blog' : 'Rejected'); setAlicePreview(null); loadAliceItems() }
+      else showToast(data.error || 'Failed', false)
+    } catch (e) { showToast(String(e), false) }
+    finally { setAliceActing(null) }
+  }
 
   const runSecurityAudit = async () => {
     setSecRunning(true)
@@ -283,13 +340,183 @@ export default function AgentAdminPage() {
         </div>
 
         {/* Main tabs */}
-        <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',marginBottom:24}}>
-          {([['security','🛡 Security & GDPR']] as const).map(([t,label]) => (
+        <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',marginBottom:24,display:'flex',gap:0,overflowX:'auto'}}>
+          {([['alice','Alice Watson — Blog Scout'],['agent','Content Agent'],['x','X Agent'],['security','Security & GDPR']] as const).map(([t,label]) => (
             <button key={t} onClick={()=>setMainTab(t as any)} style={{padding:'10px 20px',border:'none',background:'transparent',fontSize:13,fontWeight:mainTab===t?600:400,color:mainTab===t?'#6366F1':'var(--tx3)',borderBottom:mainTab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit',flexShrink:0,whiteSpace:'nowrap'}}>
               {label}
             </button>
           ))}
         </div>
+
+        {/* ── ALICE WATSON — BLOG SCOUT ── */}
+        {mainTab === 'alice' && (
+          <>
+            {/* Alice profile card */}
+            <div style={{display:'flex',alignItems:'center',gap:16,padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:20}}>
+              <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg, #6366F1 0%, #818cf8 100%)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:20,fontWeight:700,color:'#fff',fontFamily:'var(--font-sora)'}}>AW</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)'}}>Alice Watson</div>
+                <div style={{fontSize:12,color:'#6366F1',fontWeight:600,marginBottom:4}}>Head of Market Intelligence</div>
+                <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>Scans live news daily via Tavily, drafts 10 blog posts targeting AskBiz&apos;s core value areas. Posts go live on the blog once you authorise them.</div>
+              </div>
+              <button onClick={runAliceScout} disabled={aliceRunning} style={{padding:'10px 20px',borderRadius:9999,border:'none',background:aliceRunning?'var(--b)':'#6366F1',color:aliceRunning?'var(--tx3)':'#fff',fontSize:13,fontWeight:600,cursor:aliceRunning?'wait':'pointer',fontFamily:'inherit',flexShrink:0}}>
+                {aliceRunning ? 'Writing...' : 'Run Alice Now'}
+              </button>
+            </div>
+
+            {/* Run log */}
+            {aliceRunLog.length > 0 && (
+              <div style={{marginBottom:20,padding:'14px 16px',borderRadius:12,background:'var(--ev)',border:'1px solid var(--b)',fontSize:12,fontFamily:'monospace',color:'var(--tx2)',maxHeight:200,overflowY:'auto'}}>
+                {aliceRunLog.map((l,i) => <div key={i}>{l}</div>)}
+              </div>
+            )}
+
+            {/* Stats */}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))',gap:10,marginBottom:20}}>
+              {[
+                {label:'Pending Review',value:aliceItems.filter(i=>aliceFilter==='all'||aliceFilter==='pending'?i.status==='pending':false).length||aliceItems.filter(i=>i.status==='pending').length,color:'#f59e0b'},
+                {label:'Published',value:aliceItems.filter(i=>i.status==='published').length,color:'#10b981'},
+                {label:'Rejected',value:aliceItems.filter(i=>i.status==='rejected').length,color:'#94a3b8'},
+                {label:'Total Drafts',value:aliceFilter==='all'?aliceItems.length:aliceItems.length,color:'var(--tx)'},
+              ].map(({label,value,color}) => (
+                <div key={label} style={{padding:14,borderRadius:12,border:'1px solid var(--b)',background:'var(--sf)'}}>
+                  <div style={{fontSize:10,fontWeight:600,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>{label}</div>
+                  <div style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color}}>{value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Filter */}
+            <div style={{display:'flex',gap:8,marginBottom:16}}>
+              {(['pending','published','rejected','all'] as const).map(f => (
+                <button key={f} onClick={() => setAliceFilter(f)} style={{padding:'6px 14px',borderRadius:9999,border:`1px solid ${aliceFilter===f?'#6366F1':'var(--b)'}`,background:aliceFilter===f?'rgba(99,102,241,.08)':'transparent',color:aliceFilter===f?'#6366F1':'var(--tx3)',fontSize:12,fontWeight:aliceFilter===f?600:400,cursor:'pointer',fontFamily:'inherit',textTransform:'capitalize'}}>{f}</button>
+              ))}
+            </div>
+
+            {/* Blog list */}
+            {aliceItems.length === 0 ? (
+              <div style={{textAlign:'center',padding:'60px 0',color:'var(--tx3)'}}>
+                <div style={{fontSize:32,marginBottom:12}}>AW</div>
+                <div style={{fontSize:14,fontWeight:500,marginBottom:4}}>No drafts yet</div>
+                <div style={{fontSize:12}}>Hit &quot;Run Alice Now&quot; to have her scan today&apos;s news and draft 10 blog posts.</div>
+              </div>
+            ) : (
+              <div style={{borderRadius:14,border:'1px solid var(--b)',overflow:'hidden',background:'var(--sf)'}}>
+                {aliceItems.map(item => {
+                  const blog = item.content || {}
+                  return (
+                    <div key={item.id} style={{padding:'14px 16px',borderBottom:'1px solid var(--b)',display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',cursor:'pointer'}} onClick={() => openAlicePreview(item)}>
+                      <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:6,background:item.status==='pending'?'rgba(245,158,11,.1)':item.status==='published'?'rgba(16,185,129,.1)':'rgba(148,163,184,.1)',color:item.status==='pending'?'#f59e0b':item.status==='published'?'#10b981':'#94a3b8'}}>{item.status}</span>
+                      <span style={{fontSize:11,padding:'2px 8px',borderRadius:6,background:'rgba(99,102,241,.08)',color:'#6366F1',fontWeight:500}}>{blog.cluster || '—'}</span>
+                      <span style={{fontSize:13,color:'var(--tx)',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontWeight:500}}>{blog.title || 'Untitled'}</span>
+                      <span style={{fontSize:11,color:'var(--tx3)'}}>{blog.readTime ? `${blog.readTime} min` : ''}</span>
+                      <span style={{fontSize:11,color:'var(--tx3)'}}>{new Date(item.created_at).toLocaleDateString('en-GB')}</span>
+                      {item.status === 'pending' && (
+                        <div style={{display:'flex',gap:6}} onClick={e => e.stopPropagation()}>
+                          <button onClick={() => handleAliceAction(item.id, 'approve')} disabled={aliceActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'none',background:'#10b981',color:'#fff',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise</button>
+                          <button onClick={() => handleAliceAction(item.id, 'reject')} disabled={aliceActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Preview modal */}
+            {alicePreview && (
+              <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:20}} onClick={() => setAlicePreview(null)}>
+                <div style={{background:'var(--sf)',borderRadius:16,maxWidth:800,width:'100%',maxHeight:'90vh',overflow:'auto',padding:0}} onClick={e => e.stopPropagation()}>
+                  {/* Modal header */}
+                  <div style={{padding:'16px 24px',borderBottom:'1px solid var(--b)',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,background:'var(--sf)',zIndex:1,borderRadius:'16px 16px 0 0'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:10}}>
+                      <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(135deg, #6366F1, #818cf8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'#fff'}}>AW</div>
+                      <div>
+                        <div style={{fontSize:13,fontWeight:600,color:'var(--tx)'}}>Alice Watson</div>
+                        <div style={{fontSize:11,color:'var(--tx3)'}}>{alicePreview.content?.cluster} · {new Date(alicePreview.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
+                      </div>
+                    </div>
+                    <div style={{display:'flex',gap:8}}>
+                      {alicePreview.status === 'pending' && <>
+                        <button onClick={() => handleAliceAction(alicePreview.id, 'approve')} disabled={aliceActing===alicePreview.id} style={{padding:'6px 16px',borderRadius:8,border:'none',background:'#10b981',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise & Publish</button>
+                        <button onClick={() => handleAliceAction(alicePreview.id, 'reject')} disabled={aliceActing===alicePreview.id} style={{padding:'6px 16px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
+                      </>}
+                      <button onClick={() => setAlicePreview(null)} style={{padding:'6px 10px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:14,cursor:'pointer',fontFamily:'inherit',lineHeight:1}}>×</button>
+                    </div>
+                  </div>
+
+                  {/* Modal body */}
+                  <div style={{padding:24}}>
+                    {/* Byline */}
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16,fontSize:12,color:'var(--tx3)'}}>
+                      <span style={{fontWeight:600,color:'var(--tx)'}}>Written by Alice Watson</span>
+                      <span>·</span>
+                      <span>{alicePreview.content?.publishDate}</span>
+                      <span>·</span>
+                      <span>{alicePreview.content?.readTime} min read</span>
+                      {alicePreview.source_url && <>
+                        <span>·</span>
+                        <a href={alicePreview.source_url} target="_blank" rel="noopener noreferrer" style={{color:'#6366F1',textDecoration:'none'}}>Source →</a>
+                      </>}
+                    </div>
+
+                    {/* Title */}
+                    {alicePreview.status === 'pending' ? (
+                      <input value={aliceEditTitle} onChange={e => setAliceEditTitle(e.target.value)} style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:8,padding:'8px 12px',width:'100%',marginBottom:16,background:'transparent',boxSizing:'border-box'}} />
+                    ) : (
+                      <h1 style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',marginBottom:16,marginTop:0}}>{alicePreview.content?.title}</h1>
+                    )}
+
+                    {/* TLDR */}
+                    {alicePreview.content?.tldr && (
+                      <div style={{padding:'12px 16px',borderRadius:10,background:'rgba(99,102,241,.05)',border:'1px solid rgba(99,102,241,.15)',marginBottom:24,fontSize:13,color:'var(--tx2)',lineHeight:1.6}}>
+                        <strong style={{color:'#6366F1',fontSize:11,textTransform:'uppercase',letterSpacing:'.06em'}}>TL;DR</strong><br/>{alicePreview.content.tldr}
+                      </div>
+                    )}
+
+                    {/* Sections */}
+                    {(alicePreview.status === 'pending' ? aliceEditSections : alicePreview.content?.sections || []).map((sec: any, i: number) => (
+                      <div key={i} style={{marginBottom:24}}>
+                        {alicePreview.status === 'pending' ? (
+                          <>
+                            <input value={sec.heading} onChange={e => { const s = [...aliceEditSections]; s[i] = {...s[i], heading: e.target.value}; setAliceEditSections(s) }} style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:6,padding:'6px 10px',width:'100%',marginBottom:8,background:'transparent',boxSizing:'border-box'}} />
+                            <textarea value={sec.body} onChange={e => { const s = [...aliceEditSections]; s[i] = {...s[i], body: e.target.value}; setAliceEditSections(s) }} rows={5} style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:6,padding:'8px 10px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent',boxSizing:'border-box'}} />
+                          </>
+                        ) : (
+                          <>
+                            <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',marginBottom:8,marginTop:0}}>{sec.heading}</h2>
+                            <p style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',margin:0}}>{sec.body}</p>
+                          </>
+                        )}
+                      </div>
+                    ))}
+
+                    {/* PAA */}
+                    {alicePreview.content?.paa?.length > 0 && (
+                      <div style={{marginTop:24,padding:16,borderRadius:10,border:'1px solid var(--b)',background:'rgba(0,0,0,.02)'}}>
+                        <h3 style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:12,marginTop:0}}>People Also Ask</h3>
+                        {alicePreview.content.paa.map((qa: any, i: number) => (
+                          <div key={i} style={{marginBottom:12}}>
+                            <div style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:4}}>{qa.q}</div>
+                            <div style={{fontSize:12,color:'var(--tx2)',lineHeight:1.6}}>{qa.a}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* CTA */}
+                    {alicePreview.content?.cta && (
+                      <div style={{marginTop:24,padding:16,borderRadius:10,background:'rgba(99,102,241,.06)',border:'1px solid rgba(99,102,241,.15)'}}>
+                        <div style={{fontSize:14,fontWeight:600,color:'#6366F1',marginBottom:4}}>{alicePreview.content.cta.heading}</div>
+                        <div style={{fontSize:12,color:'var(--tx2)'}}>{alicePreview.content.cta.body}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
 
         {/* ── AGENT TAB ── */}
         {mainTab === 'agent' && (
