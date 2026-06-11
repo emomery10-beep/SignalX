@@ -129,7 +129,7 @@ export default function AgentAdminPage() {
 
   const loadAliceItems = useCallback(async () => {
     try {
-      const res = await fetch(`/api/agent/blog-scout/list?status=${aliceFilter}&t=${Date.now()}`)
+      const res = await fetch(`/api/agent/blog-scout/list?status=${aliceFilter}&t=${Date.now()}`, { cache: 'no-store' })
       const d = await res.json()
       setAliceItems(d.items || [])
     } catch { setAliceItems([]) }
@@ -169,7 +169,12 @@ export default function AgentAdminPage() {
         body: JSON.stringify(body),
       })
       const data = await res.json()
-      if (data.success) { showToast(action === 'approve' ? 'Published to blog' : 'Rejected'); setAlicePreview(null); loadAliceItems() }
+      if (data.success) {
+        showToast(action === 'approve' ? 'Published to blog' : 'Rejected')
+        setAlicePreview(null)
+        // Optimistically remove from local list immediately
+        setAliceItems(prev => prev.filter(item => item.id !== id))
+      }
       else showToast(data.error || 'Failed', false)
     } catch (e) { showToast(String(e), false) }
     finally { setAliceActing(null) }
