@@ -261,7 +261,10 @@ export default function IntelligencePage() {
       accentColor: health?.score != null
         ? (health.score >= 65 ? '#22C55E' : health.score >= 45 ? '#F59E0B' : '#EF4444')
         : undefined,
-      onClick: () => askAskBiz('Break down my health score — what are the component scores and what should I focus on improving?'),
+      onClick: () => {
+        setTab('overview')
+        setTimeout(() => document.getElementById('health-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
+      },
       sparkline: scoreSparkline.length > 1 ? scoreSparkline : undefined,
     },
     {
@@ -544,7 +547,9 @@ export default function IntelligencePage() {
             )}
 
             {/* ── Health Time Machine ── */}
-            <HealthTimeMachine onAsk={askAskBiz}/>
+            <div id="health-section">
+              <HealthTimeMachine onAsk={askAskBiz}/>
+            </div>
 
             {/* ── Analytics section ── */}
             <div>
