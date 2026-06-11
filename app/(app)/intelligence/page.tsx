@@ -40,6 +40,10 @@ export default function IntelligencePage() {
   const [totalSources] = useState(31)
   const [isMobile, setIsMobile] = useState(false)
 
+  // Time-sensitive state (must be client-only to avoid hydration mismatch)
+  const [nowHour, setNowHour] = useState<number | null>(null)
+  const [nowDateStr, setNowDateStr] = useState('')
+
   // Overview summary state
   const [cfoSnapshot, setCfoSnapshot] = useState<any>(null)
   const [logisticsHealth, setLogisticsHealth] = useState<any>(null)
@@ -50,6 +54,13 @@ export default function IntelligencePage() {
     check()
     window.addEventListener('resize', check)
     return () => window.removeEventListener('resize', check)
+  }, [])
+
+  // Populate time-sensitive greeting/date after mount — avoids SSR/client hydration mismatch
+  useEffect(() => {
+    const d = new Date()
+    setNowHour(d.getHours())
+    setNowDateStr(d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))
   }, [])
 
   // Decisions state (for timeline)
@@ -359,10 +370,10 @@ export default function IntelligencePage() {
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--tx)', fontFamily: 'var(--font-sora, inherit)', lineHeight: 1.3 }}>
-                  {new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening'}
+                  {nowHour === null ? '' : nowHour < 12 ? 'Good morning' : nowHour < 17 ? 'Good afternoon' : 'Good evening'}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>
-                  {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                  {nowDateStr}
                 </div>
               </div>
             </div>

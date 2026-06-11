@@ -198,8 +198,7 @@ export default function CfoDashboard({ onAsk }: Props) {
         </div>
 
         {/* Sub-tab navigation */}
-        <div style={{ position: 'relative', marginBottom: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 12, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
           {SUB_TABS.map(t => (
             <button
               key={t.id}
@@ -217,9 +216,6 @@ export default function CfoDashboard({ onAsk }: Props) {
               {t.label}
             </button>
           ))}
-          </div>
-          {/* Right-fade gradient — hints that more tabs are scrollable */}
-          <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 40, background: 'linear-gradient(to right, transparent, var(--bg, #f9f8f6))', pointerEvents: 'none' }} />
         </div>
 
         {/* Period selector */}

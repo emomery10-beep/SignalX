@@ -36,9 +36,11 @@ export const metadata: Metadata = {
   title: 'AskBiz — Ask Your Business Data Anything',
   description: 'AI-powered business intelligence for SME owners. Upload your data and get plain-English answers instantly.',
   icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
-    apple: '/logo.svg',
+    icon: [
+      { url: '/favicon.ico', sizes: '48x48' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/apple-touch-icon.png',
   },
   verification: {
     google: '9kV7FelOm_qspoK5hcdTe0drirWdQdMOyMx-Jje310s',
