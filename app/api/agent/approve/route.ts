@@ -8,7 +8,8 @@ const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
 function getServiceClient() {
   return createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { db: { schema: 'public' } }
   )
 }
 
@@ -65,8 +66,6 @@ export async function POST(request: NextRequest) {
   if (action === 'reject') {
     const { error: updateError } = await db.from('agent_content').update({
       status: 'rejected',
-      reviewed_at: new Date().toISOString(),
-      reviewed_by: userEmail,
     }).eq('id', id)
 
     if (updateError) {
@@ -79,9 +78,6 @@ export async function POST(request: NextRequest) {
   // Approve — update content if edits were provided, then publish
   const updates: Record<string, unknown> = {
     status: 'published',
-    published_at: new Date().toISOString(),
-    reviewed_at: new Date().toISOString(),
-    reviewed_by: userEmail,
   }
 
   if (content && item.type === 'blog') {
