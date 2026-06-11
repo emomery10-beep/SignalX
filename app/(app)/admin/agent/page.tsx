@@ -61,6 +61,7 @@ export default function AgentAdminPage() {
 
   // Alice blog scout state
   const [aliceItems, setAliceItems] = useState<any[]>([])
+  const [aliceCounts, setAliceCounts] = useState<{pending:number;published:number;rejected:number;total:number}>({pending:0,published:0,rejected:0,total:0})
   const [aliceFilter, setAliceFilter] = useState<'pending'|'published'|'rejected'|'all'>('pending')
   const [aliceRunning, setAliceRunning] = useState(false)
   const [aliceRunLog, setAliceRunLog] = useState<string[]>([])
@@ -127,6 +128,20 @@ export default function AgentAdminPage() {
 
   useEffect(() => { if (authorized && mainTab === 'security') loadSecHistory() }, [authorized, mainTab])
 
+  const loadAliceCounts = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/agent/blog-scout/list?status=all&t=${Date.now()}`, { cache: 'no-store' })
+      const d = await res.json()
+      const all = d.items || []
+      setAliceCounts({
+        pending: all.filter((i: any) => i.status === 'pending').length,
+        published: all.filter((i: any) => i.status === 'published').length,
+        rejected: all.filter((i: any) => i.status === 'rejected').length,
+        total: all.length,
+      })
+    } catch {}
+  }, [])
+
   const loadAliceItems = useCallback(async () => {
     try {
       const res = await fetch(`/api/agent/blog-scout/list?status=${aliceFilter}&t=${Date.now()}`, { cache: 'no-store' })
@@ -135,7 +150,12 @@ export default function AgentAdminPage() {
     } catch { setAliceItems([]) }
   }, [aliceFilter])
 
-  useEffect(() => { if (authorized && mainTab === 'alice') loadAliceItems() }, [authorized, mainTab, loadAliceItems])
+  useEffect(() => {
+    if (authorized && mainTab === 'alice') {
+      loadAliceItems()
+      loadAliceCounts()
+    }
+  }, [authorized, mainTab, loadAliceItems, loadAliceCounts])
 
   const runAliceScout = async () => {
     setAliceRunning(true); setAliceRunLog(['Alice is scanning for today\'s stories...'])
@@ -143,7 +163,7 @@ export default function AgentAdminPage() {
       const res = await fetch('/api/agent/blog-scout?secret=dev-test')
       const data = await res.json()
       setAliceRunLog(data.log || [String(data.error || 'Unknown error')])
-      if (data.success) { showToast(`Alice drafted ${data.blogsGenerated} blog posts`); loadAliceItems() }
+      if (data.success) { showToast(`Alice drafted ${data.blogsGenerated} blog posts`); loadAliceItems(); loadAliceCounts() }
       else showToast('Scout failed — check log', false)
     } catch (e) { setAliceRunLog([`Error: ${String(e)}`]); showToast('Scout failed', false) }
     finally { setAliceRunning(false) }
@@ -179,8 +199,14 @@ export default function AgentAdminPage() {
         showToast(action === 'approve' ? 'Published to blog' : 'Rejected')
       }
       setAlicePreview(null)
-      // Optimistically remove from local list immediately
+      // Optimistically remove from local list and update counts
       setAliceItems(prev => prev.filter(item => item.id !== id))
+      setAliceCounts(prev => ({
+        ...prev,
+        pending: prev.pending - 1,
+        published: action === 'approve' ? prev.published + 1 : prev.published,
+        rejected: action === 'reject' ? prev.rejected + 1 : prev.rejected,
+      }))
     } catch (e) { showToast(String(e), false) }
     finally { setAliceActing(null) }
   }
@@ -385,10 +411,10 @@ export default function AgentAdminPage() {
             {/* Stats */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))',gap:10,marginBottom:20}}>
               {[
-                {label:'Pending Review',value:aliceItems.filter(i=>aliceFilter==='all'||aliceFilter==='pending'?i.status==='pending':false).length||aliceItems.filter(i=>i.status==='pending').length,color:'#f59e0b'},
-                {label:'Published',value:aliceItems.filter(i=>i.status==='published').length,color:'#10b981'},
-                {label:'Rejected',value:aliceItems.filter(i=>i.status==='rejected').length,color:'#94a3b8'},
-                {label:'Total Drafts',value:aliceFilter==='all'?aliceItems.length:aliceItems.length,color:'var(--tx)'},
+                {label:'Pending Review',value:aliceCounts.pending,color:'#f59e0b'},
+                {label:'Published',value:aliceCounts.published,color:'#10b981'},
+                {label:'Rejected',value:aliceCounts.rejected,color:'#94a3b8'},
+                {label:'Total Drafts',value:aliceCounts.total,color:'var(--tx)'},
               ].map(({label,value,color}) => (
                 <div key={label} style={{padding:14,borderRadius:12,border:'1px solid var(--b)',background:'var(--sf)'}}>
                   <div style={{fontSize:10,fontWeight:600,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>{label}</div>
