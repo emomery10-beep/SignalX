@@ -169,13 +169,18 @@ export default function AgentAdminPage() {
         body: JSON.stringify(body),
       })
       const data = await res.json()
-      if (data.success) {
-        showToast(action === 'approve' ? 'Published to blog' : 'Rejected')
-        setAlicePreview(null)
-        // Optimistically remove from local list immediately
-        setAliceItems(prev => prev.filter(item => item.id !== id))
+      if (!res.ok || !data.success) {
+        showToast(data.error || `Failed (${res.status})`, false)
+        return
       }
-      else showToast(data.error || 'Failed', false)
+      if (action === 'approve' && data.slug) {
+        showToast(`Published → askbiz.co/blog/${data.slug}`)
+      } else {
+        showToast(action === 'approve' ? 'Published to blog' : 'Rejected')
+      }
+      setAlicePreview(null)
+      // Optimistically remove from local list immediately
+      setAliceItems(prev => prev.filter(item => item.id !== id))
     } catch (e) { showToast(String(e), false) }
     finally { setAliceActing(null) }
   }
@@ -422,6 +427,9 @@ export default function AgentAdminPage() {
                           <button onClick={() => handleAliceAction(item.id, 'approve')} disabled={aliceActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'none',background:'#10b981',color:'#fff',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise</button>
                           <button onClick={() => handleAliceAction(item.id, 'reject')} disabled={aliceActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
                         </div>
+                      )}
+                      {item.status === 'published' && blog.slug && (
+                        <a href={`/blog/${blog.slug}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{padding:'4px 12px',borderRadius:6,border:'1px solid rgba(16,185,129,.3)',background:'rgba(16,185,129,.08)',color:'#10b981',fontSize:11,fontWeight:600,textDecoration:'none',fontFamily:'inherit'}}>View on Blog ↗</a>
                       )}
                     </div>
                   )
