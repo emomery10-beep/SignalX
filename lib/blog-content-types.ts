@@ -15,4 +15,5 @@ export interface BlogPost {
   paa?: { q: string; a: string }[]
   cta?: { heading: string; body: string }
   relatedSlugs?: string[]
+  author?: { name: string; role: string; bio: string }
 }

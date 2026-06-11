@@ -203,6 +203,11 @@ Return ONLY valid JSON matching this exact structure:
   "cta": {
     "heading": "A compelling, specific CTA heading about this topic",
     "body": "Upload your data to AskBiz and ask about this in plain English. Get your answer in seconds — no spreadsheets, no consultants."
+  },
+  "author": {
+    "name": "Alice Watson",
+    "role": "Head of Market Intelligence",
+    "bio": "Alice covers emerging business trends, regulatory shifts, and growth strategies for SME founders. She distils complex market data into plain-English insights you can act on today."
   }
 }`
     }],

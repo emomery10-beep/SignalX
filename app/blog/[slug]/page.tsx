@@ -232,7 +232,7 @@ export async function generateMetadata(
       url,
       type: 'article',
       publishedTime: published,
-      authors: ['AskBiz'],
+      authors: [post.author?.name || 'AskBiz'],
       tags: [post.cluster, post.pillar].filter(Boolean),
       siteName: 'AskBiz',
     },
@@ -322,7 +322,9 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
     description: post.metaDescription,
     datePublished: displayPublishDate.toISOString(),
     dateModified: lastUpdated.toISOString(),
-    author: { '@type': 'Organization', name: 'AskBiz', url: BASE },
+    author: post.author
+      ? { '@type': 'Person', name: post.author.name, jobTitle: post.author.role, url: BASE }
+      : { '@type': 'Organization', name: 'AskBiz', url: BASE },
     publisher: {
       '@type': 'Organization',
       name: 'AskBiz',
@@ -471,14 +473,20 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
         {/* Meta row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+          {post.author?.name && <>
+            <span style={{ fontSize: 13, fontWeight: 600, color: TX }}>Written by {post.author.name}</span>
+            <span style={{ fontSize: 13, color: TX3 }}>·</span>
+          </>}
           <span style={{ fontSize: 13, color: TX3 }}>
             {displayPublishDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
           </span>
           <span style={{ fontSize: 13, color: TX3 }}>·</span>
-          <span style={{ fontSize: 12, color: TX3 }}>
-            Updated {lastUpdated.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
-          </span>
-          <span style={{ fontSize: 13, color: TX3 }}>·</span>
+          {!post.author && <>
+            <span style={{ fontSize: 12, color: TX3 }}>
+              Updated {lastUpdated.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
+            </span>
+            <span style={{ fontSize: 13, color: TX3 }}>·</span>
+          </>}
           <span style={{ fontSize: 13, color: TX3 }}>{post.readTime} min read</span>
           <span style={{ fontSize: 13, color: TX3 }}>·</span>
           <span style={{ fontSize: 11, fontWeight: 600, color: ctColour.text, background: ctColour.bg, padding: '2px 8px', borderRadius: 9999 }}>
@@ -689,16 +697,18 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
         {/* Author bio */}
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, padding: '20px 0', borderTop: `1px solid ${B}`, borderBottom: `1px solid ${B}`, marginBottom: 40 }}>
-          <div style={{ width: 48, height: 48, borderRadius: '50%', background: `linear-gradient(135deg, ${ACC} 0%, #e8a870 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.6"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.8"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
-            </svg>
+          <div style={{ width: 48, height: 48, borderRadius: '50%', background: post.author ? 'linear-gradient(135deg, #6366F1 0%, #818cf8 100%)' : `linear-gradient(135deg, ${ACC} 0%, #e8a870 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: 'Sora, sans-serif' }}>
+            {post.author ? post.author.name.split(' ').map(n => n[0]).join('') : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.6"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.8"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
+              </svg>
+            )}
           </div>
           <div>
-            <div style={{ fontFamily: 'Sora, sans-serif', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 2 }}>AskBiz Editorial Team</div>
-            <div style={{ fontSize: 12, color: ACC, marginBottom: 6, fontWeight: 600 }}>Business Intelligence Experts</div>
+            <div style={{ fontFamily: 'Sora, sans-serif', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 2 }}>{post.author?.name || 'AskBiz Editorial Team'}</div>
+            <div style={{ fontSize: 12, color: post.author ? '#6366F1' : ACC, marginBottom: 6, fontWeight: 600 }}>{post.author?.role || 'Business Intelligence Experts'}</div>
             <p style={{ fontSize: 13, color: TX2, lineHeight: 1.6, margin: 0 }}>
-              Our team combines expertise in data analytics, SME strategy, and AI tools to produce practical guides that help founders and operators make better business decisions.
+              {post.author?.bio || 'Our team combines expertise in data analytics, SME strategy, and AI tools to produce practical guides that help founders and operators make better business decisions.'}
             </p>
           </div>
         </div>
