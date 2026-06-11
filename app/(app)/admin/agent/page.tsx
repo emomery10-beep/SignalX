@@ -128,10 +128,11 @@ export default function AgentAdminPage() {
   useEffect(() => { if (authorized && mainTab === 'security') loadSecHistory() }, [authorized, mainTab])
 
   const loadAliceItems = useCallback(async () => {
-    const q = supabase.from('agent_content').select('*').eq('type', 'blog').order('created_at', { ascending: false })
-    if (aliceFilter !== 'all') q.eq('status', aliceFilter)
-    const { data } = await q.limit(50)
-    setAliceItems(data || [])
+    try {
+      const res = await fetch(`/api/agent/blog-scout/list?status=${aliceFilter}`)
+      const d = await res.json()
+      setAliceItems(d.items || [])
+    } catch { setAliceItems([]) }
   }, [aliceFilter])
 
   useEffect(() => { if (authorized && mainTab === 'alice') loadAliceItems() }, [authorized, mainTab, loadAliceItems])
