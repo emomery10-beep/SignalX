@@ -33,7 +33,7 @@ export default function AgentAdminPage() {
   const supabase = createClient()
   const [authorized, setAuthorized] = useState(false)
   const [loading, setLoading]       = useState(true)
-  const [mainTab, setMainTab]       = useState<'alice'|'agent'|'x'|'security'>('security')
+  const [mainTab, setMainTab]       = useState<'alice'|'agent'|'x'|'security'>('alice')
 
   // Agent state
   const [items, setItems]           = useState<AgentItem[]>([])
@@ -129,7 +129,7 @@ export default function AgentAdminPage() {
 
   const loadAliceItems = useCallback(async () => {
     try {
-      const res = await fetch(`/api/agent/blog-scout/list?status=${aliceFilter}`)
+      const res = await fetch(`/api/agent/blog-scout/list?status=${aliceFilter}&t=${Date.now()}`)
       const d = await res.json()
       setAliceItems(d.items || [])
     } catch { setAliceItems([]) }
@@ -342,7 +342,7 @@ export default function AgentAdminPage() {
 
         {/* Main tabs */}
         <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',marginBottom:24,display:'flex',gap:0,overflowX:'auto'}}>
-          {([['security','Security & GDPR']] as const).map(([t,label]) => (
+          {([['alice','Alice Watson — Blog Scout'],['security','Security & GDPR']] as const).map(([t,label]) => (
             <button key={t} onClick={()=>setMainTab(t as any)} style={{padding:'10px 20px',border:'none',background:'transparent',fontSize:13,fontWeight:mainTab===t?600:400,color:mainTab===t?'#6366F1':'var(--tx3)',borderBottom:mainTab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit',flexShrink:0,whiteSpace:'nowrap'}}>
               {label}
             </button>
