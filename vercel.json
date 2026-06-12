@@ -6,7 +6,7 @@
     { "path": "/api/cron/market-intelligence", "schedule": "0 3 * * *" },
     { "path": "/api/admin/security-audit?action=cron", "schedule": "0 6 * * 1" },
     { "path": "/api/agent/blog-scout",               "schedule": "0 4 * * *" },
-    { "path": "/api/cron/source-sync",               "schedule": "0 */12 * * *" },
+    { "path": "/api/cron/source-sync",               "schedule": "0 5 * * *" },
     { "path": "/api/cron/daily-brief",               "schedule": "0 7 * * *" },
     { "path": "/api/cron/stale-content",             "schedule": "0 5 * * 0" },
     { "path": "/api/cron/token-refresh",             "schedule": "0 1 * * *" },
