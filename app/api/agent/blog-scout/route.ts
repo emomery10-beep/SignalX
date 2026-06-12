@@ -97,10 +97,12 @@ async function runBlogScout() {
       const topArticle = source.searchResult!.results[0]
 
       if (result.status === 'fulfilled' && result.value) {
+        const quality = scoreBlogQuality(result.value)
+        const autoPublish = quality >= 80
         inserts.push({
           run_id: runId,
           type: 'blog',
-          status: 'pending',
+          status: autoPublish ? 'published' : 'pending',
           content: result.value,
           source_url: topArticle.url,
           source_title: topArticle.title,
@@ -109,7 +111,7 @@ async function runBlogScout() {
           verdict_sentence: result.value.tldr?.slice(0, 100) || '',
           key_insight: result.value.metaDescription || '',
         })
-        log.push(`✓ Blog ${i + 1}: "${result.value.title}"`)
+        log.push(`✓ Blog ${i + 1}: "${result.value.title}" (quality: ${quality}${autoPublish ? ', auto-published' : ', pending review'})`)
       } else {
         const reason = result.status === 'rejected' ? result.reason?.message || String(result.reason) : 'empty result'
         log.push(`✗ Blog ${i + 1} failed: ${reason}`)
@@ -121,7 +123,14 @@ async function runBlogScout() {
       if (error) {
         log.push(`DB error: ${error.message}`)
       } else {
-        log.push(`Saved ${inserts.length} blogs as pending`)
+        const published = inserts.filter(i => i.status === 'published').length
+        const pending = inserts.length - published
+        log.push(`Saved ${inserts.length} blogs (${published} auto-published, ${pending} pending review)`)
+
+        if (published > 0) {
+          await pingSitemapServices()
+          log.push('Pinged Google & Bing with updated sitemap')
+        }
       }
     }
 
@@ -240,4 +249,36 @@ Return ONLY valid JSON:
   }
 
   return parsed
+}
+
+function scoreBlogQuality(blog: Record<string, unknown>): number {
+  let score = 0
+
+  if (blog.title && typeof blog.title === 'string' && blog.title.length >= 20 && blog.title.length <= 80) score += 15
+  if (blog.slug && typeof blog.slug === 'string' && blog.slug.length >= 10) score += 10
+  if (blog.metaDescription && typeof blog.metaDescription === 'string' && blog.metaDescription.length >= 50) score += 10
+  if (blog.tldr && typeof blog.tldr === 'string' && blog.tldr.length >= 30) score += 10
+
+  const sections = blog.sections as Array<{ heading?: string; body?: string }> | undefined
+  if (Array.isArray(sections) && sections.length >= 4) {
+    score += 15
+    const totalWords = sections.reduce((sum, s) => sum + (s.body?.split(/\s+/).length || 0), 0)
+    if (totalWords >= 600) score += 15
+    if (sections.every(s => s.heading && s.body && s.body.length > 50)) score += 10
+  }
+
+  const paa = blog.paa as Array<{ q?: string; a?: string }> | undefined
+  if (Array.isArray(paa) && paa.length >= 2 && paa.every(p => p.q && p.a)) score += 10
+
+  if (blog.cta && typeof blog.cta === 'object') score += 5
+
+  return Math.min(score, 100)
+}
+
+async function pingSitemapServices() {
+  const sitemapUrl = 'https://askbiz.co/sitemap.xml'
+  await Promise.allSettled([
+    fetch(`https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`),
+    fetch(`https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`),
+  ])
 }

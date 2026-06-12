@@ -90,7 +90,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `DB update failed: ${updateError.message}` }, { status: 500 })
   }
 
-  // Return the slug so the UI can show the blog URL
+  // Ping search engines so they pick up the new content
+  if (item.type === 'blog') {
+    const sitemapUrl = 'https://askbiz.co/sitemap.xml'
+    await Promise.allSettled([
+      fetch(`https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`),
+      fetch(`https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`),
+    ])
+  }
+
   const slug = (content?.slug) || item.content?.slug
 
   return NextResponse.json({ success: true, action: 'approved', type: item.type, slug })

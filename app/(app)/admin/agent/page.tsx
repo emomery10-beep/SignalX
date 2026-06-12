@@ -33,7 +33,7 @@ export default function AgentAdminPage() {
   const supabase = createClient()
   const [authorized, setAuthorized] = useState(false)
   const [loading, setLoading]       = useState(true)
-  const [mainTab, setMainTab]       = useState<'alice'|'agent'|'x'|'security'>('alice')
+  const [mainTab, setMainTab]       = useState<'alice'|'agent'|'x'|'security'|'automation'>('alice')
 
   // Agent state
   const [items, setItems]           = useState<AgentItem[]>([])
@@ -69,6 +69,28 @@ export default function AgentAdminPage() {
   const [aliceActing, setAliceActing] = useState<string|null>(null)
   const [aliceEditTitle, setAliceEditTitle] = useState('')
   const [aliceEditSections, setAliceEditSections] = useState<{heading:string;level:2|3;body:string}[]>([])
+
+  // Automation state
+  const [autoJobs, setAutoJobs] = useState<Record<string, {running:boolean;result:any;lastRun:string|null}>>({
+    'source-sync': {running:false,result:null,lastRun:null},
+    'daily-brief': {running:false,result:null,lastRun:null},
+    'stale-content': {running:false,result:null,lastRun:null},
+    'token-refresh': {running:false,result:null,lastRun:null},
+    'seo-monitor': {running:false,result:null,lastRun:null},
+  })
+
+  const runAutoJob = async (jobId: string) => {
+    setAutoJobs(prev => ({...prev, [jobId]: {...prev[jobId], running: true, result: null}}))
+    try {
+      const res = await fetch(`/api/cron/${jobId}?secret=dev-test`)
+      const data = await res.json()
+      setAutoJobs(prev => ({...prev, [jobId]: {running: false, result: data, lastRun: new Date().toISOString()}}))
+      showToast(data.success ? `${jobId} completed` : (data.error || 'Failed'), !!data.success)
+    } catch (e) {
+      setAutoJobs(prev => ({...prev, [jobId]: {running: false, result: {error: String(e)}, lastRun: null}}))
+      showToast(String(e), false)
+    }
+  }
 
   // Security agent state
   const [secRunning, setSecRunning] = useState(false)
@@ -378,7 +400,7 @@ export default function AgentAdminPage() {
 
         {/* Main tabs */}
         <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',marginBottom:24,display:'flex',gap:0,overflowX:'auto'}}>
-          {([['alice','Alice Watson — Blog Scout'],['security','Security & GDPR']] as const).map(([t,label]) => (
+          {([['alice','Alice Watson — Blog Scout'],['automation','Automation'],['security','Security & GDPR']] as const).map(([t,label]) => (
             <button key={t} onClick={()=>setMainTab(t as any)} style={{padding:'10px 20px',border:'none',background:'transparent',fontSize:13,fontWeight:mainTab===t?600:400,color:mainTab===t?'#6366F1':'var(--tx3)',borderBottom:mainTab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit',flexShrink:0,whiteSpace:'nowrap'}}>
               {label}
             </button>
@@ -758,6 +780,69 @@ export default function AgentAdminPage() {
                 </div>
               ))
             )}
+          </>
+        )}
+
+        {/* ── AUTOMATION TAB ── */}
+        {mainTab === 'automation' && (
+          <>
+            <div style={{marginBottom:20}}>
+              <div style={{fontSize:14,fontWeight:600,color:'var(--tx)'}}>Automated Jobs</div>
+              <div style={{fontSize:12,color:'var(--tx3)',marginTop:2}}>Cron jobs that run automatically on schedule. You can also trigger them manually.</div>
+            </div>
+
+            {([
+              {id:'source-sync',   icon:'🔄', name:'Source Data Sync',     desc:'Refreshes all connected Shopify, Stripe, Xero, Amazon data.',         schedule:'Every 12 hours'},
+              {id:'daily-brief',   icon:'📋', name:'Daily Brief Generator', desc:'Pre-generates AI morning briefs for all users + emails them.',        schedule:'Daily at 7am'},
+              {id:'token-refresh', icon:'🔑', name:'OAuth Token Refresh',   desc:'Pre-emptively refreshes tokens for all integrations before expiry.',  schedule:'Daily at 1am'},
+              {id:'stale-content', icon:'🧹', name:'Stale Content Cleanup', desc:'Deletes rejected + stale pending content older than 30 days.',        schedule:'Weekly Sunday 5am'},
+              {id:'seo-monitor',   icon:'📊', name:'SEO Monitor',           desc:'Checks Google Search Console for traffic drops + broken pages.',      schedule:'Weekly Monday 9am'},
+            ] as const).map(job => {
+              const state = autoJobs[job.id]
+              return (
+                <div key={job.id} style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:12}}>
+                  <div style={{display:'flex',alignItems:'center',gap:14}}>
+                    <div style={{width:44,height:44,borderRadius:12,background:'rgba(99,102,241,.08)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>{job.icon}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:2}}>
+                        <span style={{fontSize:14,fontWeight:600,color:'var(--tx)'}}>{job.name}</span>
+                        <span style={{fontSize:10,padding:'2px 8px',borderRadius:9999,background:'rgba(99,102,241,.08)',color:'#6366F1',fontWeight:600}}>{job.schedule}</span>
+                      </div>
+                      <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>{job.desc}</div>
+                    </div>
+                    <button onClick={() => runAutoJob(job.id)} disabled={state?.running} style={{padding:'10px 20px',borderRadius:9999,border:'none',background:state?.running?'var(--b)':'#6366F1',color:state?.running?'var(--tx3)':'#fff',fontSize:13,fontWeight:600,cursor:state?.running?'wait':'pointer',fontFamily:'inherit',flexShrink:0}}>
+                      {state?.running ? 'Running...' : 'Run Now'}
+                    </button>
+                  </div>
+
+                  {state?.lastRun && (
+                    <div style={{marginTop:12,fontSize:11,color:'var(--tx3)'}}>
+                      Last run: {new Date(state.lastRun).toLocaleString('en-GB')}
+                    </div>
+                  )}
+
+                  {state?.result && (
+                    <div style={{marginTop:12,padding:'12px 14px',borderRadius:10,background:'var(--ev)',border:'1px solid var(--b)',fontSize:12,fontFamily:'monospace',color:'var(--tx2)',maxHeight:180,overflowY:'auto',whiteSpace:'pre-wrap',wordBreak:'break-word'}}>
+                      {JSON.stringify(state.result, null, 2)}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+
+            {/* Blog auto-publish info */}
+            <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:12}}>
+              <div style={{display:'flex',alignItems:'center',gap:14}}>
+                <div style={{width:44,height:44,borderRadius:12,background:'rgba(16,185,129,.08)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>✨</div>
+                <div style={{flex:1}}>
+                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:2}}>
+                    <span style={{fontSize:14,fontWeight:600,color:'var(--tx)'}}>Blog Auto-Publish</span>
+                    <span style={{fontSize:10,padding:'2px 8px',borderRadius:9999,background:'rgba(16,185,129,.1)',color:'#10b981',fontWeight:600}}>Active</span>
+                  </div>
+                  <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>High-quality blog posts (score 80+) are auto-published by Alice Watson. Lower-scoring posts go to Pending Review. Google & Bing are pinged on every publish.</div>
+                </div>
+              </div>
+            </div>
           </>
         )}
 
