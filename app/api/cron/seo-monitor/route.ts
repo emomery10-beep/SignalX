@@ -17,16 +17,23 @@ export async function GET(request: NextRequest) {
   let accessToken = process.env.GOOGLE_SEARCH_CONSOLE_TOKEN
 
   // Support service account JSON — exchange for access token
-  if (!accessToken && process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+  // Try raw JSON first, then base64-encoded JSON (GOOGLE_SERVICE_ACCOUNT_B64)
+  const rawJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON
+  const b64Json = process.env.GOOGLE_SERVICE_ACCOUNT_B64
+  if (!accessToken && (rawJson || b64Json)) {
     try {
-      accessToken = await getServiceAccountToken(process.env.GOOGLE_SERVICE_ACCOUNT_JSON)
+      let jsonStr = rawJson || ''
+      if (b64Json) {
+        jsonStr = Buffer.from(b64Json, 'base64').toString('utf-8')
+      }
+      accessToken = await getServiceAccountToken(jsonStr)
     } catch (e) {
       return NextResponse.json({ error: `Service account auth failed: ${e instanceof Error ? e.message : String(e)}` }, { status: 500 })
     }
   }
 
   if (!accessToken) {
-    return NextResponse.json({ error: 'Set GOOGLE_SEARCH_CONSOLE_TOKEN or GOOGLE_SERVICE_ACCOUNT_JSON' }, { status: 500 })
+    return NextResponse.json({ error: 'Set GOOGLE_SEARCH_CONSOLE_TOKEN, GOOGLE_SERVICE_ACCOUNT_JSON, or GOOGLE_SERVICE_ACCOUNT_B64' }, { status: 500 })
   }
 
   const issues: Array<{ type: string; detail: string; severity: 'critical' | 'warning' | 'info' }> = []
