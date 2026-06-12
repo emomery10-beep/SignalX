@@ -792,7 +792,7 @@ export default function AgentAdminPage() {
             </div>
 
             {([
-              {id:'source-sync',   icon:'🔄', name:'Source Data Sync',     desc:'Refreshes all connected Shopify, Stripe, Xero, Amazon data.',         schedule:'Every 12 hours'},
+              {id:'source-sync',   icon:'🔄', name:'Source Data Sync',     desc:'Refreshes all connected Shopify, Stripe, Xero, Amazon data.',         schedule:'Daily at 5am'},
               {id:'daily-brief',   icon:'📋', name:'Daily Brief Generator', desc:'Pre-generates AI morning briefs for all users + emails them.',        schedule:'Daily at 7am'},
               {id:'token-refresh', icon:'🔑', name:'OAuth Token Refresh',   desc:'Pre-emptively refreshes tokens for all integrations before expiry.',  schedule:'Daily at 1am'},
               {id:'stale-content', icon:'🧹', name:'Stale Content Cleanup', desc:'Deletes rejected + stale pending content older than 30 days.',        schedule:'Weekly Sunday 5am'},
