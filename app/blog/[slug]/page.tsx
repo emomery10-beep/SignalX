@@ -3,19 +3,34 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPost, getAllPosts, type BlogPost } from '@/lib/blog-content'
 import { academyArticles } from '@/lib/academy-content'
+import { createClient } from '@supabase/supabase-js'
 
 export const dynamicParams = true
+export const dynamic = 'force-dynamic'
 
 async function getPostWithFallback(slug: string): Promise<BlogPost | null> {
   const staticPost = getPost(slug)
   if (staticPost) return staticPost
 
   try {
-    const base = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'
-    const res = await fetch(`${base}/api/blog/published?slug=${encodeURIComponent(slug)}`, { next: { revalidate: 300 } })
-    if (!res.ok) return null
-    const data = await res.json()
-    return data.post || null
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data, error } = await supabase
+      .from('agent_content')
+      .select('content, created_at')
+      .eq('type', 'blog')
+      .eq('status', 'published')
+      .filter('content->>slug', 'eq', slug)
+      .single()
+
+    if (error || !data) return null
+
+    return {
+      ...data.content,
+      publishDate: data.content.publishDate || data.created_at?.slice(0, 10),
+    }
   } catch {
     return null
   }
