@@ -3,27 +3,22 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-const RED    = '#ef4444'
-const AMBER  = '#f59e0b'
-const BLUE   = '#3b82f6'
-const GREEN  = '#22c55e'
-const PURPLE = '#8b5cf6'
 const API    = process.env.NEXT_PUBLIC_API_URL || ''
 
 type Stage = 'viewfinder' | 'defect_type' | 'severity' | 'details' | 'submitting' | 'success'
 
 const DEFECT_TYPES: { id: string; label: string; icon: string; hint: string; color: string }[] = [
-  { id: 'dimensional',    label: 'Dimensional',    icon: '📐', hint: 'Wrong size or shape',     color: BLUE   },
-  { id: 'surface',        label: 'Surface',        icon: '🔍', hint: 'Scratches, marks, finish', color: AMBER  },
-  { id: 'contamination',  label: 'Contamination',  icon: '⚠️', hint: 'Foreign material found',  color: RED    },
-  { id: 'assembly',       label: 'Assembly',       icon: '🔩', hint: 'Mis-fit or missing part',  color: PURPLE },
+  { id: 'dimensional',    label: 'Dimensional',    icon: '📐', hint: 'Wrong size or shape',     color: tokens.intake   },
+  { id: 'surface',        label: 'Surface',        icon: '🔍', hint: 'Scratches, marks, finish', color: tokens.warning  },
+  { id: 'contamination',  label: 'Contamination',  icon: '⚠️', hint: 'Foreign material found',  color: tokens.danger    },
+  { id: 'assembly',       label: 'Assembly',       icon: '🔩', hint: 'Mis-fit or missing part',  color: tokens.dispatch },
   { id: 'packaging',      label: 'Packaging',      icon: '📦', hint: 'Damaged or wrong pack',   color: '#0ea5e9' },
   { id: 'other',          label: 'Other',          icon: '❓', hint: 'Specify in notes',         color: '#64748b' },
 ]
 
 const SEVERITIES: { id: string; label: string; icon: string; desc: string; color: string }[] = [
-  { id: 'critical', label: 'Critical', icon: '🔴', desc: 'Stop production immediately', color: RED   },
-  { id: 'major',    label: 'Major',    icon: '🟠', desc: 'Significant impact, rework needed', color: AMBER },
+  { id: 'critical', label: 'Critical', icon: '🔴', desc: 'Stop production immediately', color: tokens.danger   },
+  { id: 'major',    label: 'Major',    icon: '🟠', desc: 'Significant impact, rework needed', color: tokens.warning },
   { id: 'minor',    label: 'Minor',    icon: '🟡', desc: 'Small issue, document only',  color: '#eab308' },
 ]
 
@@ -149,8 +144,8 @@ export default function QualityPage() {
   }
 
   if (!ready) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0f1e' }}>
-      <div style={{ width: 36, height: 36, border: `3px solid rgba(239,68,68,.3)`, borderTopColor: RED, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }}>
+      <div style={{ width: 36, height: 36, border: `3px solid rgba(239,68,68,.3)`, borderTopColor: tokens.danger, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
@@ -182,10 +177,10 @@ export default function QualityPage() {
             width: 24, height: 24,
             top: i < 2 ? 0 : 'auto', bottom: i >= 2 ? 0 : 'auto',
             left: i % 2 === 0 ? 0 : 'auto', right: i % 2 === 1 ? 0 : 'auto',
-            borderTop: i < 2 ? '2px solid rgba(255,255,255,0.7)' : 'none',
-            borderBottom: i >= 2 ? '2px solid rgba(255,255,255,0.7)' : 'none',
-            borderLeft: i % 2 === 0 ? '2px solid rgba(255,255,255,0.7)' : 'none',
-            borderRight: i % 2 === 1 ? '2px solid rgba(255,255,255,0.7)' : 'none',
+            borderTop: i < 2 ? '2px solid var(--pos-muted)' : 'none',
+            borderBottom: i >= 2 ? '2px solid var(--pos-muted)' : 'none',
+            borderLeft: i % 2 === 0 ? '2px solid var(--pos-muted)' : 'none',
+            borderRight: i % 2 === 1 ? '2px solid var(--pos-muted)' : 'none',
           }} />
         ))}
       </div>
@@ -196,7 +191,7 @@ export default function QualityPage() {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         </button>
         <button onClick={capturePhoto} disabled={!cameraOn}
-          style={{ width: 76, height: 76, borderRadius: '50%', background: RED, border: '4px solid rgba(255,255,255,0.35)', cursor: cameraOn ? 'pointer' : 'not-allowed', boxShadow: '0 0 0 6px rgba(239,68,68,0.2)', transition: 'transform 100ms' }}
+          style={{ width: 76, height: 76, borderRadius: '50%', background: tokens.danger, border: '4px solid var(--pos-hint)', cursor: cameraOn ? 'pointer' : 'not-allowed', boxShadow: '0 0 0 6px rgba(239,68,68,0.2)', transition: 'transform 100ms' }}
           onMouseDown={e => { if (cameraOn) e.currentTarget.style.transform = 'scale(0.92)' }}
           onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
         />
@@ -214,9 +209,9 @@ export default function QualityPage() {
 
   // ── DEFECT TYPE ────────────────────────────────────────────────────────────
   if (stage === 'defect_type') return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => { setStage('viewfinder'); openCamera() }} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.7)' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', color: 'var(--pos-ink)', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ background: 'var(--pos-surface)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--pos-border)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={() => { setStage('viewfinder'); openCamera() }} style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>
           <IconArrowLeft />
         </button>
         {photoUrl && (
@@ -225,7 +220,7 @@ export default function QualityPage() {
         )}
         <div>
           <div style={{ fontWeight: 700, fontSize: 16 }}>What kind of defect?</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>Select the defect type</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>Select the defect type</div>
         </div>
       </div>
 
@@ -240,7 +235,7 @@ export default function QualityPage() {
               {d.icon}
             </div>
             <div style={{ fontSize: 12, fontWeight: 700, color: d.color, lineHeight: 1.2 }}>{d.label}</div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', lineHeight: 1.3 }}>{d.hint}</div>
+            <div style={{ fontSize: 10, color: 'var(--pos-hint)', lineHeight: 1.3 }}>{d.hint}</div>
           </button>
         ))}
       </div>
@@ -251,18 +246,18 @@ export default function QualityPage() {
   if (stage === 'severity') {
     const selectedDefect = DEFECT_TYPES.find(d => d.id === defectType)
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => setStage('defect_type')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.7)' }}>
+      <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', color: 'var(--pos-ink)', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: 'var(--pos-surface)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--pos-border)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={() => setStage('defect_type')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>
             <IconArrowLeft />
           </button>
           {photoUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={photoUrl} alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', border: `2px solid ${selectedDefect?.color || RED}80`, flexShrink: 0 }} />
+            <img src={photoUrl} alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', border: `2px solid ${selectedDefect?.color || tokens.danger}80`, flexShrink: 0 }} />
           )}
           <div>
             <div style={{ fontWeight: 700, fontSize: 16 }}>How severe?</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>
+            <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>
               {selectedDefect?.icon} {selectedDefect?.label}
             </div>
           </div>
@@ -295,19 +290,19 @@ export default function QualityPage() {
     const selectedDefect   = DEFECT_TYPES.find(d => d.id === defectType)
     const selectedSeverity = SEVERITIES.find(s => s.id === severity)
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => setStage('severity')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.7)' }}>
+      <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', color: 'var(--pos-ink)', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: 'var(--pos-surface)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--pos-border)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={() => setStage('severity')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>
             <IconArrowLeft />
           </button>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {photoUrl && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={photoUrl} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', border: `1.5px solid ${selectedSeverity?.color || RED}60`, flexShrink: 0 }} />
+              <img src={photoUrl} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', border: `1.5px solid ${selectedSeverity?.color || tokens.danger}60`, flexShrink: 0 }} />
             )}
             <div>
               <div style={{ fontWeight: 700, fontSize: 15 }}>Add details</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>
+              <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginTop: 1 }}>
                 {selectedDefect?.icon} {selectedDefect?.label} · {selectedSeverity?.icon} {selectedSeverity?.label}
               </div>
             </div>
@@ -317,38 +312,38 @@ export default function QualityPage() {
         <div style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>
           {/* Qty affected */}
           <div style={{ marginBottom: 18 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
               Quantity affected <span style={{ color: 'rgba(255,255,255,0.2)' }}>(optional)</span>
             </div>
             <input value={qty} onChange={e => setQty(e.target.value)} type="number" inputMode="decimal" placeholder="e.g. 5"
-              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${qty ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 16, outline: 'none', boxSizing: 'border-box' }} />
+              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${qty ? 'rgba(239,68,68,0.5)' : 'var(--pos-border)'}`, borderRadius: 12, color: 'var(--pos-ink)', padding: '14px 16px', fontSize: 16, outline: 'none', boxSizing: 'border-box' }} />
           </div>
 
           {/* Product name */}
           <div style={{ marginBottom: 18 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
               Product <span style={{ color: 'rgba(255,255,255,0.2)' }}>(optional)</span>
             </div>
             <input value={productName} onChange={e => setProductName(e.target.value)} placeholder="e.g. SKU-1042, Batch A3"
-              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${productName ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 16, outline: 'none', boxSizing: 'border-box' }} />
+              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${productName ? 'rgba(239,68,68,0.4)' : 'var(--pos-border)'}`, borderRadius: 12, color: 'var(--pos-ink)', padding: '14px 16px', fontSize: 16, outline: 'none', boxSizing: 'border-box' }} />
           </div>
 
           {/* Notes */}
           <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
               Notes <span style={{ color: 'rgba(255,255,255,0.2)' }}>(optional)</span>
             </div>
             <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Describe the defect…" rows={3}
-              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${notes ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 14, outline: 'none', resize: 'none', boxSizing: 'border-box', lineHeight: 1.5 }} />
+              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${notes ? 'rgba(239,68,68,0.4)' : 'var(--pos-border)'}`, borderRadius: 12, color: 'var(--pos-ink)', padding: '14px 16px', fontSize: 14, outline: 'none', resize: 'none', boxSizing: 'border-box', lineHeight: 1.5 }} />
           </div>
 
           {saveError && (
-            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', color: RED, fontSize: 13, marginBottom: 16 }}>{saveError}</div>
+            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', color: tokens.danger, fontSize: 13, marginBottom: 16 }}>{saveError}</div>
           )}
 
           {/* CTA — colour matches severity */}
           <button onClick={submitDefect}
-            style={{ width: '100%', background: `linear-gradient(135deg, ${selectedSeverity?.color || RED}, ${selectedSeverity?.id === 'critical' ? '#dc2626' : selectedSeverity?.id === 'major' ? '#d97706' : '#ca8a04'})`, border: 'none', color: '#fff', padding: '16px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 17, boxShadow: `0 4px 20px ${selectedSeverity?.color || RED}40` }}>
+            style={{ width: '100%', background: `linear-gradient(135deg, ${selectedSeverity?.color || tokens.danger}, ${selectedSeverity?.id === 'critical' ? '#dc2626' : selectedSeverity?.id === 'major' ? '#d97706' : '#ca8a04'})`, border: 'none', color: '#fff', padding: '16px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 17, boxShadow: `0 4px 20px ${selectedSeverity?.color || tokens.danger}40` }}>
             {selectedSeverity?.icon} Log {selectedSeverity?.label} Defect
           </button>
         </div>
@@ -358,8 +353,8 @@ export default function QualityPage() {
 
   // ── SUBMITTING ─────────────────────────────────────────────────────────────
   if (stage === 'submitting') return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1e', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ width: 48, height: 48, border: `4px solid rgba(239,68,68,.3)`, borderTopColor: RED, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+    <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ width: 48, height: 48, border: `4px solid rgba(239,68,68,.3)`, borderTopColor: tokens.danger, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>Logging defect…</div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
@@ -370,32 +365,32 @@ export default function QualityPage() {
     const selectedSeverity = SEVERITIES.find(s => s.id === severity)
     const selectedDefect   = DEFECT_TYPES.find(d => d.id === defectType)
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
+      <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', color: 'var(--pos-ink)', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
         <div style={{ position: 'relative', marginBottom: 24 }}>
           {photoUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={photoUrl} alt="" style={{ width: 120, height: 120, borderRadius: 20, objectFit: 'cover', border: `3px solid ${selectedSeverity?.color || RED}`, boxShadow: `0 0 40px ${selectedSeverity?.color || RED}30` }} />
+            <img src={photoUrl} alt="" style={{ width: 120, height: 120, borderRadius: 20, objectFit: 'cover', border: `3px solid ${selectedSeverity?.color || tokens.danger}`, boxShadow: `0 0 40px ${selectedSeverity?.color || tokens.danger}30` }} />
           )}
-          <div style={{ position: 'absolute', bottom: -10, right: -10, width: 36, height: 36, borderRadius: '50%', background: '#0a0f1e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
+          <div style={{ position: 'absolute', bottom: -10, right: -10, width: 36, height: 36, borderRadius: '50%', background: 'var(--pos-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
             {selectedSeverity?.icon}
           </div>
         </div>
 
         <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>Defect logged</div>
-        <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>
+        <div style={{ fontSize: 14, color: 'var(--pos-muted)', marginBottom: 4 }}>
           {selectedDefect?.icon} {selectedDefect?.label} · {selectedSeverity?.label}
         </div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginBottom: 36 }}>
+        <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginBottom: 36 }}>
           {selectedSeverity?.id === 'critical' ? 'Supervisor has been alerted' : 'Quality record saved'}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 300 }}>
           <button onClick={reset}
-            style={{ width: '100%', background: selectedSeverity?.color || RED, border: 'none', color: '#fff', padding: '15px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 15 }}>
+            style={{ width: '100%', background: selectedSeverity?.color || tokens.danger, border: 'none', color: '#fff', padding: '15px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 15 }}>
             Log Another Defect
           </button>
           <button onClick={() => router.push('/factory')}
-            style={{ width: '100%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', padding: '13px', borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+            style={{ width: '100%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', color: 'var(--pos-muted)', padding: '13px', borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
             Back to Hub
           </button>
         </div>

@@ -3,10 +3,6 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-const AMBER  = '#f59e0b'
-const GREEN  = '#22c55e'
-const RED    = '#ef4444'
-const BLUE   = '#3b82f6'
 const TEAL   = '#14b8a6'
 const API    = process.env.NEXT_PUBLIC_API_URL || ''
 
@@ -29,8 +25,8 @@ interface Shift {
 }
 
 const SHIFT_NAMES: { id: string; label: string; icon: string; hours: string; color: string }[] = [
-  { id: 'Morning',   label: 'Morning',   icon: '🌅', hours: '06:00–14:00', color: AMBER },
-  { id: 'Afternoon', label: 'Afternoon', icon: '🌤️', hours: '14:00–22:00', color: BLUE  },
+  { id: 'Morning',   label: 'Morning',   icon: '🌅', hours: '06:00–14:00', color: tokens.warning },
+  { id: 'Afternoon', label: 'Afternoon', icon: '🌤️', hours: '14:00–22:00', color: tokens.intake  },
   { id: 'Night',     label: 'Night',     icon: '🌙', hours: '22:00–06:00', color: '#6366f1' },
   { id: 'Custom',    label: 'Custom',    icon: '⚙️', hours: 'Any hours',   color: TEAL  },
 ]
@@ -230,7 +226,7 @@ export default function ShiftPage() {
   }
 
   if (!ready) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0f1e' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }}>
       <div style={{ width: 36, height: 36, border: `3px solid rgba(20,184,166,.3)`, borderTopColor: TEAL, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
@@ -240,20 +236,20 @@ export default function ShiftPage() {
   // HUB
   // ══════════════════════════════════════════════════════════════════════════
   if (stage === 'hub') return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', paddingBottom: 40 }}>
+    <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', color: 'var(--pos-ink)', fontFamily: 'system-ui, sans-serif', paddingBottom: 40 }}>
       <canvas ref={canvasRef} style={{ display: 'none' }} />
       <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: 'none' }} />
 
       {/* Header */}
-      <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '44px 20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => router.push('/factory')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.7)' }}>
+      <div style={{ background: 'var(--pos-surface)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--pos-border)', padding: '44px 20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={() => router.push('/factory')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>
           <IconArrowLeft />
         </button>
         <div>
           <div style={{ fontWeight: 800, fontSize: 18, color: TEAL }}>Shift Tracker</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>Photo-verified shift output</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>Photo-verified shift output</div>
         </div>
-        <button onClick={loadData} style={{ marginLeft: 'auto', width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.5)' }}>
+        <button onClick={loadData} style={{ marginLeft: 'auto', width: 36, height: 36, borderRadius: '50%', background: 'var(--pos-border)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
         </button>
       </div>
@@ -273,14 +269,14 @@ export default function ShiftPage() {
               )}
               <div style={{ flex: 1, padding: '14px 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: GREEN, boxShadow: '0 0 0 3px rgba(34,197,94,0.25)', animation: 'pulse-dot 1.4s ease-in-out infinite', flexShrink: 0 }} />
-                  <span style={{ fontSize: 13, fontWeight: 800, color: GREEN }}>Active</span>
-                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginLeft: 'auto' }}>{elapsed(activeShift.started_at)}</span>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: tokens.success, boxShadow: '0 0 0 3px rgba(34,197,94,0.25)', animation: 'pulse-dot 1.4s ease-in-out infinite', flexShrink: 0 }} />
+                  <span style={{ fontSize: 13, fontWeight: 800, color: tokens.success }}>Active</span>
+                  <span style={{ fontSize: 11, color: 'var(--pos-hint)', marginLeft: 'auto' }}>{elapsed(activeShift.started_at)}</span>
                 </div>
                 <div style={{ fontWeight: 800, fontSize: 16 }}>
                   {SHIFT_NAMES.find(s => s.id === activeShift.shift_name)?.icon} {activeShift.custom_name || activeShift.shift_name}
                 </div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 2 }}>
                   Started {fmtTime(activeShift.started_at)} · {activeShift.started_by_staff?.name || 'Worker'}
                 </div>
               </div>
@@ -289,18 +285,18 @@ export default function ShiftPage() {
             {/* Live output */}
             <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(20,184,166,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>Output so far</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: GREEN }}>
+                <div style={{ fontSize: 10, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>Output so far</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: tokens.success }}>
                   {(activeShift.live_output || 0).toLocaleString()}
                   {activeShift.target_units && (
-                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', fontWeight: 500, marginLeft: 6 }}>/ {activeShift.target_units.toLocaleString()} target</span>
+                    <span style={{ fontSize: 13, color: 'var(--pos-hint)', fontWeight: 500, marginLeft: 6 }}>/ {activeShift.target_units.toLocaleString()} target</span>
                   )}
                 </div>
               </div>
               {/* Progress bar if target set */}
               {activeShift.target_units && activeShift.target_units > 0 && (() => {
                 const pct = Math.min((activeShift.live_output || 0) / activeShift.target_units * 100, 100)
-                const color = pct >= 90 ? GREEN : pct >= 60 ? AMBER : RED
+                const color = pct >= 90 ? tokens.success : pct >= 60 ? tokens.warning : tokens.danger
                 return (
                   <div style={{ flex: 1, marginLeft: 16 }}>
                     <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
@@ -329,17 +325,17 @@ export default function ShiftPage() {
             onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.97)' }}
             onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)' }}
           >
-            <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 26 }}>📷</div>
+            <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 26 }}>📷</div>
             <div style={{ textAlign: 'left', flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 17, color: '#fff', lineHeight: 1.1 }}>Start Shift</div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 3 }}>Photograph the floor to begin</div>
             </div>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pos-muted)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         )}
 
         {saveError && (
-          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', color: RED, fontSize: 13, marginBottom: 16 }}>{saveError}</div>
+          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', color: tokens.danger, fontSize: 13, marginBottom: 16 }}>{saveError}</div>
         )}
 
         {/* Recent shifts */}
@@ -351,7 +347,7 @@ export default function ShiftPage() {
         ) : recentShifts.length === 0 ? (
           <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 14, padding: '24px 20px', textAlign: 'center' }}>
             <div style={{ fontSize: 32, marginBottom: 8 }}>⏱️</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>No completed shifts yet</div>
+            <div style={{ fontSize: 13, color: 'var(--pos-hint)' }}>No completed shifts yet</div>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -360,14 +356,14 @@ export default function ShiftPage() {
               const target = s.target_units
               const actual = s.actual_output ?? 0
               const hitTarget = target ? actual >= target : null
-              const color = hitTarget === true ? GREEN : hitTarget === false ? RED : TEAL
+              const color = hitTarget === true ? tokens.success : hitTarget === false ? tokens.danger : TEAL
               return (
-                <div key={s.id} style={{ display: 'flex', gap: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '12px 14px', alignItems: 'flex-start' }}>
+                <div key={s.id} style={{ display: 'flex', gap: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid var(--pos-border)', borderRadius: 14, padding: '12px 14px', alignItems: 'flex-start' }}>
                   {/* Photos */}
                   <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
                     {s.start_photo_url && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={s.start_photo_url} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.12)' }} />
+                      <img src={s.start_photo_url} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', border: '1.5px solid var(--pos-border)' }} />
                     )}
                     {s.end_photo_url && (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -378,7 +374,7 @@ export default function ShiftPage() {
                     <div style={{ fontWeight: 700, fontSize: 14 }}>
                       {meta?.icon} {s.custom_name || s.shift_name}
                     </div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginTop: 2 }}>
                       {fmtDate(s.started_at)} · {fmtTime(s.started_at)}–{s.ended_at ? fmtTime(s.ended_at) : '?'}
                       {s.duration_minutes != null && ` · ${Math.round(s.duration_minutes)}m`}
                     </div>
@@ -391,7 +387,7 @@ export default function ShiftPage() {
                       <div style={{ fontSize: 11, color: TEAL, marginTop: 3 }}>{actual.toLocaleString()} units produced</div>
                     )}
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: s.status === 'completed' ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.07)', color: s.status === 'completed' ? GREEN : 'rgba(255,255,255,0.3)', flexShrink: 0 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: s.status === 'completed' ? 'rgba(34,197,94,0.12)' : 'var(--pos-border)', color: s.status === 'completed' ? tokens.success : 'var(--pos-hint)', flexShrink: 0 }}>
                     {s.status}
                   </span>
                 </div>
@@ -436,7 +432,7 @@ export default function ShiftPage() {
 
       {/* Contextual overlay label */}
       <div style={{ position: 'absolute', bottom: 160, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
-        <div style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', borderRadius: 20, padding: '6px 16px', fontSize: 12, color: 'rgba(255,255,255,0.7)', border: `1px solid rgba(20,184,166,0.3)` }}>
+        <div style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', borderRadius: 20, padding: '6px 16px', fontSize: 12, color: 'var(--pos-muted)', border: `1px solid rgba(20,184,166,0.3)` }}>
           {isEndFlow ? '📦 Show all finished goods in frame' : '🏭 Frame the entire production area'}
         </div>
       </div>
@@ -446,7 +442,7 @@ export default function ShiftPage() {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         </button>
         <button onClick={capturePhoto} disabled={!cameraOn}
-          style={{ width: 76, height: 76, borderRadius: '50%', background: TEAL, border: '4px solid rgba(255,255,255,0.35)', cursor: cameraOn ? 'pointer' : 'not-allowed', boxShadow: `0 0 0 6px rgba(20,184,166,0.2)`, transition: 'transform 100ms' }}
+          style={{ width: 76, height: 76, borderRadius: '50%', background: TEAL, border: '4px solid var(--pos-hint)', cursor: cameraOn ? 'pointer' : 'not-allowed', boxShadow: `0 0 0 6px rgba(20,184,166,0.2)`, transition: 'transform 100ms' }}
           onMouseDown={e => { if (cameraOn) e.currentTarget.style.transform = 'scale(0.92)' }}
           onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
         />
@@ -465,9 +461,9 @@ export default function ShiftPage() {
   // SHIFT NAME + CONFIRM
   // ══════════════════════════════════════════════════════════════════════════
   if (stage === 'shift_name') return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => { setStage('start_viewfinder'); openCamera() }} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.7)' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', color: 'var(--pos-ink)', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ background: 'var(--pos-surface)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--pos-border)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={() => { setStage('start_viewfinder'); openCamera() }} style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>
           <IconArrowLeft />
         </button>
         {startPhoto && (
@@ -476,7 +472,7 @@ export default function ShiftPage() {
         )}
         <div>
           <div style={{ fontWeight: 700, fontSize: 16 }}>Which shift?</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>Set shift type and optional target</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>Set shift type and optional target</div>
         </div>
       </div>
 
@@ -488,7 +484,7 @@ export default function ShiftPage() {
               style={{ background: shiftName === s.id ? `${s.color}20` : 'rgba(255,255,255,0.05)', border: `1.5px solid ${shiftName === s.id ? s.color : 'rgba(255,255,255,0.1)'}`, borderRadius: 14, padding: '14px 16px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 120ms' }}>
               <div style={{ fontSize: 22, marginBottom: 4 }}>{s.icon}</div>
               <div style={{ fontWeight: 700, fontSize: 14, color: shiftName === s.id ? s.color : '#e2e8f0' }}>{s.label}</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{s.hours}</div>
+              <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginTop: 2 }}>{s.hours}</div>
             </button>
           ))}
         </div>
@@ -496,24 +492,24 @@ export default function ShiftPage() {
         {/* Custom name input */}
         {shiftName === 'Custom' && (
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Shift name</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Shift name</div>
             <input value={customName} onChange={e => setCustomName(e.target.value)} placeholder="e.g. Split shift, Overtime…"
-              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${customName ? TEAL : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }} />
+              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${customName ? TEAL : 'var(--pos-border)'}`, borderRadius: 12, color: 'var(--pos-ink)', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }} />
           </div>
         )}
 
         {/* Target units (optional) */}
         <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
             Target output <span style={{ color: 'rgba(255,255,255,0.2)' }}>(optional)</span>
           </div>
           <input value={targetUnits} onChange={e => setTargetUnits(e.target.value)} type="number" inputMode="numeric" placeholder="e.g. 500 units"
-            style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${targetUnits ? `${TEAL}60` : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 16, outline: 'none', boxSizing: 'border-box' }} />
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>Used to track progress during the shift</div>
+            style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${targetUnits ? `${TEAL}60` : 'var(--pos-border)'}`, borderRadius: 12, color: 'var(--pos-ink)', padding: '14px 16px', fontSize: 16, outline: 'none', boxSizing: 'border-box' }} />
+          <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginTop: 6 }}>Used to track progress during the shift</div>
         </div>
 
         {saveError && (
-          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', color: RED, fontSize: 13, marginBottom: 16 }}>{saveError}</div>
+          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', color: tokens.danger, fontSize: 13, marginBottom: 16 }}>{saveError}</div>
         )}
 
         <button onClick={submitStartShift}
@@ -528,7 +524,7 @@ export default function ShiftPage() {
   // SUBMITTING
   // ══════════════════════════════════════════════════════════════════════════
   if (stage === 'submitting') return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1e', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ width: 48, height: 48, border: `4px solid rgba(20,184,166,.3)`, borderTopColor: TEAL, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>Saving…</div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
@@ -539,26 +535,26 @@ export default function ShiftPage() {
   // START SUCCESS
   // ══════════════════════════════════════════════════════════════════════════
   if (stage === 'start_success') return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', color: 'var(--pos-ink)', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
       {startPhoto && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={startPhoto} alt="" style={{ width: 120, height: 120, borderRadius: 20, objectFit: 'cover', border: `3px solid ${TEAL}`, boxShadow: `0 0 40px rgba(20,184,166,0.3)`, marginBottom: 20 }} />
       )}
       <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>Shift started</div>
-      <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>
+      <div style={{ fontSize: 14, color: 'var(--pos-muted)', marginBottom: 4 }}>
         {SHIFT_NAMES.find(s => s.id === shiftName)?.icon} {customName || shiftName} shift is now active
       </div>
       {targetUnits && (
         <div style={{ fontSize: 12, color: TEAL, marginBottom: 4 }}>Target: {Number(targetUnits).toLocaleString()} units</div>
       )}
-      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginBottom: 36 }}>Floor photographed · output tracking started</div>
+      <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginBottom: 36 }}>Floor photographed · output tracking started</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 300 }}>
         <button onClick={() => router.push('/factory/capture')}
           style={{ width: '100%', background: `linear-gradient(135deg, ${TEAL}, #0f766e)`, border: 'none', color: '#fff', padding: '15px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 15 }}>
           Log Production →
         </button>
         <button onClick={() => { resetForm(); setStage('hub') }}
-          style={{ width: '100%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', padding: '13px', borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+          style={{ width: '100%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', color: 'var(--pos-muted)', padding: '13px', borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
           Back to Shift Hub
         </button>
       </div>
@@ -572,10 +568,10 @@ export default function ShiftPage() {
     const target = completedShift.target_units
     const actual = completedShift.actual_output ?? 0
     const hitTarget = target ? actual >= target : null
-    const resultColor = hitTarget === true ? GREEN : hitTarget === false ? RED : TEAL
+    const resultColor = hitTarget === true ? tokens.success : hitTarget === false ? tokens.danger : TEAL
     const durMins = completedShift.duration_minutes ? Math.round(completedShift.duration_minutes) : null
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
+      <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', color: 'var(--pos-ink)', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
         {/* Before / after photos */}
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 24 }}>
           {completedShift.start_photo_url && (
@@ -584,7 +580,7 @@ export default function ShiftPage() {
           )}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
             <div style={{ width: 28, height: 2, background: 'rgba(255,255,255,0.2)' }} />
-            {durMins != null && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{durMins}m</div>}
+            {durMins != null && <div style={{ fontSize: 11, color: 'var(--pos-hint)' }}>{durMins}m</div>}
           </div>
           {completedShift.end_photo_url && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -599,12 +595,12 @@ export default function ShiftPage() {
           {actual.toLocaleString()} units
         </div>
         {target && (
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>
+          <div style={{ fontSize: 13, color: 'var(--pos-hint)', marginBottom: 4 }}>
             {hitTarget ? '✓ Target met' : '✗ Below target'} ({target.toLocaleString()} goal)
           </div>
         )}
         {durMins != null && (
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginBottom: 32 }}>
+          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginBottom: 32 }}>
             Duration: {Math.floor(durMins / 60) > 0 ? `${Math.floor(durMins / 60)}h ` : ''}{durMins % 60}m
           </div>
         )}
@@ -615,7 +611,7 @@ export default function ShiftPage() {
             Start Next Shift
           </button>
           <button onClick={() => { resetForm(); setStage('hub') }}
-            style={{ width: '100%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', padding: '13px', borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+            style={{ width: '100%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', color: 'var(--pos-muted)', padding: '13px', borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
             Back to Hub
           </button>
         </div>

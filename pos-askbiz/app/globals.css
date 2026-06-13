@@ -27,6 +27,16 @@
   --pos-success-ring:   rgba(22, 163, 74, 0.2);
 
   --pos-warning:        #f97316;
+
+  /* Factory section — data type indicators */
+  --factory-intake:     #3b82f6;    /* Blue — incoming raw material */
+  --factory-output:     #16a34a;    /* Green — finished goods (mapped to success) */
+  --factory-wastage:    #dc2626;    /* Red — scrap (mapped to danger) */
+  --factory-dispatch:   #8b5cf6;    /* Purple — shipped orders */
+  --factory-critical:   #dc2626;    /* Critical defect (mapped to danger) */
+  --factory-major:      #f97316;    /* Major defect (mapped to warning) */
+  --factory-minor:      #78736d;    /* Minor defect (mapped to hint) */
+  --factory-info:       #3b82f6;    /* Info (intake-blue) */
 }
 
 /* ─── Focus rings ────────────────────────────────────────────────────────────

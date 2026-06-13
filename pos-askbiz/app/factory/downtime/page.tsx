@@ -3,9 +3,6 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-const RED    = '#ef4444'
-const AMBER  = '#f59e0b'
-const GREEN  = '#22c55e'
 const API    = process.env.NEXT_PUBLIC_API_URL || ''
 
 type Stage = 'active_check' | 'viewfinder' | 'reason' | 'machine_name' | 'submitting' | 'success'
@@ -20,9 +17,9 @@ interface ActiveDowntime {
 }
 
 const REASONS: { id: string; label: string; icon: string; color: string }[] = [
-  { id: 'breakdown',          label: 'Breakdown',          icon: '🔧', color: RED    },
-  { id: 'changeover',         label: 'Changeover',         icon: '🔄', color: AMBER  },
-  { id: 'no_materials',       label: 'No Materials',       icon: '📦', color: AMBER  },
+  { id: 'breakdown',          label: 'Breakdown',          icon: '🔧', color: tokens.danger    },
+  { id: 'changeover',         label: 'Changeover',         icon: '🔄', color: tokens.warning  },
+  { id: 'no_materials',       label: 'No Materials',       icon: '📦', color: tokens.warning  },
   { id: 'quality_hold',       label: 'Quality Hold',       icon: '🚫', color: '#8b5cf6' },
   { id: 'planned_maintenance',label: 'Maintenance',        icon: '🛠️', color: '#3b82f6' },
   { id: 'other',              label: 'Other',              icon: '❓', color: '#64748b' },
@@ -202,8 +199,8 @@ export default function DowntimePage() {
   }
 
   if (!ready) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0f1e' }}>
-      <div style={{ width: 36, height: 36, border: '3px solid rgba(239,68,68,.3)', borderTopColor: RED, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }}>
+      <div style={{ width: 36, height: 36, border: '3px solid rgba(239,68,68,.3)', borderTopColor: tokens.danger, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
@@ -212,17 +209,17 @@ export default function DowntimePage() {
   // SCREEN: Active check — show currently open events + "Report new" button
   // ══════════════════════════════════════════════════════════════════════════
   if (stage === 'active_check') return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', color: 'var(--pos-ink)', fontFamily: 'system-ui, sans-serif' }}>
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
       {/* Header */}
-      <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '44px 20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => router.push('/factory')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.7)' }}>
+      <div style={{ background: 'var(--pos-surface)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--pos-border)', padding: '44px 20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={() => router.push('/factory')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>
           <IconArrowLeft />
         </button>
         <div>
-          <div style={{ fontWeight: 800, fontSize: 18, color: RED }}>Machine Downtime</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>Track stops & build OEE</div>
+          <div style={{ fontWeight: 800, fontSize: 18, color: tokens.danger }}>Machine Downtime</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>Track stops & build OEE</div>
         </div>
       </div>
 
@@ -238,15 +235,15 @@ export default function DowntimePage() {
             <div style={{ fontWeight: 800, fontSize: 17, color: '#fff', lineHeight: 1.1 }}>Report Machine Down</div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 3 }}>Photograph the stopped machine</div>
           </div>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pos-muted)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
 
         {/* Active events */}
         <div style={{ marginBottom: 16 }}>
           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: RED, boxShadow: `0 0 0 3px rgba(239,68,68,0.25)`, animation: activeEvents.length > 0 ? 'pulse-dot 1.4s ease-in-out infinite' : 'none' }} />
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: tokens.danger, boxShadow: `0 0 0 3px rgba(239,68,68,0.25)`, animation: activeEvents.length > 0 ? 'pulse-dot 1.4s ease-in-out infinite' : 'none' }} />
             Currently Down
-            {activeEvents.length > 0 && <span style={{ background: 'rgba(239,68,68,0.15)', color: RED, borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>{activeEvents.length}</span>}
+            {activeEvents.length > 0 && <span style={{ background: 'rgba(239,68,68,0.15)', color: tokens.danger, borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>{activeEvents.length}</span>}
           </div>
 
           {loadingActive ? (
@@ -255,8 +252,8 @@ export default function DowntimePage() {
             <div style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 14, padding: '20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(34,197,94,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>✅</div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: GREEN }}>All machines running</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>No active downtime events</div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: tokens.success }}>All machines running</div>
+                <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 2 }}>No active downtime events</div>
               </div>
             </div>
           ) : (
@@ -271,14 +268,14 @@ export default function DowntimePage() {
                         <img src={ev.start_photo_url} alt="" style={{ width: 52, height: 52, borderRadius: 10, objectFit: 'cover', flexShrink: 0, border: '1.5px solid rgba(239,68,68,0.4)' }} />
                       )}
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 700, fontSize: 15, color: '#f1f5f9' }}>{ev.machine_name}</div>
-                        <div style={{ fontSize: 12, color: RED, marginTop: 2 }}>{r?.icon} {r?.label || ev.reason}</div>
-                        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 3 }}>Down for {elapsedLabel(ev.started_at)}</div>
+                        <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--pos-ink)' }}>{ev.machine_name}</div>
+                        <div style={{ fontSize: 12, color: tokens.danger, marginTop: 2 }}>{r?.icon} {r?.label || ev.reason}</div>
+                        <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginTop: 3 }}>Down for {elapsedLabel(ev.started_at)}</div>
                       </div>
                     </div>
                     {/* Close button */}
                     <button onClick={() => { setClosingEvent(ev); setStage('close_viewfinder'); openCamera() }}
-                      style={{ width: '100%', background: GREEN, border: 'none', color: '#fff', padding: '12px', borderRadius: 10, cursor: 'pointer', fontWeight: 800, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                      style={{ width: '100%', background: tokens.success, border: 'none', color: '#fff', padding: '12px', borderRadius: 10, cursor: 'pointer', fontWeight: 800, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                       📸 Machine Back Up — Close Event
                     </button>
                   </div>
@@ -289,7 +286,7 @@ export default function DowntimePage() {
         </div>
 
         {saveError && (
-          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', color: RED, fontSize: 13 }}>{saveError}</div>
+          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', color: tokens.danger, fontSize: 13 }}>{saveError}</div>
         )}
       </div>
 
@@ -333,7 +330,7 @@ export default function DowntimePage() {
       {!isCloseFlow && (
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 56, height: 56, borderRadius: '50%', border: '2px solid rgba(239,68,68,0.7)', animation: 'ring-pulse 1.6s ease-out infinite' }} />
-          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(6px)', padding: '4px 12px', borderRadius: 20 }}>Frame the stopped machine</div>
+          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, background: 'var(--pos-surface)', backdropFilter: 'blur(6px)', padding: '4px 12px', borderRadius: 20 }}>Frame the stopped machine</div>
         </div>
       )}
 
@@ -343,7 +340,7 @@ export default function DowntimePage() {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         </button>
         <button onClick={() => capturePhoto(isCloseFlow ? 'close' : 'start')} disabled={!cameraOn}
-          style={{ width: 76, height: 76, borderRadius: '50%', background: isCloseFlow ? GREEN : RED, border: `4px solid rgba(255,255,255,0.35)`, cursor: cameraOn ? 'pointer' : 'not-allowed', boxShadow: `0 0 0 6px ${isCloseFlow ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`, transition: 'transform 100ms' }}
+          style={{ width: 76, height: 76, borderRadius: '50%', background: isCloseFlow ? tokens.success : tokens.danger, border: `4px solid var(--pos-hint)`, cursor: cameraOn ? 'pointer' : 'not-allowed', boxShadow: `0 0 0 6px ${isCloseFlow ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`, transition: 'transform 100ms' }}
           onMouseDown={e => { if (cameraOn) e.currentTarget.style.transform = 'scale(0.92)' }}
           onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
         />
@@ -365,9 +362,9 @@ export default function DowntimePage() {
   // SCREEN: Reason picker — 6 icon cards
   // ══════════════════════════════════════════════════════════════════════════
   if (stage === 'reason') return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => setStage('active_check')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.7)' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', color: 'var(--pos-ink)', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ background: 'var(--pos-surface)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--pos-border)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={() => setStage('active_check')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>
           <IconArrowLeft />
         </button>
         {photoUrl && (
@@ -376,7 +373,7 @@ export default function DowntimePage() {
         )}
         <div>
           <div style={{ fontWeight: 700, fontSize: 16 }}>Why is it stopped?</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>Select the reason</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>Select the reason</div>
         </div>
       </div>
 
@@ -405,14 +402,14 @@ export default function DowntimePage() {
   if (stage === 'machine_name') {
     const selectedReason = REASONS.find(r => r.id === reason)
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => setStage('reason')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.7)' }}>
+      <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', color: 'var(--pos-ink)', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: 'var(--pos-surface)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--pos-border)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={() => setStage('reason')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>
             <IconArrowLeft />
           </button>
           <div>
             <div style={{ fontWeight: 700, fontSize: 16 }}>Which machine?</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>
+            <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>
               {selectedReason?.icon} {selectedReason?.label}
             </div>
           </div>
@@ -426,7 +423,7 @@ export default function DowntimePage() {
               <img src={photoUrl} alt="" style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', border: '2px solid rgba(239,68,68,0.5)', flexShrink: 0 }} />
             )}
             <div style={{ flex: 1, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, padding: '12px 14px' }}>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>Reason</div>
+              <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginBottom: 4 }}>Reason</div>
               <div style={{ fontSize: 14, fontWeight: 700, color: selectedReason?.color }}>{selectedReason?.icon} {selectedReason?.label}</div>
             </div>
           </div>
@@ -438,12 +435,12 @@ export default function DowntimePage() {
               value={machineName}
               onChange={e => setMachineName(e.target.value)}
               placeholder="e.g. Mixer 2, Cutter A, Line 3…"
-              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${machineName ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '16px', fontSize: 16, outline: 'none', boxSizing: 'border-box' }}
+              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${machineName ? 'rgba(239,68,68,0.5)' : 'var(--pos-border)'}`, borderRadius: 12, color: 'var(--pos-ink)', padding: '16px', fontSize: 16, outline: 'none', boxSizing: 'border-box' }}
             />
             {/* Quick name pills */}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
               {['Mixer', 'Cutter', 'Press', 'Conveyor', 'Packer', 'Boiler'].map(n => (
-                <button key={n} onClick={() => setMachineName(n)} style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.15)', background: machineName === n ? 'rgba(239,68,68,0.15)' : 'transparent', color: machineName === n ? RED : 'rgba(255,255,255,0.5)', fontSize: 13, cursor: 'pointer' }}>
+                <button key={n} onClick={() => setMachineName(n)} style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.15)', background: machineName === n ? 'rgba(239,68,68,0.15)' : 'transparent', color: machineName === n ? tokens.danger : 'var(--pos-muted)', fontSize: 13, cursor: 'pointer' }}>
                   {n}
                 </button>
               ))}
@@ -451,7 +448,7 @@ export default function DowntimePage() {
           </div>
 
           {saveError && (
-            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', color: RED, fontSize: 13, marginBottom: 16 }}>{saveError}</div>
+            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', color: tokens.danger, fontSize: 13, marginBottom: 16 }}>{saveError}</div>
           )}
 
           <button onClick={submitDowntime}
@@ -467,8 +464,8 @@ export default function DowntimePage() {
   // SCREEN: Submitting spinner
   // ══════════════════════════════════════════════════════════════════════════
   if (stage === 'submitting') return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1e', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ width: 48, height: 48, border: `4px solid rgba(239,68,68,0.3)`, borderTopColor: RED, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+    <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ width: 48, height: 48, border: `4px solid rgba(239,68,68,0.3)`, borderTopColor: tokens.danger, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>Logging event…</div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
@@ -479,31 +476,31 @@ export default function DowntimePage() {
   // ══════════════════════════════════════════════════════════════════════════
   const isCloseSuccess = stage === 'close_success'
   if (stage === 'success' || stage === 'close_success') return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', color: 'var(--pos-ink)', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
       <div style={{ position: 'relative', marginBottom: 28 }}>
         <div style={{ width: 128, height: 128, borderRadius: '50%', background: isCloseSuccess ? 'rgba(34,197,94,0.06)' : 'rgba(239,68,68,0.06)', position: 'absolute', top: -16, left: -16 }} />
-        <div style={{ width: 96, height: 96, borderRadius: '50%', background: isCloseSuccess ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)', border: `3px solid ${isCloseSuccess ? GREEN : RED}`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', fontSize: 44 }}>
+        <div style={{ width: 96, height: 96, borderRadius: '50%', background: isCloseSuccess ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)', border: `3px solid ${isCloseSuccess ? tokens.success : tokens.danger}`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', fontSize: 44 }}>
           {isCloseSuccess ? '✅' : '🔴'}
         </div>
       </div>
       <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 8 }}>
         {isCloseSuccess ? 'Machine back up' : 'Downtime logged'}
       </div>
-      <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>
+      <div style={{ fontSize: 14, color: 'var(--pos-muted)', marginBottom: 4 }}>
         {isCloseSuccess ? 'Event closed — duration recorded' : 'Supervisor has been notified'}
       </div>
-      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginBottom: 40 }}>
+      <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginBottom: 40 }}>
         {isCloseSuccess ? 'OEE Availability updated' : 'OEE Availability tracking started'}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 320 }}>
         {!isCloseSuccess && (
           <button onClick={() => { resetAll(); setStage('active_check') }}
-            style={{ width: '100%', background: RED, border: 'none', color: '#fff', padding: '16px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 16 }}>
+            style={{ width: '100%', background: tokens.danger, border: 'none', color: '#fff', padding: '16px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 16 }}>
             Report Another
           </button>
         )}
         <button onClick={() => router.push('/factory')}
-          style={{ width: '100%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', padding: '14px', borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 15 }}>
+          style={{ width: '100%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', color: 'var(--pos-muted)', padding: '14px', borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 15 }}>
           Back to Hub
         </button>
       </div>

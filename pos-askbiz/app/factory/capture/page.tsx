@@ -1,396 +1,587 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-const ACC = '#f59e0b'
-const API = process.env.NEXT_PUBLIC_API_URL || ''
-
-const GOOD = '#22c55e'
-const BAD = '#ef4444'
+// ── Design tokens ────────────────────────────────────────────────────────────
+const AMBER  = '#f59e0b'
+const GREEN  = '#22c55e'
+const RED    = '#ef4444'
+const BLUE   = '#3b82f6'
+const PURPLE = '#8b5cf6'
+const API    = process.env.NEXT_PUBLIC_API_URL || ''
 
 type CaptureType = 'intake' | 'output' | 'wastage' | 'dispatch'
-type Stage = 'select_type' | 'capture_photo' | 'details' | 'done'
+type Stage = 'viewfinder' | 'confirm_type' | 'details' | 'success'
 
-interface TypeMeta {
-  label: string
-  icon: string
-  color: string
-  blurb: string
-  notesLabel: string
-  notesPlaceholder: string
+const TYPES: { id: CaptureType; label: string; color: string; bg: string; hint: string }[] = [
+  { id: 'intake',   label: 'Intake',   color: BLUE,   bg: 'rgba(59,130,246,.15)',  hint: 'Raw materials in' },
+  { id: 'output',   label: 'Output',   color: GREEN,  bg: 'rgba(34,197,94,.15)',   hint: 'Finished goods out' },
+  { id: 'wastage',  label: 'Wastage',  color: RED,    bg: 'rgba(239,68,68,.15)',   hint: 'Scrap / spoilage' },
+  { id: 'dispatch', label: 'Dispatch', color: PURPLE, bg: 'rgba(139,92,246,.15)',  hint: 'Shipped out' },
+]
+
+const UNITS = ['kg', 'pcs', 'litres', 'boxes', 'tonnes', 'g', 'packs', 'pallets', 'bags']
+
+const WASTAGE_REASONS = ['Damaged', 'Spoiled', 'QC reject', 'Machine fault', 'Contamination', 'Overproduction', 'Other']
+
+interface InventoryItem { id: string; name: string; unit: string | null }
+
+// ── SVG icons ─────────────────────────────────────────────────────────────────
+function IconCamera({ size = 28, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </svg>
+  )
 }
-
-const TYPE_META: Record<CaptureType, TypeMeta> = {
-  intake:   { label: 'Intake',   icon: '📥', color: '#3b82f6', blurb: 'Raw materials received in', notesLabel: 'Supplier / batch notes', notesPlaceholder: 'e.g. Supplier, delivery note #, condition…' },
-  output:   { label: 'Output',   icon: '📤', color: GOOD,      blurb: 'Finished goods produced', notesLabel: 'Production notes', notesPlaceholder: 'e.g. Line, shift, quality notes…' },
-  wastage:  { label: 'Wastage',  icon: '🗑️', color: BAD,       blurb: 'Scrap / spoilage', notesLabel: 'Reason for wastage *', notesPlaceholder: 'e.g. Spoiled, damaged in handling, QC reject…' },
-  dispatch: { label: 'Dispatch', icon: '🚚', color: '#8b5cf6', blurb: 'Goods shipped out', notesLabel: 'Destination *', notesPlaceholder: 'e.g. Customer / warehouse, vehicle, order #…' },
+function IconCheck({ size = 28, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  )
 }
-
-const UNITS = ['kg', 'pcs', 'litres', 'boxes', 'tonnes', 'g', 'packs', 'pallets']
-
-interface InventoryItem { id: string; name: string }
+function IconArrowLeft({ size = 20, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+  )
+}
+function IconRotateCcw({ size = 20, color = '#fff' }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="1 4 1 10 7 10"/>
+      <path d="M3.51 15a9 9 0 1 0 .49-4.5"/>
+    </svg>
+  )
+}
 
 export default function FactoryCapturePage() {
   const router = useRouter()
   const supabase = createClient()
   const [ready, setReady] = useState(false)
 
-  const [stage, setStage] = useState<Stage>('select_type')
-  const [type, setType] = useState<CaptureType | null>(null)
-  const [preview, setPreview] = useState<string | null>(null)   // dataURL of captured photo
-  const [showCamera, setShowCamera] = useState(false)
-  const [cameraError, setCameraError] = useState<string | null>(null)
+  // Stage
+  const [stage, setStage]       = useState<Stage>('viewfinder')
+  const [captureType, setCaptureType] = useState<CaptureType | null>(null)
 
-  // form
+  // Camera
+  const videoRef   = useRef<HTMLVideoElement>(null)
+  const canvasRef  = useRef<HTMLCanvasElement>(null)
+  const streamRef  = useRef<MediaStream | null>(null)
+  const fileRef    = useRef<HTMLInputElement>(null)
+  const [cameraOn, setCameraOn]       = useState(false)
+  const [cameraErr, setCameraErr]     = useState('')
+  const [photoUrl, setPhotoUrl]       = useState('')
+  const [flashActive, setFlashActive] = useState(false)
+
+  // Details form
   const [inventory, setInventory] = useState<InventoryItem[]>([])
-  const [product, setProduct] = useState('')
-  const [freeProduct, setFreeProduct] = useState('')
-  const [useFree, setUseFree] = useState(false)
-  const [quantity, setQuantity] = useState('')
-  const [unit, setUnit] = useState('kg')
-  const [notes, setNotes] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [product, setProduct]     = useState('')
+  const [quantity, setQuantity]   = useState('')
+  const [unit, setUnit]           = useState('kg')
+  const [notes, setNotes]         = useState('')
+  const [selectedReason, setSelectedReason] = useState('')
+  const [saving, setSaving]       = useState(false)
+  const [saveError, setSaveError] = useState('')
 
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const streamRef = useRef<MediaStream | null>(null)
-  const cameraInputRef = useRef<HTMLInputElement>(null)
-
+  // ── Auth ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.push('/pos'); return }
       setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).catch(() => {})
-      fetch(`${API}/api/pos/inventory`).then(r => r.ok ? r.json() : { inventory: [] })
-        .then(d => setInventory(d.inventory || [])).catch(() => {})
+      fetch(`${API}/api/pos/inventory`)
+        .then(r => r.ok ? r.json() : { inventory: [] })
+        .then(d => setInventory((d.inventory || []).slice(0, 60)))
+        .catch(() => {})
     })
-    return () => { streamRef.current?.getTracks().forEach(t => t.stop()) }
+    return () => stopCamera()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ── Camera helpers ────────────────────────────────────────────
-  async function openCamera() {
-    setCameraError(null)
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-      streamRef.current = stream
-      setShowCamera(true)
-      setTimeout(() => {
-        if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play().catch(() => {}) }
-      }, 100)
-    } catch (err: any) {
-      // Camera denied / unavailable → fall back to native file picker
-      setCameraError(
-        err?.name === 'NotAllowedError'
-          ? 'Camera access was denied. Use “Choose photo” to upload instead.'
-          : 'Camera unavailable on this device. Use “Choose photo” to upload instead.'
-      )
-      cameraInputRef.current?.click()
-    }
-  }
+  // Open camera as soon as ready
+  useEffect(() => {
+    if (ready && stage === 'viewfinder') openCamera()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready])
 
-  function closeCamera() {
+  // ── Camera ────────────────────────────────────────────────────────────────
+  const openCamera = useCallback(async () => {
+    setCameraErr('')
+    // Stop any existing stream first
+    if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+      })
+      streamRef.current = stream
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        await videoRef.current.play()
+      }
+      setCameraOn(true)
+    } catch (err: any) {
+      const denied = err?.name === 'NotAllowedError'
+      setCameraErr(denied ? 'Camera access denied' : 'Camera unavailable')
+      setCameraOn(false)
+    }
+  }, [])
+
+  function stopCamera() {
     streamRef.current?.getTracks().forEach(t => t.stop())
     streamRef.current = null
-    setShowCamera(false)
+    setCameraOn(false)
   }
 
-  function captureFromVideo() {
-    if (!videoRef.current || !canvasRef.current) return
+  function capture() {
+    if (!canvasRef.current || !videoRef.current) return
     const v = videoRef.current
-    canvasRef.current.width = v.videoWidth
-    canvasRef.current.height = v.videoHeight
-    canvasRef.current.getContext('2d')?.drawImage(v, 0, 0)
-    const dataUrl = canvasRef.current.toDataURL('image/jpeg', 0.85)
-    closeCamera()
-    setPreview(dataUrl)
+    const c = canvasRef.current
+    c.width = v.videoWidth; c.height = v.videoHeight
+    c.getContext('2d')?.drawImage(v, 0, 0)
+    const url = c.toDataURL('image/jpeg', 0.88)
+    setPhotoUrl(url)
+    // Flash animation
+    setFlashActive(true)
+    setTimeout(() => setFlashActive(false), 180)
+    stopCamera()
+    setStage('confirm_type')
   }
 
-  function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = ev => setPreview(ev.target?.result as string)
+    reader.onload = ev => {
+      setPhotoUrl(ev.target?.result as string)
+      stopCamera()
+      setStage('confirm_type')
+    }
     reader.readAsDataURL(file)
     e.target.value = ''
   }
 
   function retake() {
-    setPreview(null)
-    setCameraError(null)
+    setPhotoUrl('')
+    setCaptureType(null)
+    setStage('viewfinder')
+    openCamera()
   }
 
-  // ── Flow control ──────────────────────────────────────────────
-  function pickType(t: CaptureType) {
-    setType(t)
-    setStage('capture_photo')
-  }
-
-  function backToType() {
-    closeCamera()
-    setPreview(null)
-    setType(null)
-    setCameraError(null)
-    setStage('select_type')
-  }
-
-  function proceedToDetails() {
-    if (!preview) return
+  function proceedToDetails(t: CaptureType) {
+    setCaptureType(t)
+    setUnit(inventory.length > 0 ? (inventory[0].unit || 'kg') : 'kg')
     setStage('details')
   }
 
-  function resetAll() {
-    closeCamera()
-    setStage('select_type')
-    setType(null)
-    setPreview(null)
-    setProduct('')
-    setFreeProduct('')
-    setUseFree(false)
-    setQuantity('')
-    setUnit('kg')
-    setNotes('')
-    setError(null)
-    setCameraError(null)
-  }
-
-  const resolvedProduct = useFree ? freeProduct.trim() : product.trim()
-  const notesRequired = type === 'wastage' || type === 'dispatch'
-
+  // ── Submit ────────────────────────────────────────────────────────────────
   async function submit() {
-    if (!type || !preview) return
-    if (!resolvedProduct) { setError('Please select or enter a product.'); return }
-    if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) { setError('Enter a valid quantity.'); return }
-    if (notesRequired && !notes.trim()) {
-      setError(type === 'wastage' ? 'A reason for wastage is required.' : 'A destination is required for dispatch.')
-      return
-    }
-    setSubmitting(true)
-    setError(null)
+    if (!captureType || !photoUrl) return
+    const resolvedNotes = captureType === 'wastage' ? selectedReason || notes.trim() : notes.trim()
+    if (!product.trim()) { setSaveError('Select or enter a product'); return }
+    if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) { setSaveError('Enter a valid quantity'); return }
+    if (captureType === 'wastage' && !resolvedNotes) { setSaveError('Select a reason for wastage'); return }
+    if (captureType === 'dispatch' && !notes.trim()) { setSaveError('Enter a destination'); return }
+    setSaving(true); setSaveError('')
     try {
       const res = await fetch(`${API}/api/pos/factory/capture`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type,
-          image: preview,                 // full data URL; API strips prefix
-          product_name: resolvedProduct,
+          type: captureType,
+          image: photoUrl,
+          product_name: product.trim(),
           quantity: Number(quantity),
-          unit,                           // sent for completeness
-          batch_ref: unit,                // round-trips the unit (no dedicated column)
-          notes: notes.trim() || null,
+          batch_ref: unit,
+          notes: resolvedNotes || null,
         }),
       })
-      const data = await res.json()
       if (!res.ok) {
-        setError(data.error || 'Failed to submit capture.')
-        setSubmitting(false)
+        const d = await res.json()
+        setSaveError(d.error || 'Failed to save')
+        setSaving(false)
         return
       }
-      setStage('done')
+      setStage('success')
     } catch {
-      setError('Network error — please try again.')
+      setSaveError('Network error — try again')
     } finally {
-      setSubmitting(false)
+      setSaving(false)
     }
   }
 
-  if (!ready) {
-    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>Loading…</div>
+  function reset() {
+    setStage('viewfinder')
+    setCaptureType(null)
+    setPhotoUrl('')
+    setProduct('')
+    setQuantity('')
+    setUnit('kg')
+    setNotes('')
+    setSelectedReason('')
+    setSaveError('')
+    openCamera()
   }
 
-  const meta = type ? TYPE_META[type] : null
+  // ── Numpad ────────────────────────────────────────────────────────────────
+  function numpadPress(v: string) {
+    setQuantity(prev => {
+      if (v === '⌫') return prev.slice(0, -1)
+      if (v === '.' && prev.includes('.')) return prev
+      if (v === '.' && prev === '') return '0.'
+      if (prev === '0' && v !== '.') return v
+      return prev + v
+    })
+  }
 
-  return (
-    <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
-      {/* Hidden file input fallback (always mounted) */}
-      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileInput} style={{ display: 'none' }} />
+  const selectedType = captureType ? TYPES.find(t => t.id === captureType)! : null
+
+  if (!ready) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0f1e' }}>
+      <div style={{ width: 36, height: 36, border: '3px solid rgba(245,158,11,.3)', borderTopColor: AMBER, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+    </div>
+  )
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SCREEN 1 — LIVE VIEWFINDER (fullscreen camera, type pills at bottom)
+  // ══════════════════════════════════════════════════════════════════════════
+  if (stage === 'viewfinder') return (
+    <div style={{ position: 'fixed', inset: 0, background: '#000', fontFamily: 'system-ui, sans-serif' }}>
+      {/* Hidden inputs */}
+      <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: 'none' }} />
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-      {/* Header */}
-      <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 14 }}>
-        <button onClick={() => { closeCamera(); router.push('/factory') }} style={{ background: '#334155', border: 'none', color: '#94a3b8', width: 36, height: 36, borderRadius: 8, cursor: 'pointer', fontSize: 18 }}>←</button>
+      {/* Live video */}
+      <video ref={videoRef} autoPlay playsInline muted style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+
+      {/* Flash overlay */}
+      <div style={{ position: 'absolute', inset: 0, background: '#fff', opacity: flashActive ? 1 : 0, transition: 'opacity 60ms', pointerEvents: 'none' }} />
+
+      {/* Corner grid guide (subtle) */}
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+        {[['top', 'left'], ['top', 'right'], ['bottom', 'left'], ['bottom', 'right']].map(([v, h]) => (
+          <div key={v + h} style={{
+            position: 'absolute', [v]: 80, [h]: 28,
+            width: 28, height: 28,
+            borderTop: v === 'top' ? '2px solid rgba(255,255,255,0.4)' : 'none',
+            borderBottom: v === 'bottom' ? '2px solid rgba(255,255,255,0.4)' : 'none',
+            borderLeft: h === 'left' ? '2px solid rgba(255,255,255,0.4)' : 'none',
+            borderRight: h === 'right' ? '2px solid rgba(255,255,255,0.4)' : 'none',
+          }} />
+        ))}
+      </div>
+
+      {/* Top bar */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '48px 20px 16px', background: 'linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)', display: 'flex', alignItems: 'center', gap: 14 }}>
+        <button onClick={() => router.push('/factory')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <IconArrowLeft size={18} />
+        </button>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>🏭 Production Capture</div>
-          <div style={{ fontSize: 12, color: '#94a3b8' }}>
-            {stage === 'select_type' && 'Choose what you are logging'}
-            {stage === 'capture_photo' && `Photograph the ${meta?.label.toLowerCase()} as proof`}
-            {stage === 'details' && 'Add the details'}
-            {stage === 'done' && 'Capture submitted'}
+          <div style={{ color: '#fff', fontWeight: 700, fontSize: 16, lineHeight: 1 }}>Production Capture</div>
+          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 2 }}>
+            {captureType ? `${TYPES.find(t => t.id === captureType)!.label} selected` : 'Select type, then tap shutter'}
           </div>
         </div>
       </div>
 
-      <div style={{ padding: '24px', maxWidth: 640, margin: '0 auto' }}>
-        {/* Step indicator */}
-        {stage !== 'done' && (
-          <div style={{ display: 'flex', gap: 6, marginBottom: 24 }}>
-            {(['select_type', 'capture_photo', 'details'] as Stage[]).map((s, i) => {
-              const order = ['select_type', 'capture_photo', 'details']
-              const active = order.indexOf(stage) >= i
-              return <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: active ? ACC : '#334155' }} />
-            })}
+      {/* Camera error state */}
+      {cameraErr && (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32 }}>
+          <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(239,68,68,.15)', border: '2px solid rgba(239,68,68,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <IconCamera size={32} color={RED} />
           </div>
-        )}
+          <div style={{ color: '#fff', fontWeight: 700, fontSize: 16, textAlign: 'center' }}>{cameraErr}</div>
+          <button onClick={() => fileRef.current?.click()} style={{ background: AMBER, border: 'none', color: '#1a1206', padding: '14px 28px', borderRadius: 12, cursor: 'pointer', fontWeight: 800, fontSize: 15 }}>Choose Photo Instead</button>
+        </div>
+      )}
 
-        {/* ── STAGE 1: select type ───────────────────────────── */}
-        {stage === 'select_type' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            {(Object.keys(TYPE_META) as CaptureType[]).map((t, idx) => {
-              const m = TYPE_META[t]
-              return (
-                <button key={t} onClick={() => pickType(t)} className="pos-item"
-                  style={{ background: '#1e293b', border: `2px solid ${m.color}55`, borderRadius: 16, padding: '28px 18px', cursor: 'pointer', textAlign: 'center', transition: 'border-color 0.15s, transform 0.1s', animationDelay: `${Math.min(idx, 8) * 40}ms` }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = m.color)}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = `${m.color}55`)}
-                >
-                  <div style={{ fontSize: 44, marginBottom: 10 }}>{m.icon}</div>
-                  <div style={{ fontWeight: 800, fontSize: 18, color: m.color }}>{m.label}</div>
-                  <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{m.blurb}</div>
-                </button>
-              )
-            })}
-          </div>
-        )}
+      {/* Bottom controls */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '20px 20px 44px', background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)' }}>
+        {/* Type selector pills */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 28, justifyContent: 'center' }}>
+          {TYPES.map(t => {
+            const active = captureType === t.id
+            return (
+              <button key={t.id} onClick={() => setCaptureType(prev => prev === t.id ? null : t.id)}
+                style={{ padding: '7px 16px', borderRadius: 24, border: `1.5px solid ${active ? t.color : 'rgba(255,255,255,0.25)'}`, background: active ? t.bg : 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', color: active ? t.color : 'rgba(255,255,255,0.75)', fontSize: 13, fontWeight: active ? 700 : 500, cursor: 'pointer', transition: 'all 150ms', whiteSpace: 'nowrap' }}>
+                {t.label}
+              </button>
+            )
+          })}
+        </div>
 
-        {/* ── STAGE 2: capture photo ─────────────────────────── */}
-        {stage === 'capture_photo' && meta && (
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-              <span style={{ background: `${meta.color}22`, color: meta.color, padding: '5px 12px', borderRadius: 8, fontSize: 14, fontWeight: 700 }}>{meta.icon} {meta.label}</span>
-              <button onClick={backToType} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 13 }}>change</button>
-            </div>
-
-            {!preview ? (
-              <div style={{ background: '#1e293b', border: '1px dashed #334155', borderRadius: 16, padding: '40px 20px', textAlign: 'center' }}>
-                <div style={{ fontSize: 56, marginBottom: 12 }}>📷</div>
-                <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Photograph the {meta.label.toLowerCase()}</div>
-                <div style={{ fontSize: 12, color: '#64748b', marginBottom: 20, lineHeight: 1.5 }}>This photo is the proof attached to this capture.<br />Make sure the materials / goods are clearly visible.</div>
-                {cameraError && <div style={{ color: BAD, fontSize: 12, marginBottom: 14 }}>{cameraError}</div>}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 280, margin: '0 auto' }}>
-                  <button onClick={openCamera} style={{ background: ACC, border: 'none', color: '#1a1206', padding: '14px', borderRadius: 10, cursor: 'pointer', fontWeight: 800, fontSize: 15 }}>📸 Open Camera</button>
-                  <button onClick={() => cameraInputRef.current?.click()} style={{ background: '#334155', border: 'none', color: '#e2e8f0', padding: '12px', borderRadius: 10, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>🖼️ Choose photo</button>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <div style={{ borderRadius: 16, overflow: 'hidden', border: `2px solid ${meta.color}55`, marginBottom: 16 }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={preview} alt="capture preview" style={{ width: '100%', display: 'block' }} />
-                </div>
-                <div style={{ display: 'flex', gap: 10 }}>
-                  <button onClick={retake} style={{ flex: 1, background: '#334155', border: 'none', color: '#e2e8f0', padding: '14px', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>↺ Retake</button>
-                  <button onClick={proceedToDetails} style={{ flex: 2, background: ACC, border: 'none', color: '#1a1206', padding: '14px', borderRadius: 10, cursor: 'pointer', fontWeight: 800, fontSize: 15 }}>Continue →</button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── STAGE 3: details ───────────────────────────────── */}
-        {stage === 'details' && meta && (
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-              {preview && (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={preview} alt="thumb" style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', border: `2px solid ${meta.color}55` }} />
-              )}
-              <div>
-                <span style={{ background: `${meta.color}22`, color: meta.color, padding: '4px 10px', borderRadius: 6, fontSize: 13, fontWeight: 700 }}>{meta.icon} {meta.label}</span>
-              </div>
-              <button onClick={() => setStage('capture_photo')} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 13 }}>retake photo</button>
-            </div>
-
-            {/* Product */}
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>Product *</label>
-            {!useFree ? (
-              <select value={product} onChange={e => { if (e.target.value === '__free__') { setUseFree(true); setProduct('') } else setProduct(e.target.value) }}
-                style={inputStyle}>
-                <option value="">Select product…</option>
-                {inventory.map(i => <option key={i.id} value={i.name}>{i.name}</option>)}
-                <option value="__free__">+ Enter manually…</option>
-              </select>
-            ) : (
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input value={freeProduct} onChange={e => setFreeProduct(e.target.value)} placeholder="Product name" style={{ ...inputStyle, flex: 1 }} autoFocus />
-                {inventory.length > 0 && <button onClick={() => { setUseFree(false); setFreeProduct('') }} style={{ background: '#334155', border: 'none', color: '#94a3b8', borderRadius: 8, padding: '0 14px', cursor: 'pointer', fontSize: 13 }}>list</button>}
-              </div>
-            )}
-
-            {/* Quantity + unit */}
-            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <div style={{ flex: 2 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>Quantity *</label>
-                <input value={quantity} onChange={e => setQuantity(e.target.value)} type="number" inputMode="decimal" min="0" placeholder="0" style={inputStyle} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>Unit</label>
-                <select value={unit} onChange={e => setUnit(e.target.value)} style={inputStyle}>
-                  {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
-                </select>
-              </div>
-            </div>
-
-            {/* Notes */}
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#94a3b8', margin: '16px 0 6px', textTransform: 'uppercase', letterSpacing: 1 }}>{meta.notesLabel}</label>
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={meta.notesPlaceholder} rows={3}
-              style={{ ...inputStyle, resize: 'vertical', fontFamily: 'system-ui, sans-serif' }} />
-
-            {error && <div className="pos-banner" role="alert" style={{ color: BAD, fontSize: 13, marginTop: 14 }}>{error}</div>}
-
-            <button onClick={submit} disabled={submitting} className="pos-btn-primary"
-              style={{ width: '100%', marginTop: 20, background: submitting ? '#334155' : ACC, border: 'none', color: submitting ? '#94a3b8' : '#1a1206', padding: '16px', borderRadius: 12, cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.5 : 1, fontWeight: 800, fontSize: 16 }}>
-              {submitting ? 'Submitting…' : `Submit ${meta.label} Capture`}
-            </button>
-            <div style={{ fontSize: 11, color: '#64748b', textAlign: 'center', marginTop: 10 }}>Will be submitted for supervisor approval.</div>
-          </div>
-        )}
-
-        {/* ── STAGE 4: done ──────────────────────────────────── */}
-        {stage === 'done' && meta && (
-          <div className="pos-reveal" style={{ textAlign: 'center', paddingTop: 30 }}>
-            <div className="pos-success-icon" style={{ width: 84, height: 84, borderRadius: '50%', background: `${GOOD}22`, border: `2px solid ${GOOD}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 42, margin: '0 auto 20px' }}>✓</div>
-            <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>Capture Logged</div>
-            <div style={{ fontSize: 14, color: '#94a3b8', marginBottom: 4 }}>{meta.icon} {meta.label} · {resolvedProduct} · {quantity} {unit}</div>
-            <div style={{ display: 'inline-block', background: `${ACC}22`, color: ACC, padding: '6px 16px', borderRadius: 20, fontSize: 13, fontWeight: 700, marginTop: 8 }}>⏳ Pending approval</div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '32px auto 0' }}>
-              <button onClick={resetAll} className="pos-btn-primary" style={{ background: ACC, border: 'none', color: '#1a1206', padding: '16px', borderRadius: 12, cursor: 'pointer', fontWeight: 800, fontSize: 16 }}>📸 New Capture</button>
-              <button onClick={() => router.push('/factory/production')} style={{ background: '#1e293b', border: '1px solid #334155', color: '#e2e8f0', padding: '14px', borderRadius: 12, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>View Production Log</button>
-              <button onClick={() => router.push('/factory')} style={{ background: 'none', border: 'none', color: '#64748b', padding: '8px', cursor: 'pointer', fontSize: 13 }}>← Back to Factory hub</button>
-            </div>
-          </div>
-        )}
+        {/* Shutter row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32 }}>
+          {/* Gallery fallback */}
+          <button onClick={() => fileRef.current?.click()} style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </button>
+          {/* Shutter */}
+          <button onClick={capture} disabled={!cameraOn}
+            style={{ width: 76, height: 76, borderRadius: '50%', background: cameraOn ? '#fff' : 'rgba(255,255,255,0.3)', border: '4px solid rgba(255,255,255,0.4)', cursor: cameraOn ? 'pointer' : 'not-allowed', transition: 'transform 100ms, background 100ms', boxShadow: cameraOn ? '0 0 0 6px rgba(255,255,255,0.12)' : 'none' }}
+            onMouseDown={e => { if (cameraOn) e.currentTarget.style.transform = 'scale(0.92)' }}
+            onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
+          />
+          {/* Placeholder for symmetry */}
+          <div style={{ width: 48 }} />
+        </div>
       </div>
 
-      {/* ── Live camera overlay ──────────────────────────────── */}
-      {showCamera && meta && (
-        <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 300, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 12 }}>
-            <button onClick={closeCamera} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>✕ Cancel</button>
-            <div style={{ flex: 1, textAlign: 'center', color: '#fff', fontSize: 13 }}>{meta.icon} Frame the {meta.label.toLowerCase()} clearly</div>
-          </div>
-          <video ref={videoRef} playsInline muted style={{ flex: 1, objectFit: 'cover', width: '100%' }} />
-          <div style={{ padding: 28, display: 'flex', justifyContent: 'center' }}>
-            <button onClick={captureFromVideo}
-              style={{ width: 76, height: 76, borderRadius: '50%', background: '#fff', border: `5px solid ${ACC}`, cursor: 'pointer', fontSize: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>📷</button>
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SCREEN 2 — CONFIRM TYPE (photo preview + 4 big type cards)
+  // ══════════════════════════════════════════════════════════════════════════
+  if (stage === 'confirm_type') return (
+    <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+      {/* Top bar */}
+      <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '48px 20px 14px', display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+        <button onClick={retake} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <IconArrowLeft size={18} />
+        </button>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>What did you capture?</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 1 }}>Select the type to continue</div>
+        </div>
+        <button onClick={retake} style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)', padding: '7px 14px', borderRadius: 20, cursor: 'pointer', fontSize: 13 }}>
+          <IconRotateCcw size={14} /> Retake
+        </button>
+      </div>
+
+      {/* Photo strip */}
+      {photoUrl && (
+        <div style={{ position: 'relative', height: 200, flexShrink: 0, overflow: 'hidden' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={photoUrl} alt="Captured" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, #0a0f1e)' }} />
+          {/* Checkmark badge */}
+          <div style={{ position: 'absolute', bottom: 12, right: 16, width: 32, height: 32, borderRadius: '50%', background: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 0 4px rgba(34,197,94,.25)` }}>
+            <IconCheck size={16} />
           </div>
         </div>
       )}
+
+      {/* Type cards */}
+      <div style={{ flex: 1, padding: '20px 20px 40px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        {TYPES.map(t => (
+          <button key={t.id} onClick={() => proceedToDetails(t.id)}
+            style={{ background: t.bg, border: `1.5px solid ${t.color}50`, borderRadius: 18, padding: '28px 16px', cursor: 'pointer', textAlign: 'center', transition: 'transform 120ms, border-color 120ms', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}
+            onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.96)' }}
+            onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
+            onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.96)' }}
+            onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = t.color }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = `${t.color}50` }}
+          >
+            {/* Coloured circle icon */}
+            <div style={{ width: 52, height: 52, borderRadius: '50%', background: `${t.color}20`, border: `2px solid ${t.color}60`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {t.id === 'intake'   && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={t.color} strokeWidth="2" strokeLinecap="round"><path d="M12 2v10M8 10l4 4 4-4"/><rect x="3" y="16" width="18" height="6" rx="1"/></svg>}
+              {t.id === 'output'   && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={t.color} strokeWidth="2" strokeLinecap="round"><path d="M12 22V12M8 14l4-4 4 4"/><rect x="3" y="2" width="18" height="6" rx="1"/></svg>}
+              {t.id === 'wastage'  && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={t.color} strokeWidth="2" strokeLinecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>}
+              {t.id === 'dispatch' && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={t.color} strokeWidth="2" strokeLinecap="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>}
+            </div>
+            <div style={{ fontWeight: 800, fontSize: 16, color: t.color }}>{t.label}</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', lineHeight: 1.3 }}>{t.hint}</div>
+          </button>
+        ))}
+      </div>
     </div>
   )
-}
 
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '12px 14px',
-  background: '#0f172a',
-  border: '1px solid #334155',
-  borderRadius: 10,
-  color: '#f1f5f9',
-  fontSize: 15,
-  outline: 'none',
-  boxSizing: 'border-box',
+  // ══════════════════════════════════════════════════════════════════════════
+  // SCREEN 3 — DETAILS (quantity numpad + product + notes)
+  // ══════════════════════════════════════════════════════════════════════════
+  if (stage === 'details' && selectedType) return (
+    <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+      {/* Top bar */}
+      <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '48px 20px 14px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+        <button onClick={() => setStage('confirm_type')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <IconArrowLeft size={18} />
+        </button>
+        {/* Photo thumb + type badge */}
+        {photoUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photoUrl} alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', border: `2px solid ${selectedType.color}60`, flexShrink: 0 }} />
+        )}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: 15 }}>Add Details</div>
+          <div style={{ fontSize: 12, marginTop: 1 }}>
+            <span style={{ color: selectedType.color, fontWeight: 700 }}>{selectedType.label}</span>
+            <span style={{ color: 'rgba(255,255,255,0.4)' }}> · {selectedType.hint}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 40px' }}>
+        {/* Product selector */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Product</div>
+          {inventory.length > 0 ? (
+            <div style={{ position: 'relative' }}>
+              <select
+                value={product}
+                onChange={e => setProduct(e.target.value)}
+                style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${product ? selectedType.color + '60' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: product ? '#f1f5f9' : 'rgba(255,255,255,0.35)', padding: '14px 16px', fontSize: 15, cursor: 'pointer', appearance: 'none', outline: 'none' }}
+              >
+                <option value="">Select product…</option>
+                {inventory.map(i => <option key={i.id} value={i.name}>{i.name}</option>)}
+                <option value="__other__">Other / not listed…</option>
+              </select>
+              <svg style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          ) : null}
+          {(product === '__other__' || inventory.length === 0) && (
+            <input
+              value={product === '__other__' ? '' : product}
+              onChange={e => setProduct(e.target.value)}
+              placeholder="Type product name…"
+              style={{ width: '100%', marginTop: inventory.length > 0 ? 8 : 0, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }}
+            />
+          )}
+        </div>
+
+        {/* Quantity display */}
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Quantity</div>
+          <div style={{ background: 'rgba(255,255,255,0.05)', border: `1.5px solid ${quantity ? selectedType.color + '60' : 'rgba(255,255,255,0.1)'}`, borderRadius: 12, padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 56 }}>
+            <span style={{ fontSize: 32, fontWeight: 800, color: quantity ? '#f1f5f9' : 'rgba(255,255,255,0.2)', lineHeight: 1 }}>{quantity || '0'}</span>
+            {/* Unit pills */}
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: 160 }}>
+              {UNITS.slice(0, 5).map(u => (
+                <button key={u} onClick={() => setUnit(u)} style={{ padding: '4px 10px', borderRadius: 20, border: `1.5px solid ${unit === u ? selectedType.color : 'rgba(255,255,255,0.15)'}`, background: unit === u ? `${selectedType.color}20` : 'transparent', color: unit === u ? selectedType.color : 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: unit === u ? 700 : 400, cursor: 'pointer' }}>
+                  {u}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Numpad */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 20 }}>
+          {['1','2','3','4','5','6','7','8','9','.','0','⌫'].map(key => (
+            <button key={key} onClick={() => numpadPress(key)}
+              style={{ background: key === '⌫' ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.06)', border: `1px solid ${key === '⌫' ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.1)'}`, borderRadius: 12, padding: '16px 0', fontSize: key === '⌫' ? 18 : 22, fontWeight: 700, color: key === '⌫' ? RED : '#f1f5f9', cursor: 'pointer', transition: 'transform 80ms' }}
+              onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.93)' }}
+              onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
+              onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.93)' }}
+              onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)' }}
+            >
+              {key}
+            </button>
+          ))}
+        </div>
+
+        {/* Wastage reason picker */}
+        {captureType === 'wastage' && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Reason <span style={{ color: RED }}>*</span></div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {WASTAGE_REASONS.map(r => (
+                <button key={r} onClick={() => setSelectedReason(prev => prev === r ? '' : r)}
+                  style={{ padding: '8px 14px', borderRadius: 20, border: `1.5px solid ${selectedReason === r ? RED : 'rgba(255,255,255,0.15)'}`, background: selectedReason === r ? 'rgba(239,68,68,0.15)' : 'transparent', color: selectedReason === r ? RED : 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: selectedReason === r ? 700 : 400, cursor: 'pointer' }}>
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Dispatch destination */}
+        {captureType === 'dispatch' && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Destination <span style={{ color: RED }}>*</span></div>
+            <input
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Customer / warehouse / vehicle…"
+              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${notes ? PURPLE + '60' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
+        )}
+
+        {/* Optional notes for intake/output */}
+        {(captureType === 'intake' || captureType === 'output') && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Notes <span style={{ color: 'rgba(255,255,255,0.25)' }}>(optional)</span></div>
+            <input
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder={captureType === 'intake' ? 'Supplier, batch, condition…' : 'Line, shift, QC notes…'}
+              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
+        )}
+
+        {saveError && (
+          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', color: RED, fontSize: 13, marginBottom: 16 }}>{saveError}</div>
+        )}
+
+        {/* Submit */}
+        <button onClick={submit} disabled={saving}
+          style={{ width: '100%', background: saving ? 'rgba(255,255,255,0.1)' : selectedType.color, border: 'none', color: saving ? 'rgba(255,255,255,0.4)' : (captureType === 'output' || captureType === 'dispatch' ? '#fff' : '#1a1206'), padding: '16px', borderRadius: 14, cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 800, fontSize: 17, transition: 'all 150ms', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+          {saving ? (
+            <div style={{ width: 22, height: 22, border: '3px solid rgba(255,255,255,.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+          ) : (
+            <><IconCheck size={20} color={captureType === 'output' || captureType === 'dispatch' ? '#fff' : '#1a1206'} /> Submit {selectedType.label}</>
+          )}
+        </button>
+      </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SCREEN 4 — SUCCESS
+  // ══════════════════════════════════════════════════════════════════════════
+  if (stage === 'success' && selectedType) return (
+    <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
+      {/* Pulsing circle */}
+      <div style={{ position: 'relative', marginBottom: 28 }}>
+        <div style={{ width: 96, height: 96, borderRadius: '50%', background: `${selectedType.color}15`, position: 'absolute', inset: -16, animation: 'pulse 1.8s ease-out infinite' }} />
+        <div style={{ width: 96, height: 96, borderRadius: '50%', background: `${selectedType.color}25`, border: `3px solid ${selectedType.color}`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+          <IconCheck size={44} color={selectedType.color} />
+        </div>
+      </div>
+
+      <div style={{ fontSize: 26, fontWeight: 800, marginBottom: 8 }}>Capture logged</div>
+      <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>
+        <span style={{ color: selectedType.color, fontWeight: 700 }}>{selectedType.label}</span>
+        {quantity && ` · ${quantity} ${unit}`}
+        {product && ` · ${product}`}
+      </div>
+      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginBottom: 40 }}>Awaiting supervisor approval</div>
+
+      {/* Photo preview */}
+      {photoUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={photoUrl} alt="" style={{ width: 160, height: 120, objectFit: 'cover', borderRadius: 14, border: `2px solid ${selectedType.color}40`, marginBottom: 36 }} />
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 320 }}>
+        <button onClick={reset}
+          style={{ width: '100%', background: selectedType.color, border: 'none', color: captureType === 'output' || captureType === 'dispatch' ? '#fff' : '#1a1206', padding: '16px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 16 }}>
+          + Log Another
+        </button>
+        <button onClick={() => router.push('/factory')}
+          style={{ width: '100%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', padding: '14px', borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 15 }}>
+          Back to Hub
+        </button>
+      </div>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg) } }
+        @keyframes pulse { 0% { opacity: 0.6; transform: scale(1); } 100% { opacity: 0; transform: scale(1.8); } }
+      `}</style>
+    </div>
+  )
+
+  return null
 }

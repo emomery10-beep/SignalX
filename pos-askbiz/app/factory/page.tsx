@@ -3,15 +3,24 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-// ── Design tokens ────────────────────────────────────────────────────────────
-const AMBER  = '#f59e0b'
-const GREEN  = '#22c55e'
-const RED    = '#ef4444'
-const BLUE   = '#3b82f6'
-const PURPLE = '#8b5cf6'
-const CYAN   = '#06b6d4'
-const ORANGE = '#f97316'
+// ── Design tokens (from CSS variables in globals.css) ──────────────────────
 const API    = process.env.NEXT_PUBLIC_API_URL || ''
+const tokens = {
+  bg:        'var(--pos-bg)',
+  surface:   'var(--pos-surface)',
+  border:    'var(--pos-border)',
+  ink:       'var(--pos-ink)',
+  muted:     'var(--pos-muted)',
+  hint:      'var(--pos-hint)',
+  accent:    'var(--pos-accent)',
+  danger:    'var(--pos-danger)',
+  success:   'var(--pos-success)',
+  warning:   'var(--pos-warning)',
+  intake:    'var(--factory-intake)',
+  output:    'var(--factory-output)',
+  wastage:   'var(--factory-wastage)',
+  dispatch:  'var(--factory-dispatch)',
+}
 
 type CaptureType = 'intake' | 'output' | 'wastage' | 'dispatch'
 
@@ -36,13 +45,13 @@ interface Capture {
 }
 
 const TYPE_META: Record<CaptureType, { label: string; color: string; bg: string }> = {
-  intake:   { label: 'Intake',   color: BLUE,   bg: 'rgba(59,130,246,.12)'  },
-  output:   { label: 'Output',   color: GREEN,  bg: 'rgba(34,197,94,.12)'   },
-  wastage:  { label: 'Wastage',  color: RED,    bg: 'rgba(239,68,68,.12)'   },
-  dispatch: { label: 'Dispatch', color: PURPLE, bg: 'rgba(139,92,246,.12)'  },
+  intake:   { label: 'Intake',   color: tokens.intake,   bg: 'rgba(59,130,246,.08)'   },
+  output:   { label: 'Output',   color: tokens.output,   bg: 'rgba(22,163,74,.08)'    },
+  wastage:  { label: 'Wastage',  color: tokens.wastage,  bg: 'rgba(220,38,38,.08)'    },
+  dispatch: { label: 'Dispatch', color: tokens.dispatch, bg: 'rgba(139,92,246,.08)'   },
 }
 
-const STATUS_COLOR = { pending: AMBER, approved: GREEN, rejected: RED }
+const STATUS_COLOR = { pending: tokens.warning, approved: tokens.success, rejected: tokens.danger }
 
 function timeAgo(iso: string) {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
@@ -329,34 +338,34 @@ export default function FactoryHub() {
   ]
 
   if (!ready) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0f1e' }}>
-      <div style={{ width: 36, height: 36, border: '3px solid rgba(245,158,11,.3)', borderTopColor: AMBER, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: tokens.bg }}>
+      <div style={{ width: 36, height: 36, border: `3px solid ${tokens.accent}20`, borderTopColor: tokens.accent, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', paddingBottom: 40 }}>
+    <div style={{ minHeight: '100vh', background: tokens.bg, color: tokens.ink, fontFamily: 'system-ui, sans-serif', paddingBottom: 40 }}>
 
       {/* ── Header ───────────────────────────────────────────────────────── */}
-      <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '44px 20px 16px' }}>
+      <div style={{ background: tokens.surface, borderBottom: `1px solid ${tokens.border}`, padding: '44px 20px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button onClick={() => router.push('/pos')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.7)' }}>
+            <button onClick={() => router.push('/pos')} style={{ width: 38, height: 38, borderRadius: '50%', background: tokens.bg, border: `1px solid ${tokens.border}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: tokens.muted }}>
               <IconArrowLeft size={18} />
             </button>
             <div>
-              <div style={{ fontWeight: 800, fontSize: 20, color: AMBER, letterSpacing: '-0.02em' }}>Factory</div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>Production floor operations</div>
+              <div style={{ fontWeight: 800, fontSize: 20, color: tokens.accent, letterSpacing: '-0.02em' }}>Factory</div>
+              <div style={{ fontSize: 12, color: tokens.hint, marginTop: 1 }}>Production floor operations</div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {pending > 0 && (
-              <button onClick={() => router.push('/factory/approvals')} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', color: RED, borderRadius: 20, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+              <button onClick={() => router.push('/factory/approvals')} style={{ background: `${tokens.danger}15`, border: `1px solid ${tokens.danger}40`, color: tokens.danger, borderRadius: 20, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                 {pending} pending
               </button>
             )}
-            <button onClick={() => loadCaptures(true)} style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.5)' }}>
+            <button onClick={() => loadCaptures(true)} style={{ width: 36, height: 36, borderRadius: '50%', background: tokens.bg, border: `1px solid ${tokens.border}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: tokens.muted }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ transform: refreshing ? 'rotate(180deg)' : 'none', transition: 'transform 600ms' }}>
                 <polyline points="1 4 1 10 7 10"/>
                 <path d="M3.51 15a9 9 0 1 0 .49-4.5"/>
@@ -371,86 +380,86 @@ export default function FactoryHub() {
         {/* ── Active downtime alert banner ─────────────────────────────────── */}
         {activeDowntime.length > 0 && (
           <button onClick={() => router.push('/factory/downtime')}
-            style={{ width: '100%', marginBottom: 14, background: 'rgba(239,68,68,0.1)', border: '1.5px solid rgba(239,68,68,0.4)', borderRadius: 14, padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left' }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: RED, flexShrink: 0 }}>
+            style={{ width: '100%', marginBottom: 14, background: `${tokens.danger}10`, border: `1.5px solid ${tokens.danger}40`, borderRadius: 14, padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left' }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: `${tokens.danger}15`, border: `1px solid ${tokens.danger}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: tokens.danger, flexShrink: 0 }}>
               <IconAlertTriangle size={18} />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: RED }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: tokens.danger }}>
                 {activeDowntime.length} machine{activeDowntime.length > 1 ? 's' : ''} down
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 1 }}>
+              <div style={{ fontSize: 11, color: tokens.hint, marginTop: 1 }}>
                 {activeDowntime.map(e => `${e.machine_name} (${elapsedLabel(e.started_at)})`).join(' · ')}
               </div>
             </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(239,68,68,0.6)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={`${tokens.danger}90`} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         )}
 
         {/* ── Active shift banner ──────────────────────────────────────────── */}
         {activeShift && (
           <button onClick={() => router.push('/factory/shift')}
-            style={{ width: '100%', marginBottom: 10, background: 'rgba(20,184,166,0.08)', border: '1.5px solid rgba(20,184,166,0.35)', borderRadius: 14, padding: '11px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left' }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: GREEN, boxShadow: '0 0 0 3px rgba(34,197,94,0.2)', flexShrink: 0, animation: 'pulse-dot 1.4s ease-in-out infinite' }} />
+            style={{ width: '100%', marginBottom: 10, background: `${tokens.success}10`, border: `1.5px solid ${tokens.success}40`, borderRadius: 14, padding: '11px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: tokens.success, boxShadow: `0 0 0 3px ${tokens.success}30`, flexShrink: 0, animation: 'pulse-dot 1.4s ease-in-out infinite' }} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#14b8a6' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: tokens.success }}>
                 {activeShift.shift_name === 'Custom' ? (activeShift.custom_name || 'Custom') : activeShift.shift_name} shift active · {elapsedLabel(activeShift.started_at)}
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>
+              <div style={{ fontSize: 11, color: tokens.hint, marginTop: 1 }}>
                 {(activeShift.live_output || 0).toLocaleString()} units produced
                 {activeShift.target_units ? ` · target ${activeShift.target_units.toLocaleString()}` : ''}
               </div>
             </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(20,184,166,0.6)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={`${tokens.success}90`} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         )}
 
         {/* ── Critical defect alert ────────────────────────────────────────── */}
         {qualityCriticals > 0 && (
           <button onClick={() => router.push('/factory/quality')}
-            style={{ width: '100%', marginBottom: 10, background: 'rgba(239,68,68,0.08)', border: '1.5px solid rgba(239,68,68,0.5)', borderRadius: 14, padding: '11px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left' }}>
+            style={{ width: '100%', marginBottom: 10, background: `${tokens.danger}10`, border: `1.5px solid ${tokens.danger}40`, borderRadius: 14, padding: '11px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left' }}>
             <div style={{ fontSize: 18, flexShrink: 0 }}>🛑</div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: RED }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: tokens.danger }}>
                 {qualityCriticals} critical defect{qualityCriticals > 1 ? 's' : ''} logged today
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>Immediate review required</div>
+              <div style={{ fontSize: 11, color: tokens.hint, marginTop: 1 }}>Immediate review required</div>
             </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(239,68,68,0.6)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={`${tokens.danger}90`} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         )}
 
         {/* ── Hero CTA ─────────────────────────────────────────────────────── */}
         <button onClick={() => router.push('/factory/capture')}
-          style={{ width: '100%', marginBottom: 20, background: `linear-gradient(135deg, ${AMBER}, #d97706)`, border: 'none', borderRadius: 18, padding: '18px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16, boxShadow: `0 8px 32px rgba(245,158,11,0.3)`, transition: 'transform 120ms, box-shadow 120ms' }}
-          onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.98)'; e.currentTarget.style.boxShadow = `0 4px 16px rgba(245,158,11,0.2)` }}
-          onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = `0 8px 32px rgba(245,158,11,0.3)` }}
+          style={{ width: '100%', marginBottom: 20, background: tokens.accent, border: 'none', borderRadius: 18, padding: '18px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16, boxShadow: `0 4px 12px ${tokens.accent}30`, transition: 'transform 120ms, box-shadow 120ms' }}
+          onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.98)'; e.currentTarget.style.boxShadow = `0 2px 6px ${tokens.accent}20` }}
+          onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = `0 4px 12px ${tokens.accent}30` }}
           onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.97)' }}
           onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)' }}
         >
-          <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff' }}>
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff' }}>
             <IconCamera size={26} />
           </div>
           <div style={{ textAlign: 'left', flex: 1 }}>
-            <div style={{ fontWeight: 800, fontSize: 18, color: '#1a1206', lineHeight: 1.1 }}>New Production Capture</div>
-            <div style={{ fontSize: 13, color: 'rgba(26,18,6,0.6)', marginTop: 3 }}>Photograph intake, output, wastage or dispatch</div>
+            <div style={{ fontWeight: 800, fontSize: 18, color: '#fff', lineHeight: 1.1 }}>New Production Capture</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 3 }}>Photograph intake, output, wastage or dispatch</div>
           </div>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(26,18,6,0.5)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
 
         {/* ── KPI grid ─────────────────────────────────────────────────────── */}
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
             {[...Array(5)].map((_, i) => (
-              <div key={i} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 14, height: 80, animation: 'pulse 1.6s ease-in-out infinite', animationDelay: `${i * 100}ms` }} />
+              <div key={i} style={{ background: tokens.bg, border: `1px solid ${tokens.border}`, borderRadius: 14, height: 80, animation: 'pulse 1.6s ease-in-out infinite', animationDelay: `${i * 100}ms` }} />
             ))}
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20 }}>
             {kpis.map((k, i) => (
               <div key={k.label} style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: `1px solid ${k.status === 'bad' ? `${k.color}30` : k.status === 'warn' ? `${k.color}25` : 'rgba(255,255,255,0.08)'}`,
+                background: tokens.surface,
+                border: `1px solid ${k.status === 'bad' ? `${k.color}40` : k.status === 'warn' ? `${k.color}30` : tokens.border}`,
                 borderRadius: 14, padding: '12px 14px',
                 gridColumn: i === 4 ? 'span 3' : 'auto',
               }}>
@@ -458,21 +467,21 @@ export default function FactoryHub() {
                   // Pending — spans full width
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{k.label}</div>
+                      <div style={{ fontSize: 10, color: tokens.hint, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{k.label}</div>
                       <div style={{ fontSize: 22, fontWeight: 800, color: k.color, lineHeight: 1.1, marginTop: 2 }}>{k.value}</div>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{k.sub}</div>
+                      <div style={{ fontSize: 10, color: tokens.hint, marginTop: 2 }}>{k.sub}</div>
                     </div>
                     {pending > 0 && (
-                      <button onClick={() => router.push('/factory/approvals')} style={{ background: `${k.color}15`, border: `1px solid ${k.color}35`, color: k.color, padding: '8px 16px', borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                      <button onClick={() => router.push('/factory/approvals')} style={{ background: `${k.color}15`, border: `1px solid ${k.color}40`, color: k.color, padding: '8px 16px', borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                         Review →
                       </button>
                     )}
                   </div>
                 ) : (
                   <>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{k.label}</div>
+                    <div style={{ fontSize: 10, color: tokens.hint, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{k.label}</div>
                     <div style={{ fontSize: 24, fontWeight: 800, color: k.color, lineHeight: 1 }}>{k.value}</div>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>{k.sub}</div>
+                    <div style={{ fontSize: 10, color: tokens.hint, marginTop: 4 }}>{k.sub}</div>
                   </>
                 )}
               </div>
@@ -482,10 +491,10 @@ export default function FactoryHub() {
 
         {/* ── OEE widget ────────────────────────────────────────────────────── */}
         {downtimeLoaded && (
-          <div style={{ marginBottom: 20, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '14px 16px' }}>
+          <div style={{ marginBottom: 20, background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 14, padding: '14px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>OEE Today</div>
-              <button onClick={() => router.push('/factory/downtime')} style={{ background: 'none', border: 'none', fontSize: 11, color: 'rgba(255,255,255,0.35)', cursor: 'pointer', padding: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: tokens.hint, textTransform: 'uppercase', letterSpacing: '0.08em' }}>OEE Today</div>
+              <button onClick={() => router.push('/factory/downtime')} style={{ background: 'none', border: 'none', fontSize: 11, color: tokens.hint, cursor: 'pointer', padding: 0 }}>
                 Downtime log →
               </button>
             </div>
@@ -493,27 +502,27 @@ export default function FactoryHub() {
               {/* Availability */}
               {(() => {
                 const av = oeeAvailability ?? 0
-                const color = av >= 90 ? GREEN : av >= 75 ? AMBER : RED
+                const color = av >= 90 ? tokens.success : av >= 75 ? tokens.warning : tokens.danger
                 return (
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginBottom: 4 }}>Availability</div>
+                    <div style={{ fontSize: 10, color: tokens.hint, marginBottom: 4 }}>Availability</div>
                     <div style={{ fontSize: 20, fontWeight: 800, color }}>{av.toFixed(0)}%</div>
-                    {downtimeMinutes > 0 && <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{Math.round(downtimeMinutes)}m down</div>}
-                    {activeDowntime.length > 0 && <div style={{ fontSize: 9, color: RED, marginTop: 2 }}>● live</div>}
+                    {downtimeMinutes > 0 && <div style={{ fontSize: 9, color: tokens.hint, marginTop: 2 }}>{Math.round(downtimeMinutes)}m down</div>}
+                    {activeDowntime.length > 0 && <div style={{ fontSize: 9, color: tokens.danger, marginTop: 2 }}>● live</div>}
                   </div>
                 )
               })()}
               {/* Performance — from active shift target */}
               {(() => {
                 const p = oeePerformance
-                const color = p === null ? 'rgba(255,255,255,0.2)' : p >= 90 ? GREEN : p >= 70 ? AMBER : RED
+                const color = p === null ? tokens.hint : p >= 90 ? tokens.success : p >= 70 ? tokens.warning : tokens.danger
                 return (
-                  <div style={{ textAlign: 'center', borderLeft: '1px solid rgba(255,255,255,0.08)', borderRight: '1px solid rgba(255,255,255,0.08)' }}>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginBottom: 4 }}>Performance</div>
+                  <div style={{ textAlign: 'center', borderLeft: `1px solid ${tokens.border}`, borderRight: `1px solid ${tokens.border}` }}>
+                    <div style={{ fontSize: 10, color: tokens.hint, marginBottom: 4 }}>Performance</div>
                     <div style={{ fontSize: 20, fontWeight: 800, color }}>{p !== null ? `${p.toFixed(0)}%` : '—'}</div>
                     {p !== null
                       ? <div style={{ fontSize: 9, color, marginTop: 2 }}>{(activeShift?.live_output || 0)} / {activeShift?.target_units} units</div>
-                      : <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)', marginTop: 2 }}>set shift target</div>
+                      : <div style={{ fontSize: 9, color: tokens.hint, marginTop: 2 }}>set shift target</div>
                     }
                   </div>
                 )
@@ -521,14 +530,14 @@ export default function FactoryHub() {
               {/* Quality */}
               {(() => {
                 const q = oeeQuality
-                const color = q === null ? 'rgba(255,255,255,0.2)' : q >= 97 ? GREEN : q >= 90 ? AMBER : RED
+                const color = q === null ? tokens.hint : q >= 97 ? tokens.success : q >= 90 ? tokens.warning : tokens.danger
                 return (
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginBottom: 4 }}>Quality</div>
+                    <div style={{ fontSize: 10, color: tokens.hint, marginBottom: 4 }}>Quality</div>
                     <div style={{ fontSize: 20, fontWeight: 800, color }}>{q !== null ? `${q.toFixed(0)}%` : '—'}</div>
                     {qualityOpen > 0
-                      ? <div style={{ fontSize: 9, color: qualityCriticals > 0 ? RED : AMBER, marginTop: 2 }}>{qualityOpen} defect{qualityOpen > 1 ? 's' : ''}</div>
-                      : q !== null && <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>no defects</div>
+                      ? <div style={{ fontSize: 9, color: qualityCriticals > 0 ? tokens.danger : tokens.warning, marginTop: 2 }}>{qualityOpen} defect{qualityOpen > 1 ? 's' : ''}</div>
+                      : q !== null && <div style={{ fontSize: 9, color: tokens.hint, marginTop: 2 }}>no defects</div>
                     }
                   </div>
                 )
@@ -540,25 +549,25 @@ export default function FactoryHub() {
         {/* ── Quick actions ─────────────────────────────────────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
           {[
-            { label: 'Production Log', sub: 'Full history + yields', icon: <IconClipboard size={20} />, color: BLUE, href: '/factory/production', span: false },
-            { label: 'Approvals', sub: `${pending} pending sign-off`, icon: <IconCheckSquare size={20} />, color: pending > 0 ? RED : GREEN, href: '/factory/approvals', span: false },
-            { label: 'Quality Check', sub: qualityOpen > 0 ? `${qualityOpen} open defect${qualityOpen > 1 ? 's' : ''}` : 'Log a defect', icon: <IconShield size={20} />, color: qualityCriticals > 0 ? RED : qualityOpen > 0 ? AMBER : PURPLE, href: '/factory/quality', span: false },
-            { label: 'Batch Scan', sub: activeBatchCount > 0 ? `${activeBatchCount} batch${activeBatchCount > 1 ? 'es' : ''} active` : 'Scan a batch label', icon: <IconBarcode size={20} />, color: CYAN, href: '/factory/batch', span: false },
-            { label: activeShift ? 'End Shift' : 'Start Shift', sub: activeShift ? `${elapsedLabel(activeShift.started_at)} running` : 'Track output by shift', icon: <IconClock size={20} />, color: '#14b8a6', href: '/factory/shift', span: false },
-            { label: 'Scan Waybill', sub: waybillTotal > 0 ? (waybillOnTimeRate !== null ? `${waybillOnTimeRate}% on time today` : `${waybillTotal} dispatched`) : 'Log a dispatch', icon: <IconTruck size={20} />, color: ORANGE, href: '/factory/waybill', span: false },
-            { label: 'Machine Down?', sub: activeDowntime.length > 0 ? `${activeDowntime.length} active event${activeDowntime.length > 1 ? 's' : ''}` : 'Report & track downtime', icon: <IconAlertTriangle size={20} />, color: activeDowntime.length > 0 ? RED : 'rgba(255,255,255,0.4)', href: '/factory/downtime', span: true },
+            { label: 'Production Log', sub: 'Full history + yields', icon: <IconClipboard size={20} />, color: tokens.intake, href: '/factory/production', span: false },
+            { label: 'Approvals', sub: `${pending} pending sign-off`, icon: <IconCheckSquare size={20} />, color: pending > 0 ? tokens.danger : tokens.success, href: '/factory/approvals', span: false },
+            { label: 'Quality Check', sub: qualityOpen > 0 ? `${qualityOpen} open defect${qualityOpen > 1 ? 's' : ''}` : 'Log a defect', icon: <IconShield size={20} />, color: qualityCriticals > 0 ? tokens.danger : qualityOpen > 0 ? tokens.warning : tokens.intake, href: '/factory/quality', span: false },
+            { label: 'Batch Scan', sub: activeBatchCount > 0 ? `${activeBatchCount} batch${activeBatchCount > 1 ? 'es' : ''} active` : 'Scan a batch label', icon: <IconBarcode size={20} />, color: tokens.dispatch, href: '/factory/batch', span: false },
+            { label: activeShift ? 'End Shift' : 'Start Shift', sub: activeShift ? `${elapsedLabel(activeShift.started_at)} running` : 'Track output by shift', icon: <IconClock size={20} />, color: tokens.success, href: '/factory/shift', span: false },
+            { label: 'Scan Waybill', sub: waybillTotal > 0 ? (waybillOnTimeRate !== null ? `${waybillOnTimeRate}% on time today` : `${waybillTotal} dispatched`) : 'Log a dispatch', icon: <IconTruck size={20} />, color: tokens.warning, href: '/factory/waybill', span: false },
+            { label: 'Machine Down?', sub: activeDowntime.length > 0 ? `${activeDowntime.length} active event${activeDowntime.length > 1 ? 's' : ''}` : 'Report & track downtime', icon: <IconAlertTriangle size={20} />, color: activeDowntime.length > 0 ? tokens.danger : tokens.hint, href: '/factory/downtime', span: true },
           ].map(n => (
             <button key={n.href} onClick={() => router.push(n.href)}
-              style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${activeDowntime.length > 0 && n.href === '/factory/downtime' ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.09)'}`, borderRadius: 14, padding: '16px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 150ms', display: 'flex', flexDirection: 'column', gap: 10, gridColumn: n.span ? 'span 2' : 'auto' }}
+              style={{ background: tokens.surface, border: `1px solid ${activeDowntime.length > 0 && n.href === '/factory/downtime' ? `${tokens.danger}40` : tokens.border}`, borderRadius: 14, padding: '16px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 150ms', display: 'flex', flexDirection: 'column', gap: 10, gridColumn: n.span ? 'span 2' : 'auto' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = `${n.color}50` }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = activeDowntime.length > 0 && n.href === '/factory/downtime' ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.09)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = activeDowntime.length > 0 && n.href === '/factory/downtime' ? `${tokens.danger}40` : tokens.border }}
             >
               <div style={{ width: 38, height: 38, borderRadius: 10, background: `${n.color}15`, border: `1px solid ${n.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: n.color }}>
                 {n.icon}
               </div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: '#e2e8f0' }}>{n.label}</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{n.sub}</div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: tokens.ink }}>{n.label}</div>
+                <div style={{ fontSize: 12, color: tokens.hint, marginTop: 2 }}>{n.sub}</div>
               </div>
             </button>
           ))}
@@ -574,11 +583,11 @@ export default function FactoryHub() {
           ] as const).map(({ type, count, units }) => {
             const m = TYPE_META[type]
             return (
-              <div key={type} style={{ background: m.bg, border: `1px solid ${m.color}30`, borderRadius: 12, padding: '10px 12px', textAlign: 'center' }}>
+              <div key={type} style={{ background: m.bg, border: `1px solid ${m.color}40`, borderRadius: 12, padding: '10px 12px', textAlign: 'center' }}>
                 <div style={{ fontSize: 10, fontWeight: 600, color: m.color, textTransform: 'capitalize', marginBottom: 4 }}>{m.label}</div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: '#f1f5f9', lineHeight: 1 }}>{count}</div>
-                {units !== null && <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 3 }}>{units} units</div>}
-                {units === null && <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 3 }}>shipped</div>}
+                <div style={{ fontSize: 20, fontWeight: 800, color: tokens.ink, lineHeight: 1 }}>{count}</div>
+                {units !== null && <div style={{ fontSize: 9, color: tokens.hint, marginTop: 3 }}>{units} units</div>}
+                {units === null && <div style={{ fontSize: 9, color: tokens.hint, marginTop: 3 }}>shipped</div>}
               </div>
             )
           })}
@@ -587,8 +596,8 @@ export default function FactoryHub() {
         {/* ── Recent captures ───────────────────────────────────────────────── */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div style={{ fontWeight: 700, fontSize: 15 }}>Recent Captures</div>
-            <button onClick={() => router.push('/factory/production')} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, color: tokens.ink }}>Recent Captures</div>
+            <button onClick={() => router.push('/factory/production')} style={{ background: 'none', border: 'none', color: tokens.hint, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
               All <IconChevronRight size={12} />
             </button>
           </div>
@@ -596,14 +605,14 @@ export default function FactoryHub() {
           {loading ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {[...Array(4)].map((_, i) => (
-                <div key={i} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 12, height: 64, animation: 'pulse 1.6s ease-in-out infinite', animationDelay: `${i * 80}ms` }} />
+                <div key={i} style={{ background: tokens.bg, border: `1px solid ${tokens.border}`, borderRadius: 12, height: 64, animation: 'pulse 1.6s ease-in-out infinite', animationDelay: `${i * 80}ms` }} />
               ))}
             </div>
           ) : recent.length === 0 ? (
-            <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 14, padding: '32px 20px', textAlign: 'center' }}>
+            <div style={{ background: tokens.bg, border: `1px dashed ${tokens.border}`, borderRadius: 14, padding: '32px 20px', textAlign: 'center' }}>
               <div style={{ fontSize: 36, marginBottom: 10 }}>📸</div>
-              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>No captures yet</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>Tap the yellow button above to log your first production event</div>
+              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, color: tokens.ink }}>No captures yet</div>
+              <div style={{ fontSize: 13, color: tokens.hint }}>Tap the button above to log your first production event</div>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -611,9 +620,9 @@ export default function FactoryHub() {
                 const m = TYPE_META[c.type]
                 const unit = c.batch_ref || ''
                 return (
-                  <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '12px 14px', transition: 'border-color 150ms', cursor: 'default' }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = `${m.color}30` }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)' }}
+                  <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 14, padding: '12px 14px', transition: 'border-color 150ms', cursor: 'default' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = `${m.color}40` }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = tokens.border }}
                   >
                     {/* Photo thumb or color dot */}
                     {c.photo_url ? (
@@ -628,19 +637,19 @@ export default function FactoryHub() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
                         <span style={{ fontSize: 11, fontWeight: 700, color: m.color }}>{m.label}</span>
                         {c.quantity != null && (
-                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{c.quantity}{unit ? ` ${unit}` : ''}</span>
+                          <span style={{ fontSize: 11, color: tokens.hint }}>{c.quantity}{unit ? ` ${unit}` : ''}</span>
                         )}
                       </div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: tokens.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {c.product_name || 'Unspecified product'}
                       </div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>
+                      <div style={{ fontSize: 11, color: tokens.hint, marginTop: 2 }}>
                         {c.captured_by_staff?.name || 'Operator'} · {timeAgo(c.created_at)}
                       </div>
                     </div>
                     <span style={{
                       fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 20, flexShrink: 0, textTransform: 'capitalize',
-                      background: `${STATUS_COLOR[c.status]}18`, color: STATUS_COLOR[c.status], border: `1px solid ${STATUS_COLOR[c.status]}30`
+                      background: `${STATUS_COLOR[c.status]}18`, color: STATUS_COLOR[c.status], border: `1px solid ${STATUS_COLOR[c.status]}40`
                     }}>{c.status}</span>
                   </div>
                 )

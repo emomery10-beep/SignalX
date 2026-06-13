@@ -3,12 +3,6 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-const AMBER  = '#f59e0b'
-const GREEN  = '#22c55e'
-const RED    = '#ef4444'
-const BLUE   = '#3b82f6'
-const PURPLE = '#8b5cf6'
-const CYAN   = '#06b6d4'
 const API    = process.env.NEXT_PUBLIC_API_URL || ''
 
 type Stage = 'hub' | 'viewfinder' | 'batch_ref' | 'checkpoint' | 'submitting' | 'success'
@@ -20,15 +14,15 @@ interface Batch {
 }
 
 const CHECKPOINTS: { id: string; label: string; icon: string; color: string; hint: string }[] = [
-  { id: 'intake',      label: 'Intake',      icon: '📥', color: BLUE,   hint: 'Raw materials arrived'     },
-  { id: 'in_progress', label: 'In Progress', icon: '⚙️', color: AMBER,  hint: 'Currently being processed' },
-  { id: 'qc_pass',     label: 'QC Pass',     icon: '✅', color: GREEN,  hint: 'Quality check passed'      },
-  { id: 'qc_fail',     label: 'QC Fail',     icon: '❌', color: RED,    hint: 'Quality check failed'      },
-  { id: 'dispatch',    label: 'Dispatch',    icon: '🚚', color: PURPLE, hint: 'Shipped out'               },
+  { id: 'intake',      label: 'Intake',      icon: '📥', color: tokens.intake,   hint: 'Raw materials arrived'     },
+  { id: 'in_progress', label: 'In Progress', icon: '⚙️', color: tokens.warning,  hint: 'Currently being processed' },
+  { id: 'qc_pass',     label: 'QC Pass',     icon: '✅', color: tokens.success,  hint: 'Quality check passed'      },
+  { id: 'qc_fail',     label: 'QC Fail',     icon: '❌', color: tokens.danger,    hint: 'Quality check failed'      },
+  { id: 'dispatch',    label: 'Dispatch',    icon: '🚚', color: tokens.dispatch, hint: 'Shipped out'               },
 ]
 
 const CP_COLOR: Record<string, string> = {
-  intake: BLUE, in_progress: AMBER, qc_pass: GREEN, qc_fail: RED, dispatch: PURPLE,
+  intake: tokens.intake, in_progress: tokens.warning, qc_pass: tokens.success, qc_fail: tokens.danger, dispatch: tokens.dispatch,
 }
 const CP_LABEL: Record<string, string> = {
   intake: 'Intake', in_progress: 'In Progress', qc_pass: 'QC Pass', qc_fail: 'QC Fail', dispatch: 'Dispatch',
@@ -176,8 +170,8 @@ export default function BatchPage() {
   }
 
   if (!ready) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0f1e' }}>
-      <div style={{ width: 36, height: 36, border: `3px solid rgba(6,182,212,.3)`, borderTopColor: CYAN, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }}>
+      <div style={{ width: 36, height: 36, border: `3px solid rgba(6,182,212,.3)`, borderTopColor: tokens.dispatch, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
@@ -186,18 +180,18 @@ export default function BatchPage() {
   // HUB — active batches + scan CTA
   // ══════════════════════════════════════════════════════════════════════════
   if (stage === 'hub') return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', paddingBottom: 40 }}>
+    <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', color: 'var(--pos-ink)', fontFamily: 'system-ui, sans-serif', paddingBottom: 40 }}>
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-      <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '44px 20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => router.push('/factory')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.7)' }}>
+      <div style={{ background: 'var(--pos-surface)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--pos-border)', padding: '44px 20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={() => router.push('/factory')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>
           <IconArrowLeft />
         </button>
         <div>
-          <div style={{ fontWeight: 800, fontSize: 18, color: CYAN }}>Batch Traceability</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>Scan labels at every checkpoint</div>
+          <div style={{ fontWeight: 800, fontSize: 18, color: tokens.dispatch }}>Batch Traceability</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>Scan labels at every checkpoint</div>
         </div>
-        <button onClick={loadBatches} style={{ marginLeft: 'auto', width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.5)' }}>
+        <button onClick={loadBatches} style={{ marginLeft: 'auto', width: 36, height: 36, borderRadius: '50%', background: 'var(--pos-border)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
         </button>
       </div>
@@ -205,27 +199,27 @@ export default function BatchPage() {
       <div style={{ padding: '20px', maxWidth: 600, margin: '0 auto' }}>
         {/* Scan CTA */}
         <button onClick={() => { setStage('viewfinder'); openCamera() }}
-          style={{ width: '100%', marginBottom: 24, background: `linear-gradient(135deg, ${CYAN}, #0891b2)`, border: 'none', borderRadius: 18, padding: '18px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16, boxShadow: `0 8px 32px rgba(6,182,212,0.3)`, transition: 'transform 120ms' }}
+          style={{ width: '100%', marginBottom: 24, background: `linear-gradient(135deg, ${tokens.dispatch}, #0891b2)`, border: 'none', borderRadius: 18, padding: '18px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16, boxShadow: `0 8px 32px rgba(6,182,212,0.3)`, transition: 'transform 120ms' }}
           onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.98)' }}
           onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
           onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.97)' }}
           onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)' }}
         >
-          <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 26 }}>
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 26 }}>
             📷
           </div>
           <div style={{ textAlign: 'left', flex: 1 }}>
             <div style={{ fontWeight: 800, fontSize: 17, color: '#fff', lineHeight: 1.1 }}>Scan Batch Label</div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 3 }}>Photograph to log a checkpoint</div>
           </div>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pos-muted)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
 
         {/* Active batches */}
         <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
           Active Batches
           {batches.length > 0 && (
-            <span style={{ background: `rgba(6,182,212,0.15)`, color: CYAN, borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>{batches.length}</span>
+            <span style={{ background: `rgba(6,182,212,0.15)`, color: tokens.dispatch, borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>{batches.length}</span>
           )}
         </div>
 
@@ -239,32 +233,32 @@ export default function BatchPage() {
           <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 14, padding: '28px 20px', textAlign: 'center' }}>
             <div style={{ fontSize: 34, marginBottom: 10 }}>📦</div>
             <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>No active batches</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>Scan a batch label to start tracking</div>
+            <div style={{ fontSize: 13, color: 'var(--pos-hint)' }}>Scan a batch label to start tracking</div>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {batches.map(b => {
               const latest = b.events?.[b.events.length - 1]
-              const latestColor = latest ? (CP_COLOR[latest.checkpoint] || 'rgba(255,255,255,0.4)') : 'rgba(255,255,255,0.3)'
+              const latestColor = latest ? (CP_COLOR[latest.checkpoint] || 'var(--pos-hint)') : 'var(--pos-hint)'
               return (
-                <div key={b.id} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '14px 16px', cursor: 'default' }}>
+                <div key={b.id} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--pos-border)', borderRadius: 14, padding: '14px 16px', cursor: 'default' }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: b.events?.length > 0 ? 12 : 0 }}>
                     {/* Latest photo */}
                     {latest?.photo_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={latest.photo_url} alt="" style={{ width: 48, height: 48, borderRadius: 10, objectFit: 'cover', flexShrink: 0, border: `1.5px solid ${latestColor}50` }} />
                     ) : (
-                      <div style={{ width: 48, height: 48, borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>📦</div>
+                      <div style={{ width: 48, height: 48, borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1.5px solid var(--pos-border)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>📦</div>
                     )}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 800, fontSize: 15, color: '#f1f5f9' }}>{b.batch_ref}</div>
-                      {b.product_name && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{b.product_name}</div>}
+                      <div style={{ fontWeight: 800, fontSize: 15, color: 'var(--pos-ink)' }}>{b.batch_ref}</div>
+                      {b.product_name && <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 2 }}>{b.product_name}</div>}
                       {latest && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
                           <span style={{ fontSize: 10, fontWeight: 700, color: latestColor, background: `${latestColor}18`, border: `1px solid ${latestColor}30`, padding: '2px 8px', borderRadius: 20 }}>
                             {CP_LABEL[latest.checkpoint] || latest.checkpoint}
                           </span>
-                          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>{timeAgo(latest.created_at)}</span>
+                          <span style={{ fontSize: 10, color: 'var(--pos-hint)' }}>{timeAgo(latest.created_at)}</span>
                         </div>
                       )}
                     </div>
@@ -274,7 +268,7 @@ export default function BatchPage() {
                   {b.events?.length > 0 && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                       {b.events.map((ev, idx) => {
-                        const c = CP_COLOR[ev.checkpoint] || 'rgba(255,255,255,0.3)'
+                        const c = CP_COLOR[ev.checkpoint] || 'var(--pos-hint)'
                         return (
                           <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             {idx > 0 && <div style={{ width: 12, height: 1, background: 'rgba(255,255,255,0.1)' }} />}
@@ -334,10 +328,10 @@ export default function BatchPage() {
             position: 'absolute', width: 28, height: 28,
             top: i < 2 ? 0 : 'auto', bottom: i >= 2 ? 0 : 'auto',
             left: i % 2 === 0 ? 0 : 'auto', right: i % 2 === 1 ? 0 : 'auto',
-            borderTop: i < 2 ? `2px solid ${CYAN}` : 'none',
-            borderBottom: i >= 2 ? `2px solid ${CYAN}` : 'none',
-            borderLeft: i % 2 === 0 ? `2px solid ${CYAN}` : 'none',
-            borderRight: i % 2 === 1 ? `2px solid ${CYAN}` : 'none',
+            borderTop: i < 2 ? `2px solid ${tokens.dispatch}` : 'none',
+            borderBottom: i >= 2 ? `2px solid ${tokens.dispatch}` : 'none',
+            borderLeft: i % 2 === 0 ? `2px solid ${tokens.dispatch}` : 'none',
+            borderRight: i % 2 === 1 ? `2px solid ${tokens.dispatch}` : 'none',
           }} />
         ))}
         <div style={{ position: 'absolute', inset: 0, border: `1px solid rgba(6,182,212,0.2)`, borderRadius: 4 }} />
@@ -349,7 +343,7 @@ export default function BatchPage() {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         </button>
         <button onClick={capturePhoto} disabled={!cameraOn}
-          style={{ width: 76, height: 76, borderRadius: '50%', background: CYAN, border: '4px solid rgba(255,255,255,0.35)', cursor: cameraOn ? 'pointer' : 'not-allowed', boxShadow: `0 0 0 6px rgba(6,182,212,0.2)`, transition: 'transform 100ms' }}
+          style={{ width: 76, height: 76, borderRadius: '50%', background: tokens.dispatch, border: '4px solid var(--pos-hint)', cursor: cameraOn ? 'pointer' : 'not-allowed', boxShadow: `0 0 0 6px rgba(6,182,212,0.2)`, transition: 'transform 100ms' }}
           onMouseDown={e => { if (cameraOn) e.currentTarget.style.transform = 'scale(0.92)' }}
           onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
         />
@@ -368,41 +362,41 @@ export default function BatchPage() {
   // BATCH REF — confirm / enter batch ID
   // ══════════════════════════════════════════════════════════════════════════
   if (stage === 'batch_ref') return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => { setStage('viewfinder'); openCamera() }} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.7)' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', color: 'var(--pos-ink)', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ background: 'var(--pos-surface)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--pos-border)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={() => { setStage('viewfinder'); openCamera() }} style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>
           <IconArrowLeft />
         </button>
         {photoUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={photoUrl} alt="" style={{ width: 42, height: 42, borderRadius: 10, objectFit: 'cover', border: `2px solid ${CYAN}60`, flexShrink: 0 }} />
+          <img src={photoUrl} alt="" style={{ width: 42, height: 42, borderRadius: 10, objectFit: 'cover', border: `2px solid ${tokens.dispatch}60`, flexShrink: 0 }} />
         )}
         <div>
           <div style={{ fontWeight: 700, fontSize: 16 }}>Batch ID</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>Enter or confirm the batch reference</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>Enter or confirm the batch reference</div>
         </div>
       </div>
 
       <div style={{ flex: 1, padding: '24px 20px' }}>
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Batch Reference *</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Batch Reference *</div>
           <input value={batchRef} onChange={e => setBatchRef(e.target.value.toUpperCase())}
             placeholder="e.g. LOT-2024-001, BATCH-A3"
             autoFocus
-            style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${batchRef ? CYAN : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '16px', fontSize: 18, fontWeight: 700, outline: 'none', boxSizing: 'border-box', letterSpacing: '0.04em', fontFamily: 'monospace' }} />
+            style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${batchRef ? tokens.dispatch : 'var(--pos-border)'}`, borderRadius: 12, color: 'var(--pos-ink)', padding: '16px', fontSize: 18, fontWeight: 700, outline: 'none', boxSizing: 'border-box', letterSpacing: '0.04em', fontFamily: 'monospace' }} />
         </div>
 
         <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
             Product <span style={{ color: 'rgba(255,255,255,0.2)' }}>(optional)</span>
           </div>
           <input value={productName} onChange={e => setProductName(e.target.value)}
             placeholder="e.g. Wheat Flour 50kg"
-            style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${productName ? `${CYAN}60` : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }} />
+            style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${productName ? `${tokens.dispatch}60` : 'var(--pos-border)'}`, borderRadius: 12, color: 'var(--pos-ink)', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }} />
         </div>
 
         <button onClick={() => { if (batchRef.trim()) setStage('checkpoint') }} disabled={!batchRef.trim()}
-          style={{ width: '100%', background: batchRef.trim() ? `linear-gradient(135deg, ${CYAN}, #0891b2)` : 'rgba(255,255,255,0.08)', border: 'none', color: batchRef.trim() ? '#fff' : 'rgba(255,255,255,0.3)', padding: '16px', borderRadius: 14, cursor: batchRef.trim() ? 'pointer' : 'not-allowed', fontWeight: 800, fontSize: 17, boxShadow: batchRef.trim() ? `0 4px 20px rgba(6,182,212,0.3)` : 'none' }}>
+          style={{ width: '100%', background: batchRef.trim() ? `linear-gradient(135deg, ${tokens.dispatch}, #0891b2)` : 'var(--pos-border)', border: 'none', color: batchRef.trim() ? '#fff' : 'var(--pos-hint)', padding: '16px', borderRadius: 14, cursor: batchRef.trim() ? 'pointer' : 'not-allowed', fontWeight: 800, fontSize: 17, boxShadow: batchRef.trim() ? `0 4px 20px rgba(6,182,212,0.3)` : 'none' }}>
           Next — Select Checkpoint →
         </button>
       </div>
@@ -413,18 +407,18 @@ export default function BatchPage() {
   // CHECKPOINT PICKER
   // ══════════════════════════════════════════════════════════════════════════
   if (stage === 'checkpoint') return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => setStage('batch_ref')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.7)' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', color: 'var(--pos-ink)', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ background: 'var(--pos-surface)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--pos-border)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={() => setStage('batch_ref')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>
           <IconArrowLeft />
         </button>
         {photoUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={photoUrl} alt="" style={{ width: 38, height: 38, borderRadius: 8, objectFit: 'cover', border: `1.5px solid ${CYAN}50`, flexShrink: 0 }} />
+          <img src={photoUrl} alt="" style={{ width: 38, height: 38, borderRadius: 8, objectFit: 'cover', border: `1.5px solid ${tokens.dispatch}50`, flexShrink: 0 }} />
         )}
         <div>
           <div style={{ fontWeight: 700, fontSize: 16 }}>Where is it now?</div>
-          <div style={{ fontSize: 11, color: CYAN, marginTop: 1, fontFamily: 'monospace', fontWeight: 700 }}>{batchRef}</div>
+          <div style={{ fontSize: 11, color: tokens.dispatch, marginTop: 1, fontFamily: 'monospace', fontWeight: 700 }}>{batchRef}</div>
         </div>
       </div>
 
@@ -440,14 +434,14 @@ export default function BatchPage() {
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 16, color: cp.color }}>{cp.label}</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{cp.hint}</div>
+              <div style={{ fontSize: 13, color: 'var(--pos-hint)', marginTop: 2 }}>{cp.hint}</div>
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={`${cp.color}60`} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         ))}
 
         {saveError && (
-          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', color: RED, fontSize: 13 }}>{saveError}</div>
+          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', color: tokens.danger, fontSize: 13 }}>{saveError}</div>
         )}
       </div>
     </div>
@@ -457,8 +451,8 @@ export default function BatchPage() {
   // SUBMITTING
   // ══════════════════════════════════════════════════════════════════════════
   if (stage === 'submitting') return (
-    <div style={{ minHeight: '100vh', background: '#0a0f1e', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'system-ui, sans-serif' }}>
-      <div style={{ width: 48, height: 48, border: `4px solid rgba(6,182,212,.3)`, borderTopColor: CYAN, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+    <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ width: 48, height: 48, border: `4px solid rgba(6,182,212,.3)`, borderTopColor: tokens.dispatch, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>Logging scan…</div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
@@ -470,13 +464,13 @@ export default function BatchPage() {
   if (stage === 'success' && successBatch) {
     const cpMeta = CHECKPOINTS.find(c => c.id === checkpoint)
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', textAlign: 'center' }}>
+      <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', color: 'var(--pos-ink)', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', textAlign: 'center' }}>
         <div style={{ fontSize: 44, marginBottom: 16 }}>{cpMeta?.icon}</div>
         <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>Scan logged</div>
-        <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 2 }}>
-          <span style={{ color: CYAN, fontFamily: 'monospace', fontWeight: 700 }}>{successBatch.batch_ref}</span> → <span style={{ color: cpMeta?.color }}>{cpMeta?.label}</span>
+        <div style={{ fontSize: 14, color: 'var(--pos-muted)', marginBottom: 2 }}>
+          <span style={{ color: tokens.dispatch, fontFamily: 'monospace', fontWeight: 700 }}>{successBatch.batch_ref}</span> → <span style={{ color: cpMeta?.color }}>{cpMeta?.label}</span>
         </div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginBottom: 32 }}>
+        <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginBottom: 32 }}>
           {successBatch.events?.length} scan{successBatch.events?.length !== 1 ? 's' : ''} in trail
         </div>
 
@@ -484,7 +478,7 @@ export default function BatchPage() {
         {successBatch.events?.length > 0 && (
           <div style={{ marginBottom: 36, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 360 }}>
             {successBatch.events.map((ev, idx) => {
-              const c = CP_COLOR[ev.checkpoint] || 'rgba(255,255,255,0.3)'
+              const c = CP_COLOR[ev.checkpoint] || 'var(--pos-hint)'
               return (
                 <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   {idx > 0 && <div style={{ width: 20, height: 1.5, background: `rgba(255,255,255,0.15)`, flexShrink: 0 }} />}
@@ -509,11 +503,11 @@ export default function BatchPage() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 300 }}>
           <button onClick={reset}
-            style={{ width: '100%', background: `linear-gradient(135deg, ${CYAN}, #0891b2)`, border: 'none', color: '#fff', padding: '15px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 15, boxShadow: `0 4px 20px rgba(6,182,212,0.3)` }}>
+            style={{ width: '100%', background: `linear-gradient(135deg, ${tokens.dispatch}, #0891b2)`, border: 'none', color: '#fff', padding: '15px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 15, boxShadow: `0 4px 20px rgba(6,182,212,0.3)` }}>
             Scan Another Batch
           </button>
           <button onClick={() => router.push('/factory')}
-            style={{ width: '100%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', padding: '13px', borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+            style={{ width: '100%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', color: 'var(--pos-muted)', padding: '13px', borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
             Back to Hub
           </button>
         </div>
