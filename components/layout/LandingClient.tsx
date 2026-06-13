@@ -10,7 +10,7 @@ import { COUNTRY_TO_LANG } from '@/lib/i18n'
 type Palette = typeof LIGHT
 const LIGHT = {
   bg:         '#ffffff',
-  sf:         '#f7f6f4',
+  sf:         '#f5f5f5',
   ev:         '#eeecea',
   ev2:        '#e4e2de',
   tx:         '#1a1916',
@@ -52,69 +52,8 @@ interface Geo {
 }
 
 const INTEGRATIONS = [
-  { name: 'Shopify', icon: '🛍️' }, { name: 'Amazon FBA', icon: '📦' },
-  { name: 'TikTok Shop', icon: '🎵' }, { name: 'Instagram', icon: '📸' },
-  { name: 'Stripe', icon: '💳' }, { name: 'QuickBooks', icon: '📒' },
-  { name: 'Google Sheets', icon: '📊' }, { name: 'Pinterest', icon: '📌' },
-  { name: 'Square', icon: '⬛' }, { name: 'CSV / Excel', icon: '📁' },
-]
-
-const DEMOS = [
-  {
-    tag: 'Margin',
-    emoji: '💰',
-    q: 'What is my best margin product right now?',
-    a: 'Wireless Earbuds — 34.2% gross margin, £8.22 profit per unit. At 143 units/month that\'s £1,175 in monthly profit from one SKU. Your second-best is Screen Protectors at 28.1%, but velocity is falling 23% month-on-month. Focus on Earbuds.',
-    kpis: [
-      { label: 'Best margin', value: '34.2%', good: true },
-      { label: 'Monthly profit', value: '£1,175', good: true },
-      { label: 'Velocity trend', value: '+12%', good: true },
-    ],
-  },
-  {
-    tag: 'Churn risk',
-    emoji: '👥',
-    q: 'Which customers are about to stop buying from me?',
-    a: '3 customers are at risk. Sarah Johnson — last order 89 days ago, usually buys every 23 days, lifetime value £1,840. She\'s 66 days overdue. David Chen and Aisha Okafor are also flagged. Combined LTV at risk: £4,200.',
-    kpis: [
-      { label: 'At risk', value: '3 customers', good: false },
-      { label: 'LTV at risk', value: '£4,200', good: false },
-      { label: 'Most urgent', value: '89 days', good: false },
-    ],
-  },
-  {
-    tag: 'Landed cost',
-    emoji: '🧮',
-    q: 'What is my true landed cost on my China imports?',
-    a: 'Your landed cost is £11.84/unit — not the £8.50 on the invoice. Freight adds £1.20, import duty (12%) adds £1.02, port handling £0.62, 2% FX buffer £0.50. Your real gross margin is 18.4% — not the 34% you assumed. On 500 units that\'s a £3,870 margin gap.',
-    kpis: [
-      { label: 'True landed cost', value: '£11.84', good: false },
-      { label: 'Real margin', value: '18.4%', good: false },
-      { label: 'Margin gap', value: '£3,870', good: false },
-    ],
-  },
-  {
-    tag: 'Export markets',
-    emoji: '🌍',
-    q: 'Which export market should I enter first?',
-    a: 'UAE scores 78/100 for your business. Your Beauty and Homeware lines match the top demand categories, duty is a flat 5%, and UK brands command a 18% premium there. Germany is second at 71 — but post-Brexit customs add 8-10 days to lead times.',
-    kpis: [
-      { label: 'Top market', value: 'UAE 78/100', good: true },
-      { label: 'UK premium', value: '+18%', good: true },
-      { label: 'Import duty', value: '5% flat', good: true },
-    ],
-  },
-  {
-    tag: 'Demand signal',
-    emoji: '📱',
-    q: 'Any products going viral on social that I should know about?',
-    a: 'Your Bamboo Travel Set has 847 saves on Pinterest this week — a 340% spike — but zero orders. You have 12 units left at current reorder lead time of 18 days. You need to reorder today or you\'ll miss the demand peak.',
-    kpis: [
-      { label: 'Pinterest saves', value: '847 ↑340%', good: true },
-      { label: 'Stock left', value: '12 units', good: false },
-      { label: 'Lead time', value: '18 days', good: false },
-    ],
-  },
+  'Shopify', 'Amazon FBA', 'TikTok Shop', 'Instagram', 'Stripe',
+  'QuickBooks', 'Google Sheets', 'Pinterest', 'Square', 'CSV / Excel',
 ]
 
 const TOOLS = [
@@ -279,18 +218,7 @@ function InteractiveDemo({ C }: { C: Palette }) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    let id: number | null = null
-    const start = () => {
-      if (id) return
-      id = window.setInterval(() => {
-        tickRef.current += 1
-        if (tickRef.current % 30 === 0) setActive(a => (a + 1) % DEMO_SLIDES.length)
-      }, 200)
-    }
-    const stop = () => { if (id) { window.clearInterval(id); id = null } }
-    const observer = new IntersectionObserver(([entry]) => { entry.isIntersecting ? start() : stop() }, { threshold: 0.2 })
-    if (containerRef.current) observer.observe(containerRef.current)
-    return () => { stop(); observer.disconnect() }
+    // Auto-rotation removed — carousel is now manual only
   }, [])
 
   const slide = DEMO_SLIDES[active]
@@ -336,14 +264,12 @@ function InteractiveDemo({ C }: { C: Palette }) {
         <div className="demo-cards" style={{ display:'flex', gap:10, flex:1, overflowX:'auto', paddingBottom:4 }}>
           {DEMO_SLIDES.map((s, i) => (
             <button key={s.id} onClick={() => go(i)} style={{
-              flex:'1 0 0', minWidth:140, padding:'14px 12px', borderRadius:12,
+              flex:'1 0 0', minWidth:120, padding:'12px 14px', borderRadius:12,
               border: i === active ? `1px solid ${C.acc}` : `1px solid ${C.b}`,
               background: i === active ? C.accBg : C.ev,
               cursor:'pointer', textAlign:'left', fontFamily:'inherit', transition:'all 180ms',
-              display:'flex', alignItems:'center', gap:10,
             }}>
-              <span style={{ fontSize:22 }}>{s.thumb}</span>
-              <span style={{ fontSize:12, fontWeight: i === active ? 700 : 500, color: i === active ? C.acc : C.tx2, lineHeight:1.3 }}>{s.label}</span>
+              <span style={{ fontSize:12, fontWeight: i === active ? 700 : 500, color: i === active ? C.acc : C.tx2, lineHeight:1.3, display:'block' }}>{s.label}</span>
             </button>
           ))}
         </div>
@@ -550,9 +476,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
   const [liveGeo, setLiveGeo] = useState<Geo | null>(geo)
   const tiltRef = useRef<HTMLDivElement>(null)
   const glowRef = useRef<HTMLDivElement>(null)
-  // next-themes — resolves system preference, no flash on navigation
-  const { resolvedTheme } = useTheme()
-  const isDark = resolvedTheme === 'dark'
+  const isDark = false
   const C: Palette = isDark ? DARK : LIGHT
 
   const sym           = liveGeo?.pricing?.sym      || '£'
@@ -579,48 +503,9 @@ function LandingInner({ geo }: { geo: Geo | null }) {
     }
   }, [isDark]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── 3D perspective tilt on hero cards ────────────────────────────────────
-  useEffect(() => {
-    const el = tiltRef.current
-    if (!el) return
-    let frame: number
-    const move = (e: MouseEvent) => {
-      cancelAnimationFrame(frame)
-      frame = requestAnimationFrame(() => {
-        const r = el.getBoundingClientRect()
-        const x = ((e.clientX - r.left) / r.width - 0.5) * 2
-        const y = ((e.clientY - r.top) / r.height - 0.5) * 2
-        el.style.transform = `perspective(1100px) rotateY(${x * 6}deg) rotateX(${-y * 4}deg) scale3d(1.01,1.01,1)`
-      })
-    }
-    const leave = () => {
-      cancelAnimationFrame(frame)
-      el.style.transition = 'transform 700ms cubic-bezier(0.16,1,0.3,1)'
-      el.style.transform = 'perspective(1100px) rotateY(0deg) rotateX(2deg) scale3d(1,1,1)'
-      setTimeout(() => { el.style.transition = '' }, 700)
-    }
-    el.addEventListener('mousemove', move)
-    el.addEventListener('mouseleave', leave)
-    return () => { cancelAnimationFrame(frame); el.removeEventListener('mousemove', move); el.removeEventListener('mouseleave', leave) }
-  }, [])
+  // 3D tilt effect removed — reduces AI template feel
 
-  // ── Cursor-aware hero glow ────────────────────────────────────────────────
-  useEffect(() => {
-    const el = glowRef.current
-    if (!el) return
-    let frame: number
-    let shown = false
-    const move = (e: MouseEvent) => {
-      cancelAnimationFrame(frame)
-      frame = requestAnimationFrame(() => {
-        el.style.left = `${e.clientX}px`
-        el.style.top = `${e.clientY}px`
-        if (!shown) { el.style.opacity = '1'; shown = true }
-      })
-    }
-    window.addEventListener('mousemove', move)
-    return () => { cancelAnimationFrame(frame); window.removeEventListener('mousemove', move) }
-  }, [])
+  // Cursor glow listener removed
 
   // ── Scroll-reveal via IntersectionObserver ────────────────────────────────
   // Fallback ensures content is NEVER permanently hidden (hidden tab, no-JS, SSR)
@@ -690,20 +575,18 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         @keyframes progress { from{width:0%} to{width:100%} }
         @keyframes heroGlow { 0%,100%{opacity:.55} 50%{opacity:.8} }
         @keyframes charIn { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes heroFloat { 0%,100%{transform:perspective(1100px) rotateX(2deg) translateY(0px)} 50%{transform:perspective(1100px) rotateX(2deg) translateY(-8px)} }
         @keyframes cursorGlowPulse { 0%,100%{opacity:.18} 50%{opacity:.28} }
         .fade-up { animation: fadeUp 600ms cubic-bezier(0.22,1,0.36,1) forwards }
         .hero-3d {
           transform: perspective(1100px) rotateX(2deg);
           transform-style: preserve-3d;
           will-change: transform;
-          animation: heroFloat 7s ease-in-out infinite;
         }
         .hero-card-depth-1 { transform: translateZ(0px); }
         .hero-card-depth-2 { transform: translateZ(20px); }
         .tdot { display:inline-block; width:6px; height:6px; border-radius:50%; background:#6B7280; animation:tdot 1.2s infinite }
         .card-hover:hover { border-color:rgba(208,138,89,.3) !important; transition:border-color 180ms ease }
-        .btn-primary { transition:transform 120ms cubic-bezier(0.22,1,0.36,1), opacity 120ms ease, box-shadow 200ms ease }
+        .btn-primary { transition:transform 105ms cubic-bezier(0.22,1,0.36,1), opacity 105ms ease, box-shadow 200ms ease }
         .btn-primary:hover { filter:brightness(1.08); box-shadow:0 8px 32px rgba(201,122,68,.35) !important }
         .btn-primary:active { transform:scale(0.97); opacity:0.92 }
         .nav-link:hover { color:${C.tx} !important }
@@ -715,6 +598,9 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         @media (prefers-reduced-motion:reduce) {
           .hero-3d { animation:none; transform:none; }
           .charIn-span { animation:none !important; opacity:1 !important; transform:none !important; }
+          .fade-up { animation:none !important; opacity:1 !important; transform:none !important; }
+          .ticker-strip { animation:none !important; }
+          [data-motion] { transition:none !important; }
         }
         @media (max-width:767px) {
           .nav-desktop { display:none !important }
@@ -753,8 +639,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         input::placeholder { color: ${C.tx3} }
       `}</style>
 
-      {/* ── Cursor-tracking glow — hidden until mouse moves ─────────────── */}
-      <div ref={glowRef} aria-hidden style={{ position:'fixed', pointerEvents:'none', zIndex:0, width:560, height:560, borderRadius:'50%', background: isDark ? 'radial-gradient(circle at center, rgba(208,138,89,.18) 0%, transparent 70%)' : 'radial-gradient(circle at center, rgba(201,122,68,.11) 0%, transparent 70%)', transform:'translate(-50%,-50%)', opacity:0, transition:'opacity 600ms', animation:'cursorGlowPulse 4s ease-in-out infinite' }} />
+      {/* Cursor glow removed — reduces AI template feel */}
 
       {/* ── NAV ───────────────────────────────────────────────────────────── */}
       <nav style={{ position:'sticky', top:0, zIndex:50, background:C.nav, backdropFilter:'blur(20px)', borderBottom:`1px solid ${C.navBorder}`, padding:'0 clamp(16px,4vw,32px)', height:56, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
@@ -772,17 +657,16 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             <div className="nav-mega" style={{ display:'none', position:'absolute', top:'100%', right:0, paddingTop:8, zIndex:60 }}>
               <div style={{ background:C.sf, borderRadius:12, boxShadow:'0 8px 24px rgba(0,0,0,.12)', padding:20, width:480, display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
                 {[
-                  { href:'/blog', icon:'📝', title:'Blog', desc:'201 articles on AI, commerce & growth' },
-                  { href:'/academy', icon:'🎓', title:'Academy', desc:'420+ structured learning articles' },
-                  { href:'/free-tools', icon:'🧮', title:'Free Tools', desc:'VAT, landed cost, FX & break-even' },
-                  { href:'/case-studies', icon:'📊', title:'Case Studies', desc:'Real results from real businesses' },
-                  { href:'/benchmarks', icon:'📈', title:'Benchmarks', desc:'Industry KPIs across 8 sectors' },
-                  { href:'/help', icon:'💡', title:'Help Center', desc:'Guides, FAQ & troubleshooting' },
-                  { href:'/glossary', icon:'📖', title:'Glossary', desc:'Business & analytics terms explained' },
-                  { href:'/integrations', icon:'🔗', title:'Integrations', desc:'Shopify, Amazon, Xero & more' },
+                  { href:'/blog', title:'Blog', desc:'201 articles on AI, commerce & growth' },
+                  { href:'/academy', title:'Academy', desc:'420+ structured learning articles' },
+                  { href:'/free-tools', title:'Free Tools', desc:'VAT, landed cost, FX & break-even' },
+                  { href:'/case-studies', title:'Case Studies', desc:'Real results from real businesses' },
+                  { href:'/benchmarks', title:'Benchmarks', desc:'Industry KPIs across 8 sectors' },
+                  { href:'/help', title:'Help Center', desc:'Guides, FAQ & troubleshooting' },
+                  { href:'/glossary', title:'Glossary', desc:'Business & analytics terms explained' },
+                  { href:'/integrations', title:'Integrations', desc:'Shopify, Amazon, Xero & more' },
                 ].map(item=>(
                   <Link key={item.href} href={item.href} style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'10px 12px', borderRadius:10, textDecoration:'none', color:C.tx, transition:'background .12s' }} onMouseEnter={e=>{e.currentTarget.style.background=C.ev}} onMouseLeave={e=>{e.currentTarget.style.background='transparent'}}>
-                    <span style={{ fontSize:18, lineHeight:1, flexShrink:0, marginTop:1 }}>{item.icon}</span>
                     <div>
                       <div style={{ fontSize:13, fontWeight:700, color:C.tx, lineHeight:1.2 }}>{item.title}</div>
                       <div style={{ fontSize:11, color:C.tx3, marginTop:2, lineHeight:1.4 }}>{item.desc}</div>
@@ -834,27 +718,21 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <div style={{ padding:'clamp(56px,8vw,108px) clamp(0px,2vw,20px) clamp(56px,8vw,108px) 0', display:'flex', flexDirection:'column', justifyContent:'center' }}>
 
             {/* Category marker — intentional, not a pill badge */}
-            <p className="fade-up" style={{ fontSize:11, fontWeight:700, color:C.acc, letterSpacing:'.16em', textTransform:'uppercase', marginBottom:28 }}>
+            <p style={{ fontSize:11, fontWeight:700, color:C.acc, letterSpacing:'.16em', textTransform:'uppercase', marginBottom:28 }}>
               Business intelligence · Point of Sale
             </p>
 
-            {/* H1 — no fade-up here; charIn cascade owns the animation */}
+            {/* H1 — direct, no animations */}
             <h1 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(36px,4vw,56px)', fontWeight:700, lineHeight:1.05, letterSpacing:'-.03em', marginBottom:22, color:C.tx }}>
-              <span className="fade-up" style={{ display:'block' }}>Ask your</span>
-              <span className="fade-up" style={{ display:'block', animationDelay:'60ms' }}>business data</span>
-              <span aria-label="anything." style={{ display:'inline-block' }}>
-                {'anything.'.split('').map((ch, i) => (
-                  <span key={i} aria-hidden="true" className="charIn-span" style={{ display:'inline-block', color:C.acc, opacity:0, animation:`charIn 480ms cubic-bezier(0.16,1,0.3,1) ${220 + i * 38}ms forwards` }}>{ch}</span>
-                ))}
-              </span>
+              Ask your business data <span style={{ color:C.acc }}>anything</span>.
             </h1>
 
-            <p className="fade-up" style={{ fontSize:'clamp(14px,1.4vw,16px)', color:C.tx2, lineHeight:1.75, marginBottom:32, maxWidth:380 }}>
+            <p style={{ fontSize:'clamp(14px,1.4vw,16px)', color:C.tx2, lineHeight:1.75, marginBottom:48, maxWidth:380 }}>
               Every sale your register takes feeds directly into your AI. Ask questions in plain English, spot problems, act fast.
             </p>
 
             {/* CTAs */}
-            <div className="fade-up hero-ctas" style={{ display:'flex', gap:10, flexWrap:'wrap', marginBottom:28 }}>
+            <div className="hero-ctas" style={{ display:'flex', gap:10, flexWrap:'wrap', marginBottom:28 }}>
               <Link href="/signin?mode=signup" className="btn-primary" style={{ padding:'13px 26px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:14, fontWeight:700, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8, letterSpacing:'-.01em' }}>
                 {geoCtaText}
               </Link>
@@ -864,19 +742,19 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             </div>
 
             {/* Trust */}
-            <div className="fade-up" style={{ display:'flex', gap:14, flexWrap:'wrap', fontSize:12, color:C.tx3 }}>
+            <div style={{ display:'flex', gap:14, flexWrap:'wrap', fontSize:12, color:C.tx3 }}>
               <span>✓ 3 months free · no card</span>
               <span>✓ GDPR compliant</span>
               <span>✓ UK data residency</span>
             </div>
-            <p className="fade-up" style={{ fontSize:12, color:C.tx3, marginTop:6 }}>
+            <p style={{ fontSize:12, color:C.tx3, marginTop:6 }}>
               {country ? `${flag} ` : ''}{geoSubText} · PoS from {posPrice}/seat/mo
             </p>
           </div>
 
           {/* ── Right: product UI bleeding to viewport edge ─────────────────── */}
-          <div className="fade-up hero-right-col" style={{ display:'flex', alignItems:'stretch', paddingLeft:'clamp(20px,3vw,40px)', paddingTop:'clamp(24px,4vw,40px)', paddingBottom:'clamp(24px,4vw,40px)', marginRight:'calc(-1 * clamp(16px,4vw,48px))' }}>
-            <div ref={tiltRef} className="hero-3d" style={{ width:'100%', background:C.bg, borderRadius:'12px 0 0 12px', border:`1px solid ${C.b}`, borderRight:'none', overflow:'hidden', display:'flex', flexDirection:'column' }}>
+          <div className="hero-right-col" style={{ display:'flex', alignItems:'stretch', paddingLeft:'clamp(20px,3vw,40px)', paddingTop:'clamp(24px,4vw,40px)', paddingBottom:'clamp(24px,4vw,40px)', marginRight:'calc(-1 * clamp(16px,4vw,48px))' }}>
+            <div style={{ width:'100%', background:C.bg, borderRadius:'12px 0 0 12px', border:`1px solid ${C.b}`, borderRight:'none', overflow:'hidden', display:'flex', flexDirection:'column' }}>
 
               {/* Browser chrome */}
               <div style={{ padding:'10px 16px', background:C.ev, borderBottom:`1px solid ${C.b}`, display:'flex', alignItems:'center', gap:10 }}>
@@ -974,10 +852,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         <p style={{ textAlign:'center', fontSize:11, fontWeight:600, color:C.tx3, letterSpacing:'.08em', marginBottom:12, textTransform:'uppercase' }}>
           Connects to your platforms
         </p>
-        <div style={{ display:'flex', gap:0, animation:'ticker 20s linear infinite', width:'max-content' }}>
-          {[...INTEGRATIONS, ...INTEGRATIONS].map((int, i) => (
-            <div key={i} style={{ display:'flex', alignItems:'center', gap:7, padding:'6px 20px', borderRight:`1px solid ${C.b}`, fontSize:13, fontWeight:500, color:C.tx2, whiteSpace:'nowrap' }}>
-              <span>{int.icon}</span> {int.name}
+        <div className="ticker-strip" style={{ display:'flex', gap:0, animation:'ticker 20s linear infinite', width:'max-content' }}>
+          {[...INTEGRATIONS, ...INTEGRATIONS].map((name, i) => (
+            <div key={i} style={{ padding:'6px 28px', borderRight:`1px solid ${C.b}`, fontSize:13, fontWeight:500, color:C.tx2, whiteSpace:'nowrap' }}>
+              {name}
             </div>
           ))}
         </div>
@@ -986,9 +864,6 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       {/* ── PROFIT CALCULATOR ─────────────────────────────────────────────── */}
       <section style={{ maxWidth:760, margin:'0 auto', padding:'clamp(48px,6vw,72px) clamp(16px,4vw,40px)' }}>
         <div data-motion style={{ marginBottom:28 }}>
-          <p style={{ fontSize:11, fontWeight:700, color:C.acc, letterSpacing:'.16em', textTransform:'uppercase', marginBottom:10 }}>
-            See your numbers
-          </p>
           <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3vw,34px)', fontWeight:700, lineHeight:1.1, letterSpacing:'-.03em', color:C.tx, marginBottom:12 }}>
             How much are you actually making?
           </h2>
@@ -1164,7 +1039,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             { num:'3', title:'Get specific answers', body:'Real numbers from your actual data. Recommended actions. Every time.' },
           ].map((step, i) => (
             <div key={i} style={{ padding:'0 clamp(12px,2vw,28px)', textAlign:'center', position:'relative', zIndex:1 }}>
-              <div style={{ width:56, height:56, borderRadius:14, background:i===0?C.acc:C.ev, border:`1px solid ${i===0?C.acc:C.b}`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 20px', boxShadow:i===0?`0 0 24px rgba(208,138,89,.35)`:'none' }}>
+              <div style={{ width:56, height:56, borderRadius:14, background:i===0?C.acc:C.ev, border:`1px solid ${i===0?'transparent':C.b}`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 20px', boxShadow:i===0?`0 0 24px rgba(208,138,89,.35)`:'none' }}>
                 <span style={{ fontFamily:'var(--font-sora)', fontWeight:800, fontSize:20, color:i===0?'#fff':C.tx3 }}>{step.num}</span>
               </div>
               <h3 style={{ fontFamily:'var(--font-sora)', fontSize:15, fontWeight:700, color:C.tx, marginBottom:8 }}>{step.title}</h3>
@@ -1189,9 +1064,6 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <div className="testimonials-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
             {TESTIMONIALS.slice(1).map((tm, i) => (
               <figure key={i} style={{ margin:0, padding:'22px', borderRadius:16, border:`1px solid ${C.b}`, background:C.ev }}>
-                <div style={{ display:'flex', gap:2, marginBottom:12 }}>
-                  {Array.from({length:5}).map((_,j) => <span key={j} style={{ color:'#f59e0b', fontSize:13 }}>★</span>)}
-                </div>
                 <blockquote style={{ margin:'0 0 16px', padding:0 }}>
                   <p style={{ fontSize:14, lineHeight:1.7, color:C.tx, margin:0 }}>&ldquo;{tm.text}&rdquo;</p>
                 </blockquote>
@@ -1208,18 +1080,23 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
       </section>
 
-      {/* ── STATS ─────────────────────────────────────────────────────────── */}
-      <section style={{ maxWidth:860, margin:'0 auto', padding:'clamp(48px,6vw,72px) clamp(16px,4vw,40px)' }}>
-        <div className="stats-grid" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:0, border:`1px solid ${C.b}`, borderRadius:16, overflow:'hidden' }}>
+      {/* ── IMPACT STORIES ────────────────────────────────────────────────── */}
+      <section style={{ maxWidth:960, margin:'0 auto', padding:'clamp(48px,6vw,72px) clamp(16px,4vw,40px)' }}>
+        <div className="stats-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
           {[
-            { num:'2 min', label:'Average setup time' },
-            { num:'£400+', label:'Avg monthly saving found' },
-            { num:'20', label:'Export markets scored' },
-            { num:'Free', label:'To start — no card needed' },
+            { quote:'Found a margin gap he\'d been missing for 4 months. Fixed it the same day.', name:'David O.', detail:'Amazon FBA · Lagos' },
+            { quote:'Replaced 2 hours of Monday reports with 4 minutes of answers.', name:'James K.', detail:'Retail shop owner · Nairobi' },
+            { quote:'Flagged 3 customers at risk — 89 days before they stopped buying.', name:'Sarah M.', detail:'Shopify seller · London' },
           ].map((s, i) => (
-            <div key={i} style={{ padding:'28px 16px', background:C.sf, borderRight:i<3?`1px solid ${C.b}`:'none', textAlign:'center' }}>
-              <div style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(24px,3vw,32px)', fontWeight:800, color:C.acc, marginBottom:8, letterSpacing:'-.03em' }}>{s.num}</div>
-              <div style={{ fontSize:12, color:C.tx2, lineHeight:1.4 }}>{s.label}</div>
+            <div key={i} style={{ padding:'28px 24px', background:C.sf, border:`1px solid ${C.b}`, borderRadius:16, display:'flex', flexDirection:'column', gap:20 }}>
+              <p style={{ fontSize:15, lineHeight:1.7, color:C.tx, margin:0, fontStyle:'italic' }}>&ldquo;{s.quote}&rdquo;</p>
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginTop:'auto' }}>
+                <div style={{ width:32, height:32, borderRadius:'50%', background:C.accBg, border:`1px solid ${C.accBdr}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:C.acc, flexShrink:0 }}>{s.name.split(' ').map((n: string) => n[0]).join('')}</div>
+                <div>
+                  <div style={{ fontSize:13, fontWeight:600, color:C.tx }}>{s.name}</div>
+                  <div style={{ fontSize:11, color:C.tx3 }}>{s.detail}</div>
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -1272,7 +1149,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, marginBottom:20 }}>
             <span style={{ fontSize:12, color:C.tx3, fontWeight:500 }}>Intelligence platform:</span>
             <span style={{ fontSize:13, color:annual?C.tx3:C.tx, fontWeight:annual?400:600 }}>Monthly</span>
-            <button onClick={() => setAnnual(v=>!v)} style={{ width:42, height:22, borderRadius:11, background:annual?C.acc:C.ev2, border:`1px solid ${C.b2}`, cursor:'pointer', position:'relative', transition:'background 200ms' }}>
+            <button role="switch" aria-checked={annual} aria-label="Annual billing" onClick={() => setAnnual(v=>!v)} style={{ width:42, height:22, borderRadius:11, background:annual?C.acc:C.ev2, border:`1px solid ${C.b2}`, cursor:'pointer', position:'relative', transition:'background 200ms' }}>
               <div style={{ width:16, height:16, borderRadius:'50%', background:'#fff', position:'absolute', top:3, left:annual?23:3, transition:'left 200ms', boxShadow:'0 1px 4px rgba(0,0,0,.4)' }}/>
             </button>
             <span style={{ fontSize:13, color:annual?C.tx:C.tx3, fontWeight:annual?600:400 }}>
@@ -1292,7 +1169,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             ].map((plan, i) => (
               <div key={i} style={{ borderRadius:18, border:plan.popular?`1px solid ${C.accBdr}`:`1px solid ${C.b}`, background:plan.popular?`rgba(208,138,89,.04)`:C.ev, padding:'24px 20px', position:'relative', display:'flex', flexDirection:'column' }}>
                 {plan.popular && (
-                  <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', padding:'3px 14px', borderRadius:9999, background:'linear-gradient(135deg, #7c3aed, #4f46e5)', color:'#fff', fontSize:10, fontWeight:700, whiteSpace:'nowrap', textTransform:'uppercase', letterSpacing:'.06em' }}>
+                  <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', padding:'3px 14px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:10, fontWeight:700, whiteSpace:'nowrap', textTransform:'uppercase', letterSpacing:'.06em' }}>
                     3 months free trial
                   </div>
                 )}
@@ -1326,7 +1203,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         <h2 data-motion style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(24px,3.5vw,36px)', fontWeight:700, textAlign:'center', marginBottom:40, letterSpacing:'-.03em', color:C.tx }}>Common questions</h2>
         <div>
           {FAQS.map((faq, i) => (
-            <div key={i} className="faq-item" style={{ borderBottom:`1px solid ${C.b}`, cursor:'pointer', transition:'background 150ms', borderRadius:8, padding:'0 4px' }} onClick={() => setOpenFaq(openFaq === i ? null : i)}>
+            <div key={i} className="faq-item" role="button" tabIndex={0} aria-expanded={openFaq === i} style={{ borderBottom:`1px solid ${C.b}`, cursor:'pointer', transition:'background 150ms', borderRadius:8, padding:'0 4px' }} onClick={() => setOpenFaq(openFaq === i ? null : i)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpenFaq(openFaq === i ? null : i) } }}>
               <div style={{ padding:'16px 12px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
                 <h3 style={{ fontFamily:'var(--font-sora)', fontSize:14, fontWeight:600, color:C.tx, margin:0 }}>{faq.q}</h3>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.tx3} strokeWidth="2" strokeLinecap="round" style={{ flexShrink:0, transform:openFaq===i?'rotate(180deg)':'none', transition:'transform 200ms' }}>
@@ -1355,15 +1232,14 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               </p>
               <div className="academy-topics" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:20 }}>
                 {[
-                  { icon:'📊', label:'Financial Intelligence', count:'40+' },
-                  { icon:'🛒', label:'eCommerce Analytics', count:'35+' },
-                  { icon:'💱', label:'FX & Trade', count:'30+' },
-                  { icon:'📦', label:'Inventory & Supply Chain', count:'25+' },
-                  { icon:'🤖', label:'AI for Business', count:'30+' },
-                  { icon:'📈', label:'Growth & Strategy', count:'45+' },
+                  { label:'Financial Intelligence', count:'40+' },
+                  { label:'eCommerce Analytics', count:'35+' },
+                  { label:'FX & Trade', count:'30+' },
+                  { label:'Inventory & Supply Chain', count:'25+' },
+                  { label:'AI for Business', count:'30+' },
+                  { label:'Growth & Strategy', count:'45+' },
                 ].map((topic, i) => (
                   <div key={i} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', borderRadius:8, border:`1px solid ${C.b}`, background:C.ev, fontSize:12, color:C.tx2 }}>
-                    <span style={{ fontSize:16 }}>{topic.icon}</span>
                     <span style={{ flex:1 }}>{topic.label}</span>
                     <span style={{ fontSize:10, fontWeight:700, color:C.acc }}>{topic.count}</span>
                   </div>
