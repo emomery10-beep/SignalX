@@ -1,0 +1,627 @@
+'use client'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+
+const AMBER  = '#f59e0b'
+const GREEN  = '#22c55e'
+const RED    = '#ef4444'
+const BLUE   = '#3b82f6'
+const TEAL   = '#14b8a6'
+const API    = process.env.NEXT_PUBLIC_API_URL || ''
+
+type Stage = 'hub' | 'start_viewfinder' | 'shift_name' | 'end_viewfinder' | 'submitting' | 'start_success' | 'end_success'
+
+interface Shift {
+  id: string
+  shift_name: string
+  custom_name: string | null
+  start_photo_url: string
+  end_photo_url: string | null
+  started_at: string
+  ended_at: string | null
+  duration_minutes: number | null
+  target_units: number | null
+  actual_output?: number
+  live_output?: number
+  status: string
+  started_by_staff?: { id: string; name: string } | null
+}
+
+const SHIFT_NAMES: { id: string; label: string; icon: string; hours: string; color: string }[] = [
+  { id: 'Morning',   label: 'Morning',   icon: '🌅', hours: '06:00–14:00', color: AMBER },
+  { id: 'Afternoon', label: 'Afternoon', icon: '🌤️', hours: '14:00–22:00', color: BLUE  },
+  { id: 'Night',     label: 'Night',     icon: '🌙', hours: '22:00–06:00', color: '#6366f1' },
+  { id: 'Custom',    label: 'Custom',    icon: '⚙️', hours: 'Any hours',   color: TEAL  },
+]
+
+function autoDetectShift() {
+  const h = new Date().getHours()
+  if (h >= 6  && h < 14) return 'Morning'
+  if (h >= 14 && h < 22) return 'Afternoon'
+  return 'Night'
+}
+
+function elapsed(iso: string) {
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000)
+  if (mins < 60) return `${mins}m`
+  const h = Math.floor(mins / 60), m = mins % 60
+  return m > 0 ? `${h}h ${m}m` : `${h}h`
+}
+
+function fmtTime(iso: string) {
+  return new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+}
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}
+
+function IconArrowLeft({ size = 18 }: { size?: number }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+}
+
+export default function ShiftPage() {
+  const router  = useRouter()
+  const supabase = createClient()
+  const [ready, setReady] = useState(false)
+  const [stage, setStage] = useState<Stage>('hub')
+
+  // Data
+  const [activeShift, setActiveShift]   = useState<Shift | null>(null)
+  const [recentShifts, setRecentShifts] = useState<Shift[]>([])
+  const [dataLoading, setDataLoading]   = useState(true)
+
+  // New shift form
+  const [shiftName, setShiftName]       = useState(autoDetectShift())
+  const [customName, setCustomName]     = useState('')
+  const [targetUnits, setTargetUnits]   = useState('')
+  const [startPhoto, setStartPhoto]     = useState('')
+  const [endPhoto, setEndPhoto]         = useState('')
+  const [saveError, setSaveError]       = useState('')
+  const [completedShift, setCompletedShift] = useState<Shift | null>(null)
+
+  // Camera
+  const videoRef  = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const fileRef   = useRef<HTMLInputElement>(null)
+  const [cameraOn, setCameraOn]       = useState(false)
+  const [cameraErr, setCameraErr]     = useState('')
+  const [flashActive, setFlashActive] = useState(false)
+  const captureTargetRef = useRef<'start' | 'end'>('start')
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) { router.push('/pos'); return }
+      setReady(true)
+    })
+    return () => stopCamera()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => { if (ready) loadData() }, [ready])
+
+  const loadData = useCallback(async () => {
+    setDataLoading(true)
+    try {
+      const r = await fetch(`${API}/api/pos/factory/shift`)
+      const d = r.ok ? await r.json() : {}
+      setActiveShift(d.activeShift || null)
+      setRecentShifts(d.recentShifts || [])
+    } catch { /* silent */ } finally { setDataLoading(false) }
+  }, [])
+
+  // ── Camera ──────────────────────────────────────────────────────────────────
+  const openCamera = useCallback(async () => {
+    setCameraErr('')
+    if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+      })
+      streamRef.current = stream
+      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play() }
+      setCameraOn(true)
+    } catch (err: any) {
+      setCameraErr(err?.name === 'NotAllowedError' ? 'Camera access denied' : 'Camera unavailable')
+      setCameraOn(false)
+    }
+  }, [])
+
+  function stopCamera() {
+    streamRef.current?.getTracks().forEach(t => t.stop())
+    streamRef.current = null
+    setCameraOn(false)
+  }
+
+  function capturePhoto() {
+    if (!canvasRef.current || !videoRef.current) return
+    const v = videoRef.current, c = canvasRef.current
+    c.width = v.videoWidth; c.height = v.videoHeight
+    c.getContext('2d')?.drawImage(v, 0, 0)
+    const url = c.toDataURL('image/jpeg', 0.88)
+    setFlashActive(true)
+    setTimeout(() => setFlashActive(false), 180)
+    stopCamera()
+    if (captureTargetRef.current === 'start') {
+      setStartPhoto(url); setStage('shift_name')
+    } else {
+      setEndPhoto(url); submitEndShift(url)
+    }
+  }
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]; if (!file) return
+    const reader = new FileReader()
+    reader.onload = ev => {
+      const url = ev.target?.result as string
+      if (captureTargetRef.current === 'start') {
+        setStartPhoto(url); setStage('shift_name')
+      } else {
+        setEndPhoto(url); submitEndShift(url)
+      }
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
+  // ── Start shift ─────────────────────────────────────────────────────────────
+  async function submitStartShift() {
+    if (!startPhoto || !shiftName) return
+    setSaveError('')
+    setStage('submitting')
+    try {
+      const res = await fetch(`${API}/api/pos/factory/shift`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shift_name:   shiftName,
+          custom_name:  shiftName === 'Custom' ? customName.trim() : undefined,
+          image:        startPhoto,
+          target_units: targetUnits ? parseFloat(targetUnits) : undefined,
+        }),
+      })
+      if (!res.ok) {
+        const d = await res.json()
+        setSaveError(d.error || 'Failed to start shift')
+        setStage('shift_name')
+        // If a shift is already active, reload to show it
+        if (res.status === 409) { await loadData(); setStage('hub') }
+        return
+      }
+      await loadData()
+      setStage('start_success')
+    } catch {
+      setSaveError('Network error — try again')
+      setStage('shift_name')
+    }
+  }
+
+  // ── End shift ───────────────────────────────────────────────────────────────
+  async function submitEndShift(photo: string) {
+    if (!activeShift) return
+    setSaveError('')
+    setStage('submitting')
+    try {
+      const res = await fetch(`${API}/api/pos/factory/shift`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: activeShift.id, image: photo }),
+      })
+      if (!res.ok) {
+        const d = await res.json()
+        setSaveError(d.error || 'Failed to end shift')
+        setStage('hub')
+        return
+      }
+      const d = await res.json()
+      setCompletedShift(d.shift)
+      await loadData()
+      setStage('end_success')
+    } catch {
+      setSaveError('Network error — try again')
+      setStage('hub')
+    }
+  }
+
+  function resetForm() {
+    setStartPhoto(''); setEndPhoto(''); setCustomName(''); setTargetUnits(''); setSaveError(''); setCompletedShift(null)
+    setShiftName(autoDetectShift())
+  }
+
+  if (!ready) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0f1e' }}>
+      <div style={{ width: 36, height: 36, border: `3px solid rgba(20,184,166,.3)`, borderTopColor: TEAL, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // HUB
+  // ══════════════════════════════════════════════════════════════════════════
+  if (stage === 'hub') return (
+    <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', paddingBottom: 40 }}>
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+      <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: 'none' }} />
+
+      {/* Header */}
+      <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '44px 20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={() => router.push('/factory')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.7)' }}>
+          <IconArrowLeft />
+        </button>
+        <div>
+          <div style={{ fontWeight: 800, fontSize: 18, color: TEAL }}>Shift Tracker</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>Photo-verified shift output</div>
+        </div>
+        <button onClick={loadData} style={{ marginLeft: 'auto', width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.5)' }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
+        </button>
+      </div>
+
+      <div style={{ padding: '20px', maxWidth: 600, margin: '0 auto' }}>
+
+        {/* ── Active shift card ─────────────────────────────────────────────── */}
+        {dataLoading ? (
+          <div style={{ height: 140, borderRadius: 18, background: 'rgba(255,255,255,0.04)', animation: 'pulse 1.6s ease-in-out infinite', marginBottom: 20 }} />
+        ) : activeShift ? (
+          <div style={{ marginBottom: 20, background: `linear-gradient(135deg, rgba(20,184,166,0.12), rgba(20,184,166,0.05))`, border: '1.5px solid rgba(20,184,166,0.4)', borderRadius: 18, overflow: 'hidden' }}>
+            {/* Start photo strip */}
+            <div style={{ display: 'flex', gap: 0 }}>
+              {activeShift.start_photo_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={activeShift.start_photo_url} alt="" style={{ width: 80, height: 80, objectFit: 'cover', flexShrink: 0 }} />
+              )}
+              <div style={{ flex: 1, padding: '14px 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: GREEN, boxShadow: '0 0 0 3px rgba(34,197,94,0.25)', animation: 'pulse-dot 1.4s ease-in-out infinite', flexShrink: 0 }} />
+                  <span style={{ fontSize: 13, fontWeight: 800, color: GREEN }}>Active</span>
+                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginLeft: 'auto' }}>{elapsed(activeShift.started_at)}</span>
+                </div>
+                <div style={{ fontWeight: 800, fontSize: 16 }}>
+                  {SHIFT_NAMES.find(s => s.id === activeShift.shift_name)?.icon} {activeShift.custom_name || activeShift.shift_name}
+                </div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                  Started {fmtTime(activeShift.started_at)} · {activeShift.started_by_staff?.name || 'Worker'}
+                </div>
+              </div>
+            </div>
+
+            {/* Live output */}
+            <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(20,184,166,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>Output so far</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: GREEN }}>
+                  {(activeShift.live_output || 0).toLocaleString()}
+                  {activeShift.target_units && (
+                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', fontWeight: 500, marginLeft: 6 }}>/ {activeShift.target_units.toLocaleString()} target</span>
+                  )}
+                </div>
+              </div>
+              {/* Progress bar if target set */}
+              {activeShift.target_units && activeShift.target_units > 0 && (() => {
+                const pct = Math.min((activeShift.live_output || 0) / activeShift.target_units * 100, 100)
+                const color = pct >= 90 ? GREEN : pct >= 60 ? AMBER : RED
+                return (
+                  <div style={{ flex: 1, marginLeft: 16 }}>
+                    <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 3, transition: 'width 600ms ease' }} />
+                    </div>
+                    <div style={{ fontSize: 10, color, textAlign: 'right', marginTop: 3 }}>{pct.toFixed(0)}%</div>
+                  </div>
+                )
+              })()}
+            </div>
+
+            {/* End shift button */}
+            <div style={{ padding: '0 16px 16px' }}>
+              <button onClick={() => { captureTargetRef.current = 'end'; setStage('end_viewfinder'); openCamera() }}
+                style={{ width: '100%', background: 'linear-gradient(135deg, #14b8a6, #0f766e)', border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: 'pointer', fontWeight: 800, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                📸 Photograph Output — End Shift
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* No active shift — start CTA */
+          <button onClick={() => { captureTargetRef.current = 'start'; setStage('start_viewfinder'); openCamera() }}
+            style={{ width: '100%', marginBottom: 20, background: `linear-gradient(135deg, ${TEAL}, #0f766e)`, border: 'none', borderRadius: 18, padding: '18px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16, boxShadow: `0 8px 32px rgba(20,184,166,0.3)`, transition: 'transform 120ms' }}
+            onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.98)' }}
+            onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
+            onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.97)' }}
+            onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)' }}
+          >
+            <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 26 }}>📷</div>
+            <div style={{ textAlign: 'left', flex: 1 }}>
+              <div style={{ fontWeight: 800, fontSize: 17, color: '#fff', lineHeight: 1.1 }}>Start Shift</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 3 }}>Photograph the floor to begin</div>
+            </div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        )}
+
+        {saveError && (
+          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', color: RED, fontSize: 13, marginBottom: 16 }}>{saveError}</div>
+        )}
+
+        {/* Recent shifts */}
+        <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12 }}>Recent Shifts</div>
+        {dataLoading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[...Array(3)].map((_, i) => <div key={i} style={{ height: 72, borderRadius: 14, background: 'rgba(255,255,255,0.04)', animation: 'pulse 1.6s ease-in-out infinite', animationDelay: `${i * 100}ms` }} />)}
+          </div>
+        ) : recentShifts.length === 0 ? (
+          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 14, padding: '24px 20px', textAlign: 'center' }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>⏱️</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>No completed shifts yet</div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {recentShifts.map(s => {
+              const meta = SHIFT_NAMES.find(n => n.id === s.shift_name)
+              const target = s.target_units
+              const actual = s.actual_output ?? 0
+              const hitTarget = target ? actual >= target : null
+              const color = hitTarget === true ? GREEN : hitTarget === false ? RED : TEAL
+              return (
+                <div key={s.id} style={{ display: 'flex', gap: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '12px 14px', alignItems: 'flex-start' }}>
+                  {/* Photos */}
+                  <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
+                    {s.start_photo_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={s.start_photo_url} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.12)' }} />
+                    )}
+                    {s.end_photo_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={s.end_photo_url} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', border: `1.5px solid ${color}60` }} />
+                    )}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14 }}>
+                      {meta?.icon} {s.custom_name || s.shift_name}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+                      {fmtDate(s.started_at)} · {fmtTime(s.started_at)}–{s.ended_at ? fmtTime(s.ended_at) : '?'}
+                      {s.duration_minutes != null && ` · ${Math.round(s.duration_minutes)}m`}
+                    </div>
+                    {target != null && (
+                      <div style={{ fontSize: 11, color, marginTop: 3, fontWeight: 600 }}>
+                        {actual.toLocaleString()} / {target.toLocaleString()} units {hitTarget ? '✓' : '✗'}
+                      </div>
+                    )}
+                    {target == null && actual > 0 && (
+                      <div style={{ fontSize: 11, color: TEAL, marginTop: 3 }}>{actual.toLocaleString()} units produced</div>
+                    )}
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: s.status === 'completed' ? 'rgba(34,197,94,0.12)' : 'rgba(255,255,255,0.07)', color: s.status === 'completed' ? GREEN : 'rgba(255,255,255,0.3)', flexShrink: 0 }}>
+                    {s.status}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes spin    { to { transform: rotate(360deg) } }
+        @keyframes pulse   { 0%,100% { opacity: 0.5 } 50% { opacity: 1 } }
+        @keyframes pulse-dot { 0%,100% { box-shadow: 0 0 0 3px rgba(34,197,94,0.25) } 50% { box-shadow: 0 0 0 6px rgba(34,197,94,0.1) } }
+      `}</style>
+    </div>
+  )
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // VIEWFINDERS (start / end)
+  // ══════════════════════════════════════════════════════════════════════════
+  const isEndFlow = stage === 'end_viewfinder'
+  if (stage === 'start_viewfinder' || stage === 'end_viewfinder') return (
+    <div style={{ position: 'fixed', inset: 0, background: '#000', fontFamily: 'system-ui, sans-serif' }}>
+      <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: 'none' }} />
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+      <video ref={videoRef} autoPlay playsInline muted style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+      <div style={{ position: 'absolute', inset: 0, background: '#fff', opacity: flashActive ? 1 : 0, transition: 'opacity 60ms', pointerEvents: 'none' }} />
+
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '48px 20px 16px', background: 'linear-gradient(to bottom, rgba(0,0,0,0.75), transparent)', display: 'flex', alignItems: 'center', gap: 14 }}>
+        <button onClick={() => { stopCamera(); setStage('hub') }} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+          <IconArrowLeft />
+        </button>
+        <div>
+          <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>
+            {isEndFlow ? 'End Shift' : 'Start Shift'}
+          </div>
+          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 2 }}>
+            {isEndFlow ? 'Photograph the production output' : 'Photograph the production floor'}
+          </div>
+        </div>
+      </div>
+
+      {/* Contextual overlay label */}
+      <div style={{ position: 'absolute', bottom: 160, left: 0, right: 0, display: 'flex', justifyContent: 'center' }}>
+        <div style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', borderRadius: 20, padding: '6px 16px', fontSize: 12, color: 'rgba(255,255,255,0.7)', border: `1px solid rgba(20,184,166,0.3)` }}>
+          {isEndFlow ? '📦 Show all finished goods in frame' : '🏭 Frame the entire production area'}
+        </div>
+      </div>
+
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '20px 20px 48px', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32 }}>
+        <button onClick={() => fileRef.current?.click()} style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </button>
+        <button onClick={capturePhoto} disabled={!cameraOn}
+          style={{ width: 76, height: 76, borderRadius: '50%', background: TEAL, border: '4px solid rgba(255,255,255,0.35)', cursor: cameraOn ? 'pointer' : 'not-allowed', boxShadow: `0 0 0 6px rgba(20,184,166,0.2)`, transition: 'transform 100ms' }}
+          onMouseDown={e => { if (cameraOn) e.currentTarget.style.transform = 'scale(0.92)' }}
+          onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
+        />
+        <div style={{ width: 48 }} />
+      </div>
+
+      {cameraErr && (
+        <div style={{ position: 'absolute', bottom: 160, left: 20, right: 20, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', borderRadius: 12, padding: '12px 16px', color: '#fff', fontSize: 13, textAlign: 'center' }}>
+          {cameraErr} — use gallery instead
+        </div>
+      )}
+    </div>
+  )
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SHIFT NAME + CONFIRM
+  // ══════════════════════════════════════════════════════════════════════════
+  if (stage === 'shift_name') return (
+    <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={() => { setStage('start_viewfinder'); openCamera() }} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.7)' }}>
+          <IconArrowLeft />
+        </button>
+        {startPhoto && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={startPhoto} alt="" style={{ width: 42, height: 42, borderRadius: 10, objectFit: 'cover', border: `2px solid ${TEAL}60`, flexShrink: 0 }} />
+        )}
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>Which shift?</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>Set shift type and optional target</div>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, padding: '20px' }}>
+        {/* Shift name pills */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+          {SHIFT_NAMES.map(s => (
+            <button key={s.id} onClick={() => setShiftName(s.id)}
+              style={{ background: shiftName === s.id ? `${s.color}20` : 'rgba(255,255,255,0.05)', border: `1.5px solid ${shiftName === s.id ? s.color : 'rgba(255,255,255,0.1)'}`, borderRadius: 14, padding: '14px 16px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 120ms' }}>
+              <div style={{ fontSize: 22, marginBottom: 4 }}>{s.icon}</div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: shiftName === s.id ? s.color : '#e2e8f0' }}>{s.label}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{s.hours}</div>
+            </button>
+          ))}
+        </div>
+
+        {/* Custom name input */}
+        {shiftName === 'Custom' && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Shift name</div>
+            <input value={customName} onChange={e => setCustomName(e.target.value)} placeholder="e.g. Split shift, Overtime…"
+              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${customName ? TEAL : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+        )}
+
+        {/* Target units (optional) */}
+        <div style={{ marginBottom: 28 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+            Target output <span style={{ color: 'rgba(255,255,255,0.2)' }}>(optional)</span>
+          </div>
+          <input value={targetUnits} onChange={e => setTargetUnits(e.target.value)} type="number" inputMode="numeric" placeholder="e.g. 500 units"
+            style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${targetUnits ? `${TEAL}60` : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 16, outline: 'none', boxSizing: 'border-box' }} />
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 6 }}>Used to track progress during the shift</div>
+        </div>
+
+        {saveError && (
+          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', color: RED, fontSize: 13, marginBottom: 16 }}>{saveError}</div>
+        )}
+
+        <button onClick={submitStartShift}
+          style={{ width: '100%', background: `linear-gradient(135deg, ${TEAL}, #0f766e)`, border: 'none', color: '#fff', padding: '16px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 17, boxShadow: `0 4px 20px rgba(20,184,166,0.3)` }}>
+          🏭 Start {shiftName === 'Custom' ? (customName || 'Custom') : shiftName} Shift
+        </button>
+      </div>
+    </div>
+  )
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SUBMITTING
+  // ══════════════════════════════════════════════════════════════════════════
+  if (stage === 'submitting') return (
+    <div style={{ minHeight: '100vh', background: '#0a0f1e', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ width: 48, height: 48, border: `4px solid rgba(20,184,166,.3)`, borderTopColor: TEAL, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>Saving…</div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // START SUCCESS
+  // ══════════════════════════════════════════════════════════════════════════
+  if (stage === 'start_success') return (
+    <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
+      {startPhoto && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={startPhoto} alt="" style={{ width: 120, height: 120, borderRadius: 20, objectFit: 'cover', border: `3px solid ${TEAL}`, boxShadow: `0 0 40px rgba(20,184,166,0.3)`, marginBottom: 20 }} />
+      )}
+      <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>Shift started</div>
+      <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>
+        {SHIFT_NAMES.find(s => s.id === shiftName)?.icon} {customName || shiftName} shift is now active
+      </div>
+      {targetUnits && (
+        <div style={{ fontSize: 12, color: TEAL, marginBottom: 4 }}>Target: {Number(targetUnits).toLocaleString()} units</div>
+      )}
+      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginBottom: 36 }}>Floor photographed · output tracking started</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 300 }}>
+        <button onClick={() => router.push('/factory/capture')}
+          style={{ width: '100%', background: `linear-gradient(135deg, ${TEAL}, #0f766e)`, border: 'none', color: '#fff', padding: '15px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 15 }}>
+          Log Production →
+        </button>
+        <button onClick={() => { resetForm(); setStage('hub') }}
+          style={{ width: '100%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', padding: '13px', borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+          Back to Shift Hub
+        </button>
+      </div>
+    </div>
+  )
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // END SUCCESS
+  // ══════════════════════════════════════════════════════════════════════════
+  if (stage === 'end_success' && completedShift) {
+    const target = completedShift.target_units
+    const actual = completedShift.actual_output ?? 0
+    const hitTarget = target ? actual >= target : null
+    const resultColor = hitTarget === true ? GREEN : hitTarget === false ? RED : TEAL
+    const durMins = completedShift.duration_minutes ? Math.round(completedShift.duration_minutes) : null
+    return (
+      <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
+        {/* Before / after photos */}
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 24 }}>
+          {completedShift.start_photo_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={completedShift.start_photo_url} alt="Start" style={{ width: 90, height: 90, borderRadius: 14, objectFit: 'cover', border: '2px solid rgba(255,255,255,0.2)', opacity: 0.7 }} />
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <div style={{ width: 28, height: 2, background: 'rgba(255,255,255,0.2)' }} />
+            {durMins != null && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{durMins}m</div>}
+          </div>
+          {completedShift.end_photo_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={completedShift.end_photo_url} alt="End" style={{ width: 90, height: 90, borderRadius: 14, objectFit: 'cover', border: `2px solid ${resultColor}`, boxShadow: `0 0 24px ${resultColor}40` }} />
+          )}
+        </div>
+
+        <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>Shift complete</div>
+
+        {/* Output vs target */}
+        <div style={{ fontSize: 28, fontWeight: 800, color: resultColor, marginBottom: 4 }}>
+          {actual.toLocaleString()} units
+        </div>
+        {target && (
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>
+            {hitTarget ? '✓ Target met' : '✗ Below target'} ({target.toLocaleString()} goal)
+          </div>
+        )}
+        {durMins != null && (
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginBottom: 32 }}>
+            Duration: {Math.floor(durMins / 60) > 0 ? `${Math.floor(durMins / 60)}h ` : ''}{durMins % 60}m
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 300 }}>
+          <button onClick={() => { resetForm(); captureTargetRef.current = 'start'; setStage('start_viewfinder'); openCamera() }}
+            style={{ width: '100%', background: `linear-gradient(135deg, ${TEAL}, #0f766e)`, border: 'none', color: '#fff', padding: '15px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 15 }}>
+            Start Next Shift
+          </button>
+          <button onClick={() => { resetForm(); setStage('hub') }}
+            style={{ width: '100%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', padding: '13px', borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+            Back to Hub
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return null
+}

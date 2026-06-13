@@ -1,0 +1,407 @@
+'use client'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+
+const RED    = '#ef4444'
+const AMBER  = '#f59e0b'
+const BLUE   = '#3b82f6'
+const GREEN  = '#22c55e'
+const PURPLE = '#8b5cf6'
+const API    = process.env.NEXT_PUBLIC_API_URL || ''
+
+type Stage = 'viewfinder' | 'defect_type' | 'severity' | 'details' | 'submitting' | 'success'
+
+const DEFECT_TYPES: { id: string; label: string; icon: string; hint: string; color: string }[] = [
+  { id: 'dimensional',    label: 'Dimensional',    icon: '📐', hint: 'Wrong size or shape',     color: BLUE   },
+  { id: 'surface',        label: 'Surface',        icon: '🔍', hint: 'Scratches, marks, finish', color: AMBER  },
+  { id: 'contamination',  label: 'Contamination',  icon: '⚠️', hint: 'Foreign material found',  color: RED    },
+  { id: 'assembly',       label: 'Assembly',       icon: '🔩', hint: 'Mis-fit or missing part',  color: PURPLE },
+  { id: 'packaging',      label: 'Packaging',      icon: '📦', hint: 'Damaged or wrong pack',   color: '#0ea5e9' },
+  { id: 'other',          label: 'Other',          icon: '❓', hint: 'Specify in notes',         color: '#64748b' },
+]
+
+const SEVERITIES: { id: string; label: string; icon: string; desc: string; color: string }[] = [
+  { id: 'critical', label: 'Critical', icon: '🔴', desc: 'Stop production immediately', color: RED   },
+  { id: 'major',    label: 'Major',    icon: '🟠', desc: 'Significant impact, rework needed', color: AMBER },
+  { id: 'minor',    label: 'Minor',    icon: '🟡', desc: 'Small issue, document only',  color: '#eab308' },
+]
+
+function IconArrowLeft({ size = 18 }: { size?: number }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+}
+
+export default function QualityPage() {
+  const router = useRouter()
+  const supabase = createClient()
+  const [ready, setReady]   = useState(false)
+  const [stage, setStage]   = useState<Stage>('viewfinder')
+
+  // Captured data
+  const [photoUrl, setPhotoUrl]             = useState('')
+  const [defectType, setDefectType]         = useState('')
+  const [severity, setSeverity]             = useState('')
+  const [qty, setQty]                       = useState('')
+  const [productName, setProductName]       = useState('')
+  const [notes, setNotes]                   = useState('')
+  const [saveError, setSaveError]           = useState('')
+
+  // Camera
+  const videoRef   = useRef<HTMLVideoElement>(null)
+  const canvasRef  = useRef<HTMLCanvasElement>(null)
+  const streamRef  = useRef<MediaStream | null>(null)
+  const fileRef    = useRef<HTMLInputElement>(null)
+  const [cameraOn, setCameraOn]         = useState(false)
+  const [cameraErr, setCameraErr]       = useState('')
+  const [flashActive, setFlashActive]   = useState(false)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) { router.push('/pos'); return }
+      setReady(true)
+    })
+    return () => stopCamera()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (ready && stage === 'viewfinder') openCamera()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready])
+
+  const openCamera = useCallback(async () => {
+    setCameraErr('')
+    if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+      })
+      streamRef.current = stream
+      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play() }
+      setCameraOn(true)
+    } catch (err: any) {
+      setCameraErr(err?.name === 'NotAllowedError' ? 'Camera access denied' : 'Camera unavailable')
+      setCameraOn(false)
+    }
+  }, [])
+
+  function stopCamera() {
+    streamRef.current?.getTracks().forEach(t => t.stop())
+    streamRef.current = null
+    setCameraOn(false)
+  }
+
+  function capturePhoto() {
+    if (!canvasRef.current || !videoRef.current) return
+    const v = videoRef.current, c = canvasRef.current
+    c.width = v.videoWidth; c.height = v.videoHeight
+    c.getContext('2d')?.drawImage(v, 0, 0)
+    const url = c.toDataURL('image/jpeg', 0.88)
+    setFlashActive(true)
+    setTimeout(() => setFlashActive(false), 180)
+    stopCamera()
+    setPhotoUrl(url)
+    setStage('defect_type')
+  }
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]; if (!file) return
+    const reader = new FileReader()
+    reader.onload = ev => { setPhotoUrl(ev.target?.result as string); setStage('defect_type') }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
+
+  async function submitDefect() {
+    if (!photoUrl || !defectType || !severity) return
+    setSaveError('')
+    setStage('submitting')
+    try {
+      const res = await fetch(`${API}/api/pos/factory/quality`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          defect_type: defectType,
+          severity,
+          image: photoUrl,
+          product_name: productName.trim() || undefined,
+          quantity_affected: qty ? parseFloat(qty) : undefined,
+          notes: notes.trim() || undefined,
+        }),
+      })
+      if (!res.ok) {
+        const d = await res.json()
+        setSaveError(d.error || 'Failed to submit')
+        setStage('details')
+        return
+      }
+      setStage('success')
+    } catch {
+      setSaveError('Network error — try again')
+      setStage('details')
+    }
+  }
+
+  function reset() {
+    setStage('viewfinder')
+    setPhotoUrl(''); setDefectType(''); setSeverity(''); setQty(''); setProductName(''); setNotes(''); setSaveError('')
+    openCamera()
+  }
+
+  if (!ready) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0f1e' }}>
+      <div style={{ width: 36, height: 36, border: `3px solid rgba(239,68,68,.3)`, borderTopColor: RED, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
+
+  // ── VIEWFINDER ─────────────────────────────────────────────────────────────
+  if (stage === 'viewfinder') return (
+    <div style={{ position: 'fixed', inset: 0, background: '#000', fontFamily: 'system-ui, sans-serif' }}>
+      <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFile} style={{ display: 'none' }} />
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+      <video ref={videoRef} autoPlay playsInline muted style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+      <div style={{ position: 'absolute', inset: 0, background: '#fff', opacity: flashActive ? 1 : 0, transition: 'opacity 60ms', pointerEvents: 'none' }} />
+
+      {/* Top bar */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '48px 20px 16px', background: 'linear-gradient(to bottom, rgba(0,0,0,0.75), transparent)', display: 'flex', alignItems: 'center', gap: 14 }}>
+        <button onClick={() => { stopCamera(); router.push('/factory') }} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+          <IconArrowLeft />
+        </button>
+        <div>
+          <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>Quality Defect</div>
+          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 2 }}>Photograph the defect clearly</div>
+        </div>
+      </div>
+
+      {/* Crosshair guide */}
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 120, height: 120, pointerEvents: 'none' }}>
+        {[['0,0','20px,0','0,20px'],['right 0,0','calc(100% - 20px) 0,100% 0,100% 20px'],['0,bottom','0,calc(100% - 20px),20px 100%,0 100%'],['right bottom','calc(100% - 20px) 100%,100% 100%,100% calc(100% - 20px)']].map((_, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            width: 24, height: 24,
+            top: i < 2 ? 0 : 'auto', bottom: i >= 2 ? 0 : 'auto',
+            left: i % 2 === 0 ? 0 : 'auto', right: i % 2 === 1 ? 0 : 'auto',
+            borderTop: i < 2 ? '2px solid rgba(255,255,255,0.7)' : 'none',
+            borderBottom: i >= 2 ? '2px solid rgba(255,255,255,0.7)' : 'none',
+            borderLeft: i % 2 === 0 ? '2px solid rgba(255,255,255,0.7)' : 'none',
+            borderRight: i % 2 === 1 ? '2px solid rgba(255,255,255,0.7)' : 'none',
+          }} />
+        ))}
+      </div>
+
+      {/* Bottom shutter */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '20px 20px 48px', background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32 }}>
+        <button onClick={() => fileRef.current?.click()} style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </button>
+        <button onClick={capturePhoto} disabled={!cameraOn}
+          style={{ width: 76, height: 76, borderRadius: '50%', background: RED, border: '4px solid rgba(255,255,255,0.35)', cursor: cameraOn ? 'pointer' : 'not-allowed', boxShadow: '0 0 0 6px rgba(239,68,68,0.2)', transition: 'transform 100ms' }}
+          onMouseDown={e => { if (cameraOn) e.currentTarget.style.transform = 'scale(0.92)' }}
+          onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)' }}
+        />
+        <div style={{ width: 48 }} />
+      </div>
+
+      {cameraErr && (
+        <div style={{ position: 'absolute', bottom: 160, left: 20, right: 20, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', borderRadius: 12, padding: '12px 16px', color: '#fff', fontSize: 13, textAlign: 'center' }}>
+          {cameraErr} — use gallery instead
+        </div>
+      )}
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
+
+  // ── DEFECT TYPE ────────────────────────────────────────────────────────────
+  if (stage === 'defect_type') return (
+    <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <button onClick={() => { setStage('viewfinder'); openCamera() }} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.7)' }}>
+          <IconArrowLeft />
+        </button>
+        {photoUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photoUrl} alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', border: '2px solid rgba(239,68,68,0.5)', flexShrink: 0 }} />
+        )}
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>What kind of defect?</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>Select the defect type</div>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, padding: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+        {DEFECT_TYPES.map(d => (
+          <button key={d.id} onClick={() => { setDefectType(d.id); setStage('severity') }}
+            style={{ background: `${d.color}12`, border: `1.5px solid ${d.color}45`, borderRadius: 16, padding: '18px 10px', cursor: 'pointer', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, transition: 'transform 100ms' }}
+            onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.94)' }}
+            onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)' }}
+          >
+            <div style={{ width: 48, height: 48, borderRadius: '50%', background: `${d.color}18`, border: `2px solid ${d.color}50`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
+              {d.icon}
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: d.color, lineHeight: 1.2 }}>{d.label}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', lineHeight: 1.3 }}>{d.hint}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+
+  // ── SEVERITY ───────────────────────────────────────────────────────────────
+  if (stage === 'severity') {
+    const selectedDefect = DEFECT_TYPES.find(d => d.id === defectType)
+    return (
+      <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={() => setStage('defect_type')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.7)' }}>
+            <IconArrowLeft />
+          </button>
+          {photoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={photoUrl} alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', border: `2px solid ${selectedDefect?.color || RED}80`, flexShrink: 0 }} />
+          )}
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 16 }}>How severe?</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>
+              {selectedDefect?.icon} {selectedDefect?.label}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ flex: 1, padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {SEVERITIES.map(s => (
+            <button key={s.id} onClick={() => { setSeverity(s.id); setStage('details') }}
+              style={{ background: `${s.color}10`, border: `1.5px solid ${s.color}40`, borderRadius: 16, padding: '20px 18px', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 16, transition: 'transform 100ms' }}
+              onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.98)' }}
+              onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)' }}
+            >
+              <div style={{ width: 52, height: 52, borderRadius: '50%', background: `${s.color}15`, border: `2px solid ${s.color}50`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
+                {s.icon}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 800, fontSize: 17, color: s.color }}>{s.label}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginTop: 3 }}>{s.desc}</div>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={`${s.color}60`} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  // ── DETAILS ────────────────────────────────────────────────────────────────
+  if (stage === 'details') {
+    const selectedDefect   = DEFECT_TYPES.find(d => d.id === defectType)
+    const selectedSeverity = SEVERITIES.find(s => s.id === severity)
+    return (
+      <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '44px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={() => setStage('severity')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.7)' }}>
+            <IconArrowLeft />
+          </button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {photoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photoUrl} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', border: `1.5px solid ${selectedSeverity?.color || RED}60`, flexShrink: 0 }} />
+            )}
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>Add details</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>
+                {selectedDefect?.icon} {selectedDefect?.label} · {selectedSeverity?.icon} {selectedSeverity?.label}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>
+          {/* Qty affected */}
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+              Quantity affected <span style={{ color: 'rgba(255,255,255,0.2)' }}>(optional)</span>
+            </div>
+            <input value={qty} onChange={e => setQty(e.target.value)} type="number" inputMode="decimal" placeholder="e.g. 5"
+              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${qty ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 16, outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+
+          {/* Product name */}
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+              Product <span style={{ color: 'rgba(255,255,255,0.2)' }}>(optional)</span>
+            </div>
+            <input value={productName} onChange={e => setProductName(e.target.value)} placeholder="e.g. SKU-1042, Batch A3"
+              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${productName ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 16, outline: 'none', boxSizing: 'border-box' }} />
+          </div>
+
+          {/* Notes */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+              Notes <span style={{ color: 'rgba(255,255,255,0.2)' }}>(optional)</span>
+            </div>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Describe the defect…" rows={3}
+              style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${notes ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 14, outline: 'none', resize: 'none', boxSizing: 'border-box', lineHeight: 1.5 }} />
+          </div>
+
+          {saveError && (
+            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 16px', color: RED, fontSize: 13, marginBottom: 16 }}>{saveError}</div>
+          )}
+
+          {/* CTA — colour matches severity */}
+          <button onClick={submitDefect}
+            style={{ width: '100%', background: `linear-gradient(135deg, ${selectedSeverity?.color || RED}, ${selectedSeverity?.id === 'critical' ? '#dc2626' : selectedSeverity?.id === 'major' ? '#d97706' : '#ca8a04'})`, border: 'none', color: '#fff', padding: '16px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 17, boxShadow: `0 4px 20px ${selectedSeverity?.color || RED}40` }}>
+            {selectedSeverity?.icon} Log {selectedSeverity?.label} Defect
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── SUBMITTING ─────────────────────────────────────────────────────────────
+  if (stage === 'submitting') return (
+    <div style={{ minHeight: '100vh', background: '#0a0f1e', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ width: 48, height: 48, border: `4px solid rgba(239,68,68,.3)`, borderTopColor: RED, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+      <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>Logging defect…</div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
+
+  // ── SUCCESS ────────────────────────────────────────────────────────────────
+  if (stage === 'success') {
+    const selectedSeverity = SEVERITIES.find(s => s.id === severity)
+    const selectedDefect   = DEFECT_TYPES.find(d => d.id === defectType)
+    return (
+      <div style={{ minHeight: '100vh', background: '#0a0f1e', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
+        <div style={{ position: 'relative', marginBottom: 24 }}>
+          {photoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={photoUrl} alt="" style={{ width: 120, height: 120, borderRadius: 20, objectFit: 'cover', border: `3px solid ${selectedSeverity?.color || RED}`, boxShadow: `0 0 40px ${selectedSeverity?.color || RED}30` }} />
+          )}
+          <div style={{ position: 'absolute', bottom: -10, right: -10, width: 36, height: 36, borderRadius: '50%', background: '#0a0f1e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
+            {selectedSeverity?.icon}
+          </div>
+        </div>
+
+        <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>Defect logged</div>
+        <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>
+          {selectedDefect?.icon} {selectedDefect?.label} · {selectedSeverity?.label}
+        </div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginBottom: 36 }}>
+          {selectedSeverity?.id === 'critical' ? 'Supervisor has been alerted' : 'Quality record saved'}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 300 }}>
+          <button onClick={reset}
+            style={{ width: '100%', background: selectedSeverity?.color || RED, border: 'none', color: '#fff', padding: '15px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 15 }}>
+            Log Another Defect
+          </button>
+          <button onClick={() => router.push('/factory')}
+            style={{ width: '100%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', padding: '13px', borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
+            Back to Hub
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return null
+}

@@ -121,6 +121,14 @@ export default function POSPage() {
   const [selectedLocation, setSelectedLocation] = useState<string>('all')
   const [selectedSector, setSelectedSector] = useState<string>('all')
 
+  // Reorder suggestions from stock replenishment agent
+  const [reorderSuggestions, setReorderSuggestions] = useState<any[]>([])
+  const [dismissingId, setDismissingId] = useState<string | null>(null)
+  const [reorderRestockId, setReorderRestockId] = useState<string | null>(null)
+  const [reorderRestockQty, setReorderRestockQty] = useState('')
+  const [reorderRestocking, setReorderRestocking] = useState(false)
+  const [archivingStockId, setArchivingStockId] = useState<string | null>(null)
+
   // Toast
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
   const notify = useCallback((msg: string, ok = true) => setToast({ msg, ok }), [])
@@ -227,9 +235,12 @@ export default function POSPage() {
   const [logTrucks, setLogTrucks] = useState<any[]>([])
   const [logRoutes, setLogRoutes] = useState<any[]>([])
   const [logLoading, setLogLoading] = useState(false)
-  const [logTab, setLogTab] = useState<'overview' | 'parcels' | 'fleet' | 'routes' | 'revenue'>('overview')
+  const [logTab, setLogTab] = useState<'overview' | 'parcels' | 'fleet' | 'routes' | 'revenue' | 'drivers'>('overview')
   const [logSearch, setLogSearch] = useState('')
   const [logStatusFilter, setLogStatusFilter] = useState('')
+  const [logSelectedParcel, setLogSelectedParcel] = useState<any>(null)
+  const [logParcelPhotos, setLogParcelPhotos] = useState<any[]>([])
+  const [logParcelPhotosLoading, setLogParcelPhotosLoading] = useState(false)
 
   // ── Date range helpers ─────────────────────────────────
   const getDateRange = useCallback((range: DateRange): { start: Date; end: Date; label: string } => {
@@ -278,22 +289,25 @@ export default function POSPage() {
       const { start, end } = getDateRange(dateRange)
       const prev = getPrevRange(dateRange)
 
-      const [staffRes, txData, prevTxData, invRes, locRes] = await Promise.all([
+      const [staffRes, txData, prevTxData, invRes, locRes, reorderRes] = await Promise.all([
         fetch('/api/pos/staff'),
         fetchTransactions(start.toISOString(), end.toISOString(), 'all'),
         fetchTransactions(prev.start.toISOString(), prev.end.toISOString(), 'all'),
         fetch('/api/pos/inventory'),
         fetch('/api/pos/locations'),
+        fetch('/api/pos/reorder-suggestions').catch(() => null),
       ])
       const staffData = await staffRes.json()
       const invData = await invRes.json()
       const locData = await locRes.json()
+      const reorderData = reorderRes ? await reorderRes.json().catch(() => ({ suggestions: [] })) : { suggestions: [] }
 
       setStaff(staffData.staff || [])
       setTransactions(txData)
       setPrevTransactions(prevTxData)
       setInventory(invData.inventory || [])
       setLocations(locData.locations || [])
+      setReorderSuggestions(reorderData.suggestions || [])
       setLoading(false)
     }
     init()
@@ -361,6 +375,7 @@ export default function POSPage() {
     // so we never render a sector view with its tab button hidden.
     const sectorTabs: Tab[] = ['restaurant', 'repair', 'salon', 'retail', 'factory']
     setTab(prev => (sectorTabs.includes(prev) && prev !== selectedSector ? 'overview' : prev))
+    setTxPage(0)
   }, [selectedSector])
 
   // Sector-filtered staff list
@@ -1231,14 +1246,37 @@ export default function POSPage() {
                 <div style={sectionLabel}>Stock alerts</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {outOfStock.map(item => (
-                    <div key={item.id} onClick={() => setFilterModal({ type: 'stock_item', title: item.name, item_id: item.id })}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)', cursor: 'pointer', transition: 'all 150ms' }}
+                    <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)', cursor: 'pointer', transition: 'all 150ms', opacity: archivingStockId === item.id ? 0.4 : 1 }}
                       onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.01)'; e.currentTarget.style.borderColor = 'rgba(220,38,38,.4)' }}
                       onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = 'rgba(220,38,38,.2)' }}>
-                      <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>{item.name}</span>
+                      <span onClick={() => setFilterModal({ type: 'stock_item', title: item.name, item_id: item.id })} style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)', flex: 1 }}>{item.name}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontSize: 12, fontWeight: 600, color: RED }}>OUT OF STOCK</span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={RED} strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        <button
+                          title="Archive — hide this item from inventory"
+                          disabled={archivingStockId === item.id}
+                          onClick={async (e) => {
+                            e.stopPropagation()
+                            setArchivingStockId(item.id)
+                            try {
+                              const res = await fetch('/api/pos/inventory', {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: item.id, active: false }),
+                              })
+                              if (res.ok) {
+                                setInventory(prev => prev.filter(i => i.id !== item.id))
+                                setToast({ msg: `${item.name} archived`, ok: true })
+                              } else {
+                                setToast({ msg: 'Failed to archive item', ok: false })
+                              }
+                            } catch { setToast({ msg: 'Failed to archive item', ok: false }) }
+                            setArchivingStockId(null)
+                          }}
+                          style={{ fontSize: 11, color: 'var(--tx3)', background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.2)', borderRadius: 6, cursor: 'pointer', padding: '3px 8px', fontFamily: 'inherit', fontWeight: 500, transition: 'all 150ms' }}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,38,38,.15)'; e.currentTarget.style.color = RED }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(220,38,38,.08)'; e.currentTarget.style.color = 'var(--tx3)' }}
+                        >Archive</button>
                       </div>
                     </div>
                   ))}
@@ -1254,6 +1292,84 @@ export default function POSPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Smart reorder suggestions from AI agent */}
+            {reorderSuggestions.length > 0 && (
+              <div style={{ marginBottom: 24 }}>
+                <div style={sectionLabel}>
+                  <span>🤖 Reorder suggestions</span>
+                  <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--tx3)', marginLeft: 8 }}>AI-powered</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {reorderSuggestions.slice(0, 10).map((s: any) => {
+                    const urgColors = { critical: { bg: 'rgba(220,38,38,.06)', border: 'rgba(220,38,38,.2)', text: '#dc2626', label: 'URGENT' }, high: { bg: 'rgba(245,158,11,.06)', border: 'rgba(245,158,11,.25)', text: '#d97706', label: 'ORDER SOON' }, medium: { bg: 'rgba(59,130,246,.06)', border: 'rgba(59,130,246,.2)', text: '#2563eb', label: 'PLAN AHEAD' } }
+                    const uc = urgColors[s.urgency as keyof typeof urgColors] || urgColors.medium
+                    const isRestocking = reorderRestockId === s.inventory_id
+                    return (
+                      <div key={s.id} style={{ padding: '12px 14px', borderRadius: 10, background: uc.bg, border: `1px solid ${uc.border}`, position: 'relative' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{s.name}</span>
+                            <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: uc.text, color: '#fff', letterSpacing: '.5px' }}>{uc.label}</span>
+                            {s.sales_trend === 'rising' && <span style={{ fontSize: 10, color: '#16a34a' }}>↑ rising</span>}
+                            {s.sales_trend === 'falling' && <span style={{ fontSize: 10, color: '#94a3b8' }}>↓ slowing</span>}
+                          </div>
+                          <button onClick={async () => { setDismissingId(s.id); await fetch('/api/pos/reorder-suggestions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'dismiss', id: s.id }) }); setReorderSuggestions(prev => prev.filter(x => x.id !== s.id)); setDismissingId(null) }}
+                            disabled={dismissingId === s.id}
+                            style={{ fontSize: 10, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', fontFamily: 'inherit', opacity: dismissingId === s.id ? 0.4 : 1 }}>✕</button>
+                        </div>
+                        <div style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 8 }}>{s.reason}</div>
+                        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                          <div><span style={{ fontSize: 10, color: 'var(--tx3)' }}>Current stock</span><div style={{ fontSize: 13, fontWeight: 600, color: s.current_stock === 0 ? '#dc2626' : 'var(--tx)' }}>{s.current_stock} {s.unit}s</div></div>
+                          <div><span style={{ fontSize: 10, color: 'var(--tx3)' }}>Sells</span><div style={{ fontSize: 13, fontWeight: 600 }}>{s.avg_daily_sales}/day</div></div>
+                          <div><span style={{ fontSize: 10, color: 'var(--tx3)' }}>Order</span><div style={{ fontSize: 13, fontWeight: 700, color: uc.text }}>{s.suggested_qty} {s.unit}s</div></div>
+                          {s.estimated_cost > 0 && <div><span style={{ fontSize: 10, color: 'var(--tx3)' }}>Est. cost</span><div style={{ fontSize: 13, fontWeight: 600 }}>{currencySymbol}{s.estimated_cost.toLocaleString()}</div></div>}
+                          {s.supplier && <div><span style={{ fontSize: 10, color: 'var(--tx3)' }}>Supplier</span><div style={{ fontSize: 13, fontWeight: 500 }}>{s.supplier}</div></div>}
+                        </div>
+                        {/* Restock action row */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, paddingTop: 10, borderTop: `1px solid ${uc.border}` }}>
+                          {isRestocking ? (
+                            <>
+                              <input type="number" placeholder={String(s.suggested_qty)} value={reorderRestockQty}
+                                onChange={e => setReorderRestockQty(e.target.value)}
+                                autoFocus
+                                style={{ width: 70, padding: '6px 8px', borderRadius: 6, border: '1px solid var(--b2)', fontSize: 13, fontFamily: 'inherit', background: 'var(--bg)', color: 'var(--tx)' }} />
+                              <button disabled={reorderRestocking} onClick={async () => {
+                                const qty = parseInt(reorderRestockQty) || s.suggested_qty
+                                setReorderRestocking(true)
+                                try {
+                                  const res = await fetch('/api/pos/inventory', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: s.inventory_id, restock_qty: qty }) })
+                                  const data = await res.json()
+                                  if (data.product) {
+                                    setInventory(prev => prev.map(i => i.id === s.inventory_id ? data.product : i))
+                                    // Dismiss this suggestion after restocking
+                                    await fetch('/api/pos/reorder-suggestions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'dismiss', id: s.id }) })
+                                    setReorderSuggestions(prev => prev.filter(x => x.id !== s.id))
+                                    notify(`Restocked ${s.name} +${qty} ${s.unit}s`)
+                                  } else { notify(data.error || 'Restock failed', false) }
+                                } catch { notify('Restock failed', false) }
+                                setReorderRestocking(false); setReorderRestockId(null); setReorderRestockQty('')
+                              }}
+                                style={{ padding: '6px 14px', borderRadius: 6, border: 'none', background: '#16a34a', color: '#fff', fontSize: 12, fontWeight: 600, cursor: reorderRestocking ? 'wait' : 'pointer', fontFamily: 'inherit', opacity: reorderRestocking ? 0.6 : 1 }}>
+                                {reorderRestocking ? 'Restocking...' : `Restock +${reorderRestockQty || s.suggested_qty}`}
+                              </button>
+                              <button onClick={() => { setReorderRestockId(null); setReorderRestockQty('') }}
+                                style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx3)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+                            </>
+                          ) : (
+                            <button onClick={() => { setReorderRestockId(s.inventory_id); setReorderRestockQty(String(s.suggested_qty)) }}
+                              style={{ padding: '6px 14px', borderRadius: 6, border: 'none', background: '#16a34a', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                              Restock
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -1351,7 +1467,7 @@ export default function POSPage() {
             {/* Recent transactions */}
             <div>
               <div style={sectionLabel}>Recent transactions</div>
-              {transactions.length === 0 ? (
+              {sectorTransactions.length === 0 ? (
                 <div style={{ ...cardStyle, textAlign: 'center', padding: 40 }}>
                   <div style={{ width: 56, height: 56, borderRadius: 14, background: ACC_BG, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -1362,7 +1478,7 @@ export default function POSPage() {
               ) : (
                 <>
                   <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
-                    {transactions.slice(txPage * TX_PER_PAGE, (txPage + 1) * TX_PER_PAGE).map((tx, i, arr) => (
+                    {sectorTransactions.slice(txPage * TX_PER_PAGE, (txPage + 1) * TX_PER_PAGE).map((tx, i, arr) => (
                       <div key={tx.id} onClick={() => setTxDetail(tx)}
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: i < arr.length - 1 ? '1px solid var(--b)' : 'none', background: 'var(--sf)', cursor: 'pointer', transition: 'background 150ms' }}
                         onMouseEnter={e => { (e.currentTarget.style as any).background = 'rgba(208,138,89,.03)' }} onMouseLeave={e => { (e.currentTarget.style as any).background = 'var(--sf)' }}>
@@ -1390,11 +1506,11 @@ export default function POSPage() {
                     ))}
                   </div>
                   {/* Pagination */}
-                  {transactions.length > TX_PER_PAGE && (
+                  {sectorTransactions.length > TX_PER_PAGE && (
                     <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12 }}>
                       <button onClick={() => setTxPage(p => Math.max(0, p - 1))} disabled={txPage === 0} style={{ ...btnSecondary, opacity: txPage === 0 ? 0.4 : 1, padding: '6px 12px', fontSize: 12 }}>Previous</button>
-                      <span style={{ fontSize: 12, color: 'var(--tx3)', alignSelf: 'center' }}>{txPage + 1} of {Math.ceil(transactions.length / TX_PER_PAGE)}</span>
-                      <button onClick={() => setTxPage(p => Math.min(Math.ceil(transactions.length / TX_PER_PAGE) - 1, p + 1))} disabled={(txPage + 1) * TX_PER_PAGE >= transactions.length} style={{ ...btnSecondary, opacity: (txPage + 1) * TX_PER_PAGE >= transactions.length ? 0.4 : 1, padding: '6px 12px', fontSize: 12 }}>Next</button>
+                      <span style={{ fontSize: 12, color: 'var(--tx3)', alignSelf: 'center' }}>{txPage + 1} of {Math.ceil(sectorTransactions.length / TX_PER_PAGE)}</span>
+                      <button onClick={() => setTxPage(p => Math.min(Math.ceil(sectorTransactions.length / TX_PER_PAGE) - 1, p + 1))} disabled={(txPage + 1) * TX_PER_PAGE >= sectorTransactions.length} style={{ ...btnSecondary, opacity: (txPage + 1) * TX_PER_PAGE >= sectorTransactions.length ? 0.4 : 1, padding: '6px 12px', fontSize: 12 }}>Next</button>
                     </div>
                   )}
                 </>
@@ -2592,6 +2708,41 @@ export default function POSPage() {
           const trucksTransit = logTrucks.filter((t: any) => t.status === 'in_transit').length
           const trucksMaint = logTrucks.filter((t: any) => t.status === 'maintenance').length
 
+          const openParcel = (p: any) => {
+            setLogSelectedParcel(p)
+            setLogParcelPhotos([])
+            setLogParcelPhotosLoading(true)
+            fetch(`/api/pos/parcels/photos?parcel_id=${p.id}&limit=50`)
+              .then(r => r.json())
+              .then(d => setLogParcelPhotos(d.photos || []))
+              .finally(() => setLogParcelPhotosLoading(false))
+          }
+
+          const PHOTO_LABELS: Record<string, string> = {
+            pickup_proof: 'Pickup',
+            delivery_proof: 'Delivered',
+            delivery_video: 'Delivery Video',
+            collection_proof: 'Collected',
+            failed_delivery: 'Failed Delivery',
+            checkpoint: 'Checkpoint',
+            return: 'Returned',
+            waybill: 'Waybill Scan',
+            invoice: 'Invoice',
+            receipt: 'Receipt',
+          }
+          const PHOTO_COLORS: Record<string, string> = {
+            pickup_proof: '#6366f1',
+            delivery_proof: GREEN,
+            delivery_video: GREEN,
+            collection_proof: GREEN,
+            failed_delivery: RED,
+            checkpoint: TEAL,
+            return: RED,
+            waybill: AMBER,
+            invoice: AMBER,
+            receipt: AMBER,
+          }
+
           return (
             <div style={{ maxWidth: 900 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -2608,19 +2759,38 @@ export default function POSPage() {
                 <>
                   {/* Sub-tabs */}
                   <div className="tab-strip" style={{ gap: 4, marginBottom: 16, borderBottom: '1px solid var(--b)' }}>
-                    {(['overview', 'parcels', 'fleet', 'routes', 'revenue'] as const).map(st => (
+                    {(['overview', 'parcels', 'fleet', 'routes', 'revenue', 'drivers'] as const).map(st => (
                       <button key={st} onClick={() => setLogTab(st)} style={{ padding: '6px 14px', border: 'none', borderBottom: logTab === st ? `2px solid ${TEAL}` : '2px solid transparent', background: 'transparent', color: logTab === st ? TEAL : 'var(--tx3)', fontSize: 12, fontWeight: logTab === st ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize', flexShrink: 0, whiteSpace: 'nowrap' }}>{st}</button>
                     ))}
                   </div>
 
-                  {logTab === 'overview' && (
+                  {logTab === 'overview' && (() => {
+                    const activeDrivers = Array.from(new Set(LP.filter((p: any) => p.driver?.id && ['in_transit','out_for_delivery','assigned','loaded'].includes(p.status)).map((p: any) => p.driver.id))).length
+                    const avgRevPerParcel = LP.length > 0 ? Math.round(totalRev / LP.length) : 0
+                    return (
                     <>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
-                        {[{ l: 'Today', v: todayP.length, c: TEAL, s: 'received' }, { l: 'In Transit', v: inTransit.length, c: '#6366f1', s: 'on the road' }, { l: 'At Branch', v: atBranch.length, c: AMBER, s: 'pending' }, { l: 'Delivered', v: delivered.length, c: GREEN, s: `${deliveryRate}% rate` }].map(k => (
-                          <div key={k.l} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14 }}>
-                            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{k.l}</div>
-                            <div style={{ fontSize: 24, fontWeight: 800, color: k.c }}>{k.v}</div>
-                            <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{k.s}</div>
+                      {/* Primary volume metrics */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 10 }}>
+                        {[{ l: 'Today', v: todayP.length, c: TEAL, s: 'parcels received' }, { l: 'In Transit', v: inTransit.length, c: '#6366f1', s: 'on the road' }, { l: 'At Branch', v: atBranch.length, c: AMBER, s: 'pending dispatch' }, { l: 'Delivered', v: delivered.length, c: GREEN, s: 'completed' }].map(k => (
+                          <div key={k.l} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, padding: '12px 14px' }}>
+                            <div style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 500, marginBottom: 4 }}>{k.l}</div>
+                            <div style={{ fontSize: 22, fontWeight: 800, color: k.c, lineHeight: 1 }}>{k.v}</div>
+                            <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 3 }}>{k.s}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Performance metrics — visually secondary */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 16 }}>
+                        {[
+                          { l: 'FADR', v: `${deliveryRate}%`, c: deliveryRate >= 85 ? GREEN : deliveryRate >= 70 ? AMBER : RED, s: 'first attempt rate' },
+                          { l: 'Failed', v: failed.length, c: failed.length > 0 ? RED : 'var(--tx3)', s: failed.length > 0 ? 'need re-attempt' : 'none' },
+                          { l: 'Active Drivers', v: activeDrivers, c: TEAL, s: 'on active runs' },
+                          { l: 'Avg / Parcel', v: avgRevPerParcel > 0 ? `${currencySymbol}${avgRevPerParcel.toLocaleString()}` : '—', c: 'var(--tx)', s: 'avg revenue' },
+                        ].map(k => (
+                          <div key={k.l} style={{ background: 'var(--bg)', border: '1px dashed var(--b)', borderRadius: 10, padding: '10px 14px' }}>
+                            <div style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 500, marginBottom: 4 }}>{k.l}</div>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: k.c, lineHeight: 1 }}>{k.v}</div>
+                            <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 3 }}>{k.s}</div>
                           </div>
                         ))}
                       </div>
@@ -2669,16 +2839,19 @@ export default function POSPage() {
                       <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>🕒 Recent Parcels</div>
                         {LP.slice(0, 10).map((p: any) => (
-                          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--b)' }}>
+                          <div key={p.id} onClick={() => openParcel(p)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 4px', borderBottom: '1px solid var(--b)', cursor: 'pointer', borderRadius: 6, transition: 'background 120ms' }}
+                            onMouseEnter={e => { (e.currentTarget.style as any).background = `${TEAL}08` }} onMouseLeave={e => { (e.currentTarget.style as any).background = 'transparent' }}>
                             <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700 }}>{p.tracking_number}</span>
                             <span style={{ flex: 1, fontSize: 11, color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.receiver_name || p.destination_city || '—'}</span>
                             <span style={{ background: `${SC[p.status] || '#888'}18`, color: SC[p.status] || '#888', padding: '1px 6px', borderRadius: 4, fontSize: 9, fontWeight: 700 }}>{SL[p.status] || p.status}</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
                           </div>
                         ))}
                         {LP.length === 0 && <div style={{ fontSize: 12, color: 'var(--tx3)', textAlign: 'center', padding: 16 }}>No parcels yet</div>}
                       </div>
                     </>
-                  )}
+                  )
+                  })()}
 
                   {logTab === 'parcels' && (
                     <div>
@@ -2692,10 +2865,12 @@ export default function POSPage() {
                       <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>{filteredParcels.length} parcels</div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 500, overflowY: 'auto' }}>
                         {filteredParcels.map((p: any) => (
-                          <div key={p.id} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, padding: 10 }}>
+                          <div key={p.id} onClick={() => openParcel(p)} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, padding: 10, cursor: 'pointer', transition: 'border-color 150ms' }}
+                            onMouseEnter={e => { (e.currentTarget.style as any).borderColor = TEAL }} onMouseLeave={e => { (e.currentTarget.style as any).borderColor = 'var(--b)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                               <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700 }}>{p.tracking_number}</span>
                               <span style={{ marginLeft: 'auto', background: `${SC[p.status] || '#888'}18`, color: SC[p.status] || '#888', padding: '1px 6px', borderRadius: 4, fontSize: 9, fontWeight: 700 }}>{SL[p.status] || p.status}</span>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
                             </div>
                             <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>
                               <div>{p.sender_name || '—'} → {p.receiver_name || '—'}</div>
@@ -2788,7 +2963,176 @@ export default function POSPage() {
                       </div>
                     </div>
                   )}
+
+                  {logTab === 'drivers' && (() => {
+                    const driverMap: Record<string, { name: string; total: number; delivered: number; failed: number; inProgress: number; revenue: number }> = {}
+                    for (const p of LP) {
+                      const dId = p.driver?.id
+                      if (!dId) continue
+                      if (!driverMap[dId]) driverMap[dId] = { name: p.driver.name || 'Unknown', total: 0, delivered: 0, failed: 0, inProgress: 0, revenue: 0 }
+                      driverMap[dId].total++
+                      if (['delivered','collected'].includes(p.status)) driverMap[dId].delivered++
+                      else if (p.status === 'failed_delivery') driverMap[dId].failed++
+                      else if (['in_transit','out_for_delivery','loaded','assigned'].includes(p.status)) driverMap[dId].inProgress++
+                      driverMap[dId].revenue += p.fee_charged || 0
+                    }
+                    const drivers = Object.entries(driverMap).sort((a, b) => b[1].revenue - a[1].revenue)
+                    return (
+                      <div>
+                        <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 12 }}>
+                          {drivers.length} driver{drivers.length !== 1 ? 's' : ''} with assigned parcels · ranked by revenue
+                        </div>
+                        {drivers.length === 0 && (
+                          <div style={{ fontSize: 12, color: 'var(--tx3)', textAlign: 'center', padding: 32 }}>No driver data yet — assign drivers to parcels to see scorecards</div>
+                        )}
+                        {drivers.map(([dId, d]) => {
+                          const completedAll = d.delivered + d.failed
+                          const fadr = completedAll > 0 ? Math.round((d.delivered / completedAll) * 100) : null
+                          const fadrColor = fadr === null ? 'var(--tx3)' : fadr >= 85 ? GREEN : fadr >= 70 ? AMBER : RED
+                          return (
+                            <div key={dId} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 14, marginBottom: 10 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                                <div style={{ width: 32, height: 32, borderRadius: 16, background: `${TEAL}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: TEAL }}>{d.name.charAt(0).toUpperCase()}</div>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ fontSize: 13, fontWeight: 700 }}>{d.name}</div>
+                                  <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{d.total} parcel{d.total !== 1 ? 's' : ''} assigned</div>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                  <div style={{ fontSize: 14, fontWeight: 800, color: GREEN }}>{currencySymbol} {d.revenue.toLocaleString()}</div>
+                                  <div style={{ fontSize: 10, color: 'var(--tx3)' }}>revenue</div>
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', gap: 0, borderTop: '1px solid var(--b)', marginTop: 2 }}>
+                                {[
+                                  { l: 'Delivered', v: d.delivered, c: GREEN },
+                                  { l: 'In Progress', v: d.inProgress, c: '#6366f1' },
+                                  { l: 'Failed', v: d.failed, c: d.failed > 0 ? RED : 'var(--tx3)' },
+                                  { l: 'FADR', v: fadr !== null ? `${fadr}%` : '—', c: fadrColor },
+                                ].map((m, i, arr) => (
+                                  <div key={m.l} style={{ flex: 1, padding: '8px 0 4px', textAlign: 'center', borderRight: i < arr.length - 1 ? '1px solid var(--b)' : 'none' }}>
+                                    <div style={{ fontSize: 15, fontWeight: 800, color: m.c }}>{m.v}</div>
+                                    <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{m.l}</div>
+                                  </div>
+                                ))}
+                              </div>
+                              {fadr !== null && (
+                                <div style={{ marginTop: 8 }}>
+                                  <div style={{ height: 3, background: 'var(--b)', borderRadius: 2, overflow: 'hidden' }}>
+                                    <div style={{ width: `${fadr}%`, height: '100%', background: fadrColor, borderRadius: 2, transition: 'width 700ms cubic-bezier(0.4,0,0.2,1)' }} />
+                                  </div>
+                                  <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 3 }}>{fadr >= 85 ? 'Excellent delivery rate' : fadr >= 70 ? 'Needs improvement' : 'Critical — review routes'}</div>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )
+                  })()}
                 </>
+              )}
+
+              {/* ── Parcel evidence modal ── */}
+              {logSelectedParcel && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 400, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setLogSelectedParcel(null)}>
+                  <div onClick={e => e.stopPropagation()} style={{ background: 'var(--bg)', borderRadius: '14px 14px 0 0', width: '100%', maxWidth: 600, maxHeight: '88vh', display: 'flex', flexDirection: 'column' }}>
+                    {/* Drag handle */}
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 4px' }}>
+                      <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--b)' }} />
+                    </div>
+                    {/* Scrollable body */}
+                    <div style={{ overflowY: 'auto', padding: '8px 20px 24px' }}>
+                      {/* Header */}
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 14 }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: 'var(--tx)', letterSpacing: '0.02em' }}>{logSelectedParcel.tracking_number}</div>
+                          <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>{logSelectedParcel.sender_name || '—'} → {logSelectedParcel.receiver_name || '—'}{logSelectedParcel.destination_city ? ` · ${logSelectedParcel.destination_city}` : ''}</div>
+                        </div>
+                        <span style={{ background: `${SC[logSelectedParcel.status] || '#888'}18`, color: SC[logSelectedParcel.status] || '#888', padding: '3px 9px', borderRadius: 6, fontSize: 10, fontWeight: 700, flexShrink: 0, marginTop: 1 }}>{SL[logSelectedParcel.status] || logSelectedParcel.status}</span>
+                        <button onClick={() => setLogSelectedParcel(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--tx3)', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                      </div>
+
+                      {/* Parcel meta — only non-empty fields */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', padding: '10px 0', borderTop: '1px solid var(--b)', borderBottom: '1px solid var(--b)', marginBottom: 18 }}>
+                        {[
+                          logSelectedParcel.weight_kg && { l: 'Weight', v: `${logSelectedParcel.weight_kg} kg` },
+                          logSelectedParcel.fee_charged != null && { l: 'Fee', v: `${currencySymbol} ${logSelectedParcel.fee_charged.toLocaleString()}` },
+                          logSelectedParcel.payment_status && { l: 'Payment', v: logSelectedParcel.payment_status },
+                          logSelectedParcel.driver?.name && { l: 'Driver', v: logSelectedParcel.driver.name },
+                          logSelectedParcel.truck?.plate_number && { l: 'Truck', v: logSelectedParcel.truck.plate_number },
+                          logSelectedParcel.fail_reason && { l: 'Fail reason', v: logSelectedParcel.fail_reason },
+                        ].filter(Boolean).map((r: any) => (
+                          <div key={r.l}>
+                            <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500 }}>{r.l.toUpperCase()}</div>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{r.v}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Evidence timeline */}
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 14 }}>Evidence chain</div>
+                      {logParcelPhotosLoading ? (
+                        <div style={{ textAlign: 'center', padding: '28px 0', color: 'var(--tx3)', fontSize: 13 }}>Loading…</div>
+                      ) : logParcelPhotos.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '28px 16px', background: 'var(--sf)', borderRadius: 10, border: '1px solid var(--b)' }}>
+                          <div style={{ fontSize: 24, marginBottom: 8 }}>📷</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 4 }}>No photos yet</div>
+                          <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Driver photos will appear here as the parcel moves</div>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          {logParcelPhotos.map((photo: any, idx: number) => {
+                            const label = PHOTO_LABELS[photo.photo_type] || photo.photo_type
+                            const color = PHOTO_COLORS[photo.photo_type] || TEAL
+                            const ts = new Date(photo.created_at)
+                            const isLast = idx === logParcelPhotos.length - 1
+                            return (
+                              <div key={photo.id} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                                {/* Timeline spine */}
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: 18 }}>
+                                  <div style={{ width: 12, height: 12, borderRadius: 6, background: color, border: `2px solid var(--bg)`, outline: `2px solid ${color}`, marginTop: 3, flexShrink: 0 }} />
+                                  {!isLast && <div style={{ width: 2, flex: 1, minHeight: 24, background: 'var(--b)', marginTop: 4 }} />}
+                                </div>
+                                <div style={{ flex: 1, paddingBottom: isLast ? 0 : 16 }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                                    <span style={{ fontSize: 12, fontWeight: 700, color }}>{label}</span>
+                                    <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{ts.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · {ts.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>
+                                    {photo.captured_staff?.name && <span style={{ fontSize: 11, color: 'var(--tx3)' }}>· {photo.captured_staff.name}</span>}
+                                  </div>
+                                  {photo.photo_url && (
+                                    photo.photo_type === 'delivery_video' || photo.photo_url.startsWith('data:video/') ? (
+                                      <video
+                                        src={photo.photo_url}
+                                        controls
+                                        playsInline
+                                        style={{ width: '100%', maxHeight: 220, borderRadius: 8, display: 'block', background: '#000' }}
+                                      />
+                                    ) : (
+                                      <img
+                                        src={photo.photo_url}
+                                        alt={label}
+                                        style={{ width: '100%', maxHeight: 200, objectFit: 'cover', borderRadius: 8, display: 'block' }}
+                                      />
+                                    )
+                                  )}
+                                  {photo.notes && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 6, fontStyle: 'italic', lineHeight: 1.4 }}>{photo.notes}</div>}
+                                  {photo.lat && photo.lng && (
+                                    <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                      {Number(photo.lat).toFixed(4)}, {Number(photo.lng).toFixed(4)}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           )
@@ -3465,9 +3809,32 @@ export default function POSPage() {
             {filterModal.type === 'low_stock' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 400, overflowY: 'auto' }}>
                 {outOfStock.map(item => (
-                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)' }}>
+                  <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)', opacity: archivingStockId === item.id ? 0.4 : 1 }}>
                     <span style={{ fontSize: 13, fontWeight: 500 }}>{item.name}</span>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: RED }}>OUT OF STOCK</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: RED }}>OUT OF STOCK</span>
+                      <button
+                        disabled={archivingStockId === item.id}
+                        onClick={async () => {
+                          setArchivingStockId(item.id)
+                          try {
+                            const res = await fetch('/api/pos/inventory', {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ id: item.id, active: false }),
+                            })
+                            if (res.ok) {
+                              setInventory(prev => prev.filter(i => i.id !== item.id))
+                              setToast({ msg: `${item.name} archived`, ok: true })
+                            } else {
+                              setToast({ msg: 'Failed to archive item', ok: false })
+                            }
+                          } catch { setToast({ msg: 'Failed to archive item', ok: false }) }
+                          setArchivingStockId(null)
+                        }}
+                        style={{ fontSize: 11, color: 'var(--tx3)', background: 'rgba(220,38,38,.08)', border: '1px solid rgba(220,38,38,.2)', borderRadius: 6, cursor: 'pointer', padding: '3px 8px', fontFamily: 'inherit', fontWeight: 500 }}
+                      >Archive</button>
+                    </div>
                   </div>
                 ))}
                 {lowStock.map(item => (
