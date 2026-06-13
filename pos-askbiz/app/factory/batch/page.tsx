@@ -4,6 +4,22 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 const API    = process.env.NEXT_PUBLIC_API_URL || ''
+const tokens = {
+  bg:      'var(--pos-bg)',
+  surface: 'var(--pos-surface)',
+  border:  'var(--pos-border)',
+  ink:     'var(--pos-ink)',
+  muted:   'var(--pos-muted)',
+  hint:    'var(--pos-hint)',
+  accent:  'var(--pos-accent)',
+  success: 'var(--pos-success)',
+  danger:  'var(--pos-danger)',
+  warning: 'var(--pos-warning)',
+  intake:  'var(--factory-intake)',
+  output:  'var(--factory-output)',
+  wastage: 'var(--factory-wastage)',
+  dispatch: 'var(--factory-dispatch)',
+}
 
 type Stage = 'hub' | 'viewfinder' | 'batch_ref' | 'checkpoint' | 'submitting' | 'success'
 
