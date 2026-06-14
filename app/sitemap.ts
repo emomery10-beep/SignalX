@@ -13,6 +13,9 @@ import { getAllArticles as getTransparencyArticles } from "@/lib/transparency-co
 import { academyArticles, academyCategories } from "@/lib/academy-content";
 import { getAllHowTo, getAllTranslate } from "@/lib/seo-content";
 import { COUNTRY_HUBS } from "@/lib/country-hub-content";
+import { SECTORS } from "@/lib/pos-sectors";
+import { POS_FEATURES } from "@/lib/pos-features";
+import { LEARNING_PATHS } from "@/lib/learning-paths-content";
 
 const base = "https://askbiz.co";
 
@@ -46,6 +49,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: base,                                                  lastModified: now, changeFrequency: "weekly",  priority: 1.0 },
     { url: `${base}/pricing`,                                    lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/point-of-sale`,                              lastModified: now, changeFrequency: "monthly", priority: 0.9 },
+    ...SECTORS.map(s => ({ url: `${base}/point-of-sale/${s.id}`,  lastModified: now, changeFrequency: "monthly" as const, priority: 0.8 })),
+    ...POS_FEATURES.map(f => ({ url: `${base}/point-of-sale/feature/${f.slug}`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.7 })),
     { url: `${base}/changelog`,                                  lastModified: now, changeFrequency: "weekly",  priority: 0.6 },
     { url: `${base}/developers`,                                 lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${base}/privacy`,                                    lastModified: now, changeFrequency: "monthly", priority: 0.5 },
@@ -91,6 +96,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // ── ACADEMY: categories + articles + learning paths ──────────────────────────
     { url: `${base}/academy`,                lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
     { url: `${base}/academy/learning-paths`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    ...LEARNING_PATHS.map(lp => ({ url: `${base}/academy/learning-paths/${lp.id}`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.7 })),
     { url: `${base}/academy/learning-askbiz`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/academy/checklists`,     lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     ...academyCategories.map((cat) => ({
