@@ -116,7 +116,7 @@ function AskUIReplica() {
     <div style={{background:'#FAFAFA',borderRadius:16,border:'1px solid #E5E5E5',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.09)',maxWidth:700,width:'100%',fontFamily:'system-ui,-apple-system,sans-serif'}}>
       {/* App chrome */}
       <div style={{display:'flex',alignItems:'center',borderBottom:'1px solid #F0F0F0',background:'#fff'}}>
-        <div style={{width:210,borderRight:'1px solid #F0F0F0',height:48,display:'flex',alignItems:'center',padding:'0 12px',gap:10,background:'#FAFAFA',flexShrink:0}}>
+        <div className="rep-hide-sm" style={{width:210,borderRight:'1px solid #F0F0F0',height:48,display:'flex',alignItems:'center',padding:'0 12px',gap:10,background:'#FAFAFA',flexShrink:0}}>
           <div style={{display:'flex',alignItems:'center',gap:6}}>
             <div style={{width:22,height:22,borderRadius:6,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center'}}><Logo size={10}/></div>
             <span style={{fontSize:12,fontWeight:700,color:'#1A1410'}}>AskBiz</span>
@@ -128,7 +128,7 @@ function AskUIReplica() {
           </div>
         </div>
         <div style={{flex:1,padding:'0 16px',fontSize:11,fontWeight:600,color:'#1A1410'}}>New conversation</div>
-        <div style={{display:'flex',gap:6,padding:'0 14px'}}>
+        <div className="rep-hide-sm" style={{display:'flex',gap:6,padding:'0 14px'}}>
           {['Run scenario','CFO view','Upload'].map(btn=>(
             <span key={btn} style={{fontSize:9,padding:'4px 8px',borderRadius:5,border:'1px solid #E5E5E5',color:'#888',cursor:'pointer'}}>{btn}</span>
           ))}
@@ -136,7 +136,7 @@ function AskUIReplica() {
       </div>
       <div style={{display:'flex',minHeight:350}}>
         {/* Left sidebar */}
-        <div style={{width:210,borderRight:'1px solid #F0F0F0',padding:'10px 8px',background:'#FAFAFA',flexShrink:0,display:'flex',flexDirection:'column',gap:3}}>
+        <div className="rep-hide-sm" style={{width:210,borderRight:'1px solid #F0F0F0',padding:'10px 8px',background:'#FAFAFA',flexShrink:0,display:'flex',flexDirection:'column',gap:3}}>
           <div style={{fontSize:8,fontWeight:700,color:'#BBB',padding:'3px 8px',letterSpacing:'.1em',textTransform:'uppercase'}}>Quick Questions</div>
           {['What are my top sellers?','Margin by product','Revenue vs last week','Stock running low'].map((q,i)=>(
             <div key={i} style={{fontSize:9,padding:'5px 8px',borderRadius:5,color:'#666',cursor:'pointer',lineHeight:1.3}}>{q}</div>
@@ -247,7 +247,7 @@ function MonitorUIReplica() {
     <div style={{background:'#FAFAFA',borderRadius:16,border:'1px solid #E5E5E5',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.09)',width:'100%',fontFamily:'system-ui,-apple-system,sans-serif'}}>
       {/* Chrome bar */}
       <div style={{display:'flex',alignItems:'center',borderBottom:'1px solid #F0F0F0',background:'#fff'}}>
-        <div style={{width:170,borderRight:'1px solid #F0F0F0',height:42,display:'flex',alignItems:'center',padding:'0 12px',gap:8,background:'#FAFAFA',flexShrink:0}}>
+        <div className="rep-chrome-sm" style={{width:170,borderRight:'1px solid #F0F0F0',height:42,display:'flex',alignItems:'center',padding:'0 12px',gap:8,background:'#FAFAFA',flexShrink:0}}>
           <div style={{width:20,height:20,borderRadius:5,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center'}}><Logo size={9}/></div>
           <span style={{fontSize:11,fontWeight:700,color:'#1A1410'}}>AskBiz</span>
           <span style={{marginLeft:'auto',fontSize:8,padding:'1px 5px',borderRadius:9999,background:'rgba(201,122,68,.1)',color:'#C97A44',fontWeight:700}}>Monitor</span>
@@ -269,7 +269,7 @@ function MonitorUIReplica() {
             <div style={{fontSize:14,fontWeight:700,color:'#1A1410',marginBottom:1}}>Good morning</div>
             <div style={{fontSize:9,color:'#AAA'}}>Sunday, 14 June 2026</div>
           </div>
-          <div style={{display:'grid',gridTemplateColumns:'1.5fr 1fr 1fr',gap:8,marginBottom:9}}>
+          <div className="rep-3col" style={{display:'grid',gridTemplateColumns:'1.5fr 1fr 1fr',gap:8,marginBottom:9}}>
             <div style={{padding:'11px 13px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',display:'flex',alignItems:'center',gap:11}}>
               <div style={{position:'relative',width:38,height:38,flexShrink:0}}>
                 <svg width="38" height="38" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="#F0F0F0" strokeWidth="3.5"/><circle cx="20" cy="20" r="16" fill="none" stroke="#C97A44" strokeWidth="3.5" strokeDasharray="72 100" strokeLinecap="round" transform="rotate(-90 20 20)"/></svg>
@@ -310,7 +310,7 @@ function MonitorUIReplica() {
       {tab==='cfo'&&(
         <div style={{padding:'16px 18px'}}>
           <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:12}}>📊 CFO Dashboard — This Week</div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:12}}>
+          <div className="rep-3col" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:12}}>
             {[{label:'Revenue',value:'£3,247',sub:'▲ 34% vs last week',c:'#16a34a'},{label:'Gross Profit',value:'£1,109',sub:'34.2% margin',c:'#C97A44'},{label:'Net Margin',value:'26.1%',sub:'▲ 2.1pp vs prev',c:'#6366f1'}].map((k,i)=>(
               <div key={i} style={{padding:'10px 11px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0'}}>
                 <div style={{fontSize:8,color:'#AAA',marginBottom:3}}>{k.label}</div>
@@ -454,7 +454,7 @@ function MonitorUIReplica() {
       {tab==='ships'&&(
         <div style={{padding:'16px 18px'}}>
           <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:12}}>🚢 Shipments & Orders</div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:12}}>
+          <div className="rep-3col" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:12}}>
             {[{label:'In transit',value:'14',color:'#6366f1'},{label:'Delivered today',value:'7',color:'#16a34a'},{label:'Delayed',value:'2',color:'#ef4444'}].map((k,i)=>(
               <div key={i} style={{padding:'9px 10px',background:'#fff',borderRadius:8,border:'1px solid #F0F0F0',textAlign:'center'}}>
                 <div style={{fontSize:14,fontWeight:800,color:k.color,marginBottom:2}}>{k.value}</div>
@@ -650,7 +650,7 @@ function PosShowcase() {
             ))}
           </div>
           {/* Top row: 4 KPI cards */}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8,marginBottom:10}}>
+          <div className="rep-4col" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8,marginBottom:10}}>
             {[
               {label:'Revenue',value:'£3,247',sub:'▲ 34% vs prev',color:'#16a34a'},
               {label:'Sales',value:'143',sub:'▲ 12% vs prev',color:'#16a34a'},
@@ -665,7 +665,7 @@ function PosShowcase() {
             ))}
           </div>
           {/* Second row: 3 cards */}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:10}}>
+          <div className="rep-3col" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:10}}>
             {[
               {label:'Gross profit',value:'£1,109',color:'#16a34a'},
               {label:'Margin',value:'34.2%',color:'#C97A44'},
@@ -715,7 +715,7 @@ function PosShowcase() {
           </div>
           <div style={{fontSize:11,fontWeight:700,color:'#1A1410',marginBottom:3}}>📦 Retail Operations</div>
           <div style={{fontSize:9,color:'#AAA',marginBottom:12}}>Stock management, sales tracking, and supplier orders.</div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:7}}>
+          <div className="rep-5col" style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:7}}>
             {[
               {icon:'📦',label:'Inventory',desc:'Stock levels & products',badge:'37',bdgColor:'#ef4444'},
               {icon:'🛒',label:'Sales',desc:'Revenue & transactions'},
@@ -981,7 +981,7 @@ function PosShowcase() {
         <div style={{padding:'16px 18px'}}>
           <div style={{fontSize:11,fontWeight:700,color:'#1A1410',marginBottom:3}}>🚛 Logistics</div>
           <div style={{fontSize:9,color:'#AAA',marginBottom:14}}>Track deliveries, supplier orders, and inter-branch stock transfers.</div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:14}}>
+          <div className="rep-3col" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:14}}>
             {[{label:'Active deliveries',value:'0',icon:'🚛',color:'#C97A44'},{label:'Pending POs',value:'0',icon:'📋',color:'#6366f1'},{label:'Stock transfers',value:'0',icon:'↔️',color:'#16a34a'}].map((k,i)=>(
               <div key={i} style={{padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',textAlign:'center'}}>
                 <div style={{fontSize:18,marginBottom:4}}>{k.icon}</div>
@@ -1020,7 +1020,7 @@ function PosUIReplica() {
         ))}
         <span style={{marginLeft:'auto',fontSize:8,padding:'3px 8px',borderRadius:5,background:'rgba(34,197,94,.08)',color:'#16a34a',fontWeight:700,border:'1px solid rgba(34,197,94,.2)',flexShrink:0}}>● Open</span>
       </div>
-      <div style={{display:'grid',gridTemplateColumns:'1.15fr 1fr',minHeight:320}}>
+      <div className="rep-split" style={{display:'grid',gridTemplateColumns:'1.15fr 1fr',minHeight:320}}>
         {/* Left: basket */}
         <div style={{padding:'12px 14px',borderRight:'1px solid #F0F0F0',display:'flex',flexDirection:'column',gap:7,background:'#fff'}}>
           <div style={{display:'flex',gap:5,marginBottom:2}}>
@@ -1345,6 +1345,19 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           .three-col{grid-template-columns:1fr!important}
           .hero-ctas{flex-direction:column!important}
           .hero-ctas a{width:100%!important;text-align:center!important;justify-content:center!important}
+        }
+        /* ── Mini-UI replica responsive grids ── */
+        @media(max-width:680px){
+          .rep-3col{grid-template-columns:1fr 1fr!important}
+          .rep-4col{grid-template-columns:1fr 1fr!important}
+          .rep-5col{grid-template-columns:repeat(3,1fr)!important}
+          .rep-split{grid-template-columns:1fr!important}
+          .rep-hide-sm{display:none!important}
+          .rep-chrome-sm{width:auto!important;min-width:0!important;padding:0 8px!important}
+        }
+        @media(max-width:420px){
+          .rep-3col{grid-template-columns:1fr!important}
+          .rep-5col{grid-template-columns:1fr 1fr!important}
         }
         input::placeholder{color:${T.tx3}}
         /* FAQ <details> — hide browser default triangle, rotate chevron when open */
