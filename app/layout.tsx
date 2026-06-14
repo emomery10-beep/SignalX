@@ -46,6 +46,7 @@ export const viewport = {
 }
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://askbiz.co'),
   title: 'AskBiz — Ask Your Business Data Anything',
   description: 'AI-powered business intelligence for SME owners. Upload your data and get plain-English answers instantly.',
   icons: {
