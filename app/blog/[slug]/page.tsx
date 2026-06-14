@@ -398,7 +398,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
   } : null
 
   return (
-    <div style={{ minHeight: '100vh', background: BG, fontFamily: 'DM Sans, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: BG, fontFamily: 'DM Sans, system-ui' }}>
       <ReadingProgress />
       <ScrollDepthTracker slug={post.slug} />
 
@@ -416,8 +416,8 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
       <style>{`
         body { background: ${BG} !important; }
-        .blog-body h2 { font-family: Sora, sans-serif; font-size: clamp(18px,3vw,22px); font-weight: 600; color: ${TX}; margin: 2em 0 .75em; letter-spacing: -.02em; line-height: 1.3; scroll-margin-top: 72px; }
-        .blog-body h3 { font-family: Sora, sans-serif; font-size: clamp(16px,2.5vw,19px); font-weight: 600; color: ${TX}; margin: 1.75em 0 .6em; line-height: 1.3; scroll-margin-top: 72px; }
+        .blog-body h2 { font-family: Sora, system-ui; font-size: clamp(18px,3vw,22px); font-weight: 600; color: ${TX}; margin: 2em 0 .75em; letter-spacing: -.02em; line-height: 1.3; scroll-margin-top: 72px; }
+        .blog-body h3 { font-family: Sora, system-ui; font-size: clamp(16px,2.5vw,19px); font-weight: 600; color: ${TX}; margin: 1.75em 0 .6em; line-height: 1.3; scroll-margin-top: 72px; }
         .blog-body p  { margin-bottom: 1.5em; }
         .blog-body h2 .anchor-icon, .blog-body h3 .anchor-icon { opacity: 0; margin-left: 6px; color: ${TX3}; text-decoration: none; font-size: .8em; transition: opacity 150ms; }
         .blog-body h2:hover .anchor-icon, .blog-body h3:hover .anchor-icon { opacity: 1; }
@@ -439,7 +439,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
               <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
             </svg>
           </div>
-          <span style={{ fontFamily: 'Sora, sans-serif', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
+          <span style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <Link href="/blog" className="nav-link" style={{ fontSize: 13, color: TX2, textDecoration: 'none', transition: 'color 120ms' }}>← All articles</Link>
@@ -482,7 +482,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         </div>
 
         {/* Title */}
-        <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(24px,4vw,36px)', fontWeight: 700, color: TX, letterSpacing: '-.03em', lineHeight: 1.2, marginBottom: 16 }}>
+        <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(24px,4vw,36px)', fontWeight: 700, color: TX, letterSpacing: '-.03em', lineHeight: 1.2, marginBottom: 16 }}>
           {post.title}
         </h1>
 
@@ -570,26 +570,16 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                     <a href={`#${id}`} className="anchor-icon" aria-label="Link to section">#</a>
                   </h3>
                 )}
-                {/* Intro section gets larger font + left border */}
+                {/* Intro section gets larger font */}
                 {i === 0 ? (
-                  <p style={{ fontSize: 17, lineHeight: 1.85, borderLeft: `3px solid ${ACC}`, paddingLeft: 16 }}>{s.body}</p>
+                  <p style={{ fontSize: 17, lineHeight: 1.85, color: TX }}>{s.body}</p>
                 ) : (
                   <p>{s.body}</p>
                 )}
-                {/* Key Insight callout after section index 1 */}
-                {i === 1 && (post.sections || [])[2] && (() => {
-                  const firstSentence = ((post.sections || [])[2]?.body || '').split(/(?<=[.!?])\s/)[0]
-                  return firstSentence ? (
-                    <div style={{ background: 'rgba(208,138,89,.07)', border: '1.5px solid rgba(208,138,89,.25)', borderRadius: 12, padding: '16px 20px', marginBottom: 28, marginTop: 4 }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>💡 Key Insight</div>
-                      <p style={{ fontSize: 14, color: TX, lineHeight: 1.65, margin: 0, fontStyle: 'italic' }}>{firstSentence}</p>
-                    </div>
-                  ) : null
-                })()}
                 {/* Contextual in-body links after 4th section */}
                 {i === 3 && contextualLinks.length > 0 && (
-                  <div style={{ background: EV, borderRadius: 10, padding: '14px 18px', margin: '28px 0', borderLeft: `3px solid ${clusterColour.text}` }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 10 }}>
+                  <div style={{ background: EV, borderRadius: 10, padding: '14px 18px', margin: '28px 0', border: `1px solid ${B}` }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: TX2, marginBottom: 10 }}>
                       More in {post.cluster}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -599,34 +589,6 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                         </Link>
                       ))}
                     </div>
-                  </div>
-                )}
-                {/* Cluster-specific product CTA after 6th section */}
-                {i === 5 && clusterCta && (
-                  <div style={{ background: `linear-gradient(135deg, ${clusterColour.bg} 0%, rgba(208,138,89,.06) 100%)`, border: `1px solid ${clusterColour.text}33`, borderRadius: 14, padding: '20px 24px', margin: '32px 0', display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-                    <div style={{ flex: 1, minWidth: 200 }}>
-                      <div style={{ fontFamily: 'Sora, sans-serif', fontSize: 15, fontWeight: 700, color: TX, marginBottom: 4 }}>{clusterCta.headline}</div>
-                      <p style={{ fontSize: 13, color: TX2, margin: 0, lineHeight: 1.6 }}>{clusterCta.body}</p>
-                    </div>
-                    <Link href="/home" style={{ display: 'inline-flex', alignItems: 'center', padding: '10px 20px', background: ACC, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                      {clusterCta.cta}
-                    </Link>
-                  </div>
-                )}
-                {/* Mid-article newsletter CTA after 3rd section */}
-                {i === 2 && (
-                  <div style={{ background: EV, border: `1px solid rgba(208,138,89,.25)`, borderRadius: 14, padding: '20px 24px', margin: '32px 0', display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-                    <div style={{ flex: 1, minWidth: 200 }}>
-                      <div style={{ fontFamily: 'Sora, sans-serif', fontSize: 15, fontWeight: 700, color: TX, marginBottom: 4 }}>Get weekly BI insights</div>
-                      <p style={{ fontSize: 13, color: TX2, margin: 0, lineHeight: 1.6 }}>Data-backed guides on AI, eCommerce, and SME strategy — straight to your inbox.</p>
-                    </div>
-                    <Link href="/home" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: ACC, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                        <polyline points="22,6 12,13 2,6"/>
-                      </svg>
-                      Get started free →
-                    </Link>
                   </div>
                 )}
               </div>
@@ -642,39 +604,19 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                 <div style={{ fontSize: 11, fontWeight: 700, color: TX2, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>📊 By The Numbers</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                   {stats.map((s, i) => (
-                    <span key={i} style={{ background: SF, border: `1px solid ${B}`, borderRadius: 8, padding: '6px 14px', fontSize: 14, fontWeight: 700, color: TX, fontFamily: 'Sora, sans-serif' }}>{s}</span>
+                    <span key={i} style={{ background: SF, border: `1px solid ${B}`, borderRadius: 8, padding: '6px 14px', fontSize: 14, fontWeight: 700, color: TX, fontFamily: 'Sora, system-ui' }}>{s}</span>
                   ))}
                 </div>
               </div>
             )
           })()}
 
-          {/* Key Takeaways summary — tldr split into bullet points */}
-          {post.tldr && (() => {
-            const sentences = post.tldr.split(/(?<=[.!?])\s+/).filter(Boolean).slice(0, 3)
-            if (sentences.length === 0) return null
-            return (
-              <div style={{ background: 'rgba(208,138,89,.06)', border: '1px solid rgba(208,138,89,.25)', borderRadius: 12, padding: '16px 20px', marginBottom: 36 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.08em' }}>Key Takeaways</span>
-                </div>
-                <ul style={{ margin: 0, padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: 6, listStyleType: 'disc' }}>
-                  {sentences.map((sentence, idx) => (
-                    <li key={idx} style={{ fontSize: 14, color: TX2, lineHeight: 1.65 }}>{sentence}</li>
-                  ))}
-                </ul>
-              </div>
-            )
-          })()}
         </div>
 
         {/* PAA */}
         {post.paa?.length > 0 && (
           <div style={{ marginTop: 48, marginBottom: 48 }}>
-            <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 20, fontWeight: 600, color: TX, marginBottom: 16, letterSpacing: '-.02em' }}>
+            <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 20, fontWeight: 600, color: TX, marginBottom: 16, letterSpacing: '-.02em' }}>
               People also ask
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -693,26 +635,10 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
           </div>
         )}
 
-        {/* Lead magnet prompt */}
-        {leadMagnet && (
-          <div style={{ background: EV, border: `1px solid ${B}`, borderRadius: 14, padding: '18px 22px', marginBottom: 32, display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>Free download</div>
-              <div style={{ fontFamily: 'Sora, sans-serif', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 4 }}>{leadMagnet.title}</div>
-              <p style={{ fontSize: 12, color: TX2, margin: 0, lineHeight: 1.55 }}>{leadMagnet.description}</p>
-            </div>
-            <Link href="/home" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 18px', background: SF, color: ACC, borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none', border: `1.5px solid ${ACC}`, whiteSpace: 'nowrap', flexShrink: 0 }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              Get access free →
-            </Link>
-          </div>
-        )}
 
         {/* Author bio */}
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, padding: '20px 0', borderTop: `1px solid ${B}`, borderBottom: `1px solid ${B}`, marginBottom: 40 }}>
-          <div style={{ width: 48, height: 48, borderRadius: '50%', background: post.author ? 'linear-gradient(135deg, #6366F1 0%, #818cf8 100%)' : `linear-gradient(135deg, ${ACC} 0%, #e8a870 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: 'Sora, sans-serif' }}>
+          <div style={{ width: 48, height: 48, borderRadius: '50%', background: post.author ? 'linear-gradient(135deg, #6366F1 0%, #818cf8 100%)' : `linear-gradient(135deg, ${ACC} 0%, #e8a870 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: 'Sora, system-ui' }}>
             {post.author ? post.author.name.split(' ').map(n => n[0]).join('') : (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.6"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.8"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
@@ -720,7 +646,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             )}
           </div>
           <div>
-            <div style={{ fontFamily: 'Sora, sans-serif', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 2 }}>{post.author?.name || 'AskBiz Editorial Team'}</div>
+            <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 2 }}>{post.author?.name || 'AskBiz Editorial Team'}</div>
             <div style={{ fontSize: 12, color: post.author ? '#6366F1' : ACC, marginBottom: 6, fontWeight: 600 }}>{post.author?.role || 'Business Intelligence Experts'}</div>
             <p style={{ fontSize: 13, color: TX2, lineHeight: 1.6, margin: 0 }}>
               {post.author?.bio || 'Our team combines expertise in data analytics, SME strategy, and AI tools to produce practical guides that help founders and operators make better business decisions.'}
@@ -731,7 +657,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         {/* CTA */}
         <div style={{ background: TX, borderRadius: 16, padding: 'clamp(20px,4vw,32px)', marginBottom: 48, textAlign: 'center' }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 10 }}>14-day free trial · No credit card needed</div>
-          <h3 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(17px,3vw,22px)', fontWeight: 700, color: '#fff', marginBottom: 10, letterSpacing: '-.02em' }}>
+          <h3 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(17px,3vw,22px)', fontWeight: 700, color: '#fff', marginBottom: 10, letterSpacing: '-.02em' }}>
             {clusterCta?.headline || post.cta?.heading || 'See this data for your own business'}
           </h3>
           <p style={{ fontSize: 14, color: 'rgba(255,255,255,.7)', marginBottom: 24, lineHeight: 1.6, maxWidth: 480, margin: '0 auto 24px' }}>
@@ -776,7 +702,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         {/* Related */}
         {relatedPosts.length > 0 && (
           <div>
-            <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 18, fontWeight: 600, color: TX, marginBottom: 16, letterSpacing: '-.02em' }}>
+            <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 600, color: TX, marginBottom: 16, letterSpacing: '-.02em' }}>
               Related articles
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px,1fr))', gap: 12 }}>
@@ -794,7 +720,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         {/* Academy cross-links — boosts internal link graph between blog and academy */}
         {academyCrossLinks.length > 0 && (
           <div style={{ marginTop: 32 }}>
-            <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 18, fontWeight: 600, color: TX, marginBottom: 16, letterSpacing: '-.02em' }}>
+            <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 600, color: TX, marginBottom: 16, letterSpacing: '-.02em' }}>
               Learn the concepts
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px,1fr))', gap: 12 }}>

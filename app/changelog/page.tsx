@@ -38,6 +38,28 @@ const TYPE_STYLE: Record<ChangeType, { label: string; bg: string; color: string;
 
 const RELEASES: Release[] = [
   {
+    version: '2.14.0',
+    date: '2026-06-14',
+    summary: 'Smart notification system, Paystack payment tracking, POS inventory archiving, and CFO dashboard cleanup.',
+    changes: [
+      { type: 'new',      text: 'In-app notification inbox — payment failures, reorder alerts, daily sales summaries, large sale flags, and source connection health all fire as notifications' },
+      { type: 'new',      text: 'Paystack webhook on main app — charge.success and charge.failed events update payment status and create instant notifications' },
+      { type: 'new',      text: 'Received Payments section — confirmed digital payments (M-Pesa, card) now shown separately from failed payment recovery' },
+      { type: 'new',      text: 'Payment Recovery dashboard — dedicated API for failed/cancelled payments with recovery stats and retry tracking' },
+      { type: 'new',      text: 'Archive button on out-of-stock items — hide products from stock alerts and Pulse without deleting them' },
+      { type: 'new',      text: 'Shared notification helper with built-in deduplication — prevents the same alert from firing more than once per configurable window' },
+      { type: 'new',      text: 'Source connection health alerts — stale sync warnings, disconnection alerts, and new connection confirmations' },
+      { type: 'new',      text: 'POS daily sales summary notifications — yesterday\'s revenue, transaction count, and cash vs digital breakdown delivered each morning' },
+      { type: 'improved', text: 'Pulse dismissed signals now persist across page refreshes — signal IDs are stable instead of regenerating on every load' },
+      { type: 'improved', text: 'Stock replenishment cron now creates notifications for critical and high-urgency reorder suggestions' },
+      { type: 'improved', text: 'Proactive cron flags large individual sales when top sale exceeds 2× the daily average' },
+      { type: 'fixed',    text: 'Paystack payments not appearing in Payment Recovery — webhook was only on pos.askbiz.co, now also on askbiz.co' },
+      { type: 'fixed',    text: 'Pending payments incorrectly shown as "Retrying" — dunning API now only queries genuinely failed payments' },
+      { type: 'fixed',    text: 'Dismissed Pulse alerts reappearing on refresh — removed Date.now() suffix from signal IDs' },
+      { type: 'removed',  text: 'Inline alert banners on CFO Dashboard — margin and stock alerts now handled by the notification system and Pulse' },
+    ],
+  },
+  {
     version: '2.13.0',
     date: '2026-06-04',
     summary: 'Critical Shopify OAuth fix, proper 404 status codes for dynamic pages, and 3-month free trial promotion on landing page.',

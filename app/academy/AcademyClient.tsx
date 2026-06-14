@@ -35,7 +35,6 @@ const DIFF_COLORS: Record<string, string> = {
 
 function ArticleRow({ article, index, total }: { article: AcademyArticle; index: number; total: number }) {
   const color = academyCategories.find(c => c.slug === article.categorySlug)?.color || ACC
-  const diffColor = DIFF_COLORS[article.difficulty] || TX3
   return (
     <Link
       href={`/academy/${article.slug}`}
@@ -48,32 +47,18 @@ function ArticleRow({ article, index, total }: { article: AcademyArticle; index:
       }}
     >
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
-          <span style={{
-            fontSize: 10, fontWeight: 700, color, background: `${color}18`,
-            border: `1px solid ${color}30`, padding: '2px 7px', borderRadius: 9999,
-            textTransform: 'uppercase', letterSpacing: '.05em', whiteSpace: 'nowrap',
-          }}>
-            {article.category}
-          </span>
-          <span style={{
-            fontSize: 10, fontWeight: 700, color: diffColor, background: `${diffColor}15`,
-            border: `1px solid ${diffColor}30`, padding: '2px 7px', borderRadius: 9999,
-            letterSpacing: '.05em', whiteSpace: 'nowrap',
-          }}>
-            {article.difficulty}
-          </span>
-        </div>
-        <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 600, color: TX, lineHeight: 1.4, marginBottom: 3 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '.04em' }}>
+          {article.category}
+        </span>
+        <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 600, color: TX, lineHeight: 1.4, marginTop: 3, marginBottom: 3 }}>
           {article.title}
         </div>
         <p style={{ fontSize: 12, color: TX2, lineHeight: 1.5, margin: 0 }}>
-          {(article.description || '').slice(0, 100)}{(article.description || '').length > 100 ? '…' : ''}
+          {(article.description || '').slice(0, 120)}{(article.description || '').length > 120 ? '…' : ''}
         </p>
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <div style={{ fontSize: 11, color: TX3, whiteSpace: 'nowrap' }}>{article.readTime} min</div>
-        <div style={{ fontSize: 11, color: ACC, fontWeight: 600, marginTop: 4 }}>Read →</div>
       </div>
     </Link>
   )
@@ -383,11 +368,12 @@ export default function AcademyClient() {
                 </Link>
               </div>
 
-              {/* Category cards */}
+              {/* Category cards — top 5 featured, rest compact */}
               <section style={{ marginBottom: 52 }}>
                 <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, marginBottom: 20, letterSpacing: '-.015em' }}>Browse categories</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 14 }}>
-                  {academyCategories.map(cat => {
+                {/* Featured top 5 */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14, marginBottom: 16 }}>
+                  {academyCategories.slice(0, 5).map(cat => {
                     const color = cat.color || ACC
                     const count = academyArticles.filter(a => a.categorySlug === cat.slug).length
                     return (
@@ -397,15 +383,30 @@ export default function AcademyClient() {
                         onClick={() => selectCategory(cat.slug)}
                         style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 12, padding: '20px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
                       >
-                        <div style={{ width: 44, height: 44, borderRadius: 10, background: `${color}18`, border: `1px solid ${color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, fontSize: 22, flexShrink: 0 }}>
-                          {cat.icon}
-                        </div>
                         <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 5, lineHeight: 1.3 }}>{cat.title}</div>
                         <p style={{ fontSize: 12, color: TX2, margin: '0 0 10px', lineHeight: 1.55 }}>
                           {cat.description.slice(0, 72)}{cat.description.length > 72 ? '…' : ''}
                         </p>
                         <span style={{ fontSize: 11, color, fontWeight: 600 }}>{count} articles →</span>
                       </div>
+                    )
+                  })}
+                </div>
+                {/* Remaining as compact inline buttons */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {academyCategories.slice(5).map(cat => {
+                    const color = cat.color || ACC
+                    const count = academyArticles.filter(a => a.categorySlug === cat.slug).length
+                    return (
+                      <button
+                        key={cat.slug}
+                        className="ac-sb-btn"
+                        onClick={() => selectCategory(cat.slug)}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, border: `1px solid ${BD}`, background: SF, fontSize: 13, color: TX, fontWeight: 500 }}
+                      >
+                        {cat.title}
+                        <span style={{ fontSize: 11, color: TX3 }}>{count}</span>
+                      </button>
                     )
                   })}
                 </div>

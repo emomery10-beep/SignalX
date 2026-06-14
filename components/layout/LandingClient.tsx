@@ -1,49 +1,31 @@
 'use client'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useTheme } from 'next-themes'
+import dynamic from 'next/dynamic'
 import { LanguageProvider, useLang } from '@/components/LanguageProvider'
 import type { Lang } from '@/lib/i18n'
 import { COUNTRY_TO_LANG } from '@/lib/i18n'
 
-// ── Palettes — light default, dark for prefers-color-scheme: dark ────────────
-type Palette = typeof LIGHT
-const LIGHT = {
-  bg:         '#ffffff',
-  sf:         '#f5f5f5',
-  ev:         '#eeecea',
-  ev2:        '#e4e2de',
-  tx:         '#1a1916',
-  tx2:        '#4e4a46',
-  tx3:        '#767270', // darkened from #908c87 — 4.79:1 on white (was 3.35:1, failed WCAG AA)
-  b:          'rgba(0,0,0,.08)',
-  b2:         'rgba(0,0,0,.14)',
-  acc:        '#c97a44',
-  accBg:      'rgba(201,122,68,.10)',
-  accBdr:     'rgba(201,122,68,.30)',
-  nav:        'rgba(255,255,255,.92)',
-  navBorder:  'rgba(0,0,0,.08)',
-  heroGlow:   'rgba(201,122,68,.08)',
+const SkullCanvas = dynamic(() => import('@/components/three/SkullCanvas'), {
+  ssr: false,
+  loading: () => null,
+})
+
+// ── Design tokens ─────────────────────────────────────────────────────────────
+const T = {
+  bg:     '#FAF8F5',
+  card:   '#FFFFFF',
+  alt:    '#F4EFE8',
+  tx:     '#1A1410',
+  tx2:    '#4A4038',
+  tx3:    '#8C7B6B',
+  bd:     '#E8DDD4',
+  bd2:    '#D5C9BE',
+  acc:    '#C97A44',
+  accBg:  'rgba(201,122,68,.08)',
+  accBdr: 'rgba(201,122,68,.28)',
+  nav:    'rgba(250,248,245,.92)',
 }
-const DARK = {
-  bg:         '#0e0d0c',
-  sf:         '#141210',
-  ev:         '#1c1a17',
-  ev2:        '#242018',
-  tx:         '#f0ede8',
-  tx2:        '#a09a92',
-  tx3:        '#807c77', // lightened from #5a5550 — 4.74:1 on dark bg (was 2.66:1, failed WCAG AA)
-  b:          'rgba(255,255,255,.07)',
-  b2:         'rgba(255,255,255,.12)',
-  acc:        '#d08a59',
-  accBg:      'rgba(208,138,89,.12)',
-  accBdr:     'rgba(208,138,89,.28)',
-  nav:        'rgba(14,13,12,.88)',
-  navBorder:  'rgba(255,255,255,.07)',
-  heroGlow:   'rgba(208,138,89,.14)',
-}
-// C is set per-component instance based on system preference — see usePalette()
-const C = LIGHT // fallback for module-level usage (DemoScreen, etc.)
 
 interface Geo {
   country: string; countryCode: string; city: string
@@ -51,331 +33,1121 @@ interface Geo {
   pricing: { growth: string; business: string; sym: string; pos: string }
 }
 
-const INTEGRATIONS = [
-  'Shopify', 'Amazon FBA', 'TikTok Shop', 'Instagram', 'Stripe',
-  'QuickBooks', 'Google Sheets', 'Pinterest', 'Square', 'CSV / Excel',
-]
-
-const TOOLS = [
-  { label: 'FX Risk Modeller', desc: 'Model sterling falling 5%, 10%, 15% against your import currency. See exactly which product lines go below your minimum margin before it happens.' },
-  { label: 'Supplier Scorecard', desc: 'Every supplier graded A–F from your shipment history. On-time rate, average delay days, customs holds, and financial impact — all in one view.' },
-  { label: 'Landed Cost Calculator', desc: 'True cost per unit: supplier price + freight + duty + VAT + FX buffer. Reveals the margin gap between what you assumed and what you\'re actually making.' },
-  { label: 'Export Market Scoring', desc: '20 markets scored by ecommerce growth, logistics, UK brand premium, duty environment, and your specific product-category match.' },
-  { label: 'Social Commerce', desc: 'TikTok Shop, Instagram, and Pinterest connected. Conversion rates, demand signals, and viral product alerts before you run out of stock.' },
-]
-
-const TESTIMONIALS = [
-  {
-    name: 'David O.', role: 'Amazon FBA', location: 'Lagos',
-    text: 'Connected my Amazon store and it found a margin problem I had been missing for 4 months. Fixed it the same day. Added £400/month to my bottom line without changing anything else.',
-    avatar: 'DO',
-  },
-  {
-    name: 'Sarah M.', role: 'Shopify seller', location: 'London',
-    text: 'The Business Pulse score changed how I start every morning. Within 10 seconds I know whether I need to act on something or can get on with my day.',
-    avatar: 'SM',
-  },
-  {
-    name: 'James K.', role: 'Retail shop owner', location: 'Nairobi',
-    text: 'I used to spend 2 hours every Monday pulling reports. Now I ask three questions and I\'m done in 4 minutes. The time saving alone is worth the subscription.',
-    avatar: 'JK',
-  },
-]
-
-const DEMO_SLIDES = [
-  {
-    id: 'ai-chat',
-    title: 'Ask questions in plain English',
-    desc: 'Type a question about your business — revenue, margins, stock levels, customer trends — and get specific answers with your actual numbers.',
-    steps: ['Connect your store or upload a CSV', 'Type a question in the chat', 'Get insights with real numbers instantly'],
-    label: 'AI Answers',
-    thumb: '💬',
-    screen: 'chat',
-  },
-  {
-    id: 'supplier',
-    title: 'Grade every supplier A–F',
-    desc: 'Your supplier scorecard is built automatically from shipment data. See on-time rates, delay averages, customs holds, and the P&L impact of each supplier.',
-    steps: ['Connect your logistics or upload shipment data', 'View automatic grades for every supplier', 'Spot underperformers costing you money'],
-    label: 'Supplier Scorecard',
-    thumb: '🏭',
-    screen: 'supplier',
-  },
-  {
-    id: 'fx',
-    title: 'Model currency risk before it hits',
-    desc: 'See what happens to your margins if sterling drops 5%, 10%, or 15% against your import currencies. Know exactly which product lines go below your minimum margin.',
-    steps: ['Select your import currencies', 'Set drop scenarios (5%, 10%, 15%)', 'See which SKUs lose margin first'],
-    label: 'FX Risk Monitor',
-    thumb: '💱',
-    screen: 'fx',
-  },
-  {
-    id: 'export',
-    title: 'Find your best export market',
-    desc: '20 markets scored by ecommerce growth, logistics quality, UK brand premium, duty environment, and your specific product category match.',
-    steps: ['Your product mix is analysed automatically', 'Markets scored 0–100 for your categories', 'See duty rates, premiums, and top channels'],
-    label: 'Export Markets',
-    thumb: '🌍',
-    screen: 'export',
-  },
-]
-
-function DemoScreen({ screen, C }: { screen: string; C: Palette }) {
-  if (screen === 'chat') return (
-    <div style={{ display:'flex', flexDirection:'column', gap:10, padding:'14px 16px' }}>
-      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
-        <div style={{ width:24, height:24, borderRadius:7, background:C.acc, display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <svg width="10" height="10" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.75"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/></svg>
-        </div>
-        <span style={{ fontSize:12, fontWeight:700, color:C.tx }}>AskBiz AI</span>
-        <span style={{ fontSize:9, color:'#22c55e', display:'flex', alignItems:'center', gap:3 }}>
-          <span style={{ width:4, height:4, borderRadius:'50%', background:'#22c55e', display:'inline-block' }}/>Online
-        </span>
-      </div>
-      <div style={{ display:'flex', justifyContent:'flex-end' }}>
-        <div style={{ padding:'8px 12px', borderRadius:14, borderBottomRightRadius:3, background:C.ev2, border:`1px solid ${C.b}`, fontSize:12, color:C.tx, maxWidth:'85%' }}>What is my best margin product?</div>
-      </div>
-      <div style={{ display:'flex', gap:8, alignItems:'flex-start' }}>
-        <div style={{ width:24, height:24, borderRadius:7, background:C.acc, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:2 }}>
-          <svg width="10" height="10" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.75"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/></svg>
-        </div>
-        <div style={{ flex:1 }}>
-          <div style={{ padding:'8px 12px', borderRadius:14, borderBottomLeftRadius:3, background:C.ev, border:`1px solid ${C.b}`, fontSize:11, lineHeight:1.65, color:C.tx, marginBottom:8 }}>
-            <strong>Wireless Earbuds</strong> — 34.2% gross margin, £8.22 profit per unit. At 143 units/month that&apos;s <strong>£1,175</strong> in monthly profit.
-          </div>
-          <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
-            <span className="kpi-chip" style={{ background:'rgba(34,197,94,.08)', color:'#4ade80', borderColor:'rgba(34,197,94,.2)', fontSize:10, padding:'3px 8px' }}><span style={{ opacity:.7 }}>Margin</span> <strong>34.2%</strong></span>
-            <span className="kpi-chip" style={{ background:'rgba(34,197,94,.08)', color:'#4ade80', borderColor:'rgba(34,197,94,.2)', fontSize:10, padding:'3px 8px' }}><span style={{ opacity:.7 }}>Profit</span> <strong>£1,175/mo</strong></span>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-  if (screen === 'supplier') return (
-    <div style={{ padding:'14px 16px', display:'flex', flexDirection:'column', gap:8 }}>
-      <div style={{ fontSize:12, fontWeight:700, color:C.tx, marginBottom:2 }}>Supplier Scorecard <span style={{ fontSize:10, fontWeight:400, color:C.tx3 }}>— Last 6 months</span></div>
-      {[
-        { name:'Guangzhou Tech Co.', grade:'A', color:'#4ade80', onTime:'96%', delay:'0.4d', impact:'+£2,100' },
-        { name:'Shenzhen Goods Ltd', grade:'B', color:C.acc, onTime:'81%', delay:'2.1d', impact:'-£380' },
-        { name:'Alibaba Exports Co.', grade:'D', color:'#f87171', onTime:'62%', delay:'6.8d', impact:'-£1,940' },
-      ].map((s,i) => (
-        <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 10px', background:C.ev, borderRadius:8, border:`1px solid ${C.b}` }}>
-          <div style={{ width:28, height:28, borderRadius:6, background:`${s.color}18`, border:`1px solid ${s.color}30`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-sora)', fontWeight:800, fontSize:14, color:s.color }}>{s.grade}</div>
-          <div style={{ flex:1, minWidth:0 }}>
-            <div style={{ fontSize:11, fontWeight:600, color:C.tx }}>{s.name}</div>
-            <div style={{ fontSize:9, color:C.tx3 }}>On-time: {s.onTime} · Avg delay: {s.delay}</div>
-          </div>
-          <div style={{ fontSize:11, fontWeight:700, color:s.impact.startsWith('+') ? '#4ade80' : '#f87171' }}>{s.impact}/mo</div>
-        </div>
-      ))}
-    </div>
-  )
-  if (screen === 'fx') return (
-    <div style={{ padding:'14px 16px', display:'flex', flexDirection:'column', gap:8 }}>
-      <div style={{ fontSize:12, fontWeight:700, color:C.tx, marginBottom:2 }}>FX Risk Monitor <span style={{ fontSize:10, fontWeight:400, color:C.tx3 }}>— Sterling drop scenario</span></div>
-      <div style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr 1fr 1fr', gap:4, padding:'4px 0' }}>
-        {['Pair','−5%','−10%','−15%'].map(h => <div key={h} style={{ fontSize:9, fontWeight:700, color:C.tx3, textTransform:'uppercase' }}>{h}</div>)}
-      </div>
-      {[
-        { pair:'GBP / CNY', d5:'-£920', d10:'-£1,840', d15:'-£2,760', risk:'high' },
-        { pair:'GBP / USD', d5:'-£310', d10:'-£620', d15:'-£930', risk:'medium' },
-        { pair:'GBP / AED', d5:'-£155', d10:'-£310', d15:'-£465', risk:'low' },
-      ].map((p,i) => (
-        <div key={i} style={{ display:'grid', gridTemplateColumns:'1.5fr 1fr 1fr 1fr', gap:4, padding:'8px 0', borderTop:`1px solid ${C.b}`, alignItems:'center' }}>
-          <div><div style={{ fontSize:11, fontWeight:600, color:C.tx }}>{p.pair}</div><span style={{ fontSize:8, fontWeight:700, color:p.risk==='high'?'#f87171':p.risk==='medium'?C.acc:'#4ade80', background:p.risk==='high'?'rgba(248,113,113,.1)':p.risk==='medium'?C.accBg:'rgba(74,222,128,.08)', padding:'1px 5px', borderRadius:3 }}>{p.risk}</span></div>
-          <div style={{ fontSize:11, color:C.acc, fontWeight:600 }}>{p.d5}</div>
-          <div style={{ fontSize:11, color:'#f87171', fontWeight:600 }}>{p.d10}</div>
-          <div style={{ fontSize:11, color:'#ef4444', fontWeight:700 }}>{p.d15}</div>
-        </div>
-      ))}
-    </div>
-  )
-  return (
-    <div style={{ padding:'14px 16px', display:'flex', flexDirection:'column', gap:8 }}>
-      <div style={{ fontSize:12, fontWeight:700, color:C.tx, marginBottom:2 }}>Export Market Scoring <span style={{ fontSize:10, fontWeight:400, color:C.tx3 }}>— Your product mix</span></div>
-      {[
-        { flag:'🇦🇪', name:'UAE', score:78, channel:'Noon.com', duty:'5% flat', premium:'+18%', tagColor:'#4ade80' },
-        { flag:'🇩🇪', name:'Germany', score:71, channel:'Amazon.de', duty:'6.5%', premium:'+12%', tagColor:C.acc },
-        { flag:'🇺🇸', name:'United States', score:64, channel:'Amazon US', duty:'3.5%', premium:'+9%', tagColor:C.tx3 },
-      ].map((m,i) => (
-        <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 10px', background:C.ev, borderRadius:8, border:`1px solid ${C.b}` }}>
-          <span style={{ fontSize:20 }}>{m.flag}</span>
-          <div style={{ flex:1, minWidth:0 }}>
-            <div style={{ fontSize:11, fontWeight:600, color:C.tx }}>{m.name} <span style={{ fontSize:9, color:C.tx3 }}>via {m.channel}</span></div>
-            <div style={{ fontSize:9, color:C.tx3 }}>Duty: {m.duty} · UK premium: <span style={{ color:'#4ade80' }}>{m.premium}</span></div>
-          </div>
-          <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:800, color:m.tagColor }}>{m.score}<span style={{ fontSize:9, color:C.tx3, fontWeight:400 }}>/100</span></div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function InteractiveDemo({ C }: { C: Palette }) {
-  const [active, setActive] = useState(0)
-  const tickRef = useRef(0)
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    // Auto-rotation removed — carousel is now manual only
-  }, [])
-
-  const slide = DEMO_SLIDES[active]
-  const go = useCallback((i: number) => { tickRef.current = 0; setActive(i) }, [])
-  const next = useCallback(() => { tickRef.current = 0; setActive(a => (a + 1) % DEMO_SLIDES.length) }, [])
-
-  return (
-    <div id="demo" ref={containerRef} style={{ maxWidth:1100, margin:'0 auto', padding:'0 clamp(16px,4vw,40px) clamp(40px,6vw,64px)' }}>
-      <div className="demo-layout" style={{ display:'grid', gridTemplateColumns:'1fr 1.3fr', gap:'clamp(24px,4vw,56px)', alignItems:'center', marginBottom:32 }}>
-        <div>
-          <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3vw,32px)', fontWeight:700, lineHeight:1.2, letterSpacing:'-.02em', marginBottom:16, color:C.tx }}>{slide.title}</h2>
-          <p style={{ fontSize:14, color:C.tx2, lineHeight:1.7, marginBottom:24 }}>{slide.desc}</p>
-          <ol style={{ listStyle:'none', padding:0, margin:'0 0 28px', display:'flex', flexDirection:'column', gap:12 }}>
-            {slide.steps.map((step, i) => (
-              <li key={i} style={{ display:'flex', gap:10, alignItems:'flex-start', fontSize:13, color:C.tx2, lineHeight:1.55 }}>
-                <span style={{ width:22, height:22, borderRadius:'50%', background:C.accBg, border:`1px solid ${C.accBdr}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:C.acc, flexShrink:0 }}>{i + 1}</span>
-                {step}
-              </li>
-            ))}
-          </ol>
-          <button onClick={next} style={{ padding:'10px 24px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:13, fontWeight:600, cursor:'pointer', fontFamily:'inherit' }} className="card-hover">
-            Next →
-          </button>
-        </div>
-        <div style={{ background:C.sf, borderRadius:16, border:`1px solid ${C.b}`, overflow:'hidden' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', background:C.ev, borderBottom:`1px solid ${C.b}` }}>
-            <div style={{ display:'flex', gap:5 }}>
-              <span style={{ width:9, height:9, borderRadius:'50%', background:'#ff5f57' }} />
-              <span style={{ width:9, height:9, borderRadius:'50%', background:'#febc2e' }} />
-              <span style={{ width:9, height:9, borderRadius:'50%', background:'#28c840' }} />
-            </div>
-            <div style={{ flex:1, textAlign:'center', fontSize:10, color:C.tx3 }}>askbiz.co/dashboard</div>
-          </div>
-          <div style={{ height:2, background:C.ev, position:'relative', overflow:'hidden' }}>
-            <div key={active} style={{ position:'absolute', top:0, left:0, height:'100%', background:C.acc, animation:'progress 6s linear forwards' }} />
-          </div>
-          <div style={{ background:C.sf, minHeight:260 }}>
-            <DemoScreen screen={slide.screen} C={C} />
-          </div>
-        </div>
-      </div>
-      <div style={{ display:'flex', gap:12, alignItems:'center' }}>
-        <div className="demo-cards" style={{ display:'flex', gap:10, flex:1, overflowX:'auto', paddingBottom:4 }}>
-          {DEMO_SLIDES.map((s, i) => (
-            <button key={s.id} onClick={() => go(i)} style={{
-              flex:'1 0 0', minWidth:120, padding:'12px 14px', borderRadius:12,
-              border: i === active ? `1px solid ${C.acc}` : `1px solid ${C.b}`,
-              background: i === active ? C.accBg : C.ev,
-              cursor:'pointer', textAlign:'left', fontFamily:'inherit', transition:'all 180ms',
-            }}>
-              <span style={{ fontSize:12, fontWeight: i === active ? 700 : 500, color: i === active ? C.acc : C.tx2, lineHeight:1.3, display:'block' }}>{s.label}</span>
-            </button>
-          ))}
-        </div>
-        <div style={{ display:'flex', gap:6, flexShrink:0 }}>
-          <button onClick={() => go((active - 1 + DEMO_SLIDES.length) % DEMO_SLIDES.length)} style={{ width:32, height:32, borderRadius:'50%', border:`1px solid ${C.b}`, background:C.ev, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, color:C.tx3 }}>‹</button>
-          <button onClick={next} style={{ width:32, height:32, borderRadius:'50%', border:`1px solid ${C.b}`, background:C.ev, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, color:C.tx3 }}>›</button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Mini Calculator ───────────────────────────────────────────────────────────
 const CURRENCIES = [
-  { code:'GBP', symbol:'£' }, { code:'USD', symbol:'$' }, { code:'EUR', symbol:'€' },
-  { code:'KES', symbol:'KSh' }, { code:'NGN', symbol:'₦' }, { code:'ZAR', symbol:'R' },
-  { code:'AED', symbol:'د.إ' }, { code:'INR', symbol:'₹' }, { code:'AUD', symbol:'A$' },
-  { code:'CAD', symbol:'C$' }, { code:'JPY', symbol:'¥' }, { code:'CHF', symbol:'Fr' },
+  { code:'GBP', symbol:'£' },{ code:'USD', symbol:'$' },{ code:'EUR', symbol:'€' },
+  { code:'KES', symbol:'KSh' },{ code:'NGN', symbol:'₦' },{ code:'ZAR', symbol:'R' },
+  { code:'AED', symbol:'د.إ' },{ code:'INR', symbol:'₹' },{ code:'AUD', symbol:'A$' },
+  { code:'CAD', symbol:'C$' },{ code:'JPY', symbol:'¥' },{ code:'CHF', symbol:'Fr' },
 ] as const
 
-type BizType = 'retail' | 'factory' | 'restaurant' | 'cargo' | 'repair'
-const BIZ_TYPES: { id: BizType; icon: string; label: string; fields: { key: string; label: string; ph: string }[]; priceLabel: string; pricePh: string; unitLabel: string; resultLabel: string }[] = [
-  { id:'retail', icon:'🛒', label:'Retail / Ecom', priceLabel:'Sale price', pricePh:'12.99', unitLabel:'Units sold', resultLabel:'COGS/UNIT',
-    fields: [{ key:'a', label:'Materials', ph:'3.00' },{ key:'b', label:'Labour', ph:'2.50' },{ key:'c', label:'Shipping', ph:'1.20' },{ key:'d', label:'Packaging', ph:'0.80' }] },
-  { id:'factory', icon:'🏭', label:'Factory', priceLabel:'Unit sale price', pricePh:'24.00', unitLabel:'Batch size', resultLabel:'COST/UNIT',
-    fields: [{ key:'a', label:'Raw materials', ph:'6.00' },{ key:'b', label:'Direct labour', ph:'4.50' },{ key:'c', label:'Machine time', ph:'2.00' },{ key:'d', label:'Overhead/unit', ph:'1.50' }] },
-  { id:'restaurant', icon:'🍽️', label:'Restaurant', priceLabel:'Menu price', pricePh:'16.50', unitLabel:'Covers/day', resultLabel:'FOOD COST',
-    fields: [{ key:'a', label:'Ingredients', ph:'4.20' },{ key:'b', label:'Prep labour', ph:'2.00' },{ key:'c', label:'Packaging', ph:'0.50' },{ key:'d', label:'Waste %', ph:'8' }] },
-  { id:'cargo', icon:'🚛', label:'Cargo', priceLabel:'Revenue/trip', pricePh:'850', unitLabel:'Trips/month', resultLabel:'COST/TRIP',
-    fields: [{ key:'a', label:'Fuel', ph:'180' },{ key:'b', label:'Driver wages', ph:'120' },{ key:'c', label:'Tolls & fees', ph:'45' },{ key:'d', label:'Insurance', ph:'30' }] },
-  { id:'repair', icon:'🔧', label:'Repair Shop', priceLabel:'Charge to customer', pricePh:'89.99', unitLabel:'Jobs/week', resultLabel:'PARTS+LABOUR',
-    fields: [{ key:'a', label:'Parts cost', ph:'25.00' },{ key:'b', label:'Labour (hrs)', ph:'1.5' },{ key:'c', label:'Labour rate/hr', ph:'20' },{ key:'d', label:'Diagnostic fee', ph:'0' }] },
+type BizType = 'retail'|'factory'|'restaurant'|'cargo'|'repair'
+const BIZ_TYPES = [
+  { id:'retail' as BizType,icon:'🛒',label:'Retail / Ecom',priceLabel:'Sale price',pricePh:'12.99',unitLabel:'Units sold',resultLabel:'COGS/UNIT',
+    fields:[{key:'a',label:'Materials',ph:'3.00'},{key:'b',label:'Labour',ph:'2.50'},{key:'c',label:'Shipping',ph:'1.20'},{key:'d',label:'Packaging',ph:'0.80'}]},
+  { id:'factory' as BizType,icon:'🏭',label:'Factory',priceLabel:'Unit sale price',pricePh:'24.00',unitLabel:'Batch size',resultLabel:'COST/UNIT',
+    fields:[{key:'a',label:'Raw materials',ph:'6.00'},{key:'b',label:'Direct labour',ph:'4.50'},{key:'c',label:'Machine time',ph:'2.00'},{key:'d',label:'Overhead/unit',ph:'1.50'}]},
+  { id:'restaurant' as BizType,icon:'🍽️',label:'Restaurant',priceLabel:'Menu price',pricePh:'16.50',unitLabel:'Covers/day',resultLabel:'FOOD COST',
+    fields:[{key:'a',label:'Ingredients',ph:'4.20'},{key:'b',label:'Prep labour',ph:'2.00'},{key:'c',label:'Packaging',ph:'0.50'},{key:'d',label:'Waste %',ph:'8'}]},
+  { id:'cargo' as BizType,icon:'🚛',label:'Cargo',priceLabel:'Revenue/trip',pricePh:'850',unitLabel:'Trips/month',resultLabel:'COST/TRIP',
+    fields:[{key:'a',label:'Fuel',ph:'180'},{key:'b',label:'Driver wages',ph:'120'},{key:'c',label:'Tolls & fees',ph:'45'},{key:'d',label:'Insurance',ph:'30'}]},
+  { id:'repair' as BizType,icon:'🔧',label:'Repair Shop',priceLabel:'Charge to customer',pricePh:'89.99',unitLabel:'Jobs/week',resultLabel:'PARTS+LABOUR',
+    fields:[{key:'a',label:'Parts cost',ph:'25.00'},{key:'b',label:'Labour (hrs)',ph:'1.5'},{key:'c',label:'Labour rate/hr',ph:'20'},{key:'d',label:'Diagnostic fee',ph:'0'}]},
 ]
 
-function MiniCalcWidget({ C }: { C: Palette }) {
-  const [mode, setMode] = useState<'margin' | 'industry'>('margin')
-  const [biz, setBiz] = useState<BizType>('retail')
-  const [cur, setCur] = useState(0)
-  const [showCur, setShowCur] = useState(false)
-  const sym = CURRENCIES[cur].symbol
-  const ref = useRef<HTMLDivElement>(null)
+// FAQS — kept in sync with the FAQPage JSON-LD schema in app/page.tsx (server-side)
+// The server-side script handles Google rich results; <details>/<summary> ensures answers
+// are always in the HTML for crawlers regardless of JS execution.
+const FAQS = [
+  {q:'What is AskBiz?',a:'AskBiz is an AI-powered business intelligence tool for SME founders. You connect your Shopify, Amazon, TikTok Shop, or QuickBooks account, then ask questions in plain English and get clear answers grounded in your actual data.'},
+  {q:'How much does AskBiz cost?',a:'AskBiz has a free plan with 10 questions per month, a Growth plan at £19/month with unlimited questions and all core features, and a Business plan at £39/month with team seats, Decision Memory, Competitor Watch, and CFO Mode. All plans include API access.'},
+  {q:'What data sources does AskBiz support?',a:'AskBiz connects to Shopify, Amazon FBA, TikTok Shop, Instagram Shopping, Pinterest, Stripe, QuickBooks, Google Sheets, and Square. You can also upload CSV and Excel files directly.'},
+  {q:'What is the Business Pulse score?',a:'The Business Pulse score is a 0–100 health rating for your business, calculated from five components: margin health, revenue trend, stock position, cash flow, and product mix. It updates every time you sync your connected stores.'},
+  {q:'Does AskBiz include a Point of Sale system?',a:'Yes — AskBiz includes a full Point of Sale system with register checkout, barcode scanning, inventory management, staff shift tracking, digital receipts, multi-branch support, tax compliance, GDPR tools, and integrations with Xero and QuickBooks. The PoS costs £5 per seat per month and is available on all plans.'},
+  {q:'Is AskBiz suitable for small businesses?',a:'Yes — AskBiz is built specifically for SME founders, solo sellers, and small business owners who need business intelligence without a data team. No technical knowledge required.'},
+  {q:'Is my business data safe?',a:'Your data is encrypted at rest and in transit. We never use your business data to train AI models. UK data residency with SOC 2-aligned controls.'},
+]
+
+function Logo({size=12,color='white'}:{size?:number;color?:string}) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+      <rect x="3" y="22" width="5" height="7" rx="1.5" fill={color} opacity=".5"/>
+      <rect x="11" y="16" width="5" height="13" rx="1.5" fill={color} opacity=".75"/>
+      <rect x="19" y="9" width="5" height="20" rx="1.5" fill={color}/>
+    </svg>
+  )
+}
+
+// ── Actual AskBiz "Ask" UI replica ────────────────────────────────────────────
+function AskUIReplica() {
+  const [typed, setTyped] = useState('')
+  const [phase, setPhase] = useState<'idle'|'typing'|'thinking'|'answer'>('idle')
+  const question = 'What is my best margin product this week?'
 
   useEffect(() => {
-    if (!showCur) return
-    const close = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setShowCur(false) }
-    document.addEventListener('mousedown', close)
-    return () => document.removeEventListener('mousedown', close)
-  }, [showCur])
+    const start = setTimeout(() => setPhase('typing'), 1200)
+    return () => clearTimeout(start)
+  }, [])
 
-  const [mc, setMc] = useState({ cost: '', revenue: '', units: '' })
-  const mCost = parseFloat(mc.cost) || 0
-  const mRev = parseFloat(mc.revenue) || 0
-  const mUnits = parseInt(mc.units) || 0
-  const mProfit = mRev - mCost
-  const mMargin = mRev > 0 ? (mProfit / mRev) * 100 : 0
-  const mMarkup = mCost > 0 ? (mProfit / mCost) * 100 : 0
-  const mHasResult = mCost > 0 && mRev > 0
-
-  const [iv, setIv] = useState({ a:'', b:'', c:'', d:'', price:'', units:'' })
-  const bt = BIZ_TYPES.find(b => b.id === biz)!
-  const iA = parseFloat(iv.a) || 0, iB = parseFloat(iv.b) || 0, iC = parseFloat(iv.c) || 0, iD = parseFloat(iv.d) || 0
-  const iPrice = parseFloat(iv.price) || 0, iUnits = parseInt(iv.units) || 0
-  let iCost = iA + iB + iC + iD
-  if (biz === 'repair') iCost = iA + (iB * iC) + iD
-  if (biz === 'restaurant') iCost = (iA + iB + iC) * (1 + iD / 100)
-  const iGross = iPrice - iCost
-  const iMargin = iPrice > 0 ? (iGross / iPrice) * 100 : 0
-  const iHasResult = iCost > 0
-
-  const mc_ = (m: number) => m >= 30 ? '#4ade80' : m >= 15 ? '#fb923c' : '#f87171'
-  const switchBiz = (b: BizType) => { setBiz(b); setIv({ a:'', b:'', c:'', d:'', price:'', units:'' }) }
-
-  const I = (props: { placeholder: string; value: string; onChange: (v: string) => void; step?: string }) => (
-    <input type="number" min="0" step={props.step || '0.01'} placeholder={props.placeholder}
-      style={{ width:'100%', height:36, padding:'0 10px', fontSize:13, border:`1px solid ${C.b2}`, borderRadius:8, background:C.ev, color:C.tx, fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }}
-      value={props.value} onChange={e => props.onChange(e.target.value)} />
-  )
-
-  const R = (props: { value: string; label: string; color: string }) => (
-    <div style={{ textAlign:'center', padding:'6px 2px', background:C.ev2, borderRadius:8 }}>
-      <div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:props.color, lineHeight:1.2 }}>{props.value}</div>
-      <div style={{ fontSize:8, color:C.tx3, fontWeight:700, marginTop:2, textTransform:'uppercase', letterSpacing:'.03em' }}>{props.label}</div>
-    </div>
-  )
+  useEffect(() => {
+    if (phase === 'typing') {
+      if (typed.length < question.length) {
+        const t = setTimeout(() => setTyped(question.slice(0, typed.length + 1)), 52)
+        return () => clearTimeout(t)
+      } else {
+        const t = setTimeout(() => setPhase('thinking'), 600)
+        return () => clearTimeout(t)
+      }
+    }
+    if (phase === 'thinking') {
+      const t = setTimeout(() => setPhase('answer'), 1100)
+      return () => clearTimeout(t)
+    }
+    if (phase === 'answer') {
+      const t = setTimeout(() => { setPhase('idle'); setTyped('') }, 5000)
+      return () => clearTimeout(t)
+    }
+    if (phase === 'idle' && typed === '') {
+      const t = setTimeout(() => setPhase('typing'), 1500)
+      return () => clearTimeout(t)
+    }
+  }, [phase, typed])
 
   return (
-    <div ref={ref} className="fade-up mini-calc" style={{ maxWidth:480, width:'100%', background:C.sf, border:`1px solid ${C.b}`, borderRadius:16, overflow:'hidden' }}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'center', padding:'10px 14px 0', gap:8 }}>
-        <div style={{ display:'inline-flex', borderRadius:9999, border:`1px solid ${C.b2}`, overflow:'hidden', background:C.ev }}>
-          {([['margin','Profit Margin'],['industry','Cost of Goods']] as const).map(([id, label]) => (
-            <button key={id} onClick={() => setMode(id as 'margin'|'industry')}
-              style={{ padding:'6px 18px', fontSize:11, fontWeight:700, fontFamily:'var(--font-sora)', background:mode===id?C.acc:'transparent', color:mode===id?'#fff':C.tx3, border:'none', cursor:'pointer', transition:'all 150ms' }}>
-              {label}
+    <div style={{background:'#FAFAFA',borderRadius:16,border:'1px solid #E5E5E5',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.09)',maxWidth:700,width:'100%',fontFamily:'system-ui,-apple-system,sans-serif'}}>
+      {/* App chrome */}
+      <div style={{display:'flex',alignItems:'center',borderBottom:'1px solid #F0F0F0',background:'#fff'}}>
+        <div style={{width:210,borderRight:'1px solid #F0F0F0',height:48,display:'flex',alignItems:'center',padding:'0 12px',gap:10,background:'#FAFAFA',flexShrink:0}}>
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <div style={{width:22,height:22,borderRadius:6,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center'}}><Logo size={10}/></div>
+            <span style={{fontSize:12,fontWeight:700,color:'#1A1410'}}>AskBiz</span>
+          </div>
+          <div style={{marginLeft:'auto',display:'flex',gap:6}}>
+            {['Ask','Business','POS'].map((t,i)=>(
+              <span key={t} style={{fontSize:9,fontWeight:i===0?700:400,color:i===0?'#C97A44':'#AAA',borderBottom:i===0?'1px solid #C97A44':'1px solid transparent',paddingBottom:1}}>{t}</span>
+            ))}
+          </div>
+        </div>
+        <div style={{flex:1,padding:'0 16px',fontSize:11,fontWeight:600,color:'#1A1410'}}>New conversation</div>
+        <div style={{display:'flex',gap:6,padding:'0 14px'}}>
+          {['Run scenario','CFO view','Upload'].map(btn=>(
+            <span key={btn} style={{fontSize:9,padding:'4px 8px',borderRadius:5,border:'1px solid #E5E5E5',color:'#888',cursor:'pointer'}}>{btn}</span>
+          ))}
+        </div>
+      </div>
+      <div style={{display:'flex',minHeight:350}}>
+        {/* Left sidebar */}
+        <div style={{width:210,borderRight:'1px solid #F0F0F0',padding:'10px 8px',background:'#FAFAFA',flexShrink:0,display:'flex',flexDirection:'column',gap:3}}>
+          <div style={{fontSize:8,fontWeight:700,color:'#BBB',padding:'3px 8px',letterSpacing:'.1em',textTransform:'uppercase'}}>Quick Questions</div>
+          {['What are my top sellers?','Margin by product','Revenue vs last week','Stock running low'].map((q,i)=>(
+            <div key={i} style={{fontSize:9,padding:'5px 8px',borderRadius:5,color:'#666',cursor:'pointer',lineHeight:1.3}}>{q}</div>
+          ))}
+          <div style={{marginTop:6,fontSize:8,fontWeight:700,color:'#BBB',padding:'3px 8px',letterSpacing:'.1em',textTransform:'uppercase'}}>History</div>
+          {['My POS sales today are 87%...','Calculate my true landed cost...','What are my top sellers?'].map((h,i)=>(
+            <div key={i} style={{fontSize:8,padding:'4px 8px',borderRadius:5,color:'#999',cursor:'pointer',lineHeight:1.4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{h}</div>
+          ))}
+        </div>
+        {/* Main chat area */}
+        <div style={{flex:1,display:'flex',flexDirection:'column',background:'#fff'}}>
+          {phase === 'idle' && typed === '' ? (
+            <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'20px 28px',gap:14}}>
+              <div style={{width:38,height:38,borderRadius:10,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center'}}><Logo size={16}/></div>
+              <div style={{textAlign:'center'}}>
+                <p style={{fontSize:15,fontWeight:700,color:'#1A1410',margin:'0 0 3px'}}>What do you want to know?</p>
+                <p style={{fontSize:10,color:'#999',margin:0}}>Just ask in plain English — no jargon, no spreadsheets needed.</p>
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7,width:'100%',maxWidth:380}}>
+                {[
+                  {icon:'💱',title:'Currency Risk',sub:'What happens if the pound drops?'},
+                  {icon:'🏭',title:'My Suppliers',sub:'Who is the most reliable?'},
+                  {icon:'📦',title:'True Cost',sub:'What does shipping actually cost me?'},
+                  {icon:'🌍',title:'New Markets',sub:'Where should I sell next?'},
+                ].map((card,i)=>(
+                  <div key={i} style={{padding:'9px 11px',borderRadius:8,border:'1px solid #F0F0F0',background:'#FAFAFA',cursor:'pointer'}}>
+                    <div style={{fontSize:15,marginBottom:3}}>{card.icon}</div>
+                    <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:1}}>{card.title}</div>
+                    <div style={{fontSize:9,color:'#AAA',lineHeight:1.3}}>{card.sub}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{width:'100%',maxWidth:380,padding:'8px 11px',borderRadius:8,border:'1px dashed #E5E5E5',background:'#FAFAFA',display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+                <div>
+                  <div style={{fontSize:10,fontWeight:600,color:'#1A1410',marginBottom:1}}>Get answers with your actual numbers</div>
+                  <div style={{fontSize:8,color:'#AAA'}}>Connect Shopify, Amazon, QuickBooks or upload a CSV</div>
+                </div>
+                <span style={{fontSize:9,fontWeight:700,padding:'5px 9px',borderRadius:6,background:'#C97A44',color:'#fff',cursor:'pointer',whiteSpace:'nowrap',flexShrink:0}}>Connect →</span>
+              </div>
+            </div>
+          ) : (
+            <div style={{flex:1,display:'flex',flexDirection:'column',gap:10,padding:'18px 20px',overflowY:'auto'}}>
+              <div style={{display:'flex',justifyContent:'flex-end'}}>
+                <div style={{maxWidth:'78%',background:'#F4EFE8',border:'1px solid #E8DDD4',borderRadius:'12px 12px 3px 12px',padding:'9px 13px',fontSize:12,color:'#1A1410',lineHeight:1.5}}>
+                  {typed}
+                  {phase==='typing'&&<span style={{display:'inline-block',width:2,height:13,background:'#C97A44',marginLeft:2,verticalAlign:'middle',animation:'blink .9s infinite'}}/>}
+                </div>
+              </div>
+              {(phase==='thinking'||phase==='answer')&&(
+                <div style={{display:'flex',gap:8,alignItems:'flex-start'}}>
+                  <div style={{width:24,height:24,borderRadius:6,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                    <Logo size={10}/>
+                  </div>
+                  {phase==='thinking' ? (
+                    <div style={{padding:'9px 12px',background:'#FAFAFA',border:'1px solid #F0F0F0',borderRadius:'3px 12px 12px 12px',display:'flex',gap:4,alignItems:'center'}}>
+                      {[0,160,320].map(d=>(
+                        <span key={d} style={{width:6,height:6,borderRadius:'50%',background:'#CCC',display:'block',animation:`tdot 1.2s infinite ${d}ms`}}/>
+                      ))}
+                    </div>
+                  ):(
+                    <div style={{flex:1}}>
+                      <div style={{padding:'10px 13px',background:'#FAFAFA',border:'1px solid #F0F0F0',borderRadius:'3px 12px 12px 12px',fontSize:12,lineHeight:1.7,color:'#1A1410',marginBottom:7}}>
+                        <strong>Wireless Earbuds Pro</strong> is your highest-margin product this week — <strong style={{color:'#C97A44'}}>34.2% gross margin</strong>, £8.22 profit per unit across 143 units sold.<br/>
+                        <span style={{color:'#888',fontSize:11}}>⚠ Ginger Powder is running at a <span style={{color:'#dc2626',fontWeight:700}}>–566.7% margin</span> — likely a pricing or cost input error.</span>
+                      </div>
+                      <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+                        {['Margin 34.2%','£1,175 this week','143 units'].map(chip=>(
+                          <span key={chip} style={{fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)'}}>{chip}</span>
+                        ))}
+                        <span style={{fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:9999,background:'rgba(220,38,38,.08)',color:'#dc2626',border:'1px solid rgba(220,38,38,.2)'}}>⚠ Ginger review needed</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          {/* Input */}
+          <div style={{borderTop:'1px solid #F0F0F0',padding:'9px 14px',display:'flex',alignItems:'center',gap:7,background:'#fff'}}>
+            <div style={{flex:1,border:'1px solid #E5E5E5',borderRadius:8,padding:'7px 11px',fontSize:11,color:'#CCC',background:'#FAFAFA'}}>
+              {phase==='typing'?typed:'What do you want to know about your business?'}
+            </div>
+            <div style={{width:26,height:26,borderRadius:6,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0}}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Monitor / Intelligence UI replica ─────────────────────────────────────────
+function MonitorUIReplica() {
+  type MTab = 'overview'|'cfo'|'alerts'|'decisions'|'team'|'askai'|'ships'|'memory'|'market'
+  const [tab, setTab] = useState<MTab>('overview')
+  const [askQ, setAskQ] = useState('')
+  const [askA, setAskA] = useState('')
+  const TABS:{id:MTab;label:string}[] = [
+    {id:'overview',label:'Overview'},{id:'cfo',label:'CFO 📊'},{id:'alerts',label:'Alerts 🚨'},
+    {id:'decisions',label:'Decisions'},{id:'team',label:'Team'},{id:'askai',label:'Ask AI'},
+    {id:'ships',label:'Ships'},{id:'memory',label:'Memory'},{id:'market',label:'Market'},
+  ]
+  const pill=(txt:string,color:string,bg:string)=>(
+    <span style={{fontSize:7,fontWeight:700,padding:'2px 6px',borderRadius:9999,background:bg,color,whiteSpace:'nowrap'}}>{txt}</span>
+  )
+  return (
+    <div style={{background:'#FAFAFA',borderRadius:16,border:'1px solid #E5E5E5',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.09)',width:'100%',fontFamily:'system-ui,-apple-system,sans-serif'}}>
+      {/* Chrome bar */}
+      <div style={{display:'flex',alignItems:'center',borderBottom:'1px solid #F0F0F0',background:'#fff'}}>
+        <div style={{width:170,borderRight:'1px solid #F0F0F0',height:42,display:'flex',alignItems:'center',padding:'0 12px',gap:8,background:'#FAFAFA',flexShrink:0}}>
+          <div style={{width:20,height:20,borderRadius:5,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center'}}><Logo size={9}/></div>
+          <span style={{fontSize:11,fontWeight:700,color:'#1A1410'}}>AskBiz</span>
+          <span style={{marginLeft:'auto',fontSize:8,padding:'1px 5px',borderRadius:9999,background:'rgba(201,122,68,.1)',color:'#C97A44',fontWeight:700}}>Monitor</span>
+        </div>
+        <div style={{display:'flex',overflowX:'auto',flex:1,scrollbarWidth:'none'}} className="pos-tabs">
+          {TABS.map(t=>(
+            <button key={t.id} onClick={()=>setTab(t.id)}
+              style={{padding:'0 12px',height:42,fontSize:10,fontWeight:tab===t.id?700:400,color:tab===t.id?'#C97A44':'#AAA',background:'none',border:'none',cursor:'pointer',borderBottom:tab===t.id?'2px solid #C97A44':'2px solid transparent',whiteSpace:'nowrap',fontFamily:'inherit',flexShrink:0}}>
+              {t.label}
             </button>
           ))}
         </div>
-        <div style={{ position:'relative' }}>
-          <button onClick={() => setShowCur(!showCur)}
-            style={{ padding:'4px 7px', fontSize:10, fontWeight:600, fontFamily:'inherit', background:C.ev, border:`1px solid ${C.b2}`, borderRadius:6, cursor:'pointer', color:C.tx2, display:'flex', alignItems:'center', gap:2 }}>
-            {sym} <span style={{ fontSize:7, opacity:.5 }}>▼</span>
+      </div>
+
+      {/* ── Overview ── */}
+      {tab==='overview'&&(
+        <div style={{padding:'16px 18px'}}>
+          <div style={{marginBottom:12}}>
+            <div style={{fontSize:14,fontWeight:700,color:'#1A1410',marginBottom:1}}>Good morning</div>
+            <div style={{fontSize:9,color:'#AAA'}}>Sunday, 14 June 2026</div>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1.5fr 1fr 1fr',gap:8,marginBottom:9}}>
+            <div style={{padding:'11px 13px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',display:'flex',alignItems:'center',gap:11}}>
+              <div style={{position:'relative',width:38,height:38,flexShrink:0}}>
+                <svg width="38" height="38" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="#F0F0F0" strokeWidth="3.5"/><circle cx="20" cy="20" r="16" fill="none" stroke="#C97A44" strokeWidth="3.5" strokeDasharray="72 100" strokeLinecap="round" transform="rotate(-90 20 20)"/></svg>
+                <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:'#1A1410'}}>72</div>
+              </div>
+              <div>
+                <div style={{fontSize:8,color:'#AAA',marginBottom:1}}>Health Score</div>
+                <div style={{fontSize:11,fontWeight:700,color:'#1A1410'}}>Good</div>
+                <div style={{fontSize:7,color:'#16a34a',fontWeight:600}}>▲ +3 this week</div>
+              </div>
+            </div>
+            {[{icon:'🚨',title:'Active Alerts',value:'2 flagged',color:'#fb923c'},{icon:'📈',title:'30-Day Trend',value:'▲ 34%',color:'#16a34a'}].map((c,i)=>(
+              <div key={i} style={{padding:'11px 13px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0'}}>
+                <div style={{fontSize:14,marginBottom:4}}>{c.icon}</div>
+                <div style={{fontSize:8,color:'#AAA',marginBottom:1}}>{c.title}</div>
+                <div style={{fontSize:11,fontWeight:700,color:c.color}}>{c.value}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',marginBottom:7}}>
+            <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
+              <span style={{fontSize:10}}>⏰</span><span style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>Daily Brief</span>
+              <span style={{fontSize:8,color:'#AAA',marginLeft:'auto'}}>Sun 14 June</span>
+            </div>
+            <p style={{fontSize:9,color:'#555',lineHeight:1.6,margin:0}}>Revenue is <strong>34% up</strong> on last week — driven by Wireless Earbuds Pro. Two alerts need attention: gross margin dropped from 45.6% → 32.1%, and 58% of products are low or out of stock.</p>
+          </div>
+          {['Gross margin dropped from 45.6% → 32.1%','58% of products are low or out of stock (42 of 73)'].map((a,i)=>(
+            <div key={i} style={{display:'flex',alignItems:'center',gap:7,padding:'6px 10px',borderRadius:7,background:'rgba(251,146,60,.07)',marginBottom:4}}>
+              <span style={{width:5,height:5,borderRadius:'50%',background:'#fb923c',display:'block',flexShrink:0}}/>
+              <span style={{fontSize:8,color:'#1A1410',flex:1}}>{a}</span>
+              <span style={{fontSize:7,color:'#C97A44',fontWeight:700,cursor:'pointer',flexShrink:0}}>View →</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── CFO ── */}
+      {tab==='cfo'&&(
+        <div style={{padding:'16px 18px'}}>
+          <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:12}}>📊 CFO Dashboard — This Week</div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:12}}>
+            {[{label:'Revenue',value:'£3,247',sub:'▲ 34% vs last week',c:'#16a34a'},{label:'Gross Profit',value:'£1,109',sub:'34.2% margin',c:'#C97A44'},{label:'Net Margin',value:'26.1%',sub:'▲ 2.1pp vs prev',c:'#6366f1'}].map((k,i)=>(
+              <div key={i} style={{padding:'10px 11px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0'}}>
+                <div style={{fontSize:8,color:'#AAA',marginBottom:3}}>{k.label}</div>
+                <div style={{fontSize:16,fontWeight:800,color:k.c,lineHeight:1}}>{k.value}</div>
+                <div style={{fontSize:7,color:'#AAA',marginTop:3}}>{k.sub}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',overflow:'hidden',marginBottom:10}}>
+            <div style={{padding:'8px 12px',background:'#FAFAFA',borderBottom:'1px solid #F5F5F5',fontSize:8,fontWeight:700,color:'#AAA',letterSpacing:'.06em'}}>P&L SUMMARY</div>
+            {[{label:'Revenue',value:'£3,247',indent:false},{label:'Cost of Goods',value:'−£2,138',indent:true,color:'#ef4444'},{label:'Gross Profit',value:'£1,109',indent:false,bold:true,color:'#16a34a'},{label:'Operating Expenses',value:'−£260',indent:true,color:'#ef4444'},{label:'Net Profit',value:'£849',indent:false,bold:true,color:'#16a34a'}].map((r,i)=>(
+              <div key={i} style={{display:'flex',justifyContent:'space-between',padding:`5px ${r.indent?'20px':'12px'} 5px 12px`,borderTop:i>0?'1px solid #F8F8F8':'none'}}>
+                <span style={{fontSize:9,color:r.bold?'#1A1410':'#666',fontWeight:r.bold?700:400}}>{r.label}</span>
+                <span style={{fontSize:9,fontWeight:r.bold?700:500,color:r.color||'#1A1410'}}>{r.value}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{display:'flex',gap:6}}>
+            {['View full P&L →','Cash flow →','Export PDF →'].map(a=>(
+              <span key={a} style={{fontSize:8,padding:'4px 10px',borderRadius:5,border:'1px solid #E5E5E5',color:'#C97A44',cursor:'pointer',fontWeight:600}}>{a}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Alerts ── */}
+      {tab==='alerts'&&(
+        <div style={{padding:'16px 18px'}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
+            <span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>🚨 Active Alerts</span>
+            <span style={{fontSize:7,padding:'2px 7px',borderRadius:9999,background:'rgba(251,146,60,.1)',color:'#fb923c',fontWeight:700}}>2 unread</span>
+          </div>
+          {[
+            {sev:'HIGH',icon:'📉',title:'Gross margin dropped sharply',body:'Margin fell from 45.6% → 32.1% this week. Likely cause: supplier cost increase on Wireless Earbuds Pro. Recommended action: review COGS or raise price.',color:'#ef4444',bg:'rgba(239,68,68,.05)',time:'2h ago'},
+            {sev:'HIGH',icon:'📦',title:'58% of products low or out of stock',body:'42 of 73 tracked products are below reorder threshold. Top affected: Earbuds Pro (0 units), Phone Stand (3 units), USB Hub (1 unit).',color:'#ef4444',bg:'rgba(239,68,68,.05)',time:'4h ago'},
+            {sev:'MED',icon:'📱',title:'TikTok: high saves, zero orders',body:'Wireless Pro Earbuds has 340 saves this week but 0 TikTok Shop orders. Add a limited-time offer to convert interest.',color:'#f59e0b',bg:'rgba(245,158,11,.04)',time:'Yesterday'},
+            {sev:'LOW',icon:'🔍',title:'Competitor price drop detected',body:'EliteGadgets reduced prices by 15% on 3 overlapping SKUs. Monitor conversion rate over the next 48h.',color:'#6b7280',bg:'rgba(107,114,128,.04)',time:'2d ago'},
+          ].map((a,i)=>(
+            <div key={i} style={{padding:'10px 12px',borderRadius:9,border:`1px solid ${a.color}22`,background:a.bg,marginBottom:7}}>
+              <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:5}}>
+                <span style={{fontSize:12}}>{a.icon}</span>
+                <span style={{fontSize:9,fontWeight:700,color:'#1A1410',flex:1}}>{a.title}</span>
+                {pill(a.sev,a.color,`${a.color}18`)}
+                <span style={{fontSize:7,color:'#AAA'}}>{a.time}</span>
+              </div>
+              <p style={{fontSize:8,color:'#555',lineHeight:1.5,margin:'0 0 6px'}}>{a.body}</p>
+              <div style={{display:'flex',gap:5}}>
+                <span style={{fontSize:7,padding:'2px 8px',borderRadius:4,border:'1px solid #E5E5E5',color:'#C97A44',cursor:'pointer',fontWeight:600}}>Take action →</span>
+                <span style={{fontSize:7,padding:'2px 8px',borderRadius:4,border:'1px solid #E5E5E5',color:'#888',cursor:'pointer'}}>Dismiss</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Decisions ── */}
+      {tab==='decisions'&&(
+        <div style={{padding:'16px 18px'}}>
+          <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:3}}>🧠 Decision Memory</div>
+          <div style={{fontSize:8,color:'#AAA',marginBottom:12}}>AskBiz remembers every decision you log. It tracks outcomes automatically and reminds you when to review.</div>
+          {[
+            {date:'23 May',action:'Raised price of Wireless Earbuds Pro by 8% to recover margin',outcome:'+£340/mo revenue',status:'positive',review:'Due for review 23 Jun'},
+            {date:'15 May',action:'Paused TikTok ads for "Cable Kit" — ROAS below 1.2x',outcome:'Saved £200/mo ad spend',status:'positive',review:'Review if ROAS improves'},
+            {date:'3 May',action:'Ordered 500 extra units of USB Hub ahead of Q2',outcome:'Stock available — margin held',status:'positive',review:'No action needed'},
+            {date:'18 Apr',action:'Switched fulfilment to Royal Mail for orders under £20',outcome:'Awaiting 30-day data',status:'pending',review:'Review due 18 May'},
+          ].map((d,i)=>(
+            <div key={i} style={{padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',marginBottom:7}}>
+              <div style={{display:'flex',alignItems:'flex-start',gap:7,marginBottom:5}}>
+                <span style={{fontSize:7,padding:'2px 6px',borderRadius:4,background:'#F5F5F5',color:'#888',fontWeight:700,flexShrink:0,marginTop:1}}>{d.date}</span>
+                <span style={{fontSize:9,color:'#1A1410',fontWeight:500,flex:1,lineHeight:1.4}}>{d.action}</span>
+              </div>
+              <div style={{display:'flex',alignItems:'center',gap:6}}>
+                {pill(d.outcome, d.status==='positive'?'#16a34a':'#f59e0b', d.status==='positive'?'rgba(22,163,74,.08)':'rgba(245,158,11,.08)')}
+                <span style={{fontSize:7,color:'#AAA'}}>{d.review}</span>
+              </div>
+            </div>
+          ))}
+          <div style={{textAlign:'center',marginTop:6}}>
+            <span style={{fontSize:8,color:'#C97A44',fontWeight:600,cursor:'pointer'}}>+ Log a new decision</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Team ── */}
+      {tab==='team'&&(
+        <div style={{padding:'16px 18px'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+            <div><span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>👥 Team</span><span style={{fontSize:8,color:'#AAA',marginLeft:6}}>2 of 5 seats used</span></div>
+            <span style={{fontSize:8,padding:'4px 10px',borderRadius:5,background:'#C97A44',color:'#fff',fontWeight:700,cursor:'pointer'}}>+ Invite</span>
+          </div>
+          {[
+            {name:'You (Admin)',email:'owner@askbiz.co',role:'Owner',last:'Now',avatar:'YO',active:true},
+            {name:'Sarah M.',email:'sarah@myshop.co',role:'Analyst',last:'2h ago',avatar:'SM',active:true},
+          ].map((m,i)=>(
+            <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',marginBottom:6}}>
+              <div style={{width:30,height:30,borderRadius:'50%',background:'#F0EDE8',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'#C97A44',flexShrink:0,position:'relative'}}>
+                {m.avatar}
+                {m.active&&<span style={{position:'absolute',bottom:0,right:0,width:7,height:7,borderRadius:'50%',background:'#16a34a',border:'1.5px solid #fff'}}/>}
+              </div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>{m.name}</div>
+                <div style={{fontSize:8,color:'#AAA'}}>{m.email} · {m.role} · Active {m.last}</div>
+              </div>
+              {pill(m.role,'#C97A44','rgba(201,122,68,.08)')}
+            </div>
+          ))}
+          <div style={{padding:'10px 12px',borderRadius:9,background:'rgba(201,122,68,.04)',border:'1px dashed rgba(201,122,68,.2)',textAlign:'center'}}>
+            <div style={{fontSize:9,color:'#C97A44',fontWeight:600,marginBottom:2}}>Invite your accountant or business partner</div>
+            <div style={{fontSize:8,color:'#AAA'}}>Each member gets their own AI context · Role-based access</div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Ask AI ── */}
+      {tab==='askai'&&(
+        <div style={{padding:'16px 18px'}}>
+          <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:10}}>💬 Ask your business anything</div>
+          {[
+            {q:'What is my best margin product this week?',a:'Your best margin product is Wireless Earbuds Pro at 38.4% gross margin — generating £847 profit on £2,203 revenue this week. Margin is up 2.1pp vs last week.'},
+            {q:'Which products should I restock first?',a:'Prioritise: (1) Wireless Earbuds Pro — 0 units, 23 pending orders. (2) USB Hub — 1 unit, selling 8/day. (3) Phone Stand — 3 units, 5-day cover remaining.'},
+          ].map((qa,i)=>(
+            <div key={i} style={{marginBottom:10}}>
+              <div style={{display:'flex',gap:7,marginBottom:5}}>
+                <div style={{width:20,height:20,borderRadius:'50%',background:'#F0EDE8',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'#C97A44',flexShrink:0}}>YO</div>
+                <div style={{padding:'7px 10px',background:'#F0EDE8',borderRadius:'8px 8px 8px 2px',fontSize:9,color:'#1A1410',maxWidth:'85%'}}>{qa.q}</div>
+              </div>
+              <div style={{display:'flex',gap:7}}>
+                <div style={{width:20,height:20,borderRadius:5,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Logo size={9}/></div>
+                <div style={{padding:'7px 10px',background:'#fff',border:'1px solid #F0F0F0',borderRadius:'8px 8px 2px 8px',fontSize:9,color:'#333',lineHeight:1.5,maxWidth:'85%'}}>{qa.a}</div>
+              </div>
+            </div>
+          ))}
+          <div style={{display:'flex',gap:6,marginTop:8}}>
+            <input readOnly value={askQ} onChange={e=>setAskQ(e.target.value)} placeholder="Ask a question about your business…" style={{flex:1,height:32,padding:'0 10px',fontSize:9,border:'1px solid #E5E5E5',borderRadius:7,background:'#FAFAFA',color:'#1A1410',fontFamily:'inherit',outline:'none'}}/>
+            <span style={{fontSize:9,padding:'0 12px',height:32,display:'flex',alignItems:'center',borderRadius:7,background:'#C97A44',color:'#fff',fontWeight:700,cursor:'pointer',flexShrink:0}}>Ask →</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Ships ── */}
+      {tab==='ships'&&(
+        <div style={{padding:'16px 18px'}}>
+          <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:12}}>🚢 Shipments & Orders</div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:12}}>
+            {[{label:'In transit',value:'14',color:'#6366f1'},{label:'Delivered today',value:'7',color:'#16a34a'},{label:'Delayed',value:'2',color:'#ef4444'}].map((k,i)=>(
+              <div key={i} style={{padding:'9px 10px',background:'#fff',borderRadius:8,border:'1px solid #F0F0F0',textAlign:'center'}}>
+                <div style={{fontSize:14,fontWeight:800,color:k.color,marginBottom:2}}>{k.value}</div>
+                <div style={{fontSize:7,color:'#AAA'}}>{k.label}</div>
+              </div>
+            ))}
+          </div>
+          {[
+            {ref:'#UK-4421',item:'Wireless Earbuds Pro ×10',carrier:'Royal Mail',status:'In transit',eta:'Tomorrow',color:'#6366f1'},
+            {ref:'#UK-4420',item:'USB Hub ×50',carrier:'DPD',status:'Delivered',eta:'Today 10:31',color:'#16a34a'},
+            {ref:'#UK-4419',item:'Phone Stand ×25',carrier:'Hermes',status:'Delayed',eta:'ETA unknown',color:'#ef4444'},
+            {ref:'#UK-4418',item:'Cable Kit ×100',carrier:'Royal Mail',status:'In transit',eta:'Wed 18 Jun',color:'#6366f1'},
+          ].map((s,i)=>(
+            <div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:'8px 0',borderTop:i>0?'1px solid #F5F5F5':'none'}}>
+              <span style={{fontSize:7,color:'#888',fontWeight:700,flexShrink:0,fontFamily:'monospace'}}>{s.ref}</span>
+              <div style={{flex:1}}>
+                <div style={{fontSize:9,fontWeight:600,color:'#1A1410'}}>{s.item}</div>
+                <div style={{fontSize:7,color:'#AAA'}}>{s.carrier} · {s.eta}</div>
+              </div>
+              {pill(s.status,s.color,`${s.color}18`)}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Memory ── */}
+      {tab==='memory'&&(
+        <div style={{padding:'16px 18px'}}>
+          <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:3}}>🧩 Business Memory</div>
+          <div style={{fontSize:8,color:'#AAA',marginBottom:12}}>Facts and context AskBiz has learned about your business. It uses these to give more relevant answers.</div>
+          {[
+            {icon:'🏭',category:'Suppliers',fact:'Primary supplier for Earbuds Pro is ShenTech Ltd — 45-day lead time. Backup: ElectroHub (60 days, 8% higher cost).'},
+            {icon:'📦',category:'Products',fact:'Top 3 by revenue: (1) Wireless Earbuds Pro, (2) USB-C Hub, (3) Phone Stand. Earbuds Pro drives 67% of weekly revenue.'},
+            {icon:'🎯',category:'Goals',fact:'Target 35% gross margin across all SKUs by Q3. Current: 34.2%. Gap: 0.8pp.'},
+            {icon:'📣',category:'Channels',fact:'Primary sales: eBay (52%), Shopify (31%), Stripe direct (17%). TikTok Shop launched May 2026 — early data.'},
+            {icon:'💸',category:'Costs',fact:'Fulfilment: Royal Mail for <£20 orders, DPD for >£20. Storage: £340/month at Fulfilment Centre East.'},
+          ].map((m,i)=>(
+            <div key={i} style={{display:'flex',gap:9,padding:'9px 0',borderTop:i>0?'1px solid #F5F5F5':'none'}}>
+              <div style={{width:26,height:26,borderRadius:6,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,flexShrink:0}}>{m.icon}</div>
+              <div>
+                <div style={{fontSize:8,fontWeight:700,color:'#C97A44',marginBottom:2}}>{m.category}</div>
+                <div style={{fontSize:8,color:'#555',lineHeight:1.5}}>{m.fact}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Market ── */}
+      {tab==='market'&&(
+        <div style={{padding:'16px 18px'}}>
+          <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:12}}>🌍 Market Intelligence</div>
+          <div style={{background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',marginBottom:10,overflow:'hidden'}}>
+            <div style={{padding:'8px 12px',background:'#FAFAFA',borderBottom:'1px solid #F5F5F5',fontSize:8,fontWeight:700,color:'#AAA',letterSpacing:'.06em'}}>COMPETITOR WATCH</div>
+            {[
+              {name:'EliteGadgets',sku:'Bluetooth Earbuds X3',change:'Price ↓15%',when:'2d ago',impact:'High',color:'#ef4444'},
+              {name:'TechDen UK',sku:'USB-C 7-in-1 Hub',change:'New listing',when:'5d ago',impact:'Med',color:'#f59e0b'},
+              {name:'GadgetHub',sku:'Wireless Charger Pro',change:'Out of stock',when:'Today',impact:'Opportunity',color:'#16a34a'},
+            ].map((c,i)=>(
+              <div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:'8px 12px',borderTop:i>0?'1px solid #F8F8F8':'none'}}>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>{c.name}</div>
+                  <div style={{fontSize:7,color:'#AAA'}}>{c.sku} · {c.when}</div>
+                </div>
+                <span style={{fontSize:8,color:c.color,fontWeight:600}}>{c.change}</span>
+                {pill(c.impact,c.color,`${c.color}18`)}
+              </div>
+            ))}
+          </div>
+          <div style={{background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',overflow:'hidden'}}>
+            <div style={{padding:'8px 12px',background:'#FAFAFA',borderBottom:'1px solid #F5F5F5',fontSize:8,fontWeight:700,color:'#AAA',letterSpacing:'.06em'}}>DEMAND SIGNALS (TIKTOK SAVES)</div>
+            {[
+              {product:'Wireless Earbuds Pro',saves:'340',orders:'0',signal:'🔥 High demand — add offer'},
+              {product:'Phone Stand Flex',saves:'87',orders:'12',signal:'✅ Converting well'},
+              {product:'USB Hub 7-in-1',saves:'210',orders:'3',signal:'⚠️ Saves not converting'},
+            ].map((d,i)=>(
+              <div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:'8px 12px',borderTop:i>0?'1px solid #F8F8F8':'none'}}>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:9,fontWeight:600,color:'#1A1410'}}>{d.product}</div>
+                  <div style={{fontSize:7,color:'#AAA'}}>{d.saves} saves · {d.orders} orders</div>
+                </div>
+                <span style={{fontSize:7,color:'#555'}}>{d.signal}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Sources / Connect UI replica ───────────────────────────────────────────────
+function SourcesUIReplica() {
+  return (
+    <div style={{background:'#FAFAFA',borderRadius:16,border:'1px solid #E5E5E5',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.09)',width:'100%',fontFamily:'system-ui,-apple-system,sans-serif'}}>
+      <div style={{padding:'12px 18px',borderBottom:'1px solid #F0F0F0',background:'#fff',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div>
+          <span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>CONNECT A PLATFORM</span>
+          <span style={{fontSize:9,color:'#AAA',marginLeft:6}}>— 30 integrations</span>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:5,padding:'5px 10px',borderRadius:6,border:'1px solid #E5E5E5',background:'#FAFAFA'}}>
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#AAA" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <span style={{fontSize:9,color:'#AAA'}}>Search integrations...</span>
+        </div>
+      </div>
+      <div style={{padding:'7px 18px 4px',background:'rgba(34,197,94,.04)',borderBottom:'1px solid rgba(34,197,94,.1)',display:'flex',alignItems:'center',gap:6}}>
+        <span style={{fontSize:9,color:'#16a34a',fontWeight:700}}>● CONNECTED (2)</span>
+        <span style={{fontSize:8,color:'#AAA'}}>Stripe · eBay Store — synced 1d ago</span>
+      </div>
+      <div style={{maxHeight:300,overflowY:'auto'}}>
+        {[
+          {cat:'E-COMMERCE',items:[
+            {icon:'🛒',name:'Shopify',desc:'Orders, products, inventory, customers',status:'connect'},
+            {icon:'📦',name:'Amazon FBA',desc:'FBA orders, inventory, fees, returns',status:'connect'},
+            {icon:'🛍️',name:'eBay Store',desc:'Listings, orders, seller metrics, fees',status:'connected'},
+            {icon:'🧵',name:'Etsy',desc:'Shop stats, orders, listings, revenue',status:'connect'},
+            {icon:'📱',name:'TikTok Shop',desc:'Orders, GMV, creator performance',status:'connect'},
+          ]},
+          {cat:'ACCOUNTING',items:[
+            {icon:'📒',name:'QuickBooks',desc:'P&L, invoices, expenses, cash flow',status:'connect'},
+            {icon:'🔵',name:'Xero',desc:'Accounts, bank feeds, payroll',status:'connect'},
+            {icon:'💳',name:'Stripe',desc:'Payments, disputes, subscriptions',status:'connected'},
+          ]},
+        ].map(section=>(
+          <div key={section.cat}>
+            <div style={{padding:'7px 18px 3px',fontSize:8,fontWeight:700,color:'#BBB',letterSpacing:'.1em',background:'#FAFAFA'}}>{section.cat}</div>
+            {section.items.map((item,i)=>(
+              <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 18px',borderTop:'1px solid #F5F5F5',background:item.status==='connected'?'rgba(34,197,94,.03)':'#fff'}}>
+                <div style={{width:26,height:26,borderRadius:6,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,flexShrink:0}}>{item.icon}</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:10,fontWeight:600,color:'#1A1410',marginBottom:1}}>{item.name}</div>
+                  <div style={{fontSize:8,color:'#AAA',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.desc}</div>
+                </div>
+                <span style={{fontSize:8,fontWeight:700,padding:'3px 9px',borderRadius:5,background:item.status==='connected'?'rgba(34,197,94,.1)':'rgba(201,122,68,.1)',color:item.status==='connected'?'#16a34a':'#C97A44',border:`1px solid ${item.status==='connected'?'rgba(34,197,94,.2)':'rgba(201,122,68,.2)'}`,whiteSpace:'nowrap',flexShrink:0,cursor:'pointer'}}>
+                  {item.status==='connected'?'CONNECTED':'Connect'}
+                </span>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── PoS Register UI replica ───────────────────────────────────────────────────
+// ── PoS full tabbed showcase ──────────────────────────────────────────────────
+function PosShowcase() {
+  type TabId = 'overview'|'operations'|'staff'|'branches'|'map'|'audit'|'payments'|'logistics'
+  const [tab, setTab] = useState<TabId>('overview')
+  const TABS:{id:TabId;label:string}[] = [
+    {id:'overview',label:'Overview'},
+    {id:'operations',label:'📦 Operations'},
+    {id:'staff',label:'Staff'},
+    {id:'branches',label:'Branches'},
+    {id:'map',label:'🗺️ Map'},
+    {id:'audit',label:'Audit'},
+    {id:'payments',label:'Payments'},
+    {id:'logistics',label:'🚛 Logistics'},
+  ]
+  return (
+    <div style={{background:'#FAFAFA',borderRadius:16,border:'1px solid #E5E5E5',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.09)',width:'100%',fontFamily:'system-ui,-apple-system,sans-serif'}}>
+      {/* App chrome */}
+      <div style={{display:'flex',alignItems:'center',background:'#fff',borderBottom:'1px solid #F0F0F0',minHeight:44}}>
+        <div style={{width:180,borderRight:'1px solid #F0F0F0',height:44,display:'flex',alignItems:'center',padding:'0 14px',gap:8,background:'#FAFAFA',flexShrink:0}}>
+          <div style={{width:20,height:20,borderRadius:5,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center'}}><Logo size={9}/></div>
+          <span style={{fontSize:11,fontWeight:700,color:'#1A1410'}}>AskBiz</span>
+          <span style={{marginLeft:'auto',fontSize:8,padding:'1px 6px',borderRadius:9999,background:'#FDEEE0',color:'#C97A44',fontWeight:700}}>POS</span>
+        </div>
+        <div className="pos-tabs-wrap" style={{flex:1,overflow:'hidden'}}>
+          <div className="pos-tabs" style={{display:'flex',overflowX:'auto'}}>
+            {TABS.map(t=>(
+              <button key={t.id} onClick={()=>setTab(t.id)}
+                style={{padding:'0 13px',height:44,fontSize:10.5,fontWeight:tab===t.id?700:400,color:tab===t.id?'#1A1410':'#AAA',background:'none',border:'none',cursor:'pointer',borderBottom:tab===t.id?'2px solid #C97A44':'2px solid transparent',whiteSpace:'nowrap',fontFamily:'inherit',flexShrink:0}}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{display:'flex',gap:5,padding:'0 10px',flexShrink:0}}>
+          <span style={{fontSize:8,padding:'3px 7px',border:'1px solid #E5E5E5',borderRadius:5,color:'#888',background:'#FAFAFA',whiteSpace:'nowrap'}}>All Branches ▾</span>
+          <span style={{fontSize:8,padding:'3px 7px',border:'1px solid #E5E5E5',borderRadius:5,color:'#888',background:'#FAFAFA',whiteSpace:'nowrap'}}>All Sectors ▾</span>
+        </div>
+      </div>
+
+      {/* Tab content */}
+      {tab==='overview' && (
+        <div style={{padding:'16px 18px'}}>
+          {/* Date filters */}
+          <div style={{display:'flex',gap:5,marginBottom:14,flexWrap:'wrap'}}>
+            {['Today','Yesterday','Last 7 days','Last 30 days'].map((d,i)=>(
+              <span key={d} style={{fontSize:9,padding:'4px 10px',borderRadius:5,border:`1px solid ${i===0?'#C97A44':'#E5E5E5'}`,background:i===0?'rgba(201,122,68,.08)':'#fff',color:i===0?'#C97A44':'#888',cursor:'pointer',fontWeight:i===0?700:400}}>{d}</span>
+            ))}
+          </div>
+          {/* Top row: 4 KPI cards */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8,marginBottom:10}}>
+            {[
+              {label:'Revenue',value:'£3,247',sub:'▲ 34% vs prev',color:'#16a34a'},
+              {label:'Sales',value:'143',sub:'▲ 12% vs prev',color:'#16a34a'},
+              {label:'Refunds',value:'3',sub:'▼ 2 vs prev',color:'#f87171'},
+              {label:'Low stock',value:'42',sub:'products',color:'#fb923c'},
+            ].map((k,i)=>(
+              <div key={i} style={{padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0'}}>
+                <div style={{fontSize:9,color:'#AAA',marginBottom:5}}>{k.label}</div>
+                <div style={{fontSize:18,fontWeight:800,color:k.color,marginBottom:3}}>{k.value}</div>
+                <div style={{fontSize:8,color:'#AAA'}}>{k.sub}</div>
+              </div>
+            ))}
+          </div>
+          {/* Second row: 3 cards */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:10}}>
+            {[
+              {label:'Gross profit',value:'£1,109',color:'#16a34a'},
+              {label:'Margin',value:'34.2%',color:'#C97A44'},
+              {label:'Avg sale',value:'£22.71',color:'#1A1410'},
+            ].map((k,i)=>(
+              <div key={i} style={{padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0'}}>
+                <div style={{fontSize:9,color:'#AAA',marginBottom:5}}>{k.label}</div>
+                <div style={{fontSize:16,fontWeight:800,color:k.color}}>{k.value}</div>
+              </div>
+            ))}
+          </div>
+          {/* Quick action pills */}
+          <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:10}}>
+            {['📊 Analyse today','⭐ Top products','👤 Staff ranking','📦 Stock alerts'].map(a=>(
+              <span key={a} style={{fontSize:9,padding:'4px 10px',borderRadius:5,border:'1px solid #E5E5E5',color:'#555',background:'#fff',cursor:'pointer'}}>{a}</span>
+            ))}
+          </div>
+          {/* Staff performance */}
+          <div style={{background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',padding:'10px 12px'}}>
+            <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:8}}>Staff performance <span style={{color:'#C97A44',fontWeight:400,cursor:'pointer'}}>View all →</span></div>
+            {[{name:'Phidisia',role:'Cashier · Retail',sales:'KSh 1.8K',tx:6},{name:'James',role:'Inventory · Retail',sales:'KSh 480',tx:2}].map((s,i)=>(
+              <div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:'6px 0',borderTop:i>0?'1px solid #F5F5F5':'none'}}>
+                <div style={{width:24,height:24,borderRadius:'50%',background:'#F0F0F0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'#555',flexShrink:0}}>{s.name[0]}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:10,fontWeight:600,color:'#1A1410'}}>{s.name}</div>
+                  <div style={{fontSize:8,color:'#AAA'}}>{s.role}</div>
+                </div>
+                <div style={{textAlign:'right'}}>
+                  <div style={{fontSize:10,fontWeight:700,color:'#16a34a'}}>{s.sales}</div>
+                  <div style={{fontSize:8,color:'#AAA'}}>{s.tx} transactions</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tab==='operations' && (
+        <div style={{padding:'14px 18px'}}>
+          {/* Sector tabs */}
+          <div style={{display:'flex',gap:5,marginBottom:14,flexWrap:'wrap'}}>
+            {[{icon:'🍽️',label:'Restaurant'},{icon:'🔧',label:'Repair'},{icon:'💈',label:'Salon'},{icon:'📦',label:'Retail',active:true},{icon:'🏭',label:'Factory'},{icon:'🚛',label:'Logistics'}].map(s=>(
+              <span key={s.label} style={{fontSize:9,padding:'4px 10px',borderRadius:5,border:`1px solid ${s.active?'#C97A44':'#E5E5E5'}`,background:s.active?'rgba(201,122,68,.08)':'#fff',color:s.active?'#C97A44':'#888',cursor:'pointer',fontWeight:s.active?700:400,display:'flex',alignItems:'center',gap:3}}>
+                <span>{s.icon}</span>{s.label}
+              </span>
+            ))}
+          </div>
+          <div style={{fontSize:11,fontWeight:700,color:'#1A1410',marginBottom:3}}>📦 Retail Operations</div>
+          <div style={{fontSize:9,color:'#AAA',marginBottom:12}}>Stock management, sales tracking, and supplier orders.</div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:7}}>
+            {[
+              {icon:'📦',label:'Inventory',desc:'Stock levels & products',badge:'37',bdgColor:'#ef4444'},
+              {icon:'🛒',label:'Sales',desc:'Revenue & transactions'},
+              {icon:'👥',label:'Customers',desc:'Profiles, history & segments'},
+              {icon:'🏷️',label:'Promotions',desc:'Discounts, coupons & deals'},
+              {icon:'⭐',label:'Loyalty',desc:'Points, rewards & tiers'},
+              {icon:'↩️',label:'Returns',desc:'Refunds, exchanges & credits'},
+              {icon:'📊',label:'Reports',desc:'Sales, margins & insights'},
+              {icon:'📋',label:'Purchase Orders',desc:'Supplier orders & receiving',soon:true},
+              {icon:'🎁',label:'Gift Cards',desc:'Issue, redeem & balances',soon:true},
+              {icon:'👤',label:'Staff',desc:'Cashiers & permissions'},
+              {icon:'🏪',label:'Branches',desc:'Locations & stock by branch'},
+              {icon:'🗺️',label:'Map',desc:'Branch locations on map'},
+              {icon:'🔗',label:'Integrations',desc:'Xero, payments & more'},
+              {icon:'🔍',label:'Audit',desc:'Transaction & change log'},
+            ].map((m,i)=>(
+              <div key={i} style={{padding:'10px 10px',borderRadius:9,border:'1px solid #F0F0F0',background:'#fff',cursor:'pointer',position:'relative'}}>
+                {m.badge&&<span style={{position:'absolute',top:6,right:6,fontSize:7,fontWeight:700,background:'#ef4444',color:'#fff',borderRadius:9999,padding:'1px 5px'}}>{m.badge}</span>}
+                {m.soon&&<span style={{position:'absolute',top:6,right:6,fontSize:7,fontWeight:700,background:'#F0F0F0',color:'#888',borderRadius:9999,padding:'1px 5px'}}>Soon</span>}
+                <div style={{fontSize:16,marginBottom:5}}>{m.icon}</div>
+                <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:2}}>{m.label}</div>
+                <div style={{fontSize:7,color:'#AAA',lineHeight:1.3}}>{m.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tab==='staff' && (
+        <div style={{padding:'16px 18px'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+            <div style={{fontSize:10,color:'#888'}}>2 of 2 seats used · <span style={{color:'#C97A44',fontWeight:600,cursor:'pointer'}}>Add seats →</span></div>
+            <span style={{fontSize:9,padding:'5px 12px',borderRadius:5,background:'#C97A44',color:'#fff',fontWeight:700,cursor:'pointer'}}>+ Add staff</span>
+          </div>
+          {[
+            {name:'Phidisia',role:'cashier',sector:'retail',branch:'town',phone:'0797446343',pin:true,last:'13/06/2026'},
+            {name:'James',role:'inventory',sector:'retail',branch:'town',phone:'—',pin:true,last:'10/06/2026'},
+          ].map((s,i)=>(
+            <div key={i} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',marginBottom:6}}>
+              <div style={{width:32,height:32,borderRadius:'50%',background:'#F0EDE8',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'#C97A44',flexShrink:0}}>{s.name[0]}</div>
+              <div style={{flex:1}}>
+                <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:2}}>
+                  <span style={{fontSize:11,fontWeight:700,color:'#1A1410'}}>{s.name}</span>
+                  <span style={{fontSize:8,padding:'1px 6px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:600}}>{s.sector}</span>
+                </div>
+                <div style={{fontSize:9,color:'#AAA'}}>{s.role} · {s.branch}{s.phone!=='—'?` · ${s.phone}`:''} · PIN {s.pin?'set':'not set'} · Last login {s.last}</div>
+              </div>
+              <div style={{display:'flex',gap:5}}>
+                <span style={{fontSize:9,padding:'4px 10px',borderRadius:5,border:'1px solid #E5E5E5',color:'#555',cursor:'pointer'}}>Edit</span>
+                <span style={{fontSize:9,padding:'4px 10px',borderRadius:5,border:'1px solid #fca5a5',color:'#ef4444',cursor:'pointer'}}>Deactivate</span>
+              </div>
+            </div>
+          ))}
+          <div style={{marginTop:12,padding:'10px 12px',borderRadius:9,background:'rgba(201,122,68,.04)',border:'1px dashed rgba(201,122,68,.2)',textAlign:'center'}}>
+            <div style={{fontSize:10,color:'#C97A44',fontWeight:600,marginBottom:2}}>Add more cashiers & inventory staff</div>
+            <div style={{fontSize:9,color:'#AAA'}}>Each seat from £5/month · Role-based PIN access</div>
+          </div>
+        </div>
+      )}
+
+      {tab==='payments' && (
+        <div style={{padding:'16px 18px'}}>
+          <div style={{fontSize:11,fontWeight:700,color:'#1A1410',marginBottom:3}}>💳 Payment Methods</div>
+          <div style={{fontSize:9,color:'#AAA',marginBottom:12}}>Configure payment providers and enable customers to pay via Paystack or Stripe</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:14}}>
+            {[
+              {name:'Paystack',desc:'KE · Card & mobile payments active',color:'#059669',bg:'rgba(5,150,105,.05)',bd:'rgba(5,150,105,.2)'},
+              {name:'Stripe',desc:'Apple Pay · Google Pay · Cards active',color:'#6366f1',bg:'rgba(99,102,241,.05)',bd:'rgba(99,102,241,.2)'},
+            ].map((p,i)=>(
+              <div key={i} style={{padding:'10px 13px',borderRadius:9,background:p.bg,border:`1px solid ${p.bd}`,display:'flex',alignItems:'center',gap:9}}>
+                <div style={{width:28,height:28,borderRadius:6,background:p.bg,border:`1px solid ${p.bd}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,flexShrink:0}}>
+                  {i===0?'💳':'💜'}
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:2}}>
+                    <span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>{p.name}</span>
+                    <span style={{width:5,height:5,borderRadius:'50%',background:p.color,display:'inline-block'}}/>
+                    <span style={{fontSize:8,color:p.color,fontWeight:600}}>Active</span>
+                  </div>
+                  <div style={{fontSize:8,color:'#AAA'}}>{p.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+            <span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>Received Payments</span>
+            <span style={{fontSize:8,padding:'2px 7px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:700}}>6 received · KSh 2.0K</span>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:7,marginBottom:12}}>
+            {[{label:'RECEIVED',value:'6',sub:'payments'},{label:'TOTAL',value:'KSh 2.0K',sub:'collected'},{label:'AVG',value:'KSh 337',sub:'per payment'}].map((k,i)=>(
+              <div key={i} style={{padding:'8px 10px',background:'#fff',borderRadius:8,border:'1px solid #F0F0F0',textAlign:'center'}}>
+                <div style={{fontSize:7,color:'#AAA',letterSpacing:'.08em',marginBottom:3}}>{k.label}</div>
+                <div style={{fontSize:13,fontWeight:800,color:'#16a34a'}}>{k.value}</div>
+                <div style={{fontSize:7,color:'#AAA'}}>{k.sub}</div>
+              </div>
+            ))}
+          </div>
+          {[
+            {name:'+254722173771',method:'Mpesa · paystack',time:'17h ago',ref:'#6255025614',amount:'KSh 1.8K'},
+            {name:'Customer',method:'Card · stripe',time:'3d ago',ref:'',amount:'KSh 100'},
+            {name:'+254713826241',method:'Mpesa · paystack',time:'5d ago',ref:'#6237054796',amount:'KSh 24'},
+          ].map((t,i)=>(
+            <div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:'8px 0',borderTop:'1px solid #F5F5F5'}}>
+              <div style={{width:22,height:22,borderRadius:5,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,flexShrink:0}}>📱</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:10,fontWeight:600,color:'#1A1410'}}>{t.name}</div>
+                <div style={{fontSize:8,color:'#AAA'}}>{t.method} · {t.time}{t.ref?` · ${t.ref}`:''}</div>
+              </div>
+              <span style={{fontSize:10,fontWeight:700,color:'#16a34a'}}>{t.amount}</span>
+              <span style={{fontSize:7,padding:'2px 7px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:700}}>Received</span>
+            </div>
+          ))}
+          {/* Payment Recovery */}
+          <div style={{marginTop:16,borderRadius:9,border:'1px solid #F0F0F0',background:'#fff',overflow:'hidden'}}>
+            <div style={{padding:'10px 14px',borderBottom:'1px solid #F5F5F5',display:'flex',alignItems:'center',gap:8}}>
+              <div style={{width:3,height:14,borderRadius:9999,background:'#C97A44'}}/>
+              <span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>Payment Recovery</span>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:0}}>
+              {[{label:'FAILED',value:'0',sub:'KSh 0',color:'#ef4444'},{label:'RECOVERED',value:'0',sub:'KSh 0',color:'#16a34a'},{label:'RECOVERY RATE',value:'0%',sub:'of failed payments',color:'#888'},{label:'PENDING RETRY',value:'0',sub:'in queue',color:'#f59e0b'}].map((k,i)=>(
+                <div key={i} style={{padding:'10px 0',textAlign:'center',borderRight:i<3?'1px solid #F5F5F5':'none'}}>
+                  <div style={{fontSize:7,color:'#AAA',letterSpacing:'.06em',marginBottom:4}}>{k.label}</div>
+                  <div style={{fontSize:16,fontWeight:800,color:k.color}}>{k.value}</div>
+                  <div style={{fontSize:7,color:'#AAA'}}>{k.sub}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{padding:'8px 14px',borderTop:'1px solid #F5F5F5',display:'flex',alignItems:'center',gap:8}}>
+              <span style={{fontSize:8,color:'#888'}}>Auto-retry:</span>
+              <span style={{fontSize:8,padding:'2px 8px',borderRadius:5,border:'1px solid #E5E5E5',color:'#555',background:'#FAFAFA'}}>Standard — Retry after 4h, 24h, 72h ▾</span>
+            </div>
+            <div style={{padding:'8px 14px 10px',borderTop:'1px solid #F5F5F5',display:'flex',gap:5,flexWrap:'wrap'}}>
+              {['All (0)','Failed (0)','Retrying (0)','Recovered (0)','Abandoned (0)'].map((f,i)=>(
+                <span key={f} style={{fontSize:8,padding:'3px 9px',borderRadius:5,border:`1px solid ${i===0?'#C97A44':'#E5E5E5'}`,background:i===0?'rgba(201,122,68,.06)':'transparent',color:i===0?'#C97A44':'#888',cursor:'pointer'}}>{f}</span>
+              ))}
+            </div>
+            <div style={{padding:'24px 14px',textAlign:'center',borderTop:'1px solid #F5F5F5'}}>
+              <div style={{width:28,height:28,borderRadius:'50%',background:'rgba(34,197,94,.1)',border:'2px solid #16a34a',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 8px',fontSize:14}}>✓</div>
+              <div style={{fontSize:11,fontWeight:700,color:'#16a34a',marginBottom:3}}>No failed payments</div>
+              <div style={{fontSize:9,color:'#AAA'}}>All payments are processing successfully. Failed payments will appear here automatically for recovery.</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab==='branches' && (
+        <div style={{padding:'16px 18px'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+            <div style={{fontSize:10,color:'#888'}}>1 branch active</div>
+            <span style={{fontSize:9,padding:'5px 12px',borderRadius:5,background:'#C97A44',color:'#fff',fontWeight:700,cursor:'pointer'}}>+ Add branch</span>
+          </div>
+          <div style={{background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',padding:'12px 14px',marginBottom:8}}>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <div style={{width:32,height:32,borderRadius:7,background:'rgba(201,122,68,.08)',border:'1px solid rgba(201,122,68,.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,flexShrink:0}}>🏪</div>
+              <div style={{flex:1}}>
+                <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:2}}>
+                  <span style={{fontSize:11,fontWeight:700,color:'#1A1410'}}>Town Branch</span>
+                  <span style={{fontSize:8,padding:'1px 6px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:600}}>Active</span>
+                  <span style={{fontSize:8,padding:'1px 6px',borderRadius:9999,background:'rgba(201,122,68,.08)',color:'#C97A44',fontWeight:600}}>Main</span>
+                </div>
+                <div style={{fontSize:9,color:'#AAA'}}>Nairobi, Kenya · 2 staff · 37 products in stock</div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontSize:11,fontWeight:700,color:'#16a34a'}}>KSh 2.0K</div>
+                <div style={{fontSize:8,color:'#AAA'}}>revenue today</div>
+              </div>
+            </div>
+            <div style={{marginTop:10,display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6}}>
+              {[{label:'Sales today',value:'6'},{label:'Low stock',value:'37',color:'#ef4444'},{label:'Avg sale',value:'KSh 337'}].map((s,i)=>(
+                <div key={i} style={{padding:'6px 8px',background:'#FAFAFA',borderRadius:6,textAlign:'center'}}>
+                  <div style={{fontSize:7,color:'#AAA',marginBottom:2}}>{s.label}</div>
+                  <div style={{fontSize:11,fontWeight:700,color:s.color||'#1A1410'}}>{s.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{padding:'10px 12px',borderRadius:9,background:'rgba(201,122,68,.04)',border:'1px dashed rgba(201,122,68,.2)',textAlign:'center'}}>
+            <div style={{fontSize:10,color:'#C97A44',fontWeight:600,marginBottom:2}}>Expand to more locations</div>
+            <div style={{fontSize:9,color:'#AAA'}}>Each branch is a separate POS node with its own inventory and staff · Stock transfers between branches</div>
+          </div>
+        </div>
+      )}
+
+      {tab==='map' && (
+        <div style={{padding:'16px 18px'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+            <div style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>🗺️ Branch Locations</div>
+            <div style={{display:'flex',gap:5}}>
+              <span style={{fontSize:8,padding:'3px 8px',border:'1px solid #E5E5E5',borderRadius:5,color:'#888',cursor:'pointer'}}>Satellite</span>
+              <span style={{fontSize:8,padding:'3px 8px',border:'1px solid #C97A44',borderRadius:5,color:'#C97A44',background:'rgba(201,122,68,.06)',cursor:'pointer'}}>Map</span>
+            </div>
+          </div>
+          {/* Map placeholder */}
+          <div style={{borderRadius:10,overflow:'hidden',border:'1px solid #E5E5E5',height:220,background:'#F0EDE8',position:'relative',display:'flex',alignItems:'center',justifyContent:'center'}}>
+            {/* Grid lines to simulate map */}
+            <svg width="100%" height="100%" style={{position:'absolute',top:0,left:0,opacity:.15}}>
+              {[0,1,2,3,4,5].map(i=><line key={`h${i}`} x1="0" y1={`${i*20}%`} x2="100%" y2={`${i*20}%`} stroke="#C97A44" strokeWidth="1"/>)}
+              {[0,1,2,3,4,5,6,7,8,9].map(i=><line key={`v${i}`} x1={`${i*12}%`} y1="0" x2={`${i*12}%`} y2="100%" stroke="#C97A44" strokeWidth="1"/>)}
+            </svg>
+            {/* Road lines */}
+            <svg width="100%" height="100%" style={{position:'absolute',top:0,left:0,opacity:.2}}>
+              <path d="M0 110 Q340 100 680 115" stroke="#8B7355" strokeWidth="3" fill="none"/>
+              <path d="M200 0 Q210 110 205 220" stroke="#8B7355" strokeWidth="2" fill="none"/>
+              <path d="M0 60 Q340 55 680 65" stroke="#8B7355" strokeWidth="1.5" fill="none"/>
+            </svg>
+            {/* Branch pin */}
+            <div style={{position:'absolute',top:'45%',left:'52%',transform:'translate(-50%,-100%)'}}>
+              <div style={{width:28,height:28,borderRadius:'50% 50% 50% 0',background:'#C97A44',border:'2px solid #fff',boxShadow:'0 2px 8px rgba(0,0,0,.2)',transform:'rotate(-45deg)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <div style={{transform:'rotate(45deg)',fontSize:12}}>🏪</div>
+              </div>
+            </div>
+            {/* Tooltip */}
+            <div style={{position:'absolute',top:'18%',left:'44%',background:'#fff',borderRadius:7,padding:'5px 9px',boxShadow:'0 4px 12px rgba(0,0,0,.12)',border:'1px solid #F0F0F0',minWidth:110}}>
+              <div style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>Town Branch</div>
+              <div style={{fontSize:8,color:'#AAA'}}>Nairobi, Kenya</div>
+              <div style={{fontSize:8,color:'#16a34a',fontWeight:600,marginTop:2}}>● Active · 6 sales today</div>
+            </div>
+          </div>
+          <div style={{marginTop:10,display:'flex',gap:8,flexWrap:'wrap'}}>
+            <span style={{fontSize:9,display:'flex',alignItems:'center',gap:4,color:'#888'}}><span style={{width:8,height:8,borderRadius:'50%',background:'#16a34a',display:'inline-block'}}/>Active branches</span>
+            <span style={{fontSize:9,display:'flex',alignItems:'center',gap:4,color:'#888'}}><span style={{width:8,height:8,borderRadius:'50%',background:'#E5E5E5',display:'inline-block'}}/>Inactive</span>
+          </div>
+        </div>
+      )}
+
+      {tab==='audit' && (
+        <div style={{padding:'16px 18px'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+            <div style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>🔍 Audit Log</div>
+            <div style={{display:'flex',gap:5}}>
+              {['All','Sales','Stock','Staff','Settings'].map((f,i)=>(
+                <span key={f} style={{fontSize:8,padding:'3px 8px',border:`1px solid ${i===0?'#C97A44':'#E5E5E5'}`,borderRadius:5,color:i===0?'#C97A44':'#888',background:i===0?'rgba(201,122,68,.06)':'transparent',cursor:'pointer'}}>{f}</span>
+              ))}
+            </div>
+          </div>
+          {[
+            {icon:'🛒',action:'Sale completed',detail:'3x Maize flour · KSh 450',user:'Phidisia',time:'10:41 AM',branch:'Town'},
+            {icon:'📦',action:'Stock updated',detail:'Cooking oil — 50 units added',user:'James',time:'9:15 AM',branch:'Town'},
+            {icon:'🛒',action:'Sale completed',detail:'1x Sugar 2kg · KSh 280',user:'Phidisia',time:'9:02 AM',branch:'Town'},
+            {icon:'↩️',action:'Refund processed',detail:'Bread 400g · KSh 65 returned',user:'Phidisia',time:'8:47 AM',branch:'Town'},
+            {icon:'👤',action:'Staff login',detail:'Phidisia logged in via PIN',user:'System',time:'8:30 AM',branch:'Town'},
+            {icon:'⚙️',action:'Settings changed',detail:'Receipt footer updated',user:'Admin',time:'Yesterday',branch:'Town'},
+          ].map((e,i)=>(
+            <div key={i} style={{display:'flex',alignItems:'flex-start',gap:9,padding:'8px 0',borderTop:i>0?'1px solid #F5F5F5':'none'}}>
+              <div style={{width:24,height:24,borderRadius:6,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,flexShrink:0,marginTop:1}}>{e.icon}</div>
+              <div style={{flex:1}}>
+                <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:1}}>
+                  <span style={{fontSize:10,fontWeight:600,color:'#1A1410'}}>{e.action}</span>
+                  <span style={{fontSize:7,padding:'1px 5px',borderRadius:4,background:'#F5F5F5',color:'#888'}}>{e.branch}</span>
+                </div>
+                <div style={{fontSize:8,color:'#AAA'}}>{e.detail} · by {e.user}</div>
+              </div>
+              <span style={{fontSize:8,color:'#AAA',flexShrink:0,whiteSpace:'nowrap'}}>{e.time}</span>
+            </div>
+          ))}
+          <div style={{marginTop:8,textAlign:'center'}}>
+            <span style={{fontSize:9,color:'#C97A44',cursor:'pointer',fontWeight:600}}>Load more entries →</span>
+          </div>
+        </div>
+      )}
+
+      {tab==='logistics' && (
+        <div style={{padding:'16px 18px'}}>
+          <div style={{fontSize:11,fontWeight:700,color:'#1A1410',marginBottom:3}}>🚛 Logistics</div>
+          <div style={{fontSize:9,color:'#AAA',marginBottom:14}}>Track deliveries, supplier orders, and inter-branch stock transfers.</div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:14}}>
+            {[{label:'Active deliveries',value:'0',icon:'🚛',color:'#C97A44'},{label:'Pending POs',value:'0',icon:'📋',color:'#6366f1'},{label:'Stock transfers',value:'0',icon:'↔️',color:'#16a34a'}].map((k,i)=>(
+              <div key={i} style={{padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',textAlign:'center'}}>
+                <div style={{fontSize:18,marginBottom:4}}>{k.icon}</div>
+                <div style={{fontSize:16,fontWeight:800,color:k.color,marginBottom:2}}>{k.value}</div>
+                <div style={{fontSize:8,color:'#AAA'}}>{k.label}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+            {[
+              {icon:'📋',title:'Purchase Orders',desc:'Create orders for suppliers, track delivery status, and auto-update stock on receipt.',badge:'Soon'},
+              {icon:'↔️',title:'Branch Transfers',desc:'Move stock between branches with a full transfer log and confirmation workflow.',badge:'Soon'},
+              {icon:'🚛',title:'Delivery Tracking',desc:'Link orders to couriers and track deliveries from dispatch to customer door.',badge:'Soon'},
+              {icon:'📍',title:'Driver Map',desc:'Live GPS map of deliveries for same-day dispatch operations.',badge:'Soon'},
+            ].map((m,i)=>(
+              <div key={i} style={{padding:'12px 14px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',position:'relative'}}>
+                <span style={{position:'absolute',top:8,right:8,fontSize:7,fontWeight:700,background:'#F0F0F0',color:'#888',borderRadius:9999,padding:'1px 6px'}}>{m.badge}</span>
+                <div style={{fontSize:18,marginBottom:6}}>{m.icon}</div>
+                <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:3}}>{m.title}</div>
+                <div style={{fontSize:8,color:'#AAA',lineHeight:1.4}}>{m.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PosUIReplica() {
+  return (
+    <div style={{background:'#FAFAFA',borderRadius:16,border:'1px solid #E5E5E5',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.09)',width:'100%',fontFamily:'system-ui,-apple-system,sans-serif'}}>
+      <div style={{display:'flex',alignItems:'center',borderBottom:'1px solid #F0F0F0',background:'#fff',padding:'9px 14px',gap:7,overflowX:'auto'}}>
+        {['Register','Inventory','Shifts','Reports','Customers','Settings'].map((tab,i)=>(
+          <span key={tab} style={{fontSize:9,fontWeight:i===0?700:400,color:i===0?'#C97A44':'#AAA',padding:'3px 9px',borderRadius:5,background:i===0?'rgba(201,122,68,.08)':'transparent',whiteSpace:'nowrap',cursor:'pointer',border:i===0?'1px solid rgba(201,122,68,.2)':'1px solid transparent'}}>{tab}</span>
+        ))}
+        <span style={{marginLeft:'auto',fontSize:8,padding:'3px 8px',borderRadius:5,background:'rgba(34,197,94,.08)',color:'#16a34a',fontWeight:700,border:'1px solid rgba(34,197,94,.2)',flexShrink:0}}>● Open</span>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1.15fr 1fr',minHeight:320}}>
+        {/* Left: basket */}
+        <div style={{padding:'12px 14px',borderRight:'1px solid #F0F0F0',display:'flex',flexDirection:'column',gap:7,background:'#fff'}}>
+          <div style={{display:'flex',gap:5,marginBottom:2}}>
+            <div style={{flex:1,display:'flex',alignItems:'center',gap:5,padding:'6px 9px',borderRadius:6,border:'1px solid #E5E5E5',background:'#FAFAFA'}}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#CCC" strokeWidth="2"><rect x="3" y="3" width="4" height="4"/><rect x="17" y="3" width="4" height="4"/><rect x="3" y="17" width="4" height="4"/><path d="M7 3h8M3 7v2M21 7v2M7 21h4M15 21h2M21 17v2M15 15h6v6"/></svg>
+              <span style={{fontSize:9,color:'#CCC'}}>Scan barcode or search...</span>
+            </div>
+            <div style={{width:28,height:28,borderRadius:6,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0}}>
+              <span style={{fontSize:12}}>📷</span>
+            </div>
+          </div>
+          <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:1}}>Current sale</div>
+          {[
+            {name:'Wireless Earbuds Pro',sku:'SKU-0041',qty:2,price:'£24.99',margin:'34.2%'},
+            {name:'Phone Case (Black)',sku:'SKU-0198',qty:1,price:'£8.50',margin:'28.7%'},
+            {name:'USB-C Cable 2m',sku:'SKU-0072',qty:3,price:'£6.99',margin:'41.0%'},
+          ].map((item,i)=>(
+            <div key={i} style={{display:'flex',alignItems:'center',gap:7,padding:'7px 9px',background:'#FAFAFA',borderRadius:7,border:'1px solid #F0F0F0'}}>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:9,fontWeight:600,color:'#1A1410',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.name}</div>
+                <div style={{fontSize:7,color:'#CCC'}}>{item.sku} · Qty: {item.qty}</div>
+              </div>
+              <div style={{textAlign:'right',flexShrink:0}}>
+                <div style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>{item.price}</div>
+                <div style={{fontSize:7,color:'#16a34a',fontWeight:600}}>▲ {item.margin}</div>
+              </div>
+            </div>
+          ))}
+          {/* AI nudge */}
+          <div style={{padding:'7px 9px',borderRadius:7,background:'rgba(201,122,68,.06)',border:'1px solid rgba(201,122,68,.18)',display:'flex',gap:6,alignItems:'flex-start'}}>
+            <span style={{fontSize:10,flexShrink:0}}>💡</span>
+            <p style={{fontSize:8,color:'#7B4C20',margin:0,lineHeight:1.4}}>Earbuds Pro is your best margin product this week. You&apos;ve sold 143 units — add 50 more to beat last week&apos;s record.</p>
+          </div>
+          <div style={{marginTop:'auto',borderTop:'1px solid #F0F0F0',paddingTop:8}}>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:9,color:'#AAA',marginBottom:3}}><span>Subtotal</span><span>£64.46</span></div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:9,color:'#AAA',marginBottom:6}}><span>VAT (20%)</span><span>£12.89</span></div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:13,fontWeight:800,color:'#1A1410'}}><span>Total</span><span style={{color:'#C97A44'}}>£77.35</span></div>
+          </div>
+        </div>
+        {/* Right: payment */}
+        <div style={{padding:'12px 14px',display:'flex',flexDirection:'column',gap:7,background:'#FAFAFA'}}>
+          <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:1}}>Payment</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:5}}>
+            {[{label:'Card',icon:'💳',active:true},{label:'Cash',icon:'💵',active:false},{label:'Mobile Money',icon:'📱',active:false},{label:'Split',icon:'⚡',active:false}].map((m,i)=>(
+              <div key={i} style={{padding:'7px 5px',borderRadius:7,border:`1px solid ${m.active?'rgba(201,122,68,.3)':'#E5E5E5'}`,background:m.active?'rgba(201,122,68,.06)':'#fff',textAlign:'center',cursor:'pointer'}}>
+                <div style={{fontSize:13,marginBottom:2}}>{m.icon}</div>
+                <div style={{fontSize:8,fontWeight:600,color:m.active?'#C97A44':'#AAA'}}>{m.label}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:4,flex:1}}>
+            {['1','2','3','4','5','6','7','8','9','⌫','0','✓'].map((k)=>(
+              <div key={k} style={{display:'flex',alignItems:'center',justifyContent:'center',borderRadius:6,background:k==='✓'?'#C97A44':'#fff',border:`1px solid ${k==='✓'?'#C97A44':'#E5E5E5'}`,height:30,fontSize:k==='✓'?13:12,fontWeight:700,color:k==='✓'?'#fff':'#1A1410',cursor:'pointer'}}>
+                {k}
+              </div>
+            ))}
+          </div>
+          <div style={{padding:'11px',borderRadius:9,background:'#C97A44',color:'#fff',textAlign:'center',fontWeight:700,fontSize:12,cursor:'pointer'}}>
+            Charge £77.35
+          </div>
+          <div style={{textAlign:'center',fontSize:8,color:'#AAA'}}>Email · SMS · Print receipt</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Calculator ────────────────────────────────────────────────────────────────
+function MiniCalcWidget() {
+  const [mode,setMode] = useState<'margin'|'industry'>('margin')
+  const [biz,setBiz] = useState<BizType>('retail')
+  const [cur,setCur] = useState(0)
+  const [showCur,setShowCur] = useState(false)
+  const sym = CURRENCIES[cur].symbol
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(()=>{
+    if(!showCur) return
+    const close=(e:MouseEvent)=>{if(ref.current&&!ref.current.contains(e.target as Node))setShowCur(false)}
+    document.addEventListener('mousedown',close)
+    return ()=>document.removeEventListener('mousedown',close)
+  },[showCur])
+  const [mc,setMc] = useState({cost:'',revenue:'',units:''})
+  const mCost=parseFloat(mc.cost)||0,mRev=parseFloat(mc.revenue)||0,mUnits=parseInt(mc.units)||0
+  const mProfit=mRev-mCost,mMargin=mRev>0?(mProfit/mRev)*100:0,mMarkup=mCost>0?(mProfit/mCost)*100:0
+  const mHasResult=mCost>0&&mRev>0
+  const [iv,setIv] = useState({a:'',b:'',c:'',d:'',price:'',units:''})
+  const bt=BIZ_TYPES.find(b=>b.id===biz)!
+  const iA=parseFloat(iv.a)||0,iB=parseFloat(iv.b)||0,iC=parseFloat(iv.c)||0,iD=parseFloat(iv.d)||0
+  const iPrice=parseFloat(iv.price)||0,iUnits=parseInt(iv.units)||0
+  let iCost=iA+iB+iC+iD
+  if(biz==='repair')iCost=iA+(iB*iC)+iD
+  if(biz==='restaurant')iCost=(iA+iB+iC)*(1+iD/100)
+  const iGross=iPrice-iCost,iMargin=iPrice>0?(iGross/iPrice)*100:0,iHasResult=iCost>0
+  const mc_=(m:number)=>m>=30?'#4ade80':m>=15?'#fb923c':'#f87171'
+  const switchBiz=(b:BizType)=>{setBiz(b);setIv({a:'',b:'',c:'',d:'',price:'',units:''})}
+  const I=(props:{placeholder:string;value:string;onChange:(v:string)=>void;step?:string})=>(
+    <input type="number" min="0" step={props.step||'0.01'} placeholder={props.placeholder}
+      style={{width:'100%',height:36,padding:'0 10px',fontSize:13,border:`1px solid ${T.bd}`,borderRadius:8,background:T.alt,color:T.tx,fontFamily:'inherit',outline:'none',boxSizing:'border-box' as const}}
+      value={props.value} onChange={e=>props.onChange(e.target.value)}/>
+  )
+  const R=(props:{value:string;label:string;color:string})=>(
+    <div style={{textAlign:'center',padding:'6px 2px',background:T.alt,borderRadius:8}}>
+      <div style={{fontFamily:'var(--font-instrument)',fontSize:16,fontWeight:700,color:props.color,lineHeight:1.2}}>{props.value}</div>
+      <div style={{fontSize:8,color:T.tx3,fontWeight:700,marginTop:2,textTransform:'uppercase',letterSpacing:'.03em'}}>{props.label}</div>
+    </div>
+  )
+  return (
+    <div ref={ref} style={{maxWidth:520,width:'100%',background:T.card,border:`1px solid ${T.bd}`,borderRadius:20,boxShadow:'0 8px 32px rgba(0,0,0,.06)',position:'relative'}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:'12px 16px 0',gap:10}}>
+        <div style={{display:'inline-flex',borderRadius:9999,border:`1px solid ${T.bd}`,overflow:'hidden',background:T.alt}}>
+          {(['margin','industry'] as const).map(id=>(
+            <button key={id} onClick={()=>setMode(id)}
+              style={{padding:'7px 18px',fontSize:12,fontWeight:700,fontFamily:'var(--font-jakarta)',background:mode===id?T.acc:'transparent',color:mode===id?'#fff':T.tx3,border:'none',cursor:'pointer',transition:'all 150ms'}}>
+              {id==='margin'?'Profit Margin':'Cost of Goods'}
+            </button>
+          ))}
+        </div>
+        <div style={{position:'relative'}}>
+          <button onClick={()=>setShowCur(!showCur)}
+            style={{padding:'5px 9px',fontSize:11,fontWeight:600,fontFamily:'inherit',background:T.alt,border:`1px solid ${T.bd}`,borderRadius:7,cursor:'pointer',color:T.tx2,display:'flex',alignItems:'center',gap:3}}>
+            {sym}<span style={{fontSize:8,opacity:.5}}>▼</span>
           </button>
-          {showCur && (
-            <div style={{ position:'absolute', top:'100%', right:0, marginTop:4, background:C.sf, borderRadius:8, boxShadow:'0 4px 16px rgba(0,0,0,.12)', zIndex:50, padding:6, display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:2, minWidth:156 }}>
-              {CURRENCIES.map((c, i) => (
-                <button key={c.code} onClick={() => { setCur(i); setShowCur(false) }}
-                  style={{ padding:'4px 6px', fontSize:10, fontWeight:cur===i?700:500, fontFamily:'inherit', background:cur===i?C.acc:'transparent', color:cur===i?'#fff':C.tx2, border:'none', borderRadius:6, cursor:'pointer', textAlign:'center' }}>
+          {showCur&&(
+            <div style={{position:'absolute',top:'100%',right:0,marginTop:4,background:T.card,borderRadius:10,boxShadow:'0 8px 32px rgba(0,0,0,.18)',zIndex:500,padding:8,display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:3,minWidth:180,border:`1px solid ${T.bd}`}}>
+              {CURRENCIES.map((c,i)=>(
+                <button key={c.code} onClick={()=>{setCur(i);setShowCur(false)}}
+                  style={{padding:'5px 7px',fontSize:10,fontWeight:cur===i?700:500,fontFamily:'inherit',background:cur===i?T.acc:'transparent',color:cur===i?'#fff':T.tx2,border:'none',borderRadius:6,cursor:'pointer',textAlign:'center'}}>
                   {c.symbol} {c.code}
                 </button>
               ))}
@@ -383,72 +1155,67 @@ function MiniCalcWidget({ C }: { C: Palette }) {
           )}
         </div>
       </div>
-      {mode === 'industry' && (
-        <div style={{ display:'flex', justifyContent:'center', gap:4, padding:'8px 12px 0', flexWrap:'wrap' }}>
-          {BIZ_TYPES.map(b => (
-            <button key={b.id} onClick={() => switchBiz(b.id)}
-              style={{ padding:'3px 8px', fontSize:10, fontWeight:biz===b.id?700:500, fontFamily:'inherit', background:biz===b.id?C.accBg:'transparent', color:biz===b.id?C.acc:C.tx3, border:`1px solid ${biz===b.id?C.accBdr:C.b}`, borderRadius:9999, cursor:'pointer', transition:'all 150ms', display:'flex', alignItems:'center', gap:3 }}>
-              <span style={{ fontSize:10 }}>{b.icon}</span> {b.label}
+      {mode==='industry'&&(
+        <div style={{display:'flex',justifyContent:'center',gap:4,padding:'10px 14px 0',flexWrap:'wrap'}}>
+          {BIZ_TYPES.map(b=>(
+            <button key={b.id} onClick={()=>switchBiz(b.id)}
+              style={{padding:'4px 10px',fontSize:11,fontWeight:biz===b.id?700:500,fontFamily:'inherit',background:biz===b.id?T.accBg:'transparent',color:biz===b.id?T.acc:T.tx3,border:`1px solid ${biz===b.id?T.accBdr:T.bd}`,borderRadius:9999,cursor:'pointer',transition:'all 150ms',display:'flex',alignItems:'center',gap:3}}>
+              <span>{b.icon}</span>{b.label}
             </button>
           ))}
         </div>
       )}
-      <div style={{ padding:'8px 14px 12px' }}>
-        {mode === 'margin' ? (
+      <div style={{padding:'10px 16px 14px'}}>
+        {mode==='margin'?(
           <>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6 }}>
-              <I placeholder={`Cost (${sym})`} value={mc.cost} onChange={v => setMc(p => ({ ...p, cost: v }))} />
-              <I placeholder={`Sale price (${sym})`} value={mc.revenue} onChange={v => setMc(p => ({ ...p, revenue: v }))} />
-              <I placeholder="Units sold" value={mc.units} onChange={v => setMc(p => ({ ...p, units: v }))} step="1" />
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:7}}>
+              <I placeholder={`Cost (${sym})`} value={mc.cost} onChange={v=>setMc(p=>({...p,cost:v}))}/>
+              <I placeholder={`Sale price (${sym})`} value={mc.revenue} onChange={v=>setMc(p=>({...p,revenue:v}))}/>
+              <I placeholder="Units sold" value={mc.units} onChange={v=>setMc(p=>({...p,units:v}))} step="1"/>
             </div>
-            {mHasResult && (
-              <div style={{ marginTop:8 }}>
-                <div style={{ height:4, borderRadius:2, background:C.ev2, overflow:'hidden', marginBottom:6 }}>
-                  <div style={{ height:'100%', width:'100%', borderRadius:2, background:mc_(mMargin), transform:`scaleX(${Math.min(mMargin, 100) / 100})`, transformOrigin:'left center', transition:'transform 300ms cubic-bezier(0.16,1,0.3,1)' }} />
+            {mHasResult&&(
+              <div style={{marginTop:10}}>
+                <div style={{height:5,borderRadius:3,background:T.alt,overflow:'hidden',marginBottom:8}}>
+                  <div style={{height:'100%',borderRadius:3,background:mc_(mMargin),transform:`scaleX(${Math.min(mMargin,100)/100})`,transformOrigin:'left center',transition:'transform 300ms cubic-bezier(0.16,1,0.3,1)'}}/>
                 </div>
-                <div style={{ display:'grid', gridTemplateColumns: mUnits > 0 ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr', gap:4 }}>
-                  <R value={`${mMargin.toFixed(1)}%`} label="Margin" color={mc_(mMargin)} />
-                  <R value={`${sym}${mProfit.toFixed(2)}`} label="Profit" color={C.tx} />
-                  <R value={`${mMarkup.toFixed(0)}%`} label="Markup" color={C.tx2} />
-                  {mUnits > 0 && <R value={`${sym}${(mProfit * mUnits).toLocaleString('en-GB', { maximumFractionDigits:0 })}`} label="Total profit" color="#4ade80" />}
+                <div style={{display:'grid',gridTemplateColumns:mUnits>0?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr',gap:5}}>
+                  <R value={`${mMargin.toFixed(1)}%`} label="Margin" color={mc_(mMargin)}/>
+                  <R value={`${sym}${mProfit.toFixed(2)}`} label="Profit" color={T.tx}/>
+                  <R value={`${mMarkup.toFixed(0)}%`} label="Markup" color={T.tx2}/>
+                  {mUnits>0&&<R value={`${sym}${(mProfit*mUnits).toLocaleString('en-GB',{maximumFractionDigits:0})}`} label="Total profit" color="#4ade80"/>}
                 </div>
               </div>
             )}
           </>
-        ) : (
+        ):(
           <>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6 }}>
-              {bt.fields.map(f => (
-                <I key={f.key} placeholder={`${f.label}${f.label.includes('%') ? '' : ` (${sym})`}`} value={(iv as Record<string,string>)[f.key]} onChange={v => setIv(p => ({ ...p, [f.key]: v }))} />
-              ))}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7,marginBottom:7}}>
+              {bt.fields.map(f=>(<I key={f.key} placeholder={`${f.label}${f.label.includes('%')?'':` (${sym})`}`} value={(iv as Record<string,string>)[f.key]} onChange={v=>setIv(p=>({...p,[f.key]:v}))}/>))}
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
-              <I placeholder={`${bt.priceLabel} (${sym})`} value={iv.price} onChange={v => setIv(p => ({ ...p, price: v }))} />
-              <I placeholder={bt.unitLabel} value={iv.units} onChange={v => setIv(p => ({ ...p, units: v }))} step="1" />
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7}}>
+              <I placeholder={`${bt.priceLabel} (${sym})`} value={iv.price} onChange={v=>setIv(p=>({...p,price:v}))}/>
+              <I placeholder={bt.unitLabel} value={iv.units} onChange={v=>setIv(p=>({...p,units:v}))} step="1"/>
             </div>
-            {iHasResult && (
-              <div style={{ marginTop:8 }}>
-                {iPrice > 0 && (
-                  <div style={{ height:4, borderRadius:2, background:C.ev2, overflow:'hidden', marginBottom:6 }}>
-                    <div style={{ height:'100%', width:'100%', background:`linear-gradient(90deg, #f87171 ${Math.min((iCost/iPrice)*100, 100)}%, #4ade80 ${Math.min((iCost/iPrice)*100, 100)}%)`, borderRadius:2 }} />
+            {iHasResult&&(
+              <div style={{marginTop:10}}>
+                {iPrice>0&&(
+                  <div style={{height:5,borderRadius:3,background:T.alt,overflow:'hidden',marginBottom:8}}>
+                    <div style={{height:'100%',background:`linear-gradient(90deg,#f87171 ${Math.min((iCost/iPrice)*100,100)}%,#4ade80 ${Math.min((iCost/iPrice)*100,100)}%)`,borderRadius:3}}/>
                   </div>
                 )}
-                <div style={{ display:'grid', gridTemplateColumns: iUnits > 0 && iPrice > 0 ? '1fr 1fr 1fr 1fr' : iPrice > 0 ? '1fr 1fr 1fr' : '1fr', gap:4 }}>
-                  <R value={`${sym}${iCost.toFixed(2)}`} label={bt.resultLabel} color="#f87171" />
-                  {iPrice > 0 && <>
-                    <R value={`${sym}${iGross.toFixed(2)}`} label="Gross profit" color={iGross >= 0 ? '#4ade80' : '#f87171'} />
-                    <R value={`${iMargin.toFixed(1)}%`} label="Margin" color={mc_(iMargin)} />
-                  </>}
-                  {iUnits > 0 && iPrice > 0 && <R value={`${sym}${(iGross * iUnits).toLocaleString('en-GB', { maximumFractionDigits:0 })}`} label="Total profit" color="#4ade80" />}
+                <div style={{display:'grid',gridTemplateColumns:iUnits>0&&iPrice>0?'1fr 1fr 1fr 1fr':iPrice>0?'1fr 1fr 1fr':'1fr',gap:5}}>
+                  <R value={`${sym}${iCost.toFixed(2)}`} label={bt.resultLabel} color="#f87171"/>
+                  {iPrice>0&&<><R value={`${sym}${iGross.toFixed(2)}`} label="Gross profit" color={iGross>=0?'#4ade80':'#f87171'}/><R value={`${iMargin.toFixed(1)}%`} label="Margin" color={mc_(iMargin)}/></>}
+                  {iUnits>0&&iPrice>0&&<R value={`${sym}${(iGross*iUnits).toLocaleString('en-GB',{maximumFractionDigits:0})}`} label="Total profit" color="#4ade80"/>}
                 </div>
               </div>
             )}
           </>
         )}
-        <div style={{ marginTop:6, textAlign:'center' }}>
-          <Link href={mode==='margin' ? '/free-tools/profit-margin-calculator' : '/free-tools/cogs-calculator'}
-            style={{ fontSize:10, color:C.acc, fontWeight:600, textDecoration:'none' }}>
-            Open full {mode==='margin' ? 'Profit Margin' : 'COGS'} calculator →
+        <div style={{marginTop:8,textAlign:'center'}}>
+          <Link href={mode==='margin'?'/free-tools/profit-margin-calculator':'/free-tools/cogs-calculator'}
+            style={{fontSize:11,color:T.acc,fontWeight:600,textDecoration:'none'}}>
+            Open full {mode==='margin'?'Profit Margin':'COGS'} calculator →
           </Link>
         </div>
       </div>
@@ -456,740 +1223,473 @@ function MiniCalcWidget({ C }: { C: Palette }) {
   )
 }
 
-// ── AskBiz bar logo SVG ───────────────────────────────────────────────────────
-function Logo({ size = 12, opacity = 1 }: { size?: number; opacity?: number }) {
+// ── Main page ─────────────────────────────────────────────────────────────────
+// ── Nav Dropdown ─────────────────────────────────────────────────────────────
+interface DropGroup { group: string; links: { href: string; label: string; desc: string }[] }
+function NavDropdown({ label, items }: { label: string; items: DropGroup[] }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const close = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [open])
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" style={{ opacity }}>
-      <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/>
-      <rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.75"/>
-      <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
-    </svg>
+    <div ref={ref} style={{ position:'relative' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{ fontSize:12,color:T.tx2,background:'none',border:'none',cursor:'pointer',padding:'0 9px',height:56,display:'flex',alignItems:'center',gap:4,fontFamily:'inherit',transition:'color 150ms',whiteSpace:'nowrap' }}
+        className="nav-link"
+      >
+        {label}
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ transform:open?'rotate(180deg)':'none',transition:'transform 180ms' }}><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      {open && (
+        <div style={{ position:'absolute',top:'calc(100% + 4px)',left:'50%',transform:'translateX(-50%)',background:T.card,borderRadius:14,boxShadow:'0 8px 40px rgba(0,0,0,.12)',border:`1px solid ${T.bd}`,zIndex:100,padding:'12px 8px',display:'flex',gap:0,minWidth:520 }}>
+          {items.map((grp, gi) => (
+            <div key={gi} style={{ flex:1,padding:'0 8px' }}>
+              <div style={{ fontSize:9,fontWeight:700,color:T.acc,letterSpacing:'.12em',textTransform:'uppercase',padding:'4px 8px 8px' }}>{grp.group}</div>
+              {grp.links.map(lnk => (
+                <Link key={lnk.href} href={lnk.href} onClick={() => setOpen(false)}
+                  style={{ display:'block',padding:'7px 8px',borderRadius:8,textDecoration:'none' }}
+                  className="nav-drop-item"
+                >
+                  <div style={{ fontSize:12,fontWeight:600,color:T.tx,marginBottom:1 }}>{lnk.label}</div>
+                  <div style={{ fontSize:10,color:T.tx3,lineHeight:1.3 }}>{lnk.desc}</div>
+                </Link>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
-// ── LandingInner ─────────────────────────────────────────────────────────────
 function LandingInner({ geo }: { geo: Geo | null }) {
-  const { t, lang, setLang } = useLang()
-  const [annual, setAnnual] = useState(false)
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const { lang, setLang } = useLang()
+  const [scrollY, setScrollY] = useState(0)
+  const [mouse, setMouse] = useState({ x: 0, y: 0 })
   const [menuOpen, setMenuOpen] = useState(false)
+  const [annual, setAnnual] = useState(false)
+  // FAQ state removed — using native <details> for SEO
   const [liveGeo, setLiveGeo] = useState<Geo | null>(geo)
-  const tiltRef = useRef<HTMLDivElement>(null)
-  const glowRef = useRef<HTMLDivElement>(null)
-  const isDark = false
-  const C: Palette = isDark ? DARK : LIGHT
 
-  const sym           = liveGeo?.pricing?.sym      || '£'
   const growthPrice   = liveGeo?.pricing?.growth   || '£19'
   const businessPrice = liveGeo?.pricing?.business || '£39'
   const posPrice      = liveGeo?.pricing?.pos      || '£5'
-  const country       = liveGeo?.country           || geo?.country    || ''
-  const countryCode   = liveGeo?.countryCode       || geo?.countryCode || ''
-  const flag          = liveGeo?.flag              || geo?.flag        || ''
-  const isRTL = lang === 'ar'
-
-  const geoCtaText = 'Start 3-month free trial'
-  const geoSubText = country
-    ? `No credit card · 3 months free then from ${growthPrice}/mo · 2 minutes to set up`
-    : 'No credit card · 3 months free · Takes 2 minutes to set up'
-
-  // Sync body bg to current palette
-  useEffect(() => {
-    document.body.style.background = C.bg
-    document.documentElement.style.background = C.bg
-    return () => {
-      document.body.style.background = ''
-      document.documentElement.style.background = ''
-    }
-  }, [isDark]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // 3D tilt effect removed — reduces AI template feel
-
-  // Cursor glow listener removed
-
-  // ── Scroll-reveal via IntersectionObserver ────────────────────────────────
-  // Fallback ensures content is NEVER permanently hidden (hidden tab, no-JS, SSR)
-  useEffect(() => {
-    const els = document.querySelectorAll('[data-motion]')
-    if (!els.length) return
-    // Safety net: make everything visible after 2.5s regardless of observer
-    const fallback = setTimeout(() => els.forEach(el => el.classList.add('is-visible')), 2500)
-    const io = new IntersectionObserver(
-      entries => entries.forEach(e => {
-        if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target) }
-      }),
-      { threshold: 0.12, rootMargin: '0px 0px -48px 0px' }
-    )
-    els.forEach(el => io.observe(el))
-    return () => { clearTimeout(fallback); io.disconnect() }
-  }, [])
-
-  useEffect(() => {
-    if (geo) return
-    fetch('/api/geo').then(r => r.json()).then(d => {
-      if (d.pricing) {
-        setLiveGeo({ country: d.country || '', countryCode: d.countryCode || '', city: d.city || '', currency: d.currency || 'USD', currencySymbol: d.currencySymbol || '$', currencyName: d.currencyName || 'US Dollar', flag: d.flag || '', pricing: d.pricing })
-      }
-      const saved = document.cookie.split(';').find(c => c.trim().startsWith('askbiz_lang='))
-      if (!saved) {
-        const browserLang = navigator.language?.split('-')[0]?.toLowerCase()
-        const BMAP: Record<string, Lang> = { en:'en', fr:'fr', de:'de', es:'es', ar:'ar', sw:'sw', pt:'pt', nl:'nl', it:'it', pl:'pl' }
-        if (browserLang && browserLang !== 'en' && BMAP[browserLang]) setLang(BMAP[browserLang] as Lang)
-        else {
-          const detected = (COUNTRY_TO_LANG as Record<string, Lang>)[d.countryCode] || 'en'
-          setLang(detected)
-        }
-      }
-    }).catch(() => {})
-  }, [])
+  const country       = liveGeo?.country           || ''
+  const flag          = liveGeo?.flag              || ''
 
   function annualPrice(price: string): string {
-    const match = price.match(/([\d,]+)/)
-    if (!match) return price
-    const num = parseInt(match[1].replace(/,/g, ''), 10)
-    const discounted = Math.round(num * 10 / 12)
-    const formatted = match[1].includes(',') ? discounted.toLocaleString('en-US') : String(discounted)
-    return price.replace(/[\d,]+/, formatted)
+    const m = price.match(/([\d,]+)/); if(!m) return price
+    const n = Math.round(parseInt(m[1].replace(/,/g,''),10)*10/12)
+    return price.replace(/[\d,]+/, String(n))
   }
   const growthMonthly = annual ? annualPrice(growthPrice) : growthPrice
   const bizMonthly    = annual ? annualPrice(businessPrice) : businessPrice
 
-  const FAQS = [
-    { q: 'What is AskBiz?', a: 'AskBiz is a business intelligence tool for SME founders. You connect your Shopify, Amazon, or other platforms, then ask questions in plain English and get answers with your actual numbers.' },
-    { q: 'How does it work without a data team?', a: 'You connect your store or upload a CSV. AskBiz handles everything — no SQL, no dashboards, no data engineering. You just ask.' },
-    { q: 'What\'s included in the free plan?', a: '10 questions per month, CSV upload, Business Pulse score, connect Shopify and Amazon, API access, and access to the FX Risk, Landed Cost, and Export Market tools with manual input. No credit card needed. You can also try Growth and PoS free for 3 months — no card required.' },
-    { q: 'What does "pre-filled from data" mean on Growth?', a: 'On Growth, the FX Risk, Landed Cost, and other tools automatically pull your real product costs, margins, and supplier data from your connected sources. You review and calculate — not re-enter.' },
-    { q: 'Can I cancel anytime?', a: 'Yes — cancel in one click. You keep access until the end of your billing period.' },
-    { q: 'How does the social commerce integration work?', a: 'Connect TikTok Shop, Instagram Shopping, or Pinterest from the Sources page. AskBiz tracks conversion rates, saves (demand signals), and alerts you when a product has high saves but no orders — before you sell out.' },
-    { q: 'What does the Point of Sale system include?', a: `The PoS includes a full register with barcode scanning, inventory management, staff shift tracking, digital receipts, refunds, multi-branch support, tax compliance (VAT, GST, multi-jurisdiction), GDPR tools, and integrations with Xero and QuickBooks. It costs ${posPrice} per seat per month — each seat is one register or device.` },
-    { q: 'Is my business data safe?', a: 'Your data is encrypted at rest and in transit. We never use your business data to train AI models.' },
-  ]
+  useEffect(() => {
+    const onScroll = () => setScrollY(window.scrollY)
+    const onMouse  = (e: MouseEvent) => setMouse({ x:(e.clientX/window.innerWidth-.5)*2, y:-(e.clientY/window.innerHeight-.5)*2 })
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('mousemove', onMouse, { passive: true })
+    return () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('mousemove', onMouse) }
+  }, [])
+
+  useEffect(() => {
+    if (geo) return
+    fetch('/api/geo').then(r=>r.json()).then(d=>{
+      if(d.pricing) setLiveGeo({country:d.country||'',countryCode:d.countryCode||'',city:d.city||'',currency:d.currency||'USD',currencySymbol:d.currencySymbol||'$',currencyName:d.currencyName||'US Dollar',flag:d.flag||'',pricing:d.pricing})
+      const saved = document.cookie.split(';').find(c=>c.trim().startsWith('askbiz_lang='))
+      if(!saved){
+        const bl=navigator.language?.split('-')[0]?.toLowerCase()
+        const BMAP: Record<string,Lang>={en:'en',fr:'fr',de:'de',es:'es',ar:'ar',sw:'sw',pt:'pt',nl:'nl',it:'it',pl:'pl'}
+        if(bl&&bl!=='en'&&BMAP[bl]) setLang(BMAP[bl])
+        else setLang((COUNTRY_TO_LANG as Record<string,Lang>)[d.countryCode]||'en')
+      }
+    }).catch(()=>{})
+  }, [])
+
+  useEffect(() => {
+    const els = document.querySelectorAll('[data-reveal]')
+    if(!els.length) return
+    const io = new IntersectionObserver(entries=>entries.forEach(e=>{
+      if(e.isIntersecting){e.target.classList.add('revealed');io.unobserve(e.target)}
+    }),{threshold:0.08,rootMargin:'0px 0px -30px 0px'})
+    els.forEach(el=>io.observe(el))
+    return ()=>io.disconnect()
+  }, [])
+
+  const isRTL = lang === 'ar'
 
   return (
-    <div style={{ background: C.bg, color: C.tx, fontFamily: 'var(--font-dm, DM Sans, system-ui)', overflowX: 'hidden', direction: isRTL ? 'rtl' : 'ltr' }}>
-
+    <div style={{ background:T.bg, color:T.tx, fontFamily:'var(--font-jakarta, Plus Jakarta Sans, system-ui)', overflowX:'hidden', direction:isRTL?'rtl':'ltr' }}>
       <style>{`
-        @keyframes fadeUp { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
-        @keyframes tdot { 0%,80%,100%{opacity:.3;transform:scale(.8)} 40%{opacity:1;transform:scale(1)} }
-        @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-        @keyframes progress { from{width:0%} to{width:100%} }
-        @keyframes heroGlow { 0%,100%{opacity:.55} 50%{opacity:.8} }
-        @keyframes charIn { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes cursorGlowPulse { 0%,100%{opacity:.18} 50%{opacity:.28} }
-        .fade-up { animation: fadeUp 600ms cubic-bezier(0.22,1,0.36,1) forwards }
-        .hero-3d {
-          transform: perspective(1100px) rotateX(2deg);
-          transform-style: preserve-3d;
-          will-change: transform;
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+        @keyframes tdot{0%,80%,100%{opacity:.25;transform:scale(.7)}40%{opacity:1;transform:scale(1)}}
+        [data-reveal]{opacity:0;transform:translateY(18px);transition:opacity 600ms cubic-bezier(0.22,1,0.36,1),transform 600ms cubic-bezier(0.22,1,0.36,1)}
+        [data-reveal].revealed{opacity:1;transform:translateY(0)}
+        [data-reveal-delay="1"].revealed{transition-delay:80ms}
+        [data-reveal-delay="2"].revealed{transition-delay:160ms}
+        .cta-btn{transition:filter 100ms,box-shadow 200ms,transform 100ms}
+        .cta-btn:hover{filter:brightness(1.08);box-shadow:0 8px 28px rgba(201,122,68,.38)!important}
+        .cta-btn:active{transform:scale(0.97)}
+        .nav-link:hover{color:${T.tx}!important}
+        .nav-drop-item:hover{background:${T.alt}!important}
+        @media(max-width:900px){.two-col{grid-template-columns:1fr!important}}
+        @media(max-width:900px){.hero-grid{grid-template-columns:1fr!important}}
+        @media(max-width:767px){
+          .nav-links{display:none!important}.nav-mobile-btn{display:flex!important}
+          .three-col{grid-template-columns:1fr!important}
+          .hero-ctas{flex-direction:column!important}
+          .hero-ctas a{width:100%!important;text-align:center!important;justify-content:center!important}
         }
-        .hero-card-depth-1 { transform: translateZ(0px); }
-        .hero-card-depth-2 { transform: translateZ(20px); }
-        .tdot { display:inline-block; width:6px; height:6px; border-radius:50%; background:#6B7280; animation:tdot 1.2s infinite }
-        .card-hover:hover { border-color:rgba(208,138,89,.3) !important; transition:border-color 180ms ease }
-        .btn-primary { transition:transform 105ms cubic-bezier(0.22,1,0.36,1), opacity 105ms ease, box-shadow 200ms ease }
-        .btn-primary:hover { filter:brightness(1.08); box-shadow:0 8px 32px rgba(201,122,68,.35) !important }
-        .btn-primary:active { transform:scale(0.97); opacity:0.92 }
-        .nav-link:hover { color:${C.tx} !important }
-        .faq-item:hover { background:${C.ev} }
-        .kpi-chip { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:9999px; font-size:12px; font-weight:600; border:1px solid }
-        .nav-desktop { display:flex }
-        .nav-hamburger { display:none }
-        .mobile-menu { display:none }
-        @media (prefers-reduced-motion:reduce) {
-          .hero-3d { animation:none; transform:none; }
-          .charIn-span { animation:none !important; opacity:1 !important; transform:none !important; }
-          .fade-up { animation:none !important; opacity:1 !important; transform:none !important; }
-          .ticker-strip { animation:none !important; }
-          [data-motion] { transition:none !important; }
-        }
-        @media (max-width:767px) {
-          .nav-desktop { display:none !important }
-          .nav-hamburger { display:flex !important }
-          .mobile-menu.open { display:flex !important }
-          .demo-layout { grid-template-columns:1fr !important }
-          .demo-cards { flex-wrap:wrap }
-          .tools-grid { grid-template-columns:1fr !important }
-          .pos-grid-4 { grid-template-columns:1fr 1fr !important }
-          .pos-grid-3 { grid-template-columns:1fr !important }
-          .steps-grid { grid-template-columns:1fr !important; gap:32px !important }
-          .steps-line { display:none !important }
-          .testimonials-grid { grid-template-columns:1fr !important }
-          .stats-grid { grid-template-columns:1fr 1fr !important }
-          .pricing-grid { grid-template-columns:1fr !important }
-          .learn-grid { grid-template-columns:1fr !important }
-          .academy-topics { grid-template-columns:1fr !important }
-          .footer-nav { justify-content:center }
-          .nav-mega-wrap { display:none !important }
-          .hero-ctas { flex-direction:column !important }
-          .hero-ctas a { width:100% !important; text-align:center !important; justify-content:center !important }
-          .mini-calc { max-width:100% !important }
-          .hero-preview-grid { grid-template-columns:1fr !important }
-        }
-        @media (max-width:480px) {
-          .pos-grid-4 { grid-template-columns:1fr !important }
-          .stats-grid { grid-template-columns:1fr !important }
-        }
-        /* ── Kill dot grid on landing (it's an AI template tell) */
-        body::before { display:none !important }
-        /* ── Hero split — collapse to single column on mobile */
-        @media (max-width:860px) {
-          .hero-split { grid-template-columns:1fr !important }
-          .hero-right-col { display:none !important }
-        }
-        input::placeholder { color: ${C.tx3} }
+        input::placeholder{color:${T.tx3}}
+        /* FAQ <details> — hide browser default triangle, rotate chevron when open */
+        .faq-item summary::-webkit-details-marker{display:none}
+        .faq-item summary::marker{display:none}
+        .faq-item[open] .faq-chevron{transform:rotate(180deg)}
+        .faq-item summary:hover h3{color:${T.acc}!important}
+        /* PosShowcase tab bar — hide scrollbar, show fade hint on right edge */
+        .pos-tabs::-webkit-scrollbar{display:none}
+        .pos-tabs{scrollbar-width:none;-ms-overflow-style:none}
+        .pos-tabs-wrap{position:relative}
+        .pos-tabs-wrap::after{content:'';position:absolute;top:0;right:0;width:32px;height:100%;background:linear-gradient(to left,#fff,transparent);pointer-events:none;z-index:1}
+        @media(prefers-reduced-motion:reduce){[data-reveal]{opacity:1;transform:none}*{animation:none!important}}
       `}</style>
 
-      {/* Cursor glow removed — reduces AI template feel */}
-
-      {/* ── NAV ───────────────────────────────────────────────────────────── */}
-      <nav style={{ position:'sticky', top:0, zIndex:50, background:C.nav, backdropFilter:'blur(20px)', borderBottom:`1px solid ${C.navBorder}`, padding:'0 clamp(16px,4vw,32px)', height:56, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <Link href="/" style={{ display:'flex', alignItems:'center', gap:8, textDecoration:'none', color:C.tx }}>
-          <div style={{ width:26, height:26, borderRadius:7, background:C.acc, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-            <Logo size={12} />
-          </div>
-          <span style={{ fontFamily:'var(--font-sora)', fontSize:15, fontWeight:700, letterSpacing:'-.02em' }}>AskBiz</span>
+      {/* ── NAV ──────────────────────────────────────────────────────── */}
+      <nav style={{ position:'sticky',top:0,zIndex:50,background:T.nav,backdropFilter:'blur(20px)',borderBottom:`1px solid ${T.bd}`,padding:'0 clamp(16px,3vw,32px)',height:56,display:'flex',alignItems:'center',justifyContent:'space-between',gap:8 }}>
+        <Link href="/" style={{ display:'flex',alignItems:'center',gap:8,textDecoration:'none',color:T.tx,flexShrink:0 }}>
+          <div style={{ width:28,height:28,borderRadius:8,background:T.acc,display:'flex',alignItems:'center',justifyContent:'center' }}><Logo size={13}/></div>
+          <span style={{ fontFamily:'var(--font-instrument)',fontSize:18,fontWeight:400,letterSpacing:'-.01em' }}>AskBiz</span>
         </Link>
 
-        <div className="nav-desktop" style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <a href="#pricing" className="nav-link" style={{ fontSize:13, color:C.tx2, textDecoration:'none', padding:'0 8px', transition:'color 150ms' }}>Pricing</a>
-          <div className="nav-mega-wrap" style={{ position:'relative' }} onMouseEnter={(e)=>{const d=e.currentTarget.querySelector('.nav-mega') as HTMLElement;if(d)d.style.display='block'}} onMouseLeave={(e)=>{const d=e.currentTarget.querySelector('.nav-mega') as HTMLElement;if(d)d.style.display='none'}}>
-            <span className="nav-link" style={{ fontSize:13, color:C.tx2, padding:'0 8px', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:3, transition:'color 150ms' }}>Resources <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2.5 4L5 6.5L7.5 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg></span>
-            <div className="nav-mega" style={{ display:'none', position:'absolute', top:'100%', right:0, paddingTop:8, zIndex:60 }}>
-              <div style={{ background:C.sf, borderRadius:12, boxShadow:'0 8px 24px rgba(0,0,0,.12)', padding:20, width:480, display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
-                {[
-                  { href:'/blog', title:'Blog', desc:'201 articles on AI, commerce & growth' },
-                  { href:'/academy', title:'Academy', desc:'420+ structured learning articles' },
-                  { href:'/free-tools', title:'Free Tools', desc:'VAT, landed cost, FX & break-even' },
-                  { href:'/case-studies', title:'Case Studies', desc:'Real results from real businesses' },
-                  { href:'/benchmarks', title:'Benchmarks', desc:'Industry KPIs across 8 sectors' },
-                  { href:'/help', title:'Help Center', desc:'Guides, FAQ & troubleshooting' },
-                  { href:'/glossary', title:'Glossary', desc:'Business & analytics terms explained' },
-                  { href:'/integrations', title:'Integrations', desc:'Shopify, Amazon, Xero & more' },
-                ].map(item=>(
-                  <Link key={item.href} href={item.href} style={{ display:'flex', alignItems:'flex-start', gap:10, padding:'10px 12px', borderRadius:10, textDecoration:'none', color:C.tx, transition:'background .12s' }} onMouseEnter={e=>{e.currentTarget.style.background=C.ev}} onMouseLeave={e=>{e.currentTarget.style.background='transparent'}}>
-                    <div>
-                      <div style={{ fontSize:13, fontWeight:700, color:C.tx, lineHeight:1.2 }}>{item.title}</div>
-                      <div style={{ fontSize:11, color:C.tx3, marginTop:2, lineHeight:1.4 }}>{item.desc}</div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-          <Link href="/signin" style={{ padding:'7px 14px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:13, fontWeight:500, textDecoration:'none' }}>Sign in</Link>
-          <Link href="/signin?mode=signup" className="btn-primary" style={{ padding:'8px 18px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none', fontFamily:'var(--font-sora)' }}>
+        {/* Desktop nav */}
+        <div className="nav-links" style={{ display:'flex',alignItems:'center',gap:0,flex:1,justifyContent:'center' }}>
+          {/* Product links */}
+          {[
+            ['/free-tools','Free Tools'],
+            ['/point-of-sale','Point of Sale'],
+            ['/integrations','Integrations'],
+          ].map(([href,label])=>(
+            <Link key={href} href={href} className="nav-link" style={{ fontSize:12,color:T.tx2,textDecoration:'none',padding:'0 9px',transition:'color 150ms',whiteSpace:'nowrap' }}>{label}</Link>
+          ))}
+
+          {/* Resources mega-dropdown */}
+          <NavDropdown label="Resources" items={[
+            {group:'Learn', links:[
+              {href:'/academy',label:'Academy',desc:'420+ free BI guides & courses'},
+              {href:'/blog',label:'Blog',desc:'Strategy, insights & case studies'},
+              {href:'/how-to',label:'How-To Guides',desc:'Step-by-step tutorials'},
+              {href:'/academy/learning-paths',label:'Learning Paths',desc:'Structured courses for founders'},
+            ]},
+            {group:'Reference', links:[
+              {href:'/glossary',label:'Business Glossary',desc:'300+ terms explained simply'},
+              {href:'/benchmarks',label:'Benchmarks',desc:'Industry KPIs & margin data'},
+              {href:'/free-tools',label:'All Free Tools',desc:'Calculators, FX, landed cost'},
+              {href:'/case-studies',label:'Case Studies',desc:'Real results from real businesses'},
+            ]},
+            {group:'Company', links:[
+              {href:'/changelog',label:'Changelog',desc:'What\'s new in AskBiz'},
+              {href:'/developers',label:'Developers',desc:'API docs & integrations'},
+              {href:'/transparency',label:'Transparency',desc:'Open company information'},
+            ]},
+          ]}/>
+
+          {/* Support */}
+          <NavDropdown label="Support" items={[
+            {group:'Help', links:[
+              {href:'/help',label:'Help Centre',desc:'Search 200+ support articles'},
+              {href:'/help/faq',label:'FAQ',desc:'Frequently asked questions'},
+              {href:'/help/glossary',label:'Metric Glossary',desc:'Business metrics & AskBiz terms'},
+            ]},
+          ]}/>
+
+          <Link href="#pricing" className="nav-link" style={{ fontSize:12,color:T.tx2,textDecoration:'none',padding:'0 9px',whiteSpace:'nowrap',transition:'color 150ms' }}>Pricing</Link>
+        </div>
+
+        <div style={{ display:'flex',alignItems:'center',gap:6,flexShrink:0 }}>
+          <Link href="/signin" style={{ padding:'7px 14px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:12,fontWeight:500,textDecoration:'none',whiteSpace:'nowrap' }}>Sign in</Link>
+          <Link href="/signin?mode=signup" className="cta-btn" style={{ padding:'8px 16px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:12,fontWeight:700,textDecoration:'none',whiteSpace:'nowrap' }}>
             Get started free →
           </Link>
         </div>
 
-        <div className="nav-hamburger" style={{ display:'none', alignItems:'center', gap:10 }}>
-          <Link href="/signin?mode=signup" className="btn-primary" style={{ padding:'7px 16px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none' }}>Try free</Link>
-          <button onClick={() => setMenuOpen(o => !o)} aria-label="Menu" style={{ width:40, height:40, borderRadius:10, border:`1px solid ${C.b}`, background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
-            {menuOpen ? (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.tx} strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.tx} strokeWidth="2" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-            )}
+        {/* Mobile hamburger */}
+        <div className="nav-mobile-btn" style={{ display:'none',alignItems:'center',gap:8 }}>
+          <Link href="/signin?mode=signup" className="cta-btn" style={{ padding:'7px 14px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:12,fontWeight:700,textDecoration:'none' }}>Try free</Link>
+          <button onClick={()=>setMenuOpen(o=>!o)} style={{ width:38,height:38,borderRadius:9,border:`1px solid ${T.bd}`,background:'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0 }}>
+            {menuOpen
+              ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.tx} strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.tx} strokeWidth="2" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>}
           </button>
         </div>
       </nav>
 
       {/* Mobile menu */}
-      <div className={`mobile-menu ${menuOpen ? 'open' : ''}`} style={{ display:'none', flexDirection:'column', gap:0, position:'fixed', top:56, left:0, right:0, bottom:0, background:C.bg, zIndex:49, overflowY:'auto', padding:'16px 20px 32px' }}>
-        <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
-          {[{ href:'#pricing', label:'Pricing' },{ href:'/point-of-sale', label:'Point of Sale' },{ href:'/blog', label:'Blog' },{ href:'/academy', label:'Academy' },{ href:'/free-tools', label:'Free Tools' },{ href:'/help', label:'Help Center' },{ href:'/integrations', label:'Integrations' }].map(item => (
-            <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} style={{ display:'block', padding:'14px 12px', borderRadius:10, fontSize:15, fontWeight:600, color:C.tx, textDecoration:'none', borderBottom:`1px solid ${C.b}` }}>{item.label}</a>
-          ))}
-        </div>
-        <div style={{ marginTop:24, display:'flex', flexDirection:'column', gap:10 }}>
-          <Link href="/signin?mode=signup" onClick={() => setMenuOpen(false)} className="btn-primary" style={{ display:'block', padding:'14px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', textAlign:'center' }}>Start free</Link>
-          <Link href="/signin" onClick={() => setMenuOpen(false)} style={{ display:'block', padding:'14px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:14, fontWeight:500, textDecoration:'none', textAlign:'center' }}>Sign in</Link>
-        </div>
-      </div>
-
-      {/* ── HERO — split layout, product UI bleeds right ──────────────────── */}
-      <section style={{ position:'relative', overflow:'hidden' }}>
-        {/* Right-half colour field — the diptych split */}
-        <div aria-hidden style={{ position:'absolute', right:0, top:0, bottom:0, width:'52%', background:C.sf, zIndex:0 }} />
-
-        <div className="hero-split" style={{ maxWidth:1280, margin:'0 auto', width:'100%', padding:'0 clamp(16px,4vw,48px)', display:'grid', gridTemplateColumns:'1fr 1.2fr', alignItems:'stretch', position:'relative', zIndex:1 }}>
-
-          {/* ── Left: copy ─────────────────────────────────────────────────── */}
-          <div style={{ padding:'clamp(56px,8vw,108px) clamp(0px,2vw,20px) clamp(56px,8vw,108px) 0', display:'flex', flexDirection:'column', justifyContent:'center' }}>
-
-            {/* Category marker — intentional, not a pill badge */}
-            <p style={{ fontSize:11, fontWeight:700, color:C.acc, letterSpacing:'.16em', textTransform:'uppercase', marginBottom:28 }}>
-              Business intelligence · Point of Sale
-            </p>
-
-            {/* H1 — direct, no animations */}
-            <h1 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(36px,4vw,56px)', fontWeight:700, lineHeight:1.05, letterSpacing:'-.03em', marginBottom:22, color:C.tx }}>
-              Ask your business data <span style={{ color:C.acc }}>anything</span>.
-            </h1>
-
-            <p style={{ fontSize:'clamp(14px,1.4vw,16px)', color:C.tx2, lineHeight:1.75, marginBottom:48, maxWidth:380 }}>
-              Every sale your register takes feeds directly into your AI. Ask questions in plain English, spot problems, act fast.
-            </p>
-
-            {/* CTAs */}
-            <div className="hero-ctas" style={{ display:'flex', gap:10, flexWrap:'wrap', marginBottom:28 }}>
-              <Link href="/signin?mode=signup" className="btn-primary" style={{ padding:'13px 26px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:14, fontWeight:700, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8, letterSpacing:'-.01em' }}>
-                {geoCtaText}
-              </Link>
-              <Link href="/point-of-sale" style={{ padding:'13px 20px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:14, fontWeight:500, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:6 }}>
-                See the PoS →
-              </Link>
-            </div>
-
-            {/* Trust */}
-            <div style={{ display:'flex', gap:14, flexWrap:'wrap', fontSize:12, color:C.tx3 }}>
-              <span>✓ 3 months free · no card</span>
-              <span>✓ GDPR compliant</span>
-              <span>✓ UK data residency</span>
-            </div>
-            <p style={{ fontSize:12, color:C.tx3, marginTop:6 }}>
-              {country ? `${flag} ` : ''}{geoSubText} · PoS from {posPrice}/seat/mo
-            </p>
-          </div>
-
-          {/* ── Right: product UI bleeding to viewport edge ─────────────────── */}
-          <div className="hero-right-col" style={{ display:'flex', alignItems:'stretch', paddingLeft:'clamp(20px,3vw,40px)', paddingTop:'clamp(24px,4vw,40px)', paddingBottom:'clamp(24px,4vw,40px)', marginRight:'calc(-1 * clamp(16px,4vw,48px))' }}>
-            <div style={{ width:'100%', background:C.bg, borderRadius:'12px 0 0 12px', border:`1px solid ${C.b}`, borderRight:'none', overflow:'hidden', display:'flex', flexDirection:'column' }}>
-
-              {/* Browser chrome */}
-              <div style={{ padding:'10px 16px', background:C.ev, borderBottom:`1px solid ${C.b}`, display:'flex', alignItems:'center', gap:10 }}>
-                <div style={{ display:'flex', gap:5 }}>
-                  {(['#ff5f57','#febc2e','#28c840'] as const).map(c => (
-                    <div key={c} style={{ width:10, height:10, borderRadius:'50%', background:c }} />
-                  ))}
-                </div>
-                <div style={{ flex:1, background:C.sf, borderRadius:5, height:22, display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:C.tx3 }}>
-                  app.askbiz.co/intelligence
-                </div>
-              </div>
-
-              {/* App shell */}
-              <div style={{ display:'grid', gridTemplateColumns:'172px 1fr', flex:1, minHeight:380, overflow:'hidden' }}>
-
-                {/* Sidebar */}
-                <div style={{ borderRight:`1px solid ${C.b}`, padding:'14px 10px', display:'flex', flexDirection:'column', gap:2, background:C.sf }}>
-                  <div style={{ fontSize:9, fontWeight:700, color:C.tx3, letterSpacing:'.1em', textTransform:'uppercase', padding:'2px 8px', marginBottom:6 }}>Conversations</div>
-                  {[
-                    { q:'Best margin product?', active:true },
-                    { q:'Churn risk this month', active:false },
-                    { q:'Tuesday revenue drop', active:false },
-                    { q:'FX impact on margins', active:false },
-                  ].map((item, i) => (
-                    <div key={i} style={{ padding:'7px 10px', borderRadius:7, background:item.active ? C.accBg : 'transparent', color:item.active ? C.acc : C.tx2, fontSize:11, fontWeight:item.active ? 600 : 400 }}>
-                      {item.q}
-                    </div>
-                  ))}
-                  <div style={{ marginTop:'auto', paddingTop:12, borderTop:`1px solid ${C.b}` }}>
-                    <div style={{ fontSize:9, fontWeight:700, color:C.tx3, letterSpacing:'.1em', textTransform:'uppercase', padding:'2px 8px', marginBottom:6 }}>Tools</div>
-                    {['FX Risk Monitor','Supplier Scorecard','Landed Cost'].map((t, i) => (
-                      <div key={i} style={{ padding:'6px 10px', borderRadius:7, color:C.tx2, fontSize:11 }}>{t}</div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Chat */}
-                <div style={{ padding:'18px 20px', display:'flex', flexDirection:'column', gap:12, overflow:'hidden' }}>
-                  <div style={{ display:'flex', justifyContent:'flex-end' }}>
-                    <div style={{ padding:'9px 14px', borderRadius:'14px 14px 3px 14px', background:C.ev2, border:`1px solid ${C.b}`, fontSize:12, color:C.tx }}>
-                      What is my best margin product?
-                    </div>
-                  </div>
-                  <div style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
-                    <div style={{ width:26, height:26, borderRadius:8, background:C.acc, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                      <Logo size={11} />
-                    </div>
-                    <div>
-                      <div style={{ padding:'10px 14px', borderRadius:'3px 14px 14px 14px', background:C.ev, border:`1px solid ${C.b}`, fontSize:12, lineHeight:1.7, color:C.tx, marginBottom:8, maxWidth:340 }}>
-                        <strong>Wireless Earbuds</strong> — 34.2% gross margin, £8.22 profit per unit. At 143 units/month that&apos;s <strong>£1,175</strong> in monthly profit from one SKU.
-                      </div>
-                      <div style={{ display:'flex', gap:5 }}>
-                        <span style={{ display:'inline-flex', alignItems:'center', gap:4, padding:'3px 9px', borderRadius:9999, fontSize:10, fontWeight:600, background:'rgba(34,197,94,.08)', color:'#16a34a', border:'1px solid rgba(34,197,94,.2)' }}>Margin 34.2%</span>
-                        <span style={{ display:'inline-flex', alignItems:'center', gap:4, padding:'3px 9px', borderRadius:9999, fontSize:10, fontWeight:600, background:'rgba(34,197,94,.08)', color:'#16a34a', border:'1px solid rgba(34,197,94,.2)' }}>£1,175/mo</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display:'flex', justifyContent:'flex-end' }}>
-                    <div style={{ padding:'9px 14px', borderRadius:'14px 14px 3px 14px', background:C.ev2, border:`1px solid ${C.b}`, fontSize:12, color:C.tx }}>
-                      Why did revenue drop Tuesday?
-                    </div>
-                  </div>
-                  <div style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
-                    <div style={{ width:26, height:26, borderRadius:8, background:C.acc, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                      <Logo size={11} />
-                    </div>
-                    <div style={{ padding:'10px 14px', borderRadius:'3px 14px 14px 14px', background:C.ev, border:`1px solid ${C.b}`, fontSize:12, lineHeight:1.7, color:C.tx, maxWidth:340 }}>
-                      Tuesday PoS revenue was <strong>£340 below</strong> the 4-week average. Lunch shift had 6 fewer transactions — check if the till opened late.
-                    </div>
-                  </div>
-                  {/* Typing indicator */}
-                  <div style={{ display:'flex', gap:10, alignItems:'center' }}>
-                    <div style={{ width:26, height:26, borderRadius:8, background:C.acc, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                      <Logo size={11} />
-                    </div>
-                    <div style={{ display:'flex', gap:4, padding:'10px 14px', background:C.ev, border:`1px solid ${C.b}`, borderRadius:'3px 14px 14px 14px' }}>
-                      <span className="tdot" style={{ animationDelay:'0ms' }} />
-                      <span className="tdot" style={{ animationDelay:'160ms' }} />
-                      <span className="tdot" style={{ animationDelay:'320ms' }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+      {menuOpen&&(
+        <div style={{ display:'flex',flexDirection:'column',position:'fixed',top:56,left:0,right:0,bottom:0,background:T.bg,zIndex:49,overflowY:'auto',padding:'8px 20px 32px' }}>
+          {[
+            ['','— Product —',''],
+            ['/free-tools','Free Tools',''],
+            ['/point-of-sale','Point of Sale',''],
+            ['/integrations','Integrations',''],
+            ['','— Learn —',''],
+            ['/academy','Academy',''],
+            ['/blog','Blog',''],
+            ['/how-to','How-To Guides',''],
+            ['/case-studies','Case Studies',''],
+            ['/glossary','Business Glossary',''],
+            ['/benchmarks','Benchmarks',''],
+            ['','— Company —',''],
+            ['/changelog','Changelog',''],
+            ['/developers','Developers',''],
+            ['/help','Help Centre',''],
+            ['/help/faq','FAQ',''],
+            ['#pricing','Pricing',''],
+          ].map(([href,label],i)=>
+            !href ? (
+              <div key={i} style={{ padding:'12px 12px 4px',fontSize:9,fontWeight:700,color:T.acc,letterSpacing:'.12em',textTransform:'uppercase' }}>{label}</div>
+            ) : (
+              <a key={href} href={href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'11px 12px',fontSize:14,fontWeight:500,color:T.tx,textDecoration:'none',borderBottom:`1px solid ${T.bd}` }}>{label}</a>
+            )
+          )}
+          <div style={{ marginTop:20,display:'flex',flexDirection:'column',gap:10 }}>
+            <Link href="/signin?mode=signup" onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:15,fontWeight:700,textDecoration:'none',textAlign:'center' }}>Start free</Link>
+            <Link href="/signin" onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',textAlign:'center' }}>Sign in</Link>
           </div>
         </div>
-      </section>
+      )}
 
-      {/* ── PRODUCT DEMO ──────────────────────────────────────────────────── */}
-      <InteractiveDemo C={C} />
-
-      {/* ── INTEGRATION TICKER ────────────────────────────────────────────── */}
-      <div style={{ borderTop:`1px solid ${C.b}`, borderBottom:`1px solid ${C.b}`, background:C.sf, padding:'14px 0', overflow:'hidden' }}>
-        <p style={{ textAlign:'center', fontSize:11, fontWeight:600, color:C.tx3, letterSpacing:'.08em', marginBottom:12, textTransform:'uppercase' }}>
-          Connects to your platforms
-        </p>
-        <div className="ticker-strip" style={{ display:'flex', gap:0, animation:'ticker 20s linear infinite', width:'max-content' }}>
-          {[...INTEGRATIONS, ...INTEGRATIONS].map((name, i) => (
-            <div key={i} style={{ padding:'6px 28px', borderRight:`1px solid ${C.b}`, fontSize:13, fontWeight:500, color:C.tx2, whiteSpace:'nowrap' }}>
-              {name}
-            </div>
-          ))}
+      {/* ── HERO ─────────────────────────────────────────────────────── */}
+      <section id="calc" style={{ position:'relative',minHeight:'100svh',display:'flex',alignItems:'center' }}>
+        <div style={{ position:'absolute',inset:0,zIndex:0,pointerEvents:'none' }}>
+          <SkullCanvas scroll={scrollY} mouse={mouse} />
         </div>
-      </div>
-
-      {/* ── PROFIT CALCULATOR ─────────────────────────────────────────────── */}
-      <section style={{ maxWidth:760, margin:'0 auto', padding:'clamp(48px,6vw,72px) clamp(16px,4vw,40px)' }}>
-        <div data-motion style={{ marginBottom:28 }}>
-          <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3vw,34px)', fontWeight:700, lineHeight:1.1, letterSpacing:'-.03em', color:C.tx, marginBottom:12 }}>
-            How much are you actually making?
-          </h2>
-          <p style={{ fontSize:15, color:C.tx2, lineHeight:1.7, maxWidth:480 }}>
-            Drop in a product price, cost, and margin target. AskBiz shows you this in real time for every SKU.
-          </p>
-        </div>
-        <div data-motion>
-          <MiniCalcWidget C={C} />
-        </div>
-      </section>
-
-      {/* ── YOUR PoS + INTELLIGENCE ────────────────────────────────────────── */}
-      <section style={{ maxWidth:1060, margin:'0 auto', padding:'clamp(64px,8vw,100px) clamp(16px,4vw,40px)' }}>
-
-        {/* Section headline — no eyebrow */}
-        <div data-motion style={{ maxWidth:640, marginBottom:52 }}>
-          <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(26px,4vw,46px)', fontWeight:700, lineHeight:1.1, letterSpacing:'-.03em', color:C.tx, marginBottom:16, textWrap:'balance' as any }}>
-            Your register and your intelligence.<br/>
-            <span style={{ color:C.tx2 }}>Finally in one place.</span>
-          </h2>
-          <p style={{ fontSize:16, color:C.tx2, lineHeight:1.7, maxWidth:480 }}>
-            Most businesses run their register and analytics in two separate worlds. AskBiz connects them — every sale, shift, and stock movement feeds your intelligence layer automatically.
-          </p>
-        </div>
-
-        {/* Editorial layout: 1 large + 2 smaller */}
-        <div style={{ display:'grid', gridTemplateColumns:'1.4fr 1fr', gap:14 }}>
-
-          {/* Large feature */}
-          <div style={{ background:C.sf, border:`1px solid ${C.b}`, borderRadius:20, padding:'32px 28px', display:'flex', flexDirection:'column', gap:16 }}>
-            <div style={{ width:40, height:40, borderRadius:11, background:C.accBg, border:`1px solid ${C.accBdr}`, display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <svg width="18" height="18" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill={C.acc} opacity="0.5"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill={C.acc} opacity="0.75"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill={C.acc}/></svg>
-            </div>
+        <div style={{ position:'absolute',top:'20%',left:'5%',width:'50%',height:'60%',background:'radial-gradient(ellipse,rgba(201,122,68,.05) 0%,transparent 70%)',pointerEvents:'none',zIndex:1 }}/>
+        <div style={{ maxWidth:1280,margin:'0 auto',width:'100%',padding:'clamp(80px,10vw,100px) clamp(20px,5vw,80px)',position:'relative',zIndex:2 }}>
+          <div className="hero-grid" style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:'clamp(32px,4vw,64px)',alignItems:'center' }}>
+            {/* Left — headline */}
             <div>
-              <div style={{ fontFamily:'var(--font-sora)', fontSize:20, fontWeight:700, color:C.tx, marginBottom:10 }}>Intelligence analyses every sale</div>
-              <p style={{ fontSize:14, color:C.tx2, lineHeight:1.7, margin:0 }}>Ask which products drive your margin. Spot slow-moving stock before it becomes a problem. Get alerted when a cashier shift has an unusual variance.</p>
+              <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.18em',textTransform:'uppercase',marginBottom:24 }}>
+                Business Intelligence · Point of Sale
+              </p>
+              <h1 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(38px,5vw,72px)',fontWeight:400,lineHeight:.98,letterSpacing:'-.025em',marginBottom:28,color:T.tx }}>
+                Ask your business<br/>
+                <em style={{ color:T.acc,fontStyle:'italic' }}>anything.</em>
+              </h1>
+              <p style={{ fontSize:'clamp(15px,1.4vw,18px)',color:T.tx2,lineHeight:1.7,marginBottom:36,maxWidth:420 }}>
+                Every sale, every supplier, every margin — answered in plain English. No spreadsheets. No IT team. No learning curve.
+              </p>
+              <div className="hero-ctas" style={{ display:'flex',gap:12,flexWrap:'wrap',marginBottom:24 }}>
+                <Link href="/signin?mode=signup" className="cta-btn" style={{ padding:'14px 28px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8,boxShadow:`0 4px 24px rgba(201,122,68,.3)` }}>
+                  Start 3-month free trial
+                </Link>
+                <a href="#pos" style={{ padding:'14px 20px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'rgba(255,255,255,.6)',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6,backdropFilter:'blur(8px)' }}>
+                  See how it works ↓
+                </a>
+              </div>
+              <div style={{ display:'flex',gap:16,flexWrap:'wrap',fontSize:12,color:T.tx3 }}>
+                <span>✓ 3-month free trial · no card required</span>
+                <span>✓ GDPR compliant · UK data residency</span>
+                <span>✓ Ready in 2 minutes</span>
+              </div>
+              {country && <p style={{ fontSize:12,color:T.tx3,marginTop:8 }}>{flag} Prices shown in local currency for {country}</p>}
             </div>
-            <Link href="/signin" style={{ marginTop:'auto', display:'inline-flex', alignItems:'center', gap:6, fontSize:14, fontWeight:600, color:C.acc, textDecoration:'none' }}>
-              Try it free →
-            </Link>
-          </div>
-
-          {/* 2 smaller stacked */}
-          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-            <div style={{ background:C.sf, border:`1px solid ${C.b}`, borderRadius:20, padding:'24px 22px', flex:1 }}>
-              <div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:C.tx, marginBottom:10 }}>Ring up sales</div>
-              <p style={{ fontSize:13, color:C.tx2, lineHeight:1.65, margin:'0 0 14px' }}>Full register with barcode scanning, multi-item baskets, discounts, refunds, and digital receipts. Works on any browser — no hardware needed.</p>
-              <Link href="/point-of-sale" style={{ fontSize:13, fontWeight:600, color:C.acc, textDecoration:'none' }}>See the PoS →</Link>
-            </div>
-            <div style={{ background:C.sf, border:`1px solid ${C.b}`, borderRadius:20, padding:'24px 22px', flex:1 }}>
-              <div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:C.tx, marginBottom:10 }}>Staff, inventory & branches</div>
-              <p style={{ fontSize:13, color:C.tx2, lineHeight:1.65, margin:'0 0 14px' }}>Multi-branch PoS with per-location stock, staff OTP login, shift tracking, factory captures, service jobs, and role-based permissions.</p>
-              <Link href="/point-of-sale" style={{ fontSize:13, fontWeight:600, color:C.acc, textDecoration:'none' }}>Learn more →</Link>
+            {/* Right — calculator */}
+            <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
+              <p style={{ fontSize:10,fontWeight:700,color:T.acc,letterSpacing:'.14em',textTransform:'uppercase',marginBottom:4,textAlign:'center' }}>
+                Free tool — no login needed
+              </p>
+              <MiniCalcWidget />
             </div>
           </div>
         </div>
-      </section>
-
-      {/* ── THE PROBLEM — atmospheric dark section ───────────────────────── */}
-      <section style={{ background:C.sf, borderTop:`1px solid ${C.b}`, borderBottom:`1px solid ${C.b}` }}>
-        <div style={{ maxWidth:900, margin:'0 auto', padding:'clamp(64px,8vw,100px) clamp(16px,4vw,40px)' }}>
-          <h2 data-motion style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(26px,4vw,46px)', fontWeight:700, lineHeight:1.1, letterSpacing:'-.03em', color:C.tx, marginBottom:16, maxWidth:640, textWrap:'balance' as any }}>
-            Your business generates data every day.
-            <br/><span style={{ color:C.tx3 }}>Almost none of it reaches a decision.</span>
-          </h2>
-          <p style={{ fontSize:'clamp(14px,1.6vw,17px)', color:C.tx2, lineHeight:1.75, maxWidth:520, marginBottom:48 }}>
-            Most founders run on instinct — not because they want to, but because getting to the data takes too long. By the time you&apos;ve pulled the reports, the moment has passed.
-          </p>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:1, borderRadius:16, overflow:'hidden', border:`1px solid ${C.b}` }} className="pos-grid-3">
-            {[
-              { before:'2 hours to pull Monday numbers', after:'4 minutes with AskBiz' },
-              { before:'Margin looked like 34%', after:'Actually 18.4% once you include freight, duty, and FX' },
-              { before:'Found out customer churned', after:'Flagged 89 days before they left' },
-            ].map((item, i) => (
-              <div key={i} style={{ padding:'28px 22px', background:C.ev, borderRight:i<2?`1px solid ${C.b}`:'none' }}>
-                <div style={{ fontSize:13, color:C.tx3, lineHeight:1.6, marginBottom:14, textDecoration:'line-through', opacity:.5 }}>
-                  {item.before}
-                </div>
-                <div style={{ fontSize:14, color:C.acc, fontWeight:600, lineHeight:1.6 }}>
-                  ↓ {item.after}
-                </div>
-              </div>
-            ))}
-          </div>
+        <div style={{ position:'absolute',bottom:24,left:'50%',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:6,zIndex:2,opacity:Math.max(0,1-scrollY/250),pointerEvents:'none' }}>
+          <span style={{ fontSize:9,color:T.tx3,letterSpacing:'.14em',textTransform:'uppercase' }}>Scroll</span>
+          <div style={{ width:1,height:28,background:`linear-gradient(to bottom,${T.bd},transparent)` }}/>
         </div>
       </section>
 
-      {/* ── BUSINESS TOOLS ────────────────────────────────────────────────── */}
-      <section style={{ maxWidth:960, margin:'0 auto', padding:'clamp(64px,8vw,100px) clamp(16px,4vw,40px)' }}>
-        <div className="tools-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'clamp(40px,6vw,80px)', alignItems:'start' }}>
-          <div data-motion>
-            <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(24px,3.5vw,38px)', fontWeight:700, lineHeight:1.12, letterSpacing:'-.03em', marginBottom:16, color:C.tx, textWrap:'balance' as any }}>
-              Five tools that pay for themselves the first time you use them.
-            </h2>
-            <p style={{ fontSize:15, color:C.tx2, lineHeight:1.7, marginBottom:28 }}>
-              Pre-filled from your connected data. Review, adjust, calculate. No spreadsheets.
-            </p>
-            <Link href="/signin?mode=signup" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'12px 22px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:14, fontWeight:600, textDecoration:'none', boxShadow:`0 0 24px rgba(208,138,89,.25)` }}>
-              Open the tools →
-            </Link>
+      {/* ── STATS BAR ─────────────────────────────────────────────────── */}
+      <div style={{ borderTop:`1px solid ${T.bd}`,borderBottom:`1px solid ${T.bd}`,background:T.card,padding:'16px clamp(16px,4vw,40px)',display:'flex',alignItems:'center',justifyContent:'center',gap:'clamp(24px,4vw,64px)',flexWrap:'wrap' }}>
+        {[
+          {value:'4 min',label:'vs 2 hrs to pull your Monday numbers'},
+          {value:'£400/mo',label:'average bottom-line gain in month 1'},
+          {value:'89 days',label:'earlier churn detection on average'},
+          {value:'30+',label:'live integrations — one click to connect'},
+        ].map((stat,i)=>(
+          <div key={i} style={{ textAlign:'center',flexShrink:0 }}>
+            <div style={{ fontFamily:'var(--font-instrument)',fontSize:26,fontWeight:400,color:T.acc,lineHeight:1 }}>{stat.value}</div>
+            <div style={{ fontSize:11,color:T.tx3,marginTop:2,maxWidth:140 }}>{stat.label}</div>
           </div>
-          <div style={{ display:'flex', flexDirection:'column', border:`1px solid ${C.b}`, borderRadius:16, overflow:'hidden' }}>
-            {TOOLS.map((tool, i) => (
-              <div key={i} className="card-hover" style={{ padding:'18px 20px', borderBottom:i<TOOLS.length-1?`1px solid ${C.b}`:'none', background:C.sf, transition:'background 150ms' }} onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background=C.ev}} onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background=C.sf}}>
-                <div style={{ fontSize:14, fontWeight:700, color:C.tx, marginBottom:4, fontFamily:'var(--font-sora)' }}>{tool.label}</div>
-                <div style={{ fontSize:13, color:C.tx2, lineHeight:1.6 }}>{tool.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        ))}
+      </div>
 
-      {/* ── POINT OF SALE ─────────────────────────────────────────────────── */}
-      <section id="pos" style={{ background:C.sf, borderTop:`1px solid ${C.b}`, borderBottom:`1px solid ${C.b}` }}>
-        <div style={{ maxWidth:1060, margin:'0 auto', padding:'clamp(64px,8vw,100px) clamp(16px,4vw,40px)' }}>
-          <div style={{ maxWidth:600, marginBottom:44 }}>
-            <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(26px,4vw,44px)', fontWeight:700, lineHeight:1.1, letterSpacing:'-.03em', color:C.tx, marginBottom:14, textWrap:'balance' as any }}>
-              A full PoS system — built into your intelligence platform.
-            </h2>
-            <p style={{ fontSize:'clamp(14px,1.6vw,16px)', color:C.tx2, lineHeight:1.7, margin:0 }}>
-              Ring up sales, manage inventory across branches, track staff shifts, and stay tax-compliant — all while your AI learns from every transaction.
-            </p>
-          </div>
-
-          <div className="pos-grid-4" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:12, marginBottom:12 }}>
-            {[
-              { title:'Register & Checkout', desc:'Fast checkout with barcode scanning, split payments, refunds, and digital receipts. Works on tablet or desktop.', tag:'Core' },
-              { title:'Inventory & Stock', desc:'Real-time stock levels, low-stock alerts, stock transfers between branches, and AI reorder recommendations.', tag:'Smart' },
-              { title:'Multi-Branch', desc:'Manage multiple locations from one dashboard. Per-branch reporting, staff, inventory, and tax settings.', tag:'Scale' },
-              { title:'Staff & Shifts', desc:'Role-based access for cashiers and managers. Shift open/close, OTP login, and per-cashier performance tracking.', tag:'Team' },
-            ].map((f, i) => (
-              <div key={i} style={{ padding:'22px 18px', borderRadius:16, border:`1px solid ${C.b}`, background:C.ev, display:'flex', flexDirection:'column', gap:10 }}>
-                <span style={{ fontSize:10, fontWeight:700, color:C.acc, background:C.accBg, border:`1px solid ${C.accBdr}`, padding:'2px 8px', borderRadius:9999, textTransform:'uppercase', letterSpacing:'.05em', alignSelf:'flex-start' }}>{f.tag}</span>
-                <div style={{ fontFamily:'var(--font-sora)', fontSize:14, fontWeight:700, color:C.tx }}>{f.title}</div>
-                <p style={{ fontSize:12, color:C.tx2, lineHeight:1.65, margin:0 }}>{f.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="pos-grid-3" style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:12 }}>
-            {[
-              { title:'Tax & Compliance', desc:'Multi-jurisdiction VAT, consolidated tax reports, and filing previews. Xero and QuickBooks sync built in.' },
-              { title:'GDPR Ready', desc:'Customer data export, deletion, consent logging, and data retention reports — all one click.' },
-              { title:'AI Intelligence', desc:'Anomaly detection on transactions, AI supplier recommendations, and sales pattern insights from your PoS data.' },
-            ].map((f, i) => (
-              <div key={i} style={{ padding:'18px 16px', borderRadius:14, border:`1px solid ${C.b}`, background:C.ev }}>
-                <div style={{ fontFamily:'var(--font-sora)', fontSize:14, fontWeight:700, color:C.tx, marginBottom:6 }}>{f.title}</div>
-                <div style={{ fontSize:12, color:C.tx2, lineHeight:1.6 }}>{f.desc}</div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ marginTop:36 }}>
-            <Link href="/signin?mode=signup" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'12px 24px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:14, fontWeight:700, textDecoration:'none', boxShadow:`0 0 24px rgba(208,138,89,.25)` }}>
-              Try the PoS free →
-            </Link>
-            <span style={{ fontSize:12, color:C.tx3, marginLeft:16 }}>{posPrice} per seat/month · Works on tablet or desktop</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS ──────────────────────────────────────────────────── */}
-      <section style={{ maxWidth:860, margin:'0 auto', padding:'clamp(64px,8vw,100px) clamp(16px,4vw,40px)' }}>
-        <h2 data-motion style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(24px,3.5vw,38px)', fontWeight:700, textAlign:'center', marginBottom:56, letterSpacing:'-.03em', color:C.tx }}>
-          Up and running in under 5 minutes
-        </h2>
-        <div className="steps-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:0, position:'relative' }}>
-          <div className="steps-line" style={{ position:'absolute', top:28, left:'16.6%', right:'16.6%', height:1, background:`linear-gradient(90deg, ${C.acc}, rgba(208,138,89,.2))`, zIndex:0 }}/>
-          {[
-            { num:'1', title:'Connect your data', body:'Shopify, Amazon, QuickBooks, TikTok Shop — or drop a CSV. Takes 2 minutes.' },
-            { num:'2', title:'Ask in plain English', body:'"What is my best margin product?" "Which customers are about to churn?" No SQL, no dashboards.' },
-            { num:'3', title:'Get specific answers', body:'Real numbers from your actual data. Recommended actions. Every time.' },
-          ].map((step, i) => (
-            <div key={i} style={{ padding:'0 clamp(12px,2vw,28px)', textAlign:'center', position:'relative', zIndex:1 }}>
-              <div style={{ width:56, height:56, borderRadius:14, background:i===0?C.acc:C.ev, border:`1px solid ${i===0?'transparent':C.b}`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 20px', boxShadow:i===0?`0 0 24px rgba(208,138,89,.35)`:'none' }}>
-                <span style={{ fontFamily:'var(--font-sora)', fontWeight:800, fontSize:20, color:i===0?'#fff':C.tx3 }}>{step.num}</span>
-              </div>
-              <h3 style={{ fontFamily:'var(--font-sora)', fontSize:15, fontWeight:700, color:C.tx, marginBottom:8 }}>{step.title}</h3>
-              <p style={{ fontSize:13, color:C.tx2, lineHeight:1.65, margin:0 }}>{step.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── TESTIMONIALS ──────────────────────────────────────────────────── */}
-      <section style={{ background:C.sf, borderTop:`1px solid ${C.b}`, borderBottom:`1px solid ${C.b}`, padding:'clamp(64px,8vw,100px) clamp(16px,4vw,40px)' }}>
-        <div style={{ maxWidth:960, margin:'0 auto' }}>
-          <blockquote data-motion style={{ margin:'0 auto 48px', maxWidth:640, textAlign:'center' }}>
-            <p style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(18px,2.8vw,28px)', fontWeight:600, lineHeight:1.35, color:C.tx, marginBottom:24, letterSpacing:'-.02em' }}>
-              &ldquo;Connected my Amazon store and it found a margin problem I had been missing for 4 months. Fixed it the same day. Added £400/month to my bottom line.&rdquo;
-            </p>
-            <cite style={{ fontSize:13, color:C.tx3, fontStyle:'normal', display:'flex', alignItems:'center', gap:8, justifyContent:'center' }}>
-              <div style={{ width:32, height:32, borderRadius:'50%', background:C.acc, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:'#fff' }}>DO</div>
-              <span><strong style={{ color:C.tx2 }}>David O.</strong> · Amazon FBA seller · Lagos</span>
-            </cite>
-          </blockquote>
-          <div className="testimonials-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
-            {TESTIMONIALS.slice(1).map((tm, i) => (
-              <figure key={i} style={{ margin:0, padding:'22px', borderRadius:16, border:`1px solid ${C.b}`, background:C.ev }}>
-                <blockquote style={{ margin:'0 0 16px', padding:0 }}>
-                  <p style={{ fontSize:14, lineHeight:1.7, color:C.tx, margin:0 }}>&ldquo;{tm.text}&rdquo;</p>
-                </blockquote>
-                <figcaption style={{ display:'flex', alignItems:'center', gap:9 }}>
-                  <div style={{ width:32, height:32, borderRadius:'50%', background:C.ev2, border:`1px solid ${C.b}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:C.tx2, flexShrink:0 }}>{tm.avatar}</div>
-                  <div>
-                    <div style={{ fontSize:13, fontWeight:600, color:C.tx }}>{tm.name}</div>
-                    <div style={{ fontSize:11, color:C.tx3 }}>{tm.role} · {tm.location}</div>
+      {/* ── INTELLIGENCE / MONITOR ────────────────────────────────────── */}
+      <section style={{ padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)',background:T.bg }}>
+        <div style={{ maxWidth:1060,margin:'0 auto' }}>
+          <div className="two-col" style={{ display:'grid',gridTemplateColumns:'1fr 1.7fr',gap:'clamp(36px,5vw,64px)',alignItems:'center' }}>
+            <div data-reveal>
+              <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:18 }}>Intelligence Platform</p>
+              <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
+                Your business,<br/><em style={{ color:T.acc,fontStyle:'italic' }}>monitored 24/7.</em>
+              </h2>
+              <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,marginBottom:22,maxWidth:320 }}>
+                Revenue trends, margin alerts, daily briefs — instant, automatic, and always up to date.
+              </p>
+              <div style={{ display:'flex',flexDirection:'column',gap:9 }}>
+                {[
+                  {icon:'⚡',label:'AI anomaly alerts — catches drops before you do'},
+                  {icon:'📊',label:'CFO dashboard — P&L, cash flow, margins in one view'},
+                  {icon:'🧠',label:'Decision memory — AI remembers what you\'ve decided'},
+                  {icon:'⏰',label:'Daily brief — your top 3 actions, every morning'},
+                ].map((f,i)=>(
+                  <div key={i} style={{ display:'flex',gap:9,alignItems:'flex-start',fontSize:13,color:T.tx2 }}>
+                    <span style={{ fontSize:14,flexShrink:0 }}>{f.icon}</span><span>{f.label}</span>
                   </div>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── IMPACT STORIES ────────────────────────────────────────────────── */}
-      <section style={{ maxWidth:960, margin:'0 auto', padding:'clamp(48px,6vw,72px) clamp(16px,4vw,40px)' }}>
-        <div className="stats-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
-          {[
-            { quote:'Found a margin gap he\'d been missing for 4 months. Fixed it the same day.', name:'David O.', detail:'Amazon FBA · Lagos' },
-            { quote:'Replaced 2 hours of Monday reports with 4 minutes of answers.', name:'James K.', detail:'Retail shop owner · Nairobi' },
-            { quote:'Flagged 3 customers at risk — 89 days before they stopped buying.', name:'Sarah M.', detail:'Shopify seller · London' },
-          ].map((s, i) => (
-            <div key={i} style={{ padding:'28px 24px', background:C.sf, border:`1px solid ${C.b}`, borderRadius:16, display:'flex', flexDirection:'column', gap:20 }}>
-              <p style={{ fontSize:15, lineHeight:1.7, color:C.tx, margin:0, fontStyle:'italic' }}>&ldquo;{s.quote}&rdquo;</p>
-              <div style={{ display:'flex', alignItems:'center', gap:10, marginTop:'auto' }}>
-                <div style={{ width:32, height:32, borderRadius:'50%', background:C.accBg, border:`1px solid ${C.accBdr}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:C.acc, flexShrink:0 }}>{s.name.split(' ').map((n: string) => n[0]).join('')}</div>
-                <div>
-                  <div style={{ fontSize:13, fontWeight:600, color:C.tx }}>{s.name}</div>
-                  <div style={{ fontSize:11, color:C.tx3 }}>{s.detail}</div>
-                </div>
+                ))}
               </div>
             </div>
-          ))}
+            <div data-reveal data-reveal-delay="1">
+              <MonitorUIReplica />
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ── PRICING ───────────────────────────────────────────────────────── */}
-      <section id="pricing" style={{ background:C.sf, borderTop:`1px solid ${C.b}`, borderBottom:`1px solid ${C.b}`, padding:'clamp(64px,8vw,100px) clamp(16px,4vw,40px)' }}>
-        <div style={{ maxWidth:960, margin:'0 auto' }}>
-          <div style={{ textAlign:'center', marginBottom:36 }}>
-            <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(26px,4vw,42px)', fontWeight:700, marginBottom:8, letterSpacing:'-.03em', color:C.tx }}>
-              Simple, honest pricing
-            </h2>
-            <p style={{ fontSize:14, color:C.tx2 }}>All plans include API access. Cancel anytime.</p>
-          </div>
-
-          {/* PoS card */}
-          <div style={{ borderRadius:20, border:`1px solid ${C.accBdr}`, background:`rgba(208,138,89,.05)`, padding:'clamp(20px,3vw,28px) clamp(20px,3vw,32px)', marginBottom:28, position:'relative', overflow:'hidden' }}>
-            <div style={{ position:'absolute', top:-60, right:-60, width:240, height:240, background:`radial-gradient(circle, ${C.accBg} 0%, transparent 70%)`, pointerEvents:'none' }} />
-            <div style={{ display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'space-between', gap:20 }}>
-              <div style={{ minWidth:200 }}>
-                <div style={{ display:'inline-flex', alignItems:'center', gap:8, marginBottom:10 }}>
-                  <span style={{ fontFamily:'var(--font-sora)', fontSize:20, fontWeight:800, color:C.acc }}>Point of Sale</span>
-                  <span style={{ fontSize:10, fontWeight:700, color:'#fff', background:C.acc, padding:'2px 9px', borderRadius:9999, textTransform:'uppercase', letterSpacing:'.06em' }}>Add-on</span>
-                </div>
-                <div style={{ display:'flex', alignItems:'baseline', gap:4, marginBottom:6 }}>
-                  <span style={{ fontFamily:'var(--font-sora)', fontSize:36, fontWeight:800, color:C.tx, letterSpacing:'-.03em' }}>{posPrice}</span>
-                  <span style={{ fontSize:13, color:C.tx3 }}>/seat/month</span>
-                </div>
-                <p style={{ fontSize:12, color:C.tx3, margin:0, lineHeight:1.5 }}>Add to any Growth or Business plan.<br/>Each seat is one register or device.</p>
-                <div style={{ display:'flex', gap:10, marginTop:18, flexWrap:'wrap' }}>
-                  <Link href="/signin?mode=signup" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'10px 22px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none' }}>
-                    Add to my plan →
-                  </Link>
-                  <Link href="/point-of-sale" style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'10px 18px', borderRadius:9999, border:`1px solid ${C.accBdr}`, background:'transparent', color:C.acc, fontSize:13, fontWeight:600, textDecoration:'none' }}>
-                    See all features
-                  </Link>
-                </div>
-              </div>
-              <div style={{ display:'flex', flexWrap:'wrap', gap:8, maxWidth:520 }}>
-                {['Register & checkout','Inventory management','Staff & shifts','Multi-branch','Tax & VAT (Xero/QB)','Barcode scanning','AI anomaly alerts','Tablet, phone, desktop'].map((f, i) => (
-                  <div key={i} style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'6px 12px', borderRadius:9999, background:C.accBg, border:`1px solid ${C.accBdr}`, fontSize:12, color:C.tx2, fontWeight:500 }}>
-                    {f}
+      {/* ── SOURCES / CONNECT ─────────────────────────────────────────── */}
+      <section style={{ background:T.alt,borderTop:`1px solid ${T.bd}`,borderBottom:`1px solid ${T.bd}`,padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)' }}>
+        <div style={{ maxWidth:1060,margin:'0 auto' }}>
+          <div className="two-col" style={{ display:'grid',gridTemplateColumns:'1.6fr 1fr',gap:'clamp(36px,5vw,64px)',alignItems:'center' }}>
+            <div data-reveal>
+              <SourcesUIReplica />
+            </div>
+            <div data-reveal data-reveal-delay="1">
+              <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:18 }}>30 integrations</p>
+              <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
+                Connect once.<br/><em style={{ color:T.acc,fontStyle:'italic' }}>Everything flows in.</em>
+              </h2>
+              <p style={{ fontSize:14,color:T.tx2,lineHeight:1.75,marginBottom:22,maxWidth:320 }}>
+                Shopify, Amazon FBA, Stripe, Xero, QuickBooks, TikTok Shop and 24 more — one click to connect, no developer needed.
+              </p>
+              <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
+                {['No exports or CSV uploads needed','Syncs automatically every 24 hours','Works with your existing tools','Connect in under 2 minutes'].map((f,i)=>(
+                  <div key={i} style={{ display:'flex',gap:8,alignItems:'center',fontSize:13,color:T.tx2 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.acc} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>{f}
                   </div>
                 ))}
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
+      {/* ── POINT OF SALE ─────────────────────────────────────────────── */}
+      <section id="pos" style={{ padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)',background:T.bg }}>
+        <div style={{ maxWidth:1180,margin:'0 auto' }}>
+          <div style={{ textAlign:'center',marginBottom:44 }} data-reveal>
+            <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:14 }}>Point of Sale</p>
+            <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(28px,4vw,54px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',color:T.tx,marginBottom:12 }}>
+              Ring up a sale.<br/><em style={{ color:T.acc,fontStyle:'italic' }}>Everything else is automatic.</em>
+            </h2>
+            <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,maxWidth:480,margin:'0 auto' }}>
+              Every transaction feeds your intelligence dashboard instantly. Overview, operations, payments and staff — all in one place.
+            </p>
+          </div>
+          <div data-reveal data-reveal-delay="1">
+            <PosShowcase />
+          </div>
+          <div style={{ display:'flex',flexWrap:'wrap',gap:7,justifyContent:'center',marginTop:24 }}>
+            {['Camera barcode scan','Works on any phone or tablet','Multi-branch','VAT / GST compliant','Inventory sync','Staff shifts','Digital receipts','Xero + QuickBooks','Refunds & voids','GDPR tools'].map(f=>(
+              <span key={f} style={{ padding:'6px 14px',borderRadius:9999,border:`1px solid ${T.bd}`,background:T.card,fontSize:12,color:T.tx2,fontWeight:500 }}>{f}</span>
+            ))}
+          </div>
+          <div style={{ textAlign:'center',marginTop:24,display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap' }}>
+            <Link href="/signin?mode=signup" className="cta-btn" style={{ padding:'11px 26px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7 }}>
+              Try the PoS free →
+            </Link>
+            <span style={{ fontSize:12,color:T.tx3,alignSelf:'center' }}>{posPrice} / seat / month · add to any plan</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── PRICING ───────────────────────────────────────────────────── */}
+      <section id="pricing" style={{ padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)',background:T.bg }}>
+        <div style={{ maxWidth:1000,margin:'0 auto' }}>
+          <div style={{ textAlign:'center',marginBottom:36 }} data-reveal>
+            <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.8vw,48px)',fontWeight:400,lineHeight:1.08,letterSpacing:'-.02em',marginBottom:10,color:T.tx }}>
+              Simple, honest pricing
+            </h2>
+            <p style={{ fontSize:13,color:T.tx2 }}>All plans include API access · Cancel anytime</p>
+          </div>
+          {/* PoS add-on */}
+          <div data-reveal style={{ borderRadius:16,border:`1px solid ${T.accBdr}`,background:`rgba(201,122,68,.04)`,padding:'clamp(16px,2.5vw,24px) clamp(16px,2.5vw,28px)',marginBottom:20 }}>
+            <div style={{ display:'flex',flexWrap:'wrap',alignItems:'center',justifyContent:'space-between',gap:16 }}>
+              <div>
+                <div style={{ display:'inline-flex',alignItems:'center',gap:8,marginBottom:9 }}>
+                  <span style={{ fontFamily:'var(--font-instrument)',fontSize:20,color:T.acc }}>Point of Sale</span>
+                  <span style={{ fontSize:9,fontWeight:700,color:'#fff',background:T.acc,padding:'2px 7px',borderRadius:9999,textTransform:'uppercase' }}>Add-on</span>
+                </div>
+                <div style={{ display:'flex',alignItems:'baseline',gap:4,marginBottom:5 }}>
+                  <span style={{ fontFamily:'var(--font-instrument)',fontSize:32,color:T.tx }}>{posPrice}</span>
+                  <span style={{ fontSize:12,color:T.tx3 }}>/seat/month</span>
+                </div>
+                <Link href="/signin?mode=signup" className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'8px 18px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:12,fontWeight:700,textDecoration:'none',marginTop:10 }}>
+                  Add to my plan →
+                </Link>
+              </div>
+              <div style={{ display:'flex',flexWrap:'wrap',gap:6,maxWidth:480 }}>
+                {['Register & checkout','Inventory','Staff & shifts','Multi-branch','Tax & VAT','Barcode scan','AI alerts','Any device'].map((f,i)=>(
+                  <span key={i} style={{ padding:'5px 11px',borderRadius:9999,background:T.accBg,border:`1px solid ${T.accBdr}`,fontSize:11,color:T.tx2 }}>{f}</span>
+                ))}
+              </div>
+            </div>
+          </div>
           {/* Annual toggle */}
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, marginBottom:20 }}>
-            <span style={{ fontSize:12, color:C.tx3, fontWeight:500 }}>Intelligence platform:</span>
-            <span style={{ fontSize:13, color:annual?C.tx3:C.tx, fontWeight:annual?400:600 }}>Monthly</span>
-            <button role="switch" aria-checked={annual} aria-label="Annual billing" onClick={() => setAnnual(v=>!v)} style={{ width:42, height:22, borderRadius:11, background:annual?C.acc:C.ev2, border:`1px solid ${C.b2}`, cursor:'pointer', position:'relative', transition:'background 200ms' }}>
-              <div style={{ width:16, height:16, borderRadius:'50%', background:'#fff', position:'absolute', top:3, left:annual?23:3, transition:'left 200ms', boxShadow:'0 1px 4px rgba(0,0,0,.4)' }}/>
+          <div style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:16 }}>
+            <span style={{ fontSize:12,color:annual?T.tx3:T.tx,fontWeight:annual?400:600 }}>Monthly</span>
+            <button role="switch" aria-checked={annual} onClick={()=>setAnnual(v=>!v)} style={{ width:44,height:23,borderRadius:12,background:annual?T.acc:T.bd2,border:'none',cursor:'pointer',position:'relative',transition:'background 200ms',outline:'none' }}>
+              <div style={{ width:17,height:17,borderRadius:'50%',background:'#fff',position:'absolute',top:3,left:annual?24:3,transition:'left 200ms',boxShadow:'0 1px 4px rgba(0,0,0,.3)' }}/>
             </button>
-            <span style={{ fontSize:13, color:annual?C.tx:C.tx3, fontWeight:annual?600:400 }}>
-              Annual <span style={{ fontSize:11, fontWeight:700, color:'#4ade80', background:'rgba(74,222,128,.1)', borderRadius:9999, padding:'1px 7px', marginLeft:4 }}>2 months free</span>
+            <span style={{ fontSize:12,color:annual?T.tx:T.tx3,fontWeight:annual?600:400 }}>
+              Annual <span style={{ fontSize:10,fontWeight:700,color:'#16a34a',background:'rgba(22,163,74,.08)',borderRadius:9999,padding:'1px 6px',marginLeft:3 }}>2 months free</span>
             </span>
           </div>
-
-          {/* Tier cards */}
-          <div className="pricing-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14 }}>
+          {/* Tiers */}
+          <div className="three-col" style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12 }}>
             {[
-              { id:'free', name:'Free', colour:'#6b6760', price:'£0', sub:'10 questions/month', popular:false,
-                features:['10 questions per month','Upload CSV & Excel','Business Pulse score','Connect Shopify, Amazon & more','FX Risk, Landed Cost, Export tools','API access','No credit card needed'] },
-              { id:'growth', name:'Growth', colour:C.acc, price:growthMonthly, sub:'per month', popular:true,
-                features:['Unlimited questions','All tools pre-filled from your data','Daily Brief — AI morning intelligence',`Point of Sale — ${posPrice}/seat/month add-on`,'Social Commerce — TikTok, Instagram, Pinterest','Churn Intelligence — monthly scan','Anomaly alerts'] },
-              { id:'business', name:'Business', colour:'#a78bfa', price:bizMonthly, sub:'per month', popular:false,
-                features:['Everything in Growth','Team seats — up to 5',`Multi-branch PoS — ${posPrice}/seat/month add-on`,'Decision Memory','Competitor Watch','CFO Mode reports','Priority support'] },
-            ].map((plan, i) => (
-              <div key={i} style={{ borderRadius:18, border:plan.popular?`1px solid ${C.accBdr}`:`1px solid ${C.b}`, background:plan.popular?`rgba(208,138,89,.04)`:C.ev, padding:'24px 20px', position:'relative', display:'flex', flexDirection:'column' }}>
-                {plan.popular && (
-                  <div style={{ position:'absolute', top:-12, left:'50%', transform:'translateX(-50%)', padding:'3px 14px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:10, fontWeight:700, whiteSpace:'nowrap', textTransform:'uppercase', letterSpacing:'.06em' }}>
-                    3 months free trial
+              {id:'free',name:'Free',colour:'#8C7B6B',price:'£0',sub:'10 questions/month',popular:false,
+                features:['10 questions per month','Upload CSV & Excel','Business Pulse score','Connect Shopify, Amazon & more','FX Risk, Landed Cost tools','API access','No credit card needed']},
+              {id:'growth',name:'Growth',colour:T.acc,price:growthMonthly,sub:'per month',popular:true,
+                features:['Unlimited questions','All tools pre-filled from your data','Daily Brief — AI morning intelligence',`Point of Sale — ${posPrice}/seat/month add-on`,'Social Commerce — TikTok, Instagram, Pinterest','Churn Intelligence','Anomaly alerts']},
+              {id:'business',name:'Business',colour:'#6366f1',price:bizMonthly,sub:'per month',popular:false,
+                features:['Everything in Growth','Team seats — up to 5',`Multi-branch PoS — ${posPrice}/seat/month add-on`,'Decision Memory','Competitor Watch','CFO Mode reports','Priority support']},
+            ].map((plan,i)=>(
+              <div key={i} data-reveal style={{ borderRadius:16,border:plan.popular?`1px solid ${T.accBdr}`:`1px solid ${T.bd}`,background:plan.popular?`rgba(201,122,68,.03)`:T.card,padding:'20px 16px',position:'relative',display:'flex',flexDirection:'column',transitionDelay:`${i*60}ms` }}>
+                {plan.popular&&(
+                  <div style={{ position:'absolute',top:-11,left:'50%',transform:'translateX(-50%)',padding:'2px 12px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:9,fontWeight:700,whiteSpace:'nowrap',textTransform:'uppercase',letterSpacing:'.06em' }}>
+                    3-month free trial
                   </div>
                 )}
-                <div style={{ marginBottom:14 }}>
-                  <div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:plan.colour, marginBottom:10 }}>{plan.name}</div>
-                  <div style={{ display:'flex', alignItems:'baseline', gap:4, marginBottom:4 }}>
-                    <span style={{ fontFamily:'var(--font-sora)', fontSize:28, fontWeight:800, color:C.tx, letterSpacing:'-.03em' }}>{plan.price}</span>
-                    {plan.id !== 'free' && <span style={{ fontSize:13, color:C.tx3 }}>{plan.sub}{annual?' · billed annually':''}</span>}
+                <div style={{ marginBottom:12 }}>
+                  <div style={{ fontFamily:'var(--font-instrument)',fontSize:17,color:plan.colour,marginBottom:9 }}>{plan.name}</div>
+                  <div style={{ display:'flex',alignItems:'baseline',gap:4,marginBottom:4 }}>
+                    <span style={{ fontFamily:'var(--font-instrument)',fontSize:30,color:T.tx }}>{plan.price}</span>
+                    {plan.id!=='free'&&<span style={{ fontSize:11,color:T.tx3 }}>{plan.sub}{annual?' · annual':''}</span>}
                   </div>
-                  <p style={{ fontSize:12, color:C.tx3, lineHeight:1.5, margin:0 }}>{plan.sub}</p>
                 </div>
-                <div style={{ flex:1, marginBottom:18 }}>
-                  {plan.features.map((f, j) => (
-                    <div key={j} style={{ display:'flex', gap:8, alignItems:'flex-start', fontSize:13, color:C.tx2, marginBottom:8 }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={plan.colour} strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink:0, marginTop:2 }}><path d="M20 6L9 17l-5-5"/></svg>
-                      {f}
+                <div style={{ flex:1,marginBottom:14 }}>
+                  {plan.features.map((f,j)=>(
+                    <div key={j} style={{ display:'flex',gap:7,alignItems:'flex-start',fontSize:12,color:T.tx2,marginBottom:7 }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={plan.colour} strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink:0,marginTop:2 }}><path d="M20 6L9 17l-5-5"/></svg>{f}
                     </div>
                   ))}
                 </div>
-                <Link href="/signin?mode=signup" className="btn-primary" style={{ display:'block', padding:'11px', borderRadius:10, border:plan.popular?'none':`1px solid ${C.b2}`, background:plan.popular?C.acc:'transparent', color:plan.popular?'#fff':C.tx2, fontSize:14, fontWeight:600, textDecoration:'none', textAlign:'center' }}>
+                <Link href="/signin?mode=signup" className="cta-btn" style={{ display:'block',padding:'10px',borderRadius:10,border:plan.popular?'none':`1px solid ${T.bd}`,background:plan.popular?T.acc:'transparent',color:plan.popular?'#fff':T.tx2,fontSize:12,fontWeight:600,textDecoration:'none',textAlign:'center' }}>
                   {plan.id==='free'?'Start for free':plan.id==='growth'?'Start free trial →':'Upgrade →'}
                 </Link>
               </div>
@@ -1198,131 +1698,35 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
       </section>
 
-      {/* ── FAQ ───────────────────────────────────────────────────────────── */}
-      <section style={{ maxWidth:640, margin:'0 auto', padding:'clamp(64px,8vw,100px) clamp(16px,4vw,40px)' }}>
-        <h2 data-motion style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(24px,3.5vw,36px)', fontWeight:700, textAlign:'center', marginBottom:40, letterSpacing:'-.03em', color:C.tx }}>Common questions</h2>
-        <div>
-          {FAQS.map((faq, i) => (
-            <div key={i} className="faq-item" role="button" tabIndex={0} aria-expanded={openFaq === i} style={{ borderBottom:`1px solid ${C.b}`, cursor:'pointer', transition:'background 150ms', borderRadius:8, padding:'0 4px' }} onClick={() => setOpenFaq(openFaq === i ? null : i)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpenFaq(openFaq === i ? null : i) } }}>
-              <div style={{ padding:'16px 12px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
-                <h3 style={{ fontFamily:'var(--font-sora)', fontSize:14, fontWeight:600, color:C.tx, margin:0 }}>{faq.q}</h3>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.tx3} strokeWidth="2" strokeLinecap="round" style={{ flexShrink:0, transform:openFaq===i?'rotate(180deg)':'none', transition:'transform 200ms' }}>
-                  <path d="M6 9l6 6 6-6"/>
-                </svg>
-              </div>
-              {openFaq === i && (
-                <p style={{ fontSize:13, color:C.tx2, lineHeight:1.7, margin:0, padding:'0 12px 16px' }}>{faq.a}</p>
-              )}
-            </div>
-          ))}
-        </div>
+      {/* ── FAQ ── JSON-LD in app/page.tsx; <details> keeps answers in DOM for crawlers ── */}
+      <section style={{ maxWidth:620,margin:'0 auto',padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)' }}>
+        <h2 data-reveal style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(24px,3.2vw,42px)',fontWeight:400,textAlign:'center',marginBottom:36,letterSpacing:'-.02em',color:T.tx }}>
+          Common questions
+        </h2>
+        {FAQS.map((faq,i)=>(
+          <details key={i} data-reveal className="faq-item" style={{ borderBottom:`1px solid ${T.bd}` }} open={i===0?true:undefined}>
+            <summary style={{ padding:'15px 10px',display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,cursor:'pointer',listStyle:'none' }}>
+              <h3 style={{ fontSize:13,fontWeight:600,color:T.tx,margin:0 }}>{faq.q}</h3>
+              <svg className="faq-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.tx3} strokeWidth="2" strokeLinecap="round" style={{ flexShrink:0,transition:'transform 200ms' }}><path d="M6 9l6 6 6-6"/></svg>
+            </summary>
+            <p style={{ fontSize:13,color:T.tx2,lineHeight:1.75,margin:0,padding:'0 10px 16px' }}>{faq.a}</p>
+          </details>
+        ))}
       </section>
 
-      {/* ── ACADEMY + BLOG ────────────────────────────────────────────────── */}
-      <section style={{ background:C.sf, borderTop:`1px solid ${C.b}`, borderBottom:`1px solid ${C.b}`, padding:'clamp(64px,8vw,100px) clamp(16px,4vw,40px)' }}>
-        <div style={{ maxWidth:1060, margin:'0 auto' }}>
-          <div className="learn-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'clamp(32px,5vw,64px)', alignItems:'start' }}>
-
-            <div>
-              <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3vw,32px)', fontWeight:700, lineHeight:1.12, letterSpacing:'-.03em', marginBottom:10, color:C.tx }}>
-                420+ free guides.<br/>No jargon. No paywall.
-              </h2>
-              <p style={{ fontSize:14, color:C.tx2, lineHeight:1.7, marginBottom:24 }}>
-                Business metrics, KPIs, financial intelligence, eCommerce analytics, FX risk, and AI — explained for founders, not analysts.
-              </p>
-              <div className="academy-topics" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:20 }}>
-                {[
-                  { label:'Financial Intelligence', count:'40+' },
-                  { label:'eCommerce Analytics', count:'35+' },
-                  { label:'FX & Trade', count:'30+' },
-                  { label:'Inventory & Supply Chain', count:'25+' },
-                  { label:'AI for Business', count:'30+' },
-                  { label:'Growth & Strategy', count:'45+' },
-                ].map((topic, i) => (
-                  <div key={i} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', borderRadius:8, border:`1px solid ${C.b}`, background:C.ev, fontSize:12, color:C.tx2 }}>
-                    <span style={{ flex:1 }}>{topic.label}</span>
-                    <span style={{ fontSize:10, fontWeight:700, color:C.acc }}>{topic.count}</span>
-                  </div>
-                ))}
-              </div>
-              <div style={{ display:'flex', gap:10, alignItems:'center' }}>
-                <Link href="/academy" className="btn-primary" style={{ padding:'10px 20px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:13, fontWeight:600, textDecoration:'none' }}>
-                  Browse the Academy →
-                </Link>
-                <Link href="/academy/learning-paths" style={{ fontSize:13, color:C.tx2, textDecoration:'none', fontWeight:500 }}>
-                  Learning paths
-                </Link>
-              </div>
-            </div>
-
-            <div>
-              <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3vw,32px)', fontWeight:700, lineHeight:1.12, letterSpacing:'-.03em', marginBottom:10, color:C.tx }}>
-                Intelligence Hub
-              </h2>
-              <p style={{ fontSize:14, color:C.tx2, lineHeight:1.7, marginBottom:22 }}>
-                Deep dives on AI, eCommerce, finance, and SME strategy from the AskBiz team.
-              </p>
-              <div style={{ display:'flex', flexDirection:'column', border:`1px solid ${C.b}`, borderRadius:12, overflow:'hidden' }}>
-                {[
-                  { tag:'AI Chief of Staff', title:'How AI Is Replacing the COO for Solo Founders', time:'6 min', tagColor:'#c4b5fd' },
-                  { tag:'Financial Intelligence', title:'The Cash Flow Metrics Every SME Founder Should Track Weekly', time:'5 min', tagColor:'#4ade80' },
-                  { tag:'eCommerce', title:'TikTok Shop vs Shopify: Where Should You Sell First?', time:'7 min', tagColor:'#7dd3fc' },
-                ].map((post, i) => (
-                  <div key={i} style={{ padding:'16px 14px', borderBottom:i<2?`1px solid ${C.b}`:'none', background:C.ev }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:6 }}>
-                      <span style={{ fontSize:10, fontWeight:700, color:post.tagColor, background:`rgba(255,255,255,.05)`, border:`1px solid rgba(255,255,255,.1)`, padding:'2px 7px', borderRadius:9999 }}>{post.tag}</span>
-                      <span style={{ fontSize:10, color:C.tx3 }}>{post.time} read</span>
-                    </div>
-                    <div style={{ fontFamily:'var(--font-sora)', fontSize:14, fontWeight:600, color:C.tx, lineHeight:1.4 }}>{post.title}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ marginTop:16 }}>
-                <Link href="/blog" className="btn-primary" style={{ padding:'10px 20px', borderRadius:9999, border:`1px solid ${C.b2}`, background:'transparent', color:C.tx2, fontSize:13, fontWeight:600, textDecoration:'none' }}>
-                  Read all articles →
-                </Link>
-              </div>
-            </div>
-          </div>
+      {/* ── FOOTER ────────────────────────────────────────────────────── */}
+      <footer style={{ borderTop:`1px solid ${T.bd}`,background:T.card,padding:'clamp(16px,2.5vw,24px) clamp(16px,4vw,40px)',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10 }}>
+        <div style={{ display:'flex',alignItems:'center',gap:7 }}>
+          <div style={{ width:22,height:22,borderRadius:6,background:T.acc,display:'flex',alignItems:'center',justifyContent:'center' }}><Logo size={10}/></div>
+          <span style={{ fontFamily:'var(--font-instrument)',fontSize:14,color:T.tx }}>AskBiz</span>
+          <span style={{ fontSize:12,color:T.tx3 }}>© 2026</span>
         </div>
-      </section>
-
-      {/* ── CTA ───────────────────────────────────────────────────────────── */}
-      <section style={{ position:'relative', overflow:'hidden', padding:'clamp(80px,10vw,120px) clamp(16px,4vw,40px)', textAlign:'center' }}>
-        <div style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%,-50%)', width:'60%', maxWidth:700, height:400, background:`radial-gradient(ellipse at center, ${C.accBg} 0%, transparent 68%)`, pointerEvents:'none' }} />
-        <div data-motion style={{ maxWidth:560, margin:'0 auto', position:'relative' }}>
-          <div style={{ width:52, height:52, borderRadius:14, background:C.acc, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 28px' }}>
-            <Logo size={24} />
-          </div>
-          <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(28px,4.5vw,48px)', fontWeight:700, color:C.tx, marginBottom:16, letterSpacing:'-.03em', lineHeight:1.1, textWrap:'balance' as any }}>
-            Your data already has<br/>the answers.
-          </h2>
-          <p style={{ fontSize:17, color:C.tx2, lineHeight:1.7, marginBottom:36 }}>
-            Most founders are one question away from a decision that changes their month. Ask AskBiz.
-          </p>
-          <Link href="/signin?mode=signup" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'16px 32px', borderRadius:9999, border:'none', background:C.acc, color:'#fff', fontSize:16, fontWeight:700, textDecoration:'none', boxShadow:`0 0 48px rgba(208,138,89,.3)`, letterSpacing:'-.01em' }}>
-            {geoCtaText}
-          </Link>
-          <p style={{ fontSize:12, color:C.tx3, marginTop:14 }}>No credit card · 2 minutes to set up · Cancel anytime</p>
-        </div>
-      </section>
-
-      {/* ── FOOTER ────────────────────────────────────────────────────────── */}
-      <footer style={{ borderTop:`1px solid ${C.b}`, background:C.sf, padding:'clamp(20px,3vw,28px) clamp(16px,4vw,40px)', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
-        <div style={{ display:'flex', alignItems:'center', gap:7 }}>
-          <div style={{ width:22, height:22, borderRadius:6, background:C.acc, display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <Logo size={10} />
-          </div>
-          <span style={{ fontFamily:'var(--font-sora)', fontSize:13, fontWeight:700, color:C.tx }}>AskBiz</span>
-          <span style={{ fontSize:12, color:C.tx3 }}>© 2026</span>
-        </div>
-        <nav className="footer-nav" style={{ display:'flex', gap:20, flexWrap:'wrap' }}>
-          {[['/', 'Home'], ['/blog', 'Blog'], ['/academy', 'Academy'], ['/case-studies', 'Case Studies'], ['/benchmarks', 'Benchmarks'], ['/integrations', 'Integrations'], ['/free-tools', 'Free Tools'], ['/developers', 'API'], ['/help', 'Help'], ['/pricing', 'Pricing'], ['/changelog', 'Changelog'], ['/rules', 'Rules & Policies'], ['/transparency', 'Transparency'], ['/privacy', 'Privacy'], ['/terms', 'Terms'], ['mailto:hello@askbiz.co', 'Contact']].map(([href, label]) => (
-            <a key={href} href={href} className="nav-link" style={{ fontSize:12, color:C.tx3, textDecoration:'none', transition:'color 150ms' }}>{label}</a>
+        <nav aria-label="Footer navigation" style={{ display:'flex',gap:16,flexWrap:'wrap' }}>
+          {[['/', 'Home'],['/blog','Blog'],['/academy','Academy'],['/free-tools','Free Tools'],['/integrations','Integrations'],['/help','Help'],['/privacy','Privacy'],['/terms','Terms'],['mailto:hello@askbiz.co','Contact']].map(([href,label])=>(
+            <a key={href} href={href} className="nav-link" style={{ fontSize:12,color:T.tx3,textDecoration:'none',transition:'color 150ms' }}>{label}</a>
           ))}
         </nav>
       </footer>
-
     </div>
   )
 }
@@ -1330,7 +1734,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 export default function LandingClient({ geo, lang = 'en' }: { geo: Geo | null; lang?: string }) {
   return (
     <LanguageProvider initialLang={lang as Lang}>
-      <LandingInner geo={geo}/>
+      <LandingInner geo={geo} />
     </LanguageProvider>
   )
 }

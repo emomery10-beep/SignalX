@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react'
 import PeriodSelector from './PeriodSelector'
 import FinancialSnapshot from './FinancialSnapshot'
 import RevenueTrendChart from './RevenueTrendChart'
-import CfoAlerts from './CfoAlerts'
 import CashFlowCountdown from '@/components/intelligence/CashFlowCountdown'
 import SupplierBrief from '@/components/intelligence/SupplierBrief'
 import PriceSensitivity from '@/components/intelligence/PriceSensitivity'
@@ -225,11 +224,6 @@ export default function CfoDashboard({ onAsk }: Props) {
       {/* ─── DASHBOARD VIEW ─── */}
       {subTab === 'dashboard' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {/* Alerts */}
-          {data?.alerts && data.alerts.length > 0 && (
-            <CfoAlerts alerts={data.alerts} onNavigate={(tab) => setSubTab(tab as SubTab)} />
-          )}
-
           {/* KPI Snapshot */}
           <FinancialSnapshot
             kpis={data?.kpis || []}

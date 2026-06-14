@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { createServiceClient } from '@/lib/supabase/server'
+import { createNotification } from '@/lib/create-notification'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -71,6 +72,19 @@ export async function POST(req: NextRequest) {
         .eq('id', payment.transaction_id)
         .eq('owner_id', payment.owner_id)
 
+      // Notify on large payments (≥ 5,000 in local currency)
+      const paidAmount = (charge.amount || 0) / 100
+      if (paidAmount >= 5000) {
+        await createNotification({
+          userId: payment.owner_id,
+          type: 'insight',
+          title: `Large payment received — ${charge.currency || 'KES'} ${paidAmount.toLocaleString()}`,
+          body: `A ${charge.channel || 'card'} payment of ${charge.currency || 'KES'} ${paidAmount.toLocaleString()} was confirmed via Paystack.`,
+          metadata: { payment_id: payment.id, amount: paidAmount, channel: charge.channel },
+          dedupHours: 1,
+        })
+      }
+
       return NextResponse.json({ status: 'processed' })
     }
 
@@ -83,11 +97,14 @@ export async function POST(req: NextRequest) {
         .single()
 
       if (payment) {
+        const failReason = charge.gateway_response || charge.message || 'Payment failed'
+        const failAmount = (charge.amount || 0) / 100
+
         await service
           .from('pos_payments')
           .update({
             status: 'failed',
-            error_message: charge.gateway_response || charge.message || 'Payment failed',
+            error_message: failReason,
           })
           .eq('id', payment.id)
 
@@ -95,10 +112,20 @@ export async function POST(req: NextRequest) {
           .from('pos_transactions')
           .update({
             payment_status: 'failed',
-            payment_failure_reason: charge.gateway_response || 'Payment failed',
+            payment_failure_reason: failReason,
           })
           .eq('id', payment.transaction_id)
           .eq('owner_id', payment.owner_id)
+
+        // Notify the merchant
+        await createNotification({
+          userId: payment.owner_id,
+          type: 'alert',
+          title: `Payment failed — ${charge.currency || 'KES'} ${failAmount.toLocaleString()}`,
+          body: `A ${charge.channel || 'card'} payment of ${charge.currency || 'KES'} ${failAmount.toLocaleString()} failed: ${failReason}. Check Payment Recovery to retry.`,
+          metadata: { payment_id: payment.id, amount: failAmount, reason: failReason, channel: charge.channel },
+          dedupHours: 1,
+        })
       }
 
       return NextResponse.json({ status: 'processed' })

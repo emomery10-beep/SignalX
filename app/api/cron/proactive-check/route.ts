@@ -66,6 +66,64 @@ export async function GET(request: NextRequest) {
         allAlerts.push(...checkAnomalies(rows, symbol))
       }
 
+      // 1b. Check connected sources health
+      const { data: sources } = await supabase
+        .from('connected_sources')
+        .select('source_type, status, last_synced_at, name, created_at')
+        .eq('user_id', userId)
+
+      if (sources?.length) {
+        const SOURCE_LABELS: Record<string, string> = {
+          stripe: 'Stripe', shopify: 'Shopify', amazon_fba: 'Amazon', xero: 'Xero',
+          quickbooks: 'QuickBooks', ebay: 'eBay', paypal: 'PayPal', google_analytics: 'Google Analytics',
+        }
+
+        // Stale sync check (> 24h)
+        const stale = sources.filter(s => {
+          if (!s.last_synced_at) return false
+          return (Date.now() - new Date(s.last_synced_at).getTime()) > 24 * 3600000
+        })
+        if (stale.length > 0) {
+          const names = stale.map(s => SOURCE_LABELS[s.source_type] || s.source_type).join(', ')
+          allAlerts.push({
+            type: 'source',
+            severity: 'warning',
+            title: `${names} sync stale`,
+            body: `Your ${names} ${stale.length > 1 ? 'connections haven\'t' : 'connection hasn\'t'} synced in 24+ hours. Data may be outdated.`,
+            metadata: { sources: stale.map(s => s.source_type) },
+          })
+        }
+
+        // Disconnected/errored sources
+        const errored = sources.filter(s => s.status === 'error' || s.status === 'disconnected')
+        for (const src of errored) {
+          const label = SOURCE_LABELS[src.source_type] || src.source_type
+          allAlerts.push({
+            type: 'source',
+            severity: 'critical',
+            title: `${label} disconnected`,
+            body: `Your ${label} integration needs reconnecting. Go to Sources to fix it.`,
+            metadata: { source: src.source_type, status: src.status },
+          })
+        }
+
+        // Freshly connected (< 1 hour old, first-time notification)
+        const fresh = sources.filter(s =>
+          s.status === 'active' && s.created_at &&
+          (Date.now() - new Date(s.created_at).getTime()) < 3600000
+        )
+        for (const src of fresh) {
+          const label = SOURCE_LABELS[src.source_type] || src.source_type
+          allAlerts.push({
+            type: 'insight',
+            severity: 'info',
+            title: `${label} connected`,
+            body: `${label} is now syncing data to AskBiz. You can ask questions about your ${label} data.`,
+            metadata: { source: src.source_type },
+          })
+        }
+      }
+
       // 2. Check connected source data for stock + anomalies
       const { data: unifiedRows } = await supabase
         .from('unified_data')
@@ -90,6 +148,46 @@ export async function GET(request: NextRequest) {
               })
             }
           }
+        }
+      }
+
+      // 2b. POS daily sales summary
+      const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1); yesterday.setHours(0, 0, 0, 0)
+      const yesterdayEnd = new Date(yesterday); yesterdayEnd.setHours(23, 59, 59, 999)
+
+      const { data: yesterdayTx } = await supabase
+        .from('pos_transactions')
+        .select('total, payment_type')
+        .eq('owner_id', userId)
+        .eq('status', 'completed')
+        .gte('created_at', yesterday.toISOString())
+        .lte('created_at', yesterdayEnd.toISOString())
+
+      if (yesterdayTx && yesterdayTx.length > 0) {
+        const dayRevenue = yesterdayTx.reduce((s: number, t: any) => s + (t.total || 0), 0)
+        const dayName = yesterday.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })
+        const cashCount = yesterdayTx.filter((t: any) => t.payment_type === 'cash').length
+        const digitalCount = yesterdayTx.length - cashCount
+
+        allAlerts.push({
+          type: 'summary',
+          severity: 'info',
+          title: `Daily summary — ${dayName}`,
+          body: `${yesterdayTx.length} sales totalling ${symbol}${dayRevenue.toLocaleString()} (${cashCount} cash, ${digitalCount} digital).`,
+          metadata: { revenue: dayRevenue, transactions: yesterdayTx.length, cash: cashCount, digital: digitalCount },
+        })
+
+        // Flag large individual sales (top sale > 2× average)
+        const avgSale = dayRevenue / yesterdayTx.length
+        const topSale = Math.max(...yesterdayTx.map((t: any) => t.total || 0))
+        if (topSale >= avgSale * 2 && topSale >= 1000) {
+          allAlerts.push({
+            type: 'insight',
+            severity: 'info',
+            title: `Large sale yesterday — ${symbol}${topSale.toLocaleString()}`,
+            body: `Your biggest sale yesterday was ${symbol}${topSale.toLocaleString()}, ${(topSale / avgSale).toFixed(1)}× your average of ${symbol}${Math.round(avgSale).toLocaleString()}.`,
+            metadata: { top_sale: topSale, avg_sale: avgSale },
+          })
         }
       }
 
@@ -138,7 +236,11 @@ export async function GET(request: NextRequest) {
 
       // Deliver each fresh alert
       for (const alert of freshAlerts.slice(0, 5)) {
-        const notifType = alert.type === 'news' ? 'brief' : 'alert'
+        const notifType = alert.type === 'news' ? 'brief'
+          : alert.type === 'summary' ? 'insight'
+          : alert.type === 'insight' ? 'insight'
+          : alert.type === 'source' ? 'system'
+          : 'alert'
 
         // In-app notification (always)
         await supabase.from('notifications').insert({

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createNotification } from '@/lib/create-notification'
 
 export const runtime = 'nodejs'
 export const maxDuration = 120
@@ -82,6 +83,34 @@ export async function GET(request: NextRequest) {
         } else {
           totalSuggestions += suggestions.length
           log.push(`  ✓ ${ownerId.slice(0, 8)}: ${suggestions.length} reorder suggestion(s)`)
+
+          // Create notification for critical/high urgency items
+          const critical = suggestions.filter(s => s.urgency === 'critical')
+          const high = suggestions.filter(s => s.urgency === 'high')
+
+          if (critical.length > 0) {
+            const names = critical.slice(0, 3).map(s => s.name).join(', ')
+            await createNotification({
+              userId: ownerId,
+              type: 'alert',
+              title: `${critical.length} product${critical.length > 1 ? 's' : ''} out of stock`,
+              body: `${names}${critical.length > 3 ? ` and ${critical.length - 3} more` : ''} — reorder suggestions ready in your POS overview.`,
+              metadata: { count: critical.length, urgency: 'critical', products: critical.map(s => s.name) },
+              dedupHours: 20, // Once per day max
+            })
+          }
+
+          if (high.length > 0) {
+            const names = high.slice(0, 3).map(s => s.name).join(', ')
+            await createNotification({
+              userId: ownerId,
+              type: 'alert',
+              title: `${high.length} product${high.length > 1 ? 's' : ''} running low`,
+              body: `${names}${high.length > 3 ? ` and ${high.length - 3} more` : ''} will stock out within ${DEFAULT_LEAD_DAYS} days. Reorder suggestions ready.`,
+              metadata: { count: high.length, urgency: 'high', products: high.map(s => s.name) },
+              dedupHours: 20,
+            })
+          }
         }
       } else {
         log.push(`  ○ ${ownerId.slice(0, 8)}: stock levels healthy`)

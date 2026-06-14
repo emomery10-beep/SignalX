@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Sora, DM_Sans, JetBrains_Mono } from 'next/font/google'
+import { Sora, DM_Sans, JetBrains_Mono, Instrument_Serif, Plus_Jakarta_Sans } from 'next/font/google'
 import { cookies } from 'next/headers'
 import './globals.css'
 import { LanguageProvider } from '@/components/LanguageProvider'
@@ -24,6 +24,19 @@ const mono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
   weight: ['400', '500'],
+  display: 'swap',
+})
+const instrumentSerif = Instrument_Serif({
+  subsets: ['latin'],
+  variable: '--font-instrument',
+  weight: ['400'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+})
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-jakarta',
+  weight: ['400', '500', '600', '700', '800'],
   display: 'swap',
 })
 
@@ -53,7 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang={lang} suppressHydrationWarning>
-      <body className={`${sora.variable} ${dm.variable} ${mono.variable}`}>
+      <body className={`${sora.variable} ${dm.variable} ${mono.variable} ${instrumentSerif.variable} ${plusJakarta.variable}`}>
         <GoogleAnalytics measurementId="G-ELBCMBBMEC" />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <LanguageProvider initialLang={lang}>

@@ -27,7 +27,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
       : "#e74c3c";
 
   return (
-    <main style={{ fontFamily: "DM Sans, sans-serif", background: "#faf9f7", minHeight: "100vh" }}>
+    <main style={{ fontFamily: "DM Sans, system-ui", background: "#faf9f7", minHeight: "100vh" }}>
       {/* Breadcrumb */}
       <div style={{ background: "#fff", borderBottom: "1px solid #eee", padding: "12px 24px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", fontSize: 13, color: "#999" }}>
@@ -59,11 +59,11 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
             </span>
           </div>
 
-          <h1 style={{ fontFamily: "Sora, sans-serif", fontSize: "clamp(24px, 4vw, 38px)", fontWeight: 700, color: "#1a1a2e", lineHeight: 1.2, margin: "0 0 16px" }}>
+          <h1 style={{ fontFamily: "Sora, system-ui", fontSize: "clamp(24px, 4vw, 38px)", fontWeight: 700, color: "#1a1a2e", lineHeight: 1.2, margin: "0 0 16px" }}>
             {article.title}
           </h1>
 
-          <p style={{ fontSize: 18, color: "#555", lineHeight: 1.7, margin: "0 0 36px", borderLeft: "3px solid #d08a59", paddingLeft: 16 }}>
+          <p style={{ fontSize: 18, color: "#555", lineHeight: 1.7, margin: "0 0 36px" }}>
             {article.description}
           </p>
 
@@ -91,7 +91,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
 
           {/* Key Takeaways */}
           <div style={{ background: "#fff8f3", border: "1px solid #f0e0cc", borderRadius: 12, padding: 24, marginBottom: 40 }}>
-            <h2 style={{ fontFamily: "Sora, sans-serif", fontSize: 15, fontWeight: 700, color: "#d08a59", margin: "0 0 14px", textTransform: "uppercase", letterSpacing: 1 }}>
+            <h2 style={{ fontFamily: "Sora, system-ui", fontSize: 15, fontWeight: 700, color: "#d08a59", margin: "0 0 14px" }}>
               Key Takeaways
             </h2>
             <ul style={{ margin: 0, paddingLeft: 20 }}>
@@ -109,7 +109,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
               <div style={{ marginBottom: 36 }}>
                 <h2
                   id={`section-${i}`}
-                  style={{ fontFamily: "Sora, sans-serif", fontSize: 20, fontWeight: 700, color: "#1a1a2e", margin: "0 0 12px" }}
+                  style={{ fontFamily: "Sora, system-ui", fontSize: 20, fontWeight: 700, color: "#1a1a2e", margin: "0 0 12px" }}
                 >
                   {section.heading}
                 </h2>
@@ -117,32 +117,13 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
                   {section.body}
                 </p>
               </div>
-              {i === Math.floor(article.content.length / 2) - 1 && (
-                <div style={{ background: "linear-gradient(135deg, #1a1a2e 0%, #2d2a40 100%)", borderRadius: 14, padding: "28px 24px", marginBottom: 36, textAlign: "center" }}>
-                  <p style={{ color: "#d08a59", fontFamily: "Sora, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", margin: "0 0 8px" }}>
-                    Free — no card needed
-                  </p>
-                  <p style={{ color: "#fff", fontFamily: "Sora, sans-serif", fontSize: 18, fontWeight: 700, margin: "0 0 8px", lineHeight: 1.3 }}>
-                    See this in action for your business
-                  </p>
-                  <p style={{ color: "rgba(255,255,255,.72)", fontSize: 14, margin: "0 0 20px", lineHeight: 1.5 }}>
-                    AskBiz tracks these metrics automatically — just connect your data and start asking questions.
-                  </p>
-                  <Link
-                    href="/signin?mode=signup"
-                    style={{ display: "inline-flex", alignItems: "center", background: "#d08a59", color: "#fff", padding: "11px 22px", borderRadius: 8, fontWeight: 700, fontSize: 14, textDecoration: "none", fontFamily: "Sora, sans-serif" }}
-                  >
-                    Start for free →
-                  </Link>
-                </div>
-              )}
             </div>
           ))}
 
           {/* Related Articles */}
           {related.length > 0 && (
             <div style={{ marginTop: 48, paddingTop: 32, borderTop: "1px solid #eee" }}>
-              <h2 style={{ fontFamily: "Sora, sans-serif", fontSize: 18, fontWeight: 700, color: "#1a1a2e", marginBottom: 20 }}>
+              <h2 style={{ fontFamily: "Sora, system-ui", fontSize: 18, fontWeight: 700, color: "#1a1a2e", marginBottom: 20 }}>
                 Related Articles
               </h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
@@ -175,7 +156,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
           {/* Blog cross-links — boosts internal link graph between academy and blog */}
           {blogCrossLinks.length > 0 && (
             <div style={{ marginTop: 48, paddingTop: 32, borderTop: "1px solid #eee" }}>
-              <h2 style={{ fontFamily: "Sora, sans-serif", fontSize: 18, fontWeight: 700, color: "#1a1a2e", marginBottom: 20 }}>
+              <h2 style={{ fontFamily: "Sora, system-ui", fontSize: 18, fontWeight: 700, color: "#1a1a2e", marginBottom: 20 }}>
                 Further Reading
               </h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
@@ -195,7 +176,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
                       lineHeight: 1.4,
                     }}
                   >
-                    <span style={{ display: "block", color: "#d08a59", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+                    <span style={{ display: "block", color: "#d08a59", fontSize: 11, fontWeight: 600, marginBottom: 6 }}>
                       {post.cluster}
                     </span>
                     {post.title}
@@ -212,7 +193,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
         {/* Sidebar TOC */}
         <aside style={{ position: "sticky", top: 80 }}>
           <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 14, padding: 24, marginBottom: 24 }}>
-            <h3 style={{ fontFamily: "Sora, sans-serif", fontSize: 13, fontWeight: 700, color: "#999", textTransform: "uppercase", letterSpacing: 1, margin: "0 0 14px" }}>
+            <h3 style={{ fontFamily: "Sora, system-ui", fontSize: 13, fontWeight: 700, color: "#999", margin: "0 0 14px" }}>
               Contents
             </h3>
             <nav>
@@ -238,10 +219,10 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
 
           {/* CTA box */}
           <div style={{ background: "#1a1a2e", borderRadius: 14, padding: 24, textAlign: "center" }}>
-            <p style={{ color: "#d08a59", fontFamily: "Sora, sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
+            <p style={{ color: "#d08a59", fontFamily: "Sora, system-ui", fontSize: 12, fontWeight: 600, marginBottom: 10 }}>
               Free — no card needed
             </p>
-            <p style={{ color: "#fff", fontFamily: "Sora, sans-serif", fontSize: 16, fontWeight: 700, marginBottom: 10, lineHeight: 1.3 }}>
+            <p style={{ color: "#fff", fontFamily: "Sora, system-ui", fontSize: 16, fontWeight: 700, marginBottom: 10, lineHeight: 1.3 }}>
               See this data for your own business
             </p>
             <p style={{ color: "#b0b8c8", fontSize: 13, marginBottom: 20, lineHeight: 1.5 }}>
@@ -258,7 +239,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
                 fontWeight: 700,
                 fontSize: 14,
                 textDecoration: "none",
-                fontFamily: "Sora, sans-serif",
+                fontFamily: "Sora, system-ui",
                 marginBottom: 10,
               }}
             >

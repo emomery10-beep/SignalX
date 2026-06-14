@@ -6,7 +6,7 @@ import { tavilySearch } from '@/lib/tavily'
 import { createServiceClient } from '@/lib/supabase/server'
 
 export interface ProactiveAlert {
-  type: 'stock' | 'anomaly' | 'news' | 'shipment'
+  type: 'stock' | 'anomaly' | 'news' | 'shipment' | 'summary' | 'insight' | 'source'
   severity: 'critical' | 'warning' | 'info'
   title: string
   body: string

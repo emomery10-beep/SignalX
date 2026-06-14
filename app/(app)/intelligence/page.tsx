@@ -383,43 +383,6 @@ export default function IntelligencePage() {
             {/* ── Daily brief ── */}
             <DailyBrief onAsk={askAskBiz}/>
 
-            {/* ── Critical Alerts (from CFO data) ── */}
-            {cfoSnapshot && (cfoSnapshot.alerts?.length > 0 || (cfoSnapshot.inventory?.stockout_rate > 40)) && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {cfoSnapshot.alerts?.slice(0, 3).map((alert: any, i: number) => (
-                  <div key={i} style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '10px 14px', borderRadius: 12,
-                    background: alert.severity === 'critical' ? 'rgba(239,68,68,.06)' : 'rgba(245,158,11,.06)',
-                    border: `1px solid ${alert.severity === 'critical' ? 'rgba(239,68,68,.18)' : 'rgba(245,158,11,.18)'}`,
-                  }}>
-                    <span style={{ fontSize: 14 }}>{alert.severity === 'critical' ? '🔴' : '🟡'}</span>
-                    <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx)', flex: 1 }}>{alert.message || alert.title}</span>
-                    <button
-                      onClick={() => setTab('cfo')}
-                      style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap' }}
-                    >View details</button>
-                  </div>
-                ))}
-                {cfoSnapshot.inventory?.stockout_rate > 40 && !cfoSnapshot.alerts?.some((a: any) => a.message?.includes('stock')) && (
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '10px 14px', borderRadius: 12,
-                    background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.18)',
-                  }}>
-                    <span style={{ fontSize: 14 }}>🟡</span>
-                    <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx)', flex: 1 }}>
-                      {Math.round(cfoSnapshot.inventory.stockout_rate)}% of products are low or out of stock ({cfoSnapshot.inventory.low_or_oos} of {cfoSnapshot.inventory.total_products})
-                    </span>
-                    <button
-                      onClick={() => setTab('cfo')}
-                      style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit', whiteSpace: 'nowrap' }}
-                    >View details</button>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* ── Today's Actions (compact — max 3) ── */}
             <DailyActions onAsk={askAskBiz} limit={3} onViewAll={() => setTab('actions')}/>
 
