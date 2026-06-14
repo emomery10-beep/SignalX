@@ -10,7 +10,8 @@
     "db:migrate": "supabase db push",
     "db:types": "supabase gen types typescript --local > lib/supabase/types.ts",
     "setup:factory-users": "node scripts/setup-factory-test-users.js",
-    "setup:restaurant-users": "node scripts/setup-restaurant-test-users.js"
+    "setup:restaurant-users": "node scripts/setup-restaurant-test-users.js",
+    "setup:staff": "node scripts/setup-actual-staff.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.3",
