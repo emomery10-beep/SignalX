@@ -34,7 +34,7 @@ export default function AgentAdminPage() {
   const supabase = createClient()
   const [authorized, setAuthorized] = useState(false)
   const [loading, setLoading]       = useState(true)
-  const [mainTab, setMainTab]       = useState<'alice'|'carolyne'|'agent'|'x'|'security'|'automation'>('alice')
+  const [mainTab, setMainTab]       = useState<'alice'|'carolyne'|'ben'|'agent'|'x'|'security'|'automation'>('alice')
 
   // Agent state
   const [items, setItems]           = useState<AgentItem[]>([])
@@ -82,9 +82,21 @@ export default function AgentAdminPage() {
   const [carolyneEditTitle, setCarolyneEditTitle] = useState('')
   const [carolyneEditSections, setCarolyneEditSections] = useState<{heading:string;level:2|3;body:string}[]>([])
 
+  // Ben Carlson — US market blog scout state
+  const [benItems, setBenItems]           = useState<any[]>([])
+  const [benCounts, setBenCounts]         = useState<{pending:number;published:number;rejected:number;total:number}>({pending:0,published:0,rejected:0,total:0})
+  const [benFilter, setBenFilter]         = useState<'pending'|'published'|'rejected'|'all'>('pending')
+  const [benRunning, setBenRunning]       = useState(false)
+  const [benRunLog, setBenRunLog]         = useState<string[]>([])
+  const [benPreview, setBenPreview]       = useState<any>(null)
+  const [benActing, setBenActing]         = useState<string|null>(null)
+  const [benEditTitle, setBenEditTitle]   = useState('')
+  const [benEditSections, setBenEditSections] = useState<{heading:string;level:2|3;body:string}[]>([])
+
   // Loading states — prevent misleading 0s on initial render
-  const [aliceLoading, setAliceLoading]     = useState(true)
+  const [aliceLoading, setAliceLoading]       = useState(true)
   const [carolyneLoading, setCarolyneLoading] = useState(true)
+  const [benLoading, setBenLoading]           = useState(true)
 
   // Automation state
   const [autoJobs, setAutoJobs] = useState<Record<string, {running:boolean;result:any;lastRun:string|null}>>({
@@ -222,6 +234,31 @@ export default function AgentAdminPage() {
       loadCarolyneCounts()
     }
   }, [authorized, mainTab, loadCarolyneItems, loadCarolyneCounts])
+
+  // ── Ben Carlson load functions ──
+  const loadBenCounts = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/agent/ben-scout/list?counts=1&t=${Date.now()}`, { cache: 'no-store' })
+      const d   = await res.json()
+      setBenCounts({ pending: d.pending || 0, published: d.published || 0, rejected: d.rejected || 0, total: d.total || 0 })
+    } catch {}
+  }, [])
+
+  const loadBenItems = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/agent/ben-scout/list?status=${benFilter}&t=${Date.now()}`, { cache: 'no-store' })
+      const d   = await res.json()
+      setBenItems(d.items || [])
+    } catch { setBenItems([]) }
+    finally { setBenLoading(false) }
+  }, [benFilter])
+
+  useEffect(() => {
+    if (authorized && mainTab === 'ben') {
+      loadBenItems()
+      loadBenCounts()
+    }
+  }, [authorized, mainTab, loadBenItems, loadBenCounts])
 
   const runAliceScout = async () => {
     setAliceRunning(true); setAliceRunLog(['Alice is scanning for today\'s stories...'])
@@ -496,11 +533,15 @@ export default function AgentAdminPage() {
 
         {/* Main tabs */}
         <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',marginBottom:24,display:'flex',gap:0,overflowX:'auto'}}>
-          {([['alice','Alice Watson — Blog Scout'],['carolyne','Carolyne Kigathi — East Africa'],['automation','Automation'],['security','Security & GDPR']] as const).map(([t,label]) => (
-            <button key={t} onClick={()=>setMainTab(t as any)} style={{padding:'10px 20px',border:'none',background:'transparent',fontSize:13,fontWeight:mainTab===t?600:400,color:mainTab===t?'#6366F1':'var(--tx3)',borderBottom:mainTab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit',flexShrink:0,whiteSpace:'nowrap'}}>
-              {label}
-            </button>
-          ))}
+          {([['alice','Alice Watson — Blog Scout'],['carolyne','Carolyne Kigathi — East Africa'],['automation','Automation'],['security','Security & GDPR']] as const).map(([t,label]) => {
+            const tabColor = t === 'carolyne' ? '#16a34a' : '#6366F1'
+            const active = mainTab === t
+            return (
+              <button key={t} onClick={()=>setMainTab(t as any)} style={{padding:'10px 20px',border:'none',background:'transparent',fontSize:13,fontWeight:active?600:400,color:active?tabColor:'var(--tx3)',borderBottom:active?`2px solid ${tabColor}`:'2px solid transparent',cursor:'pointer',fontFamily:'inherit',flexShrink:0,whiteSpace:'nowrap',transition:'color 150ms'}}>
+                {label}
+              </button>
+            )
+          })}
         </div>
 
         {/* ── ALICE WATSON — BLOG SCOUT ── */}
@@ -514,7 +555,7 @@ export default function AgentAdminPage() {
                 <div style={{fontSize:12,color:'#6366F1',fontWeight:600,marginBottom:4}}>Head of Market Intelligence</div>
                 <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>Scans live news daily via Tavily, drafts 10 blog posts targeting AskBiz&apos;s core value areas. Posts go live on the blog once you authorise them.</div>
               </div>
-              <button onClick={runAliceScout} disabled={aliceRunning} style={{padding:'10px 20px',borderRadius:9999,border:'none',background:aliceRunning?'var(--b)':'#6366F1',color:aliceRunning?'var(--tx3)':'#fff',fontSize:13,fontWeight:600,cursor:aliceRunning?'wait':'pointer',fontFamily:'inherit',flexShrink:0}}>
+              <button onClick={runAliceScout} disabled={aliceRunning} style={{padding:'10px 20px',borderRadius:9999,border:'none',background:aliceRunning?'var(--b)':'#6366F1',color:aliceRunning?'var(--tx3)':'#fff',fontSize:13,fontWeight:600,cursor:aliceRunning?'wait':'pointer',fontFamily:'inherit',flexShrink:0,transition:'background 200ms, color 200ms, opacity 200ms'}}>
                 {aliceRunning ? 'Writing...' : 'Run Alice Now'}
               </button>
             </div>
@@ -528,7 +569,12 @@ export default function AgentAdminPage() {
 
             {/* Stats */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))',gap:10,marginBottom:20}}>
-              {[
+              {aliceLoading ? [0,1,2,3].map(i => (
+                <div key={i} style={{padding:14,borderRadius:12,border:'1px solid var(--b)',background:'var(--sf)',minHeight:66}}>
+                  <div style={{height:9,borderRadius:5,background:'var(--ev)',marginBottom:10,width:'65%'}}/>
+                  <div style={{height:22,borderRadius:6,background:'var(--ev)',width:'35%'}}/>
+                </div>
+              )) : [
                 {label:'Pending Review',value:aliceCounts.pending,color:'#f59e0b'},
                 {label:'Published',value:aliceCounts.published,color:'#10b981'},
                 {label:'Rejected',value:aliceCounts.rejected,color:'#94a3b8'},
@@ -544,26 +590,27 @@ export default function AgentAdminPage() {
             {/* Filter */}
             <div style={{display:'flex',gap:8,marginBottom:16}}>
               {(['pending','published','rejected','all'] as const).map(f => (
-                <button key={f} onClick={() => setAliceFilter(f)} style={{padding:'6px 14px',borderRadius:9999,border:`1px solid ${aliceFilter===f?'#6366F1':'var(--b)'}`,background:aliceFilter===f?'rgba(99,102,241,.08)':'transparent',color:aliceFilter===f?'#6366F1':'var(--tx3)',fontSize:12,fontWeight:aliceFilter===f?600:400,cursor:'pointer',fontFamily:'inherit',textTransform:'capitalize'}}>{f}</button>
+                <button key={f} onClick={() => { setAliceLoading(true); setAliceFilter(f) }} style={{padding:'6px 14px',borderRadius:9999,border:`1px solid ${aliceFilter===f?'#6366F1':'var(--b)'}`,background:aliceFilter===f?'rgba(99,102,241,.08)':'transparent',color:aliceFilter===f?'#6366F1':'var(--tx3)',fontSize:12,fontWeight:aliceFilter===f?600:400,cursor:'pointer',fontFamily:'inherit',textTransform:'capitalize',transition:'background 150ms, color 150ms, border-color 150ms'}}>{f}</button>
               ))}
             </div>
 
             {/* Blog list */}
             {aliceItems.length === 0 ? (
               <div style={{textAlign:'center',padding:'60px 0',color:'var(--tx3)'}}>
-                <div style={{fontSize:32,marginBottom:12}}>AW</div>
-                <div style={{fontSize:14,fontWeight:500,marginBottom:4}}>No drafts yet</div>
-                <div style={{fontSize:12}}>Hit &quot;Run Alice Now&quot; to have her scan today&apos;s news and draft 10 blog posts.</div>
+                <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg,#6366F1,#818cf8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:700,color:'#fff',fontFamily:'var(--font-sora)',margin:'0 auto 16px',opacity:.7}}>AW</div>
+                <div style={{fontSize:14,fontWeight:500,marginBottom:6,color:'var(--tx)'}}>No drafts yet</div>
+                <div style={{fontSize:12,maxWidth:280,margin:'0 auto',lineHeight:1.6}}>Hit &quot;Run Alice Now&quot; to have her scan today&apos;s news and draft 10 blog posts ready for review.</div>
               </div>
             ) : (
               <div style={{borderRadius:14,border:'1px solid var(--b)',overflow:'hidden',background:'var(--sf)'}}>
                 {aliceItems.map(item => {
                   const blog = item.content || {}
                   return (
-                    <div key={item.id} style={{padding:'14px 16px',borderBottom:'1px solid var(--b)',display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',cursor:'pointer'}} onClick={() => openAlicePreview(item)}>
+                    <div key={item.id} style={{padding:'14px 16px',borderBottom:'1px solid var(--b)',display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',cursor:'pointer',transition:'background 120ms'}} onClick={() => openAlicePreview(item)} onMouseEnter={e=>e.currentTarget.style.background='var(--ev)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
                       <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:6,background:item.status==='pending'?'rgba(245,158,11,.1)':item.status==='published'?'rgba(16,185,129,.1)':'rgba(148,163,184,.1)',color:item.status==='pending'?'#f59e0b':item.status==='published'?'#10b981':'#94a3b8'}}>{item.status}</span>
                       <span style={{fontSize:11,padding:'2px 8px',borderRadius:6,background:'rgba(99,102,241,.08)',color:'#6366F1',fontWeight:500}}>{blog.cluster || '—'}</span>
                       <span style={{fontSize:13,color:'var(--tx)',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontWeight:500}}>{blog.title || 'Untitled'}</span>
+                      {blog.qualityScore != null && <span style={{fontSize:10,fontWeight:600,padding:'2px 6px',borderRadius:4,background:blog.qualityScore>=80?'rgba(16,185,129,.1)':'rgba(245,158,11,.1)',color:blog.qualityScore>=80?'#10b981':'#f59e0b'}}>{blog.qualityScore}</span>}
                       <span style={{fontSize:11,color:'var(--tx3)'}}>{blog.readTime ? `${blog.readTime} min` : ''}</span>
                       <span style={{fontSize:11,color:'var(--tx3)'}}>{new Date(item.created_at).toLocaleDateString('en-GB')}</span>
                       {item.status === 'pending' && (
@@ -599,7 +646,7 @@ export default function AgentAdminPage() {
                         <button onClick={() => handleAliceAction(alicePreview.id, 'approve')} disabled={aliceActing===alicePreview.id} style={{padding:'6px 16px',borderRadius:8,border:'none',background:'#10b981',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise & Publish</button>
                         <button onClick={() => handleAliceAction(alicePreview.id, 'reject')} disabled={aliceActing===alicePreview.id} style={{padding:'6px 16px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
                       </>}
-                      <button onClick={() => setAlicePreview(null)} style={{padding:'6px 10px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:14,cursor:'pointer',fontFamily:'inherit',lineHeight:1}}>×</button>
+                      <button onClick={() => setAlicePreview(null)} aria-label="Close preview" style={{padding:'6px 10px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:14,cursor:'pointer',fontFamily:'inherit',lineHeight:1}}>×</button>
                     </div>
                   </div>
 
@@ -620,7 +667,7 @@ export default function AgentAdminPage() {
 
                     {/* Title */}
                     {alicePreview.status === 'pending' ? (
-                      <input value={aliceEditTitle} onChange={e => setAliceEditTitle(e.target.value)} style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:8,padding:'8px 12px',width:'100%',marginBottom:16,background:'transparent',boxSizing:'border-box'}} />
+                      <input value={aliceEditTitle} onChange={e => setAliceEditTitle(e.target.value)} placeholder="Article title" style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:8,padding:'8px 12px',width:'100%',marginBottom:16,background:'transparent',boxSizing:'border-box'}} />
                     ) : (
                       <h1 style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',marginBottom:16,marginTop:0}}>{alicePreview.content?.title}</h1>
                     )}
@@ -637,8 +684,8 @@ export default function AgentAdminPage() {
                       <div key={i} style={{marginBottom:24}}>
                         {alicePreview.status === 'pending' ? (
                           <>
-                            <input value={sec.heading} onChange={e => { const s = [...aliceEditSections]; s[i] = {...s[i], heading: e.target.value}; setAliceEditSections(s) }} style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:6,padding:'6px 10px',width:'100%',marginBottom:8,background:'transparent',boxSizing:'border-box'}} />
-                            <textarea value={sec.body} onChange={e => { const s = [...aliceEditSections]; s[i] = {...s[i], body: e.target.value}; setAliceEditSections(s) }} rows={5} style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:6,padding:'8px 10px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent',boxSizing:'border-box'}} />
+                            <input value={sec.heading} onChange={e => { const s = [...aliceEditSections]; s[i] = {...s[i], heading: e.target.value}; setAliceEditSections(s) }} placeholder="Section heading" style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:6,padding:'6px 10px',width:'100%',marginBottom:8,background:'transparent',boxSizing:'border-box'}} />
+                            <textarea value={sec.body} onChange={e => { const s = [...aliceEditSections]; s[i] = {...s[i], body: e.target.value}; setAliceEditSections(s) }} rows={5} placeholder="Write section content…" style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:6,padding:'8px 10px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent',boxSizing:'border-box'}} />
                           </>
                         ) : (
                           <>
@@ -687,7 +734,7 @@ export default function AgentAdminPage() {
                 <div style={{fontSize:12,color:'#16a34a',fontWeight:600,marginBottom:4}}>Head of Strategic Partnerships, East Africa</div>
                 <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>Tracks regulatory shifts, mobile money trends, and SME growth signals across Kenya, Uganda, Tanzania, and Rwanda — drafts 10 East Africa-focused posts daily ready for your review.</div>
               </div>
-              <button onClick={runCarolyneScout} disabled={carolyneRunning} style={{padding:'10px 20px',borderRadius:9999,border:'none',background:carolyneRunning?'var(--b)':'#16a34a',color:carolyneRunning?'var(--tx3)':'#fff',fontSize:13,fontWeight:600,cursor:carolyneRunning?'wait':'pointer',fontFamily:'inherit',flexShrink:0}}>
+              <button onClick={runCarolyneScout} disabled={carolyneRunning} style={{padding:'10px 20px',borderRadius:9999,border:'none',background:carolyneRunning?'var(--b)':'#16a34a',color:carolyneRunning?'var(--tx3)':'#fff',fontSize:13,fontWeight:600,cursor:carolyneRunning?'wait':'pointer',fontFamily:'inherit',flexShrink:0,transition:'background 200ms, color 200ms, opacity 200ms'}}>
                 {carolyneRunning ? 'Writing...' : 'Run Carolyne Now'}
               </button>
             </div>
@@ -701,7 +748,12 @@ export default function AgentAdminPage() {
 
             {/* Stats */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))',gap:10,marginBottom:20}}>
-              {[
+              {carolyneLoading ? [0,1,2,3].map(i => (
+                <div key={i} style={{padding:14,borderRadius:12,border:'1px solid var(--b)',background:'var(--sf)',minHeight:66}}>
+                  <div style={{height:9,borderRadius:5,background:'var(--ev)',marginBottom:10,width:'65%'}}/>
+                  <div style={{height:22,borderRadius:6,background:'var(--ev)',width:'35%'}}/>
+                </div>
+              )) : [
                 {label:'Pending Review', value:carolyneCounts.pending,   color:'#f59e0b'},
                 {label:'Published',      value:carolyneCounts.published,  color:'#10b981'},
                 {label:'Rejected',       value:carolyneCounts.rejected,   color:'#94a3b8'},
@@ -717,7 +769,7 @@ export default function AgentAdminPage() {
             {/* Filter */}
             <div style={{display:'flex',gap:8,marginBottom:16}}>
               {(['pending','published','rejected','all'] as const).map(f => (
-                <button key={f} onClick={() => setCarolyneFilter(f)} style={{padding:'6px 14px',borderRadius:9999,border:`1px solid ${carolyneFilter===f?'#16a34a':'var(--b)'}`,background:carolyneFilter===f?'rgba(22,163,74,.08)':'transparent',color:carolyneFilter===f?'#16a34a':'var(--tx3)',fontSize:12,fontWeight:carolyneFilter===f?600:400,cursor:'pointer',fontFamily:'inherit',textTransform:'capitalize'}}>{f}</button>
+                <button key={f} onClick={() => { setCarolyneLoading(true); setCarolyneFilter(f) }} style={{padding:'6px 14px',borderRadius:9999,border:`1px solid ${carolyneFilter===f?'#16a34a':'var(--b)'}`,background:carolyneFilter===f?'rgba(22,163,74,.08)':'transparent',color:carolyneFilter===f?'#16a34a':'var(--tx3)',fontSize:12,fontWeight:carolyneFilter===f?600:400,cursor:'pointer',fontFamily:'inherit',textTransform:'capitalize',transition:'background 150ms, color 150ms, border-color 150ms'}}>{f}</button>
               ))}
             </div>
 
@@ -733,10 +785,11 @@ export default function AgentAdminPage() {
                 {carolyneItems.map(item => {
                   const blog = item.content || {}
                   return (
-                    <div key={item.id} style={{padding:'14px 16px',borderBottom:'1px solid var(--b)',display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',cursor:'pointer'}} onClick={() => openCarolynePreview(item)}>
+                    <div key={item.id} style={{padding:'14px 16px',borderBottom:'1px solid var(--b)',display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',cursor:'pointer',transition:'background 120ms'}} onClick={() => openCarolynePreview(item)} onMouseEnter={e=>e.currentTarget.style.background='var(--ev)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
                       <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:6,background:item.status==='pending'?'rgba(245,158,11,.1)':item.status==='published'?'rgba(16,185,129,.1)':'rgba(148,163,184,.1)',color:item.status==='pending'?'#f59e0b':item.status==='published'?'#10b981':'#94a3b8'}}>{item.status}</span>
                       <span style={{fontSize:11,padding:'2px 8px',borderRadius:6,background:'rgba(22,163,74,.08)',color:'#16a34a',fontWeight:500}}>{blog.cluster || '—'}</span>
                       <span style={{fontSize:13,color:'var(--tx)',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontWeight:500}}>{blog.title || 'Untitled'}</span>
+                      {blog.qualityScore != null && <span style={{fontSize:10,fontWeight:600,padding:'2px 6px',borderRadius:4,background:blog.qualityScore>=80?'rgba(16,185,129,.1)':'rgba(245,158,11,.1)',color:blog.qualityScore>=80?'#10b981':'#f59e0b'}}>{blog.qualityScore}</span>}
                       <span style={{fontSize:11,color:'var(--tx3)'}}>{blog.readTime ? `${blog.readTime} min` : ''}</span>
                       <span style={{fontSize:11,color:'var(--tx3)'}}>{new Date(item.created_at).toLocaleDateString('en-GB')}</span>
                       {item.status === 'pending' && (
@@ -757,7 +810,7 @@ export default function AgentAdminPage() {
             {/* Preview modal */}
             {carolynePreview && (
               <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:20}} onClick={() => setCarolynePreview(null)}>
-                <div style={{background:'var(--sf)',borderRadius:16,maxWidth:800,width:'100%',maxHeight:'90vh',overflow:'auto'}} onClick={e => e.stopPropagation()}>
+                <div style={{background:'var(--sf)',borderRadius:16,maxWidth:800,width:'100%',maxHeight:'90vh',overflow:'auto',padding:0}} onClick={e => e.stopPropagation()}>
                   {/* Modal header */}
                   <div style={{padding:'16px 24px',borderBottom:'1px solid var(--b)',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,background:'var(--sf)',zIndex:1,borderRadius:'16px 16px 0 0'}}>
                     <div style={{display:'flex',alignItems:'center',gap:10}}>
@@ -772,7 +825,7 @@ export default function AgentAdminPage() {
                         <button onClick={() => handleCarolyneAction(carolynePreview.id, 'approve')} disabled={carolyneActing===carolynePreview.id} style={{padding:'6px 16px',borderRadius:8,border:'none',background:'#16a34a',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise & Publish</button>
                         <button onClick={() => handleCarolyneAction(carolynePreview.id, 'reject')} disabled={carolyneActing===carolynePreview.id} style={{padding:'6px 16px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
                       </>}
-                      <button onClick={() => setCarolynePreview(null)} style={{padding:'6px 10px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:14,cursor:'pointer',fontFamily:'inherit',lineHeight:1}}>×</button>
+                      <button onClick={() => setCarolynePreview(null)} aria-label="Close preview" style={{padding:'6px 10px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:14,cursor:'pointer',fontFamily:'inherit',lineHeight:1}}>×</button>
                     </div>
                   </div>
 
@@ -786,7 +839,7 @@ export default function AgentAdminPage() {
                     </div>
 
                     {carolynePreview.status === 'pending' ? (
-                      <input value={carolyneEditTitle} onChange={e => setCarolyneEditTitle(e.target.value)} style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:8,padding:'8px 12px',width:'100%',marginBottom:16,background:'transparent',boxSizing:'border-box'}} />
+                      <input value={carolyneEditTitle} onChange={e => setCarolyneEditTitle(e.target.value)} placeholder="Article title" style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:8,padding:'8px 12px',width:'100%',marginBottom:16,background:'transparent',boxSizing:'border-box'}} />
                     ) : (
                       <h1 style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',marginBottom:16,marginTop:0}}>{carolynePreview.content?.title}</h1>
                     )}
@@ -801,8 +854,8 @@ export default function AgentAdminPage() {
                       <div key={i} style={{marginBottom:24}}>
                         {carolynePreview.status === 'pending' ? (
                           <>
-                            <input value={sec.heading} onChange={e => { const s = [...carolyneEditSections]; s[i] = {...s[i], heading: e.target.value}; setCarolyneEditSections(s) }} style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:6,padding:'6px 10px',width:'100%',marginBottom:8,background:'transparent',boxSizing:'border-box'}} />
-                            <textarea value={sec.body} onChange={e => { const s = [...carolyneEditSections]; s[i] = {...s[i], body: e.target.value}; setCarolyneEditSections(s) }} rows={5} style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:6,padding:'8px 10px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent',boxSizing:'border-box'}} />
+                            <input value={sec.heading} onChange={e => { const s = [...carolyneEditSections]; s[i] = {...s[i], heading: e.target.value}; setCarolyneEditSections(s) }} placeholder="Section heading" style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:6,padding:'6px 10px',width:'100%',marginBottom:8,background:'transparent',boxSizing:'border-box'}} />
+                            <textarea value={sec.body} onChange={e => { const s = [...carolyneEditSections]; s[i] = {...s[i], body: e.target.value}; setCarolyneEditSections(s) }} rows={5} placeholder="Write section content…" style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:6,padding:'8px 10px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent',boxSizing:'border-box'}} />
                           </>
                         ) : (
                           <>

@@ -46,7 +46,13 @@ export async function POST(req: NextRequest) {
 
   const { phone, email, name, role, pin, location_id, sector } = await req.json()
   if ((!phone && !email) || !name || !role) return NextResponse.json({ error: 'phone or email, name and role required' }, { status: 400 })
-  if (!['cashier', 'inventory', 'repair', 'engineer', 'manager', 'supervisor', 'handler', 'driver', 'dispatcher', 'branch_manager'].includes(role)) return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
+
+  // Accept both legacy roles AND template IDs (format: "business-type-role")
+  const legacyRoles = ['cashier', 'inventory', 'repair', 'engineer', 'manager', 'supervisor', 'handler', 'driver', 'dispatcher', 'branch_manager']
+  const isTemplate = typeof role === 'string' && role.includes('-')
+  const isValidRole = legacyRoles.includes(role) || (isTemplate && /^(factory|restaurant|repair|salon|retail|logistics)-/.test(role))
+
+  if (!isValidRole) return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
   if (sector && !['restaurant', 'repair', 'salon', 'retail', 'logistics'].includes(sector)) return NextResponse.json({ error: 'Invalid sector' }, { status: 400 })
   if (pin && (String(pin).length < 4 || String(pin).length > 6)) return NextResponse.json({ error: 'PIN must be 4–6 digits' }, { status: 400 })
 
@@ -111,8 +117,16 @@ export async function PATCH(req: NextRequest) {
 
   const { id, name, role, phone, email, active, pin, location_id, sector } = await req.json()
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
-  if (role !== undefined && !['cashier', 'inventory', 'repair', 'engineer', 'manager', 'supervisor', 'handler', 'driver', 'dispatcher', 'branch_manager'].includes(role)) {
-    return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
+
+  // Accept both legacy roles AND template IDs (format: "business-type-role")
+  if (role !== undefined) {
+    const legacyRoles = ['cashier', 'inventory', 'repair', 'engineer', 'manager', 'supervisor', 'handler', 'driver', 'dispatcher', 'branch_manager']
+    const isTemplate = typeof role === 'string' && role.includes('-')
+    const isValidRole = legacyRoles.includes(role) || (isTemplate && /^(factory|restaurant|repair|salon|retail|logistics)-/.test(role))
+
+    if (!isValidRole) {
+      return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
+    }
   }
 
   // Enforce sector edit limit of 2
