@@ -40,7 +40,7 @@ const RELEASES: Release[] = [
   {
     version: '2.14.0',
     date: '2026-06-14',
-    summary: 'Smart notification system, Paystack payment tracking, POS inventory archiving, and CFO dashboard cleanup.',
+    summary: 'Smart notification system, Paystack payment tracking, POS inventory archiving, CFO dashboard cleanup, and blog + academy design polish.',
     changes: [
       { type: 'new',      text: 'In-app notification inbox — payment failures, reorder alerts, daily sales summaries, large sale flags, and source connection health all fire as notifications' },
       { type: 'new',      text: 'Paystack webhook on main app — charge.success and charge.failed events update payment status and create instant notifications' },
@@ -57,6 +57,15 @@ const RELEASES: Release[] = [
       { type: 'fixed',    text: 'Pending payments incorrectly shown as "Retrying" — dunning API now only queries genuinely failed payments' },
       { type: 'fixed',    text: 'Dismissed Pulse alerts reappearing on refresh — removed Date.now() suffix from signal IDs' },
       { type: 'removed',  text: 'Inline alert banners on CFO Dashboard — margin and stock alerts now handled by the notification system and Pulse' },
+      { type: 'improved', text: 'Blog index — Popular Topics redesigned with 3 featured cards plus compact inline buttons, breaking the identical card grid' },
+      { type: 'improved', text: 'Blog article — removed 6 interstitials (Key Insight, newsletter CTA, cluster CTA, duplicate Key Takeaways, lead magnet) leaving one clean bottom CTA' },
+      { type: 'improved', text: 'Blog article — removed side-stripe accent borders from intro and contextual links sections' },
+      { type: 'improved', text: 'Blog post rows — stripped badge overload (content type, difficulty, pillar pills) down to plain cluster label' },
+      { type: 'improved', text: 'Academy index — category grid redesigned with 5 featured cards plus compact inline buttons for remaining 20 categories' },
+      { type: 'improved', text: 'Academy article — removed mid-article gradient CTA interstitial, sidebar CTA is now the single conversion ask' },
+      { type: 'improved', text: 'Academy article — removed side-stripe border from description and fixed uppercase tracked headings' },
+      { type: 'improved', text: 'Academy article rows — stripped badge overload (category + difficulty pills) down to plain category label' },
+      { type: 'fixed',    text: 'Font fallback inconsistency across blog and academy — all changed from sans-serif to system-ui' },
     ],
   },
   {
