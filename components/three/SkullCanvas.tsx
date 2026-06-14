@@ -1,6 +1,7 @@
 'use client'
-import { useRef, useMemo } from 'react'
+import { useRef, useMemo, Suspense } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
+import { useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 
 interface Props {
@@ -8,22 +9,24 @@ interface Props {
   mouse: { x: number; y: number }
 }
 
-function NetworkSphere({ scroll, mouse }: Props) {
+function EarthNetwork({ scroll, mouse }: Props) {
   const groupRef  = useRef<THREE.Group>(null!)
+  const earthRef  = useRef<THREE.Mesh>(null!)
   const pointsRef = useRef<THREE.Points>(null!)
   const linesRef  = useRef<THREE.LineSegments>(null!)
 
-  // Keep latest props accessible in useFrame without stale closures
   const scrollRef = useRef(scroll)
   const mouseRef  = useRef(mouse)
   scrollRef.current = scroll
   mouseRef.current  = mouse
 
-  // Build node positions (Fibonacci sphere) + connection line buffer once
+  const [earthTex] = useTexture(['/textures/earth-day.jpg'])
+
+  // Network nodes sitting just above the Earth surface (radius 1.82 vs Earth 1.8)
   const { pointBuf, lineBuf } = useMemo(() => {
-    const R  = 1.8
+    const R  = 1.82
     const N  = 130
-    const gr = (1 + Math.sqrt(5)) / 2            // golden ratio
+    const gr = (1 + Math.sqrt(5)) / 2
 
     const pts: [number, number, number][] = []
     for (let i = 0; i < N; i++) {
@@ -38,8 +41,7 @@ function NetworkSphere({ scroll, mouse }: Props) {
 
     const pointBuf = new Float32Array(pts.flat())
 
-    // Connect nodes whose squared chord-distance is below threshold
-    const THRESH_SQ = 0.68        // ≈ 0.82 units — ~5-7 connections per node
+    const THRESH_SQ = 0.70
     const lines: number[] = []
     for (let i = 0; i < pts.length; i++) {
       for (let j = i + 1; j < pts.length; j++) {
@@ -62,7 +64,7 @@ function NetworkSphere({ scroll, mouse }: Props) {
     const m    = mouseRef.current
 
     // Slow auto-rotation + mouse tilt
-    groupRef.current.rotation.y += delta * 0.10
+    groupRef.current.rotation.y += delta * 0.08
     groupRef.current.rotation.x = THREE.MathUtils.lerp(
       groupRef.current.rotation.x,
       m.y * 0.12 + Math.sin(t * 0.22) * 0.025,
@@ -74,15 +76,19 @@ function NetworkSphere({ scroll, mouse }: Props) {
       0.04,
     )
 
-    // Subtle breathing pulse on node opacity
+    // Earth: keep at gentle low opacity
+    if (earthRef.current) {
+      ;(earthRef.current.material as THREE.MeshPhongMaterial).opacity = 0.28 * fade
+    }
+    // Dots: breathing pulse
     if (pointsRef.current) {
       ;(pointsRef.current.material as THREE.PointsMaterial).opacity =
         (0.72 + Math.sin(t * 0.9) * 0.14) * fade
     }
-    // Slower pulse on line opacity
+    // Lines: slower pulse
     if (linesRef.current) {
       ;(linesRef.current.material as THREE.LineBasicMaterial).opacity =
-        (0.15 + Math.sin(t * 0.55) * 0.05) * fade
+        (0.16 + Math.sin(t * 0.55) * 0.05) * fade
     }
   })
 
@@ -90,7 +96,19 @@ function NetworkSphere({ scroll, mouse }: Props) {
 
   return (
     <group ref={groupRef}>
-      {/* Connection lines */}
+      {/* Ghost Earth — texture visible but very transparent */}
+      <mesh ref={earthRef}>
+        <sphereGeometry args={[1.8, 64, 64]} />
+        <meshPhongMaterial
+          map={earthTex}
+          transparent
+          opacity={0.28 * fade}
+          shininess={6}
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* Connection lines on top of Earth */}
       <lineSegments ref={linesRef}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[lineBuf, 3]} />
@@ -98,12 +116,12 @@ function NetworkSphere({ scroll, mouse }: Props) {
         <lineBasicMaterial
           color="#f97316"
           transparent
-          opacity={0.15 * fade}
+          opacity={0.16 * fade}
           depthWrite={false}
         />
       </lineSegments>
 
-      {/* Node dots */}
+      {/* Amber node dots */}
       <points ref={pointsRef}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[pointBuf, 3]} />
@@ -121,7 +139,17 @@ function NetworkSphere({ scroll, mouse }: Props) {
   )
 }
 
+function EarthFallback({ fade }: { fade: number }) {
+  return (
+    <mesh>
+      <sphereGeometry args={[1.8, 32, 32]} />
+      <meshBasicMaterial color="#d4c5b0" transparent opacity={0.15 * fade} />
+    </mesh>
+  )
+}
+
 export default function SkullCanvas({ scroll, mouse }: Props) {
+  const fade = Math.max(0, 1 - scroll / 650)
   return (
     <div style={{ width: '100%', height: '100%', display: 'block' }}>
       <Canvas
@@ -130,7 +158,11 @@ export default function SkullCanvas({ scroll, mouse }: Props) {
         gl={{ antialias: true, alpha: true }}
         dpr={[1, 1.5]}
       >
-        <NetworkSphere scroll={scroll} mouse={mouse} />
+        <ambientLight intensity={0.4} color="#d0dff0" />
+        <directionalLight position={[6, 4, 4]} intensity={2.0} color="#ffffff" />
+        <Suspense fallback={<EarthFallback fade={fade} />}>
+          <EarthNetwork scroll={scroll} mouse={mouse} />
+        </Suspense>
       </Canvas>
     </div>
   )
