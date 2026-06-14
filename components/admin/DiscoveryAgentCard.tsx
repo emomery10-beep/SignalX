@@ -176,15 +176,11 @@ export default function DiscoveryAgentCard() {
     return session?.access_token ?? null
   }, [supabase])
 
-  // Load last saved audit results on mount
+  // Load last saved audit results on mount — no auth needed (read-only, page is middleware-protected)
   useEffect(() => {
     const init = async () => {
       try {
-        const token = await getToken()
-        if (!token) { setLoading(false); return }
-        const res  = await fetch('/api/admin/ai-discovery-audit?action=last', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const res  = await fetch('/api/admin/ai-discovery-audit?action=last')
         const data = await res.json()
         if (data.platforms) {
           setAuditData(data)
@@ -196,7 +192,7 @@ export default function DiscoveryAgentCard() {
       }
     }
     init()
-  }, [getToken])
+  }, [])
 
   const runAudit = async () => {
     setAuditing(true)
@@ -273,9 +269,10 @@ export default function DiscoveryAgentCard() {
 
       {/* ── card ─────────────────────────────────────────────────── */}
       <div
-        className={`dac-card ${missing > 0 ? 'dac-card--gap' : ''}`}
+        className={`dac-card ${missing > 0 ? 'dac-card--gap' : ''} ${loading ? 'dac-card--loading' : ''}`}
         role="region"
         aria-label="AI Discovery Registration Agent"
+        aria-busy={loading}
       >
         {/* header */}
         <div className="dac-header">
@@ -347,7 +344,9 @@ export default function DiscoveryAgentCard() {
         </div>
 
         {/* last run */}
-        {auditData.lastRun && (
+        {loading ? (
+          <div className="dac-last-run dac-last-run--loading">Loading last results…</div>
+        ) : auditData.lastRun && (
           <div className="dac-last-run">
             Last run: {new Date(auditData.lastRun).toLocaleString('en-GB')}
           </div>
@@ -556,6 +555,22 @@ const CSS = `
 .dac-last-run {
   padding: 0 20px 14px;
   font-size: 11px; color: var(--tx3);
+}
+.dac-last-run--loading {
+  color: var(--tx3);
+  opacity: 0.5;
+}
+/* subtle pulse on card while loading initial data */
+.dac-card--loading .dac-stat-val {
+  opacity: 0.4;
+  animation: statPulse 1.4s ease-in-out infinite alternate;
+}
+@keyframes statPulse {
+  from { opacity: 0.4; }
+  to   { opacity: 0.75; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dac-card--loading .dac-stat-val { animation: none; }
 }
 
 /* ── expand/collapse (CSS grid trick — no height jank) ──── */

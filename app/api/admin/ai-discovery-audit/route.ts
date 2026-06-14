@@ -112,15 +112,12 @@ async function urlExists(url: string): Promise<boolean> {
 
 /* ─── GET — run audit & return results ──────────────────────────────── */
 export async function GET(req: NextRequest) {
-  const user = await requireAdmin(req)
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const { searchParams } = new URL(req.url)
 
-  // Return last saved results (no re-run)
+  // ── action=last: read-only, no auth needed (page is middleware-protected) ──
   if (searchParams.get('action') === 'last') {
     const supabase = createServiceClient()
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('agent_content')
       .select('content, created_at')
       .eq('type', 'ai_discovery_audit')
@@ -128,14 +125,18 @@ export async function GET(req: NextRequest) {
       .limit(1)
       .single()
 
-    if (data) {
-      return NextResponse.json({
-        ...(data.content as Record<string, unknown>),
-        lastRun: data.created_at,
-      })
+    if (error || !data) {
+      return NextResponse.json({ platforms: null, probeLog: null, lastRun: null })
     }
-    return NextResponse.json({ platforms: null, probeLog: null, lastRun: null })
+    return NextResponse.json({
+      ...(data.content as Record<string, unknown>),
+      lastRun: data.created_at,
+    })
   }
+
+  // ── all other actions require admin auth ──
+  const user = await requireAdmin(req)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   // Full audit run
   const result = await runAudit()

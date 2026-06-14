@@ -1800,38 +1800,34 @@ export default function POSPage() {
                   <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>— or —</div>
                   <input placeholder="Email address (alternative to WhatsApp)" value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" style={inputStyle} />
                   <select value={newRole} onChange={e => setNewRole(e.target.value as any)} style={inputStyle}>
-                    <optgroup label="📦 Factory Templates">
-                      <option value="factory-line-operator">👷 Line Operator — Production floor capture</option>
-                      <option value="factory-quality-inspector">🔍 Quality Inspector — QA & approvals</option>
-                      <option value="factory-shift-supervisor">👔 Shift Supervisor — Shift coordination</option>
-                      <option value="factory-production-manager">🎯 Production Manager — Full factory ops</option>
+                    <optgroup label="📦 FACTORY TEMPLATES">
+                      <option value="factory-line-operator">👷 Line Operator — Production floor</option>
+                      <option value="factory-quality-inspector">🔍 Quality Inspector — QA</option>
+                      <option value="factory-shift-supervisor">👔 Shift Supervisor — Coordination</option>
+                      <option value="factory-production-manager">🎯 Production Manager — Full ops</option>
                       <option value="factory-inventory-manager">📦 Inventory Manager — Batch tracking</option>
                     </optgroup>
-                    <optgroup label="🍽️ Restaurant Templates">
+                    <optgroup label="🍽️ RESTAURANT TEMPLATES">
                       <option value="restaurant-server">🍽️ Server — Table service</option>
-                      <option value="restaurant-lead-server">⭐ Lead Server — Floor coordination</option>
-                      <option value="restaurant-host">🎫 Host — Seating & reservations</option>
-                      <option value="restaurant-head-chef">👨‍🍳 Head Chef — Kitchen management</option>
+                      <option value="restaurant-lead-server">⭐ Lead Server — Floor lead</option>
+                      <option value="restaurant-host">🎫 Host — Seating</option>
+                      <option value="restaurant-head-chef">👨‍🍳 Head Chef — Kitchen lead</option>
                       <option value="restaurant-kitchen-manager">🍳 Kitchen Manager — Kitchen ops</option>
-                      <option value="restaurant-line-cook">🔪 Line Cook — Station prep</option>
-                      <option value="restaurant-operations-manager">🎯 Operations Manager — Full ops</option>
-                      <option value="restaurant-cashier">💳 Cashier — POS & payments</option>
+                      <option value="restaurant-line-cook">🔪 Line Cook — Station</option>
+                      <option value="restaurant-operations-manager">🎯 Ops Manager — All operations</option>
+                      <option value="restaurant-cashier">💳 Cashier — POS</option>
                     </optgroup>
-                    <optgroup label="📋 Legacy Roles">
-                      {(selectedSector === 'logistics' || selectedSector === 'all') && <>
-                        <option value="handler">Handler — receives & releases parcels at branch</option>
-                        <option value="driver">Driver — pickups, deliveries & vehicle inspections</option>
-                        <option value="dispatcher">Dispatcher — assigns parcels to trucks & routes</option>
-                        <option value="branch_manager">Branch Manager — branch dashboard & oversight</option>
-                      </>}
-                      {(selectedSector !== 'logistics') && <>
-                        <option value="cashier">Cashier — can process sales</option>
-                        <option value="inventory">Inventory — can manage stock</option>
-                        <option value="repair">Repair — can intake & checkout service jobs</option>
-                        <option value="engineer">Engineer — can work on assigned repairs</option>
-                        <option value="supervisor">Supervisor — can approve captures & view reports</option>
-                        <option value="manager">Manager — full staff access, refunds & amendments</option>
-                      </>}
+                    <optgroup label="— LEGACY ROLES —">
+                      <option value="cashier">Cashier — can process sales</option>
+                      <option value="inventory">Inventory — can manage stock</option>
+                      <option value="repair">Repair — can intake & checkout service jobs</option>
+                      <option value="engineer">Engineer — can work on assigned repairs</option>
+                      <option value="supervisor">Supervisor — can approve captures & view reports</option>
+                      <option value="manager">Manager — full staff access, refunds & amendments</option>
+                      <option value="handler">Handler — receives & releases parcels at branch</option>
+                      <option value="driver">Driver — pickups, deliveries & vehicle inspections</option>
+                      <option value="dispatcher">Dispatcher — assigns parcels to trucks & routes</option>
+                      <option value="branch_manager">Branch Manager — branch dashboard & oversight</option>
                     </optgroup>
                   </select>
                   {locations.length > 0 && (
@@ -1910,19 +1906,35 @@ export default function POSPage() {
                   <input placeholder="Email address" value={editEmail} onChange={e => setEditEmail(e.target.value)} type="email" style={inputStyle} />
                   <input placeholder={`New PIN (4–6 digits)${editingStaff.has_pin ? ' — leave blank to keep current' : ''}`} value={editPin} onChange={e => setEditPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: editPin && editPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
                   <select value={editRole} onChange={e => setEditRole(e.target.value as any)} style={inputStyle}>
-                    {['handler', 'driver', 'dispatcher', 'branch_manager'].includes(editingStaff.role) || selectedSector === 'logistics' ? <>
-                      <option value="handler">Handler — receives & releases parcels at branch</option>
-                      <option value="driver">Driver — pickups, deliveries & vehicle inspections</option>
-                      <option value="dispatcher">Dispatcher — assigns parcels to trucks & routes</option>
-                      <option value="branch_manager">Branch Manager — branch dashboard & oversight</option>
-                    </> : <>
+                    <optgroup label="📦 FACTORY TEMPLATES">
+                      <option value="factory-line-operator">👷 Line Operator — Production floor</option>
+                      <option value="factory-quality-inspector">🔍 Quality Inspector — QA</option>
+                      <option value="factory-shift-supervisor">👔 Shift Supervisor — Coordination</option>
+                      <option value="factory-production-manager">🎯 Production Manager — Full ops</option>
+                      <option value="factory-inventory-manager">📦 Inventory Manager — Batch tracking</option>
+                    </optgroup>
+                    <optgroup label="🍽️ RESTAURANT TEMPLATES">
+                      <option value="restaurant-server">🍽️ Server — Table service</option>
+                      <option value="restaurant-lead-server">⭐ Lead Server — Floor lead</option>
+                      <option value="restaurant-host">🎫 Host — Seating</option>
+                      <option value="restaurant-head-chef">👨‍🍳 Head Chef — Kitchen lead</option>
+                      <option value="restaurant-kitchen-manager">🍳 Kitchen Manager — Kitchen ops</option>
+                      <option value="restaurant-line-cook">🔪 Line Cook — Station</option>
+                      <option value="restaurant-operations-manager">🎯 Ops Manager — All operations</option>
+                      <option value="restaurant-cashier">💳 Cashier — POS</option>
+                    </optgroup>
+                    <optgroup label="— LEGACY ROLES —">
                       <option value="cashier">Cashier — can process sales</option>
                       <option value="inventory">Inventory — can manage stock</option>
                       <option value="repair">Repair — can intake & checkout service jobs</option>
                       <option value="engineer">Engineer — can work on assigned repairs</option>
                       <option value="supervisor">Supervisor — can approve captures & view reports</option>
                       <option value="manager">Manager — full staff access, refunds & amendments</option>
-                    </>}
+                      <option value="handler">Handler — receives & releases parcels at branch</option>
+                      <option value="driver">Driver — pickups, deliveries & vehicle inspections</option>
+                      <option value="dispatcher">Dispatcher — assigns parcels to trucks & routes</option>
+                      <option value="branch_manager">Branch Manager — branch dashboard & oversight</option>
+                    </optgroup>
                   </select>
                   {locations.length > 0 && (
                     <select value={editLocationId} onChange={e => setEditLocationId(e.target.value)} style={inputStyle}>

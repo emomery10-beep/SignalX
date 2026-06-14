@@ -1,12 +1,15 @@
 {
-  "name": "AskBiz",
+  "name": "AskBiz — AI Business Intelligence",
   "short_name": "AskBiz",
-  "description": "Ask your business data anything. Get instant BI answers.",
-  "start_url": "https://askbiz.co",
+  "description": "AI-powered business intelligence for SME founders. Connect Shopify, Amazon, TikTok Shop, QuickBooks or upload CSVs and ask questions in plain English to get instant answers grounded in your real data.",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#04080f",
-  "theme_color": "#04080f",
+  "background_color": "#1a1916",
+  "theme_color": "#d08a59",
   "orientation": "portrait-primary",
+  "lang": "en-GB",
+  "categories": ["business", "productivity", "finance", "analytics"],
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -28,5 +31,35 @@
       "type": "image/png",
       "form_factor": "narrow"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Ask a Question",
+      "short_name": "Ask",
+      "description": "Ask your business data a question in plain English",
+      "url": "/ask",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Business Pulse",
+      "short_name": "Pulse",
+      "description": "Get your daily AI-generated business health score",
+      "url": "/business",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Point of Sale",
+      "short_name": "POS",
+      "description": "Fast in-store checkout and sales tracking",
+      "url": "/pos",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://askbiz.co"
+    }
+  ],
+  "prefer_related_applications": false
 }
