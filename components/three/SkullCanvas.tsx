@@ -1,177 +1,140 @@
 'use client'
-import { useRef, useMemo } from 'react'
+import { useRef, Suspense } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Float } from '@react-three/drei'
+import { useTexture, Stars } from '@react-three/drei'
 import * as THREE from 'three'
 
-interface NeuralHeadProps {
+interface Props {
   scroll: number
   mouse: { x: number; y: number }
 }
 
-function NeuralHead({ scroll, mouse }: NeuralHeadProps) {
-  const groupRef = useRef<THREE.Group>(null!)
+function EarthMesh({ scroll, mouse }: Props) {
+  const earthRef = useRef<THREE.Mesh>(null!)
+  const cloudRef = useRef<THREE.Mesh>(null!)
 
-  const { positions, linePositions } = useMemo(() => {
-    const COUNT = 200
-    const pts: THREE.Vector3[] = []
+  const [earthTex, cloudTex] = useTexture([
+    '/textures/earth-day.jpg',
+    '/textures/earth-clouds.png',
+  ])
 
-    for (let i = 0; i < COUNT; i++) {
-      const theta = Math.random() * Math.PI * 2
-      const phi = Math.acos(2 * Math.random() - 1)
-      const r = 1.55 + (Math.random() - 0.5) * 0.55
-      // Slightly taller on Y axis — more head-like silhouette
-      pts.push(new THREE.Vector3(
-        r * Math.sin(phi) * Math.cos(theta),
-        r * 1.2 * Math.sin(phi) * Math.sin(theta),
-        r * Math.cos(phi)
-      ))
-    }
-
-    // Buffer for point positions
-    const posBuf = new Float32Array(COUNT * 3)
-    pts.forEach((p, i) => {
-      posBuf[i * 3]     = p.x
-      posBuf[i * 3 + 1] = p.y
-      posBuf[i * 3 + 2] = p.z
-    })
-
-    // Connect nearby points with lines
-    const lines: number[] = []
-    const DIST = 0.85
-    for (let i = 0; i < pts.length; i++) {
-      for (let j = i + 1; j < pts.length; j++) {
-        if (pts[i].distanceTo(pts[j]) < DIST) {
-          lines.push(pts[i].x, pts[i].y, pts[i].z)
-          lines.push(pts[j].x, pts[j].y, pts[j].z)
-        }
-      }
-    }
-
-    return {
-      positions: posBuf,
-      linePositions: new Float32Array(lines),
-    }
-  }, [])
-
-  useFrame((state) => {
-    if (!groupRef.current) return
-    const t = state.clock.elapsedTime
-
-    // Scroll-driven Y rotation — slow but responsive
-    groupRef.current.rotation.y = scroll * 0.0038
-
-    // Mouse parallax — smooth lerp
-    groupRef.current.rotation.x = THREE.MathUtils.lerp(
-      groupRef.current.rotation.x,
-      mouse.y * 0.12 + Math.sin(t * 0.18) * 0.03,
-      0.04
-    )
-    groupRef.current.rotation.z = THREE.MathUtils.lerp(
-      groupRef.current.rotation.z,
-      -mouse.x * 0.07,
-      0.04
-    )
-  })
-
-  // Fade as user scrolls down past the hero
   const fade = Math.max(0, 1 - scroll / 650)
 
+  useFrame((state, delta) => {
+    if (!earthRef.current) return
+    const t = state.clock.elapsedTime
+    // Slow auto-rotation
+    earthRef.current.rotation.y += delta * 0.06
+    // Mouse parallax tilt with gentle bob
+    earthRef.current.rotation.x = THREE.MathUtils.lerp(
+      earthRef.current.rotation.x,
+      mouse.y * 0.10 + Math.sin(t * 0.2) * 0.02,
+      0.04
+    )
+    earthRef.current.rotation.z = THREE.MathUtils.lerp(
+      earthRef.current.rotation.z,
+      -mouse.x * 0.05,
+      0.04
+    )
+    // Clouds spin slightly faster than Earth
+    if (cloudRef.current) {
+      cloudRef.current.rotation.y += delta * 0.08
+      cloudRef.current.rotation.x = earthRef.current.rotation.x
+      cloudRef.current.rotation.z = earthRef.current.rotation.z
+    }
+  })
+
   return (
-    <group ref={groupRef}>
-      {/* Soft ghost head volume */}
+    <group>
+      {/* Earth surface */}
+      <mesh ref={earthRef}>
+        <sphereGeometry args={[1.8, 64, 64]} />
+        <meshPhongMaterial
+          map={earthTex}
+          transparent
+          opacity={fade}
+          shininess={18}
+          specular={new THREE.Color('#336699')}
+        />
+      </mesh>
+
+      {/* Cloud layer */}
+      <mesh ref={cloudRef}>
+        <sphereGeometry args={[1.84, 48, 48]} />
+        <meshPhongMaterial
+          map={cloudTex}
+          transparent
+          opacity={0.35 * fade}
+          depthWrite={false}
+          side={THREE.FrontSide}
+        />
+      </mesh>
+
+      {/* Atmosphere inner glow */}
       <mesh>
-        <sphereGeometry args={[1.52, 48, 48]} />
-        <meshStandardMaterial
-          color="#1A0500"
-          emissive="#C97A44"
-          emissiveIntensity={0.12 * fade}
+        <sphereGeometry args={[1.78, 32, 32]} />
+        <meshBasicMaterial
+          color="#1a6fa8"
+          transparent
+          opacity={0.05 * fade}
+          side={THREE.BackSide}
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* Atmosphere outer halo */}
+      <mesh>
+        <sphereGeometry args={[2.05, 32, 32]} />
+        <meshBasicMaterial
+          color="#3388cc"
           transparent
           opacity={0.07 * fade}
-          roughness={1}
+          side={THREE.BackSide}
           depthWrite={false}
         />
       </mesh>
-
-      {/* Inner glow sphere */}
-      <mesh>
-        <sphereGeometry args={[1.1, 32, 32]} />
-        <meshStandardMaterial
-          color="#FF6B2B"
-          emissive="#FF6B2B"
-          emissiveIntensity={0.06 * fade}
-          transparent
-          opacity={0.03 * fade}
-          roughness={1}
-          depthWrite={false}
-        />
-      </mesh>
-
-      {/* Neural particles on surface */}
-      <points>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={positions.length / 3}
-            array={positions}
-            itemSize={3}
-          />
-        </bufferGeometry>
-        <pointsMaterial
-          color="#E8531A"
-          size={0.038}
-          transparent
-          opacity={0.82 * fade}
-          sizeAttenuation
-          depthWrite={false}
-        />
-      </points>
-
-      {/* Connection lines */}
-      <lineSegments>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={linePositions.length / 3}
-            array={linePositions}
-            itemSize={3}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial
-          color="#C97A44"
-          transparent
-          opacity={0.22 * fade}
-          depthWrite={false}
-        />
-      </lineSegments>
     </group>
   )
 }
 
-interface SkullCanvasProps {
-  scroll: number
-  mouse: { x: number; y: number }
+function EarthFallback({ fade }: { fade: number }) {
+  return (
+    <mesh>
+      <sphereGeometry args={[1.8, 32, 32]} />
+      <meshBasicMaterial color="#1a3a5c" transparent opacity={0.4 * fade} />
+    </mesh>
+  )
 }
 
-export default function SkullCanvas({ scroll, mouse }: SkullCanvasProps) {
+export default function SkullCanvas({ scroll, mouse }: Props) {
+  const fade = Math.max(0, 1 - scroll / 650)
   return (
-    // Explicit 100%×100% wrapper so R3F ResizeObserver correctly measures
-    // the container even when the parent uses position:absolute + inset:0
-    // without overflow:hidden to establish a BFC.
     <div style={{ width: '100%', height: '100%', display: 'block' }}>
       <Canvas
-        camera={{ position: [0, 0.3, 5], fov: 44 }}
+        camera={{ position: [0, 0.2, 4.8], fov: 42 }}
         style={{ background: 'transparent', width: '100%', height: '100%' }}
         gl={{ antialias: true, alpha: true }}
         dpr={[1, 1.5]}
       >
-        <ambientLight intensity={0.25} color="#FF9A5C" />
-        <pointLight position={[3, 4, 3]} intensity={2.5} color="#FF6B2B" decay={2} />
-        <pointLight position={[-3, -2, 1]} intensity={1.2} color="#FFB347" decay={2} />
-        <pointLight position={[0, -4, -2]} intensity={0.6} color="#C97A44" decay={2} />
-        <Float speed={1.1} rotationIntensity={0.06} floatIntensity={0.35}>
-          <NeuralHead scroll={scroll} mouse={mouse} />
-        </Float>
+        {/* Lighting — sun from upper-right */}
+        <ambientLight intensity={0.18} color="#c8d8f0" />
+        <directionalLight position={[6, 4, 4]} intensity={2.2} color="#ffffff" />
+        <pointLight position={[-6, -3, -3]} intensity={0.25} color="#2244aa" decay={2} />
+
+        {/* Background stars */}
+        <Stars
+          radius={90}
+          depth={40}
+          count={2500}
+          factor={3}
+          saturation={0.1}
+          fade
+          speed={0.4}
+        />
+
+        <Suspense fallback={<EarthFallback fade={fade} />}>
+          <EarthMesh scroll={scroll} mouse={mouse} />
+        </Suspense>
       </Canvas>
     </div>
   )
