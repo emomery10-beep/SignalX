@@ -1088,6 +1088,36 @@ function PosUIReplica() {
   )
 }
 
+// ── Calculator helpers — defined OUTSIDE MiniCalcWidget so React never remounts
+//    inputs on re-render (defining components inside a render fn = new type each
+//    render = unmount + remount = instant focus loss after every keystroke).
+//    Also uses type="text" + inputMode="decimal" so mobile shows a number pad
+//    instead of the browser's spinner arrows.
+function CalcInput({placeholder,value,onChange,isInt}:{placeholder:string;value:string;onChange:(v:string)=>void;isInt?:boolean}) {
+  return (
+    <input
+      type="text"
+      inputMode={isInt?'numeric':'decimal'}
+      placeholder={placeholder}
+      value={value}
+      onChange={e=>{
+        const v=e.target.value
+        // allow digits, one dot (or comma), leading minus for deletions
+        if(v===''||v==='-'||/^-?\d*\.?\d*$/.test(v))onChange(v)
+      }}
+      style={{width:'100%',height:36,padding:'0 10px',fontSize:13,border:`1px solid ${T.bd}`,borderRadius:8,background:T.alt,color:T.tx,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}
+    />
+  )
+}
+function CalcResult({value,label,color}:{value:string;label:string;color:string}) {
+  return (
+    <div style={{textAlign:'center',padding:'6px 2px',background:T.alt,borderRadius:8}}>
+      <div style={{fontFamily:'var(--font-instrument)',fontSize:16,fontWeight:700,color,lineHeight:1.2}}>{value}</div>
+      <div style={{fontSize:8,color:T.tx3,fontWeight:700,marginTop:2,textTransform:'uppercase',letterSpacing:'.03em'}}>{label}</div>
+    </div>
+  )
+}
+
 // ── Calculator ────────────────────────────────────────────────────────────────
 function MiniCalcWidget() {
   const [mode,setMode] = useState<'margin'|'industry'>('margin')
@@ -1116,17 +1146,6 @@ function MiniCalcWidget() {
   const iGross=iPrice-iCost,iMargin=iPrice>0?(iGross/iPrice)*100:0,iHasResult=iCost>0
   const mc_=(m:number)=>m>=30?'#4ade80':m>=15?'#fb923c':'#f87171'
   const switchBiz=(b:BizType)=>{setBiz(b);setIv({a:'',b:'',c:'',d:'',price:'',units:''})}
-  const I=(props:{placeholder:string;value:string;onChange:(v:string)=>void;step?:string})=>(
-    <input type="number" min="0" step={props.step||'0.01'} placeholder={props.placeholder}
-      style={{width:'100%',height:36,padding:'0 10px',fontSize:13,border:`1px solid ${T.bd}`,borderRadius:8,background:T.alt,color:T.tx,fontFamily:'inherit',outline:'none',boxSizing:'border-box' as const}}
-      value={props.value} onChange={e=>props.onChange(e.target.value)}/>
-  )
-  const R=(props:{value:string;label:string;color:string})=>(
-    <div style={{textAlign:'center',padding:'6px 2px',background:T.alt,borderRadius:8}}>
-      <div style={{fontFamily:'var(--font-instrument)',fontSize:16,fontWeight:700,color:props.color,lineHeight:1.2}}>{props.value}</div>
-      <div style={{fontSize:8,color:T.tx3,fontWeight:700,marginTop:2,textTransform:'uppercase',letterSpacing:'.03em'}}>{props.label}</div>
-    </div>
-  )
   return (
     <div ref={ref} style={{maxWidth:520,width:'100%',background:T.card,border:`1px solid ${T.bd}`,borderRadius:20,boxShadow:'0 8px 32px rgba(0,0,0,.06)',position:'relative'}}>
       <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:'12px 16px 0',gap:10}}>
@@ -1169,9 +1188,9 @@ function MiniCalcWidget() {
         {mode==='margin'?(
           <>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:7}}>
-              <I placeholder={`Cost (${sym})`} value={mc.cost} onChange={v=>setMc(p=>({...p,cost:v}))}/>
-              <I placeholder={`Sale price (${sym})`} value={mc.revenue} onChange={v=>setMc(p=>({...p,revenue:v}))}/>
-              <I placeholder="Units sold" value={mc.units} onChange={v=>setMc(p=>({...p,units:v}))} step="1"/>
+              <CalcInput placeholder={`Cost (${sym})`} value={mc.cost} onChange={v=>setMc(p=>({...p,cost:v}))}/>
+              <CalcInput placeholder={`Sale price (${sym})`} value={mc.revenue} onChange={v=>setMc(p=>({...p,revenue:v}))}/>
+              <CalcInput placeholder="Units sold" value={mc.units} onChange={v=>setMc(p=>({...p,units:v}))} isInt/>
             </div>
             {mHasResult&&(
               <div style={{marginTop:10}}>
@@ -1179,10 +1198,10 @@ function MiniCalcWidget() {
                   <div style={{height:'100%',borderRadius:3,background:mc_(mMargin),transform:`scaleX(${Math.min(mMargin,100)/100})`,transformOrigin:'left center',transition:'transform 300ms cubic-bezier(0.16,1,0.3,1)'}}/>
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:mUnits>0?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr',gap:5}}>
-                  <R value={`${mMargin.toFixed(1)}%`} label="Margin" color={mc_(mMargin)}/>
-                  <R value={`${sym}${mProfit.toFixed(2)}`} label="Profit" color={T.tx}/>
-                  <R value={`${mMarkup.toFixed(0)}%`} label="Markup" color={T.tx2}/>
-                  {mUnits>0&&<R value={`${sym}${(mProfit*mUnits).toLocaleString('en-GB',{maximumFractionDigits:0})}`} label="Total profit" color="#4ade80"/>}
+                  <CalcResult value={`${mMargin.toFixed(1)}%`} label="Margin" color={mc_(mMargin)}/>
+                  <CalcResult value={`${sym}${mProfit.toFixed(2)}`} label="Profit" color={T.tx}/>
+                  <CalcResult value={`${mMarkup.toFixed(0)}%`} label="Markup" color={T.tx2}/>
+                  {mUnits>0&&<CalcResult value={`${sym}${(mProfit*mUnits).toLocaleString('en-GB',{maximumFractionDigits:0})}`} label="Total profit" color="#4ade80"/>}
                 </div>
               </div>
             )}
@@ -1190,11 +1209,11 @@ function MiniCalcWidget() {
         ):(
           <>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7,marginBottom:7}}>
-              {bt.fields.map(f=>(<I key={f.key} placeholder={`${f.label}${f.label.includes('%')?'':` (${sym})`}`} value={(iv as Record<string,string>)[f.key]} onChange={v=>setIv(p=>({...p,[f.key]:v}))}/>))}
+              {bt.fields.map(f=>(<CalcInput key={f.key} placeholder={`${f.label}${f.label.includes('%')?'':` (${sym})`}`} value={(iv as Record<string,string>)[f.key]} onChange={v=>setIv(p=>({...p,[f.key]:v}))}/>))}
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7}}>
-              <I placeholder={`${bt.priceLabel} (${sym})`} value={iv.price} onChange={v=>setIv(p=>({...p,price:v}))}/>
-              <I placeholder={bt.unitLabel} value={iv.units} onChange={v=>setIv(p=>({...p,units:v}))} step="1"/>
+              <CalcInput placeholder={`${bt.priceLabel} (${sym})`} value={iv.price} onChange={v=>setIv(p=>({...p,price:v}))}/>
+              <CalcInput placeholder={bt.unitLabel} value={iv.units} onChange={v=>setIv(p=>({...p,units:v}))} isInt/>
             </div>
             {iHasResult&&(
               <div style={{marginTop:10}}>
@@ -1204,9 +1223,9 @@ function MiniCalcWidget() {
                   </div>
                 )}
                 <div style={{display:'grid',gridTemplateColumns:iUnits>0&&iPrice>0?'1fr 1fr 1fr 1fr':iPrice>0?'1fr 1fr 1fr':'1fr',gap:5}}>
-                  <R value={`${sym}${iCost.toFixed(2)}`} label={bt.resultLabel} color="#f87171"/>
-                  {iPrice>0&&<><R value={`${sym}${iGross.toFixed(2)}`} label="Gross profit" color={iGross>=0?'#4ade80':'#f87171'}/><R value={`${iMargin.toFixed(1)}%`} label="Margin" color={mc_(iMargin)}/></>}
-                  {iUnits>0&&iPrice>0&&<R value={`${sym}${(iGross*iUnits).toLocaleString('en-GB',{maximumFractionDigits:0})}`} label="Total profit" color="#4ade80"/>}
+                  <CalcResult value={`${sym}${iCost.toFixed(2)}`} label={bt.resultLabel} color="#f87171"/>
+                  {iPrice>0&&<><CalcResult value={`${sym}${iGross.toFixed(2)}`} label="Gross profit" color={iGross>=0?'#4ade80':'#f87171'}/><CalcResult value={`${iMargin.toFixed(1)}%`} label="Margin" color={mc_(iMargin)}/></>}
+                  {iUnits>0&&iPrice>0&&<CalcResult value={`${sym}${(iGross*iUnits).toLocaleString('en-GB',{maximumFractionDigits:0})}`} label="Total profit" color="#4ade80"/>}
                 </div>
               </div>
             )}
