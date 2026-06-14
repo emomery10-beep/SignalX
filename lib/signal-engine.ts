@@ -67,7 +67,7 @@ function checkStockoutRisk(
       const severity: SignalSeverity = daysLeft < leadTimeDays * 0.5 ? 'red' : 'yellow'
 
       signals.push({
-        id: `stockout-${product.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
+        id: `stockout-${product.replace(/\s+/g, '-').toLowerCase()}`,
         title: `${product} running low`,
         description: `You have ${Math.round(daysLeft)} days of stock left for ${product}. At your current sales rate of ${Math.round(dailySales)} units/day, you'll run out before your next delivery arrives${leadTimeDays ? ` (${leadTimeDays}-day lead time)` : ''}.`,
         severity,
@@ -108,7 +108,7 @@ function checkMarginSqueeze(
 
       if (pctIncrease > 10) {
         signals.push({
-          id: `margin-squeeze-${product.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
+          id: `margin-squeeze-${product.replace(/\s+/g, '-').toLowerCase()}`,
           title: `Cost increase on ${product}`,
           description: `Your AliExpress supplier cost for ${product} has increased by ${pctIncrease.toFixed(1)}% in the last 7 days (from $${previousCost.toFixed(2)} to $${currentCost.toFixed(2)}). This is squeezing your margin.`,
           severity: pctIncrease > 20 ? 'red' : 'yellow',
@@ -140,7 +140,7 @@ function checkMarginSqueeze(
 
       if (margin !== null && !isNaN(margin) && margin < 10) {
         signals.push({
-          id: `low-margin-${product.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
+          id: `low-margin-${product.replace(/\s+/g, '-').toLowerCase()}`,
           title: `Low margin on ${product}`,
           description: `${product} has only a ${margin.toFixed(1)}% margin — barely enough to cover your operating costs. Any cost increase or discount will push this into negative territory.`,
           severity: margin < 5 ? 'red' : 'yellow',
@@ -202,7 +202,7 @@ function checkSalesAnomalies(
   if (Math.abs(changePct) >= 30) {
     const isSpike = changePct > 0
     signals.push({
-      id: `anomaly-${today}-${Date.now()}`,
+      id: `anomaly-${today}`,
       title: isSpike ? '📈 Unusual sales spike today' : '📉 Sales down significantly today',
       description: isSpike
         ? `Today's sales (${formatValue(todayVal)}) are ${changePct.toFixed(0)}% above your 7-day average (${formatValue(avg7Day)}). Something is driving unusual demand — worth investigating so you can replicate it.`
@@ -282,7 +282,7 @@ export function runHealthCheckFromPOSData(input: PosSignalInput): Signal[] {
     if (daysLeft < leadTime) {
       const severity: SignalSeverity = daysLeft < 7 ? 'red' : 'yellow'
       signals.push({
-        id: `stockout-pos-${item.name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
+        id: `stockout-pos-${item.name.replace(/\s+/g, '-').toLowerCase()}`,
         title: `${item.name} running low`,
         description: `${Math.round(daysLeft)} days of stock left at current sales rate (${dailyVelocity.toFixed(1)}/day). You have ${item.stock_qty} units remaining.`,
         severity,
@@ -299,7 +299,7 @@ export function runHealthCheckFromPOSData(input: PosSignalInput): Signal[] {
   const outOfStock = inventory.filter(i => i.stock_qty <= 0)
   for (const item of outOfStock) {
     signals.push({
-      id: `oos-${item.name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
+      id: `oos-${item.name.replace(/\s+/g, '-').toLowerCase()}`,
       title: `${item.name} — OUT OF STOCK`,
       description: `${item.name} has zero stock. You're losing sales on this product.`,
       severity: 'red',
@@ -324,7 +324,7 @@ export function runHealthCheckFromPOSData(input: PosSignalInput): Signal[] {
     const margin = ((data.revenue - data.cost) / data.revenue) * 100
     if (margin < 0) {
       signals.push({
-        id: `neg-margin-pos-${name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
+        id: `neg-margin-pos-${name.replace(/\s+/g, '-').toLowerCase()}`,
         title: `${name} — losing money`,
         description: `${name} has a ${margin.toFixed(1)}% margin. You lose money on every sale.`,
         severity: 'red',
@@ -336,7 +336,7 @@ export function runHealthCheckFromPOSData(input: PosSignalInput): Signal[] {
       })
     } else if (margin < 10) {
       signals.push({
-        id: `low-margin-pos-${name.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}`,
+        id: `low-margin-pos-${name.replace(/\s+/g, '-').toLowerCase()}`,
         title: `Low margin on ${name}`,
         description: `${name} has only a ${margin.toFixed(1)}% margin — barely covering costs.`,
         severity: 'yellow',
@@ -355,7 +355,7 @@ export function runHealthCheckFromPOSData(input: PosSignalInput): Signal[] {
     if (Math.abs(changePct) >= 30) {
       const isSpike = changePct > 0
       signals.push({
-        id: `anomaly-pos-${Date.now()}`,
+        id: `anomaly-pos`,
         title: isSpike ? 'Unusual sales spike today' : 'Sales down significantly today',
         description: isSpike
           ? `Today's revenue (${formatValue(todayRevenue)}) is ${changePct.toFixed(0)}% above your 7-day average (${formatValue(avgDailyRevenue)}).`
@@ -404,7 +404,7 @@ export function runLogisticsSignals(input: LogisticsSignalInput): Signal[] {
     if (Math.abs(changePct) >= 30) {
       const isSpike = changePct > 0
       signals.push({
-        id: `logistics-throughput-${Date.now()}`,
+        id: `logistics-throughput`,
         title: isSpike ? 'Parcel intake spike today' : 'Parcel intake down today',
         description: isSpike
           ? `${todayParcelsIn} parcels received today — ${changePct.toFixed(0)}% above average (${avgDailyParcelsIn.toFixed(0)}/day). Check handler capacity.`
@@ -428,7 +428,7 @@ export function runLogisticsSignals(input: LogisticsSignalInput): Signal[] {
     const failRate = (failed.length / completedTotal) * 100
     if (failRate > 15) {
       signals.push({
-        id: `logistics-fail-rate-${Date.now()}`,
+        id: `logistics-fail-rate`,
         title: `High failed delivery rate: ${failRate.toFixed(0)}%`,
         description: `${failed.length} of ${completedTotal} deliveries failed. Top reason: ${failed[0]?.fail_reason || 'unknown'}. This impacts revenue and customer satisfaction.`,
         severity: failRate > 25 ? 'red' : 'yellow',
@@ -447,7 +447,7 @@ export function runLogisticsSignals(input: LogisticsSignalInput): Signal[] {
     const unpaidPct = (unpaidTotal / totalRevenue) * 100
     if (unpaidPct > 30) {
       signals.push({
-        id: `logistics-unpaid-${Date.now()}`,
+        id: `logistics-unpaid`,
         title: `${unpaidPct.toFixed(0)}% of revenue is unpaid`,
         description: `${formatValue(unpaidTotal)} in unpaid parcel fees out of ${formatValue(totalRevenue)} total. Cash flow at risk.`,
         severity: unpaidPct > 50 ? 'red' : 'yellow',
@@ -466,7 +466,7 @@ export function runLogisticsSignals(input: LogisticsSignalInput): Signal[] {
     const maintenancePct = (maintenanceCount / totalTrucks) * 100
     if (maintenancePct > 30) {
       signals.push({
-        id: `logistics-fleet-${Date.now()}`,
+        id: `logistics-fleet`,
         title: `${maintenanceCount} of ${totalTrucks} trucks in maintenance`,
         description: `${maintenancePct.toFixed(0)}% of your fleet is offline. This may delay dispatches and increase delivery times.`,
         severity: maintenancePct > 50 ? 'red' : 'yellow',
@@ -487,7 +487,7 @@ export function runLogisticsSignals(input: LogisticsSignalInput): Signal[] {
   })
   if (stuckParcels.length > 0) {
     signals.push({
-      id: `logistics-stuck-${Date.now()}`,
+      id: `logistics-stuck`,
       title: `${stuckParcels.length} parcels stuck at branch`,
       description: `${stuckParcels.length} parcel${stuckParcels.length > 1 ? 's' : ''} received over 48 hours ago and not yet dispatched. Customers may complain.`,
       severity: stuckParcels.length > 10 ? 'red' : 'yellow',

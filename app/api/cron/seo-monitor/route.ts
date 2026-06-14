@@ -16,8 +16,18 @@ export async function GET(request: NextRequest) {
 
   let accessToken = process.env.GOOGLE_SEARCH_CONSOLE_TOKEN
 
-  // Support service account JSON — exchange for access token
-  // Try raw JSON first, then base64-encoded JSON (GOOGLE_SERVICE_ACCOUNT_B64)
+  // Method 1 (recommended): individual env vars — avoids JSON/base64 encoding issues
+  const saEmail = process.env.GOOGLE_SA_CLIENT_EMAIL
+  const saKey = process.env.GOOGLE_SA_PRIVATE_KEY
+  if (!accessToken && saEmail && saKey) {
+    try {
+      accessToken = await getServiceAccountToken(saEmail, saKey.replace(/\\n/g, '\n'))
+    } catch (e) {
+      return NextResponse.json({ error: `Service account auth failed: ${e instanceof Error ? e.message : String(e)}` }, { status: 500 })
+    }
+  }
+
+  // Method 2: full JSON blob (raw or base64)
   const rawJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON
   const b64Json = process.env.GOOGLE_SERVICE_ACCOUNT_B64
   if (!accessToken && (rawJson || b64Json)) {
@@ -26,33 +36,42 @@ export async function GET(request: NextRequest) {
       if (b64Json) {
         jsonStr = Buffer.from(b64Json, 'base64').toString('utf-8')
       }
-      accessToken = await getServiceAccountToken(jsonStr)
+      const sa = JSON.parse(jsonStr)
+      accessToken = await getServiceAccountToken(sa.client_email, sa.private_key.replace(/\\n/g, '\n'))
     } catch (e) {
       return NextResponse.json({ error: `Service account auth failed: ${e instanceof Error ? e.message : String(e)}` }, { status: 500 })
     }
   }
 
   if (!accessToken) {
-    return NextResponse.json({ error: 'Set GOOGLE_SEARCH_CONSOLE_TOKEN, GOOGLE_SERVICE_ACCOUNT_JSON, or GOOGLE_SERVICE_ACCOUNT_B64' }, { status: 500 })
+    return NextResponse.json({ error: 'Set GOOGLE_SA_CLIENT_EMAIL + GOOGLE_SA_PRIVATE_KEY, or GOOGLE_SEARCH_CONSOLE_TOKEN' }, { status: 500 })
   }
 
   const issues: Array<{ type: string; detail: string; severity: 'critical' | 'warning' | 'info' }> = []
 
-  // 1. Check indexing status via Search Console API
+  // 1. Check indexing status + collect Alice Watson baseline
+  let aliceBaseline: AliceBaseline | null = null
   try {
     const now = new Date()
+    const today = now.toISOString().slice(0, 10)
     const thisWeekStart = new Date(now.getTime() - 7 * 86400000).toISOString().slice(0, 10)
     const lastWeekStart = new Date(now.getTime() - 14 * 86400000).toISOString().slice(0, 10)
-    const lastWeekEnd = new Date(now.getTime() - 7 * 86400000).toISOString().slice(0, 10)
+    const lastWeekEnd = thisWeekStart
+    const last28Start = new Date(now.getTime() - 28 * 86400000).toISOString().slice(0, 10)
 
-    const [thisWeekRes, lastWeekRes] = await Promise.all([
-      fetchSearchAnalytics(accessToken, thisWeekStart, now.toISOString().slice(0, 10)),
-      fetchSearchAnalytics(accessToken, lastWeekStart, lastWeekEnd),
+    const [thisWeekRes, lastWeekRes, blogPagesRes, blogQueriesRes] = await Promise.all([
+      fetchSearchAnalytics(accessToken, thisWeekStart, today, ['page']),
+      fetchSearchAnalytics(accessToken, lastWeekStart, lastWeekEnd, ['page']),
+      // Blog posts: last 28 days, by page — to get per-post impressions/position
+      fetchSearchAnalytics(accessToken, last28Start, today, ['page'], `${SITE_URL}/blog/`),
+      // Top queries driving traffic to /blog/ URLs
+      fetchSearchAnalytics(accessToken, last28Start, today, ['query'], `${SITE_URL}/blog/`),
     ])
 
+    // Week-over-week traffic drop check (existing logic)
     if (thisWeekRes && lastWeekRes) {
-      const thisClicks = thisWeekRes.reduce((s: number, r: { clicks: number }) => s + r.clicks, 0)
-      const lastClicks = lastWeekRes.reduce((s: number, r: { clicks: number }) => s + r.clicks, 0)
+      const thisClicks = thisWeekRes.reduce((s: number, r: GscRow) => s + r.clicks, 0)
+      const lastClicks = lastWeekRes.reduce((s: number, r: GscRow) => s + r.clicks, 0)
 
       if (lastClicks > 0) {
         const changePercent = ((thisClicks - lastClicks) / lastClicks) * 100
@@ -71,12 +90,10 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Check for pages that dropped significantly
-      const thisWeekByPage = new Map(thisWeekRes.map((r: { keys: string[]; clicks: number; position: number }) => [r.keys[0], r]))
-      const lastWeekByPage = new Map(lastWeekRes.map((r: { keys: string[]; clicks: number; position: number }) => [r.keys[0], r]))
-
+      const thisWeekByPage = new Map(thisWeekRes.map((r: GscRow) => [r.keys[0], r]))
+      const lastWeekByPage = new Map(lastWeekRes.map((r: GscRow) => [r.keys[0], r]))
       for (const [page, lastData] of lastWeekByPage) {
-        const thisData = thisWeekByPage.get(page) as { clicks: number; position: number } | undefined
+        const thisData = thisWeekByPage.get(page) as GscRow | undefined
         if (lastData.clicks >= 10 && (!thisData || thisData.clicks < lastData.clicks * 0.3)) {
           issues.push({
             type: 'page_drop',
@@ -84,6 +101,60 @@ export async function GET(request: NextRequest) {
             severity: 'warning',
           })
         }
+      }
+    }
+
+    // Alice Watson baseline: per-post performance over last 28 days
+    if (blogPagesRes) {
+      const posts = (blogPagesRes as GscRow[])
+        .map(r => ({
+          url: r.keys[0].replace(SITE_URL, ''),
+          slug: r.keys[0].replace(`${SITE_URL}/blog/`, '').replace(/\/$/, ''),
+          impressions: r.impressions,
+          clicks: r.clicks,
+          ctr: r.ctr,
+          position: Math.round(r.position * 10) / 10,
+        }))
+        .sort((a, b) => b.impressions - a.impressions)
+
+      const totalImpressions = posts.reduce((s, p) => s + p.impressions, 0)
+      const totalClicks = posts.reduce((s, p) => s + p.clicks, 0)
+      const postsInTop10 = posts.filter(p => p.position <= 10).length
+      const postsInTop3 = posts.filter(p => p.position <= 3).length
+      // position ≤ 1.5 is a strong signal for featured snippet
+      const featuredSnippetCandidates = posts.filter(p => p.position <= 1.5 && p.impressions > 0)
+
+      const topQueries = (blogQueriesRes as GscRow[] | null)
+        ?.map(r => ({
+          query: r.keys[0],
+          impressions: r.impressions,
+          clicks: r.clicks,
+          position: Math.round(r.position * 10) / 10,
+        }))
+        .sort((a, b) => b.impressions - a.impressions)
+        .slice(0, 20) || []
+
+      aliceBaseline = {
+        period: `${last28Start} to ${today}`,
+        totalPosts: posts.length,
+        totalImpressions,
+        totalClicks,
+        avgCtr: totalImpressions > 0 ? Math.round((totalClicks / totalImpressions) * 10000) / 100 : 0,
+        postsInTop10,
+        postsInTop3,
+        featuredSnippetCandidates: featuredSnippetCandidates.slice(0, 5),
+        topPosts: posts.slice(0, 10),
+        topQueries,
+        zeroImpressionPosts: posts.filter(p => p.impressions === 0).length,
+      }
+
+      // Flag if Alice has posts but no impressions at all — indexing issue
+      if (posts.length === 0) {
+        issues.push({
+          type: 'blog_not_indexed',
+          detail: 'No /blog/ pages appear in Search Console — possible indexing issue',
+          severity: 'warning',
+        })
       }
     }
   } catch (e) {
@@ -135,9 +206,11 @@ export async function GET(request: NextRequest) {
     run_id: `seo_${Date.now()}`,
     type: 'seo_report',
     status: 'published',
-    content: { issues, checkedAt: new Date().toISOString() },
+    content: { issues, aliceBaseline, checkedAt: new Date().toISOString() },
     verdict: issues.some(i => i.severity === 'critical') ? 'problem' : issues.length > 0 ? 'watch' : 'act',
-    verdict_sentence: issues.length === 0 ? 'All SEO checks passed' : `${issues.length} issue(s) found`,
+    verdict_sentence: issues.length === 0
+      ? `All SEO checks passed${aliceBaseline ? ` · ${aliceBaseline.totalImpressions.toLocaleString()} blog impressions (28d)` : ''}`
+      : `${issues.length} issue(s) found`,
     key_insight: issues.filter(i => i.severity === 'critical').map(i => i.detail).join('; ').slice(0, 200) || 'No critical issues',
   })
 
@@ -145,36 +218,67 @@ export async function GET(request: NextRequest) {
     await sendEmail({
       to: ADMIN_EMAIL,
       subject: `SEO Alert: ${issues.filter(i => i.severity === 'critical').length} critical issue(s)`,
-      html: seoAlertHtml(issues),
+      html: seoAlertHtml(issues, aliceBaseline),
     })
   }
 
-  return NextResponse.json({ success: true, issues })
+  return NextResponse.json({ success: true, issues, aliceBaseline })
 }
 
-async function fetchSearchAnalytics(token: string, startDate: string, endDate: string) {
+interface GscRow {
+  keys: string[]
+  clicks: number
+  impressions: number
+  ctr: number
+  position: number
+}
+
+interface AliceBaseline {
+  period: string
+  totalPosts: number
+  totalImpressions: number
+  totalClicks: number
+  avgCtr: number
+  postsInTop10: number
+  postsInTop3: number
+  featuredSnippetCandidates: { url: string; slug: string; impressions: number; clicks: number; ctr: number; position: number }[]
+  topPosts: { url: string; slug: string; impressions: number; clicks: number; ctr: number; position: number }[]
+  topQueries: { query: string; impressions: number; clicks: number; position: number }[]
+  zeroImpressionPosts: number
+}
+
+async function fetchSearchAnalytics(
+  token: string,
+  startDate: string,
+  endDate: string,
+  dimensions: string[] = ['page'],
+  urlPrefix?: string,
+) {
+  const body: Record<string, unknown> = {
+    startDate,
+    endDate,
+    dimensions,
+    rowLimit: 500,
+  }
+  if (urlPrefix) {
+    body.dimensionFilterGroups = [{
+      filters: [{ dimension: 'page', operator: 'contains', expression: urlPrefix }],
+    }]
+  }
   const res = await fetch(
     `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(SITE_URL)}/searchAnalytics/query`,
     {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        startDate,
-        endDate,
-        dimensions: ['page'],
-        rowLimit: 500,
-      }),
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
     }
   )
   if (!res.ok) throw new Error(`GSC API ${res.status}`)
   const data = await res.json()
-  return data.rows || []
+  return (data.rows || []) as GscRow[]
 }
 
-function seoAlertHtml(issues: Array<{ type: string; detail: string; severity: string }>) {
+function seoAlertHtml(issues: Array<{ type: string; detail: string; severity: string }>, baseline: AliceBaseline | null = null) {
   const critical = issues.filter(i => i.severity === 'critical')
   const warnings = issues.filter(i => i.severity === 'warning')
   return `<!DOCTYPE html>
@@ -186,6 +290,37 @@ function seoAlertHtml(issues: Array<{ type: string; detail: string; severity: st
   <tr><td style="background:#DC2626;padding:24px 36px;text-align:center;">
     <span style="font-size:20px;font-weight:700;color:#fff;">SEO Monitor Alert</span>
   </td></tr>
+  ${baseline ? `<tr><td style="padding:20px 36px;border-bottom:1px solid #e5e5e5;">
+    <p style="margin:0 0 12px;font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;">Alice Watson — Last 28 Days</p>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="text-align:center;padding:8px;">
+          <div style="font-size:22px;font-weight:700;color:#1a1916;">${baseline.totalImpressions.toLocaleString()}</div>
+          <div style="font-size:11px;color:#6b7280;margin-top:2px;">Impressions</div>
+        </td>
+        <td style="text-align:center;padding:8px;">
+          <div style="font-size:22px;font-weight:700;color:#1a1916;">${baseline.totalClicks.toLocaleString()}</div>
+          <div style="font-size:11px;color:#6b7280;margin-top:2px;">Clicks</div>
+        </td>
+        <td style="text-align:center;padding:8px;">
+          <div style="font-size:22px;font-weight:700;color:#1a1916;">${baseline.avgCtr}%</div>
+          <div style="font-size:11px;color:#6b7280;margin-top:2px;">Avg CTR</div>
+        </td>
+        <td style="text-align:center;padding:8px;">
+          <div style="font-size:22px;font-weight:700;color:#1a1916;">${baseline.postsInTop10}</div>
+          <div style="font-size:11px;color:#6b7280;margin-top:2px;">Posts Top 10</div>
+        </td>
+      </tr>
+    </table>
+    ${baseline.featuredSnippetCandidates.length > 0 ? `
+    <p style="margin:12px 0 6px;font-size:12px;font-weight:700;color:#059669;">Featured Snippet Candidates (position ≤ 1.5)</p>
+    ${baseline.featuredSnippetCandidates.map(p => `<div style="font-size:12px;color:#1a1916;padding:4px 0;">${p.slug} — pos ${p.position} · ${p.impressions} imp · ${p.clicks} clicks</div>`).join('')}
+    ` : ''}
+    ${baseline.topQueries.slice(0, 5).length > 0 ? `
+    <p style="margin:12px 0 6px;font-size:12px;font-weight:700;color:#1a1916;">Top 5 Queries</p>
+    ${baseline.topQueries.slice(0, 5).map(q => `<div style="font-size:12px;color:#6b7280;padding:3px 0;">"${q.query}" — pos ${q.position} · ${q.impressions} imp</div>`).join('')}
+    ` : ''}
+  </td></tr>` : ''}
   <tr><td style="padding:32px 36px;">
     <p style="margin:0 0 16px;font-size:14px;color:#1a1916;font-weight:700;">${critical.length} critical issue(s), ${warnings.length} warning(s)</p>
     ${issues.map(i => `<div style="background:${i.severity === 'critical' ? '#FEF2F2' : '#FFFBEB'};border:1px solid ${i.severity === 'critical' ? '#FCA5A5' : '#FCD34D'};border-radius:8px;padding:12px 16px;margin-bottom:8px;">
@@ -203,12 +338,11 @@ function seoAlertHtml(issues: Array<{ type: string; detail: string; severity: st
 </body></html>`
 }
 
-async function getServiceAccountToken(jsonStr: string): Promise<string> {
-  const sa = JSON.parse(jsonStr)
+async function getServiceAccountToken(clientEmail: string, privateKey: string): Promise<string> {
   const now = Math.floor(Date.now() / 1000)
   const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }))
   const payload = btoa(JSON.stringify({
-    iss: sa.client_email,
+    iss: clientEmail,
     scope: 'https://www.googleapis.com/auth/webmasters.readonly',
     aud: 'https://oauth2.googleapis.com/token',
     iat: now,
@@ -218,7 +352,7 @@ async function getServiceAccountToken(jsonStr: string): Promise<string> {
   const { createSign } = await import('crypto')
   const sign = createSign('RSA-SHA256')
   sign.update(`${header}.${payload}`)
-  const signature = sign.sign(sa.private_key, 'base64url')
+  const signature = sign.sign(privateKey, 'base64url')
 
   const jwt = `${header}.${payload}.${signature}`
 

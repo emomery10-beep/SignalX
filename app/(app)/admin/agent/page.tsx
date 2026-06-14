@@ -77,6 +77,7 @@ export default function AgentAdminPage() {
     'stale-content': {running:false,result:null,lastRun:null},
     'token-refresh': {running:false,result:null,lastRun:null},
     'seo-monitor': {running:false,result:null,lastRun:null},
+    'stock-replenishment': {running:false,result:null,lastRun:null},
   })
 
   const runAutoJob = async (jobId: string) => {
@@ -152,14 +153,13 @@ export default function AgentAdminPage() {
 
   const loadAliceCounts = useCallback(async () => {
     try {
-      const res = await fetch(`/api/agent/blog-scout/list?status=all&t=${Date.now()}`, { cache: 'no-store' })
+      const res = await fetch(`/api/agent/blog-scout/list?counts=1&t=${Date.now()}`, { cache: 'no-store' })
       const d = await res.json()
-      const all = d.items || []
       setAliceCounts({
-        pending: all.filter((i: any) => i.status === 'pending').length,
-        published: all.filter((i: any) => i.status === 'published').length,
-        rejected: all.filter((i: any) => i.status === 'rejected').length,
-        total: all.length,
+        pending: d.pending || 0,
+        published: d.published || 0,
+        rejected: d.rejected || 0,
+        total: d.total || 0,
       })
     } catch {}
   }, [])
@@ -797,6 +797,7 @@ export default function AgentAdminPage() {
               {id:'token-refresh', icon:'🔑', name:'OAuth Token Refresh',   desc:'Pre-emptively refreshes tokens for all integrations before expiry.',  schedule:'Daily at 1am'},
               {id:'stale-content', icon:'🧹', name:'Stale Content Cleanup', desc:'Deletes rejected + stale pending content older than 30 days.',        schedule:'Weekly Sunday 5am'},
               {id:'seo-monitor',   icon:'📊', name:'SEO Monitor',           desc:'Checks Google Search Console for traffic drops + broken pages.',      schedule:'Weekly Monday 9am'},
+              {id:'stock-replenishment', icon:'📦', name:'Stock Replenishment', desc:'Analyses POS sales velocity, predicts stockouts, generates reorder suggestions for all users.', schedule:'Daily at 6am'},
             ] as const).map(job => {
               const state = autoJobs[job.id]
               return (

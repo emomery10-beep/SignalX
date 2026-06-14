@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { tavilySearch } from '@/lib/tavily'
 import Anthropic from '@anthropic-ai/sdk'
+import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -8,21 +9,44 @@ export const maxDuration = 300
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const SCOUT_QUERIES = [
-  { query: 'small business cash flow management tips 2026', cluster: 'Financial Intelligence', pillar: 'Cash Flow' },
-  { query: 'SME pricing strategy inflation margins 2026', cluster: 'Business Strategy', pillar: 'Pricing Strategy' },
-  { query: 'ecommerce inventory management trends small business 2026', cluster: 'Inventory & Supply Chain', pillar: 'Inventory Management' },
-  { query: 'AI tools small business automation productivity 2026', cluster: 'AI Chief of Staff', pillar: 'AI Automation' },
-  { query: 'small business tax compliance UK EU changes 2026', cluster: 'UK Business & Tax', pillar: 'Tax Compliance' },
-  { query: 'retail POS system trends customer experience 2026', cluster: 'eCommerce Intelligence', pillar: 'Retail Technology' },
+  // ── Trend / news queries ──────────────────────────────────────────────────
+  { query: 'small business cash flow crisis warning signs 2026', cluster: 'Financial Intelligence', pillar: 'Cash Flow' },
+  { query: 'SME pricing strategy inflation margin squeeze 2026', cluster: 'Business Strategy', pillar: 'Pricing Strategy' },
+  { query: 'ecommerce inventory management stockout cost 2026', cluster: 'Inventory & Supply Chain', pillar: 'Inventory Management' },
+  { query: 'AI tools small business automation ROI results 2026', cluster: 'AI Chief of Staff', pillar: 'AI Automation' },
+  { query: 'UK small business tax changes HMRC compliance 2026', cluster: 'UK Business & Tax', pillar: 'Tax Compliance' },
+  { query: 'retail POS system omnichannel ecommerce trends 2026', cluster: 'eCommerce Intelligence', pillar: 'Retail Technology' },
   { query: 'SME supplier negotiation procurement cost reduction 2026', cluster: 'Inventory & Supply Chain', pillar: 'Supplier Management' },
   { query: 'small business data analytics decision making 2026', cluster: 'Data-Driven Decisions', pillar: 'Analytics' },
-  { query: 'startup growth scaling challenges funding 2026', cluster: 'Startup Growth', pillar: 'Growth Strategy' },
-  { query: 'cross border ecommerce trade regulations SME 2026', cluster: 'Global Trade Intelligence', pillar: 'Cross-Border Commerce' },
-  { query: 'small business customer retention churn strategy 2026', cluster: 'Marketing Intelligence', pillar: 'Customer Retention' },
-  { query: 'SME cybersecurity data protection compliance 2026', cluster: 'Efficiency & Tools', pillar: 'Security' },
-  { query: 'Africa ecommerce market growth opportunities 2026', cluster: 'Africa eCommerce', pillar: 'Market Opportunities' },
-  { query: 'restaurant cafe food business operations technology 2026', cluster: 'Local & Vertical Growth', pillar: 'Food & Beverage' },
-  { query: 'small business hiring workforce management challenges 2026', cluster: 'Business Strategy', pillar: 'People Management' },
+  { query: 'startup growth metrics funding challenges 2026', cluster: 'Startup Growth', pillar: 'Growth Strategy' },
+  { query: 'cross border ecommerce trade tariff regulations SME 2026', cluster: 'Global Trade Intelligence', pillar: 'Cross-Border Commerce' },
+  { query: 'small business customer churn retention cost 2026', cluster: 'Marketing Intelligence', pillar: 'Customer Retention' },
+  { query: 'SME cybersecurity data breach cost small business 2026', cluster: 'Efficiency & Tools', pillar: 'Security' },
+  { query: 'Africa ecommerce market growth mobile payments 2026', cluster: 'Africa eCommerce', pillar: 'Market Opportunities' },
+  { query: 'restaurant food business rising costs technology 2026', cluster: 'Local & Vertical Growth', pillar: 'Food & Beverage' },
+  { query: 'small business hiring staff cost management 2026', cluster: 'Business Strategy', pillar: 'People Management' },
+  { query: 'ecommerce returns cost management policy 2026', cluster: 'eCommerce Intelligence', pillar: 'Returns Management' },
+  { query: 'SME working capital loan funding options UK 2026', cluster: 'Financial Intelligence', pillar: 'Working Capital' },
+  { query: 'supply chain disruption small business contingency 2026', cluster: 'Inventory & Supply Chain', pillar: 'Supply Chain Risk' },
+  { query: 'small business VAT Making Tax Digital MTD 2026', cluster: 'UK Business & Tax', pillar: 'VAT Compliance' },
+  { query: 'ecommerce marketplace fees Amazon Shopify comparison 2026', cluster: 'eCommerce Intelligence', pillar: 'Marketplace Strategy' },
+
+  // ── Buyer-intent queries ──────────────────────────────────────────────────
+  { query: 'how to track profit margin small business step by step', cluster: 'Financial Intelligence', pillar: 'Margin Analysis' },
+  { query: 'best cash flow forecasting tools for small business UK', cluster: 'Financial Intelligence', pillar: 'Cash Flow' },
+  { query: 'how to reduce shipping costs ecommerce small business', cluster: 'Inventory & Supply Chain', pillar: 'Shipping Costs' },
+  { query: 'how to improve gross margin retail business practical guide', cluster: 'Business Strategy', pillar: 'Margin Improvement' },
+  { query: 'best inventory management software small business comparison', cluster: 'Inventory & Supply Chain', pillar: 'Inventory Management' },
+  { query: 'how to forecast sales small business without spreadsheets', cluster: 'Data-Driven Decisions', pillar: 'Sales Forecasting' },
+  { query: 'best POS system for retail shop UK independent', cluster: 'eCommerce Intelligence', pillar: 'POS Systems' },
+  { query: 'how to manage cash flow seasonal business practical', cluster: 'Financial Intelligence', pillar: 'Seasonal Cash Flow' },
+  { query: 'ecommerce analytics which products make money Shopify', cluster: 'Data-Driven Decisions', pillar: 'eCommerce Analytics' },
+  { query: 'how to negotiate better payment terms suppliers SME', cluster: 'Inventory & Supply Chain', pillar: 'Supplier Negotiation' },
+  { query: 'how to reduce overheads small business without cutting quality', cluster: 'Business Strategy', pillar: 'Cost Reduction' },
+  { query: 'best accounting software for small business UK Xero QuickBooks', cluster: 'Efficiency & Tools', pillar: 'Accounting Tools' },
+  { query: 'how to calculate break even point small business', cluster: 'Financial Intelligence', pillar: 'Break-Even Analysis' },
+  { query: 'what business metrics should founders track monthly', cluster: 'Data-Driven Decisions', pillar: 'KPI Tracking' },
+  { query: 'how AI can replace CFO function small business', cluster: 'AI Chief of Staff', pillar: 'AI Finance' },
 ]
 
 export async function GET(request: NextRequest) {
@@ -48,20 +72,70 @@ async function runBlogScout() {
   const log: string[] = []
 
   try {
-    log.push('Blog scout starting — selecting 10 topics...')
+    log.push('Blog scout starting — checking recent topics to avoid repeats...')
 
-    const shuffled = [...SCOUT_QUERIES].sort(() => Math.random() - 0.5)
-    const selected = shuffled.slice(0, 10)
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
+    // Fetch recent coverage for topic dedup and relatedSlugs context
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+    const [{ data: recentPosts }, { data: publishedPosts }] = await Promise.all([
+      supabase.from('agent_content').select('source_query, content').eq('type', 'blog').gte('created_at', thirtyDaysAgo).limit(60),
+      supabase.from('agent_content').select('content').eq('type', 'blog').eq('status', 'published').order('created_at', { ascending: false }).limit(30),
+    ])
+
+    // Build dedup sets
+    const recentQueryWords = new Set<string>()
+    const recentClusterCount: Record<string, number> = {}
+    for (const p of recentPosts || []) {
+      if (p.source_query) {
+        p.source_query.toLowerCase().split(/\s+/).forEach((w: string) => recentQueryWords.add(w))
+      }
+      const cluster = (p.content as Record<string, unknown>)?.cluster as string | undefined
+      if (cluster) recentClusterCount[cluster] = (recentClusterCount[cluster] || 0) + 1
+    }
+
+    // Existing slugs for dedup
+    const existingSlugs = new Set<string>(
+      (publishedPosts || []).map(p => (p.content as Record<string, unknown>)?.slug as string | undefined).filter(Boolean) as string[]
+    )
+
+    // Recent published posts for relatedSlugs context (title + slug)
+    const recentPublished: { slug: string; title: string; cluster: string }[] = (publishedPosts || [])
+      .map(p => {
+        const c = p.content as Record<string, unknown>
+        return { slug: c?.slug as string, title: c?.title as string, cluster: c?.cluster as string }
+      })
+      .filter(p => p.slug && p.title)
+
+    // Score topic freshness: deprioritise clusters covered 3+ times in last 30 days
+    const scoredQueries = SCOUT_QUERIES.map(q => {
+      const clusterPenalty = (recentClusterCount[q.cluster] || 0) >= 3 ? 1 : 0
+      // Count shared words with recent queries (rough similarity signal)
+      const queryWords = q.query.toLowerCase().split(/\s+/)
+      const overlap = queryWords.filter(w => w.length > 4 && recentQueryWords.has(w)).length
+      const overlapPenalty = overlap >= 4 ? 2 : overlap >= 2 ? 1 : 0
+      return { ...q, penalty: clusterPenalty + overlapPenalty }
+    })
+
+    // Sort by penalty ascending (freshest topics first), then shuffle within same penalty tier
+    scoredQueries.sort((a, b) => a.penalty - b.penalty || Math.random() - 0.5)
+    const selected = scoredQueries.slice(0, 10)
+
+    log.push(`Selected 10 topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
     log.push('Searching Tavily for live data...')
+
     const searchResults = await Promise.allSettled(
       selected.map(s =>
         tavilySearch(s.query, {
           searchDepth: 'advanced',
           maxResults: 5,
           includeAnswer: true,
-          topic: 'news',
-          days: 7,
+          topic: 'general',
+          days: 14,
         }).then(result => ({ ...s, searchResult: result }))
       )
     )
@@ -80,13 +154,7 @@ async function runBlogScout() {
     log.push(`Got results for ${validResults.length}/${selected.length} queries. Writing blogs...`)
 
     const blogResults = await Promise.allSettled(
-      validResults.map(r => writeBlogPost(r))
-    )
-
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      validResults.map(r => writeBlogPost(r, recentPublished))
     )
 
     const inserts: Record<string, unknown>[] = []
@@ -97,12 +165,22 @@ async function runBlogScout() {
       const topArticle = source.searchResult!.results[0]
 
       if (result.status === 'fulfilled' && result.value) {
+        // Deduplicate slug against existing published posts + this run's inserts
+        let slug = result.value.slug as string
+        if (existingSlugs.has(slug)) {
+          const dateSuffix = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+          slug = `${slug}-${dateSuffix}`
+          result.value = { ...result.value, slug }
+        }
+        existingSlugs.add(slug)
+
         const quality = scoreBlogQuality(result.value)
-        const autoPublish = quality >= 80
+        // Auto-publish if quality ≥ 80, otherwise hold for review
+        const status = quality >= 80 ? 'published' : 'pending'
         inserts.push({
           run_id: runId,
           type: 'blog',
-          status: autoPublish ? 'published' : 'pending',
+          status,
           content: result.value,
           source_url: topArticle.url,
           source_title: topArticle.title,
@@ -111,7 +189,7 @@ async function runBlogScout() {
           verdict_sentence: result.value.tldr?.slice(0, 100) || '',
           key_insight: result.value.metaDescription || '',
         })
-        log.push(`✓ Blog ${i + 1}: "${result.value.title}" (quality: ${quality}${autoPublish ? ', auto-published' : ', pending review'})`)
+        log.push(`✓ Blog ${i + 1}: "${result.value.title}" (quality: ${quality}, status: ${status})`)
       } else {
         const reason = result.status === 'rejected' ? result.reason?.message || String(result.reason) : 'empty result'
         log.push(`✗ Blog ${i + 1} failed: ${reason}`)
@@ -123,14 +201,9 @@ async function runBlogScout() {
       if (error) {
         log.push(`DB error: ${error.message}`)
       } else {
-        const published = inserts.filter(i => i.status === 'published').length
-        const pending = inserts.length - published
-        log.push(`Saved ${inserts.length} blogs (${published} auto-published, ${pending} pending review)`)
-
-        if (published > 0) {
-          await pingSitemapServices()
-          log.push('Pinged Google & Bing with updated sitemap')
-        }
+        const autoPublished = inserts.filter(i => i.status === 'published').length
+        const pendingReview = inserts.filter(i => i.status === 'pending').length
+        log.push(`Saved ${inserts.length} blogs — ${autoPublished} auto-published, ${pendingReview} pending review`)
       }
     }
 
@@ -153,21 +226,31 @@ interface SearchInput {
   query: string
   cluster: string
   pillar: string
+  penalty?: number
   searchResult: NonNullable<Awaited<ReturnType<typeof tavilySearch>>>
 }
 
-async function writeBlogPost(input: SearchInput) {
+type RecentPost = { slug: string; title: string; cluster: string }
+
+async function writeBlogPost(input: SearchInput, recentPublished: RecentPost[] = []) {
   const { query, cluster, pillar, searchResult } = input
-  const articles = searchResult.results.slice(0, 4)
+  const articles = searchResult.results.slice(0, 5)
   const aiSummary = searchResult.answer || ''
 
   const articleContext = articles
-    .map((r, i) => `[${i + 1}] ${r.title}\nURL: ${r.url}\n${r.content.slice(0, 400)}`)
+    .map((r, i) => `[${i + 1}] ${r.title}\nURL: ${r.url}\n${r.content.slice(0, 500)}`)
     .join('\n\n')
+
+  // Provide Alice with recent published posts for relatedSlugs selection
+  const relatedContext = recentPublished.length > 0
+    ? `\nRECENT PUBLISHED POSTS (for relatedSlugs — pick 2-3 most topically relevant):\n${
+        recentPublished.slice(0, 20).map(p => `- slug: "${p.slug}" | "${p.title}" [${p.cluster}]`).join('\n')
+      }\n`
+    : ''
 
   const res = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 3500,
+    max_tokens: 5000,
     system: `You are Alice Watson, Head of Market Intelligence at AskBiz. You write like a sharp, opinionated market analyst — not a content marketer. Your style:
 
 VOICE & TONE:
@@ -180,6 +263,8 @@ VOICE & TONE:
 - You name real companies, real regulations, real numbers from the sources
 - You never use: "landscape", "leverage", "synergy", "holistic", "ecosystem", "unlock", "empower", "seamless", "cutting-edge", "game-changer", "robust"
 - You sound like a smart colleague sharing a briefing, not a blog post
+
+CONTENT TYPE: Match the format to the topic. Use one of: Guide, How-To, Comparison, Explainer, Report. A "how to" query needs step-by-step sections. A news/trend topic needs a briefing-style report. Reflect this in the title and section structure.
 
 ASKBIZ PRODUCT KNOWLEDGE (use this naturally — never dump it all):
 AskBiz is an AI business intelligence platform for SME founders. Key capabilities:
@@ -204,31 +289,36 @@ Cluster: "${cluster}" | Pillar: "${pillar}"
 ${aiSummary ? `Tavily AI summary:\n${aiSummary}\n` : ''}
 Source articles:
 ${articleContext}
-
-Return ONLY valid JSON:
+${relatedContext}
+Return ONLY valid JSON (no markdown fences):
 {
-  "slug": "unique-kebab-case-slug",
-  "title": "Sharp, specific title under 65 chars — lead with the insight, not the topic",
-  "metaDescription": "Active voice, under 155 chars, makes the reader want to click",
+  "slug": "keyword-rich-kebab-case-slug-under-60-chars",
+  "title": "Sharp, specific title under 65 chars — include the primary keyword near the start",
+  "metaDescription": "Active voice, 120-155 chars, primary keyword in first 20 words, makes the reader want to click",
   "cluster": "${cluster}",
   "pillar": "${pillar}",
   "publishDate": "${new Date().toISOString().slice(0, 10)}",
-  "readTime": 6,
-  "tldr": "3 punchy sentences. The shift. The impact. What to do.",
+  "readTime": 8,
+  "tags": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6"],
+  "tldr": "3 punchy sentences. The shift. The impact. What founders should do.",
+  "relatedSlugs": ["slug-from-recent-published-list-1", "slug-from-recent-published-list-2"],
   "sections": [
-    {"heading": "Lead with the number or event — make it concrete", "level": 2, "body": "200 words. Open with the data point from the source. Name the source. Set the stakes immediately."},
-    {"heading": "A specific heading about the SME impact", "level": 2, "body": "200 words. Translate the macro trend into what it means for a founder running a 5-50 person business. Use concrete examples — 'a Shopify seller doing £40k/month', not 'businesses'."},
-    {"heading": "The playbook: what sharp operators are doing", "level": 2, "body": "200 words. 3-4 specific tactics. Be prescriptive. Name tools, strategies, timelines."},
-    {"heading": "A heading that shows AskBiz solving this specific problem", "level": 2, "body": "150 words. Paint a scene: a founder opens AskBiz, types a question like 'Show me my shipping cost per order vs last quarter', and gets an instant breakdown. Be specific about which AskBiz feature helps and what the output looks like."},
-    {"heading": "The one thing to do this week", "level": 2, "body": "100 words. Single concrete action. No 'consider' or 'explore' — tell them what to do."}
+    {"heading": "Lead with the concrete number, policy change, or market shift — not the topic name", "level": 2, "body": "250-300 words. Open with the specific data point or event from the source. Name the publication, regulator, or company. Set the stakes in the first sentence. Use a contrast structure: what was true before, what changed, why it matters now."},
+    {"heading": "What this means for a business doing £200k-£2m revenue", "level": 2, "body": "250-300 words. Translate the macro story into founder-level impact. Use a concrete business scenario — 'a Leicester-based Shopify seller doing £40k/month', not 'businesses'. Quantify the impact in pounds, percentages, or hours."},
+    {"heading": "The three moves smart operators are making right now", "level": 2, "body": "250-300 words. 3 specific, prescriptive tactics. Name tools, platforms, and timelines. No vague advice — tell them exactly what to do and when. Each tactic should be a standalone sentence that could be extracted as a bullet."},
+    {"heading": "A concrete heading showing AskBiz solving this exact problem", "level": 2, "body": "200 words. Open AskBiz scene: a founder types a specific question relevant to this topic — give the exact question text. Describe what AskBiz returns: which feature responds, what the output looks like, what decision it enables. Be specific — 'AskBiz surfaces a cash flow warning: 11 days of runway left based on your Xero data.'"},
+    {"heading": "The warning signs to watch for in the next 30 days", "level": 2, "body": "150 words. 3-4 specific signals this issue is getting worse in their business. Actionable watch items — things they can check today."},
+    {"heading": "Your action plan for this week", "level": 2, "body": "150 words. One primary action to take before Friday. One thing to set up once. One metric to track monthly. Be prescriptive — no 'consider' or 'think about'."}
   ],
   "paa": [
-    {"q": "A question people actually search on Google about this?", "a": "Direct answer, 2-3 sentences, cite a number if possible"},
-    {"q": "Second real search query?", "a": "Direct answer"},
-    {"q": "How does AskBiz help with [this specific problem]?", "a": "Specific answer — name the feature and what it shows"}
+    {"q": "Exact Google search query about the primary problem in this post (e.g. 'how to improve cash flow small business')", "a": "40-70 word direct answer. Lead with the key action or fact. Cite a specific number if available from the sources. End with what the best operators do."},
+    {"q": "Second high-volume search query about a sub-topic in this post", "a": "40-70 word direct answer. Factual, complete sentence. No cliffhangers."},
+    {"q": "Third search query a founder would type when facing this problem", "a": "40-70 word direct answer. Include a specific benchmark or timeframe if relevant."},
+    {"q": "A 'what is' or 'how does' question about the core concept in this post", "a": "40-70 word direct answer. Plain English definition or explanation, grounded in practical SME context."},
+    {"q": "How does AskBiz help with [specific problem from this post]?", "a": "40-70 words. Name the exact AskBiz feature. Describe what it shows or does. Give a specific example of the output."}
   ],
   "cta": {
-    "heading": "A CTA that references the specific problem in this post",
+    "heading": "A CTA headline that names the specific problem solved in this post",
     "body": "One sentence connecting this article's topic to AskBiz. Then: 'Try it free — ask your first question in 30 seconds.'"
   },
   "author": {
@@ -240,8 +330,9 @@ Return ONLY valid JSON:
     }],
   })
 
+  logUsage({ route: 'agent/blog-scout', model: 'claude-sonnet-4-20250514', usage: res.usage })
   const raw = res.content[0].type === 'text' ? res.content[0].text : ''
-  const clean = raw.replace(/```json|```/g, '').trim()
+  const clean = raw.replace(/```json\n?|```/g, '').trim()
   const parsed = JSON.parse(clean)
 
   if (!parsed.slug || !parsed.title || !parsed.sections?.length) {
@@ -254,23 +345,55 @@ Return ONLY valid JSON:
 function scoreBlogQuality(blog: Record<string, unknown>): number {
   let score = 0
 
-  if (blog.title && typeof blog.title === 'string' && blog.title.length >= 20 && blog.title.length <= 80) score += 15
-  if (blog.slug && typeof blog.slug === 'string' && blog.slug.length >= 10) score += 10
-  if (blog.metaDescription && typeof blog.metaDescription === 'string' && blog.metaDescription.length >= 50) score += 10
-  if (blog.tldr && typeof blog.tldr === 'string' && blog.tldr.length >= 30) score += 10
-
-  const sections = blog.sections as Array<{ heading?: string; body?: string }> | undefined
-  if (Array.isArray(sections) && sections.length >= 4) {
-    score += 15
-    const totalWords = sections.reduce((sum, s) => sum + (s.body?.split(/\s+/).length || 0), 0)
-    if (totalWords >= 600) score += 15
-    if (sections.every(s => s.heading && s.body && s.body.length > 50)) score += 10
+  // Title: 20-70 chars, doesn't start with a generic word
+  if (blog.title && typeof blog.title === 'string') {
+    const t = blog.title
+    if (t.length >= 20 && t.length <= 70) score += 12
+    // Penalise generic openers
+    if (!/^(the|a |an |how |what |why |is |are |top |best )/i.test(t)) score += 3
   }
 
-  const paa = blog.paa as Array<{ q?: string; a?: string }> | undefined
-  if (Array.isArray(paa) && paa.length >= 2 && paa.every(p => p.q && p.a)) score += 10
+  // Slug: keyword-rich, reasonable length
+  if (blog.slug && typeof blog.slug === 'string' && blog.slug.length >= 15 && blog.slug.length <= 65) score += 8
 
-  if (blog.cta && typeof blog.cta === 'object') score += 5
+  // Meta description: 120-155 chars
+  if (blog.metaDescription && typeof blog.metaDescription === 'string') {
+    const len = blog.metaDescription.length
+    if (len >= 120 && len <= 155) score += 10
+    else if (len >= 80) score += 5
+  }
+
+  // TLDR: at least 80 chars
+  if (blog.tldr && typeof blog.tldr === 'string' && blog.tldr.length >= 80) score += 8
+
+  // Tags: 4+ tags
+  if (Array.isArray(blog.tags) && blog.tags.length >= 4) score += 5
+
+  // Sections: at least 5 sections with substantial bodies
+  const sections = blog.sections as Array<{ heading?: string; body?: string }> | undefined
+  if (Array.isArray(sections)) {
+    if (sections.length >= 5) score += 10
+    const totalWords = sections.reduce((sum, s) => sum + (s.body?.split(/\s+/).length || 0), 0)
+    if (totalWords >= 1000) score += 15
+    else if (totalWords >= 700) score += 8
+    // All sections have heading + substantial body
+    if (sections.every(s => s.heading && s.body && s.body.length > 100)) score += 8
+  }
+
+  // PAA: 4+ questions with substantive answers (>150 chars each)
+  const paa = blog.paa as Array<{ q?: string; a?: string }> | undefined
+  if (Array.isArray(paa)) {
+    if (paa.length >= 4) score += 8
+    const substantiveAnswers = paa.filter(p => p.q && p.a && p.a.length >= 150).length
+    if (substantiveAnswers >= 3) score += 7
+    else if (substantiveAnswers >= 2) score += 3
+  }
+
+  // CTA present
+  if (blog.cta && typeof blog.cta === 'object') score += 3
+
+  // relatedSlugs present (boosts internal linking)
+  if (Array.isArray(blog.relatedSlugs) && blog.relatedSlugs.length >= 1) score += 3
 
   return Math.min(score, 100)
 }

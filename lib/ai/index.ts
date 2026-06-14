@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { isExpansionQuestion, buildExpansionContext, buildDataSummary } from './expansion'
+import { logUsage } from '@/lib/log-usage'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -294,19 +295,23 @@ RULES:
 `
 }
 
-export async function askOnce({ messages, systemPrompt }: {
+export async function askOnce({ messages, systemPrompt, userId }: {
   messages: Array<{ role: string; content: string }>
   systemPrompt: string
+  userId?: string | null
 }): Promise<AIResult> {
   const Anthropic = (await import('@anthropic-ai/sdk')).default
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
+  const MODEL = 'claude-sonnet-4-20250514'
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: MODEL,
     max_tokens: 2000,
     system: systemPrompt,
     messages: messages.slice(-14) as Array<{ role: 'user' | 'assistant'; content: string }>,
   })
+
+  logUsage({ route: 'chat', model: MODEL, usage: response.usage, userId })
 
   const raw = response.content.map(b => (b.type === 'text' ? b.text : '')).join('')
 

@@ -129,6 +129,15 @@ export default function LogisticsPage() {
   const [flaggedIssues, setFlaggedIssues] = useState<string[]>([])
   const [inspectionNotes, setInspectionNotes] = useState('')
 
+  // Video proof
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const recordedChunksRef = useRef<Blob[]>([])
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [captureMode, setCaptureMode] = useState<'photo' | 'video'>('photo')
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingSeconds, setRecordingSeconds] = useState(0)
+  const [capturedVideo, setCapturedVideo] = useState<string | null>(null)
+
   // ── Init ─────────────────────────────────────────────────
   useEffect(() => {
     const raw = localStorage.getItem('pos_staff')
@@ -181,6 +190,9 @@ export default function LogisticsPage() {
   // ── Camera ───────────────────────────────────────────────
   const startCamera = async () => {
     setScanError(''); setScanResult(null); setCapturedImage('')
+    // Stop any existing stream before opening a new one to avoid leaked tracks
+    const existing = videoRef.current?.srcObject as MediaStream | null
+    if (existing) { existing.getTracks().forEach(t => t.stop()); if (videoRef.current) videoRef.current.srcObject = null }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
@@ -470,11 +482,68 @@ export default function LogisticsPage() {
     setSaving(false)
   }
 
+  // ── Video recording helpers ─────────────────────────────
+  const startVideoRecording = () => {
+    const stream = videoRef.current?.srcObject as MediaStream | null
+    if (!stream) return
+    // Guard: clear any previous interval before starting a new one
+    if (recordingTimerRef.current) { clearInterval(recordingTimerRef.current); recordingTimerRef.current = null }
+    recordedChunksRef.current = []
+
+    // MediaRecorder is not supported on all platforms (e.g. iOS Safari)
+    if (typeof MediaRecorder === 'undefined') {
+      setScanError('Video recording not supported on this device')
+      return
+    }
+
+    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+      ? 'video/webm;codecs=vp9'
+      : MediaRecorder.isTypeSupported('video/webm')
+      ? 'video/webm'
+      : 'video/mp4'
+
+    let recorder: MediaRecorder
+    try {
+      recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 300_000 })
+    } catch {
+      setScanError('Video recording not supported on this device')
+      return
+    }
+
+    recorder.ondataavailable = e => { if (e.data.size > 0) recordedChunksRef.current.push(e.data) }
+    recorder.onstop = () => {
+      const blob = new Blob(recordedChunksRef.current, { type: mimeType.split(';')[0] })
+      const reader = new FileReader()
+      reader.onload = () => setCapturedVideo(reader.result as string)
+      reader.readAsDataURL(blob)
+    }
+
+    mediaRecorderRef.current = recorder
+    recorder.start(100)
+    setIsRecording(true)
+    setRecordingSeconds(0)
+
+    let secs = 0
+    recordingTimerRef.current = setInterval(() => {
+      secs++
+      setRecordingSeconds(secs)
+      if (secs >= 8) stopVideoRecording()
+    }, 1000)
+  }
+
+  const stopVideoRecording = () => {
+    if (recordingTimerRef.current) { clearInterval(recordingTimerRef.current); recordingTimerRef.current = null }
+    if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.stop()
+    setIsRecording(false)
+  }
+
   // ── Driver: deliver ─────────────────────────────────────
   const handleDeliver = async () => {
     if (!selectedParcel || !staff) return
+    if (captureMode === 'video' && !capturedVideo) { setScanError('Record a video first'); return }
     setSaving(true)
     try {
+      // Capture still photo from current frame
       let photoUrl = ''
       if (canvasRef.current && videoRef.current) {
         const canvas = canvasRef.current; const video = videoRef.current
@@ -484,6 +553,7 @@ export default function LogisticsPage() {
         stopCamera()
       }
 
+      // Post delivery handover (photo proof + status update)
       await fetch(`${API}/api/pos/parcels/handover`, {
         method: 'POST', headers: headers(),
         body: JSON.stringify({
@@ -493,6 +563,24 @@ export default function LogisticsPage() {
           notes: deliveryNotes || undefined,
         }),
       })
+
+      // Also attach video clip as a separate evidence record
+      if (capturedVideo) {
+        const videoToPost = capturedVideo
+        setCapturedVideo(null) // clear before POST so a retry cannot double-submit
+        await fetch(`${API}/api/pos/parcels/photos`, {
+          method: 'POST', headers: headers(),
+          body: JSON.stringify({
+            parcel_id: selectedParcel.id,
+            photo_type: 'delivery_video',
+            photo_url: videoToPost,
+            storage: 'fallback',
+            lat: geoCoords?.lat, lng: geoCoords?.lng,
+            notes: deliveryNotes || 'Delivery video',
+          }),
+        })
+      }
+
       setSuccessMsg('Delivered')
       setSuccessTracking(selectedParcel.tracking_number)
       setTodayOut(prev => prev + 1)
@@ -957,27 +1045,93 @@ export default function LogisticsPage() {
   // ═══════════════════════════════════════════════════════════
   if (screen === 'driver_deliver' && selectedParcel) return (
     <div className="pos-screen" style={{ minHeight: '100vh', background: '#000', display: 'flex', flexDirection: 'column' }}>
+      {/* Top bar */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => { stopCamera(); setScreen('driver_home') }} style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,.15)', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
-        <div style={{ background: 'rgba(255,255,255,.15)', backdropFilter: 'blur(10px)', borderRadius: 20, padding: '6px 14px' }}>
-          <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>📷 Proof of Delivery — {selectedParcel.tracking_number}</span>
+        <button onClick={() => { stopVideoRecording(); stopCamera(); setCapturedVideo(null); setCaptureMode('photo'); setScreen('driver_home') }}
+          style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,.15)', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+        <div style={{ background: 'rgba(255,255,255,.15)', backdropFilter: 'blur(10px)', borderRadius: 20, padding: '6px 14px', flex: 1 }}>
+          <span style={{ color: '#fff', fontSize: 12, fontWeight: 600 }}>Proof of Delivery · {selectedParcel.tracking_number}</span>
+        </div>
+        {/* Photo / Video toggle */}
+        <div style={{ display: 'flex', background: 'rgba(255,255,255,.15)', borderRadius: 20, padding: 2, gap: 2 }}>
+          {(['photo', 'video'] as const).map(m => (
+            <button key={m} onClick={() => { if (isRecording) stopVideoRecording(); setCaptureMode(m); setCapturedVideo(null) }}
+              style={{ padding: '5px 12px', borderRadius: 18, border: 'none', background: captureMode === m ? '#fff' : 'transparent', color: captureMode === m ? '#000' : '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+              {m === 'photo' ? '📷' : '🎥'} {m}
+            </button>
+          ))}
         </div>
       </div>
+
+      {/* Viewfinder */}
       <div style={{ flex: 1, position: 'relative' }}>
         <video ref={videoRef} playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+        {/* Recording indicator */}
+        {isRecording && (
+          <div style={{ position: 'absolute', top: 70, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,.6)', borderRadius: 20, padding: '6px 14px' }}>
+            <div style={{ width: 8, height: 8, borderRadius: 4, background: RED, animation: 'pulse 1s infinite' }} />
+            <span style={{ color: '#fff', fontSize: 13, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>REC {recordingSeconds}s / 8s</span>
+          </div>
+        )}
+
+        {/* Video captured badge */}
+        {capturedVideo && !isRecording && (
+          <div style={{ position: 'absolute', top: 70, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(22,163,74,.85)', borderRadius: 20, padding: '6px 14px' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+            <span style={{ color: '#fff', fontSize: 13, fontWeight: 700 }}>Video ready · {recordingSeconds}s</span>
+          </div>
+        )}
       </div>
-      <div style={{ background: 'rgba(0,0,0,.85)', padding: '16px 20px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+
+      {/* Bottom controls */}
+      <div style={{ background: 'rgba(0,0,0,.88)', padding: '14px 20px 36px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
         <div style={{ color: 'rgba(255,255,255,.7)', fontSize: 13, textAlign: 'center' }}>
-          To: <strong style={{ color: '#fff' }}>{selectedParcel.receiver_name || '—'}</strong> · {selectedParcel.destination_city || ''}
+          To: <strong style={{ color: '#fff' }}>{selectedParcel.receiver_name || '—'}</strong>{selectedParcel.destination_city ? ` · ${selectedParcel.destination_city}` : ''}
         </div>
-        <input placeholder="Delivery notes (optional)" value={deliveryNotes} onChange={e => setDeliveryNotes(e.target.value)}
+        <input placeholder="Notes (optional)" value={deliveryNotes} onChange={e => setDeliveryNotes(e.target.value)}
           style={{ width: '100%', maxWidth: 360, padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,.2)', background: 'rgba(255,255,255,.1)', color: '#fff', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
-        <button onClick={handleDeliver} disabled={saving}
-          style={{ width: 72, height: 72, borderRadius: 36, border: '4px solid #fff', background: GREEN, cursor: saving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5" /></svg>
-        </button>
-        <span style={{ color: 'rgba(255,255,255,.5)', fontSize: 12 }}>Snap photo & confirm delivery</span>
+
+        {scanError && <div style={{ color: '#fca5a5', fontSize: 13 }}>{scanError}</div>}
+
+        {captureMode === 'photo' ? (
+          <>
+            <button onClick={handleDeliver} disabled={saving}
+              style={{ width: 72, height: 72, borderRadius: 36, border: '4px solid #fff', background: GREEN, cursor: saving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: saving ? 0.6 : 1 }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </button>
+            <span style={{ color: 'rgba(255,255,255,.45)', fontSize: 11 }}>Snap photo · confirm delivery</span>
+          </>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            {/* Record / Stop button */}
+            {!capturedVideo ? (
+              <>
+                <button
+                  onClick={isRecording ? stopVideoRecording : startVideoRecording}
+                  style={{ width: 72, height: 72, borderRadius: 36, border: `4px solid ${isRecording ? RED : '#fff'}`, background: isRecording ? RED : 'rgba(255,255,255,.15)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 200ms' }}>
+                  {isRecording
+                    ? <div style={{ width: 22, height: 22, borderRadius: 3, background: '#fff' }} />
+                    : <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="8"/></svg>
+                  }
+                </button>
+                <span style={{ color: 'rgba(255,255,255,.45)', fontSize: 11 }}>{isRecording ? 'Tap to stop recording' : 'Tap to start recording (8s max)'}</span>
+              </>
+            ) : (
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <button onClick={() => { setCapturedVideo(null); setRecordingSeconds(0) }}
+                  style={{ padding: '10px 18px', borderRadius: 10, border: '1px solid rgba(255,255,255,.3)', background: 'transparent', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                  Re-record
+                </button>
+                <button onClick={handleDeliver} disabled={saving}
+                  style={{ padding: '12px 28px', borderRadius: 10, border: 'none', background: GREEN, color: '#fff', fontSize: 14, fontWeight: 700, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.6 : 1 }}>
+                  {saving ? 'Uploading…' : 'Confirm Delivery'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

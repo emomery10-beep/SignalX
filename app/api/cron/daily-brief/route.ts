@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 import { sendEmail } from '@/lib/email'
+import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -97,6 +98,7 @@ Return exactly:
           }],
         })
 
+        logUsage({ route: 'cron/daily-brief', model: 'claude-sonnet-4-6', usage: res.usage, userId: profile.id })
         const raw = res.content[0].type === 'text' ? res.content[0].text : ''
         const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim())
         brief = { ...brief, improved: parsed.improved || brief.improved, worsened: parsed.worsened || brief.worsened, action: parsed.action || brief.action }

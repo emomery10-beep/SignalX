@@ -34,6 +34,7 @@ export default function AdminPage() {
   const [xActivity, setXActivity] = useState<any[]>([])
   const [signups, setSignups] = useState<any[]>([])
   const [stripeData, setStripeData] = useState<any>(null)
+  const [apiUsage, setApiUsage] = useState<any>(null)
 
   useEffect(() => {
     const init = async () => {
@@ -59,6 +60,7 @@ export default function AdminPage() {
         setCandidates(d.candidates || [])
         setXActivity(d.xActivity || [])
         setStripeData(d.stripe || null)
+        setApiUsage(d.apiUsage || null)
         const days: Record<string, number> = {}
         const now = new Date()
         for (let i = 29; i >= 0; i--) {
@@ -322,12 +324,46 @@ export default function AdminPage() {
           {/* Content review moved to /admin/agent (Alice Watson) */}
 
           {tab==='Costs' && <>
+            {/* Real Anthropic usage — tracked from api_usage table */}
+            {apiUsage && (
+              <div style={{padding:20,borderRadius:14,border:'1px solid rgba(99,102,241,.3)',background:'rgba(99,102,241,.06)',marginBottom:16}}>
+                <div style={{fontSize:13,fontWeight:600,color:'#6366F1',marginBottom:4}}>Anthropic API — This Month (Real Data)</div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))',gap:12,marginBottom:16}}>
+                  {[
+                    {label:'Total Cost',value:'$'+(apiUsage.totalCostUsd||0).toFixed(4)+' USD'},
+                    {label:'≈ GBP',value:'£'+((apiUsage.totalCostUsd||0)*0.79).toFixed(4)},
+                    {label:'Input Tokens',value:((apiUsage.totalInputTokens||0)/1000).toFixed(1)+'k'},
+                    {label:'Output Tokens',value:((apiUsage.totalOutputTokens||0)/1000).toFixed(1)+'k'},
+                  ].map(({label,value})=>(
+                    <div key={label} style={{padding:'10px 12px',borderRadius:9,background:'var(--sf)',border:'1px solid var(--b)'}}>
+                      <div style={{fontSize:10,color:'var(--tx3)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.06em'}}>{label}</div>
+                      <div style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-sora)'}}>{value}</div>
+                    </div>
+                  ))}
+                </div>
+                {Object.keys(apiUsage.byRoute||{}).length > 0 && (
+                  <>
+                    <div style={{fontSize:11,fontWeight:600,color:'var(--tx3)',marginBottom:8,textTransform:'uppercase',letterSpacing:'.06em'}}>Breakdown by route</div>
+                    {Object.entries(apiUsage.byRoute as Record<string,{calls:number;costUsd:number}>)
+                      .sort((a,b)=>b[1].costUsd-a[1].costUsd)
+                      .map(([route,data])=>(
+                        <div key={route} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--b)',fontSize:12}}>
+                          <span style={{color:'var(--tx2)',fontFamily:'monospace'}}>{route}</span>
+                          <span style={{color:'var(--tx3)'}}>{data.calls} calls · ${data.costUsd.toFixed(4)}</span>
+                        </div>
+                      ))}
+                  </>
+                )}
+                {Object.keys(apiUsage.byRoute||{}).length === 0 && (
+                  <p style={{fontSize:12,color:'var(--tx3)',margin:0}}>No calls logged yet — logging starts from next request.</p>
+                )}
+              </div>
+            )}
             <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
-              <div style={{fontSize:13,fontWeight:600,marginBottom:4}}>Estimated Monthly Costs</div>
-              <p style={{fontSize:12,color:'var(--tx3)',marginBottom:16}}>Based on current usage. Check Anthropic and Tavily dashboards for actuals.</p>
+              <div style={{fontSize:13,fontWeight:600,marginBottom:4}}>Other Monthly Costs</div>
+              <p style={{fontSize:12,color:'var(--tx3)',marginBottom:16}}>Estimates only — check dashboards for actuals.</p>
               {[
-                {service:'Anthropic Claude API',estimate:'£0.003 per question',note:'~'+users.reduce((s,u)=>s+(u.questions_used||0),0)+' questions total',color:'#6366F1'},
-                {service:'Tavily Search API',estimate:'£0.001 per search',note:'X agent and market research',color:'#f59e0b'},
+                {service:'Tavily Search API',estimate:'£0.001 per search',note:'Blog agent and market research',color:'#f59e0b'},
                 {service:'Supabase',estimate:'Free or £25/mo',note:'Depends on database size',color:'#10b981'},
                 {service:'Vercel',estimate:'Free Hobby plan',note:'Upgrade needed for crons',color:'#94a3b8'},
                 {service:'Resend Email',estimate:'Free up to 3,000/mo',note:'Team invites',color:'#60a5fa'},
@@ -346,8 +382,8 @@ export default function AdminPage() {
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
                 {[
                   {label:'Revenue per user',value:'£'+(mrr/(payingCount||1)).toFixed(2)+'/mo'},
-                  {label:'Cost per question',value:'~£0.003'},
-                  {label:'Gross margin est.',value:'~85%'},
+                  {label:'Claude cost/mo',value:apiUsage?('$'+(apiUsage.totalCostUsd||0).toFixed(2)):'~£0.003/q'},
+                  {label:'Gross margin est.',value:mrr>0?Math.max(0,Math.round((1-((apiUsage?.totalCostUsd||0)*0.79)/mrr)*100))+'%':'~85%'},
                   {label:'LTV (12 months)',value:'£'+((mrr/(payingCount||1))*12).toFixed(0)},
                 ].map(({label,value})=>(
                   <div key={label} style={{padding:'10px 12px',borderRadius:9,background:'var(--sf)',border:'1px solid var(--b)'}}>

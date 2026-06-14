@@ -205,9 +205,32 @@ export async function GET(request: NextRequest) {
       console.error('Stripe error:', stripeError)
     }
 
+    // Real API usage for current month
+    const apiUsageMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+    const { data: apiUsageRows } = await supabase
+      .from('api_usage')
+      .select('route, model, input_tokens, output_tokens, cost_usd')
+      .gte('created_at', apiUsageMonthStart)
+
+    const apiUsage = {
+      totalCostUsd: 0,
+      totalInputTokens: 0,
+      totalOutputTokens: 0,
+      byRoute: {} as Record<string, { calls: number; costUsd: number }>,
+    }
+    ;(apiUsageRows || []).forEach((r: any) => {
+      apiUsage.totalCostUsd += r.cost_usd || 0
+      apiUsage.totalInputTokens += r.input_tokens || 0
+      apiUsage.totalOutputTokens += r.output_tokens || 0
+      if (!apiUsage.byRoute[r.route]) apiUsage.byRoute[r.route] = { calls: 0, costUsd: 0 }
+      apiUsage.byRoute[r.route].calls++
+      apiUsage.byRoute[r.route].costUsd += r.cost_usd || 0
+    })
+
     return NextResponse.json({
       stats, users, candidates, stripe: stripeData,
       xActivity: xActivity || [], agentContent: agentContent || [],
+      apiUsage,
     })
   } catch (error) {
     console.error('Admin error:', error)

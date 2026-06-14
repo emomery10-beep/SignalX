@@ -2,22 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "pos-upgrade-preview",
-      "runtimeExecutable": "node",
-      "runtimeArgs": ["/tmp/pos-upgrade/server.js"],
-      "port": 7788
-    },
-    {
-      "name": "pos-askbiz",
+      "name": "next-dev",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "cwd": "pos-askbiz",
-      "port": 3001
-    },
-    {
-      "name": "askbiz-dev",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["next", "dev"],
       "port": 3000,
       "autoPort": false
     }

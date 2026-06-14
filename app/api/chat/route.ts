@@ -777,7 +777,7 @@ export async function POST(request: NextRequest) {
     },
   })
 
-  const result = await askOnce({ messages, systemPrompt })
+  const result = await askOnce({ messages, systemPrompt, userId: user.id })
 
   // Save assistant response
   if (conversationId) {

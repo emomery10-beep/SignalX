@@ -145,6 +145,15 @@ function IconTruck({ size = 20 }: { size?: number }) {
     </svg>
   )
 }
+function IconUsers({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+  )
+}
 
 function elapsedLabel(iso: string) {
   const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000)
@@ -556,6 +565,7 @@ export default function FactoryHub() {
             { label: activeShift ? 'End Shift' : 'Start Shift', sub: activeShift ? `${elapsedLabel(activeShift.started_at)} running` : 'Track output by shift', icon: <IconClock size={20} />, color: tokens.success, href: '/factory/shift', span: false },
             { label: 'Scan Waybill', sub: waybillTotal > 0 ? (waybillOnTimeRate !== null ? `${waybillOnTimeRate}% on time today` : `${waybillTotal} dispatched`) : 'Log a dispatch', icon: <IconTruck size={20} />, color: tokens.warning, href: '/factory/waybill', span: false },
             { label: 'Machine Down?', sub: activeDowntime.length > 0 ? `${activeDowntime.length} active event${activeDowntime.length > 1 ? 's' : ''}` : 'Report & track downtime', icon: <IconAlertTriangle size={20} />, color: activeDowntime.length > 0 ? tokens.danger : tokens.hint, href: '/factory/downtime', span: true },
+            { label: 'Staff Management', sub: 'Manage team & permissions', icon: <IconUsers size={20} />, color: tokens.accent, href: '/factory/staff', span: false },
           ].map(n => (
             <button key={n.href} onClick={() => router.push(n.href)}
               style={{ background: tokens.surface, border: `1px solid ${activeDowntime.length > 0 && n.href === '/factory/downtime' ? `${tokens.danger}40` : tokens.border}`, borderRadius: 14, padding: '16px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 150ms', display: 'flex', flexDirection: 'column', gap: 10, gridColumn: n.span ? 'span 2' : 'auto' }}

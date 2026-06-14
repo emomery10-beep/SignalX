@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { PaymentSetupCard } from '@/components/PaymentSetupCard'
 import { StripeSetupCard } from '@/components/StripeSetupCard'
 import DunningRecovery from './DunningRecovery'
+import ReceivedPayments from './ReceivedPayments'
 
 interface PaymentsTabProps {
   currencySymbol: string
@@ -176,6 +177,11 @@ export default function PaymentsTab({ currencySymbol, staff }: PaymentsTabProps)
           Loading payment configuration...
         </div>
       )}
+
+      {/* ── Received Payments ── */}
+      <div style={{ marginTop: 24 }}>
+        <ReceivedPayments currencySymbol={currencySymbol} />
+      </div>
 
       {/* ── Payment Recovery (Dunning) ── */}
       <div style={{ marginTop: 24 }}>
