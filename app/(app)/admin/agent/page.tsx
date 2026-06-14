@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import DiscoveryAgentCard from '@/components/admin/DiscoveryAgentCard'
 
 const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
 
@@ -79,6 +80,8 @@ export default function AgentAdminPage() {
     'seo-monitor': {running:false,result:null,lastRun:null},
     'stock-replenishment': {running:false,result:null,lastRun:null},
   })
+
+  // AI Discovery Agent — now a standalone component (DiscoveryAgentCard)
 
   const runAutoJob = async (jobId: string) => {
     setAutoJobs(prev => ({...prev, [jobId]: {...prev[jobId], running: true, result: null}}))
@@ -830,6 +833,9 @@ export default function AgentAdminPage() {
                 </div>
               )
             })}
+
+            {/* ── AI DISCOVERY REGISTRATION AGENT ── */}
+            <DiscoveryAgentCard />
 
             {/* Blog auto-publish info */}
             <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:12}}>

@@ -12,6 +12,8 @@ import SalonTab from '@/components/pos/SalonTab'
 import RetailTab from '@/components/pos/RetailTab'
 import FactoryTab from '@/components/pos/FactoryTab'
 import PaymentsTab from '@/components/pos/PaymentsTab'
+import StaffTemplatesTab from '@/components/pos/StaffTemplatesTab'
+import { getTemplateById } from '@/lib/staff-templates'
 
 const ACC = '#d08a59'
 const ACC_BG = 'rgba(208,138,89,.08)'
@@ -82,7 +84,7 @@ interface InventoryItem {
 interface Location {
   id: string; name: string; address?: string; phone?: string; is_active: boolean
 }
-type Tab = 'overview' | 'services' | 'staff' | 'inventory' | 'branches' | 'audit' | 'map' | 'operations' | 'captures' | 'approvals' | 'intelligence' | 'logistics' | 'customers' | 'promotions' | 'loyalty' | 'returns' | 'reports' | 'purchase_orders' | 'gift_cards' | 'integrations' | 'restaurant' | 'repair' | 'salon' | 'retail' | 'factory' | 'payments'
+type Tab = 'overview' | 'services' | 'staff' | 'staff_templates' | 'inventory' | 'branches' | 'audit' | 'map' | 'operations' | 'captures' | 'approvals' | 'intelligence' | 'logistics' | 'customers' | 'promotions' | 'loyalty' | 'returns' | 'reports' | 'purchase_orders' | 'gift_cards' | 'integrations' | 'restaurant' | 'repair' | 'salon' | 'retail' | 'factory' | 'payments'
 type DateRange = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom'
 type FilterModalType = { type: 'sales' | 'refunds' | 'low_stock' | 'cashier_detail' | 'gross_profit' | 'margin' | 'avg_sale' | 'staff_overview' | 'stock_item' | 'payment_breakdown' | 'branch_detail' | 'customer_history' | 'product_history'; title: string; cashier_id?: string; item_id?: string; payment_type?: string; branch_id?: string; customer_phone?: string; product_name?: string } | null
 type TxDetailType = Transaction | null
@@ -552,12 +554,46 @@ export default function POSPage() {
     if (newPin && (newPin.length < 4 || newPin.length > 6 || !/^\d+$/.test(newPin))) { notify('PIN must be 4-6 digits', false); return }
     setAddingStaff(true)
     try {
-      const sectorForRole = ['handler','driver','dispatcher','branch_manager'].includes(newRole) ? 'logistics' : (selectedSector !== 'all' ? selectedSector : undefined)
-      const res = await fetch('/api/pos/staff', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: newPhone || undefined, email: newEmail || undefined, name: newName, role: newRole, pin: newPin || undefined, location_id: newLocationId || undefined, sector: sectorForRole }) })
-      const data = await res.json()
-      if (data.staff) { setStaff(prev => [...prev, data.staff]); setNewPhone(''); setNewEmail(''); setNewName(''); setNewRole('cashier'); setNewPin(''); setNewLocationId(''); setShowAddStaff(false); notify(`${data.staff.name} added`) }
-      else if (data.seat_limit) notify(data.error, false)
-      else if (data.error) notify(data.error, false)
+      // Check if using a staff template (ID contains dash)
+      if (newRole.includes('-')) {
+        const isFactory = newRole.startsWith('factory-')
+        const res = await fetch('/api/pos/staff-templates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: newName,
+            email: newEmail || undefined,
+            phone: newPhone || undefined,
+            pin: newPin || undefined,
+            templateId: newRole,
+            businessType: isFactory ? 'factory' : 'restaurant',
+            location_id: newLocationId || undefined,
+            sector: selectedSector !== 'all' ? selectedSector : undefined,
+          })
+        })
+        const data = await res.json()
+        if (data.staff) {
+          setStaff(prev => [...prev, data.staff])
+          setNewPhone('')
+          setNewEmail('')
+          setNewName('')
+          setNewRole('cashier')
+          setNewPin('')
+          setNewLocationId('')
+          setShowAddStaff(false)
+          notify(`${data.staff.name} added with ${data.staff.template?.name} permissions`)
+        } else {
+          notify(data.error || 'Failed to add staff', false)
+        }
+      } else {
+        // Legacy role-based creation
+        const sectorForRole = ['handler','driver','dispatcher','branch_manager'].includes(newRole) ? 'logistics' : (selectedSector !== 'all' ? selectedSector : undefined)
+        const res = await fetch('/api/pos/staff', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: newPhone || undefined, email: newEmail || undefined, name: newName, role: newRole, pin: newPin || undefined, location_id: newLocationId || undefined, sector: sectorForRole }) })
+        const data = await res.json()
+        if (data.staff) { setStaff(prev => [...prev, data.staff]); setNewPhone(''); setNewEmail(''); setNewName(''); setNewRole('cashier'); setNewPin(''); setNewLocationId(''); setShowAddStaff(false); notify(`${data.staff.name} added`) }
+        else if (data.seat_limit) notify(data.error, false)
+        else if (data.error) notify(data.error, false)
+      }
     } catch { notify('Failed to add staff', false) }
     setAddingStaff(false)
   }
@@ -1764,20 +1800,39 @@ export default function POSPage() {
                   <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>— or —</div>
                   <input placeholder="Email address (alternative to WhatsApp)" value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" style={inputStyle} />
                   <select value={newRole} onChange={e => setNewRole(e.target.value as any)} style={inputStyle}>
-                    {(selectedSector === 'logistics' || selectedSector === 'all') && <>
-                      <option value="handler">Handler — receives & releases parcels at branch</option>
-                      <option value="driver">Driver — pickups, deliveries & vehicle inspections</option>
-                      <option value="dispatcher">Dispatcher — assigns parcels to trucks & routes</option>
-                      <option value="branch_manager">Branch Manager — branch dashboard & oversight</option>
-                    </>}
-                    {(selectedSector !== 'logistics') && <>
-                      <option value="cashier">Cashier — can process sales</option>
-                      <option value="inventory">Inventory — can manage stock</option>
-                      <option value="repair">Repair — can intake & checkout service jobs</option>
-                      <option value="engineer">Engineer — can work on assigned repairs</option>
-                      <option value="supervisor">Supervisor — can approve captures & view reports</option>
-                      <option value="manager">Manager — full staff access, refunds & amendments</option>
-                    </>}
+                    <optgroup label="📦 Factory Templates">
+                      <option value="factory-line-operator">👷 Line Operator — Production floor capture</option>
+                      <option value="factory-quality-inspector">🔍 Quality Inspector — QA & approvals</option>
+                      <option value="factory-shift-supervisor">👔 Shift Supervisor — Shift coordination</option>
+                      <option value="factory-production-manager">🎯 Production Manager — Full factory ops</option>
+                      <option value="factory-inventory-manager">📦 Inventory Manager — Batch tracking</option>
+                    </optgroup>
+                    <optgroup label="🍽️ Restaurant Templates">
+                      <option value="restaurant-server">🍽️ Server — Table service</option>
+                      <option value="restaurant-lead-server">⭐ Lead Server — Floor coordination</option>
+                      <option value="restaurant-host">🎫 Host — Seating & reservations</option>
+                      <option value="restaurant-head-chef">👨‍🍳 Head Chef — Kitchen management</option>
+                      <option value="restaurant-kitchen-manager">🍳 Kitchen Manager — Kitchen ops</option>
+                      <option value="restaurant-line-cook">🔪 Line Cook — Station prep</option>
+                      <option value="restaurant-operations-manager">🎯 Operations Manager — Full ops</option>
+                      <option value="restaurant-cashier">💳 Cashier — POS & payments</option>
+                    </optgroup>
+                    <optgroup label="📋 Legacy Roles">
+                      {(selectedSector === 'logistics' || selectedSector === 'all') && <>
+                        <option value="handler">Handler — receives & releases parcels at branch</option>
+                        <option value="driver">Driver — pickups, deliveries & vehicle inspections</option>
+                        <option value="dispatcher">Dispatcher — assigns parcels to trucks & routes</option>
+                        <option value="branch_manager">Branch Manager — branch dashboard & oversight</option>
+                      </>}
+                      {(selectedSector !== 'logistics') && <>
+                        <option value="cashier">Cashier — can process sales</option>
+                        <option value="inventory">Inventory — can manage stock</option>
+                        <option value="repair">Repair — can intake & checkout service jobs</option>
+                        <option value="engineer">Engineer — can work on assigned repairs</option>
+                        <option value="supervisor">Supervisor — can approve captures & view reports</option>
+                        <option value="manager">Manager — full staff access, refunds & amendments</option>
+                      </>}
+                    </optgroup>
                   </select>
                   {locations.length > 0 && (
                     <select value={newLocationId} onChange={e => setNewLocationId(e.target.value)} style={inputStyle}>
@@ -1905,6 +1960,20 @@ export default function POSPage() {
               </div>
             )}
           </div>
+        )}
+
+        {/* ══════════════ STAFF TEMPLATES TAB ══════════════ */}
+        {tab === 'staff_templates' && (
+          <StaffTemplatesTab
+            businessType={businessType === 'restaurant' ? 'restaurant' : 'factory'}
+            onSelectTemplate={(template) => {
+              setShowAddStaff(true)
+              setNewRole(template.id as any)
+              setTimeout(() => {
+                notify(`Using ${template.name} template — enter staff details above`, true)
+              }, 100)
+            }}
+          />
         )}
 
         {/* ══════════════ INVENTORY TAB ══════════════ */}
