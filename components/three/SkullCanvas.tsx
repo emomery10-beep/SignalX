@@ -1,7 +1,6 @@
 'use client'
-import { useRef, Suspense } from 'react'
+import { useRef, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { useTexture, Stars } from '@react-three/drei'
 import * as THREE from 'three'
 
 interface Props {
@@ -9,105 +8,120 @@ interface Props {
   mouse: { x: number; y: number }
 }
 
-function EarthMesh({ scroll, mouse }: Props) {
-  const earthRef = useRef<THREE.Mesh>(null!)
-  const cloudRef = useRef<THREE.Mesh>(null!)
+function NetworkSphere({ scroll, mouse }: Props) {
+  const groupRef  = useRef<THREE.Group>(null!)
+  const pointsRef = useRef<THREE.Points>(null!)
+  const linesRef  = useRef<THREE.LineSegments>(null!)
 
-  const [earthTex, cloudTex] = useTexture([
-    '/textures/earth-day.jpg',
-    '/textures/earth-clouds.png',
-  ])
+  // Keep latest props accessible in useFrame without stale closures
+  const scrollRef = useRef(scroll)
+  const mouseRef  = useRef(mouse)
+  scrollRef.current = scroll
+  mouseRef.current  = mouse
 
-  const fade = Math.max(0, 1 - scroll / 650)
+  // Build node positions (Fibonacci sphere) + connection line buffer once
+  const { pointBuf, lineBuf } = useMemo(() => {
+    const R  = 1.8
+    const N  = 130
+    const gr = (1 + Math.sqrt(5)) / 2            // golden ratio
+
+    const pts: [number, number, number][] = []
+    for (let i = 0; i < N; i++) {
+      const theta = Math.acos(1 - 2 * (i + 0.5) / N)
+      const phi   = (2 * Math.PI * i) / gr
+      pts.push([
+        R * Math.sin(theta) * Math.cos(phi),
+        R * Math.sin(theta) * Math.sin(phi),
+        R * Math.cos(theta),
+      ])
+    }
+
+    const pointBuf = new Float32Array(pts.flat())
+
+    // Connect nodes whose squared chord-distance is below threshold
+    const THRESH_SQ = 0.68        // ≈ 0.82 units — ~5-7 connections per node
+    const lines: number[] = []
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i + 1; j < pts.length; j++) {
+        const dx = pts[i][0] - pts[j][0]
+        const dy = pts[i][1] - pts[j][1]
+        const dz = pts[i][2] - pts[j][2]
+        if (dx * dx + dy * dy + dz * dz < THRESH_SQ) {
+          lines.push(...pts[i], ...pts[j])
+        }
+      }
+    }
+
+    return { pointBuf, lineBuf: new Float32Array(lines) }
+  }, [])
 
   useFrame((state, delta) => {
-    if (!earthRef.current) return
-    const t = state.clock.elapsedTime
-    // Slow auto-rotation
-    earthRef.current.rotation.y += delta * 0.06
-    // Mouse parallax tilt with gentle bob
-    earthRef.current.rotation.x = THREE.MathUtils.lerp(
-      earthRef.current.rotation.x,
-      mouse.y * 0.10 + Math.sin(t * 0.2) * 0.02,
-      0.04
+    if (!groupRef.current) return
+    const t    = state.clock.elapsedTime
+    const fade = Math.max(0, 1 - scrollRef.current / 650)
+    const m    = mouseRef.current
+
+    // Slow auto-rotation + mouse tilt
+    groupRef.current.rotation.y += delta * 0.10
+    groupRef.current.rotation.x = THREE.MathUtils.lerp(
+      groupRef.current.rotation.x,
+      m.y * 0.12 + Math.sin(t * 0.22) * 0.025,
+      0.04,
     )
-    earthRef.current.rotation.z = THREE.MathUtils.lerp(
-      earthRef.current.rotation.z,
-      -mouse.x * 0.05,
-      0.04
+    groupRef.current.rotation.z = THREE.MathUtils.lerp(
+      groupRef.current.rotation.z,
+      -m.x * 0.04,
+      0.04,
     )
-    // Clouds spin slightly faster than Earth
-    if (cloudRef.current) {
-      cloudRef.current.rotation.y += delta * 0.08
-      cloudRef.current.rotation.x = earthRef.current.rotation.x
-      cloudRef.current.rotation.z = earthRef.current.rotation.z
+
+    // Subtle breathing pulse on node opacity
+    if (pointsRef.current) {
+      ;(pointsRef.current.material as THREE.PointsMaterial).opacity =
+        (0.72 + Math.sin(t * 0.9) * 0.14) * fade
+    }
+    // Slower pulse on line opacity
+    if (linesRef.current) {
+      ;(linesRef.current.material as THREE.LineBasicMaterial).opacity =
+        (0.15 + Math.sin(t * 0.55) * 0.05) * fade
     }
   })
 
+  const fade = Math.max(0, 1 - scroll / 650)
+
   return (
-    <group>
-      {/* Earth surface */}
-      <mesh ref={earthRef}>
-        <sphereGeometry args={[1.8, 64, 64]} />
-        <meshPhongMaterial
-          map={earthTex}
+    <group ref={groupRef}>
+      {/* Connection lines */}
+      <lineSegments ref={linesRef}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[lineBuf, 3]} />
+        </bufferGeometry>
+        <lineBasicMaterial
+          color="#f97316"
           transparent
-          opacity={fade}
-          shininess={18}
-          specular={new THREE.Color('#336699')}
-        />
-      </mesh>
-
-      {/* Cloud layer */}
-      <mesh ref={cloudRef}>
-        <sphereGeometry args={[1.84, 48, 48]} />
-        <meshPhongMaterial
-          map={cloudTex}
-          transparent
-          opacity={0.35 * fade}
-          depthWrite={false}
-          side={THREE.FrontSide}
-        />
-      </mesh>
-
-      {/* Atmosphere inner glow */}
-      <mesh>
-        <sphereGeometry args={[1.78, 32, 32]} />
-        <meshBasicMaterial
-          color="#1a6fa8"
-          transparent
-          opacity={0.05 * fade}
-          side={THREE.BackSide}
+          opacity={0.15 * fade}
           depthWrite={false}
         />
-      </mesh>
+      </lineSegments>
 
-      {/* Atmosphere outer halo */}
-      <mesh>
-        <sphereGeometry args={[2.05, 32, 32]} />
-        <meshBasicMaterial
-          color="#3388cc"
+      {/* Node dots */}
+      <points ref={pointsRef}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[pointBuf, 3]} />
+        </bufferGeometry>
+        <pointsMaterial
+          color="#f97316"
+          size={0.058}
           transparent
-          opacity={0.07 * fade}
-          side={THREE.BackSide}
+          opacity={0.80 * fade}
           depthWrite={false}
+          sizeAttenuation
         />
-      </mesh>
+      </points>
     </group>
   )
 }
 
-function EarthFallback({ fade }: { fade: number }) {
-  return (
-    <mesh>
-      <sphereGeometry args={[1.8, 32, 32]} />
-      <meshBasicMaterial color="#1a3a5c" transparent opacity={0.4 * fade} />
-    </mesh>
-  )
-}
-
 export default function SkullCanvas({ scroll, mouse }: Props) {
-  const fade = Math.max(0, 1 - scroll / 650)
   return (
     <div style={{ width: '100%', height: '100%', display: 'block' }}>
       <Canvas
@@ -116,25 +130,7 @@ export default function SkullCanvas({ scroll, mouse }: Props) {
         gl={{ antialias: true, alpha: true }}
         dpr={[1, 1.5]}
       >
-        {/* Lighting — sun from upper-right */}
-        <ambientLight intensity={0.18} color="#c8d8f0" />
-        <directionalLight position={[6, 4, 4]} intensity={2.2} color="#ffffff" />
-        <pointLight position={[-6, -3, -3]} intensity={0.25} color="#2244aa" decay={2} />
-
-        {/* Background stars */}
-        <Stars
-          radius={90}
-          depth={40}
-          count={2500}
-          factor={3}
-          saturation={0.1}
-          fade
-          speed={0.4}
-        />
-
-        <Suspense fallback={<EarthFallback fade={fade} />}>
-          <EarthMesh scroll={scroll} mouse={mouse} />
-        </Suspense>
+        <NetworkSphere scroll={scroll} mouse={mouse} />
       </Canvas>
     </div>
   )
