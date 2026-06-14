@@ -12,6 +12,7 @@
     { "path": "/api/cron/token-refresh",             "schedule": "0 1 * * *" },
     { "path": "/api/cron/seo-monitor",               "schedule": "0 9 * * 1" },
     { "path": "/api/cron/stock-replenishment",       "schedule": "0 6 * * *" },
-    { "path": "/api/cron/ai-discovery-audit",        "schedule": "0 8 * * 1" }
+    { "path": "/api/cron/ai-discovery-audit",        "schedule": "0 8 * * 1" },
+    { "path": "/api/agent/carolyne-scout",            "schedule": "30 4 * * *" }
   ]
 }

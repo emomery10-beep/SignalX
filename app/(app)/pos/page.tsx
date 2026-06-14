@@ -556,7 +556,8 @@ export default function POSPage() {
     try {
       // Check if using a staff template (ID contains dash)
       if (newRole.includes('-')) {
-        const isFactory = newRole.startsWith('factory-')
+        // Extract business type from template ID (e.g., "factory-line-operator" → "factory")
+        const businessType = newRole.split('-')[0] as any
         const res = await fetch('/api/pos/staff-templates', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -566,7 +567,7 @@ export default function POSPage() {
             phone: newPhone || undefined,
             pin: newPin || undefined,
             templateId: newRole,
-            businessType: isFactory ? 'factory' : 'restaurant',
+            businessType: businessType,
             location_id: newLocationId || undefined,
             sector: selectedSector !== 'all' ? selectedSector : undefined,
           })
@@ -577,7 +578,7 @@ export default function POSPage() {
           setNewPhone('')
           setNewEmail('')
           setNewName('')
-          setNewRole('cashier')
+          setNewRole('factory-line-operator')
           setNewPin('')
           setNewLocationId('')
           setShowAddStaff(false)
@@ -585,14 +586,6 @@ export default function POSPage() {
         } else {
           notify(data.error || 'Failed to add staff', false)
         }
-      } else {
-        // Legacy role-based creation
-        const sectorForRole = ['handler','driver','dispatcher','branch_manager'].includes(newRole) ? 'logistics' : (selectedSector !== 'all' ? selectedSector : undefined)
-        const res = await fetch('/api/pos/staff', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: newPhone || undefined, email: newEmail || undefined, name: newName, role: newRole, pin: newPin || undefined, location_id: newLocationId || undefined, sector: sectorForRole }) })
-        const data = await res.json()
-        if (data.staff) { setStaff(prev => [...prev, data.staff]); setNewPhone(''); setNewEmail(''); setNewName(''); setNewRole('cashier'); setNewPin(''); setNewLocationId(''); setShowAddStaff(false); notify(`${data.staff.name} added`) }
-        else if (data.seat_limit) notify(data.error, false)
-        else if (data.error) notify(data.error, false)
       }
     } catch { notify('Failed to add staff', false) }
     setAddingStaff(false)
@@ -1800,34 +1793,47 @@ export default function POSPage() {
                   <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>— or —</div>
                   <input placeholder="Email address (alternative to WhatsApp)" value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" style={inputStyle} />
                   <select value={newRole} onChange={e => setNewRole(e.target.value as any)} style={inputStyle}>
-                    <optgroup label="📦 FACTORY TEMPLATES">
-                      <option value="factory-line-operator">👷 Line Operator — Production floor</option>
-                      <option value="factory-quality-inspector">🔍 Quality Inspector — QA</option>
-                      <option value="factory-shift-supervisor">👔 Shift Supervisor — Coordination</option>
-                      <option value="factory-production-manager">🎯 Production Manager — Full ops</option>
-                      <option value="factory-inventory-manager">📦 Inventory Manager — Batch tracking</option>
+                    <optgroup label="🏭 FACTORY">
+                      <option value="factory-line-operator">👷 Line Operator</option>
+                      <option value="factory-quality-inspector">🔍 Quality Inspector</option>
+                      <option value="factory-shift-supervisor">👔 Shift Supervisor</option>
+                      <option value="factory-production-manager">🎯 Production Manager</option>
+                      <option value="factory-inventory-manager">📦 Inventory Manager</option>
                     </optgroup>
-                    <optgroup label="🍽️ RESTAURANT TEMPLATES">
-                      <option value="restaurant-server">🍽️ Server — Table service</option>
-                      <option value="restaurant-lead-server">⭐ Lead Server — Floor lead</option>
-                      <option value="restaurant-host">🎫 Host — Seating</option>
-                      <option value="restaurant-head-chef">👨‍🍳 Head Chef — Kitchen lead</option>
-                      <option value="restaurant-kitchen-manager">🍳 Kitchen Manager — Kitchen ops</option>
-                      <option value="restaurant-line-cook">🔪 Line Cook — Station</option>
-                      <option value="restaurant-operations-manager">🎯 Ops Manager — All operations</option>
-                      <option value="restaurant-cashier">💳 Cashier — POS</option>
+                    <optgroup label="🍽️ RESTAURANT">
+                      <option value="restaurant-server">🍽️ Server</option>
+                      <option value="restaurant-lead-server">⭐ Lead Server</option>
+                      <option value="restaurant-host">🎫 Host</option>
+                      <option value="restaurant-head-chef">👨‍🍳 Head Chef</option>
+                      <option value="restaurant-kitchen-manager">🍳 Kitchen Manager</option>
+                      <option value="restaurant-line-cook">🔪 Line Cook</option>
+                      <option value="restaurant-operations-manager">🎯 Ops Manager</option>
+                      <option value="restaurant-cashier">💳 Cashier</option>
                     </optgroup>
-                    <optgroup label="— LEGACY ROLES —">
-                      <option value="cashier">Cashier — can process sales</option>
-                      <option value="inventory">Inventory — can manage stock</option>
-                      <option value="repair">Repair — can intake & checkout service jobs</option>
-                      <option value="engineer">Engineer — can work on assigned repairs</option>
-                      <option value="supervisor">Supervisor — can approve captures & view reports</option>
-                      <option value="manager">Manager — full staff access, refunds & amendments</option>
-                      <option value="handler">Handler — receives & releases parcels at branch</option>
-                      <option value="driver">Driver — pickups, deliveries & vehicle inspections</option>
-                      <option value="dispatcher">Dispatcher — assigns parcels to trucks & routes</option>
-                      <option value="branch_manager">Branch Manager — branch dashboard & oversight</option>
+                    <optgroup label="🔧 REPAIR">
+                      <option value="repair-intake-specialist">📋 Intake Specialist</option>
+                      <option value="repair-technician">🔧 Technician</option>
+                      <option value="repair-quality-checker">✓ Quality Checker</option>
+                      <option value="repair-manager">🎯 Repair Manager</option>
+                    </optgroup>
+                    <optgroup label="💅 SALON">
+                      <option value="salon-receptionist">📞 Receptionist</option>
+                      <option value="salon-stylist">💇 Stylist</option>
+                      <option value="salon-esthetician">💄 Esthetician</option>
+                      <option value="salon-manager">🎯 Salon Manager</option>
+                    </optgroup>
+                    <optgroup label="🏪 RETAIL">
+                      <option value="retail-cashier">💳 Cashier</option>
+                      <option value="retail-floor-staff">🏪 Floor Associate</option>
+                      <option value="retail-inventory-manager">📦 Inventory Manager</option>
+                      <option value="retail-shift-supervisor">👔 Shift Supervisor</option>
+                      <option value="retail-manager">🎯 Store Manager</option>
+                    </optgroup>
+                    <optgroup label="🚛 LOGISTICS">
+                      <option value="logistics-handler">📦 Handler</option>
+                      <option value="logistics-driver">🚛 Driver</option>
+                      <option value="logistics-dispatcher">📍 Dispatcher</option>
+                      <option value="logistics-branch-manager">🎯 Branch Manager</option>
                     </optgroup>
                   </select>
                   {locations.length > 0 && (
@@ -1906,34 +1912,47 @@ export default function POSPage() {
                   <input placeholder="Email address" value={editEmail} onChange={e => setEditEmail(e.target.value)} type="email" style={inputStyle} />
                   <input placeholder={`New PIN (4–6 digits)${editingStaff.has_pin ? ' — leave blank to keep current' : ''}`} value={editPin} onChange={e => setEditPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: editPin && editPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
                   <select value={editRole} onChange={e => setEditRole(e.target.value as any)} style={inputStyle}>
-                    <optgroup label="📦 FACTORY TEMPLATES">
-                      <option value="factory-line-operator">👷 Line Operator — Production floor</option>
-                      <option value="factory-quality-inspector">🔍 Quality Inspector — QA</option>
-                      <option value="factory-shift-supervisor">👔 Shift Supervisor — Coordination</option>
-                      <option value="factory-production-manager">🎯 Production Manager — Full ops</option>
-                      <option value="factory-inventory-manager">📦 Inventory Manager — Batch tracking</option>
+                    <optgroup label="🏭 FACTORY">
+                      <option value="factory-line-operator">👷 Line Operator</option>
+                      <option value="factory-quality-inspector">🔍 Quality Inspector</option>
+                      <option value="factory-shift-supervisor">👔 Shift Supervisor</option>
+                      <option value="factory-production-manager">🎯 Production Manager</option>
+                      <option value="factory-inventory-manager">📦 Inventory Manager</option>
                     </optgroup>
-                    <optgroup label="🍽️ RESTAURANT TEMPLATES">
-                      <option value="restaurant-server">🍽️ Server — Table service</option>
-                      <option value="restaurant-lead-server">⭐ Lead Server — Floor lead</option>
-                      <option value="restaurant-host">🎫 Host — Seating</option>
-                      <option value="restaurant-head-chef">👨‍🍳 Head Chef — Kitchen lead</option>
-                      <option value="restaurant-kitchen-manager">🍳 Kitchen Manager — Kitchen ops</option>
-                      <option value="restaurant-line-cook">🔪 Line Cook — Station</option>
-                      <option value="restaurant-operations-manager">🎯 Ops Manager — All operations</option>
-                      <option value="restaurant-cashier">💳 Cashier — POS</option>
+                    <optgroup label="🍽️ RESTAURANT">
+                      <option value="restaurant-server">🍽️ Server</option>
+                      <option value="restaurant-lead-server">⭐ Lead Server</option>
+                      <option value="restaurant-host">🎫 Host</option>
+                      <option value="restaurant-head-chef">👨‍🍳 Head Chef</option>
+                      <option value="restaurant-kitchen-manager">🍳 Kitchen Manager</option>
+                      <option value="restaurant-line-cook">🔪 Line Cook</option>
+                      <option value="restaurant-operations-manager">🎯 Ops Manager</option>
+                      <option value="restaurant-cashier">💳 Cashier</option>
                     </optgroup>
-                    <optgroup label="— LEGACY ROLES —">
-                      <option value="cashier">Cashier — can process sales</option>
-                      <option value="inventory">Inventory — can manage stock</option>
-                      <option value="repair">Repair — can intake & checkout service jobs</option>
-                      <option value="engineer">Engineer — can work on assigned repairs</option>
-                      <option value="supervisor">Supervisor — can approve captures & view reports</option>
-                      <option value="manager">Manager — full staff access, refunds & amendments</option>
-                      <option value="handler">Handler — receives & releases parcels at branch</option>
-                      <option value="driver">Driver — pickups, deliveries & vehicle inspections</option>
-                      <option value="dispatcher">Dispatcher — assigns parcels to trucks & routes</option>
-                      <option value="branch_manager">Branch Manager — branch dashboard & oversight</option>
+                    <optgroup label="🔧 REPAIR">
+                      <option value="repair-intake-specialist">📋 Intake Specialist</option>
+                      <option value="repair-technician">🔧 Technician</option>
+                      <option value="repair-quality-checker">✓ Quality Checker</option>
+                      <option value="repair-manager">🎯 Repair Manager</option>
+                    </optgroup>
+                    <optgroup label="💅 SALON">
+                      <option value="salon-receptionist">📞 Receptionist</option>
+                      <option value="salon-stylist">💇 Stylist</option>
+                      <option value="salon-esthetician">💄 Esthetician</option>
+                      <option value="salon-manager">🎯 Salon Manager</option>
+                    </optgroup>
+                    <optgroup label="🏪 RETAIL">
+                      <option value="retail-cashier">💳 Cashier</option>
+                      <option value="retail-floor-staff">🏪 Floor Associate</option>
+                      <option value="retail-inventory-manager">📦 Inventory Manager</option>
+                      <option value="retail-shift-supervisor">👔 Shift Supervisor</option>
+                      <option value="retail-manager">🎯 Store Manager</option>
+                    </optgroup>
+                    <optgroup label="🚛 LOGISTICS">
+                      <option value="logistics-handler">📦 Handler</option>
+                      <option value="logistics-driver">🚛 Driver</option>
+                      <option value="logistics-dispatcher">📍 Dispatcher</option>
+                      <option value="logistics-branch-manager">🎯 Branch Manager</option>
                     </optgroup>
                   </select>
                   {locations.length > 0 && (

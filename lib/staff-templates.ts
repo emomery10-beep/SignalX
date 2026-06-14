@@ -11,7 +11,7 @@
  * - Suggested team size
  */
 
-export type StaffTemplateType = 'factory' | 'restaurant'
+export type StaffTemplateType = 'factory' | 'restaurant' | 'repair' | 'salon' | 'retail' | 'logistics'
 
 export interface StaffTemplate {
   id: string
@@ -387,7 +387,382 @@ export const QUICK_START_RECOMMENDATIONS = {
   ],
 }
 
+// ============================================================
+// REPAIR STAFF TEMPLATES
+// ============================================================
+
+export const REPAIR_TEMPLATES: StaffTemplate[] = [
+  {
+    id: 'repair-intake-specialist',
+    name: 'Intake Specialist',
+    description: 'Reception and intake of repair jobs',
+    type: 'repair',
+    icon: '📋',
+    defaultPermissions: ['intake.create', 'orders.view'],
+    responsibilities: [
+      'Receive devices for repair',
+      'Create intake records',
+      'Photograph device condition',
+      'Document customer information',
+      'Estimate repair costs',
+      'Handle customer payments',
+      'Issue receipts and service tickets',
+    ],
+    suggestedTeamSize: '1-2 per shift',
+    color: '#06b6d4', // Cyan
+  },
+
+  {
+    id: 'repair-technician',
+    name: 'Technician',
+    description: 'Repair work and technical assessment',
+    type: 'repair',
+    icon: '🔧',
+    defaultPermissions: ['intake.view', 'repairs.update', 'parts.manage'],
+    responsibilities: [
+      'Diagnose device issues',
+      'Perform repairs',
+      'Test repaired devices',
+      'Track work hours on jobs',
+      'Update repair status',
+      'Manage parts inventory',
+      'Document repair work',
+    ],
+    suggestedTeamSize: '2-5 per shift',
+    color: '#f59e0b', // Amber
+  },
+
+  {
+    id: 'repair-quality-checker',
+    name: 'Quality Checker',
+    description: 'Quality assurance and final inspection',
+    type: 'repair',
+    icon: '✓',
+    defaultPermissions: ['intake.view', 'repairs.approve', 'orders.view'],
+    responsibilities: [
+      'Inspect completed repairs',
+      'Verify repair quality',
+      'Test device functionality',
+      'Approve repairs for pickup',
+      'Check all accessories included',
+      'Generate quality reports',
+      'Track repair metrics',
+    ],
+    suggestedTeamSize: '1-2 per shift',
+    color: '#10b981', // Green
+  },
+
+  {
+    id: 'repair-manager',
+    name: 'Repair Manager',
+    description: 'Oversight and management of repair operations',
+    type: 'repair',
+    icon: '🎯',
+    defaultPermissions: ['intake.create', 'repairs.update', 'repairs.approve', 'parts.manage', 'analytics.view', 'settings.manage'],
+    responsibilities: [
+      'Oversee repair operations',
+      'Manage technician workload',
+      'Handle customer escalations',
+      'Approve complex repairs',
+      'Manage parts inventory',
+      'View repair analytics and metrics',
+      'Configure repair settings',
+      'Staff management',
+    ],
+    suggestedTeamSize: '1 total',
+    color: '#8b5cf6', // Purple
+  },
+]
+
+// ============================================================
+// SALON STAFF TEMPLATES
+// ============================================================
+
+export const SALON_TEMPLATES: StaffTemplate[] = [
+  {
+    id: 'salon-receptionist',
+    name: 'Receptionist',
+    description: 'Front desk and appointment management',
+    type: 'salon',
+    icon: '📞',
+    defaultPermissions: ['appointments.view', 'appointments.create', 'orders.view'],
+    responsibilities: [
+      'Answer client calls',
+      'Book appointments',
+      'Check in clients',
+      'Process payments',
+      'Manage waiting list',
+      'Issue receipts',
+      'Handle customer inquiries',
+    ],
+    suggestedTeamSize: '1-2 per shift',
+    color: '#ec4899', // Pink
+  },
+
+  {
+    id: 'salon-stylist',
+    name: 'Stylist',
+    description: 'Hair and beauty services',
+    type: 'salon',
+    icon: '💇',
+    defaultPermissions: ['appointments.view', 'orders.view', 'orders.take'],
+    responsibilities: [
+      'Provide hair styling services',
+      'Consult with clients on styles',
+      'Maintain equipment and tools',
+      'Track service times',
+      'Upsell additional services',
+      'Maintain client records',
+      'Follow hygiene protocols',
+    ],
+    suggestedTeamSize: '3-8 per shift',
+    color: '#06b6d4', // Cyan
+  },
+
+  {
+    id: 'salon-esthetician',
+    name: 'Esthetician',
+    description: 'Beauty treatments and skincare',
+    type: 'salon',
+    icon: '💄',
+    defaultPermissions: ['appointments.view', 'orders.view', 'orders.take'],
+    responsibilities: [
+      'Perform facials and skin treatments',
+      'Apply makeup services',
+      'Provide skincare advice',
+      'Manage beauty product inventory',
+      'Track treatment times',
+      'Maintain client cards',
+      'Recommend product purchases',
+    ],
+    suggestedTeamSize: '2-4 per shift',
+    color: '#f59e0b', // Amber
+  },
+
+  {
+    id: 'salon-manager',
+    name: 'Salon Manager',
+    description: 'Salon operations and staff management',
+    type: 'salon',
+    icon: '🎯',
+    defaultPermissions: ['appointments.create', 'appointments.manage', 'orders.view', 'orders.take', 'staff.manage', 'analytics.view', 'settings.manage'],
+    responsibilities: [
+      'Oversee salon operations',
+      'Manage staff schedules',
+      'Handle customer complaints',
+      'Manage inventory and supplies',
+      'Track salon metrics and revenue',
+      'Manage client loyalty program',
+      'Configure salon settings',
+      'Staff training and management',
+    ],
+    suggestedTeamSize: '1 total',
+    color: '#8b5cf6', // Purple
+  },
+]
+
+// ============================================================
+// RETAIL STAFF TEMPLATES
+// ============================================================
+
+export const RETAIL_TEMPLATES: StaffTemplate[] = [
+  {
+    id: 'retail-cashier',
+    name: 'Cashier',
+    description: 'Point of sale and checkout',
+    type: 'retail',
+    icon: '💳',
+    defaultPermissions: ['sales.process', 'orders.view'],
+    responsibilities: [
+      'Process customer transactions',
+      'Handle cash and card payments',
+      'Manage cash drawer',
+      'Reconcile sales',
+      'Issue receipts',
+      'Handle refunds and exchanges',
+      'Bag merchandise',
+    ],
+    suggestedTeamSize: '2-4 per shift',
+    color: '#10b981', // Green
+  },
+
+  {
+    id: 'retail-floor-staff',
+    name: 'Floor Associate',
+    description: 'Sales floor and customer service',
+    type: 'retail',
+    icon: '🏪',
+    defaultPermissions: ['inventory.view', 'orders.view'],
+    responsibilities: [
+      'Stock shelves and displays',
+      'Assist customers on sales floor',
+      'Answer product questions',
+      'Handle customer inquiries',
+      'Manage product displays',
+      'Maintain store cleanliness',
+      'Check inventory levels',
+    ],
+    suggestedTeamSize: '3-6 per shift',
+    color: '#06b6d4', // Cyan
+  },
+
+  {
+    id: 'retail-inventory-manager',
+    name: 'Inventory Manager',
+    description: 'Stock management and inventory control',
+    type: 'retail',
+    icon: '📦',
+    defaultPermissions: ['inventory.manage', 'inventory.view', 'orders.view'],
+    responsibilities: [
+      'Manage inventory levels',
+      'Conduct stock counts',
+      'Track product movement',
+      'Order new inventory',
+      'Manage warehouse',
+      'Generate inventory reports',
+      'Optimize stock levels',
+    ],
+    suggestedTeamSize: '1-2 total',
+    color: '#f59e0b', // Amber
+  },
+
+  {
+    id: 'retail-shift-supervisor',
+    name: 'Shift Supervisor',
+    description: 'Shift operations oversight',
+    type: 'retail',
+    icon: '👔',
+    defaultPermissions: ['sales.process', 'inventory.view', 'orders.view', 'orders.take'],
+    responsibilities: [
+      'Oversee shift operations',
+      'Manage floor staff',
+      'Handle customer escalations',
+      'Approve refunds and exchanges',
+      'Cash reconciliation',
+      'Staff breaks and scheduling',
+      'Opening and closing procedures',
+    ],
+    suggestedTeamSize: '1 per shift',
+    color: '#3b82f6', // Blue
+  },
+
+  {
+    id: 'retail-manager',
+    name: 'Store Manager',
+    description: 'Overall store management',
+    type: 'retail',
+    icon: '🎯',
+    defaultPermissions: ['sales.process', 'inventory.manage', 'orders.view', 'orders.take', 'staff.manage', 'analytics.view', 'settings.manage'],
+    responsibilities: [
+      'Oversee all store operations',
+      'Manage staff and schedules',
+      'Control store budget',
+      'Monitor sales performance',
+      'Manage customer relationships',
+      'Handle supplier relationships',
+      'Configure store settings',
+      'Staff training and development',
+    ],
+    suggestedTeamSize: '1 total',
+    color: '#8b5cf6', // Purple
+  },
+]
+
+// ============================================================
+// LOGISTICS STAFF TEMPLATES
+// ============================================================
+
+export const LOGISTICS_TEMPLATES: StaffTemplate[] = [
+  {
+    id: 'logistics-handler',
+    name: 'Handler',
+    description: 'Warehouse and parcel handling',
+    type: 'logistics',
+    icon: '📦',
+    defaultPermissions: ['parcels.receive', 'parcels.dispatch', 'inventory.view'],
+    responsibilities: [
+      'Receive incoming parcels',
+      'Sort and organize packages',
+      'Load packages for dispatch',
+      'Scan barcodes and track items',
+      'Handle damaged packages',
+      'Maintain warehouse cleanliness',
+      'Follow safety procedures',
+    ],
+    suggestedTeamSize: '3-6 per shift',
+    color: '#06b6d4', // Cyan
+  },
+
+  {
+    id: 'logistics-driver',
+    name: 'Driver',
+    description: 'Delivery and vehicle operations',
+    type: 'logistics',
+    icon: '🚛',
+    defaultPermissions: ['parcels.view', 'parcels.dispatch', 'vehicle.inspect'],
+    responsibilities: [
+      'Deliver packages to customers',
+      'Perform pickups',
+      'Maintain vehicle condition',
+      'Inspect vehicle before each trip',
+      'Track delivery routes',
+      'Collect signatures and payments',
+      'Handle customer interactions',
+    ],
+    suggestedTeamSize: '3-8 per shift',
+    color: '#f59e0b', // Amber
+  },
+
+  {
+    id: 'logistics-dispatcher',
+    name: 'Dispatcher',
+    description: 'Route planning and coordination',
+    type: 'logistics',
+    icon: '📍',
+    defaultPermissions: ['parcels.view', 'routes.create', 'vehicles.manage'],
+    responsibilities: [
+      'Assign parcels to drivers',
+      'Plan delivery routes',
+      'Track vehicle locations',
+      'Handle customer inquiries',
+      'Communicate with drivers',
+      'Optimize delivery routes',
+      'Generate delivery reports',
+    ],
+    suggestedTeamSize: '1-2 per shift',
+    color: '#3b82f6', // Blue
+  },
+
+  {
+    id: 'logistics-branch-manager',
+    name: 'Branch Manager',
+    description: 'Branch operations management',
+    type: 'logistics',
+    icon: '🎯',
+    defaultPermissions: ['parcels.view', 'parcels.dispatch', 'vehicles.manage', 'staff.manage', 'analytics.view', 'settings.manage'],
+    responsibilities: [
+      'Oversee branch operations',
+      'Manage staff schedules',
+      'Monitor delivery performance',
+      'Handle customer complaints',
+      'Manage vehicle maintenance',
+      'Control branch budget',
+      'Generate performance reports',
+      'Staff training and management',
+    ],
+    suggestedTeamSize: '1 total',
+    color: '#8b5cf6', // Purple
+  },
+]
+
 /**
  * Export combined list for UI selection
  */
-export const ALL_STAFF_TEMPLATES = [...FACTORY_TEMPLATES, ...RESTAURANT_TEMPLATES]
+export const ALL_STAFF_TEMPLATES = [
+  ...FACTORY_TEMPLATES,
+  ...RESTAURANT_TEMPLATES,
+  ...REPAIR_TEMPLATES,
+  ...SALON_TEMPLATES,
+  ...RETAIL_TEMPLATES,
+  ...LOGISTICS_TEMPLATES,
+]
