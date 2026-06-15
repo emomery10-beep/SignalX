@@ -98,6 +98,50 @@ button, a, label, [role="button"] {
 @keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
 @keyframes popIn     { 0%{opacity:0;transform:scale(.8)} 60%{transform:scale(1.04)} 100%{opacity:1;transform:scale(1)} }
 @keyframes verdictIn { 0%{opacity:0;transform:translateX(-8px) scale(.97)} 100%{opacity:1;transform:translateX(0) scale(1)} }
+
+/* ── Responsive grids ───────────────────────────────────────── */
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(32px, 4vw, 64px);
+  align-items: center;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: clamp(36px, 5vw, 64px);
+  align-items: center;
+}
+
+/* Mobile: stack to single column */
+@media (max-width: 768px) {
+  .hero-grid,
+  .two-col {
+    grid-template-columns: 1fr;
+    gap: clamp(24px, 5vw, 40px);
+    align-items: stretch;
+  }
+}
+
+/* ── Mobile visibility ──────────────────────────────────────── */
+.rep-hide-sm {
+  display: block;
+}
+
+.nav-mobile-btn {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .rep-hide-sm {
+    display: none !important;
+  }
+
+  .nav-mobile-btn {
+    display: flex !important;
+  }
+}
 @keyframes countUp   { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 @keyframes borderPulse { 0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.0)} 50%{box-shadow:0 0 0 4px rgba(99,102,241,.15)} }
 
