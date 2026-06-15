@@ -1444,15 +1444,16 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
 
         <div style={{ display:'flex',alignItems:'center',gap:6,flexShrink:0 }}>
-          <Link href="/signin" style={{ padding:'7px 14px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:12,fontWeight:500,textDecoration:'none',whiteSpace:'nowrap' }}>Sign in</Link>
-          <Link href="/signin?mode=signup" className="cta-btn" style={{ padding:'8px 16px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:12,fontWeight:700,textDecoration:'none',whiteSpace:'nowrap' }}>
-            Get started free →
+          <Link href="/signin" style={{ width:36,height:36,borderRadius:8,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',textDecoration:'none' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
           </Link>
         </div>
 
         {/* Mobile hamburger */}
         <div className="nav-mobile-btn" style={{ display:'none',alignItems:'center',gap:8 }}>
-          <Link href="/signin?mode=signup" className="cta-btn" style={{ padding:'7px 14px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:12,fontWeight:700,textDecoration:'none' }}>Try free</Link>
           <button onClick={()=>setMenuOpen(o=>!o)} style={{ width:38,height:38,borderRadius:9,border:`1px solid ${T.bd}`,background:'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0 }}>
             {menuOpen
               ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.tx} strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
