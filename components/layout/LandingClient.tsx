@@ -1357,26 +1357,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         .cta-btn:active{transform:scale(0.97)}
         .nav-link:hover{color:${T.tx}!important}
         .nav-drop-item:hover{background:${T.alt}!important}
-        @media(max-width:768px){.two-col{grid-template-columns:1fr!important}}
-        @media(max-width:768px){.hero-grid{grid-template-columns:1fr!important}}
-        @media(max-width:767px){
+        @media(max-width:768px){
           .nav-links{display:none!important}.nav-mobile-btn{display:flex!important}
-          .three-col{grid-template-columns:1fr!important}
           .hero-ctas{flex-direction:column!important}
           .hero-ctas a{width:100%!important;text-align:center!important;justify-content:center!important}
-        }
-        /* ── Mini-UI replica responsive grids ── */
-        @media(max-width:680px){
-          .rep-3col{grid-template-columns:1fr 1fr!important}
-          .rep-4col{grid-template-columns:1fr 1fr!important}
-          .rep-5col{grid-template-columns:repeat(3,1fr)!important}
-          .rep-split{grid-template-columns:1fr!important}
-          .rep-hide-sm{display:none!important}
-          .rep-chrome-sm{width:auto!important;min-width:0!important;padding:0 8px!important}
-        }
-        @media(max-width:420px){
-          .rep-3col{grid-template-columns:1fr!important}
-          .rep-5col{grid-template-columns:1fr 1fr!important}
         }
         input::placeholder{color:${T.tx3}}
         /* FAQ <details> — hide browser default triangle, rotate chevron when open */
@@ -1565,7 +1549,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       {/* ── INTELLIGENCE / MONITOR ────────────────────────────────────── */}
       <section style={{ padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)',background:T.bg }}>
         <div style={{ maxWidth:1060,margin:'0 auto' }}>
-          <div className="two-col" style={{ gridTemplateColumns:'1fr 1.7fr',gap:'clamp(36px,5vw,64px)' }}>
+          <div className="two-col-wide" style={{ gap:'clamp(36px,5vw,64px)' }}>
             <div data-reveal>
               <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:18 }}>Intelligence Platform</p>
               <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
@@ -1597,7 +1581,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       {/* ── SOURCES / CONNECT ─────────────────────────────────────────── */}
       <section style={{ background:T.alt,borderTop:`1px solid ${T.bd}`,borderBottom:`1px solid ${T.bd}`,padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:1060,margin:'0 auto' }}>
-          <div className="two-col" style={{ gridTemplateColumns:'1.6fr 1fr',gap:'clamp(36px,5vw,64px)' }}>
+          <div className="two-col" style={{ gap:'clamp(36px,5vw,64px)' }}>
             <div data-reveal>
               <SourcesUIReplica />
             </div>

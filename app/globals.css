@@ -114,10 +114,19 @@ button, a, label, [role="button"] {
   align-items: center;
 }
 
+/* Variant: wider left column */
+.two-col-wide {
+  display: grid;
+  grid-template-columns: 1fr 1.7fr;
+  gap: clamp(36px, 5vw, 64px);
+  align-items: center;
+}
+
 /* Mobile: stack to single column */
 @media (max-width: 768px) {
   .hero-grid,
-  .two-col {
+  .two-col,
+  .two-col-wide {
     grid-template-columns: 1fr;
     gap: clamp(24px, 5vw, 40px);
     align-items: stretch;
