@@ -1357,8 +1357,8 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         .cta-btn:active{transform:scale(0.97)}
         .nav-link:hover{color:${T.tx}!important}
         .nav-drop-item:hover{background:${T.alt}!important}
-        @media(max-width:900px){.two-col{grid-template-columns:1fr!important}}
-        @media(max-width:900px){.hero-grid{grid-template-columns:1fr!important}}
+        @media(max-width:768px){.two-col{grid-template-columns:1fr!important}}
+        @media(max-width:768px){.hero-grid{grid-template-columns:1fr!important}}
         @media(max-width:767px){
           .nav-links{display:none!important}.nav-mobile-btn{display:flex!important}
           .three-col{grid-template-columns:1fr!important}
@@ -1504,7 +1504,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
         <div style={{ position:'absolute',top:'20%',left:'5%',width:'50%',height:'60%',background:'radial-gradient(ellipse,rgba(201,122,68,.05) 0%,transparent 70%)',pointerEvents:'none',zIndex:1 }}/>
         <div style={{ maxWidth:1280,margin:'0 auto',width:'100%',padding:'clamp(80px,10vw,100px) clamp(20px,5vw,80px)',position:'relative',zIndex:2 }}>
-          <div className="hero-grid" style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:'clamp(32px,4vw,64px)',alignItems:'center' }}>
+          <div className="hero-grid" style={{ gap:'clamp(32px,4vw,64px)' }}>
             {/* Left — headline */}
             <div>
               <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.18em',textTransform:'uppercase',marginBottom:24 }}>
@@ -1565,7 +1565,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       {/* ── INTELLIGENCE / MONITOR ────────────────────────────────────── */}
       <section style={{ padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)',background:T.bg }}>
         <div style={{ maxWidth:1060,margin:'0 auto' }}>
-          <div className="two-col" style={{ display:'grid',gridTemplateColumns:'1fr 1.7fr',gap:'clamp(36px,5vw,64px)',alignItems:'center' }}>
+          <div className="two-col" style={{ gridTemplateColumns:'1fr 1.7fr',gap:'clamp(36px,5vw,64px)' }}>
             <div data-reveal>
               <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:18 }}>Intelligence Platform</p>
               <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
@@ -1597,7 +1597,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       {/* ── SOURCES / CONNECT ─────────────────────────────────────────── */}
       <section style={{ background:T.alt,borderTop:`1px solid ${T.bd}`,borderBottom:`1px solid ${T.bd}`,padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:1060,margin:'0 auto' }}>
-          <div className="two-col" style={{ display:'grid',gridTemplateColumns:'1.6fr 1fr',gap:'clamp(36px,5vw,64px)',alignItems:'center' }}>
+          <div className="two-col" style={{ gridTemplateColumns:'1.6fr 1fr',gap:'clamp(36px,5vw,64px)' }}>
             <div data-reveal>
               <SourcesUIReplica />
             </div>
