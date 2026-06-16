@@ -1826,7 +1826,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <span style={{ fontSize:12,color:T.tx3 }}>© 2026</span>
         </div>
         <nav aria-label="Footer navigation" style={{ display:'flex',gap:16,flexWrap:'wrap' }}>
-          {[['/', 'Home'],['/blog','Blog'],['/academy','Academy'],['/free-tools','Free Tools'],['/integrations','Integrations'],['/help','Help'],['/privacy','Privacy'],['/terms','Terms'],['mailto:hello@askbiz.co','Contact']].map(([href,label])=>(
+          {[['/', 'Home'],['/blog','Blog'],['/academy','Academy'],['/free-tools','Free Tools'],['/integrations','Integrations'],['/help','Help'],['/privacy','Privacy'],['/terms','Terms'],['/dpa','DPA'],['mailto:hello@askbiz.co','Contact']].map(([href,label])=>(
             <a key={href} href={href} className="nav-link" style={{ fontSize:12,color:T.tx3,textDecoration:'none',transition:'color 150ms' }}>{label}</a>
           ))}
         </nav>

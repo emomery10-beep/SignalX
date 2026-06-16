@@ -247,6 +247,7 @@ export default function PrivacyPage() {
             <Li><strong>PesaPal</strong> — payment gateway for M-Pesa and mobile money transactions (Kenya — PesaPal Data Processing Agreement applies). Processes payment callbacks and subscription conversions.</Li>
           </ul>
           <P>We never sell your data. We never share your data with advertisers. We never share individual business data with other AskBiz users.</P>
+          <P>If you use AskBiz to process your own customers' data, see our <Link href="/dpa" style={{ color: 'var(--ac, #d08a59)' }}>Data Processing Agreement &amp; full sub-processor list</Link>.</P>
         </Section>
 
         <Section title="9. Data Retention">
