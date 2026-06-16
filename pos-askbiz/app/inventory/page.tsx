@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { isInventoryLevel, isManagerOrAboveLevel } from '@/lib/pos-role-client'
 
 const inputStyle: React.CSSProperties = { padding: '9px 12px', borderRadius: 8, border: '1px solid var(--pos-border)', fontSize: 13, fontFamily: 'inherit', background: 'var(--pos-bg)', color: 'var(--pos-ink)' }
 const btnPrimary: React.CSSProperties = { padding: '9px 16px', borderRadius: 8, background: 'var(--pos-accent)', color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
@@ -77,7 +78,7 @@ export default function InventoryPage() {
     const session = localStorage.getItem('pos_staff')
     if (!session) { router.push('/'); return }
     const s = JSON.parse(session) as StaffSession
-    if (s.role !== 'inventory') { router.push('/sell'); return }
+    if (!isInventoryLevel(s.role) && !isManagerOrAboveLevel(s.role)) { router.push('/sell'); return }
     setStaff(s)
     setSym(s.currency_symbol || '£')
     loadInventory(s)

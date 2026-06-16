@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import CashierCopilot from '@/components/CashierCopilot'
 import PosCardPayment from '@/components/PosCardPayment'
 import PosMobilePayment from '@/components/PosMobilePayment'
+import { getRoleHomeRoute } from '@/lib/pos-role-client'
 
 const ACC = 'var(--pos-accent)'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
@@ -119,7 +120,8 @@ export default function SellPage() {
     const session = localStorage.getItem('pos_staff')
     if (!session) { router.push('/'); return }
     const s = JSON.parse(session) as StaffSession
-    if (s.role !== 'cashier') { router.push('/inventory'); return }
+    const home = getRoleHomeRoute(s.role)
+    if (home !== '/sell') { router.push(home); return }
     setStaff(s)
     setSym(s.currency_symbol || '£')
     setBiz(bizLabel(s.business_type || 'retail'))

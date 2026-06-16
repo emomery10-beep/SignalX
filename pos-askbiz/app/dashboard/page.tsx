@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { getRoleHomeRoute, isManagerOrAboveLevel } from '@/lib/pos-role-client'
 
 const ACC        = '#d08a59'
 const ACC_LIGHT  = 'rgba(208,138,89,.12)'
@@ -477,9 +478,9 @@ export default function DashboardPage() {
       if (!raw) { router.replace('/'); return }
       const s = JSON.parse(raw) as StaffSession
       if (!s.id || !s.owner_id) { router.replace('/'); return }
-      // Only roles that should be here — others redirect to their own pages
-      if (!['engineer', 'repair', 'supervisor', 'manager'].includes(s.role)) {
-        router.replace(s.role === 'inventory' ? '/inventory' : '/sell')
+      // Only manager-level roles belong on /dashboard — others go to their home
+      if (!isManagerOrAboveLevel(s.role)) {
+        router.replace(getRoleHomeRoute(s.role))
         return
       }
       setSession(s)
