@@ -84,6 +84,11 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const { items, payment_type, customer_phone, notes, discount_amount, amount_tendered, shift_id, initial_payment_status } = body
 
+  // shift_id is a uuid column — ignore client-side placeholder ids like
+  // "shift_1781595035263_mxnf5" so a sale never fails on a bad shift id.
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  const safeShiftId = (typeof shift_id === 'string' && UUID_RE.test(shift_id)) ? shift_id : null
+
   // Location: staff locked to their branch, owner can specify
   const txLocationId = auth.locationId || body.location_id || null
 
@@ -182,7 +187,7 @@ export async function POST(req: NextRequest) {
       status:          initial_payment_status === 'paid' ? 'completed' : 'pending',
       payment_status:  initial_payment_status === 'paid' ? 'paid' : 'pending',
       pos_location_id: txLocationId,
-      shift_id:        shift_id || null,
+      shift_id:        safeShiftId,
       notes:           notes || null,
     })
     .select('id')
