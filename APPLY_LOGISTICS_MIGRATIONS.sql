@@ -1,10 +1,10 @@
 -- ============================================================
--- AskBiz — Logistics schema setup (run ONCE in Supabase SQL Editor)
+-- AskBiz — Logistics schema setup (run in Supabase SQL Editor)
 -- Project: benptbfiudpfvmvwxcjm
--- Contains: 042_logistics.sql (trucks/parcels/routes/inspections)
---           + 050_truck_locations.sql (GPS pings)
--- Safe to re-run: tables use IF NOT EXISTS. If you re-run and see
--- 'policy already exists', that just means it's already applied.
+-- NOTE: the pos_staff_role_check constraint block from 042 was
+-- REMOVED — your constraint already allows all template roles, and
+-- re-adding the old 10-role version would reject existing staff.
+-- Safe to re-run: everything uses IF NOT EXISTS.
 -- ============================================================
 
 -- ============================================================
@@ -16,12 +16,6 @@
 -- ============================================================
 
 -- ── Extend staff roles ─────────────────────────────────────
-ALTER TABLE public.pos_staff DROP CONSTRAINT IF EXISTS pos_staff_role_check;
-ALTER TABLE public.pos_staff ADD CONSTRAINT pos_staff_role_check
-  CHECK (role IN (
-    'cashier', 'inventory', 'repair', 'engineer', 'manager', 'supervisor',
-    'handler', 'driver', 'dispatcher', 'branch_manager'
-  ));
 
 -- ── Extend sector values ───────────────────────────────────
 -- (no constraint existed before — sectors are checked at API layer)
