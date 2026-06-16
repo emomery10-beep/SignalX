@@ -46,15 +46,22 @@ function LoginPageContent() {
       if (!res.ok) { setError(data.error || 'Incorrect PIN'); return }
       localStorage.setItem('pos_staff', JSON.stringify(data.staff))
       const role = data.staff.role
-      const dest = role === 'inventory'
+      // Determine destination for both legacy roles and template roles
+      const isManagerLevel = role === 'manager' || role === 'supervisor' || role === 'repair' || role === 'engineer' ||
+        /-(manager|supervisor|head-chef|kitchen-manager|operations-manager|production-manager|shift-supervisor)$/.test(role)
+      const isInventoryLevel = role === 'inventory' || /-(inventory-manager|quality-inspector|quality-checker)$/.test(role)
+      const isLogisticsHandler = ['handler', 'driver'].includes(role) || /^logistics-(handler|driver)$/.test(role)
+      const isDispatcher = role === 'dispatcher' || /^logistics-dispatcher$/.test(role)
+      const isBranchManager = role === 'branch_manager' || /^logistics-branch-manager$/.test(role)
+      const dest = isInventoryLevel
         ? '/inventory'
-        : ['engineer', 'repair', 'supervisor', 'manager'].includes(role)
+        : isManagerLevel
           ? '/dashboard'
-          : role === 'dispatcher'
+          : isDispatcher
             ? '/logistics/dispatch'
-            : role === 'branch_manager'
+            : isBranchManager
               ? '/logistics/dashboard'
-              : ['handler', 'driver'].includes(role)
+              : isLogisticsHandler
                 ? '/logistics'
                 : '/sell'
       router.push(dest)
