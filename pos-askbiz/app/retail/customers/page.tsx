@@ -14,7 +14,7 @@ interface Txn {
   pos_items?: TxnItem[]; pos_customers?: { id?: string; name?: string; phone?: string } | null
 }
 interface Customer {
-  key: string; name: string; phone: string
+  key: string; id: string | null; name: string; phone: string
   orders: number; spend: number; lastVisit: string | null; avgBasket: number
   segment: Segment; txns: Txn[]
 }
@@ -36,6 +36,10 @@ export default function RetailCustomers() {
   const [search, setSearch] = useState('')
   const [segFilter, setSegFilter] = useState<Segment | 'all'>('all')
   const [selected, setSelected] = useState<Customer | null>(null)
+  const [exporting, setExporting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [gdprMsg, setGdprMsg] = useState<{ text: string; error?: boolean } | null>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -62,8 +66,9 @@ export default function RetailCustomers() {
         if (!c || !(c.name || c.phone)) return
         const key = c.id || c.phone || c.name || 'unknown'
         if (!map[key]) {
-          map[key] = { key, name: c.name || 'Unknown', phone: c.phone || '', orders: 0, spend: 0, lastVisit: null, avgBasket: 0, segment: 'new', txns: [] }
+          map[key] = { key, id: c.id || null, name: c.name || 'Unknown', phone: c.phone || '', orders: 0, spend: 0, lastVisit: null, avgBasket: 0, segment: 'new', txns: [] }
         }
+        if (!map[key].id && c.id) map[key].id = c.id
         const cust = map[key]
         cust.orders += 1
         cust.spend += t.total || 0
@@ -84,6 +89,71 @@ export default function RetailCustomers() {
       setCustomers(list)
     } catch (e) { console.error('customers load error', e) }
     finally { setLoading(false) }
+  }
+
+  function closeDrawer() {
+    setSelected(null); setConfirmDelete(false); setGdprMsg(null)
+  }
+
+  async function exportData(format: 'json' | 'csv') {
+    if (!selected || exporting) return
+    setExporting(true); setGdprMsg(null)
+    try {
+      const body: Record<string, unknown> = { format }
+      if (selected.id) body.customer_id = selected.id
+      else if (selected.phone) body.customer_phone = selected.phone
+      else throw new Error('No customer id or phone to export')
+      const res = await fetch(`${API}/api/pos/gdpr/customer-data-export`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || `Export failed (${res.status})`)
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `customer_data_${selected.id || selected.phone || 'export'}.${format}`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+      setGdprMsg({ text: `Data exported as ${format.toUpperCase()}` })
+    } catch (e) {
+      setGdprMsg({ text: e instanceof Error ? e.message : 'Export failed', error: true })
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  async function anonymizeCustomer() {
+    if (!selected || deleting) return
+    setDeleting(true); setGdprMsg(null)
+    try {
+      const body: Record<string, unknown> = { deletion_type: 'anonymization', reason: 'customer_request' }
+      if (selected.id) body.customer_id = selected.id
+      else if (selected.phone) body.customer_phone = selected.phone
+      else throw new Error('No customer id or phone to anonymize')
+      const res = await fetch(`${API}/api/pos/gdpr/delete-customer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || `Deletion failed (${res.status})`)
+      }
+      setConfirmDelete(false)
+      closeDrawer()
+      await load()
+    } catch (e) {
+      setGdprMsg({ text: e instanceof Error ? e.message : 'Deletion failed', error: true })
+      setDeleting(false)
+    }
+    setDeleting(false)
   }
 
   const segCounts: Record<Segment, number> = { new: 0, returning: 0, loyal: 0, lapsed: 0 }
@@ -179,7 +249,7 @@ export default function RetailCustomers() {
 
       {/* Detail drawer */}
       {selected && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'flex-end', zIndex: 50 }} onClick={() => setSelected(null)}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'flex-end', zIndex: 50 }} onClick={closeDrawer}>
           <div className="pos-sheet" onClick={e => e.stopPropagation()} style={{ background: '#1e293b', borderLeft: '1px solid #334155', width: '100%', maxWidth: 440, height: '100%', overflowY: 'auto', padding: 24 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
               <div>
@@ -187,7 +257,7 @@ export default function RetailCustomers() {
                 <div style={{ fontSize: 13, color: '#94a3b8' }}>{selected.phone || 'No phone'}</div>
                 <span style={{ display: 'inline-block', marginTop: 8, background: segMeta[selected.segment].color + '22', color: segMeta[selected.segment].color, padding: '3px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700 }}>{segMeta[selected.segment].label} · {segMeta[selected.segment].desc}</span>
               </div>
-              <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 22, cursor: 'pointer' }}>✕</button>
+              <button onClick={closeDrawer} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 22, cursor: 'pointer' }}>✕</button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 24 }}>
@@ -215,6 +285,48 @@ export default function RetailCustomers() {
                   </div>
                 )
               })}
+            </div>
+
+            {/* GDPR data-subject actions */}
+            <div style={{ marginTop: 28, paddingTop: 20, borderTop: '1px solid #334155' }}>
+              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Data &amp; Privacy (GDPR)</div>
+              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 14 }}>Handle data-subject requests for this customer.</div>
+
+              {gdprMsg && (
+                <div style={{ marginBottom: 12, padding: '10px 12px', borderRadius: 8, fontSize: 12, background: gdprMsg.error ? 'rgba(239,68,68,0.12)' : 'rgba(34,197,94,0.12)', color: gdprMsg.error ? '#fca5a5' : '#86efac', border: `1px solid ${gdprMsg.error ? '#ef4444' : '#22c55e'}33` }}>
+                  {gdprMsg.text}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+                <button onClick={() => exportData('json')} disabled={exporting} style={{ flex: 1, background: '#0f172a', border: '1px solid #334155', color: '#cbd5e1', padding: '10px 12px', borderRadius: 8, cursor: exporting ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600, opacity: exporting ? 0.6 : 1 }}>
+                  {exporting ? 'Exporting…' : 'Export JSON'}
+                </button>
+                <button onClick={() => exportData('csv')} disabled={exporting} style={{ flex: 1, background: '#0f172a', border: '1px solid #334155', color: '#cbd5e1', padding: '10px 12px', borderRadius: 8, cursor: exporting ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600, opacity: exporting ? 0.6 : 1 }}>
+                  {exporting ? 'Exporting…' : 'Export CSV'}
+                </button>
+              </div>
+
+              {!confirmDelete ? (
+                <button onClick={() => { setConfirmDelete(true); setGdprMsg(null) }} disabled={selected.id == null && !selected.phone} style={{ width: '100%', background: 'rgba(239,68,68,0.12)', border: '1px solid #ef4444', color: '#fca5a5', padding: '10px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+                  Delete / Anonymize (GDPR)
+                </button>
+              ) : (
+                <div style={{ background: '#0f172a', border: '1px solid #ef4444', borderRadius: 10, padding: 14 }}>
+                  <div style={{ fontSize: 13, color: '#f1f5f9', fontWeight: 600, marginBottom: 6 }}>Anonymize this customer?</div>
+                  <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 14, lineHeight: 1.5 }}>
+                    This removes the customer&apos;s name, phone and email and marks the record anonymized. Past transactions are kept (unlinked, for tax compliance). This cannot be undone.
+                  </div>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button onClick={() => setConfirmDelete(false)} disabled={deleting} style={{ flex: 1, background: '#1e293b', border: '1px solid #334155', color: '#94a3b8', padding: '10px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+                      Cancel
+                    </button>
+                    <button onClick={anonymizeCustomer} disabled={deleting} style={{ flex: 1, background: '#ef4444', border: 'none', color: '#fff', padding: '10px 12px', borderRadius: 8, cursor: deleting ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 700, opacity: deleting ? 0.6 : 1 }}>
+                      {deleting ? 'Anonymizing…' : 'Confirm anonymize'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

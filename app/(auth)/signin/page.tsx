@@ -6,6 +6,9 @@ import { createClient } from '@/lib/supabase/client'
 
 type Mode = 'signin' | 'signup'
 
+// Version of the legal documents the user is consenting to. Bump when Terms/Privacy change.
+const CONSENT_VERSION = '2026-06-16'
+
 export default function AuthPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -18,6 +21,7 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [consentChecked, setConsentChecked] = useState(false)
 
   const shopifyShop = searchParams.get('ref') === 'shopify' ? searchParams.get('shop') : null
 
@@ -46,10 +50,20 @@ export default function AuthPage() {
       }
       // Email/password
       if (mode === 'signup') {
+        if (!consentChecked) {
+          throw new Error('You must accept the Terms and Privacy Policy to create an account.')
+        }
         const { data, error } = await supabase.auth.signUp({
           email, password,
           options: {
-            data: { full_name: `${firstName} ${lastName}`.trim() },
+            data: {
+              full_name: `${firstName} ${lastName}`.trim(),
+              // Recorded proof of affirmative consent (GDPR Art. 7(1))
+              consent_accepted: true,
+              consent_accepted_at: new Date().toISOString(),
+              consent_terms_version: CONSENT_VERSION,
+              consent_privacy_version: CONSENT_VERSION,
+            },
             emailRedirectTo: getCallbackUrl(),
           },
         })
@@ -247,32 +261,47 @@ export default function AuthPage() {
         <input value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" type="password" style={{ ...inp, marginBottom: 16 }}
           onKeyDown={e => e.key === 'Enter' && triggerAuth('email')}/>
 
+        {/* Affirmative consent checkbox for signup */}
+        {mode === 'signup' && (
+          <label htmlFor="consent" style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 16, cursor: 'pointer' }}>
+            <input
+              id="consent"
+              type="checkbox"
+              checked={consentChecked}
+              onChange={e => { setConsentChecked(e.target.checked); if (e.target.checked) setError('') }}
+              style={{ width: 16, height: 16, marginTop: 2, flexShrink: 0, accentColor: 'var(--acc)', cursor: 'pointer' }}
+            />
+            <span style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.5 }}>
+              I agree to the{' '}
+              <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--acc)', textDecoration: 'underline' }}>Terms of Service</a>{' '}
+              and{' '}
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--acc)', textDecoration: 'underline' }}>Privacy Policy</a>
+            </span>
+          </label>
+        )}
+
         {/* Error / Success */}
         {error && <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(244,128,128,.1)', border: '1px solid rgba(244,128,128,.3)', fontSize: 13, color: '#f48080', marginBottom: 14 }}>{error}</div>}
         {success && <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.3)', fontSize: 13, color: '#22c55e', marginBottom: 14 }}>✓ {success}</div>}
 
         {/* Primary CTA */}
-        <button onClick={() => triggerAuth('email')} disabled={loading || !email || !password}
-          style={{ width: '100%', padding: '12px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'var(--font-sora, Sora)', fontSize: 15, fontWeight: 600, cursor: loading || !email || !password ? 'not-allowed' : 'pointer', opacity: loading || !email || !password ? .6 : 1, marginBottom: 10 }}>
+        <button onClick={() => triggerAuth('email')} disabled={loading || !email || !password || (mode === 'signup' && !consentChecked)}
+          style={{ width: '100%', padding: '12px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'var(--font-sora, Sora)', fontSize: 15, fontWeight: 600, cursor: loading || !email || !password || (mode === 'signup' && !consentChecked) ? 'not-allowed' : 'pointer', opacity: loading || !email || !password || (mode === 'signup' && !consentChecked) ? .6 : 1, marginBottom: 10 }}>
           {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in →' : 'Create account →'}
         </button>
 
-        {/* Inline consent for signup */}
+        {/* Inline consent details for signup */}
         {mode === 'signup' && (
           <div style={{ marginTop: 8 }}>
             <p style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.6, marginBottom: 6 }}>
-              By creating an account you agree to our{' '}
-              <a href="/terms" style={{ color: 'var(--tx2)', textDecoration: 'underline' }}>Terms of Service</a>{' '}
-              and{' '}
-              <a href="/privacy" style={{ color: 'var(--tx2)', textDecoration: 'underline' }}>Privacy Policy</a>
-              , and confirm you are 13+ (16 in the EU/UK).
+              By creating an account you confirm you are 13+ (16 in the EU/UK).
             </p>
             <p style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.6, margin: 0 }}>
               You consent to data processing for AI-powered business insights, including: analysis of uploaded files,
               IP-based geolocation for currency detection, and optional POS features such as camera scanning,
               logistics tracking, and mobile money payments (M-Pesa, MTN, Airtel). Camera images are processed
               in real time and never stored. See our{' '}
-              <a href="/privacy" style={{ color: 'var(--tx2)', textDecoration: 'underline' }}>Privacy Policy</a>{' '}
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--tx2)', textDecoration: 'underline' }}>Privacy Policy</a>{' '}
               for full details.
             </p>
           </div>
