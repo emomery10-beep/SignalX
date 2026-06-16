@@ -53,7 +53,7 @@ const PLANS = [
     ],
     cta: 'Start Growth free',
     ctaHref: '/signin',
-    note: '3 months free · then £19/mo',
+    note: 'Start free · upgrade anytime',
   },
   {
     name: 'Business',
@@ -73,7 +73,7 @@ const PLANS = [
     ],
     cta: 'Start Business free',
     ctaHref: '/signin',
-    note: '3 months free · then £39/mo',
+    note: 'Start free · upgrade anytime',
   },
 ]
 
@@ -87,8 +87,37 @@ const FAQS = [
   { q: 'How does Point of Sale pricing work?', a: 'The PoS is a £5/seat/month add-on available on any plan. Each seat is one cashier or manager login. You get a full register with barcode scanning, inventory management, multi-branch support, staff shifts, tax compliance, GDPR tools, and Xero/QuickBooks sync.' },
 ]
 
+const JSON_LD_SOFTWARE: object = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'AskBiz',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
+  url: 'https://askbiz.co',
+  description: 'AI business intelligence platform for SME founders. Ask questions about your revenue, margins, stock, and forecasts in plain English.',
+  offers: [
+    { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'GBP', description: '10 questions per month, CSV/Excel uploads, Business Pulse score.' },
+    { '@type': 'Offer', name: 'Growth', price: '19', priceCurrency: 'GBP', description: 'Unlimited questions, all AI tools pre-filled from your data, Daily Brief, social commerce, churn intelligence.' },
+    { '@type': 'Offer', name: 'Business', price: '39', priceCurrency: 'GBP', description: 'Team seats, Decision Memory, Competitor Watch, CFO Mode with board-ready reports, priority support.' },
+  ],
+  publisher: { '@type': 'Organization', name: 'AskBiz', url: 'https://askbiz.co' },
+}
+
+const JSON_LD_FAQ: object = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQS.map(({ q, a }) => ({
+    '@type': 'Question',
+    name: q,
+    acceptedAnswer: { '@type': 'Answer', text: a },
+  })),
+}
+
 export default function PricingPage() {
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD_SOFTWARE) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD_FAQ) }} />
     <div style={{ fontFamily: 'DM Sans, system-ui', background: BG, minHeight: '100vh' }}>
       <style>{`
         .pricing-plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; align-items: start; }
@@ -282,5 +311,6 @@ export default function PricingPage() {
         </div>
       </footer>
     </div>
+    </>
   )
 }

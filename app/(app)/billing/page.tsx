@@ -441,7 +441,7 @@ export default function BillingPage() {
                           fontFamily: 'inherit', boxShadow: '0 2px 12px rgba(99,102,241,.35)',
                         }}
                       >
-                        {trialLoading === 'growth' ? 'Starting…' : 'Start 3-month free trial →'}
+                        {trialLoading === 'growth' ? 'Starting…' : 'Start free →'}
                       </button>
                     )
                   }
@@ -497,7 +497,7 @@ export default function BillingPage() {
             </div>
 
             <p style={{ fontSize: 13, color: TX2, marginBottom: 16, lineHeight: 1.6 }}>
-              Start with a free 3-month trial, or pay below via M-Pesa, Airtel Money, or card through PesaPal.
+              Get started free, or pay below via M-Pesa, Airtel Money, or card through PesaPal.
             </p>
 
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -584,7 +584,7 @@ export default function BillingPage() {
               <p style={{ fontSize: 13, color: TX2, margin: 0, lineHeight: 1.6, maxWidth: 480 }}>
                 {trials.pos?.active
                   ? <>Your POS trial is active with up to 5 staff seats. Each staff member can log in to <a href="https://pos.askbiz.co" target="_blank" rel="noreferrer" style={{ color: ACC, textDecoration: 'none' }}>pos.askbiz.co</a> via email or WhatsApp OTP.</>
-                  : <>Try POS free for 3 months (up to 5 staff), or subscribe at <strong>{isKenyan ? 'KSh 500' : '£5'}/seat/month</strong>. Each seat lets one staff member log in to <a href="https://pos.askbiz.co" target="_blank" rel="noreferrer" style={{ color: ACC, textDecoration: 'none' }}>pos.askbiz.co</a> via email or WhatsApp OTP on their own phone.</>
+                  : <>Try POS free (up to 5 staff), or subscribe at <strong>{isKenyan ? 'KSh 500' : '£5'}/seat/month</strong>. Each seat lets one staff member log in to <a href="https://pos.askbiz.co" target="_blank" rel="noreferrer" style={{ color: ACC, textDecoration: 'none' }}>pos.askbiz.co</a> via email or WhatsApp OTP on their own phone.</>
                 }
               </p>
             </div>
@@ -643,7 +643,7 @@ export default function BillingPage() {
               {/* Trial expired notice */}
               {trials.pos?.expired && (
                 <div style={{ marginBottom: 14, padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.15)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: '#dc2626' }}>Your free trial has ended — subscribe below to keep using POS</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: '#dc2626' }}>Your free access has ended — subscribe below to keep using POS</span>
                 </div>
               )}
 
@@ -661,7 +661,7 @@ export default function BillingPage() {
                       opacity: trialLoading === 'pos' ? .6 : 1,
                     }}
                   >
-                    {trialLoading === 'pos' ? 'Starting…' : 'Start 3-month free trial (up to 5 staff) →'}
+                    {trialLoading === 'pos' ? 'Starting…' : 'Start free — up to 5 staff →'}
                   </button>
                   <div style={{ fontSize: 12, color: TX3, marginTop: 6 }}>No card required · Full POS access for 90 days</div>
                 </div>
@@ -792,7 +792,7 @@ export default function BillingPage() {
             { q: 'How does social commerce work?',           a: 'Connect TikTok Shop, Instagram Shopping, or Pinterest from the Sources page. AskBiz tracks conversion rates, saves (demand signals), and which products are going viral — and alerts you when a product has high saves but no orders.' },
             { q: 'How does churn intelligence work?',        a: 'AskBiz scans your customer data monthly and scores each customer by churn risk based on days since last order and purchase frequency. At-risk customers appear in a retention priority list, and you can ask AskBiz why any specific customer is flagged.' },
             { q: 'How do team seats work?',                  a: 'Business plan includes up to 5 team members. Each person gets their own login with a role — owner, admin, analyst, accountant, buyer, or viewer.' },
-            { q: 'How do POS seats work?',                   a: `Start with a free 3-month trial — up to 5 staff, no card required. After the trial, POS seats are ${isKenyan ? 'KSh 500' : '£5'}/seat/month. Each seat lets one cashier or inventory staff member log in to pos.askbiz.co via email or WhatsApp OTP on their own phone. The owner dashboard is always included free.` },
+            { q: 'How do POS seats work?',                   a: `Start free — up to 5 staff, no card required. POS seats are ${isKenyan ? 'KSh 500' : '£5'}/seat/month. Each seat lets one cashier or inventory staff member log in to pos.askbiz.co via email or WhatsApp OTP on their own phone. The owner dashboard is always included free.` },
             { q: 'Are prices in my local currency?',         a: isKenyan ? 'Yes — prices are shown in Kenyan Shillings (KES). You can pay via M-Pesa, Airtel Money, or card through PesaPal.' : 'Prices are shown in GBP. At checkout, Stripe automatically converts to your local currency at the current exchange rate.' },
             { q: 'Is my data safe?',                         a: 'Your data is encrypted at rest and in transit. We never use your business data to train AI models.' },
           ].map((faq, i) => (

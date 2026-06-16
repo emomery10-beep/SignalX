@@ -136,7 +136,7 @@ export default function PosPage() {
           </p>
           <div className="fade-up" style={{ display:'flex', gap:12, flexWrap:'wrap', alignItems:'center' }}>
             <Link href="/signin" className="btn-primary" style={{ padding:'13px 28px', borderRadius:10, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8 }}>
-              Start free trial
+              Start free
             </Link>
             <a href="#features" style={{ fontSize:14, color:C.tx2, fontWeight:500, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:5, borderBottom:`1px solid ${C.b2}`, paddingBottom:1 }}>
               See features ↓
@@ -805,9 +805,9 @@ export default function PosPage() {
             ))}
           </div>
           <Link href="/signin" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'13px 32px', borderRadius:10, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none' }}>
-            Start free trial
+            Start free
           </Link>
-          <p style={{ fontSize:12, color:C.tx3, marginTop:12 }}>Free during trial · No credit card needed</p>
+          <p style={{ fontSize:12, color:C.tx3, marginTop:12 }}>Free plan always available · No credit card needed</p>
         </div>
       </section>
 

@@ -1499,18 +1499,18 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                 <em style={{ color:T.acc,fontStyle:'italic' }}>All in one place.</em>
               </h1>
               <p style={{ fontSize:'clamp(15px,1.4vw,18px)',color:T.tx2,lineHeight:1.7,marginBottom:36,maxWidth:420 }}>
-                AskBiz is your POS, real-time inventory, and AI business intelligence — starting free. Point your camera to sell. Ask in plain English to understand. No Shopify needed. No Power BI needed.
+                AskBiz is your POS, real-time inventory, and AI business intelligence in one. Point your camera to sell. Ask in plain English to understand your numbers. No training. No setup. Just plug in and go.
               </p>
               <div className="hero-ctas" style={{ display:'flex',gap:12,flexWrap:'wrap',marginBottom:24 }}>
                 <Link href="/signin?mode=signup" className="cta-btn" style={{ padding:'14px 28px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8,boxShadow:`0 4px 24px rgba(201,122,68,.3)` }}>
-                  Start 3-month free trial
+                  Start free — no card needed
                 </Link>
                 <a href="#pos" style={{ padding:'14px 20px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'rgba(255,255,255,.6)',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6,backdropFilter:'blur(8px)' }}>
                   See how it works ↓
                 </a>
               </div>
               <div style={{ display:'flex',gap:16,flexWrap:'wrap',fontSize:12,color:T.tx3 }}>
-                <span>✓ 3-month free trial · no card required</span>
+                <span>✓ Free plan · no card required</span>
                 <span>✓ GDPR compliant · UK data residency</span>
                 <span>✓ Ready in 2 minutes</span>
               </div>
@@ -1776,7 +1776,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               <div key={i} data-reveal style={{ borderRadius:16,border:plan.popular?`1px solid ${T.accBdr}`:`1px solid ${T.bd}`,background:plan.popular?`rgba(201,122,68,.03)`:T.card,padding:'20px 16px',position:'relative',display:'flex',flexDirection:'column',transitionDelay:`${i*60}ms` }}>
                 {plan.popular&&(
                   <div style={{ position:'absolute',top:-11,left:'50%',transform:'translateX(-50%)',padding:'2px 12px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:9,fontWeight:700,whiteSpace:'nowrap',textTransform:'uppercase',letterSpacing:'.06em' }}>
-                    3-month free trial
+                    Most popular
                   </div>
                 )}
                 <div style={{ marginBottom:12 }}>
@@ -1794,7 +1794,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                   ))}
                 </div>
                 <Link href="/signin?mode=signup" className="cta-btn" style={{ display:'block',padding:'10px',borderRadius:10,border:plan.popular?'none':`1px solid ${T.bd}`,background:plan.popular?T.acc:'transparent',color:plan.popular?'#fff':T.tx2,fontSize:12,fontWeight:600,textDecoration:'none',textAlign:'center' }}>
-                  {plan.id==='free'?'Start for free':plan.id==='growth'?'Start free trial →':'Upgrade →'}
+                  {plan.id==='free'?'Start for free':plan.id==='growth'?'Start free →':'Upgrade →'}
                 </Link>
               </div>
             ))}
