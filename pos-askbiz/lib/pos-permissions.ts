@@ -92,6 +92,28 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
   cashier: [
     'sales.create', 'sales.view',
   ],
+  branch_manager: [
+    'sales.view', 'sales.view_all',
+    'inventory.view',
+    'shift.view',
+    'capture.approve',
+    'reports.view', 'reports.financial',
+  ],
+  dispatcher: [
+    'sales.view',
+    'inventory.view',
+    'reports.view',
+  ],
+  handler: [
+    'sales.create', 'sales.view',
+    'inventory.view',
+    'camera.intake', 'camera.dispatch',
+    'shift.open', 'shift.close',
+  ],
+  driver: [
+    'sales.view',
+    'camera.dispatch',
+  ],
 }
 
 // ── Template role → legacy role mapping ─────────────────────
