@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { createHash } from 'crypto'
+import { hashPin, verifyPin, needsRehash } from '@/lib/pin'
 
 // CORS is handled globally by next.config.js headers() for all /api/pos/* routes.
 export async function OPTIONS() {
@@ -9,11 +9,6 @@ export async function OPTIONS() {
 
 function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status })
-}
-
-/** Hash a PIN using SHA-256 with the staff ID as salt */
-function hashPin(pin: string, staffId: string): string {
-  return createHash('sha256').update(pin + staffId).digest('hex')
 }
 
 export async function POST(req: NextRequest) {
@@ -51,8 +46,17 @@ export async function POST(req: NextRequest) {
     if (!staff) return json({ error: 'Staff account not found or deactivated' }, 404)
     if (!staff.pin_hash) return json({ error: 'No PIN set — ask your manager to set your PIN in the dashboard.' }, 403)
 
-    const expected = hashPin(String(pin), staff.id)
-    if (expected !== staff.pin_hash) return json({ error: 'Incorrect PIN' }, 401)
+    if (!verifyPin(String(pin), staff.pin_hash, staff.id)) return json({ error: 'Incorrect PIN' }, 401)
+
+    // Transparently upgrade legacy (SHA-256) hashes to scrypt on successful login.
+    // Best-effort — never fail login if the upgrade write errors.
+    if (needsRehash(staff.pin_hash)) {
+      try {
+        await supabase.from('pos_staff')
+          .update({ pin_hash: hashPin(String(pin)) })
+          .eq('id', staff.id)
+      } catch { /* ignore — login still succeeds */ }
+    }
 
     // Fetch owner currency
     const { data: profile } = await supabase

@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createHash } from 'crypto'
-
-function hashPin(pin: string, staffId: string): string {
-  return createHash('sha256').update(pin + staffId).digest('hex')
-}
+import { hashPin } from '@/lib/pin'
 
 // GET — owner fetches all staff
 export async function GET() {
@@ -71,7 +67,7 @@ export async function POST(req: NextRequest) {
 
     // Hash and store PIN if provided
     if (pin && data) {
-      const pin_hash = hashPin(String(pin), data.id)
+      const pin_hash = hashPin(String(pin))
       await supabase.from('pos_staff').update({ pin_hash }).eq('id', data.id)
     }
 
@@ -125,7 +121,7 @@ export async function PATCH(req: NextRequest) {
 
   // PIN update — need staff ID to hash
   if (pin) {
-    updates.pin_hash = hashPin(String(pin), id)
+    updates.pin_hash = hashPin(String(pin))
   }
 
   try {

@@ -8,6 +8,57 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
 }
 
+type ConsentChannel = 'whatsapp' | 'sms' | 'email'
+
+/**
+ * GDPR consent gate. Returns true ONLY when the customer record clearly exists
+ * AND the relevant channel's marketing-consent flag is explicitly false (hard
+ * opt-out). Defensive: any DB error or missing record → returns false (proceed),
+ * so the consent lookup can never crash the send path.
+ *
+ * Consent flags live on pos_customer_preferences (keyed by customer_id); the
+ * customer is resolved from pos_customers by recipient phone/email + owner_id.
+ */
+async function isCustomerOptedOut(
+  service: ReturnType<typeof createServiceClient>,
+  ownerId: string,
+  channel: ConsentChannel,
+  recipient: { phone?: string | null; email?: string | null }
+): Promise<boolean> {
+  try {
+    let customerQuery = service.from('pos_customers').select('id').eq('owner_id', ownerId)
+    if (channel === 'email' && recipient.email) {
+      customerQuery = customerQuery.eq('email', recipient.email)
+    } else if (recipient.phone) {
+      customerQuery = customerQuery.eq('phone', recipient.phone)
+    } else {
+      return false
+    }
+
+    const { data: customer } = await customerQuery.maybeSingle()
+    if (!customer?.id) return false // no matching customer → proceed
+
+    const column =
+      channel === 'email'
+        ? 'allow_email_marketing'
+        : channel === 'sms'
+          ? 'allow_sms_marketing'
+          : 'allow_whatsapp_marketing'
+
+    const { data: prefs } = await service
+      .from('pos_customer_preferences')
+      .select(column)
+      .eq('owner_id', ownerId)
+      .eq('customer_id', customer.id)
+      .maybeSingle()
+
+    // Only block on an EXPLICIT false. null / missing prefs → proceed.
+    return (prefs as Record<string, boolean | null> | null)?.[column] === false
+  } catch {
+    return false // never let a consent-lookup error block a legitimate send
+  }
+}
+
 export async function POST(req: NextRequest) {
   // fix #2 — add authentication; previously this endpoint was completely open
   const ownerId = await resolvePosOwner(req)
@@ -56,6 +107,12 @@ export async function POST(req: NextRequest) {
     `Payment: ${tx.payment_type}\n\n` +
     `Thank you for shopping with us! 🙏\n` +
     `_Powered by AskBiz_`
+
+  // GDPR consent gate — receipts are transactional, but still honour a hard
+  // WhatsApp opt-out if the customer has explicitly set allow_whatsapp_marketing=false.
+  if (await isCustomerOptedOut(service, ownerId, 'whatsapp', { phone })) {
+    return NextResponse.json({ sent: false, skipped: true, reason: 'customer opted out' })
+  }
 
   const { ok, error: waError } = await sendReceipt(phone, message)
   // fix #18 — check ok and return error to caller; previously HTTP errors were swallowed

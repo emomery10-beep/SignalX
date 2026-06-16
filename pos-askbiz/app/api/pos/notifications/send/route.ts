@@ -2,6 +2,57 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosOwner } from '@/lib/pos-auth'
 
+type ConsentChannel = 'whatsapp' | 'sms' | 'email'
+
+/**
+ * GDPR consent gate. Returns true ONLY when the customer record clearly exists
+ * AND the relevant channel's marketing-consent flag is explicitly false (hard
+ * opt-out). Defensive: any DB error or missing record → returns false (proceed),
+ * so the consent lookup can never crash the send path.
+ *
+ * Consent flags live on pos_customer_preferences (keyed by customer_id); the
+ * customer is resolved from pos_customers by recipient phone/email + owner_id.
+ */
+async function isCustomerOptedOut(
+  service: ReturnType<typeof createServiceClient>,
+  ownerId: string,
+  channel: ConsentChannel,
+  recipient: { phone?: string | null; email?: string | null }
+): Promise<boolean> {
+  try {
+    let customerQuery = service.from('pos_customers').select('id').eq('owner_id', ownerId)
+    if (channel === 'email' && recipient.email) {
+      customerQuery = customerQuery.eq('email', recipient.email)
+    } else if (recipient.phone) {
+      customerQuery = customerQuery.eq('phone', recipient.phone)
+    } else {
+      return false
+    }
+
+    const { data: customer } = await customerQuery.maybeSingle()
+    if (!customer?.id) return false // no matching customer → proceed
+
+    const column =
+      channel === 'email'
+        ? 'allow_email_marketing'
+        : channel === 'sms'
+          ? 'allow_sms_marketing'
+          : 'allow_whatsapp_marketing'
+
+    const { data: prefs } = await service
+      .from('pos_customer_preferences')
+      .select(column)
+      .eq('owner_id', ownerId)
+      .eq('customer_id', customer.id)
+      .maybeSingle()
+
+    // Only block on an EXPLICIT false. null / missing prefs → proceed.
+    return (prefs as Record<string, boolean | null> | null)?.[column] === false
+  } catch {
+    return false // never let a consent-lookup error block a legitimate send
+  }
+}
+
 /**
  * POST /api/pos/notifications/send
  *
@@ -45,8 +96,26 @@ export async function POST(req: NextRequest) {
       methods_attempted: [],
     }
 
+    // GDPR consent gate — these notifications are marketing/promotional, so a
+    // hard opt-out on a channel means we skip that channel entirely.
+    const whatsappOptedOut =
+      !!recipient_phone && (await isCustomerOptedOut(service, ownerId, 'whatsapp', { phone: recipient_phone }))
+    const emailOptedOut =
+      !!recipient_email && (await isCustomerOptedOut(service, ownerId, 'email', { email: recipient_email }))
+
+    // If every channel we could have used is opted out, skip the send outright.
+    const whatsappViable = !!(settings?.whatsapp_enabled && recipient_phone)
+    const emailViable = !!(settings?.email_enabled && recipient_email)
+    if (
+      (whatsappViable || emailViable) &&
+      (!whatsappViable || whatsappOptedOut) &&
+      (!emailViable || emailOptedOut)
+    ) {
+      return NextResponse.json({ sent: false, skipped: true, reason: 'customer opted out' })
+    }
+
     // Try WhatsApp first (primary channel)
-    if (settings?.whatsapp_enabled && recipient_phone) {
+    if (settings?.whatsapp_enabled && recipient_phone && !whatsappOptedOut) {
       const whatsappResult = await sendWhatsApp(recipient_phone, message, settings)
       notificationResult.methods_attempted.push('whatsapp')
 
@@ -64,7 +133,8 @@ export async function POST(req: NextRequest) {
     if (
       notificationResult.status !== 'sent_whatsapp' &&
       settings?.email_enabled &&
-      recipient_email
+      recipient_email &&
+      !emailOptedOut
     ) {
       const emailResult = await sendEmail(recipient_email, message, message_template, settings)
       notificationResult.methods_attempted.push('email')

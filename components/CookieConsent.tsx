@@ -22,6 +22,8 @@ export default function CookieConsent() {
       version: '1.0',
     }
     localStorage.setItem('askbiz_cookie_consent', JSON.stringify(consent))
+    // Notify listeners (e.g. GoogleAnalytics) so they can enable/disable immediately.
+    window.dispatchEvent(new CustomEvent('askbiz:cookie-consent', { detail: consent }))
     // Save to DB if logged in
     fetch('/api/consent/cookies', {
       method: 'POST',

@@ -30,6 +30,23 @@ export async function GET(req: NextRequest) {
     .select('consent_type, status, timestamp')
     .eq('owner_id', ownerId)
 
+  // Has the automated retention job ever run for this owner? (honest signal)
+  const { data: lastAutoRun } = await service
+    .from('pos_gdpr_deletion_log')
+    .select('created_at')
+    .eq('owner_id', ownerId)
+    .eq('reason', 'automated_retention_policy')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  // GPS pings still pending purge (employee location minimization).
+  const { count: gpsPingsPendingPurge } = await service
+    .from('pos_truck_locations')
+    .select('id', { count: 'exact', head: true })
+    .eq('owner_id', ownerId)
+    .lt('recorded_at', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString())
+
   const now = new Date()
   const sevenYearsAgo = new Date(now.getTime() - 7 * 365 * 24 * 60 * 60 * 1000)
   const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
@@ -62,7 +79,7 @@ export async function GET(req: NextRequest) {
 
     retention_schedule: {
       customer_data: {
-        policy: 'Delete inactive customers after 90 days of inactivity',
+        policy: 'Anonymize inactive customers after 90 days of inactivity (PII masked; transactions retained for tax)',
         inactive_threshold_days: 90,
         customers_pending_deletion: customersToDelete.length,
         next_deletion_batch: customersToDelete.slice(0, 5).map((c: any) => ({
@@ -91,28 +108,48 @@ export async function GET(req: NextRequest) {
         withdrawn_consents: consents?.filter((c: any) => c.status === 'withdrawn').length || 0,
       },
 
+      gps_location_data: {
+        policy: 'Purge driver GPS pings after 90 days (employee location minimization)',
+        retention_period_days: 90,
+        pings_pending_purge: gpsPingsPendingPurge || 0,
+      },
+
       audit_logs: {
         policy: 'Retain audit logs for 7 years (compliance verification)',
         retention_period_years: 7,
       },
     },
 
-    compliance_status: {
-      gdpr_compliant: true,
-      ccpa_compliant: true,
-      uk_gdpr_compliant: true,
-      data_minimization_score: '100%',
+    // Honest enforcement status: capabilities are reported separately from
+    // whether retention is actually being enforced. We do NOT assert blanket
+    // compliance — that depends on the automated retention job running and the
+    // backlog being cleared.
+    enforcement: {
+      automated_retention_job: '/api/cron/gdpr-retention (daily)',
+      retention_job_last_run: lastAutoRun?.created_at || null,
+      retention_job_has_run: Boolean(lastAutoRun),
+      // Anything still eligible for deletion below means minimization is not
+      // fully enforced yet (job hasn't run, or hasn't caught up).
+      backlog: {
+        inactive_customers_awaiting_anonymization: customersToDelete.length,
+        gps_pings_awaiting_purge: gpsPingsPendingPurge || 0,
+      },
+      retention_enforced:
+        Boolean(lastAutoRun) && customersToDelete.length === 0 && (gpsPingsPendingPurge || 0) === 0,
+    },
+
+    capabilities: {
       consent_tracking_enabled: true,
-      audit_trail_immutable: true,
       right_to_erasure_enabled: true,
       data_portability_enabled: true,
+      automated_minimization_enabled: true,
     },
 
     actions_required: {
-      customers_to_delete: customersToDelete.length,
+      customers_to_anonymize: customersToDelete.length,
+      gps_pings_to_purge: gpsPingsPendingPurge || 0,
       transactions_to_archive: transactionsExpired.length,
       consent_records_to_archive: consentExpired.length,
-      next_batch_deletion_date: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     },
   })
 }
