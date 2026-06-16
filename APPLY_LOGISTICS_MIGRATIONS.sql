@@ -20,6 +20,12 @@
 -- ── Extend sector values ───────────────────────────────────
 -- (no constraint existed before — sectors are checked at API layer)
 
+-- ── Ensure the shared updated_at trigger fn exists (idempotent) ──
+CREATE OR REPLACE FUNCTION public.set_updated_at()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN NEW.updated_at = now(); RETURN NEW; END;
+$$;
+
 -- ── TRACKING NUMBER SEQUENCE ───────────────────────────────
 CREATE SEQUENCE IF NOT EXISTS pos_parcel_tracking_seq START 1000;
 
@@ -423,29 +429,37 @@ ALTER TABLE public.pos_logistics_invoices  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pos_logistics_payments  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pos_vehicle_inspections ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Owner manages trucks" ON public.pos_trucks;
 CREATE POLICY "Owner manages trucks"
   ON public.pos_trucks FOR ALL USING (owner_id = auth.uid());
 
+DROP POLICY IF EXISTS "Owner manages routes" ON public.pos_routes;
 CREATE POLICY "Owner manages routes"
   ON public.pos_routes FOR ALL USING (owner_id = auth.uid());
 
+DROP POLICY IF EXISTS "Owner manages parcels" ON public.pos_parcels;
 CREATE POLICY "Owner manages parcels"
   ON public.pos_parcels FOR ALL USING (owner_id = auth.uid());
 
+DROP POLICY IF EXISTS "Owner manages parcel photos" ON public.pos_parcel_photos;
 CREATE POLICY "Owner manages parcel photos"
   ON public.pos_parcel_photos FOR ALL USING (owner_id = auth.uid());
 
+DROP POLICY IF EXISTS "Owner manages parcel history" ON public.pos_parcel_history;
 CREATE POLICY "Owner manages parcel history"
   ON public.pos_parcel_history FOR ALL USING (
     parcel_id IN (SELECT id FROM public.pos_parcels WHERE owner_id = auth.uid())
   );
 
+DROP POLICY IF EXISTS "Owner manages logistics invoices" ON public.pos_logistics_invoices;
 CREATE POLICY "Owner manages logistics invoices"
   ON public.pos_logistics_invoices FOR ALL USING (owner_id = auth.uid());
 
+DROP POLICY IF EXISTS "Owner manages logistics payments" ON public.pos_logistics_payments;
 CREATE POLICY "Owner manages logistics payments"
   ON public.pos_logistics_payments FOR ALL USING (owner_id = auth.uid());
 
+DROP POLICY IF EXISTS "Owner manages vehicle inspections" ON public.pos_vehicle_inspections;
 CREATE POLICY "Owner manages vehicle inspections"
   ON public.pos_vehicle_inspections FOR ALL USING (owner_id = auth.uid());
 
