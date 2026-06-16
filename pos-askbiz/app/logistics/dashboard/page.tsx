@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { isLogisticsBranchLevel, isManagerOrAboveLevel, getRoleHomeRoute } from '@/lib/pos-role-client'
 
@@ -72,6 +72,9 @@ export default function BranchDashboardPage() {
   const [newCapacity, setNewCapacity] = useState('')
   const [addingTruck, setAddingTruck] = useState(false)
   const [addError, setAddError] = useState('')
+  const [scanningPlate, setScanningPlate] = useState(false)
+  const [plateMsg, setPlateMsg] = useState('')
+  const plateInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const raw = localStorage.getItem('pos_staff')
@@ -140,12 +143,42 @@ export default function BranchDashboardPage() {
       // Optimistically add, then refresh the full list so it stays in sync
       if (data.truck) setTrucks(prev => [data.truck as Truck, ...prev])
       setShowAddTruck(false)
-      setNewReg(''); setNewModel(''); setNewCapacity('')
+      setNewReg(''); setNewModel(''); setNewCapacity(''); setPlateMsg('')
       await loadAll(staff)
     } catch {
       setAddError('Could not add truck. Try again.')
     }
     setAddingTruck(false)
+  }
+
+  // Camera-first: read the number plate (and make/model) from a photo
+  const scanPlate = async (file: File) => {
+    if (!staff) return
+    setScanningPlate(true); setPlateMsg(''); setAddError('')
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve((reader.result as string).split(',')[1])
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+      const res = await fetch(`${API}/api/pos/trucks/scan-plate`, {
+        method: 'POST',
+        headers: hdrs(staff),
+        body: JSON.stringify({ image: base64 }),
+      })
+      const data = await res.json()
+      if (data.registration) {
+        setNewReg(data.registration)
+        if (data.make_model && !newModel.trim()) setNewModel(data.make_model)
+        setPlateMsg(data.confidence === 'low' ? '⚠️ Plate read — please double-check it' : '✓ Plate read from photo')
+      } else {
+        setPlateMsg("Couldn't read the plate — type it in manually")
+      }
+    } catch {
+      setPlateMsg('Scan failed — type the plate in manually')
+    }
+    setScanningPlate(false)
   }
 
   // Stats
@@ -285,8 +318,15 @@ export default function BranchDashboardPage() {
             </div>
 
             <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 4 }}>Registration *</label>
-            <input value={newReg} onChange={e => setNewReg(e.target.value)} placeholder="e.g. KDA 123A" autoFocus
-              style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--pos-border)', borderRadius: 8, fontSize: 14, marginBottom: 12, boxSizing: 'border-box', outline: 'none' }} />
+            <input ref={plateInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
+              onChange={e => { const f = e.target.files?.[0]; if (f) scanPlate(f); e.target.value = '' }} />
+            <button type="button" onClick={() => plateInputRef.current?.click()} disabled={scanningPlate}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: ACC_LIGHT, color: ACC, border: `1px solid ${ACC_BORDER}`, borderRadius: 8, padding: '10px', fontSize: 13, fontWeight: 700, cursor: scanningPlate ? 'wait' : 'pointer', marginBottom: 8 }}>
+              {scanningPlate ? 'Reading plate…' : '📷 Scan plate with camera'}
+            </button>
+            <input value={newReg} onChange={e => { setNewReg(e.target.value); setPlateMsg('') }} placeholder="e.g. KDA 123A" autoFocus
+              style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--pos-border)', borderRadius: 8, fontSize: 14, marginBottom: plateMsg ? 4 : 12, boxSizing: 'border-box', outline: 'none' }} />
+            {plateMsg && <div style={{ fontSize: 12, color: plateMsg.startsWith('✓') ? GREEN : AMBER, marginBottom: 12 }}>{plateMsg}</div>}
 
             <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 4 }}>Make / Model</label>
             <input value={newModel} onChange={e => setNewModel(e.target.value)} placeholder="e.g. Isuzu FRR"
