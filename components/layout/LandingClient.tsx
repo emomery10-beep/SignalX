@@ -1492,14 +1492,14 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             {/* Left — headline */}
             <div>
               <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.18em',textTransform:'uppercase',marginBottom:24 }}>
-                Business Intelligence · Point of Sale
+                POS · Inventory · AI Intelligence — One Platform
               </p>
               <h1 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(38px,5vw,72px)',fontWeight:400,lineHeight:.98,letterSpacing:'-.025em',marginBottom:28,color:T.tx }}>
-                Ask your business<br/>
-                <em style={{ color:T.acc,fontStyle:'italic' }}>anything.</em>
+                Your shop. Your stock.<br/>
+                <em style={{ color:T.acc,fontStyle:'italic' }}>All in one place.</em>
               </h1>
               <p style={{ fontSize:'clamp(15px,1.4vw,18px)',color:T.tx2,lineHeight:1.7,marginBottom:36,maxWidth:420 }}>
-                Every sale, every supplier, every margin — answered in plain English. No spreadsheets. No IT team. No learning curve.
+                AskBiz is your POS, real-time inventory, and AI business intelligence — starting free. Point your camera to sell. Ask in plain English to understand. No Shopify needed. No Power BI needed.
               </p>
               <div className="hero-ctas" style={{ display:'flex',gap:12,flexWrap:'wrap',marginBottom:24 }}>
                 <Link href="/signin?mode=signup" className="cta-btn" style={{ padding:'14px 28px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8,boxShadow:`0 4px 24px rgba(201,122,68,.3)` }}>
@@ -1513,6 +1513,13 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                 <span>✓ 3-month free trial · no card required</span>
                 <span>✓ GDPR compliant · UK data residency</span>
                 <span>✓ Ready in 2 minutes</span>
+              </div>
+              <div style={{ marginTop:12,display:'inline-flex',alignItems:'center',gap:8,background:'rgba(22,163,74,.07)',border:'1px solid rgba(22,163,74,.18)',borderRadius:9999,padding:'6px 14px' }}>
+                <span style={{ fontSize:11,fontWeight:700,color:'#16a34a' }}>Free plan always available</span>
+                <span style={{ fontSize:11,color:T.tx3 }}>·</span>
+                <span style={{ fontSize:11,color:T.tx2,fontWeight:600 }}>{growthPrice}/mo for Growth · {businessPrice}/mo for Business</span>
+                <span style={{ fontSize:11,color:T.tx3 }}>·</span>
+                <span style={{ fontSize:11,color:T.tx3 }}>includes full POS system</span>
               </div>
               {country && <p style={{ fontSize:12,color:T.tx3,marginTop:8 }}>{flag} Prices shown in local currency for {country}</p>}
             </div>
@@ -1630,6 +1637,86 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               Try the PoS free →
             </Link>
             <span style={{ fontSize:12,color:T.tx3,alignSelf:'center' }}>{posPrice} / seat / month · add to any plan</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ── COMPARE ───────────────────────────────────────────────────── */}
+      <section style={{ background:T.alt,borderTop:`1px solid ${T.bd}`,borderBottom:`1px solid ${T.bd}`,padding:'clamp(56px,7vw,88px) clamp(16px,4vw,40px)' }}>
+        <div style={{ maxWidth:1060,margin:'0 auto' }}>
+          <div style={{ textAlign:'center',marginBottom:44 }} data-reveal>
+            <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:14 }}>How we compare</p>
+            <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
+              One platform.<br/><em style={{ color:T.acc,fontStyle:'italic' }}>Not three subscriptions.</em>
+            </h2>
+            <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,maxWidth:440,margin:'0 auto' }}>
+              Most small businesses pay separately for a POS, a BI tool, and an inventory system. AskBiz is all three — starting free.
+            </p>
+          </div>
+
+          {/* Three-column cards */}
+          <div data-reveal data-reveal-delay="1" style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginBottom:40 }}>
+            {[
+              {
+                name:'Shopify',
+                role:'E-commerce + POS',
+                price:'from $39/mo + hardware',
+                pros:['Strong e-commerce store','Good multi-channel selling','Large app ecosystem'],
+                cons:['No AI business intelligence','Needs separate BI tool','POS hardware required','No mobile money support'],
+                verdict:'Great if online store is your primary channel. You still need Power BI or similar for real insights.',
+              },
+              {
+                name:'AskBiz',
+                role:'POS + AI Intelligence',
+                price:'Free · £19/mo · £39/mo',
+                highlight:true,
+                pros:['Full POS included — no hardware','AI answers in plain English','Camera-first scanning','Mobile money (M-Pesa, MTN)','BI built in — no extra tool','Multi-branch, multi-currency'],
+                cons:['Newer platform','Fewer third-party app integrations'],
+                verdict:'Best for shop + online owners who want one platform that sells, tracks stock, and explains what\'s happening — without three subscriptions.',
+              },
+              {
+                name:'Power BI',
+                role:'Business Intelligence',
+                price:'$10–20 / user / mo',
+                pros:['Excellent custom dashboards','Enterprise-grade analytics','Trusted by large data teams'],
+                cons:['No POS — analytics only','Requires a data team to set up','Won\'t manage your inventory','Days to weeks to get running'],
+                verdict:'Right for companies with a dedicated analyst. Wrong if you want to know your margin before lunch.',
+              },
+            ].map((tool,i)=>(
+              <div key={i} style={{ background:tool.highlight?T.acc:'transparent',borderRadius:14,border:`1px solid ${tool.highlight?'transparent':T.bd}`,padding:'24px',display:'flex',flexDirection:'column',gap:0,position:'relative' }}>
+                {tool.highlight && <div style={{ position:'absolute',top:-11,left:'50%',transform:'translateX(-50%)',background:T.acc,border:`2px solid ${T.bg}`,borderRadius:9999,padding:'2px 12px',fontSize:10,fontWeight:700,color:'#fff',whiteSpace:'nowrap',letterSpacing:'.06em' }}>RECOMMENDED</div>}
+                <div style={{ marginBottom:16 }}>
+                  <div style={{ fontSize:16,fontWeight:700,color:tool.highlight?'#fff':T.tx,marginBottom:3 }}>{tool.name}</div>
+                  <div style={{ fontSize:11,color:tool.highlight?'rgba(255,255,255,.7)':T.tx3,marginBottom:8 }}>{tool.role}</div>
+                  <div style={{ fontSize:13,fontWeight:700,color:tool.highlight?'#fff':T.acc }}>{tool.price}</div>
+                </div>
+                <div style={{ flex:1,display:'flex',flexDirection:'column',gap:12 }}>
+                  <div>
+                    {tool.pros.map((p,j)=>(
+                      <div key={j} style={{ display:'flex',gap:7,alignItems:'flex-start',fontSize:12,color:tool.highlight?'rgba(255,255,255,.9)':T.tx2,marginBottom:5 }}>
+                        <span style={{ color:tool.highlight?'#fff':'#16a34a',flexShrink:0,marginTop:1 }}>✓</span>{p}
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    {tool.cons.map((c,j)=>(
+                      <div key={j} style={{ display:'flex',gap:7,alignItems:'flex-start',fontSize:12,color:tool.highlight?'rgba(255,255,255,.6)':T.tx3,marginBottom:5 }}>
+                        <span style={{ flexShrink:0,marginTop:1 }}>–</span>{c}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ marginTop:16,paddingTop:14,borderTop:`1px solid ${tool.highlight?'rgba(255,255,255,.2)':T.bd}`,fontSize:12,color:tool.highlight?'rgba(255,255,255,.8)':T.tx2,lineHeight:1.55,fontStyle:'italic' }}>
+                  {tool.verdict}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ textAlign:'center' }}>
+            <Link href="/compare" style={{ fontSize:13,color:T.tx3,textDecoration:'none',borderBottom:`1px solid ${T.bd}`,paddingBottom:1 }}>
+              See full feature-by-feature comparison →
+            </Link>
           </div>
         </div>
       </section>

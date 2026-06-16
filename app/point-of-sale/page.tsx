@@ -123,16 +123,16 @@ export default function PosPage() {
       {/* Hero */}
       <section className="pos-hero-grid" style={{ maxWidth:1100, margin:'0 auto', padding:'clamp(56px,8vw,100px) clamp(16px,4vw,40px) clamp(40px,6vw,72px)', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'clamp(32px,5vw,64px)', alignItems:'center' }}>
         <div>
-          <p className="fade-up" style={{ fontSize:11, fontWeight:700, color:C.acc, letterSpacing:'.16em', textTransform:'uppercase', marginBottom:20 }}>Point of Sale</p>
+          <p className="fade-up" style={{ fontSize:11, fontWeight:700, color:C.acc, letterSpacing:'.16em', textTransform:'uppercase', marginBottom:20 }}>Point of Sale · Camera-First</p>
           <h1 className="fade-up" style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(30px,4.5vw,48px)', fontWeight:700, lineHeight:1.1, letterSpacing:'-.03em', marginBottom:20, color:C.tx }}>
-            A full PoS system,<br/>
-            <span style={{ color:C.acc }}>powered by AI.</span>
+            Point your camera.<br/>
+            <span style={{ color:C.acc }}>That's your checkout.</span>
           </h1>
           <p className="fade-up" style={{ fontSize:'clamp(15px,1.8vw,18px)', color:C.tx2, lineHeight:1.7, marginBottom:14, maxWidth:460 }}>
-            Ring up sales, manage inventory across branches, track staff shifts, and stay tax-compliant — while your AI learns from every transaction.
+            No barcode gun. No manual entry. Just point your phone camera at any product and it's added to the basket — inventory updated instantly across every branch.
           </p>
           <p className="fade-up" style={{ fontSize:13, color:C.tx3, marginBottom:32, lineHeight:1.6 }}>
-            {seatPrice}/seat per month · Works on tablet, phone, or desktop · No special hardware
+            {seatPrice}/seat per month · Full POS included · No special hardware · No Shopify needed
           </p>
           <div className="fade-up" style={{ display:'flex', gap:12, flexWrap:'wrap', alignItems:'center' }}>
             <Link href="/signin" className="btn-primary" style={{ padding:'13px 28px', borderRadius:10, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8 }}>
@@ -839,6 +839,34 @@ export default function PosPage() {
           <Link href="/signin" style={{ color:C.tx3, textDecoration:'none' }}>Sign in</Link>
         </div>
       </footer>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'AskBiz Point of Sale',
+        applicationCategory: 'BusinessApplication',
+        operatingSystem: 'Web, iOS, Android',
+        url: 'https://askbiz.co/point-of-sale',
+        description: 'AI-powered point of sale system for SMEs. Camera-first barcode scanning, multi-currency, mobile money (M-Pesa, MTN, Airtel), multi-branch inventory, staff shifts, and tax compliance for 10+ jurisdictions.',
+        featureList: [
+          'Camera-first barcode scanning',
+          'Multi-currency — 150+ currencies',
+          'Mobile money (M-Pesa, MTN, Airtel)',
+          'Multi-branch inventory management',
+          'Staff shifts and OTP login',
+          'VAT, GST, and local tax compliance',
+          'AI-driven demand forecasting',
+          'Offline mode with auto-sync',
+          'GDPR, NDPR, POPIA compliance',
+          'Xero and QuickBooks integration',
+        ],
+        offers: {
+          '@type': 'Offer',
+          price: '5',
+          priceCurrency: 'GBP',
+          description: '£5 per seat per month — add to any AskBiz plan.',
+        },
+        publisher: { '@type': 'Organization', name: 'AskBiz', url: 'https://askbiz.co' },
+      }) }} />
     </div>
   )
 }
