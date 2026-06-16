@@ -25,9 +25,12 @@ const RETENTION_DAYS = 90
 
 function isAuthorized(request: NextRequest): boolean {
   const secret = new URL(request.url).searchParams.get('secret')
+  // 'dev-test' bypass is allowed ONLY outside production — never let an
+  // unauthenticated caller trigger mass anonymization in prod.
+  if (secret === 'dev-test' && process.env.NODE_ENV !== 'production') return true
+  if (!process.env.CRON_SECRET) return false
   return (
     secret === process.env.CRON_SECRET ||
-    secret === 'dev-test' ||
     request.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`
   )
 }
