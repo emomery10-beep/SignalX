@@ -115,7 +115,7 @@ export async function GET() {
 
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 800,
       messages: [{ role: 'user', content: `You are a business operations assistant. Given these signals from a small business, produce a prioritised daily action list.
 

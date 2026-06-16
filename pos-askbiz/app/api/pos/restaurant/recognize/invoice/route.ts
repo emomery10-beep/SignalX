@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     // STEP 1: Extract all line items from the delivery note / invoice image
     const extractResp = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 2048,
       messages: [{
         role: 'user',

@@ -249,7 +249,7 @@ async function writeBlogPost(input: SearchInput, recentPublished: RecentPost[] =
     : ''
 
   const res = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 5000,
     system: `You are Alice Watson, Head of Market Intelligence at AskBiz. You write like a sharp, opinionated market analyst — not a content marketer. Your style:
 
@@ -330,7 +330,7 @@ Return ONLY valid JSON (no markdown fences):
     }],
   })
 
-  logUsage({ route: 'agent/blog-scout', model: 'claude-sonnet-4-20250514', usage: res.usage })
+  logUsage({ route: 'agent/blog-scout', model: 'claude-sonnet-4-6', usage: res.usage })
   const raw = res.content[0].type === 'text' ? res.content[0].text : ''
   const clean = raw.replace(/```json\n?|```/g, '').trim()
   const parsed = JSON.parse(clean)

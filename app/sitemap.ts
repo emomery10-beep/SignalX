@@ -6,6 +6,7 @@
 export const revalidate = 0 // Always regenerate — never serve stale cached sitemap
 
 import type { MetadataRoute } from "next";
+import { createClient } from '@supabase/supabase-js'
 import { getAllPosts } from "@/lib/blog-content";
 import { HELP_ARTICLES, HELP_TOPICS } from "@/lib/help-content";
 import { POLICY_ARTICLES } from "@/lib/rules-content";
@@ -42,7 +43,34 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { USE_CASES } = await import("@/lib/use-cases-content");
   const { CASE_STUDIES } = await import("@/lib/case-studies-content");
 
-  const posts = getAllPosts();
+  const staticPosts = getAllPosts();
+  const staticSlugs = new Set(staticPosts.map(p => p.slug))
+
+  // Fetch agent-published blog posts from DB (not covered by static batches)
+  let dbPosts: { slug: string; publishDate?: string }[] = []
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data } = await supabase
+      .from('agent_content')
+      .select('content, created_at')
+      .eq('type', 'blog')
+      .eq('status', 'published')
+      .order('created_at', { ascending: false })
+
+    dbPosts = (data || [])
+      .map((row: any) => ({
+        slug: row.content?.slug as string,
+        publishDate: row.content?.publishDate || row.created_at?.slice(0, 10),
+      }))
+      .filter(p => p.slug && !staticSlugs.has(p.slug))
+  } catch {
+    // silently skip if DB unreachable at build time
+  }
+
+  const posts = staticPosts;
 
   return [
     // ── CORE: landing pages, tools, comparisons, integrations, case studies ──
@@ -91,6 +119,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: hashModifiedDate(post.slug, post.publishDate),
       changeFrequency: "monthly" as const,
       priority: (post as { pillar?: string }).pillar === 'Operator Playbook' ? 0.8 : 0.7,
+    })),
+    // Agent-published blog posts (approved via admin panel, stored in Supabase)
+    ...dbPosts.map((post) => ({
+      url: `${base}/blog/${post.slug}`,
+      lastModified: post.publishDate ? new Date(post.publishDate).toISOString() : now,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
     })),
 
     // ── ACADEMY: categories + articles + learning paths ──────────────────────────

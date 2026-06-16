@@ -280,6 +280,26 @@ function BlogContent() {
       : []
   }, [posts])
 
+  // Top clusters by post count — drives the Popular topics section dynamically
+  const topClusters = useMemo(() => {
+    const counts: Record<string, number> = {}
+    posts.forEach(p => { counts[p.cluster] = (counts[p.cluster] || 0) + 1 })
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12)
+      .map(([cluster, count]) => ({
+        cluster,
+        count,
+        description: POPULAR_TOPICS.find(t => t.cluster === cluster)?.description ?? `${count} guides on ${cluster}`,
+        icon:        POPULAR_TOPICS.find(t => t.cluster === cluster)?.icon ?? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
+          </svg>
+        ),
+      }))
+  }, [posts])
+
   const isHome      = !active && !activePillar && !search.trim() && !ctFilter
   const visibleRows = filtered.slice(0, visibleCount)
   const hasMore     = filtered.length > visibleCount
@@ -332,13 +352,14 @@ function BlogContent() {
         }}
       >
         <div>
-          <span style={{ fontSize: 10, fontWeight: 700, color: c.text, letterSpacing: '.03em', textTransform: 'uppercase', marginBottom: 4, display: 'inline-block' }}>
-            {post.cluster}
-          </span>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.text, flexShrink: 0, display: 'inline-block' }}/>
+            <span style={{ fontSize: 11, fontWeight: 500, color: c.text }}>{post.cluster}</span>
+          </div>
           <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 600, color: TX, lineHeight: 1.4, marginBottom: 3 }}>
             {post.title}
           </div>
-          <p style={{ fontSize: 12, color: TX2, lineHeight: 1.5, margin: 0 }}>
+          <p style={{ fontSize: 12, color: TX2, lineHeight: 1.55, margin: 0 }}>
             {post.tldr?.slice(0, 120)}{(post.tldr?.length ?? 0) > 120 ? '…' : ''}
           </p>
         </div>
@@ -357,8 +378,8 @@ function BlogContent() {
         .post-row:hover { background: ${SF} !important; }
         .sb-btn { cursor: pointer; border: none; background: transparent; transition: background 120ms; }
         .sb-btn:hover { background: rgba(0,0,0,0.045) !important; }
-        .topic-card { transition: transform 140ms, box-shadow 140ms; cursor: pointer; }
-        .topic-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.09) !important; }
+        .topic-card { transition: background 140ms, border-color 140ms, transform 140ms; cursor: pointer; }
+        .topic-card:hover { background: var(--ev, #f3f2ef) !important; border-color: rgba(208,138,89,.25) !important; transform: translateY(-1px); }
         .search-input { outline: none; }
         .search-input:focus { border-color: ${ACC} !important; box-shadow: 0 0 0 3px rgba(208,138,89,.12); }
         .pillar-btn { cursor: pointer; border: none; background: transparent; transition: background 100ms; text-align: left; }
@@ -423,9 +444,7 @@ function BlogContent() {
               </button>
             </div>
 
-            <div style={{ fontSize: 10, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.1em', padding: '10px 24px 6px' }}>
-              Browse topics
-            </div>
+            <div style={{ height: 10 }} />
 
             {clusters.map(cluster => {
               const c         = getColour(cluster)
@@ -472,12 +491,12 @@ function BlogContent() {
           {/* Search */}
           <div style={{ marginBottom: isHome ? 36 : 28 }}>
             {isHome && (
-              <div style={{ marginBottom: 18 }}>
-                <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(22px,3vw,30px)', fontWeight: 700, letterSpacing: '-.025em', color: TX, marginBottom: 6 }}>
+              <div style={{ marginBottom: 22 }}>
+                <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(26px,4vw,40px)', fontWeight: 700, letterSpacing: '-.03em', color: TX, marginBottom: 8, lineHeight: 1.15 }}>
                   Business Intelligence Hub
                 </h1>
-                <p style={{ fontSize: 14, color: TX2, margin: 0 }}>
-                  Guides on AI, eCommerce, finance, and SME strategy — {posts.length} articles across {clusters.length} topics
+                <p style={{ fontSize: 14, color: TX2, margin: 0, lineHeight: 1.6 }}>
+                  {posts.length.toLocaleString()} guides across {clusters.length} topics — AI, eCommerce, finance, and SME strategy.
                 </p>
               </div>
             )}
@@ -499,29 +518,39 @@ function BlogContent() {
             <>
               <section style={{ marginBottom: 52 }}>
                 <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, marginBottom: 20, letterSpacing: '-.015em' }}>Popular topics</h2>
-                {/* Featured top 3 */}
+                {/* Featured top 3 — data-driven from actual post counts */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 18 }}>
-                  {POPULAR_TOPICS.slice(0, 3).map(topic => {
-                    const c     = getColour(topic.cluster)
-                    const count = posts.filter(p => p.cluster === topic.cluster).length
+                  {topClusters.slice(0, 3).map(topic => {
+                    const c = getColour(topic.cluster)
                     return (
-                      <button key={topic.cluster} className="topic-card" onClick={() => selectCluster(topic.cluster)} aria-label={`Browse ${topic.cluster} articles`} style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 12, padding: '22px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', cursor: 'pointer', textAlign: 'left', width: '100%', fontFamily: 'inherit', color: 'inherit' }}>
-                        <div style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, color: TX, marginBottom: 6, lineHeight: 1.3 }}>{topic.cluster}</div>
-                        <p style={{ fontSize: 12, color: TX2, margin: '0 0 10px', lineHeight: 1.55 }}>{topic.description}</p>
-                        <span style={{ fontSize: 11, color: c.text, fontWeight: 600 }}>{count} articles →</span>
+                      <button
+                        key={topic.cluster}
+                        className="topic-card"
+                        onClick={() => selectCluster(topic.cluster)}
+                        aria-label={`Browse ${topic.cluster} articles`}
+                        style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 12, padding: '20px 20px 18px', cursor: 'pointer', textAlign: 'left', width: '100%', fontFamily: 'inherit', color: 'inherit',
+                          /* override globals.css button { display: inline-flex; align-items: center } */
+                          display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}
+                      >
+                        <div style={{ width: 36, height: 36, borderRadius: 9, background: c.bg, border: `1px solid ${c.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14, color: c.text, flexShrink: 0 }}>
+                          {topic.icon}
+                        </div>
+                        <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 5, lineHeight: 1.3 }}>{topic.cluster}</div>
+                        <p style={{ fontSize: 12, color: TX2, margin: '0 0 12px', lineHeight: 1.55, flex: 1 }}>{topic.description}</p>
+                        <span style={{ fontSize: 11, color: c.text, fontWeight: 600 }}>{topic.count} articles →</span>
                       </button>
                     )
                   })}
                 </div>
-                {/* Compact list for rest */}
+                {/* Compact pills for next clusters — data-driven */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {POPULAR_TOPICS.slice(3).map(topic => {
-                    const c     = getColour(topic.cluster)
-                    const count = posts.filter(p => p.cluster === topic.cluster).length
+                  {topClusters.slice(3).map(topic => {
+                    const c = getColour(topic.cluster)
                     return (
-                      <button key={topic.cluster} className="sb-btn" onClick={() => selectCluster(topic.cluster)} style={{ fontSize: 13, color: TX2, background: SF, border: `1px solid ${BD}`, borderRadius: 8, padding: '7px 14px', cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontWeight: 600, color: TX }}>{topic.cluster}</span>
-                        <span style={{ fontSize: 11, color: c.text }}>{count}</span>
+                      <button key={topic.cluster} className="sb-btn" onClick={() => selectCluster(topic.cluster)} style={{ fontSize: 13, color: TX, background: SF, border: `1px solid ${BD}`, borderRadius: 8, padding: '7px 14px', cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 36 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.text, flexShrink: 0, display: 'inline-block' }}/>
+                        <span style={{ fontWeight: 500 }}>{topic.cluster}</span>
+                        <span style={{ fontSize: 11, color: TX3, fontWeight: 400 }}>{topic.count}</span>
                       </button>
                     )
                   })}
@@ -532,9 +561,11 @@ function BlogContent() {
                 <section style={{ marginBottom: 52 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
                     <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, letterSpacing: '-.015em', margin: 0 }}>Popular this month</h2>
-                    <span style={{ fontSize: 10, fontWeight: 600, color: ACC, background: 'rgba(208,138,89,.1)', borderRadius: 9999, padding: '2px 8px' }}>
-                      {getColour(popularThisMonth[0]?.cluster || '').text && popularThisMonth[0]?.cluster}
-                    </span>
+                    {popularThisMonth[0]?.cluster && (
+                      <span style={{ fontSize: 11, fontWeight: 500, color: getColour(popularThisMonth[0].cluster).text, background: getColour(popularThisMonth[0].cluster).bg, border: `1px solid ${getColour(popularThisMonth[0].cluster).border}`, borderRadius: 9999, padding: '2px 10px' }}>
+                        {popularThisMonth[0].cluster}
+                      </span>
+                    )}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     {popularThisMonth.map((post, i) => (

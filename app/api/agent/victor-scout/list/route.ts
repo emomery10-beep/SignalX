@@ -4,8 +4,8 @@ import { createClient } from '@supabase/supabase-js'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-// Ben posts are identified by run_id prefix 'blog_us_'
-const PREFIX = 'blog_us_%'
+// Victor posts are identified by run_id prefix 'blog_mktg_africa_'
+const PREFIX = 'blog_mktg_africa_%'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)

@@ -130,7 +130,7 @@ export async function PUT(req: NextRequest) {
   const menuList = (menuItems || []).slice(0, 150).map((m: any) => `- ${m.name}`).join('\n')
 
   const resp = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 512,
     messages: [{
       role: 'user',

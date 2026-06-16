@@ -52,26 +52,31 @@ export async function middleware(request: NextRequest) {
     '/settings', '/expansion', '/invite',
   ]
 
+  function applySecurityHeaders(res: typeof response) {
+    res.headers.set('X-Frame-Options', 'DENY')
+    res.headers.set('X-Content-Type-Options', 'nosniff')
+    res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+    res.headers.set('Permissions-Policy', 'camera=(self), microphone=(), geolocation=(self)')
+    if (!res.headers.has('Content-Security-Policy')) {
+      res.headers.set('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https: http:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.anthropic.com https://js.stripe.com https://api.stripe.com https://www.google-analytics.com https://*.vercel-insights.com https://*.vercel-analytics.com https://api.tavily.com https://*.tile.openstreetmap.org; frame-src https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self'")
+    }
+    return res
+  }
+
   const isProtected = protectedRoutes.some(r => request.nextUrl.pathname.startsWith(r))
   if (isProtected && !user) {
-    return NextResponse.redirect(new URL('/signin', request.url))
+    return applySecurityHeaders(NextResponse.redirect(new URL('/signin', request.url)))
   }
 
   // ── Redirect signed-in users away from auth pages ─────────────────────────
   const authRoutes = ['/signin', '/signup']
   const isAuthRoute = authRoutes.some(r => request.nextUrl.pathname.startsWith(r))
   if (isAuthRoute && user) {
-    return NextResponse.redirect(new URL('/home', request.url))
+    return applySecurityHeaders(NextResponse.redirect(new URL('/home', request.url)))
   }
 
   // ── Security headers (belt-and-suspenders with next.config.js) ──────────────
-  response.headers.set('X-Frame-Options', 'DENY')
-  response.headers.set('X-Content-Type-Options', 'nosniff')
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  response.headers.set('Permissions-Policy', 'camera=(self), microphone=(), geolocation=(self)')
-  if (!response.headers.has('Content-Security-Policy')) {
-    response.headers.set('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https: http:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.anthropic.com https://js.stripe.com https://api.stripe.com https://www.google-analytics.com https://*.vercel-insights.com https://*.vercel-analytics.com https://api.tavily.com https://*.tile.openstreetmap.org; frame-src https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self'")
-  }
+  applySecurityHeaders(response)
 
   return response
 }

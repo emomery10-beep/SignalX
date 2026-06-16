@@ -146,7 +146,7 @@ async function runAgent() {
 
 async function analyseNews(query: string, context: string, title: string, url: string) {
   const res = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 800,
     messages: [{
       role: 'user',
@@ -182,7 +182,7 @@ Return this exact JSON:
 
 async function writeBlogPost(analysis: Record<string, string>, query: string, context: string, article: { title: string; url: string; content: string }) {
   const res = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 2000,
     messages: [{
       role: 'user',
@@ -234,7 +234,7 @@ Return this JSON structure:
 
 async function writeThread(analysis: Record<string, string>, article: { title: string; url: string }) {
   const res = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 800,
     messages: [{
       role: 'user',
@@ -264,7 +264,7 @@ Return:
 
 async function writeSmartReplies(analysis: Record<string, string>, article: { title: string }) {
   const res = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 600,
     messages: [{
       role: 'user',

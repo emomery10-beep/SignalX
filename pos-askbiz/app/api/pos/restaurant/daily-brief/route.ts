@@ -133,7 +133,7 @@ Today's data:
 Respond with ONLY valid JSON: {"improved":"one thing going well (max 12 words)","worsened":"one thing to watch (max 12 words)","action":"one specific action for today (max 15 words)","health_score":number 0-100}`
 
     const msg = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 200,
       messages: [{ role: 'user', content: prompt }],
     })

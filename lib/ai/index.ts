@@ -303,7 +303,7 @@ export async function askOnce({ messages, systemPrompt, userId }: {
   const Anthropic = (await import('@anthropic-ai/sdk')).default
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-  const MODEL = 'claude-sonnet-4-20250514'
+  const MODEL = 'claude-sonnet-4-6'
   const response = await client.messages.create({
     model: MODEL,
     max_tokens: 2000,
