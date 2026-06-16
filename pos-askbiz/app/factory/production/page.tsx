@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#f59e0b'
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 const GOOD = '#22c55e'
 const WARN = '#f59e0b'
@@ -45,8 +44,7 @@ function fmtDate(iso: string) {
 
 export default function ProductionLogPage() {
   const router = useRouter()
-  const supabase = createClient()
-  const [ready, setReady] = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [captures, setCaptures] = useState<Capture[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -59,19 +57,16 @@ export default function ProductionLogPage() {
   const [detail, setDetail] = useState<Capture | null>(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).catch(() => {})
-    })
-  }, [])
-
-  useEffect(() => { if (ready) load() }, [ready])
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).catch(() => {})
+    load()
+  }, [authReady, session])
 
   async function load() {
+    if (!session) return
     setLoading(true)
     try {
-      const res = await fetch(`${API}/api/pos/factory/capture?limit=100`)
+      const res = await fetch('/api/pos/factory/capture?limit=100', { headers: session.headers })
       const data = res.ok ? await res.json() : { captures: [] }
       setCaptures(data.captures || [])
     } catch (e) {
@@ -104,7 +99,7 @@ export default function ProductionLogPage() {
     .sort((a, b) => (b.output + b.intake) - (a.output + a.intake))
     .slice(0, 8)
 
-  if (!ready) {
+  if (!authReady || !session) {
     return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>Loading…</div>
   }
 

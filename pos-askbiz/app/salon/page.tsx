@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#ec4899' // salon pink accent
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 const statusColor: Record<string, string> = {
   good: '#22c55e', warn: '#f59e0b', bad: '#ef4444', neutral: '#94a3b8',
@@ -48,35 +47,31 @@ function serviceLabel(tx: Tx) {
 
 export default function SalonHub() {
   const router = useRouter()
-  const supabase = createClient()
-  const [ready, setReady] = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [sym, setSym] = useState('£')
   const [kpis, setKpis] = useState<KPI[]>([])
   const [schedule, setSchedule] = useState<Tx[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-      }).catch(() => {})
-    })
-  }, [])
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: { ...session.headers } }).then(r => r.json()).then(c => {
+      if (c.currency_symbol) setSym(c.currency_symbol)
+    }).catch(() => {})
+  }, [authReady, session])
 
   useEffect(() => {
-    if (!ready) return
+    if (!authReady || !session) return
     loadAll()
     const interval = setInterval(loadAll, 30000) // auto-refresh every 30s
     return () => clearInterval(interval)
-  }, [ready])
+  }, [authReady, session])
 
   async function loadAll() {
     setLoading(true)
     try {
       // No dedicated salon-booking API yet — derive appointments from POS transactions.
-      const res = await fetch(`${API}/api/pos/transactions?limit=500`)
+      const res = await fetch('/api/pos/transactions?limit=500', { headers: { ...session!.headers } })
       const data = await res.json()
       const txs: Tx[] = data.transactions || []
 

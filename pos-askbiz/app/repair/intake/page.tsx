@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#6366f1'
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 const GOOD = '#22c55e', WARN = '#f59e0b', BAD = '#ef4444', MUTED = '#94a3b8', DIM = '#64748b'
 
 type Stage = 'device_scan' | 'condition_photos' | 'details' | 'done'
@@ -43,8 +42,7 @@ function toBase64(dataUrl: string) {
 
 export default function RepairIntake() {
   const router = useRouter()
-  const supabase = createClient()
-  const [ready, setReady] = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [sym, setSym] = useState('£')
 
   const [stage, setStage] = useState<Stage>('device_scan')
@@ -85,16 +83,13 @@ export default function RepairIntake() {
   const [createdJobId, setCreatedJobId] = useState('')
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-        if (c.staff_sector && c.staff_sector !== 'repair') router.push('/pos')
-      }).catch(() => {})
-    })
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: { ...session.headers } }).then(r => r.json()).then(c => {
+      if (c.currency_symbol) setSym(c.currency_symbol)
+      if (c.staff_sector && c.staff_sector !== 'repair') router.push('/pos')
+    }).catch(() => {})
     return () => stopCamera()
-  }, [])
+  }, [authReady, session])
 
   // ── Camera helpers ──────────────────────────────────────
   const openCamera = useCallback(async (purpose: 'scan' | 'condition') => {
@@ -155,9 +150,9 @@ export default function RepairIntake() {
   const runScan = async (dataUrl: string) => {
     setScanning(true); setScanError('')
     try {
-      const res = await fetch(`${API}/api/pos/service-jobs/scan-device`, {
+      const res = await fetch('/api/pos/service-jobs/scan-device', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...session?.headers },
         body: JSON.stringify({ image: toBase64(dataUrl) }),
       })
       const data = await res.json()
@@ -225,9 +220,9 @@ export default function RepairIntake() {
     setSubmitting(true); setSubmitError('')
     try {
       const deviceDesc = [deviceType, device.color, device.storage].filter(Boolean).join(' · ') || null
-      const res = await fetch(`${API}/api/pos/service-jobs`, {
+      const res = await fetch('/api/pos/service-jobs', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...session?.headers },
         body: JSON.stringify({
           customer_name: customerName.trim() || null,
           customer_phone: customerPhone.trim() || null,
@@ -252,9 +247,9 @@ export default function RepairIntake() {
       // Upload remaining condition photos (first one already saved as intake_photo_url)
       if (job?.id && photos.length > 0) {
         for (const p of photos) {
-          fetch(`${API}/api/pos/service-jobs/upload-photo`, {
+          fetch('/api/pos/service-jobs/upload-photo', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...session?.headers },
             body: JSON.stringify({ image: p.dataUrl, job_id: job.id, type: 'intake' }),
           }).catch(() => {})
         }
@@ -281,7 +276,7 @@ export default function RepairIntake() {
   const btnSecondary: React.CSSProperties = { flex: 1, padding: '14px', borderRadius: 12, background: '#334155', color: MUTED, fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
   const card: React.CSSProperties = { background: '#1e293b', border: '1px solid #334155', borderRadius: 14, padding: 18 }
 
-  if (!ready) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: MUTED, fontFamily: 'system-ui, sans-serif' }}>Loading…</div>
+  if (!authReady) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: MUTED, fontFamily: 'system-ui, sans-serif' }}>Loading…</div>
 
   const stageIndex = ['device_scan', 'condition_photos', 'details', 'done'].indexOf(stage)
   const stageLabels = ['Scan', 'Condition', 'Details', 'Done']

@@ -1,9 +1,8 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
-const API    = process.env.NEXT_PUBLIC_API_URL || ''
 const tokens = {
   bg:      'var(--pos-bg)',
   surface: 'var(--pos-surface)',
@@ -75,8 +74,7 @@ function IconCamera({ size = 22 }: { size?: number }) {
 
 export default function WaybillPage() {
   const router   = useRouter()
-  const supabase = createClient()
-  const [ready, setReady] = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [stage, setStage] = useState<Stage>('hub')
 
   // Hub data
@@ -102,30 +100,22 @@ export default function WaybillPage() {
   const [successWaybill, setSuccessWaybill] = useState<Waybill | null>(null)
   const [error,          setError]          = useState('')
 
-  // Auth guard
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-    })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   // Load hub data
   const loadHub = useCallback(async () => {
+    if (!session) return
     try {
-      const r = await fetch(`${API}/api/pos/factory/waybill`)
+      const r = await fetch('/api/pos/factory/waybill', { headers: session.headers })
       const d = r.ok ? await r.json() : null
       setHubData(d)
     } catch { /* silent */ } finally {
       setHubLoading(false)
     }
-  }, [])
+  }, [session])
 
   useEffect(() => {
-    if (!ready) return
+    if (!authReady || !session) return
     loadHub()
-  }, [ready, loadHub])
+  }, [authReady, session, loadHub])
 
   // Open camera
   const openCamera = useCallback(async () => {
@@ -177,6 +167,7 @@ export default function WaybillPage() {
   const handleSubmit = async () => {
     if (!destination.trim()) { setError('Destination is required'); return }
     if (!capturedImage)      { setError('Photo is required'); return }
+    if (!session) return
     setError('')
     setStage('submitting')
     try {
@@ -191,8 +182,10 @@ export default function WaybillPage() {
       if (scheduledAt)        body.scheduled_at = new Date(scheduledAt).toISOString()
       if (notes.trim())       body.notes        = notes.trim()
 
-      const r = await fetch(`${API}/api/pos/factory/waybill`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      const r = await fetch('/api/pos/factory/waybill', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...session.headers },
+        body: JSON.stringify(body),
       })
       const d = await r.json()
       if (!r.ok) { setError(d.error || 'Failed to log waybill'); setStage('details'); return }
@@ -202,7 +195,7 @@ export default function WaybillPage() {
     } catch { setError('Network error — please retry'); setStage('details') }
   }
 
-  if (!ready) return (
+  if (!authReady || !session) return (
     <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ width: 32, height: 32, border: '3px solid rgba(249,115,22,.3)', borderTopColor: tokens.warning, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>

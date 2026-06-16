@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#d08a59'
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 interface Table {
   id: string; name: string; section: string; capacity: number
@@ -35,8 +34,7 @@ function elapsed(from?: string): string {
 
 export default function FloorPlan() {
   const router  = useRouter()
-  const supabase = createClient()
-  const [ready, setReady]           = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [sym, setSym]               = useState('£')
   const [tables, setTables]         = useState<Table[]>([])
   const [sections, setSections]     = useState<string[]>([])
@@ -51,27 +49,25 @@ export default function FloorPlan() {
   const gridRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-      }).catch(() => {})
-    })
-  }, [])
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).then(c => {
+      if (c.currency_symbol) setSym(c.currency_symbol)
+    }).catch(() => {})
+  }, [authReady, session])
 
   useEffect(() => {
-    if (!ready) return
+    if (!authReady || !session) return
     loadTables()
     loadStaff()
     const interval = setInterval(loadTables, 15000)
     return () => clearInterval(interval)
-  }, [ready])
+  }, [authReady, session])
 
   async function loadTables() {
+    if (!session) return
     setLoading(true)
     try {
-      const res = await fetch(`${API}/api/pos/restaurant/tables`)
+      const res = await fetch('/api/pos/restaurant/tables', { headers: session.headers })
       const data = await res.json()
       const t: Table[] = data.tables || []
       setTables(t)
@@ -81,14 +77,16 @@ export default function FloorPlan() {
   }
 
   async function loadStaff() {
-    const res = await fetch(`${API}/api/pos/staff`)
+    if (!session) return
+    const res = await fetch('/api/pos/staff', { headers: session.headers })
     const data = await res.json()
     setStaff((data.staff || []).filter((s: any) => s.active))
   }
 
   async function setTableStatus(id: string, status: string) {
-    await fetch(`${API}/api/pos/restaurant/tables`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    if (!session) return
+    await fetch('/api/pos/restaurant/tables', {
+      method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, status }),
     })
     await loadTables()
@@ -96,18 +94,19 @@ export default function FloorPlan() {
   }
 
   async function assignServer(tableId: string, serverId: string) {
-    await fetch(`${API}/api/pos/restaurant/tables`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    if (!session) return
+    await fetch('/api/pos/restaurant/tables', {
+      method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: tableId, server_id: serverId || null }),
     })
     await loadTables()
   }
 
   async function addTable() {
-    if (!newTable.name.trim()) return
+    if (!newTable.name.trim() || !session) return
     setSaving(true)
-    await fetch(`${API}/api/pos/restaurant/tables`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    await fetch('/api/pos/restaurant/tables', {
+      method: 'POST', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...newTable }),
     })
     setShowAdd(false)
@@ -117,8 +116,8 @@ export default function FloorPlan() {
   }
 
   async function deleteTable(id: string) {
-    if (!confirm('Delete this table? Active orders will not be affected.')) return
-    await fetch(`${API}/api/pos/restaurant/tables?id=${id}`, { method: 'DELETE' })
+    if (!confirm('Delete this table? Active orders will not be affected.') || !session) return
+    await fetch(`/api/pos/restaurant/tables?id=${id}`, { method: 'DELETE', headers: session.headers })
     setSelected(null)
     await loadTables()
   }
@@ -136,12 +135,12 @@ export default function FloorPlan() {
 
   async function handleDrop(e: React.DragEvent) {
     e.preventDefault()
-    if (!dragging || !gridRef.current) return
+    if (!dragging || !gridRef.current || !session) return
     const rect = gridRef.current.getBoundingClientRect()
     const x = Math.max(0, Math.floor((e.clientX - rect.left) / CELL))
     const y = Math.max(0, Math.floor((e.clientY - rect.top) / CELL))
-    await fetch(`${API}/api/pos/restaurant/tables`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    await fetch('/api/pos/restaurant/tables', {
+      method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: dragging, x_pos: x, y_pos: y }),
     })
     setDragging(null)

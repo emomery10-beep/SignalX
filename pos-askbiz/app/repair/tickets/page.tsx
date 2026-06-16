@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#6366f1'
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 const GOOD = '#22c55e', WARN = '#f59e0b', BAD = '#ef4444', MUTED = '#94a3b8', DIM = '#64748b'
 
 interface Job {
@@ -62,8 +61,7 @@ function fmtDate(iso: string) { return new Date(iso).toLocaleString('en-GB', { d
 
 export default function RepairTickets() {
   const router = useRouter()
-  const supabase = createClient()
-  const [ready, setReady] = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [sym, setSym] = useState('£')
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
@@ -79,40 +77,38 @@ export default function RepairTickets() {
   const [detailError, setDetailError] = useState('')
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-        if (c.staff_sector && c.staff_sector !== 'repair') router.push('/pos')
-      }).catch(() => {})
-    })
-  }, [])
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: { ...session.headers } }).then(r => r.json()).then(c => {
+      if (c.currency_symbol) setSym(c.currency_symbol)
+      if (c.staff_sector && c.staff_sector !== 'repair') router.push('/pos')
+    }).catch(() => {})
+  }, [authReady, session])
 
   const loadJobs = useCallback(async () => {
+    if (!session) return
     setLoading(true)
     try {
-      const res = await fetch(`${API}/api/pos/service-jobs?limit=500`)
+      const res = await fetch('/api/pos/service-jobs?limit=500', { headers: { ...session.headers } })
       const data = await res.json()
       setJobs(data.jobs || [])
     } catch (e) { console.error('Tickets load error:', e) }
     finally { setLoading(false) }
-  }, [])
+  }, [session])
 
   useEffect(() => {
-    if (!ready) return
+    if (!authReady || !session) return
     loadJobs()
     const interval = setInterval(loadJobs, 30000)
     return () => clearInterval(interval)
-  }, [ready, loadJobs])
+  }, [authReady, session, loadJobs])
 
   const openDetail = async (job: Job) => {
     setSelected(job); setHistory([]); setParts([]); setDetailError('')
     setDetailLoading(true)
     try {
       const [hRes, pRes] = await Promise.all([
-        fetch(`${API}/api/pos/service-jobs/history?job_id=${job.id}`).catch(() => null),
-        fetch(`${API}/api/pos/service-jobs/parts?job_id=${job.id}`).catch(() => null),
+        fetch(`/api/pos/service-jobs/history?job_id=${job.id}`, { headers: { ...session?.headers } }).catch(() => null),
+        fetch(`/api/pos/service-jobs/parts?job_id=${job.id}`, { headers: { ...session?.headers } }).catch(() => null),
       ])
       if (hRes && hRes.ok) { const h = await hRes.json(); setHistory(h.history || []) }
       if (pRes && pRes.ok) { const p = await pRes.json(); setParts(p.parts || []) }
@@ -124,9 +120,9 @@ export default function RepairTickets() {
     if (!selected) return
     setUpdating(true); setDetailError('')
     try {
-      const res = await fetch(`${API}/api/pos/service-jobs`, {
+      const res = await fetch('/api/pos/service-jobs', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...session?.headers },
         body: JSON.stringify({ id: selected.id, status }),
       })
       const data = await res.json()
@@ -147,7 +143,7 @@ export default function RepairTickets() {
 
   const card: React.CSSProperties = { background: '#1e293b', border: '1px solid #334155', borderRadius: 12 }
 
-  if (!ready) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: MUTED, fontFamily: 'system-ui, sans-serif' }}>Loading…</div>
+  if (!authReady) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: MUTED, fontFamily: 'system-ui, sans-serif' }}>Loading…</div>
 
   return (
     <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>

@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#d08a59'
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 interface ServerPerf {
   server_id: string | null
@@ -38,8 +37,7 @@ interface Summary {
 
 export default function StaffPerformancePage() {
   const router  = useRouter()
-  const supabase = createClient()
-  const [ready, setReady]   = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [sym, setSym]       = useState('£')
   const [days, setDays]     = useState(7)
   const [loading, setLoading] = useState(true)
@@ -49,24 +47,22 @@ export default function StaffPerformancePage() {
   const [tab, setTab]         = useState<'servers' | 'shifts'>('servers')
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-      }).catch(() => {})
-    })
-  }, [])
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).then(c => {
+      if (c.currency_symbol) setSym(c.currency_symbol)
+    }).catch(() => {})
+  }, [authReady, session])
 
   useEffect(() => {
-    if (!ready) return
+    if (!authReady || !session) return
     load()
-  }, [ready, days])
+  }, [authReady, session, days])
 
   async function load() {
+    if (!session) return
     setLoading(true)
     try {
-      const res = await fetch(`${API}/api/pos/restaurant/staff-performance?days=${days}`)
+      const res = await fetch(`/api/pos/restaurant/staff-performance?days=${days}`, { headers: session.headers })
       const data = await res.json()
       setSummary(data.summary || null)
       setServers(data.server_performance || [])

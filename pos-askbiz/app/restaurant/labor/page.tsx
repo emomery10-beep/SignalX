@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#d08a59'
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 const ROLES = ['chef', 'waiter', 'bartender', 'manager', 'cashier', 'runner', 'cleaner']
 const ROLE_ICONS: Record<string, string> = {
@@ -32,8 +31,7 @@ function liveCost(shift: Shift): number {
 
 export default function LaborPage() {
   const router   = useRouter()
-  const supabase = createClient()
-  const [ready, setReady]         = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [sym, setSym]             = useState('£')
   const [shifts, setShifts]       = useState<Shift[]>([])
   const [summary, setSummary]     = useState<any>({})
@@ -49,36 +47,34 @@ export default function LaborPage() {
   useEffect(() => { const t = setInterval(() => setTick(x => x + 1), 10000); return () => clearInterval(t) }, [])
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-      }).catch(() => {})
-    })
-  }, [])
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).then(c => {
+      if (c.currency_symbol) setSym(c.currency_symbol)
+    }).catch(() => {})
+  }, [authReady, session])
 
   const load = useCallback(async () => {
+    if (!session) return
     setLoading(true)
     const from = new Date(); from.setDate(from.getDate() - period); from.setHours(0,0,0,0)
     const [shiftsRes, staffRes] = await Promise.all([
-      fetch(`${API}/api/pos/restaurant/labor?from=${from.toISOString()}`),
-      fetch(`${API}/api/pos/staff`),
+      fetch(`/api/pos/restaurant/labor?from=${from.toISOString()}`, { headers: session.headers }),
+      fetch('/api/pos/staff', { headers: session.headers }),
     ])
     const [shiftsData, staffData] = await Promise.all([shiftsRes.json(), staffRes.json()])
     setShifts(shiftsData.shifts || [])
     setSummary(shiftsData.summary || {})
     setStaffList((staffData.staff || []).filter((s: StaffMember) => s.active))
     setLoading(false)
-  }, [period])
+  }, [period, session])
 
-  useEffect(() => { if (ready) load() }, [ready, load])
+  useEffect(() => { if (authReady && session) load() }, [authReady, session, load])
 
   async function clockIn() {
-    if (!clockInForm.staff_id) return
+    if (!clockInForm.staff_id || !session) return
     setSaving(true)
-    await fetch(`${API}/api/pos/restaurant/labor`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    await fetch('/api/pos/restaurant/labor', {
+      method: 'POST', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         staff_id: clockInForm.staff_id, role: clockInForm.role,
         hourly_rate: parseFloat(clockInForm.hourly_rate) || 0, notes: clockInForm.notes,
@@ -91,9 +87,9 @@ export default function LaborPage() {
   }
 
   async function clockOut(shiftId: string) {
-    if (!confirm('Clock out this staff member?')) return
-    await fetch(`${API}/api/pos/restaurant/labor`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    if (!confirm('Clock out this staff member?') || !session) return
+    await fetch('/api/pos/restaurant/labor', {
+      method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: shiftId, action: 'clock_out' }),
     })
     await load()

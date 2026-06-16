@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#ec4899' // salon pink accent
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 const C = { good: '#22c55e', warn: '#f59e0b', bad: '#ef4444', muted: '#94a3b8', dim: '#64748b' }
 
@@ -47,8 +46,7 @@ const statusBadge: Record<string, { bg: string; fg: string; label: string }> = {
 
 export default function SalonBookings() {
   const router = useRouter()
-  const supabase = createClient()
-  const [ready, setReady] = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [sym, setSym] = useState('£')
   const [loading, setLoading] = useState(true)
   const [txs, setTxs] = useState<Tx[]>([])
@@ -64,19 +62,16 @@ export default function SalonBookings() {
   const [form, setForm] = useState({ client: '', phone: '', service: '', stylist_id: '', time: '' })
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-      }).catch(() => {})
-    })
-  }, [])
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: { ...session.headers } }).then(r => r.json()).then(c => {
+      if (c.currency_symbol) setSym(c.currency_symbol)
+    }).catch(() => {})
+  }, [authReady, session])
 
   useEffect(() => {
-    if (!ready) return
+    if (!authReady || !session) return
     load()
-  }, [ready])
+  }, [authReady, session])
 
   async function load() {
     setLoading(true)
@@ -84,9 +79,9 @@ export default function SalonBookings() {
       // Past visits are derived from completed POS transactions (read-only history);
       // scheduled appointments come from the salon appointments endpoint.
       const [txRes, apptRes, staffRes] = await Promise.all([
-        fetch(`${API}/api/pos/transactions?limit=500`),
-        fetch(`${API}/api/pos/salon/appointments`),
-        fetch(`${API}/api/pos/staff`),
+        fetch('/api/pos/transactions?limit=500', { headers: { ...session!.headers } }),
+        fetch('/api/pos/salon/appointments', { headers: { ...session!.headers } }),
+        fetch('/api/pos/staff', { headers: { ...session!.headers } }),
       ])
       const txData = await txRes.json()
       const apptData = await apptRes.json()
@@ -137,9 +132,9 @@ export default function SalonBookings() {
     try {
       // Create (or attach) a salon client record so the booking persists against a profile.
       let client_id: string | null = null
-      const clientRes = await fetch(`${API}/api/pos/salon/clients`, {
+      const clientRes = await fetch('/api/pos/salon/clients', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...session?.headers },
         body: JSON.stringify({ name: form.client.trim(), phone: form.phone || null }),
       })
       const clientData = await clientRes.json()
@@ -148,9 +143,9 @@ export default function SalonBookings() {
       // Compose scheduled_at from the selected day + chosen time.
       const scheduled_at = new Date(`${date}T${form.time}:00`).toISOString()
 
-      const res = await fetch(`${API}/api/pos/salon/appointments`, {
+      const res = await fetch('/api/pos/salon/appointments', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...session?.headers },
         body: JSON.stringify({
           client_id,
           stylist_id: form.stylist_id || null,
@@ -171,9 +166,9 @@ export default function SalonBookings() {
   async function updateStatus(id: string, status: string) {
     setAppointments(prev => prev.map(a => (a.id === id ? { ...a, status } : a)))
     try {
-      await fetch(`${API}/api/pos/salon/appointments`, {
+      await fetch('/api/pos/salon/appointments', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...session?.headers },
         body: JSON.stringify({ id, status }),
       })
     } catch (err) {

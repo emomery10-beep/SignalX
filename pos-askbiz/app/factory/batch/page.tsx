@@ -1,9 +1,8 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
-const API    = process.env.NEXT_PUBLIC_API_URL || ''
 const tokens = {
   bg:      'var(--pos-bg)',
   surface: 'var(--pos-surface)',
@@ -58,8 +57,7 @@ function IconArrowLeft({ size = 18 }: { size?: number }) {
 
 export default function BatchPage() {
   const router  = useRouter()
-  const supabase = createClient()
-  const [ready, setReady]   = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [stage, setStage]   = useState<Stage>('hub')
 
   // Hub data
@@ -84,20 +82,18 @@ export default function BatchPage() {
   const [flashActive, setFlashActive]   = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-    })
     return () => stopCamera()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => { if (ready) loadBatches() }, [ready])
+  useEffect(() => {
+    if (authReady && session) loadBatches()
+  }, [authReady, session])
 
   async function loadBatches() {
+    if (!session) return
     setBatchLoading(true)
     try {
-      const r = await fetch(`${API}/api/pos/factory/batch?status=active&limit=30`)
+      const r = await fetch('/api/pos/factory/batch?status=active&limit=30', { headers: session.headers })
       const d = r.ok ? await r.json() : { batches: [] }
       setBatches(d.batches || [])
     } catch { /* silent */ } finally { setBatchLoading(false) }
@@ -148,13 +144,13 @@ export default function BatchPage() {
 
   // ── Submit scan ─────────────────────────────────────────────────────────────
   async function submitScan() {
-    if (!photoUrl || !batchRef.trim() || !checkpoint) return
+    if (!photoUrl || !batchRef.trim() || !checkpoint || !session) return
     setSaveError('')
     setStage('submitting')
     try {
-      const res = await fetch(`${API}/api/pos/factory/batch`, {
+      const res = await fetch('/api/pos/factory/batch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...session.headers },
         body: JSON.stringify({
           batch_ref:        batchRef.trim(),
           checkpoint,
@@ -185,7 +181,7 @@ export default function BatchPage() {
     openCamera()
   }
 
-  if (!ready) return (
+  if (!authReady || !session) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }}>
       <div style={{ width: 36, height: 36, border: `3px solid rgba(6,182,212,.3)`, borderTopColor: tokens.dispatch, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>

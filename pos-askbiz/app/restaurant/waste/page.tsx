@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#d08a59'
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 const REASONS = [
   { value: 'overcooked',   label: '🔥 Overcooked'   },
@@ -46,8 +45,7 @@ const REASON_COLORS: Record<string, string> = {
 
 export default function WastePage() {
   const router   = useRouter()
-  const supabase = createClient()
-  const [ready, setReady] = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [sym, setSym]     = useState('£')
   const [period, setPeriod] = useState(7)
   const [stage, setStage] = useState<Stage>('list')
@@ -72,25 +70,23 @@ export default function WastePage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-      }).catch(() => {})
-    })
-  }, [])
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).then(c => {
+      if (c.currency_symbol) setSym(c.currency_symbol)
+    }).catch(() => {})
+  }, [authReady, session])
 
   const load = useCallback(async () => {
+    if (!session) return
     setLoading(true)
-    const res  = await fetch(`${API}/api/pos/restaurant/waste?days=${period}`)
+    const res  = await fetch(`/api/pos/restaurant/waste?days=${period}`, { headers: session.headers })
     const data = await res.json()
     setLogs(data.logs || [])
     setSummary(data.summary || null)
     setLoading(false)
-  }, [period])
+  }, [period, session])
 
-  useEffect(() => { if (ready) load() }, [ready, load])
+  useEffect(() => { if (authReady && session) load() }, [authReady, session, load])
 
   // Camera
   async function openCamera() {
@@ -130,13 +126,14 @@ export default function WastePage() {
   }
 
   async function recognizeImage(dataUrl: string) {
+    if (!session) return
     setPreview(dataUrl)
     setStage('recognize')
     setRecog(true)
     const base64 = dataUrl.split(',')[1]
     try {
-      const res  = await fetch(`${API}/api/pos/restaurant/waste`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      const res  = await fetch('/api/pos/restaurant/waste', {
+        method: 'PUT', headers: { ...session.headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: base64, media_type: 'image/jpeg' }),
       })
       const data = await res.json()
@@ -164,10 +161,10 @@ export default function WastePage() {
   }
 
   async function save() {
-    if (!form.item_name || !form.qty) return
+    if (!form.item_name || !form.qty || !session) return
     setSaving(true)
-    await fetch(`${API}/api/pos/restaurant/waste`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    await fetch('/api/pos/restaurant/waste', {
+      method: 'POST', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         item_name:     form.item_name,
         menu_item_id:  form.menu_item_id || null,

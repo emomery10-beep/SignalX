@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#d08a59'
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 interface OrderItem {
   id: string; name: string; unit_price: number; food_cost: number
@@ -45,9 +44,8 @@ function elapsed(from?: string): string {
 function OrdersPage() {
   const router       = useRouter()
   const searchParams = useSearchParams()
-  const supabase     = createClient()
+  const { session, ready: authReady } = usePosAuth()
 
-  const [ready, setReady]       = useState(false)
   const [sym, setSym]           = useState('£')
   const [orders, setOrders]     = useState<Order[]>([])
   const [selected, setSelected] = useState<Order | null>(null)
@@ -63,32 +61,31 @@ function OrdersPage() {
   const [saving, setSaving]     = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-      }).catch(() => {})
-    })
-  }, [])
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).then(c => {
+      if (c.currency_symbol) setSym(c.currency_symbol)
+    }).catch(() => {})
+  }, [authReady, session])
 
   const loadOrders = useCallback(async () => {
-    const res = await fetch(`${API}/api/pos/restaurant/orders?active=true`)
+    if (!session) return
+    const res = await fetch('/api/pos/restaurant/orders?active=true', { headers: session.headers })
     const data = await res.json()
     setOrders(data.orders || [])
     setLoading(false)
-  }, [])
+  }, [session])
 
   const loadMenu = useCallback(async () => {
-    const res = await fetch(`${API}/api/pos/restaurant/menu`)
+    if (!session) return
+    const res = await fetch('/api/pos/restaurant/menu', { headers: session.headers })
     const data = await res.json()
     const cats: MenuCategory[] = data.menu || []
     setMenu(cats)
     if (cats.length && !activeCat) setActiveCat(cats[0]?.id || '')
-  }, [])
+  }, [session])
 
   useEffect(() => {
-    if (!ready) return
+    if (!authReady || !session) return
     loadOrders()
     loadMenu()
     // Open specific order from URL
@@ -100,7 +97,7 @@ function OrdersPage() {
     if (isNew) setView('add_items')
     const interval = setInterval(loadOrders, 15000)
     return () => clearInterval(interval)
-  }, [ready])
+  }, [authReady, session])
 
   // Select order from URL params after orders load
   useEffect(() => {
@@ -132,7 +129,7 @@ function OrdersPage() {
   const cartTotal = cart.reduce((s, c) => s + c.item.price * c.qty, 0)
 
   async function sendOrder() {
-    if (!cart.length) return
+    if (!cart.length || !session) return
     setSaving(true)
     const tableId = searchParams.get('table')
     const items = cart.map(c => ({
@@ -145,14 +142,14 @@ function OrdersPage() {
 
     if (selected) {
       // Add items to existing order
-      await fetch(`${API}/api/pos/restaurant/orders`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      await fetch('/api/pos/restaurant/orders', {
+        method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: selected.id, action: 'add_items', items }),
       })
     } else {
       // New order
-      await fetch(`${API}/api/pos/restaurant/orders`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+      await fetch('/api/pos/restaurant/orders', {
+        method: 'POST', headers: { ...session.headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ table_id: tableId || null, covers, items }),
       })
     }
@@ -163,10 +160,10 @@ function OrdersPage() {
   }
 
   async function payOrder() {
-    if (!selected) return
+    if (!selected || !session) return
     setPaying(true)
-    await fetch(`${API}/api/pos/restaurant/orders`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    await fetch('/api/pos/restaurant/orders', {
+      method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: selected.id, action: 'pay', payment_type: payMethod, discount_amount: discount }),
     })
     setPaying(false)

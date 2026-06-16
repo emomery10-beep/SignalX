@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 // ── Design tokens (from CSS variables in globals.css) ──────────────────────
-const API    = process.env.NEXT_PUBLIC_API_URL || ''
 const tokens = {
   bg:        'var(--pos-bg)',
   surface:   'var(--pos-surface)',
@@ -164,8 +163,7 @@ function elapsedLabel(iso: string) {
 
 export default function FactoryHub() {
   const router = useRouter()
-  const supabase = createClient()
-  const [ready, setReady]       = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [captures, setCaptures] = useState<Capture[]>([])
   const [loading, setLoading]   = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -191,32 +189,26 @@ export default function FactoryHub() {
   const [waybillOnTimeRate, setWaybillOnTimeRate] = useState<number | null>(null)
   const [waybillTotal, setWaybillTotal]           = useState(0)
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-    })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   const loadCaptures = useCallback(async (silent = false) => {
+    if (!session) return
     if (!silent) setLoading(true)
     else setRefreshing(true)
     try {
-      const r = await fetch(`${API}/api/pos/factory/capture?limit=100`)
+      const r = await fetch('/api/pos/factory/capture?limit=100', { headers: session.headers })
       const d = r.ok ? await r.json() : { captures: [] }
       setCaptures(d.captures || [])
     } catch { /* silent */ } finally {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [])
+  }, [session])
 
   const loadDowntime = useCallback(async () => {
+    if (!session) return
     try {
       const [ra, rt] = await Promise.all([
-        fetch(`${API}/api/pos/factory/downtime?active=true`),
-        fetch(`${API}/api/pos/factory/downtime`),
+        fetch('/api/pos/factory/downtime?active=true', { headers: session.headers }),
+        fetch('/api/pos/factory/downtime', { headers: session.headers }),
       ])
       const da = ra.ok ? await ra.json() : { activeEvents: [] }
       const dt = rt.ok ? await rt.json() : { totalDowntimeMinutes: 0 }
@@ -224,46 +216,50 @@ export default function FactoryHub() {
       setDowntimeMinutes(dt.totalDowntimeMinutes || 0)
       setDowntimeLoaded(true)
     } catch { /* silent */ }
-  }, [])
+  }, [session])
 
   const loadQuality = useCallback(async () => {
+    if (!session) return
     try {
-      const r = await fetch(`${API}/api/pos/factory/quality`)
+      const r = await fetch('/api/pos/factory/quality', { headers: session.headers })
       const d = r.ok ? await r.json() : {}
       setQualityCriticals(d.criticals || 0)
       setQualityOpen(d.openCount || 0)
       setQualityTotalAffected(d.totalAffected || 0)
     } catch { /* silent */ }
-  }, [])
+  }, [session])
 
   const loadBatches = useCallback(async () => {
+    if (!session) return
     try {
-      const r = await fetch(`${API}/api/pos/factory/batch?status=active&limit=100`)
+      const r = await fetch('/api/pos/factory/batch?status=active&limit=100', { headers: session.headers })
       const d = r.ok ? await r.json() : { batches: [] }
       setActiveBatchCount((d.batches || []).length)
     } catch { /* silent */ }
-  }, [])
+  }, [session])
 
   const loadShift = useCallback(async () => {
+    if (!session) return
     try {
-      const r = await fetch(`${API}/api/pos/factory/shift`)
+      const r = await fetch('/api/pos/factory/shift', { headers: session.headers })
       const d = r.ok ? await r.json() : {}
       setActiveShift(d.activeShift || null)
       setShiftLoaded(true)
     } catch { /* silent */ }
-  }, [])
+  }, [session])
 
   const loadWaybills = useCallback(async () => {
+    if (!session) return
     try {
-      const r = await fetch(`${API}/api/pos/factory/waybill`)
+      const r = await fetch('/api/pos/factory/waybill', { headers: session.headers })
       const d = r.ok ? await r.json() : {}
       setWaybillOnTimeRate(d.onTimeRate ?? null)
       setWaybillTotal(d.totalDispatches || 0)
     } catch { /* silent */ }
-  }, [])
+  }, [session])
 
   useEffect(() => {
-    if (!ready) return
+    if (!authReady || !session) return
     loadCaptures()
     loadDowntime()
     loadQuality()
@@ -272,7 +268,7 @@ export default function FactoryHub() {
     loadWaybills()
     const interval = setInterval(() => { loadCaptures(true); loadDowntime(); loadQuality(); loadBatches(); loadShift(); loadWaybills() }, 30_000)
     return () => clearInterval(interval)
-  }, [ready, loadCaptures, loadDowntime, loadQuality, loadBatches, loadShift, loadWaybills])
+  }, [authReady, session, loadCaptures, loadDowntime, loadQuality, loadBatches, loadShift, loadWaybills])
 
   // ── Computed KPIs ────────────────────────────────────────────────────────
   const todays    = captures.filter(c => isToday(c.created_at))
@@ -346,7 +342,7 @@ export default function FactoryHub() {
     },
   ]
 
-  if (!ready) return (
+  if (!authReady || !session) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: tokens.bg }}>
       <div style={{ width: 36, height: 36, border: `3px solid ${tokens.accent}20`, borderTopColor: tokens.accent, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>

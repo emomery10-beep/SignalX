@@ -1,13 +1,12 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 import MenuMatrix from '@/components/MenuMatrix'
 import ShiftProfitability from '@/components/ShiftProfitability'
 import WhatsAppAutopilot from '@/components/WhatsAppAutopilot'
 
 const ACC = '#d08a59'
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 interface KPI {
   label: string
@@ -22,8 +21,7 @@ interface TopDish { name: string; qty: number; revenue: number; margin_pct: numb
 
 export default function RestaurantHub() {
   const router  = useRouter()
-  const supabase = createClient()
-  const [ready, setReady]               = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [sym, setSym]                   = useState('£')
   const [kpis, setKpis]                 = useState<KPI[]>([])
   const [tables, setTables]             = useState<TableSummary[]>([])
@@ -36,36 +34,34 @@ export default function RestaurantHub() {
   const [anomalies, setAnomalies]       = useState<{ title: string; severity: string; prompt: string }[]>([])
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-        // If staff_sector is set, this is a staff session — redirect to appropriate section
-        if (c.staff_sector && c.staff_sector !== 'restaurant') {
-          router.push('/pos')
-        }
-      }).catch(() => {})
-    })
-  }, [])
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).then(c => {
+      if (c.currency_symbol) setSym(c.currency_symbol)
+      // If staff_sector is set, this is a staff session — redirect to appropriate section
+      if (c.staff_sector && c.staff_sector !== 'restaurant') {
+        router.push('/pos')
+      }
+    }).catch(() => {})
+  }, [authReady, session])
 
   useEffect(() => {
-    if (!ready) return
+    if (!authReady || !session) return
     loadAll()
     const interval = setInterval(loadAll, 30000) // refresh every 30s
     return () => clearInterval(interval)
-  }, [ready])
+  }, [authReady, session])
 
   async function loadAll() {
+    if (!session) return
     setLoading(true)
     try {
       const [analyticsRes, tablesRes, onlineRes, eightySixRes, briefRes, anomalyRes] = await Promise.all([
-        fetch(`${API}/api/pos/restaurant/analytics?days=1`),
-        fetch(`${API}/api/pos/restaurant/tables`),
-        fetch(`${API}/api/pos/restaurant/online-orders?status=pending`),
-        fetch(`${API}/api/pos/restaurant/eighty-six`),
-        fetch(`${API}/api/pos/restaurant/daily-brief`),
-        fetch(`${API}/api/pos/restaurant/anomalies`),
+        fetch('/api/pos/restaurant/analytics?days=1', { headers: session.headers }),
+        fetch('/api/pos/restaurant/tables', { headers: session.headers }),
+        fetch('/api/pos/restaurant/online-orders?status=pending', { headers: session.headers }),
+        fetch('/api/pos/restaurant/eighty-six', { headers: session.headers }),
+        fetch('/api/pos/restaurant/daily-brief', { headers: session.headers }),
+        fetch('/api/pos/restaurant/anomalies', { headers: session.headers }),
       ])
 
       const [analytics, tablesData, onlineData, eightySixData, briefData, anomalyData] = await Promise.all([
@@ -105,9 +101,10 @@ export default function RestaurantHub() {
   }
 
   async function acceptOnline(id: string) {
+    if (!session) return
     setAccepting(id)
-    await fetch(`${API}/api/pos/restaurant/online-orders`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    await fetch('/api/pos/restaurant/online-orders', {
+      method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, action: 'accept' }),
     })
     await loadAll()
@@ -220,7 +217,8 @@ export default function RestaurantHub() {
                   )}
                   <button
                     onClick={async () => {
-                      await fetch(`${API}/api/pos/restaurant/anomalies`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: (a as any).id }) })
+                      if (!session) return
+                      await fetch('/api/pos/restaurant/anomalies', { method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ id: (a as any).id }) })
                       setAnomalies(prev => prev.filter((_, idx) => idx !== i))
                     }}
                     style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 14, padding: '0 2px' }}

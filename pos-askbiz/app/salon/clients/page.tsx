@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#ec4899' // salon pink accent
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 const C = { good: '#22c55e', warn: '#f59e0b', bad: '#ef4444', muted: '#94a3b8', dim: '#64748b' }
 
 interface TxItem { name: string; qty: number; unit_price: number }
@@ -77,8 +76,7 @@ function segment(c: Client): { label: string; color: string } {
 
 export default function SalonClients() {
   const router = useRouter()
-  const supabase = createClient()
-  const [ready, setReady] = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [sym, setSym] = useState('£')
   const [loading, setLoading] = useState(true)
   const [txs, setTxs] = useState<Tx[]>([])
@@ -87,27 +85,24 @@ export default function SalonClients() {
   const [selected, setSelected] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-      }).catch(() => {})
-    })
-  }, [])
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: { ...session.headers } }).then(r => r.json()).then(c => {
+      if (c.currency_symbol) setSym(c.currency_symbol)
+    }).catch(() => {})
+  }, [authReady, session])
 
   useEffect(() => {
-    if (!ready) return
+    if (!authReady || !session) return
     load()
-  }, [ready])
+  }, [authReady, session])
 
   async function load() {
     setLoading(true)
     try {
       // Merge persisted salon clients with profiles derived from POS transaction customers.
       const [txRes, clientRes] = await Promise.all([
-        fetch(`${API}/api/pos/transactions?limit=500`),
-        fetch(`${API}/api/pos/salon/clients`),
+        fetch('/api/pos/transactions?limit=500', { headers: { ...session!.headers } }),
+        fetch('/api/pos/salon/clients', { headers: { ...session!.headers } }),
       ])
       const txData = await txRes.json()
       const clientData = await clientRes.json()
@@ -162,7 +157,7 @@ export default function SalonClients() {
 
   async function reloadClients() {
     try {
-      const res = await fetch(`${API}/api/pos/salon/clients`)
+      const res = await fetch('/api/pos/salon/clients', { headers: { ...session?.headers } })
       const data = await res.json()
       setSalonClients(data.clients || [])
     } catch (e) {
@@ -229,14 +224,14 @@ export default function SalonClients() {
           </>
         )}
 
-        {current && <ClientProfile client={current} sym={sym} onClientPersisted={reloadClients} />}
+        {current && <ClientProfile client={current} sym={sym} session={session} onClientPersisted={reloadClients} />}
       </div>
     </div>
   )
 }
 
 // ─── Client profile + camera-first before/after capture ──────────────────────
-function ClientProfile({ client, sym, onClientPersisted }: { client: Client; sym: string; onClientPersisted: () => void }) {
+function ClientProfile({ client, sym, session, onClientPersisted }: { client: Client; sym: string; session: any; onClientPersisted: () => void }) {
   const seg = segment(client)
   const [photos, setPhotos] = useState<Photo[]>([])
   const [notes, setNotes] = useState('')
@@ -254,6 +249,8 @@ function ClientProfile({ client, sym, onClientPersisted }: { client: Client; sym
   const [camError, setCamError] = useState<string | null>(null)
   const [pendingTag, setPendingTag] = useState<'Before' | 'After'>('Before')
   const [pendingService, setPendingService] = useState('')
+
+  const authHeaders = session?.headers || {}
 
   // Favourite service (most frequent item)
   const favourite = useMemo(() => {
@@ -278,8 +275,8 @@ function ClientProfile({ client, sym, onClientPersisted }: { client: Client; sym
   async function loadProfileData(salonId: string) {
     try {
       const [photoRes, formulaRes] = await Promise.all([
-        fetch(`${API}/api/pos/salon/client-photos?client_id=${salonId}`),
-        fetch(`${API}/api/pos/salon/color-formulas?client_id=${salonId}`),
+        fetch(`/api/pos/salon/client-photos?client_id=${salonId}`, { headers: { ...authHeaders } }),
+        fetch(`/api/pos/salon/color-formulas?client_id=${salonId}`, { headers: { ...authHeaders } }),
       ])
       const photoData = await photoRes.json()
       const formulaData = await formulaRes.json()
@@ -302,9 +299,9 @@ function ClientProfile({ client, sym, onClientPersisted }: { client: Client; sym
   async function ensureSalonId(): Promise<string | null> {
     if (salonIdRef.current) return salonIdRef.current
     try {
-      const res = await fetch(`${API}/api/pos/salon/clients`, {
+      const res = await fetch('/api/pos/salon/clients', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({ name: client.name, phone: client.phone || null }),
       })
       const data = await res.json()
@@ -323,15 +320,15 @@ function ClientProfile({ client, sym, onClientPersisted }: { client: Client; sym
     const salonId = await ensureSalonId()
     if (!salonId) return
     try {
-      await fetch(`${API}/api/pos/salon/clients`, {
+      await fetch('/api/pos/salon/clients', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({ id: salonId, notes }),
       })
       if (formula.trim()) {
-        await fetch(`${API}/api/pos/salon/color-formulas`, {
+        await fetch('/api/pos/salon/color-formulas', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeaders },
           body: JSON.stringify({ client_id: salonId, formula }),
         })
       }
@@ -412,9 +409,9 @@ function ClientProfile({ client, sym, onClientPersisted }: { client: Client; sym
     const salonId = await ensureSalonId()
     if (!salonId) return
     try {
-      const res = await fetch(`${API}/api/pos/salon/client-photos`, {
+      const res = await fetch('/api/pos/salon/client-photos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
           client_id: salonId,
           image: dataUrl,

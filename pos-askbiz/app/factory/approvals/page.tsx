@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#f59e0b'
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 const GOOD = '#22c55e'
 const WARN = '#f59e0b'
@@ -42,8 +41,7 @@ function timeAgo(iso: string) {
 
 export default function ApprovalsPage() {
   const router = useRouter()
-  const supabase = createClient()
-  const [ready, setReady] = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [captures, setCaptures] = useState<Capture[]>([])
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
@@ -58,19 +56,16 @@ export default function ApprovalsPage() {
   const [zoom, setZoom] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).catch(() => {})
-    })
-  }, [])
-
-  useEffect(() => { if (ready) load() }, [ready])
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).catch(() => {})
+    load()
+  }, [authReady, session])
 
   async function load() {
+    if (!session) return
     setLoading(true)
     try {
-      const res = await fetch(`${API}/api/pos/factory/capture?status=pending&limit=100`)
+      const res = await fetch('/api/pos/factory/capture?status=pending&limit=100', { headers: session.headers })
       const data = res.ok ? await res.json() : { captures: [] }
       setCaptures(data.captures || [])
     } catch (e) {
@@ -81,12 +76,13 @@ export default function ApprovalsPage() {
   }
 
   async function decide(c: Capture, status: 'approved' | 'rejected', rejection_reason?: string) {
+    if (!session) return
     setBusy(c.id)
     setError(null)
     try {
-      const res = await fetch(`${API}/api/pos/factory/capture`, {
+      const res = await fetch('/api/pos/factory/capture', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...session.headers },
         body: JSON.stringify({ id: c.id, status, ...(rejection_reason ? { rejection_reason } : {}) }),
       })
       if (res.status === 405) {
@@ -119,7 +115,7 @@ export default function ApprovalsPage() {
     decide(rejecting, 'rejected', reason.trim())
   }
 
-  if (!ready) {
+  if (!authReady || !session) {
     return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>Loading…</div>
   }
 

@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#d08a59'
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
   pending:   { label: 'Pending',    color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', dot: '#f59e0b' },
@@ -34,8 +33,7 @@ const inp: React.CSSProperties = {
 
 export default function OnlineOrdersPage() {
   const router   = useRouter()
-  const supabase = createClient()
-  const [ready, setReady] = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [sym, setSym]     = useState('£')
   const [orders, setOrders]   = useState<OnlineOrder[]>([])
   const [loading, setLoading] = useState(true)
@@ -51,36 +49,35 @@ export default function OnlineOrdersPage() {
   })
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-      }).catch(() => {})
-    })
-  }, [])
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).then(c => {
+      if (c.currency_symbol) setSym(c.currency_symbol)
+    }).catch(() => {})
+  }, [authReady, session])
 
   const load = useCallback(async () => {
+    if (!session) return
     setLoading(true)
-    const res  = await fetch(`${API}/api/pos/restaurant/online-orders?days=2`)
+    const res  = await fetch('/api/pos/restaurant/online-orders?days=2', { headers: session.headers })
     const data = await res.json()
     setOrders(data.orders || [])
     setLoading(false)
-  }, [])
+  }, [session])
 
-  useEffect(() => { if (ready) load() }, [ready, load])
+  useEffect(() => { if (authReady && session) load() }, [authReady, session, load])
 
   // Poll every 30s for new pending orders
   useEffect(() => {
-    if (!ready) return
+    if (!authReady || !session) return
     const t = setInterval(load, 30000)
     return () => clearInterval(t)
-  }, [ready, load])
+  }, [authReady, session, load])
 
   async function accept(id: string) {
+    if (!session) return
     setActioning(id)
-    await fetch(`${API}/api/pos/restaurant/online-orders`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    await fetch('/api/pos/restaurant/online-orders', {
+      method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, action: 'accept' }),
     })
     setActioning(null)
@@ -88,10 +85,10 @@ export default function OnlineOrdersPage() {
   }
 
   async function reject(id: string) {
-    if (!confirm('Reject this order?')) return
+    if (!confirm('Reject this order?') || !session) return
     setActioning(id)
-    await fetch(`${API}/api/pos/restaurant/online-orders`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    await fetch('/api/pos/restaurant/online-orders', {
+      method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, action: 'reject' }),
     })
     setActioning(null)
@@ -99,9 +96,10 @@ export default function OnlineOrdersPage() {
   }
 
   async function markReady(id: string) {
+    if (!session) return
     setActioning(id)
-    await fetch(`${API}/api/pos/restaurant/online-orders`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    await fetch('/api/pos/restaurant/online-orders', {
+      method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, action: 'ready' }),
     })
     setActioning(null)
@@ -109,9 +107,10 @@ export default function OnlineOrdersPage() {
   }
 
   async function markCollected(id: string) {
+    if (!session) return
     setActioning(id)
-    await fetch(`${API}/api/pos/restaurant/online-orders`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    await fetch('/api/pos/restaurant/online-orders', {
+      method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, action: 'collect' }),
     })
     setActioning(null)
@@ -131,14 +130,14 @@ export default function OnlineOrdersPage() {
   }
 
   async function saveManualOrder() {
-    if (!addForm.customer_name || addForm.items.every(i => !i.name)) return
+    if (!addForm.customer_name || addForm.items.every(i => !i.name) || !session) return
     setSaving(true)
     const items = addForm.items.filter(i => i.name).map(i => ({
       name: i.name, qty: parseInt(i.qty) || 1, price: parseFloat(i.price) || 0,
     }))
     const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0)
-    await fetch(`${API}/api/pos/restaurant/online-orders`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    await fetch('/api/pos/restaurant/online-orders', {
+      method: 'POST', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         customer_name: addForm.customer_name,
         customer_phone: addForm.customer_phone || null,

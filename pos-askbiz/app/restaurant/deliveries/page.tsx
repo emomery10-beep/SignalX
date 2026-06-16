@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#d08a59'
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 const CATEGORY_LABELS: Record<string, string> = {
   meat: '🥩 Meat', fish: '🐟 Fish', dairy: '🧀 Dairy', produce: '🥦 Produce',
@@ -51,8 +50,7 @@ const inp: React.CSSProperties = {
 
 export default function DeliveriesPage() {
   const router   = useRouter()
-  const supabase = createClient()
-  const [ready, setReady] = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [sym, setSym]     = useState('£')
   const [stage, setStage] = useState<Stage>('capture')
 
@@ -80,14 +78,11 @@ export default function DeliveriesPage() {
   const [doneMsg, setDoneMsg]       = useState('')
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-      }).catch(() => {})
-    })
-  }, [])
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).then(c => {
+      if (c.currency_symbol) setSym(c.currency_symbol)
+    }).catch(() => {})
+  }, [authReady, session])
 
   // Camera helpers
   async function openCamera() {
@@ -132,6 +127,7 @@ export default function DeliveriesPage() {
   }
 
   async function processImage(dataUrl: string, mediaType: string) {
+    if (!session) return
     setPreview(dataUrl)
     setStage('scanning')
     setError(null)
@@ -140,9 +136,9 @@ export default function DeliveriesPage() {
     const base64 = dataUrl.split(',')[1]
 
     try {
-      const res = await fetch(`${API}/api/pos/restaurant/recognize/invoice`, {
+      const res = await fetch('/api/pos/restaurant/recognize/invoice', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...session.headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: base64, media_type: mediaType || 'image/jpeg' }),
       })
       const data = await res.json()
@@ -195,6 +191,7 @@ export default function DeliveriesPage() {
   }
 
   async function confirmUpdates() {
+    if (!session) return
     const toUpdate = items.filter(it => it.confirmed && it.menu_item_id)
     if (toUpdate.length === 0) {
       setError('No matched items selected for update.')
@@ -211,9 +208,9 @@ export default function DeliveriesPage() {
     const totalValue = items.reduce((s, it) => s + (it.line_total || 0), 0)
 
     try {
-      const res = await fetch(`${API}/api/pos/restaurant/recognize/invoice`, {
+      const res = await fetch('/api/pos/restaurant/recognize/invoice', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...session.headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           updates,
           delivery_record: {

@@ -1,9 +1,8 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
-const API    = process.env.NEXT_PUBLIC_API_URL || ''
 const tokens = {
   bg:      'var(--pos-bg)',
   surface: 'var(--pos-surface)',
@@ -44,8 +43,7 @@ function IconArrowLeft({ size = 18 }: { size?: number }) {
 
 export default function QualityPage() {
   const router = useRouter()
-  const supabase = createClient()
-  const [ready, setReady]   = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [stage, setStage]   = useState<Stage>('viewfinder')
 
   // Captured data
@@ -67,18 +65,13 @@ export default function QualityPage() {
   const [flashActive, setFlashActive]   = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-    })
     return () => stopCamera()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
-    if (ready && stage === 'viewfinder') openCamera()
+    if (authReady && session && stage === 'viewfinder') openCamera()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready])
+  }, [authReady, session])
 
   const openCamera = useCallback(async () => {
     setCameraErr('')
@@ -124,13 +117,13 @@ export default function QualityPage() {
   }
 
   async function submitDefect() {
-    if (!photoUrl || !defectType || !severity) return
+    if (!photoUrl || !defectType || !severity || !session) return
     setSaveError('')
     setStage('submitting')
     try {
-      const res = await fetch(`${API}/api/pos/factory/quality`, {
+      const res = await fetch('/api/pos/factory/quality', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...session.headers },
         body: JSON.stringify({
           defect_type: defectType,
           severity,
@@ -159,7 +152,7 @@ export default function QualityPage() {
     openCamera()
   }
 
-  if (!ready) return (
+  if (!authReady || !session) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }}>
       <div style={{ width: 36, height: 36, border: `3px solid rgba(239,68,68,.3)`, borderTopColor: tokens.danger, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>

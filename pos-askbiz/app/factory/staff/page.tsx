@@ -1,9 +1,8 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 const ACCENT = '#d08a59'
 
 type FactoryRole = 'worker' | 'supervisor' | 'manager'
@@ -72,8 +71,7 @@ function IconPlus({ size = 20 }: { size?: number }) {
 
 export default function FactoryStaffPage() {
   const router = useRouter()
-  const supabase = createClient()
-  const [ready, setReady] = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [loading, setLoading] = useState(true)
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [locations, setLocations] = useState<Array<{ id: string; name: string }>>([])
@@ -91,27 +89,17 @@ export default function FactoryStaffPage() {
     locationId: null,
   })
 
-  // Auth guard
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
-        router.push('/pos')
-        return
-      }
-      setReady(true)
-    })
-  }, [])
-
   // Load staff
   const loadStaff = useCallback(async () => {
+    if (!session) return
     setLoading(true)
     try {
-      const r = await fetch(`${API}/api/pos/staff`)
+      const r = await fetch('/api/pos/staff', { headers: session.headers })
       const d = r.ok ? await r.json() : { staff: [] }
       setStaff(d.staff || [])
 
       // Load locations
-      const locRes = await fetch(`${API}/api/pos/locations`)
+      const locRes = await fetch('/api/pos/locations', { headers: session.headers })
       const locData = locRes.ok ? await locRes.json() : { locations: [] }
       setLocations(locData.locations || [])
     } catch (e) {
@@ -120,12 +108,12 @@ export default function FactoryStaffPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [session])
 
   useEffect(() => {
-    if (!ready) return
+    if (!authReady || !session) return
     loadStaff()
-  }, [ready, loadStaff])
+  }, [authReady, session, loadStaff])
 
   const handleRoleChange = (newRole: FactoryRole) => {
     setForm({
@@ -151,11 +139,12 @@ export default function FactoryStaffPage() {
       return
     }
 
+    if (!session) return
     setSubmitting(true)
     try {
-      const res = await fetch(`${API}/api/pos/staff`, {
+      const res = await fetch('/api/pos/staff', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...session.headers },
         body: JSON.stringify({
           name: form.name.trim(),
           email: form.email.trim(),
@@ -190,7 +179,7 @@ export default function FactoryStaffPage() {
     }
   }
 
-  if (!ready)
+  if (!authReady || !session)
     return (
       <div style={{ minHeight: '100vh', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: 36, height: 36, border: `3px solid ${ACCENT}20`, borderTopColor: ACCENT, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />

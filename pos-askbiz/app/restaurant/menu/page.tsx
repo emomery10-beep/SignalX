@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#d08a59'
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 const STATIONS = ['all', 'grill', 'fryer', 'cold', 'drinks', 'dessert']
 const STATION_ICONS: Record<string, string> = { all: '🍽️', grill: '🔥', fryer: '🍟', cold: '🥗', drinks: '🍹', dessert: '🍮' }
@@ -20,8 +19,7 @@ interface EightySixEntry { id: string; item_name: string; eighty_sixed_at: strin
 
 export default function MenuPage() {
   const router   = useRouter()
-  const supabase = createClient()
-  const [ready, setReady]         = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [sym, setSym]             = useState('£')
   const [menu, setMenu]           = useState<MenuCategory[]>([])
   const [eightySix, setEightySix] = useState<EightySixEntry[]>([])
@@ -41,20 +39,18 @@ export default function MenuPage() {
   const [newCat, setNewCat]   = useState({ name: '', icon: '🍽️', color: ACC })
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-      }).catch(() => {})
-    })
-  }, [])
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: session.headers }).then(r => r.json()).then(c => {
+      if (c.currency_symbol) setSym(c.currency_symbol)
+    }).catch(() => {})
+  }, [authReady, session])
 
-  useEffect(() => { if (ready) { loadMenu(); load86() } }, [ready])
+  useEffect(() => { if (authReady && session) { loadMenu(); load86() } }, [authReady, session])
 
   async function loadMenu() {
+    if (!session) return
     setLoading(true)
-    const res = await fetch(`${API}/api/pos/restaurant/menu`)
+    const res = await fetch('/api/pos/restaurant/menu', { headers: session.headers })
     const data = await res.json()
     const cats: MenuCategory[] = data.menu || []
     setMenu(cats)
@@ -63,16 +59,17 @@ export default function MenuPage() {
   }
 
   async function load86() {
-    const res = await fetch(`${API}/api/pos/restaurant/eighty-six`)
+    if (!session) return
+    const res = await fetch('/api/pos/restaurant/eighty-six', { headers: session.headers })
     const data = await res.json()
     setEightySix(data.eighty_six || [])
   }
 
   async function saveItem() {
-    if (!newItem.name?.trim() || newItem.price == null) return
+    if (!newItem.name?.trim() || newItem.price == null || !session) return
     setSaving(true)
-    await fetch(`${API}/api/pos/restaurant/menu`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    await fetch('/api/pos/restaurant/menu', {
+      method: 'POST', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'item', ...newItem }),
     })
     setShowAdd(false)
@@ -82,31 +79,33 @@ export default function MenuPage() {
   }
 
   async function updateItem(id: string, fields: Partial<MenuItem>) {
-    await fetch(`${API}/api/pos/restaurant/menu`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    if (!session) return
+    await fetch('/api/pos/restaurant/menu', {
+      method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'item', id, ...fields }),
     })
     await loadMenu()
   }
 
   async function deleteItem(id: string) {
-    if (!confirm('Delete this menu item?')) return
-    await fetch(`${API}/api/pos/restaurant/menu?id=${id}&type=item`, { method: 'DELETE' })
+    if (!confirm('Delete this menu item?') || !session) return
+    await fetch(`/api/pos/restaurant/menu?id=${id}&type=item`, { method: 'DELETE', headers: session.headers })
     setEditing(null)
     await loadMenu()
   }
 
   async function toggle86(item: MenuItem) {
+    if (!session) return
     if (item.eighty_sixed) {
       const entry = eightySix.find(e => e.item_name === item.name)
       if (entry) {
-        await fetch(`${API}/api/pos/restaurant/eighty-six?id=${entry.id}`, { method: 'DELETE' })
+        await fetch(`/api/pos/restaurant/eighty-six?id=${entry.id}`, { method: 'DELETE', headers: session.headers })
       } else {
         await updateItem(item.id, { eighty_sixed: false })
       }
     } else {
-      await fetch(`${API}/api/pos/restaurant/eighty-six`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+      await fetch('/api/pos/restaurant/eighty-six', {
+        method: 'POST', headers: { ...session.headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ menu_item_id: item.id, item_name: item.name, reason: 'Out of stock' }),
       })
     }
@@ -114,10 +113,10 @@ export default function MenuPage() {
   }
 
   async function saveCat() {
-    if (!newCat.name.trim()) return
+    if (!newCat.name.trim() || !session) return
     setSaving(true)
-    await fetch(`${API}/api/pos/restaurant/menu`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    await fetch('/api/pos/restaurant/menu', {
+      method: 'POST', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'category', ...newCat }),
     })
     setShowCat(false); setNewCat({ name: '', icon: '🍽️', color: ACC })

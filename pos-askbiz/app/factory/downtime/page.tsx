@@ -1,9 +1,8 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
-const API    = process.env.NEXT_PUBLIC_API_URL || ''
 const tokens = {
   bg:      'var(--pos-bg)',
   surface: 'var(--pos-surface)',
@@ -56,8 +55,7 @@ function IconArrowLeft({ size = 18 }: { size?: number }) {
 
 export default function DowntimePage() {
   const router = useRouter()
-  const supabase = createClient()
-  const [ready, setReady]         = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [stage, setStage]         = useState<Stage>('active_check')
 
   // Active downtime events (currently open)
@@ -84,23 +82,19 @@ export default function DowntimePage() {
   const [flashActive, setFlashActive] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-    })
     return () => stopCamera()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
-    if (!ready) return
+    if (!authReady || !session) return
     loadActive()
-  }, [ready])
+  }, [authReady, session])
 
   async function loadActive() {
+    if (!session) return
     setLoadingActive(true)
     try {
-      const r = await fetch(`${API}/api/pos/factory/downtime?active=true`)
+      const r = await fetch('/api/pos/factory/downtime?active=true', { headers: session.headers })
       const d = r.ok ? await r.json() : { activeEvents: [] }
       setActiveEvents(d.activeEvents || [])
     } catch { /* silent */ } finally {
@@ -158,13 +152,13 @@ export default function DowntimePage() {
 
   // ── Submit new downtime ────────────────────────────────────────────────────
   async function submitDowntime() {
-    if (!photoUrl || !reason) return
+    if (!photoUrl || !reason || !session) return
     setSaveError('')
     setStage('submitting')
     try {
-      const res = await fetch(`${API}/api/pos/factory/downtime`, {
+      const res = await fetch('/api/pos/factory/downtime', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...session.headers },
         body: JSON.stringify({
           machine_name: machineName.trim() || 'Machine',
           reason,
@@ -187,12 +181,12 @@ export default function DowntimePage() {
 
   // ── Close existing downtime ────────────────────────────────────────────────
   async function submitClose(photo: string) {
-    if (!closingEvent) return
+    if (!closingEvent || !session) return
     setStage('submitting')
     try {
-      const res = await fetch(`${API}/api/pos/factory/downtime`, {
+      const res = await fetch('/api/pos/factory/downtime', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...session.headers },
         body: JSON.stringify({ id: closingEvent.id, image: photo }),
       })
       if (!res.ok) {
@@ -214,7 +208,7 @@ export default function DowntimePage() {
     setClosingEvent(null); setClosePhotoUrl('')
   }
 
-  if (!ready) return (
+  if (!authReady || !session) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }}>
       <div style={{ width: 36, height: 36, border: '3px solid rgba(239,68,68,.3)', borderTopColor: tokens.danger, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>

@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#6366f1'
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 const GOOD = '#22c55e', WARN = '#f59e0b', BAD = '#ef4444', MUTED = '#94a3b8', DIM = '#64748b'
 
 interface Job {
@@ -53,37 +52,33 @@ function timeAgo(iso: string) {
 
 export default function RepairHub() {
   const router = useRouter()
-  const supabase = createClient()
-  const [ready, setReady] = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [sym, setSym] = useState('£')
   const [jobs, setJobs] = useState<Job[]>([])
   const [lowStockCount, setLowStockCount] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-        if (c.staff_sector && c.staff_sector !== 'repair') router.push('/pos')
-      }).catch(() => {})
-    })
-  }, [])
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: { ...session.headers } }).then(r => r.json()).then(c => {
+      if (c.currency_symbol) setSym(c.currency_symbol)
+      if (c.staff_sector && c.staff_sector !== 'repair') router.push('/pos')
+    }).catch(() => {})
+  }, [authReady, session])
 
   useEffect(() => {
-    if (!ready) return
+    if (!authReady || !session) return
     loadJobs()
     const interval = setInterval(loadJobs, 30000)
     return () => clearInterval(interval)
-  }, [ready])
+  }, [authReady, session])
 
   async function loadJobs() {
     setLoading(true)
     try {
       const [jobsRes, invRes] = await Promise.all([
-        fetch(`${API}/api/pos/service-jobs?limit=500`),
-        fetch(`${API}/api/pos/inventory?sector=repair`).catch(() => null),
+        fetch('/api/pos/service-jobs?limit=500', { headers: { ...session!.headers } }),
+        fetch('/api/pos/inventory?sector=repair', { headers: { ...session!.headers } }).catch(() => null),
       ])
       const data = await jobsRes.json()
       setJobs(data.jobs || [])

@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#d08a59'
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 const STATIONS = ['all', 'grill', 'fryer', 'cold', 'drinks', 'dessert']
 const STATION_ICONS: Record<string, string> = {
@@ -34,8 +33,7 @@ function fmtAge(seconds: number): string {
 
 export default function KitchenDisplay() {
   const router  = useRouter()
-  const supabase = createClient()
-  const [ready, setReady]       = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [station, setStation]   = useState('all')
   const [tickets, setTickets]   = useState<KTicket[]>([])
   const [loading, setLoading]   = useState(true)
@@ -43,28 +41,23 @@ export default function KitchenDisplay() {
   const [showDone, setShowDone] = useState(false)
   const [, setTick]             = useState(0) // force re-render every second for age
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-    })
-  }, [])
-
   const load = useCallback(async () => {
+    if (!session) return
     const res = await fetch(
-      `${API}/api/pos/restaurant/kitchen?station=${station}&include_done=${showDone}`
+      `/api/pos/restaurant/kitchen?station=${station}&include_done=${showDone}`,
+      { headers: session.headers }
     )
     const data = await res.json()
     setTickets(data.tickets || [])
     setLoading(false)
-  }, [station, showDone])
+  }, [station, showDone, session])
 
   useEffect(() => {
-    if (!ready) return
+    if (!authReady || !session) return
     load()
     const poll = setInterval(load, 8000) // refresh every 8s
     return () => clearInterval(poll)
-  }, [ready, load])
+  }, [authReady, session, load])
 
   // Live age counter
   useEffect(() => {
@@ -73,9 +66,10 @@ export default function KitchenDisplay() {
   }, [])
 
   async function bumpTicket(id: string) {
+    if (!session) return
     setBumping(id)
-    await fetch(`${API}/api/pos/restaurant/kitchen`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    await fetch('/api/pos/restaurant/kitchen', {
+      method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, action: 'bump' }),
     })
     await load()
@@ -83,16 +77,18 @@ export default function KitchenDisplay() {
   }
 
   async function startTicket(id: string) {
-    await fetch(`${API}/api/pos/restaurant/kitchen`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    if (!session) return
+    await fetch('/api/pos/restaurant/kitchen', {
+      method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, action: 'start' }),
     })
     await load()
   }
 
   async function recallTicket(id: string) {
-    await fetch(`${API}/api/pos/restaurant/kitchen`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    if (!session) return
+    await fetch('/api/pos/restaurant/kitchen', {
+      method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, action: 'recall' }),
     })
     await load()

@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#d08a59'
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   pending:   { label: 'Pending',   color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
@@ -45,8 +44,7 @@ function fmtDate(iso: string) {
 
 export default function ReservationsPage() {
   const router   = useRouter()
-  const supabase = createClient()
-  const [ready, setReady]   = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [tables, setTables] = useState<Table[]>([])
   const [summary, setSummary] = useState<any>({})
@@ -61,33 +59,27 @@ export default function ReservationsPage() {
     covers: '2', reserved_at: '', duration_mins: '90', table_id: '', notes: '',
   })
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-    })
-  }, [])
-
   const load = useCallback(async () => {
+    if (!session) return
     setLoading(true)
     const [resRes, tabRes] = await Promise.all([
-      fetch(`${API}/api/pos/restaurant/reservations?days=14`),
-      fetch(`${API}/api/pos/restaurant/tables`),
+      fetch('/api/pos/restaurant/reservations?days=14', { headers: session.headers }),
+      fetch('/api/pos/restaurant/tables', { headers: session.headers }),
     ])
     const [resData, tabData] = await Promise.all([resRes.json(), tabRes.json()])
     setReservations(resData.reservations || [])
     setSummary(resData.summary || {})
     setTables((tabData.tables || []).filter((t: Table) => t.capacity > 0))
     setLoading(false)
-  }, [])
+  }, [session])
 
-  useEffect(() => { if (ready) load() }, [ready, load])
+  useEffect(() => { if (authReady && session) load() }, [authReady, session, load])
 
   async function createReservation() {
-    if (!form.customer_name || !form.reserved_at || !form.covers) return
+    if (!form.customer_name || !form.reserved_at || !form.covers || !session) return
     setSaving(true)
-    await fetch(`${API}/api/pos/restaurant/reservations`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    await fetch('/api/pos/restaurant/reservations', {
+      method: 'POST', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         customer_name:  form.customer_name,
         customer_phone: form.customer_phone || null,
@@ -106,9 +98,10 @@ export default function ReservationsPage() {
   }
 
   async function updateStatus(id: string, status: string) {
+    if (!session) return
     setActioning(id)
-    await fetch(`${API}/api/pos/restaurant/reservations`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    await fetch('/api/pos/restaurant/reservations', {
+      method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, status }),
     })
     setActioning(null)
@@ -116,8 +109,8 @@ export default function ReservationsPage() {
   }
 
   async function cancel(id: string) {
-    if (!confirm('Cancel this reservation?')) return
-    await fetch(`${API}/api/pos/restaurant/reservations?id=${id}`, { method: 'DELETE' })
+    if (!confirm('Cancel this reservation?') || !session) return
+    await fetch(`/api/pos/restaurant/reservations?id=${id}`, { method: 'DELETE', headers: session.headers })
     await load()
   }
 

@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#ec4899' // salon pink accent
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 const C = { good: '#22c55e', warn: '#f59e0b', bad: '#ef4444', muted: '#94a3b8', dim: '#64748b' }
 
 interface InvItem {
@@ -34,8 +33,7 @@ interface UsageLog {
 
 export default function SalonProducts() {
   const router = useRouter()
-  const supabase = createClient()
-  const [ready, setReady] = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [sym, setSym] = useState('£')
   const [loading, setLoading] = useState(true)
   const [inventory, setInventory] = useState<InvItem[]>([])
@@ -53,26 +51,23 @@ export default function SalonProducts() {
   const [scanError, setScanError] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-      }).catch(() => {})
-    })
-  }, [])
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: { ...session.headers } }).then(r => r.json()).then(c => {
+      if (c.currency_symbol) setSym(c.currency_symbol)
+    }).catch(() => {})
+  }, [authReady, session])
 
   useEffect(() => {
-    if (!ready) return
+    if (!authReady || !session) return
     load()
     loadUsage()
     return () => stopScan()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready])
+  }, [authReady, session])
 
   async function loadUsage() {
     try {
-      const res = await fetch(`${API}/api/pos/salon/product-usage`)
+      const res = await fetch('/api/pos/salon/product-usage', { headers: { ...session?.headers } })
       const data = await res.json()
       setUsage(data.usage || [])
     } catch (e) {
@@ -84,8 +79,8 @@ export default function SalonProducts() {
     setLoading(true)
     try {
       const [invRes, txRes] = await Promise.all([
-        fetch(`${API}/api/pos/inventory?limit=200`),
-        fetch(`${API}/api/pos/transactions?limit=500`),
+        fetch('/api/pos/inventory?limit=200', { headers: { ...session!.headers } }),
+        fetch('/api/pos/transactions?limit=500', { headers: { ...session!.headers } }),
       ])
       const invData = await invRes.json()
       const txData = await txRes.json()
@@ -140,9 +135,9 @@ export default function SalonProducts() {
     const amount_used = amountMatch ? parseFloat(amountMatch[1]) : 0
     const unit = (amountMatch && amountMatch[2].trim()) || 'g'
     try {
-      const res = await fetch(`${API}/api/pos/salon/product-usage`, {
+      const res = await fetch('/api/pos/salon/product-usage', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...session?.headers },
         body: JSON.stringify({
           inventory_id: matched?.id || null,
           product_name: form.product,

@@ -1,9 +1,8 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
-const API    = process.env.NEXT_PUBLIC_API_URL || ''
 const tokens = {
   bg:      'var(--pos-bg)',
   surface: 'var(--pos-surface)',
@@ -71,8 +70,7 @@ function IconArrowLeft({ size = 18 }: { size?: number }) {
 
 export default function ShiftPage() {
   const router  = useRouter()
-  const supabase = createClient()
-  const [ready, setReady] = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [stage, setStage] = useState<Stage>('hub')
 
   // Data
@@ -100,25 +98,23 @@ export default function ShiftPage() {
   const captureTargetRef = useRef<'start' | 'end'>('start')
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-    })
     return () => stopCamera()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => { if (ready) loadData() }, [ready])
+  useEffect(() => {
+    if (authReady && session) loadData()
+  }, [authReady, session])
 
   const loadData = useCallback(async () => {
+    if (!session) return
     setDataLoading(true)
     try {
-      const r = await fetch(`${API}/api/pos/factory/shift`)
+      const r = await fetch('/api/pos/factory/shift', { headers: session.headers })
       const d = r.ok ? await r.json() : {}
       setActiveShift(d.activeShift || null)
       setRecentShifts(d.recentShifts || [])
     } catch { /* silent */ } finally { setDataLoading(false) }
-  }, [])
+  }, [session])
 
   // ── Camera ──────────────────────────────────────────────────────────────────
   const openCamera = useCallback(async () => {
@@ -176,13 +172,13 @@ export default function ShiftPage() {
 
   // ── Start shift ─────────────────────────────────────────────────────────────
   async function submitStartShift() {
-    if (!startPhoto || !shiftName) return
+    if (!startPhoto || !shiftName || !session) return
     setSaveError('')
     setStage('submitting')
     try {
-      const res = await fetch(`${API}/api/pos/factory/shift`, {
+      const res = await fetch('/api/pos/factory/shift', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...session.headers },
         body: JSON.stringify({
           shift_name:   shiftName,
           custom_name:  shiftName === 'Custom' ? customName.trim() : undefined,
@@ -208,13 +204,13 @@ export default function ShiftPage() {
 
   // ── End shift ───────────────────────────────────────────────────────────────
   async function submitEndShift(photo: string) {
-    if (!activeShift) return
+    if (!activeShift || !session) return
     setSaveError('')
     setStage('submitting')
     try {
-      const res = await fetch(`${API}/api/pos/factory/shift`, {
+      const res = await fetch('/api/pos/factory/shift', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...session.headers },
         body: JSON.stringify({ id: activeShift.id, image: photo }),
       })
       if (!res.ok) {
@@ -238,7 +234,7 @@ export default function ShiftPage() {
     setShiftName(autoDetectShift())
   }
 
-  if (!ready) return (
+  if (!authReady || !session) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }}>
       <div style={{ width: 36, height: 36, border: `3px solid rgba(20,184,166,.3)`, borderTopColor: tokens.success, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>

@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 // ── Design tokens ────────────────────────────────────────────────────────────
 const AMBER  = '#f59e0b'
@@ -9,7 +9,6 @@ const GREEN  = '#22c55e'
 const RED    = '#ef4444'
 const BLUE   = '#3b82f6'
 const PURPLE = '#8b5cf6'
-const API    = process.env.NEXT_PUBLIC_API_URL || ''
 
 type CaptureType = 'intake' | 'output' | 'wastage' | 'dispatch'
 type Stage = 'viewfinder' | 'confirm_type' | 'details' | 'success'
@@ -61,8 +60,7 @@ function IconRotateCcw({ size = 20, color = '#fff' }: { size?: number; color?: s
 
 export default function FactoryCapturePage() {
   const router = useRouter()
-  const supabase = createClient()
-  const [ready, setReady] = useState(false)
+  const { session, ready: authReady } = usePosAuth()
 
   // Stage
   const [stage, setStage]       = useState<Stage>('viewfinder')
@@ -88,25 +86,23 @@ export default function FactoryCapturePage() {
   const [saving, setSaving]       = useState(false)
   const [saveError, setSaveError] = useState('')
 
-  // ── Auth ──────────────────────────────────────────────────────────────────
+  // ── Auth + inventory load ──────────────────────────────────────────────
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/inventory`)
-        .then(r => r.ok ? r.json() : { inventory: [] })
-        .then(d => setInventory((d.inventory || []).slice(0, 60)))
-        .catch(() => {})
-    })
+    if (!authReady || !session) return
+    fetch('/api/pos/inventory', { headers: session.headers })
+      .then(r => r.ok ? r.json() : { inventory: [] })
+      .then(d => setInventory((d.inventory || []).slice(0, 60)))
+      .catch(() => {})
+    openCamera()
     return () => stopCamera()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [authReady, session])
 
   // Open camera as soon as ready
   useEffect(() => {
-    if (ready && stage === 'viewfinder') openCamera()
+    if (authReady && session && stage === 'viewfinder') openCamera()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready])
+  }, [authReady, session])
 
   // ── Camera ────────────────────────────────────────────────────────────────
   const openCamera = useCallback(async () => {
@@ -179,7 +175,7 @@ export default function FactoryCapturePage() {
 
   // ── Submit ────────────────────────────────────────────────────────────────
   async function submit() {
-    if (!captureType || !photoUrl) return
+    if (!captureType || !photoUrl || !session) return
     const resolvedNotes = captureType === 'wastage' ? selectedReason || notes.trim() : notes.trim()
     if (!product.trim()) { setSaveError('Select or enter a product'); return }
     if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) { setSaveError('Enter a valid quantity'); return }
@@ -187,9 +183,9 @@ export default function FactoryCapturePage() {
     if (captureType === 'dispatch' && !notes.trim()) { setSaveError('Enter a destination'); return }
     setSaving(true); setSaveError('')
     try {
-      const res = await fetch(`${API}/api/pos/factory/capture`, {
+      const res = await fetch('/api/pos/factory/capture', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...session.headers },
         body: JSON.stringify({
           type: captureType,
           image: photoUrl,
@@ -239,7 +235,7 @@ export default function FactoryCapturePage() {
 
   const selectedType = captureType ? TYPES.find(t => t.id === captureType)! : null
 
-  if (!ready) return (
+  if (!authReady || !session) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0f1e' }}>
       <div style={{ width: 36, height: 36, border: '3px solid rgba(245,158,11,.3)', borderTopColor: AMBER, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
     </div>

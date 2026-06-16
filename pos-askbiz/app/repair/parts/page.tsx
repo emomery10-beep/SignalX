@@ -1,10 +1,9 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { usePosAuth } from '@/lib/hooks/usePosAuth'
 
 const ACC = '#6366f1'
-const API = process.env.NEXT_PUBLIC_API_URL || ''
 const GOOD = '#22c55e', WARN = '#f59e0b', BAD = '#ef4444', MUTED = '#94a3b8', DIM = '#64748b'
 
 interface Part {
@@ -20,8 +19,7 @@ interface Part {
 
 export default function RepairParts() {
   const router = useRouter()
-  const supabase = createClient()
-  const [ready, setReady] = useState(false)
+  const { session, ready: authReady } = usePosAuth()
   const [sym, setSym] = useState('£')
   const [parts, setParts] = useState<Part[]>([])
   const [loading, setLoading] = useState(true)
@@ -34,35 +32,33 @@ export default function RepairParts() {
   const [form, setForm] = useState({ name: '', sku: '', stock_qty: '', cost_price: '', sale_price: '', low_stock_threshold: '', supplier: '' })
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
-      setReady(true)
-      fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
-        if (c.currency_symbol) setSym(c.currency_symbol)
-        if (c.staff_sector && c.staff_sector !== 'repair') router.push('/pos')
-      }).catch(() => {})
-    })
-  }, [])
+    if (!authReady || !session) return
+    fetch('/api/pos/config', { headers: { ...session.headers } }).then(r => r.json()).then(c => {
+      if (c.currency_symbol) setSym(c.currency_symbol)
+      if (c.staff_sector && c.staff_sector !== 'repair') router.push('/pos')
+    }).catch(() => {})
+  }, [authReady, session])
 
   const loadParts = useCallback(async () => {
+    if (!session) return
     setLoading(true)
     try {
-      const res = await fetch(`${API}/api/pos/inventory?sector=repair&limit=200`)
+      const res = await fetch('/api/pos/inventory?sector=repair&limit=200', { headers: { ...session.headers } })
       const data = await res.json()
       setParts(data.inventory || [])
     } catch (e) { console.error('Parts load error:', e); setParts([]) }
     finally { setLoading(false) }
-  }, [])
+  }, [session])
 
-  useEffect(() => { if (ready) loadParts() }, [ready, loadParts])
+  useEffect(() => { if (authReady && session) loadParts() }, [authReady, session, loadParts])
 
   const addPart = async () => {
     if (!form.name.trim()) { setFormError('Part name is required'); return }
     setSaving(true); setFormError('')
     try {
-      const res = await fetch(`${API}/api/pos/inventory`, {
+      const res = await fetch('/api/pos/inventory', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...session?.headers },
         body: JSON.stringify({
           name: form.name.trim(),
           sku: form.sku.trim() || null,
@@ -101,7 +97,7 @@ export default function RepairParts() {
   const th: React.CSSProperties = { textAlign: 'left', padding: '10px 14px', fontSize: 11, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600, borderBottom: '1px solid #334155' }
   const td: React.CSSProperties = { padding: '12px 14px', fontSize: 13, borderBottom: '1px solid #1e293b' }
 
-  if (!ready) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: MUTED, fontFamily: 'system-ui, sans-serif' }}>Loading…</div>
+  if (!authReady) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: MUTED, fontFamily: 'system-ui, sans-serif' }}>Loading…</div>
 
   return (
     <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
