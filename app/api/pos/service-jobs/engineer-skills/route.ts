@@ -3,6 +3,13 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
 
+// 'engineer' legacy role or any repair-technician/specialist template role
+function isEngineerRole(role: string | null | undefined): boolean {
+  if (!role) return false
+  if (role === 'engineer') return true
+  return /^repair-(technician|specialist|intake-specialist)$/.test(role)
+}
+
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
 }
@@ -41,8 +48,8 @@ export async function GET(req: NextRequest) {
 
     if (error) return json({ error: error.message }, 500)
 
-    // Filter to active engineers only
-    const qualified = (data || []).filter((s: any) => s.staff?.active && s.staff?.role === 'engineer')
+    // Filter to active engineers (legacy 'engineer' role or repair-technician template role)
+    const qualified = (data || []).filter((s: any) => s.staff?.active && isEngineerRole(s.staff?.role))
     return json({ engineers: qualified })
   }
 
@@ -74,7 +81,7 @@ export async function POST(req: NextRequest) {
     .maybeSingle()
 
   if (!staff) return json({ error: 'Staff not found' }, 404)
-  if (staff.role !== 'engineer') return json({ error: 'Staff must be an engineer' }, 400)
+  if (!isEngineerRole(staff.role)) return json({ error: 'Staff must be an engineer or technician' }, 400)
 
   const { data, error } = await service
     .from('pos_engineer_skills')

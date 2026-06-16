@@ -8,6 +8,12 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
 }
 
+function isEngineerRole(role: string | null | undefined): boolean {
+  if (!role) return false
+  if (role === 'engineer') return true
+  return /^repair-(technician|specialist|intake-specialist)$/.test(role)
+}
+
 function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status })
 }
@@ -47,7 +53,7 @@ export async function GET(req: NextRequest) {
   if (location_id) query = query.eq('location_id', location_id)
 
   // Engineer view: only see own jobs
-  if (auth.role === 'engineer' && auth.staffId) {
+  if (isEngineerRole(auth.role) && auth.staffId) {
     query = query.eq('assigned_to', auth.staffId)
   }
 
@@ -283,7 +289,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   // Engineer can only update their assigned jobs
-  if (auth.role === 'engineer' && auth.staffId && current.assigned_to !== auth.staffId) {
+  if (isEngineerRole(auth.role) && auth.staffId && current.assigned_to !== auth.staffId) {
     return json({ error: 'Engineers can only update their assigned jobs' }, 403)
   }
 

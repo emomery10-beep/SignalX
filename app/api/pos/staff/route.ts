@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
   const isValidRole = legacyRoles.includes(role) || (isTemplate && /^(factory|restaurant|repair|salon|retail|logistics)-/.test(role))
 
   if (!isValidRole) return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
-  if (sector && !['restaurant', 'repair', 'salon', 'retail', 'logistics'].includes(sector)) return NextResponse.json({ error: 'Invalid sector' }, { status: 400 })
+  if (sector && !['factory', 'restaurant', 'repair', 'salon', 'retail', 'logistics'].includes(sector)) return NextResponse.json({ error: 'Invalid sector' }, { status: 400 })
   if (pin && (String(pin).length < 4 || String(pin).length > 6)) return NextResponse.json({ error: 'PIN must be 4–6 digits' }, { status: 400 })
 
   // ── Enforce seat limit ────────────────────────────────────────────────────

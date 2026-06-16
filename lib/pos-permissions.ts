@@ -116,23 +116,41 @@ const ROLE_PERMISSIONS: Record<PosRole, PosPermission[]> = {
   ],
 }
 
+// ── Template role → legacy role mapping ─────────────────────
+// Mirrors the logic in pos-auth.ts templateRoleLevel() but returns
+// the equivalent PosRole name so we can look up permissions.
+function templateToLegacyRole(role: string): PosRole | null {
+  const match = role.match(/^(factory|restaurant|repair|salon|retail|logistics)-(.+)$/)
+  if (!match) return null
+  const suffix = match[2]
+  if (suffix.includes('manager') || suffix.includes('supervisor') || suffix.includes('head') || suffix === 'operations-manager') return 'manager'
+  if (suffix.includes('inventory') || suffix.includes('inspector') || suffix.includes('quality')) return 'inventory'
+  if (suffix.includes('technician') || suffix.includes('specialist') || suffix.includes('intake')) return 'repair'
+  if (suffix === 'handler' || suffix === 'driver') return 'driver'
+  if (suffix === 'dispatcher' || suffix === 'branch-manager') return 'dispatcher'
+  return 'cashier'
+}
+
 // ── Public helpers ───────────────────────────────────────────
 
 /**
  * Check if a role has a specific permission.
- * Pass role: null | string safely — returns false if unknown.
+ * Handles both legacy PosRole values and template roles (e.g. retail-inventory-manager).
  */
 export function hasPermission(role: string | null | undefined, permission: PosPermission): boolean {
   if (!role) return false
-  const perms = ROLE_PERMISSIONS[role as PosRole]
-  if (!perms) return false
-  return perms.includes(permission)
+  const effectiveRole = ROLE_PERMISSIONS[role as PosRole] ? (role as PosRole) : templateToLegacyRole(role)
+  if (!effectiveRole) return false
+  return ROLE_PERMISSIONS[effectiveRole]?.includes(permission) ?? false
 }
 
 /**
  * Get all permissions for a role (useful for client-side UI gating).
+ * Handles both legacy PosRole values and template roles.
  */
 export function getPermissions(role: string | null | undefined): PosPermission[] {
   if (!role) return []
-  return ROLE_PERMISSIONS[role as PosRole] || []
+  const effectiveRole = ROLE_PERMISSIONS[role as PosRole] ? (role as PosRole) : templateToLegacyRole(role)
+  if (!effectiveRole) return []
+  return ROLE_PERMISSIONS[effectiveRole] || []
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
+import { hasPermission } from '@/lib/pos-permissions'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -40,8 +41,8 @@ export async function POST(req: NextRequest) {
   const auth = await resolvePosAuth(req)
   if (!auth) return json({ error: 'Unauthorised' }, 401)
 
-  if (auth.role !== 'owner' && auth.role !== 'repair') {
-    return json({ error: 'Only owner or repair staff can manage presets' }, 403)
+  if (!hasPermission(auth.role, 'service.manage')) {
+    return json({ error: 'Only repair staff or above can manage presets' }, 403)
   }
 
   const service = createServiceClient()
@@ -73,8 +74,8 @@ export async function PATCH(req: NextRequest) {
   const auth = await resolvePosAuth(req)
   if (!auth) return json({ error: 'Unauthorised' }, 401)
 
-  if (auth.role !== 'owner' && auth.role !== 'repair') {
-    return json({ error: 'Only owner or repair staff can manage presets' }, 403)
+  if (!hasPermission(auth.role, 'service.manage')) {
+    return json({ error: 'Only repair staff or above can manage presets' }, 403)
   }
 
   const service = createServiceClient()
