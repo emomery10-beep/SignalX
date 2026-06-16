@@ -23,8 +23,26 @@ const ROLE_LEVEL: Record<PosRole, number> = {
   cashier:        20,
 }
 
+// Map template role prefix to equivalent legacy role level
+function templateRoleLevel(role: string): number | null {
+  const match = role.match(/^(factory|restaurant|repair|salon|retail|logistics)-(.+)$/)
+  if (!match) return null
+  const suffix = match[2]
+  // Manager-level suffixes
+  if (suffix.includes('manager') || suffix.includes('supervisor') || suffix.includes('head') || suffix === 'operations-manager') return ROLE_LEVEL['manager']
+  // Inventory-level suffixes
+  if (suffix.includes('inventory') || suffix.includes('inspector') || suffix.includes('quality')) return ROLE_LEVEL['inventory']
+  // Repair/tech suffixes
+  if (suffix.includes('technician') || suffix.includes('specialist') || suffix.includes('intake')) return ROLE_LEVEL['repair']
+  // Handler/driver/dispatch suffixes (logistics)
+  if (suffix === 'handler' || suffix === 'driver') return ROLE_LEVEL['handler']
+  if (suffix === 'dispatcher' || suffix === 'branch-manager') return ROLE_LEVEL['dispatcher']
+  // Default: cashier level (server, host, line-cook, receptionist, stylist, floor-staff, etc.)
+  return ROLE_LEVEL['cashier']
+}
+
 export function roleCanAccess(userRole: string, requiredRole: string): boolean {
-  const userLevel   = ROLE_LEVEL[userRole as PosRole]   ?? 0
+  const userLevel   = ROLE_LEVEL[userRole as PosRole] ?? templateRoleLevel(userRole) ?? 0
   const neededLevel = ROLE_LEVEL[requiredRole as PosRole] ?? 0
   return userLevel >= neededLevel
 }

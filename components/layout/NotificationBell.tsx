@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 
 /* ── Notification (from /api/notifications) ── */
 interface Notification {
@@ -20,6 +21,7 @@ interface Signal {
   severity: 'red' | 'yellow' | 'blue'
   suggested_action: string
   prompt: string
+  action_url?: string
   product?: string
   metric?: string
   created_at: string
@@ -55,6 +57,7 @@ function timeAgo(iso: string): string {
 }
 
 export default function NotificationBell() {
+  const router = useRouter()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [signals, setSignals] = useState<Signal[]>([])
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
@@ -122,9 +125,19 @@ export default function NotificationBell() {
     })
   }
 
-  const handleSignalAction = (prompt: string) => {
+  const handleSignalAction = (signal: Signal) => {
     setOpen(false)
-    window.dispatchEvent(new CustomEvent('askbiz:send', { detail: prompt }))
+    // Navigate to restock/inventory tab for stock alerts
+    if (signal.action_url) {
+      router.push(signal.action_url)
+      return
+    }
+    const lower = (signal.suggested_action + signal.title).toLowerCase()
+    if (lower.includes('restock') || lower.includes('stock') || lower.includes('inventory') || lower.includes('reorder')) {
+      router.push('/pos?tab=inventory')
+      return
+    }
+    window.dispatchEvent(new CustomEvent('askbiz:send', { detail: signal.prompt }))
   }
 
   return (
@@ -258,7 +271,7 @@ export default function NotificationBell() {
                         </p>
                         <div style={{ display: 'flex', gap: 5, marginLeft: 14 }}>
                           <button
-                            onClick={() => handleSignalAction(signal.prompt)}
+                            onClick={() => handleSignalAction(signal)}
                             style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 9999, border: 'none', background: col, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}
                           >
                             {signal.suggested_action} →
