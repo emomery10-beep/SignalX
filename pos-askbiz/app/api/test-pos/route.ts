@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient, createClient } from '@/lib/supabase/server'
 
 /**
- * Simple test to check if pos_staff table works
+ * Simple test to check if pos_staff table works.
+ * Gated behind an authenticated owner session — uses the service-role key.
  */
 export async function GET() {
   try {
+    const { data: { user } } = await createClient().auth.getUser()
+    if (!user) return NextResponse.json({ status: 'error', message: 'Unauthorised' }, { status: 401 })
+
     const service = createServiceClient()
 
     // Test 1: Simple query

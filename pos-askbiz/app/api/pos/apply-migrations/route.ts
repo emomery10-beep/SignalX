@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient, createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -7,8 +7,12 @@ export const dynamic = 'force-dynamic'
  * Manual schema verification endpoint
  * Tests if all POS tables are accessible with proper RLS
  * GET /api/pos/apply-migrations (migration endpoint moved to debug)
+ * Gated behind an authenticated owner session — uses the service-role key.
  */
 export async function GET(req: NextRequest) {
+  const { data: { user } } = await createClient().auth.getUser()
+  if (!user) return NextResponse.json({ success: false, error: 'Unauthorised' }, { status: 401 })
+
   const service = createServiceClient()
 
   try {

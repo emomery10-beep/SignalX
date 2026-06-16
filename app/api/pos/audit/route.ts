@@ -11,8 +11,15 @@ export const dynamic = 'force-dynamic'
  */
 export async function GET(req: NextRequest) {
   try {
-    const service = createServiceClient()
     const anonClient = createClient()
+
+    // Diagnostic endpoint — require an authenticated owner session.
+    // Without this gate, anyone could hit it: it uses the service-role key
+    // (bypasses RLS) and even performs a test INSERT/DELETE on pos_staff.
+    const { data: { user } } = await anonClient.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+
+    const service = createServiceClient()
 
     const audit: any = {
       timestamp: new Date().toISOString(),
