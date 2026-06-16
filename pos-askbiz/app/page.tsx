@@ -6,6 +6,31 @@ const ACC = '#d08a59'
 
 const API = process.env.NEXT_PUBLIC_API_URL || ''
 
+// Inline role routing so the login page has no external imports that could fail
+function getLoginDest(role: string): string {
+  if (!role) return '/sell'
+  // Logistics template roles
+  if (role === 'branch_manager' || role === 'logistics-branch-manager') return '/logistics/dashboard'
+  if (role === 'dispatcher' || role === 'logistics-dispatcher') return '/logistics/dispatch'
+  if (role === 'handler' || role === 'driver' || role === 'logistics-handler' || role === 'logistics-driver') return '/logistics'
+  // Sector hubs — template roles go directly to their sector page
+  if (/^restaurant-/.test(role)) return '/restaurant'
+  if (/^factory-/.test(role))    return '/factory'
+  if (/^repair-/.test(role))     return '/repair'
+  if (/^salon-/.test(role))      return '/salon'
+  // Retail and legacy roles — by level
+  const suffix = role.match(/^retail-(.+)$/)?.[1]
+  if (suffix) {
+    if (suffix.includes('manager') || suffix.includes('supervisor')) return '/dashboard'
+    if (suffix.includes('inventory') || suffix.includes('inspector') || suffix.includes('quality')) return '/inventory'
+    return '/sell'
+  }
+  // Legacy roles
+  if (['manager', 'supervisor', 'repair', 'engineer'].includes(role)) return '/dashboard'
+  if (role === 'inventory') return '/inventory'
+  return '/sell'
+}
+
 function LoginPageContent() {
   const router = useRouter()
   const [email, setEmail]       = useState('')
@@ -45,26 +70,7 @@ function LoginPageContent() {
       setLoading(false)
       if (!res.ok) { setError(data.error || 'Incorrect PIN'); return }
       localStorage.setItem('pos_staff', JSON.stringify(data.staff))
-      const role = data.staff.role
-      // Determine destination for both legacy roles and template roles
-      const isManagerLevel = role === 'manager' || role === 'supervisor' || role === 'repair' || role === 'engineer' ||
-        /-(manager|supervisor|head-chef|kitchen-manager|operations-manager|production-manager|shift-supervisor)$/.test(role)
-      const isInventoryLevel = role === 'inventory' || /-(inventory-manager|quality-inspector|quality-checker)$/.test(role)
-      const isLogisticsHandler = ['handler', 'driver'].includes(role) || /^logistics-(handler|driver)$/.test(role)
-      const isDispatcher = role === 'dispatcher' || /^logistics-dispatcher$/.test(role)
-      const isBranchManager = role === 'branch_manager' || /^logistics-branch-manager$/.test(role)
-      const dest = isInventoryLevel
-        ? '/inventory'
-        : isManagerLevel
-          ? '/dashboard'
-          : isDispatcher
-            ? '/logistics/dispatch'
-            : isBranchManager
-              ? '/logistics/dashboard'
-              : isLogisticsHandler
-                ? '/logistics'
-                : '/sell'
-      router.push(dest)
+      router.push(getLoginDest(data.staff.role))
     } catch { setLoading(false); setError('Network error — please try again') }
   }
 

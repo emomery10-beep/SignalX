@@ -1,10 +1,17 @@
 // Client-side role helpers for page-level routing in pos-askbiz.
 // Mirrors server-side templateRoleLevel() in pos-auth.ts — keep in sync.
 
+function getSector(role: string): string | null {
+  const m = role.match(/^(factory|restaurant|repair|salon|retail|logistics)-/)
+  return m ? m[1] : null
+}
+
 function templateRoleSuffix(role: string): string | null {
   const m = role.match(/^(factory|restaurant|repair|salon|retail|logistics)-(.+)$/)
   return m ? m[2] : null
 }
+
+// ── Level checks ─────────────────────────────────────────────
 
 export function isCashierLevel(role: string): boolean {
   if (!role) return false
@@ -36,25 +43,45 @@ export function isManagerOrAboveLevel(role: string): boolean {
     s === 'operations-manager'
 }
 
+export function isLogisticsHandlerLevel(role: string): boolean {
+  return role === 'handler' || role === 'driver' ||
+    role === 'logistics-handler' || role === 'logistics-driver'
+}
+
 export function isLogisticsDispatchLevel(role: string): boolean {
-  return role === 'dispatcher' || /^logistics-dispatcher$/.test(role)
+  return role === 'dispatcher' || role === 'logistics-dispatcher'
 }
 
 export function isLogisticsBranchLevel(role: string): boolean {
-  return role === 'branch_manager' || /^logistics-branch-manager$/.test(role)
+  return role === 'branch_manager' || role === 'logistics-branch-manager'
 }
 
-export function isLogisticsHandlerLevel(role: string): boolean {
-  return role === 'handler' || role === 'driver' || /^logistics-(handler|driver)$/.test(role)
+export function isAnyLogisticsRole(role: string): boolean {
+  return isLogisticsHandlerLevel(role) || isLogisticsDispatchLevel(role) ||
+    isLogisticsBranchLevel(role) || /^logistics-/.test(role)
 }
 
-/** Returns the correct home route for a given role */
+// ── Home route ───────────────────────────────────────────────
+
+/** Returns the correct home route for any role (legacy or template) */
 export function getRoleHomeRoute(role: string): string {
   if (!role) return '/sell'
-  if (isManagerOrAboveLevel(role)) return '/dashboard'
-  if (isInventoryLevel(role)) return '/inventory'
+
+  // Logistics roles → their specific logistics page
   if (isLogisticsBranchLevel(role)) return '/logistics/dashboard'
   if (isLogisticsDispatchLevel(role)) return '/logistics/dispatch'
   if (isLogisticsHandlerLevel(role)) return '/logistics'
+
+  // Sector-specific template roles → their sector hub
+  const sector = getSector(role)
+  if (sector === 'restaurant') return '/restaurant'
+  if (sector === 'factory')    return '/factory'
+  if (sector === 'repair')     return '/repair'
+  if (sector === 'salon')      return '/salon'
+
+  // Retail and legacy roles → by level
+  if (isManagerOrAboveLevel(role)) return '/dashboard'
+  if (isInventoryLevel(role))      return '/inventory'
+
   return '/sell'
 }

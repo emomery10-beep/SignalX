@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { isLogisticsDispatchLevel, isLogisticsBranchLevel, isManagerOrAboveLevel, getRoleHomeRoute } from '@/lib/pos-role-client'
 
 const ACC = '#0891b2'
 const ACC_LIGHT = 'rgba(8,145,178,.1)'
@@ -88,8 +89,8 @@ export default function DispatchPage() {
     const raw = localStorage.getItem('pos_staff')
     if (!raw) { router.push('/'); return }
     const s = JSON.parse(raw) as Staff
-    if (!['dispatcher', 'branch_manager', 'manager'].includes(s.role)) {
-      router.push(s.role === 'handler' || s.role === 'driver' ? '/logistics' : '/')
+    if (!isLogisticsDispatchLevel(s.role) && !isLogisticsBranchLevel(s.role) && !isManagerOrAboveLevel(s.role)) {
+      router.push(getRoleHomeRoute(s.role))
       return
     }
     setStaff(s)

@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { isLogisticsHandlerLevel, isLogisticsDispatchLevel, isLogisticsBranchLevel, getRoleHomeRoute } from '@/lib/pos-role-client'
 
 const ACC = '#0891b2'
 const ACC_LIGHT = 'rgba(8,145,178,.1)'
@@ -143,13 +144,13 @@ export default function LogisticsPage() {
     const raw = localStorage.getItem('pos_staff')
     if (!raw) { router.push('/'); return }
     const s = JSON.parse(raw) as StaffSession
-    if (!['handler', 'driver'].includes(s.role)) {
-      router.push(s.role === 'dispatcher' ? '/logistics/dispatch' : s.role === 'branch_manager' ? '/logistics/dashboard' : '/')
+    if (!isLogisticsHandlerLevel(s.role)) {
+      router.push(getRoleHomeRoute(s.role))
       return
     }
     setStaff(s)
     loadTodayStats(s)
-    if (s.role === 'driver') {
+    if (s.role === 'driver' || s.role === 'logistics-driver') {
       setScreen('driver_home')
       loadDriverParcels(s)
       loadTrucks(s)
