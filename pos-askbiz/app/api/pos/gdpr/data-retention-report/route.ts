@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
   const { data: transactions } = await service
     .from('pos_transactions')
-    .select('created_at')
+    .select('created_at, customer_id')
     .eq('owner_id', ownerId)
 
   const { data: consents } = await service
@@ -51,11 +51,23 @@ export async function GET(req: NextRequest) {
   const sevenYearsAgo = new Date(now.getTime() - 7 * 365 * 24 * 60 * 60 * 1000)
   const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
 
-  // Calculate retention stats
+  // Latest transaction date per customer — mirrors the cron's "cold history"
+  // signal exactly (only customers whose newest transaction is 90+ days old
+  // are anonymized; zero-transaction customers are never auto-anonymized).
+  const latestTxByCustomer = new Map<string, number>()
+  for (const t of (transactions as any[]) || []) {
+    if (!t.customer_id) continue
+    const ts = new Date(t.created_at).getTime()
+    const prev = latestTxByCustomer.get(t.customer_id) || 0
+    if (ts > prev) latestTxByCustomer.set(t.customer_id, ts)
+  }
+
+  // Calculate retention stats — only customers with a cold transaction history.
   const customersToDelete = customers?.filter((c: any) => {
-    if (c.is_anonymized) return false // Already deleted
-    const lastActivity = new Date(c.last_seen_at || c.created_at)
-    return lastActivity < ninetyDaysAgo // Inactive for 90+ days
+    if (c.is_anonymized) return false // Already anonymized
+    const latestTx = latestTxByCustomer.get(c.id)
+    if (!latestTx) return false // No transactions → never auto-anonymized
+    return latestTx < ninetyDaysAgo.getTime() // Last sale 90+ days ago
   }) || []
 
   const transactionsExpired = transactions?.filter((t: any) => {

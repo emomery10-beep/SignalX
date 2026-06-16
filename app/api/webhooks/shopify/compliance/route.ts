@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     case 'customers/data_request': {
       // Merchant requests data for a customer
       // Log the request — in production you'd email the data to the merchant
-      console.log('Customer data request:', payload.customer?.email)
+      console.log('Customer data request received (details omitted from logs)')
       break
     }
     case 'customers/redact': {
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       // but we clear raw_data that might contain it
       const shopDomain = payload.shop_domain
       if (shopDomain && payload.customer?.id) {
-        console.log('Redacting customer data:', payload.customer.id, 'from', shopDomain)
+        console.log('Redacting customer data (identifiers omitted from logs)')
       }
       break
     }

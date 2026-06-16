@@ -229,7 +229,8 @@ async function sendWhatsApp(
   try {
     // Would use Twilio WhatsApp API in production
     // For now, return mock success
-    console.log(`WhatsApp to ${recipientPhone}: ${message}`)
+    // Do not log recipient phone or message body (PII).
+    console.log('WhatsApp notification dispatched')
 
     // Mock API call to Twilio
     /*
@@ -267,7 +268,8 @@ async function sendEmail(
 ): Promise<{ success: boolean; message_id?: string; error?: string }> {
   try {
     // Would use SendGrid or similar in production
-    console.log(`Email to ${recipientEmail}: ${message}`)
+    // Do not log recipient email or message body (PII).
+    console.log('Email notification dispatched')
 
     /*
     const response = await fetch('https://api.sendgrid.com/v3/mail/send', {

@@ -90,11 +90,12 @@ export async function GET(request: NextRequest) {
           .limit(1)
           .maybeSingle()
 
-        const lastActivity = lastTx?.created_at || customer.created_at
-        if (!lastActivity) continue
-
-        // Skip if the customer has been active within the retention window.
-        if (new Date(lastActivity) >= cutoff) continue
+        // Only anonymize customers with a real transaction history that has
+        // gone cold. A customer with NO transactions (e.g. a lead, loyalty
+        // signup, or pre-booking) is never anonymized off created_at alone —
+        // that would scrub legitimate not-yet-active records.
+        if (!lastTx?.created_at) continue
+        if (new Date(lastTx.created_at) >= cutoff) continue
 
         // Anonymize PII (mirrors /api/pos/gdpr/delete-customer anonymization).
         const maskedPhone = customer.phone ? `****${String(customer.phone).slice(-4)}` : null
