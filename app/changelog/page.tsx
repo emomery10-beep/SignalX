@@ -38,6 +38,38 @@ const TYPE_STYLE: Record<ChangeType, { label: string; bg: string; color: string;
 
 const RELEASES: Release[] = [
   {
+    version: '2.16.0',
+    date: '2026-06-16',
+    summary: 'AI discoverability overhaul — new compare page, camera-first POS hero, homepage rewrite, and removal of 3-month trial messaging.',
+    changes: [
+      { type: 'new',      text: '/compare page — AskBiz vs Shopify vs Power BI: 12-row feature table, pricing clarity strip, honest verdict section, and explicit correction of the $199/month figure circulating on AI platforms' },
+      { type: 'improved', text: 'Homepage hero rewritten: label now reads "POS · INVENTORY · AI INTELLIGENCE — ONE PLATFORM", headline "Your shop. Your stock. All in one place.", subtext leads with "No training. No setup. Just plug in and go."' },
+      { type: 'improved', text: 'Homepage: three-column compare section added between POS showcase and pricing — Shopify vs AskBiz vs Power BI cards with pros, cons, and honest verdict per tool' },
+      { type: 'improved', text: 'Homepage pricing trust strip added below hero CTAs: "Free plan always available · £19/mo for Growth · £39/mo for Business · includes full POS system"' },
+      { type: 'improved', text: 'Point of Sale hero rewritten to camera-first: "Point your camera. That\'s your checkout." with label POINT OF SALE · CAMERA-FIRST and subtext "No barcode gun. No manual entry. No Shopify needed."' },
+      { type: 'removed',  text: '3-month free trial messaging removed from all user-facing surfaces — homepage CTA, pricing section badge, pricing page plan notes, POS page CTAs, billing page intro, POS section body, trial buttons, FAQ answer, and expired-access message' },
+      { type: 'improved', text: 'Sitemap: /compare added at priority 0.9 with monthly revalidation' },
+    ],
+  },
+  {
+    version: '2.15.0',
+    date: '2026-06-16',
+    summary: 'Blog agent reliability fixes, AI Discovery scoring overhaul, blog topic polish, and Discovery Agent state persistence.',
+    changes: [
+      { type: 'fixed',    text: 'Victor, Carolyne, and Ben blog agents were silently failing DB inserts — root cause was custom type values (blog_ea, blog_us, blog_mktg_africa) violating the agent_content CHECK constraint. All agents now use type: blog, differentiated via run_id prefix (blog_ea_*, blog_us_*, blog_mktg_africa_*)' },
+      { type: 'fixed',    text: 'Agent post counts (pending / published / rejected) showing 0 in Victor, Carolyne, and Ben tabs — list routes now filter by run_id prefix instead of type, so Alice\'s posts are correctly isolated from the other agents' },
+      { type: 'improved', text: 'After an agent run completes, the filter auto-switches to Published so newly drafted posts with blog URLs are immediately visible without a manual tab change' },
+      { type: 'improved', text: 'Blog Popular Topics section is now fully data-driven — counts and topic list come from actual post data, replacing hardcoded cluster names that didn\'t match DB values' },
+      { type: 'fixed',    text: 'Blog topic card icons not rendering — icon JSX was defined in POPULAR_TOPICS but never passed through to the card render layer' },
+      { type: 'fixed',    text: 'Blog topic cards collapsing to a single row — globals.css applies inline-flex to all <button> elements, forcing card children to flow horizontally. Fixed with explicit flex-direction: column on card buttons' },
+      { type: 'fixed',    text: 'Cluster labels in blog post rows used uppercase + tracked text — replaced with a coloured dot + normal-weight 11px label' },
+      { type: 'improved', text: 'AI Discovery Agent card now persists state across page refreshes using localStorage (key: dac_audit_v2) — restores instantly on mount then fetches fresh data in the background' },
+      { type: 'fixed',    text: 'Discovery Agent "Generate manifest" state was lost on page refresh — generated manifests are now written to localStorage on success so the Listed status survives navigation' },
+      { type: 'improved', text: 'AI Discovery audit scoring upgraded to 10-point model: +4 for URL endpoint returning 200, +2 for structured data configured and valid, +4 for probe question returning AskBiz HIT. Previous model capped at 7/10 regardless of probe results' },
+      { type: 'improved', text: 'Discovery audit now runs probe questions across all 6 platforms in parallel (was limited to first 4), and probe hit results feed directly into platform scoring' },
+    ],
+  },
+  {
     version: '2.14.0',
     date: '2026-06-14',
     summary: 'Smart notification system, Paystack payment tracking, POS inventory archiving, CFO dashboard cleanup, and blog + academy design polish.',
