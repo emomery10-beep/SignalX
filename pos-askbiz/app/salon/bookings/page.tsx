@@ -7,18 +7,6 @@ const ACC = '#ec4899' // salon pink accent
 
 const C = { good: '#22c55e', warn: '#f59e0b', bad: '#ef4444', muted: '#94a3b8', dim: '#64748b' }
 
-interface TxItem { name: string; qty: number; unit_price: number }
-interface Tx {
-  id: string
-  total: number
-  created_at: string
-  status: string
-  payment_type: string
-  pos_items?: TxItem[]
-  pos_customers?: { id?: string; name?: string; phone?: string } | null
-  cashier?: { id?: string; name?: string; role?: string } | null
-}
-
 interface Appointment {
   id: string
   client_id: string | null
@@ -36,7 +24,6 @@ interface Appointment {
 
 function dayKey(iso: string) { return new Date(iso).toISOString().slice(0, 10) }
 function fmtTime(iso: string) { return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
-function serviceNames(tx: Tx) { return (tx.pos_items || []).map(i => i.name).join(', ') || 'Service' }
 
 const statusBadge: Record<string, { bg: string; fg: string; label: string }> = {
   completed: { bg: '#14532d', fg: '#22c55e', label: 'Completed' },
@@ -49,7 +36,6 @@ export default function SalonBookings() {
   const { session, ready: authReady } = usePosAuth()
   const [sym, setSym] = useState('£')
   const [loading, setLoading] = useState(true)
-  const [txs, setTxs] = useState<Tx[]>([])
 
   const todayStr = new Date().toISOString().slice(0, 10)
   const [date, setDate] = useState(todayStr)
@@ -76,17 +62,15 @@ export default function SalonBookings() {
   async function load() {
     setLoading(true)
     try {
-      // Past visits are derived from completed POS transactions (read-only history);
-      // scheduled appointments come from the salon appointments endpoint.
-      const [txRes, apptRes, staffRes] = await Promise.all([
-        fetch('/api/pos/transactions?limit=500', { headers: { ...session!.headers } }),
+      // Bookings list shows ONLY real salon appointments. Generic POS transactions
+      // are not fetched here — they belong to other sectors and were previously
+      // mis-rendered as salon "services" (cross-sector data bleed).
+      const [apptRes, staffRes] = await Promise.all([
         fetch('/api/pos/salon/appointments', { headers: { ...session!.headers } }),
         fetch('/api/pos/staff', { headers: { ...session!.headers } }),
       ])
-      const txData = await txRes.json()
       const apptData = await apptRes.json()
       const staffData = await staffRes.json()
-      setTxs(txData.transactions || [])
       setAppointments(apptData.appointments || [])
       setStaff((staffData.staff || []).map((s: { id: string; name: string }) => ({ id: s.id, name: s.name })))
     } catch (e) {
@@ -96,26 +80,19 @@ export default function SalonBookings() {
     }
   }
 
-  // Distinct stylists & services for filters
+  // Distinct stylists & services for filters — derived from real salon appointments,
+  // not from generic POS transactions (which belong to other sectors).
   const stylists = useMemo(() => {
     const set = new Set<string>()
-    txs.forEach(t => { if (t.cashier?.name) set.add(t.cashier.name) })
+    appointments.forEach(a => { if (a.stylist?.name) set.add(a.stylist.name) })
     return Array.from(set).sort()
-  }, [txs])
+  }, [appointments])
 
   const services = useMemo(() => {
     const set = new Set<string>()
-    txs.forEach(t => (t.pos_items || []).forEach(i => set.add(i.name)))
+    appointments.forEach(a => { if (a.service_name) set.add(a.service_name) })
     return Array.from(set).sort()
-  }, [txs])
-
-  const filtered = useMemo(() => {
-    return txs
-      .filter(t => dayKey(t.created_at) === date)
-      .filter(t => stylistFilter === 'all' || t.cashier?.name === stylistFilter)
-      .filter(t => serviceFilter === 'all' || (t.pos_items || []).some(i => i.name === serviceFilter))
-      .sort((a, b) => +new Date(a.created_at) - +new Date(b.created_at))
-  }, [txs, date, stylistFilter, serviceFilter])
+  }, [appointments])
 
   // Scheduled (real) appointments for the selected day, honouring the stylist filter.
   const dayAppointments = useMemo(() => {
@@ -264,7 +241,7 @@ export default function SalonBookings() {
             {services.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
           <button onClick={() => setDate(todayStr)} style={{ background: '#334155', border: 'none', color: C.muted, padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>Today</button>
-          <div style={{ marginLeft: 'auto', fontSize: 13, color: C.dim }}>{filtered.length} appointment{filtered.length !== 1 ? 's' : ''}</div>
+          <div style={{ marginLeft: 'auto', fontSize: 13, color: C.dim }}>{dayAppointments.length} appointment{dayAppointments.length !== 1 ? 's' : ''}</div>
         </div>
 
         {/* SVG Timeline */}
@@ -283,22 +260,22 @@ export default function SalonBookings() {
             })}
             {/* baseline */}
             <line x1={tlPad} y1={tlBarY + tlBarH + 8} x2={tlWidth - tlPad} y2={tlBarY + tlBarH + 8} stroke="#334155" strokeWidth={1} />
-            {/* appointment markers */}
-            {filtered.map((tx, idx) => {
-              const x = xForTime(tx.created_at)
+            {/* appointment markers — real salon appointments only */}
+            {dayAppointments.map((a, idx) => {
+              const x = xForTime(a.scheduled_at)
               const row = idx % 2 // stagger to reduce overlap
               const cy = tlBarY + (row === 0 ? 0 : tlBarH) + tlBarH / 2
               return (
-                <g key={tx.id}>
+                <g key={a.id}>
                   <line x1={x} y1={tlBarY - 8} x2={x} y2={cy} stroke={`${ACC}55`} strokeWidth={1} />
                   <circle cx={x} cy={cy} r={7} fill={ACC} stroke="#0f172a" strokeWidth={2}>
-                    <title>{`${fmtTime(tx.created_at)} — ${tx.pos_customers?.name || 'Walk-in'} (${serviceNames(tx)})`}</title>
+                    <title>{`${fmtTime(a.scheduled_at)} — ${a.client?.name || 'Walk-in'} (${a.service_name})`}</title>
                   </circle>
-                  <text x={x} y={cy - 11} textAnchor="middle" fill="#e2e8f0" fontSize={10}>{fmtTime(tx.created_at)}</text>
+                  <text x={x} y={cy - 11} textAnchor="middle" fill="#e2e8f0" fontSize={10}>{fmtTime(a.scheduled_at)}</text>
                 </g>
               )
             })}
-            {filtered.length === 0 && (
+            {dayAppointments.length === 0 && (
               <text x={tlWidth / 2} y={tlBarY + tlBarH} textAnchor="middle" fill={C.dim} fontSize={13}>No appointments for this day</text>
             )}
           </svg>
@@ -306,21 +283,20 @@ export default function SalonBookings() {
 
         {/* List view */}
         <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden', marginBottom: 24 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '80px 1.4fr 1.6fr 1.2fr 1fr 1fr 110px', gap: 8, padding: '12px 16px', borderBottom: '1px solid #334155', fontSize: 11, color: C.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
-            <div>Time</div><div>Client</div><div>Service(s)</div><div>Stylist</div><div>Total</div><div>Payment</div><div>Status</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '80px 1.4fr 1.6fr 1.2fr 1fr 110px', gap: 8, padding: '12px 16px', borderBottom: '1px solid #334155', fontSize: 11, color: C.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
+            <div>Time</div><div>Client</div><div>Service(s)</div><div>Stylist</div><div>Price</div><div>Status</div>
           </div>
           {loading && <div style={{ padding: 20, color: C.dim, fontSize: 13 }}>Loading…</div>}
-          {!loading && filtered.length === 0 && <div style={{ padding: 20, color: C.dim, fontSize: 13, textAlign: 'center' }}>No appointments match the filters.</div>}
-          {filtered.map((tx, idx) => {
-            const badge = statusBadge[tx.status] || { bg: '#334155', fg: C.muted, label: tx.status || '—' }
+          {!loading && dayAppointments.length === 0 && <div style={{ padding: 20, color: C.dim, fontSize: 13, textAlign: 'center' }}>No appointments match the filters.</div>}
+          {dayAppointments.map((a, idx) => {
+            const badge = statusBadge[a.status] || { bg: '#334155', fg: C.muted, label: (a.status || '—').replace('_', ' ') }
             return (
-              <div key={tx.id} className="pos-item" style={{ display: 'grid', gridTemplateColumns: '80px 1.4fr 1.6fr 1.2fr 1fr 1fr 110px', gap: 8, padding: '12px 16px', borderBottom: '1px solid #283548', fontSize: 13, alignItems: 'center', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
-                <div style={{ color: ACC, fontWeight: 700 }}>{fmtTime(tx.created_at)}</div>
-                <div>{tx.pos_customers?.name || tx.pos_customers?.phone || <span style={{ color: C.dim }}>Walk-in</span>}</div>
-                <div style={{ color: '#e2e8f0' }}>{serviceNames(tx)}</div>
-                <div style={{ color: C.muted }}>{tx.cashier?.name || '—'}</div>
-                <div style={{ fontWeight: 700 }}>{sym}{(tx.total || 0).toFixed(2)}</div>
-                <div style={{ color: C.muted, textTransform: 'capitalize' }}>{tx.payment_type || '—'}</div>
+              <div key={a.id} className="pos-item" style={{ display: 'grid', gridTemplateColumns: '80px 1.4fr 1.6fr 1.2fr 1fr 110px', gap: 8, padding: '12px 16px', borderBottom: '1px solid #283548', fontSize: 13, alignItems: 'center', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
+                <div style={{ color: ACC, fontWeight: 700 }}>{fmtTime(a.scheduled_at)}</div>
+                <div>{a.client?.name || a.client?.phone || <span style={{ color: C.dim }}>Walk-in</span>}</div>
+                <div style={{ color: '#e2e8f0' }}>{a.service_name}</div>
+                <div style={{ color: C.muted }}>{a.stylist?.name || '—'}</div>
+                <div style={{ fontWeight: 700 }}>{sym}{(a.price || 0).toFixed(2)}</div>
                 <div><span style={{ background: badge.bg, color: badge.fg, borderRadius: 12, padding: '3px 10px', fontSize: 11, fontWeight: 600 }}>{badge.label}</span></div>
               </div>
             )

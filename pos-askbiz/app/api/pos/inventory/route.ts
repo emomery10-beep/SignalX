@@ -31,8 +31,10 @@ export async function GET(req: NextRequest) {
   // Staff locked to branch; owner can filter or see all
   if (location_id) query = query.eq('location_id', location_id)
 
-  // Sector filter: return items tagged to this sector + untagged (shared) items
-  if (sector) query = query.or(`sector.eq.${sector},sector.is.null`)
+  // Sector filter: strict — each sector only sees its own tagged items.
+  // (Previously included sector.is.null, which leaked untagged retail products
+  // into the repair/salon/factory views.)
+  if (sector) query = query.eq('sector', sector)
 
   if (search) {
     query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`)

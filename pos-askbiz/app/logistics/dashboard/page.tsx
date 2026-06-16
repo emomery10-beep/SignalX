@@ -26,9 +26,14 @@ interface Parcel {
   destination_branch?: { id: string; name: string } | null
 }
 
-interface Truck { id: string; plate_number: string; make_model: string | null; status: string }
+interface Truck { id: string; plate_number?: string; registration?: string; make_model: string | null; capacity_kg?: number | null; status: string; assigned_driver_id?: string | null }
+
+interface TruckLocation { truck_id: string; registration: string; lat: number; lng: number; recorded_at: string; driver_name: string | null }
 
 type Tab = 'overview' | 'parcels' | 'fleet' | 'revenue'
+
+// Trucks may come back as `registration` (new API) or `plate_number` (legacy)
+const truckReg = (t: Truck) => t.registration || t.plate_number || '—'
 
 const STATUS_LABEL: Record<string, string> = {
   received: 'Received', at_branch: 'At Branch', assigned: 'Assigned',
@@ -57,7 +62,16 @@ export default function BranchDashboardPage() {
   const [tab, setTab] = useState<Tab>('overview')
   const [parcels, setParcels] = useState<Parcel[]>([])
   const [trucks, setTrucks] = useState<Truck[]>([])
+  const [locations, setLocations] = useState<TruckLocation[]>([])
   const [loading, setLoading] = useState(true)
+
+  // Add-truck modal
+  const [showAddTruck, setShowAddTruck] = useState(false)
+  const [newReg, setNewReg] = useState('')
+  const [newModel, setNewModel] = useState('')
+  const [newCapacity, setNewCapacity] = useState('')
+  const [addingTruck, setAddingTruck] = useState(false)
+  const [addError, setAddError] = useState('')
 
   useEffect(() => {
     const raw = localStorage.getItem('pos_staff')
@@ -90,6 +104,48 @@ export default function BranchDashboardPage() {
       setTrucks(tData.trucks || [])
     } catch {}
     setLoading(false)
+    loadLocations(s)
+  }
+
+  const loadLocations = useCallback(async (s: Staff) => {
+    try {
+      const res = await fetch(`${API}/api/pos/truck-locations?latest=true`, { headers: hdrs(s) })
+      const data = await res.json()
+      setLocations(data.locations || [])
+    } catch {}
+  }, [hdrs])
+
+  // Refresh fleet locations every 60s
+  useEffect(() => {
+    if (!staff) return
+    const t = setInterval(() => loadLocations(staff), 60_000)
+    return () => clearInterval(t)
+  }, [staff, loadLocations])
+
+  const addTruck = async () => {
+    if (!staff || !newReg.trim()) { setAddError('Registration is required'); return }
+    setAddingTruck(true); setAddError('')
+    try {
+      const res = await fetch(`${API}/api/pos/trucks`, {
+        method: 'POST',
+        headers: hdrs(staff),
+        body: JSON.stringify({
+          registration: newReg.trim(),
+          make_model: newModel.trim() || null,
+          capacity_kg: newCapacity ? Number(newCapacity) : null,
+        }),
+      })
+      if (!res.ok) throw new Error('failed')
+      const data = await res.json()
+      // Optimistically add, then refresh the full list so it stays in sync
+      if (data.truck) setTrucks(prev => [data.truck as Truck, ...prev])
+      setShowAddTruck(false)
+      setNewReg(''); setNewModel(''); setNewCapacity('')
+      await loadAll(staff)
+    } catch {
+      setAddError('Could not add truck. Try again.')
+    }
+    setAddingTruck(false)
   }
 
   // Stats
@@ -213,11 +269,42 @@ export default function BranchDashboardPage() {
         ) : tab === 'parcels' ? (
           <ParcelList parcels={parcels} currency={currency} />
         ) : tab === 'fleet' ? (
-          <FleetView trucks={trucks} parcels={parcels} />
+          <FleetView trucks={trucks} parcels={parcels} locations={locations} onAddTruck={() => { setAddError(''); setShowAddTruck(true) }} />
         ) : (
           <RevenueView parcels={parcels} currency={currency} />
         )}
       </div>
+
+      {/* Add Truck modal */}
+      {showAddTruck && (
+        <div onClick={() => !addingTruck && setShowAddTruck(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div onClick={e => e.stopPropagation()} className="pos-sheet" style={{ background: 'var(--pos-surface)', borderRadius: '16px 16px 0 0', padding: 20, width: '100%', maxWidth: 500, maxHeight: '85vh', overflow: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--pos-ink)' }}>🚛 Add Truck</div>
+              <button onClick={() => setShowAddTruck(false)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: 'var(--pos-muted)' }}>×</button>
+            </div>
+
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 4 }}>Registration *</label>
+            <input value={newReg} onChange={e => setNewReg(e.target.value)} placeholder="e.g. KDA 123A" autoFocus
+              style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--pos-border)', borderRadius: 8, fontSize: 14, marginBottom: 12, boxSizing: 'border-box', outline: 'none' }} />
+
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 4 }}>Make / Model</label>
+            <input value={newModel} onChange={e => setNewModel(e.target.value)} placeholder="e.g. Isuzu FRR"
+              style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--pos-border)', borderRadius: 8, fontSize: 14, marginBottom: 12, boxSizing: 'border-box', outline: 'none' }} />
+
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 4 }}>Capacity (kg)</label>
+            <input value={newCapacity} onChange={e => setNewCapacity(e.target.value.replace(/[^0-9.]/g, ''))} inputMode="decimal" placeholder="e.g. 5000"
+              style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--pos-border)', borderRadius: 8, fontSize: 14, marginBottom: 16, boxSizing: 'border-box', outline: 'none' }} />
+
+            {addError && <div style={{ color: RED, fontSize: 13, marginBottom: 12 }}>{addError}</div>}
+
+            <button onClick={addTruck} disabled={addingTruck || !newReg.trim()} className="pos-btn-primary"
+              style={{ width: '100%', background: (!newReg.trim()) ? '#ccc' : ACC, color: '#fff', border: 'none', borderRadius: 10, padding: '14px', fontSize: 15, fontWeight: 800, cursor: (!newReg.trim() || addingTruck) ? 'not-allowed' : 'pointer', opacity: (!newReg.trim()) ? 0.5 : 1 }}>
+              {addingTruck ? 'Adding…' : 'Add Truck'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -293,7 +380,7 @@ function ParcelList({ parcels, currency }: { parcels: Parcel[]; currency: string
   )
 }
 
-function FleetView({ trucks, parcels }: { trucks: Truck[]; parcels: Parcel[] }) {
+function FleetView({ trucks, parcels, locations, onAddTruck }: { trucks: Truck[]; parcels: Parcel[]; locations: TruckLocation[]; onAddTruck: () => void }) {
   const truckParcels = (truckId: string) => parcels.filter(p => p.truck?.id === truckId && ['assigned', 'loaded', 'in_transit', 'out_for_delivery'].includes(p.status))
 
   const statusStyle = (s: string) => ({
@@ -304,15 +391,26 @@ function FleetView({ trucks, parcels }: { trucks: Truck[]; parcels: Parcel[] }) 
 
   return (
     <div>
-      <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginBottom: 8 }}>{trucks.length} trucks</div>
+      {/* Header row: count + add button */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <div style={{ fontSize: 11, color: 'var(--pos-muted)' }}>{trucks.length} truck{trucks.length !== 1 ? 's' : ''}</div>
+        <button onClick={onAddTruck} style={{ background: ACC, color: '#fff', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>+ Add Truck</button>
+      </div>
+
+      {/* Fleet Locations (live GPS) */}
+      <FleetLocations locations={locations} />
+
+      {/* Truck roster */}
+      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)', margin: '4px 0 8px' }}>🚛 Trucks</div>
       {trucks.map((t, idx) => {
         const st = statusStyle(t.status)
         const tp = truckParcels(t.id)
         return (
           <div key={t.id} className="pos-item" style={{ background: 'var(--pos-surface)', borderRadius: 10, padding: 12, border: '1px solid var(--pos-border)', marginBottom: 8, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--pos-ink)' }}>{t.plate_number}</span>
+              <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--pos-ink)' }}>{truckReg(t)}</span>
               {t.make_model && <span style={{ fontSize: 11, color: 'var(--pos-muted)' }}>{t.make_model}</span>}
+              {t.capacity_kg ? <span style={{ fontSize: 11, color: 'var(--pos-hint)' }}>· {t.capacity_kg.toLocaleString()}kg</span> : null}
               <span style={{ marginLeft: 'auto', background: st.bg, color: st.color, padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700 }}>{st.label}</span>
             </div>
             {tp.length > 0 && (
@@ -323,7 +421,42 @@ function FleetView({ trucks, parcels }: { trucks: Truck[]; parcels: Parcel[] }) 
           </div>
         )
       })}
-      {trucks.length === 0 && <div style={{ textAlign: 'center', padding: 40, color: 'var(--pos-muted)', fontSize: 13 }}>No trucks registered yet</div>}
+      {trucks.length === 0 && <div style={{ textAlign: 'center', padding: 32, color: 'var(--pos-muted)', fontSize: 13 }}>No trucks registered yet. Tap “+ Add Truck” to get started.</div>}
+    </div>
+  )
+}
+
+function FleetLocations({ locations }: { locations: TruckLocation[] }) {
+  const fresh = (iso: string) => (Date.now() - new Date(iso).getTime()) < 2 * 3600_000 // within 2h
+  return (
+    <div className="pos-reveal" style={{ background: 'var(--pos-surface)', borderRadius: 12, padding: 14, border: '1px solid var(--pos-border)', marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)' }}>📍 Fleet Locations</div>
+        <span style={{ fontSize: 10, color: 'var(--pos-hint)' }}>updates every 60s</span>
+      </div>
+      {locations.length === 0 ? (
+        <div style={{ fontSize: 12, color: 'var(--pos-hint)', padding: '8px 0' }}>No location pings yet. Drivers report position hourly once a truck is selected.</div>
+      ) : (
+        locations.map(loc => {
+          const live = fresh(loc.recorded_at)
+          return (
+            <div key={loc.truck_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #f0ede8' }}>
+              <div style={{ width: 8, height: 8, borderRadius: 4, background: live ? GREEN : AMBER, flexShrink: 0 }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)' }}>{loc.registration}</div>
+                <div style={{ fontSize: 11, color: 'var(--pos-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {loc.driver_name || 'Unknown driver'} · {loc.lat.toFixed(4)}, {loc.lng.toFixed(4)}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--pos-hint)' }}>last seen {timeAgo(loc.recorded_at)}</div>
+              </div>
+              <a href={`https://www.google.com/maps?q=${loc.lat},${loc.lng}`} target="_blank" rel="noopener noreferrer"
+                style={{ background: ACC_LIGHT, color: ACC, border: `1px solid ${ACC_BORDER}`, borderRadius: 8, padding: '6px 10px', fontSize: 11, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                Map ↗
+              </a>
+            </div>
+          )
+        })
+      )}
     </div>
   )
 }

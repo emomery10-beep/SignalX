@@ -303,6 +303,11 @@ export default function InventoryPage() {
           supplier: addForm.supplier || null,
           brand: addForm.brand || null,
           unit: addForm.unit || 'item',
+          // Tag NEW products as 'retail' so they stay isolated from other sectors.
+          // NOTE: the GET above is intentionally NOT filtered by ?sector=retail —
+          // existing untagged items must remain visible so the owner isn't surprised
+          // by items disappearing. Only newly-created items get tagged going forward.
+          sector: 'retail',
         }),
       })
       const data = await res.json()
@@ -608,7 +613,9 @@ export default function InventoryPage() {
                       cost_price: parseFloat(editingRecognizedData.cost_price || '0'),
                       stock_qty: parseFloat(editingRecognizedData.stock_qty || '1'),
                       unit: editingRecognizedData.unit || 'item',
-                      low_stock_threshold: 5
+                      low_stock_threshold: 5,
+                      // Tag NEW products as 'retail' (see saveNewProduct note). GET stays unfiltered.
+                      sector: 'retail'
                     })
                   })
                   const data = await res.json()

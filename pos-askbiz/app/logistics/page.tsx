@@ -110,6 +110,9 @@ export default function LogisticsPage() {
 
   // Geo
   const [geoCoords, setGeoCoords] = useState<{ lat: number; lng: number } | null>(null)
+  const geoCoordsRef = useRef<{ lat: number; lng: number } | null>(null)
+  const selectedTruckRef = useRef<Truck | null>(null)
+  const lastPingRef = useRef<number>(0)
 
   // Success
   const [successMsg, setSuccessMsg] = useState('')
@@ -158,9 +161,26 @@ export default function LogisticsPage() {
       startCamera()
     }
 
+    const isDriver = s.role === 'driver' || s.role === 'logistics-driver'
+
     if (navigator.geolocation) {
+      // Local display refresh every 60s. Also POST a server ping at most hourly.
+      const HOUR = 3600_000
       const doGeo = () => navigator.geolocation.getCurrentPosition(
-        pos => setGeoCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        pos => {
+          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+          setGeoCoords(coords)
+          geoCoordsRef.current = coords
+          // Hourly server ping — only for active drivers with a selected truck
+          if (isDriver) {
+            const truck = selectedTruckRef.current
+            const now = Date.now()
+            if (truck && now - lastPingRef.current >= HOUR) {
+              lastPingRef.current = now
+              postTruckLocation(s, truck.id, coords.lat, coords.lng)
+            }
+          }
+        },
         () => {}
       )
       doGeo()
@@ -168,6 +188,20 @@ export default function LogisticsPage() {
       return () => clearInterval(geoTimer)
     }
   }, [])
+
+  // Keep refs in sync so the geo interval closure reads the latest values
+  useEffect(() => { selectedTruckRef.current = selectedTruck }, [selectedTruck])
+
+  // POST a GPS ping to the server (records a truck location)
+  const postTruckLocation = async (s: StaffSession, truckId: string, lat: number, lng: number) => {
+    try {
+      await fetch(`${API}/api/pos/truck-locations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-staff-id': s.id, 'x-owner-id': s.owner_id },
+        body: JSON.stringify({ truck_id: truckId, lat, lng }),
+      })
+    } catch {}
+  }
 
   const headers = useCallback(() => ({
     'Content-Type': 'application/json',
