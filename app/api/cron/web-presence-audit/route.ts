@@ -14,9 +14,10 @@ export async function GET(req: NextRequest) {
   const authHeader       = req.headers.get('authorization')
 
   const isValidCron =
-    secret === process.env.CRON_SECRET ||
-    secret === 'dev-test' ||
-    authHeader === `Bearer ${process.env.CRON_SECRET}`
+    (!!process.env.CRON_SECRET && secret === process.env.CRON_SECRET) ||
+    // 'dev-test' bypass is allowed ONLY outside production — never in prod.
+    (secret === 'dev-test' && process.env.NODE_ENV !== 'production') ||
+    (!!process.env.CRON_SECRET && authHeader === `Bearer ${process.env.CRON_SECRET}`)
 
   if (!isValidCron) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

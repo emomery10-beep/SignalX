@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { sendEmail } from '@/lib/email'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -32,6 +33,28 @@ const PROTECTED_API_ROUTES = [
 const HEALTH_ENDPOINTS = [
   '/api/health',
   '/api/consent',
+]
+
+// Mutation routes we actively probe to confirm the WRITE path (not just GET)
+// rejects anonymous callers. Each route below checks the session as its first
+// statement, so an unauthenticated probe returns 401 before any body parsing or
+// side effect — safe to run unattended. Keep this a curated allowlist: only add
+// a route here after confirming it gates auth before doing any work.
+const WRITE_PATH_PROBES = [
+  { path: '/api/pos/gdpr/delete-customer', method: 'POST' },
+  { path: '/api/memory', method: 'DELETE' },
+  { path: '/api/team', method: 'POST' },
+  { path: '/api/profile', method: 'PATCH' },
+  { path: '/api/conversations', method: 'POST' },
+]
+
+// Webhooks that must verify a provider signature before acting. We POST an
+// unsigned payload and expect rejection (400/401) — a 2xx here means forged
+// events could be accepted. Safe to probe: no valid signature is ever sent.
+const SIGNED_WEBHOOKS = [
+  '/api/webhooks/stripe',
+  '/api/webhooks/stripe-billing',
+  '/api/stripe/webhook',
 ]
 
 const REQUIRED_SECURITY_HEADERS = [
@@ -138,6 +161,79 @@ async function checkAuthAccess(baseUrl: string): Promise<CheckResult[]> {
         name: `${route} rejects unauthenticated`,
         status: 'warn',
         detail: `Could not test: ${e.message}. Recommendation: ensure the route is deployed and reachable.`,
+      })
+    }
+  }
+  return results
+}
+
+async function checkWritePathAuth(baseUrl: string): Promise<CheckResult[]> {
+  const results: CheckResult[] = []
+  for (const { path, method } of WRITE_PATH_PROBES) {
+    try {
+      const res = await fetch(`${baseUrl}${path}`, {
+        method,
+        // Deliberately invalid body + probe marker. A correctly-gated route
+        // returns 401/403 before ever reading this, so nothing is mutated.
+        headers: { 'Content-Type': 'application/json', 'x-audit-probe': '1' },
+        body: JSON.stringify({ __audit_probe__: true }),
+        signal: AbortSignal.timeout(8000),
+      })
+      const rejected = res.status === 401 || res.status === 403
+      const methodNotAllowed = res.status === 405
+      const validatedFirst = res.status === 400 || res.status === 422
+      results.push({
+        category: 'Auth & Access Control',
+        name: `${method} ${path} rejects unauthenticated`,
+        // A 2xx/3xx here is a real failure: the write path ran (or would run)
+        // for an anonymous caller. This must be able to fail the whole audit.
+        status: rejected || methodNotAllowed ? 'pass' : validatedFirst ? 'warn' : 'fail',
+        detail: rejected
+          ? `Correctly returned ${res.status} before processing — write path is gated`
+          : methodNotAllowed
+          ? `Returned 405 — ${method} not allowed on this route, so it cannot be exploited`
+          : validatedFirst
+          ? `Returned ${res.status} (body rejected) — appears to validate before auth. Recommendation: confirm the session check runs first.`
+          : `Returned ${res.status} — UNAUTHENTICATED WRITE PATH MAY BE OPEN. Recommendation: ensure the handler checks the session before touching any data.`,
+      })
+    } catch (e: any) {
+      results.push({
+        category: 'Auth & Access Control',
+        name: `${method} ${path} rejects unauthenticated`,
+        status: 'warn',
+        detail: `Could not probe: ${e.message}. Recommendation: ensure the route is deployed and reachable.`,
+      })
+    }
+  }
+  return results
+}
+
+async function checkWebhookSignatures(baseUrl: string): Promise<CheckResult[]> {
+  const results: CheckResult[] = []
+  for (const path of SIGNED_WEBHOOKS) {
+    try {
+      const res = await fetch(`${baseUrl}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }, // deliberately no stripe-signature
+        body: JSON.stringify({ id: 'evt_audit_probe', type: 'ping' }),
+        signal: AbortSignal.timeout(8000),
+      })
+      // A route that verifies signatures rejects an unsigned payload (400/401).
+      const rejects = res.status === 400 || res.status === 401 || res.status === 403
+      results.push({
+        category: 'Webhook Security',
+        name: `${path} rejects unsigned payloads`,
+        status: rejects ? 'pass' : 'fail',
+        detail: rejects
+          ? `Returned ${res.status} — signature verification is enforced`
+          : `Returned ${res.status} — webhook may accept forged events. Recommendation: verify stripe-signature via stripe.webhooks.constructEvent before acting on the payload.`,
+      })
+    } catch (e: any) {
+      results.push({
+        category: 'Webhook Security',
+        name: `${path} rejects unsigned payloads`,
+        status: 'warn',
+        detail: `Could not probe: ${e.message}. Recommendation: ensure the webhook route is deployed and reachable.`,
       })
     }
   }
@@ -268,28 +364,17 @@ async function checkContentIntegrity(supabase: any): Promise<CheckResult[]> {
       .eq('status', 'pending')
       .lt('created_at', staleDate)
 
-    // Auto-expire stale pending content (>7 days) to keep the pipeline clean
-    if (pending && pending.length > 0) {
-      const staleIds = pending.map((p: any) => p.id)
-      await supabase
-        .from('agent_content')
-        .update({ status: 'expired' })
-        .in('id', staleIds)
-
-      results.push({
-        category: 'Content Integrity',
-        name: 'No stale pending content',
-        status: 'pass',
-        detail: `Auto-expired ${staleIds.length} items that were pending for 7+ days — stale content loses relevance`,
-      })
-    } else {
-      results.push({
-        category: 'Content Integrity',
-        name: 'No stale pending content',
-        status: 'pass',
-        detail: 'No content pending for more than 7 days',
-      })
-    }
+    // Audits are read-only: report stale content, do NOT mutate it here.
+    // (Auto-expiry belongs in the stale-content cron, not the security audit.)
+    const staleCount = pending?.length ?? 0
+    results.push({
+      category: 'Content Integrity',
+      name: 'No stale pending content',
+      status: staleCount === 0 ? 'pass' : 'warn',
+      detail: staleCount === 0
+        ? 'No content pending for more than 7 days'
+        : `${staleCount} items pending for 7+ days. Recommendation: the stale-content cron should expire these — verify it is running.`,
+    })
   } catch {
     results.push({
       category: 'Content Integrity',
@@ -470,6 +555,62 @@ async function checkGdprCompliance(baseUrl: string, supabase: any): Promise<Chec
   return results
 }
 
+async function checkMainAppGdpr(baseUrl: string, supabase: any): Promise<CheckResult[]> {
+  const results: CheckResult[] = []
+
+  // Right to Portability (Art. 20) — chat users' export of profile/conversations/memory
+  try {
+    const res = await fetch(`${baseUrl}/api/export`, { signal: AbortSignal.timeout(8000) })
+    const exists = res.status !== 404
+    results.push({
+      category: 'GDPR Compliance',
+      name: 'Chat-user data export (Right to Portability)',
+      status: exists ? 'pass' : 'fail',
+      detail: exists
+        ? `Endpoint active (${res.status}) — main-app users can export their data`
+        : 'Missing — profiles/conversations/memory have no export path. Recommendation: implement /api/export (GDPR Art. 20).',
+    })
+  } catch {
+    results.push({ category: 'GDPR Compliance', name: 'Chat-user data export (Right to Portability)', status: 'warn', detail: 'Could not verify /api/export' })
+  }
+
+  // Right to Erasure (Art. 17) — main-app account deletion request flow
+  try {
+    const { error } = await supabase.from('deletion_requests').select('id', { head: true, count: 'exact' }).limit(1)
+    const tableOk = !error || error.code === '42501' // exists (or exists + RLS-protected)
+    results.push({
+      category: 'GDPR Compliance',
+      name: 'Account erasure request flow (Right to Erasure)',
+      status: tableOk ? 'pass' : 'warn',
+      detail: tableOk
+        ? 'deletion_requests table present — /api/account supports request_deletion'
+        : `Could not confirm deletion_requests table: ${error?.message}. Recommendation: ensure the erasure flow is wired (GDPR Art. 17).`,
+    })
+  } catch (e: any) {
+    results.push({ category: 'GDPR Compliance', name: 'Account erasure request flow (Right to Erasure)', status: 'warn', detail: `Could not verify: ${e.message}` })
+  }
+
+  // Consent accountability (Art. 7(1)) — consent must be demonstrable server-side
+  try {
+    const { count } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .not('data_consent_at', 'is', null)
+    results.push({
+      category: 'GDPR Compliance',
+      name: 'Consent is demonstrable server-side',
+      status: (count ?? 0) > 0 ? 'pass' : 'warn',
+      detail: (count ?? 0) > 0
+        ? `${count} profiles have a recorded consent timestamp — consent is demonstrable (not localStorage-only)`
+        : 'No server-side consent timestamps recorded yet. Recommendation: ensure /api/consent persists data_consent_at so consent can be demonstrated under Art. 7(1).',
+    })
+  } catch (e: any) {
+    results.push({ category: 'GDPR Compliance', name: 'Consent is demonstrable server-side', status: 'warn', detail: `Could not verify consent records: ${e.message}` })
+  }
+
+  return results
+}
+
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 
 async function runSecurityAudit(baseUrl: string) {
@@ -477,25 +618,31 @@ async function runSecurityAudit(baseUrl: string) {
   const runId = `sec_${Date.now()}`
   const startTime = Date.now()
 
-  const [apiHealth, authAccess, dbSecurity, contentIntegrity, securityHeaders, gdpr] = await Promise.all([
+  const [apiHealth, authAccess, writePathAuth, webhookSig, dbSecurity, contentIntegrity, securityHeaders, gdpr] = await Promise.all([
     checkApiHealth(baseUrl),
     checkAuthAccess(baseUrl),
+    checkWritePathAuth(baseUrl),
+    checkWebhookSignatures(baseUrl),
     checkDbSecurity(supabase),
     checkContentIntegrity(supabase),
     checkSecurityHeaders(baseUrl),
     checkGdprCompliance(baseUrl, supabase),
   ])
 
+  const mainAppGdpr = await checkMainAppGdpr(baseUrl, supabase)
   const envVars = checkEnvVars()
 
   const allChecks = [
     ...apiHealth,
     ...authAccess,
+    ...writePathAuth,
+    ...webhookSig,
     ...envVars,
     ...dbSecurity,
     ...contentIntegrity,
     ...securityHeaders,
     ...gdpr,
+    ...mainAppGdpr,
   ]
 
   const duration = Date.now() - startTime
@@ -527,6 +674,38 @@ async function runSecurityAudit(baseUrl: string) {
     categories,
     checks: allChecks,
     sub_processors: GDPR_SUB_PROCESSORS,
+  }
+
+  // Regression alert: compare against the previous run and email ONLY when a
+  // check has newly failed (pass/warn → fail, or a brand-new fail). A clean run
+  // stays silent so the monthly green report doesn't train us to ignore it.
+  try {
+    const { data: prev } = await supabase
+      .from('security_audits')
+      .select('report')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    const prevChecks: CheckResult[] = (prev?.report as any)?.checks ?? []
+    const prevByName = new Map(prevChecks.map(c => [c.name, c.status]))
+
+    const newFailures = allChecks.filter(c => {
+      if (c.status !== 'fail') return false
+      const before = prevByName.get(c.name)
+      return before === undefined || before !== 'fail' // newly failing
+    })
+
+    if (newFailures.length > 0) {
+      const lines = newFailures.map(c => `• [${c.category}] ${c.name}\n  ${c.detail}`).join('\n\n')
+      await sendEmail({
+        to: ADMIN_EMAILS[0],
+        subject: `⚠️ AskBiz security audit: ${newFailures.length} new failure${newFailures.length > 1 ? 's' : ''}`,
+        html: `<p>The monthly security &amp; GDPR audit (<code>${runId}</code>) detected <strong>${newFailures.length}</strong> newly failing check(s):</p><pre>${lines.replace(/</g, '&lt;')}</pre><p>Overall: ${overallStatus.toUpperCase()} — ${passed} passed, ${warnings} warnings, ${failures} failures of ${totalChecks}.</p>`,
+      })
+    }
+  } catch (e) {
+    console.error('Regression alert failed:', e)
   }
 
   try {
