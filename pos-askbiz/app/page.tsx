@@ -10,6 +10,7 @@ const API = process.env.NEXT_PUBLIC_API_URL || ''
 function getLoginDest(role: string): string {
   if (!role) return '/sell'
   // Logistics template roles
+  if (role === 'logistics-counter-clerk') return '/logistics/intake'
   if (role === 'branch_manager' || role === 'logistics-branch-manager') return '/logistics/dashboard'
   if (role === 'dispatcher' || role === 'logistics-dispatcher') return '/logistics/dispatch'
   if (role === 'handler' || role === 'driver' || role === 'logistics-handler' || role === 'logistics-driver') return '/logistics'

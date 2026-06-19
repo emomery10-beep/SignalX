@@ -178,15 +178,29 @@ export default function DiscoveryAgentCard() {
 
   // Load last saved audit results on mount — no auth needed (read-only, page is middleware-protected)
   useEffect(() => {
+    // 1. Restore from localStorage immediately (no flash, no waiting)
+    try {
+      const cached = localStorage.getItem('dac_audit_v2')
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        if (parsed?.platforms) {
+          setAuditData(parsed)
+          setLoading(false)
+        }
+      }
+    } catch {}
+
+    // 2. Fetch fresh from DB in background (cache-busted)
     const init = async () => {
       try {
-        const res  = await fetch('/api/admin/ai-discovery-audit?action=last')
+        const res  = await fetch(`/api/admin/ai-discovery-audit?action=last&t=${Date.now()}`, { cache: 'no-store' })
         const data = await res.json()
         if (data.platforms) {
           setAuditData(data)
+          try { localStorage.setItem('dac_audit_v2', JSON.stringify(data)) } catch {}
         }
       } catch {
-        // silently fall back to seed data
+        // silently keep cached/seed data
       } finally {
         setLoading(false)
       }
@@ -204,7 +218,10 @@ export default function DiscoveryAgentCard() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Audit failed')
-      if (data.platforms) setAuditData(data)
+      if (data.platforms) {
+        setAuditData(data)
+        try { localStorage.setItem('dac_audit_v2', JSON.stringify(data)) } catch {}
+      }
       setExpanded(true)
       showToast('Audit complete — results updated')
     } catch (e) {
@@ -225,12 +242,17 @@ export default function DiscoveryAgentCard() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Generation failed')
       if (data.manifest) {
-        setAuditData(prev => ({
-          ...prev,
-          platforms: prev.platforms.map(p =>
-            p.id === platformId ? { ...p, status: 'listed' as PlatformStatus, score: 5 } : p
-          ),
-        }))
+        setAuditData(prev => {
+          const updated = {
+            ...prev,
+            platforms: prev.platforms.map(p =>
+              p.id === platformId ? { ...p, status: 'listed' as PlatformStatus, score: 5 } : p
+            ),
+          }
+          // Persist optimistic state so it survives refresh
+          try { localStorage.setItem('dac_audit_v2', JSON.stringify(updated)) } catch {}
+          return updated
+        })
         showToast(`✓ Manifest generated for ${platformId}`)
       }
     } catch (e) {

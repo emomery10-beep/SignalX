@@ -1830,6 +1830,7 @@ export default function POSPage() {
                       <option value="retail-manager">🎯 Store Manager</option>
                     </optgroup>
                     <optgroup label="🚛 LOGISTICS">
+                      <option value="logistics-counter-clerk">🏷️ Counter Clerk — intake &amp; collection</option>
                       <option value="logistics-handler">📦 Handler</option>
                       <option value="logistics-driver">🚛 Driver</option>
                       <option value="logistics-dispatcher">📍 Dispatcher</option>
@@ -1949,6 +1950,7 @@ export default function POSPage() {
                       <option value="retail-manager">🎯 Store Manager</option>
                     </optgroup>
                     <optgroup label="🚛 LOGISTICS">
+                      <option value="logistics-counter-clerk">🏷️ Counter Clerk — intake &amp; collection</option>
                       <option value="logistics-handler">📦 Handler</option>
                       <option value="logistics-driver">🚛 Driver</option>
                       <option value="logistics-dispatcher">📍 Dispatcher</option>

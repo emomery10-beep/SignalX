@@ -56,9 +56,37 @@ export default function GoogleAnalytics({ measurementId }: { measurementId: stri
           gtag('consent', 'update', {
             analytics_storage: 'granted',
           });
-          gtag('config', '${measurementId}', {
-            page_path: window.location.pathname,
-          });
+
+          // Referrer-based auto-attribution: when a visit has no UTM tags but
+          // came from a known social platform, derive the source from the real
+          // document.referrer so GA4 records it as Social instead of "(unlabeled)".
+          var cfg = { page_path: window.location.pathname };
+          try {
+            var hasUtm = /[?&]utm_source=/i.test(window.location.search);
+            if (!hasUtm && document.referrer) {
+              var refHost = new URL(document.referrer).hostname.replace(/^www\\./, '');
+              var ownHost = window.location.hostname.replace(/^www\\./, '');
+              if (refHost && refHost !== ownHost) {
+                var MAP = {
+                  'instagram.com':'instagram','l.instagram.com':'instagram',
+                  'facebook.com':'facebook','l.facebook.com':'facebook','lm.facebook.com':'facebook','m.facebook.com':'facebook',
+                  'tiktok.com':'tiktok',
+                  'youtube.com':'youtube','m.youtube.com':'youtube','youtu.be':'youtube',
+                  't.co':'twitter','twitter.com':'twitter','x.com':'twitter',
+                  'linkedin.com':'linkedin','lnkd.in':'linkedin'
+                };
+                var src = MAP[refHost];
+                if (!src) { for (var k in MAP) { if (refHost === k || refHost.indexOf('.' + k) === refHost.length - k.length - 1) { src = MAP[k]; break; } } }
+                if (src) {
+                  cfg.campaign_source = src;
+                  cfg.campaign_medium = (src === 'youtube') ? 'video' : 'social';
+                  cfg.campaign_name = 'referrer_auto';
+                }
+              }
+            }
+          } catch (e) {}
+
+          gtag('config', '${measurementId}', cfg);
         `}
       </Script>
     </>

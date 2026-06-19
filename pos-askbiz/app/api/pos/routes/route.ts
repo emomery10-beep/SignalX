@@ -85,3 +85,59 @@ export async function POST(req: NextRequest) {
 
   return json({ route: data }, 201)
 }
+
+// PATCH — edit pricing / toggle active (branch_manager / dispatcher / manager / owner)
+export async function PATCH(req: NextRequest) {
+  const auth = await resolvePosAuth(req)
+  if (!auth) return json({ error: 'Unauthorised' }, 401)
+  if (!roleCanAccess(auth.role || '', 'dispatcher')) {
+    return json({ error: 'Only dispatchers and above can edit routes' }, 403)
+  }
+
+  const service = createServiceClient()
+  const body = await req.json()
+  if (!body.id) return json({ error: 'id required' }, 400)
+
+  const updates: Record<string, unknown> = {}
+  if (body.name !== undefined)            updates.name = body.name || null
+  if (body.price_per_kg !== undefined)    updates.price_per_kg = toNum(body.price_per_kg) ?? 0
+  if (body.flat_rate !== undefined)       updates.flat_rate = toNum(body.flat_rate) ?? 0
+  if (body.distance_km !== undefined)     updates.distance_km = toNum(body.distance_km)
+  if (body.estimated_hours !== undefined) updates.estimated_hours = toNum(body.estimated_hours)
+  if (body.active !== undefined)          updates.active = body.active === true
+  if (Object.keys(updates).length === 0) return json({ error: 'No valid fields to update' }, 400)
+
+  const { data, error } = await service
+    .from('pos_routes')
+    .update(updates)
+    .eq('id', body.id)
+    .eq('owner_id', auth.ownerId)
+    .select(SELECT)
+    .single()
+
+  if (error) return json({ error: error.message }, 500)
+  return json({ route: data })
+}
+
+// DELETE — remove a route (branch_manager / dispatcher / manager / owner)
+export async function DELETE(req: NextRequest) {
+  const auth = await resolvePosAuth(req)
+  if (!auth) return json({ error: 'Unauthorised' }, 401)
+  if (!roleCanAccess(auth.role || '', 'dispatcher')) {
+    return json({ error: 'Only dispatchers and above can delete routes' }, 403)
+  }
+
+  const { searchParams } = new URL(req.url)
+  const id = searchParams.get('id')
+  if (!id) return json({ error: 'id required' }, 400)
+
+  const service = createServiceClient()
+  const { error } = await service
+    .from('pos_routes')
+    .delete()
+    .eq('id', id)
+    .eq('owner_id', auth.ownerId)
+
+  if (error) return json({ error: error.message }, 500)
+  return json({ success: true })
+}

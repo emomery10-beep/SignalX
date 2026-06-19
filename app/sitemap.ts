@@ -84,6 +84,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/developers`,                                 lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${base}/privacy`,                                    lastModified: now, changeFrequency: "monthly", priority: 0.5 },
     { url: `${base}/terms`,                                      lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/dpa`,                                        lastModified: now, changeFrequency: "monthly", priority: 0.5 },
     { url: `${base}/search`,                                     lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${base}/benchmarks`,                                 lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     // SEO landing pages

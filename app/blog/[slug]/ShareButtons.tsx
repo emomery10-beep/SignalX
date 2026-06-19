@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { withUtm } from '@/lib/utm'
 
 const ACC = '#d08a59'
 const TX3 = '#a39e97'
@@ -14,18 +15,23 @@ interface ShareButtonsProps {
 export default function ShareButtons({ url, title }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false)
 
-  const twitterUrl  = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`
-  const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`
+  // UTM-tag the shared URL per channel so return visits aren't "(unlabeled)" in GA4
+  const twitterShare  = withUtm(url, 'twitter', 'social', 'blog_share')
+  const linkedinShare = withUtm(url, 'linkedin', 'social', 'blog_share')
+  const copyShare     = withUtm(url, 'share', 'referral', 'blog_share') // pasted into WhatsApp/DMs/email
+
+  const twitterUrl  = `https://twitter.com/intent/tweet?url=${encodeURIComponent(twitterShare)}&text=${encodeURIComponent(title)}`
+  const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(linkedinShare)}`
 
   async function copyLink() {
     try {
-      await navigator.clipboard.writeText(url)
+      await navigator.clipboard.writeText(copyShare)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
       // fallback for older browsers
       const el = document.createElement('textarea')
-      el.value = url
+      el.value = copyShare
       document.body.appendChild(el)
       el.select()
       document.execCommand('copy')

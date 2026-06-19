@@ -30,6 +30,12 @@ export async function GET(req: NextRequest) {
     .select('consent_type, status, timestamp')
     .eq('owner_id', ownerId)
 
+  // Parcel PII (logistics): rows still carrying personal data or an intake photo
+  const { data: parcels } = await service
+    .from('pos_parcels')
+    .select('id, created_at, sender_phone, receiver_phone, sender_id_number, receiver_id_number, intake_photo_path')
+    .eq('owner_id', ownerId)
+
   // Has the automated retention job ever run for this owner? (honest signal)
   const { data: lastAutoRun } = await service
     .from('pos_gdpr_deletion_log')
@@ -80,6 +86,12 @@ export async function GET(req: NextRequest) {
     return consentDate < sevenYearsAgo
   }) || []
 
+  // Parcel PII stats — a parcel "carries PII" if any personal field or photo remains
+  const parcelHasPII = (p: any) => Boolean(p.sender_phone || p.receiver_phone || p.sender_id_number || p.receiver_id_number || p.intake_photo_path)
+  const parcelsWithPII = (parcels as any[] || []).filter(parcelHasPII)
+  const parcelsWithPhotos = (parcels as any[] || []).filter((p: any) => p.intake_photo_path)
+  const parcelsExpiredWithPII = parcelsWithPII.filter((p: any) => new Date(p.created_at) < sevenYearsAgo)
+
   return NextResponse.json({
     compliance_report: {
       generated_at: now.toISOString(),
@@ -118,6 +130,15 @@ export async function GET(req: NextRequest) {
         records_ready_for_deletion: consentExpired.length,
         granted_consents: consents?.filter((c: any) => c.status === 'granted').length || 0,
         withdrawn_consents: consents?.filter((c: any) => c.status === 'withdrawn').length || 0,
+      },
+
+      parcel_data: {
+        policy: 'Retain parcel records for 7 years (tax/legal); sender & receiver PII (names, phones, ID numbers, delivery address) and intake photos are erased on request (Art. 17) and anonymised once past the retention window',
+        retention_period_years: 7,
+        total_parcels: parcels?.length || 0,
+        parcels_carrying_pii: parcelsWithPII.length,
+        intake_photos_stored: parcelsWithPhotos.length,
+        parcels_ready_for_anonymisation: parcelsExpiredWithPII.length,
       },
 
       gps_location_data: {
@@ -162,6 +183,7 @@ export async function GET(req: NextRequest) {
       gps_pings_to_purge: gpsPingsPendingPurge || 0,
       transactions_to_archive: transactionsExpired.length,
       consent_records_to_archive: consentExpired.length,
+      parcels_to_anonymise: parcelsExpiredWithPII.length,
     },
   })
 }

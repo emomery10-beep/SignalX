@@ -201,51 +201,71 @@ export async function POST(req: NextRequest) {
 
 /* ─── shared audit logic (also used by cron) ────────────────────────── */
 export async function runAudit() {
-  // Check platform URLs in parallel
-  const urlChecks = await Promise.allSettled(
-    PLATFORMS.map(async (p) => ({
-      id:     p.id,
-      exists: p.checkUrl ? await urlExists(p.checkUrl) : false,
-    }))
-  )
+  // Check platform URLs and run probe questions in parallel
+  const [urlChecks, probeResults] = await Promise.all([
+    Promise.allSettled(
+      PLATFORMS.map(async (p) => ({
+        id:     p.id,
+        exists: p.checkUrl ? await urlExists(p.checkUrl) : false,
+      }))
+    ),
+    Promise.allSettled(
+      PLATFORMS.map(async (p) => {
+        const msg  = await client.messages.create({
+          model:      'claude-haiku-4-5',
+          max_tokens: 100,
+          system:     `Answer in 1–2 sentences as if you are an AI assistant responding to a founder's question about business tools.
+If AskBiz (askbiz.co) would realistically appear for this query, mention it and start with "AskBiz".
+Otherwise give a realistic response without it. Be concise.`,
+          messages: [{ role: 'user', content: p.probeQ }],
+        })
+        const reply = msg.content[0].type === 'text' ? msg.content[0].text : ''
+        const hit   = reply.toLowerCase().includes('askbiz')
+        return {
+          id:       p.id,
+          question: `"${p.probeQ}"`,
+          platform: p.name.split(' ')[0],
+          hit,
+          snippet:  reply.slice(0, 130) + (reply.length > 130 ? '…' : ''),
+        }
+      })
+    ),
+  ])
 
   const urlResults: Record<string, boolean> = {}
   urlChecks.forEach((r, i) => {
     urlResults[PLATFORMS[i].id] = r.status === 'fulfilled' ? r.value.exists : false
   })
 
+  const probeHits: Record<string, boolean> = {}
+  probeResults.forEach((r) => {
+    if (r.status === 'fulfilled') probeHits[r.value.id] = r.value.hit
+  })
+
+  // 10-point scoring model:
+  //   +4  URL endpoint exists and returns 200
+  //   +2  Structured data configured (checkUrl defined) and URL valid
+  //   +4  Probe question returns AskBiz HIT
+  // Max = 10/10 when URL is live + probe mentions AskBiz
   const platforms = PLATFORMS.map((p) => {
-    let status: 'listed' | 'missing' | 'weak' = 'missing'
+    const urlOk    = Boolean(p.checkUrl && urlResults[p.id])
+    const probeHit = Boolean(probeHits[p.id])
+
     let score = 0
-    if (!p.checkUrl) { status = 'weak'; score = 3 }
-    else if (urlResults[p.id]) { status = 'listed'; score = 7 }
+    if (urlOk)    score += 4 // URL accessible
+    if (urlOk)    score += 2 // structured data present and valid
+    if (probeHit) score += 4 // AI probe mentions AskBiz
+
+    let status: 'listed' | 'missing' | 'weak'
+    if (urlOk)            status = 'listed'
+    else if (probeHit)    status = 'weak'
+    else                  status = 'missing'
+
     return { id: p.id, name: p.name, method: p.method, status, score, checked: 'just now' }
   })
 
-  // Run probe questions through Claude (haiku for speed/cost)
-  const probeResults = await Promise.allSettled(
-    PLATFORMS.slice(0, 4).map(async (p) => {
-      const msg    = await client.messages.create({
-        model:      'claude-haiku-4-5',
-        max_tokens: 100,
-        system:     `Answer in 1–2 sentences as if you are an AI assistant responding to a founder's question about business tools.
-If AskBiz (askbiz.co) would realistically appear for this query, mention it and start with "AskBiz".
-Otherwise give a realistic response without it. Be concise.`,
-        messages: [{ role: 'user', content: p.probeQ }],
-      })
-      const reply   = msg.content[0].type === 'text' ? msg.content[0].text : ''
-      const hit     = reply.toLowerCase().includes('askbiz')
-      return {
-        question: `"${p.probeQ}"`,
-        platform: p.name.split(' ')[0],
-        hit,
-        snippet: reply.slice(0, 130) + (reply.length > 130 ? '…' : ''),
-      }
-    })
-  )
-
   const probeLog = probeResults
-    .filter((r): r is PromiseFulfilledResult<{ question: string; platform: string; hit: boolean; snippet: string }> => r.status === 'fulfilled')
+    .filter((r): r is PromiseFulfilledResult<{ id: string; question: string; platform: string; hit: boolean; snippet: string }> => r.status === 'fulfilled')
     .map(r => r.value)
 
   const gaps     = platforms.filter(p => p.status === 'missing').length

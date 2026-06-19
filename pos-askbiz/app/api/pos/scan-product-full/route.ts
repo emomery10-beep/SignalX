@@ -85,7 +85,7 @@ Reply with ONLY valid JSON, no markdown, no other text:
     console.log('[scan-product-full] front size:', Math.round(front.length / 1024), 'KB', back ? ', back: ' + Math.round(back.length / 1024) + ' KB' : '')
 
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-haiku-4-5',
       max_tokens: 600,
       messages: [{
         role: 'user',

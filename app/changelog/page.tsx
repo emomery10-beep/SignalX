@@ -38,6 +38,25 @@ const TYPE_STYLE: Record<ChangeType, { label: string; bg: string; color: string;
 
 const RELEASES: Release[] = [
   {
+    version: '2.17.0',
+    date: '2026-06-17',
+    summary: 'GDPR compliance hardening — consent gating, data-retention enforcement, customer DSAR self-service, a Data Processing Agreement, and PII log redaction across both apps.',
+    changes: [
+      { type: 'new',      text: 'Data Processing Agreement page (/dpa) with sub-processor list — linked from the privacy policy and site footer' },
+      { type: 'new',      text: 'Customer data-subject request (DSAR) UI on the POS customers page — export and delete a customer\'s personal data on request, fulfilling GDPR access and erasure rights' },
+      { type: 'new',      text: 'Affirmative signup consent — account creation now requires explicit agreement to the privacy policy and terms before proceeding' },
+      { type: 'new',      text: 'Automated data-retention cron (gdpr-retention) — enforces retention windows and purges personal data past its retention period' },
+      { type: 'new',      text: 'POS consent banner, cookie policy, privacy policy, and terms pages added to pos-askbiz for parity with the main app' },
+      { type: 'new',      text: 'Google Analytics now gated behind cookie consent — no analytics scripts load until the visitor opts in' },
+      { type: 'new',      text: 'Row-level security governance migration (051_gdpr_governance_rls) applied to lock down personal-data tables' },
+      { type: 'improved', text: 'Data-retention report aligned with the actual retention logic so the report reflects what the cron enforces' },
+      { type: 'improved', text: 'Retention cron no longer over-anonymizes — only records genuinely past their retention window are anonymized' },
+      { type: 'improved', text: 'PIN handling hardened — shared PIN hashing helper plus a rate limiter on the pos-askbiz OTP route, matching the main app' },
+      { type: 'fixed',    text: 'Personal data (PII) redacted from server logs in notification send and Shopify compliance webhook routes' },
+      { type: 'removed',  text: 'Production \'dev-test\' bypass removed from the gdpr-retention cron — the cron can no longer be triggered without a valid secret in production' },
+    ],
+  },
+  {
     version: '2.16.0',
     date: '2026-06-16',
     summary: 'AI discoverability overhaul — new compare page, camera-first POS hero, homepage rewrite, and removal of 3-month trial messaging.',

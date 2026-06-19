@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   // Get shift details
   const { data: shift } = await service
     .from('pos_shifts')
-    .select('id, cashier_id, opening_balance, closed_at')
+    .select('id, cashier_id, opening_balance, closed_at, opened_at')
     .eq('id', shift_id)
     .eq('owner_id', ownerId)
     .single()
@@ -54,8 +54,24 @@ export async function POST(req: NextRequest) {
     .filter((tx: any) => tx.payment_type === 'cash' || !tx.payment_type)
     .reduce((sum: number, tx: any) => sum + (tx.total || 0), 0)
 
+  // Logistics: a counter clerk's drawer also holds cash parcel fees, which
+  // live in pos_parcels (not pos_transactions). Count cash parcels this
+  // cashier took in during the shift so reconciliation isn't a false variance.
+  let parcelCash = 0
+  if (shift.cashier_id) {
+    const { data: parcels } = await service
+      .from('pos_parcels')
+      .select('fee_charged')
+      .eq('owner_id', ownerId)
+      .eq('received_by', shift.cashier_id)
+      .eq('payment_method', 'cash')
+      .eq('payment_status', 'paid')
+      .gte('created_at', shift.opened_at)
+    parcelCash = (parcels || []).reduce((sum: number, p: any) => sum + (p.fee_charged || 0), 0)
+  }
+
   // Calculate expected cash
-  const expectedCash = shift.opening_balance + cashSales
+  const expectedCash = shift.opening_balance + cashSales + parcelCash
 
   // Calculate variance
   const variance = physical_cash_count - expectedCash
@@ -109,6 +125,7 @@ export async function POST(req: NextRequest) {
       variance: variance,
       variance_reason,
       cash_sales: cashSales,
+      parcel_cash: parcelCash,
       transaction_count: transactions?.length || 0,
     },
     logged_at: new Date().toISOString(),
@@ -121,6 +138,7 @@ export async function POST(req: NextRequest) {
     reconciliation: {
       opening_balance: Math.round(shift.opening_balance * 100) / 100,
       cash_sales: Math.round(cashSales * 100) / 100,
+      parcel_cash: Math.round(parcelCash * 100) / 100,
       expected_balance: Math.round(expectedCash * 100) / 100,
       physical_count: Math.round(physical_cash_count * 100) / 100,
       variance: Math.round(variance * 100) / 100,

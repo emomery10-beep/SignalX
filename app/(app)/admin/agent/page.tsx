@@ -34,7 +34,8 @@ export default function AgentAdminPage() {
   const supabase = createClient()
   const [authorized, setAuthorized] = useState(false)
   const [loading, setLoading]       = useState(true)
-  const [mainTab, setMainTab]       = useState<'alice'|'victor'|'carolyne'|'ben'|'agent'|'x'|'security'|'automation'>('alice')
+  const [mainTab, setMainTab]       = useState<'marketing-specialist'|'agent'|'x'|'security'|'automation'>('marketing-specialist')
+  const [agentTab, setAgentTab]     = useState<'alice'|'victor'|'carolyne'|'ben'|'maya'>('alice')
 
   // Agent state
   const [items, setItems]           = useState<AgentItem[]>([])
@@ -104,11 +105,23 @@ export default function AgentAdminPage() {
   const [benEditTitle, setBenEditTitle]   = useState('')
   const [benEditSections, setBenEditSections] = useState<{heading:string;level:2|3;body:string}[]>([])
 
+  // Maya Chen — Marketing Intelligence state
+  const [mayaItems, setMayaItems]           = useState<any[]>([])
+  const [mayaCounts, setMayaCounts]         = useState<{pending:number;published:number;rejected:number;total:number}>({pending:0,published:0,rejected:0,total:0})
+  const [mayaFilter, setMayaFilter]         = useState<'pending'|'published'|'rejected'|'all'>('pending')
+  const [mayaRunning, setMayaRunning]       = useState(false)
+  const [mayaRunLog, setMayaRunLog]         = useState<string[]>([])
+  const [mayaPreview, setMayaPreview]       = useState<any>(null)
+  const [mayaActing, setMayaActing]         = useState<string|null>(null)
+  const [mayaEditTitle, setMayaEditTitle]   = useState('')
+  const [mayaEditSections, setMayaEditSections] = useState<{heading:string;level:2|3;body:string}[]>([])
+
   // Loading states — prevent misleading 0s on initial render
   const [aliceLoading, setAliceLoading]       = useState(true)
   const [victorLoading, setVictorLoading]     = useState(true)
   const [carolyneLoading, setCarolyneLoading] = useState(true)
   const [benLoading, setBenLoading]           = useState(true)
+  const [mayaLoading, setMayaLoading]         = useState(true)
 
   // Automation state
   const [autoJobs, setAutoJobs] = useState<Record<string, {running:boolean;result:any;lastRun:string|null}>>({
@@ -216,11 +229,11 @@ export default function AgentAdminPage() {
   }, [aliceFilter])
 
   useEffect(() => {
-    if (authorized && mainTab === 'alice') {
+    if (authorized && mainTab === 'marketing-specialist' && agentTab === 'alice') {
       loadAliceItems()
       loadAliceCounts()
     }
-  }, [authorized, mainTab, loadAliceItems, loadAliceCounts])
+  }, [authorized, mainTab, agentTab, loadAliceItems, loadAliceCounts])
 
   // ── Victor load functions ──
   const loadVictorCounts = useCallback(async () => {
@@ -241,11 +254,11 @@ export default function AgentAdminPage() {
   }, [victorFilter])
 
   useEffect(() => {
-    if (authorized && mainTab === 'victor') {
+    if (authorized && mainTab === 'marketing-specialist' && agentTab === 'victor') {
       loadVictorItems()
       loadVictorCounts()
     }
-  }, [authorized, mainTab, loadVictorItems, loadVictorCounts])
+  }, [authorized, mainTab, agentTab, loadVictorItems, loadVictorCounts])
 
   // ── Carolyne load functions ──
   const loadCarolyneCounts = useCallback(async () => {
@@ -266,11 +279,11 @@ export default function AgentAdminPage() {
   }, [carolyneFilter])
 
   useEffect(() => {
-    if (authorized && mainTab === 'carolyne') {
+    if (authorized && mainTab === 'marketing-specialist' && agentTab === 'carolyne') {
       loadCarolyneItems()
       loadCarolyneCounts()
     }
-  }, [authorized, mainTab, loadCarolyneItems, loadCarolyneCounts])
+  }, [authorized, mainTab, agentTab, loadCarolyneItems, loadCarolyneCounts])
 
   // ── Ben Carlson load functions ──
   const loadBenCounts = useCallback(async () => {
@@ -291,11 +304,36 @@ export default function AgentAdminPage() {
   }, [benFilter])
 
   useEffect(() => {
-    if (authorized && mainTab === 'ben') {
+    if (authorized && mainTab === 'marketing-specialist' && agentTab === 'ben') {
       loadBenItems()
       loadBenCounts()
     }
-  }, [authorized, mainTab, loadBenItems, loadBenCounts])
+  }, [authorized, mainTab, agentTab, loadBenItems, loadBenCounts])
+
+  // ── Maya Chen load functions ──
+  const loadMayaCounts = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/agent/marketing-scout/list?counts=1&t=${Date.now()}`, { cache: 'no-store' })
+      const d   = await res.json()
+      setMayaCounts({ pending: d.pending || 0, published: d.published || 0, rejected: d.rejected || 0, total: d.total || 0 })
+    } catch {}
+  }, [])
+
+  const loadMayaItems = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/agent/marketing-scout/list?status=${mayaFilter}&t=${Date.now()}`, { cache: 'no-store' })
+      const d   = await res.json()
+      setMayaItems(d.items || [])
+    } catch { setMayaItems([]) }
+    finally { setMayaLoading(false) }
+  }, [mayaFilter])
+
+  useEffect(() => {
+    if (authorized && mainTab === 'marketing-specialist' && agentTab === 'maya') {
+      loadMayaItems()
+      loadMayaCounts()
+    }
+  }, [authorized, mainTab, agentTab, loadMayaItems, loadMayaCounts])
 
   const runAliceScout = async () => {
     setAliceRunning(true); setAliceRunLog(['Alice is scanning for today\'s stories...'])
@@ -419,6 +457,56 @@ export default function AgentAdminPage() {
       else showToast('Scout failed — check log', false)
     } catch (e) { setCarolyneRunLog([`Error: ${String(e)}`]); showToast('Scout failed', false) }
     finally { setCarolyneRunning(false) }
+  }
+
+  const runMayaScout = async () => {
+    setMayaRunning(true); setMayaRunLog(['Maya is scanning global marketing signals...'])
+    try {
+      const res  = await fetch('/api/agent/marketing-scout?secret=dev-test')
+      const data = await res.json()
+      setMayaRunLog(data.log || [String(data.error || 'Unknown error')])
+      if (data.success) { showToast(`Maya drafted ${data.blogsGenerated} posts`); setMayaLoading(true); setMayaFilter('published'); loadMayaCounts() }
+      else showToast('Scout failed — check log', false)
+    } catch (e) { setMayaRunLog([`Error: ${String(e)}`]); showToast('Scout failed', false) }
+    finally { setMayaRunning(false) }
+  }
+
+  const openMayaPreview = (item: any) => {
+    setMayaPreview(item)
+    setMayaEditTitle(item.content?.title || '')
+    setMayaEditSections(item.content?.sections ? JSON.parse(JSON.stringify(item.content.sections)) : [])
+  }
+
+  const handleMayaAction = async (id: string, action: 'approve'|'reject') => {
+    setMayaActing(id)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const body: any = { id, action }
+      if (action === 'approve' && mayaPreview) {
+        body.content = { ...mayaPreview.content, title: mayaEditTitle, sections: mayaEditSections }
+      }
+      const res = await fetch('/api/agent/approve', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+        body:    JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) { showToast(data.error || `Failed (${res.status})`, false); return }
+      if (action === 'approve' && data.slug) {
+        showToast(`Published → askbiz.co/blog/${data.slug}`)
+      } else {
+        showToast(action === 'approve' ? 'Authorised & published' : 'Rejected')
+      }
+      setMayaPreview(null)
+      setMayaItems(prev => prev.filter(item => item.id !== id))
+      setMayaCounts(prev => ({
+        ...prev,
+        pending:   prev.pending - 1,
+        published: action === 'approve' ? prev.published + 1 : prev.published,
+        rejected:  action === 'reject'  ? prev.rejected  + 1 : prev.rejected,
+      }))
+    } catch (e) { showToast(String(e), false) }
+    finally { setMayaActing(null) }
   }
 
   const openAlicePreview = (item: any) => {
@@ -656,21 +744,23 @@ export default function AgentAdminPage() {
               <span style={{fontSize:11,padding:'2px 8px',borderRadius:9999,background:'rgba(99,102,241,.1)',color:'#6366F1',fontWeight:600}}>Admin Only</span>
             </div>
             <p style={{fontSize:13,color:'var(--tx3)',margin:0}}>
-              {mainTab === 'alice'      ? 'Runs daily at 4am UTC · Scan → Draft → Review → Publish' :
-               mainTab === 'victor'    ? 'Runs daily at 4:15am UTC · Nigeria, West & South Africa · Scan → Draft → Review → Publish' :
-               mainTab === 'carolyne'  ? 'Runs daily at 4:30am UTC · East Africa · Scan → Draft → Review → Publish' :
-               mainTab === 'ben'       ? 'Runs daily at 5am UTC · US market · Scan → Draft → Review → Publish' :
-               mainTab === 'automation'? 'Background jobs that keep AskBiz data fresh and indexes current' :
-               mainTab === 'security'  ? 'Automated compliance checks · Weekly audit on Mondays at 6am' :
-               'Runs daily at 6am UTC · Scout → Analyse → Write → Review'}
+              {mainTab === 'marketing-specialist' ? (
+                agentTab === 'alice'    ? 'Runs daily at 4am UTC · Scan → Draft → Review → Publish' :
+                agentTab === 'victor'   ? 'Runs daily at 4:15am UTC · Nigeria, West & South Africa · Scan → Draft → Review → Publish' :
+                agentTab === 'carolyne' ? 'Runs daily at 4:30am UTC · East Africa · Scan → Draft → Review → Publish' :
+                agentTab === 'ben'      ? 'Runs daily at 5am UTC · US market · Scan → Draft → Review → Publish' :
+                                          'Runs daily at 5:15am UTC · Global marketing intelligence · Scan → Draft → Review → Publish'
+              ) : mainTab === 'automation' ? 'Background jobs that keep AskBiz data fresh and indexes current' :
+                  mainTab === 'security'  ? 'Automated compliance checks · Weekly audit on Mondays at 6am' :
+                  'Runs daily at 6am UTC · Scout → Analyse → Write → Review'}
             </p>
           </div>
         </div>
 
         {/* Main tabs */}
-        <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',marginBottom:24,display:'flex',gap:0,overflowX:'auto'}}>
-          {([['alice','Alice Watson — Blog Scout'],['victor','Victor Ojeakhena — Nigeria & Africa'],['carolyne','Carolyne Kigathi — East Africa'],['ben','Ben Carlson — United States'],['automation','Automation'],['security','Security & GDPR']] as const).map(([t,label]) => {
-            const tabColor = t === 'victor' ? '#ea580c' : t === 'carolyne' ? '#16a34a' : t === 'ben' ? '#1d4ed8' : '#6366F1'
+        <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',marginBottom:0,display:'flex',gap:0,overflowX:'auto'}}>
+          {([['marketing-specialist','Marketing Specialist'],['automation','Automation'],['security','Security & GDPR']] as const).map(([t,label]) => {
+            const tabColor = t === 'marketing-specialist' ? '#6366F1' : t === 'automation' ? '#ea580c' : '#16a34a'
             const active = mainTab === t
             return (
               <button key={t} onClick={()=>setMainTab(t as any)} style={{padding:'10px 20px',border:'none',background:'transparent',fontSize:13,fontWeight:active?600:400,color:active?tabColor:'var(--tx3)',borderBottom:active?`2px solid ${tabColor}`:'2px solid transparent',cursor:'pointer',fontFamily:'inherit',flexShrink:0,whiteSpace:'nowrap',transition:'color 150ms'}}>
@@ -680,8 +770,22 @@ export default function AgentAdminPage() {
           })}
         </div>
 
+        {/* Agent sub-tabs (shown only inside Marketing Specialist) */}
+        {mainTab === 'marketing-specialist' && (
+          <div style={{borderBottom:'1px solid var(--b)',marginBottom:24,display:'flex',gap:0,overflowX:'auto',background:'var(--sf)',paddingLeft:8}}>
+            {([['alice','Alice Watson','#6366F1'],['victor','Victor Ojeakhena','#ea580c'],['carolyne','Carolyne Kigathi','#16a34a'],['ben','Ben Carlson','#1d4ed8'],['maya','Maya Chen','#e11d48']] as const).map(([t,label,color]) => {
+              const active = agentTab === t
+              return (
+                <button key={t} onClick={()=>setAgentTab(t as any)} style={{padding:'8px 16px',border:'none',background:'transparent',fontSize:12,fontWeight:active?600:400,color:active?color:'var(--tx3)',borderBottom:active?`2px solid ${color}`:'2px solid transparent',cursor:'pointer',fontFamily:'inherit',flexShrink:0,whiteSpace:'nowrap',transition:'color 150ms'}}>
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        )}
+
         {/* ── ALICE WATSON — BLOG SCOUT ── */}
-        {mainTab === 'alice' && (
+        {mainTab === 'marketing-specialist' && agentTab === 'alice' && (
           <>
             {/* Alice profile card */}
             <div style={{display:'flex',alignItems:'center',gap:16,padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:20}}>
@@ -860,7 +964,7 @@ export default function AgentAdminPage() {
         )}
 
         {/* ── VICTOR OJEAKHENA — NIGERIA, WEST & SOUTH AFRICA ── */}
-        {mainTab === 'victor' && (
+        {mainTab === 'marketing-specialist' && agentTab === 'victor' && (
           <>
             {/* Victor profile card */}
             <div style={{display:'flex',alignItems:'center',gap:16,padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:20}}>
@@ -1026,7 +1130,7 @@ export default function AgentAdminPage() {
         )}
 
         {/* ── CAROLYNE KIGATHI — EAST AFRICA ── */}
-        {mainTab === 'carolyne' && (
+        {mainTab === 'marketing-specialist' && agentTab === 'carolyne' && (
           <>
             {/* Carolyne profile card */}
             <div style={{display:'flex',alignItems:'center',gap:16,padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:20}}>
@@ -1194,7 +1298,7 @@ export default function AgentAdminPage() {
         )}
 
         {/* ── BEN CARLSON — UNITED STATES ── */}
-        {mainTab === 'ben' && (
+        {mainTab === 'marketing-specialist' && agentTab === 'ben' && (
           <>
             {/* Ben profile card */}
             <div style={{display:'flex',alignItems:'center',gap:16,padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:20}}>
@@ -1352,6 +1456,166 @@ export default function AgentAdminPage() {
                       <div style={{marginTop:24,padding:16,borderRadius:10,background:'rgba(29,78,216,.06)',border:'1px solid rgba(29,78,216,.15)'}}>
                         <div style={{fontSize:14,fontWeight:600,color:'#1d4ed8',marginBottom:4}}>{benPreview.content.cta.heading}</div>
                         <div style={{fontSize:12,color:'var(--tx2)'}}>{benPreview.content.cta.body}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── MAYA CHEN — MARKETING INTELLIGENCE ── */}
+        {mainTab === 'marketing-specialist' && agentTab === 'maya' && (
+          <>
+            {/* Maya profile card */}
+            <div style={{display:'flex',alignItems:'center',gap:16,padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:20}}>
+              <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg, #e11d48 0%, #fb7185 100%)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:18,fontWeight:700,color:'#fff',fontFamily:'var(--font-sora)'}}>MC</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)'}}>Maya Chen</div>
+                <div style={{fontSize:12,color:'#e11d48',fontWeight:600,marginBottom:4}}>Head of Marketing Intelligence</div>
+                <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>Tracks Meta Ads CPMs, TikTok Shop shifts, email marketing benchmarks, and SEO signals globally — drafts 10 marketing-focused posts daily ready for your review.</div>
+              </div>
+              <button onClick={runMayaScout} disabled={mayaRunning} style={{padding:'10px 20px',borderRadius:9999,border:'none',background:mayaRunning?'var(--b)':'#e11d48',color:mayaRunning?'var(--tx3)':'#fff',fontSize:13,fontWeight:600,cursor:mayaRunning?'wait':'pointer',fontFamily:'inherit',flexShrink:0,transition:'background 200ms, color 200ms'}}>
+                {mayaRunning ? 'Writing...' : 'Run Maya Now'}
+              </button>
+            </div>
+
+            {/* Run log */}
+            {mayaRunLog.length > 0 && (
+              <div style={{marginBottom:20,padding:'14px 16px',borderRadius:12,background:'var(--ev)',border:'1px solid var(--b)',fontSize:12,fontFamily:'monospace',color:'var(--tx2)',maxHeight:200,overflowY:'auto'}}>
+                {mayaRunLog.map((l,i) => <div key={i}>{l}</div>)}
+              </div>
+            )}
+
+            {/* Stats */}
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))',gap:10,marginBottom:20}}>
+              {mayaLoading ? [0,1,2,3].map(i => (
+                <div key={i} style={{padding:14,borderRadius:12,border:'1px solid var(--b)',background:'var(--sf)',minHeight:66}}>
+                  <div style={{height:9,borderRadius:5,background:'var(--ev)',marginBottom:10,width:'65%'}}/>
+                  <div style={{height:22,borderRadius:6,background:'var(--ev)',width:'35%'}}/>
+                </div>
+              )) : [
+                {label:'Pending Review', value:mayaCounts.pending,   color:'#f59e0b'},
+                {label:'Published',      value:mayaCounts.published,  color:'#10b981'},
+                {label:'Rejected',       value:mayaCounts.rejected,   color:'#94a3b8'},
+                {label:'Total Drafts',   value:mayaCounts.total,      color:'var(--tx)'},
+              ].map(({label,value,color}) => (
+                <div key={label} style={{padding:14,borderRadius:12,border:'1px solid var(--b)',background:'var(--sf)'}}>
+                  <div style={{fontSize:10,fontWeight:600,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>{label}</div>
+                  <div style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color}}>{value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Filter */}
+            <div style={{display:'flex',gap:8,marginBottom:16}}>
+              {(['pending','published','rejected','all'] as const).map(f => (
+                <button key={f} onClick={() => { setMayaLoading(true); setMayaFilter(f) }} style={{padding:'6px 14px',borderRadius:9999,border:`1px solid ${mayaFilter===f?'#e11d48':'var(--b)'}`,background:mayaFilter===f?'rgba(225,29,72,.08)':'transparent',color:mayaFilter===f?'#e11d48':'var(--tx3)',fontSize:12,fontWeight:mayaFilter===f?600:400,cursor:'pointer',fontFamily:'inherit',textTransform:'capitalize',transition:'background 150ms, color 150ms, border-color 150ms'}}>{f}</button>
+              ))}
+            </div>
+
+            {/* Posts list */}
+            {mayaItems.length === 0 ? (
+              <div style={{textAlign:'center',padding:'60px 0',color:'var(--tx3)'}}>
+                <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg,#e11d48,#fb7185)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:700,color:'#fff',fontFamily:'var(--font-sora)',margin:'0 auto 16px',opacity:.7}}>MC</div>
+                <div style={{fontSize:14,fontWeight:500,marginBottom:6,color:'var(--tx)'}}>No drafts yet</div>
+                <div style={{fontSize:12,maxWidth:280,margin:'0 auto',lineHeight:1.6}}>Hit &quot;Run Maya Now&quot; to have her scan global marketing signals and draft 10 posts ready for review.</div>
+              </div>
+            ) : (
+              <div style={{borderRadius:14,border:'1px solid var(--b)',overflow:'hidden',background:'var(--sf)'}}>
+                {mayaItems.map(item => {
+                  const blog = item.content || {}
+                  return (
+                    <div key={item.id} style={{padding:'14px 16px',borderBottom:'1px solid var(--b)',display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',cursor:'pointer',transition:'background 120ms'}} onClick={() => openMayaPreview(item)} onMouseEnter={e=>e.currentTarget.style.background='var(--ev)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                      <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:6,background:item.status==='pending'?'rgba(245,158,11,.1)':item.status==='published'?'rgba(16,185,129,.1)':'rgba(148,163,184,.1)',color:item.status==='pending'?'#f59e0b':item.status==='published'?'#10b981':'#94a3b8'}}>{item.status}</span>
+                      <span style={{fontSize:11,padding:'2px 8px',borderRadius:6,background:'rgba(225,29,72,.08)',color:'#e11d48',fontWeight:500}}>{blog.cluster || '—'}</span>
+                      <span style={{fontSize:13,color:'var(--tx)',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontWeight:500}}>{blog.title || 'Untitled'}</span>
+                      {blog.qualityScore != null && <span style={{fontSize:10,fontWeight:600,padding:'2px 6px',borderRadius:4,background:blog.qualityScore>=80?'rgba(16,185,129,.1)':'rgba(245,158,11,.1)',color:blog.qualityScore>=80?'#10b981':'#f59e0b'}}>{blog.qualityScore}</span>}
+                      <span style={{fontSize:11,color:'var(--tx3)'}}>{blog.readTime ? `${blog.readTime} min` : ''}</span>
+                      <span style={{fontSize:11,color:'var(--tx3)'}}>{new Date(item.created_at).toLocaleDateString('en-GB')}</span>
+                      {item.status === 'pending' && (
+                        <div style={{display:'flex',gap:6}} onClick={e => e.stopPropagation()}>
+                          <button onClick={() => handleMayaAction(item.id, 'approve')} disabled={mayaActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'none',background:'#e11d48',color:'#fff',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise</button>
+                          <button onClick={() => handleMayaAction(item.id, 'reject')} disabled={mayaActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
+                        </div>
+                      )}
+                      {item.status === 'published' && blog.slug && (
+                        <a href={`/blog/${blog.slug}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{padding:'4px 12px',borderRadius:6,border:'1px solid rgba(225,29,72,.3)',background:'rgba(225,29,72,.08)',color:'#e11d48',fontSize:11,fontWeight:600,textDecoration:'none',fontFamily:'inherit'}}>View on Blog ↗</a>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* Preview modal */}
+            {mayaPreview && (
+              <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:20}} onClick={() => setMayaPreview(null)}>
+                <div style={{background:'var(--sf)',borderRadius:16,maxWidth:800,width:'100%',maxHeight:'90vh',overflow:'auto',padding:0}} onClick={e => e.stopPropagation()}>
+                  <div style={{padding:'16px 24px',borderBottom:'1px solid var(--b)',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,background:'var(--sf)',zIndex:1,borderRadius:'16px 16px 0 0'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:10}}>
+                      <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(135deg,#e11d48,#fb7185)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'#fff'}}>MC</div>
+                      <div>
+                        <div style={{fontSize:13,fontWeight:600,color:'var(--tx)'}}>Maya Chen</div>
+                        <div style={{fontSize:11,color:'var(--tx3)'}}>{mayaPreview.content?.cluster} · {new Date(mayaPreview.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
+                      </div>
+                    </div>
+                    <div style={{display:'flex',gap:8}}>
+                      {mayaPreview.status === 'pending' && <>
+                        <button onClick={() => handleMayaAction(mayaPreview.id, 'approve')} disabled={mayaActing===mayaPreview.id} style={{padding:'6px 16px',borderRadius:8,border:'none',background:'#e11d48',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise & Publish</button>
+                        <button onClick={() => handleMayaAction(mayaPreview.id, 'reject')} disabled={mayaActing===mayaPreview.id} style={{padding:'6px 16px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
+                      </>}
+                      <button onClick={() => setMayaPreview(null)} aria-label="Close preview" style={{padding:'6px 10px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:14,cursor:'pointer',fontFamily:'inherit',lineHeight:1}}>×</button>
+                    </div>
+                  </div>
+                  <div style={{padding:24}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16,fontSize:12,color:'var(--tx3)'}}>
+                      <span style={{fontWeight:600,color:'var(--tx)'}}>Written by Maya Chen</span>
+                      <span>·</span><span>{mayaPreview.content?.publishDate}</span>
+                      <span>·</span><span>{mayaPreview.content?.readTime} min read</span>
+                      {mayaPreview.source_url && <><span>·</span><a href={mayaPreview.source_url} target="_blank" rel="noopener noreferrer" style={{color:'#e11d48',textDecoration:'none'}}>Source →</a></>}
+                    </div>
+                    {mayaPreview.status === 'pending' ? (
+                      <input value={mayaEditTitle} onChange={e => setMayaEditTitle(e.target.value)} placeholder="Article title" style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:8,padding:'8px 12px',width:'100%',marginBottom:16,background:'transparent',boxSizing:'border-box'}} />
+                    ) : (
+                      <h1 style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',marginBottom:16,marginTop:0}}>{mayaPreview.content?.title}</h1>
+                    )}
+                    {mayaPreview.content?.tldr && (
+                      <div style={{padding:'12px 16px',borderRadius:10,background:'rgba(225,29,72,.05)',border:'1px solid rgba(225,29,72,.15)',marginBottom:24,fontSize:13,color:'var(--tx2)',lineHeight:1.6}}>
+                        <strong style={{color:'#e11d48',fontSize:11,textTransform:'uppercase',letterSpacing:'.06em'}}>TL;DR</strong><br/>{mayaPreview.content.tldr}
+                      </div>
+                    )}
+                    {(mayaPreview.status === 'pending' ? mayaEditSections : mayaPreview.content?.sections || []).map((sec: any, i: number) => (
+                      <div key={i} style={{marginBottom:24}}>
+                        {mayaPreview.status === 'pending' ? (
+                          <>
+                            <input value={sec.heading} onChange={e => { const s = [...mayaEditSections]; s[i] = {...s[i], heading: e.target.value}; setMayaEditSections(s) }} placeholder="Section heading" style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:6,padding:'6px 10px',width:'100%',marginBottom:8,background:'transparent',boxSizing:'border-box'}} />
+                            <textarea value={sec.body} onChange={e => { const s = [...mayaEditSections]; s[i] = {...s[i], body: e.target.value}; setMayaEditSections(s) }} rows={5} placeholder="Write section content…" style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:6,padding:'8px 10px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent',boxSizing:'border-box'}} />
+                          </>
+                        ) : (
+                          <>
+                            <h2 style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',marginBottom:8,marginTop:0}}>{sec.heading}</h2>
+                            <p style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',margin:0}}>{sec.body}</p>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                    {mayaPreview.content?.paa?.length > 0 && (
+                      <div style={{marginTop:24,padding:16,borderRadius:10,border:'1px solid var(--b)',background:'rgba(0,0,0,.02)'}}>
+                        <h3 style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:12,marginTop:0}}>People Also Ask</h3>
+                        {mayaPreview.content.paa.map((qa: any, i: number) => (
+                          <div key={i} style={{marginBottom:12}}>
+                            <div style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:4}}>{qa.q}</div>
+                            <div style={{fontSize:12,color:'var(--tx2)',lineHeight:1.6}}>{qa.a}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {mayaPreview.content?.cta && (
+                      <div style={{marginTop:24,padding:16,borderRadius:10,background:'rgba(225,29,72,.06)',border:'1px solid rgba(225,29,72,.15)'}}>
+                        <div style={{fontSize:14,fontWeight:600,color:'#e11d48',marginBottom:4}}>{mayaPreview.content.cta.heading}</div>
+                        <div style={{fontSize:12,color:'var(--tx2)'}}>{mayaPreview.content.cta.body}</div>
                       </div>
                     )}
                   </div>
@@ -1638,7 +1902,7 @@ export default function AgentAdminPage() {
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,flexWrap:'wrap',gap:10}}>
               <div>
                 <div style={{fontSize:14,fontWeight:600,color:'var(--tx)'}}>Security & GDPR Audit</div>
-                <div style={{fontSize:12,color:'var(--tx3)',marginTop:2}}>Automated weekly on Mondays · 8 check categories · Reports stored for compliance evidence</div>
+                <div style={{fontSize:12,color:'var(--tx3)',marginTop:2}}>Automated monthly (1st of the month) · 9 check categories · Reports stored for compliance evidence</div>
               </div>
               <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
                 <button onClick={()=>exportSecurityCsv()} disabled={secExporting || secHistory.length===0} style={{padding:'8px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,fontWeight:500,cursor:secHistory.length===0?'not-allowed':'pointer',fontFamily:'inherit',opacity:secHistory.length===0?0.5:1}}>

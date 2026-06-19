@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     // fix #26 — use generic alias rather than date-pinned checkpoint
     const anthropic = new Anthropic()
     const aiResponse = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-haiku-4-5',
       max_tokens: 300,
       messages: [{
         role: 'user',
@@ -159,8 +159,9 @@ Reply ONLY with valid JSON, nothing else:
       unit: null
     })
 
-  } catch (err) {
+  } catch (err: any) {
     console.error('Scan error:', err)
-    return json({ error: 'Scan failed' }, 500)
+    const billing = err?.status === 400 && /credit balance/i.test(String(err?.message || ''))
+    return json({ error: billing ? 'AI recognition is paused — top up Anthropic API credits. Use Search to add items for now.' : 'Scan failed' }, billing ? 503 : 500)
   }
 }

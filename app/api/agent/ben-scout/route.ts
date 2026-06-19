@@ -244,6 +244,24 @@ VOICE & TONE:
 - You NEVER use: "landscape", "leverage", "synergy", "holistic", "ecosystem", "unlock", "empower", "seamless", "game-changer"
 - You sound like a sharp consultant who has sat across the table from 200 small business owners and knows where the pain lives
 
+ANTI-AI WRITING RULES (these patterns get content flagged as AI-generated — avoid every single one):
+- Never open with: "In today's economy...", "As small businesses navigate...", "With the rise of...", "In an era of uncertainty..."
+- Never use: "It's worth noting", "It's important to remember", "needless to say", "at the end of the day"
+- Never use filler transitions: "Furthermore", "Moreover", "Additionally", "In conclusion", "To summarise"
+- Em-dash (—) maximum once per 400 words. Em-dash overuse is the single biggest AI tell.
+- Never round numbers when specifics exist. "$4,200/month" beats "thousands of dollars". "23% of US small businesses" beats "many businesses".
+- Vary sentence length sharply. Short. Then a longer sentence that carries the weight of the argument and gives the reader real context. Short again. Never three long sentences in a row.
+- Write to "you" not "business owners" or "entrepreneurs" — direct second person throughout
+- No hedging: "This may help...", "Consider whether...", "You might want to..."
+- Lead every section with a number, an IRS ruling, a Fed move, or a named business scenario — not scene-setting prose
+- One concrete example per major section: a real US sector (plumbing, food truck, boutique gym), a real dollar figure, a real city
+
+AEO / AI CITATION RULES (makes the article citable by ChatGPT, Perplexity, Claude):
+- Write H2s as questions: "What is the IRS mileage rate for 2026?", "How do you calculate true cost-per-order on Amazon FBA?", "Why does your QuickBooks P&L lie about your margins?"
+- Define key terms on first use in one clear sentence — AI engines extract these as direct answers
+- Include at least one "quick answer" paragraph near the top that directly answers the core question in 2–3 sentences
+- Use specific numbers, named sources (IRS, SBA, NFIB, Fed, BLS), and dates — vague claims don't get cited
+
 CONTENT TYPE: Match the format to the topic. A "how to" query needs step-by-step sections. A news/trend topic needs a briefing-style report. A compliance topic needs a practical checklist.
 
 ASKBIZ PRODUCT KNOWLEDGE (use naturally — 1-2 specific features per post, never a feature dump):
@@ -278,7 +296,7 @@ Return ONLY valid JSON (no markdown fences):
   "pillar": "${pillar}",
   "region": "us",
   "publishDate": "${new Date().toISOString().slice(0, 10)}",
-  "readTime": 8,
+  "readTime": 12,
   "tags": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6"],
   "tldr": "3 punchy sentences. The shift. The dollar impact on US SMBs. What founders should do this week.",
   "relatedSlugs": ["slug-from-recent-published-list-1", "slug-from-recent-published-list-2"],
@@ -318,6 +336,8 @@ Return ONLY valid JSON (no markdown fences):
   if (!parsed.slug || !parsed.title || !parsed.sections?.length) {
     throw new Error('Invalid blog structure — missing slug, title, or sections')
   }
+
+  parsed.publishDate = new Date().toISOString().slice(0, 10)
 
   return parsed
 }

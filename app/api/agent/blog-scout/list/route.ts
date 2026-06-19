@@ -14,20 +14,20 @@ export async function GET(request: NextRequest) {
   )
 
   // Exclude other agents' run_id prefixes so their posts don't bleed into Alice's view
-  // Carolyne = blog_ea_*  |  Ben = blog_us_*  |  Victor = blog_mktg_africa_*
+  // Carolyne = blog_ea_*  |  Ben = blog_us_*  |  Victor = blog_mktg_africa_*  |  Maya = blog_mktg_uk_*
 
   // If requesting counts, return separate count queries for accuracy
   if (searchParams.has('counts')) {
     const [pending, published, rejected] = await Promise.all([
       supabase.from('agent_content').select('id', { count: 'exact', head: true })
         .eq('type', 'blog').eq('status', 'pending')
-        .not('run_id', 'like', 'blog_ea_%').not('run_id', 'like', 'blog_us_%').not('run_id', 'like', 'blog_mktg_africa_%'),
+        .not('run_id', 'like', 'blog_ea_%').not('run_id', 'like', 'blog_us_%').not('run_id', 'like', 'blog_mktg_africa_%').not('run_id', 'like', 'blog_mktg_uk_%'),
       supabase.from('agent_content').select('id', { count: 'exact', head: true })
         .eq('type', 'blog').eq('status', 'published')
-        .not('run_id', 'like', 'blog_ea_%').not('run_id', 'like', 'blog_us_%').not('run_id', 'like', 'blog_mktg_africa_%'),
+        .not('run_id', 'like', 'blog_ea_%').not('run_id', 'like', 'blog_us_%').not('run_id', 'like', 'blog_mktg_africa_%').not('run_id', 'like', 'blog_mktg_uk_%'),
       supabase.from('agent_content').select('id', { count: 'exact', head: true })
         .eq('type', 'blog').eq('status', 'rejected')
-        .not('run_id', 'like', 'blog_ea_%').not('run_id', 'like', 'blog_us_%').not('run_id', 'like', 'blog_mktg_africa_%'),
+        .not('run_id', 'like', 'blog_ea_%').not('run_id', 'like', 'blog_us_%').not('run_id', 'like', 'blog_mktg_africa_%').not('run_id', 'like', 'blog_mktg_uk_%'),
     ])
     return NextResponse.json({
       pending: pending.count || 0,
@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
     .not('run_id', 'like', 'blog_ea_%')
     .not('run_id', 'like', 'blog_us_%')
     .not('run_id', 'like', 'blog_mktg_africa_%')
+    .not('run_id', 'like', 'blog_mktg_uk_%')
 
   let query
   if (status === 'all') {

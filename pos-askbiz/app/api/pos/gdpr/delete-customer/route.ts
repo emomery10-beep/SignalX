@@ -100,6 +100,44 @@ export async function POST(req: NextRequest) {
       .eq('owner_id', ownerId)
   }
 
+  // ── Parcel data (logistics) — GDPR Art. 17 ───────────────────────────────
+  // Parcel senders/receivers are walk-ins keyed by phone, not pos_customers.
+  // Anonymise PII columns and delete the intake photos from storage, while
+  // keeping non-personal shipment/audit fields (tracking number, fees, status,
+  // branches, timestamps) for accounting/legal retention.
+  let parcelsAnonymised = 0
+  let parcelPhotosDeleted = 0
+  if (customerPhone) {
+    const { data: parcels } = await service
+      .from('pos_parcels')
+      .select('id, intake_photo_path, sender_phone, receiver_phone')
+      .eq('owner_id', ownerId)
+      .or(`sender_phone.eq.${customerPhone},receiver_phone.eq.${customerPhone}`)
+
+    const rows = (parcels as any[]) || []
+    if (rows.length) {
+      // 1. Remove intake photos from the private bucket
+      const paths = rows.map(p => p.intake_photo_path).filter(Boolean)
+      if (paths.length) {
+        const { error: rmErr } = await service.storage.from('parcel-photos').remove(paths)
+        if (rmErr) console.error('Parcel photo deletion failed:', rmErr.message)
+        else parcelPhotosDeleted = paths.length
+      }
+      // 2. Anonymise only the matching side(s) of each parcel
+      for (const p of rows) {
+        const updates: Record<string, unknown> = { intake_photo_url: null, intake_photo_path: null }
+        if (p.sender_phone === customerPhone) {
+          updates.sender_name = 'Anonymised'; updates.sender_phone = null; updates.sender_id_number = null
+        }
+        if (p.receiver_phone === customerPhone) {
+          updates.receiver_name = 'Anonymised'; updates.receiver_phone = null; updates.receiver_id_number = null; updates.delivery_address = null
+        }
+        await service.from('pos_parcels').update(updates).eq('id', p.id).eq('owner_id', ownerId)
+      }
+      parcelsAnonymised = rows.length
+    }
+  }
+
   // Create hash for integrity verification
   const hashInput = `${customerId}${new Date().toISOString()}${deletion_type}`
   const hash = createHash('sha256').update(hashInput).digest('hex')
@@ -137,6 +175,8 @@ export async function POST(req: NextRequest) {
     customer_id: customerId,
     deletion_type,
     transactions_kept_for_tax: transactionCount,
+    parcels_anonymised: parcelsAnonymised,
+    parcel_photos_deleted: parcelPhotosDeleted,
     retention_until: new Date(new Date().getTime() + 7 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     hash, // For audit verification
   })

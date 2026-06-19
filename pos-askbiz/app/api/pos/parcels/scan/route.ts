@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
   try {
     const anthropic = new Anthropic()
     const aiResponse = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-haiku-4-5',
       max_tokens: 700,
       messages: [{
         role: 'user',
@@ -110,8 +110,9 @@ Use null for any field you cannot read. Do not invent values.`,
       data: parsed.data || {},
       ...(dt === 'unknown' ? { message: 'Could not identify document. Try again.' } : {}),
     })
-  } catch (err) {
+  } catch (err: any) {
     console.error('Parcel scan error:', err)
-    return json({ document_type: 'unknown', confidence: 0, data: {}, message: 'Scan failed. Check your connection.' }, 500)
+    const billing = err?.status === 400 && /credit balance/i.test(String(err?.message || ''))
+    return json({ document_type: 'unknown', confidence: 0, data: {}, message: billing ? 'AI scanning is paused — top up Anthropic API credits. Enter details manually for now.' : 'Scan failed. Check your connection.' }, billing ? 503 : 500)
   }
 }

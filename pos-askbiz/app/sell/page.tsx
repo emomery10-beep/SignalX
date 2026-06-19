@@ -9,6 +9,32 @@ import { getRoleHomeRoute } from '@/lib/pos-role-client'
 const ACC = 'var(--pos-accent)'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
 
+// Compress a camera/gallery photo to a small JPEG data URL. createImageBitmap
+// avoids the iOS Safari "black canvas" bug with large photos (and works in
+// private/incognito mode, where a live getUserMedia preview often stays black).
+async function compressToDataUrl(file: File, maxEdge = 1280, quality = 0.8): Promise<string> {
+  const draw = (src: CanvasImageSource, w: number, h: number): string | null => {
+    const c = document.createElement('canvas'); c.width = Math.max(1, w); c.height = Math.max(1, h)
+    const ctx = c.getContext('2d'); if (!ctx) return null
+    ctx.drawImage(src, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', quality)
+  }
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const bmp = await createImageBitmap(file)
+      const scale = Math.min(1, maxEdge / Math.max(bmp.width, bmp.height))
+      const out = draw(bmp, Math.round(bmp.width * scale), Math.round(bmp.height * scale))
+      bmp.close?.(); if (out && out.length > 120) return out
+    } catch { /* fall through */ }
+  }
+  const dataUrl: string = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result)); r.onerror = () => rej(r.error); r.readAsDataURL(file) })
+  try {
+    const img: HTMLImageElement = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('decode')); i.src = dataUrl })
+    const scale = Math.min(1, maxEdge / Math.max(img.width, img.height))
+    const out = draw(img, Math.round(img.width * scale), Math.round(img.height * scale)); if (out && out.length > 120) return out
+  } catch { /* fall through */ }
+  return dataUrl
+}
+
 interface CartItem {
   inventory_id?: string
   name: string
@@ -74,6 +100,7 @@ export default function SellPage() {
   const [searchLoading, setSearchLoading] = useState(false)
   const videoRef  = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const prodInputRef = useRef<HTMLInputElement>(null)
 
   // Cart editing
   const [editNoteIdx, setEditNoteIdx] = useState<number | null>(null)
@@ -250,35 +277,15 @@ export default function SellPage() {
   const tendered   = parseFloat(amountTendered) || 0
   const changeDue  = paymentType === 'cash' && tendered > cartTotal ? tendered - cartTotal : 0
 
-  // ── Camera ────────────────────────────────────────────────────
-  const startCamera = async () => {
+  // ── Camera (native capture — reliable on iOS / incognito) ──────
+  const openProductCamera = () => prodInputRef.current?.click()
+  const stopCamera = () => {} // retained as a no-op for legacy call sites
+
+  const scanProductFile = async (file: File) => {
     setScanResult(null); setScanError(''); setScanning(true)
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play() }
-    } catch {
-      setScanError('Camera not available. Use search instead.')
-      setScanning(false)
-    }
-  }
-
-  const stopCamera = () => {
-    const stream = videoRef.current?.srcObject as MediaStream
-    stream?.getTracks().forEach(t => t.stop())
-    if (videoRef.current) videoRef.current.srcObject = null
-    setScanning(false)
-  }
-
-  const captureAndScan = async () => {
-    if (!canvasRef.current || !videoRef.current) return
-    const canvas = canvasRef.current
-    const video  = videoRef.current
-    canvas.width  = video.videoWidth
-    canvas.height = video.videoHeight
-    canvas.getContext('2d')?.drawImage(video, 0, 0)
-    const base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1]
-    stopCamera()
-    try {
+      const dataUrl = await compressToDataUrl(file)
+      const base64 = dataUrl.split(',')[1]
       const res = await fetch(`${API}/api/pos/scan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-staff-id': staff?.id || '', 'x-owner-id': staff?.owner_id || '' },
@@ -286,10 +293,11 @@ export default function SellPage() {
       })
       const data = await res.json()
       if (data.name) setScanResult({ name: data.name, price: data.price ?? 0, inventory_id: data.inventory_id, unit: data.unit })
-      else setScanError('Could not identify product. Try search instead.')
+      else setScanError(data.error || 'Could not identify product. Try search instead.')
     } catch {
       setScanError('Scan failed. Try search instead.')
     }
+    setScanning(false)
   }
 
   // ── Inventory search ─────────────────────────────────────────
@@ -551,7 +559,7 @@ export default function SellPage() {
       {/* Main action */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', gap: 14 }}>
         <button
-          onClick={() => { setScreen('add'); setAddMode('camera'); startCamera() }}
+          onClick={() => { setScanResult(null); setScanError(''); setScreen('add'); setAddMode('camera') }}
           className="pos-btn-primary"
           style={{ width: '100%', maxWidth: 300, padding: '24px', borderRadius: 20, background: ACC, color: '#fff', fontSize: 20, fontWeight: 800, border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}
         >
@@ -620,7 +628,7 @@ export default function SellPage() {
         {(['camera', 'search'] as AddMode[]).map(m => (
           <button key={m} onClick={() => {
             if (m === 'search') stopCamera()
-            if (m === 'camera') { setScanResult(null); setScanError(''); startCamera() }
+            if (m === 'camera') { setScanResult(null); setScanError('') }
             setAddMode(m)
           }} className="pos-tab" style={{ flex: 1, padding: '9px', border: 'none', background: 'transparent', color: addMode === m ? '#fff' : 'rgba(255,255,255,.5)', fontSize: 14, fontWeight: addMode === m ? 700 : 400, borderBottom: addMode === m ? '2px solid #d08a59' : '2px solid transparent', cursor: 'pointer', fontFamily: 'inherit' }}>
             {m === 'camera' ? '📷 Camera' : '🔍 Search'}
@@ -628,21 +636,15 @@ export default function SellPage() {
         ))}
       </div>
 
-      {/* Camera mode */}
+      {/* Camera mode — native capture */}
       {addMode === 'camera' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <input ref={prodInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
+            aria-label="Photograph product" onChange={e => { const f = e.target.files?.[0]; if (f) scanProductFile(f); e.target.value = '' }} />
           {scanning ? (
-            <div style={{ flex: 1, position: 'relative' }}>
-              <video ref={videoRef} playsInline muted style={{ width: '100%', height: '55vh', objectFit: 'cover' }} />
-              <canvas ref={canvasRef} style={{ display: 'none' }} />
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-                <div style={{ width: 230, height: 150, border: '2px solid rgba(255,255,255,.75)', borderRadius: 16 }} />
-              </div>
-              <div style={{ padding: '20px' }}>
-                <button onClick={captureAndScan} style={{ width: '100%', padding: '16px', borderRadius: 14, background: ACC, color: '#fff', fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-                  📸 Capture
-                </button>
-              </div>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24 }}>
+              <div style={{ width: 40, height: 40, border: '3px solid rgba(255,255,255,.25)', borderTopColor: ACC, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <div style={{ fontSize: 15, fontWeight: 600, color: '#fff' }}>Reading product…</div>
             </div>
           ) : scanResult ? (
             <div style={{ flex: 1, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -663,15 +665,19 @@ export default function SellPage() {
               <button onClick={confirmScan} style={{ padding: '16px', borderRadius: 14, background: ACC, color: '#fff', fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
                 ✓ Add to {biz.heading.toLowerCase()}
               </button>
-              <button onClick={() => { setScanResult(null); startCamera() }} style={{ padding: '13px', borderRadius: 14, background: 'rgba(255,255,255,.12)', color: '#fff', fontSize: 15, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
+              <button onClick={() => { setScanResult(null); openProductCamera() }} style={{ padding: '13px', borderRadius: 14, background: 'rgba(255,255,255,.12)', color: '#fff', fontSize: 15, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
                 Scan again
               </button>
             </div>
           ) : (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '24px' }}>
+              <button onClick={openProductCamera} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, background: 'none', border: 'none', cursor: 'pointer', padding: 16 }}>
+                <div style={{ width: 88, height: 88, borderRadius: 24, border: '2px dashed rgba(255,255,255,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>📷</div>
+                <div style={{ color: '#fff', fontSize: 16, fontWeight: 700 }}>Tap to photograph the product</div>
+              </button>
               {scanError && <div style={{ fontSize: 14, color: '#fca5a5', textAlign: 'center' }}>{scanError}</div>}
-              <button onClick={startCamera} style={{ padding: '15px 32px', borderRadius: 14, background: ACC, color: '#fff', fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-                Start camera
+              <button onClick={() => { setScanError(''); setAddMode('search') }} style={{ padding: '12px 24px', borderRadius: 12, background: 'rgba(255,255,255,.12)', color: '#fff', fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
+                🔍 Search instead
               </button>
             </div>
           )}

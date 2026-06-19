@@ -43,6 +43,10 @@ export function isManagerOrAboveLevel(role: string): boolean {
     s === 'operations-manager'
 }
 
+export function isLogisticsClerkLevel(role: string): boolean {
+  return role === 'logistics-counter-clerk'
+}
+
 export function isLogisticsHandlerLevel(role: string): boolean {
   return role === 'handler' || role === 'driver' ||
     role === 'logistics-handler' || role === 'logistics-driver'
@@ -57,8 +61,9 @@ export function isLogisticsBranchLevel(role: string): boolean {
 }
 
 export function isAnyLogisticsRole(role: string): boolean {
-  return isLogisticsHandlerLevel(role) || isLogisticsDispatchLevel(role) ||
-    isLogisticsBranchLevel(role) || /^logistics-/.test(role)
+  return isLogisticsClerkLevel(role) || isLogisticsHandlerLevel(role) ||
+    isLogisticsDispatchLevel(role) || isLogisticsBranchLevel(role) ||
+    /^logistics-/.test(role)
 }
 
 // ── Home route ───────────────────────────────────────────────
@@ -70,6 +75,7 @@ export function getRoleHomeRoute(role: string): string {
   // Logistics roles → their specific logistics page
   if (isLogisticsBranchLevel(role)) return '/logistics/dashboard'
   if (isLogisticsDispatchLevel(role)) return '/logistics/dispatch'
+  if (isLogisticsClerkLevel(role)) return '/logistics/intake'
   if (isLogisticsHandlerLevel(role)) return '/logistics'
 
   // Sector-specific template roles → their sector hub

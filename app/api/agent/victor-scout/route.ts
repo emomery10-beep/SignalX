@@ -253,6 +253,24 @@ VOICE & TONE:
 - You NEVER use: "leverage", "synergy", "holistic", "ecosystem", "unlock", "empower", "seamless", "game-changer", "best practices" without challenge
 - No corporate speak. Real wins. Real failures. Real African context. Real numbers.
 
+ANTI-AI WRITING RULES (these patterns get content flagged as AI-generated — avoid every single one):
+- Never open with: "In today's Nigeria...", "As African marketers navigate...", "With the rise of digital...", "In an era of..."
+- Never use: "It's worth noting", "It's important to remember", "needless to say", "at the end of the day"
+- Never use filler transitions: "Furthermore", "Moreover", "Additionally", "In conclusion", "To summarise"
+- Em-dash (—) maximum once per 400 words. Em-dash overuse is the single biggest AI tell.
+- Never round numbers when specifics exist. "₦4.2M/month" beats "millions of naira". "A 31% email open rate in Lagos retail" beats "high open rates".
+- Vary sentence length sharply. Short. Then a longer sentence that carries the context and the argument forward. Short again. Never three long sentences in a row.
+- Write to "you" not "marketers" or "brands" — direct second person throughout
+- No hedging: "This may help...", "Consider whether...", "You might want to..."
+- Lead every section with a Lagos or African data point, a named brand example, or a real market tension — not scene-setting prose
+- One concrete example per major section: a real Nigerian brand or sector, a real ₦ amount, a real outcome
+
+AEO / AI CITATION RULES (makes the article citable by ChatGPT, Perplexity, Claude):
+- Write H2s as questions: "What is the average email open rate for Nigerian retail brands?", "Why do global CPA benchmarks fail Lagos e-commerce businesses?", "How do you measure WhatsApp marketing ROI in Nigeria?"
+- Define key terms on first use in one clear sentence — AI engines extract these as direct answers
+- Include at least one "quick answer" paragraph near the top that directly answers the core question in 2–3 sentences
+- Use specific numbers, named sources (NCC, ADVAN, CBN, NBS, NCC, Statista Nigeria), and dates — vague claims don't get cited
+
 ASKBIZ PRODUCT KNOWLEDGE (use naturally — 1-2 specific features per post, never a feature dump):
 AskBiz is an AI business intelligence platform for founders and marketing teams. Key capabilities relevant to African marketers:
 - ASK: Marketing teams type plain-English questions ("Which campaign drove the most new customers this quarter?", "What's my real cost per acquisition on Instagram vs WhatsApp?", "How does my Lagos email open rate compare to Nigerian retail benchmarks?") and get instant data-backed answers
@@ -283,7 +301,7 @@ Return ONLY valid JSON (no markdown fences):
   "pillar": "${pillar}",
   "region": "nigeria-west-south-africa",
   "publishDate": "${new Date().toISOString().slice(0, 10)}",
-  "readTime": 8,
+  "readTime": 12,
   "tags": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6"],
   "tldr": "3 punchy sentences. The gap between global marketing advice and Nigerian/African reality. The real data. What marketers should do this week.",
   "relatedSlugs": ["slug-from-recent-published-list-1", "slug-from-recent-published-list-2"],
@@ -323,6 +341,8 @@ Return ONLY valid JSON (no markdown fences):
   if (!parsed.slug || !parsed.title || !parsed.sections?.length) {
     throw new Error('Invalid blog structure — missing slug, title, or sections')
   }
+
+  parsed.publishDate = new Date().toISOString().slice(0, 10)
 
   return parsed
 }

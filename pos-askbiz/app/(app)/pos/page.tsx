@@ -55,8 +55,31 @@ function MiniBarChart({ data, color = ACC, height = 80 }: { data: { label: strin
 
 // ── Types ────────────────────────────────────────────────
 interface StaffMember {
-  id: string; name: string; phone: string; email?: string; role: 'cashier' | 'inventory' | 'repair' | 'engineer'; active: boolean; last_login_at: string | null; has_pin?: boolean
+  id: string; name: string; phone: string; email?: string; role: string; active: boolean; last_login_at: string | null; has_pin?: boolean
+  location_id?: string | null; location?: { id: string; name: string } | null
 }
+interface BranchOption { id: string; name: string }
+
+// Roles offered when adding/editing staff, grouped for the dropdown
+const ROLE_OPTIONS: { group: string; roles: { value: string; label: string }[] }[] = [
+  { group: 'Retail / general', roles: [
+    { value: 'cashier', label: 'Cashier — process sales' },
+    { value: 'inventory', label: 'Inventory — manage stock' },
+    { value: 'repair', label: 'Repair — service jobs' },
+    { value: 'engineer', label: 'Engineer — assigned repairs' },
+    { value: 'manager', label: 'Manager — full branch access' },
+    { value: 'supervisor', label: 'Supervisor — approvals' },
+  ] },
+  { group: 'Logistics / courier', roles: [
+    { value: 'logistics-counter-clerk', label: 'Counter Clerk — intake & collection' },
+    { value: 'logistics-handler', label: 'Handler — receive/scan parcels' },
+    { value: 'logistics-driver', label: 'Driver — pickups & deliveries' },
+    { value: 'logistics-dispatcher', label: 'Dispatcher — assign trucks & routes' },
+    { value: 'logistics-branch-manager', label: 'Branch Manager — dashboard & routes' },
+  ] },
+]
+// Roles that operate at a specific branch — branch selection matters for these
+const BRANCH_ROLES = new Set(['logistics-counter-clerk', 'logistics-handler', 'logistics-driver', 'logistics-dispatcher', 'logistics-branch-manager', 'manager', 'supervisor'])
 interface Transaction {
   id: string; total: number; subtotal?: number; payment_type: string; status: string; created_at: string; notes?: string
   cashier: { id?: string; name: string; role?: string } | null
@@ -107,15 +130,19 @@ export default function POSPage() {
   const [newPhone, setNewPhone] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newName, setNewName] = useState('')
-  const [newRole, setNewRole] = useState<'cashier' | 'inventory' | 'repair' | 'engineer'>('cashier')
+  const [newRole, setNewRole] = useState<string>('cashier')
+  const [newLocation, setNewLocation] = useState('')
   const [newPin, setNewPin] = useState('')
   const [addingStaff, setAddingStaff] = useState(false)
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null)
   const [editPhone, setEditPhone] = useState('')
   const [editEmail, setEditEmail] = useState('')
   const [editName, setEditName] = useState('')
+  const [editRole, setEditRole] = useState<string>('cashier')
+  const [editLocation, setEditLocation] = useState('')
   const [editPin, setEditPin] = useState('')
   const [editingSubmitting, setEditingSubmitting] = useState(false)
+  const [locations, setLocations] = useState<BranchOption[]>([])
 
   // Inventory
   const [showAddProduct, setShowAddProduct] = useState(false)
@@ -209,19 +236,22 @@ export default function POSPage() {
       const { start, end } = getDateRange(dateRange)
       const prev = getPrevRange(dateRange)
 
-      const [staffRes, txData, prevTxData, invRes] = await Promise.all([
+      const [staffRes, txData, prevTxData, invRes, locRes] = await Promise.all([
         fetch('/api/pos/staff'),
         fetchTransactions(start.toISOString(), end.toISOString()),
         fetchTransactions(prev.start.toISOString(), prev.end.toISOString()),
         fetch('/api/pos/inventory'),
+        fetch('/api/pos/locations'),
       ])
       const staffData = await staffRes.json()
       const invData = await invRes.json()
+      const locData = locRes.ok ? await locRes.json() : { locations: [] }
 
       setStaff(staffData.staff || [])
       setTransactions(txData)
       setPrevTransactions(prevTxData)
       setInventory(invData.inventory || [])
+      setLocations(locData.locations || [])
       setLoading(false)
     }
     init()
@@ -403,9 +433,9 @@ export default function POSPage() {
     if (newPin && (newPin.length < 4 || newPin.length > 6 || !/^\d+$/.test(newPin))) { notify('PIN must be 4-6 digits', false); return }
     setAddingStaff(true)
     try {
-      const res = await fetch('/api/pos/staff', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: newPhone || undefined, email: newEmail || undefined, name: newName, role: newRole, pin: newPin || undefined }) })
+      const res = await fetch('/api/pos/staff', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: newPhone || undefined, email: newEmail || undefined, name: newName, role: newRole, pin: newPin || undefined, location_id: newLocation || undefined }) })
       const data = await res.json()
-      if (data.staff) { setStaff(prev => [...prev, data.staff]); setNewPhone(''); setNewEmail(''); setNewName(''); setNewRole('cashier'); setNewPin(''); setShowAddStaff(false); notify(`${data.staff.name} added`) }
+      if (data.staff) { setStaff(prev => [...prev, data.staff]); setNewPhone(''); setNewEmail(''); setNewName(''); setNewRole('cashier'); setNewLocation(''); setNewPin(''); setShowAddStaff(false); notify(`${data.staff.name} added`) }
       else if (data.seat_limit) notify(data.error, false)
       else if (data.error) notify(data.error, false)
     } catch { notify('Failed to add staff', false) }
@@ -426,7 +456,7 @@ export default function POSPage() {
     if (editPin && (editPin.length < 4 || editPin.length > 6 || !/^\d+$/.test(editPin))) { notify('PIN must be 4-6 digits', false); return }
     setEditingSubmitting(true)
     try {
-      const res = await fetch('/api/pos/staff', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingStaff.id, phone: editPhone || undefined, email: editEmail || undefined, name: editName, pin: editPin || undefined }) })
+      const res = await fetch('/api/pos/staff', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingStaff.id, phone: editPhone || undefined, email: editEmail || undefined, name: editName, role: editRole, location_id: editLocation || null, pin: editPin || undefined }) })
       const data = await res.json()
       if (data.staff) { setStaff(prev => prev.map(s => s.id === editingStaff.id ? data.staff : s)); setEditingStaff(null); notify('Staff updated') }
       else if (data.error) notify(data.error, false)
@@ -436,6 +466,7 @@ export default function POSPage() {
 
   const handleOpenEditStaff = (member: StaffMember) => {
     setEditingStaff(member); setEditName(member.name); setEditPhone(member.phone || ''); setEditEmail(member.email || ''); setEditPin('')
+    setEditRole(member.role || 'cashier'); setEditLocation(member.location_id || '')
   }
 
   // Camera handlers
@@ -1134,12 +1165,20 @@ export default function POSPage() {
                   <input placeholder="Phone number (e.g. +447911123456)" value={newPhone} onChange={e => setNewPhone(e.target.value)} style={inputStyle} />
                   <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>— or —</div>
                   <input placeholder="Email address (alternative to WhatsApp)" value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" style={inputStyle} />
-                  <select value={newRole} onChange={e => setNewRole(e.target.value as any)} style={inputStyle}>
-                    <option value="cashier">Cashier — can process sales</option>
-                    <option value="inventory">Inventory — can manage stock</option>
-                    <option value="repair">Repair — can intake & manage service jobs</option>
-                    <option value="engineer">Engineer — assigned to repair jobs</option>
+                  <select value={newRole} onChange={e => setNewRole(e.target.value)} style={inputStyle}>
+                    {ROLE_OPTIONS.map(g => (
+                      <optgroup key={g.group} label={g.group}>
+                        {g.roles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                      </optgroup>
+                    ))}
                   </select>
+                  {locations.length > 0 && (
+                    <select value={newLocation} onChange={e => setNewLocation(e.target.value)} style={{ ...inputStyle, borderColor: BRANCH_ROLES.has(newRole) && !newLocation ? 'rgba(202,138,4,.5)' : undefined }}>
+                      <option value="">{BRANCH_ROLES.has(newRole) ? 'Select branch (required for this role)…' : 'Branch (optional)…'}</option>
+                      {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                    </select>
+                  )}
+                  {BRANCH_ROLES.has(newRole) && !newLocation && <div style={{ fontSize: 11, color: '#ca8a04' }}>⚠️ Logistics & manager roles need a branch — it controls which parcels & routes they see.</div>}
                   <input placeholder="PIN (4–6 digits) — required for POS login" value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: newPin && newPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button onClick={handleAddStaff} disabled={addingStaff} style={btnPrimary}>{addingStaff ? 'Adding...' : 'Add staff member'}</button>
@@ -1171,6 +1210,7 @@ export default function POSPage() {
                         <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)' }}>{s.name}</div>
                         <div style={{ fontSize: 11, color: 'var(--tx3)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                           <span>{s.role}</span>
+                          {s.location?.name && <span style={{ color: ACC, fontWeight: 600 }}>· 📍 {s.location.name}</span>}
                           {s.phone && <span>· {s.phone}</span>}
                           {s.has_pin ? <span style={{ color: GREEN, fontWeight: 600 }}>· PIN set</span> : <span style={{ color: RED, fontWeight: 600 }}>· No PIN</span>}
                           {s.last_login_at && <span>· Last login {new Date(s.last_login_at).toLocaleDateString('en-GB')}</span>}
@@ -1197,6 +1237,20 @@ export default function POSPage() {
                   <input placeholder="Phone number" value={editPhone} onChange={e => setEditPhone(e.target.value)} style={inputStyle} />
                   <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>— or —</div>
                   <input placeholder="Email address" value={editEmail} onChange={e => setEditEmail(e.target.value)} type="email" style={inputStyle} />
+                  <select value={editRole} onChange={e => setEditRole(e.target.value)} style={inputStyle}>
+                    {ROLE_OPTIONS.map(g => (
+                      <optgroup key={g.group} label={g.group}>
+                        {g.roles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                      </optgroup>
+                    ))}
+                  </select>
+                  {locations.length > 0 && (
+                    <select value={editLocation} onChange={e => setEditLocation(e.target.value)} style={{ ...inputStyle, borderColor: BRANCH_ROLES.has(editRole) && !editLocation ? 'rgba(202,138,4,.5)' : undefined }}>
+                      <option value="">{BRANCH_ROLES.has(editRole) ? 'Select branch (required for this role)…' : 'No branch'}</option>
+                      {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                    </select>
+                  )}
+                  {BRANCH_ROLES.has(editRole) && !editLocation && <div style={{ fontSize: 11, color: '#ca8a04' }}>⚠️ This role needs a branch to see its parcels & routes.</div>}
                   <input placeholder={`New PIN (4–6 digits)${editingStaff.has_pin ? ' — leave blank to keep current' : ''}`} value={editPin} onChange={e => setEditPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: editPin && editPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>

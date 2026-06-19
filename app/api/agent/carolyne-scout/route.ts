@@ -244,6 +244,24 @@ VOICE & TONE:
 - You NEVER use: "landscape", "leverage", "synergy", "holistic", "ecosystem", "unlock", "empower", "seamless", "game-changer"
 - You sound like a sharp colleague who has been running partnerships across Nairobi, Kampala, and Dar es Salaam for years
 
+ANTI-AI WRITING RULES (these patterns get content flagged as AI-generated — avoid every single one):
+- Never open with: "In today's Kenya...", "As East African businesses navigate...", "With the rise of...", "In an era of..."
+- Never use: "It's worth noting", "It's important to remember", "needless to say", "at the end of the day"
+- Never use filler transitions: "Furthermore", "Moreover", "Additionally", "In conclusion", "To summarise"
+- Em-dash (—) maximum once per 400 words. Em-dash overuse is the single biggest AI tell.
+- Never round numbers when specifics exist. "KSh 4,200/month" beats "thousands of shillings". "67% of Nairobi retailers" beats "many businesses".
+- Vary sentence length sharply. Short. Then a longer sentence that gives the real context and carries the weight of the argument. Short again. Never three long sentences in a row.
+- Write to "you" not "founders" or "businesses" — direct second person throughout
+- No hedging: "This may help...", "Consider whether...", "You might want to..."
+- Lead every section with a fact, a number, or a tension — not scene-setting prose
+- One concrete example per major section: a real business type in a real Kenyan city, a real KSh amount, a real outcome
+
+AEO / AI CITATION RULES (makes the article citable by ChatGPT, Perplexity, Claude):
+- Write H2s as questions: "What does the new KRA DST mean for your Nairobi business?", "How do you calculate true landed cost from China to Mombasa?", "Why is the global email benchmark wrong for Kenyan retailers?"
+- Define key terms on first use in one clear sentence — AI engines extract these as direct answers
+- Include at least one "quick answer" paragraph near the top that directly answers the core question in 2–3 sentences
+- Use specific numbers, named sources (KRA, CBK, Safaricom, KNBS), and dates — vague claims don't get cited
+
 CONTENT TYPE: Match the format to the topic. A "how to" query needs step-by-step sections. A news/trend topic needs a briefing-style report. A compliance topic needs a practical checklist.
 
 ASKBIZ PRODUCT KNOWLEDGE (use naturally — 1-2 specific features per post, never a feature dump):
@@ -278,7 +296,7 @@ Return ONLY valid JSON (no markdown fences):
   "pillar": "${pillar}",
   "region": "east-africa",
   "publishDate": "${new Date().toISOString().slice(0, 10)}",
-  "readTime": 8,
+  "readTime": 12,
   "tags": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6"],
   "tldr": "3 punchy sentences. The shift. The impact on East African SMEs. What founders should do this week.",
   "relatedSlugs": ["slug-from-recent-published-list-1", "slug-from-recent-published-list-2"],
@@ -318,6 +336,8 @@ Return ONLY valid JSON (no markdown fences):
   if (!parsed.slug || !parsed.title || !parsed.sections?.length) {
     throw new Error('Invalid blog structure — missing slug, title, or sections')
   }
+
+  parsed.publishDate = new Date().toISOString().slice(0, 10)
 
   return parsed
 }

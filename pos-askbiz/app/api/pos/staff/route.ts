@@ -29,7 +29,13 @@ export async function POST(req: NextRequest) {
 
   const { phone, email, name, role, pin, location_id } = await req.json()
   if ((!phone && !email) || !name || !role) return NextResponse.json({ error: 'phone or email, name and role required' }, { status: 400 })
-  if (!['cashier', 'inventory', 'repair', 'engineer'].includes(role)) return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
+  const VALID_ROLES = [
+    'cashier', 'inventory', 'repair', 'engineer', 'manager', 'supervisor',
+    'handler', 'driver', 'dispatcher', 'branch_manager',
+    'logistics-counter-clerk', 'logistics-handler', 'logistics-driver',
+    'logistics-dispatcher', 'logistics-branch-manager',
+  ]
+  if (!VALID_ROLES.includes(role)) return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
   if (pin && (String(pin).length < 4 || String(pin).length > 6)) return NextResponse.json({ error: 'PIN must be 4–6 digits' }, { status: 400 })
 
   // ── Enforce seat limit ────────────────────────────────────────────────────
@@ -130,7 +136,7 @@ export async function PATCH(req: NextRequest) {
       .update(updates)
       .eq('id', id)
       .eq('owner_id', user.id)
-      .select()
+      .select('id, name, email, phone, role, active, last_login_at, created_at, pin_hash, location_id, location:pos_locations!location_id(id, name)')
       .single()
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })

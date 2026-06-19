@@ -1,0 +1,349 @@
+'use client'
+
+import Link from 'next/link'
+import { useState, useMemo } from 'react'
+import { LEARNING_PATHS, totalArticles } from '@/lib/learning-paths-content'
+
+const ACC = '#d08a59'
+const BG  = '#f9f8f6'
+const SF  = '#ffffff'
+const TX  = '#1a1916'
+const TX2 = '#6b6760'
+const TX3 = '#a39e97'
+const BD  = '#e8e6e1'
+
+// Alias for convenience
+const PATHS = LEARNING_PATHS
+
+const LEVEL_COLOR: Record<string, string> = {
+  'Beginner':               '#27ae60',
+  'Beginner–Intermediate':  '#2980b9',
+  'Intermediate':           '#e8734a',
+  'Intermediate–Advanced':  '#8e44ad',
+  'Advanced':               '#e74c3c',
+}
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'AskBiz Academy Learning Paths',
+  description: 'Structured learning paths for SME founders covering business intelligence, eCommerce, SaaS, retail, supply chain, manufacturing, legal, sustainability, and more.',
+  url: 'https://askbiz.co/academy/learning-paths',
+  numberOfItems: PATHS.length,
+  itemListElement: PATHS.map((p, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: p.title,
+    description: p.description,
+    url: 'https://askbiz.co/academy/learning-paths',
+  })),
+}
+
+export default function LearningPathsPageClient() {
+  const [activePath, setActivePath]   = useState<string | null>(null)
+  const [search, setSearch]           = useState('')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const current = PATHS.find(p => p.id === activePath) ?? null
+
+  const filteredPaths = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return PATHS
+    return PATHS.filter(p =>
+      p.title.toLowerCase().includes(q) ||
+      p.subtitle.toLowerCase().includes(q) ||
+      p.level.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q) ||
+      p.articles.some(a => a.title.toLowerCase().includes(q))
+    )
+  }, [search])
+
+  function selectPath(id: string) {
+    setActivePath(id)
+    setSearch('')
+    setSidebarOpen(false)
+  }
+
+  function goHome() {
+    setActivePath(null)
+    setSearch('')
+    setSidebarOpen(false)
+  }
+
+  const isHome = !activePath
+
+  return (
+    <div style={{ fontFamily: 'DM Sans, system-ui', background: BG, minHeight: '100vh' }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+
+      <style>{`
+        .lp-sb-btn       { cursor: pointer; border: none; background: transparent; transition: background 120ms; font-family: DM Sans, system-ui; width: 100%; text-align: left; }
+        .lp-sb-btn:hover { background: rgba(0,0,0,0.045) !important; }
+        .lp-card         { cursor: pointer; transition: transform 140ms, box-shadow 140ms; }
+        .lp-card:hover   { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1) !important; }
+        .lp-art-link     { display: flex; align-items: center; gap: 14px; padding: 14px 20px; text-decoration: none; transition: background 100ms; }
+        .lp-art-link:hover { background: rgba(0,0,0,0.03); }
+        .lp-search       { outline: none; }
+        .lp-search:focus { border-color: ${ACC} !important; box-shadow: 0 0 0 3px rgba(208,138,89,.12); }
+        .lp-back         { background: none; border: none; cursor: pointer; font-family: DM Sans, system-ui; padding: 0; }
+        .lp-back:hover   { text-decoration: underline; }
+        .lp-mob-tog      { display: none; cursor: pointer; border: none; background: none; align-items: center; }
+        .lp-sb-overlay   { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 39; }
+        @media (max-width: 860px) {
+          .lp-sb-wrap  { display: none; position: fixed; top: 54px; left: 0; bottom: 0; width: 280px; z-index: 40; background: ${SF}; box-shadow: 4px 0 24px rgba(0,0,0,.12); overflow-y: auto; }
+          .lp-sb-wrap.open { display: block; }
+          .lp-sb-overlay.open { display: block; }
+          .lp-mob-tog  { display: flex !important; }
+          .lp-main     { padding: 24px 16px !important; }
+        }
+      `}</style>
+
+      {/* Nav */}
+      <nav style={{ borderBottom: `1px solid ${BD}`, background: SF, padding: '0 clamp(16px,4vw,24px)', height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button className="lp-mob-tog" onClick={() => setSidebarOpen(o => !o)} aria-label="Toggle paths">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TX2} strokeWidth="2" strokeLinecap="round">
+              {sidebarOpen
+                ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>
+                : <><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>}
+            </svg>
+          </button>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
+            <div style={{ width: 26, height: 26, borderRadius: 7, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="12" height="12" viewBox="0 0 32 32" fill="none">
+                <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/>
+                <rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.75"/>
+                <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
+              </svg>
+            </div>
+            <span style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
+          </Link>
+        </div>
+        <Link href="/signin" style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>Try free →</Link>
+      </nav>
+
+      {/* Mobile overlay */}
+      <div className={`lp-sb-overlay${sidebarOpen ? ' open' : ''}`} onClick={() => setSidebarOpen(false)} />
+
+      {/* Two-pane layout */}
+      <div style={{ display: 'flex', height: 'calc(100vh - 54px)', overflow: 'hidden' }}>
+
+        {/* Sidebar */}
+        <div className={`lp-sb-wrap${sidebarOpen ? ' open' : ''}`} style={{ width: 244, flexShrink: 0, overflowY: 'auto', borderRight: `1px solid ${BD}`, background: SF, padding: '20px 0 32px' }}>
+
+          {/* All paths */}
+          <div style={{ padding: '0 12px', marginBottom: 4 }}>
+            <button
+              className="lp-sb-btn"
+              onClick={goHome}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 8, background: isHome ? 'rgba(208,138,89,.12)' : 'transparent', color: isHome ? ACC : TX2, fontSize: 13, fontWeight: isHome ? 600 : 400 }}
+            >
+              <span>All learning paths</span>
+              <span style={{ fontSize: 11, color: TX3 }}>{PATHS.length}</span>
+            </button>
+          </div>
+
+          <div style={{ fontSize: 10, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.1em', padding: '10px 24px 6px' }}>Browse tracks</div>
+
+          {PATHS.map(path => {
+            const isActive = activePath === path.id
+            return (
+              <div key={path.id} style={{ padding: '0 12px' }}>
+                <button
+                  className="lp-sb-btn"
+                  onClick={() => selectPath(path.id)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 8, background: isActive ? `${path.color}14` : 'transparent', color: isActive ? path.color : TX2, fontSize: 13, fontWeight: isActive ? 600 : 400, marginBottom: 1 }}
+                >
+                  <span style={{ fontSize: 14, flexShrink: 0 }}>{path.icon}</span>
+                  <span style={{ lineHeight: 1.35, flex: 1, textAlign: 'left' }}>{path.title}</span>
+                  <span style={{ fontSize: 10, color: isActive ? path.color : TX3, flexShrink: 0 }}>{path.articles.length}</span>
+                </button>
+              </div>
+            )
+          })}
+
+          {/* Footer links */}
+          <div style={{ padding: '0 12px', marginTop: 12 }}>
+            <div style={{ height: 1, background: BD, margin: '8px 0 12px' }} />
+            <div style={{ fontSize: 10, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.1em', padding: '4px 10px 6px' }}>Also in Academy</div>
+            {([['🎓 All Articles', '/academy'], ['✅ Checklists', '/academy/checklists']] as [string,string][]).map(([label, href]) => (
+              <Link key={href} href={href} style={{ display: 'block', padding: '6px 10px', fontSize: 13, color: TX2, textDecoration: 'none', borderRadius: 6 }}>{label}</Link>
+            ))}
+            <div style={{ height: 1, background: BD, margin: '8px 0 8px' }} />
+            {([['Help Centre', '/help'], ['Blog', '/blog'], ['Free Tools', '/free-tools']] as [string,string][]).map(([label, href]) => (
+              <Link key={href} href={href} style={{ display: 'block', padding: '6px 10px', fontSize: 13, color: TX2, textDecoration: 'none', borderRadius: 6 }}>{label}</Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Main pane */}
+        <main className="lp-main" style={{ flex: 1, overflowY: 'auto', padding: 'clamp(28px,4vw,48px) clamp(24px,4vw,48px)' }}>
+
+          {/* Search + heading */}
+          <div style={{ marginBottom: 32 }}>
+            {isHome && (
+              <div style={{ marginBottom: 18 }}>
+                <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(22px,3vw,30px)', fontWeight: 700, letterSpacing: '-.025em', color: TX, marginBottom: 4 }}>
+                  Learning Paths
+                </h1>
+                <p style={{ fontSize: 14, color: TX2, margin: 0 }}>
+                  {PATHS.length} tracks · {totalArticles}+ curated articles · follow in order for best results
+                </p>
+              </div>
+            )}
+
+            {/* Search bar */}
+            <div style={{ position: 'relative', maxWidth: 520 }}>
+              <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="2" strokeLinecap="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input
+                className="lp-search"
+                type="text"
+                placeholder="Search tracks, topics, or articles…"
+                value={search}
+                onChange={e => { setSearch(e.target.value); setActivePath(null) }}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '10px 36px 10px 40px', fontSize: 14, color: TX, background: SF, border: `1.5px solid ${BD}`, borderRadius: 10 }}
+              />
+              {search && (
+                <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: TX3, fontSize: 18, padding: 0, lineHeight: 1 }}>×</button>
+              )}
+            </div>
+          </div>
+
+          {/* Search results */}
+          {search.trim() && (
+            <>
+              <div style={{ fontSize: 13, color: TX3, marginBottom: 16 }}>
+                {filteredPaths.length} track{filteredPaths.length !== 1 ? 's' : ''} matching &ldquo;{search}&rdquo;
+              </div>
+              {filteredPaths.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
+                  <div style={{ fontSize: 15, color: TX2 }}>No tracks found for &ldquo;{search}&rdquo;</div>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                  {filteredPaths.map(path => <PathCard key={path.id} path={path} onClick={() => selectPath(path.id)} />)}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Home: grid of all paths */}
+          {isHome && !search.trim() && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+              {PATHS.map(path => <PathCard key={path.id} path={path} onClick={() => selectPath(path.id)} />)}
+            </div>
+          )}
+
+          {/* Path detail */}
+          {activePath && current && !search.trim() && (
+            <>
+              <button className="lp-back" onClick={goHome} style={{ fontSize: 13, color: ACC, fontWeight: 600, marginBottom: 24, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                All learning paths
+              </button>
+
+              <div style={{ maxWidth: 680 }}>
+                {/* Header card */}
+                <div style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 16, padding: '24px 26px', marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: current.color }} />
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginTop: 6 }}>
+                    <div style={{ width: 54, height: 54, borderRadius: 14, background: `${current.color}15`, border: `1px solid ${current.color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0 }}>
+                      {current.icon}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+                        <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(18px,2.5vw,24px)', fontWeight: 700, color: TX, margin: 0, letterSpacing: '-.02em' }}>{current.title}</h1>
+                        <span style={{ fontSize: 10, color: LEVEL_COLOR[current.level] || TX3, background: `${LEVEL_COLOR[current.level] || TX3}15`, border: `1px solid ${LEVEL_COLOR[current.level] || TX3}30`, padding: '3px 9px', borderRadius: 9999, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                          {current.level}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', gap: 14, marginBottom: 10 }}>
+                        <span style={{ fontSize: 12, color: TX3 }}>📖 {current.articles.length} articles</span>
+                        <span style={{ fontSize: 12, color: TX3 }}>⏱ {current.duration}</span>
+                      </div>
+                      <p style={{ fontSize: 14, color: TX2, lineHeight: 1.65, margin: 0 }}>{current.description}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Article list */}
+                <div style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
+                  <div style={{ padding: '12px 20px', borderBottom: `1px solid ${BD}`, background: `${current.color}08`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: current.color, textTransform: 'uppercase', letterSpacing: '.07em' }}>Articles in this path</span>
+                    <span style={{ fontSize: 11, color: TX3 }}>{current.articles.length} articles</span>
+                  </div>
+                  {current.articles.map((article, i) => (
+                    <Link
+                      key={article.slug}
+                      href={`/academy/${article.slug}`}
+                      className="lp-art-link"
+                      style={{ borderBottom: i < current.articles.length - 1 ? `1px solid ${BD}` : 'none', color: TX }}
+                    >
+                      <span style={{ width: 26, height: 26, borderRadius: '50%', background: `${current.color}15`, border: `1px solid ${current.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 11, fontWeight: 700, color: current.color }}>
+                        {i + 1}
+                      </span>
+                      <span style={{ fontSize: 14, fontWeight: 500, flex: 1, lineHeight: 1.4 }}>{article.title}</span>
+                      <span style={{ fontSize: 12, color: ACC, fontWeight: 600, flexShrink: 0, display: 'flex', alignItems: 'center', gap: 3 }}>
+                        Read <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+
+                {/* CTA */}
+                <div style={{ padding: '20px 22px', background: `${current.color}08`, border: `1px solid ${current.color}20`, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 32 }}>
+                  <p style={{ fontSize: 14, color: TX2, margin: 0, lineHeight: 1.6 }}>Ready to see these metrics in your real business data?</p>
+                  <Link href="/signin" style={{ fontSize: 13, fontWeight: 700, color: SF, background: current.color, borderRadius: 8, padding: '10px 20px', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                    Try AskBiz free →
+                  </Link>
+                </div>
+
+                {/* Other paths */}
+                <div>
+                  <h3 style={{ fontFamily: 'Sora, system-ui', fontSize: 13, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 12 }}>Other paths</h3>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {PATHS.filter(p => p.id !== current.id).map(p => (
+                      <button key={p.id} onClick={() => selectPath(p.id)} style={{ fontSize: 12, color: TX2, background: SF, border: `1px solid ${BD}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontFamily: 'DM Sans, system-ui', display: 'flex', alignItems: 'center', gap: 5 }}>
+                        {p.icon} {p.title}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </main>
+      </div>
+    </div>
+  )
+}
+
+function PathCard({ path, onClick }: { path: typeof PATHS[0]; onClick: () => void }) {
+  return (
+    <div
+      className="lp-card"
+      onClick={onClick}
+      style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 14, padding: '22px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)', position: 'relative', overflow: 'hidden', cursor: 'pointer' }}
+    >
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: path.color }} />
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12, marginTop: 4 }}>
+        <div style={{ width: 44, height: 44, borderRadius: 12, background: `${path.color}15`, border: `1px solid ${path.color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>
+          {path.icon}
+        </div>
+        <span style={{ fontSize: 10, color: LEVEL_COLOR[path.level] || TX3, background: `${LEVEL_COLOR[path.level] || TX3}15`, border: `1px solid ${LEVEL_COLOR[path.level] || TX3}30`, padding: '3px 8px', borderRadius: 9999, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+          {path.level}
+        </span>
+      </div>
+      <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 2 }}>{path.title}</div>
+      <div style={{ fontSize: 11, color: path.color, fontWeight: 600, marginBottom: 8 }}>{path.subtitle}</div>
+      <p style={{ fontSize: 12, color: TX2, lineHeight: 1.6, marginBottom: 12 }}>{path.description.slice(0, 100)}{path.description.length > 100 ? '…' : ''}</p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: `1px solid ${BD}`, paddingTop: 10 }}>
+        <span style={{ fontSize: 11, color: TX3 }}>📖 {path.articles.length} articles · {path.duration}</span>
+        <span style={{ fontSize: 12, color: path.color, fontWeight: 700 }}>Start →</span>
+      </div>
+    </div>
+  )
+}

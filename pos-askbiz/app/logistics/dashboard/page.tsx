@@ -30,7 +30,16 @@ interface Truck { id: string; plate_number?: string; registration?: string; make
 
 interface TruckLocation { truck_id: string; registration: string; lat: number; lng: number; recorded_at: string; driver_name: string | null }
 
-type Tab = 'overview' | 'parcels' | 'fleet' | 'revenue'
+type Tab = 'overview' | 'parcels' | 'fleet' | 'routes' | 'revenue'
+
+interface Branch { id: string; name: string }
+interface Route {
+  id: string; name: string | null; active: boolean
+  origin_branch_id: string; destination_branch_id: string
+  price_per_kg: number | null; flat_rate: number | null
+  origin?: { id: string; name: string } | null
+  destination?: { id: string; name: string } | null
+}
 
 // Trucks may come back as `registration` (new API) or `plate_number` (legacy)
 const truckReg = (t: Truck) => t.registration || t.plate_number || '—'
@@ -63,6 +72,8 @@ export default function BranchDashboardPage() {
   const [parcels, setParcels] = useState<Parcel[]>([])
   const [trucks, setTrucks] = useState<Truck[]>([])
   const [locations, setLocations] = useState<TruckLocation[]>([])
+  const [routes, setRoutes] = useState<Route[]>([])
+  const [branches, setBranches] = useState<Branch[]>([])
   const [loading, setLoading] = useState(true)
 
   // Add-truck modal
@@ -98,17 +109,29 @@ export default function BranchDashboardPage() {
   const loadAll = async (s: Staff) => {
     setLoading(true)
     try {
-      const [pRes, tRes] = await Promise.all([
+      const [pRes, tRes, rRes, lRes] = await Promise.all([
         fetch(`${API}/api/pos/parcels?limit=200`, { headers: hdrs(s) }),
         fetch(`${API}/api/pos/trucks`, { headers: hdrs(s) }),
+        fetch(`${API}/api/pos/routes`, { headers: hdrs(s) }),
+        fetch(`${API}/api/pos/locations`, { headers: hdrs(s) }),
       ])
-      const [pData, tData] = await Promise.all([pRes.json(), tRes.json()])
+      const [pData, tData, rData, lData] = await Promise.all([pRes.json(), tRes.json(), rRes.json(), lRes.json()])
       setParcels(pData.parcels || [])
       setTrucks(tData.trucks || [])
+      setRoutes(rData.routes || [])
+      setBranches(lData.locations || [])
     } catch {}
     setLoading(false)
     loadLocations(s)
   }
+
+  const reloadRoutes = useCallback(async (s: Staff) => {
+    try {
+      const res = await fetch(`${API}/api/pos/routes`, { headers: hdrs(s) })
+      const data = await res.json()
+      setRoutes(data.routes || [])
+    } catch {}
+  }, [hdrs])
 
   const loadLocations = useCallback(async (s: Staff) => {
     try {
@@ -223,10 +246,10 @@ export default function BranchDashboardPage() {
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--pos-border)', background: 'var(--pos-surface)' }}>
-        {(['overview', 'parcels', 'fleet', 'revenue'] as Tab[]).map(t => (
+        {(['overview', 'parcels', 'fleet', 'routes', 'revenue'] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            style={{ flex: 1, padding: '10px 4px', border: 'none', background: tab === t ? ACC_LIGHT : 'transparent', borderBottom: tab === t ? `2px solid ${ACC}` : '2px solid transparent', cursor: 'pointer', fontSize: 11, fontWeight: 700, color: tab === t ? ACC : 'var(--pos-muted)', textTransform: 'capitalize' }}>
-            {t === 'overview' ? '📋 Overview' : t === 'parcels' ? '📦 Parcels' : t === 'fleet' ? '🚛 Fleet' : '💰 Revenue'}
+            style={{ flex: 1, padding: '10px 2px', border: 'none', background: tab === t ? ACC_LIGHT : 'transparent', borderBottom: tab === t ? `2px solid ${ACC}` : '2px solid transparent', cursor: 'pointer', fontSize: 10.5, fontWeight: 700, color: tab === t ? ACC : 'var(--pos-muted)' }}>
+            {t === 'overview' ? '📋 Overview' : t === 'parcels' ? '📦 Parcels' : t === 'fleet' ? '🚛 Fleet' : t === 'routes' ? '📍 Routes' : '💰 Revenue'}
           </button>
         ))}
       </div>
@@ -303,6 +326,9 @@ export default function BranchDashboardPage() {
           <ParcelList parcels={parcels} currency={currency} />
         ) : tab === 'fleet' ? (
           <FleetView trucks={trucks} parcels={parcels} locations={locations} onAddTruck={() => { setAddError(''); setShowAddTruck(true) }} />
+        ) : tab === 'routes' ? (
+          <RoutesView routes={routes} branches={branches} currency={currency} homeBranchId={staff?.location_id || null}
+            hdrs={staff ? hdrs(staff) : {}} onChanged={() => staff && reloadRoutes(staff)} />
         ) : (
           <RevenueView parcels={parcels} currency={currency} />
         )}
@@ -350,6 +376,170 @@ export default function BranchDashboardPage() {
 }
 
 // ── Sub-components ─────────────────────────────────────────
+
+function RoutesView({ routes, branches, currency, homeBranchId, hdrs, onChanged }: {
+  routes: Route[]; branches: Branch[]; currency: string; homeBranchId: string | null
+  hdrs: Record<string, string>; onChanged: () => void
+}) {
+  const [origin, setOrigin] = useState(homeBranchId || '')
+  const [dest, setDest] = useState('')
+  const [pricingMode, setPricingMode] = useState<'flat' | 'per_kg'>('flat')
+  const [price, setPrice] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState('')
+  const [busyId, setBusyId] = useState('')
+  const [editId, setEditId] = useState('')
+  const [editPrice, setEditPrice] = useState('')
+
+  const addRoute = async () => {
+    if (!origin || !dest) { setErr('Pick an origin and a destination.'); return }
+    if (origin === dest) { setErr('Origin and destination must differ.'); return }
+    const amount = parseFloat(price) || 0
+    setSaving(true); setErr('')
+    try {
+      const res = await fetch(`${API}/api/pos/routes`, {
+        method: 'POST', headers: hdrs,
+        body: JSON.stringify({
+          origin_branch_id: origin, destination_branch_id: dest,
+          flat_rate: pricingMode === 'flat' ? amount : 0,
+          price_per_kg: pricingMode === 'per_kg' ? amount : 0,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) { setErr(data.error || 'Could not add route.'); setSaving(false); return }
+      setDest(''); setPrice('')
+      onChanged()
+    } catch { setErr('Network error — try again.') }
+    setSaving(false)
+  }
+
+  const toggleActive = async (r: Route) => {
+    setBusyId(r.id)
+    try { await fetch(`${API}/api/pos/routes`, { method: 'PATCH', headers: hdrs, body: JSON.stringify({ id: r.id, active: !r.active }) }); onChanged() } catch {}
+    setBusyId('')
+  }
+
+  const savePrice = async (r: Route) => {
+    const amount = parseFloat(editPrice) || 0
+    setBusyId(r.id)
+    try {
+      // Keep the same pricing model the route already uses (flat vs per-kg)
+      const body = r.price_per_kg ? { id: r.id, price_per_kg: amount } : { id: r.id, flat_rate: amount }
+      await fetch(`${API}/api/pos/routes`, { method: 'PATCH', headers: hdrs, body: JSON.stringify(body) })
+      setEditId(''); onChanged()
+    } catch {}
+    setBusyId('')
+  }
+
+  const removeRoute = async (r: Route) => {
+    if (typeof window !== 'undefined' && !window.confirm(`Delete route ${r.origin?.name} → ${r.destination?.name}?`)) return
+    setBusyId(r.id)
+    try { await fetch(`${API}/api/pos/routes?id=${r.id}`, { method: 'DELETE', headers: hdrs }); onChanged() } catch {}
+    setBusyId('')
+  }
+
+  const lbl: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 4 }
+  const inp: React.CSSProperties = { width: '100%', padding: '10px 12px', border: '1px solid var(--pos-border)', borderRadius: 8, fontSize: 14, boxSizing: 'border-box', outline: 'none', background: 'var(--pos-surface)' }
+
+  // Group routes by origin branch so it's obvious which clerks see what
+  const byOrigin = new Map<string, Route[]>()
+  for (const r of routes) {
+    const key = r.origin?.name || 'Unknown branch'
+    if (!byOrigin.has(key)) byOrigin.set(key, [])
+    byOrigin.get(key)!.push(r)
+  }
+
+  return (
+    <div>
+      {/* How routes work */}
+      <div style={{ background: ACC_LIGHT, border: `1px solid ${ACC_BORDER}`, borderRadius: 12, padding: '12px 14px', marginBottom: 16, fontSize: 12.5, color: 'var(--pos-ink)', lineHeight: 1.5 }}>
+        📍 A counter clerk only sees routes that <strong>start at their own branch</strong>. To give a clerk a destination, add a route whose <strong>From</strong> is the branch they work at.
+      </div>
+
+      {/* Add route */}
+      <div style={{ background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 12, padding: 16, marginBottom: 16 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--pos-ink)', marginBottom: 12 }}>➕ Add a route</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+          <div>
+            <label style={lbl}>From (clerk&apos;s branch)</label>
+            <select value={origin} onChange={e => setOrigin(e.target.value)} style={{ ...inp, appearance: 'none' }}>
+              <option value="">Origin…</option>
+              {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={lbl}>To</label>
+            <select value={dest} onChange={e => setDest(e.target.value)} style={{ ...inp, appearance: 'none' }}>
+              <option value="">Destination…</option>
+              {branches.filter(b => b.id !== origin).map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+          </div>
+        </div>
+        <label style={lbl}>Pricing</label>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+          {([{ id: 'flat', label: 'Flat rate' }, { id: 'per_kg', label: 'Per kg' }] as const).map(m => (
+            <button key={m.id} type="button" onClick={() => setPricingMode(m.id)}
+              style={{ flex: 1, padding: '10px', border: `2px solid ${pricingMode === m.id ? ACC : 'var(--pos-border)'}`, borderRadius: 8, background: pricingMode === m.id ? ACC_LIGHT : 'var(--pos-surface)', color: pricingMode === m.id ? ACC : 'var(--pos-ink)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{m.label}</button>
+          ))}
+        </div>
+        <label style={lbl}>{pricingMode === 'flat' ? `Flat price (${currency})` : `Price per kg (${currency})`}</label>
+        <input value={price} onChange={e => setPrice(e.target.value.replace(/[^0-9.]/g, ''))} inputMode="decimal" placeholder="0.00" style={{ ...inp, marginBottom: 12 }} />
+        {err && <div style={{ color: RED, fontSize: 13, marginBottom: 10 }}>{err}</div>}
+        <button onClick={addRoute} disabled={saving || !origin || !dest}
+          style={{ width: '100%', background: (!origin || !dest) ? '#ccc' : ACC, color: '#fff', border: 'none', borderRadius: 10, padding: 13, fontSize: 14, fontWeight: 800, cursor: (saving || !origin || !dest) ? 'not-allowed' : 'pointer', opacity: (!origin || !dest) ? 0.6 : 1 }}>
+          {saving ? 'Adding…' : 'Add Route'}
+        </button>
+      </div>
+
+      {/* Route list grouped by origin */}
+      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--pos-muted)', marginBottom: 8 }}>{routes.length} route{routes.length === 1 ? '' : 's'}</div>
+      {routes.length === 0 ? (
+        <div style={{ background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 12, padding: '24px 16px', textAlign: 'center', color: 'var(--pos-muted)', fontSize: 13 }}>
+          No routes yet. Add one above so counter clerks can pick destinations.
+        </div>
+      ) : (
+        Array.from(byOrigin.entries()).map(([originName, rs]) => (
+          <div key={originName} style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: ACC, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6 }}>Leaving {originName}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {rs.map(r => (
+                <div key={r.id} style={{ background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 12, padding: 12, opacity: r.active ? 1 : 0.55 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--pos-ink)' }}>→ {r.destination?.name || '—'}</div>
+                      <div style={{ fontSize: 12, color: 'var(--pos-muted)', marginTop: 2 }}>
+                        {r.flat_rate ? `${currency}${r.flat_rate} flat` : r.price_per_kg ? `${currency}${r.price_per_kg}/kg` : 'No price set'}
+                      </div>
+                    </div>
+                    <button onClick={() => toggleActive(r)} disabled={busyId === r.id}
+                      style={{ background: r.active ? 'var(--pos-success-pale)' : 'var(--pos-border)', color: r.active ? GREEN : 'var(--pos-muted)', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                      {busyId === r.id ? '…' : r.active ? 'Active' : 'Off'}
+                    </button>
+                  </div>
+                  {editId === r.id ? (
+                    <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center' }}>
+                      <input value={editPrice} onChange={e => setEditPrice(e.target.value.replace(/[^0-9.]/g, ''))} inputMode="decimal"
+                        placeholder={r.price_per_kg ? `${currency}/kg` : `${currency} flat`} style={{ ...inp, flex: 1, marginBottom: 0 }} autoFocus />
+                      <button onClick={() => savePrice(r)} disabled={busyId === r.id} style={{ background: ACC, color: '#fff', border: 'none', borderRadius: 8, padding: '9px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                      <button onClick={() => setEditId('')} style={{ background: 'transparent', color: 'var(--pos-muted)', border: '1px solid var(--pos-border)', borderRadius: 8, padding: '9px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', gap: 14, marginTop: 8 }}>
+                      <button onClick={() => { setEditId(r.id); setEditPrice(String(r.price_per_kg || r.flat_rate || '')) }}
+                        style={{ background: 'none', border: 'none', color: ACC, fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0 }}>✏️ Edit price</button>
+                      <button onClick={() => removeRoute(r)} disabled={busyId === r.id}
+                        style={{ background: 'none', border: 'none', color: RED, fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: 0 }}>🗑 Delete</button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  )
+}
 
 function StatCard({ label, value, sub, color }: { label: string; value: number; sub: string; color: string }) {
   return (

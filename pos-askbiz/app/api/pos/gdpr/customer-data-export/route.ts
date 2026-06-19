@@ -74,6 +74,19 @@ export async function POST(req: NextRequest) {
   const consents = consentsRes.data || []
   const preferences = preferencesRes.data
 
+  // Parcel / shipment history (logistics) — matched by phone since parcel
+  // senders/receivers are keyed by phone, not customer_id.
+  let parcels: any[] = []
+  if (customer?.phone) {
+    const { data: parcelRows } = await service
+      .from('pos_parcels')
+      .select('id, tracking_number, created_at, status, delivery_type, destination_city, fee_charged, weight_kg, parcel_size, description, sender_name, sender_phone, sender_id_number, receiver_name, receiver_phone, receiver_id_number, delivery_address')
+      .eq('owner_id', ownerId)
+      .or(`sender_phone.eq.${customer.phone},receiver_phone.eq.${customer.phone}`)
+      .order('created_at', { ascending: false })
+    parcels = parcelRows || []
+  }
+
   // Build export data
   const exportData = {
     export_timestamp: new Date().toISOString(),
@@ -117,8 +130,28 @@ export async function POST(req: NextRequest) {
       timestamp: c.timestamp,
       request_source: c.request_source,
     })),
+    shipment_history: parcels.map((p: any) => ({
+      tracking_number: p.tracking_number,
+      created_at: p.created_at,
+      status: p.status,
+      role: p.sender_phone === customer?.phone ? 'sender' : 'receiver',
+      delivery_type: p.delivery_type,
+      destination_city: p.destination_city,
+      delivery_address: p.delivery_address,
+      fee_charged: p.fee_charged,
+      weight_kg: p.weight_kg,
+      parcel_size: p.parcel_size,
+      description: p.description,
+      sender_name: p.sender_name,
+      sender_phone: p.sender_phone,
+      sender_id_number: p.sender_id_number,
+      receiver_name: p.receiver_name,
+      receiver_phone: p.receiver_phone,
+      receiver_id_number: p.receiver_id_number,
+    })),
     data_summary: {
       total_transactions: transactions.length,
+      total_shipments: parcels.length,
       total_spent: customer?.total_spent || 0,
       total_consents_granted: consents.filter((c: any) => c.status === 'granted').length,
       retention_policy: `${preferences?.data_retention_days || 2555} days (${Math.round((preferences?.data_retention_days || 2555) / 365)} years)`,

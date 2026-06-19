@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { withUtm } from '@/lib/utm'
 
 interface KpiCard { label: string; value: string; trend?: string; status?: string }
 
@@ -25,7 +26,7 @@ export default function ShareableInsight({ question, result }: Props) {
 
   const handleShare = async () => {
     if (shareUrl) {
-      await copyToClipboard(shareUrl)
+      await copyToClipboard(withUtm(shareUrl, 'insight', 'referral', 'insight_share'))
       setState('copied')
       setTimeout(() => setState('idle'), 2500)
       return

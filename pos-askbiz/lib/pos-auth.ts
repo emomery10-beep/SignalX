@@ -32,6 +32,7 @@ function templateRoleLevel(role: string): number | null {
   if (suffix.includes('inventory') || suffix.includes('inspector') || suffix.includes('quality')) return ROLE_LEVEL['inventory']
   if (suffix.includes('technician') || suffix.includes('specialist') || suffix.includes('intake')) return ROLE_LEVEL['repair']
   if (suffix === 'handler' || suffix === 'driver') return ROLE_LEVEL['handler']
+  if (suffix === 'counter-clerk') return ROLE_LEVEL['handler']
   if (suffix === 'dispatcher' || suffix === 'branch-manager') return ROLE_LEVEL['dispatcher']
   return ROLE_LEVEL['cashier']
 }

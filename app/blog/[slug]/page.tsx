@@ -492,9 +492,17 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             <span style={{ fontSize: 13, fontWeight: 600, color: TX }}>Written by {post.author.name}</span>
             <span style={{ fontSize: 13, color: TX3 }}>·</span>
           </>}
-          <span style={{ fontSize: 13, color: TX3 }}>
-            {displayPublishDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-          </span>
+          {(() => {
+            const diffDays = Math.floor((Date.now() - displayPublishDate.getTime()) / 86400000)
+            const isRecent = diffDays <= 2
+            const label = diffDays === 0 ? 'Today' : diffDays === 1 ? 'Yesterday' : diffDays < 7 ? `${diffDays} days ago` : displayPublishDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+            return (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                {isRecent && <span style={{ fontSize: 9, fontWeight: 700, color: '#16a34a', background: 'rgba(22,163,74,.1)', border: '1px solid rgba(22,163,74,.2)', borderRadius: 4, padding: '1px 5px', letterSpacing: '.04em' }}>NEW</span>}
+                <span style={{ fontSize: 13, color: isRecent ? '#16a34a' : TX3, fontWeight: isRecent ? 500 : 400 }}>{label}</span>
+              </span>
+            )
+          })()}
           <span style={{ fontSize: 13, color: TX3 }}>·</span>
           {!post.author && <>
             <span style={{ fontSize: 12, color: TX3 }}>

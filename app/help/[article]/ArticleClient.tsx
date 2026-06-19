@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import type { HelpArticle, HelpTopic } from "@/lib/help-content";
 import { HELP_TOPICS, HELP_ARTICLES } from "@/lib/help-content";
+import { withUtm } from "@/lib/utm";
 import "../help.css";
 
 interface Props {
@@ -194,7 +195,7 @@ export default function ArticleClient({ article, topic, topicArticles, relatedAr
   }, [article.slug]);
 
   const copyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
+    navigator.clipboard.writeText(withUtm(window.location.href, "share", "referral", "help_share"));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

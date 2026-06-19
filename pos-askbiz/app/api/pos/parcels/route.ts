@@ -70,17 +70,19 @@ export async function GET(req: NextRequest) {
   return json({ parcels: data || [] })
 }
 
-// POST — create a parcel (handler / driver / dispatcher / manager / owner)
+// POST — create a parcel (counter-clerk / handler / driver / dispatcher / manager / owner)
 export async function POST(req: NextRequest) {
   const auth = await resolvePosAuth(req)
   if (!auth) return json({ error: 'Unauthorised' }, 401)
-  // handler level (25) and above can intake parcels
+  // counter-clerk (maps to handler level 25) and above can intake parcels
   if (!roleCanAccess(auth.role || '', 'handler')) {
     return json({ error: 'Not permitted to create parcels' }, 403)
   }
 
   const service = createServiceClient()
   const body = await req.json()
+
+  const VALID_PAYMENT = ['cash', 'mpesa', 'mobile_money', 'card', 'account']
 
   const { data, error } = await service
     .from('pos_parcels')
@@ -89,17 +91,29 @@ export async function POST(req: NextRequest) {
       tracking_number: body.tracking_number || '', // trigger auto-generates if blank
       sender_name: body.sender_name || null,
       sender_phone: body.sender_phone || null,
+      sender_id_number: body.sender_id_number || null,
       sender_branch_id: body.sender_branch_id || auth.locationId || null,
       receiver_name: body.receiver_name || null,
       receiver_phone: body.receiver_phone || null,
+      receiver_id_number: body.receiver_id_number || null,
       destination_branch_id: body.destination_branch_id || null,
       destination_city: body.destination_city || null,
+      route_id: body.route_id || null,
+      delivery_type: ['branch_to_branch', 'door_to_door'].includes(body.delivery_type) ? body.delivery_type : 'branch_to_branch',
+      delivery_address: body.delivery_address || null,
       description: body.description || null,
       weight_kg: toNum(body.weight_kg),
+      parcel_size: ['S', 'M', 'L', 'XL'].includes(body.parcel_size) ? body.parcel_size : null,
       declared_value: toNum(body.declared_value) ?? 0,
       fee_charged: toNum(body.fee_charged) ?? 0,
       payment_status: ['unpaid', 'paid', 'partial'].includes(body.payment_status) ? body.payment_status : 'unpaid',
-      payment_method: ['cash', 'mpesa', 'card', 'account'].includes(body.payment_method) ? body.payment_method : null,
+      payment_method: VALID_PAYMENT.includes(body.payment_method) ? body.payment_method : null,
+      intake_photo_url: body.intake_photo_url || null,
+      intake_photo_path: body.intake_photo_path || null,
+      sender_consent: body.sender_consent === true,
+      receipt_consent: body.receipt_consent === true,
+      consent_at: body.sender_consent === true ? new Date().toISOString() : null,
+      consent_by: body.sender_consent === true ? (auth.staffId || null) : null,
       status: 'received',
       received_by: auth.staffId || null,
       current_branch_id: body.current_branch_id || auth.locationId || null,
@@ -114,6 +128,25 @@ export async function POST(req: NextRequest) {
       return json({ error: 'Tracking number already exists' }, 409)
     }
     return json({ error: error.message }, 500)
+  }
+
+  // GDPR Art. 7 — persist an auditable consent record when the sender
+  // opted into a WhatsApp/SMS receipt. Best-effort; never blocks intake.
+  if (body.receipt_consent === true && (body.sender_phone || '').trim()) {
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
+    const ua = req.headers.get('user-agent') || 'unknown'
+    await service.from('pos_consent_log').insert({
+      owner_id: auth.ownerId,
+      customer_id: null,
+      consent_type: 'whatsapp',
+      status: 'granted',
+      ip_address: ip,
+      user_agent: ua,
+      request_source: 'pos_terminal',
+      timestamp: new Date().toISOString(),
+    }).then(({ error: e }: { error: { message: string } | null }) => {
+      if (e) console.error('consent_log insert failed:', e.message)
+    })
   }
 
   return json({ parcel: data }, 201)
@@ -152,15 +185,27 @@ export async function PATCH(req: NextRequest) {
 
   const VALID_STATUS = [
     'received', 'at_branch', 'assigned', 'loaded', 'in_transit',
-    'at_destination', 'out_for_delivery', 'delivered', 'collected',
+    'at_destination', 'awaiting_collection', 'out_for_delivery', 'delivered', 'collected',
     'failed_delivery', 'returned',
   ]
+  const VALID_PAYMENT = ['cash', 'mpesa', 'mobile_money', 'card', 'account']
 
   const updates: Record<string, unknown> = {}
   if (body.status !== undefined) {
     if (!VALID_STATUS.includes(body.status)) return json({ error: 'Invalid status' }, 400)
     updates.status = body.status
+    // Stamp the right actor/timestamp for the destination + collection steps
+    if (body.status === 'awaiting_collection') {
+      updates.received_at_dest_by = auth.staffId || null
+      updates.received_at_dest_at = new Date().toISOString()
+    }
+    if (body.status === 'collected') {
+      updates.collected_by = auth.staffId || null
+      updates.collected_at = new Date().toISOString()
+      updates.released_by = auth.staffId || null
+    }
   }
+  if (body.current_branch_id !== undefined) updates.current_branch_id = body.current_branch_id || null
   if (body.assigned_truck_id !== undefined) updates.assigned_truck_id = body.assigned_truck_id || null
   if (body.assigned_driver_id !== undefined) updates.assigned_driver_id = body.assigned_driver_id || null
   if (body.route_id !== undefined) updates.route_id = body.route_id || null
@@ -169,6 +214,13 @@ export async function PATCH(req: NextRequest) {
   if (body.payment_status !== undefined && ['unpaid', 'paid', 'partial'].includes(body.payment_status)) {
     updates.payment_status = body.payment_status
   }
+  if (body.payment_method !== undefined && VALID_PAYMENT.includes(body.payment_method)) {
+    updates.payment_method = body.payment_method
+  }
+  if (body.receiver_id_number !== undefined) updates.receiver_id_number = body.receiver_id_number || null
+  if (body.collected_by_name !== undefined) updates.collected_by_name = body.collected_by_name || null
+  if (body.collection_photo_url !== undefined) updates.collection_photo_url = body.collection_photo_url || null
+  if (body.collection_photo_path !== undefined) updates.collection_photo_path = body.collection_photo_path || null
   if (body.delivery_notes !== undefined) updates.delivery_notes = body.delivery_notes || null
 
   if (Object.keys(updates).length === 0) return json({ error: 'No valid fields to update' }, 400)

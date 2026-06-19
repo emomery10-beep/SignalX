@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { withUtm } from "@/lib/utm";
 import type { TransparencyArticle, TransparencySection } from "@/lib/transparency-content";
 
 function renderBody(body: string): React.ReactNode {
@@ -49,7 +50,7 @@ export default function TransparencyArticleClient({ article, section, sectionArt
   const [copied, setCopied] = useState(false);
 
   const copyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
+    navigator.clipboard.writeText(withUtm(window.location.href, "share", "referral", "transparency_share"));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
