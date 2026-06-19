@@ -37,10 +37,14 @@ interface InventoryItem {
   id: string; name: string; stock_qty: number
   low_stock_threshold: number; sale_price: number; category: string | null
 }
+interface TransactionItem {
+  name: string; qty: number; unit_price: number; inventory_id: string | null
+}
 interface Transaction {
   id: string; total: number; payment_type: string
   status: string; created_at: string
-  cashier?: { name: string } | null
+  cashier?: { name: string; role?: string } | null
+  pos_items?: TransactionItem[] | null
 }
 
 // ── Helpers ────────────────────────────────────────────────
@@ -354,33 +358,52 @@ function SupervisorDashboard({ session, notify }: { session: StaffSession; notif
 
 // ── Retail Manager dashboard ───────────────────────────────
 function RetailManagerDashboard({ session }: { session: StaffSession }) {
-  const [txns, setTxns]           = useState<Transaction[]>([])
-  const [inventory, setInventory] = useState<InventoryItem[]>([])
-  const [loading, setLoading]     = useState(true)
+  const [txns, setTxns]               = useState<Transaction[]>([])
+  const [yesterdayRev, setYesterdayRev] = useState<number | null>(null)
+  const [inventory, setInventory]     = useState<InventoryItem[]>([])
+  const [loading, setLoading]         = useState(true)
   const router = useRouter()
 
   const h = { 'Content-Type': 'application/json', 'x-staff-id': session.id, 'x-owner-id': session.owner_id }
 
   const load = useCallback(async () => {
     setLoading(true)
-    const today = new Date().toISOString().slice(0, 10)
-    const [txR, invR] = await Promise.all([
-      fetch(`${API}/api/pos/transactions?start=${today}&limit=200`, { headers: h }),
-      fetch(`${API}/api/pos/inventory?limit=100`, { headers: h }),
+    // Use correct `from`/`to` params — the API ignores unknown params
+    const todayMid = new Date(); todayMid.setHours(0, 0, 0, 0)
+    const ydMid    = new Date(todayMid.getTime() - 86400000)
+    const fromToday = todayMid.toISOString()
+    const fromYd    = ydMid.toISOString()
+    const toNow     = new Date().toISOString()
+
+    const [txR, ydR, invR] = await Promise.all([
+      fetch(`${API}/api/pos/transactions?from=${fromToday}&to=${toNow}`,          { headers: h }),
+      fetch(`${API}/api/pos/transactions?from=${fromYd}&to=${fromToday}`,         { headers: h }),
+      fetch(`${API}/api/pos/inventory?limit=500`,                                  { headers: h }),
     ])
-    const [txD, invD] = await Promise.all([txR.json(), invR.json()])
+    const [txD, ydD, invD] = await Promise.all([txR.json(), ydR.json(), invR.json()])
     setTxns(txD.transactions || [])
+    const ydCompleted = (ydD.transactions || []).filter((t: Transaction) => t.status === 'completed')
+    setYesterdayRev(ydCompleted.reduce((s: number, t: Transaction) => s + t.total, 0))
     setInventory(invD.inventory || [])
     setLoading(false)
   }, [session.id, session.owner_id])
 
   useEffect(() => { load() }, [load])
 
-  const completed  = txns.filter(t => t.status === 'completed')
-  const revenue    = completed.reduce((s, t) => s + t.total, 0)
-  const saleCount  = completed.length
-  const avgTicket  = saleCount > 0 ? revenue / saleCount : 0
+  const sym       = session.currency_symbol || 'KSh'
+  const completed = txns.filter(t => t.status === 'completed')
+  const refunded  = txns.filter(t => t.status === 'refunded')
+  const revenue   = completed.reduce((s, t) => s + t.total, 0)
+  const saleCount = completed.length
+  const avgTicket = saleCount > 0 ? revenue / saleCount : 0
+  const refundAmt = refunded.reduce((s, t) => s + t.total, 0)
 
+  // Revenue delta vs yesterday
+  const revDelta = yesterdayRev != null && yesterdayRev > 0
+    ? ((revenue - yesterdayRev) / yesterdayRev * 100)
+    : null
+
+  // Low stock
   const lowStock   = inventory.filter(i => i.low_stock_threshold > 0 && i.stock_qty <= i.low_stock_threshold)
   const outOfStock = lowStock.filter(i => i.stock_qty <= 0)
 
@@ -394,34 +417,160 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
   })
   const staffLeader = Object.values(staffMap).sort((a, b) => b.revenue - a.revenue)
 
-  const sym = session.currency_symbol || 'KSh'
+  // Top sellers from line items
+  const productMap: Record<string, { name: string; qty: number; revenue: number }> = {}
+  completed.forEach(t => {
+    (t.pos_items || []).forEach(item => {
+      if (!productMap[item.name]) productMap[item.name] = { name: item.name, qty: 0, revenue: 0 }
+      productMap[item.name].qty     += item.qty
+      productMap[item.name].revenue += item.qty * item.unit_price
+    })
+  })
+  const topSellers = Object.values(productMap).sort((a, b) => b.revenue - a.revenue).slice(0, 5)
+
+  // Hourly sales (6am–10pm)
+  const hourBuckets = Array.from({ length: 17 }, (_, i) => {
+    const hr = i + 6
+    const hrs = completed.filter(t => new Date(t.created_at).getHours() === hr)
+    return { hr, rev: hrs.reduce((s, t) => s + t.total, 0), count: hrs.length }
+  })
+  const maxHourRev = Math.max(...hourBuckets.map(b => b.rev), 1)
+
+  // Payment type split
+  const payTypes: Record<string, number> = {}
+  completed.forEach(t => {
+    const p = t.payment_type || 'other'
+    payTypes[p] = (payTypes[p] || 0) + t.total
+  })
+  const payEntries = Object.entries(payTypes).sort((a, b) => b[1] - a[1])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* KPI strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 10 }}>
-        <StatTile label="Today's Revenue" value={fmt(sym, revenue)} color={GREEN} />
-        <StatTile label="Sales Today"     value={saleCount} />
-        <StatTile label="Avg Ticket"      value={fmt(sym, avgTicket)} color={BLUE} />
-        <StatTile label="Low Stock"       value={lowStock.length} color={lowStock.length > 0 ? RED : GREEN}
-          sub={outOfStock.length > 0 ? `${outOfStock.length} out of stock` : undefined} />
+
+      {/* Camera-first quick actions */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
+        {[
+          { emoji: '📷', label: 'New Sale',    sub: 'scan to sell',    route: '/sell' },
+          { emoji: '📦', label: 'Restock',     sub: 'scan to restock', route: '/inventory' },
+          { emoji: '🔢', label: 'Stock Count', sub: 'scan & count',    route: '/retail/stocktake' },
+        ].map(a => (
+          <button key={a.route} onClick={() => router.push(a.route)}
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '14px 8px', borderRadius: 14, border: `1px solid ${ACC_BORDER}`, background: ACC_LIGHT, cursor: 'pointer', minHeight: 80 }}>
+            <span style={{ fontSize: 26 }}>{a.emoji}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: ACC }}>{a.label}</span>
+            <span style={{ fontSize: 10, color: 'var(--pos-muted)' }}>{a.sub}</span>
+          </button>
+        ))}
       </div>
 
-      {/* Low stock alerts — camera-first restock CTA */}
-      {lowStock.length > 0 && (
-        <Card style={{ borderColor: RED + '40' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, color: RED }}>
-              ⚠ {lowStock.length} item{lowStock.length !== 1 ? 's' : ''} need restocking
+      {/* KPI strip */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10 }}>
+        <Card style={{ gridColumn: 'span 2' }}>
+          <div style={{ fontSize: 12, color: 'var(--pos-muted)', fontWeight: 500, marginBottom: 4 }}>Today's Revenue</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
+            <div style={{ fontSize: 32, fontWeight: 800, color: GREEN, lineHeight: 1 }}>{fmt(sym, revenue)}</div>
+            {revDelta != null && (
+              <div style={{ fontSize: 13, fontWeight: 700, color: revDelta >= 0 ? GREEN : RED, marginBottom: 3 }}>
+                {revDelta >= 0 ? '↑' : '↓'} {Math.abs(revDelta).toFixed(0)}% vs yesterday
+              </div>
+            )}
+            {loading && <div style={{ fontSize: 12, color: 'var(--pos-muted)', marginBottom: 3 }}>Loading…</div>}
+          </div>
+          {refunded.length > 0 && (
+            <div style={{ fontSize: 11, color: RED, marginTop: 4 }}>
+              {refunded.length} refund{refunded.length !== 1 ? 's' : ''} — {fmt(sym, refundAmt)}
             </div>
-            <button
-              onClick={() => router.push('/inventory')}
+          )}
+        </Card>
+        <StatTile label="Sales Today"  value={saleCount}           sub={`avg ${fmt(sym, avgTicket)}`} />
+        <StatTile label="Low Stock"    value={lowStock.length}
+          color={outOfStock.length > 0 ? RED : lowStock.length > 0 ? AMBER : GREEN}
+          sub={outOfStock.length > 0 ? `${outOfStock.length} out of stock` : lowStock.length > 0 ? 'needs restocking' : 'all good'} />
+      </div>
+
+      {/* Hourly sales bar chart */}
+      {completed.length > 0 && (
+        <Card>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Sales by Hour</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 60 }}>
+            {hourBuckets.map(b => (
+              <div key={b.hr} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                <div title={`${b.count} sale${b.count !== 1 ? 's' : ''} · ${fmt(sym, b.rev)}`}
+                  style={{ width: '100%', height: `${Math.max((b.rev / maxHourRev) * 48, b.rev > 0 ? 6 : 0)}px`, borderRadius: 3, background: b.rev > 0 ? ACC : 'var(--pos-border)', transition: 'height .3s' }} />
+                <div style={{ fontSize: 9, color: 'var(--pos-muted)', lineHeight: 1 }}>
+                  {b.hr > 12 ? `${b.hr - 12}p` : b.hr === 12 ? '12p' : `${b.hr}a`}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Top sellers */}
+      {topSellers.length > 0 && (
+        <Card>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Top Sellers Today</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {topSellers.map((p, i) => {
+              const pct = Math.round((p.revenue / revenue) * 100)
+              return (
+                <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 22, height: 22, borderRadius: '50%', background: i === 0 ? ACC : 'var(--pos-border)', color: i === 0 ? '#fff' : 'var(--pos-muted)', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    {i + 1}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                    <div style={{ height: 4, borderRadius: 2, background: 'var(--pos-border)', marginTop: 4, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: i === 0 ? ACC : 'var(--pos-muted)', borderRadius: 2 }} />
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)' }}>{fmt(sym, p.revenue)}</div>
+                    <div style={{ fontSize: 11, color: 'var(--pos-muted)' }}>{p.qty} sold</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      )}
+
+      {/* Payment type split */}
+      {payEntries.length > 1 && (
+        <Card>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Payment Methods</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {payEntries.map(([type, amt]) => {
+              const pct = Math.round((amt / revenue) * 100)
+              return (
+                <div key={type} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 70, fontSize: 12, fontWeight: 700, color: 'var(--pos-muted)', textTransform: 'uppercase', flexShrink: 0 }}>{type}</div>
+                  <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'var(--pos-border)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, background: ACC, borderRadius: 3 }} />
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)', flexShrink: 0, minWidth: 80, textAlign: 'right' }}>{fmt(sym, amt)}</div>
+                  <div style={{ fontSize: 11, color: 'var(--pos-muted)', flexShrink: 0, width: 32, textAlign: 'right' }}>{pct}%</div>
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      )}
+
+      {/* Low stock alerts */}
+      {lowStock.length > 0 && (
+        <Card style={{ borderColor: outOfStock.length > 0 ? RED + '40' : AMBER + '40' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <div style={{ fontWeight: 700, fontSize: 15, color: outOfStock.length > 0 ? RED : AMBER }}>
+              {outOfStock.length > 0 ? `🚨 ${outOfStock.length} out of stock` : `⚠ ${lowStock.length} running low`}
+            </div>
+            <button onClick={() => router.push('/inventory')}
               style={{ padding: '5px 12px', borderRadius: 8, border: `1px solid ${ACC}`, background: ACC_LIGHT, color: ACC, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
               View all →
             </button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {lowStock.slice(0, 6).map(item => (
+            {lowStock.slice(0, 5).map(item => (
               <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: item.stock_qty <= 0 ? RED_BG : AMBER_BG, border: `1px solid ${item.stock_qty <= 0 ? RED : AMBER}30` }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--pos-ink)' }}>{item.name}</div>
@@ -429,15 +578,14 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
                     {item.stock_qty <= 0 ? 'Out of stock' : `${item.stock_qty} left (min ${item.low_stock_threshold})`}
                   </div>
                 </div>
-                <button
-                  onClick={() => router.push('/inventory')}
+                <button onClick={() => router.push('/inventory')}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, border: 'none', background: ACC, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                   📷 Restock
                 </button>
               </div>
             ))}
-            {lowStock.length > 6 && (
-              <div style={{ fontSize: 12, color: 'var(--pos-muted)', textAlign: 'center' }}>+{lowStock.length - 6} more — tap View all</div>
+            {lowStock.length > 5 && (
+              <div style={{ fontSize: 12, color: 'var(--pos-muted)', textAlign: 'center' }}>+{lowStock.length - 5} more — tap View all</div>
             )}
           </div>
         </Card>
@@ -467,14 +615,14 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
         </Card>
       )}
 
-      {/* Recent transactions */}
+      {/* Recent sales */}
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <span style={{ fontWeight: 700, fontSize: 15 }}>Recent Sales</span>
-          {loading && <span style={{ fontSize: 12, color: 'var(--pos-muted)' }}>Loading…</span>}
+          <button onClick={load} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>↻</button>
         </div>
         {txns.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--pos-muted)', fontSize: 14 }}>No sales yet today — tap 📷 to start selling</div>
+          <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--pos-muted)', fontSize: 14 }}>No sales yet today — tap 📷 New Sale to start</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {txns.slice(0, 8).map((t, idx) => (
@@ -484,6 +632,11 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
                     <span style={{ fontSize: 13, fontWeight: 600 }}>{t.payment_type?.toUpperCase()}</span>
                     {t.cashier?.name && <span style={{ fontSize: 11, color: 'var(--pos-muted)' }}>· {t.cashier.name}</span>}
                   </div>
+                  {(t.pos_items?.length ?? 0) > 0 && (
+                    <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginTop: 1 }}>
+                      {t.pos_items!.slice(0, 2).map(i => i.name).join(', ')}{(t.pos_items!.length > 2) ? ` +${t.pos_items!.length - 2}` : ''}
+                    </div>
+                  )}
                   <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginTop: 1 }}>{timeAgo(t.created_at)}</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
