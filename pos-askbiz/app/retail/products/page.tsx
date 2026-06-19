@@ -50,9 +50,25 @@ function RetailProducts() {
   const fileRef = useRef<HTMLInputElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
 
+  const [staffHeaders, setStaffHeaders] = useState<Record<string, string>>({})
+
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem('pos_staff')
+      if (raw) {
+        const s = JSON.parse(raw)
+        if (s?.id && s?.owner_id) {
+          const h = { 'x-staff-id': s.id, 'x-owner-id': s.owner_id }
+          setStaffHeaders(h)
+          if (s.currency_symbol) setSym(s.currency_symbol)
+          setReady(true)
+          if (params.get('low') === '1') setLowOnly(true)
+          return
+        }
+      }
+    } catch {}
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
+      if (!user) { router.push('/'); return }
       setReady(true)
       fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
         if (c.currency_symbol) setSym(c.currency_symbol)
@@ -67,7 +83,7 @@ function RetailProducts() {
   async function load() {
     setLoading(true)
     try {
-      const res = await fetch(`${API}/api/pos/inventory`)
+      const res = await fetch(`${API}/api/pos/inventory`, { headers: staffHeaders })
       const data = res.ok ? await res.json() : {}
       const inv: InvItem[] = data.items || data.inventory || (Array.isArray(data) ? data : [])
       setItems(inv)
@@ -134,7 +150,7 @@ function RetailProducts() {
     const base64 = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl
     try {
       const res = await fetch(`${API}/api/pos/scan-product-full`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...staffHeaders },
         body: JSON.stringify({ image: base64 }),
       })
       if (!res.ok) throw new Error(`scan failed ${res.status}`)
@@ -163,7 +179,7 @@ function RetailProducts() {
     setStage('saving')
     try {
       const res = await fetch(`${API}/api/pos/inventory`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...staffHeaders },
         body: JSON.stringify({
           name: draft.name.trim(),
           category: draft.category.trim() || null,
@@ -195,7 +211,7 @@ function RetailProducts() {
   async function saveEdit(i: InvItem) {
     try {
       await fetch(`${API}/api/pos/inventory`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...staffHeaders },
         body: JSON.stringify({ id: i.id, sale_price: parseFloat(editPrice) || 0, stock_qty: parseInt(editStock) || 0 }),
       })
     } catch (e) { console.error('edit save error', e) }

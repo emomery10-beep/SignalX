@@ -41,9 +41,24 @@ export default function RetailCustomers() {
   const [deleting, setDeleting] = useState(false)
   const [gdprMsg, setGdprMsg] = useState<{ text: string; error?: boolean } | null>(null)
 
+  const [staffHeaders, setStaffHeaders] = useState<Record<string, string>>({})
+
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem('pos_staff')
+      if (raw) {
+        const s = JSON.parse(raw)
+        if (s?.id && s?.owner_id) {
+          const h = { 'x-staff-id': s.id, 'x-owner-id': s.owner_id }
+          setStaffHeaders(h)
+          if (s.currency_symbol) setSym(s.currency_symbol)
+          setReady(true)
+          return
+        }
+      }
+    } catch {}
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
+      if (!user) { router.push('/'); return }
       setReady(true)
       fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
         if (c.currency_symbol) setSym(c.currency_symbol)
@@ -56,7 +71,7 @@ export default function RetailCustomers() {
   async function load() {
     setLoading(true)
     try {
-      const res = await fetch(`${API}/api/pos/transactions?limit=500`)
+      const res = await fetch(`${API}/api/pos/transactions?limit=500`, { headers: staffHeaders })
       const data = res.ok ? await res.json() : {}
       const txns: Txn[] = data.transactions || (Array.isArray(data) ? data : [])
       const map: Record<string, Customer> = {}
@@ -105,7 +120,7 @@ export default function RetailCustomers() {
       else throw new Error('No customer id or phone to export')
       const res = await fetch(`${API}/api/pos/gdpr/customer-data-export`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...staffHeaders },
         body: JSON.stringify(body),
       })
       if (!res.ok) {
@@ -139,7 +154,7 @@ export default function RetailCustomers() {
       else throw new Error('No customer id or phone to anonymize')
       const res = await fetch(`${API}/api/pos/gdpr/delete-customer`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...staffHeaders },
         body: JSON.stringify(body),
       })
       if (!res.ok) {
