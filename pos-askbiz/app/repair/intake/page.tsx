@@ -75,6 +75,8 @@ export default function RepairIntake() {
   const [deviceType, setDeviceType] = useState('Phone')
   const [estCost, setEstCost] = useState('')
   const [priority, setPriority] = useState('normal')
+  const [assignedTo, setAssignedTo] = useState('')
+  const [engineers, setEngineers] = useState<{ id: string; name: string; role: string }[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
 
@@ -88,6 +90,15 @@ export default function RepairIntake() {
       if (c.currency_symbol) setSym(c.currency_symbol)
       if (c.staff_sector && c.staff_sector !== 'repair') router.push('/pos')
     }).catch(() => {})
+    // Load engineers for assignment dropdown
+    fetch('/api/pos/staff/list', { headers: { ...session.headers } })
+      .then(r => r.json()).then(d => {
+        const all: { id: string; name: string; role: string }[] = d.staff || []
+        setEngineers(all.filter(s =>
+          s.role === 'engineer' || s.role === 'repair' ||
+          s.role.includes('engineer') || s.role.includes('technician')
+        ))
+      }).catch(() => {})
     return () => stopCamera()
   }, [authReady, session])
 
@@ -232,6 +243,7 @@ export default function RepairIntake() {
           fault_description: buildFaultDescription(),
           quoted_price: estCost ? Number(estCost) : null,
           intake_photo_url: photos[0]?.dataUrl || null,
+          assigned_to: assignedTo || null,
         }),
       })
       const data = await res.json()
@@ -265,7 +277,7 @@ export default function RepairIntake() {
     setStage('device_scan')
     setDevice({ model: '', serial: '' }); setScanConfidence(null); setWarrantyInfo(null); setScanError('')
     setPhotos([]); setConditionNotes(''); setChecklist(CHECKLIST_DEFAULT)
-    setCustomerName(''); setCustomerPhone(''); setIssue(''); setDeviceType('Phone'); setEstCost(''); setPriority('normal')
+    setCustomerName(''); setCustomerPhone(''); setIssue(''); setDeviceType('Phone'); setEstCost(''); setPriority('normal'); setAssignedTo('')
     setSubmitError(''); setTicketNumber(''); setCreatedJobId('')
   }
 
@@ -513,6 +525,15 @@ export default function RepairIntake() {
                   <label style={labelStyle}>Estimated cost ({sym})</label>
                   <input style={inputStyle} inputMode="decimal" value={estCost} onChange={e => setEstCost(e.target.value)} placeholder="0.00" />
                 </div>
+                {engineers.length > 0 && (
+                  <div>
+                    <label style={labelStyle}>Assign to engineer (optional)</label>
+                    <select style={inputStyle} value={assignedTo} onChange={e => setAssignedTo(e.target.value)}>
+                      <option value="">— Unassigned —</option>
+                      {engineers.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     customer_phone, customer_name, device_model, device_serial,
     device_description, fault_description, intake_photo_url,
     preset_id, quoted_price, location_id, intake_lat, intake_lng,
-    estimated_minutes, warranty_job_id,
+    estimated_minutes, warranty_job_id, assigned_to,
   } = body
 
   if (!fault_description?.trim()) {
@@ -145,6 +145,7 @@ export async function POST(req: NextRequest) {
       original_quoted_price: originalQuotedPrice,
       quoted_price: originalQuotedPrice,
       checked_in_by: auth.staffId || null,
+      assigned_to: assigned_to || null,
       location_id: jobLocationId,
       intake_lat: intake_lat || null,
       intake_lng: intake_lng || null,
