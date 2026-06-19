@@ -234,6 +234,9 @@ function RetailProducts() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => { setShowAdd(true); setDraft(emptyDraft); setScanMsg(''); setStage('review') }} style={{ background: '#334155', border: 'none', color: '#f1f5f9', padding: '10px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
+            ✏️ Add Manually
+          </button>
           <button className="pos-btn-primary" onClick={() => { setShowAdd(true); setStage('idle') }} style={{ background: ACC, border: 'none', color: '#fff', padding: '10px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
             📷 Add by Photo
           </button>
