@@ -36,9 +36,26 @@ export default function RetailStocktake() {
   const fileRef = useRef<HTMLInputElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
 
+  const [staffHeaders, setStaffHeaders] = useState<Record<string, string>>({})
+
   useEffect(() => {
+    // Support both staff PIN-auth (localStorage) and owner Supabase auth
+    try {
+      const raw = localStorage.getItem('pos_staff')
+      if (raw) {
+        const s = JSON.parse(raw)
+        if (s?.id && s?.owner_id) {
+          const h = { 'x-staff-id': s.id, 'x-owner-id': s.owner_id }
+          setStaffHeaders(h)
+          if (s.currency_symbol) setSym(s.currency_symbol)
+          setReady(true)
+          return
+        }
+      }
+    } catch {}
+    // Fall back to Supabase owner session
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push('/pos'); return }
+      if (!user) { router.push('/'); return }
       setReady(true)
       fetch(`${API}/api/pos/config`).then(r => r.json()).then(c => {
         if (c.currency_symbol) setSym(c.currency_symbol)
@@ -52,7 +69,7 @@ export default function RetailStocktake() {
   async function load() {
     setLoading(true)
     try {
-      const res = await fetch(`${API}/api/pos/inventory`)
+      const res = await fetch(`${API}/api/pos/inventory`, { headers: staffHeaders })
       const data = res.ok ? await res.json() : {}
       const inv: InvItem[] = data.items || data.inventory || (Array.isArray(data) ? data : [])
       setItems(inv)
@@ -122,7 +139,7 @@ export default function RetailStocktake() {
     const base64 = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl
     try {
       const res = await fetch(`${API}/api/pos/recognize-inventory`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...staffHeaders },
         body: JSON.stringify({ image: base64 }),
       })
       if (!res.ok) throw new Error(`recognize failed ${res.status}`)
@@ -157,7 +174,7 @@ export default function RetailStocktake() {
       // Dedicated stocktake endpoint: sets counted quantities, computes variance,
       // and writes a pos_stock_adjustments trail.
       const res = await fetch(`${API}/api/pos/stocktake`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...staffHeaders },
         body: JSON.stringify({ counts }),
       })
       const data = await res.json().catch(() => null)
