@@ -2,8 +2,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { useLang } from '@/components/LanguageProvider'
 import type { Lang } from '@/lib/i18n'
+import { ACTIVE_LOCALES } from '@/lib/i18n-locale'
 
-const LANGS: Lang[] = ['en', 'fr', 'de', 'es', 'ar', 'sw', 'pt', 'nl', 'it', 'pl']
+// The launch set only — en, es, fr, de, nl, ar. Single source of truth in
+// lib/i18n-locale, so adding a language updates the switcher automatically.
+const LANGS: Lang[] = ACTIVE_LOCALES as Lang[]
 
 export default function LanguageToggle() {
   const { lang, setLang, langNames, langFlags } = useLang()
