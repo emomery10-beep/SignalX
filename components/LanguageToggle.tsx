@@ -1,8 +1,9 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { useLang } from '@/components/LanguageProvider'
 import type { Lang } from '@/lib/i18n'
-import { ACTIVE_LOCALES } from '@/lib/i18n-locale'
+import { ACTIVE_LOCALES, localePath, type Locale } from '@/lib/i18n-locale'
 
 // The launch set only — en, es, fr, de, nl, ar. Single source of truth in
 // lib/i18n-locale, so adding a language updates the switcher automatically.
@@ -10,8 +11,18 @@ const LANGS: Lang[] = ACTIVE_LOCALES as Lang[]
 
 export default function LanguageToggle() {
   const { lang, setLang, langNames, langFlags } = useLang()
+  const pathname = usePathname()
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+
+  // Switching language updates provider state/cookie/profile AND navigates to the
+  // locale-prefixed URL, so the server re-renders the page in the new language.
+  const choose = (l: Lang) => {
+    setLang(l)
+    setOpen(false)
+    router.push(localePath(pathname || '/', l as Locale))
+  }
 
   // Close on outside click
   useEffect(() => {
@@ -61,7 +72,7 @@ export default function LanguageToggle() {
           {LANGS.map(l => (
             <button
               key={l}
-              onClick={() => { setLang(l); setOpen(false) }}
+              onClick={() => choose(l)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 padding: '7px 10px', borderRadius: 8, border: 'none',
