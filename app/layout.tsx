@@ -6,7 +6,7 @@ import { LanguageProvider } from '@/components/LanguageProvider'
 import CookieConsent from '@/components/CookieConsent'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import type { Lang } from '@/lib/i18n'
-import { resolveLocale } from '@/lib/i18n-locale'
+import { resolveLocale, isRTL } from '@/lib/i18n-locale'
 import { ThemeProvider } from 'next-themes'
 
 const sora = Sora({
@@ -64,15 +64,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = cookies()
-  // Resolve locale without a DB hit: cookie (returning visitor) → geo (first
-  // visit) → default. Profile-based sync happens at login, not on every page.
+  const hdrs = headers()
+  // x-locale is set by middleware from the URL prefix (the authoritative content
+  // locale). Cookie/geo are fallbacks only when there's no prefix (English).
   const lang = resolveLocale({
+    urlLocale: hdrs.get('x-locale'),
     cookie: cookieStore.get('askbiz_lang')?.value,
-    country: headers().get('x-vercel-ip-country'),
+    country: hdrs.get('x-vercel-ip-country'),
   }) as Lang
 
   return (
-    <html lang={lang} suppressHydrationWarning>
+    <html lang={lang} dir={isRTL(lang) ? 'rtl' : 'ltr'} suppressHydrationWarning>
       <body className={`${sora.variable} ${dm.variable} ${mono.variable} ${instrumentSerif.variable} ${plusJakarta.variable}`}>
         <GoogleAnalytics measurementId="G-ELBCMBBMEC" />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>

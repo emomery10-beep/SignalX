@@ -1,9 +1,28 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { COUNTRY_TO_LANG } from '@/lib/i18n'
+import { ACTIVE_LOCALES, DEFAULT_LOCALE } from '@/lib/i18n-locale'
+
+// Non-default locales carry a URL prefix (/es, /fr, …); English stays unprefixed
+// so existing indexed URLs and inbound links are untouched.
+const PREFIXED_LOCALES = ACTIVE_LOCALES.filter(l => l !== DEFAULT_LOCALE)
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request: { headers: request.headers } })
+  // ── Locale prefix → content locale (URL is the source of truth) ─────────────
+  // /es/blog/x is rewritten to /blog/x internally with x-locale=es injected, so
+  // the flat route tree renders translated content without being physically moved.
+  const segments = request.nextUrl.pathname.split('/')
+  const maybePrefix = segments[1]
+  const hasLocalePrefix = (PREFIXED_LOCALES as string[]).includes(maybePrefix)
+  const locale = hasLocalePrefix ? maybePrefix : DEFAULT_LOCALE
+  const logicalPath = hasLocalePrefix ? '/' + segments.slice(2).join('/') : request.nextUrl.pathname
+
+  // Headers server components (and the root layout) read to render the right locale.
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-locale', locale)
+  requestHeaders.set('x-pathname', logicalPath)
+
+  let response = NextResponse.next({ request: { headers: requestHeaders } })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -63,16 +82,31 @@ export async function middleware(request: NextRequest) {
     return res
   }
 
-  const isProtected = protectedRoutes.some(r => request.nextUrl.pathname.startsWith(r))
+  // Route guards run against the logical (locale-stripped) path; redirects keep
+  // the locale prefix so the user stays in their language.
+  const localePrefix = hasLocalePrefix ? `/${locale}` : ''
+
+  const isProtected = protectedRoutes.some(r => logicalPath.startsWith(r))
   if (isProtected && !user) {
-    return applySecurityHeaders(NextResponse.redirect(new URL('/signin', request.url)))
+    return applySecurityHeaders(NextResponse.redirect(new URL(`${localePrefix}/signin`, request.url)))
   }
 
   // ── Redirect signed-in users away from auth pages ─────────────────────────
   const authRoutes = ['/signin', '/signup']
-  const isAuthRoute = authRoutes.some(r => request.nextUrl.pathname.startsWith(r))
+  const isAuthRoute = authRoutes.some(r => logicalPath.startsWith(r))
   if (isAuthRoute && user) {
-    return applySecurityHeaders(NextResponse.redirect(new URL('/home', request.url)))
+    return applySecurityHeaders(NextResponse.redirect(new URL(`${localePrefix}/home`, request.url)))
+  }
+
+  // ── Rewrite locale-prefixed URLs onto the flat route tree ──────────────────
+  // /es/blog/x stays in the address bar but renders the /blog/x route with
+  // x-locale=es. English (unprefixed) falls through untouched.
+  if (hasLocalePrefix) {
+    const rewriteUrl = request.nextUrl.clone()
+    rewriteUrl.pathname = logicalPath
+    const rewritten = NextResponse.rewrite(rewriteUrl, { request: { headers: requestHeaders } })
+    response.cookies.getAll().forEach(c => rewritten.cookies.set(c))
+    return applySecurityHeaders(rewritten)
   }
 
   // ── Security headers (belt-and-suspenders with next.config.js) ──────────────
