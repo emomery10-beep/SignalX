@@ -8,6 +8,8 @@ import { detectChurnIntent, buildChurnAIResult } from '@/lib/ai/churn'
 import { detectCostIntent, buildCostContext, fetchCostProfile } from '@/lib/ai/cost-context'
 import { detectExportIntent, buildExportMarketsResult } from '@/lib/ai/export-markets'
 import { detectSocialIntent, buildSocialResult } from '@/lib/ai/social-intelligence'
+import { COUNTRY_CURRENCY, CURRENCIES } from '@/lib/geo'
+import { resolveLocale } from '@/lib/i18n-locale'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -33,11 +35,25 @@ export async function POST(request: NextRequest) {
     .eq('id', user.id)
     .single()
 
-  const finalCurrency = currency || profile?.currency || 'USD'
-  const finalSymbol   = symbol   || profile?.currency_symbol || '$'
+  // Derive currency from Vercel IP-country header — always accurate, overrides stale profile/client values
+  const ipCountry = request.headers.get('x-vercel-ip-country') || ''
+  const geoCurrency = ipCountry ? COUNTRY_CURRENCY[ipCountry] : null
+  const geoSymbol   = geoCurrency ? (CURRENCIES[geoCurrency]?.sym ?? null) : null
+
+  const finalCurrency = geoCurrency || profile?.currency || currency || 'USD'
+  const finalSymbol   = geoSymbol   || profile?.currency_symbol || symbol || '$'
   const finalBizType  = bizType  || profile?.business_type || 'retail'
   const finalRegion   = region   || profile?.region || ''
   const finalSector   = sectorHints || profile?.sector_hints || ''
+
+  // Resolve the response language: explicit client choice → saved cookie → geo.
+  // The AI answers in this language. (Profile column is read elsewhere once the
+  // preferred_locale migration is applied; cookie already reflects the choice.)
+  const finalLocale = resolveLocale({
+    urlLocale: (body.locale as string) || null,
+    cookie: request.cookies.get('askbiz_lang')?.value,
+    country: ipCountry,
+  })
 
   // Check usage limits
   const period = new Date().toISOString().slice(0, 7)
@@ -427,11 +443,10 @@ export async function POST(request: NextRequest) {
   }
   // ── END COST INTELLIGENCE CONTEXT ────────────────────────────
 
-  // ── POS INTELLIGENCE CONTEXT ─────────────────────────────
+  // ── BUSINESS DATA CONTEXT (always runs — every question gets business data) ──
   let posContext = ''
-  const posKeywords = /\b(sales?|till|cashier|pos|shop|store|sold|selling|stock|inventory|refund|receipt|customer|basket|revenue|profit|margin|transaction|busiest|best.?sell|top.?product|anomal|unusual|suspicious|alert|forecast|predict|health|brief|summary|daily.?report|who.?bought|top.?spend|loyal|repeat|shift|float|cash.?up|variance|reconcil|decision|m.?pesa|mpesa|mobile.?money|connect|integrat|sync|shopify|xero|source|data.?source)/i
-  if (posKeywords.test(questionText)) {
-    const service = createServiceClient()
+  const service = createServiceClient()
+  {
     const q = questionText.toLowerCase()
     const now = new Date()
     let from: Date
@@ -458,8 +473,15 @@ export async function POST(request: NextRequest) {
     } else if (/this\s*month/i.test(q)) {
       from = new Date(now.getFullYear(), now.getMonth(), 1)
       periodLabel = 'This month'
-    } else {
+    } else if (/busiest|which.?day|day.?of.?week/i.test(q)) {
+      from = new Date(now); from.setDate(from.getDate() - 90); from.setHours(0,0,0,0)
+      periodLabel = 'Last 90 days'
+    } else if (/today|right now|so far today/i.test(q)) {
       from = new Date(now); from.setHours(0,0,0,0)
+      periodLabel = "Today's"
+    } else {
+      from = new Date(now); from.setDate(from.getDate() - 30); from.setHours(0,0,0,0)
+      periodLabel = 'Last 30 days'
     }
 
     const [txRes, invRes, staffRes, custRes, anomalyRes, alertRes, forecastRes, healthRes, shiftRes, decisionRes, sourcesRes, mpesaRes, briefRes, locRes] = await Promise.all([
@@ -548,7 +570,35 @@ export async function POST(request: NextRequest) {
     }
     const busiestHour = Object.entries(hourCounts).sort((a, b) => Number(b[1]) - Number(a[1]))[0]
 
+    // POS day-of-week breakdown
+    const DOW_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+    const posDayRevenue: Record<string, { revenue: number; txns: number }> = {}
+    for (const t of completed) {
+      const day = DOW_NAMES[new Date(t.created_at).getDay()]
+      if (!posDayRevenue[day]) posDayRevenue[day] = { revenue: 0, txns: 0 }
+      posDayRevenue[day].revenue += t.total
+      posDayRevenue[day].txns++
+    }
+
     const lowStock = (inv as any[]).filter(i => i.stock_qty <= (i.low_stock_threshold || 5))
+
+    // ── Unified data (Stripe, eBay, Shopify etc.) ───────────────────────────
+    // Always query — no source-existence gate, fixed 365-day window so
+    // historical patterns (busiest day, trends) have enough data.
+    // Exclude channel='pos' to avoid double-counting (POS auto-syncs there).
+    const udFrom = new Date(now); udFrom.setDate(udFrom.getDate() - 365)
+    const { data: udData, error: udError } = await service
+      .from('unified_data')
+      .select('record_date,gross_revenue,net_revenue,channel,product_name,units_sold,source_type,payment_status')
+      .eq('user_id', user.id)
+      .neq('channel', 'pos')
+      .gte('record_date', udFrom.toISOString().slice(0, 10))
+      .order('record_date', { ascending: false })
+      .limit(1000)
+    const unifiedRows: any[] = (udData || []).filter((r: any) => (r.gross_revenue || 0) > 0)
+    if (udError) console.error('[unified_data] query error:', udError.message)
+    console.log('[unified_data] rows:', unifiedRows.length, 'user:', user.id)
+    // ── End unified data ─────────────────────────────────────────────────────
 
     posContext = `\n\nLIVE POS DATA (${periodLabel}):\n`
     posContext += `${completed.length} completed transactions, ${finalSymbol}${revenue.toFixed(2)} revenue, ${finalSymbol}${profit.toFixed(2)} profit (${marginPct}% margin), ${refunds} refund(s).\n`
@@ -635,6 +685,62 @@ export async function POST(request: NextRequest) {
       if (brief.health_score) posContext += `Health score: ${brief.health_score}/100\n`
     }
 
+    // Connected channel data (Stripe, eBay, Shopify etc.) from unified_data
+    if (unifiedRows.length > 0) {
+      const udDayRevenue: Record<string, { revenue: number; orders: number }> = {}
+      const channelRevenue: Record<string, number> = {}
+      const productSalesUd: Record<string, { units: number; revenue: number }> = {}
+      let udTotal = 0
+      for (const row of unifiedRows) {
+        const day = DOW_NAMES[new Date(row.record_date).getDay()]
+        if (!udDayRevenue[day]) udDayRevenue[day] = { revenue: 0, orders: 0 }
+        udDayRevenue[day].revenue += row.gross_revenue || 0
+        udDayRevenue[day].orders++
+        const ch = row.channel || row.source_type || 'unknown'
+        channelRevenue[ch] = (channelRevenue[ch] || 0) + (row.gross_revenue || 0)
+        udTotal += row.gross_revenue || 0
+        if (row.product_name) {
+          if (!productSalesUd[row.product_name]) productSalesUd[row.product_name] = { units: 0, revenue: 0 }
+          productSalesUd[row.product_name].units += row.units_sold || 0
+          productSalesUd[row.product_name].revenue += row.gross_revenue || 0
+        }
+      }
+      const topUdProducts = Object.entries(productSalesUd).sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 5)
+
+      posContext += `\nCONNECTED CHANNEL REVENUE (${periodLabel}, from ${Object.keys(channelRevenue).join(', ')}):\n`
+      posContext += `Total: ${finalSymbol}${udTotal.toFixed(2)} across ${unifiedRows.length} records.\n`
+      posContext += `By channel: ${Object.entries(channelRevenue).map(([ch, rev]) => `${ch}: ${finalSymbol}${rev.toFixed(2)}`).join(', ')}.\n`
+      if (topUdProducts.length > 0) {
+        posContext += `Top products: ${topUdProducts.map(([name, s]) => `${name} (${s.units} units, ${finalSymbol}${s.revenue.toFixed(2)})`).join(', ')}.\n`
+      }
+
+      // Merge POS + external channels into one combined day-of-week table
+      const allDays = new Set([...Object.keys(posDayRevenue), ...Object.keys(udDayRevenue)])
+      const combinedDays: { day: string; revenue: number; txns: number }[] = []
+      for (const day of allDays) {
+        combinedDays.push({
+          day,
+          revenue: (posDayRevenue[day]?.revenue || 0) + (udDayRevenue[day]?.revenue || 0),
+          txns: (posDayRevenue[day]?.txns || 0) + (udDayRevenue[day]?.orders || 0),
+        })
+      }
+      combinedDays.sort((a, b) => b.revenue - a.revenue)
+
+      posContext += `\nCOMBINED REVENUE BY DAY OF WEEK (POS + all channels, ${periodLabel}):\n`
+      posContext += combinedDays.map(d => `  ${d.day}: ${finalSymbol}${d.revenue.toFixed(2)} (${d.txns} transactions)`).join('\n') + '\n'
+      if (combinedDays.length > 0) {
+        posContext += `Busiest day overall: ${combinedDays[0].day} with ${finalSymbol}${combinedDays[0].revenue.toFixed(2)} combined revenue.\n`
+      }
+    } else if (Object.keys(posDayRevenue).length > 0) {
+      // POS only — no external channels
+      const sortedPosDays = Object.entries(posDayRevenue).sort((a, b) => b[1].revenue - a[1].revenue)
+      posContext += `\nPOS REVENUE BY DAY OF WEEK (${periodLabel}):\n`
+      posContext += sortedPosDays.map(([day, d]) => `  ${day}: ${finalSymbol}${d.revenue.toFixed(2)} (${d.txns} txns)`).join('\n') + '\n'
+      if (sortedPosDays.length > 0) {
+        posContext += `Busiest day: ${sortedPosDays[0][0]} with ${finalSymbol}${sortedPosDays[0][1].revenue.toFixed(2)} revenue.\n`
+      }
+    }
+
     // Connected integrations
     if (sources.length > 0) {
       const active = sources.filter((s: any) => s.status === 'active')
@@ -668,7 +774,7 @@ export async function POST(request: NextRequest) {
       }
     }
   }
-  // ── END POS CONTEXT ──────────────────────────────────────
+  // ── END BUSINESS DATA CONTEXT ────────────────────────────
 
   // ── COLLECTIVE INTELLIGENCE / BENCHMARK CONTEXT ───────────
   let benchmarkContext = ''
@@ -734,6 +840,7 @@ export async function POST(request: NextRequest) {
     symbol: finalSymbol,
     bizType: finalBizType,
     region: finalRegion,
+    locale: finalLocale,
     sectorHints: finalSector,
     trendTopics: trendTopics || [],
     activeFile,

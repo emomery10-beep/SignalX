@@ -10,6 +10,7 @@ import { speakResponse, buildVoiceResponse } from '@/lib/tts'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useStore } from '@/store'
+import { useLang } from '@/components/LanguageProvider'
 import type { AIResult } from '@/lib/ai'
 import { parseFile } from '@/lib/file/parser'
 import ResultBlock from '@/components/chat/ResultBlock'
@@ -106,6 +107,7 @@ export default function AskPage() {
   const router = useRouter()
   const supabase = createClient()
   const { user, geo, settings, session, setActiveFile, setLoading, setLastResult, setSimulateMode, toggleCfoMode } = useStore()
+  const { lang } = useLang()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [conversationId, setConversationId] = useState<string | null>(null)
@@ -311,6 +313,7 @@ export default function AskPage() {
           streaming: false,
           currency: geo?.currency || 'USD',
           symbol: geo?.currencySymbol || '$',
+          locale: lang,
           bizType: settings.bizType,
           region: geo?.country || '',
           sectorHints: geo?.sectorHints || '',

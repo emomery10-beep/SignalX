@@ -76,14 +76,27 @@ export function buildSystemPrompt(opts: {
   userName?: string
   simulateMode?: boolean
   cfoMode?: boolean
+  locale?: string             // user's interface language — AI replies in it
 }): string {
   const {
     currency, symbol, bizType, region, sectorHints, trendTopics,
     activeFile, datasetSummary, expansionContext, marketContext,
     searchContext, trackingContext, freightContext, parcelContext,
     costContext, posContext, benchmarkContext, businessMemory,
-    userName, simulateMode, cfoMode,
+    userName, simulateMode, cfoMode, locale,
   } = opts
+
+  // Thin per-language wrapper — the ONLY language-specific part of the prompt.
+  // Everything else (behaviour, data, rules) is shared, so fixes apply to all
+  // languages at once. English needs no directive.
+  const LANGUAGE_NAMES: Record<string, string> = {
+    es: 'Spanish', fr: 'French', de: 'German', nl: 'Dutch', ar: 'Arabic',
+  }
+  const langBase = (locale || 'en').toLowerCase().split('-')[0]
+  const langName = LANGUAGE_NAMES[langBase]
+  const languageDirective = langName ? `
+
+LANGUAGE — CRITICAL: Write your ENTIRE response in ${langName} — the verdict, verdict_sentence, explanation, and every recommendation. Use ${langBase}-locale formatting for numbers, dates and currency. Keep brand and product names as-is.${langBase === 'ar' ? ' Use Western (Latin) digits for monetary amounts and percentages.' : ''}` : ''
 
   const bizLabels: Record<string, string> = {
     retail: 'retail shop / FMCG seller',
@@ -214,7 +227,7 @@ CFO MODE ACTIVE:
 - recommendations: numbered, specific, with timeframes
 - Use: margin, COGS, EBITDA, churn, LTV, CAC, MoM, YoY` : ''
 
-  return `You are AskBiz, an AI-powered Business Intelligence advisor${cfoMode ? ' in CFO Mode — board-ready financial intelligence' : ` for a ${bizLabels[bizType] || 'business'} owner`}.
+  return `You are AskBiz, an AI-powered Business Intelligence advisor${cfoMode ? ' in CFO Mode — board-ready financial intelligence' : ` for a ${bizLabels[bizType] || 'business'} owner`}.${languageDirective}
 
 YOUR SCOPE: Business intelligence, analytics, KPIs, margins, stock, pricing, revenue, costs, trends, forecasting, anomaly detection, product expansion, launch planning, and shipping/logistics costs.
 
