@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useStore } from '@/store'
+import { useLang } from '@/components/LanguageProvider'
 import { useMotion } from '@/hooks/useMotion'
 import HelpWidget from '@/components/help/HelpWidget'
 import NotificationBell from '@/components/layout/NotificationBell'
@@ -184,6 +185,7 @@ export default function AppShellClient({ user, conversations, children }: {
   const router = useRouter()
   const supabase = createClient()
   const { setUser, updateSettings } = useStore()
+  const { tc } = useLang()
   const [profileOpen, setProfileOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -334,7 +336,7 @@ export default function AppShellClient({ user, conversations, children }: {
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d={n.icon}/>
                 </svg>
-                {n.id === 'monitor' ? 'Business' : n.label}
+                {n.id === 'monitor' ? tc('appnav.monitor_short') : tc('appnav.' + n.id)}
                 {n.id === 'monitor' && alertCount > 0 && (
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#EF4444', display: 'inline-block' }}/>
                 )}
@@ -379,7 +381,7 @@ export default function AppShellClient({ user, conversations, children }: {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
                   <path d={n.icon}/>
                 </svg>
-                {n.label}
+                {tc('appnav.' + n.id)}
               </Link>
             )
           })}
@@ -421,7 +423,7 @@ export default function AppShellClient({ user, conversations, children }: {
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
                     <path d={n.icon}/>
                   </svg>
-                  {n.label}
+                  {tc('appnav.' + n.id)}
                 </Link>
               )
             })}

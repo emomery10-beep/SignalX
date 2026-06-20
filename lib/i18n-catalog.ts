@@ -34,16 +34,22 @@ import frErrors from '@/locales/fr/errors.json'
 import deErrors from '@/locales/de/errors.json'
 import nlErrors from '@/locales/nl/errors.json'
 import arErrors from '@/locales/ar/errors.json'
+import enAppnav from '@/locales/en/appnav.json'
+import esAppnav from '@/locales/es/appnav.json'
+import frAppnav from '@/locales/fr/appnav.json'
+import deAppnav from '@/locales/de/appnav.json'
+import nlAppnav from '@/locales/nl/appnav.json'
+import arAppnav from '@/locales/ar/appnav.json'
 
 type Dict = Record<string, unknown>
 
 const CATALOG: Record<string, Record<string, Dict>> = {
-  en: { common: enCommon, nav: enNav, errors: enErrors },
-  es: { common: esCommon, nav: esNav, errors: esErrors },
-  fr: { common: frCommon, nav: frNav, errors: frErrors },
-  de: { common: deCommon, nav: deNav, errors: deErrors },
-  nl: { common: nlCommon, nav: nlNav, errors: nlErrors },
-  ar: { common: arCommon, nav: arNav, errors: arErrors },
+  en: { common: enCommon, nav: enNav, errors: enErrors, appnav: enAppnav },
+  es: { common: esCommon, nav: esNav, errors: esErrors, appnav: esAppnav },
+  fr: { common: frCommon, nav: frNav, errors: frErrors, appnav: frAppnav },
+  de: { common: deCommon, nav: deNav, errors: deErrors, appnav: deAppnav },
+  nl: { common: nlCommon, nav: nlNav, errors: nlErrors, appnav: nlAppnav },
+  ar: { common: arCommon, nav: arNav, errors: arErrors, appnav: arAppnav },
 }
 
 const BASE = 'en'
