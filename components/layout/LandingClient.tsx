@@ -1345,7 +1345,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
   return (
     <div style={{ background:T.bg, color:T.tx, fontFamily:'var(--font-jakarta, Plus Jakarta Sans, system-ui)', overflowX:'hidden', direction:isRTL?'rtl':'ltr' }}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
         @keyframes tdot{0%,80%,100%{opacity:.25;transform:scale(.7)}40%{opacity:1;transform:scale(1)}}
         [data-reveal]{opacity:0;transform:translateY(18px);transition:opacity 600ms cubic-bezier(0.22,1,0.36,1),transform 600ms cubic-bezier(0.22,1,0.36,1)}
@@ -1374,10 +1374,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         .pos-tabs-wrap{position:relative}
         .pos-tabs-wrap::after{content:'';position:absolute;top:0;right:0;width:32px;height:100%;background:linear-gradient(to left,#fff,transparent);pointer-events:none;z-index:1}
         @media(prefers-reduced-motion:reduce){[data-reveal]{opacity:1;transform:none}*{animation:none!important}}
-      `}</style>
+      ` }}/>
 
       {/* ── NAV ──────────────────────────────────────────────────────── */}
-      <nav style={{ position:'sticky',top:0,zIndex:50,background:T.nav,backdropFilter:'blur(20px)',borderBottom:`1px solid ${T.bd}`,padding:'0 clamp(16px,3vw,32px)',height:56,display:'flex',alignItems:'center',justifyContent:'space-between',gap:8 }}>
+      <nav aria-label="Primary navigation" style={{ position:'sticky',top:0,zIndex:50,background:T.nav,backdropFilter:'blur(20px)',borderBottom:`1px solid ${T.bd}`,padding:'0 clamp(16px,3vw,32px)',height:56,display:'flex',alignItems:'center',justifyContent:'space-between',gap:8 }}>
         <Link href="/" style={{ display:'flex',alignItems:'center',gap:8,textDecoration:'none',color:T.tx,flexShrink:0 }}>
           <div style={{ width:28,height:28,borderRadius:8,background:T.acc,display:'flex',alignItems:'center',justifyContent:'center' }}><Logo size={13}/></div>
           <span style={{ fontFamily:'var(--font-instrument)',fontSize:18,fontWeight:400,letterSpacing:'-.01em' }}>AskBiz</span>
