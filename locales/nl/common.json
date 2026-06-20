@@ -14,5 +14,11 @@
   "send": "Verzenden",
   "retry": "Opnieuw proberen",
   "yes": "Ja",
-  "no": "Nee"
+  "no": "Nee",
+  "next": "Volgende",
+  "previous": "Vorige",
+  "continue": "Doorgaan",
+  "done": "Klaar",
+  "add": "Toevoegen",
+  "remove": "Verwijderen"
 }

@@ -14,5 +14,11 @@
   "send": "Senden",
   "retry": "Erneut versuchen",
   "yes": "Ja",
-  "no": "Nein"
+  "no": "Nein",
+  "next": "Weiter",
+  "previous": "Zurück",
+  "continue": "Fortfahren",
+  "done": "Fertig",
+  "add": "Hinzufügen",
+  "remove": "Entfernen"
 }

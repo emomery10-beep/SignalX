@@ -14,5 +14,11 @@
   "send": "Enviar",
   "retry": "Reintentar",
   "yes": "Sí",
-  "no": "No"
+  "no": "No",
+  "next": "Siguiente",
+  "previous": "Anterior",
+  "continue": "Continuar",
+  "done": "Listo",
+  "add": "Agregar",
+  "remove": "Eliminar"
 }
