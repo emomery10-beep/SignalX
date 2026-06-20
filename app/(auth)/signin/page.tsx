@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { useLang } from '@/components/LanguageProvider'
 
 type Mode = 'signin' | 'signup'
 
@@ -13,6 +14,7 @@ export default function AuthPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
+  const { tc } = useLang()
   const [mode, setMode] = useState<Mode>(searchParams.get('mode') === 'signup' ? 'signup' : 'signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -51,7 +53,7 @@ export default function AuthPage() {
       // Email/password
       if (mode === 'signup') {
         if (!consentChecked) {
-          throw new Error('You must accept the Terms and Privacy Policy to create an account.')
+          throw new Error(tc('auth.err_accept_terms'))
         }
         const { data, error } = await supabase.auth.signUp({
           email, password,
@@ -72,18 +74,18 @@ export default function AuthPage() {
         // Supabase returns empty identities when the email already exists
         // (security feature to prevent email enumeration — no error thrown, no email sent)
         if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
-          throw new Error('An account with this email already exists. Try signing in instead, or use a magic link.')
+          throw new Error(tc('auth.err_email_exists'))
         }
 
         if (data.session) { router.push(shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/onboarding') }
-        else { setSuccess(`Check your inbox at ${email} — click the link to activate your account.`) }
+        else { setSuccess(tc('auth.ok_check_inbox', { email })) }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
         router.push(getPostAuthRedirect())
       }
     } catch (e: any) {
-      const msg = e?.message || e?.error_description || (typeof e === 'string' ? e : 'Authentication failed')
+      const msg = e?.message || e?.error_description || (typeof e === 'string' ? e : tc('auth.err_auth_failed'))
       setError(msg)
     } finally { setLoading(false) }
   }
@@ -101,7 +103,7 @@ export default function AuthPage() {
         router.push(getPostAuthRedirect())
       }
     } catch (e: any) {
-      const msg = e?.message || e?.error_description || 'Passkey sign-in failed'
+      const msg = e?.message || e?.error_description || tc('auth.err_passkey_failed')
       const fullText = `${msg} ${e?.name || ''}`
       // Ignore user-cancelled or timed-out WebAuthn prompts
       if (fullText.match(/cancell?ed|AbortError|NotAllowedError|timed out|not allowed/i)) {
@@ -113,7 +115,7 @@ export default function AuthPage() {
   }
 
   const handleMagicLink = async () => {
-    if (!email) { setError('Enter your email first'); return }
+    if (!email) { setError(tc('auth.err_enter_email_first')); return }
     setError(''); setSuccess(''); setLoading(true)
     try {
       const { error } = await supabase.auth.signInWithOtp({
@@ -121,9 +123,9 @@ export default function AuthPage() {
         options: { emailRedirectTo: getCallbackUrl() }
       })
       if (error) throw error
-      setSuccess(`Magic link sent to ${email} — check your inbox.`)
+      setSuccess(tc('auth.ok_magic_sent', { email }))
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to send magic link')
+      setError(e instanceof Error ? e.message : tc('auth.err_magic_failed'))
     } finally { setLoading(false) }
   }
 
@@ -156,10 +158,10 @@ export default function AuthPage() {
           </svg>
           <div>
             <div style={{ fontSize: 13, fontWeight: 600, color: '#3a6600', marginBottom: 2 }}>
-              Shopify store connected: {searchParams.get('shop')}
+              {tc('auth.shopify_connected', { shop: searchParams.get('shop') || '' })}
             </div>
             <div style={{ fontSize: 12, color: '#5A8A00', lineHeight: 1.4 }}>
-              Sign in or create a free AskBiz account to link your Shopify store and start analysing your data.
+              {tc('auth.shopify_subtitle')}
             </div>
           </div>
         </div>
@@ -202,28 +204,28 @@ export default function AuthPage() {
                 cursor: 'pointer', transition: 'all 150ms',
                 boxShadow: mode === m ? '0 2px 8px rgba(208,138,89,.3)' : 'none',
               }}>
-              {m === 'signin' ? 'Sign in' : 'Create account'}
+              {m === 'signin' ? tc('auth.tab_signin') : tc('auth.tab_signup')}
             </button>
           ))}
         </div>
 
         <h1 style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 20, fontWeight: 700, marginBottom: 6, textAlign: 'center', letterSpacing: '-.02em' }}>
-          {mode === 'signin' ? 'Welcome back' : 'Get started free'}
+          {mode === 'signin' ? tc('auth.welcome_back') : tc('auth.get_started')}
         </h1>
         <p style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 24, textAlign: 'center' }}>
-          {mode === 'signin' ? 'Sign in to your AskBiz account' : '10 free questions every month — no card needed'}
+          {mode === 'signin' ? tc('auth.signin_subtitle') : tc('auth.signup_subtitle')}
         </p>
 
         {/* Social sign-in */}
         <button onClick={() => triggerAuth('google')} disabled={loading}
           style={{ width: '100%', padding: '0 16px', height: 44, borderRadius: 10, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, marginBottom: 10, transition: 'all 150ms' }}>
           <svg width="17" height="17" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-          Continue with Google
+          {tc('auth.continue_google')}
         </button>
         <button onClick={() => triggerAuth('azure')} disabled={loading}
           style={{ width: '100%', padding: '0 16px', height: 44, borderRadius: 10, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontFamily: 'inherit', fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, marginBottom: 10, transition: 'all 150ms' }}>
           <svg width="17" height="17" viewBox="0 0 23 23" fill="none"><path fill="#f25022" d="M1 1h10v10H1z"/><path fill="#00a4ef" d="M1 12h10v10H1z"/><path fill="#7fba00" d="M12 1h10v10H12z"/><path fill="#ffb900" d="M12 12h10v10H12z"/></svg>
-          Continue with Microsoft
+          {tc('auth.continue_microsoft')}
         </button>
         {mode === 'signin' && (
           <button onClick={handlePasskeySignIn} disabled={loading}
@@ -233,7 +235,7 @@ export default function AuthPage() {
               <circle cx="12" cy="16" r="1"/>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
-            Sign in with Passkey
+            {tc('auth.signin_passkey')}
           </button>
         )}
         {mode === 'signup' && <div style={{ marginBottom: 6 }}/>}
@@ -241,24 +243,24 @@ export default function AuthPage() {
         {/* Divider */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
           <div style={{ flex: 1, height: 1, background: 'var(--b)' }}></div>
-          <span style={{ fontSize: 12, color: 'var(--tx3)' }}>or</span>
+          <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('auth.or')}</span>
           <div style={{ flex: 1, height: 1, background: 'var(--b)' }}></div>
         </div>
 
         {/* Name fields for signup */}
         {mode === 'signup' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-            <input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First name" style={inp}/>
-            <input value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last name" style={inp}/>
+            <input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder={tc('auth.first_name')} style={inp}/>
+            <input value={lastName} onChange={e => setLastName(e.target.value)} placeholder={tc('auth.last_name')} style={inp}/>
           </div>
         )}
 
         {/* Email */}
-        <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email address" type="email" style={{ ...inp, marginBottom: 10 }}
+        <input value={email} onChange={e => setEmail(e.target.value)} placeholder={tc('auth.email_placeholder')} type="email" style={{ ...inp, marginBottom: 10 }}
           onKeyDown={e => e.key === 'Enter' && triggerAuth('email')}/>
 
         {/* Password */}
-        <input value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" type="password" style={{ ...inp, marginBottom: 16 }}
+        <input value={password} onChange={e => setPassword(e.target.value)} placeholder={tc('auth.password_placeholder')} type="password" style={{ ...inp, marginBottom: 16 }}
           onKeyDown={e => e.key === 'Enter' && triggerAuth('email')}/>
 
         {/* Affirmative consent checkbox for signup */}
@@ -272,10 +274,10 @@ export default function AuthPage() {
               style={{ width: 16, height: 16, marginTop: 2, flexShrink: 0, accentColor: 'var(--acc)', cursor: 'pointer' }}
             />
             <span style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.5 }}>
-              I agree to the{' '}
-              <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--acc)', textDecoration: 'underline' }}>Terms of Service</a>{' '}
-              and{' '}
-              <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--acc)', textDecoration: 'underline' }}>Privacy Policy</a>
+              {tc('auth.consent_prefix')}{' '}
+              <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--acc)', textDecoration: 'underline' }}>{tc('auth.terms_of_service')}</a>{' '}
+              {tc('auth.and')}{' '}
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--acc)', textDecoration: 'underline' }}>{tc('auth.privacy_policy')}</a>
             </span>
           </label>
         )}
@@ -287,22 +289,18 @@ export default function AuthPage() {
         {/* Primary CTA */}
         <button onClick={() => triggerAuth('email')} disabled={loading || !email || !password || (mode === 'signup' && !consentChecked)}
           style={{ width: '100%', padding: '12px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'var(--font-sora, Sora)', fontSize: 15, fontWeight: 600, cursor: loading || !email || !password || (mode === 'signup' && !consentChecked) ? 'not-allowed' : 'pointer', opacity: loading || !email || !password || (mode === 'signup' && !consentChecked) ? .6 : 1, marginBottom: 10 }}>
-          {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in →' : 'Create account →'}
+          {loading ? tc('auth.please_wait') : mode === 'signin' ? `${tc('auth.tab_signin')} →` : `${tc('auth.tab_signup')} →`}
         </button>
 
         {/* Inline consent details for signup */}
         {mode === 'signup' && (
           <div style={{ marginTop: 8 }}>
             <p style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.6, marginBottom: 6 }}>
-              By creating an account you confirm you are 13+ (16 in the EU/UK).
+              {tc('auth.age_confirm')}
             </p>
             <p style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.6, margin: 0 }}>
-              You consent to data processing for AI-powered business insights, including: analysis of uploaded files,
-              IP-based geolocation for currency detection, and optional POS features such as camera scanning,
-              logistics tracking, and mobile money payments (M-Pesa, MTN, Airtel). Camera images are processed
-              in real time and never stored. See our{' '}
-              <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--tx2)', textDecoration: 'underline' }}>Privacy Policy</a>{' '}
-              for full details.
+              {tc('auth.consent_details')}{' '}
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--tx2)', textDecoration: 'underline' }}>{tc('auth.privacy_policy')}</a>.
             </p>
           </div>
         )}
@@ -310,13 +308,13 @@ export default function AuthPage() {
         {/* Magic link */}
         <button onClick={handleMagicLink} disabled={loading || !email}
           style={{ width: '100%', padding: '11px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 14, cursor: loading || !email ? 'not-allowed' : 'pointer', opacity: loading || !email ? .6 : 1 }}>
-          {loading ? '…' : 'Send magic link instead'}
+          {loading ? '…' : tc('auth.send_magic_link')}
         </button>
 
       </div>
 
       <p style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 20, textAlign: 'center' }}>
-        By continuing you agree to our <Link href="/terms" style={{ color: 'var(--acc)', textDecoration: 'none' }}>Terms</Link> and <Link href="/privacy" style={{ color: 'var(--acc)', textDecoration: 'none' }}>Privacy Policy</Link>
+        {tc('auth.footer_consent_prefix')} <Link href="/terms" style={{ color: 'var(--acc)', textDecoration: 'none' }}>{tc('auth.terms_short')}</Link> {tc('auth.and')} <Link href="/privacy" style={{ color: 'var(--acc)', textDecoration: 'none' }}>{tc('auth.privacy_policy')}</Link>
       </p>
     </div>
   )
