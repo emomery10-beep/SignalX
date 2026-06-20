@@ -1,0 +1,18 @@
+{
+  "loading": "Wird geladen…",
+  "error": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+  "save": "Speichern",
+  "save_changes": "Änderungen speichern",
+  "cancel": "Abbrechen",
+  "back": "Zurück",
+  "close": "Schließen",
+  "confirm": "Bestätigen",
+  "delete": "Löschen",
+  "edit": "Bearbeiten",
+  "search": "Suchen",
+  "upload": "Hochladen",
+  "send": "Senden",
+  "retry": "Erneut versuchen",
+  "yes": "Ja",
+  "no": "Nein"
+}

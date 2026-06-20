@@ -1,0 +1,21 @@
+{
+  "_comment": "Milestone-0 i18n debt baseline, captured 2026-06-20 before Foundation work began. This is a RATCHET: each number may only ever decrease. The self-audit (scripts/i18n-audit.mjs) fails the build if new code pushes any count above the value here. As a milestone burns debt down, lower the number so the ratchet tightens.",
+  "activeLocales": ["es", "fr", "de", "nl", "ar"],
+  "baseLocale": "en",
+  "rtlLocales": ["ar"],
+  "ratchet": {
+    "main": {
+      "hardcodedLocaleLiterals": 123,
+      "hardcodedCurrencyInMarkup": 1126
+    },
+    "pos": {
+      "hardcodedLocaleLiterals": 45,
+      "hardcodedCurrencyInMarkup": 261
+    }
+  },
+  "milestone0": {
+    "capturedAt": "2026-06-20",
+    "tCallAdoption": 0,
+    "localeCatalogueFiles": 0
+  }
+}

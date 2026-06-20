@@ -1,0 +1,18 @@
+{
+  "loading": "Chargement…",
+  "error": "Une erreur s'est produite. Veuillez réessayer.",
+  "save": "Enregistrer",
+  "save_changes": "Enregistrer les modifications",
+  "cancel": "Annuler",
+  "back": "Retour",
+  "close": "Fermer",
+  "confirm": "Confirmer",
+  "delete": "Supprimer",
+  "edit": "Modifier",
+  "search": "Rechercher",
+  "upload": "Téléverser",
+  "send": "Envoyer",
+  "retry": "Réessayer",
+  "yes": "Oui",
+  "no": "Non"
+}

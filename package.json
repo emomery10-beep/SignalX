@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/i18n-audit.mjs --skip-typecheck",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "i18n:audit": "node scripts/i18n-audit.mjs && node scripts/i18n-audit.mjs --app pos",
     "db:migrate": "supabase db push",
     "db:types": "supabase gen types typescript --local > lib/supabase/types.ts",
     "setup:factory-users": "node scripts/setup-factory-test-users.js",

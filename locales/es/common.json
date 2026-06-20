@@ -1,0 +1,18 @@
+{
+  "loading": "Cargando…",
+  "error": "Algo salió mal. Inténtalo de nuevo.",
+  "save": "Guardar",
+  "save_changes": "Guardar cambios",
+  "cancel": "Cancelar",
+  "back": "Atrás",
+  "close": "Cerrar",
+  "confirm": "Confirmar",
+  "delete": "Eliminar",
+  "edit": "Editar",
+  "search": "Buscar",
+  "upload": "Subir",
+  "send": "Enviar",
+  "retry": "Reintentar",
+  "yes": "Sí",
+  "no": "No"
+}

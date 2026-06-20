@@ -1,0 +1,18 @@
+{
+  "loading": "Loading…",
+  "error": "Something went wrong. Please try again.",
+  "save": "Save",
+  "save_changes": "Save changes",
+  "cancel": "Cancel",
+  "back": "Back",
+  "close": "Close",
+  "confirm": "Confirm",
+  "delete": "Delete",
+  "edit": "Edit",
+  "search": "Search",
+  "upload": "Upload",
+  "send": "Send",
+  "retry": "Retry",
+  "yes": "Yes",
+  "no": "No"
+}

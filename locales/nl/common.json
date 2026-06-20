@@ -1,0 +1,18 @@
+{
+  "loading": "Laden…",
+  "error": "Er is iets misgegaan. Probeer het opnieuw.",
+  "save": "Opslaan",
+  "save_changes": "Wijzigingen opslaan",
+  "cancel": "Annuleren",
+  "back": "Terug",
+  "close": "Sluiten",
+  "confirm": "Bevestigen",
+  "delete": "Verwijderen",
+  "edit": "Bewerken",
+  "search": "Zoeken",
+  "upload": "Uploaden",
+  "send": "Verzenden",
+  "retry": "Opnieuw proberen",
+  "yes": "Ja",
+  "no": "Nee"
+}
