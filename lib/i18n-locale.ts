@@ -17,6 +17,25 @@ export function isActiveLocale(x: unknown): x is Locale {
   return typeof x === 'string' && (ACTIVE_LOCALES as string[]).includes(x)
 }
 
+// Authenticated app routes (the signed-in shell). These render in the user's
+// CHOSEN language from the cookie/profile — not the URL — because they're
+// per-user and not SEO-indexed, so they need no locale prefix. Public/marketing
+// routes stay URL-driven (English unprefixed, others prefixed) for caching + SEO.
+export const APP_ROUTES = [
+  '/home', '/ask', '/chat', '/intelligence', '/files', '/dashboards', '/alerts',
+  '/forecasts', '/templates', '/admin', '/sources', '/billing', '/onboarding',
+  '/settings', '/expansion', '/invite', '/pos', '/tools', '/shipments',
+]
+
+// True if the path (with any locale prefix stripped) is an authenticated app route.
+export function isAppPath(pathname: string): boolean {
+  const segs = pathname.split('/')
+  const path = (ACTIVE_LOCALES as string[]).includes(segs[1]) && segs[1] !== DEFAULT_LOCALE
+    ? '/' + segs.slice(2).join('/')
+    : pathname
+  return APP_ROUTES.some(r => path === r || path.startsWith(r + '/'))
+}
+
 // Single source of RTL truth is RTL_LANGS in lib/i18n.ts (via isRtlLang).
 export function isRTL(locale: string): boolean {
   return isRtlLang(locale.split(/[-_]/)[0] as Lang)

@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useLang } from '@/components/LanguageProvider'
 import type { Lang } from '@/lib/i18n'
-import { ACTIVE_LOCALES, localePath, type Locale } from '@/lib/i18n-locale'
+import { ACTIVE_LOCALES, localePath, isAppPath, type Locale } from '@/lib/i18n-locale'
 
 // The launch set only — en, es, fr, de, nl, ar. Single source of truth in
 // lib/i18n-locale, so adding a language updates the switcher automatically.
@@ -16,14 +16,19 @@ export default function LanguageToggle() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
-  // Switching language updates provider state/cookie/profile AND navigates to the
-  // locale-prefixed URL, so the server re-renders the page in the new language.
-  // Include the live query + hash so pagination/filter/anchor state survives.
+  // Switching updates provider state + cookie + profile. App routes are
+  // cookie-driven, so we just refresh to re-render the server tree in the new
+  // language (URL stays unprefixed). Public routes are URL-driven, so we navigate
+  // to the locale-prefixed URL, preserving the live query + hash.
   const choose = (l: Lang) => {
     setLang(l)
     setOpen(false)
-    const full = (pathname || '/') + (typeof window !== 'undefined' ? window.location.search + window.location.hash : '')
-    router.push(localePath(full, l as Locale))
+    if (isAppPath(pathname || '/')) {
+      router.refresh()
+    } else {
+      const full = (pathname || '/') + (typeof window !== 'undefined' ? window.location.search + window.location.hash : '')
+      router.push(localePath(full, l as Locale))
+    }
   }
 
   // Close on outside click

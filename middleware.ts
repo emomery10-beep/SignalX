@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { COUNTRY_TO_LANG } from '@/lib/i18n'
-import { ACTIVE_LOCALES, DEFAULT_LOCALE } from '@/lib/i18n-locale'
+import { ACTIVE_LOCALES, DEFAULT_LOCALE, resolveLocale, isAppPath } from '@/lib/i18n-locale'
 
 // Non-default locales carry a URL prefix (/es, /fr, …); English stays unprefixed
 // so existing indexed URLs and inbound links are untouched.
@@ -14,8 +14,20 @@ export async function middleware(request: NextRequest) {
   const segments = request.nextUrl.pathname.split('/')
   const maybePrefix = segments[1]
   const hasLocalePrefix = (PREFIXED_LOCALES as string[]).includes(maybePrefix)
-  const locale = hasLocalePrefix ? maybePrefix : DEFAULT_LOCALE
   const logicalPath = hasLocalePrefix ? '/' + segments.slice(2).join('/') : request.nextUrl.pathname
+
+  // Locale source: a URL prefix wins (public, SEO-driven). Otherwise, authenticated
+  // app routes follow the user's chosen language (cookie/profile); public routes
+  // default to English. This lets the signed-in app render in the user's language
+  // without prefixing every nav link.
+  const locale = hasLocalePrefix
+    ? maybePrefix
+    : isAppPath(logicalPath)
+      ? resolveLocale({
+          cookie: request.cookies.get('askbiz_lang')?.value,
+          country: request.headers.get('x-vercel-ip-country'),
+        })
+      : DEFAULT_LOCALE
 
   // Headers server components (and the root layout) read to render the right locale.
   const requestHeaders = new Headers(request.headers)
