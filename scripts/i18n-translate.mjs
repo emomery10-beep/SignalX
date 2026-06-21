@@ -85,10 +85,15 @@ ${JSON.stringify(entries, null, 2)}`
   }
 }
 
+// Legal pages get HUMAN legal translation per jurisdiction — NEVER machine
+// translate them. Skipped unless explicitly named (node …mjs terms --force).
+const HUMAN_ONLY = new Set(['terms', 'privacy', 'dpa'])
+
 async function run() {
   const namespaces = onlyNs
     ? [onlyNs]
     : [...new Set(readdirSync(join(LOCALES_DIR, BASE)).filter(f => f.endsWith('.json')).map(f => f.slice(0, -5)))]
+       .filter(ns => !HUMAN_ONLY.has(ns))
 
   const failures = []
   for (const ns of namespaces) {
