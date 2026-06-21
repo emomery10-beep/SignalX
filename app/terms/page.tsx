@@ -1,29 +1,36 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
+import { getLocale, getT } from '@/lib/i18n-server'
+import { localePath } from '@/lib/i18n-locale'
 
-export const metadata = {
-  title: 'Terms of Service — AskBiz',
-  description: 'AskBiz Terms of Service. Governing your use of the AskBiz business intelligence platform.',
+export async function generateMetadata(): Promise<Metadata> {
+  const t = getT()
+  return {
+    title: t('terms.meta_title'),
+    description: t('terms.meta_description'),
+  }
 }
 
-const LAST_UPDATED = '9 May 2026'
 const COMPANY = 'AskBiz Ltd'
 const EMAIL = 'legal@askbiz.co'
 const PRIVACY_EMAIL = 'privacy@askbiz.co'
 
 export default function TermsPage() {
+  const t = getT()
+  const locale = getLocale()
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', fontFamily: 'var(--font-dm, DM Sans, sans-serif)' }}>
 
       {/* Nav */}
       <nav style={{ position: 'sticky', top: 0, background: 'rgba(249,248,246,.95)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--b)', padding: '0 24px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 50 }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'var(--tx)' }}>
+        <Link href={localePath('/', locale)} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'var(--tx)' }}>
           <div style={{ width: 26, height: 26, borderRadius: 7, background:'#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/><path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
           <span style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 15, fontWeight: 700 }}>AskBiz</span>
         </Link>
-        <Link href="/signin" style={{ padding: '7px 16px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
-          Get started free
+        <Link href={localePath('/signin', locale)} style={{ padding: '7px 16px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+          {t('terms.nav_cta')}
         </Link>
       </nav>
 
@@ -31,223 +38,210 @@ export default function TermsPage() {
 
         {/* Header */}
         <div style={{ marginBottom: 48 }}>
-          <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>Legal</div>
-          <h1 style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 36, fontWeight: 700, letterSpacing: '-.025em', marginBottom: 12 }}>Terms of Service</h1>
-          <p style={{ fontSize: 15, color: 'var(--tx2)' }}>Last updated: {LAST_UPDATED} · Effective date: {LAST_UPDATED}</p>
+          <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>{t('terms.eyebrow')}</div>
+          <h1 style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 36, fontWeight: 700, letterSpacing: '-.025em', marginBottom: 12 }}>{t('terms.h1')}</h1>
+          <p style={{ fontSize: 15, color: 'var(--tx2)' }}>{t('terms.last_updated_line')}</p>
           <div style={{ marginTop: 20, padding: '14px 18px', borderRadius: 12, background: 'rgba(208,138,89,.06)', border: '1px solid rgba(208,138,89,.2)', fontSize: 14, color: 'var(--tx2)', lineHeight: 1.65 }}>
-            <strong style={{ color: 'var(--tx)' }}>Plain English summary:</strong> Use AskBiz fairly and legally. Your data is yours. We provide the service as-is. Either party can end the relationship. Disputes are resolved in England and Wales.
+            <strong style={{ color: 'var(--tx)' }}>{t('terms.summary_label')}</strong> {t('terms.summary_body')}
           </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
 
-          <Section title="1. Agreement to terms">
-            <p>These Terms of Service ("Terms") constitute a legally binding agreement between you ("User", "you") and {COMPANY}, a company incorporated in England and Wales ("AskBiz", "we", "us", "our"), governing your access to and use of the AskBiz business intelligence platform, including all associated software, APIs, and services (collectively, the "Service").</p>
-            <p>By creating an account, clicking "I agree", or otherwise accessing the Service, you confirm that you have read, understood, and agree to be bound by these Terms and our Privacy Policy. If you are using the Service on behalf of an organisation, you represent that you have authority to bind that organisation to these Terms.</p>
-            <p>If you do not agree to these Terms, you must not access or use the Service.</p>
+          <Section title={t('terms.sec_1_title')}>
+            <p>{t('terms.sec_1_p1')}</p>
+            <p>{t('terms.sec_1_p2')}</p>
+            <p>{t('terms.sec_1_p3')}</p>
           </Section>
 
-          <Section title="2. Definitions">
-            <p>In these Terms, the following definitions apply:</p>
+          <Section title={t('terms.sec_2_title')}>
+            <p>{t('terms.sec_2_p1')}</p>
             <ul>
-              <li><strong>"Account"</strong> means the registered user account you create to access the Service.</li>
-              <li><strong>"Business Data"</strong> means any data, files, or information you upload to or connect with the Service, including CSV files, spreadsheets, and data source connections.</li>
-              <li><strong>"Output"</strong> means the analytical responses, insights, charts, and recommendations generated by the Service in response to your queries.</li>
-              <li><strong>"Subscription"</strong> means a paid plan entitling you to enhanced Service features as described on our pricing page.</li>
-              <li><strong>"Authorised Users"</strong> means employees, contractors, or agents authorised by you to access the Service under your Account.</li>
-              <li><strong>"Confidential Information"</strong> means any non-public information disclosed by either party that is designated as confidential or that reasonably should be understood to be confidential.</li>
+              {[0, 1, 2, 3, 4, 5].map(i => (
+                <li key={i}><strong>{t('terms.sec_2_li_' + i + '_term')}</strong>{t('terms.sec_2_li_' + i + '_body')}</li>
+              ))}
             </ul>
           </Section>
 
-          <Section title="3. Account registration and security">
-            <p>To use the Service, you must be at least <strong>13 years old</strong>. If you are under 16 (EU/EEA) or under the age of digital consent in your jurisdiction, you must have verifiable parental or guardian consent before creating an Account. By registering, you confirm you meet the applicable age requirement.</p>
-            <p>To use the Service, you must register for an Account by providing accurate, complete, and current information. You must update this information promptly if it changes.</p>
-            <p>You are responsible for:</p>
+          <Section title={t('terms.sec_3_title')}>
+            <p>{t('terms.sec_3_p1_a')}<strong>{t('terms.sec_3_p1_strong')}</strong>{t('terms.sec_3_p1_b')}</p>
+            <p>{t('terms.sec_3_p2')}</p>
+            <p>{t('terms.sec_3_p3')}</p>
             <ul>
-              <li>Maintaining the confidentiality of your Account credentials</li>
-              <li>All activity that occurs under your Account</li>
-              <li>Notifying us immediately of any unauthorised access or security breach at <a href={`mailto:${EMAIL}`} style={{ color: 'var(--acc)' }}>{EMAIL}</a></li>
-              <li>Ensuring all Authorised Users comply with these Terms</li>
+              <li>{t('terms.sec_3_li_0')}</li>
+              <li>{t('terms.sec_3_li_1')}</li>
+              <li>{t('terms.sec_3_li_2_a')}<a href={`mailto:${EMAIL}`} style={{ color: 'var(--acc)' }}>{EMAIL}</a></li>
+              <li>{t('terms.sec_3_li_3')}</li>
             </ul>
-            <p>You may not share your Account credentials with any third party, create multiple free Accounts to circumvent usage limits, or use automated tools to create Accounts.</p>
-            <p>We reserve the right to suspend or terminate Accounts that we reasonably believe are being used fraudulently, abusively, or in violation of these Terms.</p>
+            <p>{t('terms.sec_3_p4')}</p>
+            <p>{t('terms.sec_3_p5')}</p>
           </Section>
 
-          <Section title="4. Subscriptions and payment">
-            <SubSection title="4.1 Plans and billing">
-              <p>The Service is available on a free tier and paid Subscription plans as described on our pricing page. Paid Subscriptions are billed monthly or annually in advance. All prices are exclusive of applicable taxes unless stated otherwise.</p>
+          <Section title={t('terms.sec_4_title')}>
+            <SubSection title={t('terms.sec_4_1_title')}>
+              <p>{t('terms.sec_4_1_p1')}</p>
             </SubSection>
-            <SubSection title="4.2 Payment processing">
-              <p>Payments are processed by Stripe, Inc. By subscribing, you authorise AskBiz to charge your payment method on a recurring basis. You must keep your payment information accurate and up to date.</p>
+            <SubSection title={t('terms.sec_4_2_title')}>
+              <p>{t('terms.sec_4_2_p1')}</p>
             </SubSection>
-            <SubSection title="4.3 Free trial">
-              <p>Where a free trial is offered, it begins on the date you upgrade and ends after the stated trial period. Unless you cancel before the trial ends, your Subscription will automatically commence and your payment method will be charged.</p>
+            <SubSection title={t('terms.sec_4_3_title')}>
+              <p>{t('terms.sec_4_3_p1')}</p>
             </SubSection>
-            <SubSection title="4.4 Cancellation and refunds">
-              <p>You may cancel your Subscription at any time through the billing portal. Cancellation takes effect at the end of the current billing period. We do not provide refunds for partial billing periods, except where required by applicable law or at our sole discretion.</p>
+            <SubSection title={t('terms.sec_4_4_title')}>
+              <p>{t('terms.sec_4_4_p1')}</p>
             </SubSection>
-            <SubSection title="4.5 Price changes">
-              <p>We may change Subscription prices with at least 30 days' written notice. Early adopters who have been explicitly guaranteed a locked price will not be subject to price increases for the duration of their continuous Subscription.</p>
+            <SubSection title={t('terms.sec_4_5_title')}>
+              <p>{t('terms.sec_4_5_p1')}</p>
             </SubSection>
-            <SubSection title="4.6 Non-payment">
-              <p>If payment fails, we will notify you and attempt to retry. If payment remains outstanding after 7 days, your Account may be downgraded to the free tier. Access to paid features will be restored upon successful payment.</p>
+            <SubSection title={t('terms.sec_4_6_title')}>
+              <p>{t('terms.sec_4_6_p1')}</p>
             </SubSection>
           </Section>
 
-          <Section title="5. Acceptable use">
-            <p>You agree to use the Service only for lawful business purposes and in accordance with these Terms. You must not:</p>
+          <Section title={t('terms.sec_5_title')}>
+            <p>{t('terms.sec_5_p1')}</p>
             <ul>
-              <li>Use the Service to process data you do not have the right to process</li>
-              <li>Upload malicious code, viruses, or any software designed to disrupt, damage, or gain unauthorised access to systems</li>
-              <li>Attempt to reverse engineer, decompile, or extract the source code of the Service</li>
-              <li>Use automated scraping, crawling, or data extraction tools against the Service</li>
-              <li>Resell, sublicence, or otherwise commercialise access to the Service without our written consent</li>
-              <li>Use the Service to process personal data of third parties without a lawful basis under applicable data protection law</li>
-              <li>Circumvent or attempt to circumvent usage limits, authentication, or security measures</li>
-              <li>Use the Service in a manner that could damage, disable, or impair the Service or interfere with other users</li>
-              <li>Upload content that is unlawful, defamatory, obscene, or that violates any third-party rights</li>
-              <li>Use Outputs to make decisions that could cause physical, financial, or legal harm to individuals without appropriate human review</li>
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => (
+                <li key={i}>{t('terms.sec_5_li_' + i)}</li>
+              ))}
             </ul>
-            <p>We reserve the right to investigate suspected violations and, where appropriate, suspend or terminate access, report to law enforcement, and take legal action.</p>
+            <p>{t('terms.sec_5_p2')}</p>
           </Section>
 
-          <Section title="6. Intellectual property">
-            <SubSection title="6.1 AskBiz IP">
-              <p>The Service, including all software, algorithms, designs, trademarks, and documentation, is owned by or licensed to AskBiz and is protected by copyright, trade secret, and other intellectual property laws. These Terms do not transfer any AskBiz intellectual property to you.</p>
+          <Section title={t('terms.sec_6_title')}>
+            <SubSection title={t('terms.sec_6_1_title')}>
+              <p>{t('terms.sec_6_1_p1')}</p>
             </SubSection>
-            <SubSection title="6.2 Your Business Data">
-              <p>You retain full ownership of all Business Data you upload or connect to the Service. By using the Service, you grant AskBiz a limited, non-exclusive, royalty-free licence to process your Business Data solely for the purpose of providing the Service to you. This licence terminates when you delete your data or close your Account.</p>
-              <p>We will never use your Business Data to train AI models, develop competing products, or share with any third party except as described in our Privacy Policy.</p>
+            <SubSection title={t('terms.sec_6_2_title')}>
+              <p>{t('terms.sec_6_2_p1')}</p>
+              <p>{t('terms.sec_6_2_p2')}</p>
             </SubSection>
-            <SubSection title="6.3 Outputs">
-              <p>Subject to your compliance with these Terms, Outputs generated from your Business Data are yours to use for your internal business purposes. AskBiz does not claim ownership of Outputs. You are responsible for verifying the accuracy of Outputs before acting on them.</p>
+            <SubSection title={t('terms.sec_6_3_title')}>
+              <p>{t('terms.sec_6_3_p1')}</p>
             </SubSection>
-            <SubSection title="6.4 Feedback">
-              <p>If you provide feedback, suggestions, or ideas about the Service, you grant AskBiz an irrevocable, royalty-free licence to use that feedback for any purpose without obligation to you.</p>
+            <SubSection title={t('terms.sec_6_4_title')}>
+              <p>{t('terms.sec_6_4_p1')}</p>
             </SubSection>
           </Section>
 
-          <Section title="7. Data processing and privacy">
-            <p>Our collection and use of personal data is governed by our <Link href="/privacy" style={{ color: 'var(--acc)' }}>Privacy Policy</Link>, which is incorporated into these Terms by reference.</p>
-            <p>Where you use the Service to process personal data of third parties (for example, customer names in your Business Data), you are the data controller for that processing and AskBiz acts as a data processor. In such cases:</p>
+          <Section title={t('terms.sec_7_title')}>
+            <p>{t('terms.sec_7_p1_a')}<Link href={localePath('/privacy', locale)} style={{ color: 'var(--acc)' }}>{t('terms.sec_7_p1_link')}</Link>{t('terms.sec_7_p1_b')}</p>
+            <p>{t('terms.sec_7_p2')}</p>
             <ul>
-              <li>You are responsible for having a lawful basis for processing that data</li>
-              <li>You are responsible for providing appropriate notices to those individuals</li>
-              <li>AskBiz will process that data only on your documented instructions</li>
-              <li>Both parties will comply with applicable data protection legislation, including EU GDPR, UK GDPR, CCPA/CPRA (California), LGPD (Brazil), PIPEDA (Canada), POPIA (South Africa), and any other applicable privacy law in your jurisdiction</li>
+              <li>{t('terms.sec_7_li_0')}</li>
+              <li>{t('terms.sec_7_li_1')}</li>
+              <li>{t('terms.sec_7_li_2')}</li>
+              <li>{t('terms.sec_7_li_3')}</li>
             </ul>
-            <p>We use the following sub-processors to deliver the Service: Supabase (database), Anthropic (AI), Tavily (web search), Vercel (hosting), Stripe (payments), and Resend (email). Full details including legal transfer mechanisms are in our <Link href="/privacy" style={{ color: 'var(--acc)' }}>Privacy Policy</Link>.</p>
-            <p>Enterprise customers may request a Data Processing Agreement (DPA) by contacting <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: 'var(--acc)' }}>{PRIVACY_EMAIL}</a>.</p>
+            <p>{t('terms.sec_7_p3_a')}<Link href={localePath('/privacy', locale)} style={{ color: 'var(--acc)' }}>{t('terms.sec_7_p3_link')}</Link>{t('terms.sec_7_p3_b')}</p>
+            <p>{t('terms.sec_7_p4_a')}<a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: 'var(--acc)' }}>{PRIVACY_EMAIL}</a>{t('terms.sec_7_p4_b')}</p>
           </Section>
 
-          <Section title="8. Confidentiality">
-            <p>Each party agrees to keep the other's Confidential Information confidential using at least the same degree of care it uses to protect its own confidential information, but no less than reasonable care. Each party may disclose Confidential Information only to employees, contractors, or advisers who need to know it and are bound by confidentiality obligations at least as protective as these Terms.</p>
-            <p>This obligation does not apply to information that: (a) is or becomes publicly known through no fault of the receiving party; (b) was rightfully known before disclosure; (c) is independently developed without use of the Confidential Information; or (d) must be disclosed by law, provided the disclosing party is given reasonable prior notice where permitted.</p>
+          <Section title={t('terms.sec_8_title')}>
+            <p>{t('terms.sec_8_p1')}</p>
+            <p>{t('terms.sec_8_p2')}</p>
           </Section>
 
-          <Section title="9. AI-generated content and disclaimers">
-            <p>The Service uses artificial intelligence to generate analytical insights and recommendations ("Outputs"). You acknowledge and agree that:</p>
+          <Section title={t('terms.sec_9_title')}>
+            <p>{t('terms.sec_9_p1')}</p>
             <ul>
-              <li>Outputs are generated automatically and may contain errors, inaccuracies, or omissions</li>
-              <li>Outputs do not constitute financial, legal, accounting, tax, or professional advice</li>
-              <li>You are solely responsible for verifying the accuracy of Outputs before making business decisions</li>
-              <li>AskBiz does not guarantee that Outputs will be accurate, complete, timely, or suitable for your specific purposes</li>
-              <li>You should not rely on Outputs as the sole basis for significant financial or operational decisions</li>
+              {[0, 1, 2, 3, 4].map(i => (
+                <li key={i}>{t('terms.sec_9_li_' + i)}</li>
+              ))}
             </ul>
-            <p>You assume full responsibility for decisions made based on Outputs from the Service.</p>
+            <p>{t('terms.sec_9_p2')}</p>
           </Section>
 
-          <Section title="10. Service availability and modifications">
-            <p>We aim to provide a reliable service but do not guarantee 100% uptime. We may:</p>
+          <Section title={t('terms.sec_10_title')}>
+            <p>{t('terms.sec_10_p1')}</p>
             <ul>
-              <li>Perform scheduled maintenance with reasonable advance notice</li>
-              <li>Experience unplanned outages — we will communicate these via our status page</li>
-              <li>Modify, suspend, or discontinue features with 30 days' notice where feasible</li>
+              <li>{t('terms.sec_10_li_0')}</li>
+              <li>{t('terms.sec_10_li_1')}</li>
+              <li>{t('terms.sec_10_li_2')}</li>
             </ul>
-            <p>We will not be liable for any loss or damage caused by service unavailability beyond what is required by applicable law.</p>
+            <p>{t('terms.sec_10_p2')}</p>
           </Section>
 
-          <Section title="11. Limitation of liability">
-            <p>To the maximum extent permitted by applicable law:</p>
+          <Section title={t('terms.sec_11_title')}>
+            <p>{t('terms.sec_11_p1')}</p>
             <ul>
-              <li>AskBiz's total aggregate liability to you for all claims arising under or in connection with these Terms or the Service shall not exceed the greater of: (a) the total fees paid by you to AskBiz in the 12 months preceding the claim; or (b) £100.</li>
-              <li>AskBiz shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of profit, loss of revenue, loss of data, loss of business, or loss of goodwill, even if we have been advised of the possibility of such damages.</li>
+              <li>{t('terms.sec_11_li_0')}</li>
+              <li>{t('terms.sec_11_li_1')}</li>
             </ul>
-            <p>Nothing in these Terms excludes or limits liability for: death or personal injury caused by negligence; fraud or fraudulent misrepresentation; or any other liability that cannot be excluded or limited by law.</p>
-            <p>If you are a consumer, you may have statutory rights that these Terms cannot affect. Nothing in these Terms affects your statutory rights.</p>
+            <p>{t('terms.sec_11_p2')}</p>
+            <p>{t('terms.sec_11_p3')}</p>
           </Section>
 
-          <Section title="12. Indemnification">
-            <p>You agree to indemnify, defend, and hold harmless AskBiz and its directors, officers, employees, and agents from and against any claims, liabilities, damages, losses, and expenses (including reasonable legal fees) arising out of or in connection with:</p>
+          <Section title={t('terms.sec_12_title')}>
+            <p>{t('terms.sec_12_p1')}</p>
             <ul>
-              <li>Your use of the Service in violation of these Terms</li>
-              <li>Your Business Data, including any claim that your Business Data infringes third-party rights</li>
-              <li>Your violation of any applicable law or regulation</li>
-              <li>Any decision made by you based on Outputs from the Service</li>
+              {[0, 1, 2, 3].map(i => (
+                <li key={i}>{t('terms.sec_12_li_' + i)}</li>
+              ))}
             </ul>
           </Section>
 
-          <Section title="13. Term and termination">
-            <SubSection title="13.1 Term">
-              <p>These Terms commence when you create an Account and continue until terminated by either party.</p>
+          <Section title={t('terms.sec_13_title')}>
+            <SubSection title={t('terms.sec_13_1_title')}>
+              <p>{t('terms.sec_13_1_p1')}</p>
             </SubSection>
-            <SubSection title="13.2 Termination by you">
-              <p>You may terminate your Account at any time by deleting it through Settings or by contacting <a href={`mailto:${EMAIL}`} style={{ color: 'var(--acc)' }}>{EMAIL}</a>. Termination does not entitle you to a refund of prepaid fees except as required by law.</p>
+            <SubSection title={t('terms.sec_13_2_title')}>
+              <p>{t('terms.sec_13_2_p1_a')}<a href={`mailto:${EMAIL}`} style={{ color: 'var(--acc)' }}>{EMAIL}</a>{t('terms.sec_13_2_p1_b')}</p>
             </SubSection>
-            <SubSection title="13.3 Termination by AskBiz">
-              <p>We may suspend or terminate your Account immediately if: you materially breach these Terms; your use creates legal risk for AskBiz or other users; you fail to pay fees after a cure period; or we are required to do so by law.</p>
-              <p>For non-material breaches, we will give you 14 days' written notice and opportunity to remedy the breach before terminating.</p>
+            <SubSection title={t('terms.sec_13_3_title')}>
+              <p>{t('terms.sec_13_3_p1')}</p>
+              <p>{t('terms.sec_13_3_p2')}</p>
             </SubSection>
-            <SubSection title="13.4 Effect of termination">
-              <p>Upon termination, your right to access the Service ceases immediately. We will delete your Business Data within 30 days as described in our Privacy Policy. Sections 6, 8, 9, 11, 12, and 15 survive termination.</p>
-            </SubSection>
-          </Section>
-
-          <Section title="14. Changes to terms">
-            <p>We may update these Terms from time to time. We will notify you of material changes by email and in-app notification at least 14 days before the changes take effect. Your continued use of the Service after the effective date constitutes acceptance of the updated Terms.</p>
-            <p>If you do not accept the updated Terms, you must stop using the Service and may cancel your Subscription without penalty within the 14-day notice period.</p>
-          </Section>
-
-          <Section title="15. Governing law and disputes">
-            <p>These Terms are governed by the laws of England and Wales. Any dispute arising out of or in connection with these Terms shall be subject to the exclusive jurisdiction of the courts of England and Wales, except that either party may seek injunctive or other equitable relief in any court of competent jurisdiction.</p>
-            <p>For EU consumers, the European Commission's Online Dispute Resolution platform is available at ec.europa.eu/consumers/odr.</p>
-            <p>For disputes under £10,000, we encourage resolution through our support team before initiating legal proceedings. Email <a href={`mailto:${EMAIL}`} style={{ color: 'var(--acc)' }}>{EMAIL}</a> and we will aim to resolve the matter within 14 business days.</p>
-          </Section>
-
-          <Section title="16. General provisions">
-            <SubSection title="16.1 Entire agreement">
-              <p>These Terms, together with the Privacy Policy and any Subscription order form, constitute the entire agreement between you and AskBiz regarding the Service and supersede all prior agreements, representations, and understandings.</p>
-            </SubSection>
-            <SubSection title="16.2 Severability">
-              <p>If any provision of these Terms is found to be unenforceable, that provision will be modified to the minimum extent necessary to make it enforceable, and the remaining provisions will remain in full force and effect.</p>
-            </SubSection>
-            <SubSection title="16.3 Waiver">
-              <p>Our failure to enforce any right or provision of these Terms will not constitute a waiver of that right or provision.</p>
-            </SubSection>
-            <SubSection title="16.4 Assignment">
-              <p>You may not assign or transfer your rights under these Terms without our prior written consent. We may assign our rights and obligations to an affiliate or in connection with a merger, acquisition, or sale of assets, with notice to you.</p>
-            </SubSection>
-            <SubSection title="16.5 Force majeure">
-              <p>Neither party shall be liable for any failure or delay in performance due to circumstances beyond their reasonable control, including natural disasters, pandemic, war, government action, or internet infrastructure failures.</p>
-            </SubSection>
-            <SubSection title="16.6 Notices">
-              <p>Legal notices to AskBiz must be sent to <a href={`mailto:${EMAIL}`} style={{ color: 'var(--acc)' }}>{EMAIL}</a>. Notices to you will be sent to the email address associated with your Account.</p>
+            <SubSection title={t('terms.sec_13_4_title')}>
+              <p>{t('terms.sec_13_4_p1')}</p>
             </SubSection>
           </Section>
 
-          <Section title="17. Contact">
-            <p><strong>Legal enquiries:</strong> <a href={`mailto:${EMAIL}`} style={{ color: 'var(--acc)' }}>{EMAIL}</a></p>
-            <p><strong>Privacy enquiries:</strong> <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: 'var(--acc)' }}>{PRIVACY_EMAIL}</a></p>
-            <p><strong>General support:</strong> <a href="mailto:hello@askbiz.co" style={{ color: 'var(--acc)' }}>hello@askbiz.co</a></p>
-            <p><strong>Company:</strong> {COMPANY}, London, United Kingdom</p>
+          <Section title={t('terms.sec_14_title')}>
+            <p>{t('terms.sec_14_p1')}</p>
+            <p>{t('terms.sec_14_p2')}</p>
+          </Section>
+
+          <Section title={t('terms.sec_15_title')}>
+            <p>{t('terms.sec_15_p1')}</p>
+            <p>{t('terms.sec_15_p2')}</p>
+            <p>{t('terms.sec_15_p3_a')}<a href={`mailto:${EMAIL}`} style={{ color: 'var(--acc)' }}>{EMAIL}</a>{t('terms.sec_15_p3_b')}</p>
+          </Section>
+
+          <Section title={t('terms.sec_16_title')}>
+            <SubSection title={t('terms.sec_16_1_title')}>
+              <p>{t('terms.sec_16_1_p1')}</p>
+            </SubSection>
+            <SubSection title={t('terms.sec_16_2_title')}>
+              <p>{t('terms.sec_16_2_p1')}</p>
+            </SubSection>
+            <SubSection title={t('terms.sec_16_3_title')}>
+              <p>{t('terms.sec_16_3_p1')}</p>
+            </SubSection>
+            <SubSection title={t('terms.sec_16_4_title')}>
+              <p>{t('terms.sec_16_4_p1')}</p>
+            </SubSection>
+            <SubSection title={t('terms.sec_16_5_title')}>
+              <p>{t('terms.sec_16_5_p1')}</p>
+            </SubSection>
+            <SubSection title={t('terms.sec_16_6_title')}>
+              <p>{t('terms.sec_16_6_p1_a')}<a href={`mailto:${EMAIL}`} style={{ color: 'var(--acc)' }}>{EMAIL}</a>{t('terms.sec_16_6_p1_b')}</p>
+            </SubSection>
+          </Section>
+
+          <Section title={t('terms.sec_17_title')}>
+            <p><strong>{t('terms.sec_17_legal_label')}</strong> <a href={`mailto:${EMAIL}`} style={{ color: 'var(--acc)' }}>{EMAIL}</a></p>
+            <p><strong>{t('terms.sec_17_privacy_label')}</strong> <a href={`mailto:${PRIVACY_EMAIL}`} style={{ color: 'var(--acc)' }}>{PRIVACY_EMAIL}</a></p>
+            <p><strong>{t('terms.sec_17_support_label')}</strong> <a href="mailto:hello@askbiz.co" style={{ color: 'var(--acc)' }}>hello@askbiz.co</a></p>
+            <p><strong>{t('terms.sec_17_company_label')}</strong> {t('terms.sec_17_company_value')}</p>
           </Section>
 
         </div>
 
         {/* Footer links */}
         <div style={{ marginTop: 56, paddingTop: 28, borderTop: '1px solid var(--b)', display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-          <Link href="/privacy" style={{ fontSize: 14, color: 'var(--acc)', textDecoration: 'none' }}>Privacy Policy</Link>
-          <Link href="/" style={{ fontSize: 14, color: 'var(--tx3)', textDecoration: 'none' }}>← Back to AskBiz</Link>
+          <Link href={localePath('/privacy', locale)} style={{ fontSize: 14, color: 'var(--acc)', textDecoration: 'none' }}>{t('terms.footer_privacy')}</Link>
+          <Link href={localePath('/', locale)} style={{ fontSize: 14, color: 'var(--tx3)', textDecoration: 'none' }}>{t('terms.footer_back')}</Link>
         </div>
 
       </div>
