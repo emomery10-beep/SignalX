@@ -80,8 +80,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <LanguageProvider initialLang={lang}>
             {children}
+            <CookieConsent />
           </LanguageProvider>
-          <CookieConsent />
         </ThemeProvider>
       </body>
     </html>

@@ -1,8 +1,10 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useLang } from '@/components/LanguageProvider'
 
 export default function CookieConsent() {
+  const { tc } = useLang()
   const [show, setShow] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
   const [analytics, setAnalytics] = useState(true)
@@ -45,35 +47,34 @@ export default function CookieConsent() {
         {!showDetails ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 240 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 4 }}>🍪 We use cookies</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 4 }}>🍪 {tc('cookies.title')}</div>
               <p style={{ fontSize: 12, color: 'var(--tx3)', margin: 0, lineHeight: 1.6 }}>
-                We use essential cookies to make AskBiz work, and optional analytics cookies to improve your experience.
-                See our <Link href="/privacy" style={{ color: 'var(--acc)', textDecoration: 'none' }}>Privacy Policy</Link>.
+                {tc('cookies.description')} <Link href="/privacy" style={{ color: 'var(--acc)', textDecoration: 'none' }}>{tc('nav.privacy')}</Link>.
               </p>
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flexShrink: 0 }}>
               <button onClick={() => setShowDetails(true)}
                 style={{ padding: '8px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
-                Manage preferences
+                {tc('cookies.manage')}
               </button>
               <button onClick={() => save(false)}
                 style={{ padding: '8px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
-                Essential only
+                {tc('cookies.essential_only')}
               </button>
               <button onClick={() => save(true)}
                 style={{ padding: '8px 16px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                Accept all
+                {tc('cookies.accept_all')}
               </button>
             </div>
           </div>
         ) : (
           <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 12 }}>Cookie preferences</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 12 }}>{tc('cookies.prefs_title')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
               {[
-                { label: 'Essential cookies', desc: 'Required for login, security, and core features. Cannot be disabled.', value: true, locked: true, onChange: () => {} },
-                { label: 'Analytics cookies', desc: 'Help us understand how you use AskBiz so we can improve it. No personal data shared with third parties.', value: analytics, locked: false, onChange: () => setAnalytics(a => !a) },
-                { label: 'Marketing cookies', desc: 'Used to show relevant content about AskBiz features. Disabled by default.', value: marketing, locked: false, onChange: () => setMarketing(m => !m) },
+                { label: tc('cookies.essential_label'), desc: tc('cookies.essential_desc'), value: true, locked: true, onChange: () => {} },
+                { label: tc('cookies.analytics_label'), desc: tc('cookies.analytics_desc'), value: analytics, locked: false, onChange: () => setAnalytics(a => !a) },
+                { label: tc('cookies.marketing_label'), desc: tc('cookies.marketing_desc'), value: marketing, locked: false, onChange: () => setMarketing(m => !m) },
               ].map((item, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, padding: '10px 12px', borderRadius: 10, background: 'var(--ev)', border: '1px solid var(--b)' }}>
                   <div>
@@ -82,7 +83,7 @@ export default function CookieConsent() {
                   </div>
                   <div style={{ flexShrink: 0 }}>
                     {item.locked ? (
-                      <span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 500 }}>Always on</span>
+                      <span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 500 }}>{tc('cookies.always_on')}</span>
                     ) : (
                       <button onClick={item.onChange} style={{
                         width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer',
@@ -103,11 +104,11 @@ export default function CookieConsent() {
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
               <button onClick={() => save(false)}
                 style={{ padding: '8px 16px', borderRadius: 9999, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
-                Save preferences
+                {tc('cookies.save_prefs')}
               </button>
               <button onClick={() => save(true)}
                 style={{ padding: '8px 16px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                Accept all
+                {tc('cookies.accept_all')}
               </button>
             </div>
           </div>

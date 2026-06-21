@@ -1,0 +1,16 @@
+{
+  "title": "We gebruiken cookies",
+  "description": "We gebruiken essentiële cookies om AskBiz te laten werken, en optionele analysecookies om uw ervaring te verbeteren. Zie onze",
+  "manage": "Voorkeuren beheren",
+  "essential_only": "Alleen essentieel",
+  "accept_all": "Alles accepteren",
+  "prefs_title": "Cookievoorkeuren",
+  "essential_label": "Essentiële cookies",
+  "essential_desc": "Vereist voor inloggen, beveiliging en kernfuncties. Kan niet worden uitgeschakeld.",
+  "analytics_label": "Analysecookies",
+  "analytics_desc": "Helpt ons te begrijpen hoe u AskBiz gebruikt, zodat we het kunnen verbeteren. Geen persoonlijke gegevens gedeeld met derden.",
+  "marketing_label": "Marketingcookies",
+  "marketing_desc": "Gebruikt om relevante inhoud over AskBiz-functies te tonen. Standaard uitgeschakeld.",
+  "always_on": "Altijd aan",
+  "save_prefs": "Voorkeuren opslaan"
+}

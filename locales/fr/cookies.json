@@ -1,0 +1,16 @@
+{
+  "title": "Nous utilisons des cookies",
+  "description": "Nous utilisons des cookies essentiels au fonctionnement d'AskBiz, ainsi que des cookies analytiques facultatifs pour améliorer votre expérience. Consultez notre",
+  "manage": "Gérer les préférences",
+  "essential_only": "Essentiels uniquement",
+  "accept_all": "Tout accepter",
+  "prefs_title": "Préférences de cookies",
+  "essential_label": "Cookies essentiels",
+  "essential_desc": "Requis pour la connexion, la sécurité et les fonctionnalités de base. Ne peuvent pas être désactivés.",
+  "analytics_label": "Cookies analytiques",
+  "analytics_desc": "Nous aident à comprendre comment vous utilisez AskBiz afin de l'améliorer. Aucune donnée personnelle partagée avec des tiers.",
+  "marketing_label": "Cookies marketing",
+  "marketing_desc": "Utilisés pour afficher du contenu pertinent sur les fonctionnalités d'AskBiz. Désactivés par défaut.",
+  "always_on": "Toujours actifs",
+  "save_prefs": "Enregistrer les préférences"
+}
