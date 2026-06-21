@@ -1,16 +1,24 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { getLocale, getT } from '@/lib/i18n-server'
+import { localePath } from '@/lib/i18n-locale'
 
-export const metadata: Metadata = {
-  title: 'AskBiz vs Shopify vs Power BI — Which is right for your business?',
-  description: 'AskBiz is an AI-powered POS + business intelligence platform starting free (then from £19/month). See how it compares to Shopify, Power BI, and Tableau for small business owners who sell in-store and online.',
-  alternates: { canonical: 'https://askbiz.co/compare' },
-  openGraph: {
-    title: 'AskBiz vs Shopify vs Power BI',
-    description: 'AskBiz is a full POS + AI intelligence platform — not just a BI layer. Compare pricing, features, and use cases.',
-    url: 'https://askbiz.co/compare',
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const t = getT()
+  const locale = getLocale()
+  return {
+    title: t('compare.meta_title'),
+    description: t('compare.meta_description'),
+    alternates: { canonical: `https://askbiz.co${localePath('/compare', locale)}` },
+    openGraph: {
+      title: t('compare.og_title'),
+      description: t('compare.og_description'),
+      url: `https://askbiz.co${localePath('/compare', locale)}`,
+    },
+  }
 }
+
+type T = (key: string) => string
 
 const C = {
   bg: '#f9f8f6', sf: '#ffffff', ev: '#f3f2ef',
@@ -21,125 +29,107 @@ const C = {
   red: '#dc2626', redBg: 'rgba(220,38,38,.06)',
 }
 
-const ROWS = [
+const buildRows = (t: T) => [
   {
-    feature: 'Pricing',
-    askbiz: 'Free plan · Growth from £19/mo · Business £39/mo',
-    shopify: 'From $39/mo (Shopify Basic) — POS Pro adds $89/mo per location',
-    powerbi: 'Free (limited) · Pro $10/user/mo · Premium from $20/user/mo',
+    feature: t('compare.row_pricing_feature'),
+    askbiz: t('compare.row_pricing_askbiz'),
+    shopify: t('compare.row_pricing_shopify'),
+    powerbi: t('compare.row_pricing_powerbi'),
     askbizWin: true,
   },
   {
-    feature: 'Full POS system included',
-    askbiz: '✓ Built-in — register, inventory, shifts, receipts, tax',
-    shopify: '✓ Yes — but requires a paid plan + hardware',
-    powerbi: '✗ No — Power BI is analytics only, not a POS',
+    feature: t('compare.row_pos_feature'),
+    askbiz: t('compare.row_pos_askbiz'),
+    shopify: t('compare.row_pos_shopify'),
+    powerbi: t('compare.row_pos_powerbi'),
     askbizWin: true,
   },
   {
-    feature: 'Camera-first scanning',
-    askbiz: '✓ Point phone camera to scan products — no barcode gun needed',
-    shopify: '△ Barcode scanning requires Shopify hardware or compatible scanner',
-    powerbi: '✗ Not applicable',
+    feature: t('compare.row_camera_feature'),
+    askbiz: t('compare.row_camera_askbiz'),
+    shopify: t('compare.row_camera_shopify'),
+    powerbi: t('compare.row_camera_powerbi'),
     askbizWin: true,
   },
   {
-    feature: 'Real-time inventory (shop + online)',
-    askbiz: '✓ Single inventory synced across in-store and online channels',
-    shopify: '✓ Yes — strong inventory sync across channels',
-    powerbi: '✗ No — it reads from other systems, does not manage stock',
+    feature: t('compare.row_inventory_feature'),
+    askbiz: t('compare.row_inventory_askbiz'),
+    shopify: t('compare.row_inventory_shopify'),
+    powerbi: t('compare.row_inventory_powerbi'),
     askbizWin: false,
   },
   {
-    feature: 'AI natural-language questions',
-    askbiz: '✓ Ask "why did revenue drop?" and get a plain-English answer',
-    shopify: '△ Basic AI features — no conversational business intelligence',
-    powerbi: '△ Copilot (paid) lets you query dashboards in natural language',
+    feature: t('compare.row_ai_feature'),
+    askbiz: t('compare.row_ai_askbiz'),
+    shopify: t('compare.row_ai_shopify'),
+    powerbi: t('compare.row_ai_powerbi'),
     askbizWin: true,
   },
   {
-    feature: 'Mobile money (M-Pesa, MTN, Airtel)',
-    askbiz: '✓ Native support — built for Africa, Asia, and emerging markets',
-    shopify: '✗ Not supported natively',
-    powerbi: '✗ Not applicable',
+    feature: t('compare.row_mobilemoney_feature'),
+    askbiz: t('compare.row_mobilemoney_askbiz'),
+    shopify: t('compare.row_mobilemoney_shopify'),
+    powerbi: t('compare.row_mobilemoney_powerbi'),
     askbizWin: true,
   },
   {
-    feature: 'Business intelligence & analytics',
-    askbiz: '✓ Built-in — margins, churn, anomaly alerts, daily brief',
-    shopify: '△ Basic sales reports — no deep analytics or AI insights',
-    powerbi: '✓ Excellent — enterprise-grade dashboards and data modelling',
+    feature: t('compare.row_bi_feature'),
+    askbiz: t('compare.row_bi_askbiz'),
+    shopify: t('compare.row_bi_shopify'),
+    powerbi: t('compare.row_bi_powerbi'),
     askbizWin: false,
   },
   {
-    feature: 'Setup time',
-    askbiz: '✓ Under 2 minutes — no configuration or IT team needed',
-    shopify: '△ 1–4 hours for basic setup; days for full POS + inventory',
-    powerbi: '✗ Days to weeks — requires data modelling and dashboard setup',
+    feature: t('compare.row_setup_feature'),
+    askbiz: t('compare.row_setup_askbiz'),
+    shopify: t('compare.row_setup_shopify'),
+    powerbi: t('compare.row_setup_powerbi'),
     askbizWin: true,
   },
   {
-    feature: 'Works offline',
-    askbiz: '✓ Offline mode — syncs when reconnected',
-    shopify: '✓ POS works offline',
-    powerbi: '△ Limited offline capability',
+    feature: t('compare.row_offline_feature'),
+    askbiz: t('compare.row_offline_askbiz'),
+    shopify: t('compare.row_offline_shopify'),
+    powerbi: t('compare.row_offline_powerbi'),
     askbizWin: false,
   },
   {
-    feature: 'Multi-branch / multi-location',
-    askbiz: '✓ Full multi-branch — per-location currency, tax, inventory, staff',
-    shopify: '✓ Multi-location inventory supported',
-    powerbi: '✓ Can model multi-location data',
+    feature: t('compare.row_multibranch_feature'),
+    askbiz: t('compare.row_multibranch_askbiz'),
+    shopify: t('compare.row_multibranch_shopify'),
+    powerbi: t('compare.row_multibranch_powerbi'),
     askbizWin: false,
   },
   {
-    feature: 'Sector-specific flows',
-    askbiz: '✓ Retail, restaurant, salon, repair shop, factory, logistics',
-    shopify: '✓ Retail and restaurant focused',
-    powerbi: '✗ Generic — no sector-specific templates',
+    feature: t('compare.row_sector_feature'),
+    askbiz: t('compare.row_sector_askbiz'),
+    shopify: t('compare.row_sector_shopify'),
+    powerbi: t('compare.row_sector_powerbi'),
     askbizWin: true,
   },
   {
-    feature: 'No separate BI tool needed',
-    askbiz: '✓ Intelligence is built into the POS — one platform',
-    shopify: '✗ You need to connect Power BI, Tableau, or similar separately',
-    powerbi: '✗ You still need a POS/ERP to feed it data',
+    feature: t('compare.row_nobi_feature'),
+    askbiz: t('compare.row_nobi_askbiz'),
+    shopify: t('compare.row_nobi_shopify'),
+    powerbi: t('compare.row_nobi_powerbi'),
     askbizWin: true,
   },
 ]
 
-const VERDICT = [
-  {
-    title: 'You sell in a shop and online and need real inventory sync',
-    winner: 'AskBiz',
-    reason: 'AskBiz runs your shop POS, syncs your online orders, and gives you AI answers about what\'s happening — all in one platform starting free.',
-    notThis: 'Power BI',
-    notReason: 'Power BI only analyses data it receives from other systems. It won\'t keep your stock levels accurate.',
-  },
-  {
-    title: 'You want deep, custom enterprise dashboards',
-    winner: 'Power BI',
-    reason: 'Power BI is the gold standard for data teams who need full control over metrics, data modelling, and presentation.',
-    notThis: 'AskBiz',
-    notReason: 'AskBiz gives you AI answers, not fully custom dashboards. If your analyst team needs LookML or DAX — use Power BI.',
-  },
-  {
-    title: 'You want an e-commerce store with a physical POS',
-    winner: 'AskBiz or Shopify',
-    reason: 'Both work well here. AskBiz costs less, includes AI intelligence, and doesn\'t require hardware. Shopify has a larger app ecosystem.',
-    notThis: 'Power BI',
-    notReason: 'Power BI has no POS or e-commerce features.',
-  },
-  {
-    title: 'You want "just tell me what\'s happening in my business"',
-    winner: 'AskBiz',
-    reason: 'That\'s exactly what AskBiz is built for. Ask in plain English, get answers grounded in your real data — no dashboard to build first.',
-    notThis: 'Power BI or Shopify',
-    notReason: 'Both require significant setup before you can get business answers. Power BI especially assumes a data team.',
-  },
-]
+const buildVerdict = (t: T) =>
+  [0, 1, 2, 3].map(i => ({
+    title: t('compare.verdict_' + i + '_title'),
+    winner: t('compare.verdict_' + i + '_winner'),
+    reason: t('compare.verdict_' + i + '_reason'),
+    notThis: t('compare.verdict_' + i + '_notThis'),
+    notReason: t('compare.verdict_' + i + '_notReason'),
+  }))
 
 export default function ComparePage() {
+  const t = getT()
+  const locale = getLocale()
+  const ROWS = buildRows(t)
+  const VERDICT = buildVerdict(t)
   return (
     <div style={{ background: C.bg, minHeight: '100vh' }}>
       <style>{`
@@ -149,46 +139,46 @@ export default function ComparePage() {
 
       {/* Nav */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(249,248,246,.96)', backdropFilter: 'blur(16px)', borderBottom: `1px solid ${C.b}`, padding: '0 clamp(16px,4vw,32px)', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/" style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 800, color: C.tx, textDecoration: 'none', letterSpacing: '-.03em' }}>
+        <Link href={localePath('/', locale)} style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 800, color: C.tx, textDecoration: 'none', letterSpacing: '-.03em' }}>
           ask<span style={{ color: C.acc }}>biz</span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <Link href="/pricing" style={{ fontSize: 13, color: C.tx2, textDecoration: 'none', fontWeight: 500 }}>Pricing</Link>
-          <Link href="/signin" style={{ padding: '8px 18px', borderRadius: 9999, background: C.acc, color: '#fff', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
-            Try free
+          <Link href={localePath('/pricing', locale)} style={{ fontSize: 13, color: C.tx2, textDecoration: 'none', fontWeight: 500 }}>{t('compare.nav_pricing')}</Link>
+          <Link href={localePath('/signin', locale)} style={{ padding: '8px 18px', borderRadius: 9999, background: C.acc, color: '#fff', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+            {t('compare.nav_try_free')}
           </Link>
         </div>
       </nav>
 
       {/* Hero */}
       <section style={{ maxWidth: 860, margin: '0 auto', padding: 'clamp(56px,8vw,96px) clamp(16px,4vw,40px) clamp(32px,5vw,56px)', textAlign: 'center' }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: C.acc, letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 20 }}>AskBiz vs the alternatives</p>
+        <p style={{ fontSize: 11, fontWeight: 700, color: C.acc, letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 20 }}>{t('compare.hero_eyebrow')}</p>
         <h1 style={{ fontFamily: 'var(--font-sora)', fontSize: 'clamp(28px,4vw,52px)', fontWeight: 700, lineHeight: 1.1, letterSpacing: '-.03em', marginBottom: 20, color: C.tx }}>
-          AskBiz vs Shopify vs Power BI
+          {t('compare.hero_h1')}
         </h1>
         <p style={{ fontSize: 'clamp(15px,1.8vw,18px)', color: C.tx2, lineHeight: 1.7, maxWidth: 600, margin: '0 auto 32px' }}>
-          AskBiz is not just a BI tool — it's a full POS + AI intelligence platform. Here's how it honestly compares to the tools you've probably heard of.
+          {t('compare.hero_subtitle')}
         </p>
 
         {/* Pricing clarity strip */}
         <div style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center', padding: '14px 20px', background: C.greenBg, border: `1px solid rgba(22,163,74,.18)`, borderRadius: 12, marginBottom: 8 }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.green }}>AskBiz</div>
-            <div style={{ fontSize: 12, color: C.tx2 }}>Free · £19/mo · £39/mo</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.green }}>{t('compare.strip_askbiz_name')}</div>
+            <div style={{ fontSize: 12, color: C.tx2 }}>{t('compare.strip_askbiz_price')}</div>
           </div>
           <div style={{ width: 1, background: C.b, alignSelf: 'stretch' }} />
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.tx2 }}>Shopify</div>
-            <div style={{ fontSize: 12, color: C.tx3 }}>from $39/mo + POS hardware</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.tx2 }}>{t('compare.strip_shopify_name')}</div>
+            <div style={{ fontSize: 12, color: C.tx3 }}>{t('compare.strip_shopify_price')}</div>
           </div>
           <div style={{ width: 1, background: C.b, alignSelf: 'stretch' }} />
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.tx2 }}>Power BI</div>
-            <div style={{ fontSize: 12, color: C.tx3 }}>Free (very limited) · $10–20/user/mo</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.tx2 }}>{t('compare.strip_powerbi_name')}</div>
+            <div style={{ fontSize: 12, color: C.tx3 }}>{t('compare.strip_powerbi_price')}</div>
           </div>
         </div>
         <p style={{ fontSize: 11, color: C.tx3, marginTop: 6 }}>
-          AskBiz is not "$199/month" — that figure circulating online is incorrect.
+          {t('compare.strip_note')}
         </p>
       </section>
 
@@ -198,7 +188,7 @@ export default function ComparePage() {
 
           {/* Header row */}
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 2fr 2fr', background: C.ev, borderBottom: `1px solid ${C.b2}` }}>
-            {['Feature', 'AskBiz', 'Shopify', 'Power BI'].map((h, i) => (
+            {[t('compare.col_feature'), t('compare.col_askbiz'), t('compare.col_shopify'), t('compare.col_powerbi')].map((h, i) => (
               <div key={i} style={{ padding: '14px 20px', fontSize: 12, fontWeight: 700, color: i === 1 ? C.acc : C.tx2, letterSpacing: '.06em', textTransform: 'uppercase', borderRight: i < 3 ? `1px solid ${C.b}` : undefined }}>
                 {h}
               </div>
@@ -222,7 +212,7 @@ export default function ComparePage() {
           {ROWS.map((row, i) => (
             <div key={i} style={{ background: C.sf, borderRadius: 10, border: `1px solid ${C.b2}`, padding: '16px', marginBottom: 12 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: C.tx, marginBottom: 10 }}>{row.feature}</div>
-              {[['AskBiz', row.askbiz, true], ['Shopify', row.shopify, false], ['Power BI', row.powerbi, false]].map(([name, val, isAsk], j) => (
+              {[[t('compare.col_askbiz'), row.askbiz, true], [t('compare.col_shopify'), row.shopify, false], [t('compare.col_powerbi'), row.powerbi, false]].map(([name, val, isAsk], j) => (
                 <div key={j} style={{ marginBottom: 8, padding: '8px 10px', borderRadius: 7, background: isAsk && row.askbizWin ? C.accBg : C.bg }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: isAsk ? C.acc : C.tx3, marginBottom: 2 }}>{name as string}</div>
                   <div style={{ fontSize: 12, color: C.tx2, lineHeight: 1.5 }}>{val as string}</div>
@@ -236,21 +226,21 @@ export default function ComparePage() {
       {/* Verdict section */}
       <section style={{ background: C.ev, borderTop: `1px solid ${C.b2}`, borderBottom: `1px solid ${C.b2}`, padding: 'clamp(56px,7vw,88px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth: 860, margin: '0 auto' }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: C.acc, letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 16, textAlign: 'center' }}>Honest verdict</p>
+          <p style={{ fontSize: 11, fontWeight: 700, color: C.acc, letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 16, textAlign: 'center' }}>{t('compare.verdict_eyebrow')}</p>
           <h2 style={{ fontFamily: 'var(--font-sora)', fontSize: 'clamp(22px,3vw,36px)', fontWeight: 700, textAlign: 'center', marginBottom: 40, color: C.tx }}>
-            Which tool is right for your situation?
+            {t('compare.verdict_heading')}
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {VERDICT.map((v, i) => (
               <div key={i} style={{ background: C.sf, borderRadius: 12, border: `1px solid ${C.b2}`, padding: '20px 24px' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.tx2, marginBottom: 12 }}>If: {v.title}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.tx2, marginBottom: 12 }}>{t('compare.verdict_if_label')} {v.title}</div>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <div style={{ flex: 1, minWidth: 220, padding: '12px 16px', borderRadius: 9, background: C.greenBg, border: `1px solid rgba(22,163,74,.2)` }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: C.green, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 4 }}>Use: {v.winner}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: C.green, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 4 }}>{t('compare.verdict_use_label')} {v.winner}</div>
                     <div style={{ fontSize: 12, color: C.tx2, lineHeight: 1.55 }}>{v.reason}</div>
                   </div>
                   <div style={{ flex: 1, minWidth: 220, padding: '12px 16px', borderRadius: 9, background: C.redBg, border: `1px solid rgba(220,38,38,.12)` }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: C.red, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 4 }}>Not: {v.notThis}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: C.red, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 4 }}>{t('compare.verdict_not_label')} {v.notThis}</div>
                     <div style={{ fontSize: 12, color: C.tx2, lineHeight: 1.55 }}>{v.notReason}</div>
                   </div>
                 </div>
@@ -264,26 +254,26 @@ export default function ComparePage() {
       <section style={{ padding: 'clamp(56px,7vw,88px) clamp(16px,4vw,40px)', textAlign: 'center' }}>
         <div style={{ maxWidth: 540, margin: '0 auto' }}>
           <h2 style={{ fontFamily: 'var(--font-sora)', fontSize: 'clamp(22px,3vw,36px)', fontWeight: 700, marginBottom: 14, color: C.tx }}>
-            Try AskBiz free — no card needed
+            {t('compare.cta_heading')}
           </h2>
           <p style={{ fontSize: 15, color: C.tx2, lineHeight: 1.7, marginBottom: 28 }}>
-            Free plan always available. Growth from £19/month. Full POS system included. Ready in under 2 minutes.
+            {t('compare.cta_subtitle')}
           </p>
-          <Link href="/signin?mode=signup" style={{ display: 'inline-block', padding: '14px 32px', borderRadius: 9999, background: C.acc, color: '#fff', fontSize: 15, fontWeight: 700, textDecoration: 'none', boxShadow: `0 4px 20px rgba(208,138,89,.3)` }}>
-            Start free →
+          <Link href={localePath('/signin?mode=signup', locale)} style={{ display: 'inline-block', padding: '14px 32px', borderRadius: 9999, background: C.acc, color: '#fff', fontSize: 15, fontWeight: 700, textDecoration: 'none', boxShadow: `0 4px 20px rgba(208,138,89,.3)` }}>
+            {t('compare.cta_button')}
           </Link>
           <p style={{ fontSize: 12, color: C.tx3, marginTop: 12 }}>
-            <Link href="/pricing" style={{ color: C.acc, textDecoration: 'none' }}>See full pricing →</Link>
+            <Link href={localePath('/pricing', locale)} style={{ color: C.acc, textDecoration: 'none' }}>{t('compare.cta_pricing_link')}</Link>
             {' '}·{' '}
-            <Link href="/point-of-sale" style={{ color: C.tx3, textDecoration: 'none' }}>Explore the POS →</Link>
+            <Link href={localePath('/point-of-sale', locale)} style={{ color: C.tx3, textDecoration: 'none' }}>{t('compare.cta_pos_link')}</Link>
           </p>
         </div>
       </section>
 
       {/* Footer */}
       <footer style={{ borderTop: `1px solid ${C.b}`, padding: '20px clamp(16px,4vw,40px)', display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
-        {[['/', 'Home'], ['/pricing', 'Pricing'], ['/point-of-sale', 'Point of Sale'], ['/blog', 'Blog']].map(([href, label]) => (
-          <Link key={href} href={href} style={{ fontSize: 12, color: C.tx3, textDecoration: 'none' }}>{label}</Link>
+        {([['/', t('compare.footer_home')], ['/pricing', t('compare.footer_pricing')], ['/point-of-sale', t('compare.footer_pos')], ['/blog', t('compare.footer_blog')]] as [string, string][]).map(([href, label]) => (
+          <Link key={href} href={localePath(href, locale)} style={{ fontSize: 12, color: C.tx3, textDecoration: 'none' }}>{label}</Link>
         ))}
       </footer>
     </div>

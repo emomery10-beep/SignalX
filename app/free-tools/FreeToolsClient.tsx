@@ -1,152 +1,88 @@
 "use client";
 
 import Link from "next/link";
+import { useLang } from "@/components/LanguageProvider";
 
-const TOOLS = [
+const buildTools = (tc: (key: string) => string) => [
   {
     href: "/free-tools/landed-cost-calculator",
     icon: "🚢",
-    title: "Landed Cost Calculator",
-    tagline: "What does your shipment actually cost?",
-    description:
-      "Calculate the true landed cost of any imported product. Enter your supplier price, origin country, HS code, freight method, and destination — get a full breakdown of import duty, VAT, freight, insurance, and FX conversion cost.",
-    features: [
-      "Duty rates for 25+ import destinations",
-      "28 HS code categories covered",
-      "Sea, air, and road freight options",
-      "VAT/GST calculation by country",
-      "True per-unit cost in your currency",
-      "Compare freight methods side by side",
-    ],
-    cta: "Calculate Landed Cost →",
+    title: tc("freetools.tool_landed_title"),
+    tagline: tc("freetools.tool_landed_tagline"),
+    description: tc("freetools.tool_landed_desc"),
+    features: [0, 1, 2, 3, 4, 5].map((i) => tc("freetools.tool_landed_feat_" + i)),
+    cta: tc("freetools.tool_landed_cta"),
     color: "#d08a59",
     popular: true,
   },
   {
     href: "/free-tools/fx-risk-modeller",
     icon: "💱",
-    title: "FX Risk Modeller",
-    tagline: "How much does currency risk cost you?",
-    description:
-      "Model how exchange rate movements affect your profit margins. Enter your selling price, supplier currency, and target margin — see your break-even rate and margin impact across mild, moderate, and severe depreciation scenarios.",
-    features: [
-      "15 currency pairs covered",
-      "3 depreciation scenarios (mild/moderate/severe)",
-      "Break-even exchange rate calculation",
-      "Per-product margin impact table",
-      "Annualised volatility context",
-      "Rebalancing price suggestions",
-    ],
-    cta: "Model FX Risk →",
+    title: tc("freetools.tool_fx_title"),
+    tagline: tc("freetools.tool_fx_tagline"),
+    description: tc("freetools.tool_fx_desc"),
+    features: [0, 1, 2, 3, 4, 5].map((i) => tc("freetools.tool_fx_feat_" + i)),
+    cta: tc("freetools.tool_fx_cta"),
     color: "#3b82f6",
     popular: false,
   },
   {
     href: "/free-tools/vat-calculator",
     icon: "🧾",
-    title: "VAT / Sales Tax Calculator",
-    tagline: "Add or remove tax in one click",
-    description:
-      "Calculate VAT, GST, or sales tax for 30 countries. Add tax to a net price or extract tax from a gross price. Supports standard, reduced, and zero rates with country-specific rules.",
-    features: [
-      "30 countries covered",
-      "Add VAT or extract from gross",
-      "Standard, reduced & zero rates",
-      "US state-level sales tax",
-      "Auto-detects VAT / GST / Sales Tax label",
-      "Full rate reference table",
-    ],
-    cta: "Calculate VAT →",
+    title: tc("freetools.tool_vat_title"),
+    tagline: tc("freetools.tool_vat_tagline"),
+    description: tc("freetools.tool_vat_desc"),
+    features: [0, 1, 2, 3, 4, 5].map((i) => tc("freetools.tool_vat_feat_" + i)),
+    cta: tc("freetools.tool_vat_cta"),
     color: "#16a34a",
     popular: false,
   },
   {
     href: "/free-tools/profit-margin-calculator",
     icon: "💰",
-    title: "Profit Margin Calculator",
-    tagline: "What's your real margin after all costs?",
-    description:
-      "Calculate your true profit margin and markup per product. Add shipping, platform fees, and import duties to see the gap between your simplified margin and your real one. Compare multiple products side by side.",
-    features: [
-      "True margin after all costs",
-      "Margin vs markup comparison",
-      "Batch mode: compare products",
-      "Hidden cost gap detection",
-      "Monthly profit projection",
-      "12 currencies supported",
-    ],
-    cta: "Calculate Margin →",
+    title: tc("freetools.tool_margin_title"),
+    tagline: tc("freetools.tool_margin_tagline"),
+    description: tc("freetools.tool_margin_desc"),
+    features: [0, 1, 2, 3, 4, 5].map((i) => tc("freetools.tool_margin_feat_" + i)),
+    cta: tc("freetools.tool_margin_cta"),
     color: "#16a34a",
     popular: true,
   },
   {
     href: "/free-tools/cogs-calculator",
     icon: "🧮",
-    title: "COGS Calculator",
-    tagline: "What does each product really cost you?",
-    description:
-      "Calculate your true cost of goods sold per product. Add materials, labour, shipping, packaging, and allocated overhead. See your COGS ratio, gross profit, and how you compare to industry benchmarks.",
-    features: [
-      "Materials, labour, shipping & packaging",
-      "Overhead allocation per unit",
-      "COGS ratio and gross profit",
-      "Revenue waterfall breakdown",
-      "Industry benchmark comparison",
-      "Multi-product batch mode",
-    ],
-    cta: "Calculate COGS →",
+    title: tc("freetools.tool_cogs_title"),
+    tagline: tc("freetools.tool_cogs_tagline"),
+    description: tc("freetools.tool_cogs_desc"),
+    features: [0, 1, 2, 3, 4, 5].map((i) => tc("freetools.tool_cogs_feat_" + i)),
+    cta: tc("freetools.tool_cogs_cta"),
     color: "#7c3aed",
     popular: false,
   },
   {
     href: "/free-tools/break-even-calculator",
     icon: "📐",
-    title: "Break-Even Calculator",
-    tagline: "How many units until you're profitable?",
-    description:
-      "Enter your fixed costs, selling price, and variable cost per unit. Instantly see your break-even point in units and revenue, contribution margin, profit scenarios at different volumes, and price sensitivity analysis.",
-    features: [
-      "Break-even in units & revenue",
-      "Contribution margin calculation",
-      "6 profit/loss scenarios",
-      "Price sensitivity analysis",
-      "Monthly or yearly fixed costs",
-      "12 currencies supported",
-    ],
-    cta: "Calculate Break-Even →",
+    title: tc("freetools.tool_breakeven_title"),
+    tagline: tc("freetools.tool_breakeven_tagline"),
+    description: tc("freetools.tool_breakeven_desc"),
+    features: [0, 1, 2, 3, 4, 5].map((i) => tc("freetools.tool_breakeven_feat_" + i)),
+    cta: tc("freetools.tool_breakeven_cta"),
     color: "#7c3aed",
     popular: false,
   },
 ];
 
-const FAQS = [
-  {
-    q: "Are these tools really free?",
-    a: "Yes — completely free, no sign-up required. You can use them as many times as you like. They are powered by AskBiz, a business intelligence platform for SME founders. If you find them useful, there's a link to learn more about AskBiz at the bottom.",
-  },
-  {
-    q: "How accurate are the duty rates?",
-    a: "Duty rates are sourced from the UK Global Tariff, US HTS, and EU Combined Nomenclature, updated quarterly. They are indicative — always verify with a customs broker or the official tariff database before making a significant import decision. Rates can change with trade agreements and budget announcements.",
-  },
-  {
-    q: "What is a landed cost?",
-    a: "Landed cost is the total cost of getting a product from your supplier to your warehouse, including supplier price, international freight, import duty, VAT/GST, customs clearance, insurance, and currency conversion. Many importers underestimate their true cost by 15–30% by ignoring one or more of these elements.",
-  },
-  {
-    q: "What is FX risk for importers?",
-    a: "If you price your products in GBP but pay your suppliers in USD or CNY, a change in the exchange rate changes your effective cost — even if the supplier price stays the same. A 10% GBP depreciation against USD means your USD-priced goods cost 10% more in GBP. The FX Risk Modeller shows you exactly how much margin you lose at different exchange rate levels.",
-  },
-  {
-    q: "What is an HS code?",
-    a: "An HS (Harmonised System) code is a 6-digit number used by customs authorities worldwide to classify traded goods. Your HS code determines your import duty rate. The Landed Cost Calculator includes the most common categories — if you need a specific code, the UK Trade Tariff (gov.uk/trade-tariff) is the official reference.",
-  },
-  {
-    q: "Can I use these for my business planning?",
-    a: "Yes — these tools are designed for business planning. Use the Landed Cost Calculator to set accurate product pricing and the FX Risk Modeller to stress-test your margins before a large purchase order. For deeper analysis connected to your live sales data, AskBiz's full platform goes significantly further.",
-  },
-];
+const buildFaqs = (tc: (key: string) => string) =>
+  [0, 1, 2, 3, 4, 5].map((i) => ({
+    q: tc("freetools.faq_" + i + "_q"),
+    a: tc("freetools.faq_" + i + "_a"),
+  }));
 
 export default function FreeToolsClient() {
+  const { tc } = useLang();
+  const TOOLS = buildTools(tc);
+  const FAQS = buildFaqs(tc);
+
   return (
     <>
       <script
@@ -156,8 +92,8 @@ export default function FreeToolsClient() {
             {
               "@context": "https://schema.org",
               "@type": "WebPage",
-              name: "Free Business Tools — AskBiz",
-              description: "Free business calculators — landed cost, FX risk, VAT, and break-even analysis for SME founders.",
+              name: tc("freetools.schema_page_name"),
+              description: tc("freetools.schema_page_desc"),
               url: "https://askbiz.co/free-tools",
               offers: TOOLS.map((t) => ({
                 "@type": "Offer",
@@ -186,13 +122,13 @@ export default function FreeToolsClient() {
           <div className="ft-nav-inner">
             <Link href="/" className="ft-nav-logo">AskBiz</Link>
             <div className="ft-nav-links">
-              <Link href="/help" className="ft-nav-link">Help Center</Link>
-              <Link href="/free-tools/landed-cost-calculator" className="ft-nav-link">Landed Cost</Link>
-              <Link href="/free-tools/vat-calculator" className="ft-nav-link">VAT Calculator</Link>
-              <Link href="/free-tools/profit-margin-calculator" className="ft-nav-link">Margin Calculator</Link>
-              <Link href="/free-tools/cogs-calculator" className="ft-nav-link">COGS</Link>
-              <Link href="/free-tools/break-even-calculator" className="ft-nav-link">Break-Even</Link>
-              <Link href="/#pricing" className="ft-nav-cta">Try AskBiz Free →</Link>
+              <Link href="/help" className="ft-nav-link">{tc("freetools.nav_help")}</Link>
+              <Link href="/free-tools/landed-cost-calculator" className="ft-nav-link">{tc("freetools.nav_landed")}</Link>
+              <Link href="/free-tools/vat-calculator" className="ft-nav-link">{tc("freetools.nav_vat")}</Link>
+              <Link href="/free-tools/profit-margin-calculator" className="ft-nav-link">{tc("freetools.nav_margin")}</Link>
+              <Link href="/free-tools/cogs-calculator" className="ft-nav-link">{tc("freetools.nav_cogs")}</Link>
+              <Link href="/free-tools/break-even-calculator" className="ft-nav-link">{tc("freetools.nav_breakeven")}</Link>
+              <Link href="/#pricing" className="ft-nav-cta">{tc("freetools.nav_cta")}</Link>
             </div>
           </div>
         </nav>
@@ -200,13 +136,12 @@ export default function FreeToolsClient() {
         {/* ── Hero — left-aligned, no badge, no stats row, no blobs ── */}
         <section className="ft-hero">
           <div className="ft-hero-inner">
-            <p className="ft-hero-label">Free tools · No sign-up required</p>
+            <p className="ft-hero-label">{tc("freetools.hero_label")}</p>
             <h1 className="ft-hero-title">
-              Know your true costs<br />before you order.
+              {tc("freetools.hero_title_line1")}<br />{tc("freetools.hero_title_line2")}
             </h1>
             <p className="ft-hero-sub">
-              Free calculators for importers, exporters, and business owners. Landed cost, FX risk,
-              VAT, and break-even analysis — in seconds, no account needed.
+              {tc("freetools.hero_sub")}
             </p>
           </div>
         </section>
@@ -214,7 +149,7 @@ export default function FreeToolsClient() {
         {/* ── Tool cards ── */}
         <section className="ft-tools" aria-labelledby="tools-heading">
           <div className="ft-tools-inner">
-            <h2 id="tools-heading" className="ft-section-title">Choose a Tool</h2>
+            <h2 id="tools-heading" className="ft-section-title">{tc("freetools.tools_heading")}</h2>
             <div className="ft-tool-grid">
               {TOOLS.map((tool) => (
                 <div key={tool.href} className="ft-tool-card">
@@ -242,32 +177,32 @@ export default function FreeToolsClient() {
         <section className="ft-why">
           <div className="ft-why-inner">
             <div className="ft-why-text">
-              <h2 className="ft-why-title">Why Most Importers Underestimate Their Costs</h2>
+              <h2 className="ft-why-title">{tc("freetools.why_title")}</h2>
               <p className="ft-why-body">
-                Most importers calculate: <strong>Supplier price + freight = landed cost.</strong> That's wrong by 15–30%.
+                {tc("freetools.why_body_1_prefix")}<strong>{tc("freetools.why_body_1_strong")}</strong>{tc("freetools.why_body_1_suffix")}
               </p>
               <p className="ft-why-body">
-                The true landed cost includes import duty (0–45% depending on product and destination), VAT or GST on the full CIF value, customs clearance fees, insurance, and the hidden cost of currency conversion. A shipment that looks profitable at the supplier quote stage can be loss-making by the time it reaches your warehouse.
+                {tc("freetools.why_body_2")}
               </p>
               <p className="ft-why-body">
-                Our Landed Cost Calculator adds all of these. Our FX Risk Modeller shows you what happens to your margin if the exchange rate moves 5%, 10%, or 20% against you — before you commit to a large purchase order.
+                {tc("freetools.why_body_3")}
               </p>
             </div>
             <div className="ft-why-example">
               <div className="ft-example-card">
-                <div className="ft-example-title">Example: 1,000 cotton T-shirts from China to UK</div>
+                <div className="ft-example-title">{tc("freetools.example_title")}</div>
                 <div className="ft-example-rows">
                   {[
-                    ["Supplier price (ex-works)", "£2,800", false],
-                    ["Sea freight (LCL)", "£380", false],
-                    ["Import duty (12% on CIF)", "£384", true],
-                    ["UK VAT (20% on CIF + duty)", "£713", true],
-                    ["Customs clearance", "£25", true],
-                    ["Insurance (0.5%)", "£16", true],
+                    [tc("freetools.example_row_supplier"), "£2,800", false],
+                    [tc("freetools.example_row_freight"), "£380", false],
+                    [tc("freetools.example_row_duty"), "£384", true],
+                    [tc("freetools.example_row_vat"), "£713", true],
+                    [tc("freetools.example_row_clearance"), "£25", true],
+                    [tc("freetools.example_row_insurance"), "£16", true],
                     ["", "", false],
-                    ["True landed cost", "£4,318", false],
-                    ["vs. naive estimate", "£3,180", false],
-                    ["Difference", "+£1,138 (36%)", true],
+                    [tc("freetools.example_row_landed"), "£4,318", false],
+                    [tc("freetools.example_row_naive"), "£3,180", false],
+                    [tc("freetools.example_row_difference"), "+£1,138 (36%)", true],
                   ].map(([label, val, highlight], i) =>
                     label ? (
                       <div key={i} className={`ft-example-row ${highlight ? "ft-example-row--highlight" : ""}`}>
@@ -285,7 +220,7 @@ export default function FreeToolsClient() {
         {/* ── FAQ ── */}
         <section className="ft-faq" aria-labelledby="faq-heading">
           <div className="ft-faq-inner">
-            <h2 id="faq-heading" className="ft-section-title">Frequently Asked Questions</h2>
+            <h2 id="faq-heading" className="ft-section-title">{tc("freetools.faq_heading")}</h2>
             <div className="ft-faq-grid">
               {FAQS.map((faq) => (
                 <div key={faq.q} className="ft-faq-item">
@@ -301,16 +236,14 @@ export default function FreeToolsClient() {
         <section className="ft-cta-section">
           <div className="ft-cta-inner">
             <div className="ft-cta-text">
-              <h2 className="ft-cta-title">Want These Calculations Connected to Your Live Data?</h2>
+              <h2 className="ft-cta-title">{tc("freetools.cta_title")}</h2>
               <p className="ft-cta-sub">
-                AskBiz connects to your Shopify, Amazon, or QuickBooks account and pre-fills these
-                tools with your real products, prices, and margins. Ask questions in plain English
-                and get answers grounded in your actual numbers.
+                {tc("freetools.cta_sub")}
               </p>
             </div>
             <div className="ft-cta-actions">
-              <Link href="/" className="ft-cta-btn ft-cta-btn--primary">Try AskBiz Free →</Link>
-              <Link href="/help" className="ft-cta-btn ft-cta-btn--ghost">Help Center</Link>
+              <Link href="/" className="ft-cta-btn ft-cta-btn--primary">{tc("freetools.cta_primary")}</Link>
+              <Link href="/help" className="ft-cta-btn ft-cta-btn--ghost">{tc("freetools.cta_ghost")}</Link>
             </div>
           </div>
         </section>
@@ -318,25 +251,25 @@ export default function FreeToolsClient() {
         {/* ── Footer ── */}
         <footer className="ft-footer">
           <div className="ft-footer-inner">
-            <span>© 2026 AskBiz</span>
+            <span>{tc("freetools.footer_copyright")}</span>
             <div className="ft-footer-links">
               {[
-                ["/", "Home"],
-                ["/free-tools/landed-cost-calculator", "Landed Cost Calculator"],
-                ["/free-tools/fx-risk-modeller", "FX Risk Modeller"],
-                ["/free-tools/vat-calculator", "VAT Calculator"],
-                ["/free-tools/profit-margin-calculator", "Profit Margin Calculator"],
-                ["/free-tools/cogs-calculator", "COGS Calculator"],
-                ["/free-tools/break-even-calculator", "Break-Even Calculator"],
-                ["/help", "Help Center"],
-                ["/rules", "Rules & Policies"],
-                ["/privacy", "Privacy"],
+                ["/", tc("freetools.footer_link_home")],
+                ["/free-tools/landed-cost-calculator", tc("freetools.footer_link_landed")],
+                ["/free-tools/fx-risk-modeller", tc("freetools.footer_link_fx")],
+                ["/free-tools/vat-calculator", tc("freetools.footer_link_vat")],
+                ["/free-tools/profit-margin-calculator", tc("freetools.footer_link_margin")],
+                ["/free-tools/cogs-calculator", tc("freetools.footer_link_cogs")],
+                ["/free-tools/break-even-calculator", tc("freetools.footer_link_breakeven")],
+                ["/help", tc("freetools.footer_link_help")],
+                ["/rules", tc("freetools.footer_link_rules")],
+                ["/privacy", tc("freetools.footer_link_privacy")],
               ].map(([href, label]) => (
                 <Link key={href} href={href} className="ft-footer-link">{label}</Link>
               ))}
             </div>
             <p className="ft-footer-disclaimer">
-              Rates are indicative and updated quarterly. Always verify with official tariff databases before making import decisions.
+              {tc("freetools.footer_disclaimer")}
             </p>
           </div>
         </footer>

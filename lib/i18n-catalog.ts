@@ -64,16 +64,40 @@ import frSettings from '@/locales/fr/settings.json'
 import deSettings from '@/locales/de/settings.json'
 import nlSettings from '@/locales/nl/settings.json'
 import arSettings from '@/locales/ar/settings.json'
+import enCompare from '@/locales/en/compare.json'
+import esCompare from '@/locales/es/compare.json'
+import frCompare from '@/locales/fr/compare.json'
+import deCompare from '@/locales/de/compare.json'
+import nlCompare from '@/locales/nl/compare.json'
+import arCompare from '@/locales/ar/compare.json'
+import enIntegrationsPage from '@/locales/en/integrations_page.json'
+import esIntegrationsPage from '@/locales/es/integrations_page.json'
+import frIntegrationsPage from '@/locales/fr/integrations_page.json'
+import deIntegrationsPage from '@/locales/de/integrations_page.json'
+import nlIntegrationsPage from '@/locales/nl/integrations_page.json'
+import arIntegrationsPage from '@/locales/ar/integrations_page.json'
+import enPosMarketing from '@/locales/en/pos_marketing.json'
+import esPosMarketing from '@/locales/es/pos_marketing.json'
+import frPosMarketing from '@/locales/fr/pos_marketing.json'
+import dePosMarketing from '@/locales/de/pos_marketing.json'
+import nlPosMarketing from '@/locales/nl/pos_marketing.json'
+import arPosMarketing from '@/locales/ar/pos_marketing.json'
+import enFreetools from '@/locales/en/freetools.json'
+import esFreetools from '@/locales/es/freetools.json'
+import frFreetools from '@/locales/fr/freetools.json'
+import deFreetools from '@/locales/de/freetools.json'
+import nlFreetools from '@/locales/nl/freetools.json'
+import arFreetools from '@/locales/ar/freetools.json'
 
 type Dict = Record<string, unknown>
 
 const CATALOG: Record<string, Record<string, Dict>> = {
-  en: { common: enCommon, nav: enNav, errors: enErrors, appnav: enAppnav, auth: enAuth, pricing: enPricing, cookies: enCookies, settings: enSettings },
-  es: { common: esCommon, nav: esNav, errors: esErrors, appnav: esAppnav, auth: esAuth, pricing: esPricing, cookies: esCookies, settings: esSettings },
-  fr: { common: frCommon, nav: frNav, errors: frErrors, appnav: frAppnav, auth: frAuth, pricing: frPricing, cookies: frCookies, settings: frSettings },
-  de: { common: deCommon, nav: deNav, errors: deErrors, appnav: deAppnav, auth: deAuth, pricing: dePricing, cookies: deCookies, settings: deSettings },
-  nl: { common: nlCommon, nav: nlNav, errors: nlErrors, appnav: nlAppnav, auth: nlAuth, pricing: nlPricing, cookies: nlCookies, settings: nlSettings },
-  ar: { common: arCommon, nav: arNav, errors: arErrors, appnav: arAppnav, auth: arAuth, pricing: arPricing, cookies: arCookies, settings: arSettings },
+  en: { common: enCommon, nav: enNav, errors: enErrors, appnav: enAppnav, auth: enAuth, pricing: enPricing, cookies: enCookies, settings: enSettings, compare: enCompare, integrations_page: enIntegrationsPage, pos_marketing: enPosMarketing, freetools: enFreetools },
+  es: { common: esCommon, nav: esNav, errors: esErrors, appnav: esAppnav, auth: esAuth, pricing: esPricing, cookies: esCookies, settings: esSettings, compare: esCompare, integrations_page: esIntegrationsPage, pos_marketing: esPosMarketing, freetools: esFreetools },
+  fr: { common: frCommon, nav: frNav, errors: frErrors, appnav: frAppnav, auth: frAuth, pricing: frPricing, cookies: frCookies, settings: frSettings, compare: frCompare, integrations_page: frIntegrationsPage, pos_marketing: frPosMarketing, freetools: frFreetools },
+  de: { common: deCommon, nav: deNav, errors: deErrors, appnav: deAppnav, auth: deAuth, pricing: dePricing, cookies: deCookies, settings: deSettings, compare: deCompare, integrations_page: deIntegrationsPage, pos_marketing: dePosMarketing, freetools: deFreetools },
+  nl: { common: nlCommon, nav: nlNav, errors: nlErrors, appnav: nlAppnav, auth: nlAuth, pricing: nlPricing, cookies: nlCookies, settings: nlSettings, compare: nlCompare, integrations_page: nlIntegrationsPage, pos_marketing: nlPosMarketing, freetools: nlFreetools },
+  ar: { common: arCommon, nav: arNav, errors: arErrors, appnav: arAppnav, auth: arAuth, pricing: arPricing, cookies: arCookies, settings: arSettings, compare: arCompare, integrations_page: arIntegrationsPage, pos_marketing: arPosMarketing, freetools: arFreetools },
 }
 
 const BASE = 'en'

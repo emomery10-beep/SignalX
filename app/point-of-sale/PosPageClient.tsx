@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { SECTORS as SHARED_SECTORS } from '@/lib/pos-sectors'
+import { useLang } from '@/components/LanguageProvider'
 
 const C = {
   bg:'#f9f8f6', sf:'#ffffff', ev:'#f3f2ef',
@@ -10,39 +11,46 @@ const C = {
   acc:'#d08a59', accBg:'rgba(208,138,89,.08)', accBdr:'rgba(208,138,89,.25)',
 }
 
-const FEATURES = [
-  { icon:'🧾', title:'Register & Checkout', desc:'Fast checkout with barcode scanning or manual search. Split payments, layaways, discounts, refunds, and digital receipts in any currency.', tag:'Core', slug:'register-checkout' },
-  { icon:'💱', title:'Any Currency, Any Country', desc:'Set your store currency to GBP, USD, EUR, NGN, KES, AED, INR, ZAR or 150+ others. Exchange rates, symbol formatting, and decimal rules handled automatically.', tag:'Global', slug:'multi-currency' },
-  { icon:'📦', title:'Inventory Management', desc:'Real-time stock levels across every branch. Low-stock alerts, stock transfers, batch updates, and AI-powered reorder recommendations.', tag:'Smart', slug:'inventory' },
-  { icon:'🏪', title:'Multi-Branch', desc:'Run multiple locations — in the same country or across borders — from one dashboard. Per-branch currency, tax, inventory, and staff settings.', tag:'Scale', slug:'multi-branch' },
-  { icon:'👥', title:'Staff & Shifts', desc:'Role-based access for cashiers and managers. Shift open/close with cash reconciliation, OTP login, and per-cashier performance tracking.', tag:'Team', slug:'staff-shifts' },
-  { icon:'🧮', title:'Tax & Compliance', desc:'VAT, GST, sales tax, and custom local tax rates. Multi-jurisdiction rules, consolidated reports, and filing-ready previews. Syncs to Xero and QuickBooks.', tag:'Finance', slug:'tax-compliance' },
-  { icon:'🌍', title:'Localisation', desc:'Date formats, number separators, address formats, and receipt layouts automatically match your country. Right-to-left language support included.', tag:'Local', slug:'localisation' },
-  { icon:'💳', title:'Flexible Payments', desc:'Accept card, cash, mobile money (M-Pesa, MTN, Airtel), QR pay, and split payments. Works offline and syncs when reconnected.', tag:'Payments', slug:'payments' },
-  { icon:'🤖', title:'AI Intelligence', desc:'Anomaly detection on transactions, AI-driven supplier recommendations, sales pattern insights, and demand forecasting — all from your PoS data.', tag:'AI', slug:'ai-intelligence' },
-  { icon:'📊', title:'Reports & Analytics', desc:'Daily, weekly, and monthly sales reports broken down by product, cashier, branch, and payment method. Export in your local currency.', tag:'Insights', slug:'reports' },
-  { icon:'🔒', title:'Privacy & Compliance', desc:'GDPR, NDPR, POPIA, and PDPA ready. One-click customer data export, deletion requests, consent logging, and configurable retention policies.', tag:'Trust', slug:'privacy' },
-  { icon:'📱', title:'Works Everywhere', desc:'Runs on any device — iPad at the counter, Android phone for pop-ups, or desktop in the back office. No proprietary hardware, no lock-in.', tag:'Flex', slug:'works-everywhere' },
-]
+const buildFeatures = (tc: (key: string) => string) => [
+  { icon:'🧾', key:'register_checkout', slug:'register-checkout' },
+  { icon:'💱', key:'multi_currency', slug:'multi-currency' },
+  { icon:'📦', key:'inventory', slug:'inventory' },
+  { icon:'🏪', key:'multi_branch', slug:'multi-branch' },
+  { icon:'👥', key:'staff_shifts', slug:'staff-shifts' },
+  { icon:'🧮', key:'tax_compliance', slug:'tax-compliance' },
+  { icon:'🌍', key:'localisation', slug:'localisation' },
+  { icon:'💳', key:'payments', slug:'payments' },
+  { icon:'🤖', key:'ai_intelligence', slug:'ai-intelligence' },
+  { icon:'📊', key:'reports', slug:'reports' },
+  { icon:'🔒', key:'privacy', slug:'privacy' },
+  { icon:'📱', key:'works_everywhere', slug:'works-everywhere' },
+].map(f => ({
+  icon: f.icon,
+  slug: f.slug,
+  title: tc('pos_marketing.feature_' + f.key + '_title'),
+  desc: tc('pos_marketing.feature_' + f.key + '_desc'),
+  tag: tc('pos_marketing.feature_' + f.key + '_tag'),
+}))
 
-const WORKFLOW = [
-  { step:'1', title:'Open a shift', desc:'Cashier logs in with OTP, counts the float, and the register is live.' },
-  { step:'2', title:'Ring up sales', desc:'Scan barcodes or search products. Split payments, apply discounts, issue digital receipts.' },
-  { step:'3', title:'AI works in the background', desc:'Every transaction feeds your intelligence layer — anomaly alerts, restock suggestions, margin analysis.' },
-  { step:'4', title:'Close & reconcile', desc:'Close the shift, reconcile cash, and the day\'s data flows into your reports and accounting sync.' },
-]
+const buildWorkflow = (tc: (key: string) => string) => ['1','2','3','4'].map(step => ({
+  step,
+  title: tc('pos_marketing.workflow_' + step + '_title'),
+  desc: tc('pos_marketing.workflow_' + step + '_desc'),
+}))
 
 // SECTORS imported from @/lib/pos-sectors
 const SECTORS = SHARED_SECTORS
 
-const DEMO_STEPS = [
-  { label: 'Point & scan', desc: 'Point the camera at any barcode or QR code. No typing.' },
-  { label: 'Instant recognition', desc: 'Product matched in your inventory in under a second.' },
-  { label: 'Added to basket', desc: 'Line item appears with price, quantity, and tax — automatically.' },
-  { label: 'Tap to pay', desc: 'Card, cash, or mobile wallet. Receipt sent digitally.' },
-]
+const buildDemoSteps = (tc: (key: string) => string) => ['1','2','3','4'].map(n => ({
+  label: tc('pos_marketing.demo_step_' + n + '_label'),
+  desc: tc('pos_marketing.demo_step_' + n + '_desc'),
+}))
 
 export default function PosPageClient() {
+  const { tc } = useLang()
+  const FEATURES = buildFeatures(tc)
+  const WORKFLOW = buildWorkflow(tc)
+  const DEMO_STEPS = buildDemoSteps(tc)
   const [annual, setAnnual] = useState(true)
   const [demoStep, setDemoStep] = useState(0)
   const [demoRunning, setDemoRunning] = useState(false)
@@ -113,9 +121,9 @@ export default function PosPageClient() {
           ask<span style={{ color:C.acc }}>biz</span>
         </Link>
         <div style={{ display:'flex', alignItems:'center', gap:16 }}>
-          <Link href="/#pricing" style={{ fontSize:13, color:C.tx2, textDecoration:'none', fontWeight:500 }}>Pricing</Link>
+          <Link href="/#pricing" style={{ fontSize:13, color:C.tx2, textDecoration:'none', fontWeight:500 }}>{tc('pos_marketing.nav_pricing')}</Link>
           <Link href="/signin" className="btn-primary" style={{ padding:'8px 18px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none' }}>
-            Try free
+            {tc('pos_marketing.nav_try_free')}
           </Link>
         </div>
       </nav>
@@ -123,26 +131,26 @@ export default function PosPageClient() {
       {/* Hero */}
       <section className="pos-hero-grid" style={{ maxWidth:1100, margin:'0 auto', padding:'clamp(56px,8vw,100px) clamp(16px,4vw,40px) clamp(40px,6vw,72px)', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'clamp(32px,5vw,64px)', alignItems:'center' }}>
         <div>
-          <p className="fade-up" style={{ fontSize:11, fontWeight:700, color:C.acc, letterSpacing:'.16em', textTransform:'uppercase', marginBottom:20 }}>Point of Sale · Camera-First</p>
+          <p className="fade-up" style={{ fontSize:11, fontWeight:700, color:C.acc, letterSpacing:'.16em', textTransform:'uppercase', marginBottom:20 }}>{tc('pos_marketing.hero_eyebrow')}</p>
           <h1 className="fade-up" style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(30px,4.5vw,48px)', fontWeight:700, lineHeight:1.1, letterSpacing:'-.03em', marginBottom:20, color:C.tx }}>
-            Point your camera.<br/>
-            <span style={{ color:C.acc }}>That's your checkout.</span>
+            {tc('pos_marketing.hero_title_line1')}<br/>
+            <span style={{ color:C.acc }}>{tc('pos_marketing.hero_title_line2')}</span>
           </h1>
           <p className="fade-up" style={{ fontSize:'clamp(15px,1.8vw,18px)', color:C.tx2, lineHeight:1.7, marginBottom:14, maxWidth:460 }}>
-            No barcode gun. No manual entry. Just point your phone camera at any product and it's added to the basket — inventory updated instantly across every branch.
+            {tc('pos_marketing.hero_subtitle')}
           </p>
           <p className="fade-up" style={{ fontSize:13, color:C.tx3, marginBottom:32, lineHeight:1.6 }}>
-            {seatPrice}/seat per month · Full POS included · No special hardware · No Shopify needed
+            {tc('pos_marketing.hero_pricing_note').split('{price}').join(seatPrice)}
           </p>
           <div className="fade-up" style={{ display:'flex', gap:12, flexWrap:'wrap', alignItems:'center' }}>
             <Link href="/signin" className="btn-primary" style={{ padding:'13px 28px', borderRadius:10, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8 }}>
-              Start free
+              {tc('pos_marketing.hero_cta_start')}
             </Link>
             <a href="#features" style={{ fontSize:14, color:C.tx2, fontWeight:500, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:5, borderBottom:`1px solid ${C.b2}`, paddingBottom:1 }}>
-              See features ↓
+              {tc('pos_marketing.hero_link_features')}
             </a>
             <a href="#sectors" style={{ fontSize:14, color:C.tx2, fontWeight:500, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:5, borderBottom:`1px solid ${C.b2}`, paddingBottom:1 }}>
-              By sector →
+              {tc('pos_marketing.hero_link_sectors')}
             </a>
           </div>
         </div>
@@ -150,13 +158,13 @@ export default function PosPageClient() {
         {/* Mock register UI */}
         <div className="pos-hero-mock fade-up" style={{ background:C.sf, borderRadius:12, border:`1px solid ${C.b2}`, padding:24 }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
-            <div style={{ fontSize:13, fontWeight:700, color:C.tx }}>Register — Shift #104</div>
-            <div style={{ fontSize:11, color:'#16a34a', fontWeight:600, background:'rgba(22,163,74,.08)', padding:'3px 10px', borderRadius:9999 }}>● Live</div>
+            <div style={{ fontSize:13, fontWeight:700, color:C.tx }}>{tc('pos_marketing.mock_register_shift')}</div>
+            <div style={{ fontSize:11, color:'#16a34a', fontWeight:600, background:'rgba(22,163,74,.08)', padding:'3px 10px', borderRadius:9999 }}>{tc('pos_marketing.mock_live')}</div>
           </div>
           {[
-            { name:'Wireless Earbuds', qty:2, price:'£29.99', total:'£59.98' },
-            { name:'Phone Case — Matte Black', qty:1, price:'£12.50', total:'£12.50' },
-            { name:'USB-C Cable 2m', qty:3, price:'£6.99', total:'£20.97' },
+            { name:tc('pos_marketing.mock_item_earbuds'), qty:2, price:'£29.99', total:'£59.98' },
+            { name:tc('pos_marketing.mock_item_case'), qty:1, price:'£12.50', total:'£12.50' },
+            { name:tc('pos_marketing.mock_item_cable'), qty:3, price:'£6.99', total:'£20.97' },
           ].map((item, i) => (
             <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 0', borderBottom:`1px solid ${C.ev}`, fontSize:13 }}>
               <div>
@@ -168,18 +176,18 @@ export default function PosPageClient() {
           ))}
           <div style={{ display:'flex', justifyContent:'space-between', marginTop:16, paddingTop:12, borderTop:`2px solid ${C.tx}` }}>
             <div>
-              <div style={{ fontSize:11, color:C.tx3, marginBottom:2 }}>Subtotal · VAT 20%</div>
+              <div style={{ fontSize:11, color:C.tx3, marginBottom:2 }}>{tc('pos_marketing.mock_subtotal_vat')}</div>
               <div style={{ fontFamily:'var(--font-sora)', fontSize:22, fontWeight:800, color:C.tx }}>£111.94</div>
             </div>
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-              <div style={{ padding:'10px 20px', borderRadius:10, background:C.ev, fontSize:13, fontWeight:600, color:C.tx2, cursor:'default' }}>Split</div>
-              <div style={{ padding:'10px 24px', borderRadius:10, background:C.acc, color:'#fff', fontSize:13, fontWeight:700, cursor:'default', boxShadow:`0 2px 12px ${C.acc}35` }}>Pay →</div>
+              <div style={{ padding:'10px 20px', borderRadius:10, background:C.ev, fontSize:13, fontWeight:600, color:C.tx2, cursor:'default' }}>{tc('pos_marketing.mock_split')}</div>
+              <div style={{ padding:'10px 24px', borderRadius:10, background:C.acc, color:'#fff', fontSize:13, fontWeight:700, cursor:'default', boxShadow:`0 2px 12px ${C.acc}35` }}>{tc('pos_marketing.mock_pay')}</div>
             </div>
           </div>
           <div style={{ marginTop:16, display:'flex', gap:8 }}>
-            <div style={{ flex:1, padding:'8px', borderRadius:8, background:C.ev, textAlign:'center', fontSize:11, fontWeight:600, color:C.tx3 }}>💳 Card</div>
-            <div style={{ flex:1, padding:'8px', borderRadius:8, background:C.ev, textAlign:'center', fontSize:11, fontWeight:600, color:C.tx3 }}>💵 Cash</div>
-            <div style={{ flex:1, padding:'8px', borderRadius:8, background:C.ev, textAlign:'center', fontSize:11, fontWeight:600, color:C.tx3 }}>📱 Mobile Wallet</div>
+            <div style={{ flex:1, padding:'8px', borderRadius:8, background:C.ev, textAlign:'center', fontSize:11, fontWeight:600, color:C.tx3 }}>{tc('pos_marketing.mock_card')}</div>
+            <div style={{ flex:1, padding:'8px', borderRadius:8, background:C.ev, textAlign:'center', fontSize:11, fontWeight:600, color:C.tx3 }}>{tc('pos_marketing.mock_cash')}</div>
+            <div style={{ flex:1, padding:'8px', borderRadius:8, background:C.ev, textAlign:'center', fontSize:11, fontWeight:600, color:C.tx3 }}>{tc('pos_marketing.mock_mobile_wallet')}</div>
           </div>
         </div>
       </section>
@@ -188,10 +196,10 @@ export default function PosPageClient() {
       <section style={{ background:`linear-gradient(160deg, #0f0f0e 0%, #1a1916 100%)`, padding:'clamp(56px,7vw,92px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:1060, margin:'0 auto' }}>
           <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(24px,3.5vw,38px)', fontWeight:700, textAlign:'center', marginBottom:12, letterSpacing:'-.03em', color:'#fff' }}>
-            Scan. Add. Done.
+            {tc('pos_marketing.demo_heading')}
           </h2>
           <p style={{ fontSize:'clamp(14px,1.6vw,17px)', color:'rgba(255,255,255,.72)', lineHeight:1.7, maxWidth:520, margin:'0 auto 52px', textAlign:'center' }}>
-            No manual entry. Point, scan, checkout — the entire sale takes seconds.
+            {tc('pos_marketing.demo_subtitle')}
           </p>
 
           <div className="demo-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'clamp(32px,5vw,72px)', alignItems:'center' }}>
@@ -207,8 +215,8 @@ export default function PosPageClient() {
                 </div>
                 {/* App bar */}
                 <div style={{ background:'#1a1a1a', margin:'0 2px', borderRadius:'14px 14px 0 0', padding:'10px 14px', display:'flex', justifyContent:'space-between', alignItems:'center', borderBottom:'1px solid rgba(255,255,255,.06)' }}>
-                  <span style={{ fontSize:11, color:'rgba(255,255,255,.7)', fontWeight:600 }}>askbiz Register</span>
-                  <span style={{ fontSize:10, color:'#4ade80', fontWeight:600 }}>● Live</span>
+                  <span style={{ fontSize:11, color:'rgba(255,255,255,.7)', fontWeight:600 }}>{tc('pos_marketing.demo_phone_register')}</span>
+                  <span style={{ fontSize:10, color:'#4ade80', fontWeight:600 }}>{tc('pos_marketing.demo_phone_live')}</span>
                 </div>
                 {/* Camera view */}
                 <div style={{ background:'#000', margin:'0 2px', aspectRatio:'1/1.1', position:'relative', overflow:'hidden' }}>
@@ -229,12 +237,12 @@ export default function PosPageClient() {
                       {demoStep === 0 && (
                         <div style={{ textAlign:'center' }}>
                           <div style={{ fontSize:28, marginBottom:8 }}>📷</div>
-                          <div style={{ fontSize:11, color:'rgba(255,255,255,.5)', letterSpacing:'.04em' }}>Aim at barcode</div>
+                          <div style={{ fontSize:11, color:'rgba(255,255,255,.5)', letterSpacing:'.04em' }}>{tc('pos_marketing.demo_aim_at_barcode')}</div>
                         </div>
                       )}
                       {demoStep === 1 && (
                         <div style={{ textAlign:'center' }}>
-                          <div style={{ fontSize:11, color:'rgba(255,255,255,.6)', letterSpacing:'.04em', background:'rgba(0,0,0,.5)', padding:'4px 10px', borderRadius:6 }}>Scanning…</div>
+                          <div style={{ fontSize:11, color:'rgba(255,255,255,.6)', letterSpacing:'.04em', background:'rgba(0,0,0,.5)', padding:'4px 10px', borderRadius:6 }}>{tc('pos_marketing.demo_scanning')}</div>
                           {/* fake barcode lines */}
                           <div style={{ marginTop:14, display:'flex', gap:2, justifyContent:'center', opacity:.4 }}>
                             {[3,7,2,6,4,8,3,5,7,2,6,4,5,3,8,4,7,3].map((h, j) => (
@@ -252,9 +260,9 @@ export default function PosPageClient() {
                     <div className="pop-in" style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', zIndex:5, background:'rgba(0,0,0,.75)', backdropFilter:'blur(4px)' }}>
                       <div style={{ background:'#1a1a1a', borderRadius:16, padding:'16px 20px', border:`1px solid rgba(74,222,128,.4)`, minWidth:180, textAlign:'center' }}>
                         <div style={{ width:36, height:36, background:'rgba(74,222,128,.15)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 10px', fontSize:18 }}>✓</div>
-                        <div style={{ fontSize:13, fontWeight:700, color:'#fff', marginBottom:3 }}>USB-C Charger 65W</div>
-                        <div style={{ fontSize:11, color:'rgba(255,255,255,.45)', marginBottom:10 }}>SKU: CHG-65W-BK</div>
-                        <div style={{ fontSize:18, fontWeight:800, color:'#4ade80', fontFamily:'var(--font-sora)' }}>£24.99</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:'#fff', marginBottom:3 }}>{tc('pos_marketing.demo_recognized_name')}</div>
+                        <div style={{ fontSize:11, color:'rgba(255,255,255,.45)', marginBottom:10 }}>{tc('pos_marketing.demo_recognized_sku')}</div>
+                        <div style={{ fontSize:18, fontWeight:800, color:'#4ade80', fontFamily:'var(--font-sora)' }}>{tc('pos_marketing.demo_recognized_price')}</div>
                       </div>
                     </div>
                   )}
@@ -263,19 +271,19 @@ export default function PosPageClient() {
                     <div className="pop-in" style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', zIndex:5, background:'rgba(0,0,0,.75)', backdropFilter:'blur(4px)', padding:16 }}>
                       <div style={{ width:'100%', background:'#1a1a1a', borderRadius:12, padding:'12px 14px', marginBottom:10, border:'1px solid rgba(255,255,255,.08)' }}>
                         <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:'rgba(255,255,255,.7)', marginBottom:4 }}>
-                          <span>USB-C Charger 65W</span>
-                          <span style={{ color:'#4ade80', fontWeight:700 }}>£24.99</span>
+                          <span>{tc('pos_marketing.demo_added_item1')}</span>
+                          <span style={{ color:'#4ade80', fontWeight:700 }}>{tc('pos_marketing.demo_added_item1_price')}</span>
                         </div>
                         <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:'rgba(255,255,255,.7)', marginBottom:4 }}>
-                          <span>Wireless Mouse Pro</span>
-                          <span style={{ color:'#4ade80', fontWeight:700 }}>£49.99</span>
+                          <span>{tc('pos_marketing.demo_added_item2')}</span>
+                          <span style={{ color:'#4ade80', fontWeight:700 }}>{tc('pos_marketing.demo_added_item2_price')}</span>
                         </div>
                         <div style={{ borderTop:'1px solid rgba(255,255,255,.1)', paddingTop:8, marginTop:4, display:'flex', justifyContent:'space-between', fontSize:12, color:'#fff', fontWeight:700 }}>
-                          <span>Total</span>
-                          <span>£74.98</span>
+                          <span>{tc('pos_marketing.demo_added_total_label')}</span>
+                          <span>{tc('pos_marketing.demo_added_total_value')}</span>
                         </div>
                       </div>
-                      <div style={{ fontSize:10, color:'rgba(74,222,128,.8)', fontWeight:600, letterSpacing:'.06em' }}>+1 ITEM ADDED</div>
+                      <div style={{ fontSize:10, color:'rgba(74,222,128,.8)', fontWeight:600, letterSpacing:'.06em' }}>{tc('pos_marketing.demo_added_badge')}</div>
                     </div>
                   )}
                   {/* Paid state */}
@@ -283,9 +291,9 @@ export default function PosPageClient() {
                     <div className="pop-in" style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', zIndex:5, background:'rgba(0,0,0,.85)', backdropFilter:'blur(6px)' }}>
                       <div style={{ textAlign:'center' }}>
                         <div className="pulse-green" style={{ width:56, height:56, background:'rgba(74,222,128,.15)', border:'2px solid #4ade80', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 14px', fontSize:24 }}>✓</div>
-                        <div style={{ fontSize:15, fontWeight:700, color:'#fff', marginBottom:4 }}>Payment complete</div>
-                        <div style={{ fontSize:12, color:'rgba(255,255,255,.5)' }}>£74.98 · Card · 2.1s</div>
-                        <div style={{ marginTop:10, fontSize:10, color:'rgba(74,222,128,.7)', fontWeight:600, letterSpacing:'.06em' }}>RECEIPT SENT · AI UPDATED</div>
+                        <div style={{ fontSize:15, fontWeight:700, color:'#fff', marginBottom:4 }}>{tc('pos_marketing.demo_paid_title')}</div>
+                        <div style={{ fontSize:12, color:'rgba(255,255,255,.5)' }}>{tc('pos_marketing.demo_paid_detail')}</div>
+                        <div style={{ marginTop:10, fontSize:10, color:'rgba(74,222,128,.7)', fontWeight:600, letterSpacing:'.06em' }}>{tc('pos_marketing.demo_paid_badge')}</div>
                       </div>
                     </div>
                   )}
@@ -336,13 +344,13 @@ export default function PosPageClient() {
                 {demoRunning ? (
                   <>
                     <span style={{ display:'inline-block', width:14, height:14, border:'2px solid rgba(255,255,255,.3)', borderTopColor:'rgba(255,255,255,.7)', borderRadius:'50%', animation:'spin .7s linear infinite' }} />
-                    Running demo…
+                    {tc('pos_marketing.demo_running')}
                   </>
                 ) : (
-                  <>▶ Watch it in action</>
+                  <>{tc('pos_marketing.demo_watch')}</>
                 )}
               </button>
-              <p style={{ marginTop:12, fontSize:12, color:'rgba(255,255,255,.3)' }}>No sign-up needed — just hit play.</p>
+              <p style={{ marginTop:12, fontSize:12, color:'rgba(255,255,255,.3)' }}>{tc('pos_marketing.demo_no_signup')}</p>
             </div>
           </div>
         </div>
@@ -352,10 +360,10 @@ export default function PosPageClient() {
       <section id="features" style={{ background:C.sf, borderTop:`1px solid ${C.b}`, borderBottom:`1px solid ${C.b}`, padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:1060, margin:'0 auto' }}>
           <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,36px)', fontWeight:700, textAlign:'center', marginBottom:12, letterSpacing:'-.03em', color:C.tx }}>
-            Built to sell anywhere in the world
+            {tc('pos_marketing.features_heading')}
           </h2>
           <p style={{ fontSize:'clamp(14px,1.6vw,17px)', color:C.tx2, lineHeight:1.7, maxWidth:580, margin:'0 auto 20px', textAlign:'center' }}>
-            One platform. Any country, any currency, any tax system. No extra setup — just pick your locale and start selling.
+            {tc('pos_marketing.features_subtitle')}
           </p>
 
           {/* Global banner */}
@@ -363,10 +371,10 @@ export default function PosPageClient() {
             <div>
               <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
                 <span style={{ fontSize:20 }}>🌍</span>
-                <span style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:700, color:'#fff' }}>Works in 150+ countries</span>
+                <span style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:700, color:'#fff' }}>{tc('pos_marketing.features_global_title')}</span>
               </div>
               <p style={{ fontSize:13, color:'rgba(255,255,255,.72)', margin:0, lineHeight:1.6, maxWidth:440 }}>
-                Set your store currency once. Prices, receipts, tax reports, and accounting exports all follow. Switch branches to different currencies without losing a thing.
+                {tc('pos_marketing.features_global_desc')}
               </p>
             </div>
             {/* Currency ticker */}
@@ -390,7 +398,7 @@ export default function PosPageClient() {
                 </div>
               ))}
               <div style={{ display:'flex', alignItems:'center', padding:'5px 12px', borderRadius:8, background:'rgba(208,138,89,.12)', border:`1px solid ${C.accBdr}` }}>
-                <span style={{ fontSize:12, color:C.acc, fontWeight:600 }}>+140 more</span>
+                <span style={{ fontSize:12, color:C.acc, fontWeight:600 }}>{tc('pos_marketing.features_more_currencies')}</span>
               </div>
             </div>
           </div>
@@ -403,7 +411,7 @@ export default function PosPageClient() {
                   <span style={{ fontSize:22 }}>{f.icon}</span>
                   <div style={{ fontFamily:'var(--font-sora)', fontSize:15, fontWeight:700, color:C.tx }}>{f.title}</div>
                   <p style={{ fontSize:13, color:C.tx2, lineHeight:1.65, margin:0, flex:1 }}>{f.desc}</p>
-                  <div style={{ fontSize:11, color:C.acc, fontWeight:600, marginTop:4 }}>Learn more →</div>
+                  <div style={{ fontSize:11, color:C.acc, fontWeight:600, marginTop:4 }}>{tc('pos_marketing.features_learn_more')}</div>
                 </div>
               </Link>
             ))}
@@ -414,12 +422,12 @@ export default function PosPageClient() {
             <div style={{ display:'flex', alignItems:'center', gap:12 }}>
               <span style={{ fontSize:22 }}>🧮</span>
               <div>
-                <div style={{ fontSize:14, fontWeight:700, color:C.tx, marginBottom:2 }}>Every major tax system supported</div>
-                <div style={{ fontSize:12, color:C.tx3 }}>VAT · GST · Sales Tax · Withholding Tax · Custom rates — configured per branch, per country.</div>
+                <div style={{ fontSize:14, fontWeight:700, color:C.tx, marginBottom:2 }}>{tc('pos_marketing.features_tax_title')}</div>
+                <div style={{ fontSize:12, color:C.tx3 }}>{tc('pos_marketing.features_tax_desc')}</div>
               </div>
             </div>
             <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
-              {['🇬🇧 UK VAT','🇪🇺 EU VAT (OSS)','🇺🇸 US Sales Tax','🇳🇬 FIRS / VAT','🇰🇪 KRA / VAT','🇮🇳 GST','🇿🇦 SARS / VAT','🇦🇪 UAE VAT','🇦🇺 GST','Custom'].map((t, i) => (
+              {['🇬🇧 UK VAT','🇪🇺 EU VAT (OSS)','🇺🇸 US Sales Tax','🇳🇬 FIRS / VAT','🇰🇪 KRA / VAT','🇮🇳 GST','🇿🇦 SARS / VAT','🇦🇪 UAE VAT','🇦🇺 GST',tc('pos_marketing.features_tax_custom')].map((t, i) => (
                 <span key={i} style={{ fontSize:11, color:C.tx2, background:C.ev, padding:'3px 9px', borderRadius:6, fontWeight:500 }}>{t}</span>
               ))}
             </div>
@@ -431,10 +439,10 @@ export default function PosPageClient() {
       <section id="sectors" style={{ background:C.bg, borderTop:`1px solid ${C.b}`, padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:1060, margin:'0 auto' }}>
           <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,36px)', fontWeight:700, textAlign:'center', marginBottom:12, letterSpacing:'-.03em', color:C.tx }}>
-            Tailored to how you work
+            {tc('pos_marketing.sectors_heading')}
           </h2>
           <p style={{ fontSize:'clamp(14px,1.6vw,17px)', color:C.tx2, lineHeight:1.7, maxWidth:560, margin:'0 auto 36px', textAlign:'center' }}>
-            One platform, six sectors. The PoS adapts its tiles, workflows, and intelligence to match your type of business.
+            {tc('pos_marketing.sectors_subtitle')}
           </p>
 
           {/* Sector tabs */}
@@ -488,9 +496,9 @@ export default function PosPageClient() {
                 </div>
                 {/* CTA to dedicated sector page */}
                 <div style={{ marginTop:20, display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
-                  <p style={{ fontSize:13, color:C.tx3, margin:0 }}>All sectors share inventory, staff, branches, tax, AI, and multi-currency.</p>
+                  <p style={{ fontSize:13, color:C.tx3, margin:0 }}>{tc('pos_marketing.sectors_shared_note')}</p>
                   <Link href={`/point-of-sale/${sectorTab}`} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'9px 18px', borderRadius:9999, background:SECTORS.find(s => s.id === sectorTab)?.color || C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none' }}>
-                    Full {SECTORS.find(s => s.id === sectorTab)?.label} guide →
+                    {tc('pos_marketing.sectors_full_guide').split('{label}').join(SECTORS.find(s => s.id === sectorTab)?.label || '')}
                   </Link>
                 </div>
               </div>
@@ -502,7 +510,7 @@ export default function PosPageClient() {
       {/* How it works */}
       <section style={{ maxWidth:900, margin:'0 auto', padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
         <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,34px)', fontWeight:700, textAlign:'center', marginBottom:48, letterSpacing:'-.03em', color:C.tx }}>
-          From shift open to close
+          {tc('pos_marketing.howitworks_heading')}
         </h2>
         <div className="workflow-grid" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:20 }}>
           {WORKFLOW.map((s, i) => (
@@ -519,20 +527,20 @@ export default function PosPageClient() {
       <section style={{ background:C.sf, borderTop:`1px solid ${C.b}`, borderBottom:`1px solid ${C.b}`, padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:800, margin:'0 auto' }}>
           <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,34px)', fontWeight:700, textAlign:'center', marginBottom:44, letterSpacing:'-.03em', color:C.tx }}>
-            More than a register
+            {tc('pos_marketing.compare_heading')}
           </h2>
           <div className="compare-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
             <div style={{ padding:24, borderRadius:16, border:`1px solid ${C.b}`, background:C.bg }}>
-              <div style={{ fontSize:14, fontWeight:700, color:C.tx3, marginBottom:16 }}>Traditional PoS</div>
-              {['Ring up sales','Basic inventory','Manual reporting','Separate analytics tool','No AI insights','Extra cost for multi-branch'].map((f, i) => (
+              <div style={{ fontSize:14, fontWeight:700, color:C.tx3, marginBottom:16 }}>{tc('pos_marketing.compare_traditional_title')}</div>
+              {[tc('pos_marketing.compare_traditional_1'),tc('pos_marketing.compare_traditional_2'),tc('pos_marketing.compare_traditional_3'),tc('pos_marketing.compare_traditional_4'),tc('pos_marketing.compare_traditional_5'),tc('pos_marketing.compare_traditional_6')].map((f, i) => (
                 <div key={i} style={{ display:'flex', gap:8, alignItems:'center', fontSize:13, color:C.tx3, marginBottom:8 }}>
                   <span style={{ fontSize:12 }}>—</span> {f}
                 </div>
               ))}
             </div>
             <div style={{ padding:24, borderRadius:16, border:`2px solid ${C.acc}`, background:`rgba(208,138,89,.02)` }}>
-              <div style={{ fontSize:14, fontWeight:700, color:C.acc, marginBottom:16 }}>askbiz PoS</div>
-              {['Ring up sales + AI anomaly alerts','Smart inventory with reorder AI','Auto reports synced to Xero / QB','Built-in business intelligence','AI pattern insights from every sale','Multi-branch included'].map((f, i) => (
+              <div style={{ fontSize:14, fontWeight:700, color:C.acc, marginBottom:16 }}>{tc('pos_marketing.compare_askbiz_title')}</div>
+              {[tc('pos_marketing.compare_askbiz_1'),tc('pos_marketing.compare_askbiz_2'),tc('pos_marketing.compare_askbiz_3'),tc('pos_marketing.compare_askbiz_4'),tc('pos_marketing.compare_askbiz_5'),tc('pos_marketing.compare_askbiz_6')].map((f, i) => (
                 <div key={i} style={{ display:'flex', gap:8, alignItems:'center', fontSize:13, color:C.tx, marginBottom:8 }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.acc} strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink:0 }}><path d="M20 6L9 17l-5-5"/></svg>
                   {f}
@@ -547,10 +555,10 @@ export default function PosPageClient() {
       <section style={{ background:C.bg, borderTop:`1px solid ${C.b}`, padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:980, margin:'0 auto' }}>
           <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,36px)', fontWeight:700, textAlign:'center', marginBottom:12, letterSpacing:'-.03em', color:C.tx }}>
-            Add a cashier or inventory user<br/>in under 2 minutes
+            {tc('pos_marketing.walkthrough_heading_line1')}<br/>{tc('pos_marketing.walkthrough_heading_line2')}
           </h2>
           <p style={{ fontSize:'clamp(14px,1.6vw,17px)', color:C.tx2, lineHeight:1.7, maxWidth:520, margin:'0 auto 44px', textAlign:'center' }}>
-            No IT team. No training manuals. Pick a name, set a role, share an OTP — your staff is live.
+            {tc('pos_marketing.walkthrough_subtitle')}
           </p>
 
           {/* Walkthrough player */}
@@ -561,7 +569,7 @@ export default function PosPageClient() {
                 {['#ff5f57','#ffbd2e','#28c840'].map((c,i) => <div key={i} style={{ width:11, height:11, borderRadius:'50%', background:c }} />)}
               </div>
               <div style={{ flex:1, background:'rgba(0,0,0,.06)', borderRadius:6, padding:'4px 12px', fontSize:11, color:C.tx3, textAlign:'center' }}>
-                pos.askbiz.co — Staff Management
+                {tc('pos_marketing.walkthrough_browser_url')}
               </div>
             </div>
 
@@ -570,15 +578,15 @@ export default function PosPageClient() {
               {/* Left nav */}
               <div className="walkthrough-nav" style={{ background:'#faf9f7', borderRight:`1px solid ${C.b}`, padding:'16px 0' }}>
                 <div style={{ padding:'6px 16px', marginBottom:4 }}>
-                  <div style={{ fontSize:11, fontWeight:700, color:C.tx3, textTransform:'uppercase', letterSpacing:'.06em', marginBottom:8 }}>askbiz PoS</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:C.tx3, textTransform:'uppercase', letterSpacing:'.06em', marginBottom:8 }}>{tc('pos_marketing.walkthrough_brand')}</div>
                 </div>
                 {[
-                  { icon:'🏠', label:'Overview' },
-                  { icon:'🧾', label:'Register' },
-                  { icon:'📦', label:'Inventory' },
-                  { icon:'👥', label:'Staff', active: true },
-                  { icon:'📊', label:'Reports' },
-                  { icon:'⚙️', label:'Settings' },
+                  { icon:'🏠', label:tc('pos_marketing.walkthrough_nav_overview') },
+                  { icon:'🧾', label:tc('pos_marketing.walkthrough_nav_register') },
+                  { icon:'📦', label:tc('pos_marketing.walkthrough_nav_inventory') },
+                  { icon:'👥', label:tc('pos_marketing.walkthrough_nav_staff'), active: true },
+                  { icon:'📊', label:tc('pos_marketing.walkthrough_nav_reports') },
+                  { icon:'⚙️', label:tc('pos_marketing.walkthrough_nav_settings') },
                 ].map((item, i) => (
                   <div key={i} style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 16px', fontSize:13, fontWeight: item.active ? 600 : 400, color: item.active ? C.acc : C.tx2, background: item.active ? C.accBg : 'transparent', borderRight: item.active ? `2px solid ${C.acc}` : '2px solid transparent' }}>
                     <span style={{ fontSize:15 }}>{item.icon}</span>
@@ -595,11 +603,11 @@ export default function PosPageClient() {
                   <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'rgba(249,248,246,.92)', backdropFilter:'blur(2px)', zIndex:10, gap:16 }}>
                     <div style={{ width:64, height:64, borderRadius:'50%', background:C.acc, display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, boxShadow:`0 6px 24px ${C.acc}50`, cursor:'pointer' }} onClick={playWalkthrough}>▶</div>
                     <div style={{ textAlign:'center' }}>
-                      <div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:C.tx, marginBottom:4 }}>Watch: Add your first cashier</div>
-                      <div style={{ fontSize:13, color:C.tx3 }}>2 min walkthrough · No audio needed</div>
+                      <div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:C.tx, marginBottom:4 }}>{tc('pos_marketing.walkthrough_cover_title')}</div>
+                      <div style={{ fontSize:13, color:C.tx3 }}>{tc('pos_marketing.walkthrough_cover_subtitle')}</div>
                     </div>
                     <button onClick={playWalkthrough} style={{ padding:'10px 28px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:14, fontWeight:700, border:'none', cursor:'pointer', boxShadow:`0 3px 16px ${C.acc}40` }}>
-                      ▶ Play walkthrough
+                      {tc('pos_marketing.walkthrough_play')}
                     </button>
                   </div>
                 )}
@@ -609,16 +617,16 @@ export default function PosPageClient() {
                   <div style={{ opacity: walkthroughStep >= 1 ? 1 : 0, transition:'opacity .4s ease' }}>
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
                       <div>
-                        <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:700, color:C.tx }}>Staff Members</div>
-                        <div style={{ fontSize:12, color:C.tx3, marginTop:2 }}>2 active · 1 location</div>
+                        <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:700, color:C.tx }}>{tc('pos_marketing.walkthrough_staff_members')}</div>
+                        <div style={{ fontSize:12, color:C.tx3, marginTop:2 }}>{tc('pos_marketing.walkthrough_staff_count_2')}</div>
                       </div>
                       <div style={{ padding:'8px 16px', borderRadius:9, background: walkthroughStep === 1 ? C.acc : C.acc, color:'#fff', fontSize:13, fontWeight:700, cursor:'default', boxShadow: walkthroughStep === 1 ? `0 0 0 3px ${C.acc}30, 0 3px 12px ${C.acc}40` : `0 3px 12px ${C.acc}40`, transition:'box-shadow .3s ease' }}>
-                        + Add staff member
+                        {tc('pos_marketing.walkthrough_add_staff')}
                       </div>
                     </div>
                     {[
-                      { name:'Sarah M.', role:'Manager', status:'Active', avatar:'S' },
-                      { name:'James K.', role:'Cashier', status:'Active', avatar:'J' },
+                      { name:tc('pos_marketing.walkthrough_staff_sarah_name'), role:tc('pos_marketing.walkthrough_staff_sarah_role'), status:tc('pos_marketing.walkthrough_status_active'), avatar:'S' },
+                      { name:tc('pos_marketing.walkthrough_staff_james_name'), role:tc('pos_marketing.walkthrough_staff_james_role'), status:tc('pos_marketing.walkthrough_status_active'), avatar:'J' },
                     ].map((s, i) => (
                       <div key={i} style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 0', borderBottom:`1px solid ${C.ev}` }}>
                         <div style={{ width:36, height:36, borderRadius:'50%', background:C.ev, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:700, color:C.tx2 }}>{s.avatar}</div>
@@ -631,7 +639,7 @@ export default function PosPageClient() {
                     ))}
                     {walkthroughStep === 1 && (
                       <div className="pop-in" style={{ position:'absolute', top:20, right:28, background:'#fff', borderRadius:12, border:`2px solid ${C.acc}`, padding:'6px 12px', fontSize:12, color:C.acc, fontWeight:600, boxShadow:`0 4px 16px ${C.acc}25` }}>
-                        👆 Click to add new staff
+                        {tc('pos_marketing.walkthrough_click_to_add')}
                       </div>
                     )}
                   </div>
@@ -640,33 +648,33 @@ export default function PosPageClient() {
                 {/* Step 2 — Add staff form */}
                 {walkthroughStep === 2 && (
                   <div className="pop-in" style={{ position:'absolute', inset:0, background:'#fff', padding:'24px 28px', zIndex:5 }}>
-                    <div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:C.tx, marginBottom:20 }}>New Staff Member</div>
+                    <div style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:700, color:C.tx, marginBottom:20 }}>{tc('pos_marketing.walkthrough_new_staff_title')}</div>
                     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:16 }}>
                       <div>
-                        <div style={{ fontSize:11, fontWeight:600, color:C.tx2, marginBottom:6, textTransform:'uppercase', letterSpacing:'.04em' }}>Full name</div>
+                        <div style={{ fontSize:11, fontWeight:600, color:C.tx2, marginBottom:6, textTransform:'uppercase', letterSpacing:'.04em' }}>{tc('pos_marketing.walkthrough_field_full_name')}</div>
                         <div style={{ padding:'9px 12px', borderRadius:8, border:`2px solid ${C.acc}`, fontSize:13, color:C.tx, background:'#fff', display:'flex', alignItems:'center', gap:4 }}>
-                          Amara Osei<span className="cursor" />
+                          {tc('pos_marketing.walkthrough_value_full_name')}<span className="cursor" />
                         </div>
                       </div>
                       <div>
-                        <div style={{ fontSize:11, fontWeight:600, color:C.tx2, marginBottom:6, textTransform:'uppercase', letterSpacing:'.04em' }}>Role</div>
+                        <div style={{ fontSize:11, fontWeight:600, color:C.tx2, marginBottom:6, textTransform:'uppercase', letterSpacing:'.04em' }}>{tc('pos_marketing.walkthrough_field_role')}</div>
                         <div style={{ padding:'9px 12px', borderRadius:8, border:`1px solid ${C.b2}`, fontSize:13, color:C.tx, background:'#fff', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                          <span>Cashier</span><span style={{ fontSize:10, color:C.tx3 }}>▼</span>
+                          <span>{tc('pos_marketing.walkthrough_value_role')}</span><span style={{ fontSize:10, color:C.tx3 }}>▼</span>
                         </div>
                       </div>
                     </div>
                     <div style={{ marginBottom:16 }}>
-                      <div style={{ fontSize:11, fontWeight:600, color:C.tx2, marginBottom:6, textTransform:'uppercase', letterSpacing:'.04em' }}>Branch access</div>
+                      <div style={{ fontSize:11, fontWeight:600, color:C.tx2, marginBottom:6, textTransform:'uppercase', letterSpacing:'.04em' }}>{tc('pos_marketing.walkthrough_field_branch')}</div>
                       <div style={{ padding:'9px 12px', borderRadius:8, border:`1px solid ${C.b2}`, fontSize:13, color:C.tx, background:'#fff', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                        <span>Main Branch</span><span style={{ fontSize:10, color:C.tx3 }}>▼</span>
+                        <span>{tc('pos_marketing.walkthrough_value_branch')}</span><span style={{ fontSize:10, color:C.tx3 }}>▼</span>
                       </div>
                     </div>
                     <div style={{ display:'flex', gap:8, alignItems:'center', padding:'10px 14px', borderRadius:9, background:C.accBg, border:`1px solid ${C.accBdr}`, marginBottom:18 }}>
                       <span style={{ fontSize:16 }}>🔒</span>
-                      <span style={{ fontSize:12, color:C.tx2, lineHeight:1.5 }}>Staff log in with a one-time OTP — no password needed. You control who can access what.</span>
+                      <span style={{ fontSize:12, color:C.tx2, lineHeight:1.5 }}>{tc('pos_marketing.walkthrough_otp_note')}</span>
                     </div>
                     <div style={{ padding:'10px 24px', borderRadius:9, background:C.acc, color:'#fff', fontSize:14, fontWeight:700, display:'inline-flex', alignItems:'center', gap:8, boxShadow:`0 3px 12px ${C.acc}40`, cursor:'default' }}>
-                      Create & send OTP →
+                      {tc('pos_marketing.walkthrough_create_send_otp')}
                     </div>
                   </div>
                 )}
@@ -675,8 +683,8 @@ export default function PosPageClient() {
                 {walkthroughStep === 3 && (
                   <div className="pop-in" style={{ position:'absolute', inset:0, background:'#fff', padding:'24px 28px', zIndex:5, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
                     <div style={{ width:60, height:60, borderRadius:'50%', background:'rgba(22,163,74,.1)', border:'2px solid #16a34a', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, marginBottom:16 }}>✓</div>
-                    <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:C.tx, marginBottom:6, textAlign:'center' }}>Amara Osei added</div>
-                    <div style={{ fontSize:13, color:C.tx3, marginBottom:24, textAlign:'center' }}>Share this one-time code with your staff member</div>
+                    <div style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:700, color:C.tx, marginBottom:6, textAlign:'center' }}>{tc('pos_marketing.walkthrough_added_name')}</div>
+                    <div style={{ fontSize:13, color:C.tx3, marginBottom:24, textAlign:'center' }}>{tc('pos_marketing.walkthrough_share_code')}</div>
                     <div style={{ display:'flex', gap:8, marginBottom:20 }}>
                       {['7','4','2','9','1','8'].map((d, i) => (
                         <div key={i} style={{ width:44, height:52, borderRadius:10, background:C.ev, border:`2px solid ${C.b2}`, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-sora)', fontSize:22, fontWeight:800, color:C.tx }}>{d}</div>
@@ -684,10 +692,10 @@ export default function PosPageClient() {
                     </div>
                     <div style={{ display:'flex', gap:10 }}>
                       <div style={{ padding:'8px 18px', borderRadius:8, border:`1px solid ${C.b2}`, fontSize:13, color:C.tx2, cursor:'default', display:'flex', alignItems:'center', gap:6 }}>
-                        📋 Copy code
+                        {tc('pos_marketing.walkthrough_copy_code')}
                       </div>
                       <div style={{ padding:'8px 18px', borderRadius:8, background:C.acc, color:'#fff', fontSize:13, fontWeight:700, cursor:'default', display:'flex', alignItems:'center', gap:6, boxShadow:`0 2px 10px ${C.acc}35` }}>
-                        📱 Send via WhatsApp
+                        {tc('pos_marketing.walkthrough_send_whatsapp')}
                       </div>
                     </div>
                   </div>
@@ -698,19 +706,19 @@ export default function PosPageClient() {
                   <div className="pop-in" style={{ position:'absolute', inset:0, background:'#fff', padding:'24px 28px', zIndex:5 }}>
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
                       <div>
-                        <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:700, color:C.tx }}>Staff Members</div>
-                        <div style={{ fontSize:12, color:C.tx3, marginTop:2 }}>3 active · 1 location</div>
+                        <div style={{ fontFamily:'var(--font-sora)', fontSize:17, fontWeight:700, color:C.tx }}>{tc('pos_marketing.walkthrough_staff_members')}</div>
+                        <div style={{ fontSize:12, color:C.tx3, marginTop:2 }}>{tc('pos_marketing.walkthrough_staff_count_3')}</div>
                       </div>
                     </div>
                     {[
-                      { name:'Sarah M.', role:'Manager', status:'Active', avatar:'S' },
-                      { name:'James K.', role:'Cashier', status:'Active', avatar:'J' },
-                      { name:'Amara O.', role:'Cashier', status:'Active', avatar:'A', new:true },
+                      { name:tc('pos_marketing.walkthrough_staff_sarah_name'), role:tc('pos_marketing.walkthrough_staff_sarah_role'), status:tc('pos_marketing.walkthrough_status_active'), avatar:'S' },
+                      { name:tc('pos_marketing.walkthrough_staff_james_name'), role:tc('pos_marketing.walkthrough_staff_james_role'), status:tc('pos_marketing.walkthrough_status_active'), avatar:'J' },
+                      { name:tc('pos_marketing.walkthrough_staff_amara_name'), role:tc('pos_marketing.walkthrough_staff_amara_role'), status:tc('pos_marketing.walkthrough_status_active'), avatar:'A', new:true },
                     ].map((s, i) => (
                       <div key={i} className={s.new ? 'pop-in' : ''} style={{ display:'flex', alignItems:'center', gap:12, padding: s.new ? '12px' : '12px 0', borderBottom:`1px solid ${C.ev}`, background: s.new ? C.accBg : 'transparent', borderRadius: s.new ? 8 : 0, margin: s.new ? '4px 0' : 0 }}>
                         <div style={{ width:36, height:36, borderRadius:'50%', background: s.new ? C.acc : C.ev, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, fontWeight:700, color: s.new ? '#fff' : C.tx2 }}>{s.avatar}</div>
                         <div style={{ flex:1 }}>
-                          <div style={{ fontSize:13, fontWeight:600, color:C.tx, display:'flex', alignItems:'center', gap:6 }}>{s.name} {s.new && <span style={{ fontSize:10, color:C.acc, fontWeight:700, background:C.accBg, border:`1px solid ${C.accBdr}`, padding:'1px 6px', borderRadius:9999 }}>NEW</span>}</div>
+                          <div style={{ fontSize:13, fontWeight:600, color:C.tx, display:'flex', alignItems:'center', gap:6 }}>{s.name} {s.new && <span style={{ fontSize:10, color:C.acc, fontWeight:700, background:C.accBg, border:`1px solid ${C.accBdr}`, padding:'1px 6px', borderRadius:9999 }}>{tc('pos_marketing.walkthrough_new_badge')}</span>}</div>
                           <div style={{ fontSize:11, color:C.tx3 }}>{s.role}</div>
                         </div>
                         <div style={{ fontSize:11, color:'#16a34a', fontWeight:600, background:'rgba(22,163,74,.08)', padding:'3px 9px', borderRadius:9999 }}>● {s.status}</div>
@@ -719,8 +727,8 @@ export default function PosPageClient() {
                     <div style={{ marginTop:16, padding:'12px 16px', borderRadius:10, background:'rgba(22,163,74,.06)', border:'1px solid rgba(22,163,74,.2)', display:'flex', alignItems:'center', gap:10 }}>
                       <span style={{ fontSize:18 }}>🎉</span>
                       <div>
-                        <div style={{ fontSize:13, fontWeight:700, color:'#16a34a' }}>Amara is live on Register #2</div>
-                        <div style={{ fontSize:11, color:C.tx3 }}>Logged in 12 seconds ago · Ready to take payments</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:'#16a34a' }}>{tc('pos_marketing.walkthrough_live_title')}</div>
+                        <div style={{ fontSize:11, color:C.tx3 }}>{tc('pos_marketing.walkthrough_live_desc')}</div>
                       </div>
                     </div>
                   </div>
@@ -743,14 +751,14 @@ export default function PosPageClient() {
                 {!walkthroughPlaying && walkthroughStep === 4 && <div style={{ height:'100%', background:C.acc, width:'100%', borderRadius:2 }} />}
               </div>
               <div style={{ fontSize:11, color:C.tx3, whiteSpace:'nowrap' }}>
-                {walkthroughStep === 0 && 'Click play to start'}
-                {walkthroughStep === 1 && 'Step 1 — Staff list'}
-                {walkthroughStep === 2 && 'Step 2 — Fill in details'}
-                {walkthroughStep === 3 && 'Step 3 — OTP generated'}
-                {walkthroughStep === 4 && '✓ Done — staff is live'}
+                {walkthroughStep === 0 && tc('pos_marketing.walkthrough_progress_0')}
+                {walkthroughStep === 1 && tc('pos_marketing.walkthrough_progress_1')}
+                {walkthroughStep === 2 && tc('pos_marketing.walkthrough_progress_2')}
+                {walkthroughStep === 3 && tc('pos_marketing.walkthrough_progress_3')}
+                {walkthroughStep === 4 && tc('pos_marketing.walkthrough_progress_4')}
               </div>
               {walkthroughStep > 0 && !walkthroughPlaying && (
-                <button onClick={() => { setWalkthroughStep(0); setWalkthroughPlaying(false) }} style={{ fontSize:11, color:C.tx3, background:'none', border:`1px solid ${C.b2}`, borderRadius:6, padding:'3px 10px', cursor:'pointer' }}>↺ Replay</button>
+                <button onClick={() => { setWalkthroughStep(0); setWalkthroughPlaying(false) }} style={{ fontSize:11, color:C.tx3, background:'none', border:`1px solid ${C.b2}`, borderRadius:6, padding:'3px 10px', cursor:'pointer' }}>{tc('pos_marketing.walkthrough_replay')}</button>
               )}
             </div>
           </div>
@@ -758,9 +766,9 @@ export default function PosPageClient() {
           {/* 3 quick facts below */}
           <div className="walkthrough-facts" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:14, marginTop:24 }}>
             {[
-              { icon:'⏱', stat:'< 2 min', desc:'Average setup time per staff member' },
-              { icon:'📱', stat:'OTP login', desc:'No passwords — staff get a one-time code' },
-              { icon:'🔑', stat:'3 roles', desc:'Manager · Cashier · Inventory — set once, controlled forever' },
+              { icon:'⏱', stat:tc('pos_marketing.walkthrough_fact_1_stat'), desc:tc('pos_marketing.walkthrough_fact_1_desc') },
+              { icon:'📱', stat:tc('pos_marketing.walkthrough_fact_2_stat'), desc:tc('pos_marketing.walkthrough_fact_2_desc') },
+              { icon:'🔑', stat:tc('pos_marketing.walkthrough_fact_3_stat'), desc:tc('pos_marketing.walkthrough_fact_3_desc') },
             ].map((f, i) => (
               <div key={i} style={{ padding:'18px 16px', borderRadius:14, border:`1px solid ${C.b}`, background:C.sf, display:'flex', gap:12, alignItems:'flex-start' }}>
                 <span style={{ fontSize:22 }}>{f.icon}</span>
@@ -777,26 +785,26 @@ export default function PosPageClient() {
       {/* Pricing */}
       <section id="pricing" style={{ maxWidth:600, margin:'0 auto', padding:'clamp(52px,7vw,84px) clamp(16px,4vw,40px)' }}>
         <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(22px,3.5vw,34px)', fontWeight:700, textAlign:'center', marginBottom:8, letterSpacing:'-.03em', color:C.tx }}>
-          Simple per-seat pricing
+          {tc('pos_marketing.pricing_heading')}
         </h2>
-        <p style={{ textAlign:'center', fontSize:14, color:C.tx2, marginBottom:36 }}>Add PoS to any Growth or Business plan.</p>
+        <p style={{ textAlign:'center', fontSize:14, color:C.tx2, marginBottom:36 }}>{tc('pos_marketing.pricing_subtitle')}</p>
 
         <div style={{ borderRadius:14, border:`2px solid ${C.acc}`, background:`${C.acc}05`, padding:'32px 28px', textAlign:'center' }}>
-          <div style={{ fontSize:11, fontWeight:700, color:C.acc, letterSpacing:'.12em', textTransform:'uppercase', marginBottom:16 }}>Add-on</div>
+          <div style={{ fontSize:11, fontWeight:700, color:C.acc, letterSpacing:'.12em', textTransform:'uppercase', marginBottom:16 }}>{tc('pos_marketing.pricing_addon')}</div>
           <div style={{ fontFamily:'var(--font-sora)', fontSize:42, fontWeight:800, color:C.tx, letterSpacing:'-.03em', marginBottom:4 }}>
-            {seatPrice}<span style={{ fontSize:16, fontWeight:500, color:C.tx3 }}>/seat/month</span>
+            {seatPrice}<span style={{ fontSize:16, fontWeight:500, color:C.tx3 }}>{tc('pos_marketing.pricing_per_seat')}</span>
           </div>
           <p style={{ fontSize:14, color:C.tx2, marginBottom:24, lineHeight:1.6 }}>
-            Each seat is one register or device. Add as many as you need.
+            {tc('pos_marketing.pricing_desc')}
           </p>
           <div style={{ textAlign:'left', maxWidth:340, margin:'0 auto 28px' }}>
             {[
-              'Unlimited transactions',
-              'All 12 features included',
-              'Multi-branch at no extra cost',
-              'AI intelligence from day one',
-              'Xero & QuickBooks sync',
-              'Cancel anytime',
+              tc('pos_marketing.pricing_feature_1'),
+              tc('pos_marketing.pricing_feature_2'),
+              tc('pos_marketing.pricing_feature_3'),
+              tc('pos_marketing.pricing_feature_4'),
+              tc('pos_marketing.pricing_feature_5'),
+              tc('pos_marketing.pricing_feature_6'),
             ].map((f, i) => (
               <div key={i} style={{ display:'flex', gap:8, alignItems:'center', fontSize:13, color:C.tx2, marginBottom:8 }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.acc} strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink:0 }}><path d="M20 6L9 17l-5-5"/></svg>
@@ -805,9 +813,9 @@ export default function PosPageClient() {
             ))}
           </div>
           <Link href="/signin" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'13px 32px', borderRadius:10, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none' }}>
-            Start free
+            {tc('pos_marketing.pricing_cta')}
           </Link>
-          <p style={{ fontSize:12, color:C.tx3, marginTop:12 }}>Free plan always available · No credit card needed</p>
+          <p style={{ fontSize:12, color:C.tx3, marginTop:12 }}>{tc('pos_marketing.pricing_free_note')}</p>
         </div>
       </section>
 
@@ -816,14 +824,14 @@ export default function PosPageClient() {
       <div style={{ maxWidth:1100, margin:'0 auto', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:24, borderTop:`2px solid ${C.tx}`, paddingTop:'clamp(32px,4vw,48px)' }}>
         <div>
           <h2 style={{ fontFamily:'var(--font-sora)', fontSize:'clamp(20px,2.5vw,28px)', fontWeight:700, letterSpacing:'-.03em', color:C.tx, marginBottom:8 }}>
-            Ready to sell smarter?
+            {tc('pos_marketing.cta_heading')}
           </h2>
           <p style={{ fontSize:15, color:C.tx2, lineHeight:1.6, maxWidth:420, margin:0 }}>
-            Set up your first register in under 5 minutes. No hardware needed — just sign in and start selling.
+            {tc('pos_marketing.cta_subtitle')}
           </p>
         </div>
         <Link href="/signin" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'14px 32px', borderRadius:10, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', whiteSpace:'nowrap', flexShrink:0 }}>
-          Get started free →
+          {tc('pos_marketing.cta_button')}
         </Link>
       </div>
       </section>
@@ -834,9 +842,9 @@ export default function PosPageClient() {
           ask<span style={{ color:C.acc }}>biz</span>
         </Link>
         <div style={{ display:'flex', gap:20 }}>
-          <Link href="/" style={{ color:C.tx3, textDecoration:'none' }}>Home</Link>
-          <Link href="/#pricing" style={{ color:C.tx3, textDecoration:'none' }}>Pricing</Link>
-          <Link href="/signin" style={{ color:C.tx3, textDecoration:'none' }}>Sign in</Link>
+          <Link href="/" style={{ color:C.tx3, textDecoration:'none' }}>{tc('pos_marketing.footer_home')}</Link>
+          <Link href="/#pricing" style={{ color:C.tx3, textDecoration:'none' }}>{tc('pos_marketing.footer_pricing')}</Link>
+          <Link href="/signin" style={{ color:C.tx3, textDecoration:'none' }}>{tc('pos_marketing.footer_signin')}</Link>
         </div>
       </footer>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
