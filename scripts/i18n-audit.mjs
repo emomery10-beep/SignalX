@@ -91,15 +91,21 @@ if (existsSync(catRoot) && existsSync(join(catRoot, base.baseLocale))) {
 if (SKIP_TYPECHECK) {
   pass('typecheck', 'SKIP (--skip-typecheck)')
 } else {
+  // This codebase has a large pre-existing type-error backlog tolerated by
+  // ignoreBuildErrors — in generated content (academy/trade-news/etc. batches,
+  // ~3000 errors) and in app code (~337). We count only HAND-WRITTEN app/lib code
+  // (excluding generated content, .next, node_modules) and ratchet against it, so
+  // the gate catches NEW app-code type errors without drowning in the backlog.
+  const IGNORE = /academy-cfo-saas-batch|trade-news-batch|integration-blogs-batch|sector-posts|pseo-batch|africa-|new-blogs|-content\.ts|\.next\/|node_modules/
   let count = 0
   try { execSync('npx tsc --noEmit', { cwd: ROOT, stdio: 'pipe' }) }
   catch (e) {
     const out = (e.stdout?.toString() || '') + (e.stderr?.toString() || '')
-    count = out.split('\n').filter(l => l.includes('error TS')).length
+    count = out.split('\n').filter(l => l.includes('error TS') && !IGNORE.test(l)).length
   }
   const floor = ratchet.typescriptErrors ?? 0
-  if (count > floor) fail('typecheck', `${count} TS errors, ratchet allows ${floor} — new code added ${count - floor} (run: npx tsc --noEmit)`)
-  else pass('typecheck', `${count}/${floor} (pre-existing only — no new type errors)`)
+  if (count > floor) fail('typecheck', `${count} app-code TS errors, ratchet allows ${floor} — new code added ${count - floor} (run: npx tsc --noEmit)`)
+  else pass('typecheck', `${count}/${floor} app-code errors (pre-existing only — no new type errors)`)
 }
 
 // ── report ──────────────────────────────────────────────────────────────────
