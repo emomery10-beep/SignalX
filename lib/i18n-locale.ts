@@ -56,14 +56,22 @@ export function resolveLocale(sources: {
 const PREFIXED_LOCALES = ACTIVE_LOCALES.filter(l => l !== DEFAULT_LOCALE)
 
 // Build the URL for the same page in another locale: strips any existing locale
-// prefix, then adds the target's prefix (English stays unprefixed). Used by the
-// switcher to navigate and by hreflang generation.
+// prefix, then adds the target's prefix (English stays unprefixed). Preserves any
+// ?query and #hash so the switcher doesn't drop pagination/filter/anchor state.
+// Used by the switcher to navigate and by hreflang generation.
 export function localePath(pathname: string, locale: Locale): string {
-  const segs = pathname.split('/')
+  const hashAt = pathname.indexOf('#')
+  const hash = hashAt >= 0 ? pathname.slice(hashAt) : ''
+  const beforeHash = hashAt >= 0 ? pathname.slice(0, hashAt) : pathname
+  const queryAt = beforeHash.indexOf('?')
+  const query = queryAt >= 0 ? beforeHash.slice(queryAt) : ''
+  const path = queryAt >= 0 ? beforeHash.slice(0, queryAt) : beforeHash
+
+  const segs = path.split('/')
   if ((PREFIXED_LOCALES as string[]).includes(segs[1])) segs.splice(1, 1)
   const bare = segs.join('/') || '/'
-  if (locale === DEFAULT_LOCALE) return bare
-  return `/${locale}${bare === '/' ? '' : bare}`
+  const localized = locale === DEFAULT_LOCALE ? bare : `/${locale}${bare === '/' ? '' : bare}`
+  return localized + query + hash
 }
 
 // Labels for the language switcher — exactly the active set, in display order.

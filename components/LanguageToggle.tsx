@@ -18,10 +18,12 @@ export default function LanguageToggle() {
 
   // Switching language updates provider state/cookie/profile AND navigates to the
   // locale-prefixed URL, so the server re-renders the page in the new language.
+  // Include the live query + hash so pagination/filter/anchor state survives.
   const choose = (l: Lang) => {
     setLang(l)
     setOpen(false)
-    router.push(localePath(pathname || '/', l as Locale))
+    const full = (pathname || '/') + (typeof window !== 'undefined' ? window.location.search + window.location.hash : '')
+    router.push(localePath(full, l as Locale))
   }
 
   // Close on outside click

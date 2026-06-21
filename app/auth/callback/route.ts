@@ -2,6 +2,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { createHash } from 'crypto'
+import { isActiveLocale } from '@/lib/i18n-locale'
+
+// Cross-device language: on login, copy the user's saved profile preference into
+// the askbiz_lang cookie so the whole locale chain (middleware/layout/chat) picks
+// it up on this device. Best-effort — never blocks auth, tolerant of a missing
+// column (before the preferred_locale migration is applied).
+async function syncLocaleCookie(res: NextResponse, supabase: ReturnType<typeof createClient>, userId: string): Promise<NextResponse> {
+  try {
+    const { data } = await supabase.from('profiles').select('preferred_locale').eq('id', userId).single()
+    const loc = (data as { preferred_locale?: string } | null)?.preferred_locale
+    if (loc && isActiveLocale(loc)) {
+      res.cookies.set('askbiz_lang', loc, { path: '/', maxAge: 60 * 60 * 24 * 30, sameSite: 'lax' })
+    }
+  } catch { /* non-blocking */ }
+  return res
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
@@ -21,7 +37,7 @@ export async function GET(request: NextRequest) {
         await recordSignupIP(request, data.user.id, data.session?.access_token ? true : false)
         const profile = await supabase.from('profiles').select('onboarded').eq('id', data.user.id).single()
         const isNew = !profile.data?.onboarded
-        return NextResponse.redirect(`${origin}${isShopifyLink ? next : (isNew ? '/onboarding' : next)}`)
+        return syncLocaleCookie(NextResponse.redirect(`${origin}${isShopifyLink ? next : (isNew ? '/onboarding' : next)}`), supabase, data.user.id)
       }
     }
 
@@ -31,7 +47,7 @@ export async function GET(request: NextRequest) {
         await recordSignupIP(request, data.user.id, false)
         const profile = await supabase.from('profiles').select('onboarded').eq('id', data.user.id).single()
         const isNew = !profile.data?.onboarded
-        return NextResponse.redirect(`${origin}${isShopifyLink ? next : (isNew ? '/onboarding' : next)}`)
+        return syncLocaleCookie(NextResponse.redirect(`${origin}${isShopifyLink ? next : (isNew ? '/onboarding' : next)}`), supabase, data.user.id)
       }
     }
   } catch (_) {}
