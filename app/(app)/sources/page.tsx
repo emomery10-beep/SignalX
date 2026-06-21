@@ -1,6 +1,7 @@
 'use client'
 import { usePlan } from '@/lib/hooks/usePlan'
 import { useState, useEffect, useMemo } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Source {
   id: string; source_type: string; name: string; status: string
@@ -92,18 +93,31 @@ const CATEGORY_ORDER = [
   'Social Commerce', 'Inventory & Logistics', 'Point of Sale', 'Data',
 ]
 
-function timeAgo(iso: string | null): string {
-  if (!iso) return 'Never'
+// Maps the literal category label used in SOURCES to its translation key suffix.
+const CATEGORY_KEY: Record<string, string> = {
+  'E-Commerce': 'cat_e_commerce',
+  'Accounting': 'cat_accounting',
+  'Payments': 'cat_payments',
+  'Marketing & Ads': 'cat_marketing_ads',
+  'Social Commerce': 'cat_social_commerce',
+  'Inventory & Logistics': 'cat_inventory_logistics',
+  'Point of Sale': 'cat_point_of_sale',
+  'Data': 'cat_data',
+}
+
+function timeAgo(iso: string | null, tc: (key: string, vars?: Record<string, string | number>) => string): string {
+  if (!iso) return tc('sources.time_never')
   const diff = Date.now() - new Date(iso).getTime()
   const mins = Math.floor(diff / 60000)
-  if (mins < 2)  return 'Just now'
-  if (mins < 60) return `${mins}m ago`
+  if (mins < 2)  return tc('sources.time_just_now')
+  if (mins < 60) return tc('sources.time_minutes_ago', { mins })
   const hrs = Math.floor(mins / 60)
-  if (hrs < 24)  return `${hrs}h ago`
-  return `${Math.floor(hrs / 24)}d ago`
+  if (hrs < 24)  return tc('sources.time_hours_ago', { hrs })
+  return tc('sources.time_days_ago', { days: Math.floor(hrs / 24) })
 }
 
 export default function SourcesPage() {
+  const { tc } = useLang()
   const { planId, loading: planLoading } = usePlan()
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
 
@@ -129,8 +143,8 @@ export default function SourcesPage() {
     loadSources()
     const connected = searchParams?.get('connected')
     const error     = searchParams?.get('error')
-    if (connected) showToast(`${connected.replace(/_/g, ' ')} connected`, true)
-    if (error)     showToast(`Connection failed: ${error.replace(/_/g, ' ')}`, false)
+    if (connected) showToast(tc('sources.toast_connected', { name: connected.replace(/_/g, ' ') }), true)
+    if (error)     showToast(tc('sources.toast_connection_failed', { error: error.replace(/_/g, ' ') }), false)
   }, [])
 
   const showToast = (msg: string, ok: boolean) => {
@@ -160,8 +174,8 @@ export default function SourcesPage() {
     setShopifyError('')
     const shop  = shopifyShop.trim()
     const token = shopifyToken.trim()
-    if (!shop)  { setShopifyError('Enter your store domain'); return }
-    if (!token) { setShopifyError('Paste your access token'); return }
+    if (!shop)  { setShopifyError(tc('sources.shopify_err_enter_domain')); return }
+    if (!token) { setShopifyError(tc('sources.shopify_err_paste_token')); return }
     setShopifyConnecting('manual')
     try {
       const res = await fetch('/api/auth/shopify/token', {
@@ -170,19 +184,19 @@ export default function SourcesPage() {
         body: JSON.stringify({ shop, access_token: token }),
       })
       const data = await res.json()
-      if (!res.ok) { setShopifyError(data.error || 'Connection failed'); return }
+      if (!res.ok) { setShopifyError(data.error || tc('sources.shopify_err_connection_failed')); return }
       setShopifyModal(false)
-      showToast(`Shopify (${data.shop_name}) connected`, true)
+      showToast(tc('sources.toast_shopify_connected', { shop: data.shop_name }), true)
       await loadSources()
     } catch {
-      setShopifyError('Connection failed — try again')
+      setShopifyError(tc('sources.shopify_err_retry'))
     } finally { setShopifyConnecting(null) }
   }
 
   const handleShopifyOAuth = () => {
     setShopifyError('')
     const shop = shopifyOauthShop.trim()
-    if (!shop) { setShopifyError('Enter your store domain'); return }
+    if (!shop) { setShopifyError(tc('sources.shopify_err_enter_domain')); return }
     setShopifyConnecting('oauth')
     window.location.href = `/api/auth/shopify?shop=${encodeURIComponent(shop)}`
   }
@@ -194,7 +208,7 @@ export default function SourcesPage() {
     if (src.oauthFlow) {
       const required = src.fields.filter(f => f.required)
       const missing  = required.find(f => !modalFields[f.key]?.trim())
-      if (missing) { showToast(`Please enter your ${missing.label}`, false); return }
+      if (missing) { showToast(tc('sources.toast_please_enter', { label: missing.label }), false); return }
       const url = OAUTH_URL[srcId]?.(modalFields)
       if (url) window.location.href = url
       return
@@ -202,7 +216,7 @@ export default function SourcesPage() {
 
     const required = src.fields.filter(f => f.required)
     const missing  = required.find(f => !modalFields[f.key]?.trim())
-    if (missing) { showToast(`Please enter your ${missing.label}`, false); return }
+    if (missing) { showToast(tc('sources.toast_please_enter', { label: missing.label }), false); return }
 
     setConnecting(srcId)
     try {
@@ -218,11 +232,11 @@ export default function SourcesPage() {
         body: JSON.stringify({ source_type: srcId, name: src.label, credentials, config }),
       })
       if (!res.ok) throw new Error(await res.text())
-      showToast(`${src.label} connected`, true)
+      showToast(tc('sources.toast_connected', { name: src.label }), true)
       setModal(null)
       await loadSources()
     } catch (e) {
-      showToast(e instanceof Error ? e.message : 'Connection failed', false)
+      showToast(e instanceof Error ? e.message : tc('sources.toast_generic_connection_failed'), false)
     } finally { setConnecting(null) }
   }
 
@@ -232,10 +246,10 @@ export default function SourcesPage() {
       const res  = await fetch('/api/sources/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source_id: sourceId }) })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
-      showToast('Sync complete', true)
+      showToast(tc('sources.toast_sync_complete'), true)
       await loadSources()
     } catch (e) {
-      showToast(e instanceof Error ? e.message : 'Sync failed', false)
+      showToast(e instanceof Error ? e.message : tc('sources.toast_sync_failed'), false)
     } finally { setSyncing(null) }
   }
 
@@ -243,7 +257,7 @@ export default function SourcesPage() {
     setDeleting(id)
     try {
       await fetch('/api/sources', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
-      showToast('Disconnected', true)
+      showToast(tc('sources.toast_disconnected'), true)
       await loadSources()
     } finally { setDeleting(null) }
   }
@@ -279,7 +293,7 @@ export default function SourcesPage() {
         {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('syncing') === 'true' && (
           <div style={{ padding: '12px 16px', borderRadius: 12, marginBottom: 20, background: 'rgba(149,191,71,.08)', border: '1px solid rgba(149,191,71,.3)', fontSize: 13, color: '#7aaa2e', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 16 }}>🛍️</span>
-            <span><strong>Shopify connected.</strong> Your data is syncing in the background — check your dashboard in a few minutes.</span>
+            <span><strong>{tc('sources.syncing_banner_title')}</strong> {tc('sources.syncing_banner_body')}</span>
           </div>
         )}
 
@@ -287,7 +301,7 @@ export default function SourcesPage() {
         {sources.length > 0 && (
           <div style={{ marginBottom: 32 }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>
-              Connected ({sources.length})
+              {tc('sources.connected_heading', { count: sources.length })}
             </div>
             <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 14, overflow: 'hidden' }}>
               {sources.map((source, i) => {
@@ -300,17 +314,17 @@ export default function SourcesPage() {
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{source.name}</div>
                       <div style={{ fontSize: 12, color: isError ? '#ef4444' : 'var(--tx3)', marginTop: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ width: 5, height: 5, borderRadius: '50%', background: isError ? '#ef4444' : source.status === 'active' ? '#22c55e' : '#f59e0b', display: 'inline-block', flexShrink: 0 }}/>
-                        {isError ? source.error_message?.slice(0,60) || 'Sync error — reconnect to fix' : `Synced ${timeAgo(source.last_synced_at)}`}
+                        {isError ? source.error_message?.slice(0,60) || tc('sources.sync_error_fallback') : tc('sources.synced_label', { time: timeAgo(source.last_synced_at, tc) })}
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 7, flexShrink: 0 }}>
                       <button onClick={() => syncSource(source.id)} disabled={syncing === source.id}
                         style={{ padding: '5px 12px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', fontSize: 12, fontWeight: 500, color: 'var(--tx)', cursor: 'pointer', fontFamily: 'inherit' }}>
-                        {syncing === source.id ? 'Syncing…' : 'Sync now'}
+                        {syncing === source.id ? tc('sources.btn_syncing') : tc('sources.btn_sync_now')}
                       </button>
                       <button onClick={() => disconnectSource(source.id)} disabled={deleting === source.id}
                         style={{ padding: '5px 12px', borderRadius: 9999, border: '1px solid rgba(239,68,68,.3)', background: 'transparent', fontSize: 12, color: '#ef4444', cursor: 'pointer', fontFamily: 'inherit' }}>
-                        {deleting === source.id ? '…' : 'Disconnect'}
+                        {deleting === source.id ? '…' : tc('sources.btn_disconnect')}
                       </button>
                     </div>
                   </div>
@@ -323,8 +337,8 @@ export default function SourcesPage() {
         {/* ── Search bar ────────────────────────────────────────────────────── */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>
-            {sources.length === 0 ? 'Connect a platform' : 'Add another source'}
-            <span style={{ marginLeft: 8, fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: 'var(--tx3)' }}>— {SOURCES.length} integrations</span>
+            {sources.length === 0 ? tc('sources.heading_connect_platform') : tc('sources.heading_add_another')}
+            <span style={{ marginLeft: 8, fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: 'var(--tx3)' }}>{tc('sources.integrations_count', { count: SOURCES.length })}</span>
           </div>
           <div style={{ position: 'relative' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round" style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
@@ -332,7 +346,7 @@ export default function SourcesPage() {
             </svg>
             <input
               value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Search integrations…"
+              placeholder={tc('sources.search_placeholder')}
               style={{ width: '100%', padding: '9px 12px 9px 32px', borderRadius: 10, border: '1px solid var(--b2)', background: 'var(--sf)', color: 'var(--tx)', fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
@@ -345,14 +359,14 @@ export default function SourcesPage() {
           </div>
         ) : grouped.length === 0 ? (
           <div style={{ padding: '32px', textAlign: 'center', background: 'var(--ev)', borderRadius: 12, color: 'var(--tx3)', fontSize: 13 }}>
-            No integrations match &ldquo;{search}&rdquo;
+            {tc('sources.no_matches', { query: search })}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             {grouped.map(({ category, items }) => (
               <div key={category}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 8 }}>
-                  {category}
+                  {tc('sources.' + (CATEGORY_KEY[category] || ''))}
                 </div>
                 <div style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
                   {items.map((src, i) => {
@@ -369,7 +383,7 @@ export default function SourcesPage() {
                             {src.label}
                             {!src.oauthFlow && (
                               <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 4, padding: '1px 5px', letterSpacing: '.05em', textTransform: 'uppercase' }}>
-                                API token
+                                {tc('sources.badge_api_token')}
                               </span>
                             )}
                           </div>
@@ -380,18 +394,18 @@ export default function SourcesPage() {
                         {/* Action */}
                         {isConnected ? (
                           <span style={{ fontSize: 11, fontWeight: 600, color: '#22c55e', background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.25)', borderRadius: 9999, padding: '3px 10px', letterSpacing: '.04em', textTransform: 'uppercase', flexShrink: 0 }}>
-                            Connected
+                            {tc('sources.badge_connected')}
                           </span>
                         ) : src.id === 'shopify' ? (
                           <span style={{ fontSize: 11, fontWeight: 600, color: '#f59e0b', background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.25)', borderRadius: 9999, padding: '3px 10px', letterSpacing: '.04em', textTransform: 'uppercase', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                            Coming Soon
+                            {tc('sources.badge_coming_soon')}
                           </span>
                         ) : (
                           <button
                             onClick={() => openModal(src.id)}
                             style={{ padding: '6px 14px', borderRadius: 9999, border: 'none', background: src.accent, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, whiteSpace: 'nowrap' }}
                           >
-                            Connect
+                            {tc('sources.btn_connect')}
                           </button>
                         )}
                       </div>
@@ -404,7 +418,7 @@ export default function SourcesPage() {
         )}
 
         <div style={{ marginTop: 28, padding: '13px 16px', borderRadius: 12, border: '1px dashed var(--b2)', fontSize: 13, color: 'var(--tx3)', lineHeight: 1.6 }}>
-          💡 No integration yet? <strong style={{ color: 'var(--tx)' }}>Upload a CSV or Excel file</strong> from the chat page — instant analysis, no connection needed.
+          {tc('sources.csv_hint_prefix')} <strong style={{ color: 'var(--tx)' }}>{tc('sources.csv_hint_strong')}</strong> {tc('sources.csv_hint_suffix')}
         </div>
       </div>
 
@@ -417,7 +431,7 @@ export default function SourcesPage() {
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
               <span style={{ fontSize: 20 }}>🛍️</span>
-              <span style={{ fontSize: 15, fontWeight: 700 }}>Connect Shopify</span>
+              <span style={{ fontSize: 15, fontWeight: 700 }}>{tc('sources.shopify_modal_title')}</span>
               <button onClick={() => setShopifyModal(false)} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--tx3)', fontSize: 18, lineHeight: 1, padding: 2 }}>×</button>
             </div>
 
@@ -430,7 +444,7 @@ export default function SourcesPage() {
                     color: shopifyTab === tab ? 'var(--tx)' : 'var(--tx3)',
                     boxShadow: shopifyTab === tab ? '0 1px 4px rgba(0,0,0,.1)' : 'none',
                   }}>
-                  {tab === 'oauth' ? 'One-click' : 'Manual token'}
+                  {tab === 'oauth' ? tc('sources.shopify_tab_oauth') : tc('sources.shopify_tab_manual')}
                 </button>
               ))}
             </div>
@@ -445,10 +459,10 @@ export default function SourcesPage() {
             {/* OAuth panel */}
             <div style={{ display: shopifyTab === 'oauth' ? 'block' : 'none' }}>
               <p style={{ fontSize: 12, color: 'var(--tx3)', margin: '0 0 12px', lineHeight: 1.5 }}>
-                Enter your store domain and you'll be redirected to Shopify to approve access in one click.
+                {tc('sources.shopify_oauth_intro')}
               </p>
               <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
-                Store domain <span style={{ color: '#ef4444' }}>*</span>
+                {tc('sources.shopify_field_domain')} <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input
                 type="text"
@@ -460,33 +474,33 @@ export default function SourcesPage() {
               />
               <button onClick={handleShopifyOAuth} disabled={shopifyConnecting === 'oauth'}
                 style={{ width: '100%', padding: '10px 0', borderRadius: 9, border: 'none', background: '#95bf47', color: '#fff', fontSize: 13, fontWeight: 600, cursor: shopifyConnecting === 'oauth' ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
-                {shopifyConnecting === 'oauth' ? 'Redirecting…' : 'Connect via Shopify →'}
+                {shopifyConnecting === 'oauth' ? tc('sources.shopify_btn_redirecting') : tc('sources.shopify_btn_connect_oauth')}
               </button>
             </div>
 
             {/* Manual token panel */}
             <div style={{ display: shopifyTab === 'manual' ? 'block' : 'none' }}>
               <p style={{ fontSize: 12, color: 'var(--tx3)', margin: '0 0 12px', lineHeight: 1.5 }}>
-                Create a custom app in your Shopify Admin → Settings → Apps → Develop apps, then paste the <code style={{ fontSize: 11, background: 'var(--ev)', padding: '1px 4px', borderRadius: 3 }}>shpat_</code> token below.
+                {tc('sources.shopify_manual_intro_prefix')} <code style={{ fontSize: 11, background: 'var(--ev)', padding: '1px 4px', borderRadius: 3 }}>shpat_</code> {tc('sources.shopify_manual_intro_suffix')}
               </p>
               <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
-                Store domain <span style={{ color: '#ef4444' }}>*</span>
+                {tc('sources.shopify_field_domain')} <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input type="text" placeholder="mystore.myshopify.com" value={shopifyShop} onChange={e => setShopifyShop(e.target.value)}
                 style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', marginBottom: 10 }} />
               <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
-                Access token <span style={{ color: '#ef4444' }}>*</span>
+                {tc('sources.shopify_field_access_token')} <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input type="password" placeholder="shpat_xxxxxxxxxxxxxxxxxxxx" value={shopifyToken} onChange={e => setShopifyToken(e.target.value)}
                 style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
               <button onClick={handleShopifyManual} disabled={shopifyConnecting === 'manual'}
                 style={{ width: '100%', padding: '10px 0', borderRadius: 9, border: 'none', background: '#95bf47', color: '#fff', fontSize: 13, fontWeight: 600, cursor: shopifyConnecting === 'manual' ? 'wait' : 'pointer', fontFamily: 'inherit' }}>
-                {shopifyConnecting === 'manual' ? 'Connecting…' : 'Connect with token'}
+                {shopifyConnecting === 'manual' ? tc('sources.shopify_btn_connecting') : tc('sources.shopify_btn_connect_token')}
               </button>
             </div>
 
             <p style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', margin: '10px 0 0', lineHeight: 1.4 }}>
-              🔒 Read-only access. Credentials encrypted & stored securely.
+              {tc('sources.shopify_modal_footer')}
             </p>
           </div>
         </div>
@@ -502,7 +516,7 @@ export default function SourcesPage() {
                 {activeSrc.icon}
               </div>
               <div>
-                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700 }}>Connect {activeSrc.label}</div>
+                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700 }}>{tc('sources.modal_connect_title', { label: activeSrc.label })}</div>
                 <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>{activeSrc.hint}</div>
               </div>
             </div>
@@ -519,16 +533,16 @@ export default function SourcesPage() {
             <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
               <button onClick={() => handleConnect(modal)} disabled={connecting === modal}
                 style={{ flex: 1, padding: 11, borderRadius: 10, border: 'none', background: activeSrc.accent, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                {connecting === modal ? 'Connecting…' : activeSrc.oauthFlow ? `Authorise via ${activeSrc.label} →` : 'Connect'}
+                {connecting === modal ? tc('sources.btn_connecting') : activeSrc.oauthFlow ? tc('sources.modal_authorise', { label: activeSrc.label }) : tc('sources.btn_connect')}
               </button>
               <button onClick={() => setModal(null)}
                 style={{ padding: '11px 16px', borderRadius: 10, border: '1px solid var(--b)', background: 'transparent', fontSize: 14, color: 'var(--tx2)', cursor: 'pointer', fontFamily: 'inherit' }}>
-                Cancel
+                {tc('sources.btn_cancel')}
               </button>
             </div>
             {activeSrc.oauthFlow && (
               <p style={{ marginTop: 12, fontSize: 11, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.6 }}>
-                🔒 Read-only access. AskBiz never stores your {activeSrc.label} password.
+                {tc('sources.modal_oauth_footer', { label: activeSrc.label })}
               </p>
             )}
           </div>

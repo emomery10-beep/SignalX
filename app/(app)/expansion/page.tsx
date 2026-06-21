@@ -3,6 +3,7 @@ import { usePlan } from '@/lib/hooks/usePlan'
 import FeatureGate from '@/components/gates/FeatureGate'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Candidate {
   id: string
@@ -19,12 +20,12 @@ interface Candidate {
   status: string
 }
 
-const TYPE_LABELS: Record<string, { label: string; color: string; emoji: string }> = {
-  variant_extension: { label: 'Variant', color: 'rgba(208,138,89,.15)', emoji: '🔄' },
-  adjacent_category: { label: 'Adjacent', color: 'rgba(140,111,224,.15)', emoji: '🎯' },
-  bundle: { label: 'Bundle', color: 'rgba(34,197,94,.12)', emoji: '📦' },
-  geographic: { label: 'Geographic', color: 'rgba(59,130,246,.12)', emoji: '🌍' },
-  trend_led: { label: 'Trend', color: 'rgba(239,68,68,.12)', emoji: '📈' },
+const TYPE_LABELS: Record<string, { labelKey: string; color: string; emoji: string }> = {
+  variant_extension: { labelKey: 'type_variant', color: 'rgba(208,138,89,.15)', emoji: '🔄' },
+  adjacent_category: { labelKey: 'type_adjacent', color: 'rgba(140,111,224,.15)', emoji: '🎯' },
+  bundle: { labelKey: 'type_bundle', color: 'rgba(34,197,94,.12)', emoji: '📦' },
+  geographic: { labelKey: 'type_geographic', color: 'rgba(59,130,246,.12)', emoji: '🌍' },
+  trend_led: { labelKey: 'type_trend', color: 'rgba(239,68,68,.12)', emoji: '📈' },
 }
 
 const RISK_COLOR: Record<string, string> = {
@@ -41,6 +42,7 @@ const MOCK_CANDIDATES: Candidate[] = [
 
 export default function ExpansionPage() {
   const router = useRouter()
+  const { tc } = useLang()
   const { planId, loading: planLoading } = usePlan()
   const [candidates, setCandidates] = useState<Candidate[]>(MOCK_CANDIDATES)
   const [loading, setLoading] = useState(false)
@@ -59,7 +61,7 @@ export default function ExpansionPage() {
     setGenerating(false)
   }
 
-  if (!planLoading && planId === 'free') return <FeatureGate planId={planId} feature='expansion_intel' featureName='Expansion Intelligence' planNeeded='growth'><></></FeatureGate>
+  if (!planLoading && planId === 'free') return <FeatureGate planId={planId} feature='expansion_intel' featureName={tc('expansion.feature_name')} planNeeded='growth'><></></FeatureGate>
 
   return (
     <div className="page-shell">
@@ -70,11 +72,11 @@ export default function ExpansionPage() {
         {/* KPI row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 12 }}>
           {[
-            { label: 'Opportunities found', value: candidates.length, sub: 'this analysis', color: 'var(--acc)' },
-            { label: 'Top opportunity score', value: `${topScore}/100`, sub: 'Body Lotion 400ml', color: 'var(--acc)' },
-            { label: 'Avg estimated margin', value: `${avgMargin}%`, sub: 'across all candidates', color: '#22c55e' },
-            { label: 'High confidence picks', value: highConfidence, sub: 'strong evidence', color: '#8c6fe0' },
-            { label: 'Low cannibalisation', value: lowRisk, sub: 'safe to launch', color: '#22c55e' },
+            { label: tc('expansion.kpi_opportunities_label'), value: candidates.length, sub: tc('expansion.kpi_opportunities_sub'), color: 'var(--acc)' },
+            { label: tc('expansion.kpi_top_score_label'), value: tc('expansion.kpi_top_score_value', { score: topScore }), sub: tc('expansion.kpi_top_score_sub'), color: 'var(--acc)' },
+            { label: tc('expansion.kpi_avg_margin_label'), value: tc('expansion.kpi_avg_margin_value', { margin: avgMargin }), sub: tc('expansion.kpi_avg_margin_sub'), color: '#22c55e' },
+            { label: tc('expansion.kpi_high_confidence_label'), value: highConfidence, sub: tc('expansion.kpi_high_confidence_sub'), color: '#8c6fe0' },
+            { label: tc('expansion.kpi_low_cannibal_label'), value: lowRisk, sub: tc('expansion.kpi_low_cannibal_sub'), color: '#22c55e' },
           ].map((k, i) => (
             <div key={i} style={{ padding: '16px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)' }}>
               <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, color: k.color }}>{k.value}</div>
@@ -87,10 +89,10 @@ export default function ExpansionPage() {
         {/* Filter tabs */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {[
-            { key: 'all', label: `All (${candidates.length})` },
-            { key: 'new', label: `New (${candidates.filter(c => c.status === 'new').length})` },
-            { key: 'shortlisted', label: `Shortlisted (${candidates.filter(c => c.status === 'shortlisted').length})` },
-            { key: 'testing', label: `Testing (${candidates.filter(c => c.status === 'testing').length})` },
+            { key: 'all', label: tc('expansion.filter_all', { count: candidates.length }) },
+            { key: 'new', label: tc('expansion.filter_new', { count: candidates.filter(c => c.status === 'new').length }) },
+            { key: 'shortlisted', label: tc('expansion.filter_shortlisted', { count: candidates.filter(c => c.status === 'shortlisted').length }) },
+            { key: 'testing', label: tc('expansion.filter_testing', { count: candidates.filter(c => c.status === 'testing').length }) },
           ].map(f => (
             <button key={f.key} onClick={() => setFilter(f.key)}
               style={{ padding: '6px 14px', borderRadius: 9999, border: `1px solid ${filter === f.key ? 'rgba(208,138,89,.4)' : 'var(--b)'}`, background: filter === f.key ? 'rgba(208,138,89,.1)' : 'transparent', color: filter === f.key ? 'var(--acc)' : 'var(--tx2)', fontFamily: 'inherit', fontSize: 13, cursor: 'pointer', fontWeight: filter === f.key ? 600 : 400 }}>
@@ -102,7 +104,10 @@ export default function ExpansionPage() {
         {/* Candidate cards */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {filtered.map((c, i) => {
-            const typeInfo = TYPE_LABELS[c.candidate_type] || { label: c.candidate_type, color: 'var(--ev)', emoji: '•' }
+            const typeMeta = TYPE_LABELS[c.candidate_type]
+            const typeInfo = typeMeta
+              ? { label: tc('expansion.' + typeMeta.labelKey), color: typeMeta.color, emoji: typeMeta.emoji }
+              : { label: c.candidate_type, color: 'var(--ev)', emoji: '•' }
             return (
               <div key={c.id} onClick={() => router.push(`/expansion/${c.id}`)}
                 style={{ padding: '18px 20px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)', cursor: 'pointer', transition: 'all 150ms', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}
@@ -122,7 +127,7 @@ export default function ExpansionPage() {
                       {typeInfo.emoji} {typeInfo.label}
                     </span>
                     <span style={{ padding: '2px 8px', borderRadius: 9999, background: c.confidence === 'high' ? 'rgba(34,197,94,.1)' : 'rgba(245,197,90,.1)', fontSize: 11, color: c.confidence === 'high' ? '#22c55e' : '#f5c55a' }}>
-                      {c.confidence} confidence
+                      {tc('expansion.confidence_suffix', { level: c.confidence })}
                     </span>
                   </div>
                   <div style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.5 }}>{c.why_it_fits}</div>
@@ -143,13 +148,13 @@ export default function ExpansionPage() {
                         {c.opportunity_score}
                       </div>
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Score</div>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('expansion.metric_score')}</div>
                   </div>
 
                   {/* Margin */}
                   <div style={{ textAlign: 'center', minWidth: 50 }}>
                     <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, color: '#22c55e' }}>{c.estimated_margin_pct}%</div>
-                    <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Est. margin</div>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('expansion.metric_est_margin')}</div>
                   </div>
 
                   {/* Cannibalisation */}
@@ -157,7 +162,7 @@ export default function ExpansionPage() {
                     <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 700, color: RISK_COLOR[c.cannibalization_risk] }}>
                       {c.cannibalization_risk.charAt(0).toUpperCase() + c.cannibalization_risk.slice(1)}
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Cannibal. risk</div>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('expansion.metric_cannibal_risk')}</div>
                   </div>
 
                   {/* Arrow */}
@@ -172,10 +177,10 @@ export default function ExpansionPage() {
 
         {/* Bottom CTA */}
         <div style={{ padding: '16px 20px', borderRadius: 14, border: '1px solid rgba(208,138,89,.2)', background: 'rgba(208,138,89,.04)', fontSize: 13, color: 'var(--tx2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-          <span>💡 Connect Shopify or upload more data to get personalised expansion opportunities based on your actual sales.</span>
+          <span>{tc('expansion.cta_text')}</span>
           <button onClick={() => router.push('/sources')}
             style={{ padding: '7px 16px', borderRadius: 9999, border: '1px solid var(--acc)', background: 'transparent', color: 'var(--acc)', fontFamily: 'inherit', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
-            Connect data →
+            {tc('expansion.cta_button')}
           </button>
         </div>
 

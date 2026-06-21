@@ -1,0 +1,20 @@
+{
+  "heading": "Files",
+  "subheading": "Upload and manage your CSV and XLSX datasets",
+  "upload_button": "Upload file",
+  "uploading_button": "Uploading…",
+  "uploading_status": "Uploading {name}…",
+  "upload_success": "✓ {name} uploaded — {count} rows ready",
+  "upload_error": "✗ {message}",
+  "upload_failed": "Upload failed",
+  "dropzone_uploading": "Uploading your file…",
+  "dropzone_idle": "Drop your file here or tap to browse",
+  "dropzone_hint": "CSV or XLSX · Up to 50 MB · Your data stays private",
+  "empty_state": "No files uploaded yet. Drop a CSV or Excel file above to get started.",
+  "meta_rows": "{count} rows",
+  "meta_columns": "{count} columns",
+  "meta_size": "{size} KB",
+  "status_ready": "✓ Ready",
+  "ask_about_this": "Ask about this →",
+  "delete": "Delete"
+}
