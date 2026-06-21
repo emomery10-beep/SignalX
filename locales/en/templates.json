@@ -1,0 +1,22 @@
+{
+  "page_title": "Industry Templates",
+  "feature_name": "Industry Templates",
+  "loading": "Loading…",
+  "count_suffix_one": "template — click any question to use it",
+  "count_suffix_other": "templates — click any question to use it",
+  "search_placeholder": "Search templates or questions…",
+  "filter_all": "All",
+  "filter_retail": "Retail",
+  "filter_ecommerce": "Ecommerce",
+  "filter_distributor": "Distributor",
+  "filter_exporter": "Exporter",
+  "questions_count": "questions",
+  "use_arrow": "Use →",
+  "hide_questions": "↑ Hide",
+  "see_all_prefix": "↓ See all",
+  "see_all_suffix": "questions",
+  "use": "Use",
+  "use_first_in_chat": "Use first question in chat →",
+  "empty_title": "No templates found",
+  "empty_desc": "Try a different search or business type filter"
+}

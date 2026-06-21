@@ -3,19 +3,22 @@ import { usePlan } from '@/lib/hooks/usePlan'
 import FeatureGate from '@/components/gates/FeatureGate'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Alert { id:string; name:string; alert_type:string; column_name:string; threshold:number; is_active:boolean; last_fired_at:string|null; fire_count:number }
 interface Upload { id:string; filename:string; column_names:string[] }
 
-const ALERT_TYPES = [
-  { value:'stock_low',     label:'Stock low',      desc:'Trigger when stock falls below threshold' },
-  { value:'margin_drop',   label:'Margin drop',    desc:'Trigger when margin falls below threshold' },
-  { value:'revenue_spike', label:'Revenue spike',  desc:'Trigger when revenue exceeds threshold' },
-  { value:'price_change',  label:'Price change',   desc:'Trigger when price changes by threshold %' },
-  { value:'custom',        label:'Custom',         desc:'Define your own column and condition' },
+const buildAlertTypes = (tc: (key: string) => string) => [
+  { value:'stock_low',     label:tc('alerts.type_stock_low_label'),     desc:tc('alerts.type_stock_low_desc') },
+  { value:'margin_drop',   label:tc('alerts.type_margin_drop_label'),   desc:tc('alerts.type_margin_drop_desc') },
+  { value:'revenue_spike', label:tc('alerts.type_revenue_spike_label'), desc:tc('alerts.type_revenue_spike_desc') },
+  { value:'price_change',  label:tc('alerts.type_price_change_label'),  desc:tc('alerts.type_price_change_desc') },
+  { value:'custom',        label:tc('alerts.type_custom_label'),        desc:tc('alerts.type_custom_desc') },
 ]
 
 export default function AlertsPage() {
+  const { tc } = useLang()
+  const ALERT_TYPES = buildAlertTypes(tc)
   const { planId, loading: planLoading } = usePlan()
   const supabase = createClient()
   const [alerts, setAlerts] = useState<Alert[]>([])
@@ -101,7 +104,7 @@ export default function AlertsPage() {
         {/* Fired alerts banner */}
         {firedAlerts.length > 0 && (
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 10 }}>⚡ Alerts fired</div>
+            <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 10 }}>⚡ {tc('alerts.fired_banner_label')}</div>
             {firedAlerts.map((f, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, border: `1px solid ${severityColor(f.severity)}33`, background: `${severityColor(f.severity)}11`, marginBottom: 8 }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: severityColor(f.severity), flexShrink: 0, marginTop: 4 }}></div>
@@ -117,8 +120,8 @@ export default function AlertsPage() {
         {/* Alert list */}
         {alerts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--tx3)' }}>
-            <div style={{ fontSize: 15, marginBottom: 8 }}>No alerts set up yet</div>
-            <div style={{ fontSize: 13 }}>Click "Auto-detect alerts" after selecting a dataset, or create one manually.</div>
+            <div style={{ fontSize: 15, marginBottom: 8 }}>{tc('alerts.empty_title')}</div>
+            <div style={{ fontSize: 13 }}>{tc('alerts.empty_desc')}</div>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -128,13 +131,13 @@ export default function AlertsPage() {
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 3 }}>{a.name}</div>
                   <div style={{ fontSize: 12, color: 'var(--tx3)' }}>
-                    {a.alert_type.replace('_',' ')} · {a.column_name} {a.threshold ? `< ${a.threshold}` : ''} · Fired {a.fire_count||0} time{a.fire_count!==1?'s':''}
-                    {a.last_fired_at ? ` · Last: ${new Date(a.last_fired_at).toLocaleDateString()}` : ''}
+                    {a.alert_type.replace('_',' ')} · {a.column_name} {a.threshold ? `< ${a.threshold}` : ''} · {(a.fire_count!==1 ? tc('alerts.fired_many', { n: a.fire_count||0 }) : tc('alerts.fired_one', { n: a.fire_count||0 }))}
+                    {a.last_fired_at ? ' · ' + tc('alerts.last_fired', { date: new Date(a.last_fired_at).toLocaleDateString() }) : ''}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 7 }}>
-                  <button onClick={() => toggleAlert(a.id, a.is_active)} style={{ ...outlineBtn, fontSize: 11, padding: '4px 10px' }}>{a.is_active ? 'Pause' : 'Resume'}</button>
-                  <button onClick={() => deleteAlert(a.id)} style={{ padding: '4px 10px', borderRadius: 9999, border: '1px solid rgba(232,64,64,.28)', background: 'rgba(232,64,64,.08)', color: '#f48080', fontFamily: 'inherit', fontSize: 11, cursor: 'pointer' }}>Delete</button>
+                  <button onClick={() => toggleAlert(a.id, a.is_active)} style={{ ...outlineBtn, fontSize: 11, padding: '4px 10px' }}>{a.is_active ? tc('alerts.pause') : tc('alerts.resume')}</button>
+                  <button onClick={() => deleteAlert(a.id)} style={{ padding: '4px 10px', borderRadius: 9999, border: '1px solid rgba(232,64,64,.28)', background: 'rgba(232,64,64,.08)', color: '#f48080', fontFamily: 'inherit', fontSize: 11, cursor: 'pointer' }}>{tc('alerts.delete')}</button>
                 </div>
               </div>
             ))}
@@ -145,27 +148,27 @@ export default function AlertsPage() {
         {showForm && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(4,8,15,.75)', backdropFilter: 'blur(6px)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
             <div style={{ background: 'var(--sf)', border: '1px solid var(--b2)', borderRadius: 20, width: '100%', maxWidth: 460, padding: 28 }}>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 17, fontWeight: 600, marginBottom: 20 }}>New alert</div>
-              <div style={{ marginBottom: 12 }}><label style={labelSt}>Alert name</label><input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="e.g. Critical stock warning" style={inputSt}/></div>
-              <div style={{ marginBottom: 12 }}><label style={labelSt}>Dataset</label>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 17, fontWeight: 600, marginBottom: 20 }}>{tc('alerts.new_alert_title')}</div>
+              <div style={{ marginBottom: 12 }}><label style={labelSt}>{tc('alerts.alert_name_label')}</label><input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder={tc('alerts.alert_name_placeholder')} style={inputSt}/></div>
+              <div style={{ marginBottom: 12 }}><label style={labelSt}>{tc('alerts.dataset_label')}</label>
                 <select style={inputSt} value={form.uploadId} onChange={e=>setForm({...form,uploadId:e.target.value})}>
-                  <option value="">Select file…</option>
+                  <option value="">{tc('alerts.select_file')}</option>
                   {uploads.map(u=><option key={u.id} value={u.id}>{u.filename}</option>)}
                 </select>
               </div>
-              <div style={{ marginBottom: 12 }}><label style={labelSt}>Alert type</label>
+              <div style={{ marginBottom: 12 }}><label style={labelSt}>{tc('alerts.alert_type_label')}</label>
                 <select style={inputSt} value={form.alertType} onChange={e=>setForm({...form,alertType:e.target.value})}>
                   {ALERT_TYPES.map(t=><option key={t.value} value={t.value}>{t.label} — {t.desc}</option>)}
                 </select>
               </div>
               <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:10,marginBottom:12 }}>
-                <div><label style={labelSt}>Column</label><input value={form.column} onChange={e=>setForm({...form,column:e.target.value})} placeholder="e.g. stock" style={inputSt}/></div>
-                <div><label style={labelSt}>Threshold</label><input type="number" value={form.threshold} onChange={e=>setForm({...form,threshold:Number(e.target.value)})} style={inputSt}/></div>
+                <div><label style={labelSt}>{tc('alerts.column_label')}</label><input value={form.column} onChange={e=>setForm({...form,column:e.target.value})} placeholder={tc('alerts.column_placeholder')} style={inputSt}/></div>
+                <div><label style={labelSt}>{tc('alerts.threshold_label')}</label><input type="number" value={form.threshold} onChange={e=>setForm({...form,threshold:Number(e.target.value)})} style={inputSt}/></div>
               </div>
               <div style={{ display:'flex',gap:10,marginTop:20 }}>
-                <button onClick={()=>setShowForm(false)} style={{...outlineBtn,flex:1,padding:10}}>Cancel</button>
+                <button onClick={()=>setShowForm(false)} style={{...outlineBtn,flex:1,padding:10}}>{tc('alerts.cancel')}</button>
                 <button onClick={saveAlert} disabled={saving||!form.name||!form.column} style={{flex:1,padding:10,borderRadius:9999,border:'none',background:'#1ed4ca',color:'#04080f',fontFamily:'inherit',fontSize:13,fontWeight:600,cursor:'pointer'}}>
-                  {saving?'Saving…':'Create alert'}
+                  {saving?tc('alerts.saving'):tc('alerts.create_alert')}
                 </button>
               </div>
             </div>

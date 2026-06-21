@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { PLAN_HIGHLIGHTS, PLAN_DESCRIPTIONS, getPlanBadge } from '@/lib/plans'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC  = '#d08a59'
 const TX   = '#1a1916'
@@ -14,86 +15,93 @@ const EV   = '#f3f2ef'
 
 
 // ── Feature comparison table data ─────────────────────────────
-const FEATURES_TABLE = [
-  {
-    category: 'Core',
-    rows: [
-      { label: 'Questions per month',           free: '10',           growth: 'Unlimited',   business: 'Unlimited'   },
-      { label: 'File uploads',                  free: '1 / month',    growth: 'Unlimited',   business: 'Unlimited'   },
-      { label: 'Business Pulse health score',   free: '✓',            growth: '✓',           business: '✓'           },
-      { label: 'Data source connections',       free: 'Up to 3',      growth: 'Unlimited',   business: 'Unlimited'   },
-      { label: 'API access',                    free: '✓',            growth: '✓',           business: '✓'           },
-    ],
-  },
-  {
-    category: 'Dashboard & Visuals',
-    rows: [
-      { label: 'Command Centre KPI strip',      free: '✓',            growth: '✓',           business: '✓'           },
-      { label: '30-day health trend (expandable)', free: '✓',         growth: '✓',           business: '✓'           },
-      { label: 'Revenue & margin waterfall',    free: '—',            growth: '✓',           business: '✓'           },
-      { label: 'Anomaly live alerts',           free: '—',            growth: 'Unlimited',   business: 'Unlimited'   },
-      { label: 'Decision Timeline view',        free: '—',            growth: '—',           business: '✓'           },
-    ],
-  },
-  {
-    category: 'Intelligence',
-    rows: [
-      { label: 'Daily Brief',                   free: '—',            growth: '✓',           business: '✓'           },
-      { label: 'Market intelligence',           free: '—',            growth: '✓',           business: '✓'           },
-      { label: 'Churn intelligence',            free: '—',            growth: 'Monthly',     business: 'Real-time'   },
-      { label: 'Expansion Intelligence',        free: '—',            growth: '✓',           business: '✓'           },
-      { label: 'Decision Memory (6-week)',       free: '—',            growth: '—',           business: '✓'           },
-      { label: 'Competitor Watch',              free: '—',            growth: '—',           business: '✓'           },
-      { label: 'CFO Mode — P&L report',         free: '—',            growth: '—',           business: '✓'           },
-      { label: 'CFO Mode — Cash runway',        free: '—',            growth: '—',           business: '✓'           },
-      { label: 'CFO Mode — Board report',       free: '—',            growth: '—',           business: '✓'           },
-      { label: 'CFO Mode — Margin analysis',    free: '—',            growth: '—',           business: '✓'           },
-      { label: 'CFO Mode — Working capital',    free: '—',            growth: '—',           business: '✓'           },
-      { label: 'CFO Mode — Cost structure',     free: '—',            growth: '—',           business: '✓'           },
-    ],
-  },
-  {
-    category: 'Connections',
-    rows: [
-      { label: 'Integration Hub (31 sources)',  free: '✓',            growth: '✓',           business: '✓'           },
-      { label: 'E-commerce sync',               free: 'Up to 3',      growth: 'Unlimited',   business: 'Unlimited'   },
-      { label: 'Accounting sync',               free: 'Up to 3',      growth: 'Unlimited',   business: 'Unlimited'   },
-      { label: 'Payments sync',                 free: 'Up to 3',      growth: 'Unlimited',   business: 'Unlimited'   },
-      { label: 'Social commerce tracking',      free: '—',            growth: '✓',           business: '✓'           },
-      { label: 'Auto pre-fill tools from data', free: '—',            growth: '✓',           business: '✓'           },
-    ],
-  },
-  {
-    category: 'Tools',
-    rows: [
-      { label: 'FX Risk Modeller',              free: 'Manual',       growth: 'Pre-filled',  business: 'Pre-filled'  },
-      { label: 'Landed Cost Calculator',        free: 'Manual',       growth: 'Pre-filled',  business: 'Pre-filled'  },
-      { label: 'Supplier Scorecard',            free: 'View',         growth: 'Full',        business: 'Full'        },
-      { label: 'Export Market Scoring',         free: '20 markets',   growth: '+ Products',  business: '+ Products'  },
-    ],
-  },
-  {
-    category: 'Shipments',
-    rows: [
-      { label: 'Shipment tracking',             free: '1',            growth: '5',           business: 'Unlimited'   },
-      { label: 'Financial impact tracking',     free: '—',            growth: 'Basic',       business: 'Full'        },
-      { label: 'Customs hold alerts',           free: '—',            growth: '—',           business: '✓'           },
-      { label: 'Working capital tracking',      free: '—',            growth: '—',           business: '✓'           },
-    ],
-  },
-  {
-    category: 'Team',
-    rows: [
-      { label: 'Team seats',                    free: '1 (owner)',    growth: '1 (owner)',   business: 'Up to 5'     },
-      { label: 'Role-based access',             free: '—',            growth: '—',           business: '✓'           },
-      { label: 'Priority support',              free: '—',            growth: '—',           business: '✓'           },
-    ],
-  },
-]
+const buildFeaturesTable = (tc: (key: string, vars?: Record<string, string | number>) => string) => {
+  const U = tc('billing.val_unlimited')
+  const C = tc('billing.val_check')
+  const D = tc('billing.val_dash')
+  return [
+    {
+      category: tc('billing.cat_core'),
+      rows: [
+        { label: tc('billing.row_questions_per_month'), free: '10',                            growth: U,                            business: U },
+        { label: tc('billing.row_file_uploads'),        free: tc('billing.val_one_per_month'), growth: U,                            business: U },
+        { label: tc('billing.row_business_pulse'),      free: C,                               growth: C,                            business: C },
+        { label: tc('billing.row_data_sources'),        free: tc('billing.val_up_to_3'),       growth: U,                            business: U },
+        { label: tc('billing.row_api_access'),          free: C,                               growth: C,                            business: C },
+      ],
+    },
+    {
+      category: tc('billing.cat_dashboard'),
+      rows: [
+        { label: tc('billing.row_kpi_strip'),           free: C, growth: C, business: C },
+        { label: tc('billing.row_health_trend'),        free: C, growth: C, business: C },
+        { label: tc('billing.row_waterfall'),           free: D, growth: C, business: C },
+        { label: tc('billing.row_anomaly_alerts'),      free: D, growth: U, business: U },
+        { label: tc('billing.row_decision_timeline'),   free: D, growth: D, business: C },
+      ],
+    },
+    {
+      category: tc('billing.cat_intelligence'),
+      rows: [
+        { label: tc('billing.row_daily_brief'),            free: D, growth: C,                          business: C },
+        { label: tc('billing.row_market_intelligence'),    free: D, growth: C,                          business: C },
+        { label: tc('billing.row_churn_intelligence'),     free: D, growth: tc('billing.val_monthly'),  business: tc('billing.val_real_time') },
+        { label: tc('billing.row_expansion_intelligence'), free: D, growth: C,                          business: C },
+        { label: tc('billing.row_decision_memory'),        free: D, growth: D,                          business: C },
+        { label: tc('billing.row_competitor_watch'),       free: D, growth: D,                          business: C },
+        { label: tc('billing.row_cfo_pl'),                 free: D, growth: D,                          business: C },
+        { label: tc('billing.row_cfo_runway'),             free: D, growth: D,                          business: C },
+        { label: tc('billing.row_cfo_board'),              free: D, growth: D,                          business: C },
+        { label: tc('billing.row_cfo_margin'),             free: D, growth: D,                          business: C },
+        { label: tc('billing.row_cfo_working_capital'),    free: D, growth: D,                          business: C },
+        { label: tc('billing.row_cfo_cost_structure'),     free: D, growth: D,                          business: C },
+      ],
+    },
+    {
+      category: tc('billing.cat_connections'),
+      rows: [
+        { label: tc('billing.row_integration_hub'),  free: C,                          growth: C, business: C },
+        { label: tc('billing.row_ecommerce_sync'),   free: tc('billing.val_up_to_3'),  growth: U, business: U },
+        { label: tc('billing.row_accounting_sync'),  free: tc('billing.val_up_to_3'),  growth: U, business: U },
+        { label: tc('billing.row_payments_sync'),    free: tc('billing.val_up_to_3'),  growth: U, business: U },
+        { label: tc('billing.row_social_commerce'),  free: D,                          growth: C, business: C },
+        { label: tc('billing.row_auto_prefill'),     free: D,                          growth: C, business: C },
+      ],
+    },
+    {
+      category: tc('billing.cat_tools'),
+      rows: [
+        { label: tc('billing.row_fx_risk'),            free: tc('billing.val_manual'),     growth: tc('billing.val_prefilled'),         business: tc('billing.val_prefilled') },
+        { label: tc('billing.row_landed_cost'),        free: tc('billing.val_manual'),     growth: tc('billing.val_prefilled'),         business: tc('billing.val_prefilled') },
+        { label: tc('billing.row_supplier_scorecard'), free: tc('billing.val_view'),       growth: tc('billing.val_full'),              business: tc('billing.val_full') },
+        { label: tc('billing.row_export_market'),      free: tc('billing.row_export_market_free'), growth: tc('billing.row_export_market_growth'), business: tc('billing.row_export_market_growth') },
+      ],
+    },
+    {
+      category: tc('billing.cat_shipments'),
+      rows: [
+        { label: tc('billing.row_shipment_tracking'),       free: '1', growth: '5',                        business: U },
+        { label: tc('billing.row_financial_impact'),        free: D,   growth: tc('billing.val_basic'),    business: tc('billing.val_full') },
+        { label: tc('billing.row_customs_hold'),            free: D,   growth: D,                          business: C },
+        { label: tc('billing.row_working_capital_track'),   free: D,   growth: D,                          business: C },
+      ],
+    },
+    {
+      category: tc('billing.cat_team'),
+      rows: [
+        { label: tc('billing.row_team_seats'),     free: tc('billing.val_owner_one'), growth: tc('billing.val_owner_one'), business: tc('billing.val_up_to_5') },
+        { label: tc('billing.row_role_access'),    free: D,                           growth: D,                           business: C },
+        { label: tc('billing.row_priority_support'), free: D,                         growth: D,                           business: C },
+      ],
+    },
+  ]
+}
 
 export default function BillingPage() {
   const router = useRouter()
   const supabase = createClient()
+  const { tc } = useLang()
+  const FEATURES_TABLE = buildFeaturesTable(tc)
 
   const [currentPlan,  setCurrentPlan]  = useState('free')
   const [usage,        setUsage]        = useState<any>(null)
@@ -191,10 +199,10 @@ export default function BillingPage() {
         window.location.href = data.url
         return
       }
-      const msg = data.error || `Checkout failed (${res.status}). ${text.slice(0, 200)}`
+      const msg = data.error || tc('billing.alert_checkout_failed', { status: res.status, detail: text.slice(0, 200) })
       alert(msg)
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      alert(err instanceof Error ? err.message : tc('billing.alert_something_wrong_retry'))
     } finally { setLoading('') }
   }
 
@@ -209,8 +217,8 @@ export default function BillingPage() {
       })
       const data = await res.json()
       if (data.url) window.location.href = data.url
-      else alert(data.error || 'Something went wrong')
-    } catch { alert('Something went wrong. Please try again.') }
+      else alert(data.error || tc('billing.alert_something_wrong'))
+    } catch { alert(tc('billing.alert_something_wrong_retry')) }
     finally { setPosLoading(false) }
   }
 
@@ -242,9 +250,9 @@ export default function BillingPage() {
         window.location.href = data.redirectUrl
         return
       }
-      alert(data.error || 'Something went wrong')
+      alert(data.error || tc('billing.alert_something_wrong'))
     } catch {
-      alert('Something went wrong. Please try again.')
+      alert(tc('billing.alert_something_wrong_retry'))
     } finally { setPesapalLoading('') }
   }
 
@@ -275,9 +283,9 @@ export default function BillingPage() {
           if (d.trials) setTrials(d.trials)
         }
       } else {
-        alert(data.error || 'Something went wrong')
+        alert(data.error || tc('billing.alert_something_wrong'))
       }
-    } catch { alert('Something went wrong. Please try again.') }
+    } catch { alert(tc('billing.alert_something_wrong_retry')) }
     finally { setTrialLoading('') }
   }
 
@@ -291,8 +299,8 @@ export default function BillingPage() {
       })
       const data = await res.json()
       if (data.redirectUrl) window.location.href = data.redirectUrl
-      else alert(data.error || 'Something went wrong')
-    } catch { alert('Something went wrong. Please try again.') }
+      else alert(data.error || tc('billing.alert_something_wrong'))
+    } catch { alert(tc('billing.alert_something_wrong_retry')) }
     finally { setPosLoading(false) }
   }
 
@@ -304,7 +312,7 @@ export default function BillingPage() {
   const PLANS = [
     {
       id: 'free',
-      name: 'Free',
+      name: tc('billing.plan_0_name'),
       colour: '#6b6760',
       popular: false,
       displayPrice: `${sym}0`,
@@ -315,7 +323,7 @@ export default function BillingPage() {
     },
     {
       id: 'growth',
-      name: 'Growth',
+      name: tc('billing.plan_1_name'),
       colour: '#6366F1',
       popular: true,
       displayPrice: growthPrice?.monthly || `${sym}19`,
@@ -326,7 +334,7 @@ export default function BillingPage() {
     },
     {
       id: 'business',
-      name: 'Business',
+      name: tc('billing.plan_2_name'),
       colour: '#7c3aed',
       popular: false,
       displayPrice: bizPrice?.monthly || `${sym}49`,
@@ -345,7 +353,7 @@ export default function BillingPage() {
 
         {/* Annual toggle */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 24 }}>
-          <span style={{ fontSize: 13, color: annual ? 'var(--tx3)' : 'var(--tx)', fontWeight: annual ? 400 : 600 }}>Monthly</span>
+          <span style={{ fontSize: 13, color: annual ? 'var(--tx3)' : 'var(--tx)', fontWeight: annual ? 400 : 600 }}>{tc('billing.toggle_monthly')}</span>
           <button
             onClick={() => setAnnual(v => !v)}
             style={{ width: 44, height: 24, borderRadius: 12, background: annual ? ACC : 'var(--b2)', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 200ms' }}
@@ -353,8 +361,8 @@ export default function BillingPage() {
             <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: annual ? 23 : 3, transition: 'left 200ms', boxShadow: '0 1px 4px rgba(0,0,0,.2)' }}/>
           </button>
           <span style={{ fontSize: 13, color: annual ? 'var(--tx)' : 'var(--tx3)', fontWeight: annual ? 600 : 400 }}>
-            Annual
-            <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 700, color: '#16a34a', background: 'rgba(34,197,94,.1)', borderRadius: 9999, padding: '1px 7px' }}>2 months free</span>
+            {tc('billing.toggle_annual')}
+            <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 700, color: '#16a34a', background: 'rgba(34,197,94,.1)', borderRadius: 9999, padding: '1px 7px' }}>{tc('billing.toggle_annual_badge')}</span>
           </span>
         </div>
 
@@ -368,14 +376,14 @@ export default function BillingPage() {
               <div key={plan.id} style={{ borderRadius: 18, border: plan.popular ? `2px solid ${plan.colour}` : `1px solid ${B}`, background: plan.popular ? `rgba(99,102,241,.02)` : SF, padding: '22px 20px', position: 'relative', display: 'flex', flexDirection: 'column' }}>
                 {plan.popular && (
                   <div style={{ position: 'absolute', top: -12, left: 20, fontSize: 11, fontWeight: 700, color: '#fff', background: plan.colour, borderRadius: 9999, padding: '3px 12px', letterSpacing: '.04em', textTransform: 'uppercase' }}>
-                    Most popular
+                    {tc('billing.badge_most_popular')}
                   </div>
                 )}
 
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                     <span style={{ fontFamily: 'var(--font-sora)', fontSize: 17, fontWeight: 700, color: plan.colour }}>{plan.name}</span>
-                    {isCurrent && <span style={{ fontSize: 10, fontWeight: 700, color: plan.colour, background: plan.colour + '18', borderRadius: 9999, padding: '2px 8px' }}>Current</span>}
+                    {isCurrent && <span style={{ fontSize: 10, fontWeight: 700, color: plan.colour, background: plan.colour + '18', borderRadius: 9999, padding: '2px 8px' }}>{tc('billing.badge_current')}</span>}
                   </div>
 
                   {/* Price display */}
@@ -385,7 +393,7 @@ export default function BillingPage() {
                     </span>
                     {plan.id !== 'free' && (
                       <span style={{ fontSize: 13, color: 'var(--tx3)' }}>
-                        /month{annual ? ' · billed annually' : ''}
+                        {annual ? tc('billing.price_per_month_annual') : tc('billing.price_per_month')}
                       </span>
                     )}
                   </div>
@@ -393,7 +401,7 @@ export default function BillingPage() {
                   {/* Annual total note */}
                   {annual && plan.annualTotal && (
                     <div style={{ fontSize: 11, color: '#16a34a', marginTop: 4, fontWeight: 500 }}>
-                      {plan.annualTotal} billed once a year · 2 months free
+                      {tc('billing.annual_total_note', { total: plan.annualTotal })}
                     </div>
                   )}
 
@@ -415,12 +423,12 @@ export default function BillingPage() {
                 {plan.id === 'growth' && trials.growth?.active && (
                   <div style={{ marginBottom: 10, padding: '8px 12px', borderRadius: 10, background: 'rgba(99,102,241,.06)', border: '1px solid rgba(99,102,241,.15)', display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366F1', animation: 'pulse 2s infinite' }} />
-                    <span style={{ fontSize: 12, fontWeight: 600, color: '#6366F1' }}>Trial active · {trials.growth.daysLeft} day{trials.growth.daysLeft !== 1 ? 's' : ''} left</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#6366F1' }}>{tc(trials.growth.daysLeft === 1 ? 'billing.trial_active_one' : 'billing.trial_active', { days: trials.growth.daysLeft })}</span>
                   </div>
                 )}
                 {plan.id === 'growth' && trials.growth?.expired && (
                   <div style={{ marginBottom: 10, padding: '8px 12px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.15)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: '#dc2626' }}>Trial ended — subscribe to continue</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#dc2626' }}>{tc('billing.trial_ended_subscribe')}</span>
                   </div>
                 )}
 
@@ -441,7 +449,7 @@ export default function BillingPage() {
                           fontFamily: 'inherit', boxShadow: '0 2px 12px rgba(99,102,241,.35)',
                         }}
                       >
-                        {trialLoading === 'growth' ? 'Starting…' : 'Start free →'}
+                        {trialLoading === 'growth' ? tc('billing.btn_starting') : tc('billing.btn_start_free')}
                       </button>
                     )
                   }
@@ -460,12 +468,12 @@ export default function BillingPage() {
                         boxShadow: (!trialExpired && isCurrent) || plan.id === 'free' ? 'none' : `0 2px 12px ${plan.colour}35`,
                       }}
                     >
-                      {(loading === plan.id || pesapalLoading === plan.id) ? 'Loading…'
-                        : isTrialing ? `Subscribe to ${plan.name} →`
-                        : trialExpired ? `Subscribe to ${plan.name} →`
-                        : isCurrent ? 'Current plan'
-                        : plan.id === 'free' ? 'Free forever'
-                        : `Upgrade to ${plan.name} →`}
+                      {(loading === plan.id || pesapalLoading === plan.id) ? tc('billing.btn_loading')
+                        : isTrialing ? tc('billing.btn_subscribe_to', { plan: plan.name })
+                        : trialExpired ? tc('billing.btn_subscribe_to', { plan: plan.name })
+                        : isCurrent ? tc('billing.btn_current_plan')
+                        : plan.id === 'free' ? tc('billing.btn_free_forever')
+                        : tc('billing.btn_upgrade_to', { plan: plan.name })}
                     </button>
                   )
                 })()}
@@ -479,7 +487,7 @@ export default function BillingPage() {
         {pesapalSuccess && (
           <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-            <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500 }}>Payment confirmed! Your plan is being activated…</span>
+            <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500 }}>{tc('billing.pesapal_success')}</span>
           </div>
         )}
 
@@ -491,13 +499,13 @@ export default function BillingPage() {
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M12 1v4M12 19v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M1 12h4M19 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
               </div>
               <div>
-                <span style={{ fontSize: 16, fontWeight: 700, color: '#4CAF50' }}>Pay with M-Pesa</span>
-                <div style={{ fontSize: 12, color: TX3 }}>Lipa Na M-Pesa — pay directly from your phone via PesaPal</div>
+                <span style={{ fontSize: 16, fontWeight: 700, color: '#4CAF50' }}>{tc('billing.mpesa_title')}</span>
+                <div style={{ fontSize: 12, color: TX3 }}>{tc('billing.mpesa_subtitle')}</div>
               </div>
             </div>
 
             <p style={{ fontSize: 13, color: TX2, marginBottom: 16, lineHeight: 1.6 }}>
-              Get started free, or pay below via M-Pesa, Airtel Money, or card through PesaPal.
+              {tc('billing.mpesa_intro')}
             </p>
 
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -507,7 +515,7 @@ export default function BillingPage() {
                   disabled={!!pesapalLoading}
                   style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#4CAF50', color: '#fff', fontSize: 13, fontWeight: 600, cursor: pesapalLoading ? 'default' : 'pointer', fontFamily: 'inherit', opacity: pesapalLoading ? .6 : 1 }}
                 >
-                  {pesapalLoading === 'growth' ? 'Redirecting…' : 'Growth — KSh 1,900/mo'}
+                  {pesapalLoading === 'growth' ? tc('billing.mpesa_btn_redirecting') : tc('billing.mpesa_btn_growth')}
                 </button>
               )}
               {currentPlan !== 'business' && (
@@ -516,7 +524,7 @@ export default function BillingPage() {
                   disabled={!!pesapalLoading}
                   style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#388E3C', color: '#fff', fontSize: 13, fontWeight: 600, cursor: pesapalLoading ? 'default' : 'pointer', fontFamily: 'inherit', opacity: pesapalLoading ? .6 : 1 }}
                 >
-                  {pesapalLoading === 'business' ? 'Redirecting…' : 'Business — KSh 4,900/mo'}
+                  {pesapalLoading === 'business' ? tc('billing.mpesa_btn_redirecting') : tc('billing.mpesa_btn_business')}
                 </button>
               )}
               <button
@@ -524,21 +532,21 @@ export default function BillingPage() {
                 disabled={!!pesapalLoading || posLoading}
                 style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid rgba(76,175,80,.4)', background: 'transparent', color: '#4CAF50', fontSize: 13, fontWeight: 600, cursor: (pesapalLoading || posLoading) ? 'default' : 'pointer', fontFamily: 'inherit', opacity: (pesapalLoading || posLoading) ? .6 : 1 }}
               >
-                {posLoading ? 'Loading…' : `POS ${posSeats} seat${posSeats !== 1 ? 's' : ''} — KSh ${(posSeats * 500).toLocaleString()}/mo`}
+                {posLoading ? tc('billing.btn_loading') : tc(posSeats === 1 ? 'billing.mpesa_btn_pos_one' : 'billing.mpesa_btn_pos', { seats: posSeats, total: (posSeats * 500).toLocaleString() })}
               </button>
             </div>
 
             <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-              {['M-Pesa', 'Airtel Money', 'Visa / Mastercard'].map(m => (
-                <div key={m} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: TX3, padding: '4px 10px', borderRadius: 8, background: 'rgba(76,175,80,.06)', border: '1px solid rgba(76,175,80,.12)' }}>
+              {['mpesa_method_mpesa', 'mpesa_method_airtel', 'mpesa_method_card'].map(k => (
+                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: TX3, padding: '4px 10px', borderRadius: 8, background: 'rgba(76,175,80,.06)', border: '1px solid rgba(76,175,80,.12)' }}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-                  {m}
+                  {tc('billing.' + k)}
                 </div>
               ))}
             </div>
 
             <p style={{ fontSize: 11, color: TX3, marginTop: 12, lineHeight: 1.5 }}>
-              Powered by PesaPal — Kenya's trusted payment gateway. POS seats: KSh 500/seat/month (~$4 USD). Card payments via Stripe also available above.
+              {tc('billing.mpesa_footnote')}
             </p>
           </div>
         )}
@@ -547,13 +555,13 @@ export default function BillingPage() {
         {trialSuccess === 'pos' && (
           <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-            <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500 }}>POS trial started! Your staff can log in at pos.askbiz.co — 90 days free, up to 5 users.</span>
+            <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500 }}>{tc('billing.toast_pos_trial')}</span>
           </div>
         )}
         {trialSuccess === 'growth' && (
           <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-            <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500 }}>Growth trial started! You have full access to all Growth features for 90 days.</span>
+            <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500 }}>{tc('billing.toast_growth_trial')}</span>
           </div>
         )}
 
@@ -561,7 +569,7 @@ export default function BillingPage() {
         {posSuccess && (
           <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-            <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500 }}>POS seats activated — your cashiers can now log in at pos.askbiz.co</span>
+            <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500 }}>{tc('billing.toast_pos_activated')}</span>
           </div>
         )}
 
@@ -573,18 +581,23 @@ export default function BillingPage() {
                 <div style={{ width: 32, height: 32, borderRadius: 9, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                 </div>
-                <span style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, color: ACC }}>Point of Sale Seats</span>
+                <span style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, color: ACC }}>{tc('billing.pos_title')}</span>
                 {posEnabled && trials.pos?.active && (
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#6366F1', background: 'rgba(99,102,241,.1)', borderRadius: 9999, padding: '2px 8px' }}>Trial · {trials.pos.daysLeft} day{trials.pos.daysLeft !== 1 ? 's' : ''} left · {posSeatCount} seat{posSeatCount !== 1 ? 's' : ''}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#6366F1', background: 'rgba(99,102,241,.1)', borderRadius: 9999, padding: '2px 8px' }}>{tc(
+                    trials.pos.daysLeft === 1
+                      ? (posSeatCount === 1 ? 'billing.pos_badge_trial_one_day_one_seat' : 'billing.pos_badge_trial_one_day')
+                      : (posSeatCount === 1 ? 'billing.pos_badge_trial_one_seat' : 'billing.pos_badge_trial'),
+                    { days: trials.pos.daysLeft, seats: posSeatCount }
+                  )}</span>
                 )}
                 {posEnabled && !trials.pos?.active && (
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#16a34a', background: 'rgba(34,197,94,.1)', borderRadius: 9999, padding: '2px 8px' }}>Active · {posSeatCount} seat{posSeatCount !== 1 ? 's' : ''}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#16a34a', background: 'rgba(34,197,94,.1)', borderRadius: 9999, padding: '2px 8px' }}>{tc(posSeatCount === 1 ? 'billing.pos_badge_active_one' : 'billing.pos_badge_active', { seats: posSeatCount })}</span>
                 )}
               </div>
               <p style={{ fontSize: 13, color: TX2, margin: 0, lineHeight: 1.6, maxWidth: 480 }}>
                 {trials.pos?.active
-                  ? <>Your POS trial is active with up to 5 staff seats. Each staff member can log in to <a href="https://pos.askbiz.co" target="_blank" rel="noreferrer" style={{ color: ACC, textDecoration: 'none' }}>pos.askbiz.co</a> via email or WhatsApp OTP.</>
-                  : <>Try POS free (up to 5 staff), or subscribe at <strong>{isKenyan ? 'KSh 500' : '£5'}/seat/month</strong>. Each seat lets one staff member log in to <a href="https://pos.askbiz.co" target="_blank" rel="noreferrer" style={{ color: ACC, textDecoration: 'none' }}>pos.askbiz.co</a> via email or WhatsApp OTP on their own phone.</>
+                  ? <>{tc('billing.pos_desc_trial_pre')}<a href="https://pos.askbiz.co" target="_blank" rel="noreferrer" style={{ color: ACC, textDecoration: 'none' }}>pos.askbiz.co</a>{tc('billing.pos_desc_trial_post')}</>
+                  : <>{tc('billing.pos_desc_pre')}<strong>{tc('billing.pos_desc_price', { price: isKenyan ? 'KSh 500' : '£5' })}</strong>{tc('billing.pos_desc_post')}<a href="https://pos.askbiz.co" target="_blank" rel="noreferrer" style={{ color: ACC, textDecoration: 'none' }}>pos.askbiz.co</a>{tc('billing.pos_desc_post2')}</>
                 }
               </p>
             </div>
@@ -593,13 +606,13 @@ export default function BillingPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', flexShrink: 0 }}>
                 {trials.pos?.active ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 12, color: TX3 }}>5 seats included in trial</span>
+                    <span style={{ fontSize: 12, color: TX3 }}>{tc('billing.pos_seats_included')}</span>
                     <button
                       onClick={isKenyan ? handlePesapalPosCheckout : handlePosCheckout}
                       disabled={posLoading}
                       style={{ padding: '10px 20px', borderRadius: 10, border: `1px solid rgba(208,138,89,.4)`, background: 'transparent', color: ACC, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: posLoading ? .6 : 1 }}
                     >
-                      {posLoading ? 'Loading…' : 'Subscribe now →'}
+                      {posLoading ? tc('billing.btn_loading') : tc('billing.pos_btn_subscribe_now')}
                     </button>
                   </div>
                 ) : (
@@ -625,11 +638,11 @@ export default function BillingPage() {
                         disabled={posLoading}
                         style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 2px 10px rgba(208,138,89,.3)`, opacity: posLoading ? .6 : 1 }}
                       >
-                        {posLoading ? 'Loading…' : `Add ${posSeats - posSeatCount} seat${posSeats - posSeatCount !== 1 ? 's' : ''} →`}
+                        {posLoading ? tc('billing.btn_loading') : tc(posSeats - posSeatCount === 1 ? 'billing.pos_btn_add_seats_one' : 'billing.pos_btn_add_seats', { n: posSeats - posSeatCount })}
                       </button>
                     ) : (
                       <button onClick={handleManagePos} disabled={posLoading} style={{ padding: '10px 20px', borderRadius: 10, border: `1px solid rgba(208,138,89,.4)`, background: 'transparent', color: ACC, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: posLoading ? .6 : 1 }}>
-                        {posLoading ? 'Loading…' : 'Manage subscription →'}
+                        {posLoading ? tc('billing.btn_loading') : tc('billing.pos_btn_manage')}
                       </button>
                     )}
                   </>
@@ -643,7 +656,7 @@ export default function BillingPage() {
               {/* Trial expired notice */}
               {trials.pos?.expired && (
                 <div style={{ marginBottom: 14, padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.15)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: '#dc2626' }}>Your free access has ended — subscribe below to keep using POS</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: '#dc2626' }}>{tc('billing.pos_trial_expired')}</span>
                 </div>
               )}
 
@@ -661,9 +674,9 @@ export default function BillingPage() {
                       opacity: trialLoading === 'pos' ? .6 : 1,
                     }}
                   >
-                    {trialLoading === 'pos' ? 'Starting…' : 'Start free — up to 5 staff →'}
+                    {trialLoading === 'pos' ? tc('billing.btn_starting') : tc('billing.pos_btn_start_free')}
                   </button>
-                  <div style={{ fontSize: 12, color: TX3, marginTop: 6 }}>No card required · Full POS access for 90 days</div>
+                  <div style={{ fontSize: 12, color: TX3, marginTop: 6 }}>{tc('billing.pos_no_card')}</div>
                 </div>
               )}
 
@@ -685,8 +698,7 @@ export default function BillingPage() {
                 </div>
 
                 <div style={{ fontSize: 13, color: TX2 }}>
-                  {posSeats} seat{posSeats !== 1 ? 's' : ''} ·{' '}
-                  <strong style={{ color: TX }}>{isKenyan ? `KSh ${(posSeats * 500).toLocaleString()}` : `£${posSeats * 5}`}/month</strong>
+                  {tc(posSeats === 1 ? 'billing.pos_seat_count_price_one' : 'billing.pos_seat_count_price', { seats: posSeats, price: isKenyan ? `KSh ${(posSeats * 500).toLocaleString()}` : `£${posSeats * 5}` })}
                 </div>
 
                 <button
@@ -694,24 +706,17 @@ export default function BillingPage() {
                   disabled={posLoading}
                   style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 2px 10px rgba(208,138,89,.3)`, opacity: posLoading ? .6 : 1 }}
                 >
-                  {posLoading ? 'Loading…' : `Add ${posSeats} seat${posSeats !== 1 ? 's' : ''} →`}
+                  {posLoading ? tc('billing.btn_loading') : tc(posSeats === 1 ? 'billing.pos_btn_add_seats_one' : 'billing.pos_btn_add_seats', { n: posSeats })}
                 </button>
               </div>
             </div>
           )}
 
           <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-            {[
-              'Cashier & inventory roles',
-              'Email or WhatsApp OTP login — no app install',
-              'Camera price scanning (Claude AI)',
-              'WhatsApp receipts to customers',
-              'MTD-compatible VAT export',
-              'Sales feed into BI dashboard',
-            ].map(item => (
-              <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: TX2 }}>
+            {[0, 1, 2, 3, 4, 5].map(i => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: TX2 }}>
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-                {item}
+                {tc('billing.pos_feat_' + i)}
               </div>
             ))}
           </div>
@@ -722,7 +727,7 @@ export default function BillingPage() {
           onClick={() => setShowTable(v => !v)}
           style={{ width: '100%', padding: '12px', borderRadius: 12, border: `1px solid ${B}`, background: EV, fontSize: 13, fontWeight: 600, color: TX2, cursor: 'pointer', fontFamily: 'inherit', marginBottom: showTable ? 0 : 24, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
         >
-          {showTable ? 'Hide' : 'Compare all features'}
+          {showTable ? tc('billing.compare_hide') : tc('billing.compare_show')}
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ transform: showTable ? 'rotate(180deg)' : 'none', transition: 'transform 200ms' }}>
             <path d="M6 9l6 6 6-6"/>
           </svg>
@@ -731,9 +736,9 @@ export default function BillingPage() {
         {showTable && (
           <div style={{ border: `1px solid ${B}`, borderRadius: 16, overflow: 'hidden', marginBottom: 24 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', background: EV, borderBottom: `1px solid ${B}` }}>
-              <div style={{ padding: '12px 16px', fontSize: 12, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.06em' }}>Feature</div>
-              {['Free', 'Growth', 'Business'].map((p, i) => (
-                <div key={p} style={{ padding: '12px 12px', fontSize: 13, fontWeight: 700, color: ['#6b6760','#6366F1','#7c3aed'][i], textAlign: 'center' }}>{p}</div>
+              <div style={{ padding: '12px 16px', fontSize: 12, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('billing.table_col_feature')}</div>
+              {['table_col_free', 'table_col_growth', 'table_col_business'].map((k, i) => (
+                <div key={k} style={{ padding: '12px 12px', fontSize: 13, fontWeight: 700, color: ['#6b6760','#6366F1','#7c3aed'][i], textAlign: 'center' }}>{tc('billing.' + k)}</div>
               ))}
             </div>
             {FEATURES_TABLE.map((section, si) => (
@@ -745,9 +750,9 @@ export default function BillingPage() {
                   <div key={ri} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', borderBottom: `1px solid ${B}`, background: ri % 2 === 0 ? SF : 'rgba(0,0,0,.01)' }}>
                     <div style={{ padding: '10px 16px', fontSize: 13, color: TX2 }}>{row.label}</div>
                     {[row.free, row.growth, row.business].map((val, i) => {
-                      const isGood = val === '✓' || val === 'Full' || val === 'Unlimited' || val === 'Real-time' || val === 'Pre-filled'
-                      const isDash = val === '—'
-                      const isLimit = val === 'Manual' || val === 'View' || val === 'Monthly' || val === 'Basic'
+                      const isGood = val === tc('billing.val_check') || val === tc('billing.val_full') || val === tc('billing.val_unlimited') || val === tc('billing.val_real_time') || val === tc('billing.val_prefilled')
+                      const isDash = val === tc('billing.val_dash')
+                      const isLimit = val === tc('billing.val_manual') || val === tc('billing.val_view') || val === tc('billing.val_monthly') || val === tc('billing.val_basic')
                       return (
                         <div key={i} style={{
                           padding: '10px 12px',
@@ -773,29 +778,20 @@ export default function BillingPage() {
             <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
           </svg>
           <p style={{ fontSize: 13, color: 'var(--tx2)', margin: 0, lineHeight: 1.5 }}>
-            <strong style={{ color: 'var(--tx)' }}>API access is included on every plan — including Free.</strong> Build with AskBiz from day one.
+            <strong style={{ color: 'var(--tx)' }}>{tc('billing.api_callout_bold')}</strong> {tc('billing.api_callout_rest')}
           </p>
         </div>
 
         {/* FAQ */}
         <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>Common questions</div>
-          {[
-            { q: 'Can I cancel anytime?',                    a: 'Yes — cancel in one click, no questions asked. You keep access until the end of your billing period.' },
-            { q: 'What counts as a question?',               a: 'Every time you ask AskBiz something — in chat, the Monitor page, or via API — it counts as one question. Free plan gets 10 per month. Growth and Business are unlimited.' },
-            { q: 'What is the Command Centre KPI strip?',     a: 'Available on all plans, the KPI strip sits at the top of your Monitor overview and shows your live health score, active alert count, 30-day score change, and how many data sources are connected — all at a glance.' },
-            { q: 'What is the revenue & margin waterfall?',   a: 'A small, expandable chart on the Growth and Business overview that breaks down your revenue into COGS, gross profit, operating costs, and net margin — based on your health score signals. Click it to expand with hover detail. Connect accounting data for exact figures.' },
-            { q: 'What is Decision Timeline?',               a: 'A Business-only visual view inside Decision Memory. Every business decision you log appears on a horizontal timeline, colour-coded by outcome: green for good calls, red for missed calls, pulsing gold for decisions due for review. A stats bar shows your overall success rate.' },
-            { q: 'What does CFO Mode include?',              a: 'Six AI-generated board-ready reports: P&L Summary, Cash Runway, Margin Analysis, Board Report, Working Capital, and Cost Structure. Results use percentage-first language and appear inline with a follow-up button. Business plan only.' },
-            { q: 'What is the Integration Hub?',             a: 'A visual Connections tab (available to all plans) showing all 31 supported data sources — e-commerce, accounting, payments, marketing, logistics, and social — with live sync status, a connection health bar, and category filters. Green dot = synced, red = error, grey = not connected.' },
-            { q: 'What does "pre-filled from data" mean?',   a: 'On Growth and Business plans, the FX Risk, Landed Cost, and other tools automatically pull your product costs, margins, and supplier data from your connected sources — so you review and calculate rather than entering everything manually.' },
-            { q: 'How does social commerce work?',           a: 'Connect TikTok Shop, Instagram Shopping, or Pinterest from the Sources page. AskBiz tracks conversion rates, saves (demand signals), and which products are going viral — and alerts you when a product has high saves but no orders.' },
-            { q: 'How does churn intelligence work?',        a: 'AskBiz scans your customer data monthly and scores each customer by churn risk based on days since last order and purchase frequency. At-risk customers appear in a retention priority list, and you can ask AskBiz why any specific customer is flagged.' },
-            { q: 'How do team seats work?',                  a: 'Business plan includes up to 5 team members. Each person gets their own login with a role — owner, admin, analyst, accountant, buyer, or viewer.' },
-            { q: 'How do POS seats work?',                   a: `Start free — up to 5 staff, no card required. POS seats are ${isKenyan ? 'KSh 500' : '£5'}/seat/month. Each seat lets one cashier or inventory staff member log in to pos.askbiz.co via email or WhatsApp OTP on their own phone. The owner dashboard is always included free.` },
-            { q: 'Are prices in my local currency?',         a: isKenyan ? 'Yes — prices are shown in Kenyan Shillings (KES). You can pay via M-Pesa, Airtel Money, or card through PesaPal.' : 'Prices are shown in GBP. At checkout, Stripe automatically converts to your local currency at the current exchange rate.' },
-            { q: 'Is my data safe?',                         a: 'Your data is encrypted at rest and in transit. We never use your business data to train AI models.' },
-          ].map((faq, i) => (
+          <div style={{ fontSize: 12, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>{tc('billing.faq_heading')}</div>
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(i => {
+            let a: string
+            if (i === 11) a = tc('billing.faq_11_a', { price: isKenyan ? 'KSh 500' : '£5' })
+            else if (i === 12) a = isKenyan ? tc('billing.faq_12_a_kes') : tc('billing.faq_12_a_gbp')
+            else a = tc('billing.faq_' + i + '_a')
+            return { q: tc('billing.faq_' + i + '_q'), a }
+          }).map((faq, i) => (
             <div key={i} style={{ borderBottom: `1px solid ${B}`, padding: '14px 0' }}>
               <div style={{ fontSize: 14, fontWeight: 600, color: TX, marginBottom: 5 }}>{faq.q}</div>
               <div style={{ fontSize: 13, color: TX3, lineHeight: 1.6 }}>{faq.a}</div>
