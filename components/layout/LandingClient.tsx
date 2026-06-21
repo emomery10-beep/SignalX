@@ -57,15 +57,8 @@ const BIZ_TYPES = [
 // FAQS — kept in sync with the FAQPage JSON-LD schema in app/page.tsx (server-side)
 // The server-side script handles Google rich results; <details>/<summary> ensures answers
 // are always in the HTML for crawlers regardless of JS execution.
-const FAQS = [
-  {q:'What is AskBiz?',a:'AskBiz is an AI-powered business intelligence tool for SME founders. You connect your Shopify, Amazon, TikTok Shop, or QuickBooks account, then ask questions in plain English and get clear answers grounded in your actual data.'},
-  {q:'How much does AskBiz cost?',a:'AskBiz has a free plan with 10 questions per month, a Growth plan at £19/month with unlimited questions and all core features, and a Business plan at £39/month with team seats, Decision Memory, Competitor Watch, and CFO Mode. All plans include API access.'},
-  {q:'What data sources does AskBiz support?',a:'AskBiz connects to Shopify, Amazon FBA, TikTok Shop, Instagram Shopping, Pinterest, Stripe, QuickBooks, Google Sheets, and Square. You can also upload CSV and Excel files directly.'},
-  {q:'What is the Business Pulse score?',a:'The Business Pulse score is a 0–100 health rating for your business, calculated from five components: margin health, revenue trend, stock position, cash flow, and product mix. It updates every time you sync your connected stores.'},
-  {q:'Does AskBiz include a Point of Sale system?',a:'Yes — AskBiz includes a full Point of Sale system with register checkout, barcode scanning, inventory management, staff shift tracking, digital receipts, multi-branch support, tax compliance, GDPR tools, and integrations with Xero and QuickBooks. The PoS costs £5 per seat per month and is available on all plans.'},
-  {q:'Is AskBiz suitable for small businesses?',a:'Yes — AskBiz is built specifically for SME founders, solo sellers, and small business owners who need business intelligence without a data team. No technical knowledge required.'},
-  {q:'Is my business data safe?',a:'Your data is encrypted at rest and in transit. We never use your business data to train AI models. UK data residency with SOC 2-aligned controls.'},
-]
+const buildFaqs = (tc: (key: string) => string) =>
+  [0, 1, 2, 3, 4, 5, 6].map(i => ({ q: tc('landing.faq_' + i + '_q'), a: tc('landing.faq_' + i + '_a') }))
 
 function Logo({size=12,color='white'}:{size?:number;color?:string}) {
   return (
@@ -1287,7 +1280,8 @@ function NavDropdown({ label, items }: { label: string; items: DropGroup[] }) {
 }
 
 function LandingInner({ geo }: { geo: Geo | null }) {
-  const { lang, setLang } = useLang()
+  const { lang, setLang, tc } = useLang()
+  const FAQS = buildFaqs(tc)
   const [scrollY, setScrollY] = useState(0)
   const [mouse, setMouse] = useState({ x: 0, y: 0 })
   const [menuOpen, setMenuOpen] = useState(false)
@@ -1387,44 +1381,44 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         <div className="nav-links" style={{ display:'flex',alignItems:'center',gap:0,flex:1,justifyContent:'center' }}>
           {/* Product links */}
           {[
-            ['/free-tools','Free Tools'],
-            ['/point-of-sale','Point of Sale'],
-            ['/integrations','Integrations'],
+            ['/free-tools',tc('landing.nav_free_tools')],
+            ['/point-of-sale',tc('landing.nav_point_of_sale')],
+            ['/integrations',tc('landing.nav_integrations')],
           ].map(([href,label])=>(
             <Link key={href} href={href} className="nav-link" style={{ fontSize:12,color:T.tx2,textDecoration:'none',padding:'0 9px',transition:'color 150ms',whiteSpace:'nowrap' }}>{label}</Link>
           ))}
 
           {/* Resources mega-dropdown */}
-          <NavDropdown label="Resources" items={[
-            {group:'Learn', links:[
-              {href:'/academy',label:'Academy',desc:'420+ free BI guides & courses'},
-              {href:'/blog',label:'Blog',desc:'Strategy, insights & case studies'},
-              {href:'/how-to',label:'How-To Guides',desc:'Step-by-step tutorials'},
-              {href:'/academy/learning-paths',label:'Learning Paths',desc:'Structured courses for founders'},
+          <NavDropdown label={tc('landing.nav_resources')} items={[
+            {group:tc('landing.nav_group_learn'), links:[
+              {href:'/academy',label:tc('landing.nav_academy_label'),desc:tc('landing.nav_academy_desc')},
+              {href:'/blog',label:tc('landing.nav_blog_label'),desc:tc('landing.nav_blog_desc')},
+              {href:'/how-to',label:tc('landing.nav_howto_label'),desc:tc('landing.nav_howto_desc')},
+              {href:'/academy/learning-paths',label:tc('landing.nav_learning_paths_label'),desc:tc('landing.nav_learning_paths_desc')},
             ]},
-            {group:'Reference', links:[
-              {href:'/glossary',label:'Business Glossary',desc:'300+ terms explained simply'},
-              {href:'/benchmarks',label:'Benchmarks',desc:'Industry KPIs & margin data'},
-              {href:'/free-tools',label:'All Free Tools',desc:'Calculators, FX, landed cost'},
-              {href:'/case-studies',label:'Case Studies',desc:'Real results from real businesses'},
+            {group:tc('landing.nav_group_reference'), links:[
+              {href:'/glossary',label:tc('landing.nav_glossary_label'),desc:tc('landing.nav_glossary_desc')},
+              {href:'/benchmarks',label:tc('landing.nav_benchmarks_label'),desc:tc('landing.nav_benchmarks_desc')},
+              {href:'/free-tools',label:tc('landing.nav_all_free_tools_label'),desc:tc('landing.nav_all_free_tools_desc')},
+              {href:'/case-studies',label:tc('landing.nav_case_studies_label'),desc:tc('landing.nav_case_studies_desc')},
             ]},
-            {group:'Company', links:[
-              {href:'/changelog',label:'Changelog',desc:'What\'s new in AskBiz'},
-              {href:'/developers',label:'Developers',desc:'API docs & integrations'},
-              {href:'/transparency',label:'Transparency',desc:'Open company information'},
+            {group:tc('landing.nav_group_company'), links:[
+              {href:'/changelog',label:tc('landing.nav_changelog_label'),desc:tc('landing.nav_changelog_desc')},
+              {href:'/developers',label:tc('landing.nav_developers_label'),desc:tc('landing.nav_developers_desc')},
+              {href:'/transparency',label:tc('landing.nav_transparency_label'),desc:tc('landing.nav_transparency_desc')},
             ]},
           ]}/>
 
           {/* Support */}
-          <NavDropdown label="Support" items={[
-            {group:'Help', links:[
-              {href:'/help',label:'Help Centre',desc:'Search 200+ support articles'},
-              {href:'/help/faq',label:'FAQ',desc:'Frequently asked questions'},
-              {href:'/help/glossary',label:'Metric Glossary',desc:'Business metrics & AskBiz terms'},
+          <NavDropdown label={tc('landing.nav_support')} items={[
+            {group:tc('landing.nav_group_help'), links:[
+              {href:'/help',label:tc('landing.nav_help_centre_label'),desc:tc('landing.nav_help_centre_desc')},
+              {href:'/help/faq',label:tc('landing.nav_faq_label'),desc:tc('landing.nav_faq_desc')},
+              {href:'/help/glossary',label:tc('landing.nav_metric_glossary_label'),desc:tc('landing.nav_metric_glossary_desc')},
             ]},
           ]}/>
 
-          <Link href="#pricing" className="nav-link" style={{ fontSize:12,color:T.tx2,textDecoration:'none',padding:'0 9px',whiteSpace:'nowrap',transition:'color 150ms' }}>Pricing</Link>
+          <Link href="#pricing" className="nav-link" style={{ fontSize:12,color:T.tx2,textDecoration:'none',padding:'0 9px',whiteSpace:'nowrap',transition:'color 150ms' }}>{tc('landing.nav_pricing')}</Link>
         </div>
 
         <div style={{ display:'flex',alignItems:'center',gap:6,flexShrink:0 }}>
@@ -1450,23 +1444,23 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       {menuOpen&&(
         <div style={{ display:'flex',flexDirection:'column',position:'fixed',top:56,left:0,right:0,bottom:0,background:T.bg,zIndex:49,overflowY:'auto',padding:'8px 20px 32px' }}>
           {[
-            ['','— Product —',''],
-            ['/free-tools','Free Tools',''],
-            ['/point-of-sale','Point of Sale',''],
-            ['/integrations','Integrations',''],
-            ['','— Learn —',''],
-            ['/academy','Academy',''],
-            ['/blog','Blog',''],
-            ['/how-to','How-To Guides',''],
-            ['/case-studies','Case Studies',''],
-            ['/glossary','Business Glossary',''],
-            ['/benchmarks','Benchmarks',''],
-            ['','— Company —',''],
-            ['/changelog','Changelog',''],
-            ['/developers','Developers',''],
-            ['/help','Help Centre',''],
-            ['/help/faq','FAQ',''],
-            ['#pricing','Pricing',''],
+            ['',tc('landing.mobile_section_product'),''],
+            ['/free-tools',tc('landing.nav_free_tools'),''],
+            ['/point-of-sale',tc('landing.nav_point_of_sale'),''],
+            ['/integrations',tc('landing.nav_integrations'),''],
+            ['',tc('landing.mobile_section_learn'),''],
+            ['/academy',tc('landing.nav_academy_label'),''],
+            ['/blog',tc('landing.nav_blog_label'),''],
+            ['/how-to',tc('landing.nav_howto_label'),''],
+            ['/case-studies',tc('landing.nav_case_studies_label'),''],
+            ['/glossary',tc('landing.nav_glossary_label'),''],
+            ['/benchmarks',tc('landing.nav_benchmarks_label'),''],
+            ['',tc('landing.mobile_section_company'),''],
+            ['/changelog',tc('landing.nav_changelog_label'),''],
+            ['/developers',tc('landing.nav_developers_label'),''],
+            ['/help',tc('landing.nav_help_centre_label'),''],
+            ['/help/faq',tc('landing.nav_faq_label'),''],
+            ['#pricing',tc('landing.nav_pricing'),''],
           ].map(([href,label],i)=>
             !href ? (
               <div key={i} style={{ padding:'12px 12px 4px',fontSize:9,fontWeight:700,color:T.acc,letterSpacing:'.12em',textTransform:'uppercase' }}>{label}</div>
@@ -1475,8 +1469,8 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             )
           )}
           <div style={{ marginTop:20,display:'flex',flexDirection:'column',gap:10 }}>
-            <Link href="/signin?mode=signup" onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:15,fontWeight:700,textDecoration:'none',textAlign:'center' }}>Start free</Link>
-            <Link href="/signin" onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',textAlign:'center' }}>Sign in</Link>
+            <Link href="/signin?mode=signup" onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:15,fontWeight:700,textDecoration:'none',textAlign:'center' }}>{tc('landing.mobile_start_free')}</Link>
+            <Link href="/signin" onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',textAlign:'center' }}>{tc('landing.mobile_sign_in')}</Link>
           </div>
         </div>
       )}
@@ -1492,60 +1486,55 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             {/* Left — headline */}
             <div>
               <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.18em',textTransform:'uppercase',marginBottom:24 }}>
-                POS · Inventory · AI Intelligence — One Platform
+                {tc('landing.hero_eyebrow')}
               </p>
               <h1 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(38px,5vw,72px)',fontWeight:400,lineHeight:.98,letterSpacing:'-.025em',marginBottom:28,color:T.tx }}>
-                Your shop. Your stock.<br/>
-                <em style={{ color:T.acc,fontStyle:'italic' }}>All in one place.</em>
+                {tc('landing.hero_title_line1')}<br/>
+                <em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.hero_title_line2')}</em>
               </h1>
               <p style={{ fontSize:'clamp(15px,1.4vw,18px)',color:T.tx2,lineHeight:1.7,marginBottom:36,maxWidth:420 }}>
-                AskBiz is your POS, real-time inventory, and AI business intelligence in one. Point your camera to sell. Ask in plain English to understand your numbers. No training. No setup. Just plug in and go.
+                {tc('landing.hero_subtitle')}
               </p>
               <div className="hero-ctas" style={{ display:'flex',gap:12,flexWrap:'wrap',marginBottom:24 }}>
                 <Link href="/signin?mode=signup" className="cta-btn" style={{ padding:'14px 28px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8,boxShadow:`0 4px 24px rgba(201,122,68,.3)` }}>
-                  Start free — no card needed
+                  {tc('landing.hero_cta_primary')}
                 </Link>
                 <a href="#pos" style={{ padding:'14px 20px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'rgba(255,255,255,.6)',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6,backdropFilter:'blur(8px)' }}>
-                  See how it works ↓
+                  {tc('landing.hero_cta_secondary')}
                 </a>
               </div>
               <div style={{ display:'flex',gap:16,flexWrap:'wrap',fontSize:12,color:T.tx3 }}>
-                <span>✓ Free plan · no card required</span>
-                <span>✓ GDPR compliant · UK data residency</span>
-                <span>✓ Ready in 2 minutes</span>
+                <span>{tc('landing.hero_trust_free')}</span>
+                <span>{tc('landing.hero_trust_gdpr')}</span>
+                <span>{tc('landing.hero_trust_ready')}</span>
               </div>
               <div style={{ marginTop:12,display:'inline-flex',alignItems:'center',gap:8,background:'rgba(22,163,74,.07)',border:'1px solid rgba(22,163,74,.18)',borderRadius:9999,padding:'6px 14px' }}>
-                <span style={{ fontSize:11,fontWeight:700,color:'#16a34a' }}>Free plan always available</span>
+                <span style={{ fontSize:11,fontWeight:700,color:'#16a34a' }}>{tc('landing.hero_badge_free')}</span>
                 <span style={{ fontSize:11,color:T.tx3 }}>·</span>
-                <span style={{ fontSize:11,color:T.tx2,fontWeight:600 }}>{growthPrice}/mo for Growth · {businessPrice}/mo for Business</span>
+                <span style={{ fontSize:11,color:T.tx2,fontWeight:600 }}>{tc('landing.hero_badge_pricing',{growth:growthPrice,business:businessPrice})}</span>
                 <span style={{ fontSize:11,color:T.tx3 }}>·</span>
-                <span style={{ fontSize:11,color:T.tx3 }}>includes full POS system</span>
+                <span style={{ fontSize:11,color:T.tx3 }}>{tc('landing.hero_badge_pos')}</span>
               </div>
-              {country && <p style={{ fontSize:12,color:T.tx3,marginTop:8 }}>{flag} Prices shown in local currency for {country}</p>}
+              {country && <p style={{ fontSize:12,color:T.tx3,marginTop:8 }}>{tc('landing.hero_local_currency',{flag,country})}</p>}
             </div>
             {/* Right — calculator */}
             <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
               <p style={{ fontSize:10,fontWeight:700,color:T.acc,letterSpacing:'.14em',textTransform:'uppercase',marginBottom:4,textAlign:'center' }}>
-                Free tool — no login needed
+                {tc('landing.hero_calc_eyebrow')}
               </p>
               <MiniCalcWidget />
             </div>
           </div>
         </div>
         <div style={{ position:'absolute',bottom:24,left:'50%',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:6,zIndex:2,opacity:Math.max(0,1-scrollY/250),pointerEvents:'none' }}>
-          <span style={{ fontSize:9,color:T.tx3,letterSpacing:'.14em',textTransform:'uppercase' }}>Scroll</span>
+          <span style={{ fontSize:9,color:T.tx3,letterSpacing:'.14em',textTransform:'uppercase' }}>{tc('landing.hero_scroll')}</span>
           <div style={{ width:1,height:28,background:`linear-gradient(to bottom,${T.bd},transparent)` }}/>
         </div>
       </section>
 
       {/* ── STATS BAR ─────────────────────────────────────────────────── */}
       <div style={{ borderTop:`1px solid ${T.bd}`,borderBottom:`1px solid ${T.bd}`,background:T.card,padding:'16px clamp(16px,4vw,40px)',display:'flex',alignItems:'center',justifyContent:'center',gap:'clamp(24px,4vw,64px)',flexWrap:'wrap' }}>
-        {[
-          {value:'4 min',label:'vs 2 hrs to pull your Monday numbers'},
-          {value:'£400/mo',label:'average bottom-line gain in month 1'},
-          {value:'89 days',label:'earlier churn detection on average'},
-          {value:'30+',label:'live integrations — one click to connect'},
-        ].map((stat,i)=>(
+        {[0,1,2,3].map(i=>({value:tc('landing.stat_'+i+'_value'),label:tc('landing.stat_'+i+'_label')})).map((stat,i)=>(
           <div key={i} style={{ textAlign:'center',flexShrink:0 }}>
             <div style={{ fontFamily:'var(--font-instrument)',fontSize:26,fontWeight:400,color:T.acc,lineHeight:1 }}>{stat.value}</div>
             <div style={{ fontSize:11,color:T.tx3,marginTop:2,maxWidth:140 }}>{stat.label}</div>
@@ -1558,19 +1547,19 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         <div style={{ maxWidth:1060,margin:'0 auto' }}>
           <div className="two-col-wide" style={{ gap:'clamp(36px,5vw,64px)' }}>
             <div data-reveal>
-              <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:18 }}>Intelligence Platform</p>
+              <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:18 }}>{tc('landing.monitor_eyebrow')}</p>
               <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
-                Your business,<br/><em style={{ color:T.acc,fontStyle:'italic' }}>monitored 24/7.</em>
+                {tc('landing.monitor_title_line1')}<br/><em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.monitor_title_line2')}</em>
               </h2>
               <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,marginBottom:22,maxWidth:320 }}>
-                Revenue trends, margin alerts, daily briefs — instant, automatic, and always up to date.
+                {tc('landing.monitor_subtitle')}
               </p>
               <div style={{ display:'flex',flexDirection:'column',gap:9 }}>
                 {[
-                  {icon:'⚡',label:'AI anomaly alerts — catches drops before you do'},
-                  {icon:'📊',label:'CFO dashboard — P&L, cash flow, margins in one view'},
-                  {icon:'🧠',label:'Decision memory — AI remembers what you\'ve decided'},
-                  {icon:'⏰',label:'Daily brief — your top 3 actions, every morning'},
+                  {icon:'⚡',label:tc('landing.monitor_feat_0')},
+                  {icon:'📊',label:tc('landing.monitor_feat_1')},
+                  {icon:'🧠',label:tc('landing.monitor_feat_2')},
+                  {icon:'⏰',label:tc('landing.monitor_feat_3')},
                 ].map((f,i)=>(
                   <div key={i} style={{ display:'flex',gap:9,alignItems:'flex-start',fontSize:13,color:T.tx2 }}>
                     <span style={{ fontSize:14,flexShrink:0 }}>{f.icon}</span><span>{f.label}</span>
@@ -1593,15 +1582,15 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               <SourcesUIReplica />
             </div>
             <div data-reveal data-reveal-delay="1">
-              <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:18 }}>30 integrations</p>
+              <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:18 }}>{tc('landing.sources_eyebrow')}</p>
               <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
-                Connect once.<br/><em style={{ color:T.acc,fontStyle:'italic' }}>Everything flows in.</em>
+                {tc('landing.sources_title_line1')}<br/><em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.sources_title_line2')}</em>
               </h2>
               <p style={{ fontSize:14,color:T.tx2,lineHeight:1.75,marginBottom:22,maxWidth:320 }}>
-                Shopify, Amazon FBA, Stripe, Xero, QuickBooks, TikTok Shop and 24 more — one click to connect, no developer needed.
+                {tc('landing.sources_subtitle')}
               </p>
               <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
-                {['No exports or CSV uploads needed','Syncs automatically every 24 hours','Works with your existing tools','Connect in under 2 minutes'].map((f,i)=>(
+                {[0,1,2,3].map(i=>tc('landing.sources_feat_'+i)).map((f,i)=>(
                   <div key={i} style={{ display:'flex',gap:8,alignItems:'center',fontSize:13,color:T.tx2 }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.acc} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>{f}
                   </div>
@@ -1616,27 +1605,27 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       <section id="pos" style={{ padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)',background:T.bg }}>
         <div style={{ maxWidth:1180,margin:'0 auto' }}>
           <div style={{ textAlign:'center',marginBottom:44 }} data-reveal>
-            <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:14 }}>Point of Sale</p>
+            <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:14 }}>{tc('landing.pos_eyebrow')}</p>
             <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(28px,4vw,54px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',color:T.tx,marginBottom:12 }}>
-              Ring up a sale.<br/><em style={{ color:T.acc,fontStyle:'italic' }}>Everything else is automatic.</em>
+              {tc('landing.pos_title_line1')}<br/><em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.pos_title_line2')}</em>
             </h2>
             <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,maxWidth:480,margin:'0 auto' }}>
-              Every transaction feeds your intelligence dashboard instantly. Overview, operations, payments and staff — all in one place.
+              {tc('landing.pos_subtitle')}
             </p>
           </div>
           <div data-reveal data-reveal-delay="1">
             <PosShowcase />
           </div>
           <div style={{ display:'flex',flexWrap:'wrap',gap:7,justifyContent:'center',marginTop:24 }}>
-            {['Camera barcode scan','Works on any phone or tablet','Multi-branch','VAT / GST compliant','Inventory sync','Staff shifts','Digital receipts','Xero + QuickBooks','Refunds & voids','GDPR tools'].map(f=>(
+            {[0,1,2,3,4,5,6,7,8,9].map(i=>tc('landing.pos_pill_'+i)).map(f=>(
               <span key={f} style={{ padding:'6px 14px',borderRadius:9999,border:`1px solid ${T.bd}`,background:T.card,fontSize:12,color:T.tx2,fontWeight:500 }}>{f}</span>
             ))}
           </div>
           <div style={{ textAlign:'center',marginTop:24,display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap' }}>
             <Link href="/signin?mode=signup" className="cta-btn" style={{ padding:'11px 26px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7 }}>
-              Try the PoS free →
+              {tc('landing.pos_cta')}
             </Link>
-            <span style={{ fontSize:12,color:T.tx3,alignSelf:'center' }}>{posPrice} / seat / month · add to any plan</span>
+            <span style={{ fontSize:12,color:T.tx3,alignSelf:'center' }}>{tc('landing.pos_cta_note',{pos:posPrice})}</span>
           </div>
         </div>
       </section>
@@ -1645,12 +1634,12 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       <section style={{ background:T.alt,borderTop:`1px solid ${T.bd}`,borderBottom:`1px solid ${T.bd}`,padding:'clamp(56px,7vw,88px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:1060,margin:'0 auto' }}>
           <div style={{ textAlign:'center',marginBottom:44 }} data-reveal>
-            <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:14 }}>How we compare</p>
+            <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:14 }}>{tc('landing.compare_eyebrow')}</p>
             <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
-              One platform.<br/><em style={{ color:T.acc,fontStyle:'italic' }}>Not three subscriptions.</em>
+              {tc('landing.compare_title_line1')}<br/><em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.compare_title_line2')}</em>
             </h2>
             <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,maxWidth:440,margin:'0 auto' }}>
-              Most small businesses pay separately for a POS, a BI tool, and an inventory system. AskBiz is all three — starting free.
+              {tc('landing.compare_subtitle')}
             </p>
           </div>
 
@@ -1658,33 +1647,33 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <div data-reveal data-reveal-delay="1" style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16,marginBottom:40 }}>
             {[
               {
-                name:'Shopify',
-                role:'E-commerce + POS',
-                price:'from $39/mo + hardware',
-                pros:['Strong e-commerce store','Good multi-channel selling','Large app ecosystem'],
-                cons:['No AI business intelligence','Needs separate BI tool','POS hardware required','No mobile money support'],
-                verdict:'Great if online store is your primary channel. You still need Power BI or similar for real insights.',
+                name:tc('landing.compare_0_name'),
+                role:tc('landing.compare_0_role'),
+                price:tc('landing.compare_0_price'),
+                pros:[0,1,2].map(j=>tc('landing.compare_0_pro_'+j)),
+                cons:[0,1,2,3].map(j=>tc('landing.compare_0_con_'+j)),
+                verdict:tc('landing.compare_0_verdict'),
               },
               {
-                name:'AskBiz',
-                role:'POS + AI Intelligence',
-                price:'Free · £19/mo · £39/mo',
+                name:tc('landing.compare_1_name'),
+                role:tc('landing.compare_1_role'),
+                price:tc('landing.compare_1_price'),
                 highlight:true,
-                pros:['Full POS included — no hardware','AI answers in plain English','Camera-first scanning','Mobile money (M-Pesa, MTN)','BI built in — no extra tool','Multi-branch, multi-currency'],
-                cons:['Newer platform','Fewer third-party app integrations'],
-                verdict:'Best for shop + online owners who want one platform that sells, tracks stock, and explains what\'s happening — without three subscriptions.',
+                pros:[0,1,2,3,4,5].map(j=>tc('landing.compare_1_pro_'+j)),
+                cons:[0,1].map(j=>tc('landing.compare_1_con_'+j)),
+                verdict:tc('landing.compare_1_verdict'),
               },
               {
-                name:'Power BI',
-                role:'Business Intelligence',
-                price:'$10–20 / user / mo',
-                pros:['Excellent custom dashboards','Enterprise-grade analytics','Trusted by large data teams'],
-                cons:['No POS — analytics only','Requires a data team to set up','Won\'t manage your inventory','Days to weeks to get running'],
-                verdict:'Right for companies with a dedicated analyst. Wrong if you want to know your margin before lunch.',
+                name:tc('landing.compare_2_name'),
+                role:tc('landing.compare_2_role'),
+                price:tc('landing.compare_2_price'),
+                pros:[0,1,2].map(j=>tc('landing.compare_2_pro_'+j)),
+                cons:[0,1,2,3].map(j=>tc('landing.compare_2_con_'+j)),
+                verdict:tc('landing.compare_2_verdict'),
               },
             ].map((tool,i)=>(
               <div key={i} style={{ background:tool.highlight?T.acc:'transparent',borderRadius:14,border:`1px solid ${tool.highlight?'transparent':T.bd}`,padding:'24px',display:'flex',flexDirection:'column',gap:0,position:'relative' }}>
-                {tool.highlight && <div style={{ position:'absolute',top:-11,left:'50%',transform:'translateX(-50%)',background:T.acc,border:`2px solid ${T.bg}`,borderRadius:9999,padding:'2px 12px',fontSize:10,fontWeight:700,color:'#fff',whiteSpace:'nowrap',letterSpacing:'.06em' }}>RECOMMENDED</div>}
+                {tool.highlight && <div style={{ position:'absolute',top:-11,left:'50%',transform:'translateX(-50%)',background:T.acc,border:`2px solid ${T.bg}`,borderRadius:9999,padding:'2px 12px',fontSize:10,fontWeight:700,color:'#fff',whiteSpace:'nowrap',letterSpacing:'.06em' }}>{tc('landing.compare_recommended')}</div>}
                 <div style={{ marginBottom:16 }}>
                   <div style={{ fontSize:16,fontWeight:700,color:tool.highlight?'#fff':T.tx,marginBottom:3 }}>{tool.name}</div>
                   <div style={{ fontSize:11,color:tool.highlight?'rgba(255,255,255,.7)':T.tx3,marginBottom:8 }}>{tool.role}</div>
@@ -1715,7 +1704,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
           <div style={{ textAlign:'center' }}>
             <Link href="/compare" style={{ fontSize:13,color:T.tx3,textDecoration:'none',borderBottom:`1px solid ${T.bd}`,paddingBottom:1 }}>
-              See full feature-by-feature comparison →
+              {tc('landing.compare_full_link')}
             </Link>
           </div>
         </div>
@@ -1726,28 +1715,28 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         <div style={{ maxWidth:1000,margin:'0 auto' }}>
           <div style={{ textAlign:'center',marginBottom:36 }} data-reveal>
             <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.8vw,48px)',fontWeight:400,lineHeight:1.08,letterSpacing:'-.02em',marginBottom:10,color:T.tx }}>
-              Simple, honest pricing
+              {tc('landing.pricing_title')}
             </h2>
-            <p style={{ fontSize:13,color:T.tx2 }}>All plans include API access · Cancel anytime</p>
+            <p style={{ fontSize:13,color:T.tx2 }}>{tc('landing.pricing_subtitle')}</p>
           </div>
           {/* PoS add-on */}
           <div data-reveal style={{ borderRadius:16,border:`1px solid ${T.accBdr}`,background:`rgba(201,122,68,.04)`,padding:'clamp(16px,2.5vw,24px) clamp(16px,2.5vw,28px)',marginBottom:20 }}>
             <div style={{ display:'flex',flexWrap:'wrap',alignItems:'center',justifyContent:'space-between',gap:16 }}>
               <div>
                 <div style={{ display:'inline-flex',alignItems:'center',gap:8,marginBottom:9 }}>
-                  <span style={{ fontFamily:'var(--font-instrument)',fontSize:20,color:T.acc }}>Point of Sale</span>
-                  <span style={{ fontSize:9,fontWeight:700,color:'#fff',background:T.acc,padding:'2px 7px',borderRadius:9999,textTransform:'uppercase' }}>Add-on</span>
+                  <span style={{ fontFamily:'var(--font-instrument)',fontSize:20,color:T.acc }}>{tc('landing.pricing_pos_name')}</span>
+                  <span style={{ fontSize:9,fontWeight:700,color:'#fff',background:T.acc,padding:'2px 7px',borderRadius:9999,textTransform:'uppercase' }}>{tc('landing.pricing_pos_addon')}</span>
                 </div>
                 <div style={{ display:'flex',alignItems:'baseline',gap:4,marginBottom:5 }}>
                   <span style={{ fontFamily:'var(--font-instrument)',fontSize:32,color:T.tx }}>{posPrice}</span>
-                  <span style={{ fontSize:12,color:T.tx3 }}>/seat/month</span>
+                  <span style={{ fontSize:12,color:T.tx3 }}>{tc('landing.pricing_pos_per_seat')}</span>
                 </div>
                 <Link href="/signin?mode=signup" className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'8px 18px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:12,fontWeight:700,textDecoration:'none',marginTop:10 }}>
-                  Add to my plan →
+                  {tc('landing.pricing_pos_cta')}
                 </Link>
               </div>
               <div style={{ display:'flex',flexWrap:'wrap',gap:6,maxWidth:480 }}>
-                {['Register & checkout','Inventory','Staff & shifts','Multi-branch','Tax & VAT','Barcode scan','AI alerts','Any device'].map((f,i)=>(
+                {[0,1,2,3,4,5,6,7].map(i=>tc('landing.pricing_pos_pill_'+i)).map((f,i)=>(
                   <span key={i} style={{ padding:'5px 11px',borderRadius:9999,background:T.accBg,border:`1px solid ${T.accBdr}`,fontSize:11,color:T.tx2 }}>{f}</span>
                 ))}
               </div>
@@ -1755,35 +1744,35 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           </div>
           {/* Annual toggle */}
           <div style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:10,marginBottom:16 }}>
-            <span style={{ fontSize:12,color:annual?T.tx3:T.tx,fontWeight:annual?400:600 }}>Monthly</span>
+            <span style={{ fontSize:12,color:annual?T.tx3:T.tx,fontWeight:annual?400:600 }}>{tc('landing.pricing_toggle_monthly')}</span>
             <button role="switch" aria-checked={annual} onClick={()=>setAnnual(v=>!v)} style={{ width:44,height:23,borderRadius:12,background:annual?T.acc:T.bd2,border:'none',cursor:'pointer',position:'relative',transition:'background 200ms',outline:'none' }}>
               <div style={{ width:17,height:17,borderRadius:'50%',background:'#fff',position:'absolute',top:3,left:annual?24:3,transition:'left 200ms',boxShadow:'0 1px 4px rgba(0,0,0,.3)' }}/>
             </button>
             <span style={{ fontSize:12,color:annual?T.tx:T.tx3,fontWeight:annual?600:400 }}>
-              Annual <span style={{ fontSize:10,fontWeight:700,color:'#16a34a',background:'rgba(22,163,74,.08)',borderRadius:9999,padding:'1px 6px',marginLeft:3 }}>2 months free</span>
+              {tc('landing.pricing_toggle_annual')} <span style={{ fontSize:10,fontWeight:700,color:'#16a34a',background:'rgba(22,163,74,.08)',borderRadius:9999,padding:'1px 6px',marginLeft:3 }}>{tc('landing.pricing_toggle_save')}</span>
             </span>
           </div>
           {/* Tiers */}
           <div className="three-col" style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12 }}>
             {[
-              {id:'free',name:'Free',colour:'#8C7B6B',price:'£0',sub:'10 questions/month',popular:false,
-                features:['10 questions per month','Upload CSV & Excel','Business Pulse score','Connect Shopify, Amazon & more','FX Risk, Landed Cost tools','API access','No credit card needed']},
-              {id:'growth',name:'Growth',colour:T.acc,price:growthMonthly,sub:'per month',popular:true,
-                features:['Unlimited questions','All tools pre-filled from your data','Daily Brief — AI morning intelligence',`Point of Sale — ${posPrice}/seat/month add-on`,'Social Commerce — TikTok, Instagram, Pinterest','Churn Intelligence','Anomaly alerts']},
-              {id:'business',name:'Business',colour:'#6366f1',price:bizMonthly,sub:'per month',popular:false,
-                features:['Everything in Growth','Team seats — up to 5',`Multi-branch PoS — ${posPrice}/seat/month add-on`,'Decision Memory','Competitor Watch','CFO Mode reports','Priority support']},
+              {id:'free',name:tc('landing.plan_free_name'),colour:'#8C7B6B',price:tc('landing.plan_free_price'),sub:tc('landing.plan_free_sub'),popular:false,
+                features:[0,1,2,3,4,5,6].map(j=>tc('landing.plan_free_feat_'+j))},
+              {id:'growth',name:tc('landing.plan_growth_name'),colour:T.acc,price:growthMonthly,sub:tc('landing.plan_growth_sub'),popular:true,
+                features:[0,1,2,3,4,5,6].map(j=>tc('landing.plan_growth_feat_'+j,{pos:posPrice}))},
+              {id:'business',name:tc('landing.plan_business_name'),colour:'#6366f1',price:bizMonthly,sub:tc('landing.plan_business_sub'),popular:false,
+                features:[0,1,2,3,4,5,6].map(j=>tc('landing.plan_business_feat_'+j,{pos:posPrice}))},
             ].map((plan,i)=>(
               <div key={i} data-reveal style={{ borderRadius:16,border:plan.popular?`1px solid ${T.accBdr}`:`1px solid ${T.bd}`,background:plan.popular?`rgba(201,122,68,.03)`:T.card,padding:'20px 16px',position:'relative',display:'flex',flexDirection:'column',transitionDelay:`${i*60}ms` }}>
                 {plan.popular&&(
                   <div style={{ position:'absolute',top:-11,left:'50%',transform:'translateX(-50%)',padding:'2px 12px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:9,fontWeight:700,whiteSpace:'nowrap',textTransform:'uppercase',letterSpacing:'.06em' }}>
-                    Most popular
+                    {tc('landing.plan_most_popular')}
                   </div>
                 )}
                 <div style={{ marginBottom:12 }}>
                   <div style={{ fontFamily:'var(--font-instrument)',fontSize:17,color:plan.colour,marginBottom:9 }}>{plan.name}</div>
                   <div style={{ display:'flex',alignItems:'baseline',gap:4,marginBottom:4 }}>
                     <span style={{ fontFamily:'var(--font-instrument)',fontSize:30,color:T.tx }}>{plan.price}</span>
-                    {plan.id!=='free'&&<span style={{ fontSize:11,color:T.tx3 }}>{plan.sub}{annual?' · annual':''}</span>}
+                    {plan.id!=='free'&&<span style={{ fontSize:11,color:T.tx3 }}>{plan.sub}{annual?tc('landing.pricing_annual_suffix'):''}</span>}
                   </div>
                 </div>
                 <div style={{ flex:1,marginBottom:14 }}>
@@ -1794,7 +1783,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                   ))}
                 </div>
                 <Link href="/signin?mode=signup" className="cta-btn" style={{ display:'block',padding:'10px',borderRadius:10,border:plan.popular?'none':`1px solid ${T.bd}`,background:plan.popular?T.acc:'transparent',color:plan.popular?'#fff':T.tx2,fontSize:12,fontWeight:600,textDecoration:'none',textAlign:'center' }}>
-                  {plan.id==='free'?'Start for free':plan.id==='growth'?'Start free →':'Upgrade →'}
+                  {plan.id==='free'?tc('landing.plan_free_cta'):plan.id==='growth'?tc('landing.plan_growth_cta'):tc('landing.plan_business_cta')}
                 </Link>
               </div>
             ))}
@@ -1805,7 +1794,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       {/* ── FAQ ── JSON-LD in app/page.tsx; <details> keeps answers in DOM for crawlers ── */}
       <section style={{ maxWidth:620,margin:'0 auto',padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)' }}>
         <h2 data-reveal style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(24px,3.2vw,42px)',fontWeight:400,textAlign:'center',marginBottom:36,letterSpacing:'-.02em',color:T.tx }}>
-          Common questions
+          {tc('landing.faq_section_title')}
         </h2>
         {FAQS.map((faq,i)=>(
           <details key={i} data-reveal className="faq-item" style={{ borderBottom:`1px solid ${T.bd}` }} open={i===0?true:undefined}>
@@ -1823,10 +1812,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         <div style={{ display:'flex',alignItems:'center',gap:7 }}>
           <div style={{ width:22,height:22,borderRadius:6,background:T.acc,display:'flex',alignItems:'center',justifyContent:'center' }}><Logo size={10}/></div>
           <span style={{ fontFamily:'var(--font-instrument)',fontSize:14,color:T.tx }}>AskBiz</span>
-          <span style={{ fontSize:12,color:T.tx3 }}>© 2026</span>
+          <span style={{ fontSize:12,color:T.tx3 }}>{tc('landing.footer_copyright')}</span>
         </div>
         <nav aria-label="Footer navigation" style={{ display:'flex',gap:16,flexWrap:'wrap' }}>
-          {[['/', 'Home'],['/blog','Blog'],['/academy','Academy'],['/free-tools','Free Tools'],['/integrations','Integrations'],['/help','Help'],['/privacy','Privacy'],['/terms','Terms'],['/dpa','DPA'],['mailto:hello@askbiz.co','Contact']].map(([href,label])=>(
+          {[['/', tc('landing.footer_home')],['/blog',tc('landing.footer_blog')],['/academy',tc('landing.footer_academy')],['/free-tools',tc('landing.footer_free_tools')],['/integrations',tc('landing.footer_integrations')],['/help',tc('landing.footer_help')],['/privacy',tc('landing.footer_privacy')],['/terms',tc('landing.footer_terms')],['/dpa',tc('landing.footer_dpa')],['mailto:hello@askbiz.co',tc('landing.footer_contact')]].map(([href,label])=>(
             <a key={href} href={href} className="nav-link" style={{ fontSize:12,color:T.tx3,textDecoration:'none',transition:'color 150ms' }}>{label}</a>
           ))}
         </nav>

@@ -2,6 +2,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { HELP_TOPICS, HELP_ARTICLES, searchArticles, getPopularArticles, type HelpArticle } from '@/lib/help-content'
+import { useLang } from '@/components/LanguageProvider'
 import './help.css'
 
 const IS_NEW_DAYS = 45
@@ -23,7 +24,17 @@ const FEATURED_TOPIC_SLUGS = [
 
 const PAGE_SIZE = 20
 
+function buildResources(tc: (key: string) => string) {
+  return [
+    { icon: '📋', title: tc('help.resource_faq_title'),      desc: tc('help.resource_faq_desc'),      href: '/help/faq',                       cta: tc('help.resource_faq_cta') },
+    { icon: '📖', title: tc('help.resource_glossary_title'), desc: tc('help.resource_glossary_desc'), href: '/help/glossary',                  cta: tc('help.resource_glossary_cta') },
+    { icon: '📧', title: tc('help.resource_email_title'),    desc: tc('help.resource_email_desc'),    href: 'mailto:hello@askbiz.co',          cta: tc('help.resource_email_cta') },
+    { icon: '📅', title: tc('help.resource_call_title'),     desc: tc('help.resource_call_desc'),     href: 'https://cal.com/askbiz/support',  cta: tc('help.resource_call_cta') },
+  ]
+}
+
 export default function HelpPageClient() {
+  const { tc } = useLang()
   const popularArticles = useMemo(() => getPopularArticles(), [])
   const searchRef = useRef<HTMLInputElement>(null)
 
@@ -123,7 +134,7 @@ export default function HelpPageClient() {
             <span className="hc-brand-name">AskBiz</span>
           </Link>
           <div className="hc-brand-divider" />
-          <Link href="/help" className="hc-brand-label" style={{ textDecoration: 'none' }}>Help Centre</Link>
+          <Link href="/help" className="hc-brand-label" style={{ textDecoration: 'none' }}>{tc('help.help_centre')}</Link>
           <div style={{ flex: 1 }} />
           <Link href="/signin" style={{
             fontSize: 13, fontWeight: 600, color: '#fff',
@@ -131,7 +142,7 @@ export default function HelpPageClient() {
             padding: '7px 18px', textDecoration: 'none',
             transition: 'background 0.15s',
           }}>
-            Try free
+            {tc('help.try_free')}
           </Link>
         </div>
       </header>
@@ -140,7 +151,7 @@ export default function HelpPageClient() {
       <div className="hc-body">
         {/* ── Sidebar ── */}
         <aside className="hc-sidebar" aria-label="Help topics">
-          <p className="hc-nav-label">Browse topics</p>
+          <p className="hc-nav-label">{tc('help.browse_topics')}</p>
           {HELP_TOPICS.map(topic => {
             const isActive = activeTopic === topic.slug
             const isExp    = expandedTopics.has(topic.slug)
@@ -160,7 +171,7 @@ export default function HelpPageClient() {
                   </button>
                   <button
                     onClick={() => toggleExpand(topic.slug)}
-                    aria-label={isExp ? 'Collapse' : 'Expand'}
+                    aria-label={isExp ? tc('help.collapse') : tc('help.expand')}
                     style={{
                       background: 'none', border: 'none', cursor: 'pointer',
                       padding: '8px 12px 8px 4px', color: 'var(--hc-muted)',
@@ -191,10 +202,10 @@ export default function HelpPageClient() {
           })}
 
           <div className="hc-nav-divider" />
-          <Link href="/help/faq" className="hc-nav-link">FAQ</Link>
-          <Link href="/help/glossary" className="hc-nav-link">Glossary</Link>
-          <Link href="/rules" className="hc-nav-link">Rules & Policies</Link>
-          <Link href="/transparency" className="hc-nav-link">Transparency Centre</Link>
+          <Link href="/help/faq" className="hc-nav-link">{tc('help.faq')}</Link>
+          <Link href="/help/glossary" className="hc-nav-link">{tc('help.glossary')}</Link>
+          <Link href="/rules" className="hc-nav-link">{tc('help.rules_policies')}</Link>
+          <Link href="/transparency" className="hc-nav-link">{tc('help.transparency_centre')}</Link>
         </aside>
 
         {/* ── Main ── */}
@@ -208,10 +219,10 @@ export default function HelpPageClient() {
                   color: 'var(--hc-dark)', marginBottom: 6, lineHeight: 1.15,
                   letterSpacing: '-0.02em',
                 }}>
-                  How can we help?
+                  {tc('help.hero_heading')}
                 </h1>
                 <p style={{ fontSize: 15, color: 'var(--hc-secondary)', margin: 0, lineHeight: 1.55 }}>
-                  Search {HELP_ARTICLES.length} articles across {HELP_TOPICS.length} topics.
+                  {tc('help.search_count_prefix')} {HELP_ARTICLES.length} {tc('help.search_count_middle')} {HELP_TOPICS.length} {tc('help.search_count_suffix')}
                 </p>
               </div>
             )}
@@ -223,7 +234,7 @@ export default function HelpPageClient() {
                 ref={searchRef}
                 className="hc-search"
                 type="text"
-                placeholder="Search articles and guides..."
+                placeholder={tc('help.search_placeholder')}
                 value={search}
                 onChange={e => { setSearch(e.target.value); setActiveTopic(null); setVisibleCount(PAGE_SIZE); setAcOpen(true) }}
                 onFocus={() => { setSearchFocused(true); setAcOpen(true) }}
@@ -239,7 +250,7 @@ export default function HelpPageClient() {
                 <div className="hc-ac-dropdown">
                   {!search.trim() ? (
                     <>
-                      <p className="hc-ac-label">Popular searches</p>
+                      <p className="hc-ac-label">{tc('help.popular_searches')}</p>
                       {POPULAR_QUERIES.map(q => (
                         <button key={q} className="hc-ac-item"
                           onMouseDown={() => { setSearch(q); setActiveTopic(null); setVisibleCount(PAGE_SIZE); setAcOpen(false) }}>
@@ -252,7 +263,7 @@ export default function HelpPageClient() {
                     </>
                   ) : acSuggestions.length > 0 ? (
                     <>
-                      <p className="hc-ac-label">Suggestions</p>
+                      <p className="hc-ac-label">{tc('help.suggestions')}</p>
                       {acSuggestions.map(a => (
                         <Link key={a.slug} href={`/help/${a.slug}`} className="hc-ac-item"
                           onMouseDown={e => e.preventDefault()}
@@ -268,7 +279,7 @@ export default function HelpPageClient() {
                       ))}
                     </>
                   ) : (
-                    <p style={{ fontSize: 13, color: 'var(--hc-muted)', margin: 0, padding: '12px 16px' }}>No suggestions found</p>
+                    <p style={{ fontSize: 13, color: 'var(--hc-muted)', margin: 0, padding: '12px 16px' }}>{tc('help.no_suggestions')}</p>
                   )}
                 </div>
               )}
@@ -280,7 +291,7 @@ export default function HelpPageClient() {
             <>
               {/* Topic cards — X-style grid */}
               <section style={{ marginBottom: 48 }}>
-                <h2 className="hc-section-title">Browse by topic</h2>
+                <h2 className="hc-section-title">{tc('help.browse_by_topic')}</h2>
                 <div className="hc-topics-grid">
                   {HELP_TOPICS.filter(t => FEATURED_TOPIC_SLUGS.includes(t.slug))
                     .sort((a, b) => FEATURED_TOPIC_SLUGS.indexOf(a.slug) - FEATURED_TOPIC_SLUGS.indexOf(b.slug))
@@ -291,14 +302,14 @@ export default function HelpPageClient() {
                           key={topic.slug}
                           className="hc-topic-card"
                           onClick={() => selectTopic(topic.slug)}
-                          aria-label={`Browse ${topic.title} articles`}
+                          aria-label={tc('help.browse_articles_aria_prefix') + ' ' + topic.title + ' ' + tc('help.browse_articles_aria_suffix')}
                         >
                           <span className="hc-topic-card-icon">{topic.icon}</span>
                           <span className="hc-topic-card-title">{topic.title}</span>
                           <span className="hc-topic-card-desc">
                             {topic.description.slice(0, 80)}{topic.description.length > 80 ? '...' : ''}
                           </span>
-                          <span className="hc-topic-card-count">{count} articles</span>
+                          <span className="hc-topic-card-count">{count} {tc('help.articles_label')}</span>
                         </button>
                       )
                     })}
@@ -307,7 +318,7 @@ export default function HelpPageClient() {
 
               {/* Popular articles */}
               <section style={{ marginBottom: 48 }}>
-                <h2 className="hc-section-title">Popular articles</h2>
+                <h2 className="hc-section-title">{tc('help.popular_articles')}</h2>
                 <div className="hc-article-list">
                   {popularArticles.slice(0, 8).map(a => (
                     <Link key={a.slug} href={`/help/${a.slug}`} className="hc-article-row">
@@ -317,7 +328,7 @@ export default function HelpPageClient() {
                       </div>
                       <div className="hc-article-row-right">
                         <span className="hc-tag hc-tag--topic">{a.topic}</span>
-                        {a.popular && <span className="hc-tag hc-tag--popular">Popular</span>}
+                        {a.popular && <span className="hc-tag hc-tag--popular">{tc('help.popular_tag')}</span>}
                         <svg className="hc-article-row-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
@@ -329,14 +340,9 @@ export default function HelpPageClient() {
 
               {/* Resources */}
               <section style={{ marginBottom: 48 }}>
-                <h2 className="hc-section-title">Resources</h2>
+                <h2 className="hc-section-title">{tc('help.resources')}</h2>
                 <div className="hc-resources-grid">
-                  {[
-                    { icon: '📋', title: 'FAQ', desc: 'Quick answers to common questions about AskBiz.', href: '/help/faq', cta: 'Browse FAQ' },
-                    { icon: '📖', title: 'Glossary', desc: 'Plain-English definitions for business metrics and terms.', href: '/help/glossary', cta: 'View glossary' },
-                    { icon: '📧', title: 'Email support', desc: 'Replies within 2 business hours, Mon-Fri 8am-6pm GMT.', href: 'mailto:hello@askbiz.co', cta: 'Send email' },
-                    { icon: '📅', title: 'Book a call', desc: 'Schedule a 30-minute support call with our team.', href: 'https://cal.com/askbiz/support', cta: 'Book a slot' },
-                  ].map(c => (
+                  {buildResources(tc).map(c => (
                     <a key={c.title} href={c.href}
                       {...(c.href.startsWith('http') || c.href.startsWith('mailto') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                       className="hc-resource-card">
@@ -351,10 +357,10 @@ export default function HelpPageClient() {
 
               {/* Footer */}
               <footer className="hc-footer">
-                <span className="hc-footer-copy">© 2026 AskBiz</span>
+                <span className="hc-footer-copy">{tc('help.footer_copy')}</span>
                 <div className="hc-footer-links">
-                  {([['/', 'Home'], ['/blog', 'Blog'], ['/help', 'Help'], ['/rules', 'Rules'], ['/privacy', 'Privacy'], ['/developers', 'API']] as [string,string][]).map(([href, label]) => (
-                    <Link key={href} href={href} className="hc-footer-link">{label}</Link>
+                  {([['/', 'footer_home'], ['/blog', 'footer_blog'], ['/help', 'footer_help'], ['/rules', 'footer_rules'], ['/privacy', 'footer_privacy'], ['/developers', 'footer_api']] as [string,string][]).map(([href, key]) => (
+                    <Link key={href} href={href} className="hc-footer-link">{tc('help.' + key)}</Link>
                   ))}
                 </div>
               </footer>
@@ -367,7 +373,7 @@ export default function HelpPageClient() {
               {/* Breadcrumb */}
               <nav className="hc-breadcrumb" aria-label="Breadcrumb" style={{ marginBottom: 20 }}>
                 <ol className="hc-breadcrumb-list">
-                  <li><button onClick={goHome} className="hc-breadcrumb-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--hc-font)', fontSize: 13 }}>Help Centre</button></li>
+                  <li><button onClick={goHome} className="hc-breadcrumb-link" style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--hc-font)', fontSize: 13 }}>{tc('help.help_centre')}</button></li>
                   {activeTopic && currentTopic && (
                     <>
                       <li><span className="hc-breadcrumb-sep">›</span></li>
@@ -377,7 +383,7 @@ export default function HelpPageClient() {
                   {isSearch && !activeTopic && (
                     <>
                       <li><span className="hc-breadcrumb-sep">›</span></li>
-                      <li className="hc-breadcrumb-current">Search results</li>
+                      <li className="hc-breadcrumb-current">{tc('help.breadcrumb_search_results')}</li>
                     </>
                   )}
                 </ol>
@@ -389,10 +395,10 @@ export default function HelpPageClient() {
                   fontSize: 'clamp(18px, 3vw, 24px)', fontWeight: 700,
                   color: 'var(--hc-dark)', marginBottom: 4, letterSpacing: '-0.01em',
                 }}>
-                  {isSearch ? `Results for "${search}"` : currentTopic?.title}
+                  {isSearch ? tc('help.results_for_prefix') + ' “' + search + '”' : currentTopic?.title}
                 </h1>
                 <p style={{ fontSize: 13, color: 'var(--hc-secondary)', margin: 0 }}>
-                  {displayList.length} article{displayList.length !== 1 ? 's' : ''}
+                  {displayList.length} {displayList.length !== 1 ? tc('help.article_plural') : tc('help.article_singular')}
                   {activeTopic && currentTopic && !isSearch && ` · ${currentTopic.description}`}
                 </p>
               </div>
@@ -401,7 +407,7 @@ export default function HelpPageClient() {
               {displayList.length === 0 && (
                 <div style={{ padding: '48px 0', textAlign: 'center' }}>
                   <div style={{ fontSize: 14, color: 'var(--hc-secondary)', marginBottom: 16 }}>
-                    No articles found{isSearch ? ` for "${search}"` : ''}.
+                    {isSearch ? tc('help.no_articles_found_for') + ' “' + search + '”' : tc('help.no_articles_found')}.
                   </div>
                   <button onClick={goHome} style={{
                     fontSize: 13, color: 'var(--hc-accent)', background: 'none',
@@ -409,7 +415,7 @@ export default function HelpPageClient() {
                     padding: '7px 16px', cursor: 'pointer', fontWeight: 600,
                     fontFamily: 'var(--hc-font)',
                   }}>
-                    Back to all topics
+                    {tc('help.back_to_all_topics')}
                   </button>
                 </div>
               )}
@@ -422,13 +428,13 @@ export default function HelpPageClient() {
                       <div className="hc-article-row-body">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                           <span className="hc-article-row-title" style={{ marginBottom: 0 }}>{a.title}</span>
-                          {a.popular && <span className="hc-tag hc-tag--popular">Popular</span>}
-                          {isNew(a.lastUpdated) && <span className="hc-tag hc-tag--new">New</span>}
+                          {a.popular && <span className="hc-tag hc-tag--popular">{tc('help.popular_tag')}</span>}
+                          {isNew(a.lastUpdated) && <span className="hc-tag hc-tag--new">{tc('help.new_tag')}</span>}
                         </div>
                         <span className="hc-article-row-desc">{a.description}</span>
                       </div>
                       <div className="hc-article-row-right">
-                        <span className="hc-tag">{a.readTime} min</span>
+                        <span className="hc-tag">{a.readTime} {tc('help.min_suffix')}</span>
                         <svg className="hc-article-row-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
                           <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
@@ -452,17 +458,17 @@ export default function HelpPageClient() {
                     onMouseEnter={e => { e.currentTarget.style.background = 'var(--hc-accent-light)' }}
                     onMouseLeave={e => { e.currentTarget.style.background = 'none' }}
                   >
-                    Show more ({displayList.length - visibleCount} remaining)
+                    {tc('help.show_more_prefix')} ({displayList.length - visibleCount} {tc('help.show_more_suffix')})
                   </button>
                 </div>
               )}
 
               {/* Footer */}
               <footer className="hc-footer">
-                <span className="hc-footer-copy">© 2026 AskBiz</span>
+                <span className="hc-footer-copy">{tc('help.footer_copy')}</span>
                 <div className="hc-footer-links">
-                  {([['/', 'Home'], ['/blog', 'Blog'], ['/help', 'Help'], ['/privacy', 'Privacy']] as [string,string][]).map(([href, label]) => (
-                    <Link key={href} href={href} className="hc-footer-link">{label}</Link>
+                  {([['/', 'footer_home'], ['/blog', 'footer_blog'], ['/help', 'footer_help'], ['/privacy', 'footer_privacy']] as [string,string][]).map(([href, key]) => (
+                    <Link key={href} href={href} className="hc-footer-link">{tc('help.' + key)}</Link>
                   ))}
                 </div>
               </footer>

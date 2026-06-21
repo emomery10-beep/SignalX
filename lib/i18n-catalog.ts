@@ -88,11 +88,18 @@ import frFreetools from '@/locales/fr/freetools.json'
 import deFreetools from '@/locales/de/freetools.json'
 import nlFreetools from '@/locales/nl/freetools.json'
 import arFreetools from '@/locales/ar/freetools.json'
+// English-only for now — translations pending API credits. The resolver falls
+// back to English for locales that lack a namespace, so these render correctly
+// in every locale until the non-English files are generated + registered.
+import enLanding from '@/locales/en/landing.json'
+import enAcademy from '@/locales/en/academy.json'
+import enHelp from '@/locales/en/help.json'
+import enBlogIndex from '@/locales/en/blog_index.json'
 
 type Dict = Record<string, unknown>
 
 const CATALOG: Record<string, Record<string, Dict>> = {
-  en: { common: enCommon, nav: enNav, errors: enErrors, appnav: enAppnav, auth: enAuth, pricing: enPricing, cookies: enCookies, settings: enSettings, compare: enCompare, integrations_page: enIntegrationsPage, pos_marketing: enPosMarketing, freetools: enFreetools },
+  en: { common: enCommon, nav: enNav, errors: enErrors, appnav: enAppnav, auth: enAuth, pricing: enPricing, cookies: enCookies, settings: enSettings, compare: enCompare, integrations_page: enIntegrationsPage, pos_marketing: enPosMarketing, freetools: enFreetools, landing: enLanding, academy: enAcademy, help: enHelp, blog_index: enBlogIndex },
   es: { common: esCommon, nav: esNav, errors: esErrors, appnav: esAppnav, auth: esAuth, pricing: esPricing, cookies: esCookies, settings: esSettings, compare: esCompare, integrations_page: esIntegrationsPage, pos_marketing: esPosMarketing, freetools: esFreetools },
   fr: { common: frCommon, nav: frNav, errors: frErrors, appnav: frAppnav, auth: frAuth, pricing: frPricing, cookies: frCookies, settings: frSettings, compare: frCompare, integrations_page: frIntegrationsPage, pos_marketing: frPosMarketing, freetools: frFreetools },
   de: { common: deCommon, nav: deNav, errors: deErrors, appnav: deAppnav, auth: deAuth, pricing: dePricing, cookies: deCookies, settings: deSettings, compare: deCompare, integrations_page: deIntegrationsPage, pos_marketing: dePosMarketing, freetools: deFreetools },
