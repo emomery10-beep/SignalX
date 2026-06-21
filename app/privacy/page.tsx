@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import Link from 'next/link'
+import { useLang } from '@/components/LanguageProvider'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -19,8 +20,8 @@ function Li({ children }: { children: React.ReactNode }) {
   return <li style={{ fontSize: 15, lineHeight: 1.85, color: 'var(--tx2)', marginBottom: 6 }}>{children}</li>
 }
 
-function ConsentBox({ type, label, description, stored, notStored }: {
-  type: string; label: string; description: string; stored: string[]; notStored: string[]
+function ConsentBox({ type, label, description, stored, notStored, storedTitle, notStoredTitle }: {
+  type: string; label: string; description: string; stored: string[]; notStored: string[]; storedTitle: string; notStoredTitle: string
 }) {
   return (
     <div style={{ padding: '18px 20px', borderRadius: 14, border: '1px solid var(--b2)', background: 'var(--ev)', marginBottom: 14 }}>
@@ -28,11 +29,11 @@ function ConsentBox({ type, label, description, stored, notStored }: {
       <p style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 10, lineHeight: 1.65 }}>{description}</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 12 }}>
         <div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#22c55e', marginBottom: 4 }}>✓ What is stored</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: '#22c55e', marginBottom: 4 }}>{storedTitle}</div>
           {stored.map((s, i) => <div key={i} style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 3 }}>• {s}</div>)}
         </div>
         <div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#f48080', marginBottom: 4 }}>✗ Never stored</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: '#f48080', marginBottom: 4 }}>{notStoredTitle}</div>
           {notStored.map((s, i) => <div key={i} style={{ fontSize: 12, color: 'var(--tx2)', marginBottom: 3 }}>• {s}</div>)}
         </div>
       </div>
@@ -40,7 +41,7 @@ function ConsentBox({ type, label, description, stored, notStored }: {
   )
 }
 
-function DeleteSection() {
+function DeleteSection({ tc }: { tc: (key: string) => string }) {
   const [status, setStatus] = React.useState<'idle'|'loading'|'requested'|'cancelled'>('idle')
   const [scheduledFor, setScheduledFor] = React.useState<string|null>(null)
   const [error, setError] = React.useState('')
@@ -53,108 +54,128 @@ function DeleteSection() {
 
   if (status === 'requested') return (
     <div style={{ padding: '16px 20px', borderRadius: 14, border: '1px solid rgba(244,128,128,.3)', background: 'rgba(244,128,128,.06)' }}>
-      <div style={{ fontWeight: 600, marginBottom: 6, color: '#f48080' }}>⚠ Deletion scheduled</div>
-      <P>Your account is scheduled for permanent deletion on <strong>{scheduledFor ? new Date(scheduledFor).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '30 days from now'}</strong>.</P>
+      <div style={{ fontWeight: 600, marginBottom: 6, color: '#f48080' }}>{tc('privacy.delete_requested_heading')}</div>
+      <P>{tc('privacy.delete_requested_body_pre')}<strong>{scheduledFor ? new Date(scheduledFor).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : tc('privacy.delete_requested_fallback_date')}</strong>{tc('privacy.delete_requested_body_post')}</P>
       <button onClick={async () => { setStatus('loading'); const d = await fetch('/api/account', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'cancel_deletion' }) }).then(r=>r.json()); if(d.success) setStatus('cancelled'); else { setError(d.error); setStatus('requested') } }}
         style={{ padding: '9px 20px', borderRadius: 9999, border: 'none', background: '#22c55e', color: '#fff', fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-        Cancel deletion — keep my account
+        {tc('privacy.delete_cancel_button')}
       </button>
     </div>
   )
 
   if (status === 'cancelled') return (
     <div style={{ padding: '14px 18px', borderRadius: 12, border: '1px solid rgba(34,197,94,.3)', background: 'rgba(34,197,94,.06)', fontSize: 14, color: '#22c55e', fontWeight: 500 }}>
-      ✓ Deletion cancelled — your account is safe
+      {tc('privacy.delete_cancelled')}
     </div>
   )
 
   return (
     <div style={{ padding: '18px 20px', borderRadius: 14, border: '1px solid var(--b2)', background: 'var(--ev)' }}>
       {error && <P>{error}</P>}
-      <P>Deleting your account will permanently remove all your data after a 30-day grace period. You can cancel the request at any time during those 30 days.</P>
+      <P>{tc('privacy.delete_body')}</P>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4 }}>
-        <button onClick={async () => { if(!confirm('Request account deletion? You have 30 days to cancel.')) return; setStatus('loading'); const d = await fetch('/api/account', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'request_deletion' }) }).then(r=>r.json()); if(d.success) { setStatus('requested'); setScheduledFor(d.scheduled_for) } else { setError(d.error); setStatus('idle') } }}
+        <button onClick={async () => { if(!confirm(tc('privacy.delete_confirm_prompt'))) return; setStatus('loading'); const d = await fetch('/api/account', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'request_deletion' }) }).then(r=>r.json()); if(d.success) { setStatus('requested'); setScheduledFor(d.scheduled_for) } else { setError(d.error); setStatus('idle') } }}
           disabled={status === 'loading'}
           style={{ padding: '9px 18px', borderRadius: 9999, border: '1px solid rgba(244,128,128,.5)', background: 'transparent', color: '#f48080', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-          {status === 'loading' ? 'Processing…' : 'Request account deletion'}
+          {status === 'loading' ? tc('privacy.delete_request_processing') : tc('privacy.delete_request_button')}
         </button>
         <a href="mailto:privacy@askbiz.co" style={{ padding: '9px 18px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
-          Email privacy@askbiz.co
+          {tc('privacy.delete_email_button')}
         </a>
       </div>
     </div>
   )
 }
 
+function buildLegalBasisRows(tc: (key: string) => string): string[][] {
+  const rows: string[][] = []
+  for (let i = 0; i < 11; i++) {
+    rows.push([
+      tc('privacy.sec_4_row_' + i + '_0'),
+      tc('privacy.sec_4_row_' + i + '_1'),
+      tc('privacy.sec_4_row_' + i + '_2'),
+    ])
+  }
+  return rows
+}
+
+function buildRetentionRows(tc: (key: string) => string): string[][] {
+  const rows: string[][] = []
+  for (let i = 0; i < 16; i++) {
+    rows.push([
+      tc('privacy.sec_9_row_' + i + '_0'),
+      tc('privacy.sec_9_row_' + i + '_1'),
+      tc('privacy.sec_9_row_' + i + '_2'),
+    ])
+  }
+  return rows
+}
+
+function POSGroup({ tc, heading, prefix, count }: { tc: (key: string) => string; heading: string; prefix: string; count: number }) {
+  const items: number[] = []
+  for (let i = 0; i < count; i++) items.push(i)
+  return (
+    <div style={{ marginTop: 20, marginBottom: 20 }}>
+      <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: 'var(--tx)' }}>{heading}</div>
+      <ul style={{ paddingLeft: 24 }}>
+        {items.map(i => (
+          <Li key={i}><strong>{tc('privacy.' + prefix + '_' + i + '_bold')}</strong>{tc('privacy.' + prefix + '_' + i + '_post')}</Li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 export default function PrivacyPage() {
+  const { tc } = useLang()
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', fontFamily: 'var(--font-dm, DM Sans)' }}>
       <div style={{ maxWidth: 'min(760px, 100%)', margin: '0 auto', padding: 'clamp(20px, 4vw, 48px) clamp(14px, 4vw, 24px) 80px' }}>
 
         {/* Header */}
         <div style={{ marginBottom: 48 }}>
-          <Link href="/" style={{ fontSize: 13, color: 'var(--tx3)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>← Back to AskBiz</Link>
-          <h1 style={{ fontFamily: 'var(--font-sora)', fontSize: 32, fontWeight: 700, marginBottom: 8, letterSpacing: '-.025em' }}>Privacy Policy</h1>
-          <p style={{ fontSize: 14, color: 'var(--tx3)' }}>AskBiz Ltd · Effective date: 10 April 2026 · Last updated: 10 June 2026</p>
+          <Link href="/" style={{ fontSize: 13, color: 'var(--tx3)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>{tc('privacy.back_to_askbiz')}</Link>
+          <h1 style={{ fontFamily: 'var(--font-sora)', fontSize: 32, fontWeight: 700, marginBottom: 8, letterSpacing: '-.025em' }}>{tc('privacy.page_title')}</h1>
+          <p style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('privacy.page_meta')}</p>
         </div>
 
-        <Section title="1. Who We Are">
-          <P>AskBiz Ltd ("AskBiz", "we", "us") operates the AI-powered business intelligence platform at askbiz.co. We are the data controller for personal data processed through our platform.</P>
-          <P>Contact: privacy@askbiz.co · legal@askbiz.co</P>
+        <Section title={tc('privacy.sec_1_title')}>
+          <P>{tc('privacy.sec_1_p1')}</P>
+          <P>{tc('privacy.sec_1_p2')}</P>
         </Section>
 
-        <Section title="2. Data We Collect">
-          <P><strong>Account data:</strong> Your name, email address, business type, and country when you register.</P>
-          <P><strong>Usage data:</strong> Questions asked, files uploaded (metadata only — not content), features used, and session information.</P>
-          <P><strong>Technical data:</strong> IP address hash (SHA-256 — raw IP never stored), browser type, and device information for fraud prevention and security.</P>
-          <P><strong>Payment data:</strong> Processed by Stripe (card payments) and mobile money providers including M-Pesa, MTN Mobile Money, and Airtel Money (where available). We never see or store your card details or mobile money PINs.</P>
-          <P><strong>Camera and image data:</strong> If you use AskBiz POS camera scanning (barcode or price tag recognition), images are processed in real time on your device and via our AI pipeline. Raw images are never stored — only the extracted product data (name, price, barcode) is retained.</P>
-          <P><strong>Logistics and delivery data:</strong> If you use the AskBiz POS logistics module, we process parcel tracking information, delivery routes, vehicle inspection photos, driver handover records, and delivery addresses. Delivery addresses are retained for the duration of the shipment plus 90 days.</P>
-          <P><strong>Location data:</strong> We use IP-based geolocation to detect your country for currency localisation and pricing display. We do not use GPS or precise location tracking. Your raw IP address is never stored (see Technical data above).</P>
-          <P><strong>Trial data:</strong> If you activate a free trial (Growth plan or POS), we store the trial type, start date, end date, and conversion status to manage your subscription.</P>
-          <P><strong>With your consent only — Financial data:</strong> If you opt in to financial data personalisation (see Section 6), we store aggregated financial metrics from your uploaded files.</P>
+        <Section title={tc('privacy.sec_2_title')}>
+          <P><strong>{tc('privacy.sec_2_account_label')}</strong> {tc('privacy.sec_2_account_body')}</P>
+          <P><strong>{tc('privacy.sec_2_usage_label')}</strong> {tc('privacy.sec_2_usage_body')}</P>
+          <P><strong>{tc('privacy.sec_2_technical_label')}</strong> {tc('privacy.sec_2_technical_body')}</P>
+          <P><strong>{tc('privacy.sec_2_payment_label')}</strong> {tc('privacy.sec_2_payment_body')}</P>
+          <P><strong>{tc('privacy.sec_2_camera_label')}</strong> {tc('privacy.sec_2_camera_body')}</P>
+          <P><strong>{tc('privacy.sec_2_logistics_label')}</strong> {tc('privacy.sec_2_logistics_body')}</P>
+          <P><strong>{tc('privacy.sec_2_location_label')}</strong> {tc('privacy.sec_2_location_body')}</P>
+          <P><strong>{tc('privacy.sec_2_trial_label')}</strong> {tc('privacy.sec_2_trial_body')}</P>
+          <P><strong>{tc('privacy.sec_2_financial_label')}</strong> {tc('privacy.sec_2_financial_body')}</P>
         </Section>
 
-        <Section title="3. How We Use Your Data">
+        <Section title={tc('privacy.sec_3_title')}>
           <ul style={{ paddingLeft: 24 }}>
-            <Li>Providing and improving the AskBiz service</Li>
-            <Li>Authenticating your identity and securing your account</Li>
-            <Li>Processing your subscription payments via Stripe</Li>
-            <Li>Preventing fraud and abuse (IP hash analysis)</Li>
-            <Li>Sending service-related emails (account confirmations, billing receipts)</Li>
-            <Li>Processing camera images for barcode and price tag scanning (POS module)</Li>
-            <Li>Managing logistics, parcel tracking, and delivery routes (POS logistics module)</Li>
-            <Li>Detecting your country via IP geolocation for currency and pricing localisation</Li>
-            <Li>Managing free trial eligibility, duration, and conversion tracking</Li>
-            <Li>With your consent: personalising AI answers using your financial data</Li>
-            <Li>With your consent: improving AI accuracy using anonymised sector data</Li>
+            {[0,1,2,3,4,5,6,7,8,9,10].map(i => (
+              <Li key={i}>{tc('privacy.sec_3_item_' + i)}</Li>
+            ))}
           </ul>
         </Section>
 
-        <Section title="4. Legal Basis for Processing">
+        <Section title={tc('privacy.sec_4_title')}>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead>
                 <tr style={{ background: 'var(--ev)' }}>
-                  {['Processing activity', 'Legal basis', 'Regulation'].map(h => (
+                  {[tc('privacy.sec_4_th_0'), tc('privacy.sec_4_th_1'), tc('privacy.sec_4_th_2')].map(h => (
                     <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, borderBottom: '2px solid var(--b2)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {[
-                  ['Account creation and authentication', 'Contract performance', 'GDPR Art. 6(1)(b)'],
-                  ['AI analysis of your uploaded data', 'Contract performance', 'GDPR Art. 6(1)(b)'],
-                  ['Fraud prevention via IP hashing', 'Legitimate interest', 'GDPR Art. 6(1)(f)'],
-                  ['Payment processing', 'Contract performance', 'GDPR Art. 6(1)(b)'],
-                  ['Financial data personalisation', 'Explicit consent', 'GDPR Art. 6(1)(a)'],
-                  ['AI training and sector trends', 'Explicit consent', 'GDPR Art. 6(1)(a)'],
-                  ['Camera image processing (POS scanning)', 'Contract performance', 'GDPR Art. 6(1)(b)'],
-                  ['Logistics and delivery tracking', 'Contract performance', 'GDPR Art. 6(1)(b)'],
-                  ['IP geolocation for currency localisation', 'Legitimate interest', 'GDPR Art. 6(1)(f)'],
-                  ['Free trial management', 'Contract performance', 'GDPR Art. 6(1)(b)'],
-                  ['Service improvement analytics', 'Legitimate interest', 'GDPR Art. 6(1)(f)'],
-                ].map((row, i) => (
+                {buildLegalBasisRows(tc).map((row, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid var(--b)', background: i % 2 === 0 ? 'var(--sf)' : 'var(--bg)' }}>
                     {row.map((cell, j) => (
                       <td key={j} style={{ padding: '9px 14px', fontSize: 13, color: 'var(--tx2)' }}>{cell}</td>
@@ -166,119 +187,97 @@ export default function PrivacyPage() {
           </div>
         </Section>
 
-        <Section title="5. Anonymised Upload Analytics">
-          <P>To improve AskBiz, we collect the following <strong>anonymised metadata</strong> when you upload files. This does not require separate consent as it falls under legitimate interest:</P>
+        <Section title={tc('privacy.sec_5_title')}>
+          <P>{tc('privacy.sec_5_p1_pre')}<strong>{tc('privacy.sec_5_p1_bold')}</strong>{tc('privacy.sec_5_p1_post')}</P>
           <ul style={{ paddingLeft: 24 }}>
-            <Li>File type (CSV or Excel)</Li>
-            <Li>Number of rows and columns</Li>
-            <Li>Column header names only (e.g. "Revenue", "Stock") — never the data values</Li>
-            <Li>Your business type and country from your profile</Li>
+            {[0,1,2,3].map(i => (
+              <Li key={i}>{tc('privacy.sec_5_item_' + i)}</Li>
+            ))}
           </ul>
-          <P><strong>We never store your actual data values, business names, customer records, or financial figures</strong> as part of standard analytics.</P>
+          <P><strong>{tc('privacy.sec_5_p2')}</strong>{tc('privacy.sec_5_p2_post')}</P>
         </Section>
 
-        <Section title="6. Financial Data — Consent-Based Processing">
-          <P>If you choose to enable financial data personalisation in Settings → Privacy, we store additional data to improve your AI experience. This processing is based entirely on your <strong>explicit, freely given consent</strong> which you can withdraw at any time.</P>
+        <Section title={tc('privacy.sec_6_title')}>
+          <P>{tc('privacy.sec_6_p1_pre')}<strong>{tc('privacy.sec_6_p1_bold')}</strong>{tc('privacy.sec_6_p1_post')}</P>
 
           <ConsentBox
             type="financial"
-            label="Financial data personalisation (opt-in)"
-            description="Stores aggregated financial metrics from your uploaded files to personalise AI answers and track your business trends over time."
+            label={tc('privacy.sec_6_box1_label')}
+            description={tc('privacy.sec_6_box1_description')}
+            storedTitle={'✓ ' + tc('privacy.consent_stored_title')}
+            notStoredTitle={'✗ ' + tc('privacy.consent_notstored_title')}
             stored={[
-              'Total revenue figures',
-              'Average margin percentages',
-              'Product category names',
-              'Stock level summaries',
-              'Product count',
+              tc('privacy.sec_6_box1_stored_0'),
+              tc('privacy.sec_6_box1_stored_1'),
+              tc('privacy.sec_6_box1_stored_2'),
+              tc('privacy.sec_6_box1_stored_3'),
+              tc('privacy.sec_6_box1_stored_4'),
             ]}
             notStored={[
-              'Individual customer data',
-              'Customer names or contacts',
-              'Bank account details',
-              'Employee information',
-              'Supplier names or contracts',
-              'Individual transaction records',
+              tc('privacy.sec_6_box1_notstored_0'),
+              tc('privacy.sec_6_box1_notstored_1'),
+              tc('privacy.sec_6_box1_notstored_2'),
+              tc('privacy.sec_6_box1_notstored_3'),
+              tc('privacy.sec_6_box1_notstored_4'),
+              tc('privacy.sec_6_box1_notstored_5'),
             ]}
           />
 
           <ConsentBox
             type="training"
-            label="AI improvement and sector trends (opt-in)"
-            description="Uses fully anonymised, aggregated data to improve AI answer quality and generate sector trend alerts for businesses in your industry."
+            label={tc('privacy.sec_6_box2_label')}
+            description={tc('privacy.sec_6_box2_description')}
+            storedTitle={'✓ ' + tc('privacy.consent_stored_title')}
+            notStoredTitle={'✗ ' + tc('privacy.consent_notstored_title')}
             stored={[
-              'Anonymised sector averages',
-              'Industry trend indicators',
-              'Regional performance patterns',
+              tc('privacy.sec_6_box2_stored_0'),
+              tc('privacy.sec_6_box2_stored_1'),
+              tc('privacy.sec_6_box2_stored_2'),
             ]}
             notStored={[
-              'Any individually identifiable data',
-              'Your business name',
-              'Specific revenue figures',
-              'Any data from fewer than 5 businesses',
+              tc('privacy.sec_6_box2_notstored_0'),
+              tc('privacy.sec_6_box2_notstored_1'),
+              tc('privacy.sec_6_box2_notstored_2'),
+              tc('privacy.sec_6_box2_notstored_3'),
             ]}
           />
 
-          <P>Financial data is retained for <strong>24 months</strong> then automatically deleted. You can delete it sooner at any time in the Privacy section of our website.</P>
-          <P>You can manage your consent settings at any time at <Link href="/settings" style={{ color: 'var(--acc)', textDecoration: 'none' }}>askbiz.co/settings</Link>.</P>
+          <P>{tc('privacy.sec_6_p2_pre')}<strong>{tc('privacy.sec_6_p2_bold')}</strong>{tc('privacy.sec_6_p2_post')}</P>
+          <P>{tc('privacy.sec_6_p3_pre')}<Link href="/settings" style={{ color: 'var(--acc)', textDecoration: 'none' }}>{tc('privacy.sec_6_p3_link')}</Link>{tc('privacy.sec_6_p3_post')}</P>
         </Section>
 
-        <Section title="7. Sector Trend Alerts">
-          <P>When you consent to AI improvement, you may receive alerts about trends detected across businesses in your sector — for example "UK retail margins have declined 8% this month." These alerts are:</P>
+        <Section title={tc('privacy.sec_7_title')}>
+          <P>{tc('privacy.sec_7_p1')}</P>
           <ul style={{ paddingLeft: 24 }}>
-            <Li><strong>Fully anonymised</strong> — your business is never identifiable in any alert</Li>
-            <Li><strong>Statistically protected</strong> — only generated when at least 5 businesses contribute to the signal</Li>
-            <Li><strong>Sector-specific</strong> — you only receive alerts relevant to your business type and country</Li>
-            <Li><strong>Not shared externally</strong> — sector trend data is never sold or shared with third parties</Li>
+            {[0,1,2,3].map(i => (
+              <Li key={i}><strong>{tc('privacy.sec_7_item_' + i + '_bold')}</strong>{tc('privacy.sec_7_item_' + i + '_post')}</Li>
+            ))}
           </ul>
         </Section>
 
-        <Section title="8. Data Sharing">
-          <P>We share your data only with the following processors, all bound by appropriate data processing agreements:</P>
+        <Section title={tc('privacy.sec_8_title')}>
+          <P>{tc('privacy.sec_8_p1')}</P>
           <ul style={{ paddingLeft: 24 }}>
-            <Li><strong>Supabase</strong> — database hosting (AWS EU West)</Li>
-            <Li><strong>Anthropic</strong> — AI processing of your questions (USA — Standard Contractual Clauses apply)</Li>
-            <Li><strong>Tavily</strong> — real-time web search used by our AI agent to retrieve market data (USA — Standard Contractual Clauses apply). Only your search queries are transmitted, never your personal or financial data.</Li>
-            <Li><strong>Vercel</strong> — hosting and CDN (global edge)</Li>
-            <Li><strong>Stripe</strong> — payment processing (PCI DSS Level 1)</Li>
-            <Li><strong>Resend</strong> — transactional email delivery (USA — Standard Contractual Clauses apply). Used only for account and billing emails.</Li>
-            <Li><strong>WhatsApp/Meta</strong> — receipt delivery for AskBiz POS module (USA — Meta Data Processing Agreement and Standard Contractual Clauses apply). Customer phone numbers are transmitted only when customer opts in to receipt delivery; never stored by AskBiz after 30 days.</Li>
-            <Li><strong>Safaricom (M-Pesa)</strong> — mobile money payment processing for Kenyan and East African users (Kenya — Safaricom Data Processing Terms apply). Only transaction reference and amount are transmitted; M-Pesa PINs are never seen or stored by AskBiz.</Li>
-            <Li><strong>MTN Mobile Money / Airtel Money</strong> — mobile money payment processing for West and Central African users (regional — respective Data Processing Terms apply). Only transaction reference and amount are transmitted.</Li>
-            <Li><strong>PesaPal</strong> — payment gateway for M-Pesa and mobile money transactions (Kenya — PesaPal Data Processing Agreement applies). Processes payment callbacks and subscription conversions.</Li>
+            {[0,1,2,3,4,5,6,7,8,9].map(i => (
+              <Li key={i}><strong>{tc('privacy.sec_8_item_' + i + '_bold')}</strong>{tc('privacy.sec_8_item_' + i + '_post')}</Li>
+            ))}
           </ul>
-          <P>We never sell your data. We never share your data with advertisers. We never share individual business data with other AskBiz users.</P>
-          <P>If you use AskBiz to process your own customers' data, see our <Link href="/dpa" style={{ color: 'var(--ac, #d08a59)' }}>Data Processing Agreement &amp; full sub-processor list</Link>.</P>
+          <P>{tc('privacy.sec_8_p2')}</P>
+          <P>{tc('privacy.sec_8_p3_pre')}<Link href="/dpa" style={{ color: 'var(--ac, #d08a59)' }}>{tc('privacy.sec_8_p3_link')}</Link>{tc('privacy.sec_8_p3_post')}</P>
         </Section>
 
-        <Section title="9. Data Retention">
+        <Section title={tc('privacy.sec_9_title')}>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead>
                 <tr style={{ background: 'var(--ev)' }}>
-                  {['Data type', 'Retention period', 'Deletion'].map(h => (
+                  {[tc('privacy.sec_9_th_0'), tc('privacy.sec_9_th_1'), tc('privacy.sec_9_th_2')].map(h => (
                     <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, borderBottom: '2px solid var(--b2)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {[
-                  ['Account and profile data', '2 years after last activity', 'Automated'],
-                  ['Uploaded files and parsed data', '12 months', 'Automated'],
-                  ['Chat conversations', '12 months (or on request)', 'User-controlled'],
-                  ['Financial snapshots (consented)', '24 months', 'Automated or on request'],
-                  ['Billing and payment records', '7 years', 'Legal requirement'],
-                  ['IP hash records', '12 months', 'Automated'],
-                  ['Consent audit log', '3 years', 'Required for compliance'],
-                  ['POS transaction history', 'Indefinite (accounting/tax requirement)', 'Business owner can export or request deletion via privacy@askbiz.co'],
-                  ['POS customer phone numbers', '30 days', 'Automated deletion'],
-                  ['POS staff PIN records', '90 days (failed login attempts only)', 'Automated deletion'],
-                  ['POS camera scan images', 'Not stored (real-time processing only)', 'Immediate — images never leave device/session'],
-                  ['POS logistics and delivery data', '12 months after delivery completion', 'Automated deletion'],
-                  ['POS vehicle inspection photos', '6 months', 'Automated deletion'],
-                  ['Free trial records', '12 months after trial end', 'Automated deletion'],
-                  ['Offline mode local data', 'Until synced to server', 'Synced and cleared automatically'],
-                  ['Deleted account data', '30-day grace period', 'Permanent after 30 days'],
-                ].map((row, i) => (
+                {buildRetentionRows(tc).map((row, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid var(--b)', background: i % 2 === 0 ? 'var(--sf)' : 'var(--bg)' }}>
                     {row.map((cell, j) => (
                       <td key={j} style={{ padding: '9px 14px', fontSize: 13, color: 'var(--tx2)' }}>{cell}</td>
@@ -290,157 +289,71 @@ export default function PrivacyPage() {
           </div>
         </Section>
 
-        <Section title="10. AskBiz POS — Point of Sale Module">
-          <P><strong>The AskBiz POS module</strong> (pos.askbiz.co) is a separate application for managing retail sales, inventory, and receipts. When using POS, the following additional data is processed:</P>
+        <Section title={tc('privacy.sec_10_title')}>
+          <P><strong>{tc('privacy.sec_10_intro_bold')}</strong>{tc('privacy.sec_10_intro_post')}</P>
 
-          <div style={{ marginTop: 20, marginBottom: 20 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: 'var(--tx)' }}>📱 Customer Phone Numbers</div>
-            <ul style={{ paddingLeft: 24 }}>
-              <Li><strong>Purpose:</strong> Sending sales receipts via WhatsApp (optional)</Li>
-              <Li><strong>Legal basis:</strong> Explicit customer consent (customer must provide phone number; never pre-filled)</Li>
-              <Li><strong>Processing:</strong> Transmitted to WhatsApp/Meta for receipt delivery only</Li>
-              <Li><strong>Retention:</strong> 30 days, then automatically deleted</Li>
-              <Li><strong>Security:</strong> End-to-end encrypted by WhatsApp; AskBiz does not store receipt content</Li>
-              <Li><strong>Your rights:</strong> You can withdraw consent by not providing your phone number. You can request deletion of stored phone numbers at any time by contacting privacy@askbiz.co</Li>
-            </ul>
-          </div>
-
-          <div style={{ marginTop: 20, marginBottom: 20 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: 'var(--tx)' }}>💳 Transaction History</div>
-            <ul style={{ paddingLeft: 24 }}>
-              <Li><strong>Data collected:</strong> Products sold, quantities, prices, discounts applied, payment method, timestamps, and customer phone (if provided)</Li>
-              <Li><strong>Purpose:</strong> Sales record-keeping, inventory management, business analytics, tax and accounting compliance</Li>
-              <Li><strong>Legal basis:</strong> Contract performance (fulfilling the POS service)</Li>
-              <Li><strong>Retention:</strong> Indefinitely (required by accounting and tax law in most jurisdictions for 7 years minimum)</Li>
-              <Li><strong>Your rights:</strong> You can request an export of all your transaction data in JSON format. You can request deletion of specific transactions subject to local accounting law requirements. Contact privacy@askbiz.co</Li>
-            </ul>
-          </div>
-
-          <div style={{ marginTop: 20, marginBottom: 20 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: 'var(--tx)' }}>👤 Staff PIN Security</div>
-            <ul style={{ paddingLeft: 24 }}>
-              <Li><strong>PIN storage:</strong> Staff PINs are hashed using bcrypt with unique salts. Raw PINs are never stored or logged</Li>
-              <Li><strong>Access control:</strong> Only authenticated API calls can verify PINs. No staff member can see another staff member's PIN</Li>
-              <Li><strong>Failed login logging:</strong> Failed PIN attempts are logged for 90 days for security auditing, then automatically deleted</Li>
-              <Li><strong>Processor:</strong> All PIN data is stored in Supabase (AWS EU West) with row-level security</Li>
-              <Li><strong>Your rights:</strong> Staff members can request deletion of failed login logs at any time. All PIN data is deleted when the staff account is deactivated</Li>
-            </ul>
-          </div>
-
-          <div style={{ marginTop: 20, marginBottom: 20 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: 'var(--tx)' }}>📦 Inventory & Product Data</div>
-            <ul style={{ paddingLeft: 24 }}>
-              <Li><strong>Data collected:</strong> Product names, SKUs, sale prices, cost prices, stock quantities, units, last sold dates</Li>
-              <Li><strong>Purpose:</strong> Inventory management, stock tracking, sales analytics, product performance analysis</Li>
-              <Li><strong>Legal basis:</strong> Contract performance (core POS functionality)</Li>
-              <Li><strong>Retention:</strong> Indefinitely (business owner retains control)</Li>
-              <Li><strong>Your rights:</strong> You retain full ownership. You can export, modify, or delete any inventory data at any time through the POS interface</Li>
-            </ul>
-          </div>
-
-          <div style={{ marginTop: 20, marginBottom: 20 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: 'var(--tx)' }}>📷 Camera Scanning</div>
-            <ul style={{ paddingLeft: 24 }}>
-              <Li><strong>Data collected:</strong> Camera images of barcodes, price tags, and product labels</Li>
-              <Li><strong>Purpose:</strong> Real-time product recognition for barcode lookup and price tag extraction</Li>
-              <Li><strong>Legal basis:</strong> Contract performance (core POS scanning feature)</Li>
-              <Li><strong>Processing:</strong> Images are processed in real time via our AI pipeline. Raw images are never stored on our servers — only the extracted data (product name, price, barcode number) is retained</Li>
-              <Li><strong>Camera permission:</strong> Your browser will ask for camera access. You can revoke this at any time in your browser settings. Camera access is only used during active scanning sessions</Li>
-              <Li><strong>Your rights:</strong> You can disable camera scanning at any time and manually enter product details instead</Li>
-            </ul>
-          </div>
-
-          <div style={{ marginTop: 20, marginBottom: 20 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: 'var(--tx)' }}>🚚 Logistics &amp; Delivery</div>
-            <ul style={{ paddingLeft: 24 }}>
-              <Li><strong>Data collected:</strong> Parcel tracking numbers, delivery addresses, route information, vehicle inspection photos, driver handover records, and delivery timestamps</Li>
-              <Li><strong>Purpose:</strong> Parcel tracking, delivery route management, vehicle inspection compliance, and logistics invoicing</Li>
-              <Li><strong>Legal basis:</strong> Contract performance (logistics module functionality)</Li>
-              <Li><strong>Retention:</strong> Logistics data retained for 12 months after delivery completion. Vehicle inspection photos retained for 6 months. Delivery addresses retained for shipment duration plus 90 days</Li>
-              <Li><strong>Your rights:</strong> You can export all logistics data. You can request deletion of completed delivery records subject to local record-keeping requirements. Contact privacy@askbiz.co</Li>
-            </ul>
-          </div>
-
-          <div style={{ marginTop: 20, marginBottom: 20 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: 'var(--tx)' }}>📱 Offline Mode</div>
-            <ul style={{ paddingLeft: 24 }}>
-              <Li><strong>Data stored locally:</strong> During internet outages, cash sale transactions are stored in your browser&apos;s local storage</Li>
-              <Li><strong>Purpose:</strong> Ensure business continuity when connectivity is temporarily lost</Li>
-              <Li><strong>Sync behaviour:</strong> Locally stored transactions are automatically synced to our servers when connectivity resumes, then cleared from local storage</Li>
-              <Li><strong>Security:</strong> Local data is only accessible within your authenticated browser session</Li>
-            </ul>
-          </div>
-
-          <div style={{ marginTop: 20, marginBottom: 20 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: 'var(--tx)' }}>💰 Mobile Money Payments</div>
-            <ul style={{ paddingLeft: 24 }}>
-              <Li><strong>Supported providers:</strong> M-Pesa (Safaricom), MTN Mobile Money, Airtel Money — via PesaPal payment gateway</Li>
-              <Li><strong>Data collected:</strong> Transaction reference number, payment amount, and confirmation status</Li>
-              <Li><strong>Purpose:</strong> Processing subscription payments and POS seat purchases in markets where card payments are not widely available</Li>
-              <Li><strong>Legal basis:</strong> Contract performance (payment processing)</Li>
-              <Li><strong>Security:</strong> Mobile money PINs are entered directly on the provider&apos;s platform — AskBiz never sees, transmits, or stores your mobile money PIN</Li>
-              <Li><strong>Your rights:</strong> All mobile money transaction records follow the same retention and export policies as card payment records</Li>
-            </ul>
-          </div>
+          <POSGroup tc={tc} heading={tc('privacy.sec_10_phone_heading')} prefix="sec_10_phone" count={6} />
+          <POSGroup tc={tc} heading={tc('privacy.sec_10_transaction_heading')} prefix="sec_10_transaction" count={5} />
+          <POSGroup tc={tc} heading={tc('privacy.sec_10_staff_heading')} prefix="sec_10_staff" count={5} />
+          <POSGroup tc={tc} heading={tc('privacy.sec_10_inventory_heading')} prefix="sec_10_inventory" count={5} />
+          <POSGroup tc={tc} heading={tc('privacy.sec_10_camera_heading')} prefix="sec_10_camera" count={6} />
+          <POSGroup tc={tc} heading={tc('privacy.sec_10_logistics_heading')} prefix="sec_10_logistics" count={5} />
+          <POSGroup tc={tc} heading={tc('privacy.sec_10_offline_heading')} prefix="sec_10_offline" count={4} />
+          <POSGroup tc={tc} heading={tc('privacy.sec_10_mobilemoney_heading')} prefix="sec_10_mobilemoney" count={6} />
 
           <P style={{ marginTop: 24, padding: '16px 18px', borderRadius: 12, background: 'rgba(22,163,74,.06)', borderLeft: '4px solid #16a34a' }}>
-            <strong>Summary:</strong> The POS module processes personal data transparently with clear legal bases and user rights. Customer phone numbers are optional and automatically deleted after 30 days. Transaction history is retained for accounting compliance but can be exported or deleted upon request. Staff PINs are securely hashed and never visible to other users. Camera images are processed in real time and never stored. Logistics data is retained for 12 months after delivery. Mobile money PINs are never seen by AskBiz.
+            <strong>{tc('privacy.sec_10_summary_bold')}</strong>{tc('privacy.sec_10_summary_post')}
           </P>
         </Section>
 
-        <Section title="11. Your Rights">
-          <P>AskBiz serves users globally. Regardless of where you are located, you have the following rights. These satisfy EU GDPR, UK GDPR, CCPA/CPRA (California), LGPD (Brazil), PIPEDA (Canada), POPIA (South Africa), Australia Privacy Act, PDPA (Thailand &amp; Singapore), and most other applicable privacy laws.</P>
+        <Section title={tc('privacy.sec_11_title')}>
+          <P>{tc('privacy.sec_11_p1')}</P>
           <ul style={{ paddingLeft: 24 }}>
-            <Li><strong>Right of access</strong> — Request a copy of all personal data we hold about you</Li>
-            <Li><strong>Right to erasure / deletion</strong> — Request deletion of your account and all data (30-day grace period applies). California, Brazilian, South African, and Canadian residents have this right by statute.</Li>
-            <Li><strong>Right to rectification / correction</strong> — Correct inaccurate or incomplete data in your profile at any time</Li>
-            <Li><strong>Right to portability</strong> — Receive your data in a machine-readable format (JSON). Available to all users.</Li>
-            <Li><strong>Right to object / opt out</strong> — Object to processing based on legitimate interest. California residents: you may also opt out of "sharing" for cross-context behavioural advertising — we do not do this.</Li>
-            <Li><strong>Right to restrict processing</strong> — Request we limit processing while a dispute is resolved</Li>
-            <Li><strong>Right to withdraw consent</strong> — Withdraw consent for financial data and AI training at any time via Settings → Privacy, with immediate effect</Li>
-            <Li><strong>Do Not Sell or Share (CCPA/CPRA)</strong> — We do not sell or share personal data with third parties for advertising. There is nothing to opt out of.</Li>
-            <Li><strong>Right to non-discrimination (CCPA)</strong> — Exercising your privacy rights will never affect your service level or pricing</Li>
+            {[0,1,2,3,4,5,6,7,8].map(i => (
+              <Li key={i}><strong>{tc('privacy.sec_11_item_' + i + '_bold')}</strong>{tc('privacy.sec_11_item_' + i + '_post')}</Li>
+            ))}
           </ul>
-          <P>To exercise any right, email <strong>privacy@askbiz.co</strong>. We respond within 30 days (EU/UK GDPR: within 1 month; CCPA: within 45 days; LGPD: within 15 days).</P>
-          <P>You also have the right to lodge a complaint with your local data protection authority: ICO (UK), Data Protection Commission (Ireland/EU), ANPD (Brazil), OPC (Canada), Information Regulator (South Africa), or your local equivalent.</P>
+          <P>{tc('privacy.sec_11_p2_pre')}<strong>{tc('privacy.sec_11_p2_bold')}</strong>{tc('privacy.sec_11_p2_post')}</P>
+          <P>{tc('privacy.sec_11_p3')}</P>
         </Section>
 
-        <Section title="12. Delete Your Account and Data">
-          <P>You can request deletion of your account and all associated data below. There is a <strong>30-day grace period</strong> before permanent deletion to protect against accidental requests. You can cancel at any time during this period.</P>
-          <P><strong>What gets deleted:</strong> Profile, conversations, uploads, financial snapshots, IP hashes, and all associated data. Billing records are retained for 7 years as required by law.</P>
-          <DeleteSection />
+        <Section title={tc('privacy.sec_12_title')}>
+          <P>{tc('privacy.sec_12_p1_pre')}<strong>{tc('privacy.sec_12_p1_bold')}</strong>{tc('privacy.sec_12_p1_post')}</P>
+          <P><strong>{tc('privacy.sec_12_p2_bold')}</strong>{tc('privacy.sec_12_p2_post')}</P>
+          <DeleteSection tc={tc} />
         </Section>
 
-        <Section title="13. Cookies">
-          <P>AskBiz uses only essential cookies required for authentication. We do not use advertising cookies or third-party tracking cookies.</P>
+        <Section title={tc('privacy.sec_13_title')}>
+          <P>{tc('privacy.sec_13_p1')}</P>
           <ul style={{ paddingLeft: 24 }}>
-            <Li><strong>supabase-auth-token</strong> — Authentication session (essential, session duration)</Li>
-            <Li><strong>sb-refresh-token</strong> — Keeps you signed in (essential, 1 week)</Li>
+            {[0,1].map(i => (
+              <Li key={i}><strong>{tc('privacy.sec_13_item_' + i + '_bold')}</strong>{tc('privacy.sec_13_item_' + i + '_post')}</Li>
+            ))}
           </ul>
         </Section>
 
-        <Section title="14. Security &amp; Breach Notification">
-          <P>We use industry-standard measures to protect your data: encrypted connections (TLS), hashed IP addresses, row-level security on our database, and scoped API keys. Access to personal data is restricted to authorised personnel only.</P>
-          <P><strong>If a data breach occurs</strong> that is likely to result in a risk to your rights and freedoms, we will:</P>
+        <Section title={tc('privacy.sec_14_title')}>
+          <P>{tc('privacy.sec_14_p1')}</P>
+          <P><strong>{tc('privacy.sec_14_p2_bold')}</strong>{tc('privacy.sec_14_p2_post')}</P>
           <ul style={{ paddingLeft: 24 }}>
-            <Li>Notify the relevant supervisory authority within <strong>72 hours</strong> of becoming aware (EU/UK GDPR Art. 33; LGPD Art. 48; PIPEDA; POPIA)</Li>
-            <Li>Notify affected users <strong>without undue delay</strong> when there is a high risk to their rights, including the nature of the breach, data affected, and steps taken</Li>
-            <Li>Maintain an internal breach register for compliance purposes</Li>
+            <Li>{tc('privacy.sec_14_item_0_pre')}<strong>{tc('privacy.sec_14_item_0_bold')}</strong>{tc('privacy.sec_14_item_0_post')}</Li>
+            <Li>{tc('privacy.sec_14_item_1_pre')}<strong>{tc('privacy.sec_14_item_1_bold')}</strong>{tc('privacy.sec_14_item_1_post')}</Li>
+            <Li>{tc('privacy.sec_14_item_2')}</Li>
           </ul>
-          <P>To report a suspected security vulnerability or breach, contact us immediately at <strong>security@askbiz.co</strong>.</P>
+          <P>{tc('privacy.sec_14_p3_pre')}<strong>{tc('privacy.sec_14_p3_bold')}</strong>{tc('privacy.sec_14_p3_post')}</P>
         </Section>
 
-        <Section title="15. Changes to This Policy">
-          <P>We will notify you by email of any material changes to this policy at least 14 days before they take effect. Continued use of AskBiz after changes take effect constitutes acceptance of the updated policy.</P>
+        <Section title={tc('privacy.sec_15_title')}>
+          <P>{tc('privacy.sec_15_p1')}</P>
         </Section>
 
         <div style={{ padding: '20px', borderRadius: 14, background: 'var(--ev)', border: '1px solid var(--b)', fontSize: 13, color: 'var(--tx2)' }}>
-          <strong>Contact us</strong><br/>
-          Privacy &amp; data rights: privacy@askbiz.co<br/>
-          Security incidents: security@askbiz.co<br/>
-          Legal matters: legal@askbiz.co<br/>
-          General: hello@askbiz.co<br/>
-          AskBiz Ltd · Global service · askbiz.co
+          <strong>{tc('privacy.contact_heading')}</strong><br/>
+          {tc('privacy.contact_privacy')}<br/>
+          {tc('privacy.contact_security')}<br/>
+          {tc('privacy.contact_legal')}<br/>
+          {tc('privacy.contact_general')}<br/>
+          {tc('privacy.contact_footer')}
         </div>
       </div>
     </div>

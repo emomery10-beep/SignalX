@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import Link from 'next/link'
+import { useLang } from '@/components/LanguageProvider'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -19,78 +20,75 @@ function Li({ children }: { children: React.ReactNode }) {
   return <li style={{ fontSize: 15, lineHeight: 1.85, color: 'var(--tx2)', marginBottom: 6 }}>{children}</li>
 }
 
-const SUBPROCESSORS: [string, string, string][] = [
-  ['Supabase', 'Database, authentication, and file storage (PostgreSQL)', 'EU / US'],
-  ['Anthropic (Claude API)', 'AI processing of camera images and text — receipt, product, document, and number-plate scanning', 'United States'],
-  ['Vercel', 'Application hosting and serverless compute', 'Global edge / US'],
-  ['Stripe', 'Card payment processing', 'US / EU'],
-  ['Paystack', 'Payment processing (Africa)', 'Nigeria / South Africa'],
-  ['GoCardless', 'Bank debit payment processing', 'EU / UK'],
-  ['PayPal', 'Payment processing', 'US / EU'],
-  ['M-Pesa (Safaricom Daraja)', 'Mobile money payment processing', 'Kenya'],
-  ['Twilio / WhatsApp (Meta)', 'Customer SMS and WhatsApp messaging (receipts, notifications)', 'United States'],
-  ['Resend', 'Transactional email delivery', 'United States'],
-  ['Tavily', 'Web search for business intelligence queries (no customer PII)', 'United States'],
-]
+function buildSubprocessors(tc: (key: string) => string): [string, string, string][] {
+  const keys = ['supabase', 'anthropic', 'vercel', 'stripe', 'paystack', 'gocardless', 'paypal', 'mpesa', 'twilio', 'resend', 'tavily']
+  return keys.map(k => [
+    tc('dpa.sp_' + k + '_name'),
+    tc('dpa.sp_' + k + '_purpose'),
+    tc('dpa.sp_' + k + '_region'),
+  ])
+}
 
 export default function DpaPage() {
+  const { tc } = useLang()
+  const SUBPROCESSORS = buildSubprocessors(tc)
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', fontFamily: 'var(--font-dm, DM Sans)' }}>
       <div style={{ maxWidth: 'min(760px, 100%)', margin: '0 auto', padding: 'clamp(20px, 4vw, 48px) clamp(14px, 4vw, 24px) 80px' }}>
 
         {/* Header */}
         <div style={{ marginBottom: 48 }}>
-          <Link href="/privacy" style={{ fontSize: 13, color: 'var(--tx3)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>← Back to Privacy Policy</Link>
-          <h1 style={{ fontFamily: 'var(--font-sora)', fontSize: 32, fontWeight: 700, marginBottom: 8, letterSpacing: '-.025em' }}>Data Processing Agreement</h1>
-          <p style={{ fontSize: 14, color: 'var(--tx3)' }}>AskBiz Ltd · Last updated: 16 June 2026</p>
+          <Link href="/privacy" style={{ fontSize: 13, color: 'var(--tx3)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>{tc('dpa.back_to_privacy')}</Link>
+          <h1 style={{ fontFamily: 'var(--font-sora)', fontSize: 32, fontWeight: 700, marginBottom: 8, letterSpacing: '-.025em' }}>{tc('dpa.title')}</h1>
+          <p style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('dpa.meta')}</p>
         </div>
 
-        <Section title="1. Roles of the Parties">
-          <P>This Data Processing Agreement ("DPA") forms part of the agreement between AskBiz Ltd ("AskBiz", "we", "Processor") and the business customer that uses AskBiz ("you", "Controller").</P>
-          <P>When you use AskBiz to handle your own customers' personal data — for example their names, phone numbers, purchase history, parcel details, or photographs — <strong>you act as the data controller</strong> and <strong>AskBiz acts as a data processor</strong> on your behalf. You decide what data is collected and why; we process it only to provide the service.</P>
-          <P>For data about your own account (your name, email, billing), AskBiz is the controller — that processing is covered by our <Link href="/privacy" style={{ color: 'var(--ac, #d08a59)' }}>Privacy Policy</Link>.</P>
+        <Section title={tc('dpa.s1_title')}>
+          <P>{tc('dpa.s1_p1')}</P>
+          <P>{tc('dpa.s1_p2_pre')}<strong>{tc('dpa.s1_p2_b1')}</strong>{tc('dpa.s1_p2_mid')}<strong>{tc('dpa.s1_p2_b2')}</strong>{tc('dpa.s1_p2_post')}</P>
+          <P>{tc('dpa.s1_p3_pre')}<Link href="/privacy" style={{ color: 'var(--ac, #d08a59)' }}>{tc('dpa.s1_p3_link')}</Link>{tc('dpa.s1_p3_post')}</P>
         </Section>
 
-        <Section title="2. Subject Matter & Duration">
-          <P><strong>Subject matter:</strong> AskBiz's processing of personal data on your behalf to provide the AskBiz POS and business-intelligence platform.</P>
-          <P><strong>Duration:</strong> Processing continues for as long as your account is active, and thereafter only as required to comply with legal obligations (e.g. tax records are retained for up to 7 years; see Section 7).</P>
+        <Section title={tc('dpa.s2_title')}>
+          <P><strong>{tc('dpa.s2_p1_b')}</strong>{tc('dpa.s2_p1_text')}</P>
+          <P><strong>{tc('dpa.s2_p2_b')}</strong>{tc('dpa.s2_p2_text')}</P>
         </Section>
 
-        <Section title="3. Nature & Purpose of Processing">
+        <Section title={tc('dpa.s3_title')}>
           <ul style={{ paddingLeft: 24 }}>
-            <Li>Recording sales, transactions, and inventory</Li>
-            <Li>Storing customer records and managing loyalty / consent preferences</Li>
-            <Li>Sending receipts and notifications to your customers (subject to their consent)</Li>
-            <Li>AI scanning of images you capture (products, receipts, documents, vehicle plates)</Li>
-            <Li>Logistics: parcel tracking, vehicle inspections, and driver location for fleet management</Li>
-            <Li>Generating reports and analytics for your business</Li>
+            <Li>{tc('dpa.s3_li1')}</Li>
+            <Li>{tc('dpa.s3_li2')}</Li>
+            <Li>{tc('dpa.s3_li3')}</Li>
+            <Li>{tc('dpa.s3_li4')}</Li>
+            <Li>{tc('dpa.s3_li5')}</Li>
+            <Li>{tc('dpa.s3_li6')}</Li>
           </ul>
         </Section>
 
-        <Section title="4. Types of Data & Data Subjects">
-          <P><strong>Categories of data subjects:</strong> your customers, your staff, and (for logistics) your drivers and parcel recipients.</P>
-          <P><strong>Categories of personal data:</strong> names, phone numbers, email addresses, transaction and purchase history, staff roles and PINs (hashed), photographs (e.g. parcels, vehicle inspections, scanned documents), and driver GPS location. We do not require special-category data; please do not upload it.</P>
+        <Section title={tc('dpa.s4_title')}>
+          <P><strong>{tc('dpa.s4_p1_b')}</strong>{tc('dpa.s4_p1_text')}</P>
+          <P><strong>{tc('dpa.s4_p2_b')}</strong>{tc('dpa.s4_p2_text')}</P>
         </Section>
 
-        <Section title="5. Our Obligations as Processor">
+        <Section title={tc('dpa.s5_title')}>
           <ul style={{ paddingLeft: 24 }}>
-            <Li><strong>Documented instructions:</strong> we process personal data only on your documented instructions, which include your use of the platform's features.</Li>
-            <Li><strong>Confidentiality:</strong> personnel authorised to process data are bound by confidentiality.</Li>
-            <Li><strong>Security:</strong> we apply appropriate technical and organisational measures — encryption in transit, encryption of integration credentials at rest, hashed staff PINs, row-level security isolating each business's data, and access controls.</Li>
-            <Li><strong>Assistance with data-subject requests:</strong> the platform provides tools to export and erase/anonymise customer records so you can fulfil access and erasure requests.</Li>
-            <Li><strong>Breach notification:</strong> we will notify you without undue delay after becoming aware of a personal-data breach affecting your data.</Li>
-            <Li><strong>Deletion / return:</strong> on termination, we delete or return personal data, subject to legal retention requirements.</Li>
+            <Li><strong>{tc('dpa.s5_li1_b')}</strong>{tc('dpa.s5_li1_text')}</Li>
+            <Li><strong>{tc('dpa.s5_li2_b')}</strong>{tc('dpa.s5_li2_text')}</Li>
+            <Li><strong>{tc('dpa.s5_li3_b')}</strong>{tc('dpa.s5_li3_text')}</Li>
+            <Li><strong>{tc('dpa.s5_li4_b')}</strong>{tc('dpa.s5_li4_text')}</Li>
+            <Li><strong>{tc('dpa.s5_li5_b')}</strong>{tc('dpa.s5_li5_text')}</Li>
+            <Li><strong>{tc('dpa.s5_li6_b')}</strong>{tc('dpa.s5_li6_text')}</Li>
           </ul>
         </Section>
 
-        <Section title="6. Sub-processors">
-          <P>You authorise AskBiz to engage the sub-processors listed below to help deliver the service. Each is bound by data-protection obligations consistent with this DPA. We will give you notice of any intended changes to this list so you may object.</P>
-          <P style={{ fontSize: 13, color: 'var(--tx3)' }}>Note: customer data — including images you scan — is processed by Anthropic in the United States for AI features. International transfers rely on appropriate safeguards such as Standard Contractual Clauses (SCCs).</P>
+        <Section title={tc('dpa.s6_title')}>
+          <P>{tc('dpa.s6_p1')}</P>
+          <P style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('dpa.s6_note')}</P>
           <div style={{ overflowX: 'auto', marginTop: 14 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead>
                 <tr style={{ background: 'var(--ev)' }}>
-                  {['Sub-processor', 'Purpose', 'Region'].map(h => (
+                  {[tc('dpa.s6_col_subprocessor'), tc('dpa.s6_col_purpose'), tc('dpa.s6_col_region')].map(h => (
                     <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, borderBottom: '2px solid var(--b2)' }}>{h}</th>
                   ))}
                 </tr>
@@ -108,16 +106,16 @@ export default function DpaPage() {
           </div>
         </Section>
 
-        <Section title="7. Retention & Deletion">
-          <P>Customer records that become inactive are anonymised, and driver GPS location pings are purged, on an automated retention schedule. Transaction records are retained in anonymised form for up to 7 years to meet tax obligations. You may trigger erasure or export of an individual customer's data at any time from the customer management screen.</P>
+        <Section title={tc('dpa.s7_title')}>
+          <P>{tc('dpa.s7_p1')}</P>
         </Section>
 
-        <Section title="8. International Transfers">
-          <P>Some sub-processors process data outside the EU/UK (notably in the United States — see Section 6). Where this occurs, transfers are made under appropriate safeguards, principally the EU Standard Contractual Clauses and the UK International Data Transfer Addendum.</P>
+        <Section title={tc('dpa.s8_title')}>
+          <P>{tc('dpa.s8_p1')}</P>
         </Section>
 
-        <Section title="9. Contact">
-          <P>Questions about this DPA, or to request a counter-signed copy: <strong>dpa@askbiz.co</strong> · privacy@askbiz.co</P>
+        <Section title={tc('dpa.s9_title')}>
+          <P>{tc('dpa.s9_p1_pre')}<strong>{tc('dpa.s9_p1_b')}</strong>{tc('dpa.s9_p1_post')}</P>
         </Section>
 
       </div>
