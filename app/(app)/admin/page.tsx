@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useLang } from '@/components/LanguageProvider'
 
 const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
 const PLAN_COLORS: Record<string, string> = {
@@ -9,6 +10,10 @@ const PLAN_COLORS: Record<string, string> = {
 }
 const TABS = ['Overview','Revenue','Users','Activity','Costs','Growth'] as const
 type Tab = typeof TABS[number]
+const TAB_KEYS: Record<Tab, string> = {
+  Overview: 'tab_overview', Revenue: 'tab_revenue', Users: 'tab_users',
+  Activity: 'tab_activity', Costs: 'tab_costs', Growth: 'tab_growth',
+}
 
 function KV({ label, value, sub, color }: { label: string; value: any; sub?: string; color?: string }) {
   return (
@@ -22,6 +27,7 @@ function KV({ label, value, sub, color }: { label: string; value: any; sub?: str
 
 export default function AdminPage() {
   const router = useRouter()
+  const { tc } = useLang()
   const supabase = createClient()
   const [authorized, setAuthorized] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -90,14 +96,14 @@ export default function AdminPage() {
       })
       const d = await res.json()
       if (d.success) {
-        setActionMsg('Plan updated to ' + planId)
+        setActionMsg(tc('admin.plan_updated', { plan: planId }))
         loadAll()
       } else {
-        setActionMsg('Failed to update plan: ' + (d.error || res.statusText))
+        setActionMsg(tc('admin.plan_update_failed', { error: d.error || res.statusText }))
       }
       setTimeout(() => setActionMsg(''), 4000)
     } catch (err: any) {
-      setActionMsg('Error: ' + (err?.message || 'Network error'))
+      setActionMsg(tc('admin.error_prefix', { error: err?.message || tc('admin.network_error') }))
       setTimeout(() => setActionMsg(''), 4000)
     }
   }
@@ -120,38 +126,38 @@ export default function AdminPage() {
       {actionMsg && <div style={{position:'fixed',top:16,right:16,zIndex:999,padding:'10px 16px',borderRadius:10,background:'rgba(34,197,94,.15)',border:'1px solid rgba(34,197,94,.3)',color:'#16a34a',fontSize:13,fontWeight:500}}>✓ {actionMsg}</div>}
       <div style={{padding:'20px 24px',borderBottom:'1px solid var(--b)',background:'var(--sf)',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
         <div>
-          <h1 style={{fontFamily:'var(--font-sora)',fontSize:20,fontWeight:700,margin:0}}>🔐 AskBiz Admin</h1>
-          <p style={{fontSize:12,color:'var(--tx3)',margin:'2px 0 0'}}>Full webapp oversight</p>
+          <h1 style={{fontFamily:'var(--font-sora)',fontSize:20,fontWeight:700,margin:0}}>🔐 {tc('admin.title')}</h1>
+          <p style={{fontSize:12,color:'var(--tx3)',margin:'2px 0 0'}}>{tc('admin.subtitle')}</p>
         </div>
         <div style={{display:'flex',gap:8}}>
-          <a href="/admin/agent" style={{padding:'7px 14px',borderRadius:9999,border:'1px solid #6366F1',background:'rgba(99,102,241,.08)',color:'#6366F1',fontSize:12,fontWeight:600,textDecoration:'none'}}>⚡ Growth Agent</a>
-          <button onClick={loadAll} style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>↻ Refresh</button>
+          <a href="/admin/agent" style={{padding:'7px 14px',borderRadius:9999,border:'1px solid #6366F1',background:'rgba(99,102,241,.08)',color:'#6366F1',fontSize:12,fontWeight:600,textDecoration:'none'}}>⚡ {tc('admin.growth_agent')}</a>
+          <button onClick={loadAll} style={{padding:'7px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>↻ {tc('admin.refresh')}</button>
         </div>
       </div>
       <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',background:'var(--sf)',padding:'0 24px'}}>
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)} style={{padding:'12px 16px',border:'none',background:'transparent',fontSize:13,fontWeight:tab===t?600:400,color:tab===t?'#6366F1':'var(--tx3)',borderBottom:tab===t?'2px solid #6366F1':'2px solid transparent',cursor:'pointer',fontFamily:'inherit',whiteSpace:'nowrap'}}>
-            {t}{t==='Users'?` (${users.length})`:''}
+            {tc('admin.' + TAB_KEYS[t])}{t==='Users'?' (' + users.length + ')':''}
           </button>
         ))}
       </div>
       <div style={{padding:'24px',maxWidth:1100,margin:'0 auto'}}>
-        {loading ? <div style={{textAlign:'center',padding:60,color:'var(--tx3)'}}>Loading...</div> : <>
+        {loading ? <div style={{textAlign:'center',padding:60,color:'var(--tx3)'}}>{tc('admin.loading')}</div> : <>
 
           {tab==='Overview' && <>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-              <KV label="MRR" value={"£"+mrr} sub="Monthly recurring" color="#f59e0b" />
-              <KV label="ARR" value={"£"+arr} sub="Annual run rate" color="#8b5cf6" />
-              <KV label="Paying Users" value={payingCount} sub="Growth + Business" color="#10b981" />
-              <KV label="Free Users" value={stats?.freeUsers} sub="Opportunities" color="#94a3b8" />
-              <KV label="Conversion" value={conv+"%"} sub="Free to paid" color="#6366F1" />
-              <KV label="New This Week" value={stats?.newThisWeek} sub="Last 7 days" color="#60a5fa" />
-              <KV label="New This Month" value={stats?.newThisMonth} sub="Calendar month" color="#34d399" />
-              <KV label="Flagged" value={stats?.suspiciousCount} sub="Suspicious" color="#f87171" />
+              <KV label={tc('admin.kv_mrr')} value={"£"+mrr} sub={tc('admin.kv_mrr_sub')} color="#f59e0b" />
+              <KV label={tc('admin.kv_arr')} value={"£"+arr} sub={tc('admin.kv_arr_sub')} color="#8b5cf6" />
+              <KV label={tc('admin.kv_paying_users')} value={payingCount} sub={tc('admin.kv_paying_users_sub')} color="#10b981" />
+              <KV label={tc('admin.kv_free_users')} value={stats?.freeUsers} sub={tc('admin.kv_free_users_sub')} color="#94a3b8" />
+              <KV label={tc('admin.kv_conversion')} value={conv+"%"} sub={tc('admin.kv_conversion_sub')} color="#6366F1" />
+              <KV label={tc('admin.kv_new_this_week')} value={stats?.newThisWeek} sub={tc('admin.kv_new_this_week_sub')} color="#60a5fa" />
+              <KV label={tc('admin.kv_new_this_month')} value={stats?.newThisMonth} sub={tc('admin.kv_new_this_month_sub')} color="#34d399" />
+              <KV label={tc('admin.kv_flagged')} value={stats?.suspiciousCount} sub={tc('admin.kv_flagged_sub')} color="#f87171" />
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
               <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)'}}>
-                <div style={{fontSize:13,fontWeight:600,marginBottom:16}}>Plan Distribution</div>
+                <div style={{fontSize:13,fontWeight:600,marginBottom:16}}>{tc('admin.plan_distribution')}</div>
                 {['free','growth','business','enterprise'].map(plan => {
                   const count = users.filter(u => u.plan_id === plan).length
                   const pct = stats?.totalUsers > 0 ? Math.round(count/stats.totalUsers*100) : 0
@@ -167,8 +173,8 @@ export default function AdminPage() {
                 })}
               </div>
               <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)'}}>
-                <div style={{fontSize:13,fontWeight:600,marginBottom:16}}>Quick Stats</div>
-                {[{label:'Upgrade Candidates',value:candidates.length,color:'#10b981'}].map(({label,value,color}) => (
+                <div style={{fontSize:13,fontWeight:600,marginBottom:16}}>{tc('admin.quick_stats')}</div>
+                {[{label:tc('admin.upgrade_candidates_label'),value:candidates.length,color:'#10b981'}].map(({label,value,color}) => (
                   <div key={label} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--b)',fontSize:13}}>
                     <span style={{color:'var(--tx2)'}}>{label}</span>
                     <span style={{fontWeight:700,color}}>{value}</span>
@@ -180,21 +186,21 @@ export default function AdminPage() {
 
           {tab==='Revenue' && <>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:12,marginBottom:24}}>
-              <KV label="MRR" value={"£"+mrr} sub="From Stripe" color="#f59e0b" />
-              <KV label="ARR" value={"£"+arr} sub="Annualised" color="#8b5cf6" />
-              <KV label="Active Subs" value={stripeData?.activeSubscriptions??0} sub="Paying customers" color="#10b981" />
-              <KV label="Conversion" value={conv+"%"} sub="Free to paid" color="#6366F1" />
-              <KV label="This Month" value={"£"+(stripeData?.monthRevenue??0)} sub="Net revenue" color="#60a5fa" />
-              <KV label="Total Revenue" value={"£"+(stripeData?.totalRevenue??0)} sub="All time net" color="#34d399" />
+              <KV label={tc('admin.kv_mrr')} value={"£"+mrr} sub={tc('admin.kv_mrr_stripe_sub')} color="#f59e0b" />
+              <KV label={tc('admin.kv_arr')} value={"£"+arr} sub={tc('admin.kv_arr_annualised_sub')} color="#8b5cf6" />
+              <KV label={tc('admin.kv_active_subs')} value={stripeData?.activeSubscriptions??0} sub={tc('admin.kv_active_subs_sub')} color="#10b981" />
+              <KV label={tc('admin.kv_conversion')} value={conv+"%"} sub={tc('admin.kv_conversion_sub')} color="#6366F1" />
+              <KV label={tc('admin.kv_this_month')} value={"£"+(stripeData?.monthRevenue??0)} sub={tc('admin.kv_this_month_sub')} color="#60a5fa" />
+              <KV label={tc('admin.kv_total_revenue')} value={"£"+(stripeData?.totalRevenue??0)} sub={tc('admin.kv_total_revenue_sub')} color="#34d399" />
             </div>
 
             {stripeData?.subscriptions?.length > 0 && <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
-              <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Active Subscriptions</div>
+              <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>{tc('admin.active_subscriptions')}</div>
               <div style={{overflowX:'auto'}}>
                 <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
                   <thead>
                     <tr style={{background:'var(--ev)'}}>
-                      {['Customer','Email','Plan','Amount','Interval','Renews','Since'].map(h=>(
+                      {[tc('admin.th_customer'),tc('admin.th_email'),tc('admin.th_plan'),tc('admin.th_amount'),tc('admin.th_interval'),tc('admin.th_renews'),tc('admin.th_since')].map(h=>(
                         <th key={h} style={{padding:'8px 12px',textAlign:'left',fontWeight:600,color:'var(--tx2)'}}>{h}</th>
                       ))}
                     </tr>
@@ -202,7 +208,7 @@ export default function AdminPage() {
                   <tbody>
                     {stripeData.subscriptions.map((s:any)=>(
                       <tr key={s.id} style={{borderTop:'1px solid var(--b)'}}>
-                        <td style={{padding:'8px 12px',fontWeight:500}}>{s.customerName||'—'}</td>
+                        <td style={{padding:'8px 12px',fontWeight:500}}>{s.customerName||tc('admin.empty_dash')}</td>
                         <td style={{padding:'8px 12px',color:'var(--tx2)'}}>{s.customerEmail}</td>
                         <td style={{padding:'8px 12px'}}><span style={{padding:'2px 8px',borderRadius:9999,fontSize:11,fontWeight:600,background:'rgba(99,102,241,.1)',color:'#6366F1'}}>{s.plan}</span></td>
                         <td style={{padding:'8px 12px',fontWeight:600}}>£{s.amount}</td>
@@ -217,7 +223,7 @@ export default function AdminPage() {
             </div>}
 
             {stripeData?.recentPayments?.length > 0 && <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
-              <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Recent Payments</div>
+              <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>{tc('admin.recent_payments')}</div>
               {stripeData.recentPayments.map((p:any)=>(
                 <div key={p.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 0',borderBottom:'1px solid var(--b)',flexWrap:'wrap',gap:8}}>
                   <div>
@@ -230,16 +236,16 @@ export default function AdminPage() {
             </div>}
 
             <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)'}}>
-              <div style={{fontSize:13,fontWeight:600,marginBottom:8}}>Upgrade Candidates ({candidates.length})</div>
-              <p style={{fontSize:12,color:'var(--tx3)',marginBottom:16}}>Free users at 7-9 questions — prime conversion targets.</p>
-              {candidates.length===0 ? <div style={{textAlign:'center',padding:20,color:'var(--tx3)'}}>No candidates</div> :
+              <div style={{fontSize:13,fontWeight:600,marginBottom:8}}>{tc('admin.upgrade_candidates_title', { count: candidates.length })}</div>
+              <p style={{fontSize:12,color:'var(--tx3)',marginBottom:16}}>{tc('admin.upgrade_candidates_desc')}</p>
+              {candidates.length===0 ? <div style={{textAlign:'center',padding:20,color:'var(--tx3)'}}>{tc('admin.no_candidates')}</div> :
                 candidates.map(c => (
                   <div key={c.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 0',borderBottom:'1px solid var(--b)',flexWrap:'wrap',gap:8}}>
                     <div>
-                      <div style={{fontWeight:600,fontSize:13}}>{c.full_name||'User'}</div>
+                      <div style={{fontWeight:600,fontSize:13}}>{c.full_name||tc('admin.default_user')}</div>
                       <div style={{fontSize:12,color:'var(--tx3)'}}>{c.email} · {c.questions_used}/10</div>
                     </div>
-                    <button onClick={() => changePlan(c.id,'growth')} style={{padding:'6px 14px',borderRadius:9999,border:'none',background:'#f59e0b',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Give Growth →</button>
+                    <button onClick={() => changePlan(c.id,'growth')} style={{padding:'6px 14px',borderRadius:9999,border:'none',background:'#f59e0b',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('admin.give_growth')}</button>
                   </div>
                 ))
               }
@@ -248,15 +254,15 @@ export default function AdminPage() {
 
           {tab==='Users' && <>
             <div style={{marginBottom:16,display:'flex',gap:12,alignItems:'center'}}>
-              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by email or name…" style={{flex:1,minWidth:200,padding:'9px 14px',borderRadius:10,border:'1px solid var(--b)',background:'var(--ev)',fontFamily:'inherit',fontSize:13,outline:'none'}} />
-              <span style={{fontSize:12,color:'var(--tx3)'}}>{fu.length} of {users.length}</span>
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder={tc('admin.search_placeholder')} style={{flex:1,minWidth:200,padding:'9px 14px',borderRadius:10,border:'1px solid var(--b)',background:'var(--ev)',fontFamily:'inherit',fontSize:13,outline:'none'}} />
+              <span style={{fontSize:12,color:'var(--tx3)'}}>{tc('admin.results_count', { shown: fu.length, total: users.length })}</span>
             </div>
             <div style={{borderRadius:14,border:'1px solid var(--b)',overflow:'hidden',background:'var(--sf)'}}>
               <div style={{overflowX:'auto'}}>
                 <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
                   <thead>
                     <tr style={{background:'var(--ev)'}}>
-                      {['Name','Email','Plan','Type','Country','Questions','Joined','Actions'].map(h => (
+                      {[tc('admin.th_name'),tc('admin.th_email'),tc('admin.th_plan'),tc('admin.th_type'),tc('admin.th_country'),tc('admin.th_questions'),tc('admin.th_joined'),tc('admin.th_actions')].map(h => (
                         <th key={h} style={{padding:'10px 12px',textAlign:'left',fontWeight:600,whiteSpace:'nowrap',color:'var(--tx2)'}}>{h}</th>
                       ))}
                     </tr>
@@ -264,11 +270,11 @@ export default function AdminPage() {
                   <tbody>
                     {fu.map((u,i) => (
                       <tr key={u.id} style={{borderTop:'1px solid var(--b)',background:u.is_suspicious?'rgba(248,113,113,.04)':i%2===0?'var(--sf)':'var(--bg)'}}>
-                        <td style={{padding:'9px 12px',fontWeight:500}}>{u.full_name||'—'}{u.is_suspicious?' ⚠️':''}</td>
+                        <td style={{padding:'9px 12px',fontWeight:500}}>{u.full_name||tc('admin.empty_dash')}{u.is_suspicious?' ⚠️':''}</td>
                         <td style={{padding:'9px 12px',color:'var(--tx2)'}}>{u.email}</td>
                         <td style={{padding:'9px 12px'}}><span style={{padding:'2px 8px',borderRadius:9999,fontSize:11,fontWeight:600,background:(PLAN_COLORS[u.plan_id]||'#94a3b8')+'20',color:PLAN_COLORS[u.plan_id]||'#94a3b8'}}>{u.plan_id}</span></td>
-                        <td style={{padding:'9px 12px',color:'var(--tx2)',textTransform:'capitalize'}}>{u.business_type||'—'}</td>
-                        <td style={{padding:'9px 12px',color:'var(--tx2)'}}>{u.registration_country||'—'}</td>
+                        <td style={{padding:'9px 12px',color:'var(--tx2)',textTransform:'capitalize'}}>{u.business_type||tc('admin.empty_dash')}</td>
+                        <td style={{padding:'9px 12px',color:'var(--tx2)'}}>{u.registration_country||tc('admin.empty_dash')}</td>
                         <td style={{padding:'9px 12px'}}>{u.questions_used||0}</td>
                         <td style={{padding:'9px 12px',color:'var(--tx3)'}}>{new Date(u.created_at).toLocaleDateString('en-GB')}</td>
                         <td style={{padding:'9px 12px'}}>
@@ -286,13 +292,13 @@ export default function AdminPage() {
 
           {tab==='Activity' && <>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:12,marginBottom:24}}>
-              <KV label="New This Month" value={stats?.newThisMonth} sub="New signups" color="#6366F1" />
-              <KV label="Total Questions" value={users.reduce((s,u)=>s+(u.questions_used||0),0)} sub="All time" color="#10b981" />
-              <KV label="Avg Questions" value={(users.reduce((s,u)=>s+(u.questions_used||0),0)/(users.length||1)).toFixed(1)} sub="Per user" color="#f59e0b" />
-              <KV label="Power Users" value={users.filter(u=>u.questions_used>=5).length} sub="5+ questions" color="#8b5cf6" />
+              <KV label={tc('admin.kv_new_this_month')} value={stats?.newThisMonth} sub={tc('admin.kv_new_signups_sub')} color="#6366F1" />
+              <KV label={tc('admin.kv_total_questions')} value={users.reduce((s,u)=>s+(u.questions_used||0),0)} sub={tc('admin.kv_total_questions_sub')} color="#10b981" />
+              <KV label={tc('admin.kv_avg_questions')} value={(users.reduce((s,u)=>s+(u.questions_used||0),0)/(users.length||1)).toFixed(1)} sub={tc('admin.kv_avg_questions_sub')} color="#f59e0b" />
+              <KV label={tc('admin.kv_power_users')} value={users.filter(u=>u.questions_used>=5).length} sub={tc('admin.kv_power_users_sub')} color="#8b5cf6" />
             </div>
             <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
-              <div style={{fontSize:13,fontWeight:600,marginBottom:16}}>Daily Signups — Last 30 Days</div>
+              <div style={{fontSize:13,fontWeight:600,marginBottom:16}}>{tc('admin.daily_signups')}</div>
               <div style={{display:'flex',alignItems:'flex-end',gap:4,height:100}}>
                 {signups.map((s,i) => (
                   <div key={i} title={s.date+": "+s.count} style={{flex:1,display:'flex',alignItems:'flex-end',height:'100%'}}>
@@ -303,16 +309,16 @@ export default function AdminPage() {
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
               <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)'}}>
-                <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>By Country</div>
-                {Object.entries(users.reduce((acc:any,u)=>{const c=u.registration_country||'Unknown';acc[c]=(acc[c]||0)+1;return acc},{})).sort((a:any,b:any)=>b[1]-a[1]).slice(0,8).map(([c,n]:any)=>(
+                <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>{tc('admin.by_country')}</div>
+                {Object.entries(users.reduce((acc:any,u)=>{const c=u.registration_country||tc('admin.unknown');acc[c]=(acc[c]||0)+1;return acc},{})).sort((a:any,b:any)=>b[1]-a[1]).slice(0,8).map(([c,n]:any)=>(
                   <div key={c} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--b)',fontSize:12}}>
                     <span>{c}</span><span style={{fontWeight:600}}>{n}</span>
                   </div>
                 ))}
               </div>
               <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)'}}>
-                <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>By Business Type</div>
-                {Object.entries(users.reduce((acc:any,u)=>{const t=u.business_type||'Unknown';acc[t]=(acc[t]||0)+1;return acc},{})).sort((a:any,b:any)=>b[1]-a[1]).map(([t,n]:any)=>(
+                <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>{tc('admin.by_business_type')}</div>
+                {Object.entries(users.reduce((acc:any,u)=>{const t=u.business_type||tc('admin.unknown');acc[t]=(acc[t]||0)+1;return acc},{})).sort((a:any,b:any)=>b[1]-a[1]).map(([t,n]:any)=>(
                   <div key={t} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--b)',fontSize:12}}>
                     <span style={{textTransform:'capitalize'}}>{t}</span><span style={{fontWeight:600}}>{n}</span>
                   </div>
@@ -327,13 +333,13 @@ export default function AdminPage() {
             {/* Real Anthropic usage — tracked from api_usage table */}
             {apiUsage && (
               <div style={{padding:20,borderRadius:14,border:'1px solid rgba(99,102,241,.3)',background:'rgba(99,102,241,.06)',marginBottom:16}}>
-                <div style={{fontSize:13,fontWeight:600,color:'#6366F1',marginBottom:4}}>Anthropic API — This Month (Real Data)</div>
+                <div style={{fontSize:13,fontWeight:600,color:'#6366F1',marginBottom:4}}>{tc('admin.anthropic_api_title')}</div>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))',gap:12,marginBottom:16}}>
                   {[
-                    {label:'Total Cost',value:'$'+(apiUsage.totalCostUsd||0).toFixed(4)+' USD'},
-                    {label:'≈ GBP',value:'£'+((apiUsage.totalCostUsd||0)*0.79).toFixed(4)},
-                    {label:'Input Tokens',value:((apiUsage.totalInputTokens||0)/1000).toFixed(1)+'k'},
-                    {label:'Output Tokens',value:((apiUsage.totalOutputTokens||0)/1000).toFixed(1)+'k'},
+                    {label:tc('admin.cost_total_cost'),value:'$'+(apiUsage.totalCostUsd||0).toFixed(4)+' USD'},
+                    {label:tc('admin.cost_gbp'),value:'£'+((apiUsage.totalCostUsd||0)*0.79).toFixed(4)},
+                    {label:tc('admin.cost_input_tokens'),value:((apiUsage.totalInputTokens||0)/1000).toFixed(1)+'k'},
+                    {label:tc('admin.cost_output_tokens'),value:((apiUsage.totalOutputTokens||0)/1000).toFixed(1)+'k'},
                   ].map(({label,value})=>(
                     <div key={label} style={{padding:'10px 12px',borderRadius:9,background:'var(--sf)',border:'1px solid var(--b)'}}>
                       <div style={{fontSize:10,color:'var(--tx3)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.06em'}}>{label}</div>
@@ -343,30 +349,30 @@ export default function AdminPage() {
                 </div>
                 {Object.keys(apiUsage.byRoute||{}).length > 0 && (
                   <>
-                    <div style={{fontSize:11,fontWeight:600,color:'var(--tx3)',marginBottom:8,textTransform:'uppercase',letterSpacing:'.06em'}}>Breakdown by route</div>
+                    <div style={{fontSize:11,fontWeight:600,color:'var(--tx3)',marginBottom:8,textTransform:'uppercase',letterSpacing:'.06em'}}>{tc('admin.breakdown_by_route')}</div>
                     {Object.entries(apiUsage.byRoute as Record<string,{calls:number;costUsd:number}>)
                       .sort((a,b)=>b[1].costUsd-a[1].costUsd)
                       .map(([route,data])=>(
                         <div key={route} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--b)',fontSize:12}}>
                           <span style={{color:'var(--tx2)',fontFamily:'monospace'}}>{route}</span>
-                          <span style={{color:'var(--tx3)'}}>{data.calls} calls · ${data.costUsd.toFixed(4)}</span>
+                          <span style={{color:'var(--tx3)'}}>{tc('admin.route_calls', { calls: data.calls, cost: data.costUsd.toFixed(4) })}</span>
                         </div>
                       ))}
                   </>
                 )}
                 {Object.keys(apiUsage.byRoute||{}).length === 0 && (
-                  <p style={{fontSize:12,color:'var(--tx3)',margin:0}}>No calls logged yet — logging starts from next request.</p>
+                  <p style={{fontSize:12,color:'var(--tx3)',margin:0}}>{tc('admin.no_calls_logged')}</p>
                 )}
               </div>
             )}
             <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
-              <div style={{fontSize:13,fontWeight:600,marginBottom:4}}>Other Monthly Costs</div>
-              <p style={{fontSize:12,color:'var(--tx3)',marginBottom:16}}>Estimates only — check dashboards for actuals.</p>
+              <div style={{fontSize:13,fontWeight:600,marginBottom:4}}>{tc('admin.other_monthly_costs')}</div>
+              <p style={{fontSize:12,color:'var(--tx3)',marginBottom:16}}>{tc('admin.other_monthly_costs_desc')}</p>
               {[
-                {service:'Tavily Search API',estimate:'£0.001 per search',note:'Blog agent and market research',color:'#f59e0b'},
-                {service:'Supabase',estimate:'Free or £25/mo',note:'Depends on database size',color:'#10b981'},
-                {service:'Vercel',estimate:'Free Hobby plan',note:'Upgrade needed for crons',color:'#94a3b8'},
-                {service:'Resend Email',estimate:'Free up to 3,000/mo',note:'Team invites',color:'#60a5fa'},
+                {service:tc('admin.cost_tavily_service'),estimate:tc('admin.cost_tavily_estimate'),note:tc('admin.cost_tavily_note'),color:'#f59e0b'},
+                {service:tc('admin.cost_supabase_service'),estimate:tc('admin.cost_supabase_estimate'),note:tc('admin.cost_supabase_note'),color:'#10b981'},
+                {service:tc('admin.cost_vercel_service'),estimate:tc('admin.cost_vercel_estimate'),note:tc('admin.cost_vercel_note'),color:'#94a3b8'},
+                {service:tc('admin.cost_resend_service'),estimate:tc('admin.cost_resend_estimate'),note:tc('admin.cost_resend_note'),color:'#60a5fa'},
               ].map(({service,estimate,note,color})=>(
                 <div key={service} style={{display:'flex',justifyContent:'space-between',padding:'12px 0',borderBottom:'1px solid var(--b)',flexWrap:'wrap',gap:8}}>
                   <div>
@@ -378,13 +384,13 @@ export default function AdminPage() {
               ))}
             </div>
             <div style={{padding:20,borderRadius:14,border:'1px solid rgba(99,102,241,.2)',background:'rgba(99,102,241,.04)'}}>
-              <div style={{fontSize:13,fontWeight:600,color:'#6366F1',marginBottom:12}}>Unit Economics</div>
+              <div style={{fontSize:13,fontWeight:600,color:'#6366F1',marginBottom:12}}>{tc('admin.unit_economics')}</div>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
                 {[
-                  {label:'Revenue per user',value:'£'+(mrr/(payingCount||1)).toFixed(2)+'/mo'},
-                  {label:'Claude cost/mo',value:apiUsage?('$'+(apiUsage.totalCostUsd||0).toFixed(2)):'~£0.003/q'},
-                  {label:'Gross margin est.',value:mrr>0?Math.max(0,Math.round((1-((apiUsage?.totalCostUsd||0)*0.79)/mrr)*100))+'%':'~85%'},
-                  {label:'LTV (12 months)',value:'£'+((mrr/(payingCount||1))*12).toFixed(0)},
+                  {label:tc('admin.ue_revenue_per_user'),value:'£'+(mrr/(payingCount||1)).toFixed(2)+'/mo'},
+                  {label:tc('admin.ue_claude_cost'),value:apiUsage?('$'+(apiUsage.totalCostUsd||0).toFixed(2)):'~£0.003/q'},
+                  {label:tc('admin.ue_gross_margin'),value:mrr>0?Math.max(0,Math.round((1-((apiUsage?.totalCostUsd||0)*0.79)/mrr)*100))+'%':'~85%'},
+                  {label:tc('admin.ue_ltv'),value:'£'+((mrr/(payingCount||1))*12).toFixed(0)},
                 ].map(({label,value})=>(
                   <div key={label} style={{padding:'10px 12px',borderRadius:9,background:'var(--sf)',border:'1px solid var(--b)'}}>
                     <div style={{fontSize:11,color:'var(--tx3)',marginBottom:4}}>{label}</div>
@@ -397,13 +403,13 @@ export default function AdminPage() {
 
           {tab==='Growth' && <>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:12,marginBottom:24}}>
-              <KV label="Weekly Growth" value={"+"+stats?.newThisWeek} sub="Last 7 days" color="#10b981" />
-              <KV label="Monthly Growth" value={"+"+stats?.newThisMonth} sub="This month" color="#6366F1" />
-              <KV label="Paying Ratio" value={conv+"%"} sub="Of total users" color="#f59e0b" />
-              <KV label="Total Users" value={stats?.totalUsers} sub="All time" color="#94a3b8" />
+              <KV label={tc('admin.kv_weekly_growth')} value={"+"+stats?.newThisWeek} sub={tc('admin.kv_weekly_growth_sub')} color="#10b981" />
+              <KV label={tc('admin.kv_monthly_growth')} value={"+"+stats?.newThisMonth} sub={tc('admin.kv_monthly_growth_sub')} color="#6366F1" />
+              <KV label={tc('admin.kv_paying_ratio')} value={conv+"%"} sub={tc('admin.kv_paying_ratio_sub')} color="#f59e0b" />
+              <KV label={tc('admin.kv_total_users')} value={stats?.totalUsers} sub={tc('admin.kv_total_users_sub')} color="#94a3b8" />
             </div>
             <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
-              <div style={{fontSize:13,fontWeight:600,marginBottom:16}}>Daily Signups — Last 30 Days</div>
+              <div style={{fontSize:13,fontWeight:600,marginBottom:16}}>{tc('admin.daily_signups')}</div>
               <div style={{display:'flex',alignItems:'flex-end',gap:3,height:120}}>
                 {signups.map((s,i)=>(
                   <div key={i} title={s.date+": "+s.count} style={{flex:1,display:'flex',alignItems:'flex-end',height:'100%'}}>
@@ -413,10 +419,10 @@ export default function AdminPage() {
               </div>
             </div>
             <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)'}}>
-              <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>Growth Levers</div>
+              <div style={{fontSize:13,fontWeight:600,marginBottom:12}}>{tc('admin.growth_levers')}</div>
               {[
-                {action:'Email upgrade candidates',detail:candidates.length+' users at 7-9 questions',cta:'View',onClick:()=>setTab('Revenue'),color:'#f59e0b'},
-                {action:'Blog agent (Alice)',detail:'Manage via /admin/agent',cta:'Open',onClick:()=>router.push('/admin/agent'),color:'#6366F1'},
+                {action:tc('admin.lever_email_action'),detail:tc('admin.lever_email_detail', { count: candidates.length }),cta:tc('admin.lever_view'),onClick:()=>setTab('Revenue'),color:'#f59e0b'},
+                {action:tc('admin.lever_blog_action'),detail:tc('admin.lever_blog_detail'),cta:tc('admin.lever_open'),onClick:()=>router.push('/admin/agent'),color:'#6366F1'},
               ].map(({action,detail,cta,onClick,color})=>(
                 <div key={action} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 0',borderBottom:'1px solid var(--b)',flexWrap:'wrap',gap:8}}>
                   <div>
@@ -431,17 +437,17 @@ export default function AdminPage() {
 
           {tab==='X Agent' && <>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-              <KV label="Total Activity" value={xActivity.length} sub="All time" color="#1d9bf0" />
-              <KV label="Posted" value={xPosted} sub="Replies sent" color="#10b981" />
-              <KV label="Pending" value={xPending} sub="Awaiting review" color="#f59e0b" />
-              <KV label="Rejected" value={xActivity.filter(x=>x.status==='rejected').length} sub="Declined" color="#f87171" />
+              <KV label={tc('admin.kv_total_activity')} value={xActivity.length} sub={tc('admin.kv_total_activity_sub')} color="#1d9bf0" />
+              <KV label={tc('admin.kv_posted')} value={xPosted} sub={tc('admin.kv_posted_sub')} color="#10b981" />
+              <KV label={tc('admin.kv_pending')} value={xPending} sub={tc('admin.kv_pending_sub')} color="#f59e0b" />
+              <KV label={tc('admin.kv_rejected')} value={xActivity.filter(x=>x.status==='rejected').length} sub={tc('admin.kv_rejected_sub')} color="#f87171" />
             </div>
             <div style={{marginBottom:16}}>
-              <a href="/admin/agent" style={{padding:'9px 18px',borderRadius:9999,border:'none',background:'#1d9bf0',color:'#fff',fontSize:13,fontWeight:600,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6}}>Open X Agent →</a>
+              <a href="/admin/agent" style={{padding:'9px 18px',borderRadius:9999,border:'none',background:'#1d9bf0',color:'#fff',fontSize:13,fontWeight:600,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6}}>{tc('admin.open_x_agent')}</a>
             </div>
             <div style={{borderRadius:14,border:'1px solid var(--b)',overflow:'hidden',background:'var(--sf)'}}>
-              <div style={{padding:'12px 16px',borderBottom:'1px solid var(--b)',fontSize:12,fontWeight:600,color:'var(--tx2)',background:'var(--ev)'}}>Recent Activity</div>
-              {xActivity.length===0?<div style={{textAlign:'center',padding:40,color:'var(--tx3)'}}>No X activity yet.</div>:
+              <div style={{padding:'12px 16px',borderBottom:'1px solid var(--b)',fontSize:12,fontWeight:600,color:'var(--tx2)',background:'var(--ev)'}}>{tc('admin.recent_activity')}</div>
+              {xActivity.length===0?<div style={{textAlign:'center',padding:40,color:'var(--tx3)'}}>{tc('admin.no_x_activity')}</div>:
                 xActivity.slice(0,20).map(item=>(
                   <div key={item.id} style={{padding:'12px 16px',borderBottom:'1px solid var(--b)'}}>
                     <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6,flexWrap:'wrap'}}>

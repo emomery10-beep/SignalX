@@ -109,11 +109,14 @@ import enIntelligence from '@/locales/en/intelligence.json'
 import enForecasts from '@/locales/en/forecasts.json'
 import enOnboarding from '@/locales/en/onboarding.json'
 import enChat from '@/locales/en/chat.json'
+import enAdmin from '@/locales/en/admin.json'
+import enInvite from '@/locales/en/invite.json'
+import enStaffSetup from '@/locales/en/staff_setup.json'
 
 type Dict = Record<string, unknown>
 
 const CATALOG: Record<string, Record<string, Dict>> = {
-  en: { common: enCommon, nav: enNav, errors: enErrors, appnav: enAppnav, auth: enAuth, pricing: enPricing, cookies: enCookies, settings: enSettings, compare: enCompare, integrations_page: enIntegrationsPage, pos_marketing: enPosMarketing, freetools: enFreetools, landing: enLanding, academy: enAcademy, help: enHelp, blog_index: enBlogIndex, changelog: enChangelog, transparency: enTransparency, billing: enBilling, alerts: enAlerts, shipments: enShipments, templates: enTemplates, sources: enSources, ask: enAsk, expansion: enExpansion, files: enFiles, intelligence: enIntelligence, forecasts: enForecasts, onboarding: enOnboarding, chat: enChat },
+  en: { common: enCommon, nav: enNav, errors: enErrors, appnav: enAppnav, auth: enAuth, pricing: enPricing, cookies: enCookies, settings: enSettings, compare: enCompare, integrations_page: enIntegrationsPage, pos_marketing: enPosMarketing, freetools: enFreetools, landing: enLanding, academy: enAcademy, help: enHelp, blog_index: enBlogIndex, changelog: enChangelog, transparency: enTransparency, billing: enBilling, alerts: enAlerts, shipments: enShipments, templates: enTemplates, sources: enSources, ask: enAsk, expansion: enExpansion, files: enFiles, intelligence: enIntelligence, forecasts: enForecasts, onboarding: enOnboarding, chat: enChat, admin: enAdmin, invite: enInvite, staff_setup: enStaffSetup },
   es: { common: esCommon, nav: esNav, errors: esErrors, appnav: esAppnav, auth: esAuth, pricing: esPricing, cookies: esCookies, settings: esSettings, compare: esCompare, integrations_page: esIntegrationsPage, pos_marketing: esPosMarketing, freetools: esFreetools },
   fr: { common: frCommon, nav: frNav, errors: frErrors, appnav: frAppnav, auth: frAuth, pricing: frPricing, cookies: frCookies, settings: frSettings, compare: frCompare, integrations_page: frIntegrationsPage, pos_marketing: frPosMarketing, freetools: frFreetools },
   de: { common: deCommon, nav: deNav, errors: deErrors, appnav: deAppnav, auth: deAuth, pricing: dePricing, cookies: deCookies, settings: deSettings, compare: deCompare, integrations_page: deIntegrationsPage, pos_marketing: dePosMarketing, freetools: deFreetools },

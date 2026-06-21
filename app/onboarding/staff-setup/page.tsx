@@ -4,8 +4,45 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { StaffTemplateSelector } from '@/components/staff-template-selector'
 import { StaffTemplateType } from '@/lib/staff-templates'
+import { useLang } from '@/components/LanguageProvider'
 
 type SetupStep = 'type' | 'size' | 'templates' | 'confirm'
+
+const buildFactoryRoles = (tc: (key: string) => string): string[] => [
+  tc('staff_setup.type_factory_role_line_operator'),
+  tc('staff_setup.type_factory_role_quality_inspector'),
+  tc('staff_setup.type_factory_role_shift_supervisor'),
+]
+
+const buildRestaurantRoles = (tc: (key: string) => string): string[] => [
+  tc('staff_setup.type_restaurant_role_server'),
+  tc('staff_setup.type_restaurant_role_head_chef'),
+  tc('staff_setup.type_restaurant_role_operations_manager'),
+]
+
+const buildSizeOptions = (tc: (key: string) => string) => ([
+  {
+    size: 'small' as const,
+    icon: '👥',
+    label: tc('staff_setup.size_small_label'),
+    desc: tc('staff_setup.size_small_desc'),
+    roles: tc('staff_setup.size_small_roles'),
+  },
+  {
+    size: 'medium' as const,
+    icon: '🏢',
+    label: tc('staff_setup.size_medium_label'),
+    desc: tc('staff_setup.size_medium_desc'),
+    roles: tc('staff_setup.size_medium_roles'),
+  },
+  {
+    size: 'large' as const,
+    icon: '🏭',
+    label: tc('staff_setup.size_large_label'),
+    desc: tc('staff_setup.size_large_desc'),
+    roles: tc('staff_setup.size_large_roles'),
+  },
+])
 
 interface SetupState {
   businessType?: StaffTemplateType
@@ -15,6 +52,7 @@ interface SetupState {
 
 export default function StaffSetupPage() {
   const router = useRouter()
+  const { tc } = useLang()
   const [step, setStep] = useState<SetupStep>('type')
   const [state, setState] = useState<SetupState>({})
   const [isLoading, setIsLoading] = useState(false)
@@ -86,10 +124,10 @@ export default function StaffSetupPage() {
       <div className="border-b border-gray-700 bg-gray-900 px-6 py-6">
         <div className="mx-auto max-w-3xl">
           <h1 className="text-3xl font-bold text-white">
-            Set Up Your Business
+            {tc('staff_setup.header_title')}
           </h1>
           <p className="mt-2 text-gray-400">
-            Let's configure your team roles and permissions
+            {tc('staff_setup.header_subtitle')}
           </p>
         </div>
       </div>
@@ -105,7 +143,7 @@ export default function StaffSetupPage() {
                   : 'text-gray-500'
               }`}
             >
-              <span className="font-bold">1</span> Business Type
+              <span className="font-bold">1</span> {tc('staff_setup.step_business_type')}
             </div>
             <div className="text-gray-500">→</div>
             <div
@@ -115,7 +153,7 @@ export default function StaffSetupPage() {
                   : 'text-gray-500'
               }`}
             >
-              <span className="font-bold">2</span> Team Size
+              <span className="font-bold">2</span> {tc('staff_setup.step_team_size')}
             </div>
             <div className="text-gray-500">→</div>
             <div
@@ -125,7 +163,7 @@ export default function StaffSetupPage() {
                   : 'text-gray-500'
               }`}
             >
-              <span className="font-bold">3</span> Select Roles
+              <span className="font-bold">3</span> {tc('staff_setup.step_select_roles')}
             </div>
             <div className="text-gray-500">→</div>
             <div
@@ -135,7 +173,7 @@ export default function StaffSetupPage() {
                   : 'text-gray-500'
               }`}
             >
-              <span className="font-bold">4</span> Confirm
+              <span className="font-bold">4</span> {tc('staff_setup.step_confirm')}
             </div>
           </div>
         </div>
@@ -149,11 +187,10 @@ export default function StaffSetupPage() {
             <div className="space-y-6">
               <div>
                 <h2 className="text-2xl font-bold text-white">
-                  What type of business do you operate?
+                  {tc('staff_setup.type_heading')}
                 </h2>
                 <p className="mt-2 text-gray-400">
-                  We'll customize the team roles and permissions for your
-                  business type
+                  {tc('staff_setup.type_subtitle')}
                 </p>
               </div>
 
@@ -165,18 +202,13 @@ export default function StaffSetupPage() {
                 >
                   <div className="text-4xl">🏭</div>
                   <h3 className="mt-4 text-lg font-bold text-white">
-                    Manufacturing / Factory
+                    {tc('staff_setup.type_factory_title')}
                   </h3>
                   <p className="mt-2 text-sm text-gray-400">
-                    Production floor, quality control, batch tracking, and
-                    shift management
+                    {tc('staff_setup.type_factory_desc')}
                   </p>
                   <div className="mt-4 flex flex-wrap gap-1">
-                    {[
-                      'Line Operator',
-                      'Quality Inspector',
-                      'Shift Supervisor',
-                    ].map((role) => (
+                    {buildFactoryRoles(tc).map((role) => (
                       <span
                         key={role}
                         className="rounded text-xs bg-gray-800 px-2 py-1 text-gray-300"
@@ -194,13 +226,13 @@ export default function StaffSetupPage() {
                 >
                   <div className="text-4xl">🍽️</div>
                   <h3 className="mt-4 text-lg font-bold text-white">
-                    Restaurant / Food Service
+                    {tc('staff_setup.type_restaurant_title')}
                   </h3>
                   <p className="mt-2 text-sm text-gray-400">
-                    Servers, kitchen staff, managers, and customer orders
+                    {tc('staff_setup.type_restaurant_desc')}
                   </p>
                   <div className="mt-4 flex flex-wrap gap-1">
-                    {['Server', 'Head Chef', 'Operations Manager'].map(
+                    {buildRestaurantRoles(tc).map(
                       (role) => (
                         <span
                           key={role}
@@ -221,39 +253,15 @@ export default function StaffSetupPage() {
             <div className="space-y-6">
               <div>
                 <h2 className="text-2xl font-bold text-white">
-                  How large is your team?
+                  {tc('staff_setup.size_heading')}
                 </h2>
                 <p className="mt-2 text-gray-400">
-                  We'll recommend appropriate roles based on your team size
+                  {tc('staff_setup.size_subtitle')}
                 </p>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
-                {(
-                  [
-                    {
-                      size: 'small',
-                      icon: '👥',
-                      label: 'Small Team',
-                      desc: '1-15 people',
-                      roles: '3-4',
-                    },
-                    {
-                      size: 'medium' as const,
-                      icon: '🏢',
-                      label: 'Medium Team',
-                      desc: '15-50 people',
-                      roles: '4-6',
-                    },
-                    {
-                      size: 'large',
-                      icon: '🏭',
-                      label: 'Large Team',
-                      desc: '50+ people',
-                      roles: '6+',
-                    },
-                  ] as const
-                ).map(({ size, icon, label, desc, roles }) => (
+                {buildSizeOptions(tc).map(({ size, icon, label, desc, roles }) => (
                   <button
                     key={size}
                     onClick={() => handleSelectSize(size)}
@@ -265,7 +273,7 @@ export default function StaffSetupPage() {
                     </h3>
                     <p className="mt-1 text-xs text-gray-400">{desc}</p>
                     <p className="mt-3 text-xs font-semibold text-gray-300">
-                      ~{roles} roles
+                      {tc('staff_setup.size_roles_suffix', { roles })}
                     </p>
                   </button>
                 ))}
@@ -288,37 +296,37 @@ export default function StaffSetupPage() {
             <div className="space-y-6">
               <div>
                 <h2 className="text-2xl font-bold text-white">
-                  Review Your Setup
+                  {tc('staff_setup.confirm_heading')}
                 </h2>
                 <p className="mt-2 text-gray-400">
-                  Here's what we'll create for you
+                  {tc('staff_setup.confirm_subtitle')}
                 </p>
               </div>
 
               <div className="space-y-4 rounded-lg border border-gray-700 bg-gray-900/50 p-6">
                 <div>
                   <p className="text-xs font-semibold uppercase text-gray-400">
-                    Business Type
+                    {tc('staff_setup.confirm_business_type_label')}
                   </p>
                   <p className="mt-1 text-lg font-semibold text-white">
                     {state.businessType === 'factory'
-                      ? '🏭 Manufacturing'
-                      : '🍽️ Restaurant'}
+                      ? tc('staff_setup.confirm_business_type_factory')
+                      : tc('staff_setup.confirm_business_type_restaurant')}
                   </p>
                 </div>
 
                 <div className="border-t border-gray-700 pt-4">
                   <p className="text-xs font-semibold uppercase text-gray-400">
-                    Team Size
+                    {tc('staff_setup.confirm_team_size_label')}
                   </p>
                   <p className="mt-1 text-lg font-semibold text-white capitalize">
-                    {state.businessSize} Team
+                    {tc('staff_setup.confirm_team_size_value', { size: state.businessSize || '' })}
                   </p>
                 </div>
 
                 <div className="border-t border-gray-700 pt-4">
                   <p className="text-xs font-semibold uppercase text-gray-400">
-                    Staff Roles ({state.selectedTemplates.length})
+                    {tc('staff_setup.confirm_staff_roles_label', { count: state.selectedTemplates.length })}
                   </p>
                   <div className="mt-3 space-y-2">
                     {state.selectedTemplates.map((templateId) => (
@@ -334,23 +342,22 @@ export default function StaffSetupPage() {
 
                 <div className="border-t border-gray-700 pt-4">
                   <p className="text-xs font-semibold uppercase text-gray-400">
-                    Next Steps
+                    {tc('staff_setup.confirm_next_steps_label')}
                   </p>
                   <ul className="mt-3 space-y-2 text-sm text-gray-300">
-                    <li>✅ Create staff role templates</li>
-                    <li>✅ Set up permissions for each role</li>
+                    <li>{tc('staff_setup.confirm_next_step_1')}</li>
+                    <li>{tc('staff_setup.confirm_next_step_2')}</li>
                     <li>
-                      📝 You can customize permissions and add more roles anytime
+                      {tc('staff_setup.confirm_next_step_3')}
                     </li>
-                    <li>👥 Invite team members to assign them to roles</li>
+                    <li>{tc('staff_setup.confirm_next_step_4')}</li>
                   </ul>
                 </div>
               </div>
 
               <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-4">
                 <p className="text-xs text-blue-200">
-                  💡 You can customize these roles after setup and add team
-                  members whenever you're ready.
+                  {tc('staff_setup.confirm_tip')}
                 </p>
               </div>
             </div>
@@ -366,7 +373,7 @@ export default function StaffSetupPage() {
               onClick={handleBack}
               className="rounded-lg border border-gray-600 px-6 py-2 font-semibold text-gray-300 transition-colors hover:bg-gray-800 hover:text-white"
             >
-              Back
+              {tc('staff_setup.back')}
             </button>
           )}
 
@@ -379,7 +386,7 @@ export default function StaffSetupPage() {
               }
               className="ml-auto rounded-lg bg-blue-600 px-6 py-2 font-semibold text-white transition-colors disabled:opacity-50 hover:enabled:bg-blue-700"
             >
-              Continue
+              {tc('staff_setup.continue')}
             </button>
           )}
 
@@ -389,7 +396,7 @@ export default function StaffSetupPage() {
               disabled={isLoading}
               className="ml-auto rounded-lg bg-green-600 px-6 py-2 font-semibold text-white transition-colors disabled:opacity-50 hover:enabled:bg-green-700"
             >
-              {isLoading ? 'Setting up...' : 'Create Staff Roles'}
+              {isLoading ? tc('staff_setup.create_roles_loading') : tc('staff_setup.create_roles')}
             </button>
           )}
         </div>
