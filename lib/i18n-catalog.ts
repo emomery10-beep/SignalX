@@ -46,16 +46,22 @@ import frAuth from '@/locales/fr/auth.json'
 import deAuth from '@/locales/de/auth.json'
 import nlAuth from '@/locales/nl/auth.json'
 import arAuth from '@/locales/ar/auth.json'
+import enPricing from '@/locales/en/pricing.json'
+import esPricing from '@/locales/es/pricing.json'
+import frPricing from '@/locales/fr/pricing.json'
+import dePricing from '@/locales/de/pricing.json'
+import nlPricing from '@/locales/nl/pricing.json'
+import arPricing from '@/locales/ar/pricing.json'
 
 type Dict = Record<string, unknown>
 
 const CATALOG: Record<string, Record<string, Dict>> = {
-  en: { common: enCommon, nav: enNav, errors: enErrors, appnav: enAppnav, auth: enAuth },
-  es: { common: esCommon, nav: esNav, errors: esErrors, appnav: esAppnav, auth: esAuth },
-  fr: { common: frCommon, nav: frNav, errors: frErrors, appnav: frAppnav, auth: frAuth },
-  de: { common: deCommon, nav: deNav, errors: deErrors, appnav: deAppnav, auth: deAuth },
-  nl: { common: nlCommon, nav: nlNav, errors: nlErrors, appnav: nlAppnav, auth: nlAuth },
-  ar: { common: arCommon, nav: arNav, errors: arErrors, appnav: arAppnav, auth: arAuth },
+  en: { common: enCommon, nav: enNav, errors: enErrors, appnav: enAppnav, auth: enAuth, pricing: enPricing },
+  es: { common: esCommon, nav: esNav, errors: esErrors, appnav: esAppnav, auth: esAuth, pricing: esPricing },
+  fr: { common: frCommon, nav: frNav, errors: frErrors, appnav: frAppnav, auth: frAuth, pricing: frPricing },
+  de: { common: deCommon, nav: deNav, errors: deErrors, appnav: deAppnav, auth: deAuth, pricing: dePricing },
+  nl: { common: nlCommon, nav: nlNav, errors: nlErrors, appnav: nlAppnav, auth: nlAuth, pricing: nlPricing },
+  ar: { common: arCommon, nav: arNav, errors: arErrors, appnav: arAppnav, auth: arAuth, pricing: arPricing },
 }
 
 const BASE = 'en'
