@@ -2,6 +2,8 @@
 // Uses Web Speech API (free) with emphasis parsing
 // Upgrade path: ElevenLabs / Google TTS API when ready
 
+import { voiceTag } from '@/lib/i18n-format'
+
 export function parseEmphasisTags(text: string): { text: string; emphasized: string[] } {
   const emphasized: string[] = []
   // Find <emphasis>...</emphasis> tags
@@ -12,11 +14,6 @@ export function parseEmphasisTags(text: string): { text: string; emphasized: str
   // Also strip any other tags
   const plain = cleaned.replace(/<[^>]+>/g, '')
   return { text: plain, emphasized }
-}
-
-// BCP-47 voice tag per locale. Keep in step with lib/i18n-format LOCALE_TAG.
-const VOICE_TAG: Record<string, string> = {
-  en: 'en-GB', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', nl: 'nl-NL', ar: 'ar-SA',
 }
 
 export async function speakResponse(
@@ -37,7 +34,7 @@ export async function speakResponse(
 
   // Speak in the user's language, not always English.
   const locale = options.locale || 'en'
-  const langTag = VOICE_TAG[locale] || 'en-GB'
+  const langTag = voiceTag(locale)
 
   const utterance = new SpeechSynthesisUtterance(voiceText)
   utterance.rate = options.rate ?? 0.95

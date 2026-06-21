@@ -20,6 +20,15 @@ function tag(locale: string): string {
   return LOCALE_TAG[locale] || 'en-GB'
 }
 
+// BCP-47 tag for speech synthesis — same as the format tag, except Arabic needs a
+// regional voice (ar-SA) where the format tag stays the script-only 'ar'. Derived
+// from LOCALE_TAG so there's one source of truth, not a hand-synced copy.
+const VOICE_TAG_OVERRIDES: Record<string, string> = { ar: 'ar-SA' }
+
+export function voiceTag(locale: string): string {
+  return VOICE_TAG_OVERRIDES[locale] || tag(locale)
+}
+
 // Arabic locales default to Arabic-Indic digits; business amounts read clearer
 // with Western digits, so force latn for ar. (Text still renders RTL.)
 function extra(locale: string): Intl.NumberFormatOptions {
