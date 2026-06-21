@@ -10,6 +10,7 @@ import { speakResponse, buildVoiceResponse } from '@/lib/tts'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useStore } from '@/store'
+import { useLang } from '@/components/LanguageProvider'
 import type { AIResult } from '@/lib/ai'
 import { parseFile } from '@/lib/file/parser'
 import ResultBlock from '@/components/chat/ResultBlock'
@@ -22,69 +23,62 @@ interface Message {
   timestamp: Date
 }
 
-const DEFAULT_CARDS = [
-  { icon: '💱', title: 'FX Risk', desc: 'Model currency drops before they hit your margin', query: 'Model what happens to my margin if GBP falls 10% against my import currency' },
-  { icon: '🏭', title: 'Supplier Score', desc: 'Grade every supplier on delivery and impact', query: 'Score my suppliers by on-time delivery rate and financial impact' },
-  { icon: '🧮', title: 'Landed Cost', desc: 'True cost: supplier price + freight + duty + FX', query: 'Calculate my true landed cost including freight, duty, VAT and FX buffer' },
-  { icon: '🌍', title: 'Export Markets', desc: 'Find the best country to expand into next', query: 'Which export market should I expand into next based on my product?' },
-]
-const SOURCE_CARDS: Record<string, { icon: string; title: string; desc: string; query: string }[]> = {
-  pos: [
-    { icon: '📊', title: "Today's Sales", desc: 'Live revenue and transaction count', query: "What are my POS sales today? Show revenue, transaction count, and top products." },
-    { icon: '⭐', title: 'Top Products', desc: 'Best sellers this week', query: "What are my top 10 selling products this week by revenue and quantity?" },
-    { icon: '👥', title: 'Staff Performance', desc: 'Who sold the most?', query: "Show me staff performance — sales per cashier, average transaction value, and transaction count." },
-    { icon: '📦', title: 'Stock Check', desc: 'Low inventory alerts', query: "Which products are running low on stock? Show items below reorder point." },
-  ],
-  stripe: [
-    { icon: '💳', title: 'Stripe Revenue', desc: 'Payments and payouts', query: "Show me my Stripe revenue this month — total charges, refunds, and net revenue." },
-    { icon: '📈', title: 'Growth Trend', desc: 'Month-over-month change', query: "Compare my Stripe revenue this month vs last month. What's the growth rate?" },
-    { icon: '🔄', title: 'Failed Payments', desc: 'Recovery opportunities', query: "How many failed payments did I have this month? What's the total lost revenue?" },
-    { icon: '💰', title: 'Average Order', desc: 'AOV and trends', query: "What is my average order value this month and how does it compare to last month?" },
-  ],
-  shopify: [
-    { icon: '🛒', title: 'Shopify Sales', desc: 'Orders and revenue today', query: "Show me my Shopify sales today — orders, revenue, and top products." },
-    { icon: '📦', title: 'Inventory', desc: 'Low stock alerts', query: "Which Shopify products are running low on inventory? Show items with less than 10 units." },
-    { icon: '🔁', title: 'Returns', desc: 'Refund rate this month', query: "What is my Shopify return and refund rate this month? Which products have the highest return rate?" },
-    { icon: '🏆', title: 'Best Sellers', desc: 'Top products this week', query: "What are my best selling Shopify products this week by revenue?" },
-  ],
-  xero: [
-    { icon: '📋', title: 'P&L Summary', desc: 'Profit and loss snapshot', query: "Give me a profit and loss summary for this month from my Xero data." },
-    { icon: '💵', title: 'Cash Flow', desc: 'Money in vs money out', query: "What does my cash flow look like? Show money in, money out, and net position." },
-    { icon: '📑', title: 'Invoices', desc: 'Outstanding and overdue', query: "How many outstanding invoices do I have? What's the total overdue amount?" },
-    { icon: '📊', title: 'Expenses', desc: 'Cost breakdown by category', query: "Break down my expenses by category this month. What are my biggest cost areas?" },
-  ],
-  quickbooks: [
-    { icon: '📋', title: 'P&L Summary', desc: 'Profit and loss snapshot', query: "Give me a profit and loss summary for this month from my QuickBooks data." },
-    { icon: '💵', title: 'Cash Flow', desc: 'Money in vs money out', query: "What does my cash flow look like from QuickBooks?" },
-    { icon: '📑', title: 'Invoices', desc: 'Outstanding and overdue', query: "How many outstanding invoices do I have in QuickBooks?" },
-    { icon: '📊', title: 'Expenses', desc: 'Cost breakdown', query: "Break down my expenses by category this month from QuickBooks." },
-  ],
-  amazon_fba: [
-    { icon: '📦', title: 'Amazon Sales', desc: 'Orders and revenue', query: "Show me my Amazon FBA sales this month — orders, revenue, and top ASINs." },
-    { icon: '🏷️', title: 'FBA Fees', desc: 'Fee breakdown', query: "Break down my Amazon FBA fees this month — fulfilment, storage, referral." },
-    { icon: '⭐', title: 'Top ASINs', desc: 'Best performers', query: "What are my top 10 Amazon products by profit after FBA fees?" },
-    { icon: '📉', title: 'Returns', desc: 'Return rate by product', query: "Which Amazon products have the highest return rate?" },
-  ],
+type CardTC = (key: string) => string
+type Card = { icon: string; title: string; desc: string; query: string }
+
+const buildDefaultCards = (tc: CardTC): Card[] =>
+  ['💱', '🏭', '🧮', '🌍'].map((icon, i) => ({
+    icon,
+    title: tc('chat.default_card_' + i + '_title'),
+    desc: tc('chat.default_card_' + i + '_desc'),
+    query: tc('chat.default_card_' + i + '_query'),
+  }))
+
+const SOURCE_CARD_ICONS: Record<string, string[]> = {
+  pos: ['📊', '⭐', '👥', '📦'],
+  stripe: ['💳', '📈', '🔄', '💰'],
+  shopify: ['🛒', '📦', '🔁', '🏆'],
+  xero: ['📋', '💵', '📑', '📊'],
+  quickbooks: ['📋', '💵', '📑', '📊'],
+  amazon_fba: ['📦', '🏷️', '⭐', '📉'],
 }
-const CFO_CARDS = [
-  { icon: '📋', title: 'P&L Summary', desc: 'Revenue, costs, and net profit', query: "Give me a detailed profit and loss summary for this month with month-over-month comparison." },
-  { icon: '💰', title: 'EBITDA', desc: 'Operating earnings and valuation', query: "What is my current EBITDA and EBITDA margin? Estimate my business valuation." },
-  { icon: '💵', title: 'Cash Flow', desc: 'Inflows, outflows, runway', query: "Show me my cash flow — money in, money out, and months of runway." },
-  { icon: '📈', title: 'Growth Metrics', desc: 'MoM revenue and margin trends', query: "Show month-over-month revenue growth and margin trends for the last 6 months." },
-]
-function getSmartCards(types: string[], cfo?: boolean): typeof DEFAULT_CARDS {
-  if (cfo) return CFO_CARDS
-  if (types.length === 0) return DEFAULT_CARDS
-  if (types.length === 1 && SOURCE_CARDS[types[0]]) return SOURCE_CARDS[types[0]]
-  const cards: typeof DEFAULT_CARDS = []
+
+const buildSourceCards = (tc: CardTC): Record<string, Card[]> => {
+  const out: Record<string, Card[]> = {}
+  for (const src of Object.keys(SOURCE_CARD_ICONS)) {
+    out[src] = SOURCE_CARD_ICONS[src].map((icon, i) => ({
+      icon,
+      title: tc('chat.' + src + '_card_' + i + '_title'),
+      desc: tc('chat.' + src + '_card_' + i + '_desc'),
+      query: tc('chat.' + src + '_card_' + i + '_query'),
+    }))
+  }
+  return out
+}
+
+const buildCfoCards = (tc: CardTC): Card[] =>
+  ['📋', '💰', '💵', '📈'].map((icon, i) => ({
+    icon,
+    title: tc('chat.cfo_card_' + i + '_title'),
+    desc: tc('chat.cfo_card_' + i + '_desc'),
+    query: tc('chat.cfo_card_' + i + '_query'),
+  }))
+
+function getSmartCards(tc: CardTC, types: string[], cfo?: boolean): Card[] {
+  const defaults = buildDefaultCards(tc)
+  if (cfo) return buildCfoCards(tc)
+  if (types.length === 0) return defaults
+  const sourceCards = buildSourceCards(tc)
+  if (types.length === 1 && sourceCards[types[0]]) return sourceCards[types[0]]
+  const cards: Card[] = []
   for (const t of types) {
-    const pool = SOURCE_CARDS[t]
+    const pool = sourceCards[t]
     if (!pool) continue
     const take = cards.length === 0 ? 2 : 1
     cards.push(...pool.slice(0, take))
     if (cards.length >= 4) break
   }
-  while (cards.length < 4) cards.push(DEFAULT_CARDS[cards.length % DEFAULT_CARDS.length])
+  while (cards.length < 4) cards.push(defaults[cards.length % defaults.length])
   return cards.slice(0, 4)
 }
 
@@ -92,6 +86,7 @@ export default function ChatPage() {
   const router = useRouter()
   const supabase = createClient()
   const { user, geo, settings, session, setActiveFile, setLoading, setLastResult, setSimulateMode, toggleCfoMode } = useStore()
+  const { tc } = useLang()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [conversationId, setConversationId] = useState<string | null>(null)
@@ -135,7 +130,7 @@ export default function ChatPage() {
   }, Date.now())
   const syncStale = connectedSources.length > 0 && (Date.now() - oldestSync) > 24 * 60 * 60 * 1000
   const syncAgo = connectedSources.length > 0 && oldestSync < Date.now()
-    ? (() => { const h = Math.floor((Date.now() - oldestSync) / 3600000); return h < 1 ? 'just now' : h < 24 ? `${h}h ago` : `${Math.floor(h / 24)}d ago` })()
+    ? (() => { const h = Math.floor((Date.now() - oldestSync) / 3600000); return h < 1 ? tc('chat.sync_just_now') : h < 24 ? tc('chat.sync_hours_ago', { hours: h }) : tc('chat.sync_days_ago', { days: Math.floor(h / 24) }) })()
     : null
 
   const getOrCreateConversation = async (firstMessage: string) => {
@@ -156,7 +151,7 @@ export default function ChatPage() {
       setActiveFile(file.name, parsed.summary)
       const sysMsg: Message = {
         id: Date.now().toString(), role: 'assistant',
-        content: `I've loaded **${file.name}** — ${parsed.rowCount.toLocaleString()} rows, ${parsed.headers.length} columns (${parsed.headers.join(', ')}). What would you like to know?`,
+        content: tc('chat.file_loaded', { name: file.name, rows: parsed.rowCount.toLocaleString(), cols: parsed.headers.length, headers: parsed.headers.join(', ') }),
         timestamp: new Date()
       }
       setMessages(m => [...m, sysMsg])
@@ -168,7 +163,7 @@ export default function ChatPage() {
       }).catch(() => {})
 
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'File upload failed')
+      alert(e instanceof Error ? e.message : tc('chat.file_upload_failed'))
     } finally { setUploading(false) }
   }
 
@@ -193,28 +188,28 @@ export default function ChatPage() {
       if (d.shipment) {
         const s = d.shipment
         return [
-          `📦 **${s.tracking_number}** — ${s.track_status}${s.customs_hold ? ' 🛃 CUSTOMS HOLD' : ''}`,
-          s.last_event ? `Last event: ${s.last_event}` : '',
-          s.last_location ? `Location: ${s.last_location}` : '',
-          s.supplier_name ? `Supplier: ${s.supplier_name}${s.sku ? ' · ' + s.sku : ''}` : '',
-          s.expected_arrival ? `Expected: ${new Date(s.expected_arrival).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : '',
-          s.delay_days > 0 ? `⚠️ ${s.delay_days} days delayed` : '',
-          s.financial_impact > 0 ? `💰 Financial impact: £${s.financial_impact.toFixed(0)}` : '',
-          `[View on 17Track →](https://www.17track.net/en/track?nums=${s.tracking_number})`,
+          `📦 **${s.tracking_number}** — ${s.track_status}${s.customs_hold ? ' 🛃 ' + tc('chat.track_customs_hold') : ''}`,
+          s.last_event ? `${tc('chat.track_last_event')}: ${s.last_event}` : '',
+          s.last_location ? `${tc('chat.track_location')}: ${s.last_location}` : '',
+          s.supplier_name ? `${tc('chat.track_supplier')}: ${s.supplier_name}${s.sku ? ' · ' + s.sku : ''}` : '',
+          s.expected_arrival ? `${tc('chat.track_expected')}: ${new Date(s.expected_arrival).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : '',
+          s.delay_days > 0 ? `⚠️ ${tc('chat.track_delayed', { days: s.delay_days })}` : '',
+          s.financial_impact > 0 ? `💰 ${tc('chat.track_financial_impact')}: £${s.financial_impact.toFixed(0)}` : '',
+          `[${tc('chat.track_view_on_17track')}](https://www.17track.net/en/track?nums=${s.tracking_number})`,
         ].filter(Boolean).join('\n')
       }
       if (d.tracking) {
         const t = d.tracking
         return [
-          `📦 **${trackingNumber.toUpperCase()}** — ${t.latest_status?.status || 'Pending'}`,
+          `📦 **${trackingNumber.toUpperCase()}** — ${t.latest_status?.status || tc('chat.track_status_pending')}`,
           t.latest_event?.description || '',
-          t.latest_event?.location ? `Location: ${t.latest_event.location}` : '',
-          `[View on 17Track →](https://www.17track.net/en/track?nums=${trackingNumber})`,
+          t.latest_event?.location ? `${tc('chat.track_location')}: ${t.latest_event.location}` : '',
+          `[${tc('chat.track_view_on_17track')}](https://www.17track.net/en/track?nums=${trackingNumber})`,
         ].filter(Boolean).join('\n')
       }
-      return `📦 No tracking data yet for **${trackingNumber.toUpperCase()}**. [Check on 17Track →](https://www.17track.net/en/track?nums=${trackingNumber})`
+      return tc('chat.track_no_data', { number: trackingNumber.toUpperCase() })
     } catch {
-      return `📦 Could not retrieve tracking for **${trackingNumber}**. Try again or check 17Track directly.`
+      return tc('chat.track_error', { number: trackingNumber })
     }
   }
 
@@ -343,7 +338,7 @@ export default function ChatPage() {
         const createRes = await fetch('/api/dashboards', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: 'My Dashboard' }),
+          body: JSON.stringify({ title: tc('chat.my_dashboard') }),
         })
         const created = await createRes.json()
         dashboardId = created.id
@@ -354,7 +349,7 @@ export default function ChatPage() {
         body: JSON.stringify({
           dashboard_id: dashboardId,
           tile_type: 'insight',
-          title: result.insight_header || result.answer_text?.slice(0, 60) || 'Saved insight',
+          title: result.insight_header || result.answer_text?.slice(0, 60) || tc('chat.saved_insight'),
           config: { result },
         }),
       })
@@ -381,18 +376,18 @@ export default function ChatPage() {
         {/* Topbar */}
         <div style={{ height: 50, padding: isMobile ? '0 12px' : '0 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, background: 'var(--sf)', gap: 10, overflow: 'hidden' }}>
           <div style={{ fontSize: 13, fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {isEmpty ? 'New conversation' : messages[0]?.content.slice(0, 48) + (messages[0]?.content.length > 48 ? '…' : '')}
+            {isEmpty ? tc('chat.new_conversation') : messages[0]?.content.slice(0, 48) + (messages[0]?.content.length > 48 ? '…' : '')}
           </div>
           {voice.isRecording && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 9999, background: 'linear-gradient(135deg,rgba(99,102,241,.15),rgba(139,92,246,.15))', border: '1px solid rgba(99,102,241,.3)', fontSize: 11, fontWeight: 600, color: '#818cf8', flexShrink: 0 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#818cf8', animation: 'pulse 1s infinite' }}/>
-              AskBiz Live
+              {tc('chat.badge_live')}
             </div>
           )}
           {isSpeaking && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 9999, background: 'rgba(208,138,89,.1)', border: '1px solid rgba(208,138,89,.25)', fontSize: 11, fontWeight: 600, color: 'var(--acc)', flexShrink: 0 }}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-              Speaking
+              {tc('chat.badge_speaking')}
             </div>
           )}
           {uploadedFile && (
@@ -403,18 +398,18 @@ export default function ChatPage() {
           )}
           <div style={{ display: 'flex', gap: 7, flexShrink: 0 }}>
             <button onClick={() => setSimulateMode(!session.simulateMode)}
-              title="Run a 'what if' scenario on your business"
+              title={tc('chat.scenario_tooltip')}
               style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 9999, border: `1px solid ${session.simulateMode ? '#6366F1' : 'var(--b2)'}`, background: session.simulateMode ? 'rgba(99,102,241,.1)' : 'transparent', color: session.simulateMode ? '#6366F1' : 'var(--tx3)', fontSize: 12, fontWeight: session.simulateMode ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms', whiteSpace: 'nowrap' }}>
-              ⚡ {session.simulateMode ? 'Scenario ON' : 'Run scenario'}
+              ⚡ {session.simulateMode ? tc('chat.scenario_on') : tc('chat.scenario_run')}
             </button>
             <button onClick={toggleCfoMode}
-              title="Switch to accountant-style reports with metrics and tables"
+              title={tc('chat.cfo_tooltip')}
               style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 9999, border: `1px solid ${settings.cfoMode ? '#6366F1' : 'var(--b2)'}`, background: settings.cfoMode ? 'rgba(99,102,241,.1)' : 'transparent', color: settings.cfoMode ? '#6366F1' : 'var(--tx3)', fontSize: 12, fontWeight: settings.cfoMode ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms', whiteSpace: 'nowrap' }}>
-              📊 {settings.cfoMode ? 'CFO view ON' : 'CFO view'}
+              📊 {settings.cfoMode ? tc('chat.cfo_view_on') : tc('chat.cfo_view')}
             </button>
             <label style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 13px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx)', fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              {uploading ? 'Uploading…' : 'Upload'}
+              {uploading ? tc('chat.uploading') : tc('chat.upload')}
               <input type="file" accept=".csv,.xlsx,.xls" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleFileUpload(e.target.files[0])}/>
             </label>
             {!!session.lastResult && (
@@ -423,7 +418,7 @@ export default function ChatPage() {
                 disabled={saveStatus === 'saving'}
                 style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 13px', borderRadius: 9999, border: '1px solid var(--b2)', background: saveStatus === 'saved' ? 'rgba(34,197,94,.08)' : 'transparent', color: saveStatus === 'saved' ? '#16a34a' : saveStatus === 'error' ? '#ef4444' : 'var(--tx)', fontFamily: 'inherit', fontSize: 12, cursor: saveStatus === 'saving' ? 'default' : 'pointer', transition: 'all 150ms' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-                {saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Saved ✓' : saveStatus === 'error' ? 'Error' : 'Save'}
+                {saveStatus === 'saving' ? tc('chat.saving') : saveStatus === 'saved' ? tc('chat.saved') : saveStatus === 'error' ? tc('chat.save_error') : tc('chat.save')}
               </button>
             )}
           </div>
@@ -444,17 +439,17 @@ export default function ChatPage() {
                   </svg>
                 </div>
                 <div style={{ fontFamily: 'var(--font-sora)', fontSize: 19, fontWeight: 600, marginBottom: 7, letterSpacing: '-.02em' }} className="animate-fade-up stagger-1">
-                  {uploadedFile ? `What do you want to know, ${user?.initials || 'there'}?` : 'Ask anything about your business'}
+                  {uploadedFile ? tc('chat.empty_greeting_named', { name: user?.initials || tc('chat.empty_default_name') }) : tc('chat.empty_greeting')}
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.65, maxWidth: 360, marginBottom: 20 }} className="animate-fade-up stagger-2">
-                  {geo ? `Prices in ${geo.currencySymbol} · ${geo.country}` : 'Plain English only — no jargon, no spreadsheets needed.'}
+                  {geo ? tc('chat.empty_geo_subtitle', { symbol: geo.currencySymbol, country: geo.country }) : tc('chat.empty_subtitle')}
                 </div>
 
                 {!uploadedFile && (
                   <>
                     {/* Specialist tool cards */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, width: '100%', maxWidth: 460, marginBottom: 14 }} className="animate-fade-up stagger-3">
-                      {getSmartCards(sourceTypes, settings.cfoMode).map(card => (
+                      {getSmartCards(tc, sourceTypes, settings.cfoMode).map(card => (
                         <button
                           key={card.title}
                           onClick={() => sendMessage(card.query)}
@@ -472,14 +467,14 @@ export default function ChatPage() {
                     {/* Connect data CTA — only when no sources connected */}
                     {!hasConnectedData && <div style={{ width: '100%', maxWidth: 460, padding: '12px 16px', borderRadius: 12, border: '1px dashed var(--b2)', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }} className="animate-fade-up stagger-4">
                       <div style={{ textAlign: 'left' }}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', marginBottom: 2 }}>Get answers with your actual numbers</div>
-                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Connect Shopify, Amazon, QuickBooks or upload a CSV</div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', marginBottom: 2 }}>{tc('chat.connect_cta_title')}</div>
+                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('chat.connect_cta_desc')}</div>
                       </div>
                       <Link
                         href="/sources"
                         style={{ flexShrink: 0, padding: '7px 14px', borderRadius: 9999, background: '#6366F1', color: '#fff', fontSize: 12, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}
                       >
-                        Connect →
+                        {tc('chat.connect_cta_button')}
                       </Link>
                     </div>}
                   </>
@@ -503,19 +498,19 @@ export default function ChatPage() {
                     msg.content.startsWith('__LIMIT_REACHED__') ? (
                       <div style={{ padding: '18px 20px', borderRadius: 16, background: 'var(--sf)', border: '1px solid var(--b)' }}>
                         <div style={{ fontSize: 20, marginBottom: 8 }}>🚀</div>
-                        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 15, fontWeight: 600, marginBottom: 6 }}>Free questions used up</div>
+                        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 15, fontWeight: 600, marginBottom: 6 }}>{tc('chat.limit_emoji_heading')}</div>
                         <p style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.6, marginBottom: 14 }}>
-                          You&apos;ve used all your free questions this month. Upgrade to keep going.
+                          {tc('chat.limit_body')}
                         </p>
                         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                          <button onClick={() => router.push('/billing')} style={{ padding: '10px 18px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Upgrade →</button>
-                          <button onClick={() => router.push('/billing')} style={{ padding: '10px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 13, cursor: 'pointer' }}>See all plans</button>
+                          <button onClick={() => router.push('/billing')} style={{ padding: '10px 18px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{tc('chat.limit_upgrade')}</button>
+                          <button onClick={() => router.push('/billing')} style={{ padding: '10px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 13, cursor: 'pointer' }}>{tc('chat.limit_see_plans')}</button>
                         </div>
-                        <p style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 10 }}>Free plan resets next month.</p>
+                        <p style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 10 }}>{tc('chat.limit_reset_note')}</p>
                       </div>
                     ) : msg.content === '__CONNECTION_ERROR__' ? (
                       <div style={{ padding: '10px 14px', borderRadius: 13, borderBottomLeftRadius: 3, background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)', fontSize: 13, color: '#ef4444' }}>
-                        Connection issue — please check your internet and try again.
+                        {tc('chat.connection_error')}
                       </div>
                     ) : msg.result ? (
                       <ResultBlock
@@ -589,24 +584,24 @@ export default function ChatPage() {
             {uploadedFile ? (
               <span style={{ color: '#22C55E', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', display: 'inline-block', boxShadow: '0 0 6px #22C55E' }}/>
-                Connected: {uploadedFile.name}
+                {tc('chat.status_connected_file', { name: uploadedFile.name })}
               </span>
             ) : connectedSources.length > 0 ? (
               <span style={{ color: syncStale ? '#F59E0B' : '#22C55E', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: syncStale ? '#F59E0B' : '#22C55E', display: 'inline-block', boxShadow: syncStale ? '0 0 6px #F59E0B' : '0 0 6px #22C55E' }}/>
-                {sourceLabel} connected{syncAgo ? ` · synced ${syncAgo}` : ''}{syncStale ? ' ⚠️' : ''} ·{' '}
+                {tc('chat.status_sources_connected', { sources: sourceLabel })}{syncAgo ? tc('chat.status_synced_ago', { ago: syncAgo }) : ''}{syncStale ? ' ⚠️' : ''} ·{' '}
                 <Link href="/sources" style={{ color: '#6366F1', textDecoration: 'none', fontWeight: 500 }}>
-                  {syncStale ? 'Re-sync' : 'Manage'}
+                  {syncStale ? tc('chat.status_resync') : tc('chat.status_manage')}
                 </Link>
               </span>
             ) : (
               <span style={{ color: 'var(--tx3)', display: 'flex', alignItems: 'center', gap: 5 }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--b2)', display: 'inline-block' }}/>
-                No data connected ·{' '}
+                {tc('chat.status_no_data')}
                 <Link href="/sources" style={{ color: '#6366F1', textDecoration: 'none', fontWeight: 500 }}>
-                  Connect your shop or upload a file
+                  {tc('chat.status_connect_link')}
                 </Link>
-                {' '}for personalised answers
+                {tc('chat.status_personalised_suffix')}
               </span>
             )}
           </div>

@@ -2,6 +2,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useLang } from '@/components/LanguageProvider'
+
+type TC = (key: string, vars?: Record<string, string | number>) => string
 
 const ACC  = '#d08a59'
 const TX   = '#1a1916'
@@ -17,52 +20,60 @@ const BG   = '#f9f8f6'
 const STEPS = ['welcome', 'business', 'location', 'sector', 'export', 'connect', 'done'] as const
 type Step = typeof STEPS[number]
 
-const BIZ_TYPES = [
-  { id: 'ecommerce',    label: 'Ecommerce',       icon: '🛒', desc: 'Sell online via Shopify, Amazon, etc.' },
-  { id: 'retail',       label: 'Retail',           icon: '🏪', desc: 'Physical shop or market stall' },
-  { id: 'distributor',  label: 'Distributor',      icon: '🚚', desc: 'Wholesale and distribution' },
-  { id: 'manufacturer', label: 'Manufacturer',     icon: '🏭', desc: 'Make and sell products' },
-  { id: 'importer',     label: 'Importer',         icon: '📦', desc: 'Import and resell goods' },
-  { id: 'exporter',     label: 'Exporter',         icon: '🌍', desc: 'Export UK goods internationally' },
-  { id: 'services',     label: 'Services',         icon: '💼', desc: 'Professional or digital services' },
-  { id: 'food_bev',     label: 'Food & Beverage',  icon: '🍽️', desc: 'Food production, restaurant, café' },
+const buildBizTypes = (tc: TC) => [
+  { id: 'ecommerce',    label: tc('onboarding.biz_ecommerce_label'),    icon: '🛒', desc: tc('onboarding.biz_ecommerce_desc') },
+  { id: 'retail',       label: tc('onboarding.biz_retail_label'),       icon: '🏪', desc: tc('onboarding.biz_retail_desc') },
+  { id: 'distributor',  label: tc('onboarding.biz_distributor_label'),  icon: '🚚', desc: tc('onboarding.biz_distributor_desc') },
+  { id: 'manufacturer', label: tc('onboarding.biz_manufacturer_label'), icon: '🏭', desc: tc('onboarding.biz_manufacturer_desc') },
+  { id: 'importer',     label: tc('onboarding.biz_importer_label'),     icon: '📦', desc: tc('onboarding.biz_importer_desc') },
+  { id: 'exporter',     label: tc('onboarding.biz_exporter_label'),     icon: '🌍', desc: tc('onboarding.biz_exporter_desc') },
+  { id: 'services',     label: tc('onboarding.biz_services_label'),     icon: '💼', desc: tc('onboarding.biz_services_desc') },
+  { id: 'food_bev',     label: tc('onboarding.biz_food_bev_label'),     icon: '🍽️', desc: tc('onboarding.biz_food_bev_desc') },
 ]
 
-const SECTORS = [
+const SECTOR_IDS = [
   'Fashion & Apparel', 'Beauty & Personal Care', 'Health & Wellness',
   'Food & Beverage', 'Home & Garden', 'Electronics & Tech',
   'Sports & Outdoor', 'Luxury & Premium', 'Kids & Toys',
   'Pet Products', 'Arts & Crafts', 'Automotive', 'B2B / Industrial', 'Other',
 ]
 
-const CURRENCIES = [
-  { code: 'GBP', symbol: '£', label: 'British Pound' },
-  { code: 'USD', symbol: '$', label: 'US Dollar' },
-  { code: 'EUR', symbol: '€', label: 'Euro' },
-  { code: 'KES', symbol: 'KSh', label: 'Kenyan Shilling' },
-  { code: 'NGN', symbol: '₦', label: 'Nigerian Naira' },
-  { code: 'GHS', symbol: '₵', label: 'Ghanaian Cedi' },
-  { code: 'ZAR', symbol: 'R', label: 'South African Rand' },
-  { code: 'AED', symbol: 'د.إ', label: 'UAE Dirham' },
-  { code: 'INR', symbol: '₹', label: 'Indian Rupee' },
-  { code: 'AUD', symbol: 'A$', label: 'Australian Dollar' },
-  { code: 'CAD', symbol: 'C$', label: 'Canadian Dollar' },
-  { code: 'SGD', symbol: 'S$', label: 'Singapore Dollar' },
+const buildSectors = (tc: TC) =>
+  SECTOR_IDS.map((id, i) => ({ id, label: tc('onboarding.sector_' + i) }))
+
+const buildCurrencies = (tc: TC) => [
+  { code: 'GBP', symbol: '£', label: tc('onboarding.currency_gbp_label') },
+  { code: 'USD', symbol: '$', label: tc('onboarding.currency_usd_label') },
+  { code: 'EUR', symbol: '€', label: tc('onboarding.currency_eur_label') },
+  { code: 'KES', symbol: 'KSh', label: tc('onboarding.currency_kes_label') },
+  { code: 'NGN', symbol: '₦', label: tc('onboarding.currency_ngn_label') },
+  { code: 'GHS', symbol: '₵', label: tc('onboarding.currency_ghs_label') },
+  { code: 'ZAR', symbol: 'R', label: tc('onboarding.currency_zar_label') },
+  { code: 'AED', symbol: 'د.إ', label: tc('onboarding.currency_aed_label') },
+  { code: 'INR', symbol: '₹', label: tc('onboarding.currency_inr_label') },
+  { code: 'AUD', symbol: 'A$', label: tc('onboarding.currency_aud_label') },
+  { code: 'CAD', symbol: 'C$', label: tc('onboarding.currency_cad_label') },
+  { code: 'SGD', symbol: 'S$', label: tc('onboarding.currency_sgd_label') },
 ]
 
-const EXPORT_MARKETS = [
-  { id: 'us', label: '🇺🇸 United States' },
-  { id: 'de', label: '🇩🇪 Germany' },
-  { id: 'fr', label: '🇫🇷 France' },
-  { id: 'au', label: '🇦🇺 Australia' },
-  { id: 'ca', label: '🇨🇦 Canada' },
-  { id: 'ae', label: '🇦🇪 UAE' },
-  { id: 'ng', label: '🇳🇬 Nigeria' },
-  { id: 'ke', label: '🇰🇪 Kenya' },
-  { id: 'za', label: '🇿🇦 South Africa' },
-  { id: 'in', label: '🇮🇳 India' },
-  { id: 'sg', label: '🇸🇬 Singapore' },
-  { id: 'jp', label: '🇯🇵 Japan' },
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  GBP: '£', USD: '$', EUR: '€', KES: 'KSh', NGN: '₦', GHS: '₵',
+  ZAR: 'R', AED: 'د.إ', INR: '₹', AUD: 'A$', CAD: 'C$', SGD: 'S$',
+}
+
+const buildExportMarkets = (tc: TC) => [
+  { id: 'us', label: tc('onboarding.market_us_label') },
+  { id: 'de', label: tc('onboarding.market_de_label') },
+  { id: 'fr', label: tc('onboarding.market_fr_label') },
+  { id: 'au', label: tc('onboarding.market_au_label') },
+  { id: 'ca', label: tc('onboarding.market_ca_label') },
+  { id: 'ae', label: tc('onboarding.market_ae_label') },
+  { id: 'ng', label: tc('onboarding.market_ng_label') },
+  { id: 'ke', label: tc('onboarding.market_ke_label') },
+  { id: 'za', label: tc('onboarding.market_za_label') },
+  { id: 'in', label: tc('onboarding.market_in_label') },
+  { id: 'sg', label: tc('onboarding.market_sg_label') },
+  { id: 'jp', label: tc('onboarding.market_jp_label') },
 ]
 
 const inp: React.CSSProperties = {
@@ -74,6 +85,12 @@ const inp: React.CSSProperties = {
 export default function OnboardingPage() {
   const router = useRouter()
   const supabase = createClient()
+  const { tc } = useLang()
+
+  const BIZ_TYPES = buildBizTypes(tc)
+  const SECTORS = buildSectors(tc)
+  const CURRENCIES = buildCurrencies(tc)
+  const EXPORT_MARKETS = buildExportMarkets(tc)
 
   const [step,         setStep]         = useState<Step>('welcome')
   const [saving,       setSaving]       = useState(false)
@@ -121,14 +138,12 @@ export default function OnboardingPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const currencyObj = CURRENCIES.find(c => c.code === currency)
-
       await supabase.from('profiles').update({
         first_name:          firstName,
         business_name:       businessName,
         business_type:       bizType,
         currency:            currency,
-        currency_symbol:     currencyObj?.symbol || '£',
+        currency_symbol:     CURRENCY_SYMBOLS[currency] || '£',
         region:              region,
         sector_hints:        sectors.join(', '),
         export_markets:      exportMkts.join(','),
@@ -190,7 +205,7 @@ export default function OnboardingPage() {
           </svg>
         </div>
         <span style={{ fontFamily: 'Sora, sans-serif', fontSize: 16, fontWeight: 700, color: TX }}>AskBiz</span>
-        <span style={{ marginLeft: 'auto', fontSize: 12, color: TX3 }}>Step {stepIndex + 1} of {STEPS.length}</span>
+        <span style={{ marginLeft: 'auto', fontSize: 12, color: TX3 }}>{tc('onboarding.step_counter', { current: stepIndex + 1, total: STEPS.length })}</span>
       </div>
 
       {/* Content */}
@@ -202,36 +217,36 @@ export default function OnboardingPage() {
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>👋</div>
               <h1 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(26px,5vw,36px)', fontWeight: 700, color: TX, letterSpacing: '-.03em', marginBottom: 12 }}>
-                Welcome to AskBiz
+                {tc('onboarding.welcome_title')}
               </h1>
               <p style={{ fontSize: 16, color: TX2, lineHeight: 1.7, marginBottom: 28, maxWidth: 420, margin: '0 auto 28px' }}>
-                Let's set up your business profile so AskBiz gives you answers based on your actual data — not generic advice.
+                {tc('onboarding.welcome_subtitle')}
               </p>
               <div style={{ marginBottom: 24 }}>
                 <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6, textAlign: 'left' }}>
-                  Your first name
+                  {tc('onboarding.welcome_first_name_label')}
                 </label>
                 <input
                   style={inp}
                   value={firstName}
                   onChange={e => setFirstName(e.target.value)}
-                  placeholder="e.g. Sarah"
+                  placeholder={tc('onboarding.welcome_first_name_placeholder')}
                   autoFocus
                 />
               </div>
               <div style={{ marginBottom: 28 }}>
                 <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6, textAlign: 'left' }}>
-                  Business name
+                  {tc('onboarding.welcome_business_name_label')}
                 </label>
                 <input
                   style={inp}
                   value={businessName}
                   onChange={e => setBusinessName(e.target.value)}
-                  placeholder="e.g. Bloom & Co"
+                  placeholder={tc('onboarding.welcome_business_name_placeholder')}
                 />
               </div>
               <button style={btn} onClick={next} disabled={!firstName}>
-                Let's go →
+                {tc('onboarding.welcome_cta')}
               </button>
             </div>
           )}
@@ -240,10 +255,10 @@ export default function OnboardingPage() {
           {step === 'business' && (
             <div>
               <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,4vw,30px)', fontWeight: 700, color: TX, marginBottom: 8 }}>
-                What kind of business{firstName ? `, ${firstName}` : ''}?
+                {firstName ? tc('onboarding.business_title_named', { name: firstName }) : tc('onboarding.business_title')}
               </h2>
               <p style={{ fontSize: 14, color: TX2, marginBottom: 24, lineHeight: 1.6 }}>
-                This helps AskBiz use the right language and focus on what matters for your business model.
+                {tc('onboarding.business_subtitle')}
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10, marginBottom: 28 }}>
                 {BIZ_TYPES.map(bt => (
@@ -264,11 +279,11 @@ export default function OnboardingPage() {
                 ))}
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
-                <button style={{ ...btn, background: EV, color: TX2, boxShadow: 'none' }} onClick={back}>← Back</button>
-                <button style={{ ...btn, opacity: canNext.business ? 1 : .5 }} onClick={next} disabled={!canNext.business}>Continue →</button>
+                <button style={{ ...btn, background: EV, color: TX2, boxShadow: 'none' }} onClick={back}>{tc('onboarding.back')}</button>
+                <button style={{ ...btn, opacity: canNext.business ? 1 : .5 }} onClick={next} disabled={!canNext.business}>{tc('onboarding.continue')}</button>
               </div>
               <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 13, cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }} onClick={skip}>
-                Skip setup — go straight to AskBiz
+                {tc('onboarding.skip')}
               </button>
             </div>
           )}
@@ -277,17 +292,17 @@ export default function OnboardingPage() {
           {step === 'location' && (
             <div>
               <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,4vw,30px)', fontWeight: 700, color: TX, marginBottom: 8 }}>
-                Where are you based?
+                {tc('onboarding.location_title')}
               </h2>
               <p style={{ fontSize: 14, color: TX2, marginBottom: 24, lineHeight: 1.6 }}>
-                AskBiz uses your location to set your currency, calculate duty rates, and personalise export market recommendations.
+                {tc('onboarding.location_subtitle')}
               </p>
               <div style={{ marginBottom: 16 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>Country / Region</label>
-                <input style={inp} value={region} onChange={e => setRegion(e.target.value)} placeholder="e.g. United Kingdom, Kenya, Nigeria…"/>
+                <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 6 }}>{tc('onboarding.location_region_label')}</label>
+                <input style={inp} value={region} onChange={e => setRegion(e.target.value)} placeholder={tc('onboarding.location_region_placeholder')}/>
               </div>
               <div style={{ marginBottom: 28 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 10 }}>Your primary currency</label>
+                <label style={{ fontSize: 13, fontWeight: 600, color: TX2, display: 'block', marginBottom: 10 }}>{tc('onboarding.location_currency_label')}</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 8 }}>
                   {CURRENCIES.map(c => (
                     <button
@@ -301,8 +316,8 @@ export default function OnboardingPage() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
-                <button style={{ ...btn, background: EV, color: TX2, boxShadow: 'none' }} onClick={back}>← Back</button>
-                <button style={btn} onClick={next}>Continue →</button>
+                <button style={{ ...btn, background: EV, color: TX2, boxShadow: 'none' }} onClick={back}>{tc('onboarding.back')}</button>
+                <button style={btn} onClick={next}>{tc('onboarding.continue')}</button>
               </div>
             </div>
           )}
@@ -311,28 +326,28 @@ export default function OnboardingPage() {
           {step === 'sector' && (
             <div>
               <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,4vw,30px)', fontWeight: 700, color: TX, marginBottom: 8 }}>
-                What do you sell?
+                {tc('onboarding.sector_title')}
               </h2>
               <p style={{ fontSize: 14, color: TX2, marginBottom: 24, lineHeight: 1.6 }}>
-                Select all that apply. AskBiz uses this to match export market opportunities, duty rates, and competitor intelligence to your specific products.
+                {tc('onboarding.sector_subtitle')}
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 28 }}>
                 {SECTORS.map(s => (
                   <button
-                    key={s}
-                    onClick={() => toggleSector(s)}
-                    style={sectors.includes(s) ? { ...chipActive, padding: '7px 14px' } : { ...chipBase, padding: '7px 14px' }}
+                    key={s.id}
+                    onClick={() => toggleSector(s.id)}
+                    style={sectors.includes(s.id) ? { ...chipActive, padding: '7px 14px' } : { ...chipBase, padding: '7px 14px' }}
                   >
-                    {s}
+                    {s.label}
                   </button>
                 ))}
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
-                <button style={{ ...btn, background: EV, color: TX2, boxShadow: 'none' }} onClick={back}>← Back</button>
-                <button style={{ ...btn, opacity: canNext.sector ? 1 : .5 }} onClick={next} disabled={!canNext.sector}>Continue →</button>
+                <button style={{ ...btn, background: EV, color: TX2, boxShadow: 'none' }} onClick={back}>{tc('onboarding.back')}</button>
+                <button style={{ ...btn, opacity: canNext.sector ? 1 : .5 }} onClick={next} disabled={!canNext.sector}>{tc('onboarding.continue')}</button>
               </div>
               <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 13, cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }} onClick={skip}>
-                Skip setup — go straight to AskBiz
+                {tc('onboarding.skip')}
               </button>
             </div>
           )}
@@ -341,16 +356,16 @@ export default function OnboardingPage() {
           {step === 'export' && (
             <div>
               <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,4vw,30px)', fontWeight: 700, color: TX, marginBottom: 8 }}>
-                Are you selling internationally?
+                {tc('onboarding.export_title')}
               </h2>
               <p style={{ fontSize: 14, color: TX2, marginBottom: 20, lineHeight: 1.6 }}>
-                AskBiz will prioritise export market scoring, duty intelligence, and FX risk alerts for the markets you care about.
+                {tc('onboarding.export_subtitle')}
               </p>
 
               <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
                 {[
-                  { val: true,  label: 'Yes — I export or want to', icon: '🌍' },
-                  { val: false, label: 'No — UK / home market only', icon: '🏠' },
+                  { val: true,  label: tc('onboarding.export_opt_yes'), icon: '🌍' },
+                  { val: false, label: tc('onboarding.export_opt_no'), icon: '🏠' },
                 ].map(opt => (
                   <button
                     key={String(opt.val)}
@@ -365,7 +380,7 @@ export default function OnboardingPage() {
 
               {wantsExport && (
                 <>
-                  <p style={{ fontSize: 13, color: TX3, marginBottom: 12 }}>Which markets are you targeting? (Select all that apply)</p>
+                  <p style={{ fontSize: 13, color: TX3, marginBottom: 12 }}>{tc('onboarding.export_markets_prompt')}</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 20 }}>
                     {EXPORT_MARKETS.map(m => (
                       <button
@@ -381,11 +396,11 @@ export default function OnboardingPage() {
               )}
 
               <div style={{ display: 'flex', gap: 10 }}>
-                <button style={{ ...btn, background: EV, color: TX2, boxShadow: 'none' }} onClick={back}>← Back</button>
-                <button style={{ ...btn, opacity: canNext.export ? 1 : .5 }} onClick={next} disabled={!canNext.export}>Continue →</button>
+                <button style={{ ...btn, background: EV, color: TX2, boxShadow: 'none' }} onClick={back}>{tc('onboarding.back')}</button>
+                <button style={{ ...btn, opacity: canNext.export ? 1 : .5 }} onClick={next} disabled={!canNext.export}>{tc('onboarding.continue')}</button>
               </div>
               <button style={{ background: 'none', border: 'none', color: TX3, fontSize: 13, cursor: 'pointer', padding: '8px 0', fontFamily: 'inherit' }} onClick={skip}>
-                Skip setup — go straight to AskBiz
+                {tc('onboarding.skip')}
               </button>
             </div>
           )}
@@ -395,19 +410,19 @@ export default function OnboardingPage() {
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 44, marginBottom: 16 }}>🔌</div>
               <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(22px,4vw,30px)', fontWeight: 700, color: TX, marginBottom: 12 }}>
-                Connect your data
+                {tc('onboarding.connect_title')}
               </h2>
               <p style={{ fontSize: 14, color: TX2, lineHeight: 1.7, marginBottom: 28, maxWidth: 420, margin: '0 auto 28px' }}>
-                AskBiz gets smarter when connected to your real data. You can connect Shopify, Amazon, QuickBooks and more — or skip and upload a CSV file later.
+                {tc('onboarding.connect_subtitle')}
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 28 }}>
                 {[
-                  { icon: '🛍️', label: 'Shopify' },
-                  { icon: '📦', label: 'Amazon FBA' },
-                  { icon: '📒', label: 'QuickBooks' },
-                  { icon: '💳', label: 'Stripe' },
-                  { icon: '📊', label: 'Google Sheets' },
-                  { icon: '🎵', label: 'TikTok Shop' },
+                  { icon: '🛍️', label: tc('onboarding.connect_source_shopify') },
+                  { icon: '📦', label: tc('onboarding.connect_source_amazon') },
+                  { icon: '📒', label: tc('onboarding.connect_source_quickbooks') },
+                  { icon: '💳', label: tc('onboarding.connect_source_stripe') },
+                  { icon: '📊', label: tc('onboarding.connect_source_sheets') },
+                  { icon: '🎵', label: tc('onboarding.connect_source_tiktok') },
                 ].map(s => (
                   <div key={s.label} style={{ padding: '14px 10px', borderRadius: 12, border: `1px solid ${B}`, background: SF, textAlign: 'center' }}>
                     <div style={{ fontSize: 24, marginBottom: 6 }}>{s.icon}</div>
@@ -417,10 +432,10 @@ export default function OnboardingPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <button style={btn} onClick={() => { finish(); setTimeout(() => router.push('/sources'), 500) }}>
-                  Connect my data →
+                  {tc('onboarding.connect_cta')}
                 </button>
                 <button style={{ ...btn, background: 'transparent', color: TX3, boxShadow: 'none', border: `1px solid ${B}` }} onClick={next}>
-                  Skip — I'll upload a CSV
+                  {tc('onboarding.connect_skip')}
                 </button>
               </div>
             </div>
@@ -431,14 +446,14 @@ export default function OnboardingPage() {
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 52, marginBottom: 16 }}>🎉</div>
               <h2 style={{ fontFamily: 'Sora, sans-serif', fontSize: 'clamp(24px,4vw,34px)', fontWeight: 700, color: TX, marginBottom: 12, letterSpacing: '-.03em' }}>
-                {firstName ? `You're all set, ${firstName}!` : "You're all set!"}
+                {firstName ? tc('onboarding.done_title_named', { name: firstName }) : tc('onboarding.done_title')}
               </h2>
               <p style={{ fontSize: 14, color: TX2, lineHeight: 1.7, marginBottom: 32, maxWidth: 400, margin: '0 auto 32px' }}>
-                AskBiz is ready. Ask it anything about your business — upload a file, connect a source, or just start typing.
+                {tc('onboarding.done_subtitle')}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '0 auto' }}>
                 <button style={btn} onClick={finish} disabled={saving}>
-                  {saving ? 'Setting up…' : 'Go to AskBiz →'}
+                  {saving ? tc('onboarding.done_saving') : tc('onboarding.done_cta')}
                 </button>
               </div>
             </div>
