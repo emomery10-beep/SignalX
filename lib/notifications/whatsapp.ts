@@ -62,9 +62,13 @@ export function proactiveWhatsApp(opts: {
   businessName: string
   title: string
   body: string
-  type: 'stock' | 'anomaly' | 'news' | 'shipment'
+  type: 'stock' | 'anomaly' | 'news' | 'shipment' | 'source' | 'summary' | 'insight'
 }): string {
-  const icon = { stock: '📦', anomaly: '📊', news: '🌍', shipment: '🚚' }[opts.type]
+  const icons: Record<string, string> = {
+    stock: '📦', anomaly: '📊', news: '🌍', shipment: '🚚',
+    source: '🔌', summary: '📋', insight: '💡',
+  }
+  const icon = icons[opts.type] || '🔔' // fallback so an unmapped type never renders "undefined"
   return `${icon} *AskBiz — ${opts.businessName}*\n\n*${opts.title}*\n${opts.body}\n\nhttps://askbiz.co/home`
 }
 
