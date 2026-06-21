@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { isExpansionQuestion, buildExpansionContext, buildDataSummary } from './expansion'
 import { logUsage } from '@/lib/log-usage'
+import { LANG_ENGLISH_NAMES, type Lang } from '@/lib/i18n'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -89,11 +90,9 @@ export function buildSystemPrompt(opts: {
   // Thin per-language wrapper — the ONLY language-specific part of the prompt.
   // Everything else (behaviour, data, rules) is shared, so fixes apply to all
   // languages at once. English needs no directive.
-  const LANGUAGE_NAMES: Record<string, string> = {
-    es: 'Spanish', fr: 'French', de: 'German', nl: 'Dutch', ar: 'Arabic',
-  }
   const langBase = (locale || 'en').toLowerCase().split('-')[0]
-  const langName = LANGUAGE_NAMES[langBase]
+  // English directive only for non-English languages (en needs none).
+  const langName = langBase !== 'en' ? LANG_ENGLISH_NAMES[langBase as Lang] : undefined
   const languageDirective = langName ? `
 
 LANGUAGE — CRITICAL: Write your ENTIRE response in ${langName} — the verdict, verdict_sentence, explanation, and every recommendation. Use ${langBase}-locale formatting for numbers, dates and currency. Keep brand and product names as-is.${langBase === 'ar' ? ' Use Western (Latin) digits for monetary amounts and percentages.' : ''}` : ''

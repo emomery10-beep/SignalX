@@ -13,15 +13,24 @@
 // self-audit's catalogue-parity gate tracks coverage, not quality.
 
 import Anthropic from '@anthropic-ai/sdk'
-import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const LOCALES_DIR = join(ROOT, 'locales')
 const BASE = 'en'
-const TARGETS = { es: 'Spanish', fr: 'French', de: 'German', nl: 'Dutch', ar: 'Arabic' }
 const MODEL = 'claude-sonnet-4-6'
+
+// Target locales = the locale folders that exist (minus the English base).
+// English names come from the shared single source lib/i18n-languages.json,
+// which lib/i18n.ts also exports (LANG_ENGLISH_NAMES) — no hand-synced copy.
+const ENGLISH_NAMES = JSON.parse(readFileSync(join(ROOT, 'lib/i18n-languages.json'), 'utf8'))
+const TARGETS = Object.fromEntries(
+  readdirSync(LOCALES_DIR)
+    .filter(d => d !== BASE && statSync(join(LOCALES_DIR, d)).isDirectory())
+    .map(loc => [loc, ENGLISH_NAMES[loc] || loc]),
+)
 
 const args = process.argv.slice(2)
 const FORCE = args.includes('--force')

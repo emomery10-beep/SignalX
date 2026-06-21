@@ -12,14 +12,14 @@ export type Locale = 'en' | 'es' | 'fr' | 'de' | 'nl' | 'ar'
 
 export const ACTIVE_LOCALES: Locale[] = ['en', 'es', 'fr', 'de', 'nl', 'ar']
 export const DEFAULT_LOCALE: Locale = 'en'
-export const RTL_LOCALES: Locale[] = ['ar']
 
 export function isActiveLocale(x: unknown): x is Locale {
   return typeof x === 'string' && (ACTIVE_LOCALES as string[]).includes(x)
 }
 
+// Single source of RTL truth is RTL_LANGS in lib/i18n.ts (via isRtlLang).
 export function isRTL(locale: string): boolean {
-  return RTL_LOCALES.includes(locale as Locale) || isRtlLang(locale as Lang)
+  return isRtlLang(locale.split(/[-_]/)[0] as Lang)
 }
 
 // Coerce any candidate (e.g. "es-MX", "EN", "de_DE") to an active locale, or undefined.

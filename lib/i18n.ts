@@ -1,10 +1,17 @@
+import langEnglishNames from './i18n-languages.json'
+
 export type Lang = 'en' | 'fr' | 'de' | 'es' | 'ar' | 'sw' | 'pt' | 'nl' | 'it' | 'pl'
 
+// Native names (shown in the language switcher).
 export const LANG_NAMES: Record<Lang, string> = {
   en: 'English', fr: 'Français', de: 'Deutsch', es: 'Español',
   ar: 'العربية', sw: 'Kiswahili', pt: 'Português', nl: 'Nederlands',
   it: 'Italiano', pl: 'Polski',
 }
+
+// English names (for AI prompts etc). Single source: lib/i18n-languages.json,
+// also read by scripts/i18n-translate.mjs — keep all language metadata there.
+export const LANG_ENGLISH_NAMES: Record<Lang, string> = langEnglishNames
 
 export const LANG_FLAGS: Record<Lang, string> = {
   en: '🇬🇧', fr: '🇫🇷', de: '🇩🇪', es: '🇪🇸',

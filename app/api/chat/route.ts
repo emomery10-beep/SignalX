@@ -40,8 +40,10 @@ export async function POST(request: NextRequest) {
   const geoCurrency = ipCountry ? COUNTRY_CURRENCY[ipCountry] : null
   const geoSymbol   = geoCurrency ? (CURRENCIES[geoCurrency]?.sym ?? null) : null
 
-  const finalCurrency = geoCurrency || profile?.currency || currency || 'USD'
-  const finalSymbol   = geoSymbol   || profile?.currency_symbol || symbol || '$'
+  // The user's saved profile currency wins; geo (IP) is only a fallback when the
+  // profile has none, then the client value, then USD.
+  const finalCurrency = profile?.currency || geoCurrency || currency || 'USD'
+  const finalSymbol   = profile?.currency_symbol || geoSymbol || symbol || '$'
   const finalBizType  = bizType  || profile?.business_type || 'retail'
   const finalRegion   = region   || profile?.region || ''
   const finalSector   = sectorHints || profile?.sector_hints || ''
