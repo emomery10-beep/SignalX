@@ -3,6 +3,9 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useStore } from '@/store'
+import { useLang } from '@/components/LanguageProvider'
+import { ACTIVE_LOCALES } from '@/lib/i18n-locale'
+import type { Lang } from '@/lib/i18n'
 import { CURRENCIES } from '@/lib/geo'
 import { PLAN_FEATURES, getPlanFeatures } from '@/lib/plans'
 import ApiKeys from '@/components/settings/ApiKeys'
@@ -549,9 +552,11 @@ function TeamPanel() {
 
 function LocalisationPanel() {
   const { settings, updateSettings } = useStore()
+  // Language is driven by the real provider (cookie + /api/locale + dir), not a
+  // local state — so changing it here actually takes effect, like the switcher.
+  const { lang, setLang, tc, langNames } = useLang()
   const [currency, setCurrency] = useState('USD')
   const [bizType, setBizType]   = useState(settings.bizType)
-  const [lang, setLang]         = useState('en')
   const [saving, setSaving]     = useState(false)
   const [saved, setSaved]       = useState(false)
 
@@ -562,8 +567,6 @@ function LocalisationPanel() {
         if (d.business_type) setBizType(d.business_type)
       }
     })
-    const l = localStorage.getItem('askbiz-lang')
-    if (l) setLang(l)
   }, [])
 
   const save = async () => {
@@ -571,24 +574,23 @@ function LocalisationPanel() {
     try {
       await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ currency, currency_symbol: CURRENCIES[currency]?.sym || '$', business_type: bizType }) })
       updateSettings({ bizType: bizType as 'retail' | 'ecommerce' | 'distributor' | 'exporter' })
-      localStorage.setItem('askbiz-lang', lang)
       setSaved(true); setTimeout(() => setSaved(false), 2500)
     } finally { setSaving(false) }
   }
 
   return (
     <div>
-      <PanelHeader title="Localisation" description="Set your currency, business type and language. These shape how AskBiz presents data and answers."/>
+      <PanelHeader title={tc('settings.loc_title')} description={tc('settings.loc_desc')}/>
 
       <Card>
-        <CardHeader title="Regional"/>
-        <SettingRow label="Currency" description="Used in all AI answers, charts and tools" right={<select value={currency} onChange={e => setCurrency(e.target.value)} style={{ ...sel, minWidth: 160 }}>{Object.entries(CURRENCIES).map(([code, c]) => <option key={code} value={code}>{c.flag} {code} — {c.name.split(' ').slice(0, 2).join(' ')}</option>)}</select>}/>
-        <SettingRow label="Language" description="Language for the AskBiz interface" border={false} right={<select value={lang} onChange={e => setLang(e.target.value)} style={sel}><option value="en">English</option><option value="fr">Français</option><option value="es">Español</option><option value="de">Deutsch</option><option value="ar">العربية</option><option value="sw">Kiswahili</option><option value="pt">Português</option></select>}/>
+        <CardHeader title={tc('settings.regional')}/>
+        <SettingRow label={tc('settings.currency_label')} description={tc('settings.currency_desc')} right={<select value={currency} onChange={e => setCurrency(e.target.value)} style={{ ...sel, minWidth: 160 }}>{Object.entries(CURRENCIES).map(([code, c]) => <option key={code} value={code}>{c.flag} {code} — {c.name.split(' ').slice(0, 2).join(' ')}</option>)}</select>}/>
+        <SettingRow label={tc('settings.language_label')} description={tc('settings.language_desc')} border={false} right={<select value={lang} onChange={e => setLang(e.target.value as Lang)} style={sel}>{ACTIVE_LOCALES.map(l => <option key={l} value={l}>{langNames[l as Lang]}</option>)}</select>}/>
       </Card>
 
       <Card>
-        <CardHeader title="Business"/>
-        <SettingRow label="Business type" description="Shapes how AskBiz frames answers and recommendations" border={false} right={<select value={bizType} onChange={e => setBizType(e.target.value as any)} style={{ ...sel, minWidth: 160 }}><option value="retail">Retail / shop</option><option value="ecommerce">Ecommerce</option><option value="distributor">Distributor</option><option value="exporter">Exporter</option></select>}/>
+        <CardHeader title={tc('settings.business')}/>
+        <SettingRow label={tc('settings.biztype_label')} description={tc('settings.biztype_desc')} border={false} right={<select value={bizType} onChange={e => setBizType(e.target.value as any)} style={{ ...sel, minWidth: 160 }}><option value="retail">{tc('settings.biztype_retail')}</option><option value="ecommerce">{tc('settings.biztype_ecommerce')}</option><option value="distributor">{tc('settings.biztype_distributor')}</option><option value="exporter">{tc('settings.biztype_exporter')}</option></select>}/>
       </Card>
 
       <SaveRow onClick={save} saving={saving} saved={saved}/>
@@ -1499,6 +1501,7 @@ function CompliancePanel() {
 export default function SettingsPage() {
   const router  = useRouter()
   const supabase = createClient()
+  const { tc } = useLang()
   const [active, setActive] = useState<Section>('profile')
   const [winW, setWinW] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200)
 
@@ -1540,7 +1543,7 @@ export default function SettingsPage() {
                 <path d={activeItem.icon}/>
               </svg>
             )}
-            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)' }}>{activeItem?.label}</span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)' }}>{activeItem ? tc('settings.nav_' + activeItem.id) : ''}</span>
           </div>
           <button
             onClick={() => setMobileNavOpen(o => !o)}
@@ -1565,7 +1568,7 @@ export default function SettingsPage() {
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                       <path d={item.icon}/>
                     </svg>
-                    {item.label}
+                    {tc('settings.nav_' + item.id)}
                   </button>
                 )
               })}
@@ -1591,7 +1594,7 @@ export default function SettingsPage() {
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                     <path d={item.icon}/>
                   </svg>
-                  <span style={{ fontSize: 13, fontWeight: isActive ? 600 : 500 }}>{item.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: isActive ? 600 : 500 }}>{tc('settings.nav_' + item.id)}</span>
                   {isActive && (
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ marginLeft: 'auto', flexShrink: 0 }}>
                       <path d="M9 18l6-6-6-6"/>

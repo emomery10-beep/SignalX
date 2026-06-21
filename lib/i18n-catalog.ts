@@ -58,16 +58,22 @@ import frCookies from '@/locales/fr/cookies.json'
 import deCookies from '@/locales/de/cookies.json'
 import nlCookies from '@/locales/nl/cookies.json'
 import arCookies from '@/locales/ar/cookies.json'
+import enSettings from '@/locales/en/settings.json'
+import esSettings from '@/locales/es/settings.json'
+import frSettings from '@/locales/fr/settings.json'
+import deSettings from '@/locales/de/settings.json'
+import nlSettings from '@/locales/nl/settings.json'
+import arSettings from '@/locales/ar/settings.json'
 
 type Dict = Record<string, unknown>
 
 const CATALOG: Record<string, Record<string, Dict>> = {
-  en: { common: enCommon, nav: enNav, errors: enErrors, appnav: enAppnav, auth: enAuth, pricing: enPricing, cookies: enCookies },
-  es: { common: esCommon, nav: esNav, errors: esErrors, appnav: esAppnav, auth: esAuth, pricing: esPricing, cookies: esCookies },
-  fr: { common: frCommon, nav: frNav, errors: frErrors, appnav: frAppnav, auth: frAuth, pricing: frPricing, cookies: frCookies },
-  de: { common: deCommon, nav: deNav, errors: deErrors, appnav: deAppnav, auth: deAuth, pricing: dePricing, cookies: deCookies },
-  nl: { common: nlCommon, nav: nlNav, errors: nlErrors, appnav: nlAppnav, auth: nlAuth, pricing: nlPricing, cookies: nlCookies },
-  ar: { common: arCommon, nav: arNav, errors: arErrors, appnav: arAppnav, auth: arAuth, pricing: arPricing, cookies: arCookies },
+  en: { common: enCommon, nav: enNav, errors: enErrors, appnav: enAppnav, auth: enAuth, pricing: enPricing, cookies: enCookies, settings: enSettings },
+  es: { common: esCommon, nav: esNav, errors: esErrors, appnav: esAppnav, auth: esAuth, pricing: esPricing, cookies: esCookies, settings: esSettings },
+  fr: { common: frCommon, nav: frNav, errors: frErrors, appnav: frAppnav, auth: frAuth, pricing: frPricing, cookies: frCookies, settings: frSettings },
+  de: { common: deCommon, nav: deNav, errors: deErrors, appnav: deAppnav, auth: deAuth, pricing: dePricing, cookies: deCookies, settings: deSettings },
+  nl: { common: nlCommon, nav: nlNav, errors: nlErrors, appnav: nlAppnav, auth: nlAuth, pricing: nlPricing, cookies: nlCookies, settings: nlSettings },
+  ar: { common: arCommon, nav: arNav, errors: arErrors, appnav: arAppnav, auth: arAuth, pricing: arPricing, cookies: arCookies, settings: arSettings },
 }
 
 const BASE = 'en'
