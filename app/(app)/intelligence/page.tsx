@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLang } from '@/components/LanguageProvider'
 import DailyBrief from '@/components/intelligence/DailyBrief'
 import AnomalyFeed from '@/components/intelligence/AnomalyFeed'
 import DecisionMemory from '@/components/intelligence/DecisionMemory'
@@ -24,6 +25,7 @@ import HealthTimeMachine from '@/components/intelligence/HealthTimeMachine'
 
 export default function IntelligencePage() {
   const router = useRouter()
+  const { tc } = useLang()
   const { planId, loading: planLoading } = usePlan()
 
   // Core state
@@ -187,9 +189,9 @@ export default function IntelligencePage() {
     try {
       const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [{ role: 'user', content: sparringInput }], streaming: false }) })
       const data = await res.json()
-      setSparringResponse(data.answer_text || 'No response generated.')
+      setSparringResponse(data.answer_text || tc('intelligence.sparring_no_response'))
     } catch {
-      setSparringResponse('Could not connect.')
+      setSparringResponse(tc('intelligence.sparring_could_not_connect'))
     } finally {
       setSparringSending(false)
     }
@@ -206,7 +208,7 @@ export default function IntelligencePage() {
       const res = await fetch(`/api/market/products?${params}`)
       setMktResult(await res.json())
     } catch {
-      setMktResult({ error: 'Could not load market data.' })
+      setMktResult({ error: tc('intelligence.market_could_not_load') })
     } finally {
       setMktLoading(false)
     }
@@ -226,25 +228,25 @@ export default function IntelligencePage() {
   const canCfo       = !planLoading && planId === 'business'
 
   const tabs = [
-    { id: 'overview',     label: 'Overview' },
-    { id: 'cfo',          label: '🏛️ CFO',       locked: !canCfo },
-    { id: 'anomalies',    label: 'Alerts',       badge: canAlerts ? (criticalCount + warningCount) : 0, locked: !canAlerts },
-    { id: 'decisions',    label: 'Decisions',    locked: !canDecisions },
-    { id: 'team',         label: 'Team' },
-    { id: 'sparring',     label: 'Ask AI' },
-    { id: 'shipments',    label: '📦 Ships' },
-    { id: 'courier',      label: '🚛 Courier' },
-    { id: 'memory',       label: '🧠 Memory' },
-    { id: 'market',       label: '🌍 Market' },
-    { id: 'connections',  label: '🔗 Connect' },
-    { id: 'actions',      label: '⚡ Actions' },
+    { id: 'overview',     label: tc('intelligence.tab_overview') },
+    { id: 'cfo',          label: tc('intelligence.tab_cfo'),       locked: !canCfo },
+    { id: 'anomalies',    label: tc('intelligence.tab_anomalies'), badge: canAlerts ? (criticalCount + warningCount) : 0, locked: !canAlerts },
+    { id: 'decisions',    label: tc('intelligence.tab_decisions'), locked: !canDecisions },
+    { id: 'team',         label: tc('intelligence.tab_team') },
+    { id: 'sparring',     label: tc('intelligence.tab_sparring') },
+    { id: 'shipments',    label: tc('intelligence.tab_shipments') },
+    { id: 'courier',      label: tc('intelligence.tab_courier') },
+    { id: 'memory',       label: tc('intelligence.tab_memory') },
+    { id: 'market',       label: tc('intelligence.tab_market') },
+    { id: 'connections',  label: tc('intelligence.tab_connections') },
+    { id: 'actions',      label: tc('intelligence.tab_actions') },
   ]
 
   const sparringPrompts = [
-    'Should I launch in Germany?',
-    'Is now a good time to raise my prices?',
-    'What is my biggest business risk?',
-    'Hire or use freelancers?',
+    tc('intelligence.sparring_prompt_0'),
+    tc('intelligence.sparring_prompt_1'),
+    tc('intelligence.sparring_prompt_2'),
+    tc('intelligence.sparring_prompt_3'),
   ]
 
   // Sparkline data from score history
@@ -253,11 +255,11 @@ export default function IntelligencePage() {
   // KPI strip cards
   const kpiCards = [
     {
-      label: 'Health Score',
+      label: tc('intelligence.kpi_health_label'),
       value: health?.score != null ? health.score : '—',
-      sub: health?.label ?? (loadingHealth ? 'Loading...' : 'Upload data to score'),
+      sub: health?.label ?? (loadingHealth ? tc('intelligence.kpi_health_loading') : tc('intelligence.kpi_health_empty')),
       trend: scoreDelta > 0 ? 'up' as const : scoreDelta < 0 ? 'down' as const : null,
-      trendLabel: scoreDelta !== 0 ? `${scoreDelta > 0 ? '+' : ''}${scoreDelta} pts` : undefined,
+      trendLabel: scoreDelta !== 0 ? tc('intelligence.kpi_health_trend', { delta: `${scoreDelta > 0 ? '+' : ''}${scoreDelta}` }) : undefined,
       accentColor: health?.score != null
         ? (health.score >= 65 ? '#22C55E' : health.score >= 45 ? '#F59E0B' : '#EF4444')
         : undefined,
@@ -268,16 +270,16 @@ export default function IntelligencePage() {
       sparkline: scoreSparkline.length > 1 ? scoreSparkline : undefined,
     },
     {
-      label: 'Active Alerts',
+      label: tc('intelligence.kpi_alerts_label'),
       value: criticalCount + warningCount || '—',
-      sub: criticalCount > 0 ? `${criticalCount} critical` : warningCount > 0 ? `${warningCount} warnings` : 'All clear',
+      sub: criticalCount > 0 ? tc('intelligence.kpi_alerts_critical', { n: criticalCount }) : warningCount > 0 ? tc('intelligence.kpi_alerts_warnings', { n: warningCount }) : tc('intelligence.kpi_alerts_clear'),
       accentColor: criticalCount > 0 ? '#EF4444' : warningCount > 0 ? '#F59E0B' : '#22C55E',
       onClick: () => setTab('anomalies'),
     },
     {
-      label: '30-Day Trend',
+      label: tc('intelligence.kpi_trend_label'),
       value: scoreDelta === 0 ? '—' : `${scoreDelta > 0 ? '+' : ''}${scoreDelta}`,
-      sub: scoreHistoryItems.length > 1 ? 'pts vs 30 days ago' : 'Not enough history yet',
+      sub: scoreHistoryItems.length > 1 ? tc('intelligence.kpi_trend_sub') : tc('intelligence.kpi_trend_empty'),
       trend: scoreDelta > 0 ? 'up' as const : scoreDelta < 0 ? 'down' as const : 'flat' as const,
       trendLabel: undefined,
       accentColor: scoreDelta > 0 ? '#22C55E' : scoreDelta < 0 ? '#EF4444' : undefined,
@@ -285,9 +287,9 @@ export default function IntelligencePage() {
       onClick: () => setTrendForceOpen(true),
     },
     {
-      label: 'Data Sources',
+      label: tc('intelligence.kpi_sources_label'),
       value: connectedCount || '—',
-      sub: connectedCount === 0 ? 'None connected yet' : connectedCount === 1 ? 'POS connected' : `${connectedCount} sources live`,
+      sub: connectedCount === 0 ? tc('intelligence.kpi_sources_none') : connectedCount === 1 ? tc('intelligence.kpi_sources_pos') : tc('intelligence.kpi_sources_live', { n: connectedCount }),
       accentColor: connectedCount > 0 ? '#6366F1' : undefined,
       onClick: () => setTab('connections'),
     },
@@ -306,12 +308,12 @@ export default function IntelligencePage() {
               </svg>
             </div>
             <div>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700 }}>Monitor</div>
-              <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Health · Alerts · Decisions · Team · AI Sparring</div>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700 }}>{tc('intelligence.header_title')}</div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intelligence.header_subtitle')}</div>
             </div>
             {criticalCount > 0 && (
               <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: '#EF4444', borderRadius: 9999, padding: '2px 8px' }}>
-                {criticalCount} critical
+                {tc('intelligence.critical_badge', { n: criticalCount })}
               </span>
             )}
           </div>
@@ -369,7 +371,7 @@ export default function IntelligencePage() {
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--tx)', fontFamily: 'var(--font-sora, inherit)', lineHeight: 1.3 }}>
-                  {nowHour === null ? '' : nowHour < 12 ? 'Good morning' : nowHour < 17 ? 'Good afternoon' : 'Good evening'}
+                  {nowHour === null ? '' : nowHour < 12 ? tc('intelligence.greeting_morning') : nowHour < 17 ? tc('intelligence.greeting_afternoon') : tc('intelligence.greeting_evening')}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>
                   {nowDateStr}
@@ -392,19 +394,19 @@ export default function IntelligencePage() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 3, height: 14, borderRadius: 2, background: '#10B981' }} />
-                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Financial Summary</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intelligence.financial_summary')}</span>
                   </div>
                   <button onClick={() => setTab('cfo')} style={{ fontSize: 11, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>
-                    Open CFO →
+                    {tc('intelligence.open_cfo')}
                   </button>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10 }}>
                   {[
-                    { label: 'Revenue', value: cfoSnapshot.totals.revenue, color: '#22C55E' },
-                    { label: 'Gross Profit', value: cfoSnapshot.totals.gross_profit, color: '#6366F1' },
-                    { label: 'Net Profit', value: cfoSnapshot.totals.net_profit, color: cfoSnapshot.totals.net_profit >= 0 ? '#10B981' : '#EF4444' },
-                    { label: 'Gross Margin', value: null, pct: cfoSnapshot.totals.gross_margin_pct, color: '#F59E0B' },
-                    { label: 'Net Margin', value: null, pct: cfoSnapshot.totals.net_margin_pct, color: cfoSnapshot.totals.net_margin_pct >= 0 ? '#10B981' : '#EF4444' },
+                    { label: tc('intelligence.fin_revenue'), value: cfoSnapshot.totals.revenue, color: '#22C55E' },
+                    { label: tc('intelligence.fin_gross_profit'), value: cfoSnapshot.totals.gross_profit, color: '#6366F1' },
+                    { label: tc('intelligence.fin_net_profit'), value: cfoSnapshot.totals.net_profit, color: cfoSnapshot.totals.net_profit >= 0 ? '#10B981' : '#EF4444' },
+                    { label: tc('intelligence.fin_gross_margin'), value: null, pct: cfoSnapshot.totals.gross_margin_pct, color: '#F59E0B' },
+                    { label: tc('intelligence.fin_net_margin'), value: null, pct: cfoSnapshot.totals.net_margin_pct, color: cfoSnapshot.totals.net_margin_pct >= 0 ? '#10B981' : '#EF4444' },
                   ].map((item, i) => {
                     const sym = cfoSnapshot.currency_symbol || 'KSh'
                     const fmtVal = item.value != null
@@ -426,7 +428,7 @@ export default function IntelligencePage() {
               <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--sf) 0%, rgba(6,182,212,.02) 100%)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                   <div style={{ width: 3, height: 14, borderRadius: 2, background: '#0891B2' }} />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Shipping & Delivery</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intelligence.shipping_delivery')}</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   {/* Shipments card */}
@@ -442,7 +444,7 @@ export default function IntelligencePage() {
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                         <span style={{ fontSize: 16 }}>📦</span>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>Shipments</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('intelligence.shipments_card_title')}</span>
                         <span style={{
                           fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 9999,
                           color: logisticsHealth.color === 'green' ? '#16a34a' : logisticsHealth.color === 'red' ? '#dc2626' : '#d97706',
@@ -451,7 +453,7 @@ export default function IntelligencePage() {
                       </div>
                       <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora, inherit)', marginBottom: 4 }}>{logisticsHealth.score}<span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 400 }}>/100</span></div>
                       <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4 }}>
-                        {logisticsHealth.active_shipments > 0 ? `${logisticsHealth.active_shipments} active · ${logisticsHealth.in_transit || 0} in transit` : 'No active shipments'}
+                        {logisticsHealth.active_shipments > 0 ? tc('intelligence.shipments_active', { active: logisticsHealth.active_shipments, transit: logisticsHealth.in_transit || 0 }) : tc('intelligence.shipments_none')}
                       </div>
                     </button>
                   )}
@@ -468,16 +470,16 @@ export default function IntelligencePage() {
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                         <span style={{ fontSize: 16 }}>🚛</span>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>Courier</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('intelligence.courier_card_title')}</span>
                         {courierSummary.stuck > 0 && (
                           <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 9999, color: '#EF4444', background: 'rgba(239,68,68,.1)' }}>
-                            {courierSummary.stuck} stuck
+                            {tc('intelligence.courier_stuck', { n: courierSummary.stuck })}
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora, inherit)', marginBottom: 4 }}>{courierSummary.deliveryRate}%<span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 400 }}> delivery rate</span></div>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora, inherit)', marginBottom: 4 }}>{courierSummary.deliveryRate}%<span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 400 }}>{tc('intelligence.courier_delivery_rate')}</span></div>
                       <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4 }}>
-                        {courierSummary.inTransit} in transit · {courierSummary.delivered} delivered
+                        {tc('intelligence.courier_summary_line', { transit: courierSummary.inTransit, delivered: courierSummary.delivered })}
                       </div>
                     </button>
                   )}
@@ -499,13 +501,13 @@ export default function IntelligencePage() {
                 <span style={{ fontSize: 18 }}>🔗</span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', marginBottom: 2 }}>
-                    Connect more data sources for better insights
+                    {tc('intelligence.connect_more_title')}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
-                    {connectedCount} of {totalSources} sources connected — add Shopify, QuickBooks, or more to unlock full intelligence
+                    {tc('intelligence.connect_more_sub', { connected: connectedCount, total: totalSources })}
                   </div>
                 </div>
-                <span style={{ fontSize: 11, color: '#6366F1', fontWeight: 600, whiteSpace: 'nowrap' }}>Connect →</span>
+                <span style={{ fontSize: 11, color: '#6366F1', fontWeight: 600, whiteSpace: 'nowrap' }}>{tc('intelligence.connect_cta')}</span>
               </button>
             )}
 
@@ -519,16 +521,16 @@ export default function IntelligencePage() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Analytics</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intelligence.analytics_title')}</span>
                 </div>
-                <span style={{ fontSize: 11, color: 'var(--tx3)' }}>Last 30 days</span>
+                <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intelligence.analytics_last_30')}</span>
               </div>
 
               {/* Row 1: Health Trend + Revenue Waterfall */}
               {scoreHistoryItems.length > 1 && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 12, marginBottom: 12, alignItems: 'start' }}>
                   <div style={{ minWidth: 0, overflow: 'hidden' }}>
-                    <MiniTrendChart history={scoreHistoryItems} label="Health Trend" height={100} onAsk={askAskBiz} forceExpanded={trendForceOpen} onClose={() => setTrendForceOpen(false)}/>
+                    <MiniTrendChart history={scoreHistoryItems} label={tc('intelligence.health_trend_label')} height={100} onAsk={askAskBiz} forceExpanded={trendForceOpen} onClose={() => setTrendForceOpen(false)}/>
                   </div>
                   <div style={{ minWidth: 0, overflow: 'hidden' }}>
                     <RevenueWaterfall health={health} onAsk={askAskBiz} onDrillChange={setWaterfallDrill}/>
@@ -569,12 +571,12 @@ export default function IntelligencePage() {
                   animation: 'fadeIn 200ms ease',
                 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                  {waterfallDrill === 'Revenue' && 'See your top revenue products highlighted above ↑'}
-                  {waterfallDrill === 'COGS' && 'Check top products above to see cost breakdown ↑'}
-                  {waterfallDrill === 'Gross Profit' && 'Top products above show margin % for each item ↑'}
-                  {waterfallDrill === 'Stock Cost' && 'POS Pulse above shows your stock health ↑'}
-                  {waterfallDrill === 'Operating' && 'Review products and stock for operating cost drivers ↑'}
-                  {waterfallDrill === 'Net Margin' && 'Both widgets above feed into your net margin calculation ↑'}
+                  {waterfallDrill === 'Revenue' && tc('intelligence.drill_revenue')}
+                  {waterfallDrill === 'COGS' && tc('intelligence.drill_cogs')}
+                  {waterfallDrill === 'Gross Profit' && tc('intelligence.drill_gross_profit')}
+                  {waterfallDrill === 'Stock Cost' && tc('intelligence.drill_stock_cost')}
+                  {waterfallDrill === 'Operating' && tc('intelligence.drill_operating')}
+                  {waterfallDrill === 'Net Margin' && tc('intelligence.drill_net_margin')}
                 </div>
               )}
             </div>
@@ -585,7 +587,7 @@ export default function IntelligencePage() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 3, height: 14, borderRadius: 2, background: '#EF4444' }} />
-                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Active Alerts</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intelligence.active_alerts')}</span>
                     <span style={{
                       fontSize: 10, fontWeight: 700, color: '#EF4444',
                       background: 'rgba(239,68,68,.1)', borderRadius: 6, padding: '1px 6px',
@@ -595,7 +597,7 @@ export default function IntelligencePage() {
                     onClick={() => setTab('anomalies')}
                     style={{ fontSize: 11, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
                   >
-                    View all &rarr;
+                    {tc('intelligence.view_all')}
                   </button>
                 </div>
                 <AnomalyFeed anomalies={anomalies.slice(0, 3)} onAsk={askAskBiz} compact/>
@@ -606,7 +608,7 @@ export default function IntelligencePage() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                 <div style={{ width: 3, height: 14, borderRadius: 2, background: '#8B5CF6' }} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Quick Actions</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intelligence.quick_actions')}</span>
               </div>
 
               {/* Top row: primary actions (larger) */}
@@ -614,16 +616,16 @@ export default function IntelligencePage() {
                 {[
                   {
                     icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
-                    title: 'Ask about your data',
-                    sub: 'Ask any question in plain English',
+                    title: tc('intelligence.qa_ask_title'),
+                    sub: tc('intelligence.qa_ask_sub'),
                     gradient: 'linear-gradient(135deg, rgba(99,102,241,.08) 0%, rgba(99,102,241,.02) 100%)',
                     border: 'rgba(99,102,241,.18)',
                     action: () => askAskBiz('What is my best performing product by margin right now?'),
                   },
                   {
                     icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
-                    title: 'What if...?',
-                    sub: 'Run scenario simulations with AI',
+                    title: tc('intelligence.qa_whatif_title'),
+                    sub: tc('intelligence.qa_whatif_sub'),
                     gradient: 'linear-gradient(135deg, rgba(245,158,11,.08) 0%, rgba(245,158,11,.02) 100%)',
                     border: 'rgba(245,158,11,.18)',
                     action: () => setTab('sparring'),
@@ -668,10 +670,10 @@ export default function IntelligencePage() {
               {/* Bottom row: secondary actions (compact grid) */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
                 {[
-                  { emoji: '📦', title: 'Ships', sub: 'Track shipments', color: 'rgba(34,197,94,.06)', border: 'rgba(34,197,94,.15)', action: () => setTab('shipments') },
-                  { emoji: '🚛', title: 'Courier', sub: 'Deliveries', color: 'rgba(8,145,178,.06)', border: 'rgba(8,145,178,.15)', action: () => setTab('courier') },
-                  { emoji: '🌍', title: 'Market', sub: 'Prices & intel', color: 'rgba(208,138,89,.06)', border: 'rgba(208,138,89,.15)', action: () => setTab('market') },
-                  { emoji: '🏛️', title: 'CFO', sub: 'Financials', color: 'rgba(99,102,241,.06)', border: 'rgba(99,102,241,.15)', action: () => setTab('cfo') },
+                  { emoji: '📦', title: tc('intelligence.qa_ships_title'), sub: tc('intelligence.qa_ships_sub'), color: 'rgba(34,197,94,.06)', border: 'rgba(34,197,94,.15)', action: () => setTab('shipments') },
+                  { emoji: '🚛', title: tc('intelligence.qa_courier_title'), sub: tc('intelligence.qa_courier_sub'), color: 'rgba(8,145,178,.06)', border: 'rgba(8,145,178,.15)', action: () => setTab('courier') },
+                  { emoji: '🌍', title: tc('intelligence.qa_market_title'), sub: tc('intelligence.qa_market_sub'), color: 'rgba(208,138,89,.06)', border: 'rgba(208,138,89,.15)', action: () => setTab('market') },
+                  { emoji: '🏛️', title: tc('intelligence.qa_cfo_title'), sub: tc('intelligence.qa_cfo_sub'), color: 'rgba(99,102,241,.06)', border: 'rgba(99,102,241,.15)', action: () => setTab('cfo') },
                 ].map((card, i) => (
                   <button
                     key={i}
@@ -704,8 +706,8 @@ export default function IntelligencePage() {
           <div style={{ maxWidth: 720 }}>
             <FeatureGate planId={planId} feature="anomaly_alerts">
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', marginBottom: 4 }}>Active Alerts</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>AskBiz monitors your data and flags anything that needs attention</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', marginBottom: 4 }}>{tc('intelligence.alerts_heading')}</div>
+                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intelligence.alerts_sub')}</div>
               </div>
               <AnomalyFeed anomalies={anomalies} onAsk={askAskBiz} onDismiss={dismissAnomaly}/>
             </FeatureGate>
@@ -719,8 +721,8 @@ export default function IntelligencePage() {
               {/* View toggle */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
                 <div>
-                  <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>Decision Memory</div>
-                  <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Log decisions · AskBiz reviews outcomes in 6 weeks</div>
+                  <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>{tc('intelligence.decisions_heading')}</div>
+                  <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intelligence.decisions_sub')}</div>
                 </div>
                 <div style={{ display: 'flex', borderRadius: 9999, border: '1px solid var(--b)', overflow: 'hidden', background: 'var(--sf)' }}>
                   {(['timeline', 'cards'] as const).map(v => (
@@ -739,7 +741,7 @@ export default function IntelligencePage() {
                         transition: 'all 150ms',
                       }}
                     >
-                      {v === 'timeline' ? '⏱ Timeline' : '📋 Cards'}
+                      {v === 'timeline' ? tc('intelligence.decisions_view_timeline') : tc('intelligence.decisions_view_cards')}
                     </button>
                   ))}
                 </div>
@@ -767,25 +769,25 @@ export default function IntelligencePage() {
           <div style={{ maxWidth: 720 }}>
             <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
               <div>
-                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>Shipment Intelligence</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Real-time tracking · Financial impact · Supplier scoring</div>
+                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>{tc('intelligence.shipments_heading')}</div>
+                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intelligence.shipments_sub')}</div>
               </div>
               <button
                 onClick={() => router.push('/shipments')}
                 style={{ padding: '8px 16px', borderRadius: 9999, border: 'none', background: '#6366F1', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
               >
-                Open full view →
+                {tc('intelligence.shipments_open_full')}
               </button>
             </div>
             <LogisticsPulseCard />
             <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 12, background: 'var(--sf)', border: '1px solid var(--b)' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>Quick Actions</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>{tc('intelligence.quick_actions')}</div>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 {[
-                  { label: 'Add tracking number', action: () => router.push('/shipments') },
-                  { label: 'View at-risk shipments', action: () => router.push('/shipments?filter=at_risk') },
-                  { label: 'Ask about a delay', action: () => askAskBiz('Which of my shipments are delayed and what is the financial impact?') },
-                  { label: 'Supplier performance', action: () => askAskBiz('Which supplier has the best delivery reliability based on my shipment history?') },
+                  { label: tc('intelligence.shipments_qa_add'), action: () => router.push('/shipments') },
+                  { label: tc('intelligence.shipments_qa_at_risk'), action: () => router.push('/shipments?filter=at_risk') },
+                  { label: tc('intelligence.shipments_qa_delay'), action: () => askAskBiz('Which of my shipments are delayed and what is the financial impact?') },
+                  { label: tc('intelligence.shipments_qa_supplier'), action: () => askAskBiz('Which supplier has the best delivery reliability based on my shipment history?') },
                 ].map((item, i) => (
                   <button
                     key={i}
@@ -807,20 +809,20 @@ export default function IntelligencePage() {
           <div style={{ maxWidth: 720 }}>
             <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
               <div>
-                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>Courier Intelligence</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Parcel throughput · Delivery performance · Fleet health · Revenue</div>
+                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>{tc('intelligence.courier_heading')}</div>
+                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intelligence.courier_sub')}</div>
               </div>
             </div>
             <CourierPulseCard onAsk={askAskBiz} />
             <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 12, background: 'var(--sf)', border: '1px solid var(--b)' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>Quick Actions</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>{tc('intelligence.quick_actions')}</div>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 {[
-                  { label: 'Delivery failure analysis', action: () => askAskBiz('Analyse our delivery failures — what are the top reasons and which routes are worst?') },
-                  { label: 'Revenue at risk', action: () => askAskBiz('How much courier revenue is unpaid? Which parcels should we chase first?') },
-                  { label: 'Fleet utilization', action: () => askAskBiz('How well are we using our truck fleet? Any bottlenecks or underutilized vehicles?') },
-                  { label: 'Route performance', action: () => askAskBiz('Which courier routes are most profitable and which have the highest failure rate?') },
-                  { label: 'Stuck parcels', action: () => askAskBiz('Which parcels have been at branch for over 48 hours and need urgent dispatch?') },
+                  { label: tc('intelligence.courier_qa_failures'), action: () => askAskBiz('Analyse our delivery failures — what are the top reasons and which routes are worst?') },
+                  { label: tc('intelligence.courier_qa_revenue_risk'), action: () => askAskBiz('How much courier revenue is unpaid? Which parcels should we chase first?') },
+                  { label: tc('intelligence.courier_qa_fleet'), action: () => askAskBiz('How well are we using our truck fleet? Any bottlenecks or underutilized vehicles?') },
+                  { label: tc('intelligence.courier_qa_routes'), action: () => askAskBiz('Which courier routes are most profitable and which have the highest failure rate?') },
+                  { label: tc('intelligence.courier_qa_stuck'), action: () => askAskBiz('Which parcels have been at branch for over 48 hours and need urgent dispatch?') },
                 ].map((item, i) => (
                   <button
                     key={i}
@@ -841,14 +843,14 @@ export default function IntelligencePage() {
         {tab === 'sparring' && (
           <div style={{ maxWidth: 720 }}>
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>AI Sparring Partner</div>
-              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Scenario planning · What-if analysis · Strategic decisions</div>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>{tc('intelligence.sparring_heading')}</div>
+              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intelligence.sparring_sub')}</div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16, padding: '16px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)' }}>
               <textarea
                 value={sparringInput}
                 onChange={e => setSparringInput(e.target.value)}
-                placeholder="Ask a strategic question... e.g. Should I expand to Germany? Is now a good time to raise prices?"
+                placeholder={tc('intelligence.sparring_placeholder')}
                 rows={3}
                 style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 14, fontFamily: 'inherit', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
               />
@@ -858,7 +860,7 @@ export default function IntelligencePage() {
                   disabled={sparringSending || !sparringInput.trim()}
                   style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: '#6366F1', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: sparringSending || !sparringInput.trim() ? 0.5 : 1 }}
                 >
-                  {sparringSending ? 'Thinking...' : 'Ask →'}
+                  {sparringSending ? tc('intelligence.sparring_thinking') : tc('intelligence.sparring_ask')}
                 </button>
               </div>
             </div>
@@ -889,8 +891,8 @@ export default function IntelligencePage() {
               <CrossSectorIntel onAsk={askAskBiz} />
             </div>
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>Market Intelligence</div>
-              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Real market prices, channels, and routes — merchant data + live web signals</div>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>{tc('intelligence.market_heading')}</div>
+              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intelligence.market_sub')}</div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '16px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 20 }}>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -898,7 +900,7 @@ export default function IntelligencePage() {
                   value={mktQuery}
                   onChange={e => setMktQuery(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && searchMarket()}
-                  placeholder="e.g. leather handbag, running shoes, phone case..."
+                  placeholder={tc('intelligence.market_search_placeholder')}
                   style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 14, fontFamily: 'inherit', outline: 'none' }}
                 />
                 <button
@@ -906,14 +908,14 @@ export default function IntelligencePage() {
                   disabled={mktLoading || !mktQuery.trim()}
                   style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#d08a59', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: mktLoading || !mktQuery.trim() ? 0.5 : 1 }}
                 >
-                  {mktLoading ? '...' : 'Search'}
+                  {mktLoading ? tc('intelligence.market_searching') : tc('intelligence.market_search')}
                 </button>
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <input
                   value={mktRegion}
                   onChange={e => setMktRegion(e.target.value)}
-                  placeholder="Region (e.g. USA, UK, EU)"
+                  placeholder={tc('intelligence.market_region_placeholder')}
                   style={{ flex: 1, minWidth: 140, padding: '7px 12px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
                 />
                 <select
@@ -921,7 +923,7 @@ export default function IntelligencePage() {
                   onChange={e => setMktChannel(e.target.value)}
                   style={{ flex: 1, minWidth: 140, padding: '7px 12px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 13, fontFamily: 'inherit', outline: 'none' }}
                 >
-                  <option value="">All channels</option>
+                  <option value="">{tc('intelligence.market_channel_all')}</option>
                   <option value="shopify">Shopify</option>
                   <option value="amazon_fba">Amazon FBA</option>
                   <option value="ebay">eBay</option>
@@ -934,9 +936,9 @@ export default function IntelligencePage() {
             {mktResult?.locked && (
               <div style={{ padding: '24px 20px', borderRadius: 14, border: '1px solid #d08a59', background: 'rgba(208,138,89,0.07)', textAlign: 'center' }}>
                 <div style={{ fontSize: 28, marginBottom: 10 }}>🌍</div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)', marginBottom: 6 }}>Market Intelligence</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 16, lineHeight: 1.5 }}>Available on Growth and above. See real market prices, channel benchmarks, and live web signals.</div>
-                <a href="/billing" style={{ display: 'inline-block', padding: '10px 24px', borderRadius: 9999, background: '#d08a59', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Upgrade to Growth →</a>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)', marginBottom: 6 }}>{tc('intelligence.market_locked_title')}</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 16, lineHeight: 1.5 }}>{tc('intelligence.market_locked_desc')}</div>
+                <a href="/billing" style={{ display: 'inline-block', padding: '10px 24px', borderRadius: 9999, background: '#d08a59', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>{tc('intelligence.market_upgrade')}</a>
               </div>
             )}
             {mktResult?.error && (
@@ -947,15 +949,15 @@ export default function IntelligencePage() {
                 {mktResult.catalogue?.length > 0 && (
                   <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
                     <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Merchant Price Data</div>
-                      <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{mktResult.catalogue.length} records · {mktResult.plan} plan</span>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{tc('intelligence.market_merchant_data')}</div>
+                      <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intelligence.market_records', { count: mktResult.catalogue.length, plan: mktResult.plan })}</span>
                     </div>
                     <div style={{ overflowX: 'auto' }}>
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                         <thead>
                           <tr style={{ background: 'var(--ev)' }}>
-                            {['Product','Channel','Region','Avg Price','Min','Max','Margin %','Merchants'].map(h => (
-                              <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--tx3)', whiteSpace: 'nowrap' }}>{h}</th>
+                            {['product','channel','region','avg_price','min','max','margin','merchants'].map(h => (
+                              <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--tx3)', whiteSpace: 'nowrap' }}>{tc('intelligence.market_col_' + h)}</th>
                             ))}
                           </tr>
                         </thead>
@@ -979,20 +981,20 @@ export default function IntelligencePage() {
                 )}
                 {mktResult.catalogue?.length === 0 && (
                   <div style={{ padding: '14px 16px', borderRadius: 12, background: 'var(--sf)', border: '1px solid var(--b)', fontSize: 13, color: 'var(--tx3)' }}>
-                    No merchant price data yet for this product — web signals below may help.
+                    {tc('intelligence.market_no_data')}
                   </div>
                 )}
                 {mktResult.routes?.length > 0 && (
                   <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
                     <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)' }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Route Intelligence · {mktResult.region}</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{tc('intelligence.market_route_intel', { region: mktResult.region })}</div>
                     </div>
                     <div style={{ overflowX: 'auto' }}>
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                         <thead>
                           <tr style={{ background: 'var(--ev)' }}>
-                            {['Origin','Destination','Carrier','Avg Transit','On-Time','Customs Hold','Merchants'].map(h => (
-                              <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--tx3)', whiteSpace: 'nowrap' }}>{h}</th>
+                            {['origin','destination','carrier','transit','ontime','customs','merchants'].map(h => (
+                              <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 600, color: 'var(--tx3)', whiteSpace: 'nowrap' }}>{tc('intelligence.market_route_' + h)}</th>
                             ))}
                           </tr>
                         </thead>
@@ -1016,12 +1018,12 @@ export default function IntelligencePage() {
                 {mktResult.web && (
                   <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
                     <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)' }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Live Web Signals</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{tc('intelligence.market_web_signals')}</div>
                     </div>
                     <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
                       {mktResult.web.price_summary && (
                         <div>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>Price Summary</div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('intelligence.market_price_summary')}</div>
                           <div style={{ fontSize: 13, color: 'var(--tx)', lineHeight: 1.6, padding: '10px 14px', borderRadius: 10, background: 'var(--ev)' }}>{mktResult.web.price_summary}</div>
                           {mktResult.web.price_sources?.length > 0 && (
                             <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -1037,7 +1039,7 @@ export default function IntelligencePage() {
                       )}
                       {mktResult.web.news?.length > 0 && (
                         <div>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>Market News (last 30 days)</div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('intelligence.market_news')}</div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                             {mktResult.web.news.map((n: any, i: number) => (
                               <a key={i} href={n.url} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--b)', textDecoration: 'none' }}>
@@ -1053,7 +1055,7 @@ export default function IntelligencePage() {
                 )}
                 {mktResult.data_thin && (
                   <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(208,138,89,0.08)', border: '1px solid rgba(208,138,89,0.2)', fontSize: 12, color: '#d08a59' }}>
-                    Limited merchant data for this product — supplemented with live web signals. As more merchants contribute, this will improve.
+                    {tc('intelligence.market_data_thin')}
                   </div>
                 )}
               </div>
@@ -1066,7 +1068,7 @@ export default function IntelligencePage() {
                     onClick={() => { setMktQuery(product); if (region) setMktRegion(region) }}
                     style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}
                   >
-                    <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 3 }}>Try searching</div>
+                    <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 3 }}>{tc('intelligence.market_try_searching')}</div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{product}{region ? `, ${region}` : ''}</div>
                   </button>
                 ))}
