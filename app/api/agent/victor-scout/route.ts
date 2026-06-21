@@ -75,6 +75,18 @@ async function runVictorScout() {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    // Skip if already ran today — prevents double-posting when the orchestrator
+    // cron and a manual "Run Now" both fire on the same day.
+    const today = new Date().toISOString().slice(0, 10)
+    const { count: todayCount } = await supabase
+      .from('agent_content')
+      .select('id', { count: 'exact', head: true })
+      .like('run_id', 'blog_mktg_africa_%')
+      .gte('created_at', `${today}T00:00:00Z`)
+    if ((todayCount ?? 0) > 0) {
+      return NextResponse.json({ skipped: true, reason: 'already_ran_today', date: today })
+    }
+
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
     const [{ data: recentPosts }, { data: publishedPosts }] = await Promise.all([
       supabase.from('agent_content').select('source_query, content').eq('type', 'blog_mktg_africa').gte('created_at', thirtyDaysAgo).limit(60),
