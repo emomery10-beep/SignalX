@@ -26,5 +26,55 @@
   "biztype_exporter": "Exporter",
   "save_changes": "Save changes",
   "saving": "Saving…",
-  "saved": "Saved"
+  "saved": "Saved",
+
+  "profile_title": "Profile",
+  "profile_desc": "Update your display name and view your account details.",
+  "card_signin_methods": "Sign-in methods",
+
+  "team_title": "Team",
+  "team_desc": "Invite colleagues and manage their roles and permissions.",
+  "card_invite_member": "Invite a team member",
+  "card_members": "Members",
+
+  "address_title": "Business address",
+  "address_desc": "Used as the sender address when generating live shipping quotes. Sent directly to the courier — never shared.",
+
+  "integrations_title": "Integrations",
+  "integrations_desc": "Connect your business tools so AskBiz can answer questions using your live data.",
+  "card_connected": "Connected",
+
+  "ai_title": "AI preferences",
+  "ai_desc": "Control how AskBiz formats and presents answers. Changes apply immediately across all conversations.",
+  "card_response_format": "Response format",
+  "card_advanced": "Advanced",
+
+  "notifications_title": "Notifications",
+  "notifications_desc": "Choose how AskBiz reaches you when something needs your attention.",
+
+  "api_title": "API access",
+  "api_desc": "Create and manage API keys to integrate AskBiz into your own products and workflows.",
+
+  "privacy_title": "Privacy & data",
+  "privacy_desc": "Control how AskBiz uses your business data. All settings are optional and can be changed at any time.",
+  "card_data_preferences": "Data preferences",
+  "card_pos_data_processing": "POS data processing",
+
+  "account_title": "Account",
+  "account_desc": "Manage your subscription, export your data, or close your account.",
+  "card_current_plan": "Current plan",
+  "card_your_data": "Your data",
+  "card_danger_zone": "Danger zone",
+
+  "compliance_title": "Compliance",
+  "compliance_desc": "GDPR, ICO registration, VAT, and data residency information for your account.",
+  "card_data_residency": "Data residency",
+  "card_gdpr_status": "GDPR compliance status",
+  "card_registration_numbers": "Registration numbers",
+  "card_mtd": "Making Tax Digital (MTD)",
+  "card_market_contribution": "Market intelligence contribution",
+  "card_global_market_intel": "Global market intelligence",
+  "card_pos_staff_data": "POS staff data",
+  "card_pos_logistics_camera": "POS logistics & camera data",
+  "card_breach_notification": "Data breach notification"
 }

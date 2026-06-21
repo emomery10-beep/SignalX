@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useLang } from "@/components/LanguageProvider";
 import {
   TRANSPARENCY_SECTIONS,
   getAllArticles,
@@ -10,16 +11,29 @@ import {
   TOTAL_ARTICLES,
 } from "@/lib/transparency-content";
 
+const buildKeyMetrics = (tc: (key: string) => string) => [
+  { label: tc("transparency.metric_accuracy_label"), value: "93.0%", trend: "↑", note: tc("transparency.metric_accuracy_note") },
+  { label: tc("transparency.metric_hallucination_label"), value: "1.2%", trend: "↓", note: tc("transparency.metric_hallucination_note") },
+  { label: tc("transparency.metric_confidence_label"), value: "71%", trend: "↑", note: tc("transparency.metric_confidence_note") },
+  { label: tc("transparency.metric_flags_label"), value: "847", trend: "→", note: tc("transparency.metric_flags_note") },
+];
+
+const buildRelatedLinks = (tc: (key: string) => string) => [
+  { href: "/rules", icon: "⚖️", title: tc("transparency.related_rules_title"), desc: tc("transparency.related_rules_desc") },
+  { href: "/help/data-security", icon: "🔒", title: tc("transparency.related_security_title"), desc: tc("transparency.related_security_desc") },
+  { href: "/help/gdpr-compliance", icon: "🇪🇺", title: tc("transparency.related_gdpr_title"), desc: tc("transparency.related_gdpr_desc") },
+  { href: "/help/responsible-ai-use", icon: "🤖", title: tc("transparency.related_responsible_title"), desc: tc("transparency.related_responsible_desc") },
+  { href: "/help/reporting-a-concern", icon: "🚨", title: tc("transparency.related_report_title"), desc: tc("transparency.related_report_desc") },
+  { href: "/help/how-we-handle-safety-incidents", icon: "🛡️", title: tc("transparency.related_safety_title"), desc: tc("transparency.related_safety_desc") },
+];
+
 export default function TransparencyPage() {
+  const { tc } = useLang();
   const [query, setQuery] = useState("");
   const results = useMemo(() => (query.length > 1 ? searchTransparency(query) : []), [query]);
 
-  const keyMetrics = [
-    { label: "Overall AI accuracy", value: "93.0%", trend: "↑", note: "Q1 2026" },
-    { label: "Hallucination rate", value: "1.2%", trend: "↓", note: "Of all responses" },
-    { label: "High confidence answers", value: "71%", trend: "↑", note: "Of all queries" },
-    { label: "User flags resolved", value: "847", trend: "→", note: "Q1 2026" },
-  ];
+  const keyMetrics = buildKeyMetrics(tc);
+  const relatedLinks = buildRelatedLinks(tc);
 
   return (
     <>
@@ -43,15 +57,12 @@ export default function TransparencyPage() {
         <section className="tr-hero">
           <div className="tr-hero-inner">
             <div className="tr-hero-top">
-              <Link href="/help" className="tr-back-link">← Help Center</Link>
-              <div className="tr-hero-badge">Transparency Centre</div>
+              <Link href="/help" className="tr-back-link">{tc("transparency.back_link")}</Link>
+              <div className="tr-hero-badge">{tc("transparency.hero_badge")}</div>
             </div>
-            <h1 className="tr-hero-title">How AskBiz Works — In Full</h1>
+            <h1 className="tr-hero-title">{tc("transparency.hero_title")}</h1>
             <p className="tr-hero-sub">
-              We believe you deserve to understand the AI you're making business decisions with.
-              This is our complete disclosure: the model we use, how answers are generated,
-              our accuracy rates, our methodology, and our regulatory compliance.
-              Last updated: <strong>{TRANSPARENCY_LAST_UPDATED}</strong>.
+              {tc("transparency.hero_sub_before")} <strong>{TRANSPARENCY_LAST_UPDATED}</strong>.
             </p>
 
             {/* Search */}
@@ -65,13 +76,13 @@ export default function TransparencyPage() {
               <input
                 className="tr-search-input"
                 type="search"
-                placeholder="Search transparency docs — e.g. hallucination, confidence, churn model…"
+                placeholder={tc("transparency.search_placeholder")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                aria-label="Search transparency centre"
+                aria-label={tc("transparency.search_aria")}
               />
               {query && (
-                <button className="tr-search-clear" onClick={() => setQuery("")} aria-label="Clear">×</button>
+                <button className="tr-search-clear" onClick={() => setQuery("")} aria-label={tc("transparency.search_clear")}>×</button>
               )}
             </div>
 
@@ -79,12 +90,12 @@ export default function TransparencyPage() {
               <div className="tr-search-results">
                 {results.length === 0 ? (
                   <div className="tr-search-empty">
-                    <p>No results for <strong>"{query}"</strong></p>
-                    <p className="tr-search-empty-sub">Try different keywords or <a href="mailto:support@askbiz.co">email us</a>.</p>
+                    <p>{tc("transparency.search_no_results_before")} <strong>"{query}"</strong></p>
+                    <p className="tr-search-empty-sub">{tc("transparency.search_empty_sub_before")} <a href="mailto:support@askbiz.co">{tc("transparency.search_empty_sub_link")}</a>.</p>
                   </div>
                 ) : (
                   <>
-                    <p className="tr-search-count">{results.length} result{results.length !== 1 ? "s" : ""}</p>
+                    <p className="tr-search-count">{results.length} {results.length !== 1 ? tc("transparency.search_count_plural") : tc("transparency.search_count_singular")}</p>
                     <ul className="tr-search-list">
                       {results.map((a) => (
                         <li key={a.slug}>
@@ -131,12 +142,9 @@ export default function TransparencyPage() {
             <div className="tr-intro-inner">
               <div className="tr-intro-icon" aria-hidden>🔍</div>
               <div>
-                <h2 className="tr-intro-title">Built in the Open</h2>
+                <h2 className="tr-intro-title">{tc("transparency.intro_title")}</h2>
                 <p className="tr-intro-body">
-                  This Transparency Centre covers {TOTAL_ARTICLES} articles across {TRANSPARENCY_SECTIONS.length} sections.
-                  It is the primary way we fulfil our obligations under EU AI Act Article 13 (transparency for limited-risk AI systems),
-                  and our own commitment to you as a user. Every article is reviewed quarterly.
-                  If something here is unclear or incomplete, email <a href="mailto:support@askbiz.co">support@askbiz.co</a>.
+                  {tc("transparency.intro_body_before")} {TOTAL_ARTICLES} {tc("transparency.intro_body_articles")} {TRANSPARENCY_SECTIONS.length} {tc("transparency.intro_body_sections")} <a href="mailto:support@askbiz.co">support@askbiz.co</a>.
                 </p>
               </div>
             </div>
@@ -182,8 +190,8 @@ export default function TransparencyPage() {
                         </div>
                       )}
                       <div className="tr-article-meta">
-                        <span className="tr-article-read">{article.readTime} min</span>
-                        <span className="tr-article-arrow">Read →</span>
+                        <span className="tr-article-read">{article.readTime} {tc("transparency.article_read_suffix")}</span>
+                        <span className="tr-article-arrow">{tc("transparency.article_read_cta")}</span>
                       </div>
                     </div>
                   </Link>
@@ -194,16 +202,9 @@ export default function TransparencyPage() {
 
           {/* ── Links to Rules & Help ── */}
           <section className="tr-related-sections">
-            <h2 className="tr-related-title">Also in the Help Center</h2>
+            <h2 className="tr-related-title">{tc("transparency.related_title")}</h2>
             <div className="tr-related-grid">
-              {[
-                { href: "/rules", icon: "⚖️", title: "Rules & Policies", desc: "Acceptable use, IP, AI policies, enforcement, and regulatory compliance across UK, EU, and US." },
-                { href: "/help/data-security", icon: "🔒", title: "Data Security", desc: "How AskBiz encrypts and protects your business data at rest and in transit." },
-                { href: "/help/gdpr-compliance", icon: "🇪🇺", title: "GDPR Compliance", desc: "Your rights as a data subject and AskBiz's role as a data processor." },
-                { href: "/help/responsible-ai-use", icon: "🤖", title: "Responsible AI Use", desc: "Guidelines for using AI outputs responsibly, including how to disable AI learning." },
-                { href: "/help/reporting-a-concern", icon: "🚨", title: "Report a Concern", desc: "How to flag security vulnerabilities, policy violations, or AI errors." },
-                { href: "/help/how-we-handle-safety-incidents", icon: "🛡️", title: "Safety Incidents", desc: "How we respond to data breaches and platform safety events." },
-              ].map((item) => (
+              {relatedLinks.map((item) => (
                 <Link key={item.href} href={item.href} className="tr-related-card">
                   <span className="tr-related-icon" aria-hidden>{item.icon}</span>
                   <div>
@@ -220,14 +221,13 @@ export default function TransparencyPage() {
           <section className="tr-contact">
             <div className="tr-contact-inner">
               <div className="tr-contact-text">
-                <h2 className="tr-contact-title">Questions About How We Work?</h2>
+                <h2 className="tr-contact-title">{tc("transparency.contact_title")}</h2>
                 <p className="tr-contact-sub">
-                  If something in this Transparency Centre is unclear, incomplete, or you believe
-                  it is inaccurate, we want to know. Email us and we will respond within 2 business days.
+                  {tc("transparency.contact_sub")}
                 </p>
               </div>
               <a href="mailto:support@askbiz.co?subject=Transparency Centre query" className="tr-contact-btn">
-                Email us →
+                {tc("transparency.contact_btn")}
               </a>
             </div>
           </section>

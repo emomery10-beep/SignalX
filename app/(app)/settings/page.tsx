@@ -213,6 +213,7 @@ function sourceMeta(type: string) {
 
 function ProfilePanel({ onSignOut }: { onSignOut: () => void }) {
   const { user } = useStore()
+  const { tc } = useLang()
   const supabase = createClient()
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName]   = useState('')
@@ -289,7 +290,7 @@ function ProfilePanel({ onSignOut }: { onSignOut: () => void }) {
 
   return (
     <div>
-      <PanelHeader title="Profile" description="Update your display name and view your account details."/>
+      <PanelHeader title={tc('settings.profile_title')} description={tc('settings.profile_desc')}/>
 
       {/* Avatar + info */}
       <Card>
@@ -325,7 +326,7 @@ function ProfilePanel({ onSignOut }: { onSignOut: () => void }) {
 
       {/* Sign-in methods */}
       <Card>
-        <CardHeader title="Sign-in methods"/>
+        <CardHeader title={tc('settings.card_signin_methods')}/>
         <SettingRow label="Google" description="Sign in with your Google account" right={<span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.08)', color: '#16a34a', fontWeight: 600, border: '1px solid rgba(34,197,94,.2)' }}>Connected</span>}/>
         <SettingRow label="Email magic link" description="Sign in with a one-time link sent to your email" right={<span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.08)', color: '#16a34a', fontWeight: 600, border: '1px solid rgba(34,197,94,.2)' }}>Connected</span>}/>
         <SettingRow
@@ -363,6 +364,7 @@ function ProfilePanel({ onSignOut }: { onSignOut: () => void }) {
 
 function TeamPanel() {
   const { user } = useStore()
+  const { tc } = useLang()
   const plan = user.plan as 'free' | 'growth' | 'business'
   const features = getPlanFeatures(plan)
   const maxMembers = features.team_members   // 1 = solo, 5 = business, -1 = unlimited
@@ -425,7 +427,7 @@ function TeamPanel() {
 
   return (
     <div>
-      <PanelHeader title="Team" description="Invite colleagues and manage their roles and permissions."/>
+      <PanelHeader title={tc('settings.team_title')} description={tc('settings.team_desc')}/>
 
       {!canInvite ? (
         <Card>
@@ -457,7 +459,7 @@ function TeamPanel() {
 
           {/* Invite form */}
           <Card>
-            <CardHeader title="Invite a team member"/>
+            <CardHeader title={tc('settings.card_invite_member')}/>
             <div style={{ padding: '16px 20px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
                 <div>
@@ -498,7 +500,7 @@ function TeamPanel() {
           {/* Member list */}
           {!loading && members.length > 0 && (
             <Card>
-              <CardHeader title="Members"/>
+              <CardHeader title={tc('settings.card_members')}/>
               {/* Owner row */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid var(--b)' }}>
                 <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--acc)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
@@ -599,6 +601,7 @@ function LocalisationPanel() {
 }
 
 function AddressPanel() {
+  const { tc } = useLang()
   const [address, setAddress] = useState<AddressState>({ business_name: '', phone: '', address: '', town: '', county: '', postcode: '' })
   const [saving, setSaving]   = useState(false)
   const [saved, setSaved]     = useState(false)
@@ -632,7 +635,7 @@ function AddressPanel() {
 
   return (
     <div>
-      <PanelHeader title="Business address" description="Used as the sender address when generating live shipping quotes. Sent directly to the courier — never shared."/>
+      <PanelHeader title={tc('settings.address_title')} description={tc('settings.address_desc')}/>
 
       {!addressComplete && (
         <div style={{ display: 'flex', gap: 10, padding: '12px 16px', background: 'rgba(208,138,89,.07)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 'var(--r-md)', marginBottom: 20, fontSize: 13, color: '#7a4a1c', lineHeight: 1.6 }}>
@@ -734,6 +737,7 @@ const CONNECTOR_GROUPS = [
 ]
 
 function IntegrationsPanel() {
+  const { tc } = useLang()
   const [sources,       setSources]       = useState<ConnectedSource[]>([])
   const [loading,       setLoading]       = useState(true)
   const [disconnecting, setDisconnecting] = useState<string | null>(null)
@@ -758,7 +762,7 @@ function IntegrationsPanel() {
 
   return (
     <div>
-      <PanelHeader title="Integrations" description="Connect your business tools so AskBiz can answer questions using your live data."/>
+      <PanelHeader title={tc('settings.integrations_title')} description={tc('settings.integrations_desc')}/>
 
       {loading ? (
         <div style={{ height: 200, borderRadius: 'var(--r-lg)', background: 'var(--ev)' }}/>
@@ -767,7 +771,7 @@ function IntegrationsPanel() {
           {/* Connected sources */}
           {sources.length > 0 && (
             <Card>
-              <CardHeader title={`Connected (${sources.length})`}/>
+              <CardHeader title={tc('settings.card_connected') + ' (' + sources.length + ')'}/>
               {sources.map((src, i) => {
                 const meta    = sourceMeta(src.source_type)
                 const isError = src.status === 'error' || !!src.error_message
@@ -842,6 +846,7 @@ function IntegrationsPanel() {
 }
 
 function AIPanel() {
+  const { tc } = useLang()
   const { settings, updateSettings, user } = useStore()
   const plan = user.plan as 'free' | 'growth' | 'business'
   const canUseCfoMode = getPlanFeatures(plan).cfo_mode
@@ -863,17 +868,17 @@ function AIPanel() {
 
   return (
     <div>
-      <PanelHeader title="AI preferences" description="Control how AskBiz formats and presents answers. Changes apply immediately across all conversations."/>
+      <PanelHeader title={tc('settings.ai_title')} description={tc('settings.ai_desc')}/>
 
       <Card>
-        <CardHeader title="Response format"/>
+        <CardHeader title={tc('settings.card_response_format')}/>
         <SettingRow label="Charts and graphs" description="Automatically render charts when the answer contains numeric or trend data" right={<Toggle value={showCharts} onChange={() => toggle('showCharts')}/>}/>
         <SettingRow label="KPI summary cards" description="Show key metrics as highlighted cards at the top of each answer" right={<Toggle value={showMetrics} onChange={() => toggle('showMetrics')}/>}/>
         <SettingRow label="Follow-up suggestions" description="Suggest next questions after every answer to help you dig deeper" border={false} right={<Toggle value={showFollowUps} onChange={() => toggle('showFollowUps')}/>}/>
       </Card>
 
       <Card>
-        <CardHeader title="Advanced"/>
+        <CardHeader title={tc('settings.card_advanced')}/>
         <SettingRow
           label="CFO Mode"
           description="Board-ready responses — percentage-first language, executive summaries and formal tone"
@@ -894,6 +899,7 @@ function AIPanel() {
 }
 
 function NotificationsPanel() {
+  const { tc } = useLang()
   const [form, setForm] = useState({
     whatsapp_number:    '',
     notify_whatsapp:    false,
@@ -948,8 +954,8 @@ function NotificationsPanel() {
 
   return (
     <div>
-      <h2 style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 700, color: 'var(--tx)' }}>Notifications</h2>
-      <p style={{ margin: '0 0 28px', fontSize: 13, color: 'var(--tx3)' }}>Choose how AskBiz reaches you when something needs your attention.</p>
+      <h2 style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 700, color: 'var(--tx)' }}>{tc('settings.notifications_title')}</h2>
+      <p style={{ margin: '0 0 28px', fontSize: 13, color: 'var(--tx3)' }}>{tc('settings.notifications_desc')}</p>
 
       {/* Channels */}
       <div style={{ marginBottom: 28 }}>
@@ -993,15 +999,17 @@ function NotificationsPanel() {
 }
 
 function APIPanel() {
+  const { tc } = useLang()
   return (
     <div>
-      <PanelHeader title="API access" description="Create and manage API keys to integrate AskBiz into your own products and workflows."/>
+      <PanelHeader title={tc('settings.api_title')} description={tc('settings.api_desc')}/>
       <ApiKeys/>
     </div>
   )
 }
 
 function PrivacyPanel() {
+  const { tc } = useLang()
   const [consent, setConsent] = useState<ConsentState>({ data_consent: true, training_consent: true, camera_consent: true, logistics_consent: true, data_consent_at: null, training_consent_at: null, camera_consent_at: null, logistics_consent_at: null })
   const [loading, setLoading] = useState(true)
 
@@ -1036,14 +1044,14 @@ function PrivacyPanel() {
 
   return (
     <div>
-      <PanelHeader title="Privacy & data" description="Control how AskBiz uses your business data. All settings are optional and can be changed at any time."/>
+      <PanelHeader title={tc('settings.privacy_title')} description={tc('settings.privacy_desc')}/>
 
       {loading ? (
         <div style={{ height: 160, borderRadius: 'var(--r-lg)', background: 'var(--ev)', marginBottom: 16 }}/>
       ) : (
         <>
           <Card>
-            <CardHeader title="Data preferences"/>
+            <CardHeader title={tc('settings.card_data_preferences')}/>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--b)' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
                 <div>
@@ -1067,7 +1075,7 @@ function PrivacyPanel() {
           </Card>
 
           <Card>
-            <CardHeader title="POS data processing"/>
+            <CardHeader title={tc('settings.card_pos_data_processing')}/>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--b)' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
                 <div>
@@ -1108,6 +1116,7 @@ function PrivacyPanel() {
 
 function AccountPanel() {
   const { user } = useStore()
+  const { tc } = useLang()
   const plan = user.plan as 'free' | 'growth' | 'business'
   const features = getPlanFeatures(plan)
 
@@ -1162,7 +1171,7 @@ function AccountPanel() {
 
   return (
     <div>
-      <PanelHeader title="Account" description="Manage your subscription, export your data, or close your account."/>
+      <PanelHeader title={tc('settings.account_title')} description={tc('settings.account_desc')}/>
 
       {pendingDeletion && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '14px 16px', background: 'rgba(220,38,38,.05)', border: '1px solid rgba(220,38,38,.18)', borderRadius: 'var(--r-md)', marginBottom: 20 }}>
@@ -1178,7 +1187,7 @@ function AccountPanel() {
 
       {/* Plan summary */}
       <Card>
-        <CardHeader title="Current plan"/>
+        <CardHeader title={tc('settings.card_current_plan')}/>
         <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--b)' }}>
           <div>
             <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, color: 'var(--tx)', textTransform: 'capitalize', marginBottom: 3 }}>{plan} plan</div>
@@ -1200,7 +1209,7 @@ function AccountPanel() {
 
       {/* Data export */}
       <Card>
-        <CardHeader title="Your data"/>
+        <CardHeader title={tc('settings.card_your_data')}/>
         <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
           <div>
             <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>Export my data</div>
@@ -1214,7 +1223,7 @@ function AccountPanel() {
 
       {/* Danger zone */}
       <Card danger>
-        <CardHeader title="Danger zone" danger/>
+        <CardHeader title={tc('settings.card_danger_zone')} danger/>
         <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
           <div>
             <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>Delete account</div>
@@ -1259,6 +1268,7 @@ function AccountPanel() {
 
 function CompliancePanel() {
   const { user } = useStore()
+  const { tc } = useLang()
   const [icoNumber, setIcoNumber]   = useState('')
   const [vatNumber, setVatNumber]   = useState('')
   const [saving, setSaving]         = useState(false)
@@ -1311,11 +1321,11 @@ function CompliancePanel() {
 
   return (
     <div>
-      <PanelHeader title="Compliance" description="GDPR, ICO registration, VAT, and data residency information for your account."/>
+      <PanelHeader title={tc('settings.compliance_title')} description={tc('settings.compliance_desc')}/>
 
       {/* Data residency */}
       <Card>
-        <CardHeader title="Data residency"/>
+        <CardHeader title={tc('settings.card_data_residency')}/>
         <div style={{ padding: '16px 20px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             {[
@@ -1335,7 +1345,7 @@ function CompliancePanel() {
 
       {/* GDPR status */}
       <Card>
-        <CardHeader title="GDPR compliance status"/>
+        <CardHeader title={tc('settings.card_gdpr_status')}/>
         <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {STATUS_BADGE('Data minimisation', true)}
@@ -1354,7 +1364,7 @@ function CompliancePanel() {
       {/* ICO + VAT */}
       {!loadingOpt && (
         <Card>
-          <CardHeader title="Registration numbers"/>
+          <CardHeader title={tc('settings.card_registration_numbers')}/>
           <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 6 }}>ICO registration number (UK)</label>
@@ -1389,7 +1399,7 @@ function CompliancePanel() {
 
       {/* Making Tax Digital */}
       <Card>
-        <CardHeader title="Making Tax Digital (MTD)"/>
+        <CardHeader title={tc('settings.card_mtd')}/>
         <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {STATUS_BADGE('MTD-compatible exports', true)}
@@ -1413,7 +1423,7 @@ function CompliancePanel() {
       {/* Collective intelligence opt-in */}
       {!loadingOpt && (
         <Card>
-          <CardHeader title="Market intelligence contribution"/>
+          <CardHeader title={tc('settings.card_market_contribution')}/>
           <div style={{ padding: '16px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
               <div>
@@ -1432,7 +1442,7 @@ function CompliancePanel() {
       {/* Market intelligence opt-in */}
       {!loadingOpt && (
         <Card>
-          <CardHeader title="Global market intelligence"/>
+          <CardHeader title={tc('settings.card_global_market_intel')}/>
           <div style={{ padding: '16px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
               <div>
@@ -1450,7 +1460,7 @@ function CompliancePanel() {
 
       {/* POS staff data notice */}
       <Card>
-        <CardHeader title="POS staff data"/>
+        <CardHeader title={tc('settings.card_pos_staff_data')}/>
         <div style={{ padding: '16px 20px' }}>
           <p style={{ fontSize: 13, color: 'var(--tx3)', margin: 0, lineHeight: 1.6 }}>
             When you add cashier or inventory staff to your POS, you are acting as their data controller. Their phone numbers and login activity are stored securely in the UK. You are responsible for informing them under UK GDPR Article 13. <a href="/privacy#staff" target="_blank" rel="noreferrer" style={{ color: 'var(--acc)', textDecoration: 'none', fontWeight: 500 }}>Staff privacy notice template →</a>
@@ -1463,7 +1473,7 @@ function CompliancePanel() {
 
       {/* Logistics & camera data */}
       <Card>
-        <CardHeader title="POS logistics &amp; camera data"/>
+        <CardHeader title={tc('settings.card_pos_logistics_camera')}/>
         <div style={{ padding: '16px 20px' }}>
           <p style={{ fontSize: 13, color: 'var(--tx3)', margin: 0, lineHeight: 1.6, marginBottom: 10 }}>
             The POS logistics module processes delivery addresses, parcel tracking data, route information, and vehicle inspection photos. Camera scanning processes barcode and price tag images in real time without storing raw images.
@@ -1482,7 +1492,7 @@ function CompliancePanel() {
 
       {/* Breach notification */}
       <Card>
-        <CardHeader title="Data breach notification"/>
+        <CardHeader title={tc('settings.card_breach_notification')}/>
         <div style={{ padding: '16px 20px' }}>
           <p style={{ fontSize: 13, color: 'var(--tx3)', margin: 0, lineHeight: 1.6 }}>
             In the event of a data breach affecting your business data, AskBiz will notify you within <strong>72 hours</strong> of becoming aware, in accordance with UK GDPR Article 33. Notifications are sent to your registered email address.
