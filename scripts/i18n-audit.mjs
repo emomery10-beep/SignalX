@@ -84,17 +84,22 @@ if (existsSync(catRoot) && existsSync(join(catRoot, base.baseLocale))) {
   pass('catalogue-parity', 'SKIP — locale catalogues not created yet (Foundation F8)')
 }
 
-// ── GATE 4: typecheck (skipped in build hook — `next build` already typechecks) ─
+// ── GATE 4: typecheck — RATCHETED. next.config has ignoreBuildErrors:true, so
+// `next build` does NOT catch type errors; this gate does. There are pre-existing
+// errors in generated content files (academy-cfo-saas-batch*) we don't own, so we
+// ratchet: tolerate the baseline count, fail only if NEW errors appear.
 if (SKIP_TYPECHECK) {
-  pass('typecheck', 'SKIP — deferred to `next build`')
+  pass('typecheck', 'SKIP (--skip-typecheck)')
 } else {
-  try {
-    execSync('npx tsc --noEmit', { cwd: ROOT, stdio: 'pipe' })
-    pass('typecheck', 'tsc --noEmit clean')
-  } catch (e) {
-    const lines = (e.stdout?.toString() || '').split('\n').filter(l => l.includes('error TS')).length
-    fail('typecheck', `${lines} TypeScript error(s) — run: npx tsc --noEmit`)
+  let count = 0
+  try { execSync('npx tsc --noEmit', { cwd: ROOT, stdio: 'pipe' }) }
+  catch (e) {
+    const out = (e.stdout?.toString() || '') + (e.stderr?.toString() || '')
+    count = out.split('\n').filter(l => l.includes('error TS')).length
   }
+  const floor = ratchet.typescriptErrors ?? 0
+  if (count > floor) fail('typecheck', `${count} TS errors, ratchet allows ${floor} — new code added ${count - floor} (run: npx tsc --noEmit)`)
+  else pass('typecheck', `${count}/${floor} (pre-existing only — no new type errors)`)
 }
 
 // ── report ──────────────────────────────────────────────────────────────────

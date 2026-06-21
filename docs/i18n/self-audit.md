@@ -32,7 +32,14 @@ in English safely: new work falls back to English, but it can't bypass `t()`.
 | `no-new-hardcoded-locale` | new `toLocale…('en-GB')` appears | dates must use the locale formatter |
 | `no-new-hardcoded-currency` | new `£`/`$` literal in markup | money must use `formatCurrency(locale, n)` |
 | `catalogue-parity` | (warn) untranslated keys per locale | tracks fallback coverage; never blocks |
-| `typecheck` | `tsc --noEmit` errors | the milestone must compile |
+| `typecheck` | `tsc --noEmit` error count **exceeds the ratchet** | catches NEW type errors |
+
+> **IMPORTANT:** `next.config.js` has `typescript.ignoreBuildErrors: true`, so
+> `next build` does **NOT** catch type errors. The audit's `typecheck` gate is the
+> only thing that does — run the audit WITHOUT `--skip-typecheck` (i.e. plain
+> `node scripts/i18n-audit.mjs`) before committing. It's ratcheted: there are
+> pre-existing errors in generated `lib/academy-cfo-saas-batch*` content files we
+> don't own, so the gate tolerates that baseline count and fails only on new errors.
 
 Milestone-0 baseline (2026-06-20): 123 locale literals, 575 currency literals,
 0 `t()` adoption, 0 catalogue files.
