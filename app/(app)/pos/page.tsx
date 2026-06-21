@@ -153,7 +153,8 @@ export default function POSPage() {
   const [newPhone, setNewPhone] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newName, setNewName] = useState('')
-  const [newRole, setNewRole] = useState<'cashier' | 'inventory' | 'repair' | 'engineer' | 'supervisor' | 'manager' | 'handler' | 'driver' | 'dispatcher' | 'branch_manager'>('cashier')
+  // Holds a base role OR a staff-template id (e.g. 'factory-line-operator'), so it's a string.
+  const [newRole, setNewRole] = useState<string>('cashier')
   const [newPin, setNewPin] = useState('')
   const [newLocationId, setNewLocationId] = useState('')
   const [addingStaff, setAddingStaff] = useState(false)
@@ -162,7 +163,7 @@ export default function POSPage() {
   const [editEmail, setEditEmail] = useState('')
   const [editName, setEditName] = useState('')
   const [editPin, setEditPin] = useState('')
-  const [editRole, setEditRole] = useState<'cashier' | 'inventory' | 'repair' | 'engineer' | 'supervisor' | 'manager' | 'handler' | 'driver' | 'dispatcher' | 'branch_manager'>('cashier')
+  const [editRole, setEditRole] = useState<string>('cashier')
   const [editLocationId, setEditLocationId] = useState('')
   const [editSector, setEditSector] = useState('retail')
   const [editingSubmitting, setEditingSubmitting] = useState(false)
@@ -1792,7 +1793,7 @@ export default function POSPage() {
                   <input placeholder="Phone number (e.g. +447911123456)" value={newPhone} onChange={e => setNewPhone(e.target.value)} style={inputStyle} />
                   <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>— or —</div>
                   <input placeholder="Email address (alternative to WhatsApp)" value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" style={inputStyle} />
-                  <select value={newRole} onChange={e => setNewRole(e.target.value as any)} style={inputStyle}>
+                  <select value={newRole} onChange={e => setNewRole(e.target.value)} style={inputStyle}>
                     <optgroup label="🏭 FACTORY">
                       <option value="factory-line-operator">👷 Line Operator</option>
                       <option value="factory-quality-inspector">🔍 Quality Inspector</option>
@@ -1912,7 +1913,7 @@ export default function POSPage() {
                   <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>— or —</div>
                   <input placeholder="Email address" value={editEmail} onChange={e => setEditEmail(e.target.value)} type="email" style={inputStyle} />
                   <input placeholder={`New PIN (4–6 digits)${editingStaff.has_pin ? ' — leave blank to keep current' : ''}`} value={editPin} onChange={e => setEditPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: editPin && editPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
-                  <select value={editRole} onChange={e => setEditRole(e.target.value as any)} style={inputStyle}>
+                  <select value={editRole} onChange={e => setEditRole(e.target.value)} style={inputStyle}>
                     <optgroup label="🏭 FACTORY">
                       <option value="factory-line-operator">👷 Line Operator</option>
                       <option value="factory-quality-inspector">🔍 Quality Inspector</option>
@@ -2001,7 +2002,7 @@ export default function POSPage() {
             businessType={businessType === 'restaurant' ? 'restaurant' : 'factory'}
             onSelectTemplate={(template) => {
               setShowAddStaff(true)
-              setNewRole(template.id as any)
+              setNewRole(template.id)
               setTimeout(() => {
                 notify(`Using ${template.name} template — enter staff details above`, true)
               }, 100)
