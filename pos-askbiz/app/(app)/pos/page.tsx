@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useLang } from '@/components/LanguageProvider'
 import ServiceJobsTab from '@/components/pos/ServiceJobsTab'
 import RepairMetrics from '@/components/pos/RepairMetrics'
 import RestaurantSnapshot from '@/components/pos/RestaurantSnapshot'
@@ -61,21 +62,21 @@ interface StaffMember {
 interface BranchOption { id: string; name: string }
 
 // Roles offered when adding/editing staff, grouped for the dropdown
-const ROLE_OPTIONS: { group: string; roles: { value: string; label: string }[] }[] = [
-  { group: 'Retail / general', roles: [
-    { value: 'cashier', label: 'Cashier — process sales' },
-    { value: 'inventory', label: 'Inventory — manage stock' },
-    { value: 'repair', label: 'Repair — service jobs' },
-    { value: 'engineer', label: 'Engineer — assigned repairs' },
-    { value: 'manager', label: 'Manager — full branch access' },
-    { value: 'supervisor', label: 'Supervisor — approvals' },
+const buildRoleOptions = (tc: (key: string) => string): { group: string; roles: { value: string; label: string }[] }[] => [
+  { group: tc('pos.role_group_retail'), roles: [
+    { value: 'cashier', label: tc('pos.role_cashier') },
+    { value: 'inventory', label: tc('pos.role_inventory') },
+    { value: 'repair', label: tc('pos.role_repair') },
+    { value: 'engineer', label: tc('pos.role_engineer') },
+    { value: 'manager', label: tc('pos.role_manager') },
+    { value: 'supervisor', label: tc('pos.role_supervisor') },
   ] },
-  { group: 'Logistics / courier', roles: [
-    { value: 'logistics-counter-clerk', label: 'Counter Clerk — intake & collection' },
-    { value: 'logistics-handler', label: 'Handler — receive/scan parcels' },
-    { value: 'logistics-driver', label: 'Driver — pickups & deliveries' },
-    { value: 'logistics-dispatcher', label: 'Dispatcher — assign trucks & routes' },
-    { value: 'logistics-branch-manager', label: 'Branch Manager — dashboard & routes' },
+  { group: tc('pos.role_group_logistics'), roles: [
+    { value: 'logistics-counter-clerk', label: tc('pos.role_logistics_counter_clerk') },
+    { value: 'logistics-handler', label: tc('pos.role_logistics_handler') },
+    { value: 'logistics-driver', label: tc('pos.role_logistics_driver') },
+    { value: 'logistics-dispatcher', label: tc('pos.role_logistics_dispatcher') },
+    { value: 'logistics-branch-manager', label: tc('pos.role_logistics_branch_manager') },
   ] },
 ]
 // Roles that operate at a specific branch — branch selection matters for these
@@ -96,6 +97,8 @@ type TxDetailType = Transaction | null
 
 export default function POSPage() {
   const supabase = createClient()
+  const { tc } = useLang()
+  const ROLE_OPTIONS = useMemo(() => buildRoleOptions(tc), [tc])
   const [tab, setTab] = useState<Tab>('overview')
   const [staff, setStaff] = useState<StaffMember[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -188,13 +191,13 @@ export default function POSPage() {
     const now = new Date()
     const s = new Date()
     switch (range) {
-      case 'today': s.setHours(0, 0, 0, 0); return { start: s, end: now, label: `Today · ${now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}` }
-      case 'yesterday': s.setDate(s.getDate() - 1); s.setHours(0, 0, 0, 0); const ye = new Date(s); ye.setHours(23, 59, 59, 999); return { start: s, end: ye, label: `Yesterday · ${s.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}` }
-      case 'last7': s.setDate(s.getDate() - 7); s.setHours(0, 0, 0, 0); return { start: s, end: now, label: 'Last 7 days' }
-      case 'last30': s.setDate(s.getDate() - 30); s.setHours(0, 0, 0, 0); return { start: s, end: now, label: 'Last 30 days' }
-      case 'custom': return { start: customStart ? new Date(customStart) : s, end: customEnd ? new Date(customEnd + 'T23:59:59') : now, label: `${customStart || '?'} to ${customEnd || '?'}` }
+      case 'today': s.setHours(0, 0, 0, 0); return { start: s, end: now, label: tc('pos.range_today_label', { date: now.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) }) }
+      case 'yesterday': s.setDate(s.getDate() - 1); s.setHours(0, 0, 0, 0); const ye = new Date(s); ye.setHours(23, 59, 59, 999); return { start: s, end: ye, label: tc('pos.range_yesterday_label', { date: s.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) }) }
+      case 'last7': s.setDate(s.getDate() - 7); s.setHours(0, 0, 0, 0); return { start: s, end: now, label: tc('pos.range_last7') }
+      case 'last30': s.setDate(s.getDate() - 30); s.setHours(0, 0, 0, 0); return { start: s, end: now, label: tc('pos.range_last30') }
+      case 'custom': return { start: customStart ? new Date(customStart) : s, end: customEnd ? new Date(customEnd + 'T23:59:59') : now, label: tc('pos.range_custom_label', { start: customStart || tc('pos.range_custom_unset'), end: customEnd || tc('pos.range_custom_unset') }) }
     }
-  }, [customStart, customEnd])
+  }, [customStart, customEnd, tc])
 
   const getPrevRange = useCallback((range: DateRange): { start: Date; end: Date } => {
     const { start, end } = getDateRange(range)
@@ -281,7 +284,7 @@ export default function POSPage() {
         const newTx = payload.new as any
         if (newTx) {
           setTransactions(prev => [{ ...newTx, cashier: newTx.pos_staff ?? null, pos_items: [] }, ...prev])
-          notify(`New sale: ${currencySymbol}${(newTx.total || 0).toFixed(2)}`)
+          notify(tc('pos.toast_new_sale', { amount: currencySymbol + (newTx.total || 0).toFixed(2) }))
         }
       })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventory' }, (payload) => {
@@ -290,7 +293,7 @@ export default function POSPage() {
       })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
-  }, [currencySymbol])
+  }, [currencySymbol, tc])
 
   // ── Derived stats ──────────────────────────────────────
   const dateRangeDetails = getDateRange(dateRange)
@@ -400,7 +403,7 @@ export default function POSPage() {
       const d = new Date(t.created_at)
       let key: string
       if (plView === 'daily') key = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-      else if (plView === 'weekly') { const w = new Date(d); w.setDate(w.getDate() - w.getDay()); key = `W/c ${w.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` }
+      else if (plView === 'weekly') { const w = new Date(d); w.setDate(w.getDate() - w.getDay()); key = tc('pos.pl_week_commencing', { date: w.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) }) }
       else { key = d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }) }
       if (!buckets[key]) buckets[key] = { revenue: 0, cost: 0, count: 0 }
       buckets[key].revenue += t.total
@@ -408,7 +411,7 @@ export default function POSPage() {
       buckets[key].count++
     })
     return Object.entries(buckets).map(([period, d]) => ({ period, ...d, profit: d.revenue - d.cost }))
-  }, [completedTx, plView])
+  }, [completedTx, plView, tc])
 
   // ── Handlers ───────────────────────────────────────────
   const handleRefund = async (full: boolean) => {
@@ -417,8 +420,8 @@ export default function POSPage() {
     try {
       await fetch('/api/pos/refund', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ transaction_id: refundTx.id, full_refund: full, reason: refundReason }) })
       setTransactions(prev => prev.map(t => t.id === refundTx.id ? { ...t, status: full ? 'refunded' : 'partially_refunded' } : t))
-      notify(`Refund processed for ${currencySymbol}${refundTx.total.toFixed(2)}`)
-    } catch { notify('Refund failed', false) }
+      notify(tc('pos.toast_refund_processed', { amount: currencySymbol + refundTx.total.toFixed(2) }))
+    } catch { notify(tc('pos.toast_refund_failed'), false) }
     setRefundTx(null); setRefundReason(''); setRefunding(false)
   }
 
@@ -430,15 +433,15 @@ export default function POSPage() {
 
   const handleAddStaff = async () => {
     if ((!newPhone && !newEmail) || !newName) return
-    if (newPin && (newPin.length < 4 || newPin.length > 6 || !/^\d+$/.test(newPin))) { notify('PIN must be 4-6 digits', false); return }
+    if (newPin && (newPin.length < 4 || newPin.length > 6 || !/^\d+$/.test(newPin))) { notify(tc('pos.toast_pin_digits'), false); return }
     setAddingStaff(true)
     try {
       const res = await fetch('/api/pos/staff', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: newPhone || undefined, email: newEmail || undefined, name: newName, role: newRole, pin: newPin || undefined, location_id: newLocation || undefined }) })
       const data = await res.json()
-      if (data.staff) { setStaff(prev => [...prev, data.staff]); setNewPhone(''); setNewEmail(''); setNewName(''); setNewRole('cashier'); setNewLocation(''); setNewPin(''); setShowAddStaff(false); notify(`${data.staff.name} added`) }
+      if (data.staff) { setStaff(prev => [...prev, data.staff]); setNewPhone(''); setNewEmail(''); setNewName(''); setNewRole('cashier'); setNewLocation(''); setNewPin(''); setShowAddStaff(false); notify(tc('pos.toast_staff_added', { name: data.staff.name })) }
       else if (data.seat_limit) notify(data.error, false)
       else if (data.error) notify(data.error, false)
-    } catch { notify('Failed to add staff', false) }
+    } catch { notify(tc('pos.toast_add_staff_failed'), false) }
     setAddingStaff(false)
   }
 
@@ -446,21 +449,21 @@ export default function POSPage() {
     try {
       const res = await fetch('/api/pos/staff', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: member.id, active: !member.active }) })
       const data = await res.json()
-      if (data.staff) { setStaff(prev => prev.map(s => s.id === member.id ? data.staff : s)); notify(`${member.name} ${member.active ? 'deactivated' : 'reactivated'}`) }
+      if (data.staff) { setStaff(prev => prev.map(s => s.id === member.id ? data.staff : s)); notify(member.active ? tc('pos.toast_staff_deactivated', { name: member.name }) : tc('pos.toast_staff_reactivated', { name: member.name })) }
       else if (data.seat_limit) notify(data.error, false)
-    } catch { notify('Failed to update staff', false) }
+    } catch { notify(tc('pos.toast_update_staff_failed'), false) }
   }
 
   const handleEditStaff = async () => {
     if (!editingStaff || (!editPhone && !editEmail) || !editName) return
-    if (editPin && (editPin.length < 4 || editPin.length > 6 || !/^\d+$/.test(editPin))) { notify('PIN must be 4-6 digits', false); return }
+    if (editPin && (editPin.length < 4 || editPin.length > 6 || !/^\d+$/.test(editPin))) { notify(tc('pos.toast_pin_digits'), false); return }
     setEditingSubmitting(true)
     try {
       const res = await fetch('/api/pos/staff', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingStaff.id, phone: editPhone || undefined, email: editEmail || undefined, name: editName, role: editRole, location_id: editLocation || null, pin: editPin || undefined }) })
       const data = await res.json()
-      if (data.staff) { setStaff(prev => prev.map(s => s.id === editingStaff.id ? data.staff : s)); setEditingStaff(null); notify('Staff updated') }
+      if (data.staff) { setStaff(prev => prev.map(s => s.id === editingStaff.id ? data.staff : s)); setEditingStaff(null); notify(tc('pos.toast_staff_updated')) }
       else if (data.error) notify(data.error, false)
-    } catch { notify('Failed to update staff', false) }
+    } catch { notify(tc('pos.toast_update_staff_failed'), false) }
     setEditingSubmitting(false)
   }
 
@@ -478,7 +481,7 @@ export default function POSPage() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
       streamRef.current = stream; setShowCameraPreview(true); setShowCameraMenu(false)
-    } catch (err: any) { notify('Camera access denied: ' + err.message, false) }
+    } catch (err: any) { notify(tc('pos.toast_camera_denied', { message: err.message }), false) }
   }
 
   const handleCapturePhoto = async () => {
@@ -515,8 +518,8 @@ export default function POSPage() {
           stock_qty: (firstProduct.quantity || 1).toString()
         })
       }
-      else notify('Could not recognise products from image', false)
-    } catch (err) { notify('Image recognition failed', false) }
+      else notify(tc('pos.toast_recognise_failed'), false)
+    } catch (err) { notify(tc('pos.toast_image_recognition_failed'), false) }
     setRecognizing(false)
   }
 
@@ -526,8 +529,8 @@ export default function POSPage() {
     try {
       const res = await fetch('/api/pos/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newProduct.name, sale_price: parseFloat(newProduct.sale_price), cost_price: parseFloat(newProduct.cost_price || '0'), stock_qty: parseInt(newProduct.stock_qty || '0'), low_stock_threshold: parseInt(newProduct.low_stock_threshold || '5') }) })
       const data = await res.json()
-      if (data.product) { setInventory(prev => [...prev, data.product]); setNewProduct({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '' }); setShowAddProduct(false); notify(`${data.product.name} added`) }
-    } catch { notify('Failed to add product', false) }
+      if (data.product) { setInventory(prev => [...prev, data.product]); setNewProduct({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '' }); setShowAddProduct(false); notify(tc('pos.toast_product_added', { name: data.product.name })) }
+    } catch { notify(tc('pos.toast_add_product_failed'), false) }
     setAddingProduct(false)
   }
 
@@ -543,30 +546,30 @@ export default function POSPage() {
       if (editProduct.low_stock_threshold) updates.low_stock_threshold = parseInt(editProduct.low_stock_threshold)
       const res = await fetch('/api/pos/inventory', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingProduct.id, ...updates }) })
       const data = await res.json()
-      if (data.product) { setInventory(prev => prev.map(i => i.id === editingProduct.id ? data.product : i)); setEditingProduct(null); notify('Product updated') }
-      else notify(data.error || 'Update failed', false)
-    } catch { notify('Failed to update product', false) }
+      if (data.product) { setInventory(prev => prev.map(i => i.id === editingProduct.id ? data.product : i)); setEditingProduct(null); notify(tc('pos.toast_product_updated')) }
+      else notify(data.error || tc('pos.toast_update_failed'), false)
+    } catch { notify(tc('pos.toast_update_product_failed'), false) }
     setEditingProductSubmitting(false)
   }
 
   const handleDeleteProduct = async (item: InventoryItem) => {
-    if (!confirm(`Remove "${item.name}" from inventory?`)) return
+    if (!confirm(tc('pos.confirm_remove_product', { name: item.name }))) return
     try {
       const res = await fetch('/api/pos/inventory', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: item.id, active: false }) })
       const data = await res.json()
-      if (data.product) { setInventory(prev => prev.filter(i => i.id !== item.id)); notify(`${item.name} removed`) }
-    } catch { notify('Failed to remove product', false) }
+      if (data.product) { setInventory(prev => prev.filter(i => i.id !== item.id)); notify(tc('pos.toast_product_removed', { name: item.name })) }
+    } catch { notify(tc('pos.toast_remove_product_failed'), false) }
   }
 
   const handleRestock = async (id: string) => {
     const qty = parseInt(restockQty)
-    if (!qty || qty <= 0) { notify('Enter a valid quantity', false); return }
+    if (!qty || qty <= 0) { notify(tc('pos.toast_valid_quantity'), false); return }
     try {
       const res = await fetch('/api/pos/inventory', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, restock_qty: qty }) })
       const data = await res.json()
-      if (data.product) { setInventory(prev => prev.map(i => i.id === id ? data.product : i)); setRestockId(null); setRestockQty(''); notify(`Restocked +${qty} units`) }
-      else notify(data.error || 'Restock failed', false)
-    } catch { notify('Restock failed', false) }
+      if (data.product) { setInventory(prev => prev.map(i => i.id === id ? data.product : i)); setRestockId(null); setRestockQty(''); notify(tc('pos.toast_restocked', { qty })) }
+      else notify(data.error || tc('pos.toast_restock_failed'), false)
+    } catch { notify(tc('pos.toast_restock_failed'), false) }
   }
 
   const handleBulkImport = async () => {
@@ -580,9 +583,9 @@ export default function POSPage() {
       }).filter(i => i.name)
       const res = await fetch('/api/pos/inventory', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items }) })
       const data = await res.json()
-      if (data.products) { setInventory(prev => [...prev, ...data.products]); setShowBulkImport(false); setBulkCsv(''); notify(`${data.products.length} products imported`) }
-      else notify(data.error || 'Import failed', false)
-    } catch { notify('Import failed', false) }
+      if (data.products) { setInventory(prev => [...prev, ...data.products]); setShowBulkImport(false); setBulkCsv(''); notify(tc('pos.toast_products_imported', { count: data.products.length })) }
+      else notify(data.error || tc('pos.toast_import_failed'), false)
+    } catch { notify(tc('pos.toast_import_failed'), false) }
     setImportingBulk(false)
   }
 
@@ -611,7 +614,7 @@ export default function POSPage() {
     return (
       <span style={{ fontSize: 11, fontWeight: 600, color: up ? GREEN : RED, display: 'inline-flex', alignItems: 'center', gap: 2, marginTop: 4 }}>
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" style={{ transform: up ? 'none' : 'rotate(180deg)' }}><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-        {Math.abs(pct).toFixed(0)}% vs prev
+        {tc('pos.comp_vs_prev', { pct: Math.abs(pct).toFixed(0) })}
       </span>
     )
   }
@@ -697,18 +700,18 @@ export default function POSPage() {
   // ── POS NOT ENABLED ────────────────────────────────────
   if (!posEnabled) return (
     <div className="page-shell">
-      <div className="page-shell-header"><div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700 }}>Point of Sale</div></div>
+      <div className="page-shell-header"><div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700 }}>{tc('pos.not_enabled_title')}</div></div>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40 }}>
         <div style={{ maxWidth: 480, textAlign: 'center' }}>
           <div style={{ width: 80, height: 80, borderRadius: 20, background: ACC_BG, border: `1px solid ${ACC_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           </div>
-          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 24, fontWeight: 700, marginBottom: 12 }}>Point of Sale</div>
+          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 24, fontWeight: 700, marginBottom: 12 }}>{tc('pos.not_enabled_title')}</div>
           <p style={{ fontSize: 14, color: 'var(--tx3)', lineHeight: 1.7, marginBottom: 28 }}>
-            Turn any phone into a till. Add cashier and inventory staff seats to unlock the POS system — camera price scanning, WhatsApp receipts, live stock tracking, and BI insights all in one place.
+            {tc('pos.not_enabled_intro')}
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', marginBottom: 28 }}>
-            {['Cashier & inventory roles with WhatsApp OTP login', 'Camera price scanning powered by Claude AI', 'Auto stock deduction + restock alerts', 'WhatsApp receipts to customers', 'MTD-compatible VAT export', 'Sales feed directly into your BI dashboard'].map(f => (
+            {[tc('pos.feature_roles'), tc('pos.feature_camera'), tc('pos.feature_stock'), tc('pos.feature_receipts'), tc('pos.feature_vat'), tc('pos.feature_bi')].map(f => (
               <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--tx2)' }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
                 {f}
@@ -716,12 +719,12 @@ export default function POSPage() {
             ))}
           </div>
           <div style={{ marginBottom: 8 }}>
-            <span style={{ fontFamily: 'var(--font-sora)', fontSize: 28, fontWeight: 800 }}>£5</span>
-            <span style={{ fontSize: 14, color: 'var(--tx3)', marginLeft: 4 }}>/seat/month</span>
+            <span style={{ fontFamily: 'var(--font-sora)', fontSize: 28, fontWeight: 800 }}>{tc('pos.price_amount')}</span>
+            <span style={{ fontSize: 14, color: 'var(--tx3)', marginLeft: 4 }}>{tc('pos.price_unit')}</span>
           </div>
-          <p style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 20 }}>Owner dashboard always included — seats are for cashier and inventory staff only</p>
+          <p style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 20 }}>{tc('pos.price_note')}</p>
           <a href="/billing" style={{ display: 'inline-block', padding: '12px 28px', borderRadius: 12, background: ACC, color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 700, fontFamily: 'inherit', boxShadow: '0 2px 12px rgba(208,138,89,.3)' }}>
-            Add seats in billing →
+            {tc('pos.add_seats_cta')}
           </a>
         </div>
       </div>
@@ -740,26 +743,26 @@ export default function POSPage() {
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           </div>
           <div>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700 }}>Point of Sale</div>
+            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700 }}>{tc('pos.header_title')}</div>
             <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{dateRangeDetails.label}</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button onClick={handleExportVAT} style={{ padding: '8px 14px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            MTD VAT
+            {tc('pos.btn_mtd_vat')}
           </button>
           <button onClick={handleExport} style={{ padding: '8px 14px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export CSV
+            {tc('pos.btn_export_csv')}
           </button>
           <a href="/intelligence" style={{ padding: '8px 14px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx2)', fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="11" r="3"/><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"/></svg>
-            Sales Map
+            {tc('pos.btn_sales_map')}
           </a>
           <a href="https://pos.askbiz.co" target="_blank" rel="noopener noreferrer" style={{ padding: '8px 14px', borderRadius: 9, background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            Open till
+            {tc('pos.btn_open_till')}
           </a>
         </div>
       </div>
@@ -774,15 +777,15 @@ export default function POSPage() {
               : ['salon','barber','barbershop','spa','beauty','clinic','nail'].some(k => bt.includes(k)) ? 'salon'
               : 'retail'
             const _sector = sectorOverride || _detected
-            const sectorLabel = _sector === 'restaurant' ? '🍴 Restaurant'
-              : _sector === 'repair' ? '🔧 Repairs'
-              : _sector === 'salon'  ? '💇 Bookings'
-              : '📦 Operations'
+            const sectorLabel = _sector === 'restaurant' ? tc('pos.sector_label_restaurant')
+              : _sector === 'repair' ? tc('pos.sector_label_repair')
+              : _sector === 'salon'  ? tc('pos.sector_label_salon')
+              : tc('pos.sector_label_operations')
 
             const tabLabel = t === 'services'
               ? sectorLabel
-              : t === 'map' ? '🗺️ Map'
-              : t.charAt(0).toUpperCase() + t.slice(1)
+              : t === 'map' ? tc('pos.tab_map')
+              : tc('pos.tab_' + t)
 
             return (
               <button key={t} onClick={() => setTab(t)} style={{
@@ -804,12 +807,12 @@ export default function POSPage() {
             {(['today', 'yesterday', 'last7', 'last30'] as DateRange[]).map(range => (
               <button key={range} onClick={() => { setDateRange(range); setCustomStart(''); setCustomEnd('') }}
                 style={{ padding: '6px 12px', borderRadius: 8, border: dateRange === range ? `1.5px solid ${ACC}` : '1px solid var(--b)', background: dateRange === range ? ACC_BG : 'var(--sf)', color: dateRange === range ? ACC : 'var(--tx2)', fontSize: 12, fontWeight: dateRange === range ? 600 : 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s ease' }}>
-                {range === 'today' ? 'Today' : range === 'yesterday' ? 'Yesterday' : range === 'last7' ? 'Last 7 days' : 'Last 30 days'}
+                {range === 'today' ? tc('pos.range_today') : range === 'yesterday' ? tc('pos.range_yesterday') : range === 'last7' ? tc('pos.range_last7') : tc('pos.range_last30')}
               </button>
             ))}
             <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
               <input type="date" value={customStart} onChange={e => { setCustomStart(e.target.value); setDateRange('custom') }} style={{ ...inputStyle, padding: '6px 10px', fontSize: 12 }} />
-              <span style={{ fontSize: 12, color: 'var(--tx3)' }}>to</span>
+              <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos.to')}</span>
               <input type="date" value={customEnd} onChange={e => { setCustomEnd(e.target.value); setDateRange('custom') }} style={{ ...inputStyle, padding: '6px 10px', fontSize: 12 }} />
             </div>
           </div>
@@ -821,10 +824,10 @@ export default function POSPage() {
             {/* KPI row */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
               {[
-                { label: 'Revenue', value: `${currencySymbol}${todayRevenue.toLocaleString()}`, color: GREEN, prev: prevRevenue, curr: todayRevenue, type: 'sales' as const },
-                { label: 'Sales', value: todaySales.toString(), color: ACC, prev: prevSales, curr: todaySales, type: 'sales' as const },
-                { label: 'Refunds', value: refundCount.toString(), color: refundCount > 0 ? RED : 'var(--tx)', prev: prevRefunds, curr: refundCount, type: 'refunds' as const },
-                { label: 'Low stock', value: alertCount.toString(), color: alertCount > 0 ? RED : GREEN, prev: 0, curr: alertCount, type: 'low_stock' as const },
+                { label: tc('pos.kpi_revenue'), value: `${currencySymbol}${todayRevenue.toLocaleString()}`, color: GREEN, prev: prevRevenue, curr: todayRevenue, type: 'sales' as const },
+                { label: tc('pos.kpi_sales'), value: todaySales.toString(), color: ACC, prev: prevSales, curr: todaySales, type: 'sales' as const },
+                { label: tc('pos.kpi_refunds'), value: refundCount.toString(), color: refundCount > 0 ? RED : 'var(--tx)', prev: prevRefunds, curr: refundCount, type: 'refunds' as const },
+                { label: tc('pos.kpi_low_stock'), value: alertCount.toString(), color: alertCount > 0 ? RED : GREEN, prev: 0, curr: alertCount, type: 'low_stock' as const },
               ].map((kpi, i) => (
                 <div key={i} onClick={() => setFilterModal({ type: kpi.type, title: kpi.label })}
                   style={{ ...cardStyle, cursor: 'pointer', transition: 'all 200ms' }}
@@ -840,15 +843,15 @@ export default function POSPage() {
             {/* Profit / margin row */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
               <div style={cardStyle}>
-                <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Gross profit</div>
+                <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos.gross_profit')}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: grossProfit >= 0 ? GREEN : RED }}>{currencySymbol}{grossProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
               </div>
               <div style={cardStyle}>
-                <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Margin</div>
+                <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos.margin')}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: margin >= 20 ? GREEN : margin >= 10 ? AMBER : RED }}>{margin.toFixed(1)}%</div>
               </div>
               <div style={cardStyle}>
-                <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Avg sale</div>
+                <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos.avg_sale')}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--tx)' }}>{currencySymbol}{todaySales > 0 ? (todayRevenue / todaySales).toFixed(2) : '0.00'}</div>
               </div>
             </div>
@@ -858,7 +861,7 @@ export default function POSPage() {
             {/* Sales chart (hourly) */}
             {completedTx.length > 0 && (
               <div style={{ ...cardStyle, marginBottom: 24 }}>
-                <div style={sectionLabel}>Sales by hour</div>
+                <div style={sectionLabel}>{tc('pos.sales_by_hour')}</div>
                 <MiniBarChart data={hourlyData} color={ACC} height={100} />
               </div>
             )}
@@ -868,12 +871,12 @@ export default function POSPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 12, marginBottom: 24 }}>
                 {/* Payment breakdown */}
                 <div style={cardStyle}>
-                  <div style={sectionLabel}>By payment method</div>
+                  <div style={sectionLabel}>{tc('pos.by_payment_method')}</div>
                   {paymentBreakdown.map(p => (
                     <div key={p.method} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--b)' }}>
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)', textTransform: 'capitalize' }}>{p.method}</div>
-                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{p.count} sale{p.count !== 1 ? 's' : ''}</div>
+                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{p.count !== 1 ? tc('pos.sales_count_other', { count: p.count }) : tc('pos.sales_count_one', { count: p.count })}</div>
                       </div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{currencySymbol}{p.total.toFixed(2)}</div>
                     </div>
@@ -882,12 +885,12 @@ export default function POSPage() {
 
                 {/* Top products */}
                 <div style={cardStyle}>
-                  <div style={sectionLabel}>Top products</div>
+                  <div style={sectionLabel}>{tc('pos.top_products')}</div>
                   {topProducts.slice(0, 5).map((p, i) => (
                     <div key={p.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--b)' }}>
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>{i + 1}. {p.name}</div>
-                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{p.qty} sold</div>
+                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos.qty_sold', { qty: p.qty })}</div>
                       </div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{currencySymbol}{p.revenue.toFixed(2)}</div>
                     </div>
@@ -899,21 +902,21 @@ export default function POSPage() {
             {/* Staff performance */}
             {cashierStats.length > 0 && (
               <div style={{ marginBottom: 24 }}>
-                <div style={sectionLabel}>Staff performance</div>
+                <div style={sectionLabel}>{tc('pos.staff_performance')}</div>
                 {/* Mini bar chart for staff */}
                 <div style={{ ...cardStyle, marginBottom: 12 }}>
                   <MiniBarChart data={cashierStats.map(c => ({ label: c.name.split(' ')[0], value: c.revenue }))} color={ACC} height={70} />
                 </div>
                 <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
                   {cashierStats.map((c, i) => (
-                    <div key={c.id} onClick={() => setFilterModal({ type: 'cashier_detail', title: `${c.name}'s transactions`, cashier_id: c.name })}
+                    <div key={c.id} onClick={() => setFilterModal({ type: 'cashier_detail', title: tc('pos.cashier_transactions_title', { name: c.name }), cashier_id: c.name })}
                       style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: i < cashierStats.length - 1 ? '1px solid var(--b)' : 'none', background: 'var(--sf)', cursor: 'pointer', transition: 'background 200ms' }}
                       onMouseEnter={e => { (e.currentTarget.style as any).background = 'rgba(208,138,89,.04)' }} onMouseLeave={e => { (e.currentTarget.style as any).background = 'var(--sf)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <div style={{ width: 32, height: 32, borderRadius: '50%', background: ACC_BG, border: `1px solid ${ACC_BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: ACC }}>{c.name.charAt(0).toUpperCase()}</div>
                         <div>
                           <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)' }}>{c.name}</div>
-                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{c.sales} sales · avg {currencySymbol}{c.avgSale.toFixed(2)}</div>
+                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos.cashier_summary', { count: c.sales, amount: currencySymbol + c.avgSale.toFixed(2) })}</div>
                         </div>
                       </div>
                       <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>{currencySymbol}{c.revenue.toLocaleString()}</div>
@@ -926,18 +929,18 @@ export default function POSPage() {
             {/* Stock alerts */}
             {(lowStock.length > 0 || outOfStock.length > 0) && (
               <div style={{ marginBottom: 24 }}>
-                <div style={sectionLabel}>Stock alerts</div>
+                <div style={sectionLabel}>{tc('pos.stock_alerts')}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {outOfStock.map(item => (
                     <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)' }}>
                       <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>{item.name}</span>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: RED }}>OUT OF STOCK</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: RED }}>{tc('pos.out_of_stock')}</span>
                     </div>
                   ))}
                   {lowStock.map(item => (
                     <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(234,179,8,.06)', border: '1px solid rgba(234,179,8,.25)' }}>
                       <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>{item.name}</span>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: AMBER }}>{item.stock_qty} left</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: AMBER }}>{tc('pos.stock_left', { count: item.stock_qty })}</span>
                     </div>
                   ))}
                 </div>
@@ -948,18 +951,18 @@ export default function POSPage() {
             {completedTx.length > 0 && (
               <div style={{ marginBottom: 24 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <div style={sectionLabel}>Profit & loss</div>
+                  <div style={sectionLabel}>{tc('pos.profit_and_loss')}</div>
                   <div style={{ display: 'flex', gap: 4 }}>
                     {(['daily', 'weekly', 'monthly'] as const).map(v => (
                       <button key={v} onClick={() => setPlView(v)} style={{ padding: '4px 10px', borderRadius: 6, border: plView === v ? `1px solid ${ACC}` : '1px solid var(--b)', background: plView === v ? ACC_BG : 'transparent', color: plView === v ? ACC : 'var(--tx3)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                        {v.charAt(0).toUpperCase() + v.slice(1)}
+                        {tc('pos.pl_' + v)}
                       </button>
                     ))}
                   </div>
                 </div>
                 <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 90px', padding: '10px 16px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>
-                    <span>Period</span><span style={{ textAlign: 'right' }}>Revenue</span><span style={{ textAlign: 'right' }}>Cost</span><span style={{ textAlign: 'right' }}>Profit</span>
+                    <span>{tc('pos.pl_period')}</span><span style={{ textAlign: 'right' }}>{tc('pos.pl_revenue')}</span><span style={{ textAlign: 'right' }}>{tc('pos.pl_cost')}</span><span style={{ textAlign: 'right' }}>{tc('pos.pl_profit')}</span>
                   </div>
                   {plData.map((row, i) => (
                     <div key={row.period} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 90px', padding: '10px 16px', borderTop: '1px solid var(--b)', background: 'var(--sf)', alignItems: 'center' }}>
@@ -975,14 +978,14 @@ export default function POSPage() {
 
             {/* Recent transactions */}
             <div>
-              <div style={sectionLabel}>Recent transactions</div>
+              <div style={sectionLabel}>{tc('pos.recent_transactions')}</div>
               {transactions.length === 0 ? (
                 <div style={{ ...cardStyle, textAlign: 'center', padding: 40 }}>
                   <div style={{ width: 56, height: 56, borderRadius: 14, background: ACC_BG, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>No sales yet</div>
-                  <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Share <strong>pos.askbiz.co</strong> with your cashiers to get started.</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{tc('pos.no_sales_yet')}</div>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)' }} dangerouslySetInnerHTML={{ __html: tc('pos.no_sales_hint', { brand: '<strong>pos.askbiz.co</strong>' }) }} />
                 </div>
               ) : (
                 <>
@@ -994,10 +997,10 @@ export default function POSPage() {
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>
                             {(tx.pos_items || []).slice(0, 2).map(i => i.name).join(', ')}
-                            {(tx.pos_items?.length ?? 0) > 2 && ` +${tx.pos_items.length - 2} more`}
+                            {(tx.pos_items?.length ?? 0) > 2 && ' ' + tc('pos.more_items', { count: tx.pos_items.length - 2 })}
                           </div>
                           <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
-                            {tx.cashier?.name || 'Owner'} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · {tx.payment_type}
+                            {tx.cashier?.name || tc('pos.owner')} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · {tx.payment_type}
                           </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1013,9 +1016,9 @@ export default function POSPage() {
                   {/* Pagination */}
                   {transactions.length > TX_PER_PAGE && (
                     <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12 }}>
-                      <button onClick={() => setTxPage(p => Math.max(0, p - 1))} disabled={txPage === 0} style={{ ...btnSecondary, opacity: txPage === 0 ? 0.4 : 1, padding: '6px 12px', fontSize: 12 }}>Previous</button>
-                      <span style={{ fontSize: 12, color: 'var(--tx3)', alignSelf: 'center' }}>{txPage + 1} of {Math.ceil(transactions.length / TX_PER_PAGE)}</span>
-                      <button onClick={() => setTxPage(p => Math.min(Math.ceil(transactions.length / TX_PER_PAGE) - 1, p + 1))} disabled={(txPage + 1) * TX_PER_PAGE >= transactions.length} style={{ ...btnSecondary, opacity: (txPage + 1) * TX_PER_PAGE >= transactions.length ? 0.4 : 1, padding: '6px 12px', fontSize: 12 }}>Next</button>
+                      <button onClick={() => setTxPage(p => Math.max(0, p - 1))} disabled={txPage === 0} style={{ ...btnSecondary, opacity: txPage === 0 ? 0.4 : 1, padding: '6px 12px', fontSize: 12 }}>{tc('pos.pagination_previous')}</button>
+                      <span style={{ fontSize: 12, color: 'var(--tx3)', alignSelf: 'center' }}>{tc('pos.pagination_of', { current: txPage + 1, total: Math.ceil(transactions.length / TX_PER_PAGE) })}</span>
+                      <button onClick={() => setTxPage(p => Math.min(Math.ceil(transactions.length / TX_PER_PAGE) - 1, p + 1))} disabled={(txPage + 1) * TX_PER_PAGE >= transactions.length} style={{ ...btnSecondary, opacity: (txPage + 1) * TX_PER_PAGE >= transactions.length ? 0.4 : 1, padding: '6px 12px', fontSize: 12 }}>{tc('pos.pagination_next')}</button>
                     </div>
                   )}
                 </>
@@ -1040,17 +1043,17 @@ export default function POSPage() {
             // Staff session — show locked sector badge, no switching
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
               <span style={{ padding: '5px 14px', borderRadius: 20, background: ACC, color: '#fff', fontSize: 12, fontWeight: 600 }}>
-                {sector === 'restaurant' ? '🍴 Restaurant' : sector === 'repair' ? '🔧 Repair' : sector === 'salon' ? '💇 Salon' : '📦 Retail'}
+                {sector === 'restaurant' ? tc('pos.sector_restaurant') : sector === 'repair' ? tc('pos.sector_repair') : sector === 'salon' ? tc('pos.sector_salon') : tc('pos.sector_retail')}
               </span>
-              <span style={{ fontSize: 12, color: 'var(--tx3)' }}>Assigned by admin · contact your manager to change</span>
+              <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos.sector_assigned_note')}</span>
             </div>
           ) : (
             <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
               {[
-                { id: 'restaurant', label: '🍴 Restaurant' },
-                { id: 'repair',     label: '🔧 Repair' },
-                { id: 'salon',      label: '💇 Salon' },
-                { id: 'retail',     label: '📦 Retail' },
+                { id: 'restaurant', label: tc('pos.sector_restaurant') },
+                { id: 'repair',     label: tc('pos.sector_repair') },
+                { id: 'salon',      label: tc('pos.sector_salon') },
+                { id: 'retail',     label: tc('pos.sector_retail') },
               ].map(s => (
                 <button key={s.id} onClick={() => setSectorOverride(s.id === detectedSector ? null : s.id)}
                   style={{ padding: '5px 14px', borderRadius: 20, border: `1.5px solid ${sector === s.id ? ACC : 'var(--b)'}`,
@@ -1067,22 +1070,22 @@ export default function POSPage() {
             <div style={{ maxWidth: 860 }}>
               {sectorPicker}
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>🍴 Restaurant Operations</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Floor plan, kitchen, orders, menu and labour — all in one place.</div>
+                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{tc('pos.restaurant_ops_title')}</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos.restaurant_ops_desc')}</div>
               </div>
 
               {/* Quick-link tiles */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 28 }}>
                 {[
-                  { label: '🗺️ Floor Plan',  href: '/restaurant/floor',   desc: 'Table status & seating' },
-                  { label: '📋 Orders',      href: '/restaurant/orders',   desc: 'Take & manage orders' },
-                  { label: '🍳 Kitchen',     href: '/restaurant/kitchen',  desc: 'Live KDS display' },
-                  { label: '🍽️ Menu',        href: '/restaurant/menu',     desc: 'Edit items & pricing' },
-                  { label: '⏱️ Labour',      href: '/restaurant/labor',    desc: 'Clock in/out & costs' },
-                  { label: '📱 Online Orders', href: '/restaurant/online-orders', desc: 'Accept & manage online orders' },
-                  { label: '📅 Reservations', href: '/restaurant/reservations',  desc: 'Bookings & covers management' },
-                  { label: '📦 Deliveries',   href: '/restaurant/deliveries',    desc: 'Scan invoices & food costs' },
-                  { label: '🗑️ Waste',        href: '/restaurant/waste',         desc: 'Log & track food waste' },
+                  { label: tc('pos.tile_floor_plan'),    href: '/restaurant/floor',         desc: tc('pos.tile_floor_plan_desc') },
+                  { label: tc('pos.tile_orders'),        href: '/restaurant/orders',        desc: tc('pos.tile_orders_desc') },
+                  { label: tc('pos.tile_kitchen'),       href: '/restaurant/kitchen',       desc: tc('pos.tile_kitchen_desc') },
+                  { label: tc('pos.tile_menu'),          href: '/restaurant/menu',          desc: tc('pos.tile_menu_desc') },
+                  { label: tc('pos.tile_labour'),        href: '/restaurant/labor',         desc: tc('pos.tile_labour_desc') },
+                  { label: tc('pos.tile_online_orders'), href: '/restaurant/online-orders', desc: tc('pos.tile_online_orders_desc') },
+                  { label: tc('pos.tile_reservations'),  href: '/restaurant/reservations',  desc: tc('pos.tile_reservations_desc') },
+                  { label: tc('pos.tile_deliveries'),    href: '/restaurant/deliveries',    desc: tc('pos.tile_deliveries_desc') },
+                  { label: tc('pos.tile_waste'),         href: '/restaurant/waste',         desc: tc('pos.tile_waste_desc') },
                 ].map(tile => (
                   <a key={tile.href} href={tile.href}
                     style={{ display: 'block', background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: '16px 14px', textDecoration: 'none', transition: 'border-color 0.15s' }}
@@ -1113,10 +1116,10 @@ export default function POSPage() {
             <div style={{ maxWidth: 860 }}>
               {sectorPicker}
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>💇 Salon & Bookings</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Manage appointments, staff schedules, and services.</div>
+                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{tc('pos.salon_title')}</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos.salon_desc')}</div>
               </div>
-              <div style={{ color: 'var(--tx3)', fontSize: 13 }}>Salon module coming soon.</div>
+              <div style={{ color: 'var(--tx3)', fontSize: 13 }}>{tc('pos.salon_coming_soon')}</div>
             </div>
           )
 
@@ -1125,13 +1128,13 @@ export default function POSPage() {
             <div style={{ maxWidth: 860 }}>
               {sectorPicker}
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>📦 Retail Operations</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Stock management, purchase orders, and supplier tracking.</div>
+                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{tc('pos.retail_ops_title')}</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos.retail_ops_desc')}</div>
               </div>
               <div style={{ color: 'var(--tx3)', fontSize: 13 }}>
-                Use the <strong>Inventory</strong> tab for stock levels and alerts.{' '}
-                Select a different sector above or update your business type in{' '}
-                <a href="/pos/settings" style={{ color: ACC }}>Settings</a>.
+                {tc('pos.retail_inventory_hint_1')} <strong>{tc('pos.retail_inventory_hint_inventory')}</strong> {tc('pos.retail_inventory_hint_2')}{' '}
+                {tc('pos.retail_inventory_hint_3')}{' '}
+                <a href="/pos/settings" style={{ color: ACC }}>{tc('pos.retail_settings')}</a>.
               </div>
             </div>
           )
@@ -1146,11 +1149,11 @@ export default function POSPage() {
               return (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
                   <div style={{ fontSize: 13, color: 'var(--tx3)' }}>
-                    {activeStaff} of {seatCount} seat{seatCount !== 1 ? 's' : ''} used
-                    {atLimit && <span style={{ marginLeft: 8, color: RED, fontWeight: 600 }}>· <a href="/billing" style={{ color: RED }}>Add seats →</a></span>}
+                    {seatCount !== 1 ? tc('pos.seats_used_other', { used: activeStaff, total: seatCount }) : tc('pos.seats_used_one', { used: activeStaff, total: seatCount })}
+                    {atLimit && <span style={{ marginLeft: 8, color: RED, fontWeight: 600 }}>· <a href="/billing" style={{ color: RED }}>{tc('pos.add_seats_link')}</a></span>}
                   </div>
                   <button onClick={() => atLimit ? window.location.href = '/billing' : setShowAddStaff(true)} style={{ ...btnPrimary, background: atLimit ? RED : ACC }}>
-                    {atLimit ? 'Upgrade seats →' : '+ Add staff'}
+                    {atLimit ? tc('pos.upgrade_seats') : tc('pos.add_staff')}
                   </button>
                 </div>
               )
@@ -1159,12 +1162,12 @@ export default function POSPage() {
             {/* Add staff form */}
             {showAddStaff && (
               <div style={{ ...cardStyle, marginBottom: 16 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>New staff member</div>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{tc('pos.new_staff_member')}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <input placeholder="Full name" value={newName} onChange={e => setNewName(e.target.value)} style={inputStyle} />
-                  <input placeholder="Phone number (e.g. +447911123456)" value={newPhone} onChange={e => setNewPhone(e.target.value)} style={inputStyle} />
-                  <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>— or —</div>
-                  <input placeholder="Email address (alternative to WhatsApp)" value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" style={inputStyle} />
+                  <input placeholder={tc('pos.ph_full_name')} value={newName} onChange={e => setNewName(e.target.value)} style={inputStyle} />
+                  <input placeholder={tc('pos.ph_phone_example')} value={newPhone} onChange={e => setNewPhone(e.target.value)} style={inputStyle} />
+                  <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>{tc('pos.or_separator')}</div>
+                  <input placeholder={tc('pos.ph_email_alt')} value={newEmail} onChange={e => setNewEmail(e.target.value)} type="email" style={inputStyle} />
                   <select value={newRole} onChange={e => setNewRole(e.target.value)} style={inputStyle}>
                     {ROLE_OPTIONS.map(g => (
                       <optgroup key={g.group} label={g.group}>
@@ -1174,17 +1177,17 @@ export default function POSPage() {
                   </select>
                   {locations.length > 0 && (
                     <select value={newLocation} onChange={e => setNewLocation(e.target.value)} style={{ ...inputStyle, borderColor: BRANCH_ROLES.has(newRole) && !newLocation ? 'rgba(202,138,4,.5)' : undefined }}>
-                      <option value="">{BRANCH_ROLES.has(newRole) ? 'Select branch (required for this role)…' : 'Branch (optional)…'}</option>
+                      <option value="">{BRANCH_ROLES.has(newRole) ? tc('pos.branch_required_select') : tc('pos.branch_optional')}</option>
                       {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
                     </select>
                   )}
-                  {BRANCH_ROLES.has(newRole) && !newLocation && <div style={{ fontSize: 11, color: '#ca8a04' }}>⚠️ Logistics & manager roles need a branch — it controls which parcels & routes they see.</div>}
-                  <input placeholder="PIN (4–6 digits) — required for POS login" value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: newPin && newPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
+                  {BRANCH_ROLES.has(newRole) && !newLocation && <div style={{ fontSize: 11, color: '#ca8a04' }}>{tc('pos.branch_warning_logistics')}</div>}
+                  <input placeholder={tc('pos.ph_pin_required')} value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: newPin && newPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={handleAddStaff} disabled={addingStaff} style={btnPrimary}>{addingStaff ? 'Adding...' : 'Add staff member'}</button>
-                    <button onClick={() => setShowAddStaff(false)} style={btnSecondary}>Cancel</button>
+                    <button onClick={handleAddStaff} disabled={addingStaff} style={btnPrimary}>{addingStaff ? tc('pos.adding') : tc('pos.add_staff_member')}</button>
+                    <button onClick={() => setShowAddStaff(false)} style={btnSecondary}>{tc('pos.cancel')}</button>
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 4 }}>They'll log in at <strong>pos.askbiz.co</strong> using their phone (WhatsApp code) or email address.</div>
+                  <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 4 }} dangerouslySetInnerHTML={{ __html: tc('pos.staff_login_note', { brand: '<strong>pos.askbiz.co</strong>' }) }} />
                 </div>
               </div>
             )}
@@ -1195,8 +1198,8 @@ export default function POSPage() {
                 <div style={{ width: 56, height: 56, borderRadius: 14, background: ACC_BG, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>No staff added yet</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Add your first cashier or inventory manager above.</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{tc('pos.no_staff_yet')}</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos.no_staff_hint')}</div>
               </div>
             ) : (
               <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
@@ -1212,15 +1215,15 @@ export default function POSPage() {
                           <span>{s.role}</span>
                           {s.location?.name && <span style={{ color: ACC, fontWeight: 600 }}>· 📍 {s.location.name}</span>}
                           {s.phone && <span>· {s.phone}</span>}
-                          {s.has_pin ? <span style={{ color: GREEN, fontWeight: 600 }}>· PIN set</span> : <span style={{ color: RED, fontWeight: 600 }}>· No PIN</span>}
-                          {s.last_login_at && <span>· Last login {new Date(s.last_login_at).toLocaleDateString('en-GB')}</span>}
+                          {s.has_pin ? <span style={{ color: GREEN, fontWeight: 600 }}>· {tc('pos.pin_set')}</span> : <span style={{ color: RED, fontWeight: 600 }}>· {tc('pos.no_pin')}</span>}
+                          {s.last_login_at && <span>· {tc('pos.last_login', { date: new Date(s.last_login_at).toLocaleDateString('en-GB') })}</span>}
                         </div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={() => handleOpenEditStaff(s)} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)' }}>Edit</button>
+                      <button onClick={() => handleOpenEditStaff(s)} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)' }}>{tc('pos.edit')}</button>
                       <button onClick={() => handleToggleStaff(s)} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: 'none', background: s.active ? 'rgba(220,38,38,.08)' : 'rgba(22,163,74,.08)', color: s.active ? RED : GREEN }}>
-                        {s.active ? 'Deactivate' : 'Reactivate'}
+                        {s.active ? tc('pos.deactivate') : tc('pos.reactivate')}
                       </button>
                     </div>
                   </div>
@@ -1231,12 +1234,12 @@ export default function POSPage() {
             {/* Edit staff inline */}
             {editingStaff && (
               <div style={{ ...cardStyle, marginTop: 16 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Edit {editingStaff.name}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{tc('pos.edit_staff', { name: editingStaff.name })}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
-                  <input placeholder="Full name" value={editName} onChange={e => setEditName(e.target.value)} style={inputStyle} />
-                  <input placeholder="Phone number" value={editPhone} onChange={e => setEditPhone(e.target.value)} style={inputStyle} />
-                  <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>— or —</div>
-                  <input placeholder="Email address" value={editEmail} onChange={e => setEditEmail(e.target.value)} type="email" style={inputStyle} />
+                  <input placeholder={tc('pos.ph_full_name')} value={editName} onChange={e => setEditName(e.target.value)} style={inputStyle} />
+                  <input placeholder={tc('pos.ph_phone')} value={editPhone} onChange={e => setEditPhone(e.target.value)} style={inputStyle} />
+                  <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>{tc('pos.or_separator')}</div>
+                  <input placeholder={tc('pos.ph_email')} value={editEmail} onChange={e => setEditEmail(e.target.value)} type="email" style={inputStyle} />
                   <select value={editRole} onChange={e => setEditRole(e.target.value)} style={inputStyle}>
                     {ROLE_OPTIONS.map(g => (
                       <optgroup key={g.group} label={g.group}>
@@ -1246,16 +1249,16 @@ export default function POSPage() {
                   </select>
                   {locations.length > 0 && (
                     <select value={editLocation} onChange={e => setEditLocation(e.target.value)} style={{ ...inputStyle, borderColor: BRANCH_ROLES.has(editRole) && !editLocation ? 'rgba(202,138,4,.5)' : undefined }}>
-                      <option value="">{BRANCH_ROLES.has(editRole) ? 'Select branch (required for this role)…' : 'No branch'}</option>
+                      <option value="">{BRANCH_ROLES.has(editRole) ? tc('pos.branch_required_select') : tc('pos.no_branch')}</option>
                       {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
                     </select>
                   )}
-                  {BRANCH_ROLES.has(editRole) && !editLocation && <div style={{ fontSize: 11, color: '#ca8a04' }}>⚠️ This role needs a branch to see its parcels & routes.</div>}
-                  <input placeholder={`New PIN (4–6 digits)${editingStaff.has_pin ? ' — leave blank to keep current' : ''}`} value={editPin} onChange={e => setEditPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: editPin && editPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
+                  {BRANCH_ROLES.has(editRole) && !editLocation && <div style={{ fontSize: 11, color: '#ca8a04' }}>{tc('pos.branch_warning_role')}</div>}
+                  <input placeholder={editingStaff.has_pin ? tc('pos.ph_new_pin_keep') : tc('pos.ph_new_pin')} value={editPin} onChange={e => setEditPin(e.target.value.replace(/\D/g, '').slice(0, 6))} type="text" inputMode="numeric" maxLength={6} style={{ ...inputStyle, letterSpacing: '0.15em', borderColor: editPin && editPin.length >= 4 ? 'rgba(22,163,74,.4)' : undefined }} />
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={handleEditStaff} disabled={editingSubmitting} style={btnPrimary}>{editingSubmitting ? 'Saving...' : 'Save changes'}</button>
-                  <button onClick={() => setEditingStaff(null)} style={btnSecondary}>Cancel</button>
+                  <button onClick={handleEditStaff} disabled={editingSubmitting} style={btnPrimary}>{editingSubmitting ? tc('pos.saving') : tc('pos.save_changes')}</button>
+                  <button onClick={() => setEditingStaff(null)} style={btnSecondary}>{tc('pos.cancel')}</button>
                 </div>
               </div>
             )}
@@ -1266,30 +1269,30 @@ export default function POSPage() {
         {tab === 'inventory' && (
           <div style={{ maxWidth: 900 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-              <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{filteredInventory.length} product{filteredInventory.length !== 1 ? 's' : ''}</div>
+              <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{filteredInventory.length !== 1 ? tc('pos.products_count_other', { count: filteredInventory.length }) : tc('pos.products_count_one', { count: filteredInventory.length })}</div>
               <div style={{ display: 'flex', gap: 8, position: 'relative', flexWrap: 'wrap' }}>
                 <input ref={cameraInputRef} type="file" accept="image/*" onChange={e => { if (e.target.files?.[0]) handleImageCapture(e.target.files[0]) }} style={{ display: 'none' }} capture="environment" />
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={e => { if (e.target.files?.[0]) handleImageCapture(e.target.files[0]) }} style={{ display: 'none' }} />
                 <button onClick={() => setShowCameraMenu(!showCameraMenu)} disabled={recognizing} style={{ ...btnSecondary, opacity: recognizing ? 0.6 : 1, fontSize: 12 }}>
-                  {recognizing ? 'Reading...' : 'Scan products'}
+                  {recognizing ? tc('pos.reading') : tc('pos.scan_products')}
                 </button>
                 {showCameraMenu && (
                   <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 10, overflow: 'hidden', zIndex: 10, minWidth: 160 }}>
-                    <button onClick={handleOpenCamera} style={{ width: '100%', padding: '12px 16px', textAlign: 'left', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: 'var(--tx)', borderBottom: '1px solid var(--b)', fontFamily: 'inherit' }}>Take photo</button>
-                    <button onClick={() => { fileInputRef.current?.click(); setShowCameraMenu(false) }} style={{ width: '100%', padding: '12px 16px', textAlign: 'left', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: 'var(--tx)', fontFamily: 'inherit' }}>Upload file</button>
+                    <button onClick={handleOpenCamera} style={{ width: '100%', padding: '12px 16px', textAlign: 'left', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: 'var(--tx)', borderBottom: '1px solid var(--b)', fontFamily: 'inherit' }}>{tc('pos.take_photo')}</button>
+                    <button onClick={() => { fileInputRef.current?.click(); setShowCameraMenu(false) }} style={{ width: '100%', padding: '12px 16px', textAlign: 'left', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 13, color: 'var(--tx)', fontFamily: 'inherit' }}>{tc('pos.upload_file')}</button>
                   </div>
                 )}
-                <button onClick={() => setShowBulkImport(true)} style={{ ...btnSecondary, fontSize: 12 }}>CSV import</button>
-                <button onClick={() => setShowAddProduct(true)} style={{ ...btnPrimary, fontSize: 12 }}>+ Add product</button>
+                <button onClick={() => setShowBulkImport(true)} style={{ ...btnSecondary, fontSize: 12 }}>{tc('pos.csv_import')}</button>
+                <button onClick={() => setShowAddProduct(true)} style={{ ...btnPrimary, fontSize: 12 }}>{tc('pos.add_product')}</button>
               </div>
             </div>
 
             {/* Search & category filter */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-              <input placeholder="Search products..." value={invSearch} onChange={e => setInvSearch(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 180 }} />
+              <input placeholder={tc('pos.ph_search_products')} value={invSearch} onChange={e => setInvSearch(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 180 }} />
               {categories.length > 2 && (
                 <select value={invCategory} onChange={e => setInvCategory(e.target.value)} style={{ ...inputStyle, minWidth: 140 }}>
-                  {categories.map(c => <option key={c} value={c}>{c === 'all' ? 'All categories' : c}</option>)}
+                  {categories.map(c => <option key={c} value={c}>{c === 'all' ? tc('pos.all_categories') : c}</option>)}
                 </select>
               )}
             </div>
@@ -1300,8 +1303,8 @@ export default function POSPage() {
                 <video ref={videoRef} autoPlay playsInline style={{ width: '100%', maxWidth: 600, borderRadius: 12, marginBottom: 16 }} />
                 <canvas ref={canvasRef} style={{ display: 'none' }} />
                 <div style={{ display: 'flex', gap: 12 }}>
-                  <button onClick={handleCapturePhoto} disabled={recognizing} style={{ ...btnPrimary, padding: '12px 28px', fontSize: 14, fontWeight: 700 }}>{recognizing ? 'Processing...' : 'Capture photo'}</button>
-                  <button onClick={handleCloseCamera} disabled={recognizing} style={{ padding: '12px 28px', borderRadius: 10, border: '1px solid rgba(255,255,255,.3)', background: 'transparent', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+                  <button onClick={handleCapturePhoto} disabled={recognizing} style={{ ...btnPrimary, padding: '12px 28px', fontSize: 14, fontWeight: 700 }}>{recognizing ? tc('pos.processing') : tc('pos.capture_photo')}</button>
+                  <button onClick={handleCloseCamera} disabled={recognizing} style={{ padding: '12px 28px', borderRadius: 10, border: '1px solid rgba(255,255,255,.3)', background: 'transparent', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos.cancel')}</button>
                 </div>
               </div>
             )}
@@ -1311,44 +1314,44 @@ export default function POSPage() {
             {editingRecognizedIndex !== null && recognizedProducts.length > 0 && (
               <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 99, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setEditingRecognizedIndex(null)}>
                 <div style={{ background: 'var(--sf)', borderRadius: 16, padding: 24, maxWidth: 500, width: '100%', maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)', marginBottom: 20, marginTop: 0 }}>Edit product details</h3>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)', marginBottom: 20, marginTop: 0 }}>{tc('pos.edit_product_details')}</h3>
 
                   {/* Product name (read-only) */}
                   <div style={{ marginBottom: 16 }}>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Product name</label>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('pos.label_product_name')}</label>
                     <input type="text" value={editingRecognizedData.name || ''} disabled style={{ ...inputStyle, background: 'var(--ev)', opacity: 0.6, width: '100%' }} />
                   </div>
 
                   {/* SKU / Barcode */}
                   <div style={{ marginBottom: 16 }}>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>SKU / Barcode {editingRecognizedData.barcode_number ? '(auto-detected)' : ''}</label>
-                    <input type="text" placeholder="e.g. 8718924509127" value={editingRecognizedData.sku || editingRecognizedData.barcode_number || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, sku: e.target.value })} style={{ ...inputStyle, width: '100%' }} />
-                    {editingRecognizedData.barcode_detected && <div style={{ fontSize: 11, color: 'var(--acc)', marginTop: 4 }}>✓ Barcode detected in image</div>}
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('pos.label_sku_barcode')} {editingRecognizedData.barcode_number ? tc('pos.auto_detected') : ''}</label>
+                    <input type="text" placeholder={tc('pos.ph_barcode_example')} value={editingRecognizedData.sku || editingRecognizedData.barcode_number || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, sku: e.target.value })} style={{ ...inputStyle, width: '100%' }} />
+                    {editingRecognizedData.barcode_detected && <div style={{ fontSize: 11, color: 'var(--acc)', marginTop: 4 }}>{tc('pos.barcode_detected')}</div>}
                   </div>
 
                   {/* Cost price */}
                   <div style={{ marginBottom: 16 }}>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Cost price (purchase price)</label>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('pos.label_cost_price')}</label>
                     <input type="number" placeholder="0.00" value={editingRecognizedData.cost_price || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, cost_price: e.target.value })} style={{ ...inputStyle, width: '100%' }} step="0.01" />
                   </div>
 
                   {/* Sale price */}
                   <div style={{ marginBottom: 16 }}>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Sale price (selling price)</label>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('pos.label_sale_price')}</label>
                     <input type="number" placeholder="0.00" value={editingRecognizedData.sale_price || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, sale_price: e.target.value })} style={{ ...inputStyle, width: '100%' }} step="0.01" />
                   </div>
 
                   {/* Quantity */}
                   <div style={{ marginBottom: 20 }}>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Starting stock quantity</label>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('pos.label_starting_stock')}</label>
                     <input type="number" value={editingRecognizedData.stock_qty || 1} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, stock_qty: e.target.value })} style={{ ...inputStyle, width: '100%' }} min="1" />
                   </div>
 
                   {/* Margin preview */}
                   {editingRecognizedData.cost_price && editingRecognizedData.sale_price && (
                     <div style={{ background: 'var(--ev)', padding: 12, borderRadius: 8, marginBottom: 20, fontSize: 12 }}>
-                      <div style={{ color: 'var(--tx2)', marginBottom: 4 }}>Margin: <strong style={{ color: 'var(--acc)' }}>{((parseFloat(editingRecognizedData.sale_price) - parseFloat(editingRecognizedData.cost_price || 0)) / parseFloat(editingRecognizedData.sale_price || 1) * 100).toFixed(1)}%</strong></div>
-                      <div style={{ color: 'var(--tx3)', fontSize: 11 }}>Profit per unit: {(parseFloat(editingRecognizedData.sale_price) - parseFloat(editingRecognizedData.cost_price || 0)).toFixed(2)}</div>
+                      <div style={{ color: 'var(--tx2)', marginBottom: 4 }}>{tc('pos.margin_label')} <strong style={{ color: 'var(--acc)' }}>{((parseFloat(editingRecognizedData.sale_price) - parseFloat(editingRecognizedData.cost_price || 0)) / parseFloat(editingRecognizedData.sale_price || 1) * 100).toFixed(1)}%</strong></div>
+                      <div style={{ color: 'var(--tx3)', fontSize: 11 }}>{tc('pos.profit_per_unit', { amount: (parseFloat(editingRecognizedData.sale_price) - parseFloat(editingRecognizedData.cost_price || 0)).toFixed(2) })}</div>
                     </div>
                   )}
 
@@ -1373,7 +1376,7 @@ export default function POSPage() {
                         const data = await res.json()
                         if (data.product) {
                           setInventory(prev => [...prev, data.product])
-                          notify(`${data.product.name} added`)
+                          notify(tc('pos.toast_product_added', { name: data.product.name }))
                           // Remove from recognized list
                           const newRecognized = recognizedProducts.filter((_, idx) => idx !== editingRecognizedIndex)
                           setRecognizedProducts(newRecognized)
@@ -1392,11 +1395,11 @@ export default function POSPage() {
                           }
                         }
                       } catch (err) {
-                        notify('Failed to add product', false)
+                        notify(tc('pos.toast_add_product_failed'), false)
                       }
                       setAddingProduct(false)
-                    }} disabled={!editingRecognizedData.sale_price || addingProduct} style={{ ...btnPrimary, flex: 1, opacity: !editingRecognizedData.sale_price || addingProduct ? 0.5 : 1 }}>{addingProduct ? 'Adding...' : 'Add to inventory'}</button>
-                    <button onClick={() => { setEditingRecognizedIndex(null); setRecognizedProducts([]) }} style={btnSecondary}>Done</button>
+                    }} disabled={!editingRecognizedData.sale_price || addingProduct} style={{ ...btnPrimary, flex: 1, opacity: !editingRecognizedData.sale_price || addingProduct ? 0.5 : 1 }}>{addingProduct ? tc('pos.adding') : tc('pos.add_to_inventory')}</button>
+                    <button onClick={() => { setEditingRecognizedIndex(null); setRecognizedProducts([]) }} style={btnSecondary}>{tc('pos.done')}</button>
                   </div>
                 </div>
               </div>
@@ -1405,14 +1408,14 @@ export default function POSPage() {
             {/* Bulk CSV import */}
             {showBulkImport && (
               <div style={{ ...cardStyle, marginBottom: 16 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Bulk import from CSV</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 10 }}>Format: <code>name, price, stock_qty, unit</code> (one product per line)</div>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{tc('pos.bulk_import_title')}</div>
+                <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 10 }}>{tc('pos.bulk_import_format')}<code>name, price, stock_qty, unit</code>{tc('pos.bulk_import_format_suffix')}</div>
                 <input ref={csvInputRef} type="file" accept=".csv,.txt" onChange={handleCsvFile} style={{ display: 'none' }} />
-                <button onClick={() => csvInputRef.current?.click()} style={{ ...btnSecondary, marginBottom: 8, fontSize: 12 }}>Choose CSV file</button>
-                <textarea value={bulkCsv} onChange={e => setBulkCsv(e.target.value)} placeholder={"Hair Gel, 250, 100, item\nShampoo, 500, 50, bottle"} rows={5} style={{ ...inputStyle, width: '100%', resize: 'vertical', marginBottom: 10 }} />
+                <button onClick={() => csvInputRef.current?.click()} style={{ ...btnSecondary, marginBottom: 8, fontSize: 12 }}>{tc('pos.choose_csv_file')}</button>
+                <textarea value={bulkCsv} onChange={e => setBulkCsv(e.target.value)} placeholder={tc('pos.ph_bulk_csv')} rows={5} style={{ ...inputStyle, width: '100%', resize: 'vertical', marginBottom: 10 }} />
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={handleBulkImport} disabled={importingBulk || !bulkCsv.trim()} style={{ ...btnPrimary, opacity: !bulkCsv.trim() ? 0.5 : 1 }}>{importingBulk ? 'Importing...' : 'Import products'}</button>
-                  <button onClick={() => { setShowBulkImport(false); setBulkCsv('') }} style={btnSecondary}>Cancel</button>
+                  <button onClick={handleBulkImport} disabled={importingBulk || !bulkCsv.trim()} style={{ ...btnPrimary, opacity: !bulkCsv.trim() ? 0.5 : 1 }}>{importingBulk ? tc('pos.importing') : tc('pos.import_products')}</button>
+                  <button onClick={() => { setShowBulkImport(false); setBulkCsv('') }} style={btnSecondary}>{tc('pos.cancel')}</button>
                 </div>
               </div>
             )}
@@ -1420,17 +1423,17 @@ export default function POSPage() {
             {/* Add product form */}
             {showAddProduct && (
               <div style={{ ...cardStyle, marginBottom: 16 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>New product</div>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{tc('pos.new_product')}</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  <input placeholder="Product name" value={newProduct.name} onChange={e => setNewProduct(p => ({ ...p, name: e.target.value }))} style={{ ...inputStyle, gridColumn: '1/-1' }} />
-                  <input placeholder="Sale price" type="number" value={newProduct.sale_price} onChange={e => setNewProduct(p => ({ ...p, sale_price: e.target.value }))} style={inputStyle} />
-                  <input placeholder="Cost price (optional)" type="number" value={newProduct.cost_price} onChange={e => setNewProduct(p => ({ ...p, cost_price: e.target.value }))} style={inputStyle} />
-                  <input placeholder="Starting stock qty" type="number" value={newProduct.stock_qty} onChange={e => setNewProduct(p => ({ ...p, stock_qty: e.target.value }))} style={inputStyle} />
-                  <input placeholder="Low stock alert at" type="number" value={newProduct.low_stock_threshold} onChange={e => setNewProduct(p => ({ ...p, low_stock_threshold: e.target.value }))} style={inputStyle} />
+                  <input placeholder={tc('pos.ph_product_name')} value={newProduct.name} onChange={e => setNewProduct(p => ({ ...p, name: e.target.value }))} style={{ ...inputStyle, gridColumn: '1/-1' }} />
+                  <input placeholder={tc('pos.ph_sale_price')} type="number" value={newProduct.sale_price} onChange={e => setNewProduct(p => ({ ...p, sale_price: e.target.value }))} style={inputStyle} />
+                  <input placeholder={tc('pos.ph_cost_price_optional')} type="number" value={newProduct.cost_price} onChange={e => setNewProduct(p => ({ ...p, cost_price: e.target.value }))} style={inputStyle} />
+                  <input placeholder={tc('pos.ph_starting_stock_qty')} type="number" value={newProduct.stock_qty} onChange={e => setNewProduct(p => ({ ...p, stock_qty: e.target.value }))} style={inputStyle} />
+                  <input placeholder={tc('pos.ph_low_stock_alert')} type="number" value={newProduct.low_stock_threshold} onChange={e => setNewProduct(p => ({ ...p, low_stock_threshold: e.target.value }))} style={inputStyle} />
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                  <button onClick={handleAddProduct} disabled={addingProduct} style={btnPrimary}>{addingProduct ? 'Adding...' : 'Add product'}</button>
-                  <button onClick={() => setShowAddProduct(false)} style={btnSecondary}>Cancel</button>
+                  <button onClick={handleAddProduct} disabled={addingProduct} style={btnPrimary}>{addingProduct ? tc('pos.adding') : tc('pos.add_product_submit')}</button>
+                  <button onClick={() => setShowAddProduct(false)} style={btnSecondary}>{tc('pos.cancel')}</button>
                 </div>
               </div>
             )}
@@ -1438,17 +1441,17 @@ export default function POSPage() {
             {/* Edit product modal */}
             {editingProduct && (
               <div style={{ ...cardStyle, marginBottom: 16, border: `1px solid ${ACC}` }}>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Edit {editingProduct.name}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>{tc('pos.edit_product', { name: editingProduct.name })}</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  <input placeholder="Name" value={editProduct.name} onChange={e => setEditProduct(p => ({ ...p, name: e.target.value }))} style={{ ...inputStyle, gridColumn: '1/-1' }} />
-                  <input placeholder="Sale price" type="number" value={editProduct.sale_price} onChange={e => setEditProduct(p => ({ ...p, sale_price: e.target.value }))} style={inputStyle} />
-                  <input placeholder="Cost price" type="number" value={editProduct.cost_price} onChange={e => setEditProduct(p => ({ ...p, cost_price: e.target.value }))} style={inputStyle} />
-                  <input placeholder="Stock qty" type="number" value={editProduct.stock_qty} onChange={e => setEditProduct(p => ({ ...p, stock_qty: e.target.value }))} style={inputStyle} />
-                  <input placeholder="Low stock threshold" type="number" value={editProduct.low_stock_threshold} onChange={e => setEditProduct(p => ({ ...p, low_stock_threshold: e.target.value }))} style={inputStyle} />
+                  <input placeholder={tc('pos.ph_name')} value={editProduct.name} onChange={e => setEditProduct(p => ({ ...p, name: e.target.value }))} style={{ ...inputStyle, gridColumn: '1/-1' }} />
+                  <input placeholder={tc('pos.ph_sale_price')} type="number" value={editProduct.sale_price} onChange={e => setEditProduct(p => ({ ...p, sale_price: e.target.value }))} style={inputStyle} />
+                  <input placeholder={tc('pos.ph_cost_price')} type="number" value={editProduct.cost_price} onChange={e => setEditProduct(p => ({ ...p, cost_price: e.target.value }))} style={inputStyle} />
+                  <input placeholder={tc('pos.ph_stock_qty')} type="number" value={editProduct.stock_qty} onChange={e => setEditProduct(p => ({ ...p, stock_qty: e.target.value }))} style={inputStyle} />
+                  <input placeholder={tc('pos.ph_low_stock_threshold')} type="number" value={editProduct.low_stock_threshold} onChange={e => setEditProduct(p => ({ ...p, low_stock_threshold: e.target.value }))} style={inputStyle} />
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                  <button onClick={handleEditProduct} disabled={editingProductSubmitting} style={btnPrimary}>{editingProductSubmitting ? 'Saving...' : 'Save'}</button>
-                  <button onClick={() => setEditingProduct(null)} style={btnSecondary}>Cancel</button>
+                  <button onClick={handleEditProduct} disabled={editingProductSubmitting} style={btnPrimary}>{editingProductSubmitting ? tc('pos.saving') : tc('pos.save')}</button>
+                  <button onClick={() => setEditingProduct(null)} style={btnSecondary}>{tc('pos.cancel')}</button>
                 </div>
               </div>
             )}
@@ -1459,13 +1462,13 @@ export default function POSPage() {
                 <div style={{ width: 56, height: 56, borderRadius: 14, background: ACC_BG, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="1.8" strokeLinecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{invSearch || invCategory !== 'all' ? 'No matching products' : 'No products yet'}</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{invSearch || invCategory !== 'all' ? 'Try a different search or category.' : 'Add your first product above or scan items with the camera.'}</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{invSearch || invCategory !== 'all' ? tc('pos.no_matching_products') : tc('pos.no_products_yet')}</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{invSearch || invCategory !== 'all' ? tc('pos.no_matching_hint') : tc('pos.no_products_hint')}</div>
               </div>
             ) : (
               <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 70px 70px 70px 110px', padding: '10px 16px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>
-                  <span>Product</span><span style={{ textAlign: 'right' }}>Price</span><span style={{ textAlign: 'right' }}>Cost</span><span style={{ textAlign: 'right' }}>Stock</span><span style={{ textAlign: 'right' }}>Actions</span>
+                  <span>{tc('pos.col_product')}</span><span style={{ textAlign: 'right' }}>{tc('pos.col_price')}</span><span style={{ textAlign: 'right' }}>{tc('pos.col_cost')}</span><span style={{ textAlign: 'right' }}>{tc('pos.col_stock')}</span><span style={{ textAlign: 'right' }}>{tc('pos.col_actions')}</span>
                 </div>
                 {filteredInventory.map((item, i) => {
                   const isOut = item.stock_qty === 0
@@ -1476,11 +1479,11 @@ export default function POSPage() {
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--tx)' }}>
                           {item.name}
-                          {isOut && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: RED, background: 'rgba(220,38,38,.08)', padding: '1px 6px', borderRadius: 9999 }}>OUT</span>}
-                          {isLow && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: AMBER, background: 'rgba(234,179,8,.08)', padding: '1px 6px', borderRadius: 9999 }}>LOW</span>}
+                          {isOut && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: RED, background: 'rgba(220,38,38,.08)', padding: '1px 6px', borderRadius: 9999 }}>{tc('pos.badge_out')}</span>}
+                          {isLow && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 700, color: AMBER, background: 'rgba(234,179,8,.08)', padding: '1px 6px', borderRadius: 9999 }}>{tc('pos.badge_low')}</span>}
                         </div>
-                        {item.sku && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>SKU: {item.sku}</div>}
-                        {item.last_sold_at && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Last sold {new Date(item.last_sold_at).toLocaleDateString('en-GB')}</div>}
+                        {item.sku && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos.sku_prefix', { sku: item.sku })}</div>}
+                        {item.last_sold_at && <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos.last_sold', { date: new Date(item.last_sold_at).toLocaleDateString('en-GB') })}</div>}
                       </div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', textAlign: 'right' }}>{currencySymbol}{item.sale_price.toFixed(2)}</div>
                       <div style={{ textAlign: 'right' }}>
@@ -1490,18 +1493,18 @@ export default function POSPage() {
                       <div style={{ textAlign: 'right' }}>
                         {restockId === item.id ? (
                           <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-                            <input value={restockQty} onChange={e => setRestockQty(e.target.value.replace(/\D/g, ''))} placeholder="qty" style={{ ...inputStyle, width: 50, padding: '4px 6px', fontSize: 12, textAlign: 'center' }} autoFocus onKeyDown={e => { if (e.key === 'Enter') handleRestock(item.id); if (e.key === 'Escape') setRestockId(null) }} />
+                            <input value={restockQty} onChange={e => setRestockQty(e.target.value.replace(/\D/g, ''))} placeholder={tc('pos.ph_qty')} style={{ ...inputStyle, width: 50, padding: '4px 6px', fontSize: 12, textAlign: 'center' }} autoFocus onKeyDown={e => { if (e.key === 'Enter') handleRestock(item.id); if (e.key === 'Escape') setRestockId(null) }} />
                             <button onClick={() => handleRestock(item.id)} style={{ padding: '4px 6px', borderRadius: 4, background: GREEN, color: '#fff', border: 'none', fontSize: 10, cursor: 'pointer' }}>+</button>
                           </div>
                         ) : (
-                          <div onClick={() => { setRestockId(item.id); setRestockQty('') }} style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', cursor: 'pointer' }} title="Click to restock">
+                          <div onClick={() => { setRestockId(item.id); setRestockQty('') }} style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', cursor: 'pointer' }} title={tc('pos.restock_title')}>
                             {item.stock_qty}
                           </div>
                         )}
                       </div>
                       <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-                        <button onClick={() => { setEditingProduct(item); setEditProduct({ name: item.name, sale_price: item.sale_price.toString(), cost_price: (item.cost_price || 0).toString(), stock_qty: item.stock_qty.toString(), low_stock_threshold: item.low_stock_threshold.toString(), category: item.category || '' }) }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx2)' }}>Edit</button>
-                        <button onClick={() => handleDeleteProduct(item)} style={{ padding: '4px 8px', borderRadius: 6, border: 'none', background: 'rgba(220,38,38,.08)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', color: RED }}>Remove</button>
+                        <button onClick={() => { setEditingProduct(item); setEditProduct({ name: item.name, sale_price: item.sale_price.toString(), cost_price: (item.cost_price || 0).toString(), stock_qty: item.stock_qty.toString(), low_stock_threshold: item.low_stock_threshold.toString(), category: item.category || '' }) }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx2)' }}>{tc('pos.edit')}</button>
+                        <button onClick={() => handleDeleteProduct(item)} style={{ padding: '4px 8px', borderRadius: 6, border: 'none', background: 'rgba(220,38,38,.08)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', color: RED }}>{tc('pos.remove')}</button>
                       </div>
                     </div>
                   )
@@ -1514,14 +1517,14 @@ export default function POSPage() {
         {/* ══════════════ AUDIT TAB ══════════════ */}
         {tab === 'audit' && (
           <div style={{ maxWidth: 800 }}>
-            <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 16 }}>All amendments and refunds are logged here automatically.</div>
+            <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 16 }}>{tc('pos.audit_intro')}</div>
             {transactions.filter(t => t.status !== 'completed').length === 0 ? (
               <div style={{ ...cardStyle, textAlign: 'center', padding: 40 }}>
                 <div style={{ width: 56, height: 56, borderRadius: 14, background: 'rgba(22,163,74,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.8" strokeLinecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>Clean record</div>
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No amendments or refunds yet.</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{tc('pos.clean_record')}</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos.clean_record_hint')}</div>
               </div>
             ) : (
               <div style={{ border: '1px solid var(--b)', borderRadius: 12, overflow: 'hidden' }}>
@@ -1530,11 +1533,11 @@ export default function POSPage() {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontSize: 11, fontWeight: 700, color: tx.status === 'refunded' ? RED : AMBER, background: tx.status === 'refunded' ? 'rgba(220,38,38,.08)' : 'rgba(234,179,8,.08)', padding: '2px 8px', borderRadius: 9999, textTransform: 'uppercase' }}>{tx.status.replace('_', ' ')}</span>
-                        <span style={{ fontSize: 12, color: 'var(--tx3)' }}>Sale #{tx.id.slice(0, 8)}</span>
+                        <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos.sale_number', { id: tx.id.slice(0, 8) })}</span>
                       </div>
                       <span style={{ fontSize: 15, fontWeight: 700, color: RED }}>-{currencySymbol}{tx.total.toFixed(2)}</span>
                     </div>
-                    <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tx.cashier?.name || 'Owner'} · {new Date(tx.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+                    <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tx.cashier?.name || tc('pos.owner')} · {new Date(tx.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
                   </div>
                 ))}
               </div>
@@ -1546,8 +1549,8 @@ export default function POSPage() {
             <div style={{ marginBottom: 12 }}>
               <div style={{ fontSize: 13, color: 'var(--tx3)' }}>
                 {geoPoints.length > 0
-                  ? `${geoPoints.length} geo-tagged sale${geoPoints.length !== 1 ? 's' : ''} in this period`
-                  : 'No geo-tagged sales yet — cashiers must allow location access on their device when checking out'}
+                  ? (geoPoints.length !== 1 ? tc('pos.geo_count_other', { count: geoPoints.length }) : tc('pos.geo_count_one', { count: geoPoints.length }))
+                  : tc('pos.geo_empty')}
               </div>
             </div>
             <div style={{ position: 'relative', height: 520, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--b)' }}>
@@ -1556,8 +1559,8 @@ export default function POSPage() {
                 <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 999, background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(8px)', borderRadius: 12, padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 2px 12px rgba(0,0,0,0.12)', whiteSpace: 'nowrap' }}>
                   <span style={{ fontSize: 20 }}>📍</span>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>No pins yet for this period</div>
-                    <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Cashiers must allow location access when checking out</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{tc('pos.map_no_pins')}</div>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos.map_no_pins_hint')}</div>
                   </div>
                 </div>
               )}
@@ -1575,19 +1578,19 @@ export default function POSPage() {
           <div style={modalBox}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div>
-                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700 }}>Transaction details</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>#{txDetail.id.slice(0, 8)} · {new Date(txDetail.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700 }}>{tc('pos.transaction_details')}</div>
+                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos.tx_meta', { id: txDetail.id.slice(0, 8), date: new Date(txDetail.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) })}</div>
               </div>
               {txDetail.status !== 'completed' && <span style={{ fontSize: 11, fontWeight: 700, color: RED, background: 'rgba(220,38,38,.08)', padding: '4px 10px', borderRadius: 9999, textTransform: 'uppercase' }}>{txDetail.status.replace('_', ' ')}</span>}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Cashier<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{txDetail.cashier?.name || 'Owner'}</div></div>
-              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Payment<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2, textTransform: 'capitalize' }}>{txDetail.payment_type}</div></div>
+              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos.cashier')}<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2 }}>{txDetail.cashier?.name || tc('pos.owner')}</div></div>
+              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos.payment')}<div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginTop: 2, textTransform: 'capitalize' }}>{txDetail.payment_type}</div></div>
             </div>
-            {txDetail.pos_customers?.phone && <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 12 }}>Customer: {txDetail.pos_customers.name || txDetail.pos_customers.phone}</div>}
+            {txDetail.pos_customers?.phone && <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 12 }}>{tc('pos.customer', { name: txDetail.pos_customers.name || txDetail.pos_customers.phone })}</div>}
             <div style={{ border: '1px solid var(--b)', borderRadius: 10, overflow: 'hidden', marginBottom: 16 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 50px 70px 70px', padding: '8px 14px', background: 'var(--ev)', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>
-                <span>Item</span><span style={{ textAlign: 'center' }}>Qty</span><span style={{ textAlign: 'right' }}>Unit</span><span style={{ textAlign: 'right' }}>Total</span>
+                <span>{tc('pos.col_item')}</span><span style={{ textAlign: 'center' }}>{tc('pos.col_qty')}</span><span style={{ textAlign: 'right' }}>{tc('pos.col_unit')}</span><span style={{ textAlign: 'right' }}>{tc('pos.col_total')}</span>
               </div>
               {(txDetail.pos_items || []).map((item, i) => (
                 <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 50px 70px 70px', padding: '10px 14px', borderTop: '1px solid var(--b)', fontSize: 13 }}>
@@ -1599,15 +1602,15 @@ export default function POSPage() {
               ))}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderTop: '2px solid var(--b)', fontSize: 16, fontWeight: 800 }}>
-              <span>Total</span>
+              <span>{tc('pos.total')}</span>
               <span>{currencySymbol}{txDetail.total.toFixed(2)}</span>
             </div>
-            {txDetail.notes && <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 8 }}>Note: {txDetail.notes}</div>}
+            {txDetail.notes && <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 8 }}>{tc('pos.note', { note: txDetail.notes })}</div>}
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
               {txDetail.status === 'completed' && (
-                <button onClick={() => { setRefundTx(txDetail); setTxDetail(null); setRefundReason('') }} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid rgba(220,38,38,.25)', background: 'rgba(220,38,38,.06)', color: RED, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Process refund</button>
+                <button onClick={() => { setRefundTx(txDetail); setTxDetail(null); setRefundReason('') }} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid rgba(220,38,38,.25)', background: 'rgba(220,38,38,.06)', color: RED, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('pos.process_refund')}</button>
               )}
-              <button onClick={() => setTxDetail(null)} style={btnSecondary}>Close</button>
+              <button onClick={() => setTxDetail(null)} style={btnSecondary}>{tc('pos.close')}</button>
             </div>
           </div>
         </>
@@ -1621,13 +1624,13 @@ export default function POSPage() {
             <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, marginBottom: 16 }}>{filterModal.title}</div>
             {filterModal.type === 'sales' && (
               <div>
-                {completedTx.length === 0 ? <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>No completed sales in this period.</div> : (
+                {completedTx.length === 0 ? <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos.no_completed_sales')}</div> : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 400, overflowY: 'auto' }}>
                     {completedTx.map(tx => (
                       <div key={tx.id} onClick={() => { setFilterModal(null); setTxDetail(tx) }} style={{ ...cardStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || 'Sale'}</div>
-                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tx.cashier?.name || 'Owner'} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
+                          <div style={{ fontSize: 13, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || tc('pos.sale')}</div>
+                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tx.cashier?.name || tc('pos.owner')} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
                         </div>
                         <div style={{ fontSize: 15, fontWeight: 700 }}>{currencySymbol}{tx.total.toFixed(2)}</div>
                       </div>
@@ -1638,13 +1641,13 @@ export default function POSPage() {
             )}
             {filterModal.type === 'refunds' && (
               <div>
-                {refundedTx.length === 0 ? <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>No refunds in this period.</div> : (
+                {refundedTx.length === 0 ? <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos.no_refunds')}</div> : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 400, overflowY: 'auto' }}>
                     {refundedTx.map(tx => (
                       <div key={tx.id} onClick={() => { setFilterModal(null); setTxDetail(tx) }} style={{ ...cardStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderColor: 'rgba(220,38,38,.2)' }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || 'Refund'}</div>
-                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tx.cashier?.name || 'Owner'} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
+                          <div style={{ fontSize: 13, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || tc('pos.refund')}</div>
+                          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tx.cashier?.name || tc('pos.owner')} · {new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</div>
                         </div>
                         <div style={{ fontSize: 15, fontWeight: 700, color: RED }}>-{currencySymbol}{tx.total.toFixed(2)}</div>
                       </div>
@@ -1658,16 +1661,16 @@ export default function POSPage() {
                 {outOfStock.map(item => (
                   <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)' }}>
                     <span style={{ fontSize: 13, fontWeight: 500 }}>{item.name}</span>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: RED }}>OUT OF STOCK</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: RED }}>{tc('pos.out_of_stock')}</span>
                   </div>
                 ))}
                 {lowStock.map(item => (
                   <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, background: 'rgba(234,179,8,.06)', border: '1px solid rgba(234,179,8,.25)' }}>
                     <span style={{ fontSize: 13, fontWeight: 500 }}>{item.name}</span>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: AMBER }}>{item.stock_qty} left</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: AMBER }}>{tc('pos.stock_left', { count: item.stock_qty })}</span>
                   </div>
                 ))}
-                {alertCount === 0 && <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>All stock levels healthy.</div>}
+                {alertCount === 0 && <div style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', padding: 20 }}>{tc('pos.all_stock_healthy')}</div>}
               </div>
             )}
             {filterModal.type === 'cashier_detail' && (() => {
@@ -1680,13 +1683,13 @@ export default function POSPage() {
               return (
                 <div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)' }}>Sales</div><div style={{ fontSize: 20, fontWeight: 800, color: ACC }}>{cashierTx.length}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)' }}>Revenue</div><div style={{ fontSize: 20, fontWeight: 800, color: GREEN }}>{currencySymbol}{cashierRevenue.toFixed(2)}</div></div>
-                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)' }}>Avg sale</div><div style={{ fontSize: 20, fontWeight: 800, color: 'var(--tx)' }}>{currencySymbol}{avgSale.toFixed(2)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos.kpi_sales')}</div><div style={{ fontSize: 20, fontWeight: 800, color: ACC }}>{cashierTx.length}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos.kpi_revenue')}</div><div style={{ fontSize: 20, fontWeight: 800, color: GREEN }}>{currencySymbol}{cashierRevenue.toFixed(2)}</div></div>
+                    <div style={cardStyle}><div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos.avg_sale')}</div><div style={{ fontSize: 20, fontWeight: 800, color: 'var(--tx)' }}>{currencySymbol}{avgSale.toFixed(2)}</div></div>
                   </div>
                   {activeHours.length > 0 && (
                     <div style={{ ...cardStyle, marginBottom: 16 }}>
-                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>Sales by hour</div>
+                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 8 }}>{tc('pos.sales_by_hour')}</div>
                       <MiniBarChart data={activeHours} color={ACC} height={60} />
                     </div>
                   )}
@@ -1694,7 +1697,7 @@ export default function POSPage() {
                     {cashierTx.map(tx => (
                       <div key={tx.id} onClick={() => { setFilterModal(null); setTxDetail(tx) }} style={{ ...cardStyle, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || 'Sale'}</div>
+                          <div style={{ fontSize: 13, fontWeight: 500 }}>{(tx.pos_items || []).map(i => i.name).join(', ') || tc('pos.sale')}</div>
                           <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{new Date(tx.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · {tx.payment_type}</div>
                         </div>
                         <div style={{ fontSize: 15, fontWeight: 700 }}>{currencySymbol}{tx.total.toFixed(2)}</div>
@@ -1704,7 +1707,7 @@ export default function POSPage() {
                 </div>
               )
             })()}
-            <button onClick={() => setFilterModal(null)} style={{ ...btnSecondary, marginTop: 16 }}>Close</button>
+            <button onClick={() => setFilterModal(null)} style={{ ...btnSecondary, marginTop: 16 }}>{tc('pos.close')}</button>
           </div>
         </>
       )}
@@ -1714,8 +1717,8 @@ export default function POSPage() {
         <>
           <div onClick={() => setRefundTx(null)} style={modalOverlay} />
           <div style={modalBox}>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Process refund</div>
-            <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 20 }}>Sale #{refundTx.id.slice(0, 8)} · {currencySymbol}{refundTx.total.toFixed(2)} · {refundTx.cashier?.name || 'Owner'}</div>
+            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{tc('pos.process_refund')}</div>
+            <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 20 }}>{tc('pos.refund_sale_meta', { id: refundTx.id.slice(0, 8), amount: currencySymbol + refundTx.total.toFixed(2), cashier: refundTx.cashier?.name || tc('pos.owner') })}</div>
             <div style={{ border: '1px solid var(--b)', borderRadius: 10, overflow: 'hidden', marginBottom: 16 }}>
               {(refundTx.pos_items || []).map((item, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderBottom: i < refundTx.pos_items.length - 1 ? '1px solid var(--b)' : 'none', fontSize: 13 }}>
@@ -1725,21 +1728,21 @@ export default function POSPage() {
               ))}
             </div>
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Reason (required)</div>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{tc('pos.reason_required')}</div>
               <select value={refundReason} onChange={e => setRefundReason(e.target.value)} style={{ ...inputStyle, width: '100%' }}>
-                <option value="">Select reason...</option>
-                <option value="Customer changed mind">Customer changed mind</option>
-                <option value="Wrong item scanned">Wrong item scanned</option>
-                <option value="Defective product">Defective product</option>
-                <option value="Duplicate charge">Duplicate charge</option>
-                <option value="Other">Other</option>
+                <option value="">{tc('pos.reason_select')}</option>
+                <option value="Customer changed mind">{tc('pos.reason_changed_mind')}</option>
+                <option value="Wrong item scanned">{tc('pos.reason_wrong_item')}</option>
+                <option value="Defective product">{tc('pos.reason_defective')}</option>
+                <option value="Duplicate charge">{tc('pos.reason_duplicate')}</option>
+                <option value="Other">{tc('pos.reason_other')}</option>
               </select>
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => handleRefund(true)} disabled={!refundReason || refunding} style={{ flex: 1, padding: 12, borderRadius: 10, background: RED, color: '#fff', fontSize: 14, fontWeight: 700, border: 'none', cursor: !refundReason || refunding ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: !refundReason ? 0.5 : 1 }}>
-                {refunding ? 'Processing...' : 'Full refund'}
+                {refunding ? tc('pos.processing') : tc('pos.full_refund')}
               </button>
-              <button onClick={() => setRefundTx(null)} style={{ flex: 1, ...btnSecondary, padding: 12, fontSize: 14 }}>Cancel</button>
+              <button onClick={() => setRefundTx(null)} style={{ flex: 1, ...btnSecondary, padding: 12, fontSize: 14 }}>{tc('pos.cancel')}</button>
             </div>
           </div>
         </>

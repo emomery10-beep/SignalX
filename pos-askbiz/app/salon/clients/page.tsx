@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#ec4899' // salon pink accent
 const C = { good: '#22c55e', warn: '#f59e0b', bad: '#ef4444', muted: '#94a3b8', dim: '#64748b' }
@@ -67,15 +68,16 @@ function fmtDate(iso: string) { return new Date(iso).toLocaleDateString([], { da
 function daysSince(iso: string) { return Math.floor((Date.now() - +new Date(iso)) / 86400000) }
 
 // Client segmentation: VIP (5+ visits), Regular (2-4), New (1), Lapsed (>90 days since last visit)
-function segment(c: Client): { label: string; color: string } {
-  if (daysSince(c.lastVisit) > 90) return { label: 'Lapsed', color: C.bad }
-  if (c.visits >= 5) return { label: 'VIP', color: ACC }
-  if (c.visits >= 2) return { label: 'Regular', color: C.good }
-  return { label: 'New', color: C.warn }
+function segment(c: Client, tc: (key: string) => string): { label: string; color: string } {
+  if (daysSince(c.lastVisit) > 90) return { label: tc('salon_clients.seg_lapsed'), color: C.bad }
+  if (c.visits >= 5) return { label: tc('salon_clients.seg_vip'), color: ACC }
+  if (c.visits >= 2) return { label: tc('salon_clients.seg_regular'), color: C.good }
+  return { label: tc('salon_clients.seg_new'), color: C.warn }
 }
 
 export default function SalonClients() {
   const router = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [sym, setSym] = useState('£')
   const [loading, setLoading] = useState(true)
@@ -122,7 +124,7 @@ export default function SalonClients() {
       if (!cust || (!cust.phone && !cust.name)) return // skip true anonymous walk-ins
       const key = cust.phone || cust.name || t.id
       if (!map[key]) {
-        map[key] = { key, salonId: null, name: cust.name || 'Unnamed', phone: cust.phone || '', notes: '', visits: 0, totalSpend: 0, lastVisit: t.created_at, firstVisit: t.created_at, txs: [] }
+        map[key] = { key, salonId: null, name: cust.name || tc('salon_clients.unnamed'), phone: cust.phone || '', notes: '', visits: 0, totalSpend: 0, lastVisit: t.created_at, firstVisit: t.created_at, txs: [] }
       }
       const c = map[key]
       c.visits += 1
@@ -153,7 +155,7 @@ export default function SalonClients() {
     })
 
     return Object.values(map).sort((a, b) => +new Date(b.lastVisit) - +new Date(a.lastVisit))
-  }, [txs, salonClients])
+  }, [txs, salonClients, tc])
 
   async function reloadClients() {
     try {
@@ -179,11 +181,11 @@ export default function SalonClients() {
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <button onClick={() => (current ? setSelected(null) : router.push('/salon'))} style={{ background: '#334155', border: 'none', color: C.muted, padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
-            ← {current ? 'Clients' : 'Salon'}
+            ← {current ? tc('salon_clients.back_clients') : tc('salon_clients.back_salon')}
           </button>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>💇 Clients</div>
-            <div style={{ fontSize: 12, color: C.muted }}>{current ? current.name : 'Profiles & before/after photos'}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>{tc('salon_clients.header_title')}</div>
+            <div style={{ fontSize: 12, color: C.muted }}>{current ? current.name : tc('salon_clients.header_subtitle')}</div>
           </div>
         </div>
       </div>
@@ -194,17 +196,17 @@ export default function SalonClients() {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search by name or phone…"
+              placeholder={tc('salon_clients.search_placeholder')}
               style={{ width: '100%', background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9', borderRadius: 10, padding: '12px 16px', fontSize: 14, marginBottom: 20, fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
             <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.3fr 0.8fr 1fr 1.2fr 90px', gap: 8, padding: '12px 16px', borderBottom: '1px solid #334155', fontSize: 11, color: C.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
-                <div>Name</div><div>Phone</div><div>Visits</div><div>Spend</div><div>Last Visit</div><div>Tier</div>
+                <div>{tc('salon_clients.col_name')}</div><div>{tc('salon_clients.col_phone')}</div><div>{tc('salon_clients.col_visits')}</div><div>{tc('salon_clients.col_spend')}</div><div>{tc('salon_clients.col_last_visit')}</div><div>{tc('salon_clients.col_tier')}</div>
               </div>
-              {loading && <div style={{ padding: 20, color: C.dim, fontSize: 13 }}>Loading…</div>}
-              {!loading && filtered.length === 0 && <div style={{ padding: 20, color: C.dim, fontSize: 13, textAlign: 'center' }}>No clients found. Clients appear from saved profiles or once linked to a transaction.</div>}
+              {loading && <div style={{ padding: 20, color: C.dim, fontSize: 13 }}>{tc('salon_clients.loading')}</div>}
+              {!loading && filtered.length === 0 && <div style={{ padding: 20, color: C.dim, fontSize: 13, textAlign: 'center' }}>{tc('salon_clients.empty_clients')}</div>}
               {filtered.map((c, idx) => {
-                const seg = segment(c)
+                const seg = segment(c, tc)
                 return (
                   <button key={c.key} type="button" className="pos-item" onClick={() => setSelected(c.key)}
                     style={{ display: 'grid', gridTemplateColumns: '2fr 1.3fr 0.8fr 1fr 1.2fr 90px', gap: 8, padding: '12px 16px', borderBottom: '1px solid #283548', fontSize: 13, alignItems: 'center', cursor: 'pointer', animationDelay: `${Math.min(idx, 8) * 40}ms`, width: '100%', background: 'transparent', border: 'none', color: 'inherit', textAlign: 'left', fontFamily: 'inherit' }}
@@ -212,7 +214,7 @@ export default function SalonClients() {
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
                     <div style={{ fontWeight: 600 }}>{c.name}</div>
-                    <div style={{ color: C.muted }}>{c.phone || '—'}</div>
+                    <div style={{ color: C.muted }}>{c.phone || tc('salon_clients.no_phone_dash')}</div>
                     <div>{c.visits}</div>
                     <div style={{ fontWeight: 700 }}>{sym}{c.totalSpend.toFixed(2)}</div>
                     <div style={{ color: C.muted }}>{fmtDate(c.lastVisit)}</div>
@@ -232,7 +234,8 @@ export default function SalonClients() {
 
 // ─── Client profile + camera-first before/after capture ──────────────────────
 function ClientProfile({ client, sym, session, onClientPersisted }: { client: Client; sym: string; session: any; onClientPersisted: () => void }) {
-  const seg = segment(client)
+  const { tc } = useLang()
+  const seg = segment(client, tc)
   const [photos, setPhotos] = useState<Photo[]>([])
   const [notes, setNotes] = useState('')
   const [formula, setFormula] = useState('')
@@ -257,8 +260,8 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
     const count: Record<string, number> = {}
     client.txs.forEach(t => (t.pos_items || []).forEach(i => { count[i.name] = (count[i.name] || 0) + (i.qty || 1) }))
     const top = Object.entries(count).sort((a, b) => b[1] - a[1])[0]
-    return top ? top[0] : '—'
-  }, [client])
+    return top ? top[0] : tc('salon_clients.favourite_none')
+  }, [client, tc])
 
   // Load persisted data from the salon endpoints
   useEffect(() => {
@@ -266,7 +269,7 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
     setNotes(client.notes || '')
     setPhotos([])
     setFormula('')
-    setPendingService(favourite !== '—' ? favourite : '')
+    setPendingService(favourite !== tc('salon_clients.favourite_none') ? favourite : '')
     if (client.salonId) loadProfileData(client.salonId)
     return () => stopCamera()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -284,7 +287,7 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
         id: p.id,
         dataUrl: p.photo_url,
         tag: p.kind === 'after' ? 'After' : 'Before',
-        service: p.service_type || 'General',
+        service: p.service_type || tc('salon_clients.service_general'),
         at: +new Date(p.created_at),
       })))
       // Most recent formula populates the editor.
@@ -343,7 +346,7 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
   async function startCamera() {
     setCamError(null)
     if (!navigator.mediaDevices?.getUserMedia) {
-      setCamError('Camera API not available in this browser. Use the upload button instead.')
+      setCamError(tc('salon_clients.cam_err_unavailable'))
       fileRef.current?.click()
       return
     }
@@ -356,13 +359,13 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
     } catch (err: any) {
       const name = err?.name || ''
       if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
-        setCamError('Camera permission denied. Enable camera access in your browser settings, or use the upload button.')
+        setCamError(tc('salon_clients.cam_err_denied'))
       } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
-        setCamError('No camera found on this device. Use the upload button to add a photo.')
+        setCamError(tc('salon_clients.cam_err_notfound'))
       } else if (name === 'NotReadableError') {
-        setCamError('Camera is already in use by another app. Close it and try again.')
+        setCamError(tc('salon_clients.cam_err_inuse'))
       } else {
-        setCamError('Could not start the camera. Use the upload button instead.')
+        setCamError(tc('salon_clients.cam_err_generic'))
       }
     }
   }
@@ -395,7 +398,7 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
 
   function addPhoto(dataUrl: string) {
     const tag = pendingTag
-    const service = pendingService || 'General'
+    const service = pendingService || tc('salon_clients.service_general')
     // Optimistic local entry; replaced by the persisted record on upload success.
     const tempId = `tmp-${Date.now()}`
     const temp: Photo = { id: tempId, dataUrl, tag, service, at: Date.now() }
@@ -425,7 +428,7 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
           id: data.photo.id,
           dataUrl: data.photo.photo_url,
           tag: data.photo.kind === 'after' ? 'After' : 'Before',
-          service: data.photo.service_type || 'General',
+          service: data.photo.service_type || tc('salon_clients.service_general'),
           at: +new Date(data.photo.created_at),
         }
         setPhotos(prev => prev.map(p => (p.id === tempId ? saved : p)))
@@ -450,14 +453,14 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
         </div>
         <div style={{ flex: 1, minWidth: 180 }}>
           <div style={{ fontSize: 18, fontWeight: 700 }}>{client.name}</div>
-          <div style={{ fontSize: 13, color: C.muted }}>{client.phone || 'No phone on file'}</div>
+          <div style={{ fontSize: 13, color: C.muted }}>{client.phone || tc('salon_clients.summary_no_phone')}</div>
         </div>
         <span style={{ background: seg.color + '22', color: seg.color, borderRadius: 12, padding: '5px 14px', fontSize: 13, fontWeight: 700 }}>{seg.label}</span>
         {[
-          { label: 'Visits', value: `${client.visits}` },
-          { label: 'Total Spend', value: `${sym}${client.totalSpend.toFixed(2)}` },
-          { label: 'Favourite', value: favourite },
-          { label: 'Last Visit', value: fmtDate(client.lastVisit) },
+          { label: tc('salon_clients.stat_visits'), value: `${client.visits}` },
+          { label: tc('salon_clients.stat_total_spend'), value: `${sym}${client.totalSpend.toFixed(2)}` },
+          { label: tc('salon_clients.stat_favourite'), value: favourite },
+          { label: tc('salon_clients.stat_last_visit'), value: fmtDate(client.lastVisit) },
         ].map(s => (
           <div key={s.label} style={{ minWidth: 90 }}>
             <div style={{ fontSize: 10, color: C.dim, textTransform: 'uppercase', letterSpacing: 1 }}>{s.label}</div>
@@ -468,8 +471,8 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
 
       {/* Before/After capture — the camera-first feature */}
       <div style={card}>
-        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>📸 Capture Before / After</div>
-        <div style={{ fontSize: 12, color: C.dim, marginBottom: 14 }}>Before/after photos are saved to the client&apos;s profile.</div>
+        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{tc('salon_clients.capture_title')}</div>
+        <div style={{ fontSize: 12, color: C.dim, marginBottom: 14 }}>{tc('salon_clients.capture_subtitle')}</div>
 
         {/* Tag + service selectors */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginBottom: 14 }}>
@@ -477,11 +480,11 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
             {(['Before', 'After'] as const).map(t => (
               <button key={t} onClick={() => setPendingTag(t)}
                 style={{ background: pendingTag === t ? ACC : '#334155', border: 'none', color: pendingTag === t ? '#fff' : C.muted, padding: '8px 18px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
-                {t}
+                {t === 'Before' ? tc('salon_clients.tag_before') : tc('salon_clients.tag_after')}
               </button>
             ))}
           </div>
-          <input value={pendingService} onChange={e => setPendingService(e.target.value)} placeholder="Service / treatment tag"
+          <input value={pendingService} onChange={e => setPendingService(e.target.value)} placeholder={tc('salon_clients.service_placeholder')}
             style={{ flex: 1, minWidth: 160, background: '#0f172a', border: '1px solid #334155', color: '#f1f5f9', borderRadius: 8, padding: '8px 12px', fontSize: 13, fontFamily: 'inherit' }} />
         </div>
 
@@ -496,14 +499,14 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
           <div style={{ marginBottom: 12 }}>
             <video ref={videoRef} playsInline muted style={{ width: '100%', maxWidth: 420, borderRadius: 10, background: '#000', display: 'block' }} />
             <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-              <button onClick={capture} style={{ background: ACC, border: 'none', color: '#fff', padding: '10px 22px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>📷 Capture {pendingTag}</button>
-              <button onClick={stopCamera} style={{ background: '#334155', border: 'none', color: C.muted, padding: '10px 18px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>Stop Camera</button>
+              <button onClick={capture} style={{ background: ACC, border: 'none', color: '#fff', padding: '10px 22px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>{tc('salon_clients.cam_capture', { tag: pendingTag === 'Before' ? tc('salon_clients.tag_before') : tc('salon_clients.tag_after') })}</button>
+              <button onClick={stopCamera} style={{ background: '#334155', border: 'none', color: C.muted, padding: '10px 18px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('salon_clients.cam_stop')}</button>
             </div>
           </div>
         ) : (
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
-            <button onClick={startCamera} style={{ background: ACC, border: 'none', color: '#fff', padding: '10px 22px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>📷 Open Camera</button>
-            <button onClick={() => fileRef.current?.click()} style={{ background: '#334155', border: 'none', color: '#e2e8f0', padding: '10px 18px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>⬆️ Upload Photo</button>
+            <button onClick={startCamera} style={{ background: ACC, border: 'none', color: '#fff', padding: '10px 22px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>{tc('salon_clients.cam_open')}</button>
+            <button onClick={() => fileRef.current?.click()} style={{ background: '#334155', border: 'none', color: '#e2e8f0', padding: '10px 18px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('salon_clients.cam_upload')}</button>
           </div>
         )}
 
@@ -514,11 +517,11 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
         {/* Gallery — paired before/after columns */}
         {photos.length > 0 && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 8 }}>
-            {[{ title: 'Before', list: befores }, { title: 'After', list: afters }].map(col => (
+            {[{ title: tc('salon_clients.tag_before'), list: befores }, { title: tc('salon_clients.tag_after'), list: afters }].map(col => (
               <div key={col.title}>
-                <div style={{ fontSize: 12, color: C.muted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>{col.title} ({col.list.length})</div>
+                <div style={{ fontSize: 12, color: C.muted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>{tc('salon_clients.gallery_count', { title: col.title, count: col.list.length })}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {col.list.length === 0 && <div style={{ fontSize: 12, color: C.dim }}>No {col.title.toLowerCase()} photos</div>}
+                  {col.list.length === 0 && <div style={{ fontSize: 12, color: C.dim }}>{tc('salon_clients.gallery_no_photos', { label: col.title.toLowerCase() })}</div>}
                   {col.list.map(p => (
                     <div key={p.id} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', border: '1px solid #334155' }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -536,26 +539,26 @@ function ClientProfile({ client, sym, session, onClientPersisted }: { client: Cl
 
       {/* Color formula + notes */}
       <div style={card}>
-        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Color Formula & Notes</div>
-        <div style={{ fontSize: 11, color: C.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Color Formula</div>
-        <textarea value={formula} onChange={e => setFormula(e.target.value)} placeholder="e.g. 6N + 7.43 (1:1), 20 vol, 35 min…" style={{ ...taArea, marginBottom: 14 }} />
-        <div style={{ fontSize: 11, color: C.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Client Notes</div>
-        <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Allergies, preferences, scalp sensitivity, conversation notes…" style={taArea} />
+        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>{tc('salon_clients.formula_title')}</div>
+        <div style={{ fontSize: 11, color: C.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>{tc('salon_clients.formula_label')}</div>
+        <textarea value={formula} onChange={e => setFormula(e.target.value)} placeholder={tc('salon_clients.formula_placeholder')} style={{ ...taArea, marginBottom: 14 }} />
+        <div style={{ fontSize: 11, color: C.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>{tc('salon_clients.notes_label')}</div>
+        <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={tc('salon_clients.notes_placeholder')} style={taArea} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
-          <button className="pos-btn-primary" onClick={saveNotes} style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 20px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Save</button>
-          {savedFlash && <span className="pos-success-icon" style={{ color: C.good, fontSize: 13 }}>✓ Saved</span>}
+          <button className="pos-btn-primary" onClick={saveNotes} style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 20px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>{tc('salon_clients.save')}</button>
+          {savedFlash && <span className="pos-success-icon" style={{ color: C.good, fontSize: 13 }}>{tc('salon_clients.saved')}</span>}
         </div>
       </div>
 
       {/* Visit history */}
       <div style={card}>
-        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Visit History</div>
+        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>{tc('salon_clients.visit_history_title')}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {client.txs.slice().sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at)).map((t, idx) => (
             <div key={t.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '10px 14px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
               <div style={{ fontSize: 13, color: ACC, fontWeight: 600, width: 110 }}>{fmtDate(t.created_at)}</div>
-              <div style={{ flex: 1, fontSize: 13, color: '#e2e8f0' }}>{(t.pos_items || []).map(i => i.name).join(', ') || 'Service'}</div>
-              <div style={{ fontSize: 12, color: C.muted }}>{t.cashier?.name || '—'}</div>
+              <div style={{ flex: 1, fontSize: 13, color: '#e2e8f0' }}>{(t.pos_items || []).map(i => i.name).join(', ') || tc('salon_clients.visit_service_fallback')}</div>
+              <div style={{ fontSize: 12, color: C.muted }}>{t.cashier?.name || tc('salon_clients.no_phone_dash')}</div>
               <div style={{ fontSize: 13, fontWeight: 700 }}>{sym}{(t.total || 0).toFixed(2)}</div>
             </div>
           ))}

@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
 
 // ── Design tokens (from CSS variables in globals.css) ──────────────────────
 const tokens = {
@@ -43,18 +44,18 @@ interface Capture {
   captured_by_staff?: { id: string; name: string } | null
 }
 
-const TYPE_META: Record<CaptureType, { label: string; color: string; bg: string }> = {
-  intake:   { label: 'Intake',   color: tokens.intake,   bg: 'rgba(59,130,246,.08)'   },
-  output:   { label: 'Output',   color: tokens.output,   bg: 'rgba(22,163,74,.08)'    },
-  wastage:  { label: 'Wastage',  color: tokens.wastage,  bg: 'rgba(220,38,38,.08)'    },
-  dispatch: { label: 'Dispatch', color: tokens.dispatch, bg: 'rgba(139,92,246,.08)'   },
-}
+const buildTypeMeta = (tc: (key: string) => string): Record<CaptureType, { label: string; color: string; bg: string }> => ({
+  intake:   { label: tc('factory.type_intake'),   color: tokens.intake,   bg: 'rgba(59,130,246,.08)'   },
+  output:   { label: tc('factory.type_output'),   color: tokens.output,   bg: 'rgba(22,163,74,.08)'    },
+  wastage:  { label: tc('factory.type_wastage'),  color: tokens.wastage,  bg: 'rgba(220,38,38,.08)'    },
+  dispatch: { label: tc('factory.type_dispatch'), color: tokens.dispatch, bg: 'rgba(139,92,246,.08)'   },
+})
 
 const STATUS_COLOR = { pending: tokens.warning, approved: tokens.success, rejected: tokens.danger }
 
-function timeAgo(iso: string) {
+function timeAgo(iso: string, tc: (key: string) => string) {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
-  if (s < 60) return 'just now'
+  if (s < 60) return tc('factory.time_just_now')
   if (s < 3600) return `${Math.floor(s / 60)}m ago`
   if (s < 86400) return `${Math.floor(s / 3600)}h ago`
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
@@ -154,15 +155,17 @@ function IconUsers({ size = 20 }: { size?: number }) {
   )
 }
 
-function elapsedLabel(iso: string) {
+function elapsedLabel(iso: string, tc: (key: string) => string) {
   const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000)
-  if (mins < 1)  return 'just now'
+  if (mins < 1)  return tc('factory.time_just_now')
   if (mins < 60) return `${mins}m`
   return `${Math.floor(mins / 60)}h ${mins % 60}m`
 }
 
 export default function FactoryHub() {
   const router = useRouter()
+  const { tc } = useLang()
+  const TYPE_META = buildTypeMeta(tc)
   const { session, ready: authReady } = usePosAuth()
   const [captures, setCaptures] = useState<Capture[]>([])
   const [loading, setLoading]   = useState(true)
@@ -306,37 +309,37 @@ export default function FactoryHub() {
 
   const kpis = [
     {
-      label: 'Produced',
+      label: tc('factory.kpi_produced'),
       value: unitsOut.toLocaleString(),
-      sub: 'units today',
+      sub: tc('factory.kpi_produced_sub'),
       color: tokens.success,
       status: unitsOut > 0 ? 'good' : 'neutral',
     },
     {
-      label: 'Wastage',
+      label: tc('factory.kpi_wastage'),
       value: `${wastagePct.toFixed(1)}%`,
-      sub: `${unitsWaste} units scrapped`,
+      sub: tc('factory.kpi_wastage_sub', { count: unitsWaste }),
       color: wastagePct <= 3 ? tokens.success : wastagePct <= 8 ? tokens.warning : tokens.danger,
       status: wastagePct <= 3 ? 'good' : wastagePct <= 8 ? 'warn' : 'bad',
     },
     {
-      label: 'Dispatched',
+      label: tc('factory.kpi_dispatched'),
       value: `${dispatches.length}`,
-      sub: 'shipments today',
+      sub: tc('factory.kpi_dispatched_sub'),
       color: tokens.dispatch,
       status: 'neutral',
     },
     {
-      label: 'Efficiency',
+      label: tc('factory.kpi_efficiency'),
       value: unitsIn > 0 ? `${efficiency.toFixed(0)}%` : '—',
-      sub: 'output ÷ intake',
+      sub: tc('factory.kpi_efficiency_sub'),
       color: efficiency >= 90 ? tokens.success : efficiency >= 70 ? tokens.warning : efficiency > 0 ? tokens.danger : tokens.hint,
       status: efficiency >= 90 ? 'good' : efficiency >= 70 ? 'warn' : efficiency > 0 ? 'bad' : 'neutral',
     },
     {
-      label: 'Pending',
+      label: tc('factory.kpi_pending'),
       value: `${pending}`,
-      sub: 'need approval',
+      sub: tc('factory.kpi_pending_sub'),
       color: pending === 0 ? tokens.success : pending <= 5 ? tokens.warning : tokens.danger,
       status: pending === 0 ? 'good' : pending <= 5 ? 'warn' : 'bad',
     },
@@ -360,14 +363,14 @@ export default function FactoryHub() {
               <IconArrowLeft size={18} />
             </button>
             <div>
-              <div style={{ fontWeight: 800, fontSize: 20, color: tokens.accent, letterSpacing: '-0.02em' }}>Factory</div>
-              <div style={{ fontSize: 12, color: tokens.hint, marginTop: 1 }}>Production floor operations</div>
+              <div style={{ fontWeight: 800, fontSize: 20, color: tokens.accent, letterSpacing: '-0.02em' }}>{tc('factory.header_title')}</div>
+              <div style={{ fontSize: 12, color: tokens.hint, marginTop: 1 }}>{tc('factory.header_subtitle')}</div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {pending > 0 && (
               <button onClick={() => router.push('/factory/approvals')} style={{ background: `${tokens.danger}15`, border: `1px solid ${tokens.danger}40`, color: tokens.danger, borderRadius: 20, padding: '5px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                {pending} pending
+                {tc('factory.pending_badge', { count: pending })}
               </button>
             )}
             <button onClick={() => loadCaptures(true)} style={{ width: 36, height: 36, borderRadius: '50%', background: tokens.bg, border: `1px solid ${tokens.border}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: tokens.muted }}>
@@ -391,10 +394,10 @@ export default function FactoryHub() {
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: tokens.danger }}>
-                {activeDowntime.length} machine{activeDowntime.length > 1 ? 's' : ''} down
+                {tc(activeDowntime.length > 1 ? 'factory.machines_down_other' : 'factory.machines_down_one', { count: activeDowntime.length })}
               </div>
               <div style={{ fontSize: 11, color: tokens.hint, marginTop: 1 }}>
-                {activeDowntime.map(e => `${e.machine_name} (${elapsedLabel(e.started_at)})`).join(' · ')}
+                {activeDowntime.map(e => `${e.machine_name} (${elapsedLabel(e.started_at, tc)})`).join(' · ')}
               </div>
             </div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={`${tokens.danger}90`} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -408,11 +411,11 @@ export default function FactoryHub() {
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: tokens.success, boxShadow: `0 0 0 3px ${tokens.success}30`, flexShrink: 0, animation: 'pulse-dot 1.4s ease-in-out infinite' }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: tokens.success }}>
-                {activeShift.shift_name === 'Custom' ? (activeShift.custom_name || 'Custom') : activeShift.shift_name} shift active · {elapsedLabel(activeShift.started_at)}
+                {tc('factory.shift_active', { name: activeShift.shift_name === 'Custom' ? (activeShift.custom_name || tc('factory.shift_custom')) : activeShift.shift_name, elapsed: elapsedLabel(activeShift.started_at, tc) })}
               </div>
               <div style={{ fontSize: 11, color: tokens.hint, marginTop: 1 }}>
-                {(activeShift.live_output || 0).toLocaleString()} units produced
-                {activeShift.target_units ? ` · target ${activeShift.target_units.toLocaleString()}` : ''}
+                {tc('factory.shift_units_produced', { count: (activeShift.live_output || 0).toLocaleString() })}
+                {activeShift.target_units ? tc('factory.shift_target', { count: activeShift.target_units.toLocaleString() }) : ''}
               </div>
             </div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={`${tokens.success}90`} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -426,9 +429,9 @@ export default function FactoryHub() {
             <div style={{ fontSize: 18, flexShrink: 0 }}>🛑</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: tokens.danger }}>
-                {qualityCriticals} critical defect{qualityCriticals > 1 ? 's' : ''} logged today
+                {tc(qualityCriticals > 1 ? 'factory.critical_defect_other' : 'factory.critical_defect_one', { count: qualityCriticals })}
               </div>
-              <div style={{ fontSize: 11, color: tokens.hint, marginTop: 1 }}>Immediate review required</div>
+              <div style={{ fontSize: 11, color: tokens.hint, marginTop: 1 }}>{tc('factory.critical_defect_review')}</div>
             </div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={`${tokens.danger}90`} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
@@ -446,8 +449,8 @@ export default function FactoryHub() {
             <IconCamera size={26} />
           </div>
           <div style={{ textAlign: 'left', flex: 1 }}>
-            <div style={{ fontWeight: 800, fontSize: 18, color: '#fff', lineHeight: 1.1 }}>New Production Capture</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 3 }}>Photograph intake, output, wastage or dispatch</div>
+            <div style={{ fontWeight: 800, fontSize: 18, color: '#fff', lineHeight: 1.1 }}>{tc('factory.hero_title')}</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 3 }}>{tc('factory.hero_subtitle')}</div>
           </div>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
@@ -478,7 +481,7 @@ export default function FactoryHub() {
                     </div>
                     {pending > 0 && (
                       <button onClick={() => router.push('/factory/approvals')} style={{ background: `${k.color}15`, border: `1px solid ${k.color}40`, color: k.color, padding: '8px 16px', borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                        Review →
+                        {tc('factory.kpi_review')}
                       </button>
                     )}
                   </div>
@@ -498,9 +501,9 @@ export default function FactoryHub() {
         {downtimeLoaded && (
           <div style={{ marginBottom: 20, background: tokens.surface, border: `1px solid ${tokens.border}`, borderRadius: 14, padding: '14px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: tokens.hint, textTransform: 'uppercase', letterSpacing: '0.08em' }}>OEE Today</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: tokens.hint, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{tc('factory.oee_title')}</div>
               <button onClick={() => router.push('/factory/downtime')} style={{ background: 'none', border: 'none', fontSize: 11, color: tokens.hint, cursor: 'pointer', padding: 0 }}>
-                Downtime log →
+                {tc('factory.oee_downtime_log')}
               </button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
@@ -510,10 +513,10 @@ export default function FactoryHub() {
                 const color = av >= 90 ? tokens.success : av >= 75 ? tokens.warning : tokens.danger
                 return (
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, color: tokens.hint, marginBottom: 4 }}>Availability</div>
+                    <div style={{ fontSize: 10, color: tokens.hint, marginBottom: 4 }}>{tc('factory.oee_availability')}</div>
                     <div style={{ fontSize: 20, fontWeight: 800, color }}>{av.toFixed(0)}%</div>
-                    {downtimeMinutes > 0 && <div style={{ fontSize: 9, color: tokens.hint, marginTop: 2 }}>{Math.round(downtimeMinutes)}m down</div>}
-                    {activeDowntime.length > 0 && <div style={{ fontSize: 9, color: tokens.danger, marginTop: 2 }}>● live</div>}
+                    {downtimeMinutes > 0 && <div style={{ fontSize: 9, color: tokens.hint, marginTop: 2 }}>{tc('factory.oee_down_minutes', { count: Math.round(downtimeMinutes) })}</div>}
+                    {activeDowntime.length > 0 && <div style={{ fontSize: 9, color: tokens.danger, marginTop: 2 }}>{tc('factory.oee_live')}</div>}
                   </div>
                 )
               })()}
@@ -523,11 +526,11 @@ export default function FactoryHub() {
                 const color = p === null ? tokens.hint : p >= 90 ? tokens.success : p >= 70 ? tokens.warning : tokens.danger
                 return (
                   <div style={{ textAlign: 'center', borderLeft: `1px solid ${tokens.border}`, borderRight: `1px solid ${tokens.border}` }}>
-                    <div style={{ fontSize: 10, color: tokens.hint, marginBottom: 4 }}>Performance</div>
+                    <div style={{ fontSize: 10, color: tokens.hint, marginBottom: 4 }}>{tc('factory.oee_performance')}</div>
                     <div style={{ fontSize: 20, fontWeight: 800, color }}>{p !== null ? `${p.toFixed(0)}%` : '—'}</div>
                     {p !== null
-                      ? <div style={{ fontSize: 9, color, marginTop: 2 }}>{(activeShift?.live_output || 0)} / {activeShift?.target_units} units</div>
-                      : <div style={{ fontSize: 9, color: tokens.hint, marginTop: 2 }}>set shift target</div>
+                      ? <div style={{ fontSize: 9, color, marginTop: 2 }}>{tc('factory.oee_units_progress', { output: (activeShift?.live_output || 0), target: activeShift?.target_units ?? 0 })}</div>
+                      : <div style={{ fontSize: 9, color: tokens.hint, marginTop: 2 }}>{tc('factory.oee_set_target')}</div>
                     }
                   </div>
                 )
@@ -538,11 +541,11 @@ export default function FactoryHub() {
                 const color = q === null ? tokens.hint : q >= 97 ? tokens.success : q >= 90 ? tokens.warning : tokens.danger
                 return (
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, color: tokens.hint, marginBottom: 4 }}>Quality</div>
+                    <div style={{ fontSize: 10, color: tokens.hint, marginBottom: 4 }}>{tc('factory.oee_quality')}</div>
                     <div style={{ fontSize: 20, fontWeight: 800, color }}>{q !== null ? `${q.toFixed(0)}%` : '—'}</div>
                     {qualityOpen > 0
-                      ? <div style={{ fontSize: 9, color: qualityCriticals > 0 ? tokens.danger : tokens.warning, marginTop: 2 }}>{qualityOpen} defect{qualityOpen > 1 ? 's' : ''}</div>
-                      : q !== null && <div style={{ fontSize: 9, color: tokens.hint, marginTop: 2 }}>no defects</div>
+                      ? <div style={{ fontSize: 9, color: qualityCriticals > 0 ? tokens.danger : tokens.warning, marginTop: 2 }}>{tc(qualityOpen > 1 ? 'factory.oee_defects_other' : 'factory.oee_defects_one', { count: qualityOpen })}</div>
+                      : q !== null && <div style={{ fontSize: 9, color: tokens.hint, marginTop: 2 }}>{tc('factory.oee_no_defects')}</div>
                     }
                   </div>
                 )
@@ -554,14 +557,14 @@ export default function FactoryHub() {
         {/* ── Quick actions ─────────────────────────────────────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
           {[
-            { label: 'Production Log', sub: 'Full history + yields', icon: <IconClipboard size={20} />, color: tokens.intake, href: '/factory/production', span: false },
-            { label: 'Approvals', sub: `${pending} pending sign-off`, icon: <IconCheckSquare size={20} />, color: pending > 0 ? tokens.danger : tokens.success, href: '/factory/approvals', span: false },
-            { label: 'Quality Check', sub: qualityOpen > 0 ? `${qualityOpen} open defect${qualityOpen > 1 ? 's' : ''}` : 'Log a defect', icon: <IconShield size={20} />, color: qualityCriticals > 0 ? tokens.danger : qualityOpen > 0 ? tokens.warning : tokens.intake, href: '/factory/quality', span: false },
-            { label: 'Batch Scan', sub: activeBatchCount > 0 ? `${activeBatchCount} batch${activeBatchCount > 1 ? 'es' : ''} active` : 'Scan a batch label', icon: <IconBarcode size={20} />, color: tokens.dispatch, href: '/factory/batch', span: false },
-            { label: activeShift ? 'End Shift' : 'Start Shift', sub: activeShift ? `${elapsedLabel(activeShift.started_at)} running` : 'Track output by shift', icon: <IconClock size={20} />, color: tokens.success, href: '/factory/shift', span: false },
-            { label: 'Scan Waybill', sub: waybillTotal > 0 ? (waybillOnTimeRate !== null ? `${waybillOnTimeRate}% on time today` : `${waybillTotal} dispatched`) : 'Log a dispatch', icon: <IconTruck size={20} />, color: tokens.warning, href: '/factory/waybill', span: false },
-            { label: 'Machine Down?', sub: activeDowntime.length > 0 ? `${activeDowntime.length} active event${activeDowntime.length > 1 ? 's' : ''}` : 'Report & track downtime', icon: <IconAlertTriangle size={20} />, color: activeDowntime.length > 0 ? tokens.danger : tokens.hint, href: '/factory/downtime', span: true },
-            { label: 'Staff Management', sub: 'Manage team & permissions', icon: <IconUsers size={20} />, color: tokens.accent, href: '/factory/staff', span: false },
+            { label: tc('factory.action_production_log'), sub: tc('factory.action_production_log_sub'), icon: <IconClipboard size={20} />, color: tokens.intake, href: '/factory/production', span: false },
+            { label: tc('factory.action_approvals'), sub: tc('factory.action_approvals_sub', { count: pending }), icon: <IconCheckSquare size={20} />, color: pending > 0 ? tokens.danger : tokens.success, href: '/factory/approvals', span: false },
+            { label: tc('factory.action_quality_check'), sub: qualityOpen > 0 ? tc(qualityOpen > 1 ? 'factory.action_quality_open_other' : 'factory.action_quality_open_one', { count: qualityOpen }) : tc('factory.action_quality_log'), icon: <IconShield size={20} />, color: qualityCriticals > 0 ? tokens.danger : qualityOpen > 0 ? tokens.warning : tokens.intake, href: '/factory/quality', span: false },
+            { label: tc('factory.action_batch_scan'), sub: activeBatchCount > 0 ? tc(activeBatchCount > 1 ? 'factory.action_batch_active_other' : 'factory.action_batch_active_one', { count: activeBatchCount }) : tc('factory.action_batch_log'), icon: <IconBarcode size={20} />, color: tokens.dispatch, href: '/factory/batch', span: false },
+            { label: activeShift ? tc('factory.action_end_shift') : tc('factory.action_start_shift'), sub: activeShift ? tc('factory.action_shift_running', { elapsed: elapsedLabel(activeShift.started_at, tc) }) : tc('factory.action_shift_track'), icon: <IconClock size={20} />, color: tokens.success, href: '/factory/shift', span: false },
+            { label: tc('factory.action_scan_waybill'), sub: waybillTotal > 0 ? (waybillOnTimeRate !== null ? tc('factory.action_waybill_on_time', { rate: waybillOnTimeRate }) : tc('factory.action_waybill_dispatched', { count: waybillTotal })) : tc('factory.action_waybill_log'), icon: <IconTruck size={20} />, color: tokens.warning, href: '/factory/waybill', span: false },
+            { label: tc('factory.action_machine_down'), sub: activeDowntime.length > 0 ? tc(activeDowntime.length > 1 ? 'factory.action_downtime_active_other' : 'factory.action_downtime_active_one', { count: activeDowntime.length }) : tc('factory.action_downtime_report'), icon: <IconAlertTriangle size={20} />, color: activeDowntime.length > 0 ? tokens.danger : tokens.hint, href: '/factory/downtime', span: true },
+            { label: tc('factory.action_staff'), sub: tc('factory.action_staff_sub'), icon: <IconUsers size={20} />, color: tokens.accent, href: '/factory/staff', span: false },
           ].map(n => (
             <button key={n.href} onClick={() => router.push(n.href)}
               style={{ background: tokens.surface, border: `1px solid ${activeDowntime.length > 0 && n.href === '/factory/downtime' ? `${tokens.danger}40` : tokens.border}`, borderRadius: 14, padding: '16px', cursor: 'pointer', textAlign: 'left', transition: 'border-color 150ms', display: 'flex', flexDirection: 'column', gap: 10, gridColumn: n.span ? 'span 2' : 'auto' }}
@@ -592,8 +595,8 @@ export default function FactoryHub() {
               <div key={type} style={{ background: m.bg, border: `1px solid ${m.color}40`, borderRadius: 12, padding: '10px 12px', textAlign: 'center' }}>
                 <div style={{ fontSize: 10, fontWeight: 600, color: m.color, textTransform: 'capitalize', marginBottom: 4 }}>{m.label}</div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: tokens.ink, lineHeight: 1 }}>{count}</div>
-                {units !== null && <div style={{ fontSize: 9, color: tokens.hint, marginTop: 3 }}>{units} units</div>}
-                {units === null && <div style={{ fontSize: 9, color: tokens.hint, marginTop: 3 }}>shipped</div>}
+                {units !== null && <div style={{ fontSize: 9, color: tokens.hint, marginTop: 3 }}>{tc('factory.glance_units', { count: units })}</div>}
+                {units === null && <div style={{ fontSize: 9, color: tokens.hint, marginTop: 3 }}>{tc('factory.glance_shipped')}</div>}
               </div>
             )
           })}
@@ -602,9 +605,9 @@ export default function FactoryHub() {
         {/* ── Recent captures ───────────────────────────────────────────────── */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, color: tokens.ink }}>Recent Captures</div>
+            <div style={{ fontWeight: 700, fontSize: 15, color: tokens.ink }}>{tc('factory.recent_title')}</div>
             <button onClick={() => router.push('/factory/production')} style={{ background: 'none', border: 'none', color: tokens.hint, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-              All <IconChevronRight size={12} />
+              {tc('factory.recent_all')} <IconChevronRight size={12} />
             </button>
           </div>
 
@@ -617,8 +620,8 @@ export default function FactoryHub() {
           ) : recent.length === 0 ? (
             <div style={{ background: tokens.bg, border: `1px dashed ${tokens.border}`, borderRadius: 14, padding: '32px 20px', textAlign: 'center' }}>
               <div style={{ fontSize: 36, marginBottom: 10 }}>📸</div>
-              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, color: tokens.ink }}>No captures yet</div>
-              <div style={{ fontSize: 13, color: tokens.hint }}>Tap the button above to log your first production event</div>
+              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4, color: tokens.ink }}>{tc('factory.empty_title')}</div>
+              <div style={{ fontSize: 13, color: tokens.hint }}>{tc('factory.empty_subtitle')}</div>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -647,16 +650,16 @@ export default function FactoryHub() {
                         )}
                       </div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: tokens.ink, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {c.product_name || 'Unspecified product'}
+                        {c.product_name || tc('factory.capture_unspecified')}
                       </div>
                       <div style={{ fontSize: 11, color: tokens.hint, marginTop: 2 }}>
-                        {c.captured_by_staff?.name || 'Operator'} · {timeAgo(c.created_at)}
+                        {c.captured_by_staff?.name || tc('factory.capture_operator')} · {timeAgo(c.created_at, tc)}
                       </div>
                     </div>
                     <span style={{
                       fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 20, flexShrink: 0, textTransform: 'capitalize',
                       background: `${STATUS_COLOR[c.status]}18`, color: STATUS_COLOR[c.status], border: `1px solid ${STATUS_COLOR[c.status]}40`
-                    }}>{c.status}</span>
+                    }}>{tc('factory.status_' + c.status)}</span>
                   </div>
                 )
               })}

@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { isLogisticsHandlerLevel, isLogisticsDispatchLevel, isLogisticsBranchLevel, getRoleHomeRoute } from '@/lib/pos-role-client'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#0891b2'
 const ACC_LIGHT = 'rgba(8,145,178,.1)'
@@ -82,42 +83,48 @@ type Screen = 'camera' | 'confirm' | 'parcels' | 'release' | 'success' | 'handle
   | 'inspection' | 'inspection_done'
 type Mode = 'in' | 'out'
 
-const INSPECTION_STEPS = [
-  { key: 'photo_front', label: 'Front of truck', icon: '🚛' },
-  { key: 'photo_rear', label: 'Rear of truck', icon: '🔙' },
-  { key: 'photo_left', label: 'Left side', icon: '◀️' },
-  { key: 'photo_right', label: 'Right side', icon: '▶️' },
-  { key: 'photo_tyres', label: 'Tyres (close-up)', icon: '🛞' },
-  { key: 'photo_cargo', label: 'Cargo area', icon: '📦' },
-] as const
-
-const FAIL_REASONS = [
-  'Not home', 'Refused delivery', 'Wrong address', 'Phone unreachable',
-  'Area inaccessible', 'Customer rescheduled', 'Other',
+const buildInspectionSteps = (tc: (key: string) => string) => [
+  { key: 'photo_front', label: tc('logistics.inspection_step_photo_front'), icon: '🚛' },
+  { key: 'photo_rear', label: tc('logistics.inspection_step_photo_rear'), icon: '🔙' },
+  { key: 'photo_left', label: tc('logistics.inspection_step_photo_left'), icon: '◀️' },
+  { key: 'photo_right', label: tc('logistics.inspection_step_photo_right'), icon: '▶️' },
+  { key: 'photo_tyres', label: tc('logistics.inspection_step_photo_tyres'), icon: '🛞' },
+  { key: 'photo_cargo', label: tc('logistics.inspection_step_photo_cargo'), icon: '📦' },
 ]
 
-const STATUS_LABEL: Record<string, string> = {
-  received: 'Received', at_branch: 'At Branch', assigned: 'Assigned',
-  loaded: 'Loaded', in_transit: 'In Transit', at_destination: 'At Destination',
-  out_for_delivery: 'Out for Delivery', delivered: 'Delivered',
-  collected: 'Collected', failed_delivery: 'Failed', returned: 'Returned',
-}
+const FAIL_REASON_KEYS = [
+  'not_home', 'refused_delivery', 'wrong_address', 'phone_unreachable',
+  'area_inaccessible', 'customer_rescheduled', 'other',
+]
+
+const ISSUE_KEYS = [
+  'tyre_wear', 'body_damage', 'light_broken', 'mirror_damaged',
+  'cargo_area_dirty', 'fluid_leak', 'brake_issue',
+]
 const STATUS_COLOR: Record<string, string> = {
   received: AMBER, at_branch: ACC, assigned: ACC, loaded: ACC,
   in_transit: '#6366f1', at_destination: GREEN, out_for_delivery: '#6366f1',
   delivered: GREEN, collected: GREEN, failed_delivery: RED, returned: RED,
 }
 
-function timeAgo(iso: string) {
+function timeAgo(iso: string, tc: (key: string, vars?: Record<string, string | number>) => string) {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
-  if (s < 60) return 'just now'
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`
-  if (s < 86400) return `${Math.floor(s / 3600)}h ago`
+  if (s < 60) return tc('logistics.time_just_now')
+  if (s < 3600) return tc('logistics.time_minutes_ago', { count: Math.floor(s / 60) })
+  if (s < 86400) return tc('logistics.time_hours_ago', { count: Math.floor(s / 3600) })
   return new Date(iso).toLocaleDateString()
 }
 
 export default function LogisticsPage() {
   const router = useRouter()
+  const { tc } = useLang()
+  const INSPECTION_STEPS = buildInspectionSteps(tc)
+  const STATUS_LABEL: Record<string, string> = {
+    received: tc('logistics.status_received'), at_branch: tc('logistics.status_at_branch'), assigned: tc('logistics.status_assigned'),
+    loaded: tc('logistics.status_loaded'), in_transit: tc('logistics.status_in_transit'), at_destination: tc('logistics.status_at_destination'),
+    out_for_delivery: tc('logistics.status_out_for_delivery'), delivered: tc('logistics.status_delivered'),
+    collected: tc('logistics.status_collected'), failed_delivery: tc('logistics.status_failed_delivery'), returned: tc('logistics.status_returned'),
+  }
   const [staff, setStaff] = useState<StaffSession | null>(null)
   const [screen, setScreen] = useState<Screen>('camera')
   const [mode, setMode] = useState<Mode>('in')
@@ -282,7 +289,7 @@ export default function LogisticsPage() {
       let tries = 0
       while (!videoRef.current && tries < 60) { await new Promise(r => requestAnimationFrame(() => r(null))); tries++ }
       const v = videoRef.current
-      if (!v) { stream.getTracks().forEach(t => t.stop()); setScanError('Camera not available'); return }
+      if (!v) { stream.getTracks().forEach(t => t.stop()); setScanError(tc('logistics.camera_not_available')); return }
       v.srcObject = stream
       await v.play().catch(() => {})
       // Wait until the camera is actually producing frames (videoWidth > 0)
@@ -295,7 +302,7 @@ export default function LogisticsPage() {
       }
       setCameraActive(true)
     } catch {
-      setScanError('Camera not available')
+      setScanError(tc('logistics.camera_not_available'))
       setCameraActive(false)
     }
   }
@@ -320,14 +327,14 @@ export default function LogisticsPage() {
       })
       const result: ScanResult = await res.json()
       if (result.document_type === 'unknown' || !result.document_type) {
-        setScanError(result.message || 'Could not identify document. Try again.')
+        setScanError(result.message || tc('logistics.scan_could_not_identify'))
         setScanning(false); return
       }
       setScanResult(result)
       setEditFields({ ...result.data })
       setScreen('confirm')
     } catch {
-      setScanError('Scan failed. Check your connection.')
+      setScanError(tc('logistics.scan_failed'))
     }
     setScanning(false)
   }
@@ -339,7 +346,7 @@ export default function LogisticsPage() {
     // Don't capture before the camera is producing frames — avoids the black
     // 0×0 frame that the model reads as "Could not identify document".
     if (!video.videoWidth || !video.videoHeight) {
-      setScanError('Camera still starting — hold steady and tap again.')
+      setScanError(tc('logistics.camera_still_starting'))
       return
     }
     canvas.width = video.videoWidth
@@ -358,7 +365,7 @@ export default function LogisticsPage() {
       })
       const result: ScanResult = await res.json()
       if (result.document_type === 'unknown' || !result.document_type) {
-        setScanError(result.message || 'Could not identify document. Try again.')
+        setScanError(result.message || tc('logistics.scan_could_not_identify'))
         setScanning(false)
         return
       }
@@ -366,7 +373,7 @@ export default function LogisticsPage() {
       setEditFields({ ...result.data })
       setScreen('confirm')
     } catch {
-      setScanError('Scan failed. Check your connection.')
+      setScanError(tc('logistics.scan_failed'))
     }
     setScanning(false)
   }
@@ -433,7 +440,7 @@ export default function LogisticsPage() {
         }
 
         setSuccessTracking(parcelData.parcel?.tracking_number || '')
-        setSuccessMsg('Parcel received')
+        setSuccessMsg(tc('logistics.toast_parcel_received'))
         setTodayIn(prev => prev + 1)
       } else if (scanResult.document_type === 'invoice') {
         await fetch(`${API}/api/pos/logistics-invoices`, {
@@ -450,7 +457,7 @@ export default function LogisticsPage() {
             category: editFields.category || null,
           }),
         })
-        setSuccessMsg('Invoice saved')
+        setSuccessMsg(tc('logistics.toast_invoice_saved'))
         setSuccessTracking('')
       } else if (scanResult.document_type === 'receipt') {
         // Save as logistics payment
@@ -469,13 +476,13 @@ export default function LogisticsPage() {
           headers: headers(),
           body: JSON.stringify(body),
         }).catch(() => {})
-        setSuccessMsg('Receipt saved')
+        setSuccessMsg(tc('logistics.toast_receipt_saved'))
         setSuccessTracking('')
       }
 
       setScreen('success')
     } catch {
-      setScanError('Failed to save. Try again.')
+      setScanError(tc('logistics.save_failed'))
     }
     setSaving(false)
   }
@@ -517,12 +524,12 @@ export default function LogisticsPage() {
           lng: geoCoords?.lng,
         }),
       })
-      setSuccessMsg('Parcel released')
+      setSuccessMsg(tc('logistics.toast_parcel_released'))
       setSuccessTracking(selectedParcel.tracking_number)
       setTodayOut(prev => prev + 1)
       setScreen('success')
     } catch {
-      setScanError('Failed to release parcel')
+      setScanError(tc('logistics.release_failed'))
     }
     setSaving(false)
   }
@@ -637,7 +644,7 @@ export default function LogisticsPage() {
   const capturePhotoFromFile = async (file: File) => {
     setScanError('')
     try { setCapturedPhoto(await compressPhoto(file)) }
-    catch { setScanError('Could not process that photo — try again.') }
+    catch { setScanError(tc('logistics.could_not_process_photo')) }
   }
 
   // ── Driver: pickup from branch ──────────────────────────
@@ -653,11 +660,11 @@ export default function LogisticsPage() {
         }),
       })
       setCapturedPhoto('')
-      setSuccessMsg('Parcel picked up')
+      setSuccessMsg(tc('logistics.toast_parcel_picked_up'))
       setSuccessTracking(parcel.tracking_number)
       setScreen('success')
       if (staff) loadDriverParcels(staff)
-    } catch { setScanError('Pickup failed') }
+    } catch { setScanError(tc('logistics.pickup_failed')) }
     setSaving(false)
   }
 
@@ -671,7 +678,7 @@ export default function LogisticsPage() {
 
     // MediaRecorder is not supported on all platforms (e.g. iOS Safari)
     if (typeof MediaRecorder === 'undefined') {
-      setScanError('Video recording not supported on this device')
+      setScanError(tc('logistics.video_not_supported'))
       return
     }
 
@@ -685,7 +692,7 @@ export default function LogisticsPage() {
     try {
       recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 300_000 })
     } catch {
-      setScanError('Video recording not supported on this device')
+      setScanError(tc('logistics.video_not_supported'))
       return
     }
 
@@ -719,7 +726,7 @@ export default function LogisticsPage() {
   // ── Driver: deliver ─────────────────────────────────────
   const handleDeliver = async () => {
     if (!selectedParcel || !staff) return
-    if (!capturedPhoto) { setScanError('Take a photo as proof of delivery first'); return }
+    if (!capturedPhoto) { setScanError(tc('logistics.deliver_need_photo')); return }
     setSaving(true)
     try {
       await fetch(`${API}/api/pos/parcels/handover`, {
@@ -732,12 +739,12 @@ export default function LogisticsPage() {
         }),
       })
       setCapturedPhoto('')
-      setSuccessMsg('Delivered')
+      setSuccessMsg(tc('logistics.toast_delivered'))
       setSuccessTracking(selectedParcel.tracking_number)
       setTodayOut(prev => prev + 1)
       setScreen('success')
       loadDriverParcels(staff)
-    } catch { setScanError('Delivery failed') }
+    } catch { setScanError(tc('logistics.delivery_failed')) }
     setSaving(false)
   }
 
@@ -756,18 +763,18 @@ export default function LogisticsPage() {
         }),
       })
       setCapturedPhoto('')
-      setSuccessMsg('Marked as failed')
+      setSuccessMsg(tc('logistics.toast_marked_failed'))
       setSuccessTracking(selectedParcel.tracking_number)
       setScreen('success')
       loadDriverParcels(staff)
-    } catch { setScanError('Failed to update') }
+    } catch { setScanError(tc('logistics.fail_update_failed')) }
     setSaving(false)
   }
 
   // ── Driver: checkpoint ──────────────────────────────────
   const handleCheckpoint = async () => {
     if (!selectedParcel || !staff) return
-    if (!capturedPhoto) { setScanError('Take a photo for the checkpoint first'); return }
+    if (!capturedPhoto) { setScanError(tc('logistics.checkpoint_need_photo')); return }
     setSaving(true)
     try {
       await fetch(`${API}/api/pos/parcels/handover`, {
@@ -776,14 +783,14 @@ export default function LogisticsPage() {
           parcel_id: selectedParcel.id, action: 'checkpoint',
           photo_url: capturedPhoto, storage: 'fallback',
           lat: geoCoords?.lat, lng: geoCoords?.lng,
-          notes: deliveryNotes || 'Checkpoint',
+          notes: deliveryNotes || tc('logistics.checkpoint_default_note'),
         }),
       })
       setCapturedPhoto('')
-      setSuccessMsg('Checkpoint logged')
+      setSuccessMsg(tc('logistics.toast_checkpoint_logged'))
       setSuccessTracking(selectedParcel.tracking_number)
       setScreen('success')
-    } catch { setScanError('Failed to log checkpoint') }
+    } catch { setScanError(tc('logistics.checkpoint_log_failed')) }
     setSaving(false)
   }
 
@@ -815,10 +822,10 @@ export default function LogisticsPage() {
           lat: geoCoords?.lat, lng: geoCoords?.lng,
         }),
       })
-      setSuccessMsg(`${inspectionType === 'pre_trip' ? 'Pre-trip' : 'Post-trip'} inspection saved`)
+      setSuccessMsg(inspectionType === 'pre_trip' ? tc('logistics.inspection_saved_pre_trip') : tc('logistics.inspection_saved_post_trip'))
       setSuccessTracking(selectedTruck.plate_number)
       setScreen('success')
-    } catch { setScanError('Failed to save inspection') }
+    } catch { setScanError(tc('logistics.inspection_save_failed')) }
     setSaving(false)
   }
 
@@ -827,7 +834,7 @@ export default function LogisticsPage() {
   const btnPrimary: React.CSSProperties = { flex: 1, padding: '14px', borderRadius: 12, background: ACC, color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
   const btnSecondary: React.CSSProperties = { flex: 1, padding: '14px', borderRadius: 12, background: 'transparent', color: 'var(--pos-muted)', fontSize: 14, fontWeight: 600, border: '1.5px solid var(--pos-border)', cursor: 'pointer', fontFamily: 'inherit' }
 
-  if (!staff) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }}>Loading…</div>
+  if (!staff) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }}>{tc('logistics.loading')}</div>
 
   const isDriverRole = staff.role === 'driver' || staff.role === 'logistics-driver'
 
@@ -840,7 +847,7 @@ export default function LogisticsPage() {
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {isDriverRole && (
-            <button onClick={() => { stopCamera(); setCapturedImage(''); setScanError(''); setScreen('driver_home') }} aria-label="Back"
+            <button onClick={() => { stopCamera(); setCapturedImage(''); setScanError(''); setScreen('driver_home') }} aria-label={tc('logistics.back')}
               style={{ background: 'rgba(255,255,255,.15)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: 20, width: 36, height: 36, color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
           )}
           <div style={{ background: 'rgba(255,255,255,.15)', backdropFilter: 'blur(10px)', borderRadius: 20, padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -848,17 +855,17 @@ export default function LogisticsPage() {
             <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{staff.name}</span>
           </div>
           <div style={{ background: 'rgba(255,255,255,.15)', backdropFilter: 'blur(10px)', borderRadius: 20, padding: '6px 12px' }}>
-            <span style={{ color: '#fff', fontSize: 12 }}>📦 {todayIn} in · {todayOut} out</span>
+            <span style={{ color: '#fff', fontSize: 12 }}>{tc('logistics.stat_in_out', { in: todayIn, out: todayOut })}</span>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {staff.role === 'handler' && (
             <button onClick={() => { stopCamera(); setScreen('handler_incoming'); loadIncoming(staff) }} style={{ background: 'rgba(255,255,255,.15)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: 20, padding: '6px 14px', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-              📥 Incoming
+              {tc('logistics.incoming_button')}
             </button>
           )}
           <button onClick={() => { stopCamera(); localStorage.removeItem('pos_staff'); router.push('/') }} style={{ background: 'rgba(255,255,255,.15)', backdropFilter: 'blur(10px)', border: 'none', borderRadius: 20, padding: '6px 14px', color: '#fff', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
-            Sign out
+            {tc('logistics.sign_out')}
           </button>
         </div>
       </div>
@@ -867,17 +874,17 @@ export default function LogisticsPage() {
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <canvas ref={canvasRef} style={{ display: 'none' }} />
         <input ref={docInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
-          aria-label="Photograph document" onChange={e => { const f = e.target.files?.[0]; if (f) scanFile(f); e.target.value = '' }} />
+          aria-label={tc('logistics.aria_photograph_document')} onChange={e => { const f = e.target.files?.[0]; if (f) scanFile(f); e.target.value = '' }} />
 
         {capturedImage && !scanError ? (
           /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={capturedImage} alt="Captured document" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          <img src={capturedImage} alt={tc('logistics.alt_captured_document')} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         ) : (
           <button onClick={() => docInputRef.current?.click()} disabled={scanning}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, background: 'none', border: 'none', cursor: scanning ? 'wait' : 'pointer', padding: 24 }}>
             <div style={{ width: 88, height: 88, borderRadius: 24, border: '2px dashed rgba(255,255,255,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>📷</div>
-            <div style={{ color: '#fff', fontSize: 15, fontWeight: 700 }}>Tap to photograph the waybill</div>
-            <div style={{ color: 'rgba(255,255,255,.55)', fontSize: 12 }}>Fills in sender, receiver &amp; destination automatically</div>
+            <div style={{ color: '#fff', fontSize: 15, fontWeight: 700 }}>{tc('logistics.viewfinder_tap_waybill')}</div>
+            <div style={{ color: 'rgba(255,255,255,.55)', fontSize: 12 }}>{tc('logistics.viewfinder_waybill_hint')}</div>
           </button>
         )}
 
@@ -885,7 +892,7 @@ export default function LogisticsPage() {
         {scanning && (
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
             <div style={{ width: 40, height: 40, border: '3px solid #fff', borderTopColor: ACC, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-            <span style={{ color: '#fff', fontSize: 14, fontWeight: 600 }}>Reading document…</span>
+            <span style={{ color: '#fff', fontSize: 14, fontWeight: 600 }}>{tc('logistics.reading_document')}</span>
           </div>
         )}
 
@@ -894,7 +901,7 @@ export default function LogisticsPage() {
           <div className="pos-banner" style={{ position: 'absolute', bottom: 24, left: 16, right: 16, background: 'rgba(220,38,38,.9)', borderRadius: 12, padding: '12px 16px', color: '#fff', fontSize: 13, textAlign: 'center' }}>
             {scanError}
             <button onClick={() => { setScanError(''); setCapturedImage(''); docInputRef.current?.click() }} style={{ display: 'block', margin: '8px auto 0', background: 'rgba(255,255,255,.2)', border: 'none', borderRadius: 8, padding: '6px 16px', color: '#fff', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
-              Retake photo
+              {tc('logistics.retake_photo')}
             </button>
           </div>
         )}
@@ -911,7 +918,7 @@ export default function LogisticsPage() {
                 if (m === 'out') { stopCamera(); setScreen('parcels') }
               }}
                 style={{ padding: '8px 28px', borderRadius: 8, border: 'none', background: mode === m ? ACC : 'transparent', color: mode === m ? '#fff' : 'rgba(255,255,255,.6)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .2s' }}>
-                {m === 'in' ? '📦 Receive' : '📤 Release'}
+                {m === 'in' ? tc('logistics.mode_receive') : tc('logistics.mode_release')}
               </button>
             ))}
           </div>
@@ -925,7 +932,7 @@ export default function LogisticsPage() {
             <circle cx="12" cy="13" r="4" />
           </svg>
         </button>
-        <span style={{ color: 'rgba(255,255,255,.5)', fontSize: 12 }}>Point at waybill, invoice, or receipt</span>
+        <span style={{ color: 'rgba(255,255,255,.5)', fontSize: 12 }}>{tc('logistics.shutter_hint')}</span>
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
@@ -946,68 +953,68 @@ export default function LogisticsPage() {
           <button onClick={resetToCamera} style={{ width: 36, height: 36, borderRadius: 10, background: '#f4f3f1', border: 'none', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--pos-ink)' }}>
-              {dt === 'waybill' ? '📦 Waybill detected' : dt === 'invoice' ? '🧾 Invoice detected' : '🧾 Receipt detected'}
+              {dt === 'waybill' ? tc('logistics.confirm_waybill_detected') : dt === 'invoice' ? tc('logistics.confirm_invoice_detected') : tc('logistics.confirm_receipt_detected')}
             </div>
-            <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{conf}% confidence</div>
+            <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{tc('logistics.confirm_confidence', { percent: conf })}</div>
           </div>
         </div>
 
         {/* Captured image thumbnail */}
         {capturedImage && (
           <div className="pos-reveal" style={{ padding: '12px 20px 0' }}>
-            <img src={capturedImage} alt="scan" style={{ width: '100%', borderRadius: 12, maxHeight: 160, objectFit: 'cover', border: '1px solid var(--pos-border)' }} />
+            <img src={capturedImage} alt={tc('logistics.alt_scan')} style={{ width: '100%', borderRadius: 12, maxHeight: 160, objectFit: 'cover', border: '1px solid var(--pos-border)' }} />
           </div>
         )}
 
         {/* Editable fields */}
         <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {dt === 'waybill' && <>
-            <Field label="Sender name" value={editFields.sender_name} onChange={v => setEditFields(p => ({ ...p, sender_name: v }))} />
-            <Field label="Sender phone" value={editFields.sender_phone} onChange={v => setEditFields(p => ({ ...p, sender_phone: v }))} inputMode="tel" />
-            <Field label="Receiver name" value={editFields.receiver_name} onChange={v => setEditFields(p => ({ ...p, receiver_name: v }))} />
-            <Field label="Receiver phone" value={editFields.receiver_phone} onChange={v => setEditFields(p => ({ ...p, receiver_phone: v }))} inputMode="tel" />
-            <Field label="Destination city" value={editFields.destination_city} onChange={v => setEditFields(p => ({ ...p, destination_city: v }))} />
-            <Field label="Description" value={editFields.description} onChange={v => setEditFields(p => ({ ...p, description: v }))} />
-            <Field label="Weight (kg)" value={editFields.weight_kg} onChange={v => setEditFields(p => ({ ...p, weight_kg: v }))} inputMode="decimal" />
-            {editFields.tracking_number && <Field label="Tracking #" value={editFields.tracking_number} onChange={v => setEditFields(p => ({ ...p, tracking_number: v }))} />}
+            <Field label={tc('logistics.field_sender_name')} value={editFields.sender_name} onChange={v => setEditFields(p => ({ ...p, sender_name: v }))} />
+            <Field label={tc('logistics.field_sender_phone')} value={editFields.sender_phone} onChange={v => setEditFields(p => ({ ...p, sender_phone: v }))} inputMode="tel" />
+            <Field label={tc('logistics.field_receiver_name')} value={editFields.receiver_name} onChange={v => setEditFields(p => ({ ...p, receiver_name: v }))} />
+            <Field label={tc('logistics.field_receiver_phone')} value={editFields.receiver_phone} onChange={v => setEditFields(p => ({ ...p, receiver_phone: v }))} inputMode="tel" />
+            <Field label={tc('logistics.field_destination_city')} value={editFields.destination_city} onChange={v => setEditFields(p => ({ ...p, destination_city: v }))} />
+            <Field label={tc('logistics.field_description')} value={editFields.description} onChange={v => setEditFields(p => ({ ...p, description: v }))} />
+            <Field label={tc('logistics.field_weight_kg')} value={editFields.weight_kg} onChange={v => setEditFields(p => ({ ...p, weight_kg: v }))} inputMode="decimal" />
+            {editFields.tracking_number && <Field label={tc('logistics.field_tracking_number')} value={editFields.tracking_number} onChange={v => setEditFields(p => ({ ...p, tracking_number: v }))} />}
           </>}
 
           {dt === 'invoice' && <>
-            <Field label="Vendor" value={editFields.vendor_name} onChange={v => setEditFields(p => ({ ...p, vendor_name: v }))} />
-            <Field label="Invoice #" value={editFields.invoice_number} onChange={v => setEditFields(p => ({ ...p, invoice_number: v }))} />
-            <Field label="Total amount" value={editFields.total_amount} onChange={v => setEditFields(p => ({ ...p, total_amount: v }))} inputMode="decimal" />
-            <Field label="Currency" value={editFields.currency || 'KES'} onChange={v => setEditFields(p => ({ ...p, currency: v }))} />
-            <Field label="Date" value={editFields.date} onChange={v => setEditFields(p => ({ ...p, date: v }))} />
+            <Field label={tc('logistics.field_vendor')} value={editFields.vendor_name} onChange={v => setEditFields(p => ({ ...p, vendor_name: v }))} />
+            <Field label={tc('logistics.field_invoice_number')} value={editFields.invoice_number} onChange={v => setEditFields(p => ({ ...p, invoice_number: v }))} />
+            <Field label={tc('logistics.field_total_amount')} value={editFields.total_amount} onChange={v => setEditFields(p => ({ ...p, total_amount: v }))} inputMode="decimal" />
+            <Field label={tc('logistics.field_currency')} value={editFields.currency || 'KES'} onChange={v => setEditFields(p => ({ ...p, currency: v }))} />
+            <Field label={tc('logistics.field_date')} value={editFields.date} onChange={v => setEditFields(p => ({ ...p, date: v }))} />
             <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>
-              Category:
+              {tc('logistics.field_category')}
               <select value={editFields.category || ''} onChange={e => setEditFields(p => ({ ...p, category: e.target.value || null }))} style={{ ...inputStyle, marginTop: 4 }}>
-                <option value="">— Select —</option>
-                <option value="fuel">Fuel</option>
-                <option value="maintenance">Maintenance</option>
-                <option value="toll">Toll</option>
-                <option value="loading">Loading</option>
-                <option value="other">Other</option>
+                <option value="">{tc('logistics.category_select')}</option>
+                <option value="fuel">{tc('logistics.category_fuel')}</option>
+                <option value="maintenance">{tc('logistics.category_maintenance')}</option>
+                <option value="toll">{tc('logistics.category_toll')}</option>
+                <option value="loading">{tc('logistics.category_loading')}</option>
+                <option value="other">{tc('logistics.category_other')}</option>
               </select>
             </div>
           </>}
 
           {dt === 'receipt' && <>
-            <Field label="Amount" value={editFields.amount} onChange={v => setEditFields(p => ({ ...p, amount: v }))} inputMode="decimal" />
-            <Field label="Currency" value={editFields.currency || 'KES'} onChange={v => setEditFields(p => ({ ...p, currency: v }))} />
-            <Field label="Payment method" value={editFields.payment_method} onChange={v => setEditFields(p => ({ ...p, payment_method: v }))} />
-            <Field label="Receipt #" value={editFields.receipt_number} onChange={v => setEditFields(p => ({ ...p, receipt_number: v }))} />
-            <Field label="Payer" value={editFields.payer_name} onChange={v => setEditFields(p => ({ ...p, payer_name: v }))} />
-            <Field label="Payee" value={editFields.payee_name} onChange={v => setEditFields(p => ({ ...p, payee_name: v }))} />
-            <Field label="Date" value={editFields.date} onChange={v => setEditFields(p => ({ ...p, date: v }))} />
+            <Field label={tc('logistics.field_amount')} value={editFields.amount} onChange={v => setEditFields(p => ({ ...p, amount: v }))} inputMode="decimal" />
+            <Field label={tc('logistics.field_currency')} value={editFields.currency || 'KES'} onChange={v => setEditFields(p => ({ ...p, currency: v }))} />
+            <Field label={tc('logistics.field_payment_method')} value={editFields.payment_method} onChange={v => setEditFields(p => ({ ...p, payment_method: v }))} />
+            <Field label={tc('logistics.field_receipt_number')} value={editFields.receipt_number} onChange={v => setEditFields(p => ({ ...p, receipt_number: v }))} />
+            <Field label={tc('logistics.field_payer')} value={editFields.payer_name} onChange={v => setEditFields(p => ({ ...p, payer_name: v }))} />
+            <Field label={tc('logistics.field_payee')} value={editFields.payee_name} onChange={v => setEditFields(p => ({ ...p, payee_name: v }))} />
+            <Field label={tc('logistics.field_date')} value={editFields.date} onChange={v => setEditFields(p => ({ ...p, date: v }))} />
           </>}
 
           {scanError && <div style={{ color: RED, fontSize: 13, textAlign: 'center' }}>{scanError}</div>}
 
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
             <button className="pos-btn-primary" onClick={handleConfirm} disabled={saving} style={{ ...btnPrimary, opacity: saving ? 0.6 : 1 }}>
-              {saving ? 'Saving…' : '✓ Confirm'}
+              {saving ? tc('logistics.saving') : tc('logistics.confirm_button')}
             </button>
-            <button onClick={resetToCamera} style={btnSecondary}>Re-scan</button>
+            <button onClick={resetToCamera} style={btnSecondary}>{tc('logistics.rescan_button')}</button>
           </div>
         </div>
       </div>
@@ -1022,14 +1029,14 @@ export default function LogisticsPage() {
       <div style={{ background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={resetToCamera} style={{ width: 36, height: 36, borderRadius: 10, background: '#f4f3f1', border: 'none', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 15, fontWeight: 700 }}>📤 Release Parcel</div>
-          <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>Search by name, phone, or tracking #</div>
+          <div style={{ fontSize: 15, fontWeight: 700 }}>{tc('logistics.release_title')}</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{tc('logistics.release_subtitle')}</div>
         </div>
       </div>
 
       <div style={{ padding: '12px 20px' }}>
         <input
-          placeholder="Search parcels…"
+          placeholder={tc('logistics.search_placeholder')}
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           style={inputStyle}
@@ -1038,17 +1045,17 @@ export default function LogisticsPage() {
       </div>
 
       <div style={{ padding: '0 20px' }}>
-        {searchLoading && <div style={{ color: 'var(--pos-muted)', fontSize: 13, padding: '12px 0' }}>Searching…</div>}
+        {searchLoading && <div style={{ color: 'var(--pos-muted)', fontSize: 13, padding: '12px 0' }}>{tc('logistics.searching')}</div>}
         {!searchLoading && searchQuery && parcels.length === 0 && (
-          <div style={{ color: 'var(--pos-muted)', fontSize: 13, padding: '12px 0', textAlign: 'center' }}>No parcels found at this branch</div>
+          <div style={{ color: 'var(--pos-muted)', fontSize: 13, padding: '12px 0', textAlign: 'center' }}>{tc('logistics.no_parcels_at_branch')}</div>
         )}
         {parcels.map((p, idx) => (
           <button key={p.id} className="pos-item" onClick={() => { setSelectedParcel(p); setCollectName(p.receiver_name || ''); setScreen('release') }}
             style={{ width: '100%', background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 12, padding: '14px 16px', marginBottom: 8, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', justifyContent: 'space-between', alignItems: 'center', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
             <div>
               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--pos-ink)' }}>{p.tracking_number}</div>
-              <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginTop: 2 }}>To: {p.receiver_name || '—'} {p.receiver_phone ? `· ${p.receiver_phone}` : ''}</div>
-              <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 2 }}>{p.description || '—'} · {timeAgo(p.created_at)}</div>
+              <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginTop: 2 }}>{p.receiver_phone ? tc('logistics.parcel_to_with_phone', { name: p.receiver_name || '—', phone: p.receiver_phone }) : tc('logistics.parcel_to', { name: p.receiver_name || '—' })}</div>
+              <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 2 }}>{p.description || '—'} · {timeAgo(p.created_at, tc)}</div>
             </div>
             <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: (STATUS_COLOR[p.status] || '#6b7280') + '18', color: STATUS_COLOR[p.status] || '#6b7280' }}>
               {STATUS_LABEL[p.status] || p.status}
@@ -1066,29 +1073,29 @@ export default function LogisticsPage() {
     <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <div style={{ background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => setScreen('parcels')} style={{ width: 36, height: 36, borderRadius: 10, background: '#f4f3f1', border: 'none', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
-        <div style={{ fontSize: 15, fontWeight: 700 }}>Release {selectedParcel.tracking_number}</div>
+        <div style={{ fontSize: 15, fontWeight: 700 }}>{tc('logistics.release_heading', { tracking: selectedParcel.tracking_number })}</div>
       </div>
 
       <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 14, padding: '16px 18px' }}>
-          <div style={{ fontSize: 12, color: 'var(--pos-muted)', marginBottom: 8 }}>Parcel details</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-muted)', marginBottom: 8 }}>{tc('logistics.parcel_details')}</div>
           <div style={{ fontSize: 14, fontWeight: 600 }}>{selectedParcel.receiver_name || '—'}</div>
           <div style={{ fontSize: 13, color: 'var(--pos-muted)' }}>{selectedParcel.receiver_phone || ''}</div>
           <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginTop: 4 }}>{selectedParcel.description || '—'}</div>
           {selectedParcel.fee_charged ? (
-            <div style={{ fontSize: 14, fontWeight: 700, color: ACC, marginTop: 8 }}>Fee: KES {selectedParcel.fee_charged.toLocaleString()}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: ACC, marginTop: 8 }}>{tc('logistics.fee_label', { amount: selectedParcel.fee_charged.toLocaleString() })}</div>
           ) : null}
         </div>
 
-        <Field label="Collected by (name)" value={collectName} onChange={setCollectName} />
+        <Field label={tc('logistics.field_collected_by')} value={collectName} onChange={setCollectName} />
 
         {scanError && <div style={{ color: RED, fontSize: 13, textAlign: 'center' }}>{scanError}</div>}
 
         <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
           <button className="pos-btn-primary" onClick={handleRelease} disabled={saving} style={{ ...btnPrimary, opacity: saving ? 0.6 : 1 }}>
-            {saving ? 'Releasing…' : '✓ Release Parcel'}
+            {saving ? tc('logistics.releasing') : tc('logistics.release_parcel_button')}
           </button>
-          <button onClick={() => setScreen('parcels')} style={btnSecondary}>Back</button>
+          <button onClick={() => setScreen('parcels')} style={btnSecondary}>{tc('logistics.back')}</button>
         </div>
       </div>
     </div>
@@ -1104,9 +1111,9 @@ export default function LogisticsPage() {
       </div>
       <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--pos-ink)', marginBottom: 4 }}>{successMsg}</div>
       {successTracking && <div style={{ fontSize: 16, color: ACC, fontWeight: 700, marginBottom: 8 }}>{successTracking}</div>}
-      <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 32 }}>📦 {todayIn} received · {todayOut} released today</div>
+      <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 32 }}>{tc('logistics.success_received_released_today', { in: todayIn, out: todayOut })}</div>
       <button className="pos-btn-primary" onClick={resetToCamera} style={{ ...btnPrimary, width: '100%', maxWidth: 320 }}>
-        {staff?.role === 'driver' ? '← Back to my parcels' : '📷 Scan next'}
+        {staff?.role === 'driver' ? tc('logistics.back_to_my_parcels') : tc('logistics.scan_next')}
       </button>
     </div>
   )
@@ -1117,10 +1124,10 @@ export default function LogisticsPage() {
   if (screen === 'handler_incoming') return (
     <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <div style={{ background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => { setScreen('camera'); setCapturedImage(''); setScanError('') }} aria-label="Back" style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', padding: 0, color: 'var(--pos-ink)' }}>←</button>
+        <button onClick={() => { setScreen('camera'); setCapturedImage(''); setScanError('') }} aria-label={tc('logistics.back')} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', padding: 0, color: 'var(--pos-ink)' }}>←</button>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--pos-ink)' }}>📥 Incoming Parcels</div>
-          <div style={{ fontSize: 11, color: 'var(--pos-muted)' }}>{staff.name} · receive arrivals into the branch</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--pos-ink)' }}>{tc('logistics.incoming_title')}</div>
+          <div style={{ fontSize: 11, color: 'var(--pos-muted)' }}>{tc('logistics.incoming_subtitle', { name: staff.name })}</div>
         </div>
         <button onClick={() => loadIncoming(staff)} style={{ background: ACC_LIGHT, color: ACC, border: `1px solid ${ACC_BORDER}`, borderRadius: 8, padding: '6px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>↻</button>
       </div>
@@ -1129,14 +1136,14 @@ export default function LogisticsPage() {
         {incoming.length > 1 && (
           <button onClick={() => receiveIntoBranch(incoming.map(p => p.id))} disabled={saving}
             style={{ width: '100%', background: GREEN, color: '#fff', border: 'none', borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 800, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1, marginBottom: 12 }}>
-            ✓ Receive all {incoming.length} into branch
+            {tc('logistics.receive_all_into_branch', { count: incoming.length })}
           </button>
         )}
         {incomingLoading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--pos-muted)' }}>Loading…</div>
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--pos-muted)' }}>{tc('logistics.loading')}</div>
         ) : incoming.length === 0 ? (
           <div style={{ background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 12, padding: '32px 16px', textAlign: 'center', color: 'var(--pos-muted)', fontSize: 13 }}>
-            No parcels have arrived for collection yet. They appear here when a driver drops them at this branch.
+            {tc('logistics.no_incoming_parcels')}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -1144,11 +1151,11 @@ export default function LogisticsPage() {
               <div key={p.id} style={{ background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 12, padding: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 14, fontWeight: 800, color: 'var(--pos-ink)' }}>{p.tracking_number}</div>
-                  <div style={{ fontSize: 12, color: 'var(--pos-muted)', marginTop: 2 }}>To: {p.receiver_name || '—'} {p.receiver_phone ? `· ${p.receiver_phone}` : ''}</div>
-                  <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 2 }}>{p.description || 'Parcel'}{p.weight_kg ? ` · ${p.weight_kg}kg` : ''}</div>
+                  <div style={{ fontSize: 12, color: 'var(--pos-muted)', marginTop: 2 }}>{p.receiver_phone ? tc('logistics.parcel_to_with_phone', { name: p.receiver_name || '—', phone: p.receiver_phone }) : tc('logistics.parcel_to', { name: p.receiver_name || '—' })}</div>
+                  <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 2 }}>{p.description || tc('logistics.parcel_default_label')}{p.weight_kg ? tc('logistics.parcel_weight_suffix', { weight: p.weight_kg }) : ''}</div>
                 </div>
                 <button onClick={() => receiveIntoBranch([p.id])} disabled={saving} style={{ background: ACC, color: '#fff', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1, whiteSpace: 'nowrap' }}>
-                  Receive
+                  {tc('logistics.receive_button')}
                 </button>
               </div>
             ))}
@@ -1173,11 +1180,11 @@ export default function LogisticsPage() {
             <div style={{ fontSize: 15, fontWeight: 700 }}>{staff?.name}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--pos-muted)' }}>
               <div style={{ width: 6, height: 6, borderRadius: 3, background: geoCoords ? GREEN : AMBER }} />
-              Driver · {myParcels.length} parcels
+              {tc('logistics.driver_role_parcels', { count: myParcels.length })}
             </div>
           </div>
         </div>
-        <button onClick={() => { localStorage.removeItem('pos_staff'); router.push('/') }} style={{ background: '#f4f3f1', border: 'none', borderRadius: 8, padding: '6px 12px', color: 'var(--pos-muted)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Sign out</button>
+        <button onClick={() => { localStorage.removeItem('pos_staff'); router.push('/') }} style={{ background: '#f4f3f1', border: 'none', borderRadius: 8, padding: '6px 12px', color: 'var(--pos-muted)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('logistics.sign_out')}</button>
       </div>
 
       <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1190,11 +1197,11 @@ export default function LogisticsPage() {
             else { setScreen('inspection') }
           }} style={{ flex: 1, padding: '14px', borderRadius: 12, background: ACC_LIGHT, border: `1px solid ${ACC_BORDER}`, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center' }}>
             <div style={{ fontSize: 20, marginBottom: 4 }}>🔍</div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: ACC }}>Vehicle Check</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: ACC }}>{tc('logistics.vehicle_check')}</div>
           </button>
           <button onClick={() => { setCapturedImage(''); setScanError(''); setScreen('camera') }} style={{ flex: 1, padding: '14px', borderRadius: 12, background: ACC_LIGHT, border: `1px solid ${ACC_BORDER}`, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center' }}>
             <div style={{ fontSize: 20, marginBottom: 4 }}>📷</div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: ACC }}>Scan Document</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: ACC }}>{tc('logistics.scan_document')}</div>
           </button>
         </div>
 
@@ -1203,23 +1210,23 @@ export default function LogisticsPage() {
           const groups = new Map<string, { name: string; items: Parcel[] }>()
           for (const p of myParcels) {
             if (p.status !== 'in_transit' || p.delivery_type !== 'branch_to_branch' || !p.destination_branch_id) continue
-            const g = groups.get(p.destination_branch_id) || { name: p.destination_branch?.name || p.destination_city || 'destination', items: [] }
+            const g = groups.get(p.destination_branch_id) || { name: p.destination_branch?.name || p.destination_city || tc('logistics.destination_fallback'), items: [] }
             g.items.push(p); groups.set(p.destination_branch_id, g)
           }
           return Array.from(groups.entries()).map(([bid, g]) => (
             <button key={bid} onClick={() => dropAllAtBranch(bid, g.items)} disabled={saving}
               style={{ width: '100%', background: GREEN, color: '#fff', border: 'none', borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 800, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1, marginTop: 4 }}>
-              📍 Drop all at {g.name} ({g.items.length})
+              {tc('logistics.drop_all_at', { name: g.name, count: g.items.length })}
             </button>
           ))
         })()}
 
         {/* My parcels */}
-        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--pos-ink)', marginTop: 4 }}>My Parcels</div>
-        {driverLoading && <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>Loading…</div>}
+        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--pos-ink)', marginTop: 4 }}>{tc('logistics.my_parcels')}</div>
+        {driverLoading && <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>{tc('logistics.loading')}</div>}
         {!driverLoading && myParcels.length === 0 && (
           <div style={{ background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 12, padding: '24px 16px', textAlign: 'center', color: 'var(--pos-muted)', fontSize: 13 }}>
-            No parcels assigned to you yet
+            {tc('logistics.no_parcels_assigned')}
           </div>
         )}
         {myParcels.map((p, idx) => (
@@ -1227,7 +1234,7 @@ export default function LogisticsPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700 }}>{p.tracking_number}</div>
-                <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginTop: 2 }}>To: {p.receiver_name || '—'} · {p.destination_city || ''}</div>
+                <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginTop: 2 }}>{tc('logistics.parcel_to', { name: p.receiver_name || '—' })} · {p.destination_city || ''}</div>
                 {p.description && <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 2 }}>{p.description}</div>}
               </div>
               <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20, background: (STATUS_COLOR[p.status] || '#6b7280') + '18', color: STATUS_COLOR[p.status] || '#6b7280', whiteSpace: 'nowrap' }}>
@@ -1237,24 +1244,24 @@ export default function LogisticsPage() {
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {['assigned', 'loaded'].includes(p.status) && (
                 <button onClick={() => handlePickup(p)} disabled={saving} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: ACC, color: '#fff', fontSize: 12, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: saving ? 0.5 : 1 }}>
-                  📷 Pick up
+                  {tc('logistics.btn_pick_up')}
                 </button>
               )}
               {['in_transit', 'out_for_delivery'].includes(p.status) && <>
                 {p.delivery_type === 'branch_to_branch' ? (
                   <button onClick={() => markArrived(p)} disabled={saving} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: GREEN, color: '#fff', fontSize: 12, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: saving ? 0.5 : 1 }}>
-                    📍 Arrived at branch
+                    {tc('logistics.btn_arrived_at_branch')}
                   </button>
                 ) : (
                   <button onClick={() => { setSelectedParcel(p); setDeliveryNotes(''); setCapturedPhoto(''); setScanError(''); setScreen('driver_deliver') }} style={{ padding: '7px 14px', borderRadius: 8, border: 'none', background: GREEN, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                    ✓ Deliver
+                    {tc('logistics.btn_deliver')}
                   </button>
                 )}
                 <button onClick={() => { setSelectedParcel(p); setDeliveryNotes(''); setCapturedPhoto(''); setScanError(''); setScreen('driver_checkpoint') }} style={{ padding: '7px 14px', borderRadius: 8, border: `1px solid ${ACC_BORDER}`, background: 'transparent', color: ACC, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                  📍 Checkpoint
+                  {tc('logistics.btn_checkpoint')}
                 </button>
                 <button onClick={() => { setSelectedParcel(p); setFailReason(''); setDeliveryNotes(''); setScreen('driver_fail') }} style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(220,38,38,.25)', background: 'transparent', color: RED, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                  ✗ Failed
+                  {tc('logistics.btn_failed')}
                 </button>
               </>}
             </div>
@@ -1274,21 +1281,21 @@ export default function LogisticsPage() {
         <button onClick={() => { setCapturedPhoto(''); setScanError(''); setScreen('driver_home') }}
           style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,.15)', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
         <div style={{ background: 'rgba(255,255,255,.15)', backdropFilter: 'blur(10px)', borderRadius: 20, padding: '6px 14px', flex: 1 }}>
-          <span style={{ color: '#fff', fontSize: 12, fontWeight: 600 }}>Proof of Delivery · {selectedParcel.tracking_number}</span>
+          <span style={{ color: '#fff', fontSize: 12, fontWeight: 600 }}>{tc('logistics.proof_of_delivery', { tracking: selectedParcel.tracking_number })}</span>
         </div>
       </div>
 
-      <input ref={camFileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} aria-label="Take delivery photo" onChange={e => { const f = e.target.files?.[0]; if (f) capturePhotoFromFile(f); e.target.value = '' }} />
+      <input ref={camFileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} aria-label={tc('logistics.aria_take_delivery_photo')} onChange={e => { const f = e.target.files?.[0]; if (f) capturePhotoFromFile(f); e.target.value = '' }} />
 
       {/* Viewfinder — native capture */}
       <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {capturedPhoto ? (
           /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={capturedPhoto} alt="Delivery proof" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          <img src={capturedPhoto} alt={tc('logistics.alt_delivery_proof')} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         ) : (
           <button onClick={() => camFileRef.current?.click()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, background: 'none', border: 'none', cursor: 'pointer', padding: 24 }}>
             <div style={{ width: 88, height: 88, borderRadius: 24, border: '2px dashed rgba(255,255,255,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>📷</div>
-            <div style={{ color: '#fff', fontSize: 16, fontWeight: 700 }}>Tap to photograph the delivery</div>
+            <div style={{ color: '#fff', fontSize: 16, fontWeight: 700 }}>{tc('logistics.tap_photograph_delivery')}</div>
           </button>
         )}
       </div>
@@ -1296,15 +1303,15 @@ export default function LogisticsPage() {
       {/* Bottom controls */}
       <div style={{ background: 'rgba(0,0,0,.88)', padding: '14px 20px 36px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
         <div style={{ color: 'rgba(255,255,255,.7)', fontSize: 13, textAlign: 'center' }}>
-          To: <strong style={{ color: '#fff' }}>{selectedParcel.receiver_name || '—'}</strong>{selectedParcel.destination_city ? ` · ${selectedParcel.destination_city}` : ''}
+          {selectedParcel.destination_city ? tc('logistics.deliver_to_destination', { name: selectedParcel.receiver_name || '—', city: selectedParcel.destination_city }) : tc('logistics.deliver_to', { name: selectedParcel.receiver_name || '—' })}
         </div>
-        <input placeholder="Notes (optional)" value={deliveryNotes} onChange={e => setDeliveryNotes(e.target.value)}
+        <input placeholder={tc('logistics.notes_optional')} value={deliveryNotes} onChange={e => setDeliveryNotes(e.target.value)}
           style={{ width: '100%', maxWidth: 360, padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,.2)', background: 'rgba(255,255,255,.1)', color: '#fff', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
         {scanError && <div style={{ color: '#fca5a5', fontSize: 13 }}>{scanError}</div>}
         {capturedPhoto ? (
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <button onClick={() => camFileRef.current?.click()} style={{ padding: '12px 18px', borderRadius: 10, border: '1px solid rgba(255,255,255,.3)', background: 'transparent', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Retake</button>
-            <button onClick={handleDeliver} disabled={saving} style={{ padding: '13px 28px', borderRadius: 10, border: 'none', background: GREEN, color: '#fff', fontSize: 15, fontWeight: 800, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : '✓ Confirm Delivery'}</button>
+            <button onClick={() => camFileRef.current?.click()} style={{ padding: '12px 18px', borderRadius: 10, border: '1px solid rgba(255,255,255,.3)', background: 'transparent', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{tc('logistics.retake')}</button>
+            <button onClick={handleDeliver} disabled={saving} style={{ padding: '13px 28px', borderRadius: 10, border: 'none', background: GREEN, color: '#fff', fontSize: 15, fontWeight: 800, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? tc('logistics.saving') : tc('logistics.confirm_delivery_button')}</button>
           </div>
         ) : (
           <button onClick={() => camFileRef.current?.click()} style={{ width: 72, height: 72, borderRadius: 36, border: '4px solid #fff', background: GREEN, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1323,30 +1330,30 @@ export default function LogisticsPage() {
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => { setCapturedPhoto(''); setScanError(''); setScreen('driver_home') }} style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,.15)', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
         <div style={{ background: 'rgba(255,255,255,.15)', backdropFilter: 'blur(10px)', borderRadius: 20, padding: '6px 14px' }}>
-          <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>📍 Checkpoint — {selectedParcel.tracking_number}</span>
+          <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{tc('logistics.checkpoint_heading', { tracking: selectedParcel.tracking_number })}</span>
         </div>
       </div>
-      <input ref={camFileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} aria-label="Take checkpoint photo" onChange={e => { const f = e.target.files?.[0]; if (f) capturePhotoFromFile(f); e.target.value = '' }} />
+      <input ref={camFileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} aria-label={tc('logistics.aria_take_checkpoint_photo')} onChange={e => { const f = e.target.files?.[0]; if (f) capturePhotoFromFile(f); e.target.value = '' }} />
       <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {capturedPhoto ? (
           /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={capturedPhoto} alt="Checkpoint" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          <img src={capturedPhoto} alt={tc('logistics.alt_checkpoint')} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         ) : (
           <button onClick={() => camFileRef.current?.click()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, background: 'none', border: 'none', cursor: 'pointer', padding: 24 }}>
             <div style={{ width: 88, height: 88, borderRadius: 24, border: '2px dashed rgba(255,255,255,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>📍</div>
-            <div style={{ color: '#fff', fontSize: 16, fontWeight: 700 }}>Tap to photograph the checkpoint</div>
+            <div style={{ color: '#fff', fontSize: 16, fontWeight: 700 }}>{tc('logistics.tap_photograph_checkpoint')}</div>
           </button>
         )}
       </div>
       <div style={{ background: 'rgba(0,0,0,.85)', padding: '16px 20px 32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
         {geoCoords && <div style={{ color: 'rgba(255,255,255,.5)', fontSize: 11 }}>📍 {geoCoords.lat.toFixed(4)}, {geoCoords.lng.toFixed(4)}</div>}
-        <input placeholder="Location name (optional)" value={deliveryNotes} onChange={e => setDeliveryNotes(e.target.value)}
+        <input placeholder={tc('logistics.location_name_optional')} value={deliveryNotes} onChange={e => setDeliveryNotes(e.target.value)}
           style={{ width: '100%', maxWidth: 360, padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,.2)', background: 'rgba(255,255,255,.1)', color: '#fff', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
         {scanError && <div style={{ color: '#fca5a5', fontSize: 13 }}>{scanError}</div>}
         {capturedPhoto ? (
           <div style={{ display: 'flex', gap: 12 }}>
-            <button onClick={() => camFileRef.current?.click()} style={{ padding: '12px 18px', borderRadius: 10, border: '1px solid rgba(255,255,255,.3)', background: 'transparent', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Retake</button>
-            <button onClick={handleCheckpoint} disabled={saving} style={{ padding: '13px 28px', borderRadius: 10, border: 'none', background: '#6366f1', color: '#fff', fontSize: 15, fontWeight: 800, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : '📍 Log checkpoint'}</button>
+            <button onClick={() => camFileRef.current?.click()} style={{ padding: '12px 18px', borderRadius: 10, border: '1px solid rgba(255,255,255,.3)', background: 'transparent', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{tc('logistics.retake')}</button>
+            <button onClick={handleCheckpoint} disabled={saving} style={{ padding: '13px 28px', borderRadius: 10, border: 'none', background: '#6366f1', color: '#fff', fontSize: 15, fontWeight: 800, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.6 : 1 }}>{saving ? tc('logistics.saving') : tc('logistics.log_checkpoint_button')}</button>
           </div>
         ) : (
           <button onClick={() => camFileRef.current?.click()} style={{ width: 72, height: 72, borderRadius: 36, border: '4px solid #fff', background: '#6366f1', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1365,27 +1372,29 @@ export default function LogisticsPage() {
       <div style={{ background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => setScreen('driver_home')} style={{ width: 36, height: 36, borderRadius: 10, background: '#f4f3f1', border: 'none', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
         <div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: RED }}>Failed Delivery</div>
-          <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{selectedParcel.tracking_number} · {selectedParcel.receiver_name}</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: RED }}>{tc('logistics.failed_delivery_title')}</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{tc('logistics.failed_delivery_subtitle', { tracking: selectedParcel.tracking_number, name: selectedParcel.receiver_name || '' })}</div>
         </div>
       </div>
       <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)' }}>Reason</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)' }}>{tc('logistics.reason_label')}</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {FAIL_REASONS.map(r => (
-            <button key={r} onClick={() => setFailReason(r)}
-              style={{ padding: '8px 14px', borderRadius: 20, border: failReason === r ? `2px solid ${RED}` : '1.5px solid var(--pos-border)', background: failReason === r ? 'var(--pos-danger-pale)' : 'var(--pos-surface)', color: failReason === r ? RED : 'var(--pos-ink)', fontSize: 13, fontWeight: failReason === r ? 700 : 500, cursor: 'pointer', fontFamily: 'inherit' }}>
-              {r}
+          {FAIL_REASON_KEYS.map(r => {
+            const label = tc('logistics.fail_reason_' + r)
+            return (
+            <button key={r} onClick={() => setFailReason(label)}
+              style={{ padding: '8px 14px', borderRadius: 20, border: failReason === label ? `2px solid ${RED}` : '1.5px solid var(--pos-border)', background: failReason === label ? 'var(--pos-danger-pale)' : 'var(--pos-surface)', color: failReason === label ? RED : 'var(--pos-ink)', fontSize: 13, fontWeight: failReason === label ? 700 : 500, cursor: 'pointer', fontFamily: 'inherit' }}>
+              {label}
             </button>
-          ))}
+          )})}
         </div>
-        <input placeholder="Additional notes (optional)" value={deliveryNotes} onChange={e => setDeliveryNotes(e.target.value)} style={inputStyle} />
+        <input placeholder={tc('logistics.additional_notes_optional')} value={deliveryNotes} onChange={e => setDeliveryNotes(e.target.value)} style={inputStyle} />
 
         {scanError && <div style={{ color: RED, fontSize: 13, textAlign: 'center' }}>{scanError}</div>}
 
         <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
           <button onClick={handleFailDelivery} disabled={saving || !failReason} style={{ ...btnPrimary, background: RED, opacity: !failReason || saving ? 0.5 : 1 }}>
-            {saving ? 'Saving…' : 'Confirm Failed Delivery'}
+            {saving ? tc('logistics.saving') : tc('logistics.confirm_failed_delivery')}
           </button>
         </div>
       </div>
@@ -1401,19 +1410,19 @@ export default function LogisticsPage() {
       <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
         <div style={{ background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={() => setScreen('driver_home')} style={{ width: 36, height: 36, borderRadius: 10, background: '#f4f3f1', border: 'none', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
-          <div style={{ fontSize: 15, fontWeight: 700 }}>🔍 Vehicle Inspection</div>
+          <div style={{ fontSize: 15, fontWeight: 700 }}>{tc('logistics.vehicle_inspection_title')}</div>
         </div>
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
             {(['pre_trip', 'post_trip'] as const).map(t => (
               <button key={t} onClick={() => setInspectionType(t)}
                 style={{ flex: 1, padding: '10px', borderRadius: 10, border: inspectionType === t ? `2px solid ${ACC}` : '1.5px solid var(--pos-border)', background: inspectionType === t ? ACC_LIGHT : 'var(--pos-surface)', color: inspectionType === t ? ACC : 'var(--pos-ink)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-  {t === 'pre_trip' ? '🌅 Pre-trip' : '🌆 Post-trip'}
+  {t === 'pre_trip' ? tc('logistics.inspection_pre_trip') : tc('logistics.inspection_post_trip')}
               </button>
             ))}
           </div>
-          <div style={{ fontSize: 13, fontWeight: 600 }}>Select truck</div>
-          {trucks.length === 0 && <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>No trucks available</div>}
+          <div style={{ fontSize: 13, fontWeight: 600 }}>{tc('logistics.select_truck')}</div>
+          {trucks.length === 0 && <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>{tc('logistics.no_trucks_available')}</div>}
           {trucks.map(t => (
             <button key={t.id} onClick={() => { setSelectedTruck(t); setScreen('inspection') }}
               style={{ width: '100%', background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 12, padding: '14px 16px', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -1433,7 +1442,7 @@ export default function LogisticsPage() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <button onClick={() => { stopCamera(); setSelectedTruck(null); setScreen('driver_home') }} style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,.15)', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
             <div style={{ background: 'rgba(255,255,255,.15)', backdropFilter: 'blur(10px)', borderRadius: 20, padding: '6px 14px' }}>
-              <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{selectedTruck.plate_number} · {inspectionStep + 1}/{INSPECTION_STEPS.length}</span>
+              <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{tc('logistics.inspection_step_counter', { plate: selectedTruck.plate_number, step: inspectionStep + 1, total: INSPECTION_STEPS.length })}</span>
             </div>
           </div>
           {/* Progress bar */}
@@ -1442,11 +1451,11 @@ export default function LogisticsPage() {
           </div>
         </div>
 
-        <input ref={camFileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} aria-label={`Photograph ${step.label}`} onChange={e => { const f = e.target.files?.[0]; if (f) captureInspectionFile(f); e.target.value = '' }} />
+        <input ref={camFileRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} aria-label={tc('logistics.aria_photograph_step', { label: step.label })} onChange={e => { const f = e.target.files?.[0]; if (f) captureInspectionFile(f); e.target.value = '' }} />
         <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <button onClick={() => camFileRef.current?.click()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, background: 'none', border: 'none', cursor: 'pointer', padding: 24 }}>
             <div style={{ width: 96, height: 96, borderRadius: 24, border: '2px dashed rgba(255,255,255,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44 }}>{step.icon}</div>
-            <div style={{ color: '#fff', fontSize: 16, fontWeight: 700 }}>Tap to photograph: {step.label}</div>
+            <div style={{ color: '#fff', fontSize: 16, fontWeight: 700 }}>{tc('logistics.tap_photograph_step', { label: step.label })}</div>
           </button>
         </div>
 
@@ -1457,7 +1466,7 @@ export default function LogisticsPage() {
               <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" /><circle cx="12" cy="13" r="4" />
             </svg>
           </button>
-          <span style={{ color: 'rgba(255,255,255,.5)', fontSize: 12 }}>Step {inspectionStep + 1} of {INSPECTION_STEPS.length}</span>
+          <span style={{ color: 'rgba(255,255,255,.5)', fontSize: 12 }}>{tc('logistics.step_of_total', { step: inspectionStep + 1, total: INSPECTION_STEPS.length })}</span>
         </div>
       </div>
     )
@@ -1471,8 +1480,8 @@ export default function LogisticsPage() {
       <div style={{ background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => { setScreen('driver_home'); setSelectedTruck(null) }} style={{ width: 36, height: 36, borderRadius: 10, background: '#f4f3f1', border: 'none', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
         <div>
-          <div style={{ fontSize: 15, fontWeight: 700 }}>Review Inspection</div>
-          <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{selectedTruck?.plate_number} · {inspectionType === 'pre_trip' ? 'Pre-trip' : 'Post-trip'}</div>
+          <div style={{ fontSize: 15, fontWeight: 700 }}>{tc('logistics.review_inspection')}</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{selectedTruck?.plate_number} · {inspectionType === 'pre_trip' ? tc('logistics.review_pre_trip') : tc('logistics.review_post_trip')}</div>
         </div>
       </div>
 
@@ -1484,7 +1493,7 @@ export default function LogisticsPage() {
               {inspectionPhotos[s.key] ? (
                 <img src={inspectionPhotos[s.key]} alt={s.label} style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', borderRadius: 10, border: '1px solid var(--pos-border)' }} />
               ) : (
-                <div style={{ width: '100%', aspectRatio: '4/3', borderRadius: 10, background: '#f4f3f1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'var(--pos-muted)' }}>Missing</div>
+                <div style={{ width: '100%', aspectRatio: '4/3', borderRadius: 10, background: '#f4f3f1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'var(--pos-muted)' }}>{tc('logistics.photo_missing')}</div>
               )}
               <div style={{ fontSize: 10, color: 'var(--pos-muted)', textAlign: 'center', marginTop: 4 }}>{s.icon} {s.label}</div>
             </div>
@@ -1492,24 +1501,26 @@ export default function LogisticsPage() {
         </div>
 
         {/* Flag issues */}
-        <div style={{ fontSize: 13, fontWeight: 600, marginTop: 4 }}>Flag any issues</div>
+        <div style={{ fontSize: 13, fontWeight: 600, marginTop: 4 }}>{tc('logistics.flag_any_issues')}</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {['Tyre wear', 'Body damage', 'Light broken', 'Mirror damaged', 'Cargo area dirty', 'Fluid leak', 'Brake issue'].map(issue => (
-            <button key={issue} onClick={() => setFlaggedIssues(prev => prev.includes(issue) ? prev.filter(i => i !== issue) : [...prev, issue])}
+          {ISSUE_KEYS.map(issueKey => {
+            const issue = tc('logistics.issue_' + issueKey)
+            return (
+            <button key={issueKey} onClick={() => setFlaggedIssues(prev => prev.includes(issue) ? prev.filter(i => i !== issue) : [...prev, issue])}
               style={{ padding: '6px 12px', borderRadius: 20, border: flaggedIssues.includes(issue) ? `2px solid ${RED}` : '1.5px solid var(--pos-border)', background: flaggedIssues.includes(issue) ? 'var(--pos-danger-pale)' : 'var(--pos-surface)', color: flaggedIssues.includes(issue) ? RED : 'var(--pos-ink)', fontSize: 12, fontWeight: flaggedIssues.includes(issue) ? 700 : 500, cursor: 'pointer', fontFamily: 'inherit' }}>
               {issue}
             </button>
-          ))}
+          )})}
         </div>
 
-        <input placeholder="Additional notes (optional)" value={inspectionNotes} onChange={e => setInspectionNotes(e.target.value)} style={inputStyle} />
+        <input placeholder={tc('logistics.additional_notes_optional')} value={inspectionNotes} onChange={e => setInspectionNotes(e.target.value)} style={inputStyle} />
 
         {scanError && <div style={{ color: RED, fontSize: 13, textAlign: 'center' }}>{scanError}</div>}
 
         <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
           <button className="pos-btn-primary" onClick={submitInspection} disabled={saving}
             style={{ ...btnPrimary, background: flaggedIssues.length > 0 ? AMBER : GREEN, opacity: saving ? 0.6 : 1 }}>
-            {saving ? 'Saving…' : flaggedIssues.length > 0 ? `⚠ Submit with ${flaggedIssues.length} issue${flaggedIssues.length !== 1 ? 's' : ''}` : '✓ Submit — all clear'}
+            {saving ? tc('logistics.saving') : flaggedIssues.length > 0 ? (flaggedIssues.length !== 1 ? tc('logistics.submit_with_issues', { count: flaggedIssues.length }) : tc('logistics.submit_with_issue', { count: flaggedIssues.length })) : tc('logistics.submit_all_clear')}
           </button>
         </div>
       </div>

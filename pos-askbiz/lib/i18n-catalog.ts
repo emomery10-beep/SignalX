@@ -8,13 +8,17 @@ import enCommon from '@/locales/en/common.json'
 import enSell from '@/locales/en/sell.json'
 import enDashboard from '@/locales/en/dashboard.json'
 import enInventory from '@/locales/en/inventory.json'
+import enPos from '@/locales/en/pos.json'
+import enLogistics from '@/locales/en/logistics.json'
+import enFactory from '@/locales/en/factory.json'
+import enSalonClients from '@/locales/en/salon_clients.json'
 
 type Dict = Record<string, unknown>
 
 // English-only for now — translation gated on API credits. The resolver falls
 // back to English for locales lacking a namespace, so pages render correctly.
 const CATALOG: Record<string, Record<string, Dict>> = {
-  en: { common: enCommon, sell: enSell, dashboard: enDashboard, inventory: enInventory },
+  en: { common: enCommon, sell: enSell, dashboard: enDashboard, inventory: enInventory, pos: enPos, logistics: enLogistics, factory: enFactory, salon_clients: enSalonClients },
 }
 
 const BASE = 'en'
