@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from 'next'
+import { cookies, headers } from 'next/headers'
 import './globals.css'
 import PosConsentBanner from '@/components/PosConsentBanner'
+import { LanguageProvider } from '@/components/LanguageProvider'
+import { resolveLocale, isRTL } from '@/lib/i18n-locale'
+import type { Lang } from '@/lib/i18n'
 
 export const metadata: Metadata = {
   title: 'AskBiz POS',
@@ -18,8 +22,14 @@ export const viewport: Viewport = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // POS app is all-authenticated → cookie/preference-driven locale (no URL prefix).
+  const lang = resolveLocale({
+    cookie: cookies().get('askbiz_lang')?.value,
+    country: headers().get('x-vercel-ip-country'),
+  }) as Lang
+
   return (
-    <html lang="en">
+    <html lang={lang} dir={isRTL(lang) ? 'rtl' : 'ltr'}>
       <head>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="apple-touch-icon" href="/favicon.svg" />
@@ -27,8 +37,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body style={{ margin: 0, fontFamily: 'system-ui, -apple-system, sans-serif', background: '#f9f8f6', color: '#1a1916', WebkitFontSmoothing: 'antialiased' }}>
-        {children}
-        <PosConsentBanner />
+        <LanguageProvider initialLang={lang}>
+          {children}
+          <PosConsentBanner />
+        </LanguageProvider>
       </body>
     </html>
   )

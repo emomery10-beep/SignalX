@@ -1,0 +1,21 @@
+{
+  "loading": "Loading…",
+  "error": "Something went wrong. Please try again.",
+  "save": "Save",
+  "cancel": "Cancel",
+  "back": "Back",
+  "close": "Close",
+  "confirm": "Confirm",
+  "delete": "Delete",
+  "edit": "Edit",
+  "search": "Search",
+  "add": "Add",
+  "done": "Done",
+  "total": "Total",
+  "subtotal": "Subtotal",
+  "tax": "Tax",
+  "pay": "Pay",
+  "checkout": "Checkout",
+  "yes": "Yes",
+  "no": "No"
+}
