@@ -1,6 +1,7 @@
 'use client'
 import { useState, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#d08a59'
 
@@ -34,6 +35,7 @@ function getLoginDest(role: string): string {
 
 function LoginPageContent() {
   const router = useRouter()
+  const { tc } = useLang()
   const [email, setEmail]       = useState('')
   const [pin, setPin]           = useState('')
   const [step, setStep]         = useState<'email' | 'pin'>('email')
@@ -52,10 +54,10 @@ function LoginPageContent() {
       })
       const data = await res.json()
       setLoading(false)
-      if (!res.ok) { setError(data.error || 'Email not recognised'); return }
+      if (!res.ok) { setError(data.error || tc('pos_login.err_email_unrecognised')); return }
       setStaffName(data.name)
       setStep('pin')
-    } catch { setLoading(false); setError('Network error — please try again') }
+    } catch { setLoading(false); setError(tc('pos_login.err_network')) }
   }
 
   const handleVerifyPin = async () => {
@@ -69,10 +71,10 @@ function LoginPageContent() {
       })
       const data = await res.json()
       setLoading(false)
-      if (!res.ok) { setError(data.error || 'Incorrect PIN'); return }
+      if (!res.ok) { setError(data.error || tc('pos_login.err_pin_incorrect')); return }
       localStorage.setItem('pos_staff', JSON.stringify(data.staff))
       router.push(getLoginDest(data.staff.role))
-    } catch { setLoading(false); setError('Network error — please try again') }
+    } catch { setLoading(false); setError(tc('pos_login.err_network')) }
   }
 
   return (
@@ -86,13 +88,13 @@ function LoginPageContent() {
             </svg>
           </div>
           <div style={{ fontWeight: 800, fontSize: 22, letterSpacing: '-.02em', color: 'var(--pos-ink)' }}>AskBiz POS</div>
-          <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginTop: 4 }}>Staff login</div>
+          <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginTop: 4 }}>{tc('pos_login.staff_login')}</div>
         </div>
 
         {step === 'email' ? (
           <div>
-            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6, color: 'var(--pos-ink)' }}>Email address</div>
-            <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 16 }}>Enter your work email to continue.</div>
+            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6, color: 'var(--pos-ink)' }}>{tc('pos_login.email_label')}</div>
+            <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 16 }}>{tc('pos_login.email_hint')}</div>
             <input
               type="email"
               placeholder="you@email.com"
@@ -111,13 +113,13 @@ function LoginPageContent() {
               className="pos-btn-primary"
               style={{ width: '100%', marginTop: 16, padding: '15px', borderRadius: 12, background: ACC, color: 'var(--pos-surface)', fontSize: 16, fontWeight: 700, border: 'none', cursor: loading ? 'wait' : !email.trim() ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: !email.trim() ? 0.5 : 1 }}
             >
-              {loading ? 'Checking...' : 'Continue →'}
+              {loading ? tc('pos_login.checking') : tc('pos_login.continue')}
             </button>
           </div>
         ) : (
           <div>
-            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4, color: 'var(--pos-ink)' }}>Hi {staffName} 👋</div>
-            <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 16 }}>Enter your PIN to sign in.</div>
+            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4, color: 'var(--pos-ink)' }}>{tc('pos_login.greeting', { name: staffName })}</div>
+            <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 16 }}>{tc('pos_login.pin_hint')}</div>
             <input
               type="password"
               inputMode="numeric"
@@ -136,13 +138,13 @@ function LoginPageContent() {
               className="pos-btn-primary"
               style={{ width: '100%', marginTop: 16, padding: '15px', borderRadius: 12, background: ACC, color: 'var(--pos-surface)', fontSize: 16, fontWeight: 700, border: 'none', cursor: loading ? 'wait' : !pin.trim() ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: !pin.trim() ? 0.5 : 1 }}
             >
-              {loading ? 'Signing in...' : 'Sign in →'}
+              {loading ? tc('pos_login.signing_in') : tc('pos_login.sign_in')}
             </button>
             <button
               onClick={() => { setStep('email'); setError(''); setPin('') }}
               style={{ width: '100%', marginTop: 10, padding: '12px', borderRadius: 12, background: 'transparent', border: '1px solid var(--pos-border)', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--pos-muted)' }}
             >
-              Use a different email
+              {tc('pos_login.use_different_email')}
             </button>
           </div>
         )}
@@ -152,8 +154,9 @@ function LoginPageContent() {
 }
 
 export default function LoginPage() {
+  const { tc } = useLang()
   return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)', fontSize: 14 }}>Loading login…</div>}>
+    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)', fontSize: 14 }}>{tc('pos_login.loading_login')}</div>}>
       <LoginPageContent />
     </Suspense>
   )

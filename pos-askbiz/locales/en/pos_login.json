@@ -1,0 +1,16 @@
+{
+  "staff_login": "Staff login",
+  "email_label": "Email address",
+  "email_hint": "Enter your work email to continue.",
+  "err_email_unrecognised": "Email not recognised",
+  "err_network": "Network error — please try again",
+  "err_pin_incorrect": "Incorrect PIN",
+  "checking": "Checking…",
+  "continue": "Continue →",
+  "greeting": "Hi {name} 👋",
+  "pin_hint": "Enter your PIN to sign in.",
+  "signing_in": "Signing in…",
+  "sign_in": "Sign in →",
+  "use_different_email": "Use a different email",
+  "loading_login": "Loading login…"
+}

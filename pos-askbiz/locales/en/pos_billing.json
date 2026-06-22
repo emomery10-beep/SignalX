@@ -1,0 +1,18 @@
+{
+  "loading_billing": "Loading billing…",
+  "title": "💳 Plans & Billing",
+  "sign_out": "Sign out",
+  "upgrade_success": "✅ Upgrade successful! Your new seats are now active.",
+  "upgrade_cancelled": "❌ Upgrade cancelled. No charges were made.",
+  "seats_title": "Point of Sale Seats",
+  "seats_active_one": "Active — {count} seat",
+  "seats_active_other": "Active — {count} seats",
+  "loading_seat_info": "Loading seat information…",
+  "seats_blurb_1": "Add cashier and inventory staff to your shop at £5/seat/month. Each seat lets one staff member log in to ",
+  "seats_blurb_2": " via email or WhatsApp OTP on their own phone. The owner dashboard is always included — seats are for additional staff only.",
+  "bullet_roles": "✓ Cashier & inventory roles",
+  "bullet_login": "✓ Email or WhatsApp OTP login",
+  "bullet_receipts": "✓ WhatsApp receipts to customers",
+  "bullet_vat": "✓ MTD-compatible VAT export",
+  "bullet_cancel": "✓ Cancel anytime"
+}

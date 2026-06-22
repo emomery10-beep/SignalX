@@ -3,15 +3,18 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { SeatsUpgradeButton } from '@/components/SeatsUpgradeButton'
+import { useLang } from '@/components/LanguageProvider'
 
 const API = process.env.NEXT_PUBLIC_API_URL || ''
 
 function BillingPageContent() {
   const router = useRouter()
+  const { tc } = useLang()
   const searchParams = useSearchParams()
   const [staff, setStaff] = useState<any>(null)
   const [seatsActive, setSeatsActive] = useState(1)
   const [upgradeMessage, setUpgradeMessage] = useState('')
+  const [upgradeKind, setUpgradeKind] = useState<'' | 'success' | 'cancelled'>('')
   const [loadingSeats, setLoadingSeats] = useState(true)
   const [seatsLoaded, setSeatsLoaded] = useState(false)
   const [isClient, setIsClient] = useState(false)
@@ -69,11 +72,13 @@ function BillingPageContent() {
   useEffect(() => {
     const upgrade = searchParams.get('upgrade')
     if (upgrade === 'success') {
-      setUpgradeMessage('✅ Upgrade successful! Your new seats are now active.')
-      setTimeout(() => setUpgradeMessage(''), 5000)
+      setUpgradeKind('success')
+      setUpgradeMessage(tc('pos_billing.upgrade_success'))
+      setTimeout(() => { setUpgradeMessage(''); setUpgradeKind('') }, 5000)
     } else if (upgrade === 'cancelled') {
-      setUpgradeMessage('❌ Upgrade cancelled. No charges were made.')
-      setTimeout(() => setUpgradeMessage(''), 5000)
+      setUpgradeKind('cancelled')
+      setUpgradeMessage(tc('pos_billing.upgrade_cancelled'))
+      setTimeout(() => { setUpgradeMessage(''); setUpgradeKind('') }, 5000)
     }
   }, [searchParams])
 
@@ -87,18 +92,18 @@ function BillingPageContent() {
       {/* Header */}
       <div style={{ backgroundColor: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '16px 0' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1 style={{ margin: 0, fontSize: '28px', fontWeight: '700', color: 'var(--pos-ink)' }}>💳 Plans & Billing</h1>
+          <h1 style={{ margin: 0, fontSize: '28px', fontWeight: '700', color: 'var(--pos-ink)' }}>{tc('pos_billing.title')}</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {staff && <span style={{ fontSize: '14px', color: 'var(--pos-muted)' }}>{staff.name}</span>}
             <button type="button" onClick={handleSignOut} style={{ padding: '8px 16px', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: 'var(--pos-ink)' }}>
-              Sign out
+              {tc('pos_billing.sign_out')}
             </button>
           </div>
         </div>
       </div>
 
       {upgradeMessage && (
-        <div className="pos-banner" style={{ padding: '12px 16px', backgroundColor: upgradeMessage.includes('successful') ? '#d4edda' : '#f8d7da', color: upgradeMessage.includes('successful') ? '#155724' : '#721c24', borderRadius: '6px', margin: '16px', border: `1px solid ${upgradeMessage.includes('successful') ? '#c3e6cb' : '#f5c6cb'}` }}>
+        <div className="pos-banner" style={{ padding: '12px 16px', backgroundColor: upgradeKind === 'success' ? '#d4edda' : '#f8d7da', color: upgradeKind === 'success' ? '#155724' : '#721c24', borderRadius: '6px', margin: '16px', border: `1px solid ${upgradeKind === 'success' ? '#c3e6cb' : '#f5c6cb'}` }}>
           {upgradeMessage}
         </div>
       )}
@@ -109,9 +114,9 @@ function BillingPageContent() {
         <div className="pos-reveal" style={{ backgroundColor: 'var(--pos-surface)', borderRadius: '8px', border: '1px solid var(--pos-border)', padding: '24px', marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <div>
-              <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600', color: 'var(--pos-ink)' }}>Point of Sale Seats</h2>
+              <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600', color: 'var(--pos-ink)' }}>{tc('pos_billing.seats_title')}</h2>
               <span style={{ display: 'inline-block', padding: '4px 8px', backgroundColor: '#d1fae5', color: '#065f46', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>
-                Active - {seatsActive} seat{seatsActive !== 1 ? 's' : ''}
+                {tc('pos_billing.seats_active' + (seatsActive !== 1 ? '_other' : '_one'), { count: seatsActive })}
               </span>
             </div>
           </div>
@@ -125,18 +130,18 @@ function BillingPageContent() {
             />
           ) : isClient ? (
             <div style={{ padding: '16px', backgroundColor: '#fef3c7', borderRadius: '4px', color: '#78350f', fontSize: '13px' }}>
-              Loading seat information...
+              {tc('pos_billing.loading_seat_info')}
             </div>
           ) : null}
 
           <div style={{ padding: '16px', backgroundColor: '#fef3c7', borderLeft: '4px solid #f59e0b', borderRadius: '4px', marginTop: '16px', fontSize: '13px', color: '#78350f' }}>
-            <p style={{ margin: '0 0 12px 0' }}>Add cashier and inventory staff to your shop at £5/seat/month. Each seat lets one staff member log in to <code>pos.askbiz.co</code> via email or WhatsApp OTP on their own phone. The owner dashboard is always included — seats are for additional staff only.</p>
+            <p style={{ margin: '0 0 12px 0' }}>{tc('pos_billing.seats_blurb_1')}<code>pos.askbiz.co</code>{tc('pos_billing.seats_blurb_2')}</p>
             <ul style={{ margin: '0', paddingLeft: '20px' }}>
-              <li>✓ Cashier & inventory roles</li>
-              <li>✓ Email or WhatsApp OTP login</li>
-              <li>✓ WhatsApp receipts to customers</li>
-              <li>✓ MTD-compatible VAT export</li>
-              <li>✓ Cancel anytime</li>
+              <li>{tc('pos_billing.bullet_roles')}</li>
+              <li>{tc('pos_billing.bullet_login')}</li>
+              <li>{tc('pos_billing.bullet_receipts')}</li>
+              <li>{tc('pos_billing.bullet_vat')}</li>
+              <li>{tc('pos_billing.bullet_cancel')}</li>
             </ul>
           </div>
         </div>
@@ -145,9 +150,14 @@ function BillingPageContent() {
   )
 }
 
+function BillingFallback() {
+  const { tc } = useLang()
+  return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>{tc('pos_billing.loading_billing')}</div>
+}
+
 export default function BillingPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>Loading billing…</div>}>
+    <Suspense fallback={<BillingFallback />}>
       <BillingPageContent />
     </Suspense>
   )
