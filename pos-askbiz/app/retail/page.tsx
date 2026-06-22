@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#22c55e'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
@@ -23,6 +24,7 @@ interface Txn {
 
 export default function RetailHub() {
   const router = useRouter()
+  const { tc } = useLang()
   const supabase = createClient()
   const [ready, setReady] = useState(false)
   const [sym, setSym] = useState('£')
@@ -85,12 +87,12 @@ export default function RetailHub() {
       ).sort((a, b) => (a.stock_qty ?? 0) - (b.stock_qty ?? 0))
 
       setKpis([
-        { label: "Today's Sales", value: `${sym}${sales.toFixed(2)}`, sub: `${todays.length} sales`, status: 'good' },
-        { label: 'Transactions', value: `${txnCount}`, sub: 'today', status: 'neutral' },
-        { label: 'Avg Basket', value: `${sym}${avgBasket.toFixed(2)}`, sub: 'per sale', status: 'neutral' },
-        { label: 'Items Sold', value: `${itemsSold}`, sub: 'units today', status: 'neutral' },
-        { label: 'Low Stock', value: `${low.length}`, sub: 'need reorder', status: low.length > 0 ? 'warn' : 'good' },
-        { label: 'Top Seller', value: topSeller ? topSeller[0] : '—', sub: topSeller ? `${topSeller[1]} sold` : 'no sales yet', status: 'neutral' },
+        { label: tc('retail.kpi_sales_today'), value: `${sym}${sales.toFixed(2)}`, sub: tc('retail.kpi_sales_today_sub' + (todays.length === 1 ? '_one' : '_other'), { count: todays.length }), status: 'good' },
+        { label: tc('retail.kpi_transactions'), value: `${txnCount}`, sub: tc('retail.kpi_transactions_sub'), status: 'neutral' },
+        { label: tc('retail.kpi_avg_basket'), value: `${sym}${avgBasket.toFixed(2)}`, sub: tc('retail.kpi_avg_basket_sub'), status: 'neutral' },
+        { label: tc('retail.kpi_items_sold'), value: `${itemsSold}`, sub: tc('retail.kpi_items_sold_sub'), status: 'neutral' },
+        { label: tc('retail.kpi_low_stock'), value: `${low.length}`, sub: tc('retail.kpi_low_stock_sub'), status: low.length > 0 ? 'warn' : 'good' },
+        { label: tc('retail.kpi_top_seller'), value: topSeller ? topSeller[0] : '—', sub: topSeller ? tc('retail.kpi_top_seller_sub' + (topSeller[1] === 1 ? '_one' : '_other'), { count: topSeller[1] }) : tc('retail.kpi_top_seller_sub_none'), status: 'neutral' },
       ])
       setRecent(txns.slice(0, 10))
       setLowStock(low.slice(0, 8))
@@ -102,20 +104,20 @@ export default function RetailHub() {
   }
 
   const nav = [
-    { label: '📷 Products', href: '/retail/products', desc: 'Catalog & photo-to-listing' },
-    { label: '📊 Stocktake', href: '/retail/stocktake', desc: 'Camera-assisted counting' },
-    { label: '👤 Customers', href: '/retail/customers', desc: 'Profiles & segments' },
+    { label: tc('retail.nav_products_label'), href: '/retail/products', desc: tc('retail.nav_products_desc') },
+    { label: tc('retail.nav_stocktake_label'), href: '/retail/stocktake', desc: tc('retail.nav_stocktake_desc') },
+    { label: tc('retail.nav_customers_label'), href: '/retail/customers', desc: tc('retail.nav_customers_desc') },
   ]
 
   return (
     <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>📦 Retail</div>
-          <div style={{ fontSize: 12, color: '#94a3b8' }}>Live operations dashboard</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>{tc('retail.header_title')}</div>
+          <div style={{ fontSize: 12, color: '#94a3b8' }}>{tc('retail.header_subtitle')}</div>
         </div>
         <button onClick={() => router.push('/pos')} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
-          ← POS
+          {tc('retail.back_pos')}
         </button>
       </div>
 
@@ -149,18 +151,18 @@ export default function RetailHub() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
           {/* Recent Sales */}
           <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20 }}>
-            <div style={{ fontWeight: 700, marginBottom: 12, fontSize: 15 }}>Recent Sales</div>
-            {loading && recent.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>Loading…</div>}
-            {!loading && recent.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>No sales yet</div>}
+            <div style={{ fontWeight: 700, marginBottom: 12, fontSize: 15 }}>{tc('retail.recent_sales_title')}</div>
+            {loading && recent.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>{tc('retail.loading')}</div>}
+            {!loading && recent.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>{tc('retail.no_sales_yet')}</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {recent.map((t, idx) => {
                 const count = (t.pos_items || []).reduce((s, it) => s + (it.qty || it.quantity || 1), 0)
                 return (
                   <div key={t.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0f172a', padding: '10px 14px', borderRadius: 8, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 600 }}>{t.pos_customers?.name || 'Walk-in'}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{t.pos_customers?.name || tc('retail.walk_in')}</div>
                       <div style={{ fontSize: 11, color: '#64748b' }}>
-                        {count} item{count !== 1 ? 's' : ''}{t.cashier ? ` · ${t.cashier}` : ''}{t.created_at ? ` · ${new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+                        {tc('retail.sale_items' + (count !== 1 ? '_other' : '_one'), { count })}{t.cashier ? ` · ${t.cashier}` : ''}{t.created_at ? ` · ${new Date(t.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
                       </div>
                     </div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: ACC }}>{sym}{(t.total || 0).toFixed(2)}</div>
@@ -173,9 +175,9 @@ export default function RetailHub() {
           {/* Low Stock Alert */}
           <div style={{ background: '#1e293b', border: `1px solid ${lowStock.length ? '#f59e0b' : '#334155'}`, borderRadius: 12, padding: 20 }}>
             <div style={{ fontWeight: 700, marginBottom: 12, fontSize: 15, color: lowStock.length ? '#f59e0b' : '#f1f5f9' }}>
-              {lowStock.length ? '⚠️ Low Stock' : 'Stock Levels'}
+              {lowStock.length ? tc('retail.low_stock_title') : tc('retail.stock_levels_title')}
             </div>
-            {lowStock.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>All items well stocked</div>}
+            {lowStock.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>{tc('retail.all_well_stocked')}</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {lowStock.map((i, idx) => {
                 const q = i.stock_qty ?? 0
@@ -186,14 +188,14 @@ export default function RetailHub() {
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{i.name}</div>
                       <div style={{ fontSize: 11, color: '#64748b' }}>{i.sku || i.category || '—'}</div>
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: col }}>{q} left</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: col }}>{tc('retail.stock_left', { count: q })}</div>
                   </div>
                 )
               })}
             </div>
             {lowStock.length > 0 && (
               <button onClick={() => router.push('/retail/products?low=1')} style={{ width: '100%', marginTop: 14, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
-                Manage products →
+                {tc('retail.manage_products')}
               </button>
             )}
           </div>
