@@ -127,7 +127,7 @@ export default function OnboardingPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      await supabase.from('profiles').update({ onboarding_complete: true, onboarded: true }).eq('id', user.id)
+      await supabase.from('profiles').update({ onboarded: true }).eq('id', user.id)
       router.push('/home')
     } catch (e) { console.error(e) } finally { setSaving(false) }
   }
@@ -148,7 +148,6 @@ export default function OnboardingPage() {
         sector_hints:        sectors.join(', '),
         export_markets:      exportMkts.join(','),
         wants_export:        wantsExport,
-        onboarding_complete: true,
         onboarded:           true,
       }).eq('id', user.id)
 

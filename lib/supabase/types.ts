@@ -5589,10 +5589,13 @@ export type Database = {
           currency_symbol: string | null
           data_consent: boolean | null
           data_consent_at: string | null
+          export_markets: string | null
+          first_name: string | null
           full_name: string | null
           ico_number: string | null
           id: string
           is_suspicious: boolean | null
+          last_name: string | null
           market_intelligence_opt_in: boolean | null
           market_intelligence_opted_at: string | null
           notify_digest_hour: number | null
@@ -5617,6 +5620,7 @@ export type Database = {
           training_consent_at: string | null
           updated_at: string | null
           vat_number: string | null
+          wants_export: boolean | null
           whatsapp_number: string | null
         }
         Insert: {
@@ -5634,10 +5638,13 @@ export type Database = {
           currency_symbol?: string | null
           data_consent?: boolean | null
           data_consent_at?: string | null
+          export_markets?: string | null
+          first_name?: string | null
           full_name?: string | null
           ico_number?: string | null
           id: string
           is_suspicious?: boolean | null
+          last_name?: string | null
           market_intelligence_opt_in?: boolean | null
           market_intelligence_opted_at?: string | null
           notify_digest_hour?: number | null
@@ -5662,6 +5669,7 @@ export type Database = {
           training_consent_at?: string | null
           updated_at?: string | null
           vat_number?: string | null
+          wants_export?: boolean | null
           whatsapp_number?: string | null
         }
         Update: {
@@ -5679,10 +5687,13 @@ export type Database = {
           currency_symbol?: string | null
           data_consent?: boolean | null
           data_consent_at?: string | null
+          export_markets?: string | null
+          first_name?: string | null
           full_name?: string | null
           ico_number?: string | null
           id?: string
           is_suspicious?: boolean | null
+          last_name?: string | null
           market_intelligence_opt_in?: boolean | null
           market_intelligence_opted_at?: string | null
           notify_digest_hour?: number | null
@@ -5707,6 +5718,7 @@ export type Database = {
           training_consent_at?: string | null
           updated_at?: string | null
           vat_number?: string | null
+          wants_export?: boolean | null
           whatsapp_number?: string | null
         }
         Relationships: [

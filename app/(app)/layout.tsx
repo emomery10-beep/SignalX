@@ -9,13 +9,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, business_type, currency, currency_symbol, plan, region, sector_hints, onboarding_complete')
+    .select('full_name, business_type, currency, currency_symbol, plan, region, sector_hints, onboarded')
     .eq('id', user.id)
     .single()
 
   // First-time users go through onboarding
   // (only redirect if they're hitting the root, not a specific page)
-  if (profile && !profile.onboarding_complete) {
+  if (profile && !profile.onboarded) {
     redirect('/onboarding')
   }
 
