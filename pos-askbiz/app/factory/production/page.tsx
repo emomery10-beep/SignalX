@@ -2,6 +2,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
+
+type Tc = (key: string, vars?: Record<string, string | number>) => string
 
 const ACC = '#f59e0b'
 
@@ -27,11 +30,15 @@ interface Capture {
   approved_by_staff?: { id: string; name: string; role: string } | null
 }
 
-const TYPE_META: Record<CaptureType, { label: string; icon: string; color: string }> = {
-  intake:   { label: 'Intake',   icon: '📥', color: '#3b82f6' },
-  output:   { label: 'Output',   icon: '📤', color: GOOD },
-  wastage:  { label: 'Wastage',  icon: '🗑️', color: BAD },
-  dispatch: { label: 'Dispatch', icon: '🚚', color: '#8b5cf6' },
+const TYPE_META: Record<CaptureType, { icon: string; color: string }> = {
+  intake:   { icon: '📥', color: '#3b82f6' },
+  output:   { icon: '📤', color: GOOD },
+  wastage:  { icon: '🗑️', color: BAD },
+  dispatch: { icon: '🚚', color: '#8b5cf6' },
+}
+
+function typeLabel(tc: Tc, type: CaptureType): string {
+  return tc('factory_production.type_' + type + '_label')
 }
 
 const STATUS_COLOR: Record<string, string> = { pending: WARN, approved: GOOD, rejected: BAD }
@@ -44,6 +51,7 @@ function fmtDate(iso: string) {
 
 export default function ProductionLogPage() {
   const router = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [captures, setCaptures] = useState<Capture[]>([])
   const [loading, setLoading] = useState(true)
@@ -87,7 +95,7 @@ export default function ProductionLogPage() {
   // Yield summary: output qty / intake qty per product
   const yieldMap: Record<string, { intake: number; output: number }> = {}
   for (const c of captures) {
-    const p = c.product_name || 'Unspecified'
+    const p = c.product_name || tc('factory_production.yield_unspecified')
     if (c.type === 'intake' || c.type === 'output') {
       yieldMap[p] = yieldMap[p] || { intake: 0, output: 0 }
       yieldMap[p][c.type] += c.quantity || 0
@@ -100,7 +108,7 @@ export default function ProductionLogPage() {
     .slice(0, 8)
 
   if (!authReady || !session) {
-    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>Loading…</div>
+    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>{tc('factory_production.loading')}</div>
   }
 
   return (
@@ -110,18 +118,18 @@ export default function ProductionLogPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <button onClick={() => router.push('/factory')} style={{ background: '#334155', border: 'none', color: '#94a3b8', width: 36, height: 36, borderRadius: 8, cursor: 'pointer', fontSize: 18 }}>←</button>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>🏭 Production Log</div>
-            <div style={{ fontSize: 12, color: '#94a3b8' }}>{filtered.length} of {captures.length} captures</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>{tc('factory_production.header_title')}</div>
+            <div style={{ fontSize: 12, color: '#94a3b8' }}>{tc('factory_production.header_captures_count', { shown: filtered.length, total: captures.length })}</div>
           </div>
         </div>
-        <button onClick={load} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>↻ Refresh</button>
+        <button onClick={load} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('factory_production.header_refresh')}</button>
       </div>
 
       <div style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
         {/* Yield summary */}
         {yields.length > 0 && (
           <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20, marginBottom: 20 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>Yield Summary <span style={{ fontSize: 12, color: '#64748b', fontWeight: 400 }}>output ÷ intake per product</span></div>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>{tc('factory_production.yield_summary_title')} <span style={{ fontSize: 12, color: '#64748b', fontWeight: 400 }}>{tc('factory_production.yield_summary_hint')}</span></div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
               {yields.map((y, idx) => (
                 <div key={y.product} className="pos-item" style={{ background: '#0f172a', borderRadius: 8, padding: '12px 14px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
@@ -130,7 +138,7 @@ export default function ProductionLogPage() {
                     <span style={{ fontSize: 20, fontWeight: 700, color: y.pct == null ? '#94a3b8' : y.pct >= 90 ? GOOD : y.pct >= 70 ? WARN : BAD }}>
                       {y.pct == null ? '—' : `${y.pct.toFixed(0)}%`}
                     </span>
-                    <span style={{ fontSize: 11, color: '#64748b' }}>{y.output.toLocaleString()} out / {y.intake.toLocaleString()} in</span>
+                    <span style={{ fontSize: 11, color: '#64748b' }}>{tc('factory_production.yield_out_in', { out: y.output.toLocaleString(), in: y.intake.toLocaleString() })}</span>
                   </div>
                 </div>
               ))}
@@ -141,34 +149,42 @@ export default function ProductionLogPage() {
         {/* Filters */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
           <select value={fType} onChange={e => setFType(e.target.value as any)} style={filterStyle}>
-            <option value="">All types</option>
-            {(Object.keys(TYPE_META) as CaptureType[]).map(t => <option key={t} value={t}>{TYPE_META[t].icon} {TYPE_META[t].label}</option>)}
+            <option value="">{tc('factory_production.filter_all_types')}</option>
+            {(Object.keys(TYPE_META) as CaptureType[]).map(t => <option key={t} value={t}>{TYPE_META[t].icon} {typeLabel(tc, t)}</option>)}
           </select>
           <select value={fStatus} onChange={e => setFStatus(e.target.value as any)} style={filterStyle}>
-            <option value="">All statuses</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
+            <option value="">{tc('factory_production.filter_all_statuses')}</option>
+            <option value="pending">{tc('factory_production.status_pending')}</option>
+            <option value="approved">{tc('factory_production.status_approved')}</option>
+            <option value="rejected">{tc('factory_production.status_rejected')}</option>
           </select>
           <input type="date" value={fDate} onChange={e => setFDate(e.target.value)} style={filterStyle} />
-          <input value={fProduct} onChange={e => setFProduct(e.target.value)} placeholder="Search product…" style={{ ...filterStyle, flex: 1, minWidth: 160 }} />
+          <input value={fProduct} onChange={e => setFProduct(e.target.value)} placeholder={tc('factory_production.filter_search_product')} style={{ ...filterStyle, flex: 1, minWidth: 160 }} />
           {(fType || fStatus || fDate || fProduct) && (
-            <button onClick={() => { setFType(''); setFStatus(''); setFDate(''); setFProduct('') }} style={{ background: '#334155', border: 'none', color: '#94a3b8', borderRadius: 8, padding: '0 14px', cursor: 'pointer', fontSize: 13 }}>Clear</button>
+            <button onClick={() => { setFType(''); setFStatus(''); setFDate(''); setFProduct('') }} style={{ background: '#334155', border: 'none', color: '#94a3b8', borderRadius: 8, padding: '0 14px', cursor: 'pointer', fontSize: 13 }}>{tc('factory_production.filter_clear')}</button>
           )}
         </div>
 
         {/* Table */}
         <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
           {loading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: '#64748b', fontSize: 13 }}>Loading captures…</div>
+            <div style={{ padding: 40, textAlign: 'center', color: '#64748b', fontSize: 13 }}>{tc('factory_production.table_loading')}</div>
           ) : filtered.length === 0 ? (
-            <div style={{ padding: 40, textAlign: 'center', color: '#64748b', fontSize: 13 }}>No captures match these filters.</div>
+            <div style={{ padding: 40, textAlign: 'center', color: '#64748b', fontSize: 13 }}>{tc('factory_production.table_empty')}</div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: '#0f172a', color: '#64748b', textAlign: 'left' }}>
-                    {['Date', 'Type', 'Product', 'Qty', 'Unit', 'Status', 'Operator'].map(h => (
+                    {[
+                      tc('factory_production.col_date'),
+                      tc('factory_production.col_type'),
+                      tc('factory_production.col_product'),
+                      tc('factory_production.col_qty'),
+                      tc('factory_production.col_unit'),
+                      tc('factory_production.col_status'),
+                      tc('factory_production.col_operator'),
+                    ].map(h => (
                       <th key={h} style={{ padding: '12px 14px', fontWeight: 600, textTransform: 'uppercase', fontSize: 11, letterSpacing: 1, whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
@@ -185,13 +201,13 @@ export default function ProductionLogPage() {
                       >
                         <td style={{ padding: '12px 14px', color: '#94a3b8', whiteSpace: 'nowrap' }}>{fmtDate(c.created_at)}</td>
                         <td style={{ padding: '12px 14px' }}>
-                          <span style={{ background: `${meta.color}22`, color: meta.color, padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>{meta.icon} {meta.label}</span>
+                          <span style={{ background: `${meta.color}22`, color: meta.color, padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>{meta.icon} {typeLabel(tc, c.type)}</span>
                         </td>
                         <td style={{ padding: '12px 14px', color: '#e2e8f0', fontWeight: 600 }}>{c.product_name || '—'}</td>
                         <td style={{ padding: '12px 14px', color: '#e2e8f0' }}>{c.quantity ?? '—'}</td>
                         <td style={{ padding: '12px 14px', color: '#64748b' }}>{c.batch_ref || '—'}</td>
                         <td style={{ padding: '12px 14px' }}>
-                          <span style={{ background: `${STATUS_COLOR[c.status]}22`, color: STATUS_COLOR[c.status], padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700, textTransform: 'capitalize' }}>{c.status}</span>
+                          <span style={{ background: `${STATUS_COLOR[c.status]}22`, color: STATUS_COLOR[c.status], padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 700 }}>{tc('factory_production.status_' + c.status)}</span>
                         </td>
                         <td style={{ padding: '12px 14px', color: '#94a3b8', whiteSpace: 'nowrap' }}>{c.captured_by_staff?.name || '—'}</td>
                       </tr>
@@ -209,7 +225,7 @@ export default function ProductionLogPage() {
         <div onClick={() => setDetail(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div onClick={e => e.stopPropagation()} className="pos-sheet" style={{ background: '#1e293b', borderRadius: '16px 16px 0 0', padding: 24, width: '100%', maxWidth: 560, maxHeight: '88vh', overflow: 'auto', borderTop: `3px solid ${TYPE_META[detail.type].color}` }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <span style={{ background: `${TYPE_META[detail.type].color}22`, color: TYPE_META[detail.type].color, padding: '5px 12px', borderRadius: 8, fontSize: 14, fontWeight: 700 }}>{TYPE_META[detail.type].icon} {TYPE_META[detail.type].label}</span>
+              <span style={{ background: `${TYPE_META[detail.type].color}22`, color: TYPE_META[detail.type].color, padding: '5px 12px', borderRadius: 8, fontSize: 14, fontWeight: 700 }}>{TYPE_META[detail.type].icon} {typeLabel(tc, detail.type)}</span>
               <button onClick={() => setDetail(null)} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 24, cursor: 'pointer' }}>×</button>
             </div>
 
@@ -219,24 +235,24 @@ export default function ProductionLogPage() {
             )}
 
             <div className="pos-reveal" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              <Field label="Product" value={detail.product_name || '—'} />
-              <Field label="Quantity" value={`${detail.quantity ?? '—'} ${detail.batch_ref || ''}`.trim()} />
-              <Field label="Status" value={detail.status} valueColor={STATUS_COLOR[detail.status]} />
-              <Field label="Logged" value={fmtDate(detail.created_at)} />
-              <Field label="Operator" value={detail.captured_by_staff?.name || '—'} />
-              {detail.approved_by_staff && <Field label={detail.status === 'rejected' ? 'Reviewed by' : 'Approved by'} value={detail.approved_by_staff.name} />}
+              <Field label={tc('factory_production.detail_product')} value={detail.product_name || '—'} />
+              <Field label={tc('factory_production.detail_quantity')} value={`${detail.quantity ?? '—'} ${detail.batch_ref || ''}`.trim()} />
+              <Field label={tc('factory_production.detail_status')} value={tc('factory_production.status_' + detail.status)} valueColor={STATUS_COLOR[detail.status]} />
+              <Field label={tc('factory_production.detail_logged')} value={fmtDate(detail.created_at)} />
+              <Field label={tc('factory_production.detail_operator')} value={detail.captured_by_staff?.name || '—'} />
+              {detail.approved_by_staff && <Field label={detail.status === 'rejected' ? tc('factory_production.detail_reviewed_by') : tc('factory_production.detail_approved_by')} value={detail.approved_by_staff.name} />}
             </div>
 
             {detail.notes && (
               <div style={{ background: '#0f172a', borderRadius: 8, padding: '12px 14px', marginBottom: 12 }}>
-                <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Notes</div>
+                <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{tc('factory_production.detail_notes')}</div>
                 <div style={{ fontSize: 14, color: '#e2e8f0', lineHeight: 1.5 }}>{detail.notes}</div>
               </div>
             )}
 
             {detail.status === 'rejected' && detail.rejection_reason && (
               <div style={{ background: '#7f1d1d', border: `1px solid ${BAD}`, borderRadius: 8, padding: '12px 14px' }}>
-                <div style={{ fontSize: 11, color: '#fca5a5', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Rejection reason</div>
+                <div style={{ fontSize: 11, color: '#fca5a5', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{tc('factory_production.detail_rejection_reason')}</div>
                 <div style={{ fontSize: 14, color: '#fee2e2', lineHeight: 1.5 }}>{detail.rejection_reason}</div>
               </div>
             )}

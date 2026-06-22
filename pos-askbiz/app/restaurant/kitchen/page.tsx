@@ -2,8 +2,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#d08a59'
+
+const NS = 'restaurant_kitchen.'
 
 const STATIONS = ['all', 'grill', 'fryer', 'cold', 'drinks', 'dessert']
 const STATION_ICONS: Record<string, string> = {
@@ -33,6 +36,7 @@ function fmtAge(seconds: number): string {
 
 export default function KitchenDisplay() {
   const router  = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [station, setStation]   = useState('all')
   const [tickets, setTickets]   = useState<KTicket[]>([])
@@ -107,14 +111,14 @@ export default function KitchenDisplay() {
       {/* KDS Header */}
       <div style={{ background: '#0f172a', borderBottom: '2px solid #1e293b', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/restaurant')} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 20 }}>←</button>
-        <div style={{ fontSize: 18, fontWeight: 800, color: ACC }}>🍳 Kitchen Display</div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: ACC }}>{tc(NS + 'header_title')}</div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
           <div style={{ fontSize: 12, color: '#64748b' }}>
-            {activeTickets.length} active · {doneTickets.length} done
+            {tc(NS + 'active_done_count', { active: activeTickets.length, done: doneTickets.length })}
           </div>
           <button onClick={() => setShowDone(p => !p)}
             style={{ background: showDone ? '#334155' : '#1e293b', border: '1px solid #334155', color: '#94a3b8', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>
-            {showDone ? 'Hide Done' : 'Show Done'}
+            {showDone ? tc(NS + 'hide_done') : tc(NS + 'show_done')}
           </button>
         </div>
       </div>
@@ -132,7 +136,7 @@ export default function KitchenDisplay() {
                 borderBottom: station === s ? `3px solid ${ACC}` : '3px solid transparent',
                 fontSize: 14, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6,
               }}>
-              {STATION_ICONS[s]} {s.charAt(0).toUpperCase() + s.slice(1)}
+              {STATION_ICONS[s]} {tc(NS + 'station_' + s)}
               {count > 0 && <span style={{ background: '#ef4444', color: '#fff', borderRadius: 10, padding: '1px 6px', fontSize: 11 }}>{count}</span>}
             </button>
           )
@@ -141,13 +145,13 @@ export default function KitchenDisplay() {
 
       {/* Ticket Grid */}
       <div style={{ padding: 16, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16, alignItems: 'start' }}>
-        {loading && <div style={{ color: '#64748b', gridColumn: '1/-1', textAlign: 'center', padding: 40 }}>Loading kitchen...</div>}
+        {loading && <div style={{ color: '#64748b', gridColumn: '1/-1', textAlign: 'center', padding: 40 }}>{tc(NS + 'loading')}</div>}
 
         {!loading && activeTickets.length === 0 && (
           <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 60 }}>
             <div className="pos-success-icon" style={{ fontSize: 48, marginBottom: 8 }}>✅</div>
-            <div style={{ color: '#22c55e', fontWeight: 700, fontSize: 18 }}>All clear!</div>
-            <div style={{ color: '#64748b', fontSize: 14 }}>No pending tickets for this station.</div>
+            <div style={{ color: '#22c55e', fontWeight: 700, fontSize: 18 }}>{tc(NS + 'all_clear')}</div>
+            <div style={{ color: '#64748b', fontSize: 14 }}>{tc(NS + 'no_pending')}</div>
           </div>
         )}
 
@@ -168,13 +172,18 @@ export default function KitchenDisplay() {
                 <div>
                   <div style={{ fontWeight: 800, fontSize: 18, color: '#f1f5f9' }}>{ticket.table_name}</div>
                   <div style={{ fontSize: 12, color: '#94a3b8' }}>
-                    {ticket.covers} cover{ticket.covers !== 1 ? 's' : ''} · {STATION_ICONS[ticket.station]} {ticket.station}
-                    {ticket.server_name && ` · ${ticket.server_name}`}
+                    {(() => {
+                      const coversLabel = tc(NS + (ticket.covers === 1 ? 'covers_one' : 'covers_other'), { count: ticket.covers })
+                      const stationLabel = tc(NS + 'station_' + ticket.station)
+                      return ticket.server_name
+                        ? tc(NS + 'ticket_meta_server', { covers: coversLabel, icon: STATION_ICONS[ticket.station], station: stationLabel, server: ticket.server_name })
+                        : tc(NS + 'ticket_meta', { covers: coversLabel, icon: STATION_ICONS[ticket.station], station: stationLabel })
+                    })()}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 20, fontWeight: 800, color, fontVariantNumeric: 'tabular-nums' }}>{fmtAge(age)}</div>
-                  <div style={{ fontSize: 10, color: '#64748b' }}>{isInProgress ? '🔥 In progress' : '⏳ Pending'}</div>
+                  <div style={{ fontSize: 10, color: '#64748b' }}>{isInProgress ? tc(NS + 'in_progress') : tc(NS + 'pending')}</div>
                 </div>
               </div>
 
@@ -202,7 +211,7 @@ export default function KitchenDisplay() {
                 {!isInProgress && (
                   <button onClick={() => startTicket(ticket.id)}
                     style={{ flex: 1, background: '#1e293b', border: '1px solid #334155', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
-                    🔥 Start
+                    {tc(NS + 'start')}
                   </button>
                 )}
                 <button
@@ -214,7 +223,7 @@ export default function KitchenDisplay() {
                     padding: '10px', borderRadius: 8, cursor: bumping === ticket.id ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 14,
                     opacity: bumping === ticket.id ? 0.5 : 1,
                   }}>
-                  {bumping === ticket.id ? '...' : '✓ Bump'}
+                  {bumping === ticket.id ? tc(NS + 'bumping') : tc(NS + 'bump')}
                 </button>
               </div>
             </div>
@@ -227,9 +236,9 @@ export default function KitchenDisplay() {
             <div style={{ background: '#22c55e20', padding: '10px 14px', display: 'flex', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 15, color: '#94a3b8' }}>{ticket.table_name}</div>
-                <div style={{ fontSize: 11, color: '#64748b' }}>{ticket.station} · {ticket.items_json.length} item(s)</div>
+                <div style={{ fontSize: 11, color: '#64748b' }}>{tc(NS + 'done_meta', { station: tc(NS + 'station_' + ticket.station), count: ticket.items_json.length })}</div>
               </div>
-              <div style={{ fontSize: 12, color: '#22c55e', fontWeight: 700 }}>✓ Done</div>
+              <div style={{ fontSize: 12, color: '#22c55e', fontWeight: 700 }}>{tc(NS + 'done')}</div>
             </div>
             <div style={{ padding: '8px 14px' }}>
               {ticket.items_json.map((item, i) => (
@@ -239,7 +248,7 @@ export default function KitchenDisplay() {
             <div style={{ padding: '8px 14px' }}>
               <button onClick={() => recallTicket(ticket.id)}
                 style={{ width: '100%', background: '#1e293b', border: '1px solid #334155', color: '#94a3b8', padding: '7px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>
-                Recall
+                {tc(NS + 'recall')}
               </button>
             </div>
           </div>

@@ -2,8 +2,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#d08a59'
+
+const NS = 'restaurant_labor.'
 
 const ROLES = ['chef', 'waiter', 'bartender', 'manager', 'cashier', 'runner', 'cleaner']
 const ROLE_ICONS: Record<string, string> = {
@@ -31,6 +34,7 @@ function liveCost(shift: Shift): number {
 
 export default function LaborPage() {
   const router   = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [sym, setSym]             = useState('£')
   const [shifts, setShifts]       = useState<Shift[]>([])
@@ -87,7 +91,7 @@ export default function LaborPage() {
   }
 
   async function clockOut(shiftId: string) {
-    if (!confirm('Clock out this staff member?') || !session) return
+    if (!confirm(tc(NS + 'confirm_clock_out')) || !session) return
     await fetch('/api/pos/restaurant/labor', {
       method: 'PATCH', headers: { ...session.headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: shiftId, action: 'clock_out' }),
@@ -110,19 +114,19 @@ export default function LaborPage() {
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/restaurant')} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 18 }}>←</button>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 16, color: ACC }}>⏱️ Labour Tracking</div>
-          <div style={{ fontSize: 11, color: '#64748b' }}>Clock in/out · Live cost · Shift analysis</div>
+          <div style={{ fontWeight: 700, fontSize: 16, color: ACC }}>{tc(NS + 'header_title')}</div>
+          <div style={{ fontSize: 11, color: '#64748b' }}>{tc(NS + 'header_subtitle')}</div>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           {[1, 7, 30].map(d => (
             <button key={d} onClick={() => setPeriod(d)}
               style={{ background: period === d ? ACC : '#1e293b', border: `1px solid ${period === d ? ACC : '#334155'}`, color: period === d ? '#fff' : '#64748b', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>
-              {d === 1 ? 'Today' : `${d}d`}
+              {d === 1 ? tc(NS + 'period_today') : tc(NS + 'period_days', { days: d })}
             </button>
           ))}
           <button className="pos-btn-primary" onClick={() => setShowClock(true)}
             style={{ background: ACC, border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
-            Clock In
+            {tc(NS + 'clock_in')}
           </button>
         </div>
       </div>
@@ -131,10 +135,10 @@ export default function LaborPage() {
         {/* Summary KPIs */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
           {[
-            { label: 'Clocked In Now',  value: `${activeShifts.length}`,                   color: activeShifts.length ? '#22c55e' : '#64748b' },
-            { label: 'Live Cost',       value: `${sym}${summary.live_running_cost?.toFixed(2) || '0.00'}`, color: '#f59e0b' },
-            { label: 'Total Cost (period)', value: `${sym}${summary.total_cost?.toFixed(2) || '0.00'}`, color: ACC },
-            { label: 'Total Hours',     value: `${summary.total_hours?.toFixed(1) || '0'}h`, color: '#94a3b8' },
+            { label: tc(NS + 'kpi_clocked_in_now'),  value: `${activeShifts.length}`,                   color: activeShifts.length ? '#22c55e' : '#64748b' },
+            { label: tc(NS + 'kpi_live_cost'),       value: `${sym}${summary.live_running_cost?.toFixed(2) || '0.00'}`, color: '#f59e0b' },
+            { label: tc(NS + 'kpi_total_cost_period'), value: `${sym}${summary.total_cost?.toFixed(2) || '0.00'}`, color: ACC },
+            { label: tc(NS + 'kpi_total_hours'),     value: `${summary.total_hours?.toFixed(1) || '0'}h`, color: '#94a3b8' },
           ].map(kpi => (
             <div key={kpi.label} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: '14px 16px' }}>
               <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>{kpi.label}</div>
@@ -146,7 +150,7 @@ export default function LaborPage() {
         {/* Active Shifts */}
         {activeShifts.length > 0 && (
           <div style={{ marginBottom: 24 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: '#22c55e' }}>🟢 Currently Clocked In</div>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: '#22c55e' }}>{tc(NS + 'currently_clocked_in')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {activeShifts.map((shift, idx) => {
                 const hours = liveHours(shift)
@@ -156,20 +160,20 @@ export default function LaborPage() {
                   <div key={shift.id} className="pos-item" style={{ background: '#1e293b', border: '1px solid #14532d', borderRadius: 10, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                     <div style={{ fontSize: 24 }}>{ROLE_ICONS[shift.role] || '👤'}</div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 700, fontSize: 15 }}>{shift.staff?.name || 'Staff'}</div>
+                      <div style={{ fontWeight: 700, fontSize: 15 }}>{shift.staff?.name || tc(NS + 'staff_fallback')}</div>
                       <div style={{ fontSize: 12, color: '#94a3b8' }}>
-                        {shift.role} · {sym}{shift.hourly_rate}/hr · In since {new Date(shift.clock_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {tc(NS + 'active_shift_line', { role: tc(NS + 'role_' + shift.role), sym, rate: shift.hourly_rate, time: new Date(shift.clock_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right', marginRight: 8 }}>
                       <div style={{ fontSize: 18, fontWeight: 800, color: '#f59e0b', fontVariantNumeric: 'tabular-nums' }}>
-                        {Math.floor(elapsed / 60)}h {elapsed % 60}m
+                        {tc(NS + 'elapsed_hm', { hours: Math.floor(elapsed / 60), mins: elapsed % 60 })}
                       </div>
                       <div style={{ fontSize: 13, color: ACC, fontWeight: 600 }}>{sym}{cost.toFixed(2)}</div>
                     </div>
                     <button onClick={() => clockOut(shift.id)}
                       style={{ background: '#ef4444', border: 'none', color: '#fff', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>
-                      Clock Out
+                      {tc(NS + 'clock_out')}
                     </button>
                   </div>
                 )
@@ -181,13 +185,13 @@ export default function LaborPage() {
         {/* Completed Shifts */}
         {completedShifts.length > 0 && (
           <div>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: '#64748b' }}>Completed Shifts</div>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12, color: '#64748b' }}>{tc(NS + 'completed_shifts')}</div>
             <div style={{ background: '#1e293b', borderRadius: 12, overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#0f172a' }}>
-                    {['Staff', 'Role', 'Clock In', 'Clock Out', 'Hours', 'Rate', 'Cost'].map(h => (
-                      <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>{h}</th>
+                    {[tc(NS + 'col_staff'), tc(NS + 'col_role'), tc(NS + 'col_clock_in'), tc(NS + 'col_clock_out'), tc(NS + 'col_hours'), tc(NS + 'col_rate'), tc(NS + 'col_cost')].map((h, hi) => (
+                      <th key={hi} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -195,15 +199,15 @@ export default function LaborPage() {
                   {completedShifts.map((shift, idx) => (
                     <tr key={shift.id} className="pos-item" style={{ borderTop: '1px solid #1e293b', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                       <td style={{ padding: '10px 14px', fontSize: 14, fontWeight: 600 }}>{shift.staff?.name || '—'}</td>
-                      <td style={{ padding: '10px 14px', fontSize: 13, color: '#94a3b8' }}>{ROLE_ICONS[shift.role]} {shift.role}</td>
+                      <td style={{ padding: '10px 14px', fontSize: 13, color: '#94a3b8' }}>{ROLE_ICONS[shift.role]} {tc(NS + 'role_' + shift.role)}</td>
                       <td style={{ padding: '10px 14px', fontSize: 12, color: '#94a3b8', fontVariantNumeric: 'tabular-nums' }}>
                         {new Date(shift.clock_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </td>
                       <td style={{ padding: '10px 14px', fontSize: 12, color: '#94a3b8', fontVariantNumeric: 'tabular-nums' }}>
                         {shift.clock_out ? new Date(shift.clock_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
                       </td>
-                      <td style={{ padding: '10px 14px', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{shift.total_hours?.toFixed(2) || '—'}h</td>
-                      <td style={{ padding: '10px 14px', fontSize: 13, color: '#64748b' }}>{sym}{shift.hourly_rate}/hr</td>
+                      <td style={{ padding: '10px 14px', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>{shift.total_hours != null ? tc(NS + 'hours_suffix', { hours: shift.total_hours.toFixed(2) }) : '—'}</td>
+                      <td style={{ padding: '10px 14px', fontSize: 13, color: '#64748b' }}>{tc(NS + 'rate_per_hr', { sym, rate: shift.hourly_rate })}</td>
                       <td style={{ padding: '10px 14px', fontSize: 14, fontWeight: 700, color: ACC }}>{sym}{shift.total_cost?.toFixed(2) || '—'}</td>
                     </tr>
                   ))}
@@ -216,8 +220,8 @@ export default function LaborPage() {
         {!loading && shifts.length === 0 && (
           <div style={{ textAlign: 'center', padding: 60, color: '#64748b' }}>
             <div style={{ fontSize: 40, marginBottom: 8 }}>⏱️</div>
-            <div style={{ fontSize: 16, marginBottom: 4 }}>No shifts recorded</div>
-            <div style={{ fontSize: 13 }}>Clock in staff to start tracking labour costs.</div>
+            <div style={{ fontSize: 16, marginBottom: 4 }}>{tc(NS + 'empty_no_shifts')}</div>
+            <div style={{ fontSize: 13 }}>{tc(NS + 'empty_blurb')}</div>
           </div>
         )}
       </div>
@@ -226,37 +230,37 @@ export default function LaborPage() {
       {showClockIn && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
           <div className="pos-sheet" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: 380 }}>
-            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Clock In Staff</div>
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>{tc(NS + 'modal_title')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Staff Member *</label>
+                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_staff_member')}</label>
                 <select value={clockInForm.staff_id} onChange={e => setForm(p => ({ ...p, staff_id: e.target.value }))} style={inp}>
-                  <option value="">— Select staff —</option>
-                  {staffList.map(s => <option key={s.id} value={s.id}>{s.name} ({s.role})</option>)}
+                  <option value="">{tc(NS + 'select_staff')}</option>
+                  {staffList.map(s => <option key={s.id} value={s.id}>{tc(NS + 'staff_option', { name: s.name, role: s.role })}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Role for this shift</label>
+                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_role_for_shift')}</label>
                 <select value={clockInForm.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))} style={inp}>
-                  {ROLES.map(r => <option key={r} value={r}>{ROLE_ICONS[r]} {r}</option>)}
+                  {ROLES.map(r => <option key={r} value={r}>{ROLE_ICONS[r]} {tc(NS + 'role_' + r)}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Hourly Rate ({sym})</label>
+                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_hourly_rate', { sym })}</label>
                 <input type="number" step="0.01" value={clockInForm.hourly_rate}
                   onChange={e => setForm(p => ({ ...p, hourly_rate: e.target.value }))} style={inp} />
               </div>
               <div>
-                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Notes (optional)</label>
+                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_notes')}</label>
                 <input value={clockInForm.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
-                  placeholder="Evening shift, covering for..." style={inp} />
+                  placeholder={tc(NS + 'placeholder_notes')} style={inp} />
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button onClick={() => setShowClock(false)} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setShowClock(false)} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>{tc(NS + 'cancel')}</button>
               <button className="pos-btn-primary" onClick={clockIn} disabled={saving || !clockInForm.staff_id}
                 style={{ flex: 1, background: '#22c55e', border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: saving || !clockInForm.staff_id ? 'not-allowed' : 'pointer', fontWeight: 700, opacity: saving || !clockInForm.staff_id ? 0.5 : 1 }}>
-                {saving ? '...' : '🟢 Clock In Now'}
+                {saving ? tc(NS + 'saving') : tc(NS + 'clock_in_now')}
               </button>
             </div>
           </div>

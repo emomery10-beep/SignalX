@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#d08a59'
 
@@ -37,6 +38,7 @@ interface Summary {
 
 export default function StaffPerformancePage() {
   const router  = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [sym, setSym]       = useState('£')
   const [days, setDays]     = useState(7)
@@ -82,8 +84,8 @@ export default function StaffPerformancePage() {
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>👥 Staff Performance</div>
-          <div style={{ fontSize: 12, color: '#94a3b8' }}>Server revenue & labour metrics</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>{tc('restaurant_staff.header_title')}</div>
+          <div style={{ fontSize: 12, color: '#94a3b8' }}>{tc('restaurant_staff.header_subtitle')}</div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <select
@@ -91,14 +93,14 @@ export default function StaffPerformancePage() {
             onChange={e => setDays(parseInt(e.target.value))}
             style={{ background: '#334155', border: 'none', color: '#f1f5f9', padding: '6px 10px', borderRadius: 6, fontSize: 13, cursor: 'pointer' }}
           >
-            <option value={1}>Today</option>
-            <option value={7}>Last 7 days</option>
-            <option value={14}>Last 14 days</option>
-            <option value={30}>Last 30 days</option>
+            <option value={1}>{tc('restaurant_staff.filter_today')}</option>
+            <option value={7}>{tc('restaurant_staff.filter_last_7_days')}</option>
+            <option value={14}>{tc('restaurant_staff.filter_last_14_days')}</option>
+            <option value={30}>{tc('restaurant_staff.filter_last_30_days')}</option>
           </select>
           <button onClick={() => router.push('/restaurant')}
             style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
-            ← Hub
+            {tc('restaurant_staff.back_to_hub')}
           </button>
         </div>
       </div>
@@ -108,12 +110,12 @@ export default function StaffPerformancePage() {
         {summary && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
             {[
-              { label: 'Total Revenue', value: `${sym}${summary.total_revenue.toFixed(2)}` },
-              { label: 'Total Orders',  value: `${summary.total_orders}` },
-              { label: 'Total Covers',  value: `${summary.total_covers}` },
-              { label: 'Labour Hours',  value: `${summary.total_labour_hours.toFixed(1)}h` },
-              { label: 'Labour Cost',   value: `${sym}${summary.total_labour_cost.toFixed(2)}` },
-              { label: 'Rev / Labour Hr', value: `${sym}${summary.revenue_per_labour_hour.toFixed(2)}` },
+              { label: tc('restaurant_staff.kpi_total_revenue'), value: `${sym}${summary.total_revenue.toFixed(2)}` },
+              { label: tc('restaurant_staff.kpi_total_orders'),  value: `${summary.total_orders}` },
+              { label: tc('restaurant_staff.kpi_total_covers'),  value: `${summary.total_covers}` },
+              { label: tc('restaurant_staff.kpi_labour_hours'),  value: `${summary.total_labour_hours.toFixed(1)}h` },
+              { label: tc('restaurant_staff.kpi_labour_cost'),   value: `${sym}${summary.total_labour_cost.toFixed(2)}` },
+              { label: tc('restaurant_staff.kpi_rev_per_labour_hr'), value: `${sym}${summary.revenue_per_labour_hour.toFixed(2)}` },
             ].map((k, idx) => (
               <div key={k.label} className="pos-item" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 10, padding: '12px 14px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                 <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>{k.label}</div>
@@ -129,24 +131,33 @@ export default function StaffPerformancePage() {
             <button key={t} onClick={() => setTab(t)}
               style={{ padding: '8px 20px', borderRadius: 6, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13,
                 background: tab === t ? ACC : 'transparent', color: tab === t ? '#fff' : '#94a3b8' }}>
-              {t === 'servers' ? '🍽️ Servers' : '⏱️ Shifts'}
+              {t === 'servers' ? tc('restaurant_staff.tab_servers') : tc('restaurant_staff.tab_shifts')}
             </button>
           ))}
         </div>
 
-        {loading && <div style={{ color: '#64748b', textAlign: 'center', padding: 40 }}>Loading…</div>}
+        {loading && <div style={{ color: '#64748b', textAlign: 'center', padding: 40 }}>{tc('restaurant_staff.loading')}</div>}
 
         {/* Server performance table */}
         {!loading && tab === 'servers' && (
           <div className="pos-reveal" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
             {servers.length === 0 ? (
-              <div style={{ padding: 32, textAlign: 'center', color: '#64748b' }}>No server data for this period</div>
+              <div style={{ padding: 32, textAlign: 'center', color: '#64748b' }}>{tc('restaurant_staff.servers_empty')}</div>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#0f172a' }}>
-                    {['Rank', 'Server', 'Orders', 'Covers', 'Revenue', 'Avg Ticket', 'Avg/Cover', 'Items Sold'].map(h => (
-                      <th key={h} style={{ padding: '12px 16px', textAlign: h === 'Rank' || h === 'Server' ? 'left' : 'right', fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>{h}</th>
+                    {[
+                      { key: 'rank', label: tc('restaurant_staff.col_rank'), left: true },
+                      { key: 'server', label: tc('restaurant_staff.col_server'), left: true },
+                      { key: 'orders', label: tc('restaurant_staff.col_orders'), left: false },
+                      { key: 'covers', label: tc('restaurant_staff.col_covers'), left: false },
+                      { key: 'revenue', label: tc('restaurant_staff.col_revenue'), left: false },
+                      { key: 'avg_ticket', label: tc('restaurant_staff.col_avg_ticket'), left: false },
+                      { key: 'avg_per_cover', label: tc('restaurant_staff.col_avg_per_cover'), left: false },
+                      { key: 'items_sold', label: tc('restaurant_staff.col_items_sold'), left: false },
+                    ].map(h => (
+                      <th key={h.key} style={{ padding: '12px 16px', textAlign: h.left ? 'left' : 'right', fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>{h.label}</th>
                     ))}
                   </tr>
                 </thead>
@@ -181,13 +192,20 @@ export default function StaffPerformancePage() {
         {!loading && tab === 'shifts' && (
           <div className="pos-reveal" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
             {shifts.length === 0 ? (
-              <div style={{ padding: 32, textAlign: 'center', color: '#64748b' }}>No shift data for this period</div>
+              <div style={{ padding: 32, textAlign: 'center', color: '#64748b' }}>{tc('restaurant_staff.shifts_empty')}</div>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#0f172a' }}>
-                    {['Staff', 'Role', 'Shifts', 'Hours', 'Labour Cost', 'Rev / Hr'].map(h => (
-                      <th key={h} style={{ padding: '12px 16px', textAlign: h === 'Staff' || h === 'Role' ? 'left' : 'right', fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>{h}</th>
+                    {[
+                      { key: 'staff', label: tc('restaurant_staff.col_staff'), left: true },
+                      { key: 'role', label: tc('restaurant_staff.col_role'), left: true },
+                      { key: 'shifts', label: tc('restaurant_staff.col_shifts'), left: false },
+                      { key: 'hours', label: tc('restaurant_staff.col_hours'), left: false },
+                      { key: 'labour_cost', label: tc('restaurant_staff.col_labour_cost'), left: false },
+                      { key: 'rev_per_hr', label: tc('restaurant_staff.col_rev_per_hr'), left: false },
+                    ].map(h => (
+                      <th key={h.key} style={{ padding: '12px 16px', textAlign: h.left ? 'left' : 'right', fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, fontWeight: 600 }}>{h.label}</th>
                     ))}
                   </tr>
                 </thead>
@@ -223,7 +241,7 @@ export default function StaffPerformancePage() {
               onClick={() => router.push('/pos?q=Analyse+my+staff+performance+and+suggest+who+is+performing+best')}
               style={{ background: '#1e293b', border: `1px solid ${ACC}`, color: ACC, padding: '10px 24px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
             >
-              Ask AI for staff analysis →
+              {tc('restaurant_staff.ask_ai')}
             </button>
           </div>
         )}
