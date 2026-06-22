@@ -1,6 +1,9 @@
 'use client'
 import React from 'react'
 import Link from 'next/link'
+import { useLang } from '@/components/LanguageProvider'
+
+type Tc = (key: string, vars?: Record<string, string | number>) => string
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -15,39 +18,49 @@ function P({ children, style }: { children: React.ReactNode; style?: React.CSSPr
   return <p style={{ fontSize: 15, lineHeight: 1.8, color: 'var(--pos-muted)', marginBottom: 12, ...style }}>{children}</p>
 }
 
+const buildTableHeaders = (tc: Tc) => [
+  tc('pos_cookies.table_header_name'),
+  tc('pos_cookies.table_header_type'),
+  tc('pos_cookies.table_header_purpose'),
+  tc('pos_cookies.table_header_duration'),
+]
+
+const buildTableRows = (tc: Tc) => [
+  [tc('pos_cookies.row_staff_name'), tc('pos_cookies.row_staff_type'), tc('pos_cookies.row_staff_purpose'), tc('pos_cookies.row_staff_duration')],
+  [tc('pos_cookies.row_consent_name'), tc('pos_cookies.row_consent_type'), tc('pos_cookies.row_consent_purpose'), tc('pos_cookies.row_consent_duration')],
+  [tc('pos_cookies.row_auth_name'), tc('pos_cookies.row_auth_type'), tc('pos_cookies.row_auth_purpose'), tc('pos_cookies.row_auth_duration')],
+  [tc('pos_cookies.row_offline_name'), tc('pos_cookies.row_offline_type'), tc('pos_cookies.row_offline_purpose'), tc('pos_cookies.row_offline_duration')],
+]
+
 export default function CookiesPage() {
+  const { tc } = useLang()
   return (
     <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <div style={{ maxWidth: 'min(760px, 100%)', margin: '0 auto', padding: 'clamp(20px, 4vw, 48px) clamp(16px, 4vw, 24px) 80px' }}>
 
         {/* Header */}
         <div style={{ marginBottom: 44 }}>
-          <Link href="/" style={{ fontSize: 13, color: 'var(--pos-hint)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>← Back to POS</Link>
-          <h1 style={{ fontSize: 'clamp(26px, 6vw, 32px)', fontWeight: 700, marginBottom: 8, letterSpacing: '-.02em', color: 'var(--pos-ink)' }}>Cookie Policy</h1>
-          <p style={{ fontSize: 14, color: 'var(--pos-hint)' }}>AskBiz POS · Last updated: 16 June 2026</p>
+          <Link href="/" style={{ fontSize: 13, color: 'var(--pos-hint)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>{tc('pos_cookies.back_to_pos')}</Link>
+          <h1 style={{ fontSize: 'clamp(26px, 6vw, 32px)', fontWeight: 700, marginBottom: 8, letterSpacing: '-.02em', color: 'var(--pos-ink)' }}>{tc('pos_cookies.page_title')}</h1>
+          <p style={{ fontSize: 14, color: 'var(--pos-hint)' }}>{tc('pos_cookies.last_updated', { date: '16 June 2026' })}</p>
         </div>
 
-        <Section title="The short version">
-          <P>AskBiz POS uses <strong>minimal, essential storage only</strong>. We do not run advertising cookies, and we currently use <strong>no third-party analytics or tracking</strong>. There is nothing to opt out of — only the storage needed to keep you signed in and let the app work.</P>
+        <Section title={tc('pos_cookies.short_version_title')}>
+          <P>{tc('pos_cookies.short_version_body')}</P>
         </Section>
 
-        <Section title="What we store">
+        <Section title={tc('pos_cookies.what_we_store_title')}>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: 'var(--pos-accent-pale)' }}>
-                  {['Name', 'Type', 'Purpose', 'Duration'].map(h => (
+                  {buildTableHeaders(tc).map(h => (
                     <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, borderBottom: '2px solid var(--pos-border)', color: 'var(--pos-ink)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {[
-                  ['pos_staff', 'localStorage', 'Keeps your staff sign-in session active', 'Until sign-out / browser clear'],
-                  ['pos_consent_ack', 'localStorage', 'Remembers you dismissed the privacy notice', 'Persistent'],
-                  ['supabase auth token', 'Cookie / localStorage', 'Authenticates your account session (essential)', 'Session'],
-                  ['Offline sale cache', 'localStorage', 'Stores cash sales during connectivity loss', 'Until synced, then cleared'],
-                ].map((row, i) => (
+                {buildTableRows(tc).map((row, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid var(--pos-border)', background: i % 2 === 0 ? 'var(--pos-surface)' : 'var(--pos-bg)' }}>
                     {row.map((cell, j) => (
                       <td key={j} style={{ padding: '9px 12px', fontSize: 13, color: 'var(--pos-muted)' }}>{cell}</td>
@@ -59,23 +72,27 @@ export default function CookiesPage() {
           </div>
         </Section>
 
-        <Section title="No analytics or advertising">
-          <P>We do not use Google Analytics, advertising pixels, or any third-party tracking cookies in the POS. We do not sell data or share it with advertisers. Because the only storage we use is strictly necessary to deliver the service you asked for, consent is not required for it under the ePrivacy / PECR rules — but we still show a notice so you know what is happening.</P>
-          <P>If we ever add optional analytics, we will update this page and add a proper accept/reject control before any such storage is set.</P>
+        <Section title={tc('pos_cookies.no_analytics_title')}>
+          <P>{tc('pos_cookies.no_analytics_body_1')}</P>
+          <P>{tc('pos_cookies.no_analytics_body_2')}</P>
         </Section>
 
-        <Section title="Managing storage">
-          <P>You can clear this storage at any time by signing out of the POS or clearing your browser&apos;s site data. Clearing it will sign you out and may discard any unsynced offline sales.</P>
+        <Section title={tc('pos_cookies.managing_storage_title')}>
+          <P>{tc('pos_cookies.managing_storage_body')}</P>
         </Section>
 
-        <Section title="More information">
-          <P>See our <Link href="/privacy" style={{ color: 'var(--pos-accent)', textDecoration: 'none' }}>Privacy Policy</Link> for full detail on the data we process, or contact privacy@askbiz.co.</P>
+        <Section title={tc('pos_cookies.more_info_title')}>
+          <P>
+            {tc('pos_cookies.more_info_body_before')}
+            <Link href="/privacy" style={{ color: 'var(--pos-accent)', textDecoration: 'none' }}>{tc('pos_cookies.more_info_privacy_link')}</Link>
+            {tc('pos_cookies.more_info_body_after')}
+          </P>
         </Section>
 
         <div style={{ marginTop: 8, paddingTop: 24, borderTop: '1px solid var(--pos-border)', display: 'flex', gap: 18, flexWrap: 'wrap' }}>
-          <Link href="/privacy" style={{ fontSize: 14, color: 'var(--pos-accent)', textDecoration: 'none' }}>Privacy Policy</Link>
-          <Link href="/terms" style={{ fontSize: 14, color: 'var(--pos-accent)', textDecoration: 'none' }}>Terms of Service</Link>
-          <Link href="/" style={{ fontSize: 14, color: 'var(--pos-hint)', textDecoration: 'none' }}>← Back to POS</Link>
+          <Link href="/privacy" style={{ fontSize: 14, color: 'var(--pos-accent)', textDecoration: 'none' }}>{tc('pos_cookies.footer_privacy')}</Link>
+          <Link href="/terms" style={{ fontSize: 14, color: 'var(--pos-accent)', textDecoration: 'none' }}>{tc('pos_cookies.footer_terms')}</Link>
+          <Link href="/" style={{ fontSize: 14, color: 'var(--pos-hint)', textDecoration: 'none' }}>{tc('pos_cookies.back_to_pos')}</Link>
         </div>
       </div>
     </div>

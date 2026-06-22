@@ -18,7 +18,10 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
-const LOCALES_DIR = join(ROOT, 'locales')
+// `--app=pos` translates the separate pos-askbiz app's catalogues instead of the
+// main app's. Language display names are shared, so ROOT/lib stays the source.
+const POS = process.argv.slice(2).includes('--app=pos')
+const LOCALES_DIR = POS ? join(ROOT, 'pos-askbiz', 'locales') : join(ROOT, 'locales')
 const BASE = 'en'
 const MODEL = 'claude-sonnet-4-6'
 
@@ -87,7 +90,8 @@ ${JSON.stringify(entries, null, 2)}`
 
 // Legal pages get HUMAN legal translation per jurisdiction — NEVER machine
 // translate them. Skipped unless explicitly named (node …mjs terms --force).
-const HUMAN_ONLY = new Set(['terms', 'privacy', 'dpa'])
+// Includes the pos-askbiz app's legal namespaces (pos_* prefix).
+const HUMAN_ONLY = new Set(['terms', 'privacy', 'dpa', 'pos_terms', 'pos_privacy', 'pos_cookies'])
 
 async function run() {
   const namespaces = onlyNs
