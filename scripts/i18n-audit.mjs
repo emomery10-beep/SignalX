@@ -97,8 +97,10 @@ if (SKIP_TYPECHECK) {
   // (excluding generated content, .next, node_modules) and ratchet against it, so
   // the gate catches NEW app-code type errors without drowning in the backlog.
   const IGNORE = /academy-cfo-saas-batch|trade-news-batch|integration-blogs-batch|sector-posts|pseo-batch|africa-|new-blogs|-content\.ts|\.next\/|node_modules/
+  // Typecheck the app being audited — pos-askbiz is a separate Next app/tsconfig.
+  const TSC_CWD = APP === 'pos' ? join(ROOT, 'pos-askbiz') : ROOT
   let count = 0
-  try { execSync('npx tsc --noEmit', { cwd: ROOT, stdio: 'pipe' }) }
+  try { execSync('npx tsc --noEmit', { cwd: TSC_CWD, stdio: 'pipe' }) }
   catch (e) {
     const out = (e.stdout?.toString() || '') + (e.stderr?.toString() || '')
     count = out.split('\n').filter(l => l.includes('error TS') && !IGNORE.test(l)).length
