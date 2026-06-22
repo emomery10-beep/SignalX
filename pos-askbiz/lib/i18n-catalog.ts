@@ -14,13 +14,15 @@ import enFactory from '@/locales/en/factory.json'
 import enSalonClients from '@/locales/en/salon_clients.json'
 import enFactoryCapture from '@/locales/en/factory_capture.json'
 import enFactoryShift from '@/locales/en/factory_shift.json'
+import enLogisticsIntake from '@/locales/en/logistics_intake.json'
+import enLogisticsDashboard from '@/locales/en/logistics_dashboard.json'
 
 type Dict = Record<string, unknown>
 
 // English-only for now — translation gated on API credits. The resolver falls
 // back to English for locales lacking a namespace, so pages render correctly.
 const CATALOG: Record<string, Record<string, Dict>> = {
-  en: { common: enCommon, sell: enSell, dashboard: enDashboard, inventory: enInventory, pos: enPos, logistics: enLogistics, factory: enFactory, salon_clients: enSalonClients, factory_capture: enFactoryCapture, factory_shift: enFactoryShift },
+  en: { common: enCommon, sell: enSell, dashboard: enDashboard, inventory: enInventory, pos: enPos, logistics: enLogistics, factory: enFactory, salon_clients: enSalonClients, factory_capture: enFactoryCapture, factory_shift: enFactoryShift, logistics_intake: enLogisticsIntake, logistics_dashboard: enLogisticsDashboard },
 }
 
 const BASE = 'en'

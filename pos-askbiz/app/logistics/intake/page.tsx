@@ -2,6 +2,9 @@
 import { useEffect, useRef, useState, useCallback, useId } from 'react'
 import { useRouter } from 'next/navigation'
 import { isLogisticsClerkLevel, isLogisticsBranchLevel, isManagerOrAboveLevel, getRoleHomeRoute } from '@/lib/pos-role-client'
+import { useLang } from '@/components/LanguageProvider'
+
+type Tc = (key: string, vars?: Record<string, string | number>) => string
 
 // ── Palette (logistics cyan sub-brand, matches /logistics/dispatch) ──
 const ACC       = '#0891b2'
@@ -157,6 +160,7 @@ function ErrorText({ children }: { children: React.ReactNode }) {
 // ── Main Component ────────────────────────────────────────────
 export default function IntakePage() {
   const router  = useRouter()
+  const { tc }  = useLang()
   const [staff, setStaff] = useState<Staff | null>(null)
   const [ready, setReady] = useState(false)
 
@@ -267,7 +271,7 @@ export default function IntakePage() {
   // ── Shift ────────────────────────────────────────────────
   const openShift = async () => {
     if (!staff) return
-    if (!staff.location_id) { setShiftErr('Your account has no branch assigned. Ask a manager to set your branch before opening a shift.'); return }
+    if (!staff.location_id) { setShiftErr(tc('logistics_intake.err_no_branch')); return }
     setShiftBusy(true); setShiftErr('')
     try {
       const res  = await fetch(`${API}/api/pos/shift/open`, {
@@ -275,19 +279,19 @@ export default function IntakePage() {
         body: JSON.stringify({ cashier_id: staff.id, location_id: staff.location_id, opening_cash_balance: parseFloat(openFloat) || 0 }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) { setShiftErr(data.error || `Could not open shift (${res.status})`); return }
+      if (!res.ok) { setShiftErr(data.error || tc('logistics_intake.err_open_shift_status', { status: res.status })); return }
       const sh = { id: data.shift_id, opened_at: data.opened_at, opening_balance: data.opening_balance }
       setShift(sh)
       localStorage.setItem('pos_logistics_shift', JSON.stringify(sh))
       setStep('sender')
-    } catch { setShiftErr('Network error — check your connection and try again.') }
+    } catch { setShiftErr(tc('logistics_intake.err_network_retry')) }
     finally { setShiftBusy(false) }
   }
 
   const closeShift = async () => {
     if (!staff || !shift) return
     const physical = parseFloat(closeCash)
-    if (isNaN(physical) || physical < 0) { setCloseErr('Enter a valid cash amount.'); return }
+    if (isNaN(physical) || physical < 0) { setCloseErr(tc('logistics_intake.err_valid_cash')); return }
     setClosingShift(true); setCloseErr('')
     try {
       const res  = await fetch(`${API}/api/pos/shift/close`, {
@@ -295,25 +299,25 @@ export default function IntakePage() {
         body: JSON.stringify({ shift_id: shift.id, physical_cash_count: physical }),
       })
       const data = await res.json().catch(() => ({}))
-      if (data.requires_reason) { setCloseErr(`Cash variance of ${staff.currency_symbol}${Math.abs(data.variance_amount).toFixed(2)} — please recount, then a manager can reconcile.`); return }
-      if (!res.ok) { setCloseErr(data.error || `Could not close shift (${res.status})`); return }
+      if (data.requires_reason) { setCloseErr(tc('logistics_intake.err_cash_variance', { symbol: staff.currency_symbol, amount: Math.abs(data.variance_amount).toFixed(2) })); return }
+      if (!res.ok) { setCloseErr(data.error || tc('logistics_intake.err_close_shift_status', { status: res.status })); return }
       localStorage.removeItem('pos_logistics_shift')
       setShift(null); setShowClose(false); setStep('shift'); setOpenFloat(''); setCloseCash('')
-    } catch { setCloseErr('Network error — check your connection and try again.') }
+    } catch { setCloseErr(tc('logistics_intake.err_network_retry')) }
     finally { setClosingShift(false) }
   }
 
   // ── Photo ─────────────────────────────────────────────────
   const handlePhoto = async (file: File) => {
     setPhotoErr('')
-    if (file.type && !ALLOWED_PHOTO.includes(file.type)) { setPhotoErr('Use a JPEG, PNG, WebP or HEIC image.'); return }
-    if (file.size > MAX_PHOTO_BYTES)                     { setPhotoErr('Photo is over 10 MB — retake at a lower resolution.'); return }
+    if (file.type && !ALLOWED_PHOTO.includes(file.type)) { setPhotoErr(tc('logistics_intake.err_photo_type')); return }
+    if (file.size > MAX_PHOTO_BYTES)                     { setPhotoErr(tc('logistics_intake.err_photo_too_big')); return }
     setPhotoBusy(true)
     try {
       const compressed = await compressImage(file)
-      if (approxDataUrlBytes(compressed) > 4 * 1024 * 1024) { setPhotoErr('Photo too large after processing — retake at a lower resolution.'); return }
+      if (approxDataUrlBytes(compressed) > 4 * 1024 * 1024) { setPhotoErr(tc('logistics_intake.err_photo_too_big_processed')); return }
       setPhotoDataUrl(compressed)
-    } catch { setPhotoErr('Could not process that photo — try again.') }
+    } catch { setPhotoErr(tc('logistics_intake.err_photo_process')) }
     finally { setPhotoBusy(false) }
   }
 
@@ -324,14 +328,14 @@ export default function IntakePage() {
     if (!staff) return
     setIdScanMsg(''); setIdMsgFor(which); setScanningId(which)
     try {
-      if (file.type && !ALLOWED_PHOTO.includes(file.type)) { setIdScanMsg('Use a JPEG/PNG/WebP/HEIC image.'); return }
+      if (file.type && !ALLOWED_PHOTO.includes(file.type)) { setIdScanMsg(tc('logistics_intake.err_id_type')); return }
       const compressed = await compressImage(file, 1800, 0.85)
       const res  = await fetchWithTimeout(`${API}/api/pos/parcels/scan-id`, {
         method: 'POST', headers: hdrs(staff), body: JSON.stringify({ image: compressed }),
       }, 45000)
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) { setIdScanMsg(data.error || 'Could not read the ID — type it in manually.'); return }
-      if (!data.id_number) { setIdScanMsg('Couldn’t read a number from that photo — try again or type it in.'); return }
+      if (!res.ok) { setIdScanMsg(data.error || tc('logistics_intake.err_id_read')); return }
+      if (!data.id_number) { setIdScanMsg(tc('logistics_intake.err_id_no_number')); return }
       if (which === 'sender') {
         setSenderIdNum(data.id_number)
         if (data.full_name && !senderName.trim()) setSenderName(data.full_name)
@@ -340,16 +344,16 @@ export default function IntakePage() {
         if (data.full_name && !recvName.trim()) setRecvName(data.full_name)
       }
       const low = typeof data.confidence === 'number' && data.confidence < 0.6
-      setIdScanMsg(low ? '⚠️ Read with low confidence — please check it matches the ID.' : '✓ ID captured — please verify it matches.')
+      setIdScanMsg(low ? tc('logistics_intake.id_low_confidence') : tc('logistics_intake.id_captured'))
     } catch (e: any) {
-      setIdScanMsg(e?.name === 'AbortError' ? 'ID scan timed out — type it in manually.' : 'ID scan failed — type it in manually.')
+      setIdScanMsg(e?.name === 'AbortError' ? tc('logistics_intake.err_id_timeout') : tc('logistics_intake.err_id_failed'))
     } finally { setScanningId(null) }
   }
 
   // ── Submit ────────────────────────────────────────────────
   const submit = async () => {
     if (!staff) return
-    if (!dataConsent) { setSubmitErr('The sender must agree to the data-processing notice before you register the parcel.'); return }
+    if (!dataConsent) { setSubmitErr(tc('logistics_intake.err_consent_required')); return }
     setSubmitting(true); setSubmitErr('')
 
     // 1. Upload photo via the server route (private bucket + signed URL)
@@ -361,11 +365,11 @@ export default function IntakePage() {
           method: 'POST', headers: hdrs(staff), body: JSON.stringify({ image: photoDataUrl }),
         }, 45000)
         const upData = await up.json().catch(() => ({}))
-        if (!up.ok) { setSubmitErr(upData.error || 'Photo upload failed — retake or skip the photo.'); setSubmitting(false); return }
+        if (!up.ok) { setSubmitErr(upData.error || tc('logistics_intake.err_photo_upload_failed')); setSubmitting(false); return }
         intakePhotoUrl  = upData.url || null
         intakePhotoPath = upData.path || null
       } catch (e: any) {
-        setSubmitErr(e?.name === 'AbortError' ? 'Photo upload timed out — check your connection and try again.' : 'Photo upload failed — check your connection.')
+        setSubmitErr(e?.name === 'AbortError' ? tc('logistics_intake.err_photo_upload_timeout') : tc('logistics_intake.err_photo_upload_network'))
         setSubmitting(false); return
       }
     }
@@ -394,11 +398,11 @@ export default function IntakePage() {
         }),
       }, 45000)
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) { setSubmitErr(data.error || `Could not register parcel (${res.status})`); setSubmitting(false); return }
+      if (!res.ok) { setSubmitErr(data.error || tc('logistics_intake.err_register_status', { status: res.status })); setSubmitting(false); return }
       setCreatedParcel({ tracking_number: data.parcel.tracking_number, id: data.parcel.id, receipt_consent: receiptConsent })
       setStep('done')
     } catch (e: any) {
-      setSubmitErr(e?.name === 'AbortError' ? 'Timed out — the parcel may not have been registered. Check the dispatch queue before retrying.' : 'Network error — the parcel was not registered. Try again.')
+      setSubmitErr(e?.name === 'AbortError' ? tc('logistics_intake.err_submit_timeout') : tc('logistics_intake.err_submit_network'))
     } finally { setSubmitting(false) }
   }
 
@@ -415,7 +419,7 @@ export default function IntakePage() {
   }
 
   if (!ready) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }} aria-busy="true">Loading…</div>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }} aria-busy="true">{tc('logistics_intake.loading')}</div>
   )
 
   const sym = staff?.currency_symbol || '$'
@@ -423,19 +427,19 @@ export default function IntakePage() {
   // ── STEP: Open Shift ──────────────────────────────────────
   if (step === 'shift') return (
     <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <Header title="Parcel Intake" subtitle={`${staff?.name} · Open your shift to begin`} />
+      <Header tc={tc} title={tc('logistics_intake.shift_title')} subtitle={tc('logistics_intake.shift_subtitle', { name: staff?.name || '' })} />
       <main style={{ maxWidth: 440, margin: '40px auto', padding: '0 16px' }}>
         <div style={{ background: 'var(--pos-surface)', borderRadius: 16, padding: 24, border: '1px solid var(--pos-border)' }}>
-          <div style={{ fontSize: 22, marginBottom: 8 }} aria-hidden>🏪</div>
-          <h1 style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', margin: '0 0 4px' }}>Open Shift</h1>
-          <p style={{ fontSize: 13, color: 'var(--pos-muted)', margin: '0 0 20px' }}>Count your starting cash float before accepting parcels.</p>
-          <Field label={`Opening Cash Float (${sym})`}>
-            <input value={openFloat} onChange={e => setOpenFloat(e.target.value)} type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00" style={inputSx} />
+          <div style={{ fontSize: 22, marginBottom: 8 }} aria-hidden>{tc('logistics_intake.shift_card_emoji')}</div>
+          <h1 style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', margin: '0 0 4px' }}>{tc('logistics_intake.shift_heading')}</h1>
+          <p style={{ fontSize: 13, color: 'var(--pos-muted)', margin: '0 0 20px' }}>{tc('logistics_intake.shift_intro')}</p>
+          <Field label={tc('logistics_intake.shift_float_label', { symbol: sym })}>
+            <input value={openFloat} onChange={e => setOpenFloat(e.target.value)} type="number" min="0" step="0.01" inputMode="decimal" placeholder={tc('logistics_intake.shift_float_placeholder')} style={inputSx} />
           </Field>
           <ErrorText>{shiftErr}</ErrorText>
           <button onClick={openShift} disabled={shiftBusy} aria-busy={shiftBusy}
             style={{ width: '100%', background: ACC, color: '#fff', border: 'none', borderRadius: 12, padding: 14, fontSize: 16, fontWeight: 800, cursor: shiftBusy ? 'wait' : 'pointer', opacity: shiftBusy ? 0.6 : 1 }}>
-            {shiftBusy ? 'Opening…' : 'Open Shift & Start Intake'}
+            {shiftBusy ? tc('logistics_intake.shift_opening') : tc('logistics_intake.shift_open_button')}
           </button>
         </div>
       </main>
@@ -445,27 +449,27 @@ export default function IntakePage() {
   // ── STEP: Done ────────────────────────────────────────────
   if (step === 'done' && createdParcel) return (
     <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <Header title="Parcel Registered" subtitle={staff?.name || ''} onClose={() => setShowClose(true)} />
+      <Header tc={tc} title={tc('logistics_intake.done_title')} subtitle={staff?.name || ''} onClose={() => setShowClose(true)} />
       <main style={{ maxWidth: 440, margin: '40px auto', padding: '0 16px', textAlign: 'center' }}>
         <div style={{ background: 'var(--pos-surface)', borderRadius: 20, padding: '32px 24px', border: `2px solid ${GREEN}` }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }} aria-hidden>📦</div>
-          <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 8 }}>Tracking Number</div>
+          <div style={{ fontSize: 40, marginBottom: 12 }} aria-hidden>{tc('logistics_intake.done_emoji')}</div>
+          <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 8 }}>{tc('logistics_intake.done_tracking_label')}</div>
           <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 42, fontWeight: 900, color: ACC, letterSpacing: 2, padding: '16px 24px', background: ACC_LIGHT, borderRadius: 12, border: `2px dashed ${ACC_B}`, marginBottom: 16, wordBreak: 'break-all' }}>
             {createdParcel.tracking_number}
           </div>
           <p style={{ fontSize: 14, color: 'var(--pos-muted)', margin: '0 0 24px' }}>
-            ✍️ Write this number on the parcel now. Handlers, drivers and managers scan it with their camera.
+            {tc('logistics_intake.done_write_note')}
           </p>
           {createdParcel.receipt_consent && (
             <div style={{ background: 'var(--pos-success-pale)', border: '1px solid var(--pos-success-ring)', borderRadius: 10, padding: '10px 14px', marginBottom: 24, fontSize: 12, color: GREEN }}>
-              📲 Sender consented to a WhatsApp/SMS receipt &amp; tracking updates.
+              {tc('logistics_intake.done_receipt_consent')}
             </div>
           )}
-          <button onClick={resetForm} style={{ width: '100%', background: ACC, color: '#fff', border: 'none', borderRadius: 12, padding: 14, fontSize: 16, fontWeight: 800, cursor: 'pointer', marginBottom: 12 }}>+ Take Next Parcel</button>
-          <button onClick={() => setShowClose(true)} style={{ width: '100%', background: 'transparent', color: 'var(--pos-muted)', border: '1px solid var(--pos-border)', borderRadius: 12, padding: 12, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Close Shift</button>
+          <button onClick={resetForm} style={{ width: '100%', background: ACC, color: '#fff', border: 'none', borderRadius: 12, padding: 14, fontSize: 16, fontWeight: 800, cursor: 'pointer', marginBottom: 12 }}>{tc('logistics_intake.done_next_parcel')}</button>
+          <button onClick={() => setShowClose(true)} style={{ width: '100%', background: 'transparent', color: 'var(--pos-muted)', border: '1px solid var(--pos-border)', borderRadius: 12, padding: 12, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>{tc('logistics_intake.done_close_shift')}</button>
         </div>
       </main>
-      {showClose && <CloseShiftModal sym={sym} closeCash={closeCash} setCloseCash={setCloseCash} closingShift={closingShift} closeErr={closeErr} onClose={closeShift} onCancel={() => { setShowClose(false); setCloseErr('') }} />}
+      {showClose && <CloseShiftModal tc={tc} sym={sym} closeCash={closeCash} setCloseCash={setCloseCash} closingShift={closingShift} closeErr={closeErr} onClose={closeShift} onCancel={() => { setShowClose(false); setCloseErr('') }} />}
     </div>
   )
 
@@ -478,12 +482,12 @@ export default function IntakePage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', fontFamily: 'system-ui, -apple-system, sans-serif', paddingBottom: 80 }}>
-      <Header title="Parcel Intake" subtitle={`${staff?.name} · Shift open`} sticky onClose={() => setShowClose(true)} />
+      <Header tc={tc} title={tc('logistics_intake.main_title')} subtitle={tc('logistics_intake.main_subtitle', { name: staff?.name || '' })} sticky onClose={() => setShowClose(true)} />
 
       {/* Outgoing / Incoming switch */}
       <div style={{ display: 'flex', background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)' }}>
-        <div style={{ flex: 1, padding: '10px 4px', textAlign: 'center', fontSize: 12, fontWeight: 800, color: ACC, borderBottom: `2px solid ${ACC}` }}>📤 Outgoing</div>
-        <button onClick={() => router.push('/logistics/collect')} style={{ flex: 1, padding: '10px 4px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: 'var(--pos-muted)', background: 'transparent', border: 'none', borderBottom: '2px solid transparent', cursor: 'pointer' }}>📥 Incoming</button>
+        <div style={{ flex: 1, padding: '10px 4px', textAlign: 'center', fontSize: 12, fontWeight: 800, color: ACC, borderBottom: `2px solid ${ACC}` }}>{tc('logistics_intake.tab_outgoing')}</div>
+        <button onClick={() => router.push('/logistics/collect')} style={{ flex: 1, padding: '10px 4px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: 'var(--pos-muted)', background: 'transparent', border: 'none', borderBottom: '2px solid transparent', cursor: 'pointer' }}>{tc('logistics_intake.tab_incoming')}</button>
       </div>
 
       {/* Progress (decorative; current step announced via aria-current) */}
@@ -501,16 +505,16 @@ export default function IntakePage() {
         {/* SENDER */}
         {step === 'sender' && (
           <section aria-labelledby="h-sender">
-            <h1 id="h-sender" style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', margin: '0 0 4px' }}>👤 Sender Details</h1>
-            <p style={{ fontSize: 13, color: 'var(--pos-muted)', margin: '0 0 18px' }}>Who is sending this parcel?</p>
-            <Field label="Full Name *"><input value={senderName} onChange={e => setSenderName(e.target.value)} maxLength={120} autoComplete="off" placeholder="e.g. John Banda" style={inputSx} /></Field>
-            <Field label="Phone Number *"><input value={senderPhone} onChange={e => setSenderPhone(e.target.value)} type="tel" inputMode="tel" maxLength={32} autoComplete="off" placeholder="+265 999 000 000" style={inputSx} /></Field>
-            <Field label="ID Number (optional)" hint="Only collect if your branch requires sender ID. Stored securely and used solely for this shipment.">
-              <input value={senderIdNum} onChange={e => setSenderIdNum(e.target.value)} maxLength={40} autoComplete="off" placeholder="National ID / Passport" style={inputSx} />
+            <h1 id="h-sender" style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', margin: '0 0 4px' }}>{tc('logistics_intake.sender_heading')}</h1>
+            <p style={{ fontSize: 13, color: 'var(--pos-muted)', margin: '0 0 18px' }}>{tc('logistics_intake.sender_intro')}</p>
+            <Field label={tc('logistics_intake.field_full_name_required')}><input value={senderName} onChange={e => setSenderName(e.target.value)} maxLength={120} autoComplete="off" placeholder={tc('logistics_intake.sender_name_placeholder')} style={inputSx} /></Field>
+            <Field label={tc('logistics_intake.field_phone_required')}><input value={senderPhone} onChange={e => setSenderPhone(e.target.value)} type="tel" inputMode="tel" maxLength={32} autoComplete="off" placeholder={tc('logistics_intake.sender_phone_placeholder')} style={inputSx} /></Field>
+            <Field label={tc('logistics_intake.field_id_optional')} hint={tc('logistics_intake.sender_id_hint')}>
+              <input value={senderIdNum} onChange={e => setSenderIdNum(e.target.value)} maxLength={40} autoComplete="off" placeholder={tc('logistics_intake.id_placeholder')} style={inputSx} />
             </Field>
-            <ScanIdButton busy={scanningId === 'sender'} msg={idMsgFor === 'sender' ? idScanMsg : ''} onClick={() => senderIdCamRef.current?.click()} />
-            <input ref={senderIdCamRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} aria-label="Photograph sender ID" onChange={e => { const f = e.target.files?.[0]; if (f) handleIdScan(f, 'sender'); e.target.value = '' }} />
-            <NextButton disabled={!senderName.trim() || !senderPhone.trim()} onClick={() => setStep('receiver')}>Next: Receiver →</NextButton>
+            <ScanIdButton tc={tc} busy={scanningId === 'sender'} msg={idMsgFor === 'sender' ? idScanMsg : ''} onClick={() => senderIdCamRef.current?.click()} />
+            <input ref={senderIdCamRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} aria-label={tc('logistics_intake.aria_photograph_sender_id')} onChange={e => { const f = e.target.files?.[0]; if (f) handleIdScan(f, 'sender'); e.target.value = '' }} />
+            <NextButton disabled={!senderName.trim() || !senderPhone.trim()} onClick={() => setStep('receiver')}>{tc('logistics_intake.next_receiver')}</NextButton>
           </section>
         )}
 
@@ -518,19 +522,19 @@ export default function IntakePage() {
         {step === 'receiver' && (
           <section aria-labelledby="h-recv">
             <BackButton onClick={() => setStep('sender')} />
-            <h1 id="h-recv" style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', margin: '0 0 4px' }}>📬 Receiver Details</h1>
-            <p style={{ fontSize: 13, color: 'var(--pos-muted)', margin: '0 0 18px' }}>Who is receiving this parcel?</p>
-            <Field label="Full Name *"><input value={recvName} onChange={e => setRecvName(e.target.value)} maxLength={120} autoComplete="off" placeholder="e.g. Mary Phiri" style={inputSx} /></Field>
-            <Field label="Phone Number *"><input value={recvPhone} onChange={e => setRecvPhone(e.target.value)} type="tel" inputMode="tel" maxLength={32} autoComplete="off" placeholder="+265 888 000 000" style={inputSx} /></Field>
-            <Field label="ID Number (optional)" hint="Checked when the receiver collects the parcel."><input value={recvIdNum} onChange={e => setRecvIdNum(e.target.value)} maxLength={40} autoComplete="off" placeholder="National ID / Passport" style={inputSx} /></Field>
-            <ScanIdButton busy={scanningId === 'receiver'} msg={idMsgFor === 'receiver' ? idScanMsg : ''} onClick={() => recvIdCamRef.current?.click()} />
-            <input ref={recvIdCamRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} aria-label="Photograph receiver ID" onChange={e => { const f = e.target.files?.[0]; if (f) handleIdScan(f, 'receiver'); e.target.value = '' }} />
+            <h1 id="h-recv" style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', margin: '0 0 4px' }}>{tc('logistics_intake.receiver_heading')}</h1>
+            <p style={{ fontSize: 13, color: 'var(--pos-muted)', margin: '0 0 18px' }}>{tc('logistics_intake.receiver_intro')}</p>
+            <Field label={tc('logistics_intake.field_full_name_required')}><input value={recvName} onChange={e => setRecvName(e.target.value)} maxLength={120} autoComplete="off" placeholder={tc('logistics_intake.recv_name_placeholder')} style={inputSx} /></Field>
+            <Field label={tc('logistics_intake.field_phone_required')}><input value={recvPhone} onChange={e => setRecvPhone(e.target.value)} type="tel" inputMode="tel" maxLength={32} autoComplete="off" placeholder={tc('logistics_intake.recv_phone_placeholder')} style={inputSx} /></Field>
+            <Field label={tc('logistics_intake.field_id_optional')} hint={tc('logistics_intake.recv_id_hint')}><input value={recvIdNum} onChange={e => setRecvIdNum(e.target.value)} maxLength={40} autoComplete="off" placeholder={tc('logistics_intake.id_placeholder')} style={inputSx} /></Field>
+            <ScanIdButton tc={tc} busy={scanningId === 'receiver'} msg={idMsgFor === 'receiver' ? idScanMsg : ''} onClick={() => recvIdCamRef.current?.click()} />
+            <input ref={recvIdCamRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} aria-label={tc('logistics_intake.aria_photograph_receiver_id')} onChange={e => { const f = e.target.files?.[0]; if (f) handleIdScan(f, 'receiver'); e.target.value = '' }} />
 
-            <ChoiceGroup label="Delivery Type *">
+            <ChoiceGroup label={tc('logistics_intake.delivery_type_label')}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 {(['branch_to_branch', 'door_to_door'] as const).map(dt => (
                   <button key={dt} type="button" aria-pressed={deliveryType === dt} onClick={() => setDeliveryType(dt)}
-                    style={choiceSx(deliveryType === dt)}>{dt === 'branch_to_branch' ? '🏪 Branch to Branch' : '🏠 Door to Door'}</button>
+                    style={choiceSx(deliveryType === dt)}>{dt === 'branch_to_branch' ? tc('logistics_intake.delivery_branch_to_branch') : tc('logistics_intake.delivery_door_to_door')}</button>
                 ))}
               </div>
             </ChoiceGroup>
@@ -538,10 +542,10 @@ export default function IntakePage() {
             {deliveryType === 'branch_to_branch' ? (
               routes.length === 0 ? (
                 <div style={{ background: 'var(--pos-danger-pale)', border: '1px solid var(--pos-danger-ring)', borderRadius: 12, padding: '14px 16px', marginBottom: 14, fontSize: 13, color: 'var(--pos-ink)' }}>
-                  🚧 No delivery routes set up from your branch yet. Ask your manager to add a route (Branch Dashboard → Routes), or use <strong>Door to Door</strong>.
+                  {tc('logistics_intake.no_routes_notice')}
                 </div>
               ) : (
-                <Field label="Destination (route) *" hint="Routes & prices are set by your manager.">
+                <Field label={tc('logistics_intake.destination_label')} hint={tc('logistics_intake.destination_hint')}>
                   <select value={selectedRouteId} style={selectSx}
                     onChange={e => {
                       const r = routes.find(x => x.id === e.target.value) || null
@@ -550,10 +554,10 @@ export default function IntakePage() {
                       setFeeEdited(false)
                       applyRoutePrice(r, weightKg)
                     }}>
-                    <option value="">Select destination…</option>
+                    <option value="">{tc('logistics_intake.destination_placeholder')}</option>
                     {routes.map(r => (
                       <option key={r.id} value={r.id}>
-                        {r.destination?.name || r.name || 'Route'}{r.flat_rate != null ? ` · ${sym}${r.flat_rate}` : r.price_per_kg != null ? ` · ${sym}${r.price_per_kg}/kg` : ''}
+                        {r.destination?.name || r.name || tc('logistics_intake.route_fallback')}{r.flat_rate != null ? ` · ${sym}${r.flat_rate}` : r.price_per_kg != null ? ` · ${sym}${r.price_per_kg}/kg` : ''}
                       </option>
                     ))}
                   </select>
@@ -561,13 +565,13 @@ export default function IntakePage() {
               )
             ) : (
               <>
-                <Field label="Delivery Address *"><input value={deliveryAddress} onChange={e => setDelivAddress(e.target.value)} maxLength={200} placeholder="Street, area, landmark" style={inputSx} /></Field>
-                <Field label="Destination City *"><input value={destCity} onChange={e => setDestCity(e.target.value)} maxLength={80} placeholder="e.g. Blantyre" style={inputSx} /></Field>
+                <Field label={tc('logistics_intake.delivery_address_label')}><input value={deliveryAddress} onChange={e => setDelivAddress(e.target.value)} maxLength={200} placeholder={tc('logistics_intake.delivery_address_placeholder')} style={inputSx} /></Field>
+                <Field label={tc('logistics_intake.destination_city_label')}><input value={destCity} onChange={e => setDestCity(e.target.value)} maxLength={80} placeholder={tc('logistics_intake.destination_city_placeholder')} style={inputSx} /></Field>
               </>
             )}
             <NextButton
               disabled={!recvName.trim() || !recvPhone.trim() || (deliveryType === 'branch_to_branch' ? !selectedRouteId : !deliveryAddress.trim() || !destCity.trim())}
-              onClick={() => setStep('parcel')}>Next: Parcel Details →</NextButton>
+              onClick={() => setStep('parcel')}>{tc('logistics_intake.next_parcel')}</NextButton>
           </section>
         )}
 
@@ -575,24 +579,24 @@ export default function IntakePage() {
         {step === 'parcel' && (
           <section aria-labelledby="h-parcel">
             <BackButton onClick={() => setStep('receiver')} />
-            <h1 id="h-parcel" style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', margin: '0 0 4px' }}>📦 Parcel Details</h1>
-            <p style={{ fontSize: 13, color: 'var(--pos-muted)', margin: '0 0 18px' }}>Describe what&apos;s being sent.</p>
-            <Field label="Description"><input value={description} onChange={e => setDescription(e.target.value)} maxLength={200} placeholder="e.g. Clothes, electronics, documents" style={inputSx} /></Field>
+            <h1 id="h-parcel" style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', margin: '0 0 4px' }}>{tc('logistics_intake.parcel_heading')}</h1>
+            <p style={{ fontSize: 13, color: 'var(--pos-muted)', margin: '0 0 18px' }}>{tc('logistics_intake.parcel_intro')}</p>
+            <Field label={tc('logistics_intake.field_description')}><input value={description} onChange={e => setDescription(e.target.value)} maxLength={200} placeholder={tc('logistics_intake.description_placeholder')} style={inputSx} /></Field>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 0 }}>
-              <Field label="Weight (kg)"><input value={weightKg} onChange={e => { setWeightKg(e.target.value); applyRoutePrice(selectedRoute, e.target.value) }} type="number" min="0" step="0.1" inputMode="decimal" placeholder="0.0" style={inputSx} /></Field>
-              <Field label={`Declared Value (${sym})`}><input value={declaredValue} onChange={e => setDeclaredVal(e.target.value)} type="number" min="0" step="1" inputMode="decimal" placeholder="0" style={inputSx} /></Field>
+              <Field label={tc('logistics_intake.field_weight')}><input value={weightKg} onChange={e => { setWeightKg(e.target.value); applyRoutePrice(selectedRoute, e.target.value) }} type="number" min="0" step="0.1" inputMode="decimal" placeholder={tc('logistics_intake.weight_placeholder')} style={inputSx} /></Field>
+              <Field label={tc('logistics_intake.field_declared_value', { symbol: sym })}><input value={declaredValue} onChange={e => setDeclaredVal(e.target.value)} type="number" min="0" step="1" inputMode="decimal" placeholder={tc('logistics_intake.declared_value_placeholder')} style={inputSx} /></Field>
             </div>
-            <ChoiceGroup label="Parcel Size" hint="S=shoebox · M=backpack · L=suitcase · XL=pallet">
+            <ChoiceGroup label={tc('logistics_intake.parcel_size_label')} hint={tc('logistics_intake.parcel_size_hint')}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
                 {(['S', 'M', 'L', 'XL'] as const).map(sz => (
                   <button key={sz} type="button" aria-pressed={parcelSize === sz} onClick={() => setParcelSize(sz)} style={{ ...choiceSx(parcelSize === sz), padding: '10px 4px', fontSize: 15, fontWeight: 800 }}>{sz}</button>
                 ))}
               </div>
             </ChoiceGroup>
-            <Field label={`Shipping Fee (${sym}) *`} hint={selectedRoute && !feeEdited ? 'Auto-priced from the route — you can adjust it.' : 'Manager route rates apply by default — you can adjust this.'}>
-              <input value={feeCharged} onChange={e => { setFeeEdited(true); setFeeCharged(e.target.value) }} type="number" min="0" step="1" inputMode="decimal" placeholder="0.00" style={{ ...inputSx, fontSize: 20, fontWeight: 800, color: ACC }} />
+            <Field label={tc('logistics_intake.shipping_fee_label', { symbol: sym })} hint={selectedRoute && !feeEdited ? tc('logistics_intake.shipping_fee_hint_auto') : tc('logistics_intake.shipping_fee_hint_manual')}>
+              <input value={feeCharged} onChange={e => { setFeeEdited(true); setFeeCharged(e.target.value) }} type="number" min="0" step="1" inputMode="decimal" placeholder={tc('logistics_intake.fee_placeholder')} style={{ ...inputSx, fontSize: 20, fontWeight: 800, color: ACC }} />
             </Field>
-            <NextButton disabled={false} onClick={() => setStep('photo')}>Next: Take Photo →</NextButton>
+            <NextButton disabled={false} onClick={() => setStep('photo')}>{tc('logistics_intake.next_photo')}</NextButton>
           </section>
         )}
 
@@ -600,28 +604,28 @@ export default function IntakePage() {
         {step === 'photo' && (
           <section aria-labelledby="h-photo">
             <BackButton onClick={() => setStep('parcel')} />
-            <h1 id="h-photo" style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', margin: '0 0 4px' }}>📷 Parcel Photo</h1>
-            <p style={{ fontSize: 13, color: 'var(--pos-muted)', margin: '0 0 18px' }}>Take a clear photo of the sealed parcel. This is your proof of intake.</p>
+            <h1 id="h-photo" style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', margin: '0 0 4px' }}>{tc('logistics_intake.photo_heading')}</h1>
+            <p style={{ fontSize: 13, color: 'var(--pos-muted)', margin: '0 0 18px' }}>{tc('logistics_intake.photo_intro')}</p>
             <ErrorText>{photoErr}</ErrorText>
             {photoDataUrl ? (
               <div style={{ position: 'relative', marginBottom: 16 }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={photoDataUrl} alt="Captured parcel" style={{ width: '100%', borderRadius: 12, maxHeight: 260, objectFit: 'cover', border: `2px solid ${GREEN}` }} />
-                <button type="button" onClick={clearPhoto} style={{ position: 'absolute', top: 8, right: 8, background: RED, color: '#fff', border: 'none', borderRadius: 8, padding: '4px 10px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Retake</button>
+                <img src={photoDataUrl} alt={tc('logistics_intake.alt_captured_parcel')} style={{ width: '100%', borderRadius: 12, maxHeight: 260, objectFit: 'cover', border: `2px solid ${GREEN}` }} />
+                <button type="button" onClick={clearPhoto} style={{ position: 'absolute', top: 8, right: 8, background: RED, color: '#fff', border: 'none', borderRadius: 8, padding: '4px 10px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{tc('logistics_intake.photo_retake')}</button>
               </div>
             ) : (
               <button type="button" onClick={() => cameraRef.current?.click()} disabled={photoBusy} aria-busy={photoBusy} style={{ width: '100%', aspectRatio: '4/3', background: 'var(--pos-surface)', border: `2px dashed ${ACC_B}`, borderRadius: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: photoBusy ? 'wait' : 'pointer', marginBottom: 16 }}>
                 <div style={{ fontSize: 48, marginBottom: 8 }} aria-hidden>📷</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: ACC }}>{photoBusy ? 'Processing…' : 'Tap to open camera'}</div>
-                <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>JPEG/PNG/WebP/HEIC · auto-compressed</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: ACC }}>{photoBusy ? tc('logistics_intake.photo_processing') : tc('logistics_intake.photo_tap_open_camera')}</div>
+                <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{tc('logistics_intake.photo_formats')}</div>
               </button>
             )}
-            <input ref={cameraRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handlePhoto(f); e.target.value = '' }} aria-label="Take parcel photo with camera" />
-            <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handlePhoto(f); e.target.value = '' }} aria-label="Choose parcel photo from gallery" />
+            <input ref={cameraRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handlePhoto(f); e.target.value = '' }} aria-label={tc('logistics_intake.aria_take_parcel_photo_camera')} />
+            <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handlePhoto(f); e.target.value = '' }} aria-label={tc('logistics_intake.aria_choose_parcel_photo_gallery')} />
             {!photoDataUrl && (
-              <button type="button" onClick={() => fileRef.current?.click()} disabled={photoBusy} style={{ width: '100%', background: 'transparent', color: ACC, border: `1px solid ${ACC_B}`, borderRadius: 12, padding: 12, fontSize: 14, fontWeight: 700, cursor: 'pointer', marginBottom: 12 }}>📁 Choose from gallery</button>
+              <button type="button" onClick={() => fileRef.current?.click()} disabled={photoBusy} style={{ width: '100%', background: 'transparent', color: ACC, border: `1px solid ${ACC_B}`, borderRadius: 12, padding: 12, fontSize: 14, fontWeight: 700, cursor: 'pointer', marginBottom: 12 }}>{tc('logistics_intake.photo_choose_gallery')}</button>
             )}
-            <NextButton disabled={photoBusy} variant={photoDataUrl ? 'primary' : 'muted'} onClick={() => setStep('payment')}>{photoDataUrl ? 'Next: Payment →' : 'Skip photo (not recommended)'}</NextButton>
+            <NextButton disabled={photoBusy} variant={photoDataUrl ? 'primary' : 'muted'} onClick={() => setStep('payment')}>{photoDataUrl ? tc('logistics_intake.next_payment') : tc('logistics_intake.photo_skip')}</NextButton>
           </section>
         )}
 
@@ -629,28 +633,28 @@ export default function IntakePage() {
         {step === 'payment' && (
           <section aria-labelledby="h-pay">
             <BackButton onClick={() => setStep('photo')} />
-            <h1 id="h-pay" style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', margin: '0 0 4px' }}>💳 Payment</h1>
-            <p style={{ fontSize: 13, color: 'var(--pos-muted)', margin: '0 0 18px' }}>How is the sender paying?</p>
+            <h1 id="h-pay" style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', margin: '0 0 4px' }}>{tc('logistics_intake.payment_heading')}</h1>
+            <p style={{ fontSize: 13, color: 'var(--pos-muted)', margin: '0 0 18px' }}>{tc('logistics_intake.payment_intro')}</p>
             <div style={{ background: ACC_LIGHT, border: `1px solid ${ACC_B}`, borderRadius: 12, padding: '14px 16px', marginBottom: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ fontSize: 13, color: 'var(--pos-muted)' }}>Shipping Fee</div>
+              <div style={{ fontSize: 13, color: 'var(--pos-muted)' }}>{tc('logistics_intake.payment_shipping_fee')}</div>
               <div style={{ fontSize: 24, fontWeight: 900, color: ACC }}>{sym}{(parseFloat(feeCharged || '0') || 0).toFixed(2)}</div>
             </div>
-            <ChoiceGroup label="Payment Method">
+            <ChoiceGroup label={tc('logistics_intake.payment_method_label')}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
-                {([{ id: 'cash', label: '💵 Cash' }, { id: 'card', label: '💳 Card' }, { id: 'mobile_money', label: '📱 Mobile' }] as const).map(pm => (
+                {([{ id: 'cash', label: tc('logistics_intake.pay_method_cash') }, { id: 'card', label: tc('logistics_intake.pay_method_card') }, { id: 'mobile_money', label: tc('logistics_intake.pay_method_mobile') }] as const).map(pm => (
                   <button key={pm.id} type="button" aria-pressed={payMethod === pm.id} onClick={() => setPayMethod(pm.id)} style={choiceSx(payMethod === pm.id)}>{pm.label}</button>
                 ))}
               </div>
             </ChoiceGroup>
-            <ChoiceGroup label="Payment Status">
+            <ChoiceGroup label={tc('logistics_intake.payment_status_label')}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
-                {([{ id: 'paid', label: '✅ Paid', c: GREEN }, { id: 'partial', label: '⚡ Partial', c: AMBER }, { id: 'unpaid', label: '❌ Unpaid', c: RED }] as const).map(ps => (
+                {([{ id: 'paid', label: tc('logistics_intake.pay_status_paid'), c: GREEN }, { id: 'partial', label: tc('logistics_intake.pay_status_partial'), c: AMBER }, { id: 'unpaid', label: tc('logistics_intake.pay_status_unpaid'), c: RED }] as const).map(ps => (
                   <button key={ps.id} type="button" aria-pressed={payStatus === ps.id} onClick={() => setPayStatus(ps.id)}
                     style={{ padding: '12px 4px', border: `2px solid ${payStatus === ps.id ? ps.c : 'var(--pos-border)'}`, borderRadius: 10, background: payStatus === ps.id ? `color-mix(in srgb, ${ps.c} 12%, transparent)` : 'var(--pos-surface)', color: payStatus === ps.id ? ps.c : 'var(--pos-ink)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{ps.label}</button>
                 ))}
               </div>
             </ChoiceGroup>
-            <NextButton disabled={false} onClick={() => setStep('confirm')}>Review &amp; Confirm →</NextButton>
+            <NextButton disabled={false} onClick={() => setStep('confirm')}>{tc('logistics_intake.review_confirm')}</NextButton>
           </section>
         )}
 
@@ -658,31 +662,31 @@ export default function IntakePage() {
         {step === 'confirm' && (
           <section aria-labelledby="h-confirm">
             <BackButton onClick={() => setStep('payment')} />
-            <h1 id="h-confirm" style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', margin: '0 0 4px' }}>✅ Confirm Intake</h1>
-            <p style={{ fontSize: 13, color: 'var(--pos-muted)', margin: '0 0 18px' }}>Review, capture consent, then register the parcel.</p>
+            <h1 id="h-confirm" style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', margin: '0 0 4px' }}>{tc('logistics_intake.confirm_heading')}</h1>
+            <p style={{ fontSize: 13, color: 'var(--pos-muted)', margin: '0 0 18px' }}>{tc('logistics_intake.confirm_intro')}</p>
 
             <div style={{ background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 14, overflow: 'hidden', marginBottom: 16 }}>
-              <Row label="👤 Sender" value={`${senderName} · ${senderPhone}${senderIdNum ? ` · ID ${senderIdNum}` : ''}`} />
-              <Row label="📬 Receiver" value={`${recvName} · ${recvPhone}${recvIdNum ? ` · ID ${recvIdNum}` : ''}`} />
-              <Row label="🚚 Delivery" value={deliveryType === 'branch_to_branch' ? `Branch → ${selectedRoute?.destination?.name || '—'}` : `Door to Door — ${deliveryAddress}, ${destCity}`} />
-              <Row label="📦 Parcel" value={`${parcelSize} · ${weightKg || '?'}kg${description ? ` · ${description}` : ''}`} />
-              {photoDataUrl && <Row label="📷 Photo" value="✓ Attached" />}
-              <Row label="💳 Payment" value={`${sym}${(parseFloat(feeCharged || '0') || 0).toFixed(2)} · ${payMethod.replace('_', ' ')} · ${payStatus}`} bold />
+              <Row label={tc('logistics_intake.row_sender')} value={`${senderName} · ${senderPhone}${senderIdNum ? tc('logistics_intake.row_id_prefix') + senderIdNum : ''}`} />
+              <Row label={tc('logistics_intake.row_receiver')} value={`${recvName} · ${recvPhone}${recvIdNum ? tc('logistics_intake.row_id_prefix') + recvIdNum : ''}`} />
+              <Row label={tc('logistics_intake.row_delivery')} value={deliveryType === 'branch_to_branch' ? tc('logistics_intake.delivery_branch_arrow', { dest: selectedRoute?.destination?.name || tc('logistics_intake.delivery_dash') }) : tc('logistics_intake.delivery_door_summary', { address: deliveryAddress, city: destCity })} />
+              <Row label={tc('logistics_intake.row_parcel')} value={description ? tc('logistics_intake.parcel_summary_desc', { size: parcelSize, weight: weightKg || tc('logistics_intake.weight_unknown'), description }) : tc('logistics_intake.parcel_summary', { size: parcelSize, weight: weightKg || tc('logistics_intake.weight_unknown') })} />
+              {photoDataUrl && <Row label={tc('logistics_intake.row_photo')} value={tc('logistics_intake.photo_attached')} />}
+              <Row label={tc('logistics_intake.row_payment')} value={tc('logistics_intake.payment_summary', { symbol: sym, fee: (parseFloat(feeCharged || '0') || 0).toFixed(2), method: payMethod.replace('_', ' '), status: payStatus })} bold />
             </div>
 
             {/* GDPR consent */}
             <div style={{ background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 14, padding: 16, marginBottom: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--pos-ink)', marginBottom: 10 }}>Data &amp; privacy</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--pos-ink)', marginBottom: 10 }}>{tc('logistics_intake.privacy_heading')}</div>
               <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 12, cursor: 'pointer' }}>
                 <input type="checkbox" checked={dataConsent} onChange={e => setDataConsent(e.target.checked)} style={{ width: 20, height: 20, marginTop: 1, accentColor: ACC, flexShrink: 0 }} />
                 <span style={{ fontSize: 12.5, color: 'var(--pos-ink)', lineHeight: 1.5 }}>
-                  The sender agrees that AskBiz may store and process these details (including any ID number and photo) to carry and deliver this parcel. Data is kept only as long as needed for the shipment and legal records, and can be erased on request. <span style={{ fontWeight: 700, color: RED }}>Required.</span>
+                  {tc('logistics_intake.consent_data_text')} <span style={{ fontWeight: 700, color: RED }}>{tc('logistics_intake.consent_required_word')}</span>
                 </span>
               </label>
               <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer' }}>
                 <input type="checkbox" checked={receiptConsent} onChange={e => setReceiptConsent(e.target.checked)} style={{ width: 20, height: 20, marginTop: 1, accentColor: ACC, flexShrink: 0 }} />
                 <span style={{ fontSize: 12.5, color: 'var(--pos-ink)', lineHeight: 1.5 }}>
-                  The sender wants a WhatsApp/SMS receipt &amp; tracking updates on {senderPhone || 'their number'}. <span style={{ color: 'var(--pos-muted)' }}>Optional.</span>
+                  {tc('logistics_intake.consent_receipt_text', { phone: senderPhone || tc('logistics_intake.consent_their_number') })} <span style={{ color: 'var(--pos-muted)' }}>{tc('logistics_intake.consent_optional_word')}</span>
                 </span>
               </label>
             </div>
@@ -690,13 +694,13 @@ export default function IntakePage() {
             <ErrorText>{submitErr}</ErrorText>
             <button onClick={submit} disabled={submitting || !dataConsent} aria-busy={submitting}
               style={{ width: '100%', background: !dataConsent ? 'var(--pos-border)' : GREEN, color: !dataConsent ? 'var(--pos-muted)' : '#fff', border: 'none', borderRadius: 12, padding: 16, fontSize: 17, fontWeight: 900, cursor: submitting ? 'wait' : !dataConsent ? 'not-allowed' : 'pointer', opacity: submitting ? 0.7 : 1 }}>
-              {submitting ? '⏳ Registering parcel…' : '✅ Register Parcel'}
+              {submitting ? tc('logistics_intake.registering_parcel') : tc('logistics_intake.register_parcel')}
             </button>
           </section>
         )}
       </main>
 
-      {showClose && <CloseShiftModal sym={sym} closeCash={closeCash} setCloseCash={setCloseCash} closingShift={closingShift} closeErr={closeErr} onClose={closeShift} onCancel={() => { setShowClose(false); setCloseErr('') }} />}
+      {showClose && <CloseShiftModal tc={tc} sym={sym} closeCash={closeCash} setCloseCash={setCloseCash} closingShift={closingShift} closeErr={closeErr} onClose={closeShift} onCancel={() => { setShowClose(false); setCloseErr('') }} />}
     </div>
   )
 }
@@ -706,26 +710,26 @@ function choiceSx(active: boolean): React.CSSProperties {
   return { padding: '12px 8px', border: `2px solid ${active ? ACC : 'var(--pos-border)'}`, borderRadius: 10, background: active ? ACC_LIGHT : 'var(--pos-surface)', color: active ? ACC : 'var(--pos-ink)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }
 }
 
-function Header({ title, subtitle, sticky, onClose }: { title: string; subtitle: string; sticky?: boolean; onClose?: () => void }) {
+function Header({ tc, title, subtitle, sticky, onClose }: { tc: Tc; title: string; subtitle: string; sticky?: boolean; onClose?: () => void }) {
   return (
     <header style={{ background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, ...(sticky ? { position: 'sticky', top: 0, zIndex: 50 } : {}) }}>
-      <div style={{ fontSize: 18 }} aria-hidden>📋</div>
+      <div style={{ fontSize: 18 }} aria-hidden>{tc('logistics_intake.header_emoji')}</div>
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--pos-ink)' }}>{title}</div>
         <div style={{ fontSize: 11, color: 'var(--pos-muted)' }}>{subtitle}</div>
       </div>
-      {onClose && <button type="button" onClick={onClose} style={{ background: 'transparent', color: 'var(--pos-muted)', border: '1px solid var(--pos-border)', borderRadius: 8, padding: '5px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Close Shift</button>}
+      {onClose && <button type="button" onClick={onClose} style={{ background: 'transparent', color: 'var(--pos-muted)', border: '1px solid var(--pos-border)', borderRadius: 8, padding: '5px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{tc('logistics_intake.header_close_shift')}</button>}
     </header>
   )
 }
 
-function ScanIdButton({ busy, msg, onClick }: { busy: boolean; msg: string; onClick: () => void }) {
+function ScanIdButton({ tc, busy, msg, onClick }: { tc: Tc; busy: boolean; msg: string; onClick: () => void }) {
   const low = msg.startsWith('⚠️'); const ok = msg.startsWith('✓')
   return (
     <div style={{ marginTop: -6, marginBottom: 14 }}>
       <button type="button" onClick={onClick} disabled={busy} aria-busy={busy}
         style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: ACC_LIGHT, color: ACC, border: `1px solid ${ACC_B}`, borderRadius: 10, padding: '8px 12px', fontSize: 13, fontWeight: 700, cursor: busy ? 'wait' : 'pointer' }}>
-        {busy ? '⏳ Reading ID…' : '📷 Scan ID to auto-fill'}
+        {busy ? tc('logistics_intake.scan_reading_id') : tc('logistics_intake.scan_id_autofill')}
       </button>
       {msg && <div role="status" style={{ fontSize: 11.5, marginTop: 6, color: low ? AMBER : ok ? 'var(--pos-success)' : 'var(--pos-muted)' }}>{msg}</div>}
     </div>
@@ -733,7 +737,8 @@ function ScanIdButton({ busy, msg, onClick }: { busy: boolean; msg: string; onCl
 }
 
 function BackButton({ onClick }: { onClick: () => void }) {
-  return <button type="button" onClick={onClick} aria-label="Go back" style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', marginBottom: 8, padding: 0, color: 'var(--pos-ink)' }}>←</button>
+  const { tc } = useLang()
+  return <button type="button" onClick={onClick} aria-label={tc('logistics_intake.aria_go_back')} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', marginBottom: 8, padding: 0, color: 'var(--pos-ink)' }}>←</button>
 }
 
 function NextButton({ children, disabled, onClick, variant = 'primary' }: { children: React.ReactNode; disabled: boolean; onClick: () => void; variant?: 'primary' | 'muted' }) {
@@ -757,23 +762,23 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
   )
 }
 
-function CloseShiftModal({ sym, closeCash, setCloseCash, closingShift, closeErr, onClose, onCancel }: {
-  sym: string; closeCash: string; setCloseCash: (v: string) => void; closingShift: boolean; closeErr: string; onClose: () => void; onCancel: () => void
+function CloseShiftModal({ tc, sym, closeCash, setCloseCash, closingShift, closeErr, onClose, onCancel }: {
+  tc: Tc; sym: string; closeCash: string; setCloseCash: (v: string) => void; closingShift: boolean; closeErr: string; onClose: () => void; onCancel: () => void
 }) {
   return (
-    <div role="dialog" aria-modal="true" aria-label="Close shift" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onCancel}>
+    <div role="dialog" aria-modal="true" aria-label={tc('logistics_intake.close_aria')} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onCancel}>
       <div style={{ background: 'var(--pos-surface)', borderRadius: '16px 16px 0 0', padding: 24, width: '100%', maxWidth: 500 }} onClick={e => e.stopPropagation()}>
-        <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', margin: '0 0 4px' }}>🔒 Close Shift</h2>
-        <p style={{ fontSize: 13, color: 'var(--pos-muted)', margin: '0 0 16px' }}>Count your cash and enter the total in the drawer.</p>
+        <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', margin: '0 0 4px' }}>{tc('logistics_intake.close_heading')}</h2>
+        <p style={{ fontSize: 13, color: 'var(--pos-muted)', margin: '0 0 16px' }}>{tc('logistics_intake.close_intro')}</p>
         <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 4 }}>
-          Physical Cash Count ({sym})
-          <input value={closeCash} onChange={e => setCloseCash(e.target.value)} type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00"
+          {tc('logistics_intake.close_cash_label', { symbol: sym })}
+          <input value={closeCash} onChange={e => setCloseCash(e.target.value)} type="number" min="0" step="0.01" inputMode="decimal" placeholder={tc('logistics_intake.close_cash_placeholder')}
             style={{ width: '100%', padding: '11px 12px', border: '1px solid var(--pos-border)', borderRadius: 10, fontSize: 18, fontWeight: 800, outline: 'none', boxSizing: 'border-box', margin: '4px 0 12px', textAlign: 'center' }} />
         </label>
         {closeErr && <div role="alert" style={{ color: RED, fontSize: 13, marginBottom: 12, padding: '10px 14px', background: 'var(--pos-danger-pale)', borderRadius: 10 }}>{closeErr}</div>}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <button type="button" onClick={onCancel} style={{ padding: 13, border: '1px solid var(--pos-border)', borderRadius: 12, background: 'transparent', color: 'var(--pos-ink)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-          <button type="button" onClick={onClose} disabled={closingShift} aria-busy={closingShift} style={{ padding: 13, border: 'none', borderRadius: 12, background: RED, color: '#fff', fontSize: 15, fontWeight: 800, cursor: closingShift ? 'wait' : 'pointer', opacity: closingShift ? 0.6 : 1 }}>{closingShift ? 'Closing…' : 'Close Shift'}</button>
+          <button type="button" onClick={onCancel} style={{ padding: 13, border: '1px solid var(--pos-border)', borderRadius: 12, background: 'transparent', color: 'var(--pos-ink)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>{tc('logistics_intake.close_cancel')}</button>
+          <button type="button" onClick={onClose} disabled={closingShift} aria-busy={closingShift} style={{ padding: 13, border: 'none', borderRadius: 12, background: RED, color: '#fff', fontSize: 15, fontWeight: 800, cursor: closingShift ? 'wait' : 'pointer', opacity: closingShift ? 0.6 : 1 }}>{closingShift ? tc('logistics_intake.close_closing') : tc('logistics_intake.close_button')}</button>
         </div>
       </div>
     </div>
