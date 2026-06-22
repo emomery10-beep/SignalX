@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
 
 // ── Design tokens ────────────────────────────────────────────────────────────
 const AMBER  = '#f59e0b'
@@ -13,16 +14,18 @@ const PURPLE = '#8b5cf6'
 type CaptureType = 'intake' | 'output' | 'wastage' | 'dispatch'
 type Stage = 'viewfinder' | 'confirm_type' | 'details' | 'success'
 
-const TYPES: { id: CaptureType; label: string; color: string; bg: string; hint: string }[] = [
-  { id: 'intake',   label: 'Intake',   color: BLUE,   bg: 'rgba(59,130,246,.15)',  hint: 'Raw materials in' },
-  { id: 'output',   label: 'Output',   color: GREEN,  bg: 'rgba(34,197,94,.15)',   hint: 'Finished goods out' },
-  { id: 'wastage',  label: 'Wastage',  color: RED,    bg: 'rgba(239,68,68,.15)',   hint: 'Scrap / spoilage' },
-  { id: 'dispatch', label: 'Dispatch', color: PURPLE, bg: 'rgba(139,92,246,.15)',  hint: 'Shipped out' },
-]
+function buildTypes(tc: (key: string) => string): { id: CaptureType; label: string; color: string; bg: string; hint: string }[] {
+  return [
+    { id: 'intake',   label: tc('factory_capture.type_intake_label'),   color: BLUE,   bg: 'rgba(59,130,246,.15)',  hint: tc('factory_capture.type_intake_hint') },
+    { id: 'output',   label: tc('factory_capture.type_output_label'),   color: GREEN,  bg: 'rgba(34,197,94,.15)',   hint: tc('factory_capture.type_output_hint') },
+    { id: 'wastage',  label: tc('factory_capture.type_wastage_label'),  color: RED,    bg: 'rgba(239,68,68,.15)',   hint: tc('factory_capture.type_wastage_hint') },
+    { id: 'dispatch', label: tc('factory_capture.type_dispatch_label'), color: PURPLE, bg: 'rgba(139,92,246,.15)',  hint: tc('factory_capture.type_dispatch_hint') },
+  ]
+}
 
 const UNITS = ['kg', 'pcs', 'litres', 'boxes', 'tonnes', 'g', 'packs', 'pallets', 'bags']
 
-const WASTAGE_REASONS = ['Damaged', 'Spoiled', 'QC reject', 'Machine fault', 'Contamination', 'Overproduction', 'Other']
+const WASTAGE_REASON_KEYS = ['reason_damaged', 'reason_spoiled', 'reason_qc_reject', 'reason_machine_fault', 'reason_contamination', 'reason_overproduction', 'reason_other']
 
 interface InventoryItem { id: string; name: string; unit: string | null }
 
@@ -61,6 +64,9 @@ function IconRotateCcw({ size = 20, color = '#fff' }: { size?: number; color?: s
 export default function FactoryCapturePage() {
   const router = useRouter()
   const { session, ready: authReady } = usePosAuth()
+  const { tc } = useLang()
+  const TYPES = buildTypes(tc)
+  const WASTAGE_REASONS = WASTAGE_REASON_KEYS.map(k => tc('factory_capture.' + k))
 
   // Stage
   const [stage, setStage]       = useState<Stage>('viewfinder')
@@ -121,10 +127,10 @@ export default function FactoryCapturePage() {
       setCameraOn(true)
     } catch (err: any) {
       const denied = err?.name === 'NotAllowedError'
-      setCameraErr(denied ? 'Camera access denied' : 'Camera unavailable')
+      setCameraErr(denied ? tc('factory_capture.camera_access_denied') : tc('factory_capture.camera_unavailable'))
       setCameraOn(false)
     }
-  }, [])
+  }, [tc])
 
   function stopCamera() {
     streamRef.current?.getTracks().forEach(t => t.stop())
@@ -177,10 +183,10 @@ export default function FactoryCapturePage() {
   async function submit() {
     if (!captureType || !photoUrl || !session) return
     const resolvedNotes = captureType === 'wastage' ? selectedReason || notes.trim() : notes.trim()
-    if (!product.trim()) { setSaveError('Select or enter a product'); return }
-    if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) { setSaveError('Enter a valid quantity'); return }
-    if (captureType === 'wastage' && !resolvedNotes) { setSaveError('Select a reason for wastage'); return }
-    if (captureType === 'dispatch' && !notes.trim()) { setSaveError('Enter a destination'); return }
+    if (!product.trim()) { setSaveError(tc('factory_capture.error_select_product')); return }
+    if (!quantity || isNaN(Number(quantity)) || Number(quantity) <= 0) { setSaveError(tc('factory_capture.error_valid_quantity')); return }
+    if (captureType === 'wastage' && !resolvedNotes) { setSaveError(tc('factory_capture.error_wastage_reason')); return }
+    if (captureType === 'dispatch' && !notes.trim()) { setSaveError(tc('factory_capture.error_destination')); return }
     setSaving(true); setSaveError('')
     try {
       const res = await fetch('/api/pos/factory/capture', {
@@ -197,13 +203,13 @@ export default function FactoryCapturePage() {
       })
       if (!res.ok) {
         const d = await res.json()
-        setSaveError(d.error || 'Failed to save')
+        setSaveError(d.error || tc('factory_capture.error_failed_save'))
         setSaving(false)
         return
       }
       setStage('success')
     } catch {
-      setSaveError('Network error — try again')
+      setSaveError(tc('factory_capture.error_network'))
     } finally {
       setSaving(false)
     }
@@ -276,9 +282,9 @@ export default function FactoryCapturePage() {
           <IconArrowLeft size={18} />
         </button>
         <div>
-          <div style={{ color: '#fff', fontWeight: 700, fontSize: 16, lineHeight: 1 }}>Production Capture</div>
+          <div style={{ color: '#fff', fontWeight: 700, fontSize: 16, lineHeight: 1 }}>{tc('factory_capture.viewfinder_title')}</div>
           <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 2 }}>
-            {captureType ? `${TYPES.find(t => t.id === captureType)!.label} selected` : 'Select type, then tap shutter'}
+            {captureType ? tc('factory_capture.viewfinder_type_selected', { label: TYPES.find(t => t.id === captureType)!.label }) : tc('factory_capture.viewfinder_prompt')}
           </div>
         </div>
       </div>
@@ -290,7 +296,7 @@ export default function FactoryCapturePage() {
             <IconCamera size={32} color={RED} />
           </div>
           <div style={{ color: '#fff', fontWeight: 700, fontSize: 16, textAlign: 'center' }}>{cameraErr}</div>
-          <button onClick={() => fileRef.current?.click()} style={{ background: AMBER, border: 'none', color: '#1a1206', padding: '14px 28px', borderRadius: 12, cursor: 'pointer', fontWeight: 800, fontSize: 15 }}>Choose Photo Instead</button>
+          <button onClick={() => fileRef.current?.click()} style={{ background: AMBER, border: 'none', color: '#1a1206', padding: '14px 28px', borderRadius: 12, cursor: 'pointer', fontWeight: 800, fontSize: 15 }}>{tc('factory_capture.choose_photo_instead')}</button>
         </div>
       )}
 
@@ -343,11 +349,11 @@ export default function FactoryCapturePage() {
           <IconArrowLeft size={18} />
         </button>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>What did you capture?</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 1 }}>Select the type to continue</div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>{tc('factory_capture.confirm_title')}</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 1 }}>{tc('factory_capture.confirm_subtitle')}</div>
         </div>
         <button onClick={retake} style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)', padding: '7px 14px', borderRadius: 20, cursor: 'pointer', fontSize: 13 }}>
-          <IconRotateCcw size={14} /> Retake
+          <IconRotateCcw size={14} /> {tc('factory_capture.retake')}
         </button>
       </div>
 
@@ -355,7 +361,7 @@ export default function FactoryCapturePage() {
       {photoUrl && (
         <div style={{ position: 'relative', height: 200, flexShrink: 0, overflow: 'hidden' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={photoUrl} alt="Captured" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={photoUrl} alt={tc('factory_capture.photo_alt')} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, #0a0f1e)' }} />
           {/* Checkmark badge */}
           <div style={{ position: 'absolute', bottom: 12, right: 16, width: 32, height: 32, borderRadius: '50%', background: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 0 0 4px rgba(34,197,94,.25)` }}>
@@ -407,7 +413,7 @@ export default function FactoryCapturePage() {
           <img src={photoUrl} alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', border: `2px solid ${selectedType.color}60`, flexShrink: 0 }} />
         )}
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: 15 }}>Add Details</div>
+          <div style={{ fontWeight: 700, fontSize: 15 }}>{tc('factory_capture.details_title')}</div>
           <div style={{ fontSize: 12, marginTop: 1 }}>
             <span style={{ color: selectedType.color, fontWeight: 700 }}>{selectedType.label}</span>
             <span style={{ color: 'rgba(255,255,255,0.4)' }}> · {selectedType.hint}</span>
@@ -418,7 +424,7 @@ export default function FactoryCapturePage() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 40px' }}>
         {/* Product selector */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Product</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('factory_capture.product_label')}</div>
           {inventory.length > 0 ? (
             <div style={{ position: 'relative' }}>
               <select
@@ -426,9 +432,9 @@ export default function FactoryCapturePage() {
                 onChange={e => setProduct(e.target.value)}
                 style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${product ? selectedType.color + '60' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: product ? '#f1f5f9' : 'rgba(255,255,255,0.35)', padding: '14px 16px', fontSize: 15, cursor: 'pointer', appearance: 'none', outline: 'none' }}
               >
-                <option value="">Select product…</option>
+                <option value="">{tc('factory_capture.product_select_placeholder')}</option>
                 {inventory.map(i => <option key={i.id} value={i.name}>{i.name}</option>)}
-                <option value="__other__">Other / not listed…</option>
+                <option value="__other__">{tc('factory_capture.product_other_option')}</option>
               </select>
               <svg style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
@@ -437,7 +443,7 @@ export default function FactoryCapturePage() {
             <input
               value={product === '__other__' ? '' : product}
               onChange={e => setProduct(e.target.value)}
-              placeholder="Type product name…"
+              placeholder={tc('factory_capture.product_type_placeholder')}
               style={{ width: '100%', marginTop: inventory.length > 0 ? 8 : 0, background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }}
             />
           )}
@@ -445,7 +451,7 @@ export default function FactoryCapturePage() {
 
         {/* Quantity display */}
         <div style={{ marginBottom: 8 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Quantity</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('factory_capture.quantity_label')}</div>
           <div style={{ background: 'rgba(255,255,255,0.05)', border: `1.5px solid ${quantity ? selectedType.color + '60' : 'rgba(255,255,255,0.1)'}`, borderRadius: 12, padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 56 }}>
             <span style={{ fontSize: 32, fontWeight: 800, color: quantity ? '#f1f5f9' : 'rgba(255,255,255,0.2)', lineHeight: 1 }}>{quantity || '0'}</span>
             {/* Unit pills */}
@@ -477,7 +483,7 @@ export default function FactoryCapturePage() {
         {/* Wastage reason picker */}
         {captureType === 'wastage' && (
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Reason <span style={{ color: RED }}>*</span></div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('factory_capture.reason_label')} <span style={{ color: RED }}>*</span></div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {WASTAGE_REASONS.map(r => (
                 <button key={r} onClick={() => setSelectedReason(prev => prev === r ? '' : r)}
@@ -492,11 +498,11 @@ export default function FactoryCapturePage() {
         {/* Dispatch destination */}
         {captureType === 'dispatch' && (
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Destination <span style={{ color: RED }}>*</span></div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('factory_capture.destination_label')} <span style={{ color: RED }}>*</span></div>
             <input
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              placeholder="Customer / warehouse / vehicle…"
+              placeholder={tc('factory_capture.destination_placeholder')}
               style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${notes ? PURPLE + '60' : 'rgba(255,255,255,0.12)'}`, borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
@@ -505,11 +511,11 @@ export default function FactoryCapturePage() {
         {/* Optional notes for intake/output */}
         {(captureType === 'intake' || captureType === 'output') && (
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Notes <span style={{ color: 'rgba(255,255,255,0.25)' }}>(optional)</span></div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('factory_capture.notes_label')} <span style={{ color: 'rgba(255,255,255,0.25)' }}>{tc('factory_capture.notes_optional')}</span></div>
             <input
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              placeholder={captureType === 'intake' ? 'Supplier, batch, condition…' : 'Line, shift, QC notes…'}
+              placeholder={captureType === 'intake' ? tc('factory_capture.notes_intake_placeholder') : tc('factory_capture.notes_output_placeholder')}
               style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 12, color: '#f1f5f9', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
@@ -525,7 +531,7 @@ export default function FactoryCapturePage() {
           {saving ? (
             <div style={{ width: 22, height: 22, border: '3px solid rgba(255,255,255,.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
           ) : (
-            <><IconCheck size={20} color={captureType === 'output' || captureType === 'dispatch' ? '#fff' : '#1a1206'} /> Submit {selectedType.label}</>
+            <><IconCheck size={20} color={captureType === 'output' || captureType === 'dispatch' ? '#fff' : '#1a1206'} /> {tc('factory_capture.submit_prefix')} {selectedType.label}</>
           )}
         </button>
       </div>
@@ -547,13 +553,13 @@ export default function FactoryCapturePage() {
         </div>
       </div>
 
-      <div style={{ fontSize: 26, fontWeight: 800, marginBottom: 8 }}>Capture logged</div>
+      <div style={{ fontSize: 26, fontWeight: 800, marginBottom: 8 }}>{tc('factory_capture.success_title')}</div>
       <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>
         <span style={{ color: selectedType.color, fontWeight: 700 }}>{selectedType.label}</span>
         {quantity && ` · ${quantity} ${unit}`}
         {product && ` · ${product}`}
       </div>
-      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginBottom: 40 }}>Awaiting supervisor approval</div>
+      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginBottom: 40 }}>{tc('factory_capture.success_awaiting')}</div>
 
       {/* Photo preview */}
       {photoUrl && (
@@ -564,11 +570,11 @@ export default function FactoryCapturePage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 320 }}>
         <button onClick={reset}
           style={{ width: '100%', background: selectedType.color, border: 'none', color: captureType === 'output' || captureType === 'dispatch' ? '#fff' : '#1a1206', padding: '16px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 16 }}>
-          + Log Another
+          {tc('factory_capture.log_another')}
         </button>
         <button onClick={() => router.push('/factory')}
           style={{ width: '100%', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', padding: '14px', borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 15 }}>
-          Back to Hub
+          {tc('factory_capture.back_to_hub')}
         </button>
       </div>
 
