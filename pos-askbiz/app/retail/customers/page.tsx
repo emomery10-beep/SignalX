@@ -2,6 +2,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useLang } from '@/components/LanguageProvider'
+
+type Tc = (key: string, vars?: Record<string, string | number>) => string
 
 const ACC = '#22c55e'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
@@ -19,15 +22,23 @@ interface Customer {
   segment: Segment; txns: Txn[]
 }
 
-const segMeta: Record<Segment, { label: string; color: string; desc: string }> = {
-  new:       { label: 'New', color: '#3b82f6', desc: '1 order' },
-  returning: { label: 'Returning', color: '#22c55e', desc: '2–5 orders' },
-  loyal:     { label: 'Loyal', color: '#a855f7', desc: '6+ orders' },
-  lapsed:    { label: 'Lapsed', color: '#ef4444', desc: '>90 days' },
+const SEG_COLOR: Record<Segment, string> = {
+  new: '#3b82f6', returning: '#22c55e', loyal: '#a855f7', lapsed: '#ef4444',
+}
+
+function buildSegMeta(tc: Tc): Record<Segment, { label: string; color: string; desc: string }> {
+  return {
+    new:       { label: tc('retail_customers.seg_new_label'),       color: SEG_COLOR.new,       desc: tc('retail_customers.seg_new_desc')       },
+    returning: { label: tc('retail_customers.seg_returning_label'), color: SEG_COLOR.returning, desc: tc('retail_customers.seg_returning_desc') },
+    loyal:     { label: tc('retail_customers.seg_loyal_label'),     color: SEG_COLOR.loyal,     desc: tc('retail_customers.seg_loyal_desc')     },
+    lapsed:    { label: tc('retail_customers.seg_lapsed_label'),    color: SEG_COLOR.lapsed,    desc: tc('retail_customers.seg_lapsed_desc')    },
+  }
 }
 
 export default function RetailCustomers() {
   const router = useRouter()
+  const { tc } = useLang()
+  const segMeta = buildSegMeta(tc)
   const supabase = createClient()
   const [ready, setReady] = useState(false)
   const [sym, setSym] = useState('£')
@@ -81,7 +92,7 @@ export default function RetailCustomers() {
         if (!c || !(c.name || c.phone)) return
         const key = c.id || c.phone || c.name || 'unknown'
         if (!map[key]) {
-          map[key] = { key, id: c.id || null, name: c.name || 'Unknown', phone: c.phone || '', orders: 0, spend: 0, lastVisit: null, avgBasket: 0, segment: 'new', txns: [] }
+          map[key] = { key, id: c.id || null, name: c.name || tc('retail_customers.unknown_customer'), phone: c.phone || '', orders: 0, spend: 0, lastVisit: null, avgBasket: 0, segment: 'new', txns: [] }
         }
         if (!map[key].id && c.id) map[key].id = c.id
         const cust = map[key]
@@ -117,7 +128,7 @@ export default function RetailCustomers() {
       const body: Record<string, unknown> = { format }
       if (selected.id) body.customer_id = selected.id
       else if (selected.phone) body.customer_phone = selected.phone
-      else throw new Error('No customer id or phone to export')
+      else throw new Error(tc('retail_customers.no_id_to_export'))
       const res = await fetch(`${API}/api/pos/gdpr/customer-data-export`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...staffHeaders },
@@ -125,7 +136,7 @@ export default function RetailCustomers() {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        throw new Error(err.error || `Export failed (${res.status})`)
+        throw new Error(err.error || tc('retail_customers.export_failed_status', { status: res.status }))
       }
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
@@ -136,9 +147,9 @@ export default function RetailCustomers() {
       a.click()
       a.remove()
       URL.revokeObjectURL(url)
-      setGdprMsg({ text: `Data exported as ${format.toUpperCase()}` })
+      setGdprMsg({ text: tc('retail_customers.data_exported', { format: format.toUpperCase() }) })
     } catch (e) {
-      setGdprMsg({ text: e instanceof Error ? e.message : 'Export failed', error: true })
+      setGdprMsg({ text: e instanceof Error ? e.message : tc('retail_customers.export_failed'), error: true })
     } finally {
       setExporting(false)
     }
@@ -151,7 +162,7 @@ export default function RetailCustomers() {
       const body: Record<string, unknown> = { deletion_type: 'anonymization', reason: 'customer_request' }
       if (selected.id) body.customer_id = selected.id
       else if (selected.phone) body.customer_phone = selected.phone
-      else throw new Error('No customer id or phone to anonymize')
+      else throw new Error(tc('retail_customers.no_id_to_anonymize'))
       const res = await fetch(`${API}/api/pos/gdpr/delete-customer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...staffHeaders },
@@ -159,13 +170,13 @@ export default function RetailCustomers() {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        throw new Error(err.error || `Deletion failed (${res.status})`)
+        throw new Error(err.error || tc('retail_customers.deletion_failed_status', { status: res.status }))
       }
       setConfirmDelete(false)
       closeDrawer()
       await load()
     } catch (e) {
-      setGdprMsg({ text: e instanceof Error ? e.message : 'Deletion failed', error: true })
+      setGdprMsg({ text: e instanceof Error ? e.message : tc('retail_customers.deletion_failed'), error: true })
       setDeleting(false)
     }
     setDeleting(false)
@@ -196,33 +207,33 @@ export default function RetailCustomers() {
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/retail')} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>←</button>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>📦 Customers</div>
-          <div style={{ fontSize: 12, color: '#94a3b8' }}>Profiles & segments</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>📦 {tc('retail_customers.header_title')}</div>
+          <div style={{ fontSize: 12, color: '#94a3b8' }}>{tc('retail_customers.header_subtitle')}</div>
         </div>
       </div>
 
       <div style={{ padding: '24px', maxWidth: 1300, margin: '0 auto' }}>
         {/* Segment chips */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 18, flexWrap: 'wrap' }}>
-          <Chip label={`All (${customers.length})`} active={segFilter === 'all'} color="#94a3b8" onClick={() => setSegFilter('all')} />
+          <Chip label={tc('retail_customers.chip_all', { count: customers.length })} active={segFilter === 'all'} color="#94a3b8" onClick={() => setSegFilter('all')} />
           {(Object.keys(segMeta) as Segment[]).map(s => (
-            <Chip key={s} label={`${segMeta[s].label} (${segCounts[s]})`} active={segFilter === s} color={segMeta[s].color} onClick={() => setSegFilter(s)} />
+            <Chip key={s} label={tc('retail_customers.chip_segment', { label: segMeta[s].label, count: segCounts[s] })} active={segFilter === s} color={segMeta[s].color} onClick={() => setSegFilter(s)} />
           ))}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20 }}>
           {/* Main list */}
           <div>
-            <input placeholder="Search name or phone…" value={search} onChange={e => setSearch(e.target.value)} style={{ ...inp, width: '100%', marginBottom: 14 }} />
+            <input placeholder={tc('retail_customers.search_placeholder')} value={search} onChange={e => setSearch(e.target.value)} style={{ ...inp, width: '100%', marginBottom: 14 }} />
             <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead><tr>
-                  <th style={th}>Customer</th><th style={th}>Segment</th><th style={th}>Orders</th>
-                  <th style={th}>Spend</th><th style={th}>Avg</th><th style={th}>Last Visit</th>
+                  <th style={th}>{tc('retail_customers.col_customer')}</th><th style={th}>{tc('retail_customers.col_segment')}</th><th style={th}>{tc('retail_customers.col_orders')}</th>
+                  <th style={th}>{tc('retail_customers.col_spend')}</th><th style={th}>{tc('retail_customers.col_avg')}</th><th style={th}>{tc('retail_customers.col_last_visit')}</th>
                 </tr></thead>
                 <tbody>
-                  {loading && <tr><td style={td} colSpan={6}><span style={{ color: '#64748b' }}>Loading…</span></td></tr>}
-                  {!loading && filtered.length === 0 && <tr><td style={td} colSpan={6}><span style={{ color: '#64748b' }}>{search || segFilter !== 'all' ? 'No customers match your filter' : 'No customers yet — they will appear after the first transaction'}</span></td></tr>}
+                  {loading && <tr><td style={td} colSpan={6}><span style={{ color: '#64748b' }}>{tc('retail_customers.loading')}</span></td></tr>}
+                  {!loading && filtered.length === 0 && <tr><td style={td} colSpan={6}><span style={{ color: '#64748b' }}>{search || segFilter !== 'all' ? tc('retail_customers.no_match') : tc('retail_customers.no_customers_yet')}</span></td></tr>}
                   {filtered.map((c, idx) => (
                     <tr key={c.key} className="pos-item" onClick={() => setSelected(c)} style={{ cursor: 'pointer', animationDelay: `${Math.min(idx, 8) * 40}ms` }}
                       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(34,197,94,0.06)')}
@@ -243,15 +254,15 @@ export default function RetailCustomers() {
           {/* Top spenders */}
           <div>
             <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 18 }}>
-              <div style={{ fontWeight: 700, marginBottom: 14, fontSize: 15 }}>🏆 Top Spenders</div>
-              {topSpenders.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>No data yet</div>}
+              <div style={{ fontWeight: 700, marginBottom: 14, fontSize: 15 }}>🏆 {tc('retail_customers.top_spenders')}</div>
+              {topSpenders.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>{tc('retail_customers.no_data_yet')}</div>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {topSpenders.map((c, i) => (
                   <button key={c.key} type="button" className="pos-item" onClick={() => setSelected(c)} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', animationDelay: `${Math.min(i, 8) * 40}ms`, background: 'none', border: 'none', width: '100%', textAlign: 'left', padding: 0, color: 'inherit' }}>
                     <span style={{ color: '#64748b', width: 16, textAlign: 'right', fontSize: 12 }}>{i + 1}</span>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{c.name}</div>
-                      <div style={{ fontSize: 11, color: '#64748b' }}>{c.orders} orders</div>
+                      <div style={{ fontSize: 11, color: '#64748b' }}>{tc('retail_customers.orders_count', { count: c.orders })}</div>
                     </div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: ACC }}>{sym}{c.spend.toFixed(0)}</div>
                   </button>
@@ -269,19 +280,19 @@ export default function RetailCustomers() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
               <div>
                 <div style={{ fontSize: 20, fontWeight: 700 }}>{selected.name}</div>
-                <div style={{ fontSize: 13, color: '#94a3b8' }}>{selected.phone || 'No phone'}</div>
+                <div style={{ fontSize: 13, color: '#94a3b8' }}>{selected.phone || tc('retail_customers.no_phone')}</div>
                 <span style={{ display: 'inline-block', marginTop: 8, background: segMeta[selected.segment].color + '22', color: segMeta[selected.segment].color, padding: '3px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700 }}>{segMeta[selected.segment].label} · {segMeta[selected.segment].desc}</span>
               </div>
               <button onClick={closeDrawer} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 22, cursor: 'pointer' }}>✕</button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 24 }}>
-              <Stat label="Orders" value={`${selected.orders}`} />
-              <Stat label="Spend" value={`${sym}${selected.spend.toFixed(2)}`} accent />
-              <Stat label="Avg" value={`${sym}${selected.avgBasket.toFixed(2)}`} />
+              <Stat label={tc('retail_customers.stat_orders')} value={`${selected.orders}`} />
+              <Stat label={tc('retail_customers.stat_spend')} value={`${sym}${selected.spend.toFixed(2)}`} accent />
+              <Stat label={tc('retail_customers.stat_avg')} value={`${sym}${selected.avgBasket.toFixed(2)}`} />
             </div>
 
-            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12 }}>Purchase History</div>
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12 }}>{tc('retail_customers.purchase_history')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {selected.txns.map((t, idx) => {
                 const items = (t.pos_items || [])
@@ -293,7 +304,7 @@ export default function RetailCustomers() {
                     </div>
                     {items.map((it, idx) => (
                       <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#cbd5e1' }}>
-                        <span>{(it.qty || it.quantity || 1)}× {it.name || 'Item'}</span>
+                        <span>{(it.qty || it.quantity || 1)}× {it.name || tc('retail_customers.item_fallback')}</span>
                         {it.price != null && <span style={{ color: '#64748b' }}>{sym}{it.price.toFixed(2)}</span>}
                       </div>
                     ))}
@@ -304,8 +315,8 @@ export default function RetailCustomers() {
 
             {/* GDPR data-subject actions */}
             <div style={{ marginTop: 28, paddingTop: 20, borderTop: '1px solid #334155' }}>
-              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Data &amp; Privacy (GDPR)</div>
-              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 14 }}>Handle data-subject requests for this customer.</div>
+              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{tc('retail_customers.gdpr_title')}</div>
+              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 14 }}>{tc('retail_customers.gdpr_subtitle')}</div>
 
               {gdprMsg && (
                 <div style={{ marginBottom: 12, padding: '10px 12px', borderRadius: 8, fontSize: 12, background: gdprMsg.error ? 'rgba(239,68,68,0.12)' : 'rgba(34,197,94,0.12)', color: gdprMsg.error ? '#fca5a5' : '#86efac', border: `1px solid ${gdprMsg.error ? '#ef4444' : '#22c55e'}33` }}>
@@ -315,29 +326,29 @@ export default function RetailCustomers() {
 
               <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
                 <button onClick={() => exportData('json')} disabled={exporting} style={{ flex: 1, background: '#0f172a', border: '1px solid #334155', color: '#cbd5e1', padding: '10px 12px', borderRadius: 8, cursor: exporting ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600, opacity: exporting ? 0.6 : 1 }}>
-                  {exporting ? 'Exporting…' : 'Export JSON'}
+                  {exporting ? tc('retail_customers.exporting') : tc('retail_customers.export_json')}
                 </button>
                 <button onClick={() => exportData('csv')} disabled={exporting} style={{ flex: 1, background: '#0f172a', border: '1px solid #334155', color: '#cbd5e1', padding: '10px 12px', borderRadius: 8, cursor: exporting ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600, opacity: exporting ? 0.6 : 1 }}>
-                  {exporting ? 'Exporting…' : 'Export CSV'}
+                  {exporting ? tc('retail_customers.exporting') : tc('retail_customers.export_csv')}
                 </button>
               </div>
 
               {!confirmDelete ? (
                 <button onClick={() => { setConfirmDelete(true); setGdprMsg(null) }} disabled={selected.id == null && !selected.phone} style={{ width: '100%', background: 'rgba(239,68,68,0.12)', border: '1px solid #ef4444', color: '#fca5a5', padding: '10px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
-                  Delete / Anonymize (GDPR)
+                  {tc('retail_customers.delete_anonymize')}
                 </button>
               ) : (
                 <div style={{ background: '#0f172a', border: '1px solid #ef4444', borderRadius: 10, padding: 14 }}>
-                  <div style={{ fontSize: 13, color: '#f1f5f9', fontWeight: 600, marginBottom: 6 }}>Anonymize this customer?</div>
+                  <div style={{ fontSize: 13, color: '#f1f5f9', fontWeight: 600, marginBottom: 6 }}>{tc('retail_customers.anonymize_confirm_title')}</div>
                   <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 14, lineHeight: 1.5 }}>
-                    This removes the customer&apos;s name, phone and email and marks the record anonymized. Past transactions are kept (unlinked, for tax compliance). This cannot be undone.
+                    {tc('retail_customers.anonymize_confirm_body')}
                   </div>
                   <div style={{ display: 'flex', gap: 10 }}>
                     <button onClick={() => setConfirmDelete(false)} disabled={deleting} style={{ flex: 1, background: '#1e293b', border: '1px solid #334155', color: '#94a3b8', padding: '10px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
-                      Cancel
+                      {tc('retail_customers.cancel')}
                     </button>
                     <button onClick={anonymizeCustomer} disabled={deleting} style={{ flex: 1, background: '#ef4444', border: 'none', color: '#fff', padding: '10px 12px', borderRadius: 8, cursor: deleting ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 700, opacity: deleting ? 0.6 : 1 }}>
-                      {deleting ? 'Anonymizing…' : 'Confirm anonymize'}
+                      {deleting ? tc('retail_customers.anonymizing') : tc('retail_customers.confirm_anonymize')}
                     </button>
                   </div>
                 </div>

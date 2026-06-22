@@ -28,13 +28,17 @@ import enRetailProducts from '@/locales/en/retail_products.json'
 import enFactoryQuality from '@/locales/en/factory_quality.json'
 import enRestaurantOrders from '@/locales/en/restaurant_orders.json'
 import enRestaurantFloor from '@/locales/en/restaurant_floor.json'
+import enLogisticsDispatch from '@/locales/en/logistics_dispatch.json'
+import enRestaurantOnlineOrders from '@/locales/en/restaurant_online_orders.json'
+import enRetailCustomers from '@/locales/en/retail_customers.json'
+import enRestaurantMenu from '@/locales/en/restaurant_menu.json'
 
 type Dict = Record<string, unknown>
 
 // English-only for now — translation gated on API credits. The resolver falls
 // back to English for locales lacking a namespace, so pages render correctly.
 const CATALOG: Record<string, Record<string, Dict>> = {
-  en: { common: enCommon, sell: enSell, dashboard: enDashboard, inventory: enInventory, pos: enPos, logistics: enLogistics, factory: enFactory, salon_clients: enSalonClients, factory_capture: enFactoryCapture, factory_shift: enFactoryShift, logistics_intake: enLogisticsIntake, logistics_dashboard: enLogisticsDashboard, restaurant_deliveries: enRestaurantDeliveries, factory_waybill: enFactoryWaybill, repair_intake: enRepairIntake, factory_batch: enFactoryBatch, factory_downtime: enFactoryDowntime, factory_staff: enFactoryStaff, restaurant_waste: enRestaurantWaste, repair: enRepair, retail_products: enRetailProducts, factory_quality: enFactoryQuality, restaurant_orders: enRestaurantOrders, restaurant_floor: enRestaurantFloor },
+  en: { common: enCommon, sell: enSell, dashboard: enDashboard, inventory: enInventory, pos: enPos, logistics: enLogistics, factory: enFactory, salon_clients: enSalonClients, factory_capture: enFactoryCapture, factory_shift: enFactoryShift, logistics_intake: enLogisticsIntake, logistics_dashboard: enLogisticsDashboard, restaurant_deliveries: enRestaurantDeliveries, factory_waybill: enFactoryWaybill, repair_intake: enRepairIntake, factory_batch: enFactoryBatch, factory_downtime: enFactoryDowntime, factory_staff: enFactoryStaff, restaurant_waste: enRestaurantWaste, repair: enRepair, retail_products: enRetailProducts, factory_quality: enFactoryQuality, restaurant_orders: enRestaurantOrders, restaurant_floor: enRestaurantFloor, logistics_dispatch: enLogisticsDispatch, restaurant_online_orders: enRestaurantOnlineOrders, retail_customers: enRetailCustomers, restaurant_menu: enRestaurantMenu },
 }
 
 const BASE = 'en'

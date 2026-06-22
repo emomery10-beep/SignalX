@@ -2,8 +2,11 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#d08a59'
+
+const NS = 'restaurant_menu.'
 
 const STATIONS = ['all', 'grill', 'fryer', 'cold', 'drinks', 'dessert']
 const STATION_ICONS: Record<string, string> = { all: '🍽️', grill: '🔥', fryer: '🍟', cold: '🥗', drinks: '🍹', dessert: '🍮' }
@@ -19,6 +22,7 @@ interface EightySixEntry { id: string; item_name: string; eighty_sixed_at: strin
 
 export default function MenuPage() {
   const router   = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [sym, setSym]             = useState('£')
   const [menu, setMenu]           = useState<MenuCategory[]>([])
@@ -88,7 +92,7 @@ export default function MenuPage() {
   }
 
   async function deleteItem(id: string) {
-    if (!confirm('Delete this menu item?') || !session) return
+    if (!confirm(tc(NS + 'confirm_delete_item')) || !session) return
     await fetch(`/api/pos/restaurant/menu?id=${id}&type=item`, { method: 'DELETE', headers: session.headers })
     setEditing(null)
     await loadMenu()
@@ -106,7 +110,7 @@ export default function MenuPage() {
     } else {
       await fetch('/api/pos/restaurant/eighty-six', {
         method: 'POST', headers: { ...session.headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ menu_item_id: item.id, item_name: item.name, reason: 'Out of stock' }),
+        body: JSON.stringify({ menu_item_id: item.id, item_name: item.name, reason: tc(NS + 'out_of_stock') }),
       })
     }
     await loadMenu(); await load86()
@@ -147,20 +151,20 @@ export default function MenuPage() {
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/restaurant')} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 18 }}>←</button>
-        <div style={{ fontWeight: 700, fontSize: 16, color: ACC }}>🍽️ Menu Management</div>
+        <div style={{ fontWeight: 700, fontSize: 16, color: ACC }}>{tc(NS + 'header_title')}</div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           <button onClick={() => { setShowAdd(true); setNewItem(blankItem()) }}
             className="pos-btn-primary"
-            style={{ background: ACC, border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>+ Add Item</button>
+            style={{ background: ACC, border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>{tc(NS + 'add_item')}</button>
           <button onClick={() => setShowCat(true)}
-            style={{ background: '#334155', border: 'none', color: '#e2e8f0', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>+ Category</button>
+            style={{ background: '#334155', border: 'none', color: '#e2e8f0', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc(NS + 'add_category')}</button>
         </div>
       </div>
 
       {/* 86 Board */}
       {eightySix.length > 0 && (
         <div className="pos-banner" style={{ background: '#7f1d1d', border: 'none', borderBottom: '1px solid #ef4444', padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ color: '#fca5a5', fontWeight: 700, fontSize: 13 }}>🚫 86 Board:</span>
+          <span style={{ color: '#fca5a5', fontWeight: 700, fontSize: 13 }}>{tc(NS + 'eighty_six_board')}</span>
           <span style={{ color: '#fecaca', fontSize: 13 }}>{eightySix.map(e => e.item_name).join(' · ')}</span>
         </div>
       )}
@@ -186,13 +190,13 @@ export default function MenuPage() {
         <div style={{ flex: 1, overflow: 'auto', padding: 20 }}>
           {/* Search */}
           <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder={`Search in ${currentCat?.name || 'menu'}...`}
+            placeholder={tc(NS + 'search_placeholder', { category: currentCat?.name || tc(NS + 'menu_fallback') })}
             style={{ ...inp, maxWidth: 360, marginBottom: 16 }} />
 
-          {loading && <div style={{ color: '#64748b' }}>Loading menu...</div>}
+          {loading && <div style={{ color: '#64748b' }}>{tc(NS + 'loading_menu')}</div>}
           {!loading && displayItems.length === 0 && (
             <div style={{ color: '#64748b', textAlign: 'center', padding: 40 }}>
-              No items in this category. <button onClick={() => setShowAdd(true)} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 14 }}>Add one</button>
+              {tc(NS + 'no_items_in_category')} <button onClick={() => setShowAdd(true)} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 14 }}>{tc(NS + 'add_one')}</button>
             </div>
           )}
 
@@ -208,25 +212,25 @@ export default function MenuPage() {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', gap: 6 }}>
                       {item.name}
-                      {item.eighty_sixed && <span style={{ fontSize: 10, color: '#ef4444', fontWeight: 700, background: '#7f1d1d', padding: '2px 6px', borderRadius: 4 }}>86'D</span>}
+                      {item.eighty_sixed && <span style={{ fontSize: 10, color: '#ef4444', fontWeight: 700, background: '#7f1d1d', padding: '2px 6px', borderRadius: 4 }}>{tc(NS + 'eighty_sixd_badge')}</span>}
                     </div>
                     {item.description && <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{item.description}</div>}
                   </div>
                   <div style={{ textAlign: 'right', marginLeft: 8 }}>
                     <div style={{ fontWeight: 700, color: ACC, fontSize: 16 }}>{sym}{item.price?.toFixed(2)}</div>
-                    <div style={{ fontSize: 11, color: marginColor(item), fontWeight: 600 }}>{margin(item)}% margin</div>
+                    <div style={{ fontSize: 11, color: marginColor(item), fontWeight: 600 }}>{tc(NS + 'margin_suffix', { margin: margin(item) })}</div>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
                   <span style={{ fontSize: 11, background: '#0f172a', color: '#94a3b8', padding: '2px 8px', borderRadius: 10 }}>
-                    {STATION_ICONS[item.station] || '🍽️'} {item.station}
+                    {STATIONS.includes(item.station) ? tc(NS + 'station_' + item.station) : ((STATION_ICONS[item.station] || '🍽️') + ' ' + item.station)}
                   </span>
                   <span style={{ fontSize: 11, background: '#0f172a', color: '#94a3b8', padding: '2px 8px', borderRadius: 10 }}>
-                    ⏱ {item.prep_time_mins}min
+                    {tc(NS + 'prep_time_min', { mins: item.prep_time_mins })}
                   </span>
                   <span style={{ fontSize: 11, background: '#0f172a', color: '#94a3b8', padding: '2px 8px', borderRadius: 10 }}>
-                    Cost: {sym}{item.food_cost?.toFixed(2)}
+                    {tc(NS + 'cost_label', { sym, cost: item.food_cost?.toFixed(2) })}
                   </span>
                   {item.allergens?.map(a => (
                     <span key={a} style={{ fontSize: 10, background: '#7c2d12', color: '#fca5a5', padding: '2px 6px', borderRadius: 10 }}>{a}</span>
@@ -236,15 +240,15 @@ export default function MenuPage() {
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button onClick={() => setEditing(item)}
                     style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '7px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>
-                    Edit
+                    {tc(NS + 'edit')}
                   </button>
                   <button onClick={() => toggle86(item)}
                     style={{ flex: 1, background: item.eighty_sixed ? '#14532d' : '#7f1d1d', border: 'none', color: item.eighty_sixed ? '#22c55e' : '#ef4444', padding: '7px', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
-                    {item.eighty_sixed ? '✓ Restore' : '86 Item'}
+                    {item.eighty_sixed ? tc(NS + 'restore') : tc(NS + 'eighty_six_item')}
                   </button>
                   <button onClick={() => updateItem(item.id, { available: !item.available })}
                     style={{ background: '#1e293b', border: '1px solid #334155', color: item.available ? '#22c55e' : '#64748b', padding: '7px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>
-                    {item.available ? 'ON' : 'OFF'}
+                    {item.available ? tc(NS + 'on') : tc(NS + 'off')}
                   </button>
                 </div>
               </div>
@@ -257,25 +261,25 @@ export default function MenuPage() {
       {editing && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 20 }}>
           <div className="pos-sheet" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: 480, maxHeight: '90vh', overflow: 'auto' }}>
-            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Edit — {editing.name}</div>
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>{tc(NS + 'edit_heading', { name: editing.name })}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Name</label>
+              <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_name')}</label>
                 <input value={editing.name} onChange={e => setEditing(p => p ? { ...p, name: e.target.value } : p)} style={inp} /></div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Price ({sym})</label>
+                <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_price', { sym })}</label>
                   <input type="number" step="0.01" value={editing.price} onChange={e => setEditing(p => p ? { ...p, price: parseFloat(e.target.value) || 0 } : p)} style={inp} /></div>
-                <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Food Cost ({sym})</label>
+                <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_food_cost', { sym })}</label>
                   <input type="number" step="0.01" value={editing.food_cost} onChange={e => setEditing(p => p ? { ...p, food_cost: parseFloat(e.target.value) || 0 } : p)} style={inp} /></div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Station</label>
+                <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_station')}</label>
                   <select value={editing.station} onChange={e => setEditing(p => p ? { ...p, station: e.target.value } : p)} style={inp}>
-                    {STATIONS.map(s => <option key={s} value={s}>{STATION_ICONS[s]} {s}</option>)}
+                    {STATIONS.map(s => <option key={s} value={s}>{tc(NS + 'station_' + s)}</option>)}
                   </select></div>
-                <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Prep Time (mins)</label>
+                <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_prep_time')}</label>
                   <input type="number" value={editing.prep_time_mins} onChange={e => setEditing(p => p ? { ...p, prep_time_mins: parseInt(e.target.value) || 10 } : p)} style={inp} /></div>
               </div>
-              <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 6 }}>Allergens</label>
+              <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 6 }}>{tc(NS + 'label_allergens')}</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {ALLERGENS.map(a => (
                     <button key={a} onClick={() => setEditing(p => p ? { ...p, allergens: p.allergens?.includes(a) ? p.allergens.filter(x => x !== a) : [...(p.allergens || []), a] } : p)}
@@ -286,12 +290,12 @@ export default function MenuPage() {
                 </div></div>
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button onClick={() => deleteItem(editing.id)} style={{ background: 'none', border: '1px solid #ef4444', color: '#ef4444', padding: '10px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>Delete</button>
-              <button onClick={() => setEditing(null)} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => deleteItem(editing.id)} style={{ background: 'none', border: '1px solid #ef4444', color: '#ef4444', padding: '10px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc(NS + 'delete')}</button>
+              <button onClick={() => setEditing(null)} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>{tc(NS + 'cancel')}</button>
               <button onClick={async () => { await updateItem(editing.id, editing); setEditing(null) }}
                 className="pos-btn-primary"
                 style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>
-                Save Changes
+                {tc(NS + 'save_changes')}
               </button>
             </div>
           </div>
@@ -302,38 +306,38 @@ export default function MenuPage() {
       {showAddItem && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 20 }}>
           <div className="pos-sheet" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: 440, maxHeight: '90vh', overflow: 'auto' }}>
-            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Add Menu Item</div>
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>{tc(NS + 'add_item_heading')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Name *</label>
-                <input value={newItem.name || ''} onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} placeholder="Grilled Salmon..." style={inp} /></div>
-              <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Description</label>
-                <input value={newItem.description || ''} onChange={e => setNewItem(p => ({ ...p, description: e.target.value }))} placeholder="Short description..." style={inp} /></div>
+              <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_name_required')}</label>
+                <input value={newItem.name || ''} onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} placeholder={tc(NS + 'placeholder_item_name')} style={inp} /></div>
+              <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_description')}</label>
+                <input value={newItem.description || ''} onChange={e => setNewItem(p => ({ ...p, description: e.target.value }))} placeholder={tc(NS + 'placeholder_description')} style={inp} /></div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Price ({sym}) *</label>
+                <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_price_required', { sym })}</label>
                   <input type="number" step="0.01" value={newItem.price || ''} onChange={e => setNewItem(p => ({ ...p, price: parseFloat(e.target.value) || 0 }))} style={inp} /></div>
-                <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Food Cost ({sym})</label>
+                <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_food_cost', { sym })}</label>
                   <input type="number" step="0.01" value={newItem.food_cost || ''} onChange={e => setNewItem(p => ({ ...p, food_cost: parseFloat(e.target.value) || 0 }))} style={inp} /></div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Station</label>
+                <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_station')}</label>
                   <select value={newItem.station || 'all'} onChange={e => setNewItem(p => ({ ...p, station: e.target.value }))} style={inp}>
-                    {STATIONS.map(s => <option key={s} value={s}>{STATION_ICONS[s]} {s}</option>)}
+                    {STATIONS.map(s => <option key={s} value={s}>{tc(NS + 'station_' + s)}</option>)}
                   </select></div>
-                <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Prep Time (mins)</label>
+                <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_prep_time')}</label>
                   <input type="number" value={newItem.prep_time_mins || 10} onChange={e => setNewItem(p => ({ ...p, prep_time_mins: parseInt(e.target.value) || 10 }))} style={inp} /></div>
               </div>
               {newItem.price && newItem.food_cost && (
                 <div style={{ background: '#0f172a', borderRadius: 6, padding: '8px 12px', fontSize: 13 }}>
-                  Margin: <strong style={{ color: parseFloat(margin(newItem as MenuItem)) >= 65 ? '#22c55e' : '#f59e0b' }}>{margin(newItem as MenuItem)}%</strong>
+                  {tc(NS + 'margin_preview')} <strong style={{ color: parseFloat(margin(newItem as MenuItem)) >= 65 ? '#22c55e' : '#f59e0b' }}>{margin(newItem as MenuItem)}%</strong>
                 </div>
               )}
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button onClick={() => setShowAdd(false)} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setShowAdd(false)} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>{tc(NS + 'cancel')}</button>
               <button onClick={saveItem} disabled={saving || !newItem.name?.trim()}
                 className="pos-btn-primary"
                 style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: saving || !newItem.name?.trim() ? 'not-allowed' : 'pointer', fontWeight: 700, opacity: saving || !newItem.name?.trim() ? 0.5 : 1 }}>
-                {saving ? 'Saving...' : 'Add to Menu'}
+                {saving ? tc(NS + 'saving') : tc(NS + 'add_to_menu')}
               </button>
             </div>
           </div>
@@ -344,19 +348,19 @@ export default function MenuPage() {
       {showAddCat && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
           <div className="pos-sheet" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: 340 }}>
-            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Add Category</div>
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>{tc(NS + 'add_category_heading')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Name *</label>
-                <input value={newCat.name} onChange={e => setNewCat(p => ({ ...p, name: e.target.value }))} placeholder="Starters, Mains, Desserts..." style={inp} /></div>
-              <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Icon (emoji)</label>
+              <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_name_required')}</label>
+                <input value={newCat.name} onChange={e => setNewCat(p => ({ ...p, name: e.target.value }))} placeholder={tc(NS + 'placeholder_category_name')} style={inp} /></div>
+              <div><label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_icon')}</label>
                 <input value={newCat.icon} onChange={e => setNewCat(p => ({ ...p, icon: e.target.value }))} style={inp} /></div>
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button onClick={() => setShowCat(false)} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setShowCat(false)} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>{tc(NS + 'cancel')}</button>
               <button onClick={saveCat} disabled={saving || !newCat.name.trim()}
                 className="pos-btn-primary"
                 style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: saving || !newCat.name.trim() ? 'not-allowed' : 'pointer', fontWeight: 700, opacity: saving || !newCat.name.trim() ? 0.5 : 1 }}>
-                {saving ? 'Saving...' : 'Add Category'}
+                {saving ? tc(NS + 'saving') : tc(NS + 'add_category_btn')}
               </button>
             </div>
           </div>

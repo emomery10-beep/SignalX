@@ -1,0 +1,56 @@
+{
+  "loading": "Loading…",
+
+  "status_received": "Received",
+  "status_at_branch": "At Branch",
+  "status_assigned": "Assigned",
+  "status_loaded": "Loaded",
+  "status_in_transit": "In Transit",
+  "status_at_destination": "At Destination",
+  "status_out_for_delivery": "Out for Delivery",
+  "status_delivered": "Delivered",
+  "status_collected": "Collected",
+  "status_failed_delivery": "Failed",
+  "status_returned": "Returned",
+
+  "time_just_now": "just now",
+  "time_minutes_ago": "{minutes}m ago",
+  "time_hours_ago": "{hours}h ago",
+
+  "tab_pending": "Pending",
+  "tab_assigned": "Assigned",
+  "tab_transit": "Transit",
+  "tab_arrived": "Arrived",
+
+  "header_title": "🚛 Dispatch",
+  "header_subtitle": "{name} · {count} total parcels",
+  "refresh": "↻ Refresh",
+
+  "search_placeholder": "Search tracking, name, city…",
+
+  "bulk_cancel": "✕ Cancel",
+  "bulk_assign": "☐ Bulk assign",
+  "bulk_selected": "{count} selected",
+
+  "loading_parcels": "Loading parcels…",
+  "empty_category": "No parcels in this category yet",
+
+  "no_description": "No description",
+  "dash": "—",
+
+  "assign_arrow": "Assign →",
+  "mark_loaded": "Mark Loaded",
+  "dispatch_check": "Dispatch ✓",
+
+  "bulk_assign_count": "Assign {count} parcels",
+  "select_truck": "Select truck…",
+  "select_driver": "Select driver…",
+  "select_route_optional": "Select route (optional)…",
+  "assigning": "Assigning…",
+
+  "assign_title": "Assign {tracking}",
+  "label_truck_required": "Truck *",
+  "label_driver_required": "Driver *",
+  "label_route": "Route",
+  "assign_parcel": "Assign Parcel"
+}
