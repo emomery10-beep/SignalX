@@ -20,20 +20,20 @@ export async function POST(request: NextRequest) {
       // Fetch synced records from unified_data to calculate health score
       const { data: unifiedRows } = await supabase
         .from('unified_data')
-        .select('product_name, revenue, cost, quantity, stock_quantity, date')
+        .select('product_name, gross_revenue, total_cost, units_sold, stock_level, record_date')
         .eq('user_id', user.id)
-        .order('date', { ascending: false })
+        .order('record_date', { ascending: false })
         .limit(1000)
 
       if (unifiedRows && unifiedRows.length > 0) {
         // Map unified_data columns to health score expected format
         const rows = unifiedRows.map(r => ({
           product: r.product_name,
-          revenue: r.revenue,
-          cost: r.cost,
-          qty: r.quantity,
-          stock: r.stock_quantity,
-          date: r.date,
+          revenue: r.gross_revenue,
+          cost: r.total_cost,
+          qty: r.units_sold,
+          stock: r.stock_level,
+          date: r.record_date,
         }))
         const headers = ['product', 'revenue', 'cost', 'qty', 'stock', 'date']
 
