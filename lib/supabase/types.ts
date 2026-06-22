@@ -3292,6 +3292,39 @@ export type Database = {
           },
         ]
       }
+      pos_magic_links: {
+        Row: {
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          staff_id: string
+          token: string
+          used: boolean | null
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          expires_at: string
+          id?: string
+          staff_id: string
+          token: string
+          used?: boolean | null
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          staff_id?: string
+          token?: string
+          used?: boolean | null
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       pos_menu_sync_state: {
         Row: {
           created_at: string
@@ -5268,6 +5301,36 @@ export type Database = {
           },
         ]
       }
+      pos_truck_locations: {
+        Row: {
+          driver_id: string | null
+          id: string
+          lat: number
+          lng: number
+          owner_id: string
+          recorded_at: string
+          truck_id: string | null
+        }
+        Insert: {
+          driver_id?: string | null
+          id?: string
+          lat: number
+          lng: number
+          owner_id: string
+          recorded_at?: string
+          truck_id?: string | null
+        }
+        Update: {
+          driver_id?: string | null
+          id?: string
+          lat?: number
+          lng?: number
+          owner_id?: string
+          recorded_at?: string
+          truck_id?: string | null
+        }
+        Relationships: []
+      }
       pos_trucks: {
         Row: {
           created_at: string
@@ -7112,6 +7175,108 @@ export type Database = {
           recommendations?: Json | null
           user_id?: string | null
           view_count?: number | null
+        }
+        Relationships: []
+      }
+      shipments: {
+        Row: {
+          actual_arrival: string | null
+          carrier_code: string | null
+          created_at: string
+          customs_hold: boolean | null
+          daily_financing_cost: number | null
+          expected_arrival: string | null
+          financial_impact: number | null
+          id: string
+          is_at_risk: boolean | null
+          last_event: string | null
+          last_location: string | null
+          last_update: string | null
+          notes: string | null
+          order_date: string | null
+          purchase_order_ref: string | null
+          quantity: number | null
+          risk_score: number | null
+          shipment_type: string | null
+          sku: string | null
+          stockout_risk: boolean | null
+          supplier_name: string | null
+          total_value: number | null
+          total_value_currency: string | null
+          track_status: string | null
+          track_sub_status: string | null
+          tracking_number: string
+          unit_cost: number | null
+          unit_cost_currency: string | null
+          updated_at: string
+          user_id: string
+          working_capital_days: number | null
+        }
+        Insert: {
+          actual_arrival?: string | null
+          carrier_code?: string | null
+          created_at?: string
+          customs_hold?: boolean | null
+          daily_financing_cost?: number | null
+          expected_arrival?: string | null
+          financial_impact?: number | null
+          id?: string
+          is_at_risk?: boolean | null
+          last_event?: string | null
+          last_location?: string | null
+          last_update?: string | null
+          notes?: string | null
+          order_date?: string | null
+          purchase_order_ref?: string | null
+          quantity?: number | null
+          risk_score?: number | null
+          shipment_type?: string | null
+          sku?: string | null
+          stockout_risk?: boolean | null
+          supplier_name?: string | null
+          total_value?: number | null
+          total_value_currency?: string | null
+          track_status?: string | null
+          track_sub_status?: string | null
+          tracking_number: string
+          unit_cost?: number | null
+          unit_cost_currency?: string | null
+          updated_at?: string
+          user_id: string
+          working_capital_days?: number | null
+        }
+        Update: {
+          actual_arrival?: string | null
+          carrier_code?: string | null
+          created_at?: string
+          customs_hold?: boolean | null
+          daily_financing_cost?: number | null
+          expected_arrival?: string | null
+          financial_impact?: number | null
+          id?: string
+          is_at_risk?: boolean | null
+          last_event?: string | null
+          last_location?: string | null
+          last_update?: string | null
+          notes?: string | null
+          order_date?: string | null
+          purchase_order_ref?: string | null
+          quantity?: number | null
+          risk_score?: number | null
+          shipment_type?: string | null
+          sku?: string | null
+          stockout_risk?: boolean | null
+          supplier_name?: string | null
+          total_value?: number | null
+          total_value_currency?: string | null
+          track_status?: string | null
+          track_sub_status?: string | null
+          tracking_number?: string
+          unit_cost?: number | null
+          unit_cost_currency?: string | null
+          updated_at?: string
+          user_id?: string
+          working_capital_days?: number | null
         }
         Relationships: []
       }
