@@ -2,8 +2,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#d08a59'
+
+const NS = 'restaurant_floor.'
 
 interface Table {
   id: string; name: string; section: string; capacity: number
@@ -17,12 +20,12 @@ interface Table {
   }
 }
 
-const TABLE_STATUS: Record<string, { label: string; color: string; bg: string }> = {
-  available: { label: 'Available',  color: '#22c55e', bg: '#14532d' },
-  occupied:  { label: 'Occupied',   color: '#f87171', bg: '#7f1d1d' },
-  reserved:  { label: 'Reserved',   color: '#a78bfa', bg: '#4c1d95' },
-  cleaning:  { label: 'Cleaning',   color: '#fbbf24', bg: '#78350f' },
-  closed:    { label: 'Closed',     color: '#475569', bg: '#1e293b' },
+const TABLE_STATUS: Record<string, { color: string; bg: string }> = {
+  available: { color: '#22c55e', bg: '#14532d' },
+  occupied:  { color: '#f87171', bg: '#7f1d1d' },
+  reserved:  { color: '#a78bfa', bg: '#4c1d95' },
+  cleaning:  { color: '#fbbf24', bg: '#78350f' },
+  closed:    { color: '#475569', bg: '#1e293b' },
 }
 
 function elapsed(from?: string): string {
@@ -34,6 +37,7 @@ function elapsed(from?: string): string {
 
 export default function FloorPlan() {
   const router  = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [sym, setSym]               = useState('£')
   const [tables, setTables]         = useState<Table[]>([])
@@ -116,7 +120,7 @@ export default function FloorPlan() {
   }
 
   async function deleteTable(id: string) {
-    if (!confirm('Delete this table? Active orders will not be affected.') || !session) return
+    if (!confirm(tc(NS + 'confirm_delete_table')) || !session) return
     await fetch(`/api/pos/restaurant/tables?id=${id}`, { method: 'DELETE', headers: session.headers })
     setSelected(null)
     await loadTables()
@@ -158,18 +162,18 @@ export default function FloorPlan() {
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/restaurant')} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 18 }}>←</button>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 16, color: ACC }}>🗺️ Floor Plan</div>
-          <div style={{ fontSize: 11, color: '#64748b' }}>Drag tables to reposition · Click to manage</div>
+          <div style={{ fontWeight: 700, fontSize: 16, color: ACC }}>{tc(NS + 'header_title')}</div>
+          <div style={{ fontSize: 11, color: '#64748b' }}>{tc(NS + 'header_subtitle')}</div>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           <button onClick={() => router.push('/restaurant/orders?new=1')}
             className="pos-btn-primary"
             style={{ background: ACC, border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
-            + New Order
+            {tc(NS + 'new_order')}
           </button>
           <button onClick={() => setShowAdd(true)}
             style={{ background: '#334155', border: 'none', color: '#e2e8f0', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
-            + Add Table
+            {tc(NS + 'add_table')}
           </button>
         </div>
       </div>
@@ -179,7 +183,7 @@ export default function FloorPlan() {
         {sections.map(s => (
           <button key={s} onClick={() => setSection(s)}
             style={{ background: 'none', border: 'none', color: activeSection === s ? ACC : '#64748b', padding: '10px 14px', cursor: 'pointer', fontWeight: activeSection === s ? 700 : 400, borderBottom: activeSection === s ? `2px solid ${ACC}` : '2px solid transparent', fontSize: 13 }}>
-            {s}
+            {s === 'All' ? tc(NS + 'all_sections') : s}
           </button>
         ))}
       </div>
@@ -189,7 +193,7 @@ export default function FloorPlan() {
         {Object.entries(TABLE_STATUS).map(([k, v]) => (
           <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
             <div style={{ width: 12, height: 12, borderRadius: 3, background: v.color }} />
-            <span style={{ color: '#94a3b8' }}>{v.label}</span>
+            <span style={{ color: '#94a3b8' }}>{tc(NS + 'status_' + k)}</span>
           </div>
         ))}
       </div>
@@ -240,7 +244,7 @@ export default function FloorPlan() {
                   }}
                 >
                   <div style={{ fontWeight: 700, fontSize: Math.min(14, w / 4), color: st.color, textAlign: 'center', lineHeight: 1.2 }}>{table.name}</div>
-                  <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>{table.capacity}p</div>
+                  <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>{tc(NS + 'person_suffix', { count: table.capacity })}</div>
                   {table.status === 'occupied' && table.seated_at && (
                     <div style={{ fontSize: 10, color: '#f87171', fontWeight: 700 }}>{elapsed(table.seated_at)}</div>
                   )}
@@ -261,14 +265,14 @@ export default function FloorPlan() {
               <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 18 }}>×</button>
             </div>
             <div style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>
-              {selected.section} · {selected.capacity} covers · {TABLE_STATUS[selected.status]?.label}
+              {tc(NS + 'table_summary', { section: selected.section, capacity: selected.capacity, status: tc(NS + 'status_' + selected.status) })}
             </div>
 
             {/* Current Order */}
             {selected.current_order && (
               <div className="pos-reveal" style={{ background: '#0f172a', borderRadius: 8, padding: 12, marginBottom: 16 }}>
                 <div style={{ fontWeight: 600, fontSize: 13, color: '#e2e8f0', marginBottom: 8 }}>
-                  Current Order · {selected.current_order.covers} covers
+                  {tc(NS + 'current_order_covers', { covers: selected.current_order.covers })}
                 </div>
                 {selected.current_order.order_items?.slice(0, 5).map(item => (
                   <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '2px 0', color: '#94a3b8' }}>
@@ -277,18 +281,18 @@ export default function FloorPlan() {
                   </div>
                 ))}
                 <div style={{ borderTop: '1px solid #334155', marginTop: 8, paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 700 }}>
-                  <span style={{ color: '#94a3b8' }}>Total</span>
+                  <span style={{ color: '#94a3b8' }}>{tc(NS + 'total')}</span>
                   <span style={{ color: ACC }}>£{selected.current_order.total?.toFixed(2)}</span>
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                   <button onClick={() => router.push(`/restaurant/orders?order=${selected.current_order?.id}`)}
                     style={{ flex: 1, background: '#334155', border: 'none', color: '#e2e8f0', padding: '8px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>
-                    View Order
+                    {tc(NS + 'view_order')}
                   </button>
                   <button onClick={() => router.push(`/restaurant/orders?pay=${selected.current_order?.id}`)}
                     className="pos-btn-primary"
                     style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '8px', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
-                    Pay Bill
+                    {tc(NS + 'pay_bill')}
                   </button>
                 </div>
               </div>
@@ -296,24 +300,24 @@ export default function FloorPlan() {
 
             {/* Server Assignment */}
             <div style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Assigned Server</label>
+              <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'assigned_server')}</label>
               <select
                 value={selected.server_id || ''}
                 onChange={e => { assignServer(selected.id, e.target.value); setSelected(prev => prev ? { ...prev, server_id: e.target.value } : null) }}
                 style={{ ...inp }}
               >
-                <option value="">— Unassigned —</option>
+                <option value="">{tc(NS + 'unassigned')}</option>
                 {staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
 
             {/* Status Actions */}
-            <div style={{ fontWeight: 600, fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>Change Status</div>
+            <div style={{ fontWeight: 600, fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>{tc(NS + 'change_status')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
               {Object.entries(TABLE_STATUS).filter(([k]) => k !== selected.status).map(([k, v]) => (
                 <button key={k} onClick={() => setTableStatus(selected.id, k)}
                   style={{ background: v.bg, border: `1px solid ${v.color}`, color: v.color, padding: '8px', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
-                  {v.label}
+                  {tc(NS + 'status_' + k)}
                 </button>
               ))}
             </div>
@@ -323,13 +327,13 @@ export default function FloorPlan() {
               <button onClick={() => router.push(`/restaurant/orders?new=1&table=${selected.id}`)}
                 className="pos-btn-primary"
                 style={{ width: '100%', background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 700, marginBottom: 8 }}>
-                + New Order for {selected.name}
+                {tc(NS + 'new_order_for', { name: selected.name })}
               </button>
             )}
 
             <button onClick={() => deleteTable(selected.id)}
               style={{ width: '100%', background: 'none', border: '1px solid #ef4444', color: '#ef4444', padding: '8px', borderRadius: 8, cursor: 'pointer', fontSize: 12 }}>
-              Delete Table
+              {tc(NS + 'delete_table')}
             </button>
           </div>
         )}
@@ -339,39 +343,39 @@ export default function FloorPlan() {
       {showAddTable && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
           <div className="pos-sheet" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: 340 }}>
-            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Add Table</div>
+            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>{tc(NS + 'modal_add_table')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Name *</label>
+                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_name')}</label>
                 <input value={newTable.name} onChange={e => setNewTable(p => ({ ...p, name: e.target.value }))}
-                  placeholder="Table 1, Bar, Terrace A..." style={inp} />
+                  placeholder={tc(NS + 'placeholder_name')} style={inp} />
               </div>
               <div>
-                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Section</label>
+                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_section')}</label>
                 <input value={newTable.section} onChange={e => setNewTable(p => ({ ...p, section: e.target.value }))}
-                  placeholder="Main, Outdoor, Bar..." style={inp} />
+                  placeholder={tc(NS + 'placeholder_section')} style={inp} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 <div>
-                  <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Capacity</label>
+                  <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_capacity')}</label>
                   <input type="number" value={newTable.capacity} onChange={e => setNewTable(p => ({ ...p, capacity: parseInt(e.target.value) || 4 }))} style={inp} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Shape</label>
+                  <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_shape')}</label>
                   <select value={newTable.shape} onChange={e => setNewTable(p => ({ ...p, shape: e.target.value }))} style={inp}>
-                    <option value="rectangle">Rectangle</option>
-                    <option value="circle">Circle</option>
-                    <option value="square">Square</option>
+                    <option value="rectangle">{tc(NS + 'shape_rectangle')}</option>
+                    <option value="circle">{tc(NS + 'shape_circle')}</option>
+                    <option value="square">{tc(NS + 'shape_square')}</option>
                   </select>
                 </div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button onClick={() => setShowAdd(false)} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setShowAdd(false)} style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '10px', borderRadius: 8, cursor: 'pointer' }}>{tc(NS + 'cancel')}</button>
               <button onClick={addTable} disabled={saving || !newTable.name.trim()}
                 className="pos-btn-primary"
                 style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: saving || !newTable.name.trim() ? 'not-allowed' : 'pointer', fontWeight: 700, opacity: saving || !newTable.name.trim() ? 0.5 : 1 }}>
-                {saving ? 'Adding...' : 'Add Table'}
+                {saving ? tc(NS + 'adding') : tc(NS + 'modal_add_table')}
               </button>
             </div>
           </div>

@@ -2,6 +2,9 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useLang } from '@/components/LanguageProvider'
+
+type Tc = (key: string, vars?: Record<string, string | number>) => string
 
 const ACC = '#22c55e'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
@@ -28,6 +31,7 @@ function RetailProducts() {
   const router = useRouter()
   const params = useSearchParams()
   const supabase = createClient()
+  const { tc } = useLang()
   const [ready, setReady] = useState(false)
   const [sym, setSym] = useState('£')
   const [loading, setLoading] = useState(true)
@@ -115,7 +119,7 @@ function RetailProducts() {
       if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play() }
     } catch (e: any) {
       console.error('camera error', e)
-      setCamError('Camera unavailable — use "Choose photo" instead.')
+      setCamError(tc('retail_products.camera_unavailable'))
       // fall back to file input automatically
       fileRef.current?.click()
     }
@@ -146,7 +150,7 @@ function RetailProducts() {
   }
 
   async function scan(dataUrl: string) {
-    setStage('scanning'); setScanMsg('Analysing photo…')
+    setStage('scanning'); setScanMsg(tc('retail_products.scan_analysing'))
     const base64 = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl
     try {
       const res = await fetch(`${API}/api/pos/scan-product-full`, {
@@ -168,14 +172,14 @@ function RetailProducts() {
       setStage('review')
     } catch (e) {
       console.error('scan error', e)
-      setScanMsg('Could not read the photo. You can still enter details manually.')
+      setScanMsg(tc('retail_products.scan_failed'))
       setDraft(emptyDraft)
       setStage('review')
     }
   }
 
   async function saveDraft() {
-    if (!draft.name.trim()) { setScanMsg('Name is required'); return }
+    if (!draft.name.trim()) { setScanMsg(tc('retail_products.name_required')); return }
     setStage('saving')
     try {
       const res = await fetch(`${API}/api/pos/inventory`, {
@@ -195,7 +199,7 @@ function RetailProducts() {
       await load()
     } catch (e) {
       console.error('save error', e)
-      setScanMsg('Save failed. Please try again.')
+      setScanMsg(tc('retail_products.save_failed'))
       setStage('review')
     }
   }
@@ -229,16 +233,16 @@ function RetailProducts() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={() => router.push('/retail')} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>←</button>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>📦 Products</div>
-            <div style={{ fontSize: 12, color: '#94a3b8' }}>Catalog & photo-to-listing</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>📦 {tc('retail_products.header_title')}</div>
+            <div style={{ fontSize: 12, color: '#94a3b8' }}>{tc('retail_products.header_subtitle')}</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={() => { setShowAdd(true); setDraft(emptyDraft); setScanMsg(''); setStage('review') }} style={{ background: '#334155', border: 'none', color: '#f1f5f9', padding: '10px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
-            ✏️ Add Manually
+            ✏️ {tc('retail_products.add_manually')}
           </button>
           <button className="pos-btn-primary" onClick={() => { setShowAdd(true); setStage('idle') }} style={{ background: ACC, border: 'none', color: '#fff', padding: '10px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
-            📷 Add by Photo
+            📷 {tc('retail_products.add_by_photo')}
           </button>
         </div>
       </div>
@@ -246,27 +250,27 @@ function RetailProducts() {
       <div style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
         {/* Filters */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-          <input placeholder="Search name or SKU…" value={search} onChange={e => setSearch(e.target.value)} style={{ ...inp, width: 260 }} />
+          <input placeholder={tc('retail_products.search_placeholder')} value={search} onChange={e => setSearch(e.target.value)} style={{ ...inp, width: 260 }} />
           <select value={catFilter} onChange={e => setCatFilter(e.target.value)} style={{ ...inp, width: 'auto' }}>
-            <option value="all">All categories</option>
+            <option value="all">{tc('retail_products.all_categories')}</option>
             {categories.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
           <button onClick={() => setLowOnly(v => !v)} style={{ background: lowOnly ? '#f59e0b' : '#334155', border: 'none', color: lowOnly ? '#0f172a' : '#94a3b8', padding: '10px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
-            ⚠️ Low stock
+            ⚠️ {tc('retail_products.low_stock')}
           </button>
-          <div style={{ marginLeft: 'auto', color: '#64748b', fontSize: 13 }}>{filtered.length} of {items.length}</div>
+          <div style={{ marginLeft: 'auto', color: '#64748b', fontSize: 13 }}>{tc('retail_products.count_of', { shown: filtered.length, total: items.length })}</div>
         </div>
 
         {/* Table */}
         <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>
-              <th style={th}>Name</th><th style={th}>SKU</th><th style={th}>Category</th>
-              <th style={th}>Stock</th><th style={th}>Price</th><th style={th}>Cost</th><th style={th}>Margin</th><th style={th}></th>
+              <th style={th}>{tc('retail_products.col_name')}</th><th style={th}>{tc('retail_products.col_sku')}</th><th style={th}>{tc('retail_products.col_category')}</th>
+              <th style={th}>{tc('retail_products.col_stock')}</th><th style={th}>{tc('retail_products.col_price')}</th><th style={th}>{tc('retail_products.col_cost')}</th><th style={th}>{tc('retail_products.col_margin')}</th><th style={th}></th>
             </tr></thead>
             <tbody>
-              {loading && <tr><td style={td} colSpan={8}><span style={{ color: '#64748b' }}>Loading…</span></td></tr>}
-              {!loading && filtered.length === 0 && <tr><td style={td} colSpan={8}><span style={{ color: '#64748b' }}>No products found</span></td></tr>}
+              {loading && <tr><td style={td} colSpan={8}><span style={{ color: '#64748b' }}>{tc('retail_products.loading')}</span></td></tr>}
+              {!loading && filtered.length === 0 && <tr><td style={td} colSpan={8}><span style={{ color: '#64748b' }}>{tc('retail_products.no_products')}</span></td></tr>}
               {filtered.map((i, idx) => {
                 const low = typeof i.stock_qty === 'number' && i.stock_qty <= (i.low_stock_threshold ?? 5)
                 const m = margin(i)
@@ -291,10 +295,10 @@ function RetailProducts() {
                     <td style={td}>
                       {editing
                         ? <span style={{ display: 'flex', gap: 6 }}>
-                            <button onClick={() => saveEdit(i)} style={{ background: ACC, border: 'none', color: '#fff', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>Save</button>
+                            <button onClick={() => saveEdit(i)} style={{ background: ACC, border: 'none', color: '#fff', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>{tc('retail_products.save')}</button>
                             <button onClick={() => setEditId(null)} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>✕</button>
                           </span>
-                        : <button onClick={() => beginEdit(i)} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>Edit</button>}
+                        : <button onClick={() => beginEdit(i)} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>{tc('retail_products.edit')}</button>}
                     </td>
                   </tr>
                 )
@@ -313,7 +317,7 @@ function RetailProducts() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 50 }} onClick={closeAdd}>
           <div className="pos-sheet" onClick={e => e.stopPropagation()} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, fontSize: 17, color: ACC }}>Add Product</div>
+              <div style={{ fontWeight: 700, fontSize: 17, color: ACC }}>{tc('retail_products.add_product')}</div>
               <button onClick={closeAdd} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 20, cursor: 'pointer' }}>✕</button>
             </div>
 
@@ -333,16 +337,16 @@ function RetailProducts() {
             {stage === 'idle' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <button onClick={startCamera} style={{ background: ACC, border: 'none', color: '#fff', padding: '16px', borderRadius: 12, cursor: 'pointer', fontWeight: 700, fontSize: 16 }}>
-                  📷 Take Photo
+                  📷 {tc('retail_products.take_photo')}
                 </button>
                 <button onClick={() => fileRef.current?.click()} style={{ background: '#334155', border: 'none', color: '#f1f5f9', padding: '14px', borderRadius: 12, cursor: 'pointer', fontSize: 14 }}>
-                  🖼️ Choose Photo
+                  🖼️ {tc('retail_products.choose_photo')}
                 </button>
-                <div style={{ textAlign: 'center', color: '#64748b', fontSize: 12, margin: '4px 0' }}>— or —</div>
+                <div style={{ textAlign: 'center', color: '#64748b', fontSize: 12, margin: '4px 0' }}>{tc('retail_products.or_divider')}</div>
                 <button onClick={() => { setDraft(emptyDraft); setStage('review') }} style={{ background: 'transparent', border: '1px solid #334155', color: '#94a3b8', padding: '14px', borderRadius: 12, cursor: 'pointer', fontSize: 14 }}>
-                  ✏️ Enter Manually
+                  ✏️ {tc('retail_products.enter_manually')}
                 </button>
-                <div style={{ color: '#64748b', fontSize: 12, textAlign: 'center', marginTop: 4 }}>Snap a product to auto-fill name, category & suggested price.</div>
+                <div style={{ color: '#64748b', fontSize: 12, textAlign: 'center', marginTop: 4 }}>{tc('retail_products.snap_hint')}</div>
               </div>
             )}
 
@@ -351,8 +355,8 @@ function RetailProducts() {
                 <video ref={videoRef} playsInline muted style={{ width: '100%', borderRadius: 12, background: '#000', maxHeight: 360, objectFit: 'cover' }} />
                 {camError && <div style={{ color: '#f59e0b', fontSize: 13, marginTop: 10 }}>{camError}</div>}
                 <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-                  <button onClick={captureFrame} style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: 'pointer', fontWeight: 700 }}>Capture</button>
-                  <button onClick={() => { stopCamera(); setStage('idle') }} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '14px 20px', borderRadius: 12, cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={captureFrame} style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: 'pointer', fontWeight: 700 }}>{tc('retail_products.capture')}</button>
+                  <button onClick={() => { stopCamera(); setStage('idle') }} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '14px 20px', borderRadius: 12, cursor: 'pointer' }}>{tc('retail_products.cancel')}</button>
                 </div>
               </div>
             )}
@@ -360,29 +364,29 @@ function RetailProducts() {
             {stage === 'scanning' && (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
-                <div style={{ color: '#f1f5f9', fontWeight: 600 }}>{scanMsg || 'Analysing…'}</div>
-                <div style={{ color: '#64748b', fontSize: 12, marginTop: 6 }}>Reading product details from your photo</div>
+                <div style={{ color: '#f1f5f9', fontWeight: 600 }}>{scanMsg || tc('retail_products.analysing')}</div>
+                <div style={{ color: '#64748b', fontSize: 12, marginTop: 6 }}>{tc('retail_products.reading_details')}</div>
               </div>
             )}
 
             {(stage === 'review' || stage === 'saving') && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {scanMsg && <div style={{ color: '#f59e0b', fontSize: 13 }}>{scanMsg}</div>}
-                <Field label="Name *"><input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} style={inp} /></Field>
+                <Field label={tc('retail_products.field_name')}><input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} style={inp} /></Field>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <Field label="Category"><input value={draft.category} onChange={e => setDraft({ ...draft, category: e.target.value })} style={inp} /></Field>
-                  <Field label="SKU"><input value={draft.sku} onChange={e => setDraft({ ...draft, sku: e.target.value })} style={inp} /></Field>
+                  <Field label={tc('retail_products.field_category')}><input value={draft.category} onChange={e => setDraft({ ...draft, category: e.target.value })} style={inp} /></Field>
+                  <Field label={tc('retail_products.field_sku')}><input value={draft.sku} onChange={e => setDraft({ ...draft, sku: e.target.value })} style={inp} /></Field>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <Field label={`Sale price (${sym})`}><input value={draft.sale_price} onChange={e => setDraft({ ...draft, sale_price: e.target.value })} style={inp} inputMode="decimal" /></Field>
-                  <Field label={`Cost price (${sym})`}><input value={draft.cost_price} onChange={e => setDraft({ ...draft, cost_price: e.target.value })} style={inp} inputMode="decimal" /></Field>
+                  <Field label={tc('retail_products.field_sale_price', { sym })}><input value={draft.sale_price} onChange={e => setDraft({ ...draft, sale_price: e.target.value })} style={inp} inputMode="decimal" /></Field>
+                  <Field label={tc('retail_products.field_cost_price', { sym })}><input value={draft.cost_price} onChange={e => setDraft({ ...draft, cost_price: e.target.value })} style={inp} inputMode="decimal" /></Field>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <Field label="Stock qty"><input value={draft.stock_qty} onChange={e => setDraft({ ...draft, stock_qty: e.target.value })} style={inp} inputMode="numeric" /></Field>
-                  <Field label="Low-stock alert"><input value={draft.low_stock_threshold} onChange={e => setDraft({ ...draft, low_stock_threshold: e.target.value })} style={inp} inputMode="numeric" /></Field>
+                  <Field label={tc('retail_products.field_stock_qty')}><input value={draft.stock_qty} onChange={e => setDraft({ ...draft, stock_qty: e.target.value })} style={inp} inputMode="numeric" /></Field>
+                  <Field label={tc('retail_products.field_low_stock_alert')}><input value={draft.low_stock_threshold} onChange={e => setDraft({ ...draft, low_stock_threshold: e.target.value })} style={inp} inputMode="numeric" /></Field>
                 </div>
                 <button className="pos-btn-primary" onClick={saveDraft} disabled={stage === 'saving'} style={{ background: ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: 'pointer', fontWeight: 700, fontSize: 15, opacity: stage === 'saving' ? 0.6 : 1 }}>
-                  {stage === 'saving' ? 'Saving…' : 'Save Product'}
+                  {stage === 'saving' ? tc('retail_products.saving') : tc('retail_products.save_product')}
                 </button>
               </div>
             )}
@@ -390,11 +394,11 @@ function RetailProducts() {
             {stage === 'done' && (
               <div className="pos-reveal" style={{ textAlign: 'center', padding: '30px 0' }}>
                 <div className="pos-success-icon" style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
-                <div style={{ fontWeight: 700, fontSize: 17 }}>Product added</div>
-                <div style={{ color: '#64748b', fontSize: 13, marginTop: 6, marginBottom: 20 }}>{draft.name} is now in your catalog.</div>
+                <div style={{ fontWeight: 700, fontSize: 17 }}>{tc('retail_products.product_added')}</div>
+                <div style={{ color: '#64748b', fontSize: 13, marginTop: 6, marginBottom: 20 }}>{tc('retail_products.product_added_detail', { name: draft.name })}</div>
                 <div style={{ display: 'flex', gap: 10 }}>
-                  <button className="pos-btn-primary" onClick={() => { setDraft(emptyDraft); setScanMsg(''); setStage('idle') }} style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: 'pointer', fontWeight: 600 }}>Add Another</button>
-                  <button onClick={closeAdd} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '14px 20px', borderRadius: 12, cursor: 'pointer' }}>Done</button>
+                  <button className="pos-btn-primary" onClick={() => { setDraft(emptyDraft); setScanMsg(''); setStage('idle') }} style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: 'pointer', fontWeight: 600 }}>{tc('retail_products.add_another')}</button>
+                  <button onClick={closeAdd} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '14px 20px', borderRadius: 12, cursor: 'pointer' }}>{tc('retail_products.done')}</button>
                 </div>
               </div>
             )}

@@ -2,6 +2,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
+
+type Tc = (key: string, vars?: Record<string, string | number>) => string
 
 const tokens = {
   bg:      'var(--pos-bg)',
@@ -22,20 +25,24 @@ const tokens = {
 
 type Stage = 'viewfinder' | 'defect_type' | 'severity' | 'details' | 'submitting' | 'success'
 
-const DEFECT_TYPES: { id: string; label: string; icon: string; hint: string; color: string }[] = [
-  { id: 'dimensional',    label: 'Dimensional',    icon: '📐', hint: 'Wrong size or shape',     color: tokens.intake   },
-  { id: 'surface',        label: 'Surface',        icon: '🔍', hint: 'Scratches, marks, finish', color: tokens.warning  },
-  { id: 'contamination',  label: 'Contamination',  icon: '⚠️', hint: 'Foreign material found',  color: tokens.danger    },
-  { id: 'assembly',       label: 'Assembly',       icon: '🔩', hint: 'Mis-fit or missing part',  color: tokens.dispatch },
-  { id: 'packaging',      label: 'Packaging',      icon: '📦', hint: 'Damaged or wrong pack',   color: '#0ea5e9' },
-  { id: 'other',          label: 'Other',          icon: '❓', hint: 'Specify in notes',         color: '#64748b' },
-]
+function buildDefectTypes(tc: Tc): { id: string; label: string; icon: string; hint: string; color: string }[] {
+  return [
+    { id: 'dimensional',    label: tc('factory_quality.defect_dimensional_label'),    icon: '📐', hint: tc('factory_quality.defect_dimensional_hint'),    color: tokens.intake   },
+    { id: 'surface',        label: tc('factory_quality.defect_surface_label'),        icon: '🔍', hint: tc('factory_quality.defect_surface_hint'),        color: tokens.warning  },
+    { id: 'contamination',  label: tc('factory_quality.defect_contamination_label'),  icon: '⚠️', hint: tc('factory_quality.defect_contamination_hint'),  color: tokens.danger    },
+    { id: 'assembly',       label: tc('factory_quality.defect_assembly_label'),       icon: '🔩', hint: tc('factory_quality.defect_assembly_hint'),       color: tokens.dispatch },
+    { id: 'packaging',      label: tc('factory_quality.defect_packaging_label'),      icon: '📦', hint: tc('factory_quality.defect_packaging_hint'),      color: '#0ea5e9' },
+    { id: 'other',          label: tc('factory_quality.defect_other_label'),          icon: '❓', hint: tc('factory_quality.defect_other_hint'),          color: '#64748b' },
+  ]
+}
 
-const SEVERITIES: { id: string; label: string; icon: string; desc: string; color: string }[] = [
-  { id: 'critical', label: 'Critical', icon: '🔴', desc: 'Stop production immediately', color: tokens.danger   },
-  { id: 'major',    label: 'Major',    icon: '🟠', desc: 'Significant impact, rework needed', color: tokens.warning },
-  { id: 'minor',    label: 'Minor',    icon: '🟡', desc: 'Small issue, document only',  color: '#eab308' },
-]
+function buildSeverities(tc: Tc): { id: string; label: string; icon: string; desc: string; color: string }[] {
+  return [
+    { id: 'critical', label: tc('factory_quality.severity_critical_label'), icon: '🔴', desc: tc('factory_quality.severity_critical_desc'), color: tokens.danger   },
+    { id: 'major',    label: tc('factory_quality.severity_major_label'),    icon: '🟠', desc: tc('factory_quality.severity_major_desc'),    color: tokens.warning },
+    { id: 'minor',    label: tc('factory_quality.severity_minor_label'),    icon: '🟡', desc: tc('factory_quality.severity_minor_desc'),    color: '#eab308' },
+  ]
+}
 
 function IconArrowLeft({ size = 18 }: { size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -43,8 +50,11 @@ function IconArrowLeft({ size = 18 }: { size?: number }) {
 
 export default function QualityPage() {
   const router = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [stage, setStage]   = useState<Stage>('viewfinder')
+  const DEFECT_TYPES = buildDefectTypes(tc)
+  const SEVERITIES = buildSeverities(tc)
 
   // Captured data
   const [photoUrl, setPhotoUrl]             = useState('')
@@ -84,10 +94,10 @@ export default function QualityPage() {
       if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play() }
       setCameraOn(true)
     } catch (err: any) {
-      setCameraErr(err?.name === 'NotAllowedError' ? 'Camera access denied' : 'Camera unavailable')
+      setCameraErr(err?.name === 'NotAllowedError' ? tc('factory_quality.camera_access_denied') : tc('factory_quality.camera_unavailable'))
       setCameraOn(false)
     }
-  }, [])
+  }, [tc])
 
   function stopCamera() {
     streamRef.current?.getTracks().forEach(t => t.stop())
@@ -135,13 +145,13 @@ export default function QualityPage() {
       })
       if (!res.ok) {
         const d = await res.json()
-        setSaveError(d.error || 'Failed to submit')
+        setSaveError(d.error || tc('factory_quality.error_failed_submit'))
         setStage('details')
         return
       }
       setStage('success')
     } catch {
-      setSaveError('Network error — try again')
+      setSaveError(tc('factory_quality.error_network'))
       setStage('details')
     }
   }
@@ -173,8 +183,8 @@ export default function QualityPage() {
           <IconArrowLeft />
         </button>
         <div>
-          <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>Quality Defect</div>
-          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 2 }}>Photograph the defect clearly</div>
+          <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{tc('factory_quality.viewfinder_title')}</div>
+          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 2 }}>{tc('factory_quality.viewfinder_subtitle')}</div>
         </div>
       </div>
 
@@ -209,7 +219,7 @@ export default function QualityPage() {
 
       {cameraErr && (
         <div style={{ position: 'absolute', bottom: 160, left: 20, right: 20, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', borderRadius: 12, padding: '12px 16px', color: '#fff', fontSize: 13, textAlign: 'center' }}>
-          {cameraErr} — use gallery instead
+          {tc('factory_quality.viewfinder_camera_error', { error: cameraErr })}
         </div>
       )}
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
@@ -228,8 +238,8 @@ export default function QualityPage() {
           <img src={photoUrl} alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', border: '2px solid rgba(239,68,68,0.5)', flexShrink: 0 }} />
         )}
         <div>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>What kind of defect?</div>
-          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>Select the defect type</div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>{tc('factory_quality.defect_type_title')}</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>{tc('factory_quality.defect_type_subtitle')}</div>
         </div>
       </div>
 
@@ -265,7 +275,7 @@ export default function QualityPage() {
             <img src={photoUrl} alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', border: `2px solid ${selectedDefect?.color || tokens.danger}80`, flexShrink: 0 }} />
           )}
           <div>
-            <div style={{ fontWeight: 700, fontSize: 16 }}>How severe?</div>
+            <div style={{ fontWeight: 700, fontSize: 16 }}>{tc('factory_quality.severity_title')}</div>
             <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>
               {selectedDefect?.icon} {selectedDefect?.label}
             </div>
@@ -310,7 +320,7 @@ export default function QualityPage() {
               <img src={photoUrl} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', border: `1.5px solid ${selectedSeverity?.color || tokens.danger}60`, flexShrink: 0 }} />
             )}
             <div>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>Add details</div>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>{tc('factory_quality.details_title')}</div>
               <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginTop: 1 }}>
                 {selectedDefect?.icon} {selectedDefect?.label} · {selectedSeverity?.icon} {selectedSeverity?.label}
               </div>
@@ -322,27 +332,27 @@ export default function QualityPage() {
           {/* Qty affected */}
           <div style={{ marginBottom: 18 }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-              Quantity affected <span style={{ color: 'rgba(255,255,255,0.2)' }}>(optional)</span>
+              {tc('factory_quality.details_qty_label')} <span style={{ color: 'rgba(255,255,255,0.2)' }}>{tc('factory_quality.details_optional')}</span>
             </div>
-            <input value={qty} onChange={e => setQty(e.target.value)} type="number" inputMode="decimal" placeholder="e.g. 5"
+            <input value={qty} onChange={e => setQty(e.target.value)} type="number" inputMode="decimal" placeholder={tc('factory_quality.details_qty_placeholder')}
               style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${qty ? 'rgba(239,68,68,0.5)' : 'var(--pos-border)'}`, borderRadius: 12, color: 'var(--pos-ink)', padding: '14px 16px', fontSize: 16, outline: 'none', boxSizing: 'border-box' }} />
           </div>
 
           {/* Product name */}
           <div style={{ marginBottom: 18 }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-              Product <span style={{ color: 'rgba(255,255,255,0.2)' }}>(optional)</span>
+              {tc('factory_quality.details_product_label')} <span style={{ color: 'rgba(255,255,255,0.2)' }}>{tc('factory_quality.details_optional')}</span>
             </div>
-            <input value={productName} onChange={e => setProductName(e.target.value)} placeholder="e.g. SKU-1042, Batch A3"
+            <input value={productName} onChange={e => setProductName(e.target.value)} placeholder={tc('factory_quality.details_product_placeholder')}
               style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${productName ? 'rgba(239,68,68,0.4)' : 'var(--pos-border)'}`, borderRadius: 12, color: 'var(--pos-ink)', padding: '14px 16px', fontSize: 16, outline: 'none', boxSizing: 'border-box' }} />
           </div>
 
           {/* Notes */}
           <div style={{ marginBottom: 24 }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-              Notes <span style={{ color: 'rgba(255,255,255,0.2)' }}>(optional)</span>
+              {tc('factory_quality.details_notes_label')} <span style={{ color: 'rgba(255,255,255,0.2)' }}>{tc('factory_quality.details_optional')}</span>
             </div>
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Describe the defect…" rows={3}
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder={tc('factory_quality.details_notes_placeholder')} rows={3}
               style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${notes ? 'rgba(239,68,68,0.4)' : 'var(--pos-border)'}`, borderRadius: 12, color: 'var(--pos-ink)', padding: '14px 16px', fontSize: 14, outline: 'none', resize: 'none', boxSizing: 'border-box', lineHeight: 1.5 }} />
           </div>
 
@@ -353,7 +363,7 @@ export default function QualityPage() {
           {/* CTA — colour matches severity */}
           <button onClick={submitDefect}
             style={{ width: '100%', background: `linear-gradient(135deg, ${selectedSeverity?.color || tokens.danger}, ${selectedSeverity?.id === 'critical' ? '#dc2626' : selectedSeverity?.id === 'major' ? '#d97706' : '#ca8a04'})`, border: 'none', color: '#fff', padding: '16px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 17, boxShadow: `0 4px 20px ${selectedSeverity?.color || tokens.danger}40` }}>
-            {selectedSeverity?.icon} Log {selectedSeverity?.label} Defect
+            {selectedSeverity?.icon} {tc('factory_quality.details_log_cta', { severity: selectedSeverity?.label || '' })}
           </button>
         </div>
       </div>
@@ -364,7 +374,7 @@ export default function QualityPage() {
   if (stage === 'submitting') return (
     <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ width: 48, height: 48, border: `4px solid rgba(239,68,68,.3)`, borderTopColor: tokens.danger, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-      <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>Logging defect…</div>
+      <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>{tc('factory_quality.submitting_label')}</div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
@@ -385,22 +395,22 @@ export default function QualityPage() {
           </div>
         </div>
 
-        <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>Defect logged</div>
+        <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>{tc('factory_quality.success_title')}</div>
         <div style={{ fontSize: 14, color: 'var(--pos-muted)', marginBottom: 4 }}>
           {selectedDefect?.icon} {selectedDefect?.label} · {selectedSeverity?.label}
         </div>
         <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginBottom: 36 }}>
-          {selectedSeverity?.id === 'critical' ? 'Supervisor has been alerted' : 'Quality record saved'}
+          {selectedSeverity?.id === 'critical' ? tc('factory_quality.success_critical_note') : tc('factory_quality.success_saved_note')}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 300 }}>
           <button onClick={reset}
             style={{ width: '100%', background: selectedSeverity?.color || tokens.danger, border: 'none', color: '#fff', padding: '15px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 15 }}>
-            Log Another Defect
+            {tc('factory_quality.success_log_another')}
           </button>
           <button onClick={() => router.push('/factory')}
             style={{ width: '100%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', color: 'var(--pos-muted)', padding: '13px', borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
-            Back to Hub
+            {tc('factory_quality.success_back_to_hub')}
           </button>
         </div>
       </div>
