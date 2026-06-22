@@ -2,6 +2,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
+
+type Tc = (key: string, vars?: Record<string, string | number>) => string
 
 const ACC = '#ec4899' // salon pink accent
 
@@ -38,15 +41,16 @@ function fmtTime(iso: string) {
   return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-function serviceLabel(tx: Tx) {
+function serviceLabel(tc: Tc, tx: Tx) {
   const items = tx.pos_items || []
-  if (!items.length) return 'Service'
+  if (!items.length) return tc('salon.service_fallback')
   if (items.length === 1) return items[0].name
-  return `${items[0].name} +${items.length - 1}`
+  return tc('salon.service_plus', { name: items[0].name, count: items.length - 1 })
 }
 
 export default function SalonHub() {
   const router = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [sym, setSym] = useState('£')
   const [kpis, setKpis] = useState<KPI[]>([])
@@ -102,12 +106,12 @@ export default function SalonHub() {
       const returnRate = phones.length ? (returning / phones.length) * 100 : 0
 
       setKpis([
-        { label: "Today's Appointments", value: `${todayTxs.length}`, sub: 'tickets today', status: 'neutral' },
-        { label: 'Revenue Today', value: `${sym}${todayRevenue.toFixed(2)}`, sub: `${todayTxs.length} services`, status: 'good' },
-        { label: 'Avg Service Value', value: `${sym}${avgService.toFixed(2)}`, sub: 'per ticket', status: 'neutral' },
-        { label: 'Walk-ins', value: `${walkIns}`, sub: 'est. no phone on file', status: walkIns > todayTxs.length / 2 ? 'warn' : 'neutral' },
-        { label: 'Top Service', value: topService ? topService[0] : '—', sub: topService ? `${topService[1]} booked` : 'no data', status: 'neutral' },
-        { label: 'Return Client Rate', value: `${returnRate.toFixed(0)}%`, sub: 'repeat visitors', status: returnRate >= 40 ? 'good' : returnRate >= 20 ? 'warn' : 'bad' },
+        { label: tc('salon.kpi_appointments'), value: `${todayTxs.length}`, sub: tc('salon.kpi_appointments_sub'), status: 'neutral' },
+        { label: tc('salon.kpi_revenue'), value: `${sym}${todayRevenue.toFixed(2)}`, sub: tc('salon.kpi_revenue_sub' + (todayTxs.length === 1 ? '_one' : '_other'), { count: todayTxs.length }), status: 'good' },
+        { label: tc('salon.kpi_avg_service'), value: `${sym}${avgService.toFixed(2)}`, sub: tc('salon.kpi_avg_service_sub'), status: 'neutral' },
+        { label: tc('salon.kpi_walk_ins'), value: `${walkIns}`, sub: tc('salon.kpi_walk_ins_sub'), status: walkIns > todayTxs.length / 2 ? 'warn' : 'neutral' },
+        { label: tc('salon.kpi_top_service'), value: topService ? topService[0] : '—', sub: topService ? tc('salon.kpi_top_service_sub' + (topService[1] === 1 ? '_one' : '_other'), { count: topService[1] }) : tc('salon.kpi_top_service_sub_none'), status: 'neutral' },
+        { label: tc('salon.kpi_return_rate'), value: `${returnRate.toFixed(0)}%`, sub: tc('salon.kpi_return_rate_sub'), status: returnRate >= 40 ? 'good' : returnRate >= 20 ? 'warn' : 'bad' },
       ])
 
       setSchedule(todayTxs.slice().sort((a, b) => +new Date(a.created_at) - +new Date(b.created_at)))
@@ -119,9 +123,9 @@ export default function SalonHub() {
   }
 
   const nav = [
-    { label: '📅 Bookings', href: '/salon/bookings', desc: 'Appointments & timeline' },
-    { label: '👤 Clients', href: '/salon/clients', desc: 'Profiles & before/after photos' },
-    { label: '🧴 Products', href: '/salon/products', desc: 'Retail & backbar usage' },
+    { label: tc('salon.nav_bookings_label'), href: '/salon/bookings', desc: tc('salon.nav_bookings_desc') },
+    { label: tc('salon.nav_clients_label'), href: '/salon/clients', desc: tc('salon.nav_clients_desc') },
+    { label: tc('salon.nav_products_label'), href: '/salon/products', desc: tc('salon.nav_products_desc') },
   ]
 
   return (
@@ -129,11 +133,11 @@ export default function SalonHub() {
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>💇 Salon</div>
-          <div style={{ fontSize: 12, color: '#94a3b8' }}>Operations dashboard</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>{tc('salon.header_title')}</div>
+          <div style={{ fontSize: 12, color: '#94a3b8' }}>{tc('salon.header_subtitle')}</div>
         </div>
         <button onClick={() => router.push('/pos')} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
-          ← POS
+          {tc('salon.back_pos')}
         </button>
       </div>
 
@@ -141,7 +145,7 @@ export default function SalonHub() {
         {/* KPI Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 12, marginBottom: 24 }}>
           {kpis.length === 0 && loading && (
-            <div style={{ color: '#64748b', fontSize: 13 }}>Loading…</div>
+            <div style={{ color: '#64748b', fontSize: 13 }}>{tc('salon.loading')}</div>
           )}
           {kpis.map(kpi => (
             <div key={kpi.label} className="pos-reveal" style={{ background: '#1e293b', border: `1px solid ${kpi.status ? statusColor[kpi.status] + '40' : '#334155'}`, borderRadius: 12, padding: '14px 16px' }}>
@@ -170,14 +174,14 @@ export default function SalonHub() {
         {/* Today's schedule preview */}
         <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <div style={{ fontWeight: 700, fontSize: 15 }}>Today's Schedule</div>
+            <div style={{ fontWeight: 700, fontSize: 15 }}>{tc('salon.schedule_title')}</div>
             <button onClick={() => router.push('/salon/bookings')} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>
-              All bookings →
+              {tc('salon.all_bookings')}
             </button>
           </div>
           {schedule.length === 0 && (
             <div style={{ color: '#64748b', fontSize: 13, padding: '20px 0', textAlign: 'center' }}>
-              {loading ? 'Loading…' : 'No appointments recorded today.'}
+              {loading ? tc('salon.loading') : tc('salon.schedule_empty')}
             </div>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -185,8 +189,8 @@ export default function SalonHub() {
               <div key={tx.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '10px 14px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: ACC, width: 56 }}>{fmtTime(tx.created_at)}</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{tx.pos_customers?.name || tx.pos_customers?.phone || 'Walk-in'}</div>
-                  <div style={{ fontSize: 11, color: '#64748b' }}>{serviceLabel(tx)} · {tx.cashier?.name || 'Unassigned'}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{tx.pos_customers?.name || tx.pos_customers?.phone || tc('salon.walk_in')}</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>{serviceLabel(tc, tx)} · {tx.cashier?.name || tc('salon.unassigned')}</div>
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>{sym}{(tx.total || 0).toFixed(2)}</div>
               </div>

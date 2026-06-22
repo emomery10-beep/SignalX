@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#6366f1'
 const GOOD = '#22c55e', WARN = '#f59e0b', BAD = '#ef4444', MUTED = '#94a3b8', DIM = '#64748b'
@@ -19,6 +20,7 @@ interface Part {
 
 export default function RepairParts() {
   const router = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [sym, setSym] = useState('£')
   const [parts, setParts] = useState<Part[]>([])
@@ -53,7 +55,7 @@ export default function RepairParts() {
   useEffect(() => { if (authReady && session) loadParts() }, [authReady, session, loadParts])
 
   const addPart = async () => {
-    if (!form.name.trim()) { setFormError('Part name is required'); return }
+    if (!form.name.trim()) { setFormError(tc('repair_parts.err_name_required')); return }
     setSaving(true); setFormError('')
     try {
       const res = await fetch('/api/pos/inventory', {
@@ -71,11 +73,11 @@ export default function RepairParts() {
         }),
       })
       const data = await res.json()
-      if (!res.ok) { setFormError(data.error || 'Failed to add part'); setSaving(false); return }
+      if (!res.ok) { setFormError(data.error || tc('repair_parts.err_add_failed')); setSaving(false); return }
       setShowForm(false)
       setForm({ name: '', sku: '', stock_qty: '', cost_price: '', sale_price: '', low_stock_threshold: '', supplier: '' })
       loadParts()
-    } catch { setFormError('Failed to add part. Check connection.') }
+    } catch { setFormError(tc('repair_parts.err_add_failed_conn')) }
     setSaving(false)
   }
 
@@ -97,7 +99,7 @@ export default function RepairParts() {
   const th: React.CSSProperties = { textAlign: 'left', padding: '10px 14px', fontSize: 11, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600, borderBottom: '1px solid #334155' }
   const td: React.CSSProperties = { padding: '12px 14px', fontSize: 13, borderBottom: '1px solid #1e293b' }
 
-  if (!authReady) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: MUTED, fontFamily: 'system-ui, sans-serif' }}>Loading…</div>
+  if (!authReady) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: MUTED, fontFamily: 'system-ui, sans-serif' }}>{tc('repair_parts.loading')}</div>
 
   return (
     <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
@@ -105,11 +107,11 @@ export default function RepairParts() {
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/repair')} style={{ background: '#334155', border: 'none', color: MUTED, width: 36, height: 36, borderRadius: 8, cursor: 'pointer', fontSize: 16 }}>←</button>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: ACC }}>🔧 Parts Inventory</div>
-          <div style={{ fontSize: 12, color: MUTED }}>{parts.length} part{parts.length === 1 ? '' : 's'}{lowCount > 0 ? ` · ${lowCount} low stock` : ''}</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: ACC }}>{tc('repair_parts.header_title')}</div>
+          <div style={{ fontSize: 12, color: MUTED }}>{tc('repair_parts.header_parts' + (parts.length === 1 ? '_one' : '_other'), { count: parts.length })}{lowCount > 0 ? tc('repair_parts.header_low_suffix', { count: lowCount }) : ''}</div>
         </div>
         <button onClick={() => { setShowForm(s => !s); setFormError('') }} style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
-          {showForm ? 'Cancel' : '+ Add Part'}
+          {showForm ? tc('repair_parts.cancel') : tc('repair_parts.add_part')}
         </button>
       </div>
 
@@ -117,34 +119,34 @@ export default function RepairParts() {
         {/* Add form */}
         {showForm && (
           <div className="pos-sheet" style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 18, marginBottom: 18 }}>
-            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>Add a part</div>
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>{tc('repair_parts.form_title')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
-              <div><label style={labelStyle}>Part name *</label><input style={inputStyle} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. iPhone 13 screen" /></div>
-              <div><label style={labelStyle}>SKU</label><input style={inputStyle} value={form.sku} onChange={e => setForm(f => ({ ...f, sku: e.target.value }))} placeholder="SKU code" /></div>
-              <div><label style={labelStyle}>Stock qty</label><input style={inputStyle} inputMode="numeric" value={form.stock_qty} onChange={e => setForm(f => ({ ...f, stock_qty: e.target.value }))} placeholder="0" /></div>
-              <div><label style={labelStyle}>Cost ({sym})</label><input style={inputStyle} inputMode="decimal" value={form.cost_price} onChange={e => setForm(f => ({ ...f, cost_price: e.target.value }))} placeholder="0.00" /></div>
-              <div><label style={labelStyle}>Sale price ({sym})</label><input style={inputStyle} inputMode="decimal" value={form.sale_price} onChange={e => setForm(f => ({ ...f, sale_price: e.target.value }))} placeholder="0.00" /></div>
-              <div><label style={labelStyle}>Reorder point</label><input style={inputStyle} inputMode="numeric" value={form.low_stock_threshold} onChange={e => setForm(f => ({ ...f, low_stock_threshold: e.target.value }))} placeholder="5" /></div>
-              <div><label style={labelStyle}>Supplier</label><input style={inputStyle} value={form.supplier} onChange={e => setForm(f => ({ ...f, supplier: e.target.value }))} placeholder="Supplier name" /></div>
+              <div><label style={labelStyle}>{tc('repair_parts.label_name')}</label><input style={inputStyle} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder={tc('repair_parts.placeholder_name')} /></div>
+              <div><label style={labelStyle}>{tc('repair_parts.label_sku')}</label><input style={inputStyle} value={form.sku} onChange={e => setForm(f => ({ ...f, sku: e.target.value }))} placeholder={tc('repair_parts.placeholder_sku')} /></div>
+              <div><label style={labelStyle}>{tc('repair_parts.label_stock')}</label><input style={inputStyle} inputMode="numeric" value={form.stock_qty} onChange={e => setForm(f => ({ ...f, stock_qty: e.target.value }))} placeholder="0" /></div>
+              <div><label style={labelStyle}>{tc('repair_parts.label_cost', { sym })}</label><input style={inputStyle} inputMode="decimal" value={form.cost_price} onChange={e => setForm(f => ({ ...f, cost_price: e.target.value }))} placeholder="0.00" /></div>
+              <div><label style={labelStyle}>{tc('repair_parts.label_sale', { sym })}</label><input style={inputStyle} inputMode="decimal" value={form.sale_price} onChange={e => setForm(f => ({ ...f, sale_price: e.target.value }))} placeholder="0.00" /></div>
+              <div><label style={labelStyle}>{tc('repair_parts.label_reorder')}</label><input style={inputStyle} inputMode="numeric" value={form.low_stock_threshold} onChange={e => setForm(f => ({ ...f, low_stock_threshold: e.target.value }))} placeholder="5" /></div>
+              <div><label style={labelStyle}>{tc('repair_parts.label_supplier')}</label><input style={inputStyle} value={form.supplier} onChange={e => setForm(f => ({ ...f, supplier: e.target.value }))} placeholder={tc('repair_parts.placeholder_supplier')} /></div>
             </div>
             {formError && <div className="pos-banner" role="alert" style={{ color: BAD, fontSize: 13, marginTop: 12 }}>{formError}</div>}
             <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-              <button onClick={addPart} disabled={saving} className="pos-btn-primary" style={{ padding: '11px 22px', borderRadius: 9, background: ACC, color: '#fff', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 14, opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save part'}</button>
-              <button onClick={() => setShowForm(false)} style={{ padding: '11px 22px', borderRadius: 9, background: '#334155', color: MUTED, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>Cancel</button>
+              <button onClick={addPart} disabled={saving} className="pos-btn-primary" style={{ padding: '11px 22px', borderRadius: 9, background: ACC, color: '#fff', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 14, opacity: saving ? 0.6 : 1 }}>{saving ? tc('repair_parts.saving') : tc('repair_parts.save_part')}</button>
+              <button onClick={() => setShowForm(false)} style={{ padding: '11px 22px', borderRadius: 9, background: '#334155', color: MUTED, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>{tc('repair_parts.cancel')}</button>
             </div>
           </div>
         )}
 
         {/* Search */}
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search parts by name, SKU or supplier…"
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder={tc('repair_parts.search_placeholder')}
           style={{ ...inputStyle, background: '#1e293b', marginBottom: 16 }} />
 
         {/* Table */}
         <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden' }}>
-          {loading && parts.length === 0 && <div style={{ padding: 24, color: DIM, fontSize: 13 }}>Loading parts…</div>}
+          {loading && parts.length === 0 && <div style={{ padding: 24, color: DIM, fontSize: 13 }}>{tc('repair_parts.loading_parts')}</div>}
           {!loading && filtered.length === 0 && (
             <div style={{ padding: '40px 24px', textAlign: 'center', color: DIM, fontSize: 13 }}>
-              {parts.length === 0 ? 'No repair parts yet. Add your first part to start tracking stock.' : 'No parts match your search.'}
+              {parts.length === 0 ? tc('repair_parts.empty_no_parts') : tc('repair_parts.empty_no_match')}
             </div>
           )}
           {filtered.length > 0 && (
@@ -152,13 +154,13 @@ export default function RepairParts() {
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
                 <thead>
                   <tr>
-                    <th style={th}>Part</th>
-                    <th style={th}>SKU</th>
-                    <th style={{ ...th, textAlign: 'right' }}>Stock</th>
-                    <th style={{ ...th, textAlign: 'right' }}>Cost</th>
-                    <th style={{ ...th, textAlign: 'right' }}>Sale</th>
-                    <th style={{ ...th, textAlign: 'right' }}>Reorder</th>
-                    <th style={th}>Supplier</th>
+                    <th style={th}>{tc('repair_parts.th_part')}</th>
+                    <th style={th}>{tc('repair_parts.th_sku')}</th>
+                    <th style={{ ...th, textAlign: 'right' }}>{tc('repair_parts.th_stock')}</th>
+                    <th style={{ ...th, textAlign: 'right' }}>{tc('repair_parts.th_cost')}</th>
+                    <th style={{ ...th, textAlign: 'right' }}>{tc('repair_parts.th_sale')}</th>
+                    <th style={{ ...th, textAlign: 'right' }}>{tc('repair_parts.th_reorder')}</th>
+                    <th style={th}>{tc('repair_parts.th_supplier')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -170,7 +172,7 @@ export default function RepairParts() {
                         <td style={{ ...td, color: MUTED }}>{p.sku || '—'}</td>
                         <td style={{ ...td, textAlign: 'right' }}>
                           <span style={{ fontWeight: 700, color: low ? BAD : GOOD }}>{p.stock_qty ?? 0}</span>
-                          {low && <span style={{ fontSize: 10, color: BAD, marginLeft: 6, fontWeight: 700 }}>LOW</span>}
+                          {low && <span style={{ fontSize: 10, color: BAD, marginLeft: 6, fontWeight: 700 }}>{tc('repair_parts.low_badge')}</span>}
                         </td>
                         <td style={{ ...td, textAlign: 'right', color: MUTED }}>{sym}{Number(p.cost_price ?? 0).toFixed(2)}</td>
                         <td style={{ ...td, textAlign: 'right', color: MUTED }}>{sym}{Number(p.sale_price ?? 0).toFixed(2)}</td>
