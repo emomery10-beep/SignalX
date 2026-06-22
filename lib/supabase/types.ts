@@ -1215,6 +1215,7 @@ export type Database = {
           batch_number: string | null
           brand: string | null
           category: string | null
+          channel: string | null
           cost_price: number | null
           created_at: string | null
           expiry_date: string | null
@@ -1238,6 +1239,7 @@ export type Database = {
           batch_number?: string | null
           brand?: string | null
           category?: string | null
+          channel?: string | null
           cost_price?: number | null
           created_at?: string | null
           expiry_date?: string | null
@@ -1261,6 +1263,7 @@ export type Database = {
           batch_number?: string | null
           brand?: string | null
           category?: string | null
+          channel?: string | null
           cost_price?: number | null
           created_at?: string | null
           expiry_date?: string | null
@@ -3758,7 +3761,12 @@ export type Database = {
           assigned_driver_id: string | null
           assigned_truck_id: string | null
           collected_at: string | null
+          collected_by: string | null
           collected_by_name: string | null
+          collection_photo_path: string | null
+          collection_photo_url: string | null
+          consent_at: string | null
+          consent_by: string | null
           created_at: string
           current_branch_id: string | null
           current_lat: number | null
@@ -3766,7 +3774,9 @@ export type Database = {
           declared_value: number | null
           delivered_at: string | null
           delivered_by: string | null
+          delivery_address: string | null
           delivery_notes: string | null
+          delivery_type: string | null
           description: string | null
           destination_branch_id: string | null
           destination_city: string | null
@@ -3774,16 +3784,25 @@ export type Database = {
           fail_reason: string | null
           fee_charged: number | null
           id: string
+          intake_photo_path: string | null
+          intake_photo_url: string | null
           owner_id: string
+          parcel_size: string | null
           payment_method: string | null
           payment_status: string | null
+          receipt_consent: boolean
+          received_at_dest_at: string | null
+          received_at_dest_by: string | null
           received_by: string | null
+          receiver_id_number: string | null
           receiver_name: string | null
           receiver_phone: string | null
           released_by: string | null
           return_reason: string | null
           route_id: string | null
           sender_branch_id: string | null
+          sender_consent: boolean
+          sender_id_number: string | null
           sender_name: string | null
           sender_phone: string | null
           status: string
@@ -3795,7 +3814,12 @@ export type Database = {
           assigned_driver_id?: string | null
           assigned_truck_id?: string | null
           collected_at?: string | null
+          collected_by?: string | null
           collected_by_name?: string | null
+          collection_photo_path?: string | null
+          collection_photo_url?: string | null
+          consent_at?: string | null
+          consent_by?: string | null
           created_at?: string
           current_branch_id?: string | null
           current_lat?: number | null
@@ -3803,7 +3827,9 @@ export type Database = {
           declared_value?: number | null
           delivered_at?: string | null
           delivered_by?: string | null
+          delivery_address?: string | null
           delivery_notes?: string | null
+          delivery_type?: string | null
           description?: string | null
           destination_branch_id?: string | null
           destination_city?: string | null
@@ -3811,16 +3837,25 @@ export type Database = {
           fail_reason?: string | null
           fee_charged?: number | null
           id?: string
+          intake_photo_path?: string | null
+          intake_photo_url?: string | null
           owner_id: string
+          parcel_size?: string | null
           payment_method?: string | null
           payment_status?: string | null
+          receipt_consent?: boolean
+          received_at_dest_at?: string | null
+          received_at_dest_by?: string | null
           received_by?: string | null
+          receiver_id_number?: string | null
           receiver_name?: string | null
           receiver_phone?: string | null
           released_by?: string | null
           return_reason?: string | null
           route_id?: string | null
           sender_branch_id?: string | null
+          sender_consent?: boolean
+          sender_id_number?: string | null
           sender_name?: string | null
           sender_phone?: string | null
           status?: string
@@ -3832,7 +3867,12 @@ export type Database = {
           assigned_driver_id?: string | null
           assigned_truck_id?: string | null
           collected_at?: string | null
+          collected_by?: string | null
           collected_by_name?: string | null
+          collection_photo_path?: string | null
+          collection_photo_url?: string | null
+          consent_at?: string | null
+          consent_by?: string | null
           created_at?: string
           current_branch_id?: string | null
           current_lat?: number | null
@@ -3840,7 +3880,9 @@ export type Database = {
           declared_value?: number | null
           delivered_at?: string | null
           delivered_by?: string | null
+          delivery_address?: string | null
           delivery_notes?: string | null
+          delivery_type?: string | null
           description?: string | null
           destination_branch_id?: string | null
           destination_city?: string | null
@@ -3848,16 +3890,25 @@ export type Database = {
           fail_reason?: string | null
           fee_charged?: number | null
           id?: string
+          intake_photo_path?: string | null
+          intake_photo_url?: string | null
           owner_id?: string
+          parcel_size?: string | null
           payment_method?: string | null
           payment_status?: string | null
+          receipt_consent?: boolean
+          received_at_dest_at?: string | null
+          received_at_dest_by?: string | null
           received_by?: string | null
+          receiver_id_number?: string | null
           receiver_name?: string | null
           receiver_phone?: string | null
           released_by?: string | null
           return_reason?: string | null
           route_id?: string | null
           sender_branch_id?: string | null
+          sender_consent?: boolean
+          sender_id_number?: string | null
           sender_name?: string | null
           sender_phone?: string | null
           status?: string
