@@ -5,6 +5,7 @@ import CashierCopilot from '@/components/CashierCopilot'
 import PosCardPayment from '@/components/PosCardPayment'
 import PosMobilePayment from '@/components/PosMobilePayment'
 import { getRoleHomeRoute } from '@/lib/pos-role-client'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = 'var(--pos-accent)'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
@@ -71,24 +72,25 @@ type Screen = 'home' | 'add' | 'cart' | 'checkout' | 'receipt'
 type AddMode = 'camera' | 'search'
 
 // Business-type adaptive labels
-function bizLabel(type: string) {
+function bizLabel(type: string, tc: (key: string, vars?: Record<string, string | number>) => string) {
   const t = (type || '').toLowerCase()
   if (['restaurant', 'cafe', 'café', 'food', 'bar', 'takeaway'].some(k => t.includes(k)))
-    return { sale: 'New Order', item: 'Add items', heading: 'Order', table: true }
+    return { sale: tc('sell.biz_food_sale'), item: tc('sell.biz_food_item'), heading: tc('sell.biz_food_heading'), table: true }
   if (['salon', 'barber', 'barbershop', 'spa', 'beauty', 'service', 'clinic'].some(k => t.includes(k)))
-    return { sale: 'New Booking', item: 'Add services', heading: 'Services', table: false }
-  return { sale: 'New Sale', item: 'Add item', heading: 'Cart', table: false }
+    return { sale: tc('sell.biz_service_sale'), item: tc('sell.biz_service_item'), heading: tc('sell.biz_service_heading'), table: false }
+  return { sale: tc('sell.biz_retail_sale'), item: tc('sell.biz_retail_item'), heading: tc('sell.biz_retail_heading'), table: false }
 }
 
 export default function SellPage() {
   const router = useRouter()
+  const { tc } = useLang()
   const [staff, setStaff]   = useState<StaffSession | null>(null)
   const [screen, setScreen] = useState<Screen>('home')
   const [cart, setCart]     = useState<CartItem[]>([])
   const [todaySales, setTodaySales]     = useState(0)
   const [todayRevenue, setTodayRevenue] = useState(0)
   const [sym, setSym]       = useState('£')
-  const [biz, setBiz]       = useState(bizLabel('retail'))
+  const [biz, setBiz]       = useState(() => bizLabel('retail', tc))
 
   // Add-item mode
   const [addMode, setAddMode]           = useState<AddMode>('camera')
@@ -151,7 +153,7 @@ export default function SellPage() {
     if (home !== '/sell') { router.push(home); return }
     setStaff(s)
     setSym(s.currency_symbol || '£')
-    setBiz(bizLabel(s.business_type || 'retail'))
+    setBiz(bizLabel(s.business_type || 'retail', tc))
     loadTodayStats(s)
     if (s.location_id) checkShift(s)  // sync localStorage check
     // Fetch fresh owner config to get correct currency symbol
@@ -159,7 +161,7 @@ export default function SellPage() {
       headers: { 'x-owner-id': s.owner_id, 'x-staff-id': s.id },
     }).then(r => r.json()).then(cfg => {
       if (cfg.currency_symbol) setSym(cfg.currency_symbol)
-      if (cfg.business_type)   setBiz(bizLabel(cfg.business_type))
+      if (cfg.business_type)   setBiz(bizLabel(cfg.business_type, tc))
     }).catch(() => {})
 
     // Fetch payment config to know if Stripe is verified (for Apple Pay sub-option)
@@ -293,9 +295,9 @@ export default function SellPage() {
       })
       const data = await res.json()
       if (data.name) setScanResult({ name: data.name, price: data.price ?? 0, inventory_id: data.inventory_id, unit: data.unit })
-      else setScanError(data.error || 'Could not identify product. Try search instead.')
+      else setScanError(data.error || tc('sell.scan_not_identified'))
     } catch {
-      setScanError('Scan failed. Try search instead.')
+      setScanError(tc('sell.scan_failed'))
     }
     setScanning(false)
   }
@@ -354,11 +356,15 @@ export default function SellPage() {
       const todayMs = new Date().setHours(0,0,0,0)
       const daysToExpiry = Math.floor((new Date(item.expiry_date).getTime() - todayMs) / 86400000)
       if (daysToExpiry < 0) {
-        setExpiryWarning(`⚠ "${item.name}" EXPIRED on ${new Date(item.expiry_date).toLocaleDateString('en-GB')} — do not sell`)
+        setExpiryWarning(tc('sell.expiry_expired', { name: item.name, date: new Date(item.expiry_date).toLocaleDateString('en-GB') }))
         setTimeout(() => setExpiryWarning(null), 5000)
         return // block adding expired items
       } else if (daysToExpiry <= 7) {
-        setExpiryWarning(`⚠ "${item.name}" expires ${daysToExpiry === 0 ? 'TODAY' : `in ${daysToExpiry} day${daysToExpiry !== 1 ? 's' : ''}`}`)
+        setExpiryWarning(
+          daysToExpiry === 0 ? tc('sell.expiry_soon_today', { name: item.name })
+          : daysToExpiry === 1 ? tc('sell.expiry_soon_one_day', { name: item.name })
+          : tc('sell.expiry_soon_days', { name: item.name, days: daysToExpiry })
+        )
         setTimeout(() => setExpiryWarning(null), 4000)
       }
     }
@@ -430,10 +436,10 @@ export default function SellPage() {
         }
         // card/mobile: stay here — payment component below handles completion
       } else {
-        setCheckoutError(data.error || 'Payment failed — please try again')
+        setCheckoutError(data.error || tc('sell.payment_failed_retry'))
       }
     } catch (err: any) {
-      setCheckoutError('Network error — check your connection and try again')
+      setCheckoutError(tc('sell.network_error'))
     }
     setProcessing(false)
   }
@@ -476,7 +482,7 @@ export default function SellPage() {
       <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid var(--pos-border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <div>
-            <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--pos-ink)' }}>AskBiz POS</div>
+            <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--pos-ink)' }}>{tc('sell.app_name')}</div>
             <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{staff?.name}</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -486,7 +492,7 @@ export default function SellPage() {
                 className="pos-tab"
                 style={{ padding: '5px 10px', borderRadius: 8, border: `1px solid ${shiftOpen ? 'var(--pos-success)' : 'var(--pos-accent)'}`, background: shiftOpen ? 'var(--pos-success-pale)' : 'var(--pos-accent-pale)', fontSize: 11, fontWeight: 600, cursor: 'pointer', color: shiftOpen ? 'var(--pos-success)' : 'var(--pos-accent)' }}
               >
-                {shiftOpen ? '● Shift open' : '○ Open shift'}
+                {shiftOpen ? tc('sell.shift_open_indicator') : tc('sell.shift_open_action')}
               </button>
             )}
             {/* Location indicator */}
@@ -496,16 +502,16 @@ export default function SellPage() {
                 setGeoError('')
                 navigator.geolocation.getCurrentPosition(
                   pos => { setGeoCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setGeoError('') },
-                  () => setGeoError('Location denied. Go to Settings → this site → allow Location to geo-tag sales.')
+                  () => setGeoError(tc('sell.location_denied'))
                 )
               }}
-              aria-label={geoCoords ? `Location active: ${geoCoords.lat.toFixed(4)}, ${geoCoords.lng.toFixed(4)}` : 'Enable location for map pins'}
-              title={geoCoords ? `📍 ${geoCoords.lat.toFixed(4)}, ${geoCoords.lng.toFixed(4)}` : 'Tap to enable location for map pins'}
+              aria-label={geoCoords ? tc('sell.location_active_label', { lat: geoCoords.lat.toFixed(4), lng: geoCoords.lng.toFixed(4) }) : tc('sell.location_enable_label')}
+              title={geoCoords ? `📍 ${geoCoords.lat.toFixed(4)}, ${geoCoords.lng.toFixed(4)}` : tc('sell.location_tap_enable_title')}
               style={{ padding: '4px 8px', borderRadius: 20, border: `1px solid ${geoCoords ? 'var(--pos-success)' : 'var(--pos-border)'}`, background: geoCoords ? 'var(--pos-success-pale)' : 'rgba(229,226,220,.5)', fontSize: 11, fontWeight: 600, cursor: 'pointer', color: geoCoords ? 'var(--pos-success)' : 'var(--pos-hint)', display: 'flex', alignItems: 'center', gap: 4 }}>
               {geoCoords ? '📍' : '📍?'}
             </button>
             <button onClick={() => { localStorage.removeItem('pos_staff'); router.push('/') }} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--pos-border)', background: 'transparent', fontSize: 12, cursor: 'pointer', color: 'var(--pos-muted)' }}>
-              Sign out
+              {tc('sell.sign_out')}
             </button>
           </div>
         </div>
@@ -513,10 +519,10 @@ export default function SellPage() {
         {/* Stats strip — inline, not card grid */}
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
           <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--pos-ink)', letterSpacing: '-0.02em' }}>{sym}{todayRevenue.toFixed(2)}</span>
-          <span style={{ fontSize: 13, color: 'var(--pos-muted)', fontWeight: 400 }}>today</span>
+          <span style={{ fontSize: 13, color: 'var(--pos-muted)', fontWeight: 400 }}>{tc('sell.today')}</span>
           <span style={{ fontSize: 13, color: 'var(--pos-border)', margin: '0 2px' }}>·</span>
           <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--pos-muted)' }}>{todaySales}</span>
-          <span style={{ fontSize: 13, color: 'var(--pos-muted)', fontWeight: 400 }}>sale{todaySales !== 1 ? 's' : ''}</span>
+          <span style={{ fontSize: 13, color: 'var(--pos-muted)', fontWeight: 400 }}>{todaySales !== 1 ? tc('sell.sales_plural') : tc('sell.sales_singular')}</span>
         </div>
       </div>
 
@@ -524,7 +530,7 @@ export default function SellPage() {
       {geoError && (
         <div role="alert" className="pos-banner" style={{ margin: '0 20px 8px', padding: '10px 14px', borderRadius: 10, background: 'var(--pos-danger-pale)', border: '1px solid rgba(220,38,38,.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <div style={{ fontSize: 12, color: 'var(--pos-danger)' }}>📍 {geoError}</div>
-          <button onClick={() => setGeoError('')} aria-label="Dismiss" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--pos-danger)', fontSize: 14, padding: '2px 4px', lineHeight: 1 }}>×</button>
+          <button onClick={() => setGeoError('')} aria-label={tc('sell.dismiss')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--pos-danger)', fontSize: 14, padding: '2px 4px', lineHeight: 1 }}>×</button>
         </div>
       )}
 
@@ -536,14 +542,14 @@ export default function SellPage() {
             setGeoError('')
             navigator.geolocation.getCurrentPosition(
               pos => { setGeoCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setGeoError('') },
-              () => setGeoError('Location denied. Go to Settings → this site → allow Location to geo-tag sales.')
+              () => setGeoError(tc('sell.location_denied'))
             )
           }}
           style={{ margin: '0 20px 12px', padding: '10px 14px', borderRadius: 12, border: '1px dashed #d1d5db', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, width: 'calc(100% - 40px)', textAlign: 'left' }}>
           <span style={{ fontSize: 16 }}>📍</span>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)' }}>Tap to enable location</div>
-            <div style={{ fontSize: 11, color: 'var(--pos-hint)' }}>Geo-tags each sale on the map</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)' }}>{tc('sell.tap_enable_location')}</div>
+            <div style={{ fontSize: 11, color: 'var(--pos-hint)' }}>{tc('sell.geo_tags_each_sale')}</div>
           </div>
         </button>
       )}
@@ -551,7 +557,7 @@ export default function SellPage() {
       {/* Cart resume banner */}
       {cart.length > 0 && (
         <div onClick={() => setScreen('cart')} style={{ margin: '0 20px 12px', padding: '14px 16px', borderRadius: 14, background: 'var(--pos-accent-pale)', border: '1px solid var(--pos-accent-ring)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: ACC }}>{cart.length} item{cart.length !== 1 ? 's' : ''} in {biz.heading.toLowerCase()}</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: ACC }}>{cart.length !== 1 ? tc('sell.items_in_heading', { count: cart.length, heading: biz.heading.toLowerCase() }) : tc('sell.one_item_in_heading', { heading: biz.heading.toLowerCase() })}</div>
           <div style={{ fontSize: 16, fontWeight: 800, color: ACC }}>{sym}{cartTotal.toFixed(2)}</div>
         </div>
       )}
@@ -571,7 +577,7 @@ export default function SellPage() {
         </button>
         {cart.length > 0 && (
           <button onClick={() => setScreen('cart')} className="pos-btn-primary" style={{ width: '100%', maxWidth: 300, padding: '16px', borderRadius: 16, background: 'var(--pos-surface)', color: ACC, fontSize: 16, fontWeight: 700, border: `2px solid ${ACC}`, cursor: 'pointer' }}>
-            Continue {biz.heading} ({cart.length}) · {sym}{cartTotal.toFixed(2)}
+            {tc('sell.continue_heading', { heading: biz.heading, count: cart.length, total: `${sym}${cartTotal.toFixed(2)}` })}
           </button>
         )}
       </div>
@@ -581,28 +587,28 @@ export default function SellPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'flex-end', zIndex: 999 }} onClick={e => e.target === e.currentTarget && setShowShiftModal(false)}>
           <div className="pos-sheet" style={{ width: '100%', background: 'var(--pos-surface)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px' }}>
             <div style={{ fontWeight: 700, fontSize: 17, color: 'var(--pos-ink)', marginBottom: 16 }}>
-              {shiftAction === 'open' ? 'Open shift' : 'Close shift'}
+              {shiftAction === 'open' ? tc('sell.open_shift') : tc('sell.close_shift')}
             </div>
             {shiftAction === 'open' ? (
               <>
-                <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 8 }}>Opening cash in till</div>
+                <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 8 }}>{tc('sell.opening_cash_in_till')}</div>
                 <input
                   type="number" placeholder="0.00" value={openingCash} onChange={e => setOpeningCash(e.target.value)}
                   style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1.5px solid var(--pos-border)', fontSize: 16, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 14 }}
                 />
                 <button onClick={handleOpenShift} disabled={shiftLoading} style={{ width: '100%', padding: '14px', borderRadius: 12, background: ACC, color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-                  {shiftLoading ? 'Opening...' : 'Open shift'}
+                  {shiftLoading ? tc('sell.opening') : tc('sell.open_shift')}
                 </button>
               </>
             ) : (
               <>
-                <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 8 }}>Closing cash count</div>
+                <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 8 }}>{tc('sell.closing_cash_count')}</div>
                 <input
                   type="number" placeholder="0.00" value={closingCash} onChange={e => setClosingCash(e.target.value)}
                   style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1.5px solid var(--pos-border)', fontSize: 16, fontFamily: 'inherit', boxSizing: 'border-box', marginBottom: 14 }}
                 />
                 <button onClick={handleCloseShift} disabled={shiftLoading} style={{ width: '100%', padding: '14px', borderRadius: 12, background: 'var(--pos-ink)', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-                  {shiftLoading ? 'Closing...' : 'Close shift'}
+                  {shiftLoading ? tc('sell.closing') : tc('sell.close_shift')}
                 </button>
               </>
             )}
@@ -619,7 +625,7 @@ export default function SellPage() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#000' }}>
       {/* Header */}
       <div style={{ padding: '16px 20px 0', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => { stopCamera(); setScreen('home') }} aria-label="Back to home" style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,.15)', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+        <button onClick={() => { stopCamera(); setScreen('home') }} aria-label={tc('sell.back_to_home')} style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,.15)', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
         <div style={{ color: '#fff', fontSize: 16, fontWeight: 600 }}>{biz.item}</div>
       </div>
 
@@ -631,7 +637,7 @@ export default function SellPage() {
             if (m === 'camera') { setScanResult(null); setScanError('') }
             setAddMode(m)
           }} className="pos-tab" style={{ flex: 1, padding: '9px', border: 'none', background: 'transparent', color: addMode === m ? '#fff' : 'rgba(255,255,255,.5)', fontSize: 14, fontWeight: addMode === m ? 700 : 400, borderBottom: addMode === m ? '2px solid #d08a59' : '2px solid transparent', cursor: 'pointer', fontFamily: 'inherit' }}>
-            {m === 'camera' ? '📷 Camera' : '🔍 Search'}
+            {m === 'camera' ? tc('sell.tab_camera') : tc('sell.tab_search')}
           </button>
         ))}
       </div>
@@ -640,44 +646,44 @@ export default function SellPage() {
       {addMode === 'camera' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <input ref={prodInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
-            aria-label="Photograph product" onChange={e => { const f = e.target.files?.[0]; if (f) scanProductFile(f); e.target.value = '' }} />
+            aria-label={tc('sell.photograph_product')} onChange={e => { const f = e.target.files?.[0]; if (f) scanProductFile(f); e.target.value = '' }} />
           {scanning ? (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24 }}>
               <div style={{ width: 40, height: 40, border: '3px solid rgba(255,255,255,.25)', borderTopColor: ACC, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-              <div style={{ fontSize: 15, fontWeight: 600, color: '#fff' }}>Reading product…</div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: '#fff' }}>{tc('sell.reading_product')}</div>
             </div>
           ) : scanResult ? (
             <div style={{ flex: 1, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div className="pos-reveal" style={{ padding: '24px', borderRadius: 16, background: 'var(--pos-surface)', textAlign: 'center' }}>
-                <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 6 }}>Found</div>
+                <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 6 }}>{tc('sell.found')}</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 6 }}>
                   <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--pos-ink)' }}>{scanResult.name}</div>
                   {scanResult.unit === 'kg' && (
-                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--pos-accent)', background: 'var(--pos-accent-pale)', padding: '3px 8px', borderRadius: 6, border: '1px solid var(--pos-accent-ring)' }}>kg</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--pos-accent)', background: 'var(--pos-accent-pale)', padding: '3px 8px', borderRadius: 6, border: '1px solid var(--pos-accent-ring)' }}>{tc('sell.unit_kg')}</span>
                   )}
                 </div>
                 <div style={{ fontSize: 36, fontWeight: 900, color: ACC }}>{sym}{scanResult.price.toFixed(2)}</div>
                 {scanResult.unit === 'kg' && (
-                  <div style={{ fontSize: 12, color: 'var(--pos-muted)', marginTop: 2 }}>per kg — set quantity in cart</div>
+                  <div style={{ fontSize: 12, color: 'var(--pos-muted)', marginTop: 2 }}>{tc('sell.per_kg_set_quantity')}</div>
                 )}
               </div>
               {scanError && <div style={{ fontSize: 13, color: '#fca5a5', textAlign: 'center' }}>{scanError}</div>}
               <button onClick={confirmScan} style={{ padding: '16px', borderRadius: 14, background: ACC, color: '#fff', fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-                ✓ Add to {biz.heading.toLowerCase()}
+                {tc('sell.add_to_heading', { heading: biz.heading.toLowerCase() })}
               </button>
               <button onClick={() => { setScanResult(null); openProductCamera() }} style={{ padding: '13px', borderRadius: 14, background: 'rgba(255,255,255,.12)', color: '#fff', fontSize: 15, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
-                Scan again
+                {tc('sell.scan_again')}
               </button>
             </div>
           ) : (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '24px' }}>
               <button onClick={openProductCamera} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, background: 'none', border: 'none', cursor: 'pointer', padding: 16 }}>
                 <div style={{ width: 88, height: 88, borderRadius: 24, border: '2px dashed rgba(255,255,255,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>📷</div>
-                <div style={{ color: '#fff', fontSize: 16, fontWeight: 700 }}>Tap to photograph the product</div>
+                <div style={{ color: '#fff', fontSize: 16, fontWeight: 700 }}>{tc('sell.tap_to_photograph')}</div>
               </button>
               {scanError && <div style={{ fontSize: 14, color: '#fca5a5', textAlign: 'center' }}>{scanError}</div>}
               <button onClick={() => { setScanError(''); setAddMode('search') }} style={{ padding: '12px 24px', borderRadius: 12, background: 'rgba(255,255,255,.12)', color: '#fff', fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
-                🔍 Search instead
+                {tc('sell.search_instead')}
               </button>
             </div>
           )}
@@ -692,7 +698,7 @@ export default function SellPage() {
               autoFocus
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search by name or SKU..."
+              placeholder={tc('sell.search_placeholder')}
               style={{ width: '100%', padding: '12px 16px', borderRadius: 12, border: '1.5px solid var(--pos-border)', fontSize: 15, fontFamily: 'inherit', background: 'var(--pos-surface)', color: 'var(--pos-ink)', boxSizing: 'border-box' }}
             />
           </div>
@@ -705,7 +711,7 @@ export default function SellPage() {
                 addToCart({ name: searchQuery, unit_price: price, cost_price: 0 })
                 setScreen('cart')
               }} style={{ width: '100%', padding: '13px', borderRadius: 12, border: '1.5px dashed var(--pos-accent)', background: 'var(--pos-accent-pale)', color: 'var(--pos-accent)', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                + Add "{searchQuery}" manually (set price in cart)
+                {tc('sell.add_manually', { query: searchQuery })}
               </button>
             </div>
           )}
@@ -718,7 +724,7 @@ export default function SellPage() {
 
           <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 20px' }}>
             {searchLoading && (
-              <div style={{ textAlign: 'center', padding: '32px', color: 'var(--pos-muted)', fontSize: 14 }}>Searching...</div>
+              <div style={{ textAlign: 'center', padding: '32px', color: 'var(--pos-muted)', fontSize: 14 }}>{tc('sell.searching')}</div>
             )}
             {searchResults.map(item => {
               const todayMs2 = new Date().setHours(0,0,0,0)
@@ -730,16 +736,16 @@ export default function SellPage() {
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--pos-ink)' }}>
                     {item.name}
-                    {isExpiredItem && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: 'var(--pos-danger)', background: 'rgba(220,38,38,.1)', padding: '1px 6px', borderRadius: 9999 }}>EXPIRED</span>}
-                    {isExpiringSoonItem && !isExpiredItem && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: 'var(--pos-warning)', background: 'rgba(249,115,22,.1)', padding: '1px 6px', borderRadius: 9999 }}>EXP {daysToExp === 0 ? 'TODAY' : `${daysToExp}d`}</span>}
+                    {isExpiredItem && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: 'var(--pos-danger)', background: 'rgba(220,38,38,.1)', padding: '1px 6px', borderRadius: 9999 }}>{tc('sell.badge_expired')}</span>}
+                    {isExpiringSoonItem && !isExpiredItem && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: 'var(--pos-warning)', background: 'rgba(249,115,22,.1)', padding: '1px 6px', borderRadius: 9999 }}>{daysToExp === 0 ? tc('sell.badge_exp_today') : tc('sell.badge_exp_days', { days: daysToExp as number })}</span>}
                   </div>
-                  {item.sku && <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginTop: 1 }}>SKU: {item.sku}</div>}
+                  {item.sku && <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginTop: 1 }}>{tc('sell.sku_label', { sku: item.sku })}</div>}
                   <div style={{ fontSize: 11, marginTop: 3 }}>
                     {item.stock_qty <= 0
-                      ? <span style={{ color: 'var(--pos-danger)', fontWeight: 600 }}>Out of stock</span>
+                      ? <span style={{ color: 'var(--pos-danger)', fontWeight: 600 }}>{tc('sell.out_of_stock')}</span>
                       : item.low_stock_threshold && item.stock_qty <= item.low_stock_threshold
-                      ? <span style={{ color: '#f59e0b', fontWeight: 600 }}>Low stock · {item.stock_qty} left</span>
-                      : <span style={{ color: 'var(--pos-muted)' }}>{item.stock_qty} in stock</span>
+                      ? <span style={{ color: '#f59e0b', fontWeight: 600 }}>{tc('sell.low_stock', { count: item.stock_qty })}</span>
+                      : <span style={{ color: 'var(--pos-muted)' }}>{tc('sell.in_stock', { count: item.stock_qty })}</span>
                     }
                   </div>
                 </div>
@@ -749,7 +755,7 @@ export default function SellPage() {
             })}
             {!searchLoading && searchResults.length === 0 && !searchQuery && (
               <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--pos-muted)', fontSize: 14 }}>
-                Start typing to search your inventory
+                {tc('sell.start_typing_to_search')}
               </div>
             )}
           </div>
@@ -764,21 +770,21 @@ export default function SellPage() {
   if (screen === 'cart') return (<>{copilot}
     <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '16px 20px 8px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => setScreen('home')} aria-label="Back to home" style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', color: 'var(--pos-ink)', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+        <button onClick={() => setScreen('home')} aria-label={tc('sell.back_to_home')} style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', color: 'var(--pos-ink)', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
         <div style={{ fontWeight: 700, fontSize: 18, color: 'var(--pos-ink)' }}>{biz.heading}</div>
-        {cart.length > 0 && <div style={{ marginLeft: 'auto', fontSize: 13, color: 'var(--pos-muted)' }}>{cart.length} item{cart.length !== 1 ? 's' : ''}</div>}
+        {cart.length > 0 && <div style={{ marginLeft: 'auto', fontSize: 13, color: 'var(--pos-muted)' }}>{cart.length !== 1 ? tc('sell.items_count', { count: cart.length }) : tc('sell.one_item')}</div>}
       </div>
 
       <div style={{ flex: 1, padding: '8px 20px', overflowY: 'auto' }}>
         {cart.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--pos-muted)', fontSize: 14 }}>{biz.heading} is empty</div>
+          <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--pos-muted)', fontSize: 14 }}>{tc('sell.heading_is_empty', { heading: biz.heading })}</div>
         ) : (
           cart.map((item, idx) => (
             <div key={idx} className="pos-item" style={{ background: 'var(--pos-surface)', borderRadius: 14, marginBottom: 10, border: '1px solid var(--pos-border)', overflow: 'hidden' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--pos-ink)' }}>{item.name}</div>
-                  <div style={{ fontSize: 13, color: 'var(--pos-muted)' }}>{sym}{item.unit_price.toFixed(2)} {item.unit === 'kg' ? 'per kg' : 'each'}</div>
+                  <div style={{ fontSize: 13, color: 'var(--pos-muted)' }}>{sym}{item.unit_price.toFixed(2)} {item.unit === 'kg' ? tc('sell.per_kg') : tc('sell.each')}</div>
                   {item.notes && <div style={{ fontSize: 12, color: ACC, marginTop: 2 }}>📝 {item.notes}</div>}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -797,13 +803,13 @@ export default function SellPage() {
                         min="0.1"
                         style={{ width: 68, padding: '6px 8px', borderRadius: 8, border: '1.5px solid #d08a59', fontSize: 15, fontWeight: 700, textAlign: 'center', fontFamily: 'inherit', color: 'var(--pos-ink)', background: 'var(--pos-surface)', boxSizing: 'border-box' }}
                       />
-                      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--pos-accent)', background: 'var(--pos-accent-pale)', padding: '4px 8px', borderRadius: 6, border: '1px solid var(--pos-accent-ring)', whiteSpace: 'nowrap' }}>kg</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--pos-accent)', background: 'var(--pos-accent-pale)', padding: '4px 8px', borderRadius: 6, border: '1px solid var(--pos-accent-ring)', whiteSpace: 'nowrap' }}>{tc('sell.unit_kg')}</span>
                     </div>
                   ) : (
                     <>
-                      <button onClick={() => updateQty(idx, -1)} aria-label={`Decrease quantity of ${item.name}`} className="pos-qty-btn" style={{ width: 44, height: 44, borderRadius: 10, border: '1px solid var(--pos-border)', background: 'var(--pos-bg)', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>−</button>
-                      <span style={{ fontSize: 16, fontWeight: 700, minWidth: 20, textAlign: 'center' }} aria-label={`Quantity: ${item.qty}`}>{item.qty}</span>
-                      <button onClick={() => updateQty(idx, 1)}  aria-label={`Increase quantity of ${item.name}`} className="pos-qty-btn" style={{ width: 44, height: 44, borderRadius: 10, border: '1px solid var(--pos-border)', background: 'var(--pos-bg)', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>+</button>
+                      <button onClick={() => updateQty(idx, -1)} aria-label={tc('sell.decrease_quantity', { name: item.name })} className="pos-qty-btn" style={{ width: 44, height: 44, borderRadius: 10, border: '1px solid var(--pos-border)', background: 'var(--pos-bg)', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>−</button>
+                      <span style={{ fontSize: 16, fontWeight: 700, minWidth: 20, textAlign: 'center' }} aria-label={tc('sell.quantity_label', { qty: item.qty })}>{item.qty}</span>
+                      <button onClick={() => updateQty(idx, 1)}  aria-label={tc('sell.increase_quantity', { name: item.name })} className="pos-qty-btn" style={{ width: 44, height: 44, borderRadius: 10, border: '1px solid var(--pos-border)', background: 'var(--pos-bg)', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>+</button>
                     </>
                   )}
                   <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--pos-ink)', minWidth: 64, textAlign: 'right' }}>{sym}{(item.qty * item.unit_price).toFixed(2)}</div>
@@ -815,14 +821,14 @@ export default function SellPage() {
                   <input
                     autoFocus value={noteInput} onChange={e => setNoteInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && saveNote(idx)}
-                    placeholder="e.g. no sugar, oat milk, medium..."
+                    placeholder={tc('sell.note_placeholder')}
                     style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--pos-border)', fontSize: 13, fontFamily: 'inherit' }}
                   />
-                  <button onClick={() => saveNote(idx)} style={{ padding: '8px 12px', borderRadius: 8, background: ACC, color: '#fff', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save</button>
+                  <button onClick={() => saveNote(idx)} style={{ padding: '8px 12px', borderRadius: 8, background: ACC, color: '#fff', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{tc('sell.save')}</button>
                 </div>
               ) : (
                 <button onClick={() => { setEditNoteIdx(idx); setNoteInput(item.notes || '') }} style={{ width: '100%', padding: '6px 16px 10px', textAlign: 'left', border: 'none', background: 'transparent', fontSize: 12, color: 'var(--pos-hint)', cursor: 'pointer', fontFamily: 'inherit' }}>
-                  + {item.notes ? 'Edit note' : 'Add note / modifier'}
+                  + {item.notes ? tc('sell.edit_note') : tc('sell.add_note_modifier')}
                 </button>
               )}
             </div>
@@ -832,7 +838,7 @@ export default function SellPage() {
 
       <div style={{ padding: '14px 20px 32px', background: 'var(--pos-surface)', borderTop: '1px solid var(--pos-border)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
-          <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--pos-muted)' }}>Total</span>
+          <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--pos-muted)' }}>{tc('sell.total')}</span>
           <span style={{ fontSize: 24, fontWeight: 900, color: 'var(--pos-ink)' }}>{sym}{cartTotal.toFixed(2)}</span>
         </div>
         <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
@@ -840,12 +846,12 @@ export default function SellPage() {
             + {biz.item}
           </button>
           <button onClick={() => { captureGeo(); setScreen('checkout') }} disabled={cart.length === 0} className="pos-btn-primary" style={{ flex: 2, padding: '13px', borderRadius: 12, background: ACC, color: '#fff', fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-            Checkout →
+            {tc('sell.checkout_arrow')}
           </button>
         </div>
         {cart.length > 0 && (
           <button onClick={() => { setCart([]); setScreen('home') }} style={{ width: '100%', padding: '11px', borderRadius: 12, background: 'transparent', border: '1px solid var(--pos-danger-ring)', color: 'var(--pos-danger)', fontSize: 14, cursor: 'pointer' }}>
-            Cancel {biz.heading.toLowerCase()}
+            {tc('sell.cancel_heading', { heading: biz.heading.toLowerCase() })}
           </button>
         )}
       </div>
@@ -858,8 +864,8 @@ export default function SellPage() {
   if (screen === 'checkout') return (<>{copilot}
     <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '16px 20px 8px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => setScreen('cart')} aria-label="Back to cart" style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', color: 'var(--pos-ink)', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
-        <div style={{ fontWeight: 700, fontSize: 18, color: 'var(--pos-ink)' }}>Checkout</div>
+        <button onClick={() => setScreen('cart')} aria-label={tc('sell.back_to_cart')} style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', color: 'var(--pos-ink)', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+        <div style={{ fontWeight: 700, fontSize: 18, color: 'var(--pos-ink)' }}>{tc('sell.checkout')}</div>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px 20px' }}>
@@ -868,24 +874,24 @@ export default function SellPage() {
           {discountAmt > 0 ? (
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, color: 'var(--pos-muted)', marginBottom: 4 }}>
-                <span>Subtotal</span><span>{sym}{subtotal.toFixed(2)}</span>
+                <span>{tc('sell.subtotal')}</span><span>{sym}{subtotal.toFixed(2)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, color: 'var(--pos-success)', marginBottom: 8 }}>
-                <span>Discount</span><span>−{sym}{discountAmt.toFixed(2)}</span>
+                <span>{tc('sell.discount')}</span><span>−{sym}{discountAmt.toFixed(2)}</span>
               </div>
               <div style={{ height: 1, background: 'var(--pos-border)', marginBottom: 10 }} />
             </>
           ) : null}
-          <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 4 }}>Total to collect</div>
+          <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 4 }}>{tc('sell.total_to_collect')}</div>
           <div style={{ fontSize: 40, fontWeight: 900, color: 'var(--pos-ink)' }}>{sym}{cartTotal.toFixed(2)}</div>
-          <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginTop: 4 }}>{cart.length} item{cart.length !== 1 ? 's' : ''}</div>
+          <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginTop: 4 }}>{cart.length !== 1 ? tc('sell.items_count', { count: cart.length }) : tc('sell.one_item')}</div>
         </div>
 
         {/* Payment method */}
         <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 8 }}>Payment method</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 8 }}>{tc('sell.payment_method')}</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-            {([['cash', '💵 Cash'], ['card', '💳 Card'], ['mobile', '📱 Mobile']] as const).map(([type, label]) => (
+            {([['cash', tc('sell.pay_cash')], ['card', tc('sell.pay_card')], ['mobile', tc('sell.pay_mobile')]] as const).map(([type, label]) => (
               <button key={type} onClick={() => { setPaymentType(type); setLastTxId(''); setPaymentError(null); setCardProvider(null); }} className="pos-tab" style={{ padding: '13px 8px', borderRadius: 12, border: `2px solid ${paymentType === type ? ACC : 'var(--pos-border)'}`, background: paymentType === type ? 'var(--pos-accent-pale)' : '#fff', color: paymentType === type ? ACC : 'var(--pos-muted)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 {label}
               </button>
@@ -896,23 +902,23 @@ export default function SellPage() {
         {/* Card sub-selector — shown when Card is selected and merchant has both Stripe + Paystack */}
         {paymentType === 'card' && stripeVerified && !lastTxId && (
           <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>How does the customer want to pay?</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{tc('sell.how_customer_wants_to_pay')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               <button
                 onClick={() => setCardProvider('paystack')}
                 style={{ padding: '14px 10px', borderRadius: 14, border: `2px solid ${cardProvider === 'paystack' ? ACC : 'var(--pos-border)'}`, background: cardProvider === 'paystack' ? 'var(--pos-accent-pale)' : '#fff', cursor: 'pointer', textAlign: 'center' }}
               >
                 <div style={{ fontSize: 22, marginBottom: 4 }}>💳</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)' }}>Card</div>
-                <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginTop: 1 }}>Visa · Mastercard</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)' }}>{tc('sell.card_label')}</div>
+                <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginTop: 1 }}>{tc('sell.card_brands')}</div>
               </button>
               <button
                 onClick={() => setCardProvider('stripe')}
                 style={{ padding: '14px 10px', borderRadius: 14, border: `2px solid ${cardProvider === 'stripe' ? '#635bff' : 'var(--pos-border)'}`, background: cardProvider === 'stripe' ? 'rgba(99,91,255,.06)' : '#fff', cursor: 'pointer', textAlign: 'center' }}
               >
                 <div style={{ fontSize: 22, marginBottom: 4 }}>🍎</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)' }}>Apple / Google Pay</div>
-                <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginTop: 1 }}>Scan QR to pay</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)' }}>{tc('sell.apple_google_pay')}</div>
+                <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginTop: 1 }}>{tc('sell.scan_qr_to_pay')}</div>
               </button>
             </div>
           </div>
@@ -921,8 +927,8 @@ export default function SellPage() {
         {/* M-Pesa phone input — shows immediately when Mobile selected */}
         {paymentType === 'mobile' && !lastTxId && (
           <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 6 }}>M-Pesa / Mobile wallet number</div>
-            <input type="tel" placeholder="07XX XXX XXX" value={mpesaPhone} onChange={e => setMpesaPhone(e.target.value)}
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 6 }}>{tc('sell.mpesa_number_label')}</div>
+            <input type="tel" placeholder={tc('sell.mpesa_number_placeholder')} value={mpesaPhone} onChange={e => setMpesaPhone(e.target.value)}
               style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid var(--pos-border)', fontSize: 15, fontFamily: 'inherit', background: 'var(--pos-surface)', color: 'var(--pos-ink)', boxSizing: 'border-box' }} />
           </div>
         )}
@@ -979,7 +985,7 @@ export default function SellPage() {
         {/* Cash tendered → change */}
         {paymentType === 'cash' && (
           <div style={{ marginBottom: 14, padding: '16px', background: 'var(--pos-surface)', borderRadius: 14, border: '1px solid var(--pos-border)' }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 8 }}>Amount received</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 8 }}>{tc('sell.amount_received')}</div>
             <input
               type="number" inputMode="decimal" placeholder={`${sym}0.00`} value={amountTendered}
               onChange={e => setAmountTendered(e.target.value)}
@@ -987,13 +993,13 @@ export default function SellPage() {
             />
             {changeDue > 0 && (
               <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: 'var(--pos-success-pale)', border: '1px solid var(--pos-success-ring)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--pos-success)' }}>Change due</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--pos-success)' }}>{tc('sell.change_due')}</span>
                 <span style={{ fontSize: 22, fontWeight: 900, color: 'var(--pos-success)' }}>{sym}{changeDue.toFixed(2)}</span>
               </div>
             )}
             {amountTendered && tendered < cartTotal && (
               <div style={{ marginTop: 8, fontSize: 12, color: 'var(--pos-danger)' }}>
-                Short by {sym}{(cartTotal - tendered).toFixed(2)}
+                {tc('sell.short_by', { amount: `${sym}${(cartTotal - tendered).toFixed(2)}` })}
               </div>
             )}
           </div>
@@ -1001,24 +1007,24 @@ export default function SellPage() {
 
         {/* Discount */}
         <div style={{ marginBottom: 14, padding: '16px', background: 'var(--pos-surface)', borderRadius: 14, border: '1px solid var(--pos-border)' }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 8 }}>Discount (optional)</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 8 }}>{tc('sell.discount_optional')}</div>
           <div style={{ display: 'flex', gap: 8 }}>
             <div style={{ display: 'flex', borderRadius: 10, overflow: 'hidden', border: '1.5px solid var(--pos-border)' }}>
               {(['amount', 'percent'] as const).map(t => (
                 <button key={t} onClick={() => setDiscountType(t)} style={{ padding: '10px 14px', border: 'none', background: discountType === t ? ACC : '#fff', color: discountType === t ? '#fff' : 'var(--pos-muted)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                  {t === 'amount' ? sym : '%'}
+                  {t === 'amount' ? sym : tc('sell.percent_symbol')}
                 </button>
               ))}
             </div>
             <input
-              type="number" inputMode="decimal" placeholder="0"
+              type="number" inputMode="decimal" placeholder={tc('sell.discount_value_placeholder')}
               value={discountValue} onChange={e => setDiscountValue(e.target.value)}
               style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1.5px solid var(--pos-border)', fontSize: 15, fontFamily: 'inherit', color: 'var(--pos-ink)' }}
             />
           </div>
           {discountAmt > 0 && (
             <div style={{ marginTop: 8, fontSize: 12, color: 'var(--pos-success)' }}>
-              Saving {sym}{discountAmt.toFixed(2)} ({((discountAmt / subtotal) * 100).toFixed(0)}% off)
+              {tc('sell.saving_off', { amount: `${sym}${discountAmt.toFixed(2)}`, percent: ((discountAmt / subtotal) * 100).toFixed(0) })}
             </div>
           )}
         </div>
@@ -1026,9 +1032,9 @@ export default function SellPage() {
         {/* Table number (restaurant/café only) */}
         {biz.table && (
           <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 6 }}>Table number (optional)</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 6 }}>{tc('sell.table_number_optional')}</div>
             <input
-              type="text" placeholder="e.g. 4, A3, Bar" value={tableNumber}
+              type="text" placeholder={tc('sell.table_number_placeholder')} value={tableNumber}
               onChange={e => setTableNumber(e.target.value)}
               style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid var(--pos-border)', fontSize: 15, fontFamily: 'inherit', background: 'var(--pos-surface)', color: 'var(--pos-ink)', boxSizing: 'border-box' }}
             />
@@ -1037,10 +1043,10 @@ export default function SellPage() {
 
         {/* Customer phone */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 4 }}>Customer phone (optional)</div>
-          <div style={{ fontSize: 12, color: 'var(--pos-muted)', marginBottom: 6 }}>To send a WhatsApp receipt</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 4 }}>{tc('sell.customer_phone_optional')}</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-muted)', marginBottom: 6 }}>{tc('sell.to_send_whatsapp_receipt')}</div>
           <input
-            type="tel" placeholder="+447911123456" value={customerPhone}
+            type="tel" placeholder={tc('sell.customer_phone_placeholder')} value={customerPhone}
             onChange={e => setCustomerPhone(e.target.value)}
             style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid var(--pos-border)', fontSize: 15, fontFamily: 'inherit', background: 'var(--pos-surface)', color: 'var(--pos-ink)', boxSizing: 'border-box' }}
           />
@@ -1065,13 +1071,13 @@ export default function SellPage() {
             className="pos-btn-primary"
             style={{ width: '100%', padding: '18px', borderRadius: 14, background: ACC, color: '#fff', fontSize: 18, fontWeight: 800, border: 'none', cursor: processing ? 'wait' : 'pointer', opacity: (paymentType === 'cash' && (!amountTendered || tendered < cartTotal)) ? 0.5 : 1 }}
           >
-            {processing ? 'Processing...' :
-              paymentType === 'mobile' ? `📲 Send M-Pesa · ${sym}${cartTotal.toFixed(2)}` :
-              paymentType === 'card' && stripeVerified && cardProvider === 'stripe' ? `🍎 Charge Apple/Google Pay · ${sym}${cartTotal.toFixed(2)}` :
-              paymentType === 'card' && stripeVerified && cardProvider === 'paystack' ? `💳 Charge Card · ${sym}${cartTotal.toFixed(2)}` :
-              paymentType === 'card' && stripeVerified && !cardProvider ? `← Select how to pay` :
-              paymentType === 'card'   ? `💳 Charge Card · ${sym}${cartTotal.toFixed(2)}` :
-                                        `Complete · ${sym}${cartTotal.toFixed(2)}`}
+            {processing ? tc('sell.processing') :
+              paymentType === 'mobile' ? tc('sell.send_mpesa', { amount: `${sym}${cartTotal.toFixed(2)}` }) :
+              paymentType === 'card' && stripeVerified && cardProvider === 'stripe' ? tc('sell.charge_apple_google_pay', { amount: `${sym}${cartTotal.toFixed(2)}` }) :
+              paymentType === 'card' && stripeVerified && cardProvider === 'paystack' ? tc('sell.charge_card_amount', { amount: `${sym}${cartTotal.toFixed(2)}` }) :
+              paymentType === 'card' && stripeVerified && !cardProvider ? tc('sell.select_how_to_pay') :
+              paymentType === 'card'   ? tc('sell.charge_card_amount', { amount: `${sym}${cartTotal.toFixed(2)}` }) :
+                                        tc('sell.complete_amount', { amount: `${sym}${cartTotal.toFixed(2)}` })}
           </button>
         )}
       </div>
@@ -1088,7 +1094,7 @@ export default function SellPage() {
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke='var(--pos-success)' strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
         </div>
         <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--pos-ink)', marginBottom: 4 }}>
-          {biz.sale === 'New Order' ? 'Order complete!' : biz.sale === 'New Booking' ? 'Booking done!' : 'Sale complete!'}
+          {biz.sale === tc('sell.biz_food_sale') ? tc('sell.order_complete') : biz.sale === tc('sell.biz_service_sale') ? tc('sell.booking_done') : tc('sell.sale_complete')}
         </div>
         <div style={{ fontSize: 28, fontWeight: 900, color: 'var(--pos-success)', marginBottom: changeDue > 0 ? 6 : 20 }}>
           {sym}{lastTotal.toFixed(2)}
@@ -1097,7 +1103,7 @@ export default function SellPage() {
         {/* Change due */}
         {changeDue > 0 && (
           <div style={{ marginBottom: 16, padding: '10px 16px', borderRadius: 12, background: 'var(--pos-success-pale)', border: '1px solid var(--pos-success-ring)' }}>
-            <div style={{ fontSize: 12, color: 'var(--pos-success)', marginBottom: 2 }}>Change to give customer</div>
+            <div style={{ fontSize: 12, color: 'var(--pos-success)', marginBottom: 2 }}>{tc('sell.change_to_give')}</div>
             <div style={{ fontSize: 28, fontWeight: 900, color: 'var(--pos-success)' }}>{sym}{changeDue.toFixed(2)}</div>
           </div>
         )}
@@ -1105,7 +1111,7 @@ export default function SellPage() {
         {/* Oversold warning */}
         {oversold.length > 0 && (
           <div style={{ marginBottom: 14, padding: '10px 14px', borderRadius: 10, background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.3)', fontSize: 12, color: '#d97706', textAlign: 'left' }}>
-            ⚠️ Sold beyond stock: {oversold.join(', ')}. Update inventory.
+            {tc('sell.oversold_warning', { items: oversold.join(', ') })}
           </div>
         )}
 
@@ -1119,7 +1125,7 @@ export default function SellPage() {
           ))}
           {discountAmt > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0 0', fontSize: 13, color: 'var(--pos-success)', fontWeight: 600 }}>
-              <span>Discount</span><span>−{sym}{discountAmt.toFixed(2)}</span>
+              <span>{tc('sell.discount')}</span><span>−{sym}{discountAmt.toFixed(2)}</span>
             </div>
           )}
         </div>
@@ -1130,28 +1136,28 @@ export default function SellPage() {
             {!customerPhone ? (
               <>
                 <input
-                  type="tel" placeholder="Customer phone for receipt"
+                  type="tel" placeholder={tc('sell.customer_phone_for_receipt')}
                   value={customerPhone} onChange={e => setCustomerPhone(e.target.value)}
                   style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px solid var(--pos-border)', fontSize: 14, fontFamily: 'inherit', background: 'var(--pos-surface)', color: 'var(--pos-ink)', boxSizing: 'border-box', marginBottom: 8 }}
                 />
                 <button onClick={handleSendReceipt} disabled={!customerPhone || sendingReceipt} style={{ width: '100%', padding: '13px', borderRadius: 12, background: '#25D366', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-                  {sendingReceipt ? 'Sending...' : '📲 Send WhatsApp receipt'}
+                  {sendingReceipt ? tc('sell.sending') : tc('sell.send_whatsapp_receipt')}
                 </button>
               </>
             ) : (
               <button onClick={handleSendReceipt} disabled={sendingReceipt} style={{ width: '100%', padding: '13px', borderRadius: 12, background: '#25D366', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-                {sendingReceipt ? 'Sending...' : `📲 Send to ${customerPhone}`}
+                {sendingReceipt ? tc('sell.sending') : tc('sell.send_to_phone', { phone: customerPhone })}
               </button>
             )}
           </div>
         ) : (
           <div style={{ padding: '11px', borderRadius: 12, background: 'rgba(37,211,102,.1)', border: '1px solid rgba(37,211,102,.3)', color: 'var(--pos-success)', fontSize: 14, fontWeight: 600, marginBottom: 16 }}>
-            ✓ Receipt sent
+            {tc('sell.receipt_sent')}
           </div>
         )}
 
         <button onClick={resetSale} style={{ width: '100%', padding: '16px', borderRadius: 14, background: ACC, color: '#fff', fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
-          {biz.sale} →
+          {tc('sell.sale_arrow', { sale: biz.sale })}
         </button>
       </div>
     </div>

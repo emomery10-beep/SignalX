@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getRoleHomeRoute, isManagerOrAboveLevel } from '@/lib/pos-role-client'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC        = '#d08a59'
 const ACC_LIGHT  = 'rgba(208,138,89,.12)'
@@ -64,6 +65,11 @@ const STATUS_COLOR: Record<string, string> = {
   pending: AMBER, approved: GREEN, rejected: RED,
 }
 
+// Map a raw status/filter key (e.g. "in_progress") to its localized label.
+function statusLabel(tc: (key: string) => string, status: string) {
+  return tc('dashboard.filter_' + status)
+}
+
 // ── Toast ──────────────────────────────────────────────────
 function Toast({ msg, ok, onDone }: { msg: string; ok: boolean; onDone: () => void }) {
   useEffect(() => { const t = setTimeout(onDone, 3200); return () => clearTimeout(t) }, [onDone])
@@ -103,6 +109,7 @@ function StatTile({ label, value, color = 'var(--pos-ink)', sub }: { label: stri
 
 // ── Engineer dashboard ─────────────────────────────────────
 function EngineerDashboard({ session, notify }: { session: StaffSession; notify: (m: string, ok?: boolean) => void }) {
+  const { tc } = useLang()
   const [jobs, setJobs] = useState<ServiceJob[]>([])
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState<string | null>(null)
@@ -126,8 +133,8 @@ function EngineerDashboard({ session, notify }: { session: StaffSession; notify:
       body: JSON.stringify({ id: job.id, status: newStatus }),
     })
     const d = await r.json()
-    if (d.job) { notify(`#${job.ticket_number} → ${newStatus.replace('_', ' ')}`); load() }
-    else notify(d.error || 'Update failed', false)
+    if (d.job) { notify('#' + job.ticket_number + ' → ' + statusLabel(tc, newStatus)); load() }
+    else notify(d.error || tc('dashboard.update_failed'), false)
     setUpdating(null)
   }
 
@@ -136,16 +143,16 @@ function EngineerDashboard({ session, notify }: { session: StaffSession; notify:
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 10 }}>
-        <StatTile label="Active Jobs" value={active.length} color={ACC} />
-        <StatTile label="Total Assigned" value={jobs.length} />
+        <StatTile label={tc('dashboard.engineer_active_jobs')} value={active.length} color={ACC} />
+        <StatTile label={tc('dashboard.engineer_total_assigned')} value={jobs.length} />
       </div>
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <span style={{ fontWeight: 700, fontSize: 15 }}>My Jobs</span>
-          <button onClick={load} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>↻ Refresh</button>
+          <span style={{ fontWeight: 700, fontSize: 15 }}>{tc('dashboard.engineer_my_jobs')}</span>
+          <button onClick={load} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>{tc('dashboard.refresh')}</button>
         </div>
-        {loading ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>Loading…</div> : jobs.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--pos-muted)', fontSize: 14 }}>No jobs assigned to you yet</div>
+        {loading ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>{tc('dashboard.loading')}</div> : jobs.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--pos-muted)', fontSize: 14 }}>{tc('dashboard.engineer_no_jobs')}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {jobs.map((job, idx) => (
@@ -156,7 +163,7 @@ function EngineerDashboard({ session, notify }: { session: StaffSession; notify:
                       <span style={{ fontWeight: 700, fontSize: 14, color: ACC }}>#{job.ticket_number}</span>
                       <Badge status={job.status} />
                     </div>
-                    <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{job.device_model || 'Unknown device'}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{job.device_model || tc('dashboard.unknown_device')}</div>
                     <div style={{ fontSize: 12, color: 'var(--pos-muted)', marginBottom: 2 }}>{job.fault_description}</div>
                     {job.customer_name && <div style={{ fontSize: 11, color: 'var(--pos-muted)' }}>👤 {job.customer_name}</div>}
                     <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginTop: 2 }}>{timeAgo(job.created_at)}</div>
@@ -165,13 +172,13 @@ function EngineerDashboard({ session, notify }: { session: StaffSession; notify:
                     {job.status === 'accepted' && (
                       <button disabled={updating === job.id} onClick={() => updateStatus(job, 'in_progress')}
                         style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: BLUE, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: updating === job.id ? 0.6 : 1 }}>
-                        Start
+                        {tc('dashboard.start')}
                       </button>
                     )}
                     {job.status === 'in_progress' && (
                       <button disabled={updating === job.id} onClick={() => updateStatus(job, 'completed')}
                         style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: GREEN, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: updating === job.id ? 0.6 : 1 }}>
-                        Complete ✓
+                        {tc('dashboard.complete')}
                       </button>
                     )}
                   </div>
@@ -187,6 +194,7 @@ function EngineerDashboard({ session, notify }: { session: StaffSession; notify:
 
 // ── Repair dashboard ───────────────────────────────────────
 function RepairDashboard({ session, notify }: { session: StaffSession; notify: (m: string, ok?: boolean) => void }) {
+  const { tc } = useLang()
   const [jobs, setJobs] = useState<ServiceJob[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
@@ -210,26 +218,26 @@ function RepairDashboard({ session, notify }: { session: StaffSession; notify: (
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(110px,1fr))', gap: 10 }}>
-        <StatTile label="Intake"      value={counts.intake || 0}      color={AMBER} />
-        <StatTile label="In Progress" value={counts.in_progress || 0} color={ACC} />
-        <StatTile label="Completed"   value={counts.completed || 0}   color={GREEN} />
-        <StatTile label="Total"       value={jobs.length} />
+        <StatTile label={tc('dashboard.repair_intake')}      value={counts.intake || 0}      color={AMBER} />
+        <StatTile label={tc('dashboard.repair_in_progress')} value={counts.in_progress || 0} color={ACC} />
+        <StatTile label={tc('dashboard.repair_completed')}   value={counts.completed || 0}   color={GREEN} />
+        <StatTile label={tc('dashboard.repair_total')}       value={jobs.length} />
       </div>
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <span style={{ fontWeight: 700, fontSize: 15 }}>Service Jobs</span>
+          <span style={{ fontWeight: 700, fontSize: 15 }}>{tc('dashboard.repair_service_jobs')}</span>
           <button onClick={load} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>↻</button>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
           {['all', 'intake', 'quoted', 'accepted', 'in_progress', 'completed'].map(s => (
             <button key={s} onClick={() => setFilter(s)}
               style={{ padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: `1px solid ${filter === s ? ACC : 'var(--pos-border)'}`, background: filter === s ? ACC_LIGHT : 'transparent', color: filter === s ? ACC : 'var(--pos-muted)', textTransform: 'capitalize' }}>
-              {s.replace('_', ' ')}
+              {statusLabel(tc, s)}
             </button>
           ))}
         </div>
-        {loading ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>Loading…</div> : jobs.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '28px 0', color: 'var(--pos-muted)', fontSize: 13 }}>No jobs found for this filter</div>
+        {loading ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>{tc('dashboard.loading')}</div> : jobs.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '28px 0', color: 'var(--pos-muted)', fontSize: 13 }}>{tc('dashboard.repair_no_jobs_filter')}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {jobs.map((job, idx) => (
@@ -239,8 +247,8 @@ function RepairDashboard({ session, notify }: { session: StaffSession; notify: (
                     <span style={{ fontWeight: 700, color: ACC, fontSize: 13 }}>#{job.ticket_number}</span>
                     <Badge status={job.status} />
                   </div>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{job.device_model || '—'}</div>
-                  <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{job.customer_name || 'No customer'} · {timeAgo(job.created_at)}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{job.device_model || tc('dashboard.dash')}</div>
+                  <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{job.customer_name || tc('dashboard.no_customer')} · {timeAgo(job.created_at)}</div>
                 </div>
                 {job.quoted_price != null && (
                   <div style={{ fontWeight: 700, fontSize: 14, color: GREEN }}>{fmt(session.currency_symbol, job.quoted_price)}</div>
@@ -257,6 +265,7 @@ function RepairDashboard({ session, notify }: { session: StaffSession; notify: (
 // ── Supervisor dashboard (legacy `supervisor` role — factory context) ─
 // Shows ONLY factory capture approvals — no service jobs, no retail.
 function SupervisorDashboard({ session, notify }: { session: StaffSession; notify: (m: string, ok?: boolean) => void }) {
+  const { tc } = useLang()
   const [captures, setCaptures] = useState<FactoryCapture[]>([])
   const [loading, setLoading]   = useState(true)
   const [rejectId, setRejectId] = useState<string | null>(null)
@@ -282,24 +291,24 @@ function SupervisorDashboard({ session, notify }: { session: StaffSession; notif
       body: JSON.stringify({ id, status, rejection_reason: reason }),
     })
     const d = await r.json()
-    if (d.capture) { notify(`Capture ${status}`); load() }
-    else notify(d.error || 'Action failed', false)
+    if (d.capture) { notify(tc('dashboard.capture_' + status)); load() }
+    else notify(d.error || tc('dashboard.action_failed'), false)
     setActioning(null); setRejectId(null); setRejectReason('')
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 10 }}>
-        <StatTile label="Pending Approvals" value={captures.length} color={captures.length > 0 ? AMBER : GREEN} />
+        <StatTile label={tc('dashboard.supervisor_pending_approvals')} value={captures.length} color={captures.length > 0 ? AMBER : GREEN} />
       </div>
 
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <span style={{ fontWeight: 700, fontSize: 15 }}>Pending Captures</span>
-          <button onClick={load} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>↻ Refresh</button>
+          <span style={{ fontWeight: 700, fontSize: 15 }}>{tc('dashboard.supervisor_pending_captures')}</span>
+          <button onClick={load} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>{tc('dashboard.refresh')}</button>
         </div>
-        {loading ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>Loading…</div> : captures.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '24px 0', color: GREEN, fontSize: 14 }}>✓ All captures reviewed</div>
+        {loading ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>{tc('dashboard.loading')}</div> : captures.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '24px 0', color: GREEN, fontSize: 14 }}>{tc('dashboard.supervisor_all_reviewed')}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {captures.map((cap, idx) => (
@@ -313,12 +322,12 @@ function SupervisorDashboard({ session, notify }: { session: StaffSession; notif
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
                       <span style={{ fontWeight: 700, fontSize: 13, textTransform: 'capitalize', color: ACC }}>{cap.type}</span>
                       {cap.product_name && <span style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{cap.product_name}</span>}
-                      {cap.batch_ref && <span style={{ fontSize: 11, color: 'var(--pos-muted)', background: '#f0ede8', padding: '1px 6px', borderRadius: 4 }}>Batch: {cap.batch_ref}</span>}
+                      {cap.batch_ref && <span style={{ fontSize: 11, color: 'var(--pos-muted)', background: '#f0ede8', padding: '1px 6px', borderRadius: 4 }}>{tc('dashboard.batch_label', { ref: cap.batch_ref })}</span>}
                     </div>
-                    {cap.quantity != null && <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>Qty: {cap.quantity}</div>}
+                    {cap.quantity != null && <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{tc('dashboard.qty_label', { qty: cap.quantity })}</div>}
                     {cap.notes && <div style={{ fontSize: 12, color: 'var(--pos-muted)', fontStyle: 'italic' }}>{cap.notes}</div>}
                     <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginTop: 4 }}>
-                      By {cap.captured_by_staff?.name || 'Unknown'} · {timeAgo(cap.created_at)}
+                      {tc('dashboard.by_name', { name: cap.captured_by_staff?.name || tc('dashboard.unknown') })} · {timeAgo(cap.created_at)}
                     </div>
                   </div>
                   {rejectId !== cap.id && (
@@ -332,17 +341,17 @@ function SupervisorDashboard({ session, notify }: { session: StaffSession; notif
                 </div>
                 {rejectId === cap.id && (
                   <div style={{ padding: '0 14px 12px', borderTop: '1px solid var(--pos-border)', paddingTop: 10 }}>
-                    <input placeholder="Reason for rejection…" value={rejectReason} onChange={e => setRejectReason(e.target.value)}
+                    <input placeholder={tc('dashboard.reason_for_rejection')} value={rejectReason} onChange={e => setRejectReason(e.target.value)}
                       style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--pos-border)', fontSize: 13, marginBottom: 8, boxSizing: 'border-box' }} />
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button disabled={!rejectReason.trim() || actioning === cap.id}
                         onClick={() => actOnCapture(cap.id, 'rejected', rejectReason)}
                         style={{ padding: '6px 16px', borderRadius: 8, border: 'none', background: RED, color: '#fff', fontSize: 12, fontWeight: 700, cursor: !rejectReason.trim() ? 'not-allowed' : 'pointer', opacity: !rejectReason.trim() ? 0.5 : 1 }}>
-                        Reject
+                        {tc('dashboard.reject')}
                       </button>
                       <button onClick={() => setRejectId(null)}
                         style={{ padding: '6px 16px', borderRadius: 8, border: '1px solid var(--pos-border)', background: 'transparent', color: 'var(--pos-muted)', fontSize: 12, cursor: 'pointer' }}>
-                        Cancel
+                        {tc('dashboard.cancel')}
                       </button>
                     </div>
                   </div>
@@ -358,6 +367,7 @@ function SupervisorDashboard({ session, notify }: { session: StaffSession; notif
 
 // ── Retail Manager dashboard ───────────────────────────────
 function RetailManagerDashboard({ session }: { session: StaffSession }) {
+  const { tc } = useLang()
   const [txns, setTxns]               = useState<Transaction[]>([])
   const [yesterdayRev, setYesterdayRev] = useState<number | null>(null)
   const [inventory, setInventory]     = useState<InventoryItem[]>([])
@@ -410,7 +420,7 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
   // Staff leaderboard
   const staffMap: Record<string, { name: string; revenue: number; sales: number }> = {}
   completed.forEach(t => {
-    const name = t.cashier?.name || 'Unknown'
+    const name = t.cashier?.name || tc('dashboard.unknown')
     if (!staffMap[name]) staffMap[name] = { name, revenue: 0, sales: 0 }
     staffMap[name].revenue += t.total
     staffMap[name].sales   += 1
@@ -450,9 +460,9 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
       {/* Camera-first quick actions */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
         {[
-          { emoji: '📷', label: 'New Sale',    sub: 'scan to sell',    route: '/sell' },
-          { emoji: '📦', label: 'Restock',     sub: 'scan to restock', route: '/inventory' },
-          { emoji: '🔢', label: 'Stock Count', sub: 'scan & count',    route: '/retail/stocktake' },
+          { emoji: '📷', label: tc('dashboard.retail_new_sale'),    sub: tc('dashboard.retail_new_sale_sub'),    route: '/sell' },
+          { emoji: '📦', label: tc('dashboard.retail_restock'),     sub: tc('dashboard.retail_restock_sub'), route: '/inventory' },
+          { emoji: '🔢', label: tc('dashboard.retail_stock_count'), sub: tc('dashboard.retail_stock_count_sub'),    route: '/retail/stocktake' },
         ].map(a => (
           <button key={a.route} onClick={() => router.push(a.route)}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '14px 8px', borderRadius: 14, border: `1px solid ${ACC_BORDER}`, background: ACC_LIGHT, cursor: 'pointer', minHeight: 80 }}>
@@ -466,36 +476,36 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
       {/* KPI strip */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10 }}>
         <Card style={{ gridColumn: 'span 2' }}>
-          <div style={{ fontSize: 12, color: 'var(--pos-muted)', fontWeight: 500, marginBottom: 4 }}>Today's Revenue</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-muted)', fontWeight: 500, marginBottom: 4 }}>{tc('dashboard.retail_todays_revenue')}</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
             <div style={{ fontSize: 32, fontWeight: 800, color: GREEN, lineHeight: 1 }}>{fmt(sym, revenue)}</div>
             {revDelta != null && (
               <div style={{ fontSize: 13, fontWeight: 700, color: revDelta >= 0 ? GREEN : RED, marginBottom: 3 }}>
-                {revDelta >= 0 ? '↑' : '↓'} {Math.abs(revDelta).toFixed(0)}% vs yesterday
+                {revDelta >= 0 ? '↑' : '↓'} {tc('dashboard.retail_vs_yesterday', { pct: Math.abs(revDelta).toFixed(0) })}
               </div>
             )}
-            {loading && <div style={{ fontSize: 12, color: 'var(--pos-muted)', marginBottom: 3 }}>Loading…</div>}
+            {loading && <div style={{ fontSize: 12, color: 'var(--pos-muted)', marginBottom: 3 }}>{tc('dashboard.loading')}</div>}
           </div>
           {refunded.length > 0 && (
             <div style={{ fontSize: 11, color: RED, marginTop: 4 }}>
-              {refunded.length} refund{refunded.length !== 1 ? 's' : ''} — {fmt(sym, refundAmt)}
+              {tc(refunded.length !== 1 ? 'dashboard.retail_refunds_many' : 'dashboard.retail_refunds_one', { count: refunded.length, amount: fmt(sym, refundAmt) })}
             </div>
           )}
         </Card>
-        <StatTile label="Sales Today"  value={saleCount}           sub={`avg ${fmt(sym, avgTicket)}`} />
-        <StatTile label="Low Stock"    value={lowStock.length}
+        <StatTile label={tc('dashboard.retail_sales_today')}  value={saleCount}           sub={tc('dashboard.retail_avg', { amount: fmt(sym, avgTicket) })} />
+        <StatTile label={tc('dashboard.retail_low_stock')}    value={lowStock.length}
           color={outOfStock.length > 0 ? RED : lowStock.length > 0 ? AMBER : GREEN}
-          sub={outOfStock.length > 0 ? `${outOfStock.length} out of stock` : lowStock.length > 0 ? 'needs restocking' : 'all good'} />
+          sub={outOfStock.length > 0 ? tc('dashboard.retail_out_of_stock_sub', { count: outOfStock.length }) : lowStock.length > 0 ? tc('dashboard.retail_needs_restocking') : tc('dashboard.retail_all_good')} />
       </div>
 
       {/* Hourly sales bar chart */}
       {completed.length > 0 && (
         <Card>
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Sales by Hour</div>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>{tc('dashboard.retail_sales_by_hour')}</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 60 }}>
             {hourBuckets.map(b => (
               <div key={b.hr} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                <div title={`${b.count} sale${b.count !== 1 ? 's' : ''} · ${fmt(sym, b.rev)}`}
+                <div title={tc(b.count !== 1 ? 'dashboard.retail_hour_tooltip_many' : 'dashboard.retail_hour_tooltip_one', { count: b.count, amount: fmt(sym, b.rev) })}
                   style={{ width: '100%', height: `${Math.max((b.rev / maxHourRev) * 48, b.rev > 0 ? 6 : 0)}px`, borderRadius: 3, background: b.rev > 0 ? ACC : 'var(--pos-border)', transition: 'height .3s' }} />
                 <div style={{ fontSize: 9, color: 'var(--pos-muted)', lineHeight: 1 }}>
                   {b.hr > 12 ? `${b.hr - 12}p` : b.hr === 12 ? '12p' : `${b.hr}a`}
@@ -509,7 +519,7 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
       {/* Top sellers */}
       {topSellers.length > 0 && (
         <Card>
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Top Sellers Today</div>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>{tc('dashboard.retail_top_sellers')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {topSellers.map((p, i) => {
               const pct = Math.round((p.revenue / revenue) * 100)
@@ -526,7 +536,7 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)' }}>{fmt(sym, p.revenue)}</div>
-                    <div style={{ fontSize: 11, color: 'var(--pos-muted)' }}>{p.qty} sold</div>
+                    <div style={{ fontSize: 11, color: 'var(--pos-muted)' }}>{tc('dashboard.retail_sold', { qty: p.qty })}</div>
                   </div>
                 </div>
               )
@@ -538,7 +548,7 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
       {/* Payment type split */}
       {payEntries.length > 1 && (
         <Card>
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Payment Methods</div>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>{tc('dashboard.retail_payment_methods')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {payEntries.map(([type, amt]) => {
               const pct = Math.round((amt / revenue) * 100)
@@ -562,11 +572,11 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
         <Card style={{ borderColor: outOfStock.length > 0 ? RED + '40' : AMBER + '40' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <div style={{ fontWeight: 700, fontSize: 15, color: outOfStock.length > 0 ? RED : AMBER }}>
-              {outOfStock.length > 0 ? `🚨 ${outOfStock.length} out of stock` : `⚠ ${lowStock.length} running low`}
+              {outOfStock.length > 0 ? tc('dashboard.retail_out_of_stock_alert', { count: outOfStock.length }) : tc('dashboard.retail_running_low_alert', { count: lowStock.length })}
             </div>
             <button onClick={() => router.push('/inventory')}
               style={{ padding: '5px 12px', borderRadius: 8, border: `1px solid ${ACC}`, background: ACC_LIGHT, color: ACC, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-              View all →
+              {tc('dashboard.retail_view_all')}
             </button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -575,17 +585,17 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--pos-ink)' }}>{item.name}</div>
                   <div style={{ fontSize: 12, color: item.stock_qty <= 0 ? RED : AMBER, fontWeight: 600, marginTop: 1 }}>
-                    {item.stock_qty <= 0 ? 'Out of stock' : `${item.stock_qty} left (min ${item.low_stock_threshold})`}
+                    {item.stock_qty <= 0 ? tc('dashboard.retail_item_out_of_stock') : tc('dashboard.retail_item_left', { qty: item.stock_qty, min: item.low_stock_threshold })}
                   </div>
                 </div>
                 <button onClick={() => router.push('/inventory')}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, border: 'none', background: ACC, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                  📷 Restock
+                  {tc('dashboard.retail_restock_btn')}
                 </button>
               </div>
             ))}
             {lowStock.length > 5 && (
-              <div style={{ fontSize: 12, color: 'var(--pos-muted)', textAlign: 'center' }}>+{lowStock.length - 5} more — tap View all</div>
+              <div style={{ fontSize: 12, color: 'var(--pos-muted)', textAlign: 'center' }}>{tc('dashboard.retail_more_view_all', { count: lowStock.length - 5 })}</div>
             )}
           </div>
         </Card>
@@ -595,7 +605,7 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
       {staffLeader.length > 0 && (
         <Card>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <span style={{ fontWeight: 700, fontSize: 15 }}>👥 Staff Today</span>
+            <span style={{ fontWeight: 700, fontSize: 15 }}>{tc('dashboard.retail_staff_today')}</span>
             <button onClick={load} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>↻</button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -606,7 +616,7 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--pos-ink)' }}>{s.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{s.sales} sale{s.sales !== 1 ? 's' : ''}</div>
+                  <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{tc(s.sales !== 1 ? 'dashboard.retail_sales_many' : 'dashboard.retail_sales_one', { count: s.sales })}</div>
                 </div>
                 <div style={{ fontSize: 16, fontWeight: 800, color: i === 0 ? ACC : 'var(--pos-ink)' }}>{fmt(sym, s.revenue)}</div>
               </div>
@@ -618,11 +628,11 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
       {/* Recent sales */}
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <span style={{ fontWeight: 700, fontSize: 15 }}>Recent Sales</span>
+          <span style={{ fontWeight: 700, fontSize: 15 }}>{tc('dashboard.retail_recent_sales')}</span>
           <button onClick={load} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>↻</button>
         </div>
         {txns.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--pos-muted)', fontSize: 14 }}>No sales yet today — tap 📷 New Sale to start</div>
+          <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--pos-muted)', fontSize: 14 }}>{tc('dashboard.retail_no_sales')}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {txns.slice(0, 8).map((t, idx) => (
@@ -645,7 +655,7 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
                 </div>
               </div>
             ))}
-            {txns.length > 8 && <div style={{ fontSize: 12, color: 'var(--pos-muted)', textAlign: 'center' }}>+{txns.length - 8} more today</div>}
+            {txns.length > 8 && <div style={{ fontSize: 12, color: 'var(--pos-muted)', textAlign: 'center' }}>{tc('dashboard.retail_more_today', { count: txns.length - 8 })}</div>}
           </div>
         )}
       </Card>
@@ -657,6 +667,7 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
 // Used by repair-manager, repair-supervisor, repair-technician, etc.
 // Shows ONLY repair/service data — no factory, no retail.
 function RepairSectorDashboard({ session, notify }: { session: StaffSession; notify: (m: string, ok?: boolean) => void }) {
+  const { tc } = useLang()
   const [jobs, setJobs]     = useState<ServiceJob[]>([])
   const [txns, setTxns]     = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
@@ -690,27 +701,27 @@ function RepairSectorDashboard({ session, notify }: { session: StaffSession; not
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: 10 }}>
-        <StatTile label="Today's Revenue"    value={fmt(sym, revenue)} color={GREEN} />
-        <StatTile label="Open Jobs"          value={openJobs} color={openJobs > 0 ? AMBER : 'var(--pos-muted)'} />
-        <StatTile label="Completed"          value={counts.completed || 0} color={GREEN} />
-        <StatTile label="Awaiting Pickup"    value={counts.collected || 0} color={BLUE} />
+        <StatTile label={tc('dashboard.repair_sector_todays_revenue')}    value={fmt(sym, revenue)} color={GREEN} />
+        <StatTile label={tc('dashboard.repair_sector_open_jobs')}          value={openJobs} color={openJobs > 0 ? AMBER : 'var(--pos-muted)'} />
+        <StatTile label={tc('dashboard.repair_sector_completed')}          value={counts.completed || 0} color={GREEN} />
+        <StatTile label={tc('dashboard.repair_sector_awaiting_pickup')}    value={counts.collected || 0} color={BLUE} />
       </div>
 
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <span style={{ fontWeight: 700, fontSize: 15 }}>Service Jobs</span>
+          <span style={{ fontWeight: 700, fontSize: 15 }}>{tc('dashboard.repair_sector_service_jobs')}</span>
           <button onClick={load} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>↻</button>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
           {['all', 'intake', 'in_progress', 'completed', 'collected'].map(s => (
             <button key={s} onClick={() => setFilter(s)}
               style={{ padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: `1px solid ${filter === s ? ACC : 'var(--pos-border)'}`, background: filter === s ? ACC_LIGHT : 'transparent', color: filter === s ? ACC : 'var(--pos-muted)', textTransform: 'capitalize' }}>
-              {s.replace('_', ' ')}
+              {statusLabel(tc, s)}
             </button>
           ))}
         </div>
-        {loading ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>Loading…</div> : jobs.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '28px 0', color: 'var(--pos-muted)', fontSize: 14 }}>No jobs found</div>
+        {loading ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>{tc('dashboard.loading')}</div> : jobs.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '28px 0', color: 'var(--pos-muted)', fontSize: 14 }}>{tc('dashboard.repair_sector_no_jobs')}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {jobs.map((job, idx) => (
@@ -720,8 +731,8 @@ function RepairSectorDashboard({ session, notify }: { session: StaffSession; not
                     <span style={{ fontWeight: 700, color: ACC, fontSize: 13 }}>#{job.ticket_number}</span>
                     <Badge status={job.status} />
                   </div>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{job.device_model || '—'}</div>
-                  <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{job.customer_name || 'No customer'} · {timeAgo(job.created_at)}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{job.device_model || tc('dashboard.dash')}</div>
+                  <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{job.customer_name || tc('dashboard.no_customer')} · {timeAgo(job.created_at)}</div>
                 </div>
                 {job.quoted_price != null && (
                   <div style={{ fontWeight: 700, fontSize: 14, color: GREEN }}>{fmt(sym, job.quoted_price)}</div>
@@ -733,8 +744,8 @@ function RepairSectorDashboard({ session, notify }: { session: StaffSession; not
       </Card>
 
       <Card>
-        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Today's Payments</div>
-        {txns.length === 0 ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>No payments yet today</div> : (
+        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>{tc('dashboard.repair_sector_todays_payments')}</div>
+        {txns.length === 0 ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>{tc('dashboard.repair_sector_no_payments')}</div> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {txns.slice(0, 6).map((t, idx) => (
               <div key={t.id} className="pos-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 8, background: 'var(--pos-bg)', border: '1px solid var(--pos-border)', animationDelay: `${Math.min(idx, 6) * 40}ms` }}>
@@ -748,7 +759,7 @@ function RepairSectorDashboard({ session, notify }: { session: StaffSession; not
                 </div>
               </div>
             ))}
-            {txns.length > 6 && <div style={{ fontSize: 12, color: 'var(--pos-muted)', textAlign: 'center' }}>+{txns.length - 6} more today</div>}
+            {txns.length > 6 && <div style={{ fontSize: 12, color: 'var(--pos-muted)', textAlign: 'center' }}>{tc('dashboard.retail_more_today', { count: txns.length - 6 })}</div>}
           </div>
         )}
       </Card>
@@ -760,6 +771,7 @@ function RepairSectorDashboard({ session, notify }: { session: StaffSession; not
 // Used by factory-manager, factory-supervisor, factory-production-manager, etc.
 // Shows ONLY factory capture data — no service jobs, no retail.
 function FactorySectorDashboard({ session, notify }: { session: StaffSession; notify: (m: string, ok?: boolean) => void }) {
+  const { tc } = useLang()
   const [pending, setPending]   = useState<FactoryCapture[]>([])
   const [recent, setRecent]     = useState<FactoryCapture[]>([])
   const [loading, setLoading]   = useState(true)
@@ -790,8 +802,8 @@ function FactorySectorDashboard({ session, notify }: { session: StaffSession; no
       body: JSON.stringify({ id, status, rejection_reason: reason }),
     })
     const d = await r.json()
-    if (d.capture) { notify(`Capture ${status}`); load() }
-    else notify(d.error || 'Action failed', false)
+    if (d.capture) { notify(tc('dashboard.capture_' + status)); load() }
+    else notify(d.error || tc('dashboard.action_failed'), false)
     setActioning(null); setRejectId(null); setRejectReason('')
   }
 
@@ -801,20 +813,20 @@ function FactorySectorDashboard({ session, notify }: { session: StaffSession; no
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: 10 }}>
-        <StatTile label="Pending Review"  value={pending.length} color={pending.length > 0 ? AMBER : GREEN} />
-        <StatTile label="Approved Today"  value={approvedToday}  color={GREEN} />
-        <StatTile label="Rejected Today"  value={rejectedToday}  color={rejectedToday > 0 ? RED : 'var(--pos-muted)'} />
+        <StatTile label={tc('dashboard.factory_pending_review')}  value={pending.length} color={pending.length > 0 ? AMBER : GREEN} />
+        <StatTile label={tc('dashboard.factory_approved_today')}  value={approvedToday}  color={GREEN} />
+        <StatTile label={tc('dashboard.factory_rejected_today')}  value={rejectedToday}  color={rejectedToday > 0 ? RED : 'var(--pos-muted)'} />
       </div>
 
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <span style={{ fontWeight: 700, fontSize: 15 }}>
-            {pending.length > 0 ? `⚠ ${pending.length} capture${pending.length !== 1 ? 's' : ''} awaiting review` : '✓ All captures reviewed'}
+            {pending.length > 0 ? tc(pending.length !== 1 ? 'dashboard.factory_awaiting_review_many' : 'dashboard.factory_awaiting_review_one', { count: pending.length }) : tc('dashboard.factory_all_reviewed')}
           </span>
-          <button onClick={load} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>↻ Refresh</button>
+          <button onClick={load} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>{tc('dashboard.refresh')}</button>
         </div>
-        {loading ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>Loading…</div> : pending.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '24px 0', color: GREEN, fontSize: 14 }}>✓ Nothing waiting for your approval</div>
+        {loading ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>{tc('dashboard.loading')}</div> : pending.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '24px 0', color: GREEN, fontSize: 14 }}>{tc('dashboard.factory_nothing_waiting')}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {pending.map((cap, idx) => (
@@ -828,12 +840,12 @@ function FactorySectorDashboard({ session, notify }: { session: StaffSession; no
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
                       <span style={{ fontWeight: 700, fontSize: 13, textTransform: 'capitalize', color: ACC }}>{cap.type}</span>
                       {cap.product_name && <span style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{cap.product_name}</span>}
-                      {cap.batch_ref && <span style={{ fontSize: 11, color: 'var(--pos-muted)', background: '#f0ede8', padding: '1px 6px', borderRadius: 4 }}>Batch: {cap.batch_ref}</span>}
+                      {cap.batch_ref && <span style={{ fontSize: 11, color: 'var(--pos-muted)', background: '#f0ede8', padding: '1px 6px', borderRadius: 4 }}>{tc('dashboard.batch_label', { ref: cap.batch_ref })}</span>}
                     </div>
-                    {cap.quantity != null && <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>Qty: {cap.quantity}</div>}
+                    {cap.quantity != null && <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{tc('dashboard.qty_label', { qty: cap.quantity })}</div>}
                     {cap.notes && <div style={{ fontSize: 12, color: 'var(--pos-muted)', fontStyle: 'italic' }}>{cap.notes}</div>}
                     <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginTop: 4 }}>
-                      By {cap.captured_by_staff?.name || 'Unknown'} · {timeAgo(cap.created_at)}
+                      {tc('dashboard.by_name', { name: cap.captured_by_staff?.name || tc('dashboard.unknown') })} · {timeAgo(cap.created_at)}
                     </div>
                   </div>
                   {rejectId !== cap.id && (
@@ -847,17 +859,17 @@ function FactorySectorDashboard({ session, notify }: { session: StaffSession; no
                 </div>
                 {rejectId === cap.id && (
                   <div style={{ padding: '0 14px 12px', borderTop: '1px solid var(--pos-border)', paddingTop: 10 }}>
-                    <input placeholder="Reason for rejection…" value={rejectReason} onChange={e => setRejectReason(e.target.value)}
+                    <input placeholder={tc('dashboard.reason_for_rejection')} value={rejectReason} onChange={e => setRejectReason(e.target.value)}
                       style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--pos-border)', fontSize: 13, marginBottom: 8, boxSizing: 'border-box' }} />
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button disabled={!rejectReason.trim() || actioning === cap.id}
                         onClick={() => actOnCapture(cap.id, 'rejected', rejectReason)}
                         style={{ padding: '6px 16px', borderRadius: 8, border: 'none', background: RED, color: '#fff', fontSize: 12, fontWeight: 700, cursor: !rejectReason.trim() ? 'not-allowed' : 'pointer', opacity: !rejectReason.trim() ? 0.5 : 1 }}>
-                        Reject
+                        {tc('dashboard.reject')}
                       </button>
                       <button onClick={() => setRejectId(null)}
                         style={{ padding: '6px 16px', borderRadius: 8, border: '1px solid var(--pos-border)', background: 'transparent', color: 'var(--pos-muted)', fontSize: 12, cursor: 'pointer' }}>
-                        Cancel
+                        {tc('dashboard.cancel')}
                       </button>
                     </div>
                   </div>
@@ -870,14 +882,14 @@ function FactorySectorDashboard({ session, notify }: { session: StaffSession; no
 
       {recent.length > 0 && (
         <Card>
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Production Log</div>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>{tc('dashboard.factory_production_log')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {recent.slice(0, 8).map((cap, idx) => (
               <div key={cap.id} className="pos-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 8, background: 'var(--pos-bg)', border: '1px solid var(--pos-border)', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                 <div>
                   <span style={{ fontSize: 13, fontWeight: 600, textTransform: 'capitalize' }}>{cap.type}</span>
                   {cap.product_name && <span style={{ fontSize: 12, color: 'var(--pos-muted)', marginLeft: 8 }}>{cap.product_name}</span>}
-                  <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginTop: 1 }}>By {cap.captured_by_staff?.name || '—'} · {timeAgo(cap.created_at)}</div>
+                  <div style={{ fontSize: 11, color: 'var(--pos-muted)', marginTop: 1 }}>{tc('dashboard.by_name', { name: cap.captured_by_staff?.name || tc('dashboard.dash') })} · {timeAgo(cap.created_at)}</div>
                 </div>
                 <Badge status={cap.status} />
               </div>
@@ -892,6 +904,7 @@ function FactorySectorDashboard({ session, notify }: { session: StaffSession; no
 // ── Manager dashboard (legacy `manager` role — repair shop context) ─
 // Repair service jobs + revenue only. No factory captures.
 function ManagerDashboard({ session, notify }: { session: StaffSession; notify: (m: string, ok?: boolean) => void }) {
+  const { tc } = useLang()
   const [jobs, setJobs]     = useState<ServiceJob[]>([])
   const [txns, setTxns]     = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
@@ -920,22 +933,22 @@ function ManagerDashboard({ session, notify }: { session: StaffSession; notify: 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 10 }}>
-        <StatTile label="Today's Revenue" value={fmt(sym, revenue)} color={GREEN} />
-        <StatTile label="Active Jobs"     value={(jobCounts.accepted || 0) + (jobCounts.in_progress || 0)} color={ACC} />
-        <StatTile label="Completed"       value={jobCounts.completed || 0} color={GREEN} />
-        <StatTile label="Awaiting Pickup" value={jobCounts.collected || 0} color={BLUE} />
+        <StatTile label={tc('dashboard.manager_todays_revenue')} value={fmt(sym, revenue)} color={GREEN} />
+        <StatTile label={tc('dashboard.manager_active_jobs')}     value={(jobCounts.accepted || 0) + (jobCounts.in_progress || 0)} color={ACC} />
+        <StatTile label={tc('dashboard.manager_completed')}       value={jobCounts.completed || 0} color={GREEN} />
+        <StatTile label={tc('dashboard.manager_awaiting_pickup')} value={jobCounts.collected || 0} color={BLUE} />
       </div>
 
       <Card>
-        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Jobs by Status</div>
-        {loading ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>Loading…</div> : (
+        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>{tc('dashboard.manager_jobs_by_status')}</div>
+        {loading ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>{tc('dashboard.loading')}</div> : (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {['intake', 'quoted', 'accepted', 'in_progress', 'completed', 'collected', 'cancelled'].map(status => {
               const n = jobCounts[status] || 0
               return (
                 <div key={status} style={{ padding: '8px 14px', borderRadius: 10, background: STATUS_COLOR[status] + '12', border: `1px solid ${STATUS_COLOR[status]}25`, textAlign: 'center', minWidth: 56 }}>
                   <div style={{ fontSize: 22, fontWeight: 700, color: STATUS_COLOR[status] }}>{n}</div>
-                  <div style={{ fontSize: 10, color: 'var(--pos-muted)', textTransform: 'capitalize', marginTop: 2 }}>{status.replace('_', ' ')}</div>
+                  <div style={{ fontSize: 10, color: 'var(--pos-muted)', textTransform: 'capitalize', marginTop: 2 }}>{statusLabel(tc, status)}</div>
                 </div>
               )
             })}
@@ -944,8 +957,8 @@ function ManagerDashboard({ session, notify }: { session: StaffSession; notify: 
       </Card>
 
       <Card>
-        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Today's Transactions</div>
-        {txns.length === 0 ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>No transactions yet today</div> : (
+        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>{tc('dashboard.manager_todays_transactions')}</div>
+        {txns.length === 0 ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>{tc('dashboard.manager_no_transactions')}</div> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {txns.slice(0, 8).map((t, idx) => (
               <div key={t.id} className="pos-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: 8, background: 'var(--pos-bg)', border: '1px solid var(--pos-border)', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
@@ -959,7 +972,7 @@ function ManagerDashboard({ session, notify }: { session: StaffSession; notify: 
                 </div>
               </div>
             ))}
-            {txns.length > 8 && <div style={{ fontSize: 12, color: 'var(--pos-muted)', textAlign: 'center' }}>+{txns.length - 8} more</div>}
+            {txns.length > 8 && <div style={{ fontSize: 12, color: 'var(--pos-muted)', textAlign: 'center' }}>{tc('dashboard.manager_more', { count: txns.length - 8 })}</div>}
           </div>
         )}
       </Card>
@@ -969,6 +982,7 @@ function ManagerDashboard({ session, notify }: { session: StaffSession; notify: 
 
 // ── Main page ──────────────────────────────────────────────
 export default function DashboardPage() {
+  const { tc } = useLang()
   const router  = useRouter()
   const [session, setSession] = useState<StaffSession | null>(null)
   const [ready, setReady]     = useState(false)
@@ -998,14 +1012,14 @@ export default function DashboardPage() {
 
   if (!ready || !session) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }}>
-      <div style={{ color: 'var(--pos-muted)', fontSize: 14 }}>Loading…</div>
+      <div style={{ color: 'var(--pos-muted)', fontSize: 14 }}>{tc('dashboard.loading')}</div>
     </div>
   )
 
   const ROLE_LABEL: Record<string, string> = {
-    manager: 'Manager', supervisor: 'Supervisor', repair: 'Repair Tech', engineer: 'Engineer',
-    'retail-manager': 'Retail Manager', 'retail-inventory-manager': 'Inventory Manager',
-    'retail-cashier': 'Cashier', 'retail-supervisor': 'Retail Supervisor',
+    manager: tc('dashboard.role_manager'), supervisor: tc('dashboard.role_supervisor'), repair: tc('dashboard.role_repair'), engineer: tc('dashboard.role_engineer'),
+    'retail-manager': tc('dashboard.role_retail_manager'), 'retail-inventory-manager': tc('dashboard.role_retail_inventory_manager'),
+    'retail-cashier': tc('dashboard.role_retail_cashier'), 'retail-supervisor': tc('dashboard.role_retail_supervisor'),
   }
   const ROLE_COLOR: Record<string, string> = {
     manager: ACC, supervisor: BLUE, repair: '#0891b2', engineer: '#0891b2',
@@ -1061,7 +1075,7 @@ export default function DashboardPage() {
           </div>
           <button onClick={logout}
             style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid var(--pos-border)', background: 'transparent', color: 'var(--pos-muted)', fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
-            Sign out
+            {tc('dashboard.sign_out')}
           </button>
         </div>
       </div>
@@ -1069,7 +1083,7 @@ export default function DashboardPage() {
       {/* Content */}
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '20px 16px 60px' }}>
         <div style={{ marginBottom: 18 }}>
-          <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: 'var(--pos-ink)' }}>{roleLabel} Dashboard</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: 'var(--pos-ink)' }}>{tc('dashboard.dashboard_title', { role: roleLabel })}</h1>
           <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginTop: 2 }}>
             {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
           </div>

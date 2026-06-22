@@ -5,11 +5,16 @@
 import type { Lang } from './i18n'
 
 import enCommon from '@/locales/en/common.json'
+import enSell from '@/locales/en/sell.json'
+import enDashboard from '@/locales/en/dashboard.json'
+import enInventory from '@/locales/en/inventory.json'
 
 type Dict = Record<string, unknown>
 
+// English-only for now — translation gated on API credits. The resolver falls
+// back to English for locales lacking a namespace, so pages render correctly.
 const CATALOG: Record<string, Record<string, Dict>> = {
-  en: { common: enCommon },
+  en: { common: enCommon, sell: enSell, dashboard: enDashboard, inventory: enInventory },
 }
 
 const BASE = 'en'

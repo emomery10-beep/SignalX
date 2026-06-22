@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { isInventoryLevel, isManagerOrAboveLevel } from '@/lib/pos-role-client'
+import { useLang } from '@/components/LanguageProvider'
 
 const inputStyle: React.CSSProperties = { padding: '9px 12px', borderRadius: 8, border: '1px solid var(--pos-border)', fontSize: 13, fontFamily: 'inherit', background: 'var(--pos-bg)', color: 'var(--pos-ink)' }
 const btnPrimary: React.CSSProperties = { padding: '9px 16px', borderRadius: 8, background: 'var(--pos-accent)', color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
@@ -20,6 +21,7 @@ interface InventoryItem {
 
 export default function InventoryPage() {
   const router = useRouter()
+  const { tc } = useLang()
   const [staff, setStaff]         = useState<StaffSession | null>(null)
   const [sym, setSym]             = useState('£')
   const [items, setItems]         = useState<InventoryItem[]>([])
@@ -113,7 +115,7 @@ export default function InventoryPage() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       streamRef.current = stream
       if (videoRef.current) videoRef.current.srcObject = stream
-    } catch { setCameraError('Could not access camera. Check that the browser has camera permission.') }
+    } catch { setCameraError(tc('inventory.err_camera_access')) }
   }
 
   const handleCloseCamera = () => {
@@ -216,7 +218,7 @@ export default function InventoryPage() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       scanStreamRef.current = stream
       if (scanVideoRef.current) scanVideoRef.current.srcObject = stream
-    } catch { setCameraError('Camera access denied. Allow camera access in your browser settings.'); setScanCameraOpen(false) }
+    } catch { setCameraError(tc('inventory.err_camera_denied')); setScanCameraOpen(false) }
   }
 
   const closeScanCamera = () => {
@@ -229,7 +231,7 @@ export default function InventoryPage() {
     // Resize to max 1200px to stay within Vercel's 4.5MB body limit
     const vw = scanVideoRef.current.videoWidth
     const vh = scanVideoRef.current.videoHeight
-    if (vw === 0 || vh === 0) { setCameraError('Camera not ready — wait a moment and try again'); return }
+    if (vw === 0 || vh === 0) { setCameraError(tc('inventory.err_camera_not_ready')); return }
     const maxDim = 1200
     let cw = vw, ch = vh
     if (vw > maxDim || vh > maxDim) {
@@ -260,7 +262,7 @@ export default function InventoryPage() {
         body: JSON.stringify(body),
       })
       const data = await res.json()
-      if (!data.product) { setScanError(data.error || 'Could not read product — try better lighting or a clearer photo'); setScanning(false); return }
+      if (!data.product) { setScanError(data.error || tc('inventory.err_scan_read')); setScanning(false); return }
       const p = data.product
       setAddForm({
         name:                p.name         || '',
@@ -279,7 +281,7 @@ export default function InventoryPage() {
       setShowScanModal(false)
       setShowAddForm(true)
       setScanFront(null); setScanBack(null); setScanFrontThumb(null); setScanBackThumb(null)
-    } catch { setScanError('Scan failed — check your connection and try again') }
+    } catch { setScanError(tc('inventory.err_scan_failed')) }
     setScanning(false)
   }
 
@@ -315,8 +317,8 @@ export default function InventoryPage() {
         setItems(prev => [...prev, data.product])
         setShowAddForm(false)
         setAddForm({ name: '', sale_price: '', cost_price: '', stock_qty: '', low_stock_threshold: '5', category: '', sku: '', expiry_date: '', batch_number: '', supplier: '', brand: '', unit: 'item' })
-      } else { setSaveError(data.error || 'Save failed — please check your inputs and try again') }
-    } catch { setSaveError('Save failed — check your connection and try again') }
+      } else { setSaveError(data.error || tc('inventory.err_save_failed_inputs')) }
+    } catch { setSaveError(tc('inventory.err_save_failed_connection')) }
     setSavingNew(false)
   }
   // ────────────────────────────────────────────────────────────
@@ -361,7 +363,7 @@ export default function InventoryPage() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)', fontSize: 14 }}>
-      Loading inventory...
+      {tc('inventory.loading')}
     </div>
   )
 
@@ -370,7 +372,7 @@ export default function InventoryPage() {
       {/* Header */}
       <div style={{ padding: '20px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--pos-ink)' }}>Inventory</div>
+          <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--pos-ink)' }}>{tc('inventory.title')}</div>
           <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{staff?.name}</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -380,12 +382,12 @@ export default function InventoryPage() {
 
           <button onClick={() => { setShowScanModal(true); setScanFront(null); setScanBack(null); setScanFrontThumb(null); setScanBackThumb(null) }}
             style={{ padding: '6px 14px', borderRadius: 8, background: '#7c3aed', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-            📷 Add product
+            {tc('inventory.add_product_button')}
           </button>
 
           <button onClick={() => { localStorage.removeItem('pos_staff'); router.push('/') }}
             style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--pos-border)', background: 'transparent', fontSize: 12, cursor: 'pointer', color: 'var(--pos-muted)' }}>
-            Sign out
+            {tc('inventory.sign_out')}
           </button>
         </div>
       </div>
@@ -394,10 +396,10 @@ export default function InventoryPage() {
       {(outCount > 0 || lowCount > 0 || expiredCount > 0 || expiringCount > 0) && (
         <div className="pos-banner" role="alert" style={{ margin: '8px 20px', padding: '12px 16px', borderRadius: 12, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)' }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-danger)', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {outCount > 0 && <span>{outCount} out of stock</span>}
-            {lowCount > 0 && <span style={{ color: '#ca8a04' }}>{lowCount} running low</span>}
-            {expiredCount > 0 && <span style={{ color: 'var(--pos-danger)' }}>⚠ {expiredCount} EXPIRED — remove now</span>}
-            {expiringCount > 0 && <span style={{ color: 'var(--pos-warning)' }}>{expiringCount} expiring within 30 days</span>}
+            {outCount > 0 && <span>{tc('inventory.alert_out_of_stock', { count: outCount })}</span>}
+            {lowCount > 0 && <span style={{ color: '#ca8a04' }}>{tc('inventory.alert_running_low', { count: lowCount })}</span>}
+            {expiredCount > 0 && <span style={{ color: 'var(--pos-danger)' }}>{tc('inventory.alert_expired', { count: expiredCount })}</span>}
+            {expiringCount > 0 && <span style={{ color: 'var(--pos-warning)' }}>{tc('inventory.alert_expiring', { count: expiringCount })}</span>}
           </div>
         </div>
       )}
@@ -408,17 +410,17 @@ export default function InventoryPage() {
           <div className="pos-sheet" style={{ background: 'var(--pos-surface)', borderRadius: '20px 20px 0 0', padding: 24, width: '100%', maxWidth: 500, maxHeight: '92vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
             <div style={{ width: 36, height: 4, borderRadius: 9999, background: 'var(--pos-border)', margin: '0 auto 20px' }} />
 
-            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', marginBottom: 4 }}>📷 Scan product</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--pos-ink)', marginBottom: 4 }}>{tc('inventory.scan_title')}</div>
             <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 20 }}>
-              Photo the front — Claude fills in name, price, category, SKU.<br/>
-              Add the back for expiry date, batch number and supplier.
+              {tc('inventory.scan_subtitle_front')}<br/>
+              {tc('inventory.scan_subtitle_back')}
             </div>
 
             {/* Photo slots */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
               {/* Front */}
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--pos-muted)', marginBottom: 8, textTransform: 'uppercase' }}>Front <span style={{ color: '#ef4444' }}>*</span></div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--pos-muted)', marginBottom: 8, textTransform: 'uppercase' }}>{tc('inventory.scan_front_label')} <span style={{ color: '#ef4444' }}>*</span></div>
                 {scanFrontThumb ? (
                   <div style={{ position: 'relative' }}>
                     <img src={scanFrontThumb} alt="" style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', borderRadius: 12, border: '2.5px solid #7c3aed' }} />
@@ -428,15 +430,15 @@ export default function InventoryPage() {
                 ) : (
                   <div style={{ aspectRatio: '3/4', borderRadius: 12, border: '2px dashed #e5e2dc', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'var(--pos-bg)' }}>
                     <div style={{ fontSize: 26 }}>📦</div>
-                    <div style={{ fontSize: 11, color: 'var(--pos-hint)', textAlign: 'center', padding: '0 8px' }}>Brand, name, price</div>
-                    <button onClick={() => openScanCamera('front')} style={{ padding: '6px 14px', borderRadius: 8, background: '#7c3aed', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>📷 Camera</button>
-                    <button onClick={() => scanFrontRef.current?.click()} style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid var(--pos-border)', background: 'transparent', fontSize: 12, cursor: 'pointer', color: 'var(--pos-muted)' }}>Upload</button>
+                    <div style={{ fontSize: 11, color: 'var(--pos-hint)', textAlign: 'center', padding: '0 8px' }}>{tc('inventory.scan_front_hint')}</div>
+                    <button onClick={() => openScanCamera('front')} style={{ padding: '6px 14px', borderRadius: 8, background: '#7c3aed', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{tc('inventory.camera_button')}</button>
+                    <button onClick={() => scanFrontRef.current?.click()} style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid var(--pos-border)', background: 'transparent', fontSize: 12, cursor: 'pointer', color: 'var(--pos-muted)' }}>{tc('inventory.upload_button')}</button>
                   </div>
                 )}
               </div>
               {/* Back */}
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--pos-muted)', marginBottom: 8, textTransform: 'uppercase' }}>Back <span style={{ color: 'var(--pos-hint)', fontWeight: 400 }}>(optional)</span></div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--pos-muted)', marginBottom: 8, textTransform: 'uppercase' }}>{tc('inventory.scan_back_label')} <span style={{ color: 'var(--pos-hint)', fontWeight: 400 }}>{tc('inventory.scan_optional')}</span></div>
                 {scanBackThumb ? (
                   <div style={{ position: 'relative' }}>
                     <img src={scanBackThumb} alt="" style={{ width: '100%', aspectRatio: '3/4', objectFit: 'cover', borderRadius: 12, border: '2.5px solid #0891b2' }} />
@@ -446,9 +448,9 @@ export default function InventoryPage() {
                 ) : (
                   <div style={{ aspectRatio: '3/4', borderRadius: 12, border: '2px dashed #e5e2dc', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'var(--pos-bg)' }}>
                     <div style={{ fontSize: 26 }}>🏷️</div>
-                    <div style={{ fontSize: 11, color: 'var(--pos-hint)', textAlign: 'center', padding: '0 8px' }}>Expiry, batch, supplier</div>
-                    <button onClick={() => openScanCamera('back')} style={{ padding: '6px 14px', borderRadius: 8, background: '#0891b2', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>📷 Camera</button>
-                    <button onClick={() => scanBackRef.current?.click()} style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid var(--pos-border)', background: 'transparent', fontSize: 12, cursor: 'pointer', color: 'var(--pos-muted)' }}>Upload</button>
+                    <div style={{ fontSize: 11, color: 'var(--pos-hint)', textAlign: 'center', padding: '0 8px' }}>{tc('inventory.scan_back_hint')}</div>
+                    <button onClick={() => openScanCamera('back')} style={{ padding: '6px 14px', borderRadius: 8, background: '#0891b2', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{tc('inventory.camera_button')}</button>
+                    <button onClick={() => scanBackRef.current?.click()} style={{ padding: '5px 14px', borderRadius: 8, border: '1px solid var(--pos-border)', background: 'transparent', fontSize: 12, cursor: 'pointer', color: 'var(--pos-muted)' }}>{tc('inventory.upload_button')}</button>
                   </div>
                 )}
               </div>
@@ -456,15 +458,15 @@ export default function InventoryPage() {
 
             <button onClick={runFullScan} disabled={!scanFront || scanning} className="pos-btn-primary"
               style={{ width: '100%', padding: '15px', borderRadius: 14, background: scanFront ? '#7c3aed' : 'var(--pos-border)', color: scanFront ? '#fff' : 'var(--pos-hint)', border: 'none', fontSize: 15, fontWeight: 800, cursor: scanFront ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
-              {scanning ? '⏳ Reading...' : scanFront ? `✨ Scan & fill${scanBack ? ' (front + back)' : ' (front only)'}` : 'Take front photo first'}
+              {scanning ? tc('inventory.scan_reading') : scanFront ? (scanBack ? tc('inventory.scan_fill_both') : tc('inventory.scan_fill_front')) : tc('inventory.scan_take_front_first')}
             </button>
             {scanFront && !scanBack && (
-              <div style={{ fontSize: 11, color: 'var(--pos-hint)', textAlign: 'center', marginTop: 8 }}>Add the back photo for expiry date, batch no. and supplier</div>
+              <div style={{ fontSize: 11, color: 'var(--pos-hint)', textAlign: 'center', marginTop: 8 }}>{tc('inventory.scan_add_back_hint')}</div>
             )}
             {(scanError || cameraError) && (
               <div className="pos-banner" role="alert" style={{ marginTop: 12, padding: '10px 14px', borderRadius: 8, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)', fontSize: 13, color: 'var(--pos-danger)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <span>{scanError || cameraError}</span>
-                <button onClick={() => { setScanError(''); setCameraError('') }} aria-label="Dismiss" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--pos-danger)', fontSize: 16, lineHeight: 1, padding: '0 2px' }}>×</button>
+                <button onClick={() => { setScanError(''); setCameraError('') }} aria-label={tc('inventory.dismiss')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--pos-danger)', fontSize: 16, lineHeight: 1, padding: '0 2px' }}>×</button>
               </div>
             )}
           </div>
@@ -475,13 +477,13 @@ export default function InventoryPage() {
       {scanCameraOpen && (
         <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 300, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ color: '#fff', fontSize: 13, fontWeight: 600, marginBottom: 10, opacity: 0.8 }}>
-            {scanStep === 'front' ? '📦 Front of product' : '🏷️ Back of product'}
+            {scanStep === 'front' ? tc('inventory.scan_camera_front') : tc('inventory.scan_camera_back')}
           </div>
           <video ref={scanVideoRef} autoPlay playsInline style={{ width: '100%', maxWidth: 500, border: `3px solid ${scanStep === 'front' ? '#7c3aed' : '#0891b2'}` }} />
           <canvas ref={scanCanvasRef} style={{ display: 'none' }} />
           <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
-            <button onClick={captureScanPhoto} style={{ padding: '13px 28px', borderRadius: 12, background: scanStep === 'front' ? '#7c3aed' : '#0891b2', color: '#fff', border: 'none', fontSize: 15, fontWeight: 800, cursor: 'pointer' }}>📸 Capture</button>
-            <button onClick={closeScanCamera} style={{ padding: '13px 20px', borderRadius: 12, border: '1px solid rgba(255,255,255,.3)', background: 'transparent', color: '#fff', fontSize: 14, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={captureScanPhoto} style={{ padding: '13px 28px', borderRadius: 12, background: scanStep === 'front' ? '#7c3aed' : '#0891b2', color: '#fff', border: 'none', fontSize: 15, fontWeight: 800, cursor: 'pointer' }}>{tc('inventory.capture_button')}</button>
+            <button onClick={closeScanCamera} style={{ padding: '13px 20px', borderRadius: 12, border: '1px solid rgba(255,255,255,.3)', background: 'transparent', color: '#fff', fontSize: 14, cursor: 'pointer' }}>{tc('inventory.cancel')}</button>
           </div>
         </div>
       )}
@@ -491,44 +493,44 @@ export default function InventoryPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => !savingNew && setShowAddForm(false)}>
           <div className="pos-sheet" style={{ background: 'var(--pos-surface)', borderRadius: '20px 20px 0 0', padding: 24, width: '100%', maxWidth: 500, maxHeight: '92vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
             <div style={{ width: 36, height: 4, borderRadius: 9999, background: 'var(--pos-border)', margin: '0 auto 16px' }} />
-            <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--pos-ink)', marginBottom: 16 }}>Add product</div>
+            <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--pos-ink)', marginBottom: 16 }}>{tc('inventory.add_product_title')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <input placeholder="Product name *" value={addForm.name} onChange={e => setAddForm(p => ({ ...p, name: e.target.value }))} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
+              <input placeholder={tc('inventory.ph_product_name_required')} value={addForm.name} onChange={e => setAddForm(p => ({ ...p, name: e.target.value }))} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <input placeholder="Sale price *" type="number" value={addForm.sale_price} onChange={e => setAddForm(p => ({ ...p, sale_price: e.target.value }))} style={inputStyle} />
-                <input placeholder="Cost price" type="number" value={addForm.cost_price} onChange={e => setAddForm(p => ({ ...p, cost_price: e.target.value }))} style={inputStyle} />
-                <input placeholder="Starting qty" type="number" value={addForm.stock_qty} onChange={e => setAddForm(p => ({ ...p, stock_qty: e.target.value }))} style={inputStyle} />
-                <input placeholder="Low stock at" type="number" value={addForm.low_stock_threshold} onChange={e => setAddForm(p => ({ ...p, low_stock_threshold: e.target.value }))} style={inputStyle} />
-                <input placeholder="Brand" value={addForm.brand} onChange={e => setAddForm(p => ({ ...p, brand: e.target.value }))} style={inputStyle} />
-                <input placeholder="Supplier" value={addForm.supplier} onChange={e => setAddForm(p => ({ ...p, supplier: e.target.value }))} style={inputStyle} />
-                <input placeholder="Category" value={addForm.category} onChange={e => setAddForm(p => ({ ...p, category: e.target.value }))} style={inputStyle} />
-                <input placeholder="SKU / Barcode" value={addForm.sku} onChange={e => setAddForm(p => ({ ...p, sku: e.target.value }))} style={inputStyle} />
-                <input placeholder="Batch / lot no." value={addForm.batch_number} onChange={e => setAddForm(p => ({ ...p, batch_number: e.target.value }))} style={inputStyle} />
+                <input placeholder={tc('inventory.ph_sale_price_required')} type="number" value={addForm.sale_price} onChange={e => setAddForm(p => ({ ...p, sale_price: e.target.value }))} style={inputStyle} />
+                <input placeholder={tc('inventory.ph_cost_price')} type="number" value={addForm.cost_price} onChange={e => setAddForm(p => ({ ...p, cost_price: e.target.value }))} style={inputStyle} />
+                <input placeholder={tc('inventory.ph_starting_qty')} type="number" value={addForm.stock_qty} onChange={e => setAddForm(p => ({ ...p, stock_qty: e.target.value }))} style={inputStyle} />
+                <input placeholder={tc('inventory.ph_low_stock_at')} type="number" value={addForm.low_stock_threshold} onChange={e => setAddForm(p => ({ ...p, low_stock_threshold: e.target.value }))} style={inputStyle} />
+                <input placeholder={tc('inventory.ph_brand')} value={addForm.brand} onChange={e => setAddForm(p => ({ ...p, brand: e.target.value }))} style={inputStyle} />
+                <input placeholder={tc('inventory.ph_supplier')} value={addForm.supplier} onChange={e => setAddForm(p => ({ ...p, supplier: e.target.value }))} style={inputStyle} />
+                <input placeholder={tc('inventory.ph_category')} value={addForm.category} onChange={e => setAddForm(p => ({ ...p, category: e.target.value }))} style={inputStyle} />
+                <input placeholder={tc('inventory.ph_sku_barcode')} value={addForm.sku} onChange={e => setAddForm(p => ({ ...p, sku: e.target.value }))} style={inputStyle} />
+                <input placeholder={tc('inventory.ph_batch_lot')} value={addForm.batch_number} onChange={e => setAddForm(p => ({ ...p, batch_number: e.target.value }))} style={inputStyle} />
               </div>
               <div>
-                <label style={{ fontSize: 11, color: 'var(--pos-muted)', fontWeight: 600, display: 'block', marginBottom: 4 }}>Expiry date</label>
+                <label style={{ fontSize: 11, color: 'var(--pos-muted)', fontWeight: 600, display: 'block', marginBottom: 4 }}>{tc('inventory.expiry_date_label')}</label>
                 <input type="date" value={addForm.expiry_date} onChange={e => setAddForm(p => ({ ...p, expiry_date: e.target.value }))} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
               </div>
               <select value={addForm.unit} onChange={e => setAddForm(p => ({ ...p, unit: e.target.value }))} style={{ ...inputStyle, width: '100%' }}>
-                <option value="item">item</option>
-                <option value="kg">kg</option>
-                <option value="litre">litre</option>
-                <option value="pack">pack</option>
-                <option value="box">box</option>
+                <option value="item">{tc('inventory.unit_item')}</option>
+                <option value="kg">{tc('inventory.unit_kg')}</option>
+                <option value="litre">{tc('inventory.unit_litre')}</option>
+                <option value="pack">{tc('inventory.unit_pack')}</option>
+                <option value="box">{tc('inventory.unit_box')}</option>
               </select>
             </div>
             {saveError && (
               <div className="pos-banner" role="alert" style={{ marginTop: 12, padding: '10px 14px', borderRadius: 8, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)', fontSize: 13, color: 'var(--pos-danger)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <span>{saveError}</span>
-                <button onClick={() => setSaveError('')} aria-label="Dismiss" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--pos-danger)', fontSize: 16, lineHeight: 1, padding: '0 2px' }}>×</button>
+                <button onClick={() => setSaveError('')} aria-label={tc('inventory.dismiss')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--pos-danger)', fontSize: 16, lineHeight: 1, padding: '0 2px' }}>×</button>
               </div>
             )}
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
               <button onClick={saveNewProduct} disabled={!addForm.name || !addForm.sale_price || savingNew} className="pos-btn-primary"
                 style={{ ...btnPrimary, flex: 1, opacity: !addForm.name || !addForm.sale_price || savingNew ? 0.5 : 1 }}>
-                {savingNew ? 'Saving...' : 'Add to inventory'}
+                {savingNew ? tc('inventory.saving') : tc('inventory.add_to_inventory')}
               </button>
-              <button onClick={() => setShowAddForm(false)} style={btnSecondary}>Cancel</button>
+              <button onClick={() => setShowAddForm(false)} style={btnSecondary}>{tc('inventory.cancel')}</button>
             </div>
           </div>
         </div>
@@ -540,8 +542,8 @@ export default function InventoryPage() {
           <video ref={videoRef} autoPlay playsInline style={{ width: '100%', maxWidth: 600, borderRadius: 12, marginBottom: 16 }} />
           <canvas ref={canvasRef} style={{ display: 'none' }} />
           <div style={{ display: 'flex', gap: 12 }}>
-            <button onClick={handleCapturePhoto} disabled={recognizing} style={{ ...btnPrimary, padding: '12px 28px', fontSize: 14, fontWeight: 700 }}>{recognizing ? 'Processing...' : 'Capture photo'}</button>
-            <button onClick={handleCloseCamera} disabled={recognizing} style={{ padding: '12px 28px', borderRadius: 10, border: '1px solid rgba(255,255,255,.3)', background: 'transparent', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+            <button onClick={handleCapturePhoto} disabled={recognizing} style={{ ...btnPrimary, padding: '12px 28px', fontSize: 14, fontWeight: 700 }}>{recognizing ? tc('inventory.processing') : tc('inventory.capture_photo')}</button>
+            <button onClick={handleCloseCamera} disabled={recognizing} style={{ padding: '12px 28px', borderRadius: 10, border: '1px solid rgba(255,255,255,.3)', background: 'transparent', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('inventory.cancel')}</button>
           </div>
         </div>
       )}
@@ -550,42 +552,42 @@ export default function InventoryPage() {
       {editingRecognizedIndex !== null && recognizedProducts.length > 0 && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 99, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setEditingRecognizedIndex(null)}>
           <div className="pos-sheet" style={{ background: 'var(--pos-surface)', borderRadius: 16, padding: 24, maxWidth: 500, width: '100%', maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 20, marginTop: 0 }}>Edit product details</h3>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 20, marginTop: 0 }}>{tc('inventory.edit_product_title')}</h3>
 
             {/* Product name (editable) */}
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>Product name</label>
-              <input type="text" value={editingRecognizedData.name || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, name: e.target.value })} style={{ ...inputStyle, width: '100%' }} placeholder="Enter product name" />
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>{tc('inventory.product_name_label')}</label>
+              <input type="text" value={editingRecognizedData.name || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, name: e.target.value })} style={{ ...inputStyle, width: '100%' }} placeholder={tc('inventory.ph_enter_product_name')} />
             </div>
 
             {/* SKU / Barcode */}
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>SKU / Barcode {editingRecognizedData.barcode_number ? '(auto-detected)' : ''}</label>
-              <input type="text" placeholder="e.g. 8718924509127" value={editingRecognizedData.sku || editingRecognizedData.barcode_number || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, sku: e.target.value })} style={{ ...inputStyle, width: '100%' }} />
-              {editingRecognizedData.barcode_detected && <div style={{ fontSize: 11, color: 'var(--pos-accent)', marginTop: 4 }}>✓ Barcode detected in image</div>}
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>{tc('inventory.sku_barcode_label')} {editingRecognizedData.barcode_number ? tc('inventory.auto_detected') : ''}</label>
+              <input type="text" placeholder={tc('inventory.ph_barcode_example')} value={editingRecognizedData.sku || editingRecognizedData.barcode_number || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, sku: e.target.value })} style={{ ...inputStyle, width: '100%' }} />
+              {editingRecognizedData.barcode_detected && <div style={{ fontSize: 11, color: 'var(--pos-accent)', marginTop: 4 }}>{tc('inventory.barcode_detected')}</div>}
             </div>
 
             {/* Cost price */}
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>Cost price (purchase price)</label>
-              <input type="number" placeholder="0.00" value={editingRecognizedData.cost_price || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, cost_price: e.target.value })} style={{ ...inputStyle, width: '100%' }} step="0.01" />
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>{tc('inventory.cost_price_label')}</label>
+              <input type="number" placeholder={tc('inventory.ph_price_zero')} value={editingRecognizedData.cost_price || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, cost_price: e.target.value })} style={{ ...inputStyle, width: '100%' }} step="0.01" />
             </div>
 
             {/* Sale price */}
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>Sale price (selling price)</label>
-              <input type="number" placeholder="0.00" value={editingRecognizedData.sale_price || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, sale_price: e.target.value })} style={{ ...inputStyle, width: '100%' }} step="0.01" />
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>{tc('inventory.sale_price_label')}</label>
+              <input type="number" placeholder={tc('inventory.ph_price_zero')} value={editingRecognizedData.sale_price || ''} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, sale_price: e.target.value })} style={{ ...inputStyle, width: '100%' }} step="0.01" />
             </div>
 
             {/* Quantity */}
             <div style={{ marginBottom: 20 }}>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>
-                Starting stock quantity {editingRecognizedData.unit === 'kg' ? '(kg)' : ''}
+                {editingRecognizedData.unit === 'kg' ? tc('inventory.starting_stock_label_kg') : tc('inventory.starting_stock_label')}
               </label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <input type="number" value={editingRecognizedData.stock_qty || 1} onChange={(e) => setEditingRecognizedData({ ...editingRecognizedData, stock_qty: e.target.value })} style={{ ...inputStyle, flex: 1 }} min="0" step={editingRecognizedData.unit === 'kg' ? '0.1' : '1'} />
                 {editingRecognizedData.unit === 'kg' && (
-                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-accent)', background: 'rgba(208,138,89,.1)', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(208,138,89,.2)', whiteSpace: 'nowrap' }}>kg</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-accent)', background: 'rgba(208,138,89,.1)', padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(208,138,89,.2)', whiteSpace: 'nowrap' }}>{tc('inventory.unit_kg')}</span>
                 )}
               </div>
             </div>
@@ -593,8 +595,8 @@ export default function InventoryPage() {
             {/* Margin preview */}
             {editingRecognizedData.cost_price && editingRecognizedData.sale_price && (
               <div style={{ background: '#f0f0f0', padding: 12, borderRadius: 8, marginBottom: 20, fontSize: 12 }}>
-                <div style={{ color: 'var(--pos-muted)', marginBottom: 4 }}>Margin: <strong style={{ color: 'var(--pos-accent)' }}>{((parseFloat(editingRecognizedData.sale_price) - parseFloat(editingRecognizedData.cost_price || 0)) / parseFloat(editingRecognizedData.sale_price || 1) * 100).toFixed(1)}%</strong></div>
-                <div style={{ color: '#999', fontSize: 11 }}>Profit per unit: {(parseFloat(editingRecognizedData.sale_price) - parseFloat(editingRecognizedData.cost_price || 0)).toFixed(2)}</div>
+                <div style={{ color: 'var(--pos-muted)', marginBottom: 4 }}>{tc('inventory.margin_label')} <strong style={{ color: 'var(--pos-accent)' }}>{((parseFloat(editingRecognizedData.sale_price) - parseFloat(editingRecognizedData.cost_price || 0)) / parseFloat(editingRecognizedData.sale_price || 1) * 100).toFixed(1)}%</strong></div>
+                <div style={{ color: '#999', fontSize: 11 }}>{tc('inventory.profit_per_unit', { amount: (parseFloat(editingRecognizedData.sale_price) - parseFloat(editingRecognizedData.cost_price || 0)).toFixed(2) })}</div>
               </div>
             )}
 
@@ -640,8 +642,8 @@ export default function InventoryPage() {
                   console.error('Error:', err)
                 }
                 setAddingProduct(false)
-              }} disabled={!editingRecognizedData.sale_price || addingProduct} className="pos-btn-primary" style={{ ...btnPrimary, flex: 1, opacity: !editingRecognizedData.sale_price || addingProduct ? 0.5 : 1 }}>{addingProduct ? 'Adding...' : 'Add to inventory'}</button>
-              <button onClick={() => { setEditingRecognizedIndex(null); setRecognizedProducts([]) }} style={btnSecondary}>Done</button>
+              }} disabled={!editingRecognizedData.sale_price || addingProduct} className="pos-btn-primary" style={{ ...btnPrimary, flex: 1, opacity: !editingRecognizedData.sale_price || addingProduct ? 0.5 : 1 }}>{addingProduct ? tc('inventory.adding') : tc('inventory.add_to_inventory')}</button>
+              <button onClick={() => { setEditingRecognizedIndex(null); setRecognizedProducts([]) }} style={btnSecondary}>{tc('inventory.done')}</button>
             </div>
           </div>
         </div>
@@ -654,7 +656,7 @@ export default function InventoryPage() {
           <input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search products..."
+            placeholder={tc('inventory.ph_search_products')}
             style={{ width: '100%', padding: '10px 12px 10px 36px', borderRadius: 10, border: '1.5px solid var(--pos-border)', fontSize: 14, fontFamily: 'inherit', background: 'var(--pos-surface)', color: 'var(--pos-ink)', boxSizing: 'border-box' }}
           />
           {searchQuery && (
@@ -666,10 +668,10 @@ export default function InventoryPage() {
       {/* Filter tabs */}
       <div style={{ display: 'flex', gap: 8, padding: '12px 20px', flexWrap: 'wrap' }}>
         {([
-          ['all', `All (${items.length})`, ACC],
-          ['low', `Low (${lowCount})`, '#ca8a04'],
-          ['out', `Out (${outCount})`, 'var(--pos-danger)'],
-          ['expiring', `Expiring (${expiredCount + expiringCount})`, 'var(--pos-warning)'],
+          ['all', tc('inventory.filter_all', { count: items.length }), ACC],
+          ['low', tc('inventory.filter_low', { count: lowCount }), '#ca8a04'],
+          ['out', tc('inventory.filter_out', { count: outCount }), 'var(--pos-danger)'],
+          ['expiring', tc('inventory.filter_expiring', { count: expiredCount + expiringCount }), 'var(--pos-warning)'],
         ] as [typeof filter, string, string][]).map(([f, label, color]) => (
           <button key={f} onClick={() => setFilter(f)} style={{ padding: '7px 14px', borderRadius: 9999, fontSize: 12, fontWeight: 600, cursor: 'pointer', background: filter === f ? color : '#fff', color: filter === f ? '#fff' : 'var(--pos-muted)', border: filter === f ? 'none' : '1px solid #e5e2dc' } as React.CSSProperties}>
             {label}
@@ -681,15 +683,15 @@ export default function InventoryPage() {
       <div style={{ flex: 1, padding: '4px 20px 32px', overflowY: 'auto' }}>
         {filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--pos-muted)', fontSize: 14 }}>
-            No items in this filter
+            {tc('inventory.empty_filter')}
           </div>
         ) : (
           filtered.map((item, idx) => {
             const isOut = item.stock_qty === 0
             const isLow = !isOut && item.stock_qty <= item.low_stock_threshold
-            const status = isOut ? { label: 'Out', color: 'var(--pos-danger)', bg: 'rgba(220,38,38,.08)' }
-                         : isLow ? { label: 'Low', color: '#ca8a04', bg: 'rgba(234,179,8,.08)' }
-                         :          { label: 'OK',  color: 'var(--pos-success)', bg: 'rgba(22,163,74,.08)' }
+            const status = isOut ? { label: tc('inventory.status_Out'), color: 'var(--pos-danger)', bg: 'rgba(220,38,38,.08)' }
+                         : isLow ? { label: tc('inventory.status_Low'), color: '#ca8a04', bg: 'rgba(234,179,8,.08)' }
+                         :          { label: tc('inventory.status_OK'),  color: 'var(--pos-success)', bg: 'rgba(22,163,74,.08)' }
             const daysToExpiry = item.expiry_date ? Math.floor((new Date(item.expiry_date).getTime() - todayMs) / 86400000) : null
             const isExpired = daysToExpiry !== null && daysToExpiry < 0
             const isExpiringSoon = daysToExpiry !== null && daysToExpiry >= 0 && daysToExpiry <= 30
@@ -700,12 +702,12 @@ export default function InventoryPage() {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 2 }}>
                       {item.name}
-                      {isExpired && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: 'var(--pos-danger)', background: 'rgba(220,38,38,.1)', padding: '2px 7px', borderRadius: 9999 }}>EXPIRED</span>}
-                      {isExpiringSoon && !isExpired && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: 'var(--pos-warning)', background: 'rgba(249,115,22,.1)', padding: '2px 7px', borderRadius: 9999 }}>EXP {daysToExpiry === 0 ? 'TODAY' : `${daysToExpiry}d`}</span>}
+                      {isExpired && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: 'var(--pos-danger)', background: 'rgba(220,38,38,.1)', padding: '2px 7px', borderRadius: 9999 }}>{tc('inventory.badge_expired')}</span>}
+                      {isExpiringSoon && !isExpired && <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, color: 'var(--pos-warning)', background: 'rgba(249,115,22,.1)', padding: '2px 7px', borderRadius: 9999 }}>{daysToExpiry === 0 ? tc('inventory.badge_exp_today') : tc('inventory.badge_exp_days', { days: daysToExpiry as number })}</span>}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>
-                      {sym}{item.sale_price.toFixed(2)} · {item.stock_qty}{item.unit === 'kg' ? ' kg' : ''} in stock
-                      {item.expiry_date && <span style={{ marginLeft: 6, color: isExpired ? 'var(--pos-danger)' : isExpiringSoon ? 'var(--pos-warning)' : 'var(--pos-hint)' }}>· Exp {new Date(item.expiry_date).toLocaleDateString('en-GB')}</span>}
+                      {sym}{item.sale_price.toFixed(2)} · {item.stock_qty}{item.unit === 'kg' ? ' kg' : ''} {tc('inventory.in_stock_suffix')}
+                      {item.expiry_date && <span style={{ marginLeft: 6, color: isExpired ? 'var(--pos-danger)' : isExpiringSoon ? 'var(--pos-warning)' : 'var(--pos-hint)' }}>{tc('inventory.exp_prefix', { date: new Date(item.expiry_date).toLocaleDateString('en-GB') })}</span>}
                     </div>
                     {(item.brand || item.supplier) && <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginTop: 1 }}>{[item.brand, item.supplier].filter(Boolean).join(' · ')}</div>}
                   </div>
@@ -713,7 +715,7 @@ export default function InventoryPage() {
                     <span style={{ fontSize: 11, fontWeight: 700, color: status.color, background: status.bg, padding: '3px 9px', borderRadius: 9999 }}>{status.label}</span>
                     <button onClick={() => { setRestocking(restocking === item.id ? null : item.id); setRestockQty(''); setUpdateMode('add') }}
                       style={{ padding: '7px 12px', borderRadius: 9, background: `rgba(208,138,89,.1)`, border: `1px solid rgba(208,138,89,.2)`, color: ACC, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                      Update stock
+                      {tc('inventory.update_stock_button')}
                     </button>
                   </div>
                 </div>
@@ -725,20 +727,24 @@ export default function InventoryPage() {
                       {(['add', 'set'] as const).map(mode => (
                         <button key={mode} onClick={() => { setUpdateMode(mode); setRestockQty('') }}
                           style={{ flex: 1, padding: '8px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', background: updateMode === mode ? ACC : 'transparent', color: updateMode === mode ? '#fff' : 'var(--pos-muted)', transition: 'all 0.15s' }}>
-                          {mode === 'add' ? '＋ Add stock' : '✎ Set total'}
+                          {mode === 'add' ? tc('inventory.mode_add') : tc('inventory.mode_set')}
                         </button>
                       ))}
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginBottom: 8 }}>
                       {updateMode === 'add'
-                        ? `Current: ${item.stock_qty}${item.unit === 'kg' ? ' kg' : ''} → will become ${(item.stock_qty + (parseFloat(restockQty) || 0)).toFixed(item.unit === 'kg' ? 2 : 0)}${item.unit === 'kg' ? ' kg' : ''}`
-                        : `Will override current stock (${item.stock_qty}${item.unit === 'kg' ? ' kg' : ''}) with new value`}
+                        ? (item.unit === 'kg'
+                            ? tc('inventory.add_preview_kg', { current: item.stock_qty, result: (item.stock_qty + (parseFloat(restockQty) || 0)).toFixed(2) })
+                            : tc('inventory.add_preview', { current: item.stock_qty, result: (item.stock_qty + (parseFloat(restockQty) || 0)).toFixed(0) }))
+                        : (item.unit === 'kg'
+                            ? tc('inventory.set_preview_kg', { current: item.stock_qty })
+                            : tc('inventory.set_preview', { current: item.stock_qty }))}
                     </div>
                     <div style={{ display: 'flex', gap: 10 }}>
                       <div style={{ flex: 1, position: 'relative' }}>
                         <input
                           type="number"
-                          placeholder={updateMode === 'add' ? `Qty to add${item.unit === 'kg' ? ' (kg)' : ''}` : `Set stock to${item.unit === 'kg' ? ' (kg)' : ''}`}
+                          placeholder={updateMode === 'add' ? (item.unit === 'kg' ? tc('inventory.ph_qty_to_add_kg') : tc('inventory.ph_qty_to_add')) : (item.unit === 'kg' ? tc('inventory.ph_set_stock_to_kg') : tc('inventory.ph_set_stock_to'))}
                           value={restockQty}
                           onChange={e => setRestockQty(e.target.value)}
                           step={item.unit === 'kg' ? '0.1' : '1'}
@@ -747,11 +753,11 @@ export default function InventoryPage() {
                           autoFocus
                         />
                         {item.unit === 'kg' && (
-                          <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 12, fontWeight: 700, color: 'var(--pos-accent)' }}>kg</span>
+                          <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 12, fontWeight: 700, color: 'var(--pos-accent)' }}>{tc('inventory.unit_kg')}</span>
                         )}
                       </div>
                       <button onClick={() => handleRestock(item)} style={{ padding: '10px 20px', borderRadius: 10, background: ACC, color: '#fff', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                        {updateMode === 'add' ? 'Add' : 'Set'}
+                        {updateMode === 'add' ? tc('inventory.btn_add') : tc('inventory.btn_set')}
                       </button>
                     </div>
                   </div>
