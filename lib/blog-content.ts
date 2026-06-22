@@ -774,6 +774,8 @@ export interface BlogPost {
   cta?: { heading?: string; body?: string; text?: string; href?: string }
   relatedSlugs: string[]
   i18n?: { hreflang: { lang: string; url: string }[] }
+  /** Optional byline; when absent the page shows the AskBiz Editorial Team. */
+  author?: { name: string; role?: string; bio?: string }
 }
 
 const ALL_POSTS = [
