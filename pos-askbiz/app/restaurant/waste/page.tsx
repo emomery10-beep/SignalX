@@ -2,19 +2,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#d08a59'
 
-const REASONS = [
-  { value: 'overcooked',   label: '🔥 Overcooked'   },
-  { value: 'expired',      label: '🗓️ Expired'       },
-  { value: 'dropped',      label: '💧 Dropped'       },
-  { value: 'returned',     label: '↩️ Returned'      },
-  { value: 'spoiled',      label: '🦠 Spoiled'       },
-  { value: 'overproduced', label: '📦 Overproduced'  },
-  { value: 'trimming',     label: '🔪 Prep Trimming' },
-  { value: 'other',        label: '📁 Other'         },
-]
+const NS = 'restaurant_waste.'
+
+const REASON_VALUES = ['overcooked','expired','dropped','returned','spoiled','overproduced','trimming','other']
+
+const buildReasons = (tc: (key: string, vars?: Record<string, string | number>) => string) =>
+  REASON_VALUES.map(value => ({ value, label: tc(NS + 'reason_' + value) }))
 
 const UNITS = ['portion','kg','g','litre','item']
 
@@ -45,7 +42,9 @@ const REASON_COLORS: Record<string, string> = {
 
 export default function WastePage() {
   const router   = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
+  const REASONS = buildReasons(tc)
   const [sym, setSym]     = useState('£')
   const [period, setPeriod] = useState(7)
   const [stage, setStage] = useState<Stage>('list')
@@ -198,20 +197,20 @@ export default function WastePage() {
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/restaurant')} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 18 }}>←</button>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 16, color: ACC }}>🗑️ Waste Log</div>
-          <div style={{ fontSize: 11, color: '#64748b' }}>Photo logging · Cost tracking · Trend analysis</div>
+          <div style={{ fontWeight: 700, fontSize: 16, color: ACC }}>{tc(NS + 'header_title')}</div>
+          <div style={{ fontSize: 11, color: '#64748b' }}>{tc(NS + 'header_subtitle')}</div>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           {[7, 30].map(d => (
             <button key={d} onClick={() => setPeriod(d)}
               style={{ background: period === d ? ACC : '#1e293b', border: `1px solid ${period === d ? ACC : '#334155'}`, color: period === d ? '#fff' : '#64748b', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>
-              {d}d
+              {tc(NS + 'days_short', { days: d })}
             </button>
           ))}
           {stage === 'list' && (
             <button onClick={() => setStage('add')}
               style={{ background: ACC, border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
-              + Log Waste
+              {tc(NS + 'log_waste_btn')}
             </button>
           )}
         </div>
@@ -226,10 +225,10 @@ export default function WastePage() {
             {summary && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 24 }}>
                 {[
-                  { label: 'Total Waste Cost',  value: `${sym}${summary.total_cost.toFixed(2)}`,    color: '#ef4444' },
-                  { label: 'Log Entries',        value: String(summary.total_entries),               color: '#94a3b8' },
-                  { label: 'Top Reason',         value: summary.by_reason[0]?.reason || '—',         color: '#f59e0b' },
-                  { label: '#1 Wasted Item',     value: summary.top_wasted_items[0]?.item_name || '—', color: ACC    },
+                  { label: tc(NS + 'kpi_total_waste_cost'),  value: `${sym}${summary.total_cost.toFixed(2)}`,    color: '#ef4444' },
+                  { label: tc(NS + 'kpi_log_entries'),        value: String(summary.total_entries),               color: '#94a3b8' },
+                  { label: tc(NS + 'kpi_top_reason'),         value: summary.by_reason[0] ? (REASONS.find(x => x.value === summary.by_reason[0].reason)?.label || summary.by_reason[0].reason) : '—', color: '#f59e0b' },
+                  { label: tc(NS + 'kpi_top_wasted_item'),     value: summary.top_wasted_items[0]?.item_name || '—', color: ACC    },
                 ].map(k => (
                   <div key={k.label} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: '14px 16px' }}>
                     <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>{k.label}</div>
@@ -242,7 +241,7 @@ export default function WastePage() {
             {/* By-reason breakdown */}
             {summary && summary.by_reason.length > 0 && (
               <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 16, marginBottom: 20 }}>
-                <div style={{ fontWeight: 600, fontSize: 13, color: '#94a3b8', marginBottom: 12 }}>Waste by Reason</div>
+                <div style={{ fontWeight: 600, fontSize: 13, color: '#94a3b8', marginBottom: 12 }}>{tc(NS + 'waste_by_reason')}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {summary.by_reason.map(r => {
                     const pct = summary.total_cost > 0 ? (r.total_cost / summary.total_cost) * 100 : 0
@@ -252,7 +251,7 @@ export default function WastePage() {
                       <div key={r.reason}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
                           <span>{label}</span>
-                          <span style={{ color, fontWeight: 600 }}>{sym}{r.total_cost.toFixed(2)} · {r.count} log{r.count !== 1 ? 's' : ''}</span>
+                          <span style={{ color, fontWeight: 600 }}>{sym}{r.total_cost.toFixed(2)} · {tc(NS + (r.count === 1 ? 'logs_count_one' : 'logs_count_other'), { count: r.count })}</span>
                         </div>
                         <div style={{ background: '#0f172a', borderRadius: 4, height: 6, overflow: 'hidden' }}>
                           <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 4, transition: 'width 0.4s ease' }} />
@@ -267,11 +266,11 @@ export default function WastePage() {
             {/* Top wasted items */}
             {summary && summary.top_wasted_items.length > 0 && (
               <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden', marginBottom: 20 }}>
-                <div style={{ padding: '12px 16px', fontWeight: 600, fontSize: 13, color: '#94a3b8' }}>Most Wasted Items</div>
+                <div style={{ padding: '12px 16px', fontWeight: 600, fontSize: 13, color: '#94a3b8' }}>{tc(NS + 'most_wasted_items')}</div>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: '#0f172a' }}>
-                      {['Item', 'Times', 'Qty', 'Cost'].map(h => (
+                      {[tc(NS + 'th_item'), tc(NS + 'th_times'), tc(NS + 'th_qty'), tc(NS + 'th_cost')].map(h => (
                         <th key={h} style={{ padding: '8px 16px', textAlign: 'left', fontSize: 11, color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>{h}</th>
                       ))}
                     </tr>
@@ -294,14 +293,14 @@ export default function WastePage() {
             {!loading && logs.length === 0 && (
               <div style={{ textAlign: 'center', padding: 60, color: '#64748b' }}>
                 <div style={{ fontSize: 40, marginBottom: 8 }}>🗑️</div>
-                <div style={{ fontSize: 16, marginBottom: 4 }}>No waste logged yet</div>
-                <div style={{ fontSize: 13 }}>Tap "Log Waste" or take a photo to start tracking.</div>
+                <div style={{ fontSize: 16, marginBottom: 4 }}>{tc(NS + 'empty_title')}</div>
+                <div style={{ fontSize: 13 }}>{tc(NS + 'empty_blurb')}</div>
               </div>
             )}
 
             {logs.length > 0 && (
               <div>
-                <div style={{ fontWeight: 600, fontSize: 13, color: '#64748b', marginBottom: 10 }}>Recent Entries</div>
+                <div style={{ fontWeight: 600, fontSize: 13, color: '#64748b', marginBottom: 10 }}>{tc(NS + 'recent_entries')}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {logs.slice(0, 30).map((log, idx) => {
                     const reasonLabel = REASONS.find(r => r.value === log.reason)?.label || log.reason
@@ -331,10 +330,10 @@ export default function WastePage() {
         {(stage === 'add' || stage === 'review') && (
           <div style={{ maxWidth: 480 }}>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>
-              {stage === 'review' ? '📸 Review Recognised Waste' : '🗑️ Log Waste Item'}
+              {stage === 'review' ? tc(NS + 'review_title') : tc(NS + 'add_title')}
             </div>
             <div style={{ fontSize: 13, color: '#64748b', marginBottom: 20 }}>
-              {stage === 'review' ? 'Claude identified this — adjust if needed before saving.' : 'Fill in what was wasted.'}
+              {stage === 'review' ? tc(NS + 'review_blurb') : tc(NS + 'add_blurb')}
             </div>
 
             {/* Photo option when in manual-add mode */}
@@ -342,50 +341,50 @@ export default function WastePage() {
               <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
                 <button onClick={openCamera}
                   style={{ flex: 1, background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9', padding: '10px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
-                  📷 Take Photo
+                  {tc(NS + 'take_photo')}
                 </button>
                 <button onClick={() => fileInputRef.current?.click()}
                   style={{ flex: 1, background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9', padding: '10px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
-                  📁 Upload
+                  {tc(NS + 'upload')}
                 </button>
                 <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFile} style={{ display: 'none' }} />
               </div>
             )}
 
             {preview && stage === 'review' && (
-              <img src={preview} alt="Waste" style={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 10, marginBottom: 16, border: '1px solid #334155' }} />
+              <img src={preview} alt={tc(NS + 'img_alt_waste')} style={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 10, marginBottom: 16, border: '1px solid #334155' }} />
             )}
 
             {recognized && stage === 'review' && (
               <div className="pos-reveal" style={{ background: 'rgba(208,138,89,0.08)', border: '1px solid rgba(208,138,89,0.2)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>
-                🤖 Claude says: <strong>{recognized.item_name}</strong> · {recognized.confidence}% confidence
+                {tc(NS + 'claude_says')} <strong>{recognized.item_name}</strong> · {tc(NS + 'confidence_pct', { confidence: recognized.confidence })}
                 {recognized.notes && <div style={{ color: '#94a3b8', marginTop: 2 }}>{recognized.notes}</div>}
               </div>
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Item Name *</label>
+                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_item_name')}</label>
                 <input value={form.item_name} onChange={e => setForm(f => ({ ...f, item_name: e.target.value }))}
-                  placeholder="e.g. Chicken Breast" style={inp} />
+                  placeholder={tc(NS + 'placeholder_item_name')} style={inp} />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Quantity *</label>
+                  <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_quantity')}</label>
                   <input type="number" step="0.1" min="0" value={form.qty}
                     onChange={e => setForm(f => ({ ...f, qty: e.target.value }))} style={inp} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Unit</label>
+                  <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_unit')}</label>
                   <select value={form.unit} onChange={e => setForm(f => ({ ...f, unit: e.target.value }))} style={inp}>
-                    {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                    {UNITS.map(u => <option key={u} value={u}>{tc(NS + 'unit_' + u)}</option>)}
                   </select>
                 </div>
               </div>
 
               <div>
-                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Reason</label>
+                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_reason')}</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
                   {REASONS.map(r => (
                     <button key={r.value} onClick={() => setForm(f => ({ ...f, reason: r.value }))}
@@ -397,32 +396,32 @@ export default function WastePage() {
               </div>
 
               <div>
-                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Cost per Unit ({sym})</label>
+                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_cost_per_unit', { sym })}</label>
                 <input type="number" step="0.01" min="0" value={form.cost_per_unit}
                   onChange={e => setForm(f => ({ ...f, cost_per_unit: e.target.value }))}
-                  placeholder="0.00 — leave blank to pull from menu" style={inp} />
+                  placeholder={tc(NS + 'placeholder_cost_per_unit')} style={inp} />
                 {estCost > 0 && (
                   <div style={{ fontSize: 12, color: '#ef4444', marginTop: 4 }}>
-                    Estimated waste cost: <strong>{sym}{estCost.toFixed(2)}</strong>
+                    {tc(NS + 'estimated_waste_cost')} <strong>{sym}{estCost.toFixed(2)}</strong>
                   </div>
                 )}
               </div>
 
               <div>
-                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Notes (optional)</label>
+                <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_notes')}</label>
                 <input value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                  placeholder="e.g. Left out too long, guest complaint..." style={inp} />
+                  placeholder={tc(NS + 'placeholder_notes')} style={inp} />
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
               <button onClick={cancelAdd}
                 style={{ flex: 1, background: '#334155', border: 'none', color: '#94a3b8', padding: '11px', borderRadius: 8, cursor: 'pointer' }}>
-                Cancel
+                {tc(NS + 'cancel')}
               </button>
               <button onClick={save} disabled={saving || !form.item_name} className="pos-btn-primary"
                 style={{ flex: 2, background: '#ef4444', border: 'none', color: '#fff', padding: '11px', borderRadius: 8, cursor: saving || !form.item_name ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 14, opacity: saving || !form.item_name ? 0.5 : 1 }}>
-                {saving ? 'Saving...' : '🗑️ Log Waste'}
+                {saving ? tc(NS + 'saving') : tc(NS + 'log_waste_submit')}
               </button>
             </div>
           </div>
@@ -434,9 +433,9 @@ export default function WastePage() {
             <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <button onClick={() => { closeCamera(); setStage('add') }}
                 style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>
-                ✕ Cancel
+                {tc(NS + 'camera_cancel')}
               </button>
-              <div style={{ flex: 1, textAlign: 'center', color: '#fff', fontSize: 13 }}>Point at the waste item</div>
+              <div style={{ flex: 1, textAlign: 'center', color: '#fff', fontSize: 13 }}>{tc(NS + 'camera_point')}</div>
             </div>
             <video ref={videoRef} playsInline muted style={{ flex: 1, objectFit: 'cover', width: '100%' }} />
             <canvas ref={canvasRef} style={{ display: 'none' }} />
@@ -453,11 +452,11 @@ export default function WastePage() {
         {stage === 'recognize' && (
           <div style={{ textAlign: 'center', padding: '60px 20px' }}>
             {preview && (
-              <img src={preview} alt="Waste" style={{ maxWidth: 240, borderRadius: 12, marginBottom: 24, border: '2px solid #334155', maxHeight: 180, objectFit: 'cover' }} />
+              <img src={preview} alt={tc(NS + 'img_alt_waste')} style={{ maxWidth: 240, borderRadius: 12, marginBottom: 24, border: '2px solid #334155', maxHeight: 180, objectFit: 'cover' }} />
             )}
             <div style={{ fontSize: 32, marginBottom: 12 }}>🤖</div>
-            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Identifying waste item...</div>
-            <div style={{ fontSize: 13, color: '#64748b' }}>Claude is analysing the photo</div>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>{tc(NS + 'recognize_heading')}</div>
+            <div style={{ fontSize: 13, color: '#64748b' }}>{tc(NS + 'recognize_blurb')}</div>
           </div>
         )}
       </div>

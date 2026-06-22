@@ -2,6 +2,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
+
+type Tc = (key: string, vars?: Record<string, string | number>) => string
 
 const ACCENT = '#d08a59'
 
@@ -29,27 +32,21 @@ interface FormData {
   locationId: string | null
 }
 
-const ROLE_CONFIG: Record<FactoryRole, { label: string; permissions: Permission[] }> = {
-  worker: {
-    label: '👷 Worker',
-    permissions: ['camera.output', 'camera.wastage'],
-  },
-  supervisor: {
-    label: '👔 Supervisor',
-    permissions: ['camera.output', 'camera.wastage', 'capture.approve'],
-  },
-  manager: {
-    label: '🎯 Manager',
-    permissions: ['camera.output', 'camera.wastage', 'capture.approve', 'data.export', 'settings.manage'],
-  },
+const ROLE_PERMISSIONS: Record<FactoryRole, Permission[]> = {
+  worker: ['camera.output', 'camera.wastage'],
+  supervisor: ['camera.output', 'camera.wastage', 'capture.approve'],
+  manager: ['camera.output', 'camera.wastage', 'capture.approve', 'data.export', 'settings.manage'],
 }
 
-const PERMISSION_LABELS: Record<Permission, string> = {
-  'camera.output': '📸 Capture Production Photos',
-  'camera.wastage': '🗑️ Log Wastage',
-  'capture.approve': '✅ Approve Captures',
-  'data.export': '📊 Export Data',
-  'settings.manage': '⚙️ Manage Settings',
+const ROLE_ORDER: FactoryRole[] = ['worker', 'supervisor', 'manager']
+const PERMISSION_ORDER: Permission[] = ['camera.output', 'camera.wastage', 'capture.approve', 'data.export', 'settings.manage']
+
+function roleLabel(tc: Tc, role: FactoryRole): string {
+  return tc('factory_staff.role_' + role + '_label')
+}
+
+function permissionLabel(tc: Tc, perm: Permission): string {
+  return tc('factory_staff.perm_' + perm.replace('.', '_') + '_label')
 }
 
 function IconArrowLeft({ size = 20 }: { size?: number }) {
@@ -71,6 +68,7 @@ function IconPlus({ size = 20 }: { size?: number }) {
 
 export default function FactoryStaffPage() {
   const router = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [loading, setLoading] = useState(true)
   const [staff, setStaff] = useState<StaffMember[]>([])
@@ -104,11 +102,11 @@ export default function FactoryStaffPage() {
       setLocations(locData.locations || [])
     } catch (e) {
       console.error(e)
-      setError('Failed to load staff data')
+      setError(tc('factory_staff.error_load_failed'))
     } finally {
       setLoading(false)
     }
-  }, [session])
+  }, [session, tc])
 
   useEffect(() => {
     if (!authReady || !session) return
@@ -119,7 +117,7 @@ export default function FactoryStaffPage() {
     setForm({
       ...form,
       role: newRole,
-      permissions: ROLE_CONFIG[newRole].permissions,
+      permissions: ROLE_PERMISSIONS[newRole],
     })
   }
 
@@ -135,7 +133,7 @@ export default function FactoryStaffPage() {
     setError('')
 
     if (!form.name.trim() || !form.email.trim()) {
-      setError('Name and email are required')
+      setError(tc('factory_staff.error_name_email_required'))
       return
     }
 
@@ -157,7 +155,7 @@ export default function FactoryStaffPage() {
 
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || 'Failed to add staff member')
+        setError(data.error || tc('factory_staff.error_add_failed'))
         return
       }
 
@@ -173,7 +171,7 @@ export default function FactoryStaffPage() {
       setShowForm(false)
       await loadStaff()
     } catch (err) {
-      setError('Network error — please try again')
+      setError(tc('factory_staff.error_network'))
     } finally {
       setSubmitting(false)
     }
@@ -210,8 +208,8 @@ export default function FactoryStaffPage() {
             <IconArrowLeft size={18} />
           </button>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: ACCENT }}>👥 Factory Staff</div>
-            <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>Manage team & assign permissions</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: ACCENT }}>{tc('factory_staff.header_title')}</div>
+            <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>{tc('factory_staff.header_subtitle')}</div>
           </div>
         </div>
         <button
@@ -231,7 +229,7 @@ export default function FactoryStaffPage() {
           }}
         >
           <IconPlus size={18} />
-          Add Staff
+          {tc('factory_staff.add_staff')}
         </button>
       </div>
 
@@ -239,7 +237,7 @@ export default function FactoryStaffPage() {
         {/* Add Staff Form */}
         {showForm && (
           <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 14, padding: 20, marginBottom: 20 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: ACCENT }}>Add New Staff Member</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: ACCENT }}>{tc('factory_staff.form_title')}</h3>
 
             {error && (
               <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '12px 14px', marginBottom: 16, fontSize: 13, color: '#ef4444' }}>
@@ -251,12 +249,12 @@ export default function FactoryStaffPage() {
               {/* Name & Email */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 6 }}>Name *</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 6 }}>{tc('factory_staff.form_name_label')}</label>
                   <input
                     type="text"
                     value={form.name}
                     onChange={e => setForm({ ...form, name: e.target.value })}
-                    placeholder="e.g., John Operator"
+                    placeholder={tc('factory_staff.form_name_placeholder')}
                     style={{
                       width: '100%',
                       background: '#0f172a',
@@ -271,12 +269,12 @@ export default function FactoryStaffPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 6 }}>Email *</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 6 }}>{tc('factory_staff.form_email_label')}</label>
                   <input
                     type="email"
                     value={form.email}
                     onChange={e => setForm({ ...form, email: e.target.value })}
-                    placeholder="john@factory.local"
+                    placeholder={tc('factory_staff.form_email_placeholder')}
                     style={{
                       width: '100%',
                       background: '#0f172a',
@@ -295,12 +293,12 @@ export default function FactoryStaffPage() {
               {/* Phone & Location */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 6 }}>Phone</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 6 }}>{tc('factory_staff.form_phone_label')}</label>
                   <input
                     type="tel"
                     value={form.phone}
                     onChange={e => setForm({ ...form, phone: e.target.value })}
-                    placeholder="+1 234 567 8900"
+                    placeholder={tc('factory_staff.form_phone_placeholder')}
                     style={{
                       width: '100%',
                       background: '#0f172a',
@@ -315,7 +313,7 @@ export default function FactoryStaffPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 6 }}>Location</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 6 }}>{tc('factory_staff.form_location_label')}</label>
                   <select
                     value={form.locationId || ''}
                     onChange={e => setForm({ ...form, locationId: e.target.value || null })}
@@ -331,7 +329,7 @@ export default function FactoryStaffPage() {
                       boxSizing: 'border-box',
                     }}
                   >
-                    <option value="">Select location...</option>
+                    <option value="">{tc('factory_staff.form_location_select')}</option>
                     {locations.map(loc => (
                       <option key={loc.id} value={loc.id}>
                         {loc.name}
@@ -343,9 +341,9 @@ export default function FactoryStaffPage() {
 
               {/* Role Selection */}
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 10 }}>Factory Role *</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 10 }}>{tc('factory_staff.form_role_label')}</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-                  {(Object.entries(ROLE_CONFIG) as Array<[FactoryRole, typeof ROLE_CONFIG[FactoryRole]]>).map(([role, config]) => (
+                  {ROLE_ORDER.map(role => (
                     <button
                       key={role}
                       type="button"
@@ -362,7 +360,7 @@ export default function FactoryStaffPage() {
                         transition: 'all 150ms',
                       }}
                     >
-                      {config.label}
+                      {roleLabel(tc, role)}
                     </button>
                   ))}
                 </div>
@@ -370,9 +368,9 @@ export default function FactoryStaffPage() {
 
               {/* Permissions */}
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 10 }}>Permissions</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 10 }}>{tc('factory_staff.form_permissions_label')}</label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {(Object.entries(PERMISSION_LABELS) as Array<[Permission, string]>).map(([perm, label]) => (
+                  {PERMISSION_ORDER.map(perm => (
                     <label key={perm} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
                       <input
                         type="checkbox"
@@ -380,7 +378,7 @@ export default function FactoryStaffPage() {
                         onChange={e => handlePermissionChange(perm, e.target.checked)}
                         style={{ width: 18, height: 18, cursor: 'pointer' }}
                       />
-                      <span style={{ fontSize: 14, color: '#e2e8f0' }}>{label}</span>
+                      <span style={{ fontSize: 14, color: '#e2e8f0' }}>{permissionLabel(tc, perm)}</span>
                     </label>
                   ))}
                 </div>
@@ -404,7 +402,7 @@ export default function FactoryStaffPage() {
                     opacity: submitting ? 0.5 : 1,
                   }}
                 >
-                  {submitting ? 'Adding...' : 'Add Staff Member'}
+                  {submitting ? tc('factory_staff.form_submitting') : tc('factory_staff.form_submit')}
                 </button>
                 <button
                   type="button"
@@ -421,7 +419,7 @@ export default function FactoryStaffPage() {
                     cursor: 'pointer',
                   }}
                 >
-                  Cancel
+                  {tc('factory_staff.form_cancel')}
                 </button>
               </div>
             </form>
@@ -431,15 +429,15 @@ export default function FactoryStaffPage() {
         {/* Staff List */}
         <div>
           <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12, color: ACCENT }}>
-            Team Members ({staff.length})
+            {tc('factory_staff.list_title', { count: staff.length })}
           </h3>
 
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>Loading staff...</div>
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>{tc('factory_staff.list_loading')}</div>
           ) : staff.length === 0 ? (
             <div style={{ background: '#1e293b', border: '1px dashed #334155', borderRadius: 14, padding: '40px 20px', textAlign: 'center', color: '#94a3b8' }}>
-              <div style={{ fontSize: 14, marginBottom: 8 }}>No staff members yet</div>
-              <div style={{ fontSize: 12, color: '#64748b' }}>Click "Add Staff" to create the first team member</div>
+              <div style={{ fontSize: 14, marginBottom: 8 }}>{tc('factory_staff.list_empty_title')}</div>
+              <div style={{ fontSize: 12, color: '#64748b' }}>{tc('factory_staff.list_empty_subtitle')}</div>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -464,12 +462,12 @@ export default function FactoryStaffPage() {
                   </div>
 
                   <div>
-                    <div style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Role</div>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: ACCENT }}>{ROLE_CONFIG[member.role].label}</div>
+                    <div style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{tc('factory_staff.member_role_label')}</div>
+                    <div style={{ fontWeight: 700, fontSize: 14, color: ACCENT }}>{roleLabel(tc, member.role)}</div>
                   </div>
 
                   <div>
-                    <div style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Permissions</div>
+                    <div style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{tc('factory_staff.member_permissions_label')}</div>
                     <div style={{ fontSize: 12, color: '#e2e8f0' }}>
                       {member.permissions.length > 0 ? (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
@@ -480,7 +478,7 @@ export default function FactoryStaffPage() {
                           ))}
                         </div>
                       ) : (
-                        <span style={{ color: '#94a3b8' }}>None</span>
+                        <span style={{ color: '#94a3b8' }}>{tc('factory_staff.member_permissions_none')}</span>
                       )}
                     </div>
                   </div>

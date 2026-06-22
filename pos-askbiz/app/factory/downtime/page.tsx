@@ -2,6 +2,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
+
+type Tc = (key: string, vars?: Record<string, string | number>) => string
 
 const tokens = {
   bg:      'var(--pos-bg)',
@@ -31,20 +34,22 @@ interface ActiveDowntime {
   start_photo_url: string
 }
 
-const REASONS: { id: string; label: string; icon: string; color: string }[] = [
-  { id: 'breakdown',          label: 'Breakdown',          icon: '🔧', color: tokens.danger    },
-  { id: 'changeover',         label: 'Changeover',         icon: '🔄', color: tokens.warning  },
-  { id: 'no_materials',       label: 'No Materials',       icon: '📦', color: tokens.warning  },
-  { id: 'quality_hold',       label: 'Quality Hold',       icon: '🚫', color: '#8b5cf6' },
-  { id: 'planned_maintenance',label: 'Maintenance',        icon: '🛠️', color: '#3b82f6' },
-  { id: 'other',              label: 'Other',              icon: '❓', color: '#64748b' },
-]
+function buildReasons(tc: Tc): { id: string; label: string; icon: string; color: string }[] {
+  return [
+    { id: 'breakdown',          label: tc('factory_downtime.reason_breakdown'),          icon: '🔧', color: tokens.danger    },
+    { id: 'changeover',         label: tc('factory_downtime.reason_changeover'),         icon: '🔄', color: tokens.warning  },
+    { id: 'no_materials',       label: tc('factory_downtime.reason_no_materials'),       icon: '📦', color: tokens.warning  },
+    { id: 'quality_hold',       label: tc('factory_downtime.reason_quality_hold'),       icon: '🚫', color: '#8b5cf6' },
+    { id: 'planned_maintenance',label: tc('factory_downtime.reason_planned_maintenance'),icon: '🛠️', color: '#3b82f6' },
+    { id: 'other',              label: tc('factory_downtime.reason_other'),              icon: '❓', color: '#64748b' },
+  ]
+}
 
-function elapsedLabel(iso: string) {
+function elapsedLabel(tc: Tc, iso: string) {
   const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000)
-  if (mins < 1)  return 'just now'
-  if (mins < 60) return `${mins}m`
-  return `${Math.floor(mins / 60)}h ${mins % 60}m`
+  if (mins < 1)  return tc('factory_downtime.elapsed_just_now')
+  if (mins < 60) return tc('factory_downtime.elapsed_minutes', { count: mins })
+  return tc('factory_downtime.elapsed_hours', { hours: Math.floor(mins / 60), mins: mins % 60 })
 }
 
 function IconArrowLeft({ size = 18 }: { size?: number }) {
@@ -55,8 +60,10 @@ function IconArrowLeft({ size = 18 }: { size?: number }) {
 
 export default function DowntimePage() {
   const router = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [stage, setStage]         = useState<Stage>('active_check')
+  const REASONS = buildReasons(tc)
 
   // Active downtime events (currently open)
   const [activeEvents, setActiveEvents]     = useState<ActiveDowntime[]>([])
@@ -114,10 +121,10 @@ export default function DowntimePage() {
       if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play() }
       setCameraOn(true)
     } catch (err: any) {
-      setCameraErr(err?.name === 'NotAllowedError' ? 'Camera access denied' : 'Camera unavailable')
+      setCameraErr(err?.name === 'NotAllowedError' ? tc('factory_downtime.camera_access_denied') : tc('factory_downtime.camera_unavailable'))
       setCameraOn(false)
     }
-  }, [])
+  }, [tc])
 
   function stopCamera() {
     streamRef.current?.getTracks().forEach(t => t.stop())
@@ -167,14 +174,14 @@ export default function DowntimePage() {
       })
       if (!res.ok) {
         const d = await res.json()
-        setSaveError(d.error || 'Failed to submit')
+        setSaveError(d.error || tc('factory_downtime.error_failed_submit'))
         setStage('machine_name')
         return
       }
       await loadActive()
       setStage('success')
     } catch {
-      setSaveError('Network error — try again')
+      setSaveError(tc('factory_downtime.error_network'))
       setStage('machine_name')
     }
   }
@@ -190,14 +197,14 @@ export default function DowntimePage() {
         body: JSON.stringify({ id: closingEvent.id, image: photo }),
       })
       if (!res.ok) {
-        setSaveError('Failed to close event')
+        setSaveError(tc('factory_downtime.error_failed_close'))
         setStage('active_check')
         return
       }
       await loadActive()
       setStage('close_success')
     } catch {
-      setSaveError('Network error — try again')
+      setSaveError(tc('factory_downtime.error_network'))
       setStage('active_check')
     }
   }
@@ -228,8 +235,8 @@ export default function DowntimePage() {
           <IconArrowLeft />
         </button>
         <div>
-          <div style={{ fontWeight: 800, fontSize: 18, color: tokens.danger }}>Machine Downtime</div>
-          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>Track stops & build OEE</div>
+          <div style={{ fontWeight: 800, fontSize: 18, color: tokens.danger }}>{tc('factory_downtime.active_title')}</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>{tc('factory_downtime.active_subtitle')}</div>
         </div>
       </div>
 
@@ -242,8 +249,8 @@ export default function DowntimePage() {
         >
           <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 26 }}>🔴</div>
           <div style={{ textAlign: 'left', flex: 1 }}>
-            <div style={{ fontWeight: 800, fontSize: 17, color: '#fff', lineHeight: 1.1 }}>Report Machine Down</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 3 }}>Photograph the stopped machine</div>
+            <div style={{ fontWeight: 800, fontSize: 17, color: '#fff', lineHeight: 1.1 }}>{tc('factory_downtime.active_report_cta_title')}</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 3 }}>{tc('factory_downtime.active_report_cta_subtitle')}</div>
           </div>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pos-muted)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
@@ -252,7 +259,7 @@ export default function DowntimePage() {
         <div style={{ marginBottom: 16 }}>
           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: tokens.danger, boxShadow: `0 0 0 3px rgba(239,68,68,0.25)`, animation: activeEvents.length > 0 ? 'pulse-dot 1.4s ease-in-out infinite' : 'none' }} />
-            Currently Down
+            {tc('factory_downtime.active_currently_down')}
             {activeEvents.length > 0 && <span style={{ background: 'rgba(239,68,68,0.15)', color: tokens.danger, borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>{activeEvents.length}</span>}
           </div>
 
@@ -262,8 +269,8 @@ export default function DowntimePage() {
             <div style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 14, padding: '20px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(34,197,94,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>✅</div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: tokens.success }}>All machines running</div>
-                <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 2 }}>No active downtime events</div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: tokens.success }}>{tc('factory_downtime.active_all_running_title')}</div>
+                <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 2 }}>{tc('factory_downtime.active_all_running_subtitle')}</div>
               </div>
             </div>
           ) : (
@@ -280,13 +287,13 @@ export default function DowntimePage() {
                       <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--pos-ink)' }}>{ev.machine_name}</div>
                         <div style={{ fontSize: 12, color: tokens.danger, marginTop: 2 }}>{r?.icon} {r?.label || ev.reason}</div>
-                        <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginTop: 3 }}>Down for {elapsedLabel(ev.started_at)}</div>
+                        <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginTop: 3 }}>{tc('factory_downtime.active_down_for', { duration: elapsedLabel(tc, ev.started_at) })}</div>
                       </div>
                     </div>
                     {/* Close button */}
                     <button onClick={() => { setClosingEvent(ev); setStage('close_viewfinder'); openCamera() }}
                       style={{ width: '100%', background: tokens.success, border: 'none', color: '#fff', padding: '12px', borderRadius: 10, cursor: 'pointer', fontWeight: 800, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                      📸 Machine Back Up — Close Event
+                      {tc('factory_downtime.active_close_event')}
                     </button>
                   </div>
                 )
@@ -328,10 +335,10 @@ export default function DowntimePage() {
         </button>
         <div>
           <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>
-            {isCloseFlow ? `${closingEvent?.machine_name} — Back Up` : 'Machine Down'}
+            {isCloseFlow ? tc('factory_downtime.viewfinder_back_up_title', { machine: closingEvent?.machine_name || '' }) : tc('factory_downtime.viewfinder_down_title')}
           </div>
           <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 2 }}>
-            {isCloseFlow ? 'Photograph the running machine' : 'Photograph the stopped machine'}
+            {isCloseFlow ? tc('factory_downtime.viewfinder_back_up_subtitle') : tc('factory_downtime.viewfinder_down_subtitle')}
           </div>
         </div>
       </div>
@@ -340,7 +347,7 @@ export default function DowntimePage() {
       {!isCloseFlow && (
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 56, height: 56, borderRadius: '50%', border: '2px solid rgba(239,68,68,0.7)', animation: 'ring-pulse 1.6s ease-out infinite' }} />
-          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, background: 'var(--pos-surface)', backdropFilter: 'blur(6px)', padding: '4px 12px', borderRadius: 20 }}>Frame the stopped machine</div>
+          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, background: 'var(--pos-surface)', backdropFilter: 'blur(6px)', padding: '4px 12px', borderRadius: 20 }}>{tc('factory_downtime.viewfinder_frame_hint')}</div>
         </div>
       )}
 
@@ -358,7 +365,7 @@ export default function DowntimePage() {
       </div>
 
       {cameraErr && (
-        <div style={{ position: 'absolute', bottom: 160, left: 20, right: 20, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', borderRadius: 12, padding: '12px 16px', color: '#fff', fontSize: 13, textAlign: 'center' }}>{cameraErr} — use gallery instead</div>
+        <div style={{ position: 'absolute', bottom: 160, left: 20, right: 20, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', borderRadius: 12, padding: '12px 16px', color: '#fff', fontSize: 13, textAlign: 'center' }}>{tc('factory_downtime.viewfinder_camera_error', { error: cameraErr })}</div>
       )}
 
       <style>{`
@@ -382,8 +389,8 @@ export default function DowntimePage() {
           <img src={photoUrl} alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', border: '2px solid rgba(239,68,68,0.5)', flexShrink: 0 }} />
         )}
         <div>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>Why is it stopped?</div>
-          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>Select the reason</div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>{tc('factory_downtime.reason_title')}</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>{tc('factory_downtime.reason_subtitle')}</div>
         </div>
       </div>
 
@@ -418,7 +425,7 @@ export default function DowntimePage() {
             <IconArrowLeft />
           </button>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 16 }}>Which machine?</div>
+            <div style={{ fontWeight: 700, fontSize: 16 }}>{tc('factory_downtime.machine_title')}</div>
             <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>
               {selectedReason?.icon} {selectedReason?.label}
             </div>
@@ -433,25 +440,32 @@ export default function DowntimePage() {
               <img src={photoUrl} alt="" style={{ width: 64, height: 64, borderRadius: 12, objectFit: 'cover', border: '2px solid rgba(239,68,68,0.5)', flexShrink: 0 }} />
             )}
             <div style={{ flex: 1, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, padding: '12px 14px' }}>
-              <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginBottom: 4 }}>Reason</div>
+              <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginBottom: 4 }}>{tc('factory_downtime.machine_reason_label')}</div>
               <div style={{ fontSize: 14, fontWeight: 700, color: selectedReason?.color }}>{selectedReason?.icon} {selectedReason?.label}</div>
             </div>
           </div>
 
           {/* Machine name input */}
           <div style={{ marginBottom: 28 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Machine name <span style={{ color: 'rgba(255,255,255,0.25)' }}>(optional)</span></div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('factory_downtime.machine_name_label')} <span style={{ color: 'rgba(255,255,255,0.25)' }}>{tc('factory_downtime.machine_name_optional')}</span></div>
             <input
               value={machineName}
               onChange={e => setMachineName(e.target.value)}
-              placeholder="e.g. Mixer 2, Cutter A, Line 3…"
+              placeholder={tc('factory_downtime.machine_name_placeholder')}
               style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${machineName ? 'rgba(239,68,68,0.5)' : 'var(--pos-border)'}`, borderRadius: 12, color: 'var(--pos-ink)', padding: '16px', fontSize: 16, outline: 'none', boxSizing: 'border-box' }}
             />
             {/* Quick name pills */}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-              {['Mixer', 'Cutter', 'Press', 'Conveyor', 'Packer', 'Boiler'].map(n => (
-                <button key={n} onClick={() => setMachineName(n)} style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.15)', background: machineName === n ? 'rgba(239,68,68,0.15)' : 'transparent', color: machineName === n ? tokens.danger : 'var(--pos-muted)', fontSize: 13, cursor: 'pointer' }}>
-                  {n}
+              {[
+                { value: 'Mixer',    label: tc('factory_downtime.machine_pill_mixer') },
+                { value: 'Cutter',   label: tc('factory_downtime.machine_pill_cutter') },
+                { value: 'Press',    label: tc('factory_downtime.machine_pill_press') },
+                { value: 'Conveyor', label: tc('factory_downtime.machine_pill_conveyor') },
+                { value: 'Packer',   label: tc('factory_downtime.machine_pill_packer') },
+                { value: 'Boiler',   label: tc('factory_downtime.machine_pill_boiler') },
+              ].map(n => (
+                <button key={n.value} onClick={() => setMachineName(n.value)} style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.15)', background: machineName === n.value ? 'rgba(239,68,68,0.15)' : 'transparent', color: machineName === n.value ? tokens.danger : 'var(--pos-muted)', fontSize: 13, cursor: 'pointer' }}>
+                  {n.label}
                 </button>
               ))}
             </div>
@@ -463,7 +477,7 @@ export default function DowntimePage() {
 
           <button onClick={submitDowntime}
             style={{ width: '100%', background: 'linear-gradient(135deg, #ef4444, #dc2626)', border: 'none', color: '#fff', padding: '16px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 17, boxShadow: '0 4px 20px rgba(239,68,68,0.3)' }}>
-            🔴 Report Machine Down
+            {tc('factory_downtime.machine_report_button')}
           </button>
         </div>
       </div>
@@ -476,7 +490,7 @@ export default function DowntimePage() {
   if (stage === 'submitting') return (
     <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ width: 48, height: 48, border: `4px solid rgba(239,68,68,0.3)`, borderTopColor: tokens.danger, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-      <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>Logging event…</div>
+      <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>{tc('factory_downtime.submitting_label')}</div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
@@ -494,24 +508,24 @@ export default function DowntimePage() {
         </div>
       </div>
       <div style={{ fontSize: 24, fontWeight: 800, marginBottom: 8 }}>
-        {isCloseSuccess ? 'Machine back up' : 'Downtime logged'}
+        {isCloseSuccess ? tc('factory_downtime.success_back_up_title') : tc('factory_downtime.success_down_title')}
       </div>
       <div style={{ fontSize: 14, color: 'var(--pos-muted)', marginBottom: 4 }}>
-        {isCloseSuccess ? 'Event closed — duration recorded' : 'Supervisor has been notified'}
+        {isCloseSuccess ? tc('factory_downtime.success_back_up_subtitle') : tc('factory_downtime.success_down_subtitle')}
       </div>
       <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginBottom: 40 }}>
-        {isCloseSuccess ? 'OEE Availability updated' : 'OEE Availability tracking started'}
+        {isCloseSuccess ? tc('factory_downtime.success_back_up_oee') : tc('factory_downtime.success_down_oee')}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 320 }}>
         {!isCloseSuccess && (
           <button onClick={() => { resetAll(); setStage('active_check') }}
             style={{ width: '100%', background: tokens.danger, border: 'none', color: '#fff', padding: '16px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 16 }}>
-            Report Another
+            {tc('factory_downtime.success_report_another')}
           </button>
         )}
         <button onClick={() => router.push('/factory')}
           style={{ width: '100%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', color: 'var(--pos-muted)', padding: '14px', borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 15 }}>
-          Back to Hub
+          {tc('factory_downtime.success_back_to_hub')}
         </button>
       </div>
     </div>
