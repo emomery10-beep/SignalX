@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#22c55e'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
@@ -16,6 +17,7 @@ type Stage = 'idle' | 'camera' | 'scanning' | 'error'
 
 export default function RetailStocktake() {
   const router = useRouter()
+  const { tc } = useLang()
   const supabase = createClient()
   const [ready, setReady] = useState(false)
   const [sym, setSym] = useState('£')
@@ -110,7 +112,7 @@ export default function RetailStocktake() {
       if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play() }
     } catch (e) {
       console.error('camera error', e)
-      setCamError('Camera unavailable — use "Choose photo" instead.')
+      setCamError(tc('retail_stocktake.camera_unavailable'))
       fileRef.current?.click()
     }
   }
@@ -135,7 +137,7 @@ export default function RetailStocktake() {
     reader.readAsDataURL(file)
   }
   async function recognize(dataUrl: string) {
-    setStage('scanning'); setScanMsg('Identifying products…')
+    setStage('scanning'); setScanMsg(tc('retail_stocktake.scan_identifying'))
     const base64 = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl
     try {
       const res = await fetch(`${API}/api/pos/recognize-inventory`, {
@@ -155,11 +157,11 @@ export default function RetailStocktake() {
         )
         if (found) { addRow(found); added++ }
       })
-      setScanMsg(added ? `Added ${added} product${added > 1 ? 's' : ''} to count` : 'No matching catalog products found')
+      setScanMsg(added ? (added > 1 ? tc('retail_stocktake.scan_added_plural', { count: added }) : tc('retail_stocktake.scan_added', { count: added })) : tc('retail_stocktake.scan_no_matches'))
       setShowScan(false); setStage('idle')
     } catch (e) {
       console.error('recognize error', e)
-      setCamError('Could not identify products. Try again or add manually.')
+      setCamError(tc('retail_stocktake.scan_error'))
       setStage('error')
     }
   }
@@ -181,15 +183,15 @@ export default function RetailStocktake() {
       if (res.ok && data) {
         const vv = Number(data.total_variance_value) || 0
         const sign = vv >= 0 ? '+' : '−'
-        setSubmitMsg(`${data.adjusted}/${data.total} adjusted ✓ · variance ${sign}${sym}${Math.abs(vv).toLocaleString(undefined, { maximumFractionDigits: 2 })}`)
+        setSubmitMsg(tc('retail_stocktake.submit_success', { adjusted: data.adjusted, total: data.total, variance: sign + sym + Math.abs(vv).toLocaleString(undefined, { maximumFractionDigits: 2 }) }))
         setRows([])
         await load()
       } else {
-        setSubmitMsg(data?.error || 'Could not save adjustments — please try again.')
+        setSubmitMsg(data?.error || tc('retail_stocktake.submit_save_error'))
       }
     } catch (e) {
       console.error('submit error', e)
-      setSubmitMsg('Submit failed. Please try again.')
+      setSubmitMsg(tc('retail_stocktake.submit_failed'))
     } finally { setSubmitting(false) }
   }
 
@@ -203,37 +205,37 @@ export default function RetailStocktake() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={() => router.push('/retail')} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>←</button>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>📦 Stocktake</div>
-            <div style={{ fontSize: 12, color: '#94a3b8' }}>Camera-assisted counting</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>📦 {tc('retail_stocktake.header_title')}</div>
+            <div style={{ fontSize: 12, color: '#94a3b8' }}>{tc('retail_stocktake.header_subtitle')}</div>
           </div>
         </div>
         <button onClick={() => { setShowScan(true); setStage('idle'); setScanMsg('') }} style={{ background: ACC, border: 'none', color: '#fff', padding: '10px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
-          📷 Scan Shelf
+          📷 {tc('retail_stocktake.scan_shelf_btn')}
         </button>
       </div>
 
       <div style={{ padding: '24px', maxWidth: 1100, margin: '0 auto' }}>
         {/* Summary cards */}
         <div className="pos-reveal" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12, marginBottom: 20 }}>
-          <SummaryCard label="Items in Count" value={`${rows.length}`} />
-          <SummaryCard label="Counted" value={`${countedRows.length}`} />
-          <SummaryCard label="Variance Units" value={`${varianceUnits > 0 ? '+' : ''}${varianceUnits}`} status={varianceUnits === 0 ? 'good' : 'warn'} />
-          <SummaryCard label="Variance Value" value={`${varianceValue < 0 ? '-' : ''}${sym}${Math.abs(varianceValue).toFixed(2)}`} status={varianceValue === 0 ? 'good' : 'bad'} />
+          <SummaryCard label={tc('retail_stocktake.summary_items_in_count')} value={`${rows.length}`} />
+          <SummaryCard label={tc('retail_stocktake.summary_counted')} value={`${countedRows.length}`} />
+          <SummaryCard label={tc('retail_stocktake.summary_variance_units')} value={`${varianceUnits > 0 ? '+' : ''}${varianceUnits}`} status={varianceUnits === 0 ? 'good' : 'warn'} />
+          <SummaryCard label={tc('retail_stocktake.summary_variance_value')} value={`${varianceValue < 0 ? '-' : ''}${sym}${Math.abs(varianceValue).toFixed(2)}`} status={varianceValue === 0 ? 'good' : 'bad'} />
         </div>
 
         {scanMsg && <div className="pos-banner" style={{ background: '#1e293b', border: `1px solid ${ACC}40`, borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#e2e8f0' }}>{scanMsg}</div>}
 
         {/* Add products */}
         <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 16, marginBottom: 16 }}>
-          <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 14 }}>Add products to count</div>
-          <input placeholder="Search to add an item…" value={search} onChange={e => setSearch(e.target.value)} style={{ ...inp, width: '100%' }} />
+          <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 14 }}>{tc('retail_stocktake.add_products_title')}</div>
+          <input placeholder={tc('retail_stocktake.search_placeholder')} value={search} onChange={e => setSearch(e.target.value)} style={{ ...inp, width: '100%' }} />
           {search && (
             <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {candidates.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>No matches — try a different name or SKU</div>}
+              {candidates.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>{tc('retail_stocktake.search_no_matches')}</div>}
               {candidates.map(i => (
                 <button key={i.id} onClick={() => { addRow(i); setSearch('') }} style={{ textAlign: 'left', background: '#0f172a', border: '1px solid #334155', borderRadius: 8, padding: '10px 14px', cursor: 'pointer', color: '#f1f5f9', display: 'flex', justifyContent: 'space-between' }}>
                   <span>{i.name} <span style={{ color: '#64748b' }}>{i.sku || ''}</span></span>
-                  <span style={{ color: ACC }}>+ Add</span>
+                  <span style={{ color: ACC }}>{tc('retail_stocktake.add_btn')}</span>
                 </button>
               ))}
             </div>
@@ -244,10 +246,10 @@ export default function RetailStocktake() {
         <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden', marginBottom: 16 }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr>
-              <th style={th}>Product</th><th style={th}>System</th><th style={th}>Counted</th><th style={th}>Variance</th><th style={th}></th>
+              <th style={th}>{tc('retail_stocktake.col_product')}</th><th style={th}>{tc('retail_stocktake.col_system')}</th><th style={th}>{tc('retail_stocktake.col_counted')}</th><th style={th}>{tc('retail_stocktake.col_variance')}</th><th style={th}></th>
             </tr></thead>
             <tbody>
-              {rows.length === 0 && <tr><td style={td} colSpan={5}><span style={{ color: '#64748b' }}>{loading ? 'Loading…' : 'No items yet — scan a shelf or search to add products.'}</span></td></tr>}
+              {rows.length === 0 && <tr><td style={td} colSpan={5}><span style={{ color: '#64748b' }}>{loading ? tc('retail_stocktake.loading') : tc('retail_stocktake.empty_rows')}</span></td></tr>}
               {rows.map((r, idx) => {
                 const sys = r.item.stock_qty ?? 0
                 const cnt = r.counted === '' ? null : parseInt(r.counted)
@@ -259,7 +261,7 @@ export default function RetailStocktake() {
                     <td style={td}>{sys}</td>
                     <td style={td}><input value={r.counted} onChange={e => setCount(r.item.id, e.target.value)} placeholder="—" inputMode="numeric" style={{ ...inp, width: 80, padding: '6px 8px' }} /></td>
                     <td style={td}>{diff == null ? <span style={{ color: '#64748b' }}>—</span> : <span style={{ fontWeight: 700, color: diff === 0 ? '#22c55e' : '#ef4444' }}>{diff > 0 ? '+' : ''}{diff}</span>}</td>
-                    <td style={td}><button onClick={() => removeRow(r.item.id)} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>Remove</button></td>
+                    <td style={td}><button onClick={() => removeRow(r.item.id)} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '6px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>{tc('retail_stocktake.remove_btn')}</button></td>
                   </tr>
                 )
               })}
@@ -270,7 +272,7 @@ export default function RetailStocktake() {
         {submitMsg && <div className="pos-banner" style={{ marginBottom: 12, fontSize: 13, color: submitMsg.includes('✓') ? '#22c55e' : '#f59e0b' }}>{submitMsg}</div>}
 
         <button className="pos-btn-primary" onClick={submitAdjustments} disabled={submitting || countedRows.length === 0} style={{ width: '100%', background: countedRows.length === 0 ? '#334155' : ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: countedRows.length === 0 ? 'not-allowed' : 'pointer', fontWeight: 700, fontSize: 15, opacity: submitting || countedRows.length === 0 ? 0.5 : 1 }}>
-          {submitting ? 'Saving…' : `Submit Adjustments (${countedRows.length})`}
+          {submitting ? tc('retail_stocktake.saving') : tc('retail_stocktake.submit_adjustments', { count: countedRows.length })}
         </button>
       </div>
 
@@ -282,15 +284,15 @@ export default function RetailStocktake() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 50 }} onClick={closeScan}>
           <div className="pos-sheet" onClick={e => e.stopPropagation()} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 16, padding: 24, width: '100%', maxWidth: 480 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, fontSize: 17, color: ACC }}>Scan Shelf</div>
+              <div style={{ fontWeight: 700, fontSize: 17, color: ACC }}>{tc('retail_stocktake.scan_modal_title')}</div>
               <button onClick={closeScan} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 20, cursor: 'pointer' }}>✕</button>
             </div>
 
             {stage === 'idle' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <button onClick={startCamera} style={{ background: ACC, border: 'none', color: '#fff', padding: '16px', borderRadius: 12, cursor: 'pointer', fontWeight: 700, fontSize: 16 }}>📷 Open Camera</button>
-                <button onClick={() => fileRef.current?.click()} style={{ background: '#334155', border: 'none', color: '#f1f5f9', padding: '14px', borderRadius: 12, cursor: 'pointer', fontSize: 14 }}>🖼️ Choose Photo</button>
-                <div style={{ color: '#64748b', fontSize: 12, textAlign: 'center', marginTop: 4 }}>Point at a shelf — recognised items are added to your count.</div>
+                <button onClick={startCamera} style={{ background: ACC, border: 'none', color: '#fff', padding: '16px', borderRadius: 12, cursor: 'pointer', fontWeight: 700, fontSize: 16 }}>📷 {tc('retail_stocktake.open_camera')}</button>
+                <button onClick={() => fileRef.current?.click()} style={{ background: '#334155', border: 'none', color: '#f1f5f9', padding: '14px', borderRadius: 12, cursor: 'pointer', fontSize: 14 }}>🖼️ {tc('retail_stocktake.choose_photo')}</button>
+                <div style={{ color: '#64748b', fontSize: 12, textAlign: 'center', marginTop: 4 }}>{tc('retail_stocktake.scan_hint')}</div>
               </div>
             )}
 
@@ -299,8 +301,8 @@ export default function RetailStocktake() {
                 <video ref={videoRef} playsInline muted style={{ width: '100%', borderRadius: 12, background: '#000', maxHeight: 360, objectFit: 'cover' }} />
                 {camError && <div style={{ color: '#f59e0b', fontSize: 13, marginTop: 10 }}>{camError}</div>}
                 <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-                  <button onClick={captureFrame} style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: 'pointer', fontWeight: 700 }}>Capture</button>
-                  <button onClick={() => { stopCamera(); setStage('idle') }} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '14px 20px', borderRadius: 12, cursor: 'pointer' }}>Cancel</button>
+                  <button onClick={captureFrame} style={{ flex: 1, background: ACC, border: 'none', color: '#fff', padding: '14px', borderRadius: 12, cursor: 'pointer', fontWeight: 700 }}>{tc('retail_stocktake.capture')}</button>
+                  <button onClick={() => { stopCamera(); setStage('idle') }} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '14px 20px', borderRadius: 12, cursor: 'pointer' }}>{tc('retail_stocktake.cancel')}</button>
                 </div>
               </div>
             )}
@@ -308,7 +310,7 @@ export default function RetailStocktake() {
             {stage === 'scanning' && (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
-                <div style={{ color: '#f1f5f9', fontWeight: 600 }}>{scanMsg || 'Identifying…'}</div>
+                <div style={{ color: '#f1f5f9', fontWeight: 600 }}>{scanMsg || tc('retail_stocktake.scanning_fallback')}</div>
               </div>
             )}
 
@@ -316,7 +318,7 @@ export default function RetailStocktake() {
               <div style={{ textAlign: 'center', padding: '24px 0' }}>
                 <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
                 <div style={{ color: '#f59e0b', fontSize: 14, marginBottom: 16 }}>{camError}</div>
-                <button onClick={() => setStage('idle')} style={{ background: ACC, border: 'none', color: '#fff', padding: '12px 24px', borderRadius: 10, cursor: 'pointer', fontWeight: 600 }}>Try Again</button>
+                <button onClick={() => setStage('idle')} style={{ background: ACC, border: 'none', color: '#fff', padding: '12px 24px', borderRadius: 10, cursor: 'pointer', fontWeight: 600 }}>{tc('retail_stocktake.try_again')}</button>
               </div>
             )}
           </div>

@@ -2,6 +2,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
+
+type Tc = (key: string, vars?: Record<string, string | number>) => string
 
 const ACC = '#6366f1'
 const GOOD = '#22c55e', WARN = '#f59e0b', BAD = '#ef4444', MUTED = '#94a3b8', DIM = '#64748b'
@@ -29,31 +32,23 @@ interface HistoryEntry { id: string; from_status: string | null; to_status: stri
 interface Part { id: string; name: string; qty: number; unit_cost: number; line_total: number }
 
 // Columns map to the real API statuses
-const COLUMNS: { key: string; label: string }[] = [
-  { key: 'intake', label: 'Intake' },
-  { key: 'quoted', label: 'Quoted' },
-  { key: 'accepted', label: 'Accepted' },
-  { key: 'in_progress', label: 'In Progress' },
-  { key: 'completed', label: 'Ready' },
-  { key: 'collected', label: 'Collected' },
-]
+const COLUMN_KEYS = ['intake', 'quoted', 'accepted', 'in_progress', 'completed', 'collected']
+const buildColumns = (tc: Tc): { key: string; label: string }[] =>
+  COLUMN_KEYS.map(key => ({ key, label: tc('repair_tickets.col_' + key) }))
+const statusLabel = (tc: Tc, status: string) => tc('repair_tickets.status_' + status)
 const STATUS_COLOR: Record<string, string> = {
   intake: MUTED, quoted: WARN, accepted: ACC, in_progress: '#8b5cf6',
   completed: GOOD, collected: GOOD, cancelled: BAD,
 }
-const STATUS_LABEL: Record<string, string> = {
-  intake: 'Intake', quoted: 'Quoted', accepted: 'Accepted',
-  in_progress: 'In Progress', completed: 'Ready', collected: 'Collected', cancelled: 'Cancelled',
-}
-// Valid forward transitions (mirrors the API)
-const NEXT_STATUS: Record<string, { value: string; label: string }[]> = {
-  intake: [{ value: 'quoted', label: 'Send Quote' }, { value: 'cancelled', label: 'Cancel' }],
-  quoted: [{ value: 'accepted', label: 'Accept' }, { value: 'cancelled', label: 'Cancel' }],
-  accepted: [{ value: 'in_progress', label: 'Start Repair' }, { value: 'cancelled', label: 'Cancel' }],
-  in_progress: [{ value: 'completed', label: 'Mark Ready' }],
-  completed: [{ value: 'collected', label: 'Collect' }, { value: 'in_progress', label: 'Re-open' }],
+// Valid forward transitions (mirrors the API); label key suffix → tc('repair_tickets.action_*')
+const NEXT_STATUS: Record<string, { value: string; labelKey: string }[]> = {
+  intake: [{ value: 'quoted', labelKey: 'send_quote' }, { value: 'cancelled', labelKey: 'cancel' }],
+  quoted: [{ value: 'accepted', labelKey: 'accept' }, { value: 'cancelled', labelKey: 'cancel' }],
+  accepted: [{ value: 'in_progress', labelKey: 'start_repair' }, { value: 'cancelled', labelKey: 'cancel' }],
+  in_progress: [{ value: 'completed', labelKey: 'mark_ready' }],
+  completed: [{ value: 'collected', labelKey: 'collect' }, { value: 'in_progress', labelKey: 'reopen' }],
   collected: [],
-  cancelled: [{ value: 'intake', label: 'Re-open' }],
+  cancelled: [{ value: 'intake', labelKey: 'reopen' }],
 }
 
 function daysOpen(iso: string) { return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)) }
@@ -62,6 +57,7 @@ function fmtDate(iso: string) { return new Date(iso).toLocaleString('en-GB', { d
 export default function RepairTickets() {
   const router = useRouter()
   const { session, ready: authReady } = usePosAuth()
+  const { tc } = useLang()
   const [sym, setSym] = useState('£')
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
@@ -126,11 +122,11 @@ export default function RepairTickets() {
         body: JSON.stringify({ id: selected.id, status }),
       })
       const data = await res.json()
-      if (!res.ok) { setDetailError(data.error || 'Failed to update'); setUpdating(false); return }
+      if (!res.ok) { setDetailError(data.error || tc('repair_tickets.failed_to_update')); setUpdating(false); return }
       setSelected(data.job)
       setJobs(prev => prev.map(j => j.id === data.job.id ? { ...j, ...data.job } : j))
       openDetail(data.job)
-    } catch { setDetailError('Failed to update. Check connection.') }
+    } catch { setDetailError(tc('repair_tickets.failed_to_update_conn')) }
     setUpdating(false)
   }
 
@@ -142,8 +138,9 @@ export default function RepairTickets() {
   })
 
   const card: React.CSSProperties = { background: '#1e293b', border: '1px solid #334155', borderRadius: 12 }
+  const COLUMNS = buildColumns(tc)
 
-  if (!authReady) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: MUTED, fontFamily: 'system-ui, sans-serif' }}>Loading…</div>
+  if (!authReady) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: MUTED, fontFamily: 'system-ui, sans-serif' }}>{tc('repair_tickets.loading')}</div>
 
   return (
     <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
@@ -151,13 +148,13 @@ export default function RepairTickets() {
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/repair')} style={{ background: '#334155', border: 'none', color: MUTED, width: 36, height: 36, borderRadius: 8, cursor: 'pointer', fontSize: 16 }}>←</button>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: ACC }}>🔧 Tickets</div>
-          <div style={{ fontSize: 12, color: MUTED }}>{filtered.length} repair ticket{filtered.length === 1 ? '' : 's'}</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: ACC }}>{tc('repair_tickets.header_title')}</div>
+          <div style={{ fontSize: 12, color: MUTED }}>{filtered.length === 1 ? tc('repair_tickets.ticket_count_one', { count: filtered.length }) : tc('repair_tickets.ticket_count_other', { count: filtered.length })}</div>
         </div>
         <div style={{ display: 'flex', background: '#0f172a', borderRadius: 8, padding: 3, gap: 2 }}>
           {(['board', 'list'] as const).map(v => (
             <button key={v} onClick={() => setView(v)} style={{ padding: '6px 14px', borderRadius: 6, border: 'none', background: view === v ? ACC : 'transparent', color: view === v ? '#fff' : MUTED, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-              {v === 'board' ? 'Board' : 'List'}
+              {v === 'board' ? tc('repair_tickets.view_board') : tc('repair_tickets.view_list')}
             </button>
           ))}
         </div>
@@ -165,13 +162,13 @@ export default function RepairTickets() {
 
       {/* Search */}
       <div style={{ padding: '14px 20px 0' }}>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by customer, device, serial or ticket #…"
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder={tc('repair_tickets.search_placeholder')}
           style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1px solid #334155', background: '#1e293b', color: '#f1f5f9', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
       </div>
 
       <div style={{ padding: 20 }}>
-        {loading && jobs.length === 0 && <div style={{ color: DIM, fontSize: 13 }}>Loading tickets…</div>}
-        {!loading && filtered.length === 0 && <div style={{ color: DIM, fontSize: 13, textAlign: 'center', padding: '40px 0' }}>No tickets match. <button onClick={() => router.push('/repair/intake')} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 13 }}>Start a new intake →</button></div>}
+        {loading && jobs.length === 0 && <div style={{ color: DIM, fontSize: 13 }}>{tc('repair_tickets.loading_tickets')}</div>}
+        {!loading && filtered.length === 0 && <div style={{ color: DIM, fontSize: 13, textAlign: 'center', padding: '40px 0' }}>{tc('repair_tickets.no_tickets_match')} <button onClick={() => router.push('/repair/intake')} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 13 }}>{tc('repair_tickets.start_new_intake')}</button></div>}
 
         {/* BOARD VIEW */}
         {view === 'board' && filtered.length > 0 && (
@@ -188,16 +185,16 @@ export default function RepairTickets() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {colJobs.map((j, idx) => (
                       <button key={j.id} onClick={() => openDetail(j)} className="pos-item" style={{ ...card, padding: '12px 14px', textAlign: 'left', cursor: 'pointer', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: '#f1f5f9' }}>{j.device_model || 'Unknown device'}</div>
-                        <div style={{ fontSize: 11, color: MUTED, marginTop: 3 }}>{j.customer_name || 'Walk-in'} · #{j.ticket_number}</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: '#f1f5f9' }}>{j.device_model || tc('repair_tickets.unknown_device')}</div>
+                        <div style={{ fontSize: 11, color: MUTED, marginTop: 3 }}>{j.customer_name || tc('repair_tickets.walk_in')} · #{j.ticket_number}</div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 11, color: DIM }}>
-                          <span>{daysOpen(j.created_at)}d open</span>
+                          <span>{tc('repair_tickets.days_open', { days: daysOpen(j.created_at) })}</span>
                           {j.quoted_price ? <span style={{ color: ACC }}>{sym}{Number(j.quoted_price).toFixed(2)}</span> : null}
                         </div>
                         {j.assigned_staff && <div style={{ fontSize: 10, color: DIM, marginTop: 4 }}>👤 {j.assigned_staff.name}</div>}
                       </button>
                     ))}
-                    {colJobs.length === 0 && <div style={{ fontSize: 11, color: DIM, textAlign: 'center', padding: '12px 0' }}>No tickets here</div>}
+                    {colJobs.length === 0 && <div style={{ fontSize: 11, color: DIM, textAlign: 'center', padding: '12px 0' }}>{tc('repair_tickets.no_tickets_here')}</div>}
                   </div>
                 </div>
               )
@@ -211,12 +208,12 @@ export default function RepairTickets() {
             {filtered.map((j, idx) => (
               <button key={j.id} onClick={() => openDetail(j)} className="pos-item" style={{ ...card, padding: '14px 16px', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{j.device_model || 'Unknown device'} <span style={{ color: DIM, fontWeight: 400 }}>#{j.ticket_number}</span></div>
-                  <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{j.customer_name || 'Walk-in'} · {j.fault_description?.slice(0, 60) || '—'}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{j.device_model || tc('repair_tickets.unknown_device')} <span style={{ color: DIM, fontWeight: 400 }}>#{j.ticket_number}</span></div>
+                  <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{j.customer_name || tc('repair_tickets.walk_in')} · {j.fault_description?.slice(0, 60) || '—'}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: (STATUS_COLOR[j.status] || DIM) + '22', color: STATUS_COLOR[j.status] || DIM }}>{STATUS_LABEL[j.status] || j.status}</span>
-                  <div style={{ fontSize: 11, color: DIM, marginTop: 4 }}>{daysOpen(j.created_at)}d · {j.assigned_staff?.name || 'unassigned'}{j.quoted_price ? ` · ${sym}${Number(j.quoted_price).toFixed(2)}` : ''}</div>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: (STATUS_COLOR[j.status] || DIM) + '22', color: STATUS_COLOR[j.status] || DIM }}>{statusLabel(tc, j.status)}</span>
+                  <div style={{ fontSize: 11, color: DIM, marginTop: 4 }}>{daysOpen(j.created_at)}d · {j.assigned_staff?.name || tc('repair_tickets.unassigned_short')}{j.quoted_price ? ` · ${sym}${Number(j.quoted_price).toFixed(2)}` : ''}</div>
                 </div>
               </button>
             ))}
@@ -231,7 +228,7 @@ export default function RepairTickets() {
             {/* drawer header */}
             <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 2 }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>{selected.device_model || 'Unknown device'}</div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>{selected.device_model || tc('repair_tickets.unknown_device')}</div>
                 <div style={{ fontSize: 12, color: MUTED }}>#{selected.ticket_number}</div>
               </div>
               <button onClick={() => setSelected(null)} style={{ background: '#334155', border: 'none', color: MUTED, width: 32, height: 32, borderRadius: 8, cursor: 'pointer', fontSize: 16 }}>×</button>
@@ -240,37 +237,37 @@ export default function RepairTickets() {
             <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* status + actions */}
               <div>
-                <span style={{ fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 20, background: (STATUS_COLOR[selected.status] || DIM) + '22', color: STATUS_COLOR[selected.status] || DIM }}>{STATUS_LABEL[selected.status] || selected.status}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 20, background: (STATUS_COLOR[selected.status] || DIM) + '22', color: STATUS_COLOR[selected.status] || DIM }}>{statusLabel(tc, selected.status)}</span>
                 {detailError && <div style={{ color: BAD, fontSize: 13, marginTop: 10 }}>{detailError}</div>}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
                   {(NEXT_STATUS[selected.status] || []).map(t => (
                     <button key={t.value} onClick={() => changeStatus(t.value)} disabled={updating}
                       className={t.value === 'cancelled' ? undefined : 'pos-btn-primary'}
                       style={{ padding: '9px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', opacity: updating ? 0.6 : 1, background: t.value === 'cancelled' ? '#334155' : ACC, color: t.value === 'cancelled' ? MUTED : '#fff' }}>
-                      {t.label}
+                      {tc('repair_tickets.action_' + t.labelKey)}
                     </button>
                   ))}
-                  {(NEXT_STATUS[selected.status] || []).length === 0 && <span style={{ fontSize: 12, color: DIM }}>No further actions</span>}
+                  {(NEXT_STATUS[selected.status] || []).length === 0 && <span style={{ fontSize: 12, color: DIM }}>{tc('repair_tickets.no_further_actions')}</span>}
                 </div>
               </div>
 
               {/* info */}
               <div style={{ ...card, padding: 16 }}>
-                <Row label="Customer" value={selected.customer_name || 'Walk-in'} />
-                <Row label="Phone" value={selected.customer_phone || '—'} />
-                <Row label="Serial / IMEI" value={selected.device_serial || '—'} />
-                <Row label="Device" value={selected.device_description || '—'} />
-                <Row label="Engineer" value={selected.assigned_staff?.name || 'Unassigned'} />
-                <Row label="Quote" value={selected.quoted_price != null ? `${sym}${Number(selected.quoted_price).toFixed(2)}` : 'TBC'} />
-                <Row label="Opened" value={`${fmtDate(selected.created_at)} (${daysOpen(selected.created_at)}d ago)`} />
+                <Row label={tc('repair_tickets.row_customer')} value={selected.customer_name || tc('repair_tickets.walk_in')} />
+                <Row label={tc('repair_tickets.row_phone')} value={selected.customer_phone || '—'} />
+                <Row label={tc('repair_tickets.row_serial_imei')} value={selected.device_serial || '—'} />
+                <Row label={tc('repair_tickets.row_device')} value={selected.device_description || '—'} />
+                <Row label={tc('repair_tickets.row_engineer')} value={selected.assigned_staff?.name || tc('repair_tickets.unassigned')} />
+                <Row label={tc('repair_tickets.row_quote')} value={selected.quoted_price != null ? `${sym}${Number(selected.quoted_price).toFixed(2)}` : tc('repair_tickets.quote_tbc')} />
+                <Row label={tc('repair_tickets.row_opened')} value={tc('repair_tickets.opened_value', { date: fmtDate(selected.created_at), days: daysOpen(selected.created_at) })} />
               </div>
 
               {/* fault */}
               <div style={{ ...card, padding: 16 }}>
-                <div style={{ fontSize: 12, color: MUTED, marginBottom: 6 }}>Fault description</div>
+                <div style={{ fontSize: 12, color: MUTED, marginBottom: 6 }}>{tc('repair_tickets.fault_description')}</div>
                 <div style={{ fontSize: 13, color: '#f1f5f9', lineHeight: 1.5 }}>{selected.fault_description || '—'}</div>
                 {selected.engineer_notes && <>
-                  <div style={{ fontSize: 12, color: MUTED, margin: '12px 0 6px' }}>Engineer notes</div>
+                  <div style={{ fontSize: 12, color: MUTED, margin: '12px 0 6px' }}>{tc('repair_tickets.engineer_notes')}</div>
                   <div style={{ fontSize: 13, color: '#f1f5f9', lineHeight: 1.5 }}>{selected.engineer_notes}</div>
                 </>}
               </div>
@@ -278,7 +275,7 @@ export default function RepairTickets() {
               {/* photos */}
               {(selected.intake_photo_url || selected.checkout_photo_url) && (
                 <div style={{ ...card, padding: 16 }}>
-                  <div style={{ fontSize: 12, color: MUTED, marginBottom: 10 }}>Photos</div>
+                  <div style={{ fontSize: 12, color: MUTED, marginBottom: 10 }}>{tc('repair_tickets.photos')}</div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {selected.intake_photo_url && <img src={selected.intake_photo_url} alt="intake" style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8, border: '1px solid #334155' }} />}
                     {selected.checkout_photo_url && <img src={selected.checkout_photo_url} alt="checkout" style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 8, border: '1px solid #334155' }} />}
@@ -288,8 +285,8 @@ export default function RepairTickets() {
 
               {/* parts */}
               <div style={{ ...card, padding: 16 }}>
-                <div style={{ fontSize: 12, color: MUTED, marginBottom: 10 }}>Parts used</div>
-                {parts.length === 0 ? <div style={{ fontSize: 13, color: DIM }}>No parts logged</div> : (
+                <div style={{ fontSize: 12, color: MUTED, marginBottom: 10 }}>{tc('repair_tickets.parts_used')}</div>
+                {parts.length === 0 ? <div style={{ fontSize: 13, color: DIM }}>{tc('repair_tickets.no_parts_logged')}</div> : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     {parts.map(p => (
                       <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
@@ -303,15 +300,15 @@ export default function RepairTickets() {
 
               {/* timeline */}
               <div style={{ ...card, padding: 16 }}>
-                <div style={{ fontSize: 12, color: MUTED, marginBottom: 12 }}>Timeline</div>
-                {detailLoading && <div style={{ fontSize: 13, color: DIM }}>Loading…</div>}
-                {!detailLoading && history.length === 0 && <div style={{ fontSize: 13, color: DIM }}>No history yet</div>}
+                <div style={{ fontSize: 12, color: MUTED, marginBottom: 12 }}>{tc('repair_tickets.timeline')}</div>
+                {detailLoading && <div style={{ fontSize: 13, color: DIM }}>{tc('repair_tickets.loading')}</div>}
+                {!detailLoading && history.length === 0 && <div style={{ fontSize: 13, color: DIM }}>{tc('repair_tickets.no_history_yet')}</div>}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {history.map(h => (
                     <div key={h.id} style={{ display: 'flex', gap: 10 }}>
                       <div style={{ width: 8, height: 8, borderRadius: 4, background: STATUS_COLOR[h.to_status] || DIM, marginTop: 5, flexShrink: 0 }} />
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, color: '#f1f5f9' }}>{STATUS_LABEL[h.to_status] || h.to_status}{h.notes ? ` — ${h.notes}` : ''}</div>
+                        <div style={{ fontSize: 13, color: '#f1f5f9' }}>{statusLabel(tc, h.to_status)}{h.notes ? ` — ${h.notes}` : ''}</div>
                         <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{fmtDate(h.created_at)}</div>
                       </div>
                     </div>

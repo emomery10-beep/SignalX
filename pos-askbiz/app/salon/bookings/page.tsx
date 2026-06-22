@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#ec4899' // salon pink accent
 
@@ -25,14 +26,15 @@ interface Appointment {
 function dayKey(iso: string) { return new Date(iso).toISOString().slice(0, 10) }
 function fmtTime(iso: string) { return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
 
-const statusBadge: Record<string, { bg: string; fg: string; label: string }> = {
-  completed: { bg: '#14532d', fg: '#22c55e', label: 'Completed' },
-  voided: { bg: '#7f1d1d', fg: '#ef4444', label: 'Voided' },
-  refunded: { bg: '#451a03', fg: '#f59e0b', label: 'Refunded' },
-}
+const buildStatusBadge = (tc: (key: string, vars?: Record<string, string | number>) => string): Record<string, { bg: string; fg: string; label: string }> => ({
+  completed: { bg: '#14532d', fg: '#22c55e', label: tc('salon_bookings.status_completed') },
+  voided: { bg: '#7f1d1d', fg: '#ef4444', label: tc('salon_bookings.status_voided') },
+  refunded: { bg: '#451a03', fg: '#f59e0b', label: tc('salon_bookings.status_refunded') },
+})
 
 export default function SalonBookings() {
   const router = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [sym, setSym] = useState('£')
   const [loading, setLoading] = useState(true)
@@ -174,14 +176,14 @@ export default function SalonBookings() {
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <button onClick={() => router.push('/salon')} style={{ background: '#334155', border: 'none', color: C.muted, padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>← Salon</button>
+          <button onClick={() => router.push('/salon')} style={{ background: '#334155', border: 'none', color: C.muted, padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>← {tc('salon_bookings.back_salon')}</button>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>💇 Bookings</div>
-            <div style={{ fontSize: 12, color: C.muted }}>Appointment management</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>{tc('salon_bookings.header_title')}</div>
+            <div style={{ fontSize: 12, color: C.muted }}>{tc('salon_bookings.header_subtitle')}</div>
           </div>
         </div>
         <button onClick={() => setShowForm(s => !s)} style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
-          + New Booking
+          {tc('salon_bookings.new_booking_btn')}
         </button>
       </div>
 
@@ -189,21 +191,21 @@ export default function SalonBookings() {
         {/* New booking form */}
         {showForm && (
           <form onSubmit={submitBooking} style={{ background: '#1e293b', border: `1px solid ${ACC}40`, borderRadius: 12, padding: 20, marginBottom: 24 }}>
-            <div style={{ fontWeight: 700, marginBottom: 4 }}>New Booking</div>
-            <div style={{ fontSize: 12, color: C.dim, marginBottom: 14 }}>Scheduled on {date}. Saved to the salon appointments record.</div>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>{tc('salon_bookings.form_title')}</div>
+            <div style={{ fontSize: 12, color: C.dim, marginBottom: 14 }}>{tc('salon_bookings.form_subtitle', { date })}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
-              <input style={inputStyle} placeholder="Client name" value={form.client} onChange={e => setForm({ ...form, client: e.target.value })} />
-              <input style={inputStyle} placeholder="Phone" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
-              <input style={inputStyle} placeholder="Service" value={form.service} onChange={e => setForm({ ...form, service: e.target.value })} />
+              <input style={inputStyle} placeholder={tc('salon_bookings.client_name_placeholder')} value={form.client} onChange={e => setForm({ ...form, client: e.target.value })} />
+              <input style={inputStyle} placeholder={tc('salon_bookings.phone_placeholder')} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+              <input style={inputStyle} placeholder={tc('salon_bookings.service_placeholder')} value={form.service} onChange={e => setForm({ ...form, service: e.target.value })} />
               <select style={inputStyle} value={form.stylist_id} onChange={e => setForm({ ...form, stylist_id: e.target.value })}>
-                <option value="">Stylist…</option>
+                <option value="">{tc('salon_bookings.stylist_placeholder')}</option>
                 {staff.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
               <input style={inputStyle} type="time" value={form.time} onChange={e => setForm({ ...form, time: e.target.value })} />
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-              <button type="submit" className="pos-btn-primary" style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Save Booking</button>
-              <button type="button" onClick={() => setShowForm(false)} style={{ background: '#334155', border: 'none', color: C.muted, padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>Cancel</button>
+              <button type="submit" className="pos-btn-primary" style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>{tc('salon_bookings.save_booking')}</button>
+              <button type="button" onClick={() => setShowForm(false)} style={{ background: '#334155', border: 'none', color: C.muted, padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('salon_bookings.cancel')}</button>
             </div>
           </form>
         )}
@@ -211,16 +213,16 @@ export default function SalonBookings() {
         {/* Scheduled appointments for the day (persisted) */}
         {dayAppointments.length > 0 && (
           <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 16, marginBottom: 24 }}>
-            <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 14 }}>Scheduled Appointments</div>
+            <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 14 }}>{tc('salon_bookings.scheduled_appointments_title')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {dayAppointments.map((a, idx) => (
                 <div key={a.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '8px 12px', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                   <span style={{ color: ACC, fontWeight: 700, width: 48 }}>{fmtTime(a.scheduled_at)}</span>
-                  <span style={{ flex: 1, fontSize: 13 }}>{a.client?.name || 'Walk-in'} {a.client?.phone && <span style={{ color: C.dim }}>· {a.client.phone}</span>}</span>
-                  <span style={{ fontSize: 12, color: C.muted }}>{a.service_name} · {a.stylist?.name || 'Unassigned'}</span>
+                  <span style={{ flex: 1, fontSize: 13 }}>{a.client?.name || tc('salon_bookings.walk_in')} {a.client?.phone && <span style={{ color: C.dim }}>· {a.client.phone}</span>}</span>
+                  <span style={{ fontSize: 12, color: C.muted }}>{a.service_name} · {a.stylist?.name || tc('salon_bookings.unassigned')}</span>
                   <select value={a.status} onChange={e => updateStatus(a.id, e.target.value)} style={{ ...inputStyle, padding: '4px 8px', fontSize: 12 }}>
                     {['booked', 'confirmed', 'in_progress', 'completed', 'no_show', 'cancelled'].map(s => (
-                      <option key={s} value={s}>{s.replace('_', ' ')}</option>
+                      <option key={s} value={s}>{tc('salon_bookings.status_' + s)}</option>
                     ))}
                   </select>
                 </div>
@@ -233,20 +235,20 @@ export default function SalonBookings() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 20, alignItems: 'center' }}>
           <input style={inputStyle} type="date" value={date} onChange={e => setDate(e.target.value)} />
           <select style={inputStyle} value={stylistFilter} onChange={e => setStylistFilter(e.target.value)}>
-            <option value="all">All stylists</option>
+            <option value="all">{tc('salon_bookings.all_stylists')}</option>
             {stylists.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
           <select style={inputStyle} value={serviceFilter} onChange={e => setServiceFilter(e.target.value)}>
-            <option value="all">All services</option>
+            <option value="all">{tc('salon_bookings.all_services')}</option>
             {services.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
-          <button onClick={() => setDate(todayStr)} style={{ background: '#334155', border: 'none', color: C.muted, padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>Today</button>
-          <div style={{ marginLeft: 'auto', fontSize: 13, color: C.dim }}>{dayAppointments.length} appointment{dayAppointments.length !== 1 ? 's' : ''}</div>
+          <button onClick={() => setDate(todayStr)} style={{ background: '#334155', border: 'none', color: C.muted, padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('salon_bookings.today')}</button>
+          <div style={{ marginLeft: 'auto', fontSize: 13, color: C.dim }}>{tc(dayAppointments.length === 1 ? 'salon_bookings.appointments_count_one' : 'salon_bookings.appointments_count_other', { count: dayAppointments.length })}</div>
         </div>
 
         {/* SVG Timeline */}
         <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20, marginBottom: 24, overflowX: 'auto' }}>
-          <div style={{ fontWeight: 700, marginBottom: 12, fontSize: 15 }}>Day Timeline</div>
+          <div style={{ fontWeight: 700, marginBottom: 12, fontSize: 15 }}>{tc('salon_bookings.day_timeline_title')}</div>
           <svg width={tlWidth} height={110} style={{ minWidth: tlWidth }}>
             {/* hour gridlines + labels */}
             {Array.from({ length: endHour - startHour + 1 }).map((_, i) => {
@@ -269,14 +271,14 @@ export default function SalonBookings() {
                 <g key={a.id}>
                   <line x1={x} y1={tlBarY - 8} x2={x} y2={cy} stroke={`${ACC}55`} strokeWidth={1} />
                   <circle cx={x} cy={cy} r={7} fill={ACC} stroke="#0f172a" strokeWidth={2}>
-                    <title>{`${fmtTime(a.scheduled_at)} — ${a.client?.name || 'Walk-in'} (${a.service_name})`}</title>
+                    <title>{`${fmtTime(a.scheduled_at)} — ${a.client?.name || tc('salon_bookings.walk_in')} (${a.service_name})`}</title>
                   </circle>
                   <text x={x} y={cy - 11} textAnchor="middle" fill="#e2e8f0" fontSize={10}>{fmtTime(a.scheduled_at)}</text>
                 </g>
               )
             })}
             {dayAppointments.length === 0 && (
-              <text x={tlWidth / 2} y={tlBarY + tlBarH} textAnchor="middle" fill={C.dim} fontSize={13}>No appointments for this day</text>
+              <text x={tlWidth / 2} y={tlBarY + tlBarH} textAnchor="middle" fill={C.dim} fontSize={13}>{tc('salon_bookings.no_appointments_day')}</text>
             )}
           </svg>
         </div>
@@ -284,18 +286,19 @@ export default function SalonBookings() {
         {/* List view */}
         <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, overflow: 'hidden', marginBottom: 24 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '80px 1.4fr 1.6fr 1.2fr 1fr 110px', gap: 8, padding: '12px 16px', borderBottom: '1px solid #334155', fontSize: 11, color: C.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
-            <div>Time</div><div>Client</div><div>Service(s)</div><div>Stylist</div><div>Price</div><div>Status</div>
+            <div>{tc('salon_bookings.col_time')}</div><div>{tc('salon_bookings.col_client')}</div><div>{tc('salon_bookings.col_services')}</div><div>{tc('salon_bookings.col_stylist')}</div><div>{tc('salon_bookings.col_price')}</div><div>{tc('salon_bookings.col_status')}</div>
           </div>
-          {loading && <div style={{ padding: 20, color: C.dim, fontSize: 13 }}>Loading…</div>}
-          {!loading && dayAppointments.length === 0 && <div style={{ padding: 20, color: C.dim, fontSize: 13, textAlign: 'center' }}>No appointments match the filters.</div>}
+          {loading && <div style={{ padding: 20, color: C.dim, fontSize: 13 }}>{tc('salon_bookings.loading')}</div>}
+          {!loading && dayAppointments.length === 0 && <div style={{ padding: 20, color: C.dim, fontSize: 13, textAlign: 'center' }}>{tc('salon_bookings.no_appointments_filters')}</div>}
           {dayAppointments.map((a, idx) => {
-            const badge = statusBadge[a.status] || { bg: '#334155', fg: C.muted, label: (a.status || '—').replace('_', ' ') }
+            const statusBadge = buildStatusBadge(tc)
+            const badge = statusBadge[a.status] || { bg: '#334155', fg: C.muted, label: a.status ? tc('salon_bookings.status_' + a.status) : tc('salon_bookings.dash') }
             return (
               <div key={a.id} className="pos-item" style={{ display: 'grid', gridTemplateColumns: '80px 1.4fr 1.6fr 1.2fr 1fr 110px', gap: 8, padding: '12px 16px', borderBottom: '1px solid #283548', fontSize: 13, alignItems: 'center', animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                 <div style={{ color: ACC, fontWeight: 700 }}>{fmtTime(a.scheduled_at)}</div>
-                <div>{a.client?.name || a.client?.phone || <span style={{ color: C.dim }}>Walk-in</span>}</div>
+                <div>{a.client?.name || a.client?.phone || <span style={{ color: C.dim }}>{tc('salon_bookings.walk_in')}</span>}</div>
                 <div style={{ color: '#e2e8f0' }}>{a.service_name}</div>
-                <div style={{ color: C.muted }}>{a.stylist?.name || '—'}</div>
+                <div style={{ color: C.muted }}>{a.stylist?.name || tc('salon_bookings.dash')}</div>
                 <div style={{ fontWeight: 700 }}>{sym}{(a.price || 0).toFixed(2)}</div>
                 <div><span style={{ background: badge.bg, color: badge.fg, borderRadius: 12, padding: '3px 10px', fontSize: 11, fontWeight: 600 }}>{badge.label}</span></div>
               </div>
@@ -305,11 +308,11 @@ export default function SalonBookings() {
 
         {/* No-show tracking */}
         <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20 }}>
-          <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 15 }}>No-Show Tracking</div>
+          <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 15 }}>{tc('salon_bookings.no_show_title')}</div>
           {(() => {
             const noShows = appointments.filter(a => a.status === 'no_show')
             if (noShows.length === 0) {
-              return <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.5 }}>No missed appointments recorded. Mark a scheduled appointment as &quot;no show&quot; to track it here.</div>
+              return <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.5 }}>{tc('salon_bookings.no_show_empty')}</div>
             }
             return (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -319,8 +322,8 @@ export default function SalonBookings() {
                   .map((a, idx) => (
                     <div key={a.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '8px 12px', fontSize: 13, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                       <span style={{ color: C.bad, fontWeight: 700, width: 110 }}>{new Date(a.scheduled_at).toLocaleDateString([], { day: '2-digit', month: 'short' })} {fmtTime(a.scheduled_at)}</span>
-                      <span style={{ flex: 1 }}>{a.client?.name || 'Walk-in'}</span>
-                      <span style={{ color: C.muted }}>{a.service_name} · {a.stylist?.name || 'Unassigned'}</span>
+                      <span style={{ flex: 1 }}>{a.client?.name || tc('salon_bookings.walk_in')}</span>
+                      <span style={{ color: C.muted }}>{a.service_name} · {a.stylist?.name || tc('salon_bookings.unassigned')}</span>
                       <span style={{ fontWeight: 700 }}>{sym}{(a.price || 0).toFixed(2)}</span>
                     </div>
                   ))}

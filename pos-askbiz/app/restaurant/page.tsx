@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
 import MenuMatrix from '@/components/MenuMatrix'
 import ShiftProfitability from '@/components/ShiftProfitability'
 import WhatsAppAutopilot from '@/components/WhatsAppAutopilot'
@@ -21,6 +22,7 @@ interface TopDish { name: string; qty: number; revenue: number; margin_pct: numb
 
 export default function RestaurantHub() {
   const router  = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [sym, setSym]                   = useState('£')
   const [kpis, setKpis]                 = useState<KPI[]>([])
@@ -75,15 +77,16 @@ export default function RestaurantHub() {
       const foodOk = k.food_cost_pct <= 35
       const laborOk = k.labor_cost_pct <= 35
       const primeOk = k.prime_cost_pct <= 65
+      const orderCount = k.total_orders || 0
       setKpis([
-        { label: 'Revenue Today', value: `${sym}${(k.total_revenue || 0).toFixed(2)}`, sub: `${k.total_orders || 0} orders`, status: 'good' },
-        { label: 'Covers', value: `${k.total_covers || 0}`, sub: `${sym}${(k.avg_per_cover || 0).toFixed(2)}/cover`, status: 'neutral' },
-        { label: 'Avg Ticket', value: `${sym}${(k.avg_ticket || 0).toFixed(2)}`, sub: 'per order', status: 'neutral' },
-        { label: 'Food Cost', value: `${k.food_cost_pct || 0}%`, sub: 'target ≤35%', status: foodOk ? 'good' : 'bad' },
-        { label: 'Labour Cost', value: `${k.labor_cost_pct || 0}%`, sub: 'target ≤35%', status: laborOk ? 'good' : 'warn' },
-        { label: 'Prime Cost', value: `${k.prime_cost_pct || 0}%`, sub: 'food+labour ≤65%', status: primeOk ? 'good' : 'bad' },
-        { label: 'Avg Dwell', value: `${k.avg_dwell_mins || 0} min`, sub: 'time at table', status: 'neutral' },
-        { label: 'Avg Prep', value: `${k.avg_prep_mins || 0} min`, sub: 'kitchen speed', status: (k.avg_prep_mins || 0) <= 15 ? 'good' : 'warn' },
+        { label: tc('restaurant.kpi_revenue_today'), value: `${sym}${(k.total_revenue || 0).toFixed(2)}`, sub: tc('restaurant.kpi_revenue_today_sub_' + (orderCount === 1 ? 'one' : 'other'), { count: orderCount }), status: 'good' },
+        { label: tc('restaurant.kpi_covers'), value: `${k.total_covers || 0}`, sub: tc('restaurant.kpi_covers_sub', { sym, amount: (k.avg_per_cover || 0).toFixed(2) }), status: 'neutral' },
+        { label: tc('restaurant.kpi_avg_ticket'), value: `${sym}${(k.avg_ticket || 0).toFixed(2)}`, sub: tc('restaurant.kpi_avg_ticket_sub'), status: 'neutral' },
+        { label: tc('restaurant.kpi_food_cost'), value: `${k.food_cost_pct || 0}%`, sub: tc('restaurant.kpi_food_cost_sub'), status: foodOk ? 'good' : 'bad' },
+        { label: tc('restaurant.kpi_labour_cost'), value: `${k.labor_cost_pct || 0}%`, sub: tc('restaurant.kpi_labour_cost_sub'), status: laborOk ? 'good' : 'warn' },
+        { label: tc('restaurant.kpi_prime_cost'), value: `${k.prime_cost_pct || 0}%`, sub: tc('restaurant.kpi_prime_cost_sub'), status: primeOk ? 'good' : 'bad' },
+        { label: tc('restaurant.kpi_avg_dwell'), value: tc('restaurant.kpi_avg_dwell_value', { mins: k.avg_dwell_mins || 0 }), sub: tc('restaurant.kpi_avg_dwell_sub'), status: 'neutral' },
+        { label: tc('restaurant.kpi_avg_prep'), value: tc('restaurant.kpi_avg_prep_value', { mins: k.avg_prep_mins || 0 }), sub: tc('restaurant.kpi_avg_prep_sub'), status: (k.avg_prep_mins || 0) <= 15 ? 'good' : 'warn' },
       ])
 
       const topByRevenue = Object.values(analytics.top_items || []) as TopDish[]
@@ -123,16 +126,16 @@ export default function RestaurantHub() {
   }
 
   const nav = [
-    { label: '🗺️ Floor Plan',  href: '/restaurant/floor',      desc: 'Table status & orders' },
-    { label: '📋 Orders',      href: '/restaurant/orders',      desc: 'Active order management' },
-    { label: '🍳 Kitchen',     href: '/restaurant/kitchen',     desc: 'Kitchen display system' },
-    { label: '🍽️ Menu',        href: '/restaurant/menu',        desc: 'Edit menu & modifiers' },
-    { label: '⏱️ Labour',      href: '/restaurant/labor',       desc: 'Clock in/out & costs' },
-    { label: '📱 Online Orders', href: '/restaurant/online-orders', desc: 'Accept & manage online orders' },
-    { label: '📅 Reservations', href: '/restaurant/reservations',  desc: 'Bookings & covers management' },
-    { label: '📦 Deliveries',   href: '/restaurant/deliveries',    desc: 'Scan invoices & food costs' },
-    { label: '🗑️ Waste',        href: '/restaurant/waste',         desc: 'Log & track food waste' },
-    { label: '👥 Staff',        href: '/restaurant/staff',         desc: 'Server revenue & shifts' },
+    { label: tc('restaurant.nav_floor_label'),       href: '/restaurant/floor',         desc: tc('restaurant.nav_floor_desc') },
+    { label: tc('restaurant.nav_orders_label'),      href: '/restaurant/orders',        desc: tc('restaurant.nav_orders_desc') },
+    { label: tc('restaurant.nav_kitchen_label'),     href: '/restaurant/kitchen',       desc: tc('restaurant.nav_kitchen_desc') },
+    { label: tc('restaurant.nav_menu_label'),        href: '/restaurant/menu',          desc: tc('restaurant.nav_menu_desc') },
+    { label: tc('restaurant.nav_labour_label'),      href: '/restaurant/labor',         desc: tc('restaurant.nav_labour_desc') },
+    { label: tc('restaurant.nav_online_label'),      href: '/restaurant/online-orders', desc: tc('restaurant.nav_online_desc') },
+    { label: tc('restaurant.nav_reservations_label'), href: '/restaurant/reservations', desc: tc('restaurant.nav_reservations_desc') },
+    { label: tc('restaurant.nav_deliveries_label'),  href: '/restaurant/deliveries',    desc: tc('restaurant.nav_deliveries_desc') },
+    { label: tc('restaurant.nav_waste_label'),       href: '/restaurant/waste',         desc: tc('restaurant.nav_waste_desc') },
+    { label: tc('restaurant.nav_staff_label'),       href: '/restaurant/staff',         desc: tc('restaurant.nav_staff_desc') },
   ]
 
   return (
@@ -140,17 +143,17 @@ export default function RestaurantHub() {
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>🍴 Restaurant</div>
-          <div style={{ fontSize: 12, color: '#94a3b8' }}>Live operations dashboard</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>{tc('restaurant.header_title')}</div>
+          <div style={{ fontSize: 12, color: '#94a3b8' }}>{tc('restaurant.header_subtitle')}</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {pendingOnline.length > 0 && (
             <div style={{ background: '#ef4444', color: '#fff', borderRadius: 20, padding: '4px 12px', fontSize: 12, fontWeight: 700, animation: 'pulse 1s infinite' }}>
-              {pendingOnline.length} online order{pendingOnline.length > 1 ? 's' : ''} pending
+              {tc('restaurant.online_orders_pending_' + (pendingOnline.length === 1 ? 'one' : 'other'), { count: pendingOnline.length })}
             </div>
           )}
           <button onClick={() => router.push('/pos')} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
-            ← POS
+            {tc('restaurant.back_pos')}
           </button>
         </div>
       </div>
@@ -160,14 +163,14 @@ export default function RestaurantHub() {
         {/* Pending Online Orders — top alert */}
         {pendingOnline.length > 0 && (
           <div className="pos-banner" style={{ background: '#7f1d1d', border: '1px solid #ef4444', borderRadius: 12, padding: 16, marginBottom: 24 }}>
-            <div style={{ fontWeight: 700, color: '#fca5a5', marginBottom: 12 }}>⚠️ Online Orders Awaiting Acceptance</div>
+            <div style={{ fontWeight: 700, color: '#fca5a5', marginBottom: 12 }}>{tc('restaurant.online_awaiting')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {pendingOnline.map((o, idx) => (
                 <div key={o.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.3)', padding: '10px 14px', borderRadius: 8, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                   <div>
-                    <span style={{ fontWeight: 600, color: '#fff' }}>{o.customer_name || 'Customer'}</span>
+                    <span style={{ fontWeight: 600, color: '#fff' }}>{o.customer_name || tc('restaurant.customer_fallback')}</span>
                     <span style={{ color: '#fca5a5', marginLeft: 8 }}>{sym}{o.total?.toFixed(2)}</span>
-                    <span style={{ color: '#94a3b8', marginLeft: 8, fontSize: 12 }}>via {o.source}</span>
+                    <span style={{ color: '#94a3b8', marginLeft: 8, fontSize: 12 }}>{tc('restaurant.via_source', { source: o.source })}</span>
                   </div>
                   <button
                     onClick={() => acceptOnline(o.id)}
@@ -175,7 +178,7 @@ export default function RestaurantHub() {
                     className="pos-btn-primary"
                     style={{ background: ACC, border: 'none', color: '#fff', padding: '6px 16px', borderRadius: 6, cursor: accepting === o.id ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: 13, opacity: accepting === o.id ? 0.5 : 1 }}
                   >
-                    {accepting === o.id ? '...' : 'Accept'}
+                    {accepting === o.id ? '...' : tc('restaurant.accept')}
                   </button>
                 </div>
               ))}
@@ -212,7 +215,7 @@ export default function RestaurantHub() {
                       onClick={() => router.push(`/pos?q=${encodeURIComponent(a.prompt)}`)}
                       style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#94a3b8', padding: '3px 8px', borderRadius: 4, cursor: 'pointer', fontSize: 11, whiteSpace: 'nowrap' }}
                     >
-                      Ask AI →
+                      {tc('restaurant.ask_ai')}
                     </button>
                   )}
                   <button
@@ -247,20 +250,20 @@ export default function RestaurantHub() {
                 />
                 <text x={32} y={37} textAnchor="middle" fill="#f1f5f9" fontSize={14} fontWeight={700}>{brief.health_score}</text>
               </svg>
-              <div style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>Health</div>
+              <div style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>{tc('restaurant.brief_health')}</div>
             </div>
             {/* Brief text */}
             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
               <div>
-                <div style={{ fontSize: 10, color: '#22c55e', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>↑ Going well</div>
+                <div style={{ fontSize: 10, color: '#22c55e', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{tc('restaurant.brief_going_well')}</div>
                 <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.4 }}>{brief.improved}</div>
               </div>
               <div>
-                <div style={{ fontSize: 10, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>↓ Watch out</div>
+                <div style={{ fontSize: 10, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{tc('restaurant.brief_watch_out')}</div>
                 <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.4 }}>{brief.worsened}</div>
               </div>
               <div>
-                <div style={{ fontSize: 10, color: ACC, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>→ Action</div>
+                <div style={{ fontSize: 10, color: ACC, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{tc('restaurant.brief_action')}</div>
                 <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.4 }}>{brief.action}</div>
               </div>
             </div>
@@ -268,7 +271,7 @@ export default function RestaurantHub() {
               onClick={() => router.push('/pos?q=Give+me+a+full+restaurant+performance+analysis+for+today')}
               style={{ flexShrink: 0, background: '#334155', border: 'none', color: '#94a3b8', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 12 }}
             >
-              Deep dive →
+              {tc('restaurant.brief_deep_dive')}
             </button>
           </div>
         )}
@@ -278,11 +281,11 @@ export default function RestaurantHub() {
           <div style={{ background: '#1e293b', border: '1px solid #f59e0b', borderRadius: 12, padding: '14px 18px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 18 }}>🚫</span>
             <div>
-              <div style={{ fontWeight: 700, color: '#f59e0b', fontSize: 13 }}>86 Board — Currently Out</div>
+              <div style={{ fontWeight: 700, color: '#f59e0b', fontSize: 13 }}>{tc('restaurant.eighty_six_title')}</div>
               <div style={{ color: '#e2e8f0', fontSize: 13, marginTop: 2 }}>{eightySix.join(' · ')}</div>
             </div>
             <button onClick={() => router.push('/restaurant/menu')} style={{ marginLeft: 'auto', background: '#334155', border: 'none', color: '#94a3b8', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>
-              Manage menu
+              {tc('restaurant.manage_menu')}
             </button>
           </div>
         )}
@@ -290,13 +293,13 @@ export default function RestaurantHub() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
           {/* Table Status */}
           <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20 }}>
-            <div style={{ fontWeight: 700, marginBottom: 16, fontSize: 15 }}>Table Status</div>
+            <div style={{ fontWeight: 700, marginBottom: 16, fontSize: 15 }}>{tc('restaurant.table_status')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
               {[
-                { label: 'Occupied', count: tablesByStatus.occupied, color: '#ef4444' },
-                { label: 'Available', count: tablesByStatus.available, color: '#22c55e' },
-                { label: 'Cleaning', count: tablesByStatus.cleaning, color: '#f59e0b' },
-                { label: 'Reserved', count: tablesByStatus.reserved, color: '#8b5cf6' },
+                { label: tc('restaurant.table_occupied'), count: tablesByStatus.occupied, color: '#ef4444' },
+                { label: tc('restaurant.table_available'), count: tablesByStatus.available, color: '#22c55e' },
+                { label: tc('restaurant.table_cleaning'), count: tablesByStatus.cleaning, color: '#f59e0b' },
+                { label: tc('restaurant.table_reserved'), count: tablesByStatus.reserved, color: '#8b5cf6' },
               ].map(s => (
                 <div key={s.label} style={{ background: '#0f172a', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: 13, color: '#94a3b8' }}>{s.label}</span>
@@ -305,21 +308,21 @@ export default function RestaurantHub() {
               ))}
             </div>
             <button onClick={() => router.push('/restaurant/floor')} className="pos-btn-primary" style={{ width: '100%', background: ACC, border: 'none', color: '#fff', padding: '10px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}>
-              Open Floor Plan →
+              {tc('restaurant.open_floor_plan')}
             </button>
           </div>
 
           {/* Top Dishes */}
           <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: 20 }}>
-            <div style={{ fontWeight: 700, marginBottom: 12, fontSize: 15 }}>Today's Top Dishes</div>
-            {topDishes.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>No orders yet today</div>}
+            <div style={{ fontWeight: 700, marginBottom: 12, fontSize: 15 }}>{tc('restaurant.top_dishes_title')}</div>
+            {topDishes.length === 0 && <div style={{ color: '#64748b', fontSize: 13 }}>{tc('restaurant.no_orders_yet')}</div>}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {topDishes.map((dish, i) => (
                 <div key={dish.name} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 10, animationDelay: `${Math.min(i, 8) * 40}ms` }}>
                   <span style={{ color: '#64748b', fontSize: 12, width: 16, textAlign: 'right' }}>{i + 1}</span>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 13, fontWeight: 600 }}>{dish.name}</div>
-                    <div style={{ fontSize: 11, color: '#64748b' }}>{dish.qty} sold · {sym}{dish.revenue?.toFixed(2)}</div>
+                    <div style={{ fontSize: 11, color: '#64748b' }}>{tc('restaurant.dish_sold_revenue', { qty: dish.qty, sym, revenue: dish.revenue?.toFixed(2) ?? '0.00' })}</div>
                   </div>
                   <div style={{ fontSize: 12, color: dish.margin_pct >= 65 ? '#22c55e' : dish.margin_pct >= 50 ? '#f59e0b' : '#ef4444', fontWeight: 700 }}>
                     {dish.margin_pct}%
