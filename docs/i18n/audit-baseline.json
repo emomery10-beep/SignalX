@@ -15,7 +15,7 @@
     "main": {
       "hardcodedLocaleLiterals": 123,
       "hardcodedCurrencyInMarkup": 1111,
-      "typescriptErrors": 337
+      "typescriptErrors": 59
     },
     "pos": {
       "hardcodedLocaleLiterals": 45,
