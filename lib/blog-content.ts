@@ -766,7 +766,12 @@ export interface BlogPost {
     body: string
   }>
   paa: Array<{ q: string; a: string }>
-  cta: { heading: string; body: string }
+  /**
+   * Per-post call-to-action. Two conventions exist across the content set:
+   * { heading, body } (a headline + paragraph) and { text, href } (a label +
+   * link). Both are accepted; the renderer reads heading→text and uses href.
+   */
+  cta?: { heading?: string; body?: string; text?: string; href?: string }
   relatedSlugs: string[]
   i18n?: { hreflang: { lang: string; url: string }[] }
 }

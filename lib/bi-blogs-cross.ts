@@ -45,20 +45,20 @@ export const CROSS_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'What is grassroots business intelligence?',
-        answer: 'Grassroots business intelligence refers to BI tools and practices designed for small businesses without enterprise IT infrastructure — working on basic smartphones, offline, and at prices accessible to any business regardless of size or location.'
+        q: 'What is grassroots business intelligence?',
+        a: 'Grassroots business intelligence refers to BI tools and practices designed for small businesses without enterprise IT infrastructure — working on basic smartphones, offline, and at prices accessible to any business regardless of size or location.'
       },
       {
-        question: 'Can a very small business benefit from business intelligence?',
-        answer: 'Yes. Even a single-person business benefits from knowing its real profit margin, tracking stock levels, and understanding which products drive the most value. The information is valuable at any scale — the tools just need to be appropriate for small business reality.'
+        q: 'Can a very small business benefit from business intelligence?',
+        a: 'Yes. Even a single-person business benefits from knowing its real profit margin, tracking stock levels, and understanding which products drive the most value. The information is valuable at any scale — the tools just need to be appropriate for small business reality.'
       },
       {
-        question: 'How does AskBiz make business intelligence accessible to small businesses?',
-        answer: 'AskBiz works on any Android smartphone, operates offline, requires no technical training to use, and is priced at levels accessible to even the smallest businesses — delivering the same intelligence capabilities that enterprise tools provide, but designed for grassroots use.'
+        q: 'How does AskBiz make business intelligence accessible to small businesses?',
+        a: 'AskBiz works on any Android smartphone, operates offline, requires no technical training to use, and is priced at levels accessible to even the smallest businesses — delivering the same intelligence capabilities that enterprise tools provide, but designed for grassroots use.'
       },
       {
-        question: 'What is the difference between enterprise BI and small business BI?',
-        answer: 'Enterprise BI requires dedicated infrastructure, IT teams, and significant investment. Small business BI like AskBiz is cloud-based, runs on consumer devices, works offline, and can be set up in minutes — delivering the same core insights without the complexity.'
+        q: 'What is the difference between enterprise BI and small business BI?',
+        a: 'Enterprise BI requires dedicated infrastructure, IT teams, and significant investment. Small business BI like AskBiz is cloud-based, runs on consumer devices, works offline, and can be set up in minutes — delivering the same core insights without the complexity.'
       }
     ],
     cta: {
@@ -110,20 +110,20 @@ export const CROSS_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'What is POS intelligence and how does it differ from a basic POS?',
-        answer: 'POS intelligence transforms point-of-sale transaction data into business analytics — tracking profit margins, inventory levels, staff performance, and sales patterns automatically. Basic POS systems only process payments and print receipts.'
+        q: 'What is POS intelligence and how does it differ from a basic POS?',
+        a: 'POS intelligence transforms point-of-sale transaction data into business analytics — tracking profit margins, inventory levels, staff performance, and sales patterns automatically. Basic POS systems only process payments and print receipts.'
       },
       {
-        question: 'How does a smart POS system update inventory automatically?',
-        answer: 'When a product is sold through a POS connected to inventory management, the system deducts the sold quantity from the stock count automatically — maintaining a real-time inventory position without manual counting.'
+        q: 'How does a smart POS system update inventory automatically?',
+        a: 'When a product is sold through a POS connected to inventory management, the system deducts the sold quantity from the stock count automatically — maintaining a real-time inventory position without manual counting.'
       },
       {
-        question: 'Can a POS system show profit in real time?',
-        answer: 'Yes. When product cost prices are recorded in the system, every sale automatically calculates gross profit — enabling real-time profit tracking that updates with each transaction throughout the trading day.'
+        q: 'Can a POS system show profit in real time?',
+        a: 'Yes. When product cost prices are recorded in the system, every sale automatically calculates gross profit — enabling real-time profit tracking that updates with each transaction throughout the trading day.'
       },
       {
-        question: 'How do restaurants and cafes use POS data for staffing decisions?',
-        answer: 'Sales-by-hour and day-of-week POS reports show exactly when peak and quiet periods occur — enabling data-driven scheduling that matches staffing levels to actual demand, reducing labour cost in quiet periods without affecting service in busy ones.'
+        q: 'How do restaurants and cafes use POS data for staffing decisions?',
+        a: 'Sales-by-hour and day-of-week POS reports show exactly when peak and quiet periods occur — enabling data-driven scheduling that matches staffing levels to actual demand, reducing labour cost in quiet periods without affecting service in busy ones.'
       }
     ],
     cta: {
@@ -175,20 +175,20 @@ export const CROSS_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'What is inventory intelligence and why does it matter for small businesses?',
-        answer: 'Inventory intelligence is the systematic tracking and analysis of stock levels, movement, and value — enabling businesses to prevent stockouts, reduce overstock, eliminate dead stock, and deploy capital more efficiently.'
+        q: 'What is inventory intelligence and why does it matter for small businesses?',
+        a: 'Inventory intelligence is the systematic tracking and analysis of stock levels, movement, and value — enabling businesses to prevent stockouts, reduce overstock, eliminate dead stock, and deploy capital more efficiently.'
       },
       {
-        question: 'How do I calculate a reorder point for my business?',
-        answer: 'Reorder Point = (Average Daily Sales × Supplier Lead Time in Days) + Safety Stock. When your stock level hits this number, place a new order. Business intelligence tools calculate and alert you when you reach this threshold automatically.'
+        q: 'How do I calculate a reorder point for my business?',
+        a: 'Reorder Point = (Average Daily Sales × Supplier Lead Time in Days) + Safety Stock. When your stock level hits this number, place a new order. Business intelligence tools calculate and alert you when you reach this threshold automatically.'
       },
       {
-        question: 'What is ABC inventory analysis?',
-        answer: 'ABC analysis classifies products into three tiers by their contribution to sales or value: A items (top 20% of products generating 70-80% of value), B items (middle 30%), and C items (bottom 50%). This prioritises management attention on the most important products.'
+        q: 'What is ABC inventory analysis?',
+        a: 'ABC analysis classifies products into three tiers by their contribution to sales or value: A items (top 20% of products generating 70-80% of value), B items (middle 30%), and C items (bottom 50%). This prioritises management attention on the most important products.'
       },
       {
-        question: 'How can a business with multiple locations manage inventory efficiently?',
-        answer: 'Multi-location inventory management tools like AskBiz provide a consolidated view across all locations, enable stock transfer between branches, and show which location performs best with each product — enabling intelligent distribution decisions.'
+        q: 'How can a business with multiple locations manage inventory efficiently?',
+        a: 'Multi-location inventory management tools like AskBiz provide a consolidated view across all locations, enable stock transfer between branches, and show which location performs best with each product — enabling intelligent distribution decisions.'
       }
     ],
     cta: {
@@ -240,20 +240,20 @@ export const CROSS_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'Why do profitable businesses sometimes run out of cash?',
-        answer: 'Profit and cash flow are different. Timing mismatches between delivery and payment, inventory investment, rapid growth demands, and seasonal cash valleys can all create cash shortages in businesses that are genuinely profitable.'
+        q: 'Why do profitable businesses sometimes run out of cash?',
+        a: 'Profit and cash flow are different. Timing mismatches between delivery and payment, inventory investment, rapid growth demands, and seasonal cash valleys can all create cash shortages in businesses that are genuinely profitable.'
       },
       {
-        question: 'What is a cash flow forecast and why do small businesses need one?',
-        answer: 'A cash flow forecast projects expected cash inflows and outflows over a future period (typically 13 weeks), showing when cash surpluses and shortfalls will occur. It\'s the primary tool for proactive cash management.'
+        q: 'What is a cash flow forecast and why do small businesses need one?',
+        a: 'A cash flow forecast projects expected cash inflows and outflows over a future period (typically 13 weeks), showing when cash surpluses and shortfalls will occur. It\'s the primary tool for proactive cash management.'
       },
       {
-        question: 'How can a small business improve its cash flow without more revenue?',
-        answer: 'Shortening the cash conversion cycle through faster invoice collection, extended supplier payment terms, and reduced inventory holding time improves cash flow without requiring revenue growth. Cash flow intelligence tools show exactly where cash is tied up.'
+        q: 'How can a small business improve its cash flow without more revenue?',
+        a: 'Shortening the cash conversion cycle through faster invoice collection, extended supplier payment terms, and reduced inventory holding time improves cash flow without requiring revenue growth. Cash flow intelligence tools show exactly where cash is tied up.'
       },
       {
-        question: 'How does business intelligence help with seasonal cash flow management?',
-        answer: 'Historical sales and cash flow data from BI tools reveals seasonal patterns precisely — enabling businesses to build reserves during strong periods, plan lean operations during predictable slow periods, and arrange credit well in advance of need.'
+        q: 'How does business intelligence help with seasonal cash flow management?',
+        a: 'Historical sales and cash flow data from BI tools reveals seasonal patterns precisely — enabling businesses to build reserves during strong periods, plan lean operations during predictable slow periods, and arrange credit well in advance of need.'
       }
     ],
     cta: {
@@ -305,20 +305,20 @@ export const CROSS_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'How do small business owners track staff sales performance?',
-        answer: 'By assigning each transaction to the staff member on shift, POS systems like AskBiz automatically build a performance record showing sales volume, revenue generated, and average transaction value per person.'
+        q: 'How do small business owners track staff sales performance?',
+        a: 'By assigning each transaction to the staff member on shift, POS systems like AskBiz automatically build a performance record showing sales volume, revenue generated, and average transaction value per person.'
       },
       {
-        question: 'How can business intelligence help prevent staff theft?',
-        answer: 'Systematic recording of all transactions enables cash vs. sales reconciliation (exposing cash shortfalls), void and refund pattern monitoring (detecting manipulation), and inventory vs. sales comparison (revealing unrecorded transactions).'
+        q: 'How can business intelligence help prevent staff theft?',
+        a: 'Systematic recording of all transactions enables cash vs. sales reconciliation (exposing cash shortfalls), void and refund pattern monitoring (detecting manipulation), and inventory vs. sales comparison (revealing unrecorded transactions).'
       },
       {
-        question: 'Is it fair to monitor staff performance with business intelligence tools?',
-        answer: 'Yes, when implemented transparently. Informing staff that all transactions are recorded and attributed to shift workers is standard business practice. Objective performance data enables fairer management than subjective impressions.'
+        q: 'Is it fair to monitor staff performance with business intelligence tools?',
+        a: 'Yes, when implemented transparently. Informing staff that all transactions are recorded and attributed to shift workers is standard business practice. Objective performance data enables fairer management than subjective impressions.'
       },
       {
-        question: 'How does staff performance data improve team results?',
-        answer: 'Performance data enables learning from top performers, setting evidence-based targets, providing meaningful recognition, and designing commission structures that genuinely incentivise performance — all of which improve overall team results.'
+        q: 'How does staff performance data improve team results?',
+        a: 'Performance data enables learning from top performers, setting evidence-based targets, providing meaningful recognition, and designing commission structures that genuinely incentivise performance — all of which improve overall team results.'
       }
     ],
     cta: {
@@ -370,20 +370,20 @@ export const CROSS_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'How do business owners manage multiple shop locations effectively?',
-        answer: 'Unified business intelligence platforms provide consolidated dashboards showing performance across all locations simultaneously — enabling owners to manage multiple branches from a single view without physical presence at each.'
+        q: 'How do business owners manage multiple shop locations effectively?',
+        a: 'Unified business intelligence platforms provide consolidated dashboards showing performance across all locations simultaneously — enabling owners to manage multiple branches from a single view without physical presence at each.'
       },
       {
-        question: 'What is multi-branch inventory management?',
-        answer: 'Multi-branch inventory management tracks stock levels at every location from a centralised system, enables stock transfers between branches, and maintains accurate inventory records at each location — preventing stockouts at one location while excess sits at another.'
+        q: 'What is multi-branch inventory management?',
+        a: 'Multi-branch inventory management tracks stock levels at every location from a centralised system, enables stock transfers between branches, and maintains accurate inventory records at each location — preventing stockouts at one location while excess sits at another.'
       },
       {
-        question: 'How can I maintain accountability for branch managers remotely?',
-        answer: 'When both owner and manager see the same real-time business data, accountability is transparent. Performance conversations reference shared data rather than subjective impressions — creating constructive management without micromanagement.'
+        q: 'How can I maintain accountability for branch managers remotely?',
+        a: 'When both owner and manager see the same real-time business data, accountability is transparent. Performance conversations reference shared data rather than subjective impressions — creating constructive management without micromanagement.'
       },
       {
-        question: 'When should a business open a second location?',
-        answer: 'Key indicators include consistently maxing out capacity at your current location, strong profitability margins, and stable operations that function without constant owner involvement. BI data showing these indicators provides the evidence for a confident expansion decision.'
+        q: 'When should a business open a second location?',
+        a: 'Key indicators include consistently maxing out capacity at your current location, strong profitability margins, and stable operations that function without constant owner involvement. BI data showing these indicators provides the evidence for a confident expansion decision.'
       }
     ],
     cta: {
@@ -435,20 +435,20 @@ export const CROSS_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'How should small businesses set product prices?',
-        answer: 'Data-driven pricing starts with true cost calculation (including all landed costs), sets a price floor at minimum acceptable margin, and sets target prices at desired margin — then adjusts based on sales velocity and demand sensitivity data.'
+        q: 'How should small businesses set product prices?',
+        a: 'Data-driven pricing starts with true cost calculation (including all landed costs), sets a price floor at minimum acceptable margin, and sets target prices at desired margin — then adjusts based on sales velocity and demand sensitivity data.'
       },
       {
-        question: 'How do I know if I\'m undercharging for my products?',
-        answer: 'Signs of underpricing include: products selling extremely quickly (demand exceeds supply at your price), margins below your minimum target when costs are included accurately, and competitors charging significantly more for comparable products.'
+        q: 'How do I know if I\'m undercharging for my products?',
+        a: 'Signs of underpricing include: products selling extremely quickly (demand exceeds supply at your price), margins below your minimum target when costs are included accurately, and competitors charging significantly more for comparable products.'
       },
       {
-        question: 'How do I raise prices without losing customers?',
-        answer: 'Data-driven price increases start with least price-sensitive products, test increases on new inventory, and monitor sales velocity post-change. This incremental, monitored approach typically generates margin improvements with minimal customer impact.'
+        q: 'How do I raise prices without losing customers?',
+        a: 'Data-driven price increases start with least price-sensitive products, test increases on new inventory, and monitor sales velocity post-change. This incremental, monitored approach typically generates margin improvements with minimal customer impact.'
       },
       {
-        question: 'What is a price floor for a business product?',
-        answer: 'A price floor is the minimum price at which a product can be sold while achieving a minimum acceptable margin. It\'s calculated as: True Cost × (1 + Minimum Margin %). Selling below this floor means losing money on every unit.'
+        q: 'What is a price floor for a business product?',
+        a: 'A price floor is the minimum price at which a product can be sold while achieving a minimum acceptable margin. It\'s calculated as: True Cost × (1 + Minimum Margin %). Selling below this floor means losing money on every unit.'
       }
     ],
     cta: {
@@ -500,20 +500,20 @@ export const CROSS_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'Can I run a full business intelligence system from just a smartphone?',
-        answer: 'Yes. AskBiz is designed to run entirely from a smartphone — processing sales, tracking inventory, managing staff, and generating profit reports without any desktop computer or additional hardware.'
+        q: 'Can I run a full business intelligence system from just a smartphone?',
+        a: 'Yes. AskBiz is designed to run entirely from a smartphone — processing sales, tracking inventory, managing staff, and generating profit reports without any desktop computer or additional hardware.'
       },
       {
-        question: 'Does AskBiz work offline on a phone?',
-        answer: 'Yes. AskBiz stores all transaction data locally on the device first and syncs to the cloud when internet is available — ensuring no sales are lost during connectivity outages, critical for businesses in areas with unreliable internet.'
+        q: 'Does AskBiz work offline on a phone?',
+        a: 'Yes. AskBiz stores all transaction data locally on the device first and syncs to the cloud when internet is available — ensuring no sales are lost during connectivity outages, critical for businesses in areas with unreliable internet.'
       },
       {
-        question: 'What kind of phone does AskBiz require?',
-        answer: 'AskBiz works on any Android smartphone, including budget devices. No proprietary hardware or expensive tablets are required — which makes it accessible to businesses in all markets regardless of available device budget.'
+        q: 'What kind of phone does AskBiz require?',
+        a: 'AskBiz works on any Android smartphone, including budget devices. No proprietary hardware or expensive tablets are required — which makes it accessible to businesses in all markets regardless of available device budget.'
       },
       {
-        question: 'How does mobile-first BI help businesses in emerging markets?',
-        answer: 'In markets where smartphones are the primary computing device, mobile-first BI makes business intelligence accessible without laptops, desktop computers, or reliable internet — democratising access to the insights that help businesses grow and survive.'
+        q: 'How does mobile-first BI help businesses in emerging markets?',
+        a: 'In markets where smartphones are the primary computing device, mobile-first BI makes business intelligence accessible without laptops, desktop computers, or reliable internet — democratising access to the insights that help businesses grow and survive.'
       }
     ],
     cta: {
@@ -565,20 +565,20 @@ export const CROSS_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'What is the minimum business intelligence a sole trader needs?',
-        answer: 'A sole trader needs five core metrics: daily profit, week-over-week growth trend, low stock alerts, outstanding invoices, and top-performing products. These provide 90% of the intelligence needed for good decisions in minimal daily time.'
+        q: 'What is the minimum business intelligence a sole trader needs?',
+        a: 'A sole trader needs five core metrics: daily profit, week-over-week growth trend, low stock alerts, outstanding invoices, and top-performing products. These provide 90% of the intelligence needed for good decisions in minimal daily time.'
       },
       {
-        question: 'How can a one-person business implement business intelligence without spending hours on it?',
-        answer: 'Configure automated reports and alerts in your BI tool so intelligence is pushed to you rather than requiring you to pull it. Daily summary emails, low stock notifications, and weekly performance reports provide key insights without manual analysis.'
+        q: 'How can a one-person business implement business intelligence without spending hours on it?',
+        a: 'Configure automated reports and alerts in your BI tool so intelligence is pushed to you rather than requiring you to pull it. Daily summary emails, low stock notifications, and weekly performance reports provide key insights without manual analysis.'
       },
       {
-        question: 'How does business intelligence help a solo entrepreneur with taxes?',
-        answer: 'A BI tool that records all transactions digitally from day one generates tax-year revenue, expense, and VAT reports automatically — transforming year-end tax preparation from a painful reconstruction into a simple report export.'
+        q: 'How does business intelligence help a solo entrepreneur with taxes?',
+        a: 'A BI tool that records all transactions digitally from day one generates tax-year revenue, expense, and VAT reports automatically — transforming year-end tax preparation from a painful reconstruction into a simple report export.'
       },
       {
-        question: 'When should a solo entrepreneur hire their first employee?',
-        answer: 'Data signals for hiring readiness include: capacity being consistently maxed out, strong profit margins, sales velocity exceeding your ability to serve demand, and stable cash flow able to support 3+ months of salary payments.'
+        q: 'When should a solo entrepreneur hire their first employee?',
+        a: 'Data signals for hiring readiness include: capacity being consistently maxed out, strong profit margins, sales velocity exceeding your ability to serve demand, and stable cash flow able to support 3+ months of salary payments.'
       }
     ],
     cta: {
@@ -630,20 +630,20 @@ export const CROSS_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'How should small businesses track supplier performance?',
-        answer: 'Record each supplier delivery with date, quantity, price, and any quality issues. Over time, this builds a performance profile showing price trends, delivery reliability, and quality consistency — the three most important supplier intelligence metrics.'
+        q: 'How should small businesses track supplier performance?',
+        a: 'Record each supplier delivery with date, quantity, price, and any quality issues. Over time, this builds a performance profile showing price trends, delivery reliability, and quality consistency — the three most important supplier intelligence metrics.'
       },
       {
-        question: 'How do I negotiate better prices with suppliers as a small business?',
-        answer: 'Data-backed negotiation uses historical purchase volume, total annual spend, and price comparisons across suppliers to make a compelling case for better terms. Suppliers respond more positively to data-backed requests than to general price complaints.'
+        q: 'How do I negotiate better prices with suppliers as a small business?',
+        a: 'Data-backed negotiation uses historical purchase volume, total annual spend, and price comparisons across suppliers to make a compelling case for better terms. Suppliers respond more positively to data-backed requests than to general price complaints.'
       },
       {
-        question: 'What is supply chain resilience for a small business?',
-        answer: 'Supply chain resilience means having qualified alternative suppliers for key products, tracked and maintained even when not your primary source, so that a primary supplier failure causes an inconvenience rather than a business crisis.'
+        q: 'What is supply chain resilience for a small business?',
+        a: 'Supply chain resilience means having qualified alternative suppliers for key products, tracked and maintained even when not your primary source, so that a primary supplier failure causes an inconvenience rather than a business crisis.'
       },
       {
-        question: 'How does supplier intelligence affect business profitability?',
-        answer: 'Since gross margin is determined by both selling price and buying cost, supplier intelligence that enables better buying terms has an equivalent profit impact to the same percentage improvement in selling prices.'
+        q: 'How does supplier intelligence affect business profitability?',
+        a: 'Since gross margin is determined by both selling price and buying cost, supplier intelligence that enables better buying terms has an equivalent profit impact to the same percentage improvement in selling prices.'
       }
     ],
     cta: {
@@ -695,20 +695,20 @@ export const CROSS_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'How often should a small business owner review their business data?',
-        answer: 'A 15-minute daily check, a 30-minute weekly review, and a 1-hour monthly review covers the intelligence needs of most SMEs. Consistency matters more than depth — daily habits catch problems early.'
+        q: 'How often should a small business owner review their business data?',
+        a: 'A 15-minute daily check, a 30-minute weekly review, and a 1-hour monthly review covers the intelligence needs of most SMEs. Consistency matters more than depth — daily habits catch problems early.'
       },
       {
-        question: 'What should a business owner check in their BI dashboard every day?',
-        answer: 'The five daily checks are: yesterday\'s profit, this week vs. last week trend, low stock alerts, exception alerts (unusual transactions), and one improvement action based on the data.'
+        q: 'What should a business owner check in their BI dashboard every day?',
+        a: 'The five daily checks are: yesterday\'s profit, this week vs. last week trend, low stock alerts, exception alerts (unusual transactions), and one improvement action based on the data.'
       },
       {
-        question: 'How do you build a data culture in a small business team?',
-        answer: 'Share relevant metrics with staff, set data-backed daily targets, celebrate performance wins with numbers, and allow staff to see their own performance data. Transparency and shared metrics build a team that collectively cares about results.'
+        q: 'How do you build a data culture in a small business team?',
+        a: 'Share relevant metrics with staff, set data-backed daily targets, celebrate performance wins with numbers, and allow staff to see their own performance data. Transparency and shared metrics build a team that collectively cares about results.'
       },
       {
-        question: 'What is included in a monthly business intelligence review?',
-        answer: 'A monthly review covers profit/loss statement, revenue and profit trends, product category performance, dead stock identification, cash flow position, and progress against annual targets — providing the data foundation for significant business decisions.'
+        q: 'What is included in a monthly business intelligence review?',
+        a: 'A monthly review covers profit/loss statement, revenue and profit trends, product category performance, dead stock identification, cash flow position, and progress against annual targets — providing the data foundation for significant business decisions.'
       }
     ],
     cta: {
@@ -760,20 +760,20 @@ export const CROSS_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'How do small businesses plan for seasonal demand?',
-        answer: 'Historical sales data from business intelligence tools reveals month-by-month, week-by-week, and day-by-day demand patterns. Using last year\'s data as a forecast (adjusted for business growth), owners can plan stock, staffing, and cash needs 6-8 weeks ahead of each peak.'
+        q: 'How do small businesses plan for seasonal demand?',
+        a: 'Historical sales data from business intelligence tools reveals month-by-month, week-by-week, and day-by-day demand patterns. Using last year\'s data as a forecast (adjusted for business growth), owners can plan stock, staffing, and cash needs 6-8 weeks ahead of each peak.'
       },
       {
-        question: 'How should a business manage cash flow during seasonal slow periods?',
-        answer: 'By building cash reserves during peak periods specifically to cover predictable slow periods, reducing stock purchasing before the valley, and managing variable costs (especially staffing) proactively based on forecast demand.'
+        q: 'How should a business manage cash flow during seasonal slow periods?',
+        a: 'By building cash reserves during peak periods specifically to cover predictable slow periods, reducing stock purchasing before the valley, and managing variable costs (especially staffing) proactively based on forecast demand.'
       },
       {
-        question: 'What seasonal patterns should retail businesses track?',
-        answer: 'Monthly revenue trends, week-of-year patterns (e.g., pre-Christmas acceleration), day-of-week splits, and time-of-day peaks are all valuable seasonal patterns for retail planning — revealed by consistent BI data recording.'
+        q: 'What seasonal patterns should retail businesses track?',
+        a: 'Monthly revenue trends, week-of-year patterns (e.g., pre-Christmas acceleration), day-of-week splits, and time-of-day peaks are all valuable seasonal patterns for retail planning — revealed by consistent BI data recording.'
       },
       {
-        question: 'How accurate is demand forecasting based on previous year data?',
-        answer: 'For established businesses in stable markets, previous year data adjusted for growth trend provides surprisingly accurate forecasts. The accuracy improves with more years of data and is supplemented by known one-off events (local festivals, public holidays).'
+        q: 'How accurate is demand forecasting based on previous year data?',
+        a: 'For established businesses in stable markets, previous year data adjusted for growth trend provides surprisingly accurate forecasts. The accuracy improves with more years of data and is supplemented by known one-off events (local festivals, public holidays).'
       }
     ],
     cta: {
@@ -825,20 +825,20 @@ export const CROSS_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'What is the difference between business intelligence and accounting software?',
-        answer: 'Accounting software records financial history for compliance purposes and is used by accountants. Business intelligence software provides real-time operational data for decision-making and is used by business owners daily.'
+        q: 'What is the difference between business intelligence and accounting software?',
+        a: 'Accounting software records financial history for compliance purposes and is used by accountants. Business intelligence software provides real-time operational data for decision-making and is used by business owners daily.'
       },
       {
-        question: 'Do small businesses need both accounting software and business intelligence tools?',
-        answer: 'Most established businesses benefit from both — BI for operational decisions and accounting software for compliance. AskBiz bridges the gap by providing both operational intelligence and tax-ready financial data that can be exported to your accountant.'
+        q: 'Do small businesses need both accounting software and business intelligence tools?',
+        a: 'Most established businesses benefit from both — BI for operational decisions and accounting software for compliance. AskBiz bridges the gap by providing both operational intelligence and tax-ready financial data that can be exported to your accountant.'
       },
       {
-        question: 'Can AskBiz replace accounting software for a small business?',
-        answer: 'For small businesses in early stages, AskBiz\'s built-in reporting often covers essential needs. As businesses grow and compliance requirements increase, integrating with dedicated accounting software for formal statements and tax filing becomes valuable.'
+        q: 'Can AskBiz replace accounting software for a small business?',
+        a: 'For small businesses in early stages, AskBiz\'s built-in reporting often covers essential needs. As businesses grow and compliance requirements increase, integrating with dedicated accounting software for formal statements and tax filing becomes valuable.'
       },
       {
-        question: 'How does a POS system connect to accounting software?',
-        answer: 'AskBiz generates exportable financial summaries (sales totals, expense categories, VAT amounts) that can be imported into accounting packages — reducing manual data entry and ensuring accounting records match operational data.'
+        q: 'How does a POS system connect to accounting software?',
+        a: 'AskBiz generates exportable financial summaries (sales totals, expense categories, VAT amounts) that can be imported into accounting packages — reducing manual data entry and ensuring accounting records match operational data.'
       }
     ],
     cta: {
@@ -890,20 +890,20 @@ export const CROSS_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'How quickly do businesses see results from AskBiz?',
-        answer: 'Most businesses experience their first significant insight — about margin, product performance, or staff accountability — within the first week of recording data. Meaningful financial results from data-driven decisions typically appear within 30-90 days.'
+        q: 'How quickly do businesses see results from AskBiz?',
+        a: 'Most businesses experience their first significant insight — about margin, product performance, or staff accountability — within the first week of recording data. Meaningful financial results from data-driven decisions typically appear within 30-90 days.'
       },
       {
-        question: 'What is the typical ROI from business intelligence for a small business?',
-        answer: 'ROI from business intelligence typically comes from margin improvement through pricing correction, inventory cost reduction through better buying, and theft/waste reduction through accountability. Most businesses recoup their subscription cost within the first month of data-driven decisions.'
+        q: 'What is the typical ROI from business intelligence for a small business?',
+        a: 'ROI from business intelligence typically comes from margin improvement through pricing correction, inventory cost reduction through better buying, and theft/waste reduction through accountability. Most businesses recoup their subscription cost within the first month of data-driven decisions.'
       },
       {
-        question: 'How long does it take to set up AskBiz?',
-        answer: 'Basic setup — creating your product catalogue and making your first sales — takes less than an hour. The full capability of AskBiz develops over time as data accumulates, with most businesses reaching full operational intelligence within 30 days.'
+        q: 'How long does it take to set up AskBiz?',
+        a: 'Basic setup — creating your product catalogue and making your first sales — takes less than an hour. The full capability of AskBiz develops over time as data accumulates, with most businesses reaching full operational intelligence within 30 days.'
       },
       {
-        question: 'Is AskBiz suitable for my type of business?',
-        answer: 'AskBiz is designed for any business that sells products or services — retail, hospitality, manufacturing, distribution, services, and online commerce. The core intelligence layer — profit tracking, inventory management, staff accountability — is valuable across all business types.'
+        q: 'Is AskBiz suitable for my type of business?',
+        a: 'AskBiz is designed for any business that sells products or services — retail, hospitality, manufacturing, distribution, services, and online commerce. The core intelligence layer — profit tracking, inventory management, staff accountability — is valuable across all business types.'
       }
     ],
     cta: {

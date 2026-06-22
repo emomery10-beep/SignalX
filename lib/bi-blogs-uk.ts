@@ -45,20 +45,20 @@ export const UKEU_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'What business intelligence tools are available for UK small businesses?',
-        answer: 'Affordable cloud-based BI tools like AskBiz provide UK SMEs with real-time sales tracking, profit/loss reporting, inventory management, and cash flow forecasting — without the enterprise price tag.'
+        q: 'What business intelligence tools are available for UK small businesses?',
+        a: 'Affordable cloud-based BI tools like AskBiz provide UK SMEs with real-time sales tracking, profit/loss reporting, inventory management, and cash flow forecasting — without the enterprise price tag.'
       },
       {
-        question: 'How does Making Tax Digital affect UK SME business intelligence?',
-        answer: 'MTD requires UK businesses to keep digital records and submit tax data digitally. BI tools that record every transaction digitally from the point of sale address MTD compliance automatically as part of normal business operations.'
+        q: 'How does Making Tax Digital affect UK SME business intelligence?',
+        a: 'MTD requires UK businesses to keep digital records and submit tax data digitally. BI tools that record every transaction digitally from the point of sale address MTD compliance automatically as part of normal business operations.'
       },
       {
-        question: 'How can UK SMEs improve their cash flow management?',
-        answer: 'Cash flow intelligence tools provide visibility into outstanding invoices, expected payment timing, and upcoming obligations — enabling businesses to act proactively on cash flow rather than reacting to crises.'
+        q: 'How can UK SMEs improve their cash flow management?',
+        a: 'Cash flow intelligence tools provide visibility into outstanding invoices, expected payment timing, and upcoming obligations — enabling businesses to act proactively on cash flow rather than reacting to crises.'
       },
       {
-        question: 'How has Brexit affected UK SME business intelligence needs?',
-        answer: 'Brexit added customs duties, import VAT, and rules of origin requirements for EU trade. Business intelligence tools that track landed costs and separate domestic from export transactions help UK SMEs manage this complexity.'
+        q: 'How has Brexit affected UK SME business intelligence needs?',
+        a: 'Brexit added customs duties, import VAT, and rules of origin requirements for EU trade. Business intelligence tools that track landed costs and separate domestic from export transactions help UK SMEs manage this complexity.'
       }
     ],
     cta: {
@@ -110,20 +110,20 @@ export const UKEU_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'How do UK small businesses prepare VAT returns efficiently?',
-        answer: 'Point-of-sale systems that automatically categorise each sale by VAT rate generate quarterly VAT summaries automatically, making return preparation a matter of minutes rather than hours of manual calculation.'
+        q: 'How do UK small businesses prepare VAT returns efficiently?',
+        a: 'Point-of-sale systems that automatically categorise each sale by VAT rate generate quarterly VAT summaries automatically, making return preparation a matter of minutes rather than hours of manual calculation.'
       },
       {
-        question: 'What records does HMRC require UK small businesses to keep?',
-        answer: 'HMRC requires businesses to keep records of all income, expenses, VAT, payroll, and asset purchases. These must be kept for 6 years from the end of the relevant tax year. Digital records that meet Making Tax Digital standards are increasingly required.'
+        q: 'What records does HMRC require UK small businesses to keep?',
+        a: 'HMRC requires businesses to keep records of all income, expenses, VAT, payroll, and asset purchases. These must be kept for 6 years from the end of the relevant tax year. Digital records that meet Making Tax Digital standards are increasingly required.'
       },
       {
-        question: 'How can a UK small business reduce its accountant fees?',
-        answer: 'Better organised, categorised digital records reduce the time accountants spend on data entry and reconstruction — directly reducing their fees. Business intelligence tools that generate tax-ready reports are key to this saving.'
+        q: 'How can a UK small business reduce its accountant fees?',
+        a: 'Better organised, categorised digital records reduce the time accountants spend on data entry and reconstruction — directly reducing their fees. Business intelligence tools that generate tax-ready reports are key to this saving.'
       },
       {
-        question: 'What is Making Tax Digital and how do I comply as a UK small business?',
-        answer: 'MTD requires UK businesses to maintain digital records and submit tax data through HMRC-compatible software. Business intelligence tools that record all transactions digitally from the point of sale address this requirement as a byproduct of normal operations.'
+        q: 'What is Making Tax Digital and how do I comply as a UK small business?',
+        a: 'MTD requires UK businesses to maintain digital records and submit tax data through HMRC-compatible software. Business intelligence tools that record all transactions digitally from the point of sale address this requirement as a byproduct of normal operations.'
       }
     ],
     cta: {
@@ -175,20 +175,20 @@ export const UKEU_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'How can UK restaurants manage food cost percentage?',
-        answer: 'By recording ingredient costs and associating them with menu items, tools like AskBiz calculate food cost percentage per dish — enabling menu engineering that targets the optimal 25-35% food cost ratio.'
+        q: 'How can UK restaurants manage food cost percentage?',
+        a: 'By recording ingredient costs and associating them with menu items, tools like AskBiz calculate food cost percentage per dish — enabling menu engineering that targets the optimal 25-35% food cost ratio.'
       },
       {
-        question: 'How does business intelligence help UK retail businesses manage buying decisions?',
-        answer: 'Sales data showing sell-through rates, days of supply remaining, and seasonal patterns enables UK retailers to make data-driven buying decisions — stocking proven bestsellers and avoiding dead stock.'
+        q: 'How does business intelligence help UK retail businesses manage buying decisions?',
+        a: 'Sales data showing sell-through rates, days of supply remaining, and seasonal patterns enables UK retailers to make data-driven buying decisions — stocking proven bestsellers and avoiding dead stock.'
       },
       {
-        question: 'What is menu engineering and how does it improve restaurant profitability?',
-        answer: 'Menu engineering classifies dishes by their margin and popularity — enabling restaurateurs to promote high-margin items, reprice underperforming ones, and remove unprofitable dishes. Data-driven menu changes typically improve gross margin by 3-5%.'
+        q: 'What is menu engineering and how does it improve restaurant profitability?',
+        a: 'Menu engineering classifies dishes by their margin and popularity — enabling restaurateurs to promote high-margin items, reprice underperforming ones, and remove unprofitable dishes. Data-driven menu changes typically improve gross margin by 3-5%.'
       },
       {
-        question: 'How do UK hospitality businesses manage labour cost against sales revenue?',
-        answer: 'Tracking sales per trading hour against staff hours enables hospitality businesses to identify optimal staffing levels for different periods — maximising the sales/labour cost ratio across all shifts.'
+        q: 'How do UK hospitality businesses manage labour cost against sales revenue?',
+        a: 'Tracking sales per trading hour against staff hours enables hospitality businesses to identify optimal staffing levels for different periods — maximising the sales/labour cost ratio across all shifts.'
       }
     ],
     cta: {
@@ -240,20 +240,20 @@ export const UKEU_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'How do UK businesses manage inventory across multiple sales channels?',
-        answer: 'Unified inventory management tools like AskBiz maintain a single stock pool that updates in real time regardless of which channel processes a sale — preventing oversells and keeping listings accurate.'
+        q: 'How do UK businesses manage inventory across multiple sales channels?',
+        a: 'Unified inventory management tools like AskBiz maintain a single stock pool that updates in real time regardless of which channel processes a sale — preventing oversells and keeping listings accurate.'
       },
       {
-        question: 'Which UK e-commerce marketplace has the highest fees?',
-        answer: 'Fee structures vary by product category and fulfillment method. Amazon typically charges 8-15% referral fees plus fulfillment costs; eBay charges up to 12.8% final value fees; Etsy 6.5% plus listing and payment fees. True profitability requires accounting for all fees.'
+        q: 'Which UK e-commerce marketplace has the highest fees?',
+        a: 'Fee structures vary by product category and fulfillment method. Amazon typically charges 8-15% referral fees plus fulfillment costs; eBay charges up to 12.8% final value fees; Etsy 6.5% plus listing and payment fees. True profitability requires accounting for all fees.'
       },
       {
-        question: 'How can UK omnichannel businesses track profitability by channel?',
-        answer: 'By recording the channel-specific fee structure for each sale and comparing against cost of goods, businesses can calculate true net margin per channel — showing which channels are genuinely profitable vs. merely high-revenue.'
+        q: 'How can UK omnichannel businesses track profitability by channel?',
+        a: 'By recording the channel-specific fee structure for each sale and comparing against cost of goods, businesses can calculate true net margin per channel — showing which channels are genuinely profitable vs. merely high-revenue.'
       },
       {
-        question: 'What is the average e-commerce return rate for UK businesses?',
-        answer: 'UK online return rates average 20-30% for fashion and footwear, and 8-15% for other product categories. Tracking returns by product and channel helps identify quality or description issues driving above-average return rates.'
+        q: 'What is the average e-commerce return rate for UK businesses?',
+        a: 'UK online return rates average 20-30% for fashion and footwear, and 8-15% for other product categories. Tracking returns by product and channel helps identify quality or description issues driving above-average return rates.'
       }
     ],
     cta: {
@@ -305,20 +305,20 @@ export const UKEU_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'What is the EU One Stop Shop (OSS) for VAT?',
-        answer: 'The EU OSS is a simplified VAT registration scheme allowing businesses to register in one EU member state and file a single quarterly return covering all B2C sales to EU consumers — rather than registering in each country separately.'
+        q: 'What is the EU One Stop Shop (OSS) for VAT?',
+        a: 'The EU OSS is a simplified VAT registration scheme allowing businesses to register in one EU member state and file a single quarterly return covering all B2C sales to EU consumers — rather than registering in each country separately.'
       },
       {
-        question: 'Do UK businesses need to charge EU VAT after Brexit?',
-        answer: 'UK businesses selling to EU consumers must charge the applicable EU destination country VAT rate. For goods under €150, this can be managed through the IOSS scheme. For goods over €150, customs duty and import VAT apply at the EU border.'
+        q: 'Do UK businesses need to charge EU VAT after Brexit?',
+        a: 'UK businesses selling to EU consumers must charge the applicable EU destination country VAT rate. For goods under €150, this can be managed through the IOSS scheme. For goods over €150, customs duty and import VAT apply at the EU border.'
       },
       {
-        question: 'What VAT rate should I charge for EU sales?',
-        answer: 'VAT rates vary by EU member state (17%-27% standard rate) and product category. Under OSS rules, you apply the destination country VAT rate for each sale — making systematic tracking by customer country essential.'
+        q: 'What VAT rate should I charge for EU sales?',
+        a: 'VAT rates vary by EU member state (17%-27% standard rate) and product category. Under OSS rules, you apply the destination country VAT rate for each sale — making systematic tracking by customer country essential.'
       },
       {
-        question: 'How do I prepare an EU OSS VAT return?',
-        answer: 'OSS returns require a breakdown of sales by EU destination country with the VAT amounts charged. Business intelligence tools that record each sale with customer country and VAT rate applied generate this breakdown automatically.'
+        q: 'How do I prepare an EU OSS VAT return?',
+        a: 'OSS returns require a breakdown of sales by EU destination country with the VAT amounts charged. Business intelligence tools that record each sale with customer country and VAT rate applied generate this breakdown automatically.'
       }
     ],
     cta: {
@@ -370,20 +370,20 @@ export const UKEU_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'How do EU e-commerce businesses manage cross-border VAT?',
-        answer: 'Through the EU OSS (One Stop Shop) scheme, businesses can register in one EU member state and file a single quarterly return for all EU cross-border B2C sales — applying the destination country VAT rate to each transaction.'
+        q: 'How do EU e-commerce businesses manage cross-border VAT?',
+        a: 'Through the EU OSS (One Stop Shop) scheme, businesses can register in one EU member state and file a single quarterly return for all EU cross-border B2C sales — applying the destination country VAT rate to each transaction.'
       },
       {
-        question: 'What are the biggest challenges in EU cross-border e-commerce?',
-        answer: 'The main challenges are VAT compliance across different rates, logistics costs and complexity, returns management under EU consumer law, and currency conversion for non-euro markets. Business intelligence tools that track all of these systematically are essential.'
+        q: 'What are the biggest challenges in EU cross-border e-commerce?',
+        a: 'The main challenges are VAT compliance across different rates, logistics costs and complexity, returns management under EU consumer law, and currency conversion for non-euro markets. Business intelligence tools that track all of these systematically are essential.'
       },
       {
-        question: 'How do I calculate profitability for different EU countries in my e-commerce business?',
-        answer: 'By tracking revenue, shipping costs, returns, and marketplace fees separately by destination country, you can calculate the true contribution margin for each market — enabling rational decisions about where to focus expansion.'
+        q: 'How do I calculate profitability for different EU countries in my e-commerce business?',
+        a: 'By tracking revenue, shipping costs, returns, and marketplace fees separately by destination country, you can calculate the true contribution margin for each market — enabling rational decisions about where to focus expansion.'
       },
       {
-        question: 'Do I need to register for VAT in every EU country I sell to?',
-        answer: 'Under the OSS scheme, most EU-based sellers only need to register in their home country and file consolidated cross-border returns. Non-EU sellers may need to register through IOSS for goods under €150 or in each country of import for higher-value goods.'
+        q: 'Do I need to register for VAT in every EU country I sell to?',
+        a: 'Under the OSS scheme, most EU-based sellers only need to register in their home country and file consolidated cross-border returns. Non-EU sellers may need to register through IOSS for goods under €150 or in each country of import for higher-value goods.'
       }
     ],
     cta: {
@@ -435,20 +435,20 @@ export const UKEU_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'What business intelligence tools are available for EU small businesses?',
-        answer: 'Cloud-based BI tools like AskBiz provide EU SMEs with sales tracking, profit reporting, inventory management, and cash flow analysis — with GDPR-compliant data handling and multi-currency support for non-euro markets.'
+        q: 'What business intelligence tools are available for EU small businesses?',
+        a: 'Cloud-based BI tools like AskBiz provide EU SMEs with sales tracking, profit reporting, inventory management, and cash flow analysis — with GDPR-compliant data handling and multi-currency support for non-euro markets.'
       },
       {
-        question: 'How does GDPR affect business intelligence for EU companies?',
-        answer: 'GDPR requires lawful bases for collecting and processing customer data, right-to-erasure compliance, and data protection measures. Business intelligence tools used by EU companies must be GDPR-compliant in their data handling.'
+        q: 'How does GDPR affect business intelligence for EU companies?',
+        a: 'GDPR requires lawful bases for collecting and processing customer data, right-to-erasure compliance, and data protection measures. Business intelligence tools used by EU companies must be GDPR-compliant in their data handling.'
       },
       {
-        question: 'How do EU SMEs use business data to access EU funding?',
-        answer: 'EU funding programmes and national SME loan schemes require documented financial performance. Business intelligence records showing consistent revenue, profitability, and cash flow patterns significantly strengthen funding applications.'
+        q: 'How do EU SMEs use business data to access EU funding?',
+        a: 'EU funding programmes and national SME loan schemes require documented financial performance. Business intelligence records showing consistent revenue, profitability, and cash flow patterns significantly strengthen funding applications.'
       },
       {
-        question: 'What is the ROI of business intelligence for a small European business?',
-        answer: 'Most businesses see ROI within 90 days through reduced stock waste, better buying decisions, and pricing optimisation. The long-term value — in better decisions, finance access, and faster growth — compounds significantly over time.'
+        q: 'What is the ROI of business intelligence for a small European business?',
+        a: 'Most businesses see ROI within 90 days through reduced stock waste, better buying decisions, and pricing optimisation. The long-term value — in better decisions, finance access, and faster growth — compounds significantly over time.'
       }
     ],
     cta: {
@@ -500,20 +500,20 @@ export const UKEU_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'How can UK independent retailers compete with Amazon and large chains?',
-        answer: 'Independent retailers compete through local knowledge, availability, and personal service — all amplified by business intelligence. Knowing exactly what your specific customers want and never running out of it is an advantage chains struggle to replicate.'
+        q: 'How can UK independent retailers compete with Amazon and large chains?',
+        a: 'Independent retailers compete through local knowledge, availability, and personal service — all amplified by business intelligence. Knowing exactly what your specific customers want and never running out of it is an advantage chains struggle to replicate.'
       },
       {
-        question: 'How do UK independent retailers forecast product demand?',
-        answer: 'Sales velocity tracking, seasonal pattern analysis from prior year data, and reorder point alerts provide the inputs for demand forecasting — enabling retailers to stock what customers want before demand peaks.'
+        q: 'How do UK independent retailers forecast product demand?',
+        a: 'Sales velocity tracking, seasonal pattern analysis from prior year data, and reorder point alerts provide the inputs for demand forecasting — enabling retailers to stock what customers want before demand peaks.'
       },
       {
-        question: 'What is dead stock and how do independent retailers manage it?',
-        answer: 'Dead stock is inventory that hasn\'t sold in 30-90 days. Business intelligence tools identify it automatically, allowing retailers to take action (promotional pricing, bundling, supplier returns) before it becomes a full capital write-off.'
+        q: 'What is dead stock and how do independent retailers manage it?',
+        a: 'Dead stock is inventory that hasn\'t sold in 30-90 days. Business intelligence tools identify it automatically, allowing retailers to take action (promotional pricing, bundling, supplier returns) before it becomes a full capital write-off.'
       },
       {
-        question: 'How does AskBiz help UK independent retailers manage suppliers?',
-        answer: 'AskBiz tracks multiple suppliers per product, records price and delivery performance history, and enables a multi-supplier strategy that protects against supply chain disruptions — crucial for UK retailers post-Brexit.'
+        q: 'How does AskBiz help UK independent retailers manage suppliers?',
+        a: 'AskBiz tracks multiple suppliers per product, records price and delivery performance history, and enables a multi-supplier strategy that protects against supply chain disruptions — crucial for UK retailers post-Brexit.'
       }
     ],
     cta: {
@@ -565,20 +565,20 @@ export const UKEU_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'What is a good food cost percentage for a UK restaurant?',
-        answer: 'The target food cost percentage for UK restaurants and cafes is typically 25-30% of revenue. Running above 35% usually indicates portion control issues, recipe cost increases not reflected in menu prices, or significant waste.'
+        q: 'What is a good food cost percentage for a UK restaurant?',
+        a: 'The target food cost percentage for UK restaurants and cafes is typically 25-30% of revenue. Running above 35% usually indicates portion control issues, recipe cost increases not reflected in menu prices, or significant waste.'
       },
       {
-        question: 'How can a UK cafe or restaurant reduce food waste?',
-        answer: 'Tracking waste as a cost category in your POS system makes it visible and measurable. FIFO stock management, accurate prep quantities based on sales forecasts, and daily waste recording are the core practices for reduction.'
+        q: 'How can a UK cafe or restaurant reduce food waste?',
+        a: 'Tracking waste as a cost category in your POS system makes it visible and measurable. FIFO stock management, accurate prep quantities based on sales forecasts, and daily waste recording are the core practices for reduction.'
       },
       {
-        question: 'How do UK food businesses manage rising labour costs?',
-        answer: 'Sales-per-labour-hour tracking enables data-driven scheduling — reducing hours during predictably slow periods while maintaining service quality during peaks. This typically improves the labour cost percentage without reducing customer experience.'
+        q: 'How do UK food businesses manage rising labour costs?',
+        a: 'Sales-per-labour-hour tracking enables data-driven scheduling — reducing hours during predictably slow periods while maintaining service quality during peaks. This typically improves the labour cost percentage without reducing customer experience.'
       },
       {
-        question: 'What BI tools do UK restaurants use for profitability management?',
-        answer: 'Tools like AskBiz provide food cost tracking by menu item, labour cost analysis by shift, waste recording, and daily profit/loss — giving UK hospitality operators the margin intelligence needed for profitability in a high-cost market.'
+        q: 'What BI tools do UK restaurants use for profitability management?',
+        a: 'Tools like AskBiz provide food cost tracking by menu item, labour cost analysis by shift, waste recording, and daily profit/loss — giving UK hospitality operators the margin intelligence needed for profitability in a high-cost market.'
       }
     ],
     cta: {
@@ -630,20 +630,20 @@ export const UKEU_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'How do EU retailers manage data across multiple European markets?',
-        answer: 'Unified business intelligence platforms like AskBiz consolidate sales, inventory, and customer data from all EU markets into a single dashboard — enabling performance comparison and resource allocation decisions across markets.'
+        q: 'How do EU retailers manage data across multiple European markets?',
+        a: 'Unified business intelligence platforms like AskBiz consolidate sales, inventory, and customer data from all EU markets into a single dashboard — enabling performance comparison and resource allocation decisions across markets.'
       },
       {
-        question: 'What is the best strategy for a retail brand expanding across EU markets?',
-        answer: 'Data-driven expansion starts by dominating your home market, testing adjacent markets with minimal investment, and using BI data to identify which markets have the highest CLV and lowest acquisition cost before scaling further.'
+        q: 'What is the best strategy for a retail brand expanding across EU markets?',
+        a: 'Data-driven expansion starts by dominating your home market, testing adjacent markets with minimal investment, and using BI data to identify which markets have the highest CLV and lowest acquisition cost before scaling further.'
       },
       {
-        question: 'How does customer lifetime value vary across European markets?',
-        answer: 'Repeat purchase rates, average order values, and return rates vary significantly by European market. Tracking these metrics by country helps identify which markets generate the highest total customer value and deserve the most marketing investment.'
+        q: 'How does customer lifetime value vary across European markets?',
+        a: 'Repeat purchase rates, average order values, and return rates vary significantly by European market. Tracking these metrics by country helps identify which markets generate the highest total customer value and deserve the most marketing investment.'
       },
       {
-        question: 'When should an EU retailer open a second warehouse for cross-border fulfilment?',
-        answer: 'Business intelligence that tracks actual delivery cost, delivery time, and return rate by customer country enables a financial model of the second-warehouse business case — showing precisely when volume and logistics economics justify the investment.'
+        q: 'When should an EU retailer open a second warehouse for cross-border fulfilment?',
+        a: 'Business intelligence that tracks actual delivery cost, delivery time, and return rate by customer country enables a financial model of the second-warehouse business case — showing precisely when volume and logistics economics justify the investment.'
       }
     ],
     cta: {
@@ -695,20 +695,20 @@ export const UKEU_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'When should a UK startup start tracking business intelligence data?',
-        answer: 'From the first sale. The compounding value of data history means that every month you delay BI implementation is a month of insights and trend data lost. Starting early costs almost nothing with affordable cloud tools.'
+        q: 'When should a UK startup start tracking business intelligence data?',
+        a: 'From the first sale. The compounding value of data history means that every month you delay BI implementation is a month of insights and trend data lost. Starting early costs almost nothing with affordable cloud tools.'
       },
       {
-        question: 'What metrics should a UK startup track in its first year?',
-        answer: 'Monthly revenue growth rate, gross margin percentage, customer acquisition cost, customer lifetime value, and (if pre-profitability) burn rate and runway are the core metrics for UK startup financial management.'
+        q: 'What metrics should a UK startup track in its first year?',
+        a: 'Monthly revenue growth rate, gross margin percentage, customer acquisition cost, customer lifetime value, and (if pre-profitability) burn rate and runway are the core metrics for UK startup financial management.'
       },
       {
-        question: 'How does business intelligence data help UK startups raise investment?',
-        answer: 'Investors respond to real historical data rather than projections. BI records showing consistent revenue growth, improving margins, and strong customer retention metrics are the most compelling elements of a fundraising data room.'
+        q: 'How does business intelligence data help UK startups raise investment?',
+        a: 'Investors respond to real historical data rather than projections. BI records showing consistent revenue growth, improving margins, and strong customer retention metrics are the most compelling elements of a fundraising data room.'
       },
       {
-        question: 'Is AskBiz suitable for UK startups?',
-        answer: 'Yes. AskBiz is designed to be affordable and easy to implement for businesses of any size — making it ideal for UK startups who want to build a data foundation from day one without enterprise-level costs or complexity.'
+        q: 'Is AskBiz suitable for UK startups?',
+        a: 'Yes. AskBiz is designed to be affordable and easy to implement for businesses of any size — making it ideal for UK startups who want to build a data foundation from day one without enterprise-level costs or complexity.'
       }
     ],
     cta: {
@@ -760,20 +760,20 @@ export const UKEU_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'Does GDPR apply to business intelligence software used by EU companies?',
-        answer: 'Yes. Any business intelligence tool that processes personal data of EU residents must comply with GDPR. This includes customer purchase history, loyalty data, and staff performance records.'
+        q: 'Does GDPR apply to business intelligence software used by EU companies?',
+        a: 'Yes. Any business intelligence tool that processes personal data of EU residents must comply with GDPR. This includes customer purchase history, loyalty data, and staff performance records.'
       },
       {
-        question: 'What personal data do business intelligence tools typically collect?',
-        answer: 'Most SME BI tools collect transaction records (product, amount, date), customer purchase history if customer tracking is enabled, and staff performance data. GDPR requires a lawful basis for each category of personal data processed.'
+        q: 'What personal data do business intelligence tools typically collect?',
+        a: 'Most SME BI tools collect transaction records (product, amount, date), customer purchase history if customer tracking is enabled, and staff performance data. GDPR requires a lawful basis for each category of personal data processed.'
       },
       {
-        question: 'How should EU businesses handle customer data deletion requests under GDPR?',
-        answer: 'Businesses must be able to search their systems for all personal data held about a specific customer and delete or anonymise it upon a valid erasure request. Business intelligence tools should support this with search and delete functions.'
+        q: 'How should EU businesses handle customer data deletion requests under GDPR?',
+        a: 'Businesses must be able to search their systems for all personal data held about a specific customer and delete or anonymise it upon a valid erasure request. Business intelligence tools should support this with search and delete functions.'
       },
       {
-        question: 'What should EU businesses look for in a GDPR-compliant BI tool?',
-        answer: 'Look for EU data storage, a Data Processing Agreement from the vendor, security certifications, transparency about subprocessors, and features that support data subject rights requests (search, export, delete by customer).'
+        q: 'What should EU businesses look for in a GDPR-compliant BI tool?',
+        a: 'Look for EU data storage, a Data Processing Agreement from the vendor, security certifications, transparency about subprocessors, and features that support data subject rights requests (search, export, delete by customer).'
       }
     ],
     cta: {
@@ -825,20 +825,20 @@ export const UKEU_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'What business intelligence metrics matter most for UK service businesses?',
-        answer: 'For service businesses, the key metrics are utilisation rate (% of time that is billable), average day rate achieved, project profitability (revenue minus actual time cost), and accounts receivable aging (how long clients take to pay).'
+        q: 'What business intelligence metrics matter most for UK service businesses?',
+        a: 'For service businesses, the key metrics are utilisation rate (% of time that is billable), average day rate achieved, project profitability (revenue minus actual time cost), and accounts receivable aging (how long clients take to pay).'
       },
       {
-        question: 'How do UK consultancies track project profitability?',
-        answer: 'By recording all staff time against each project with a cost per hour, and comparing total project cost against the fee charged, consultancies can identify which clients and project types are genuinely profitable.'
+        q: 'How do UK consultancies track project profitability?',
+        a: 'By recording all staff time against each project with a cost per hour, and comparing total project cost against the fee charged, consultancies can identify which clients and project types are genuinely profitable.'
       },
       {
-        question: 'How should UK service businesses manage invoice payment terms?',
-        answer: 'Aged debtor reports showing outstanding invoices by client and days outstanding enable targeted chasing of slow payers. Cash flow forecasts based on expected payment dates help service businesses anticipate and manage cash flow gaps.'
+        q: 'How should UK service businesses manage invoice payment terms?',
+        a: 'Aged debtor reports showing outstanding invoices by client and days outstanding enable targeted chasing of slow payers. Cash flow forecasts based on expected payment dates help service businesses anticipate and manage cash flow gaps.'
       },
       {
-        question: 'How do UK tradespeople and contractors track their business profitability?',
-        answer: 'Tradespeople can track job profitability by recording materials cost and time per job against the amount charged — identifying which types of work are most profitable and which clients or job types to focus on.'
+        q: 'How do UK tradespeople and contractors track their business profitability?',
+        a: 'Tradespeople can track job profitability by recording materials cost and time per job against the amount charged — identifying which types of work are most profitable and which clients or job types to focus on.'
       }
     ],
     cta: {
@@ -890,20 +890,20 @@ export const UKEU_BLOG_POSTS: BlogPost[] = [
     ],
     paa: [
       {
-        question: 'What records do EU pharmaceutical businesses need to keep for GDP compliance?',
-        answer: 'GDP (Good Distribution Practice) requires chain of custody records, temperature monitoring documentation, batch/serialisation records, and supplier qualification evidence. Business intelligence tools that track batch numbers and supply chain movements support GDP compliance.'
+        q: 'What records do EU pharmaceutical businesses need to keep for GDP compliance?',
+        a: 'GDP (Good Distribution Practice) requires chain of custody records, temperature monitoring documentation, batch/serialisation records, and supplier qualification evidence. Business intelligence tools that track batch numbers and supply chain movements support GDP compliance.'
       },
       {
-        question: 'How do EU cosmetics companies track products under EU Cosmetics Regulation?',
-        answer: 'EU Cosmetics Regulation requires product information files with formulation, batch records, and safety assessments. Tracking batch numbers and product history in a BI system supports compliance and enables rapid response to any product issues.'
+        q: 'How do EU cosmetics companies track products under EU Cosmetics Regulation?',
+        a: 'EU Cosmetics Regulation requires product information files with formulation, batch records, and safety assessments. Tracking batch numbers and product history in a BI system supports compliance and enables rapid response to any product issues.'
       },
       {
-        question: 'How can an EU pharmaceutical distributor manage product recalls efficiently?',
-        answer: 'Batch tracking in a business intelligence system allows immediate search of inventory by batch number — identifying all affected stock locations within seconds of a recall notice, rather than hours of manual searching.'
+        q: 'How can an EU pharmaceutical distributor manage product recalls efficiently?',
+        a: 'Batch tracking in a business intelligence system allows immediate search of inventory by batch number — identifying all affected stock locations within seconds of a recall notice, rather than hours of manual searching.'
       },
       {
-        question: 'What BI tools are suitable for EU pharmaceutical businesses?',
-        answer: 'Tools that support batch/lot tracking, expiry date management, FIFO stock control, and full supply chain audit trails are essential for pharmaceutical BI. AskBiz provides all these features alongside commercial analytics.'
+        q: 'What BI tools are suitable for EU pharmaceutical businesses?',
+        a: 'Tools that support batch/lot tracking, expiry date management, FIFO stock control, and full supply chain audit trails are essential for pharmaceutical BI. AskBiz provides all these features alongside commercial analytics.'
       }
     ],
     cta: {
