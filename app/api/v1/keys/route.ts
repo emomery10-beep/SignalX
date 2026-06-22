@@ -4,11 +4,11 @@ import { randomBytes } from 'crypto'
 
 export const runtime = 'nodejs'
 
+// Tiers mirror lib/plans.ts (free | growth | business). -1 = unlimited.
 const PLAN_LIMITS: Record<string, { month: number; minute: number }> = {
-  free:       { month: 100,   minute: 5   },
-  starter:    { month: 2000,  minute: 20  },
-  growth:     { month: 10000, minute: 60  },
-  enterprise: { month: -1,    minute: 120 },
+  free:     { month: 100,   minute: 5   },
+  growth:   { month: 10000, minute: 60  },
+  business: { month: -1,    minute: 120 },
 }
 
 function generateKey(): string {
@@ -46,7 +46,13 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { name = 'My API Key', mode = 'generic', plan = 'free' } = body
+  const { name = 'My API Key', mode = 'generic' } = body
+
+  // The key's plan comes from the user's actual subscription — never the request
+  // body — so a free user can't mint a higher-tier (e.g. unlimited) key. The
+  // entry tier and any unknown value map to 'free'.
+  const { data: profile } = await supabase.from('profiles').select('plan').eq('id', user.id).single()
+  const plan = profile?.plan && PLAN_LIMITS[profile.plan] ? profile.plan : 'free'
 
   // Max 5 keys per user
   const { count } = await supabase
