@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
 
 const tokens = {
   bg:      'var(--pos-bg)',
@@ -41,11 +42,11 @@ interface HubData {
   withScheduleCount: number
 }
 
-function timeAgo(iso: string) {
+function timeAgo(iso: string, tc: (key: string, vars?: Record<string, string | number>) => string) {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
-  if (s < 60) return 'just now'
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`
-  return `${Math.floor(s / 3600)}h ago`
+  if (s < 60) return tc('time_just_now')
+  if (s < 3600) return tc('time_minutes_ago', { count: Math.floor(s / 60) })
+  return tc('time_hours_ago', { count: Math.floor(s / 3600) })
 }
 
 function IconArrowLeft({ size = 20 }: { size?: number }) {
@@ -74,6 +75,7 @@ function IconCamera({ size = 22 }: { size?: number }) {
 
 export default function WaybillPage() {
   const router   = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [stage, setStage] = useState<Stage>('hub')
 
@@ -130,8 +132,8 @@ export default function WaybillPage() {
         videoRef.current.srcObject = stream
         await videoRef.current.play()
       }
-    } catch { setError('Camera access denied'); setStage('hub') }
-  }, [])
+    } catch { setError(tc('error_camera_denied')); setStage('hub') }
+  }, [tc])
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -165,8 +167,8 @@ export default function WaybillPage() {
 
   // Submit waybill
   const handleSubmit = async () => {
-    if (!destination.trim()) { setError('Destination is required'); return }
-    if (!capturedImage)      { setError('Photo is required'); return }
+    if (!destination.trim()) { setError(tc('error_destination_required')); return }
+    if (!capturedImage)      { setError(tc('error_photo_required')); return }
     if (!session) return
     setError('')
     setStage('submitting')
@@ -188,11 +190,11 @@ export default function WaybillPage() {
         body: JSON.stringify(body),
       })
       const d = await r.json()
-      if (!r.ok) { setError(d.error || 'Failed to log waybill'); setStage('details'); return }
+      if (!r.ok) { setError(d.error || tc('error_log_failed')); setStage('details'); return }
       setSuccessWaybill(d.waybill)
       await loadHub()
       setStage('success')
-    } catch { setError('Network error — please retry'); setStage('details') }
+    } catch { setError(tc('error_network')); setStage('details') }
   }
 
   if (!authReady || !session) return (
@@ -215,8 +217,8 @@ export default function WaybillPage() {
             <IconArrowLeft size={18} />
           </button>
           <div>
-            <div style={{ fontWeight: 800, fontSize: 17, color: '#fff' }}>Photograph Waybill</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>Delivery note or shipping label</div>
+            <div style={{ fontWeight: 800, fontSize: 17, color: '#fff' }}>{tc('viewfinder_title')}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>{tc('viewfinder_subtitle')}</div>
           </div>
         </div>
         {/* Frame guide */}
@@ -240,8 +242,8 @@ export default function WaybillPage() {
           <IconArrowLeft size={18} />
         </button>
         <div>
-          <div style={{ fontWeight: 800, fontSize: 18, color: tokens.warning }}>Dispatch Details</div>
-          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>Fill in the shipment info</div>
+          <div style={{ fontWeight: 800, fontSize: 18, color: tokens.warning }}>{tc('details_title')}</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>{tc('details_subtitle')}</div>
         </div>
       </div>
 
@@ -261,31 +263,31 @@ export default function WaybillPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Destination — required */}
           <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>Destination *</label>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>{tc('field_destination')}</label>
             <input
               value={destination}
               onChange={e => setDestination(e.target.value)}
-              placeholder="e.g. Accra Main Depot"
+              placeholder={tc('placeholder_destination')}
               style={{ width: '100%', background: 'var(--pos-border)', border: `1px solid ${destination.trim() ? `${tokens.warning}50` : 'var(--pos-border)'}`, borderRadius: 10, padding: '12px 14px', color: 'var(--pos-ink)', fontSize: 15, outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
 
           {/* Scheduled time */}
           <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>Scheduled Dispatch Time <span style={{ fontWeight: 400, opacity: 0.6 }}>(optional)</span></label>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>{tc('field_scheduled_time')} <span style={{ fontWeight: 400, opacity: 0.6 }}>{tc('label_optional')}</span></label>
             <input
               type="datetime-local"
               value={scheduledAt}
               onChange={e => setScheduledAt(e.target.value)}
               style={{ width: '100%', background: 'var(--pos-border)', border: `1px solid ${scheduledAt ? `${tokens.warning}50` : 'var(--pos-border)'}`, borderRadius: 10, padding: '12px 14px', color: 'var(--pos-ink)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }}
             />
-            {scheduledAt && <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginTop: 4 }}>On-time if dispatched within 15 min of this time</div>}
+            {scheduledAt && <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginTop: 4 }}>{tc('hint_on_time_window')}</div>}
           </div>
 
           {/* Two-column: Waybill ref + Vehicle ref */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>Waybill Ref</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>{tc('field_waybill_ref')}</label>
               <input
                 value={waybillRef}
                 onChange={e => setWaybillRef(e.target.value.toUpperCase())}
@@ -294,7 +296,7 @@ export default function WaybillPage() {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>Vehicle Ref</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>{tc('field_vehicle_ref')}</label>
               <input
                 value={vehicleRef}
                 onChange={e => setVehicleRef(e.target.value.toUpperCase())}
@@ -307,16 +309,16 @@ export default function WaybillPage() {
           {/* Two-column: Product + Quantity */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>Product</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>{tc('field_product')}</label>
               <input
                 value={productName}
                 onChange={e => setProductName(e.target.value)}
-                placeholder="Product name"
+                placeholder={tc('placeholder_product')}
                 style={{ width: '100%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', borderRadius: 10, padding: '11px 12px', color: 'var(--pos-ink)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>Quantity</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>{tc('field_quantity')}</label>
               <input
                 type="number"
                 value={quantity}
@@ -330,11 +332,11 @@ export default function WaybillPage() {
 
           {/* Notes */}
           <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>Notes <span style={{ fontWeight: 400, opacity: 0.6 }}>(optional)</span></label>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--pos-muted)', marginBottom: 6 }}>{tc('field_notes')} <span style={{ fontWeight: 400, opacity: 0.6 }}>{tc('label_optional')}</span></label>
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              placeholder="Any additional information…"
+              placeholder={tc('placeholder_notes')}
               rows={2}
               style={{ width: '100%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', borderRadius: 10, padding: '11px 12px', color: 'var(--pos-ink)', fontSize: 14, outline: 'none', boxSizing: 'border-box', resize: 'none' }}
             />
@@ -359,7 +361,7 @@ export default function WaybillPage() {
             transition: 'all 150ms',
           }}
         >
-          Log Dispatch
+          {tc('btn_log_dispatch')}
         </button>
       </div>
     </div>
@@ -369,7 +371,7 @@ export default function WaybillPage() {
   if (stage === 'submitting') return (
     <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
       <div style={{ width: 36, height: 36, border: `3px solid rgba(249,115,22,.3)`, borderTopColor: tokens.warning, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-      <div style={{ fontSize: 15, color: 'var(--pos-muted)' }}>Logging dispatch…</div>
+      <div style={{ fontSize: 15, color: 'var(--pos-muted)' }}>{tc('submitting_label')}</div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
@@ -380,7 +382,7 @@ export default function WaybillPage() {
     const onTimeRate = hubData?.onTimeRate ?? null
     const statusColor = isOnTime === true ? tokens.success : isOnTime === false ? tokens.danger : tokens.warning
     const statusIcon  = isOnTime === true ? '✓' : isOnTime === false ? '✗' : '—'
-    const statusLabel = isOnTime === true ? 'On Time' : isOnTime === false ? 'Late' : 'No schedule set'
+    const statusLabel = isOnTime === true ? tc('status_on_time') : isOnTime === false ? tc('status_late') : tc('status_no_schedule')
 
     return (
       <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', color: 'var(--pos-ink)', fontFamily: 'system-ui, sans-serif' }}>
@@ -388,7 +390,7 @@ export default function WaybillPage() {
           <button onClick={() => router.push('/factory')} style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>
             <IconArrowLeft size={18} />
           </button>
-          <div style={{ fontWeight: 800, fontSize: 18, color: tokens.warning }}>Dispatch Logged</div>
+          <div style={{ fontWeight: 800, fontSize: 18, color: tokens.warning }}>{tc('success_title')}</div>
         </div>
 
         <div style={{ padding: '28px 20px', maxWidth: 600, margin: '0 auto' }}>
@@ -411,19 +413,19 @@ export default function WaybillPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               {successWaybill.vehicle_ref && (
                 <div>
-                  <div style={{ fontSize: 10, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>Vehicle</div>
+                  <div style={{ fontSize: 10, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{tc('summary_vehicle')}</div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0', fontFamily: 'monospace' }}>{successWaybill.vehicle_ref}</div>
                 </div>
               )}
               {successWaybill.quantity != null && (
                 <div>
-                  <div style={{ fontSize: 10, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>Qty</div>
+                  <div style={{ fontSize: 10, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{tc('summary_qty')}</div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0' }}>{successWaybill.quantity.toLocaleString()}</div>
                 </div>
               )}
               {successWaybill.product_name && (
                 <div style={{ gridColumn: 'span 2' }}>
-                  <div style={{ fontSize: 10, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>Product</div>
+                  <div style={{ fontSize: 10, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>{tc('summary_product')}</div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0' }}>{successWaybill.product_name}</div>
                 </div>
               )}
@@ -434,15 +436,15 @@ export default function WaybillPage() {
           {onTimeRate !== null && (
             <div style={{ background: `rgba(249,115,22,0.06)`, border: `1px solid rgba(249,115,22,0.2)`, borderRadius: 14, padding: '14px 16px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginBottom: 2 }}>Today's on-time rate</div>
+                <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginBottom: 2 }}>{tc('success_today_on_time_rate')}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: onTimeRate >= 90 ? tokens.success : onTimeRate >= 70 ? tokens.warning : tokens.danger }}>
                   {onTimeRate}%
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 11, color: 'var(--pos-hint)' }}>{hubData?.onTime ?? 0} on time</div>
-                <div style={{ fontSize: 11, color: 'var(--pos-hint)' }}>{hubData?.late ?? 0} late</div>
-                <div style={{ fontSize: 11, color: 'var(--pos-hint)' }}>{hubData?.totalDispatches ?? 0} total</div>
+                <div style={{ fontSize: 11, color: 'var(--pos-hint)' }}>{tc('stat_on_time', { count: hubData?.onTime ?? 0 })}</div>
+                <div style={{ fontSize: 11, color: 'var(--pos-hint)' }}>{tc('stat_late', { count: hubData?.late ?? 0 })}</div>
+                <div style={{ fontSize: 11, color: 'var(--pos-hint)' }}>{tc('stat_total', { count: hubData?.totalDispatches ?? 0 })}</div>
               </div>
             </div>
           )}
@@ -451,11 +453,11 @@ export default function WaybillPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <button onClick={() => { setCapturedImage(null); setDestination(''); setWaybillRef(''); setProductName(''); setQuantity(''); setVehicleRef(''); setScheduledAt(''); setNotes(''); setStage('viewfinder') }}
               style={{ padding: '14px', background: `rgba(249,115,22,0.1)`, border: `1px solid rgba(249,115,22,0.3)`, borderRadius: 14, color: tokens.warning, fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
-              Scan Another
+              {tc('btn_scan_another')}
             </button>
             <button onClick={() => router.push('/factory')}
               style={{ padding: '14px', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', borderRadius: 14, color: '#e2e8f0', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
-              Back to Hub
+              {tc('btn_back_to_hub')}
             </button>
           </div>
         </div>
@@ -472,8 +474,8 @@ export default function WaybillPage() {
             <IconArrowLeft size={18} />
           </button>
           <div>
-            <div style={{ fontWeight: 800, fontSize: 20, color: tokens.warning }}>Dispatch</div>
-            <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>Waybill scan &amp; on-time tracking</div>
+            <div style={{ fontWeight: 800, fontSize: 20, color: tokens.warning }}>{tc('hub_title')}</div>
+            <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>{tc('hub_subtitle')}</div>
           </div>
         </div>
       </div>
@@ -485,28 +487,28 @@ export default function WaybillPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 20 }}>
             {/* On-time rate */}
             <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 14, padding: '14px', textAlign: 'center', gridColumn: 'span 3' }}>
-              <div style={{ fontSize: 10, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Today's On-Time Rate</div>
+              <div style={{ fontSize: 10, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{tc('hub_on_time_rate')}</div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 36, fontWeight: 900, lineHeight: 1, color: hubData.onTimeRate === null ? 'rgba(255,255,255,0.2)' : hubData.onTimeRate >= 90 ? tokens.success : hubData.onTimeRate >= 70 ? tokens.warning : tokens.danger }}>
                     {hubData.onTimeRate !== null ? `${hubData.onTimeRate}%` : '—'}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginTop: 4 }}>
-                    {hubData.withScheduleCount > 0 ? `${hubData.withScheduleCount} scheduled` : 'No scheduled dispatches'}
+                    {hubData.withScheduleCount > 0 ? tc('hub_scheduled_count', { count: hubData.withScheduleCount }) : tc('hub_no_scheduled')}
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: tokens.success }} />
-                    <span style={{ fontSize: 13, color: 'var(--pos-muted)' }}>{hubData.onTime} on time</span>
+                    <span style={{ fontSize: 13, color: 'var(--pos-muted)' }}>{tc('stat_on_time', { count: hubData.onTime })}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: tokens.danger }} />
-                    <span style={{ fontSize: 13, color: 'var(--pos-muted)' }}>{hubData.late} late</span>
+                    <span style={{ fontSize: 13, color: 'var(--pos-muted)' }}>{tc('stat_late', { count: hubData.late })}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--pos-hint)' }} />
-                    <span style={{ fontSize: 13, color: 'var(--pos-muted)' }}>{hubData.totalDispatches} total</span>
+                    <span style={{ fontSize: 13, color: 'var(--pos-muted)' }}>{tc('stat_total', { count: hubData.totalDispatches })}</span>
                   </div>
                 </div>
               </div>
@@ -526,15 +528,15 @@ export default function WaybillPage() {
             <IconTruck size={26} />
           </div>
           <div style={{ textAlign: 'left', flex: 1 }}>
-            <div style={{ fontWeight: 800, fontSize: 18, color: '#fff', lineHeight: 1.1 }}>Scan Waybill</div>
-            <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginTop: 3 }}>Photograph the delivery note before goods leave</div>
+            <div style={{ fontWeight: 800, fontSize: 18, color: '#fff', lineHeight: 1.1 }}>{tc('cta_scan_waybill')}</div>
+            <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginTop: 3 }}>{tc('cta_scan_subtitle')}</div>
           </div>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
 
         {/* Recent dispatches */}
         <div>
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>Today's Dispatches</div>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>{tc('recent_title')}</div>
           {hubLoading ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {[...Array(3)].map((_, i) => (
@@ -544,15 +546,15 @@ export default function WaybillPage() {
           ) : !hubData || hubData.waybills.length === 0 ? (
             <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 14, padding: '32px 20px', textAlign: 'center' }}>
               <div style={{ fontSize: 36, marginBottom: 10 }}>🚚</div>
-              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>No dispatches yet</div>
-              <div style={{ fontSize: 13, color: 'var(--pos-hint)' }}>Scan the first waybill to start tracking</div>
+              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{tc('empty_title')}</div>
+              <div style={{ fontSize: 13, color: 'var(--pos-hint)' }}>{tc('empty_subtitle')}</div>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {hubData.waybills.map(w => {
                 const isOnTime   = w.is_on_time
                 const badgeColor = isOnTime === true ? tokens.success : isOnTime === false ? tokens.danger : 'rgba(255,255,255,0.25)'
-                const badgeLabel = isOnTime === true ? 'On time' : isOnTime === false ? 'Late' : 'No sched.'
+                const badgeLabel = isOnTime === true ? tc('badge_on_time') : isOnTime === false ? tc('badge_late') : tc('badge_no_sched')
                 return (
                   <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.04)', border: `1px solid ${isOnTime === false ? 'rgba(239,68,68,0.2)' : 'var(--pos-border)'}`, borderRadius: 14, padding: '12px 14px' }}>
                     {w.photo_url ? (
@@ -568,7 +570,7 @@ export default function WaybillPage() {
                       <div style={{ fontSize: 11, color: 'var(--pos-hint)', marginTop: 2 }}>
                         {w.waybill_ref && `${w.waybill_ref} · `}
                         {w.vehicle_ref && `${w.vehicle_ref} · `}
-                        {timeAgo(w.dispatched_at)}
+                        {timeAgo(w.dispatched_at, tc)}
                       </div>
                     </div>
                     <span style={{ fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 20, flexShrink: 0, background: `${badgeColor}18`, color: badgeColor, border: `1px solid ${badgeColor}30` }}>

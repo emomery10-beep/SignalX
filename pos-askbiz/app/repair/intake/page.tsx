@@ -2,6 +2,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
+
+type Tc = (key: string, vars?: Record<string, string | number>) => string
 
 const ACC = '#6366f1'
 const GOOD = '#22c55e', WARN = '#f59e0b', BAD = '#ef4444', MUTED = '#94a3b8', DIM = '#64748b'
@@ -22,18 +25,20 @@ interface ConditionPhoto { label: string; dataUrl: string }
 
 interface ChecklistItem { key: string; label: string; result: 'untested' | 'pass' | 'fail' }
 
-const CONDITION_SLOTS = ['Front', 'Back', 'Screen', 'Sides']
+// slot label keys → tc('repair_intake.slot_*'); index used for stage-2 photo labelling
+const CONDITION_SLOT_KEYS = ['slot_front', 'slot_back', 'slot_screen', 'slot_sides']
+const buildConditionSlots = (tc: Tc) => CONDITION_SLOT_KEYS.map(k => tc('repair_intake.' + k))
 
-const CHECKLIST_DEFAULT: ChecklistItem[] = [
-  { key: 'screen', label: 'Screen test', result: 'untested' },
-  { key: 'buttons', label: 'Buttons', result: 'untested' },
-  { key: 'camera', label: 'Camera', result: 'untested' },
-  { key: 'battery', label: 'Battery health', result: 'untested' },
-  { key: 'water', label: 'Water damage indicator', result: 'untested' },
-]
+const CHECKLIST_KEYS = ['screen', 'buttons', 'camera', 'battery', 'water']
+const checklistLabel = (tc: Tc, key: string) => tc('repair_intake.check_' + key)
+const buildChecklistDefault = (tc: Tc): ChecklistItem[] =>
+  CHECKLIST_KEYS.map(key => ({ key, label: checklistLabel(tc, key), result: 'untested' as const }))
 
+// option value → label-key suffix
 const DEVICE_TYPES = ['Phone', 'Tablet', 'Laptop', 'Watch', 'Console', 'Other']
+const deviceTypeLabel = (tc: Tc, t: string) => tc('repair_intake.device_type_' + t.toLowerCase())
 const PRIORITIES = ['normal', 'high', 'urgent']
+const priorityLabel = (tc: Tc, p: string) => tc('repair_intake.priority_' + p)
 
 // strip data URL prefix → raw base64 for scan-device API
 function toBase64(dataUrl: string) {
@@ -43,6 +48,7 @@ function toBase64(dataUrl: string) {
 export default function RepairIntake() {
   const router = useRouter()
   const { session, ready: authReady } = usePosAuth()
+  const { tc } = useLang()
   const [sym, setSym] = useState('£')
 
   const [stage, setStage] = useState<Stage>('device_scan')
@@ -66,7 +72,8 @@ export default function RepairIntake() {
   // stage 2: condition
   const [photos, setPhotos] = useState<ConditionPhoto[]>([])
   const [conditionNotes, setConditionNotes] = useState('')
-  const [checklist, setChecklist] = useState<ChecklistItem[]>(CHECKLIST_DEFAULT)
+  const [checklist, setChecklist] = useState<ChecklistItem[]>(() => buildChecklistDefault(tc))
+  const conditionSlots = buildConditionSlots(tc)
 
   // stage 3: details
   const [customerName, setCustomerName] = useState('')
@@ -115,7 +122,7 @@ export default function RepairIntake() {
     } catch (err: any) {
       // Permission denied or no camera — fall back to file input (capture attr opens native camera on mobile)
       const denied = err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError'
-      setCameraError(denied ? 'Camera permission denied. Use the photo button instead.' : 'Camera unavailable. Use the photo button instead.')
+      setCameraError(denied ? tc('repair_intake.camera_permission_denied') : tc('repair_intake.camera_unavailable'))
       setCameraActive(false)
       fileRef.current?.click()
     }
@@ -153,7 +160,7 @@ export default function RepairIntake() {
   // ── Stage 1: device scan ────────────────────────────────
   const captureForScan = () => {
     const dataUrl = captureFromVideo()
-    if (!dataUrl) { setScanError('Could not capture frame'); return }
+    if (!dataUrl) { setScanError(tc('repair_intake.could_not_capture_frame')); return }
     stopCamera()
     runScan(dataUrl)
   }
@@ -168,7 +175,7 @@ export default function RepairIntake() {
       })
       const data = await res.json()
       if (!res.ok) {
-        setScanError(data.error || 'Could not read device label. Try again or enter manually.')
+        setScanError(data.error || tc('repair_intake.scan_read_failed'))
         setScanning(false)
         return
       }
@@ -183,7 +190,7 @@ export default function RepairIntake() {
       setScanConfidence(typeof d.confidence === 'number' ? d.confidence : null)
       setWarrantyInfo(data.warranty_info || null)
     } catch {
-      setScanError('Scan failed. Check your connection or enter manually.')
+      setScanError(tc('repair_intake.scan_failed'))
     }
     setScanning(false)
   }
@@ -199,7 +206,7 @@ export default function RepairIntake() {
 
   const addConditionPhoto = (dataUrl: string) => {
     setPhotos(prev => {
-      const label = CONDITION_SLOTS[prev.length] || `Photo ${prev.length + 1}`
+      const label = conditionSlots[prev.length] || tc('repair_intake.photo_n', { n: prev.length + 1 })
       return [...prev, { label, dataUrl }]
     })
   }
@@ -218,16 +225,16 @@ export default function RepairIntake() {
   const buildFaultDescription = () => {
     const parts: string[] = []
     if (issue.trim()) parts.push(issue.trim())
-    if (conditionNotes.trim()) parts.push(`Condition: ${conditionNotes.trim()}`)
+    if (conditionNotes.trim()) parts.push(tc('repair_intake.fault_condition_prefix', { notes: conditionNotes.trim() }))
     const failed = checklist.filter(c => c.result === 'fail').map(c => c.label)
-    if (failed.length) parts.push(`Failed checks: ${failed.join(', ')}`)
+    if (failed.length) parts.push(tc('repair_intake.fault_failed_checks', { checks: failed.join(', ') }))
     const passed = checklist.filter(c => c.result === 'pass').map(c => c.label)
-    if (passed.length) parts.push(`Passed checks: ${passed.join(', ')}`)
-    return parts.join('. ') || 'Device intake'
+    if (passed.length) parts.push(tc('repair_intake.fault_passed_checks', { checks: passed.join(', ') }))
+    return parts.join('. ') || tc('repair_intake.fault_default')
   }
 
   const submit = async () => {
-    if (!issue.trim()) { setSubmitError('Issue description is required'); return }
+    if (!issue.trim()) { setSubmitError(tc('repair_intake.issue_required')); return }
     setSubmitting(true); setSubmitError('')
     try {
       const deviceDesc = [deviceType, device.color, device.storage].filter(Boolean).join(' · ') || null
@@ -248,7 +255,7 @@ export default function RepairIntake() {
       })
       const data = await res.json()
       if (!res.ok) {
-        setSubmitError(data.error || 'Failed to create ticket')
+        setSubmitError(data.error || tc('repair_intake.create_ticket_failed'))
         setSubmitting(false)
         return
       }
@@ -268,7 +275,7 @@ export default function RepairIntake() {
       }
       setStage('done')
     } catch {
-      setSubmitError('Failed to create ticket. Check your connection.')
+      setSubmitError(tc('repair_intake.create_ticket_failed_conn'))
     }
     setSubmitting(false)
   }
@@ -276,7 +283,7 @@ export default function RepairIntake() {
   const resetAll = () => {
     setStage('device_scan')
     setDevice({ model: '', serial: '' }); setScanConfidence(null); setWarrantyInfo(null); setScanError('')
-    setPhotos([]); setConditionNotes(''); setChecklist(CHECKLIST_DEFAULT)
+    setPhotos([]); setConditionNotes(''); setChecklist(buildChecklistDefault(tc))
     setCustomerName(''); setCustomerPhone(''); setIssue(''); setDeviceType('Phone'); setEstCost(''); setPriority('normal'); setAssignedTo('')
     setSubmitError(''); setTicketNumber(''); setCreatedJobId('')
   }
@@ -288,10 +295,10 @@ export default function RepairIntake() {
   const btnSecondary: React.CSSProperties = { flex: 1, padding: '14px', borderRadius: 12, background: '#334155', color: MUTED, fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }
   const card: React.CSSProperties = { background: '#1e293b', border: '1px solid #334155', borderRadius: 14, padding: 18 }
 
-  if (!authReady) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: MUTED, fontFamily: 'system-ui, sans-serif' }}>Loading…</div>
+  if (!authReady) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: MUTED, fontFamily: 'system-ui, sans-serif' }}>{tc('repair_intake.loading')}</div>
 
   const stageIndex = ['device_scan', 'condition_photos', 'details', 'done'].indexOf(stage)
-  const stageLabels = ['Scan', 'Condition', 'Details', 'Done']
+  const stageLabels = [tc('repair_intake.stage_scan'), tc('repair_intake.stage_condition'), tc('repair_intake.stage_details'), tc('repair_intake.stage_done')]
 
   return (
     <div className="pos-screen" style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
@@ -303,8 +310,8 @@ export default function RepairIntake() {
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => { stopCamera(); router.push('/repair') }} style={{ background: '#334155', border: 'none', color: MUTED, width: 36, height: 36, borderRadius: 8, cursor: 'pointer', fontSize: 16 }}>←</button>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: ACC }}>🔧 New Intake</div>
-          <div style={{ fontSize: 12, color: MUTED }}>Camera-first device check-in</div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: ACC }}>{tc('repair_intake.header_title')}</div>
+          <div style={{ fontSize: 12, color: MUTED }}>{tc('repair_intake.header_subtitle')}</div>
         </div>
       </div>
 
@@ -324,8 +331,8 @@ export default function RepairIntake() {
         {stage === 'device_scan' && (
           <>
             <div style={card}>
-              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Scan device label</div>
-              <div style={{ fontSize: 12, color: MUTED, marginBottom: 14 }}>Point the camera at the IMEI/serial sticker (usually on the back or under the battery).</div>
+              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{tc('repair_intake.scan_title')}</div>
+              <div style={{ fontSize: 12, color: MUTED, marginBottom: 14 }}>{tc('repair_intake.scan_subtitle')}</div>
 
               {/* viewfinder */}
               <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', background: '#000', aspectRatio: '4 / 3', marginBottom: 12 }}>
@@ -333,13 +340,13 @@ export default function RepairIntake() {
                 {!cameraActive && (
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: DIM, gap: 8 }}>
                     <div style={{ fontSize: 40 }}>📷</div>
-                    <div style={{ fontSize: 13 }}>{scanning ? 'Reading label…' : 'Camera off'}</div>
+                    <div style={{ fontSize: 13 }}>{scanning ? tc('repair_intake.reading_label_short') : tc('repair_intake.camera_off')}</div>
                   </div>
                 )}
                 {scanning && (
                   <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
                     <div style={{ width: 40, height: 40, border: '3px solid #fff', borderTopColor: ACC, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                    <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>Reading device label…</span>
+                    <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{tc('repair_intake.reading_device_label')}</span>
                   </div>
                 )}
                 {cameraActive && !scanning && (
@@ -352,9 +359,9 @@ export default function RepairIntake() {
 
               <div style={{ display: 'flex', gap: 10 }}>
                 {!cameraActive
-                  ? <button onClick={() => openCamera('scan')} disabled={scanning} style={{ ...btnPrimary, opacity: scanning ? 0.6 : 1 }}>📷 Open camera</button>
-                  : <button onClick={stopCamera} style={btnSecondary}>Stop camera</button>}
-                <button onClick={() => { capturePurpose.current = 'scan'; fileRef.current?.click() }} disabled={scanning} style={{ ...btnSecondary, opacity: scanning ? 0.6 : 1 }}>🖼 Photo</button>
+                  ? <button onClick={() => openCamera('scan')} disabled={scanning} style={{ ...btnPrimary, opacity: scanning ? 0.6 : 1 }}>{tc('repair_intake.open_camera')}</button>
+                  : <button onClick={stopCamera} style={btnSecondary}>{tc('repair_intake.stop_camera')}</button>}
+                <button onClick={() => { capturePurpose.current = 'scan'; fileRef.current?.click() }} disabled={scanning} style={{ ...btnSecondary, opacity: scanning ? 0.6 : 1 }}>{tc('repair_intake.photo_btn')}</button>
               </div>
             </div>
 
@@ -362,11 +369,11 @@ export default function RepairIntake() {
             {warrantyInfo && (
               <div className="pos-banner" style={{ ...card, borderColor: warrantyInfo.is_under_warranty ? GOOD : WARN, background: warrantyInfo.is_under_warranty ? 'rgba(34,197,94,.08)' : 'rgba(245,158,11,.08)' }}>
                 <div style={{ fontWeight: 700, fontSize: 13, color: warrantyInfo.is_under_warranty ? GOOD : WARN }}>
-                  {warrantyInfo.is_under_warranty ? '✓ Under warranty' : 'Warranty expired'}
+                  {warrantyInfo.is_under_warranty ? tc('repair_intake.under_warranty') : tc('repair_intake.warranty_expired')}
                 </div>
                 <div style={{ fontSize: 12, color: MUTED, marginTop: 4 }}>
-                  Previous repair #{warrantyInfo.previous_ticket} — {warrantyInfo.previous_repair}
-                  {warrantyInfo.is_under_warranty ? ` · ${warrantyInfo.days_remaining} days remaining` : ''}
+                  {tc('repair_intake.previous_repair_line', { ticket: warrantyInfo.previous_ticket, repair: warrantyInfo.previous_repair })}
+                  {warrantyInfo.is_under_warranty ? tc('repair_intake.days_remaining_suffix', { days: warrantyInfo.days_remaining }) : ''}
                 </div>
               </div>
             )}
@@ -374,38 +381,38 @@ export default function RepairIntake() {
             {/* extracted / editable device info */}
             <div style={card}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div style={{ fontWeight: 700, fontSize: 14 }}>Device details</div>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>{tc('repair_intake.device_details')}</div>
                 {scanConfidence != null && (
                   <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 12, background: (scanConfidence >= 80 ? GOOD : scanConfidence >= 50 ? WARN : BAD) + '22', color: scanConfidence >= 80 ? GOOD : scanConfidence >= 50 ? WARN : BAD }}>
-                    {scanConfidence}% match
+                    {tc('repair_intake.percent_match', { percent: scanConfidence })}
                   </span>
                 )}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div>
-                  <label style={labelStyle}>Model</label>
-                  <input style={inputStyle} value={device.model || ''} placeholder="e.g. iPhone 14 Pro" onChange={e => setDevice(d => ({ ...d, model: e.target.value }))} />
+                  <label style={labelStyle}>{tc('repair_intake.model')}</label>
+                  <input style={inputStyle} value={device.model || ''} placeholder={tc('repair_intake.model_placeholder')} onChange={e => setDevice(d => ({ ...d, model: e.target.value }))} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Serial / IMEI</label>
-                  <input style={inputStyle} value={device.serial || ''} placeholder="Serial or IMEI" onChange={e => setDevice(d => ({ ...d, serial: e.target.value }))} />
+                  <label style={labelStyle}>{tc('repair_intake.serial_imei')}</label>
+                  <input style={inputStyle} value={device.serial || ''} placeholder={tc('repair_intake.serial_imei_placeholder')} onChange={e => setDevice(d => ({ ...d, serial: e.target.value }))} />
                 </div>
                 <div style={{ display: 'flex', gap: 12 }}>
                   <div style={{ flex: 1 }}>
-                    <label style={labelStyle}>Storage</label>
-                    <input style={inputStyle} value={device.storage || ''} placeholder="128GB" onChange={e => setDevice(d => ({ ...d, storage: e.target.value }))} />
+                    <label style={labelStyle}>{tc('repair_intake.storage')}</label>
+                    <input style={inputStyle} value={device.storage || ''} placeholder={tc('repair_intake.storage_placeholder')} onChange={e => setDevice(d => ({ ...d, storage: e.target.value }))} />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <label style={labelStyle}>Colour</label>
-                    <input style={inputStyle} value={device.color || ''} placeholder="Graphite" onChange={e => setDevice(d => ({ ...d, color: e.target.value }))} />
+                    <label style={labelStyle}>{tc('repair_intake.colour')}</label>
+                    <input style={inputStyle} value={device.color || ''} placeholder={tc('repair_intake.colour_placeholder')} onChange={e => setDevice(d => ({ ...d, color: e.target.value }))} />
                   </div>
                 </div>
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <button className="pos-btn-primary" onClick={() => { stopCamera(); setStage('condition_photos') }} style={btnPrimary}>Next: Condition →</button>
-              <button onClick={skipScan} style={btnSecondary}>Skip scan</button>
+              <button className="pos-btn-primary" onClick={() => { stopCamera(); setStage('condition_photos') }} style={btnPrimary}>{tc('repair_intake.next_condition')}</button>
+              <button onClick={skipScan} style={btnSecondary}>{tc('repair_intake.skip_scan')}</button>
             </div>
           </>
         )}
@@ -414,15 +421,15 @@ export default function RepairIntake() {
         {stage === 'condition_photos' && (
           <>
             <div style={card}>
-              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Document condition</div>
-              <div style={{ fontSize: 12, color: MUTED, marginBottom: 14 }}>Capture front, back, screen and sides. Protects you and the customer.</div>
+              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{tc('repair_intake.condition_title')}</div>
+              <div style={{ fontSize: 12, color: MUTED, marginBottom: 14 }}>{tc('repair_intake.condition_subtitle')}</div>
 
               <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', background: '#000', aspectRatio: '4 / 3', marginBottom: 12 }}>
                 <video ref={videoRef} playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', display: cameraActive ? 'block' : 'none' }} />
                 {!cameraActive && (
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: DIM, gap: 8 }}>
                     <div style={{ fontSize: 40 }}>📸</div>
-                    <div style={{ fontSize: 13 }}>Capture {CONDITION_SLOTS[photos.length] || 'extra'} view</div>
+                    <div style={{ fontSize: 13 }}>{tc('repair_intake.capture_view', { view: conditionSlots[photos.length] || tc('repair_intake.extra') })}</div>
                   </div>
                 )}
                 {cameraActive && (
@@ -434,9 +441,9 @@ export default function RepairIntake() {
 
               <div style={{ display: 'flex', gap: 10 }}>
                 {!cameraActive
-                  ? <button onClick={() => openCamera('condition')} style={btnPrimary}>📷 Open camera</button>
-                  : <button onClick={stopCamera} style={btnSecondary}>Stop camera</button>}
-                <button onClick={() => { capturePurpose.current = 'condition'; fileRef.current?.click() }} style={btnSecondary}>🖼 Add photo</button>
+                  ? <button onClick={() => openCamera('condition')} style={btnPrimary}>{tc('repair_intake.open_camera')}</button>
+                  : <button onClick={stopCamera} style={btnSecondary}>{tc('repair_intake.stop_camera')}</button>}
+                <button onClick={() => { capturePurpose.current = 'condition'; fileRef.current?.click() }} style={btnSecondary}>{tc('repair_intake.add_photo')}</button>
               </div>
 
               {/* thumbnails */}
@@ -455,12 +462,12 @@ export default function RepairIntake() {
 
             {/* pre-repair checklist */}
             <div style={card}>
-              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>Pre-repair checklist</div>
-              <div style={{ fontSize: 11, color: DIM, marginBottom: 12 }}>Tap to cycle: untested → pass → fail</div>
+              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{tc('repair_intake.checklist_title')}</div>
+              <div style={{ fontSize: 11, color: DIM, marginBottom: 12 }}>{tc('repair_intake.checklist_hint')}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {checklist.map(c => {
                   const col = c.result === 'pass' ? GOOD : c.result === 'fail' ? BAD : DIM
-                  const txt = c.result === 'pass' ? 'PASS' : c.result === 'fail' ? 'FAIL' : '—'
+                  const txt = c.result === 'pass' ? tc('repair_intake.result_pass') : c.result === 'fail' ? tc('repair_intake.result_fail') : tc('repair_intake.result_untested')
                   return (
                     <button key={c.key} onClick={() => cycleChecklist(c.key)}
                       style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0f172a', border: `1px solid ${c.result === 'untested' ? '#334155' : col + '66'}`, borderRadius: 8, padding: '10px 14px', cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -474,15 +481,15 @@ export default function RepairIntake() {
 
             {/* condition notes */}
             <div style={card}>
-              <label style={labelStyle}>Condition notes (scratches, cracks, etc.)</label>
+              <label style={labelStyle}>{tc('repair_intake.condition_notes_label')}</label>
               <textarea value={conditionNotes} onChange={e => setConditionNotes(e.target.value)} rows={3}
-                placeholder="e.g. Hairline crack top-left, scuffs on back…"
+                placeholder={tc('repair_intake.condition_notes_placeholder')}
                 style={{ ...inputStyle, resize: 'vertical' }} />
             </div>
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => { stopCamera(); setStage('device_scan') }} style={btnSecondary}>← Back</button>
-              <button className="pos-btn-primary" onClick={() => { stopCamera(); setStage('details') }} style={btnPrimary}>Next: Details →</button>
+              <button onClick={() => { stopCamera(); setStage('device_scan') }} style={btnSecondary}>{tc('repair_intake.back')}</button>
+              <button className="pos-btn-primary" onClick={() => { stopCamera(); setStage('details') }} style={btnPrimary}>{tc('repair_intake.next_details')}</button>
             </div>
           </>
         )}
@@ -491,45 +498,45 @@ export default function RepairIntake() {
         {stage === 'details' && (
           <>
             <div style={card}>
-              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>Customer & job details</div>
+              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>{tc('repair_intake.details_title')}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div style={{ display: 'flex', gap: 12 }}>
                   <div style={{ flex: 1 }}>
-                    <label style={labelStyle}>Customer name</label>
-                    <input style={inputStyle} value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Full name" />
+                    <label style={labelStyle}>{tc('repair_intake.customer_name')}</label>
+                    <input style={inputStyle} value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder={tc('repair_intake.customer_name_placeholder')} />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <label style={labelStyle}>Phone</label>
-                    <input style={inputStyle} inputMode="tel" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="Phone number" />
+                    <label style={labelStyle}>{tc('repair_intake.phone')}</label>
+                    <input style={inputStyle} inputMode="tel" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder={tc('repair_intake.phone_placeholder')} />
                   </div>
                 </div>
                 <div>
-                  <label style={labelStyle}>Issue description *</label>
-                  <textarea value={issue} onChange={e => setIssue(e.target.value)} rows={3} placeholder="What's wrong with the device?" style={{ ...inputStyle, resize: 'vertical' }} />
+                  <label style={labelStyle}>{tc('repair_intake.issue_description')}</label>
+                  <textarea value={issue} onChange={e => setIssue(e.target.value)} rows={3} placeholder={tc('repair_intake.issue_placeholder')} style={{ ...inputStyle, resize: 'vertical' }} />
                 </div>
                 <div style={{ display: 'flex', gap: 12 }}>
                   <div style={{ flex: 1 }}>
-                    <label style={labelStyle}>Device type</label>
+                    <label style={labelStyle}>{tc('repair_intake.device_type')}</label>
                     <select style={inputStyle} value={deviceType} onChange={e => setDeviceType(e.target.value)}>
-                      {DEVICE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                      {DEVICE_TYPES.map(t => <option key={t} value={t}>{deviceTypeLabel(tc, t)}</option>)}
                     </select>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <label style={labelStyle}>Priority</label>
+                    <label style={labelStyle}>{tc('repair_intake.priority')}</label>
                     <select style={inputStyle} value={priority} onChange={e => setPriority(e.target.value)}>
-                      {PRIORITIES.map(p => <option key={p} value={p}>{p[0].toUpperCase() + p.slice(1)}</option>)}
+                      {PRIORITIES.map(p => <option key={p} value={p}>{priorityLabel(tc, p)}</option>)}
                     </select>
                   </div>
                 </div>
                 <div>
-                  <label style={labelStyle}>Estimated cost ({sym})</label>
-                  <input style={inputStyle} inputMode="decimal" value={estCost} onChange={e => setEstCost(e.target.value)} placeholder="0.00" />
+                  <label style={labelStyle}>{tc('repair_intake.estimated_cost', { sym })}</label>
+                  <input style={inputStyle} inputMode="decimal" value={estCost} onChange={e => setEstCost(e.target.value)} placeholder={tc('repair_intake.estimated_cost_placeholder')} />
                 </div>
                 {engineers.length > 0 && (
                   <div>
-                    <label style={labelStyle}>Assign to engineer (optional)</label>
+                    <label style={labelStyle}>{tc('repair_intake.assign_engineer')}</label>
                     <select style={inputStyle} value={assignedTo} onChange={e => setAssignedTo(e.target.value)}>
-                      <option value="">— Unassigned —</option>
+                      <option value="">{tc('repair_intake.unassigned')}</option>
                       {engineers.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
                     </select>
                   </div>
@@ -539,16 +546,16 @@ export default function RepairIntake() {
 
             {/* summary */}
             <div style={{ ...card, background: '#0f172a' }}>
-              <div style={{ fontSize: 12, color: MUTED, marginBottom: 8 }}>Summary</div>
-              <div style={{ fontSize: 13, color: '#f1f5f9' }}>{device.model || 'Unknown device'}{device.serial ? ` · ${device.serial}` : ''}</div>
-              <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>{photos.length} photo{photos.length === 1 ? '' : 's'} · {checklist.filter(c => c.result !== 'untested').length}/{checklist.length} checks done</div>
+              <div style={{ fontSize: 12, color: MUTED, marginBottom: 8 }}>{tc('repair_intake.summary')}</div>
+              <div style={{ fontSize: 13, color: '#f1f5f9' }}>{device.model || tc('repair_intake.unknown_device')}{device.serial ? ' · ' + device.serial : ''}</div>
+              <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>{tc('repair_intake.photos_checks_line', { photos: photos.length, photoWord: photos.length === 1 ? tc('repair_intake.photo_singular') : tc('repair_intake.photo_plural'), done: checklist.filter(c => c.result !== 'untested').length, total: checklist.length })}</div>
             </div>
 
             {submitError && <div className="pos-banner" style={{ color: BAD, fontSize: 13 }}>{submitError}</div>}
 
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setStage('condition_photos')} style={btnSecondary}>← Back</button>
-              <button className="pos-btn-primary" onClick={submit} disabled={submitting} style={{ ...btnPrimary, opacity: submitting ? 0.6 : 1 }}>{submitting ? 'Creating…' : '✓ Create ticket'}</button>
+              <button onClick={() => setStage('condition_photos')} style={btnSecondary}>{tc('repair_intake.back')}</button>
+              <button className="pos-btn-primary" onClick={submit} disabled={submitting} style={{ ...btnPrimary, opacity: submitting ? 0.6 : 1 }}>{submitting ? tc('repair_intake.creating') : tc('repair_intake.create_ticket')}</button>
             </div>
           </>
         )}
@@ -559,13 +566,13 @@ export default function RepairIntake() {
             <div className="pos-success-icon" style={{ width: 72, height: 72, borderRadius: 36, background: 'rgba(34,197,94,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={GOOD} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5" /></svg>
             </div>
-            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>Ticket created</div>
+            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 4 }}>{tc('repair_intake.ticket_created')}</div>
             {ticketNumber && <div style={{ fontSize: 18, color: ACC, fontWeight: 700, marginBottom: 6 }}>#{ticketNumber}</div>}
-            <div style={{ fontSize: 13, color: MUTED, marginBottom: 24 }}>{device.model || 'Device'} checked in for {customerName || 'walk-in customer'}. {customerPhone ? 'SMS confirmation sent.' : ''}</div>
+            <div style={{ fontSize: 13, color: MUTED, marginBottom: 24 }}>{tc('repair_intake.checked_in_for', { device: device.model || tc('repair_intake.device_fallback'), customer: customerName || tc('repair_intake.walk_in_customer') })}{customerPhone ? tc('repair_intake.sms_sent') : ''}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 320, margin: '0 auto' }}>
-              <button onClick={() => window.print()} style={{ ...btnSecondary, flex: 'none' }}>🖨 Print ticket</button>
-              <button onClick={() => router.push('/repair/tickets')} style={{ ...btnSecondary, flex: 'none' }}>🎫 View tickets</button>
-              <button className="pos-btn-primary" onClick={resetAll} style={{ ...btnPrimary, flex: 'none' }}>📸 New intake</button>
+              <button onClick={() => window.print()} style={{ ...btnSecondary, flex: 'none' }}>{tc('repair_intake.print_ticket')}</button>
+              <button onClick={() => router.push('/repair/tickets')} style={{ ...btnSecondary, flex: 'none' }}>{tc('repair_intake.view_tickets')}</button>
+              <button className="pos-btn-primary" onClick={resetAll} style={{ ...btnPrimary, flex: 'none' }}>{tc('repair_intake.new_intake')}</button>
             </div>
           </div>
         )}

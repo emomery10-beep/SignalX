@@ -16,13 +16,17 @@ import enFactoryCapture from '@/locales/en/factory_capture.json'
 import enFactoryShift from '@/locales/en/factory_shift.json'
 import enLogisticsIntake from '@/locales/en/logistics_intake.json'
 import enLogisticsDashboard from '@/locales/en/logistics_dashboard.json'
+import enRestaurantDeliveries from '@/locales/en/restaurant_deliveries.json'
+import enFactoryWaybill from '@/locales/en/factory_waybill.json'
+import enRepairIntake from '@/locales/en/repair_intake.json'
+import enFactoryBatch from '@/locales/en/factory_batch.json'
 
 type Dict = Record<string, unknown>
 
 // English-only for now — translation gated on API credits. The resolver falls
 // back to English for locales lacking a namespace, so pages render correctly.
 const CATALOG: Record<string, Record<string, Dict>> = {
-  en: { common: enCommon, sell: enSell, dashboard: enDashboard, inventory: enInventory, pos: enPos, logistics: enLogistics, factory: enFactory, salon_clients: enSalonClients, factory_capture: enFactoryCapture, factory_shift: enFactoryShift, logistics_intake: enLogisticsIntake, logistics_dashboard: enLogisticsDashboard },
+  en: { common: enCommon, sell: enSell, dashboard: enDashboard, inventory: enInventory, pos: enPos, logistics: enLogistics, factory: enFactory, salon_clients: enSalonClients, factory_capture: enFactoryCapture, factory_shift: enFactoryShift, logistics_intake: enLogisticsIntake, logistics_dashboard: enLogisticsDashboard, restaurant_deliveries: enRestaurantDeliveries, factory_waybill: enFactoryWaybill, repair_intake: enRepairIntake, factory_batch: enFactoryBatch },
 }
 
 const BASE = 'en'

@@ -2,6 +2,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
+
+type Tc = (key: string, vars?: Record<string, string | number>) => string
 
 const tokens = {
   bg:      'var(--pos-bg)',
@@ -28,26 +31,36 @@ interface Batch {
   status: string; updated_at: string; events: BatchEvent[]
 }
 
-const CHECKPOINTS: { id: string; label: string; icon: string; color: string; hint: string }[] = [
-  { id: 'intake',      label: 'Intake',      icon: '📥', color: tokens.intake,   hint: 'Raw materials arrived'     },
-  { id: 'in_progress', label: 'In Progress', icon: '⚙️', color: tokens.warning,  hint: 'Currently being processed' },
-  { id: 'qc_pass',     label: 'QC Pass',     icon: '✅', color: tokens.success,  hint: 'Quality check passed'      },
-  { id: 'qc_fail',     label: 'QC Fail',     icon: '❌', color: tokens.danger,    hint: 'Quality check failed'      },
-  { id: 'dispatch',    label: 'Dispatch',    icon: '🚚', color: tokens.dispatch, hint: 'Shipped out'               },
-]
+function buildCheckpoints(tc: Tc): { id: string; label: string; icon: string; color: string; hint: string }[] {
+  return [
+    { id: 'intake',      label: tc('factory_batch.cp_intake_label'),      icon: '📥', color: tokens.intake,   hint: tc('factory_batch.cp_intake_hint')      },
+    { id: 'in_progress', label: tc('factory_batch.cp_in_progress_label'), icon: '⚙️', color: tokens.warning,  hint: tc('factory_batch.cp_in_progress_hint') },
+    { id: 'qc_pass',     label: tc('factory_batch.cp_qc_pass_label'),     icon: '✅', color: tokens.success,  hint: tc('factory_batch.cp_qc_pass_hint')     },
+    { id: 'qc_fail',     label: tc('factory_batch.cp_qc_fail_label'),     icon: '❌', color: tokens.danger,    hint: tc('factory_batch.cp_qc_fail_hint')     },
+    { id: 'dispatch',    label: tc('factory_batch.cp_dispatch_label'),    icon: '🚚', color: tokens.dispatch, hint: tc('factory_batch.cp_dispatch_hint')     },
+  ]
+}
 
 const CP_COLOR: Record<string, string> = {
   intake: tokens.intake, in_progress: tokens.warning, qc_pass: tokens.success, qc_fail: tokens.danger, dispatch: tokens.dispatch,
 }
-const CP_LABEL: Record<string, string> = {
-  intake: 'Intake', in_progress: 'In Progress', qc_pass: 'QC Pass', qc_fail: 'QC Fail', dispatch: 'Dispatch',
+
+function cpLabel(tc: Tc, id: string): string {
+  const map: Record<string, string> = {
+    intake: tc('factory_batch.cp_intake_label'),
+    in_progress: tc('factory_batch.cp_in_progress_label'),
+    qc_pass: tc('factory_batch.cp_qc_pass_label'),
+    qc_fail: tc('factory_batch.cp_qc_fail_label'),
+    dispatch: tc('factory_batch.cp_dispatch_label'),
+  }
+  return map[id] || id
 }
 
-function timeAgo(iso: string) {
+function timeAgo(tc: Tc, iso: string) {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
-  if (s < 60) return 'just now'
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`
-  if (s < 86400) return `${Math.floor(s / 3600)}h ago`
+  if (s < 60) return tc('factory_batch.time_just_now')
+  if (s < 3600) return tc('factory_batch.time_minutes_ago', { count: Math.floor(s / 60) })
+  if (s < 86400) return tc('factory_batch.time_hours_ago', { count: Math.floor(s / 3600) })
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
@@ -57,8 +70,10 @@ function IconArrowLeft({ size = 18 }: { size?: number }) {
 
 export default function BatchPage() {
   const router  = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [stage, setStage]   = useState<Stage>('hub')
+  const CHECKPOINTS = buildCheckpoints(tc)
 
   // Hub data
   const [batches, setBatches]       = useState<Batch[]>([])
@@ -111,10 +126,10 @@ export default function BatchPage() {
       if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play() }
       setCameraOn(true)
     } catch (err: any) {
-      setCameraErr(err?.name === 'NotAllowedError' ? 'Camera access denied' : 'Camera unavailable')
+      setCameraErr(err?.name === 'NotAllowedError' ? tc('factory_batch.camera_access_denied') : tc('factory_batch.camera_unavailable'))
       setCameraOn(false)
     }
-  }, [])
+  }, [tc])
 
   function stopCamera() {
     streamRef.current?.getTracks().forEach(t => t.stop())
@@ -161,7 +176,7 @@ export default function BatchPage() {
       })
       if (!res.ok) {
         const d = await res.json()
-        setSaveError(d.error || 'Failed to submit')
+        setSaveError(d.error || tc('factory_batch.error_failed_submit'))
         setStage('checkpoint')
         return
       }
@@ -170,7 +185,7 @@ export default function BatchPage() {
       await loadBatches()
       setStage('success')
     } catch {
-      setSaveError('Network error — try again')
+      setSaveError(tc('factory_batch.error_network'))
       setStage('checkpoint')
     }
   }
@@ -200,8 +215,8 @@ export default function BatchPage() {
           <IconArrowLeft />
         </button>
         <div>
-          <div style={{ fontWeight: 800, fontSize: 18, color: tokens.dispatch }}>Batch Traceability</div>
-          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>Scan labels at every checkpoint</div>
+          <div style={{ fontWeight: 800, fontSize: 18, color: tokens.dispatch }}>{tc('factory_batch.hub_title')}</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>{tc('factory_batch.hub_subtitle')}</div>
         </div>
         <button onClick={loadBatches} style={{ marginLeft: 'auto', width: 36, height: 36, borderRadius: '50%', background: 'var(--pos-border)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pos-muted)' }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
@@ -221,15 +236,15 @@ export default function BatchPage() {
             📷
           </div>
           <div style={{ textAlign: 'left', flex: 1 }}>
-            <div style={{ fontWeight: 800, fontSize: 17, color: '#fff', lineHeight: 1.1 }}>Scan Batch Label</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 3 }}>Photograph to log a checkpoint</div>
+            <div style={{ fontWeight: 800, fontSize: 17, color: '#fff', lineHeight: 1.1 }}>{tc('factory_batch.hub_scan_cta_title')}</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginTop: 3 }}>{tc('factory_batch.hub_scan_cta_subtitle')}</div>
           </div>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pos-muted)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
 
         {/* Active batches */}
         <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-          Active Batches
+          {tc('factory_batch.hub_active_batches')}
           {batches.length > 0 && (
             <span style={{ background: `rgba(6,182,212,0.15)`, color: tokens.dispatch, borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>{batches.length}</span>
           )}
@@ -244,8 +259,8 @@ export default function BatchPage() {
         ) : batches.length === 0 ? (
           <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 14, padding: '28px 20px', textAlign: 'center' }}>
             <div style={{ fontSize: 34, marginBottom: 10 }}>📦</div>
-            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>No active batches</div>
-            <div style={{ fontSize: 13, color: 'var(--pos-hint)' }}>Scan a batch label to start tracking</div>
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{tc('factory_batch.hub_empty_title')}</div>
+            <div style={{ fontSize: 13, color: 'var(--pos-hint)' }}>{tc('factory_batch.hub_empty_subtitle')}</div>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -268,9 +283,9 @@ export default function BatchPage() {
                       {latest && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
                           <span style={{ fontSize: 10, fontWeight: 700, color: latestColor, background: `${latestColor}18`, border: `1px solid ${latestColor}30`, padding: '2px 8px', borderRadius: 20 }}>
-                            {CP_LABEL[latest.checkpoint] || latest.checkpoint}
+                            {cpLabel(tc, latest.checkpoint)}
                           </span>
-                          <span style={{ fontSize: 10, color: 'var(--pos-hint)' }}>{timeAgo(latest.created_at)}</span>
+                          <span style={{ fontSize: 10, color: 'var(--pos-hint)' }}>{timeAgo(tc, latest.created_at)}</span>
                         </div>
                       )}
                     </div>
@@ -295,7 +310,7 @@ export default function BatchPage() {
                           </div>
                         )
                       })}
-                      <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginLeft: 4 }}>{b.events.length} scan{b.events.length > 1 ? 's' : ''}</span>
+                      <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginLeft: 4 }}>{b.events.length > 1 ? tc('factory_batch.hub_scan_count_plural', { count: b.events.length }) : tc('factory_batch.hub_scan_count', { count: b.events.length })}</span>
                     </div>
                   )}
                 </div>
@@ -328,8 +343,8 @@ export default function BatchPage() {
           <IconArrowLeft />
         </button>
         <div>
-          <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>Scan Batch Label</div>
-          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 2 }}>Frame the batch label or packaging</div>
+          <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{tc('factory_batch.viewfinder_title')}</div>
+          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 2 }}>{tc('factory_batch.viewfinder_subtitle')}</div>
         </div>
       </div>
 
@@ -364,7 +379,7 @@ export default function BatchPage() {
 
       {cameraErr && (
         <div style={{ position: 'absolute', bottom: 160, left: 20, right: 20, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', borderRadius: 12, padding: '12px 16px', color: '#fff', fontSize: 13, textAlign: 'center' }}>
-          {cameraErr} — use gallery instead
+          {tc('factory_batch.viewfinder_camera_error', { error: cameraErr })}
         </div>
       )}
     </div>
@@ -384,32 +399,32 @@ export default function BatchPage() {
           <img src={photoUrl} alt="" style={{ width: 42, height: 42, borderRadius: 10, objectFit: 'cover', border: `2px solid ${tokens.dispatch}60`, flexShrink: 0 }} />
         )}
         <div>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>Batch ID</div>
-          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>Enter or confirm the batch reference</div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>{tc('factory_batch.batch_ref_title')}</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginTop: 1 }}>{tc('factory_batch.batch_ref_subtitle')}</div>
         </div>
       </div>
 
       <div style={{ flex: 1, padding: '24px 20px' }}>
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Batch Reference *</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('factory_batch.batch_ref_label')}</div>
           <input value={batchRef} onChange={e => setBatchRef(e.target.value.toUpperCase())}
-            placeholder="e.g. LOT-2024-001, BATCH-A3"
+            placeholder={tc('factory_batch.batch_ref_placeholder')}
             autoFocus
             style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${batchRef ? tokens.dispatch : 'var(--pos-border)'}`, borderRadius: 12, color: 'var(--pos-ink)', padding: '16px', fontSize: 18, fontWeight: 700, outline: 'none', boxSizing: 'border-box', letterSpacing: '0.04em', fontFamily: 'monospace' }} />
         </div>
 
         <div style={{ marginBottom: 28 }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-            Product <span style={{ color: 'rgba(255,255,255,0.2)' }}>(optional)</span>
+            {tc('factory_batch.batch_ref_product_label')} <span style={{ color: 'rgba(255,255,255,0.2)' }}>{tc('factory_batch.batch_ref_product_optional')}</span>
           </div>
           <input value={productName} onChange={e => setProductName(e.target.value)}
-            placeholder="e.g. Wheat Flour 50kg"
+            placeholder={tc('factory_batch.batch_ref_product_placeholder')}
             style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1.5px solid ${productName ? `${tokens.dispatch}60` : 'var(--pos-border)'}`, borderRadius: 12, color: 'var(--pos-ink)', padding: '14px 16px', fontSize: 15, outline: 'none', boxSizing: 'border-box' }} />
         </div>
 
         <button onClick={() => { if (batchRef.trim()) setStage('checkpoint') }} disabled={!batchRef.trim()}
           style={{ width: '100%', background: batchRef.trim() ? `linear-gradient(135deg, ${tokens.dispatch}, #0891b2)` : 'var(--pos-border)', border: 'none', color: batchRef.trim() ? '#fff' : 'var(--pos-hint)', padding: '16px', borderRadius: 14, cursor: batchRef.trim() ? 'pointer' : 'not-allowed', fontWeight: 800, fontSize: 17, boxShadow: batchRef.trim() ? `0 4px 20px rgba(6,182,212,0.3)` : 'none' }}>
-          Next — Select Checkpoint →
+          {tc('factory_batch.batch_ref_next')}
         </button>
       </div>
     </div>
@@ -429,7 +444,7 @@ export default function BatchPage() {
           <img src={photoUrl} alt="" style={{ width: 38, height: 38, borderRadius: 8, objectFit: 'cover', border: `1.5px solid ${tokens.dispatch}50`, flexShrink: 0 }} />
         )}
         <div>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>Where is it now?</div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>{tc('factory_batch.checkpoint_title')}</div>
           <div style={{ fontSize: 11, color: tokens.dispatch, marginTop: 1, fontFamily: 'monospace', fontWeight: 700 }}>{batchRef}</div>
         </div>
       </div>
@@ -465,7 +480,7 @@ export default function BatchPage() {
   if (stage === 'submitting') return (
     <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ width: 48, height: 48, border: `4px solid rgba(6,182,212,.3)`, borderTopColor: tokens.dispatch, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-      <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>Logging scan…</div>
+      <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }}>{tc('factory_batch.submitting_label')}</div>
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   )
@@ -478,12 +493,12 @@ export default function BatchPage() {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--pos-bg)', color: 'var(--pos-ink)', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', textAlign: 'center' }}>
         <div style={{ fontSize: 44, marginBottom: 16 }}>{cpMeta?.icon}</div>
-        <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>Scan logged</div>
+        <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 6 }}>{tc('factory_batch.success_title')}</div>
         <div style={{ fontSize: 14, color: 'var(--pos-muted)', marginBottom: 2 }}>
           <span style={{ color: tokens.dispatch, fontFamily: 'monospace', fontWeight: 700 }}>{successBatch.batch_ref}</span> → <span style={{ color: cpMeta?.color }}>{cpMeta?.label}</span>
         </div>
         <div style={{ fontSize: 12, color: 'var(--pos-hint)', marginBottom: 32 }}>
-          {successBatch.events?.length} scan{successBatch.events?.length !== 1 ? 's' : ''} in trail
+          {successBatch.events?.length !== 1 ? tc('factory_batch.success_trail_count_plural', { count: successBatch.events?.length || 0 }) : tc('factory_batch.success_trail_count', { count: successBatch.events?.length || 0 })}
         </div>
 
         {/* Photo trail */}
@@ -505,7 +520,7 @@ export default function BatchPage() {
                         </div>
                       )}
                     </div>
-                    <div style={{ fontSize: 9, color: c, fontWeight: 700 }}>{CP_LABEL[ev.checkpoint]}</div>
+                    <div style={{ fontSize: 9, color: c, fontWeight: 700 }}>{cpLabel(tc, ev.checkpoint)}</div>
                   </div>
                 </div>
               )
@@ -516,11 +531,11 @@ export default function BatchPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', maxWidth: 300 }}>
           <button onClick={reset}
             style={{ width: '100%', background: `linear-gradient(135deg, ${tokens.dispatch}, #0891b2)`, border: 'none', color: '#fff', padding: '15px', borderRadius: 14, cursor: 'pointer', fontWeight: 800, fontSize: 15, boxShadow: `0 4px 20px rgba(6,182,212,0.3)` }}>
-            Scan Another Batch
+            {tc('factory_batch.success_scan_another')}
           </button>
           <button onClick={() => router.push('/factory')}
             style={{ width: '100%', background: 'var(--pos-border)', border: '1px solid var(--pos-border)', color: 'var(--pos-muted)', padding: '13px', borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
-            Back to Hub
+            {tc('factory_batch.success_back_to_hub')}
           </button>
         </div>
       </div>

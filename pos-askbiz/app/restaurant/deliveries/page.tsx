@@ -2,13 +2,19 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#d08a59'
 
-const CATEGORY_LABELS: Record<string, string> = {
-  meat: '🥩 Meat', fish: '🐟 Fish', dairy: '🧀 Dairy', produce: '🥦 Produce',
-  dry_goods: '🌾 Dry Goods', beverages: '🍶 Beverages', cleaning: '🧹 Cleaning',
-  packaging: '📦 Packaging', other: '📁 Other',
+const NS = 'restaurant_deliveries.'
+
+const CATEGORY_KEYS = new Set([
+  'meat', 'fish', 'dairy', 'produce', 'dry_goods',
+  'beverages', 'cleaning', 'packaging', 'other',
+])
+
+function categoryLabel(tc: (key: string, vars?: Record<string, string | number>) => string, category: string): string {
+  return CATEGORY_KEYS.has(category) ? tc(NS + 'cat_' + category) : category
 }
 
 interface LineItem {
@@ -50,6 +56,7 @@ const inp: React.CSSProperties = {
 
 export default function DeliveriesPage() {
   const router   = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [sym, setSym]     = useState('£')
   const [stage, setStage] = useState<Stage>('capture')
@@ -143,12 +150,12 @@ export default function DeliveriesPage() {
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || 'Scan failed')
+        setError(data.error || tc(NS + 'error_scan_failed'))
         setStage('capture')
         return
       }
       if (!data.matches || data.matches.length === 0) {
-        setError('No line items found — try a clearer photo or a different angle.')
+        setError(tc(NS + 'error_no_line_items'))
         setStage('capture')
         return
       }
@@ -177,7 +184,7 @@ export default function DeliveriesPage() {
       setItems(lineItems)
       setStage('review')
     } catch (err: any) {
-      setError(err.message || 'Network error')
+      setError(err.message || tc(NS + 'error_network'))
       setStage('capture')
     }
   }
@@ -194,7 +201,7 @@ export default function DeliveriesPage() {
     if (!session) return
     const toUpdate = items.filter(it => it.confirmed && it.menu_item_id)
     if (toUpdate.length === 0) {
-      setError('No matched items selected for update.')
+      setError(tc(NS + 'error_no_matched_selected'))
       return
     }
     setConfirming(true)
@@ -223,10 +230,10 @@ export default function DeliveriesPage() {
         }),
       })
       const data = await res.json()
-      setDoneMsg(data.message || `${toUpdate.length} items updated`)
+      setDoneMsg(data.message || tc(NS + 'items_updated', { count: toUpdate.length }))
       setStage('done')
     } catch (err: any) {
-      setError(err.message || 'Update failed')
+      setError(err.message || tc(NS + 'error_update_failed'))
       setStage('review')
     } finally {
       setConfirming(false)
@@ -255,12 +262,12 @@ export default function DeliveriesPage() {
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => router.push('/restaurant')} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 18 }}>←</button>
         <div>
-          <div style={{ fontWeight: 700, fontSize: 16, color: ACC }}>📦 Delivery Scanner</div>
-          <div style={{ fontSize: 11, color: '#64748b' }}>Scan supplier invoices · Update food costs · Build price history</div>
+          <div style={{ fontWeight: 700, fontSize: 16, color: ACC }}>{tc(NS + 'header_title')}</div>
+          <div style={{ fontSize: 11, color: '#64748b' }}>{tc(NS + 'header_subtitle')}</div>
         </div>
         {stage !== 'capture' && stage !== 'scanning' && (
           <button onClick={reset} style={{ marginLeft: 'auto', background: '#334155', border: 'none', color: '#94a3b8', padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 12 }}>
-            New Scan
+            {tc(NS + 'new_scan')}
           </button>
         )}
       </div>
@@ -278,22 +285,22 @@ export default function DeliveriesPage() {
         {stage === 'capture' && (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
             <div style={{ fontSize: 64, marginBottom: 16 }}>📄</div>
-            <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Scan a Delivery Note</div>
+            <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>{tc(NS + 'capture_heading')}</div>
             <div style={{ fontSize: 14, color: '#64748b', marginBottom: 32, maxWidth: 400, margin: '0 auto 32px' }}>
-              Point your camera at a supplier invoice or delivery note. Claude will extract every line item, match it to your menu, and let you update food costs in one tap.
+              {tc(NS + 'capture_blurb')}
             </div>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button onClick={openCamera} className="pos-btn-primary"
                 style={{ background: ACC, border: 'none', color: '#fff', padding: '14px 28px', borderRadius: 12, cursor: 'pointer', fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8 }}>
-                📷 Take Photo
+                {tc(NS + 'take_photo')}
               </button>
               <button onClick={() => fileInputRef.current?.click()}
                 style={{ background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9', padding: '14px 28px', borderRadius: 12, cursor: 'pointer', fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8 }}>
-                📁 Upload Image
+                {tc(NS + 'upload_image')}
               </button>
             </div>
             <div style={{ marginTop: 16, fontSize: 12, color: '#475569' }}>
-              Works with printed invoices, handwritten notes, and delivery sheets
+              {tc(NS + 'capture_works_with')}
             </div>
             <input ref={fileInputRef}   type="file" accept="image/*" onChange={handleFileInput} style={{ display: 'none' }} />
             <input ref={cameraInputRef} type="file" accept="image/*" onChange={handleFileInput} style={{ display: 'none' }} capture="environment" />
@@ -304,11 +311,11 @@ export default function DeliveriesPage() {
         {stage === 'scanning' && (
           <div style={{ textAlign: 'center', padding: '60px 20px' }}>
             {preview && (
-              <img src={preview} alt="Invoice" style={{ maxWidth: 280, borderRadius: 12, marginBottom: 24, border: '2px solid #334155', maxHeight: 200, objectFit: 'cover' }} />
+              <img src={preview} alt={tc(NS + 'img_alt_invoice')} style={{ maxWidth: 280, borderRadius: 12, marginBottom: 24, border: '2px solid #334155', maxHeight: 200, objectFit: 'cover' }} />
             )}
             <div style={{ fontSize: 32, marginBottom: 12 }}>🤖</div>
-            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Reading your delivery note...</div>
-            <div style={{ fontSize: 13, color: '#64748b' }}>Claude is extracting line items, prices and quantities</div>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>{tc(NS + 'scanning_heading')}</div>
+            <div style={{ fontSize: 13, color: '#64748b' }}>{tc(NS + 'scanning_blurb')}</div>
             <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center', gap: 6 }}>
               {[0,1,2].map(i => (
                 <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: ACC, animation: `pulse 1.2s infinite ${i * 0.2}s ease-in-out` }} />
@@ -324,37 +331,37 @@ export default function DeliveriesPage() {
             <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: '16px 18px', marginBottom: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                 {preview && (
-                  <img src={preview} alt="Invoice" style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, border: '1px solid #334155' }} />
+                  <img src={preview} alt={tc(NS + 'img_alt_invoice')} style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, border: '1px solid #334155' }} />
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 15 }}>
-                    {matchedCount}/{items.length} items matched to your menu
+                    {tc(NS + 'items_matched', { matched: matchedCount, total: items.length })}
                   </div>
                   <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
-                    Confidence: {extraction.confidence}% · {items.length} line items found
+                    {tc(NS + 'confidence_line', { confidence: extraction.confidence, total: items.length })}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 18, fontWeight: 800, color: ACC }}>{sym}{totalInvoice.toFixed(2)}</div>
-                  <div style={{ fontSize: 11, color: '#64748b' }}>invoice total</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>{tc(NS + 'invoice_total')}</div>
                 </div>
               </div>
             </div>
 
             {/* Supplier / invoice header — user can correct */}
             <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: '16px 18px', marginBottom: 20 }}>
-              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 12, color: '#94a3b8' }}>Delivery Details (edit if incorrect)</div>
+              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 12, color: '#94a3b8' }}>{tc(NS + 'delivery_details')}</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
-                  <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Supplier</label>
-                  <input value={supplierOverride} onChange={e => setSupplierOverride(e.target.value)} style={inp} placeholder="Supplier name" />
+                  <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_supplier')}</label>
+                  <input value={supplierOverride} onChange={e => setSupplierOverride(e.target.value)} style={inp} placeholder={tc(NS + 'placeholder_supplier')} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Invoice / Ref</label>
-                  <input value={refOverride} onChange={e => setRefOverride(e.target.value)} style={inp} placeholder="DN-12345" />
+                  <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_invoice_ref')}</label>
+                  <input value={refOverride} onChange={e => setRefOverride(e.target.value)} style={inp} placeholder={tc(NS + 'placeholder_invoice_ref')} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>Date</label>
+                  <label style={{ fontSize: 11, color: '#64748b', display: 'block', marginBottom: 4 }}>{tc(NS + 'label_date')}</label>
                   <input type="date" value={dateOverride} onChange={e => setDateOverride(e.target.value)} style={inp} />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'flex-end' }}>
@@ -367,9 +374,9 @@ export default function DeliveriesPage() {
 
             {/* Line items */}
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>
-              Review Line Items
+              {tc(NS + 'review_line_items')}
               <span style={{ fontWeight: 400, fontSize: 12, color: '#64748b', marginLeft: 8 }}>
-                Check the box to update food cost on matched menu items
+                {tc(NS + 'review_line_items_hint')}
               </span>
             </div>
 
@@ -395,7 +402,7 @@ export default function DeliveriesPage() {
                           <input type="checkbox" checked={item.confirmed} onChange={() => toggleConfirm(idx)}
                             style={{ width: 18, height: 18, accentColor: ACC, cursor: 'pointer' }} />
                         ) : (
-                          <div style={{ width: 18, height: 18, borderRadius: 3, border: '1px solid #334155', background: '#0f172a' }} title="Not matched to menu" />
+                          <div style={{ width: 18, height: 18, borderRadius: 3, border: '1px solid #334155', background: '#0f172a' }} title={tc(NS + 'not_matched_title')} />
                         )}
                       </div>
 
@@ -404,40 +411,40 @@ export default function DeliveriesPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                           <span style={{ fontWeight: 700, fontSize: 14 }}>{item.name}</span>
                           <span style={{ fontSize: 11, color: '#64748b', background: '#0f172a', padding: '2px 6px', borderRadius: 4 }}>
-                            {CATEGORY_LABELS[item.category] || item.category}
+                            {categoryLabel(tc, item.category)}
                           </span>
                           {!item.matched && (
                             <span style={{ fontSize: 11, color: '#f59e0b', background: 'rgba(245,158,11,0.1)', padding: '2px 6px', borderRadius: 4 }}>
-                              Not in menu
+                              {tc(NS + 'not_in_menu')}
                             </span>
                           )}
                         </div>
 
                         {/* Qty + unit + prices */}
                         <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>
-                          {item.qty} {item.unit} · {sym}{item.unit_price.toFixed(2)}/unit
-                          {item.line_total > 0 && ` · Total: ${sym}${item.line_total.toFixed(2)}`}
+                          {tc(NS + 'qty_unit_price', { qty: item.qty, unit: item.unit, sym, price: item.unit_price.toFixed(2) })}
+                          {item.line_total > 0 && tc(NS + 'line_total_suffix', { sym, total: item.line_total.toFixed(2) })}
                         </div>
 
                         {/* Menu match info */}
                         {item.matched && (
                           <div style={{ marginTop: 8, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
                             <span style={{ fontSize: 12, color: '#22c55e' }}>
-                              ✓ Matches: <strong>{item.menu_item_name}</strong>
+                              {tc(NS + 'matches_label')} <strong>{item.menu_item_name}</strong>
                             </span>
                             {item.current_food_cost !== null && (
                               <span style={{ fontSize: 12, color: '#64748b' }}>
-                                Current cost: {sym}{item.current_food_cost.toFixed(2)}
+                                {tc(NS + 'current_cost', { sym, cost: item.current_food_cost.toFixed(2) })}
                                 {item.unit_price > 0 && item.unit_price !== item.current_food_cost && (
                                   <span style={{ color: item.unit_price > item.current_food_cost ? '#ef4444' : '#22c55e', marginLeft: 4 }}>
-                                    → {sym}{item.unit_price.toFixed(2)} ({item.unit_price > item.current_food_cost ? '▲' : '▼'})
+                                    {tc(NS + 'cost_change', { sym, price: item.unit_price.toFixed(2), arrow: item.unit_price > item.current_food_cost ? '▲' : '▼' })}
                                   </span>
                                 )}
                               </span>
                             )}
                             {margin !== null && (
                               <span style={{ fontSize: 12, color: marginColor, fontWeight: 600 }}>
-                                Margin: {margin.toFixed(0)}%
+                                {tc(NS + 'margin_label', { margin: margin.toFixed(0) })}
                               </span>
                             )}
                           </div>
@@ -446,7 +453,7 @@ export default function DeliveriesPage() {
                         {/* Editable cost override — only when confirmed */}
                         {item.confirmed && item.matched && (
                           <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <label style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>Set food cost to:</label>
+                            <label style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>{tc(NS + 'set_food_cost_to')}</label>
                             <div style={{ position: 'relative', maxWidth: 120 }}>
                               <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#64748b', fontSize: 13 }}>{sym}</span>
                               <input
@@ -456,7 +463,7 @@ export default function DeliveriesPage() {
                                 style={{ ...inp, paddingLeft: 24, maxWidth: 120 }}
                               />
                             </div>
-                            <span style={{ fontSize: 12, color: '#475569' }}>per {item.unit}</span>
+                            <span style={{ fontSize: 12, color: '#475569' }}>{tc(NS + 'per_unit', { unit: item.unit })}</span>
                           </div>
                         )}
                       </div>
@@ -470,16 +477,20 @@ export default function DeliveriesPage() {
             <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <div style={{ flex: 1, fontSize: 13, color: '#94a3b8' }}>
                 {confirmedCount > 0
-                  ? <span style={{ color: ACC, fontWeight: 600 }}>{confirmedCount} food cost{confirmedCount !== 1 ? 's' : ''} will be updated</span>
-                  : 'Check items to update their food costs'
+                  ? <span style={{ color: ACC, fontWeight: 600 }}>{tc(NS + (confirmedCount === 1 ? 'costs_will_update_one' : 'costs_will_update_other'), { count: confirmedCount })}</span>
+                  : tc(NS + 'check_items_to_update')
                 }
               </div>
               <button onClick={reset} style={{ background: '#334155', border: 'none', color: '#94a3b8', padding: '10px 18px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>
-                Cancel
+                {tc(NS + 'cancel')}
               </button>
               <button onClick={confirmUpdates} disabled={confirmedCount === 0 || confirming} className="pos-btn-primary"
                 style={{ background: confirmedCount > 0 ? '#22c55e' : '#334155', border: 'none', color: '#fff', padding: '10px 20px', borderRadius: 8, cursor: confirmedCount > 0 ? 'pointer' : 'default', fontWeight: 700, fontSize: 13, opacity: confirmedCount === 0 ? 0.5 : 1 }}>
-                {confirming ? 'Saving...' : `✓ Confirm ${confirmedCount > 0 ? confirmedCount + ' update' + (confirmedCount !== 1 ? 's' : '') : ''}`}
+                {confirming
+                  ? tc(NS + 'saving')
+                  : confirmedCount > 0
+                    ? tc(NS + (confirmedCount === 1 ? 'confirm_one' : 'confirm_other'), { count: confirmedCount })
+                    : tc(NS + 'confirm_plain')}
               </button>
             </div>
           </div>
@@ -489,7 +500,7 @@ export default function DeliveriesPage() {
         {stage === 'confirming' && (
           <div style={{ textAlign: 'center', padding: '60px 20px' }}>
             <div style={{ fontSize: 32, marginBottom: 12 }}>💾</div>
-            <div style={{ fontSize: 16, fontWeight: 700 }}>Updating food costs...</div>
+            <div style={{ fontSize: 16, fontWeight: 700 }}>{tc(NS + 'confirming_heading')}</div>
           </div>
         )}
 
@@ -499,16 +510,16 @@ export default function DeliveriesPage() {
             <div className="pos-success-icon" style={{ fontSize: 64, marginBottom: 16 }}>✅</div>
             <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 8, color: '#22c55e' }}>{doneMsg}</div>
             <div style={{ fontSize: 14, color: '#64748b', marginBottom: 32 }}>
-              Margins recalculated. Price data added to the collective intelligence pool.
+              {tc(NS + 'done_blurb')}
             </div>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button onClick={reset} className="pos-btn-primary"
                 style={{ background: ACC, border: 'none', color: '#fff', padding: '12px 24px', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 14 }}>
-                Scan Another Delivery
+                {tc(NS + 'scan_another')}
               </button>
               <button onClick={() => router.push('/restaurant/menu')}
                 style={{ background: '#1e293b', border: '1px solid #334155', color: '#f1f5f9', padding: '12px 24px', borderRadius: 10, cursor: 'pointer', fontSize: 14 }}>
-                View Menu Margins →
+                {tc(NS + 'view_menu_margins')}
               </button>
             </div>
           </div>
@@ -520,10 +531,10 @@ export default function DeliveriesPage() {
         <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 100, display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
             <button onClick={closeCamera} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>
-              ✕ Cancel
+              {tc(NS + 'camera_cancel')}
             </button>
             <div style={{ flex: 1, textAlign: 'center', color: '#fff', fontSize: 13 }}>
-              Position the invoice to fill the frame
+              {tc(NS + 'camera_position')}
             </div>
           </div>
 
