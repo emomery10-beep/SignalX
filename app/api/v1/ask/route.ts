@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { askOnce, buildSystemPrompt } from '@/lib/ai'
 
 export const runtime = 'nodejs'
@@ -42,7 +42,10 @@ export async function OPTIONS() {
 // ── POST /api/v1/ask ──────────────────────────────────────────────────────────
 export async function POST(request: NextRequest) {
   const start = Date.now()
-  const supabase = createClient()
+  // Service client: callers authenticate with an API key (no session), so RLS
+  // can't scope by auth.uid(). The route validates the key and scopes every
+  // query manually by the key's user_id.
+  const supabase = createServiceClient()
 
   // 1. Extract API key
   const apiKey = request.headers.get('x-api-key')

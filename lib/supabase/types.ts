@@ -233,38 +233,106 @@ export type Database = {
         }
         Relationships: []
       }
+      api_keys: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          key: string
+          last_used_at: string | null
+          mode: string
+          name: string
+          plan: string
+          request_limit_minute: number
+          request_limit_month: number
+          requests_month: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key: string
+          last_used_at?: string | null
+          mode?: string
+          name?: string
+          plan?: string
+          request_limit_minute?: number
+          request_limit_month?: number
+          requests_month?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key?: string
+          last_used_at?: string | null
+          mode?: string
+          name?: string
+          plan?: string
+          request_limit_minute?: number
+          request_limit_month?: number
+          requests_month?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       api_usage: {
         Row: {
           cost_usd: number
           created_at: string | null
+          endpoint: string | null
           id: string
           input_tokens: number
+          key_id: string | null
+          latency_ms: number | null
           model: string
           output_tokens: number
+          question: string | null
           route: string
+          status: number | null
           user_id: string | null
         }
         Insert: {
           cost_usd?: number
           created_at?: string | null
+          endpoint?: string | null
           id?: string
           input_tokens?: number
+          key_id?: string | null
+          latency_ms?: number | null
           model: string
           output_tokens?: number
+          question?: string | null
           route: string
+          status?: number | null
           user_id?: string | null
         }
         Update: {
           cost_usd?: number
           created_at?: string | null
+          endpoint?: string | null
           id?: string
           input_tokens?: number
+          key_id?: string | null
+          latency_ms?: number | null
           model?: string
           output_tokens?: number
+          question?: string | null
           route?: string
+          status?: number | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "api_usage_key_id_fkey"
+            columns: ["key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       audit_log: {
         Row: {

@@ -27,7 +27,8 @@ export async function GET() {
   // Group by day for chart
   const byDay: Record<string, number> = {}
   ;(usage || []).forEach(row => {
-    const day = row.created_at.slice(0, 10)
+    const day = row.created_at?.slice(0, 10)
+    if (!day) return
     byDay[day] = (byDay[day] || 0) + 1
   })
 
@@ -36,7 +37,7 @@ export async function GET() {
     : 0
 
   const errorRate = usage?.length
-    ? Math.round(((usage || []).filter(r => r.status >= 400).length / usage.length) * 100)
+    ? Math.round(((usage || []).filter(r => (r.status ?? 0) >= 400).length / usage.length) * 100)
     : 0
 
   return NextResponse.json({
