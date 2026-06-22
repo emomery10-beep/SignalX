@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePosAuth } from '@/lib/hooks/usePosAuth'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#ec4899' // salon pink accent
 const C = { good: '#22c55e', warn: '#f59e0b', bad: '#ef4444', muted: '#94a3b8', dim: '#64748b' }
@@ -33,6 +34,7 @@ interface UsageLog {
 
 export default function SalonProducts() {
   const router = useRouter()
+  const { tc } = useLang()
   const { session, ready: authReady } = usePosAuth()
   const [sym, setSym] = useState('£')
   const [loading, setLoading] = useState(true)
@@ -157,7 +159,7 @@ export default function SalonProducts() {
 
   async function startScan() {
     setScanError(null)
-    if (!navigator.mediaDevices?.getUserMedia) { setScanError('Camera not available. Type the product name instead.'); return }
+    if (!navigator.mediaDevices?.getUserMedia) { setScanError(tc('salon_products.scan_err_unavailable')); return }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       streamRef.current = stream
@@ -165,9 +167,9 @@ export default function SalonProducts() {
       setTimeout(() => { if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play().catch(() => {}) } }, 50)
     } catch (err: any) {
       const name = err?.name || ''
-      if (name === 'NotAllowedError') setScanError('Camera permission denied. Enable it in browser settings or type the product name.')
-      else if (name === 'NotFoundError') setScanError('No camera found. Type the product name instead.')
-      else setScanError('Could not start camera. Type the product name instead.')
+      if (name === 'NotAllowedError') setScanError(tc('salon_products.scan_err_denied'))
+      else if (name === 'NotFoundError') setScanError(tc('salon_products.scan_err_notfound'))
+      else setScanError(tc('salon_products.scan_err_generic'))
     }
   }
 
@@ -184,10 +186,10 @@ export default function SalonProducts() {
       {/* Header */}
       <div style={{ background: '#1e293b', borderBottom: '1px solid #334155', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <button onClick={() => router.push('/salon')} style={{ background: '#334155', border: 'none', color: C.muted, padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>← Salon</button>
+          <button onClick={() => router.push('/salon')} style={{ background: '#334155', border: 'none', color: C.muted, padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>← {tc('salon_products.back_salon')}</button>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>💇 Products</div>
-            <div style={{ fontSize: 12, color: C.muted }}>Retail & backbar usage</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: ACC }}>{tc('salon_products.header_title')}</div>
+            <div style={{ fontSize: 12, color: C.muted }}>{tc('salon_products.header_subtitle')}</div>
           </div>
         </div>
       </div>
@@ -198,7 +200,7 @@ export default function SalonProducts() {
           <div className="pos-banner" style={{ background: '#451a03', border: `1px solid ${C.warn}`, borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 12 }}>
             <span style={{ fontSize: 18 }}>⚠️</span>
             <div>
-              <div style={{ fontWeight: 700, color: C.warn, fontSize: 13 }}>Low Stock — {lowStock.length} item{lowStock.length !== 1 ? 's' : ''}</div>
+              <div style={{ fontWeight: 700, color: C.warn, fontSize: 13 }}>{lowStock.length === 1 ? tc('salon_products.low_stock_one', { count: lowStock.length }) : tc('salon_products.low_stock_many', { count: lowStock.length })}</div>
               <div style={{ color: '#e2e8f0', fontSize: 13, marginTop: 2 }}>
                 {lowStock.map(p => `${p.name} (${p.stock_qty})`).join(' · ')}
               </div>
@@ -209,16 +211,16 @@ export default function SalonProducts() {
         {/* Retail products table */}
         <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #334155' }}>
-            <div style={{ fontWeight: 700, fontSize: 15 }}>Retail Products</div>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…" style={{ ...inputStyle, width: 200 }} />
+            <div style={{ fontWeight: 700, fontSize: 15 }}>{tc('salon_products.retail_products')}</div>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder={tc('salon_products.search_placeholder')} style={{ ...inputStyle, width: 200 }} />
           </div>
           <div style={{ overflowX: 'auto' }}>
             <div style={{ minWidth: 720 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 0.8fr 0.9fr 0.9fr 0.8fr 0.9fr', gap: 8, padding: '12px 20px', borderBottom: '1px solid #334155', fontSize: 11, color: C.dim, textTransform: 'uppercase', letterSpacing: 1 }}>
-                <div>Name</div><div>Stock</div><div>Price</div><div>Cost</div><div>Margin</div><div>Units Sold</div>
+                <div>{tc('salon_products.col_name')}</div><div>{tc('salon_products.col_stock')}</div><div>{tc('salon_products.col_price')}</div><div>{tc('salon_products.col_cost')}</div><div>{tc('salon_products.col_margin')}</div><div>{tc('salon_products.col_units_sold')}</div>
               </div>
-              {loading && <div style={{ padding: 20, color: C.dim, fontSize: 13 }}>Loading…</div>}
-              {!loading && filtered.length === 0 && <div style={{ padding: 20, color: C.dim, fontSize: 13, textAlign: 'center' }}>{search.trim() ? 'No products match your search.' : 'No products yet — add your first product to get started.'}</div>}
+              {loading && <div style={{ padding: 20, color: C.dim, fontSize: 13 }}>{tc('salon_products.loading')}</div>}
+              {!loading && filtered.length === 0 && <div style={{ padding: 20, color: C.dim, fontSize: 13, textAlign: 'center' }}>{search.trim() ? tc('salon_products.empty_search') : tc('salon_products.empty_products')}</div>}
               {filtered.map((p, idx) => {
                 const m = margin(p)
                 const low = p.stock_qty <= (p.low_stock_threshold || 5)
@@ -239,8 +241,8 @@ export default function SalonProducts() {
 
         {/* Backbar usage logging */}
         <div style={card}>
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Backbar Usage Log</div>
-          <div style={{ fontSize: 12, color: C.dim, marginBottom: 14 }}>Track professional-use product per service to capture cost-per-service.</div>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{tc('salon_products.backbar_title')}</div>
+          <div style={{ fontSize: 12, color: C.dim, marginBottom: 14 }}>{tc('salon_products.backbar_subtitle')}</div>
 
           {scanError && (
             <div className="pos-banner" style={{ background: '#451a03', border: `1px solid ${C.warn}`, borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: '#fcd34d' }}>⚠️ {scanError}</div>
@@ -248,19 +250,19 @@ export default function SalonProducts() {
           {scanActive && (
             <div style={{ marginBottom: 14 }}>
               <video ref={videoRef} playsInline muted style={{ width: '100%', maxWidth: 360, borderRadius: 10, background: '#000', display: 'block' }} />
-              <div style={{ fontSize: 12, color: C.dim, margin: '8px 0' }}>Point at the product barcode, then type the matched product name below. (Barcode decoding can be wired to a scanner library later.)</div>
-              <button onClick={stopScan} style={{ background: '#334155', border: 'none', color: C.muted, padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>Stop Camera</button>
+              <div style={{ fontSize: 12, color: C.dim, margin: '8px 0' }}>{tc('salon_products.scan_hint')}</div>
+              <button onClick={stopScan} style={{ background: '#334155', border: 'none', color: C.muted, padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('salon_products.stop_camera')}</button>
             </div>
           )}
 
           <form onSubmit={logUsage} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr)) auto', gap: 10, alignItems: 'center' }}>
-            <input list="salon-products" style={inputStyle} placeholder="Product" value={form.product} onChange={e => setForm({ ...form, product: e.target.value })} />
+            <input list="salon-products" style={inputStyle} placeholder={tc('salon_products.form_product')} value={form.product} onChange={e => setForm({ ...form, product: e.target.value })} />
             <datalist id="salon-products">{inventory.map(p => <option key={p.id} value={p.name} />)}</datalist>
-            <input style={inputStyle} placeholder="Amount used (e.g. 30ml)" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} />
-            <input style={inputStyle} placeholder="Linked service" value={form.service} onChange={e => setForm({ ...form, service: e.target.value })} />
+            <input style={inputStyle} placeholder={tc('salon_products.form_amount')} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} />
+            <input style={inputStyle} placeholder={tc('salon_products.form_service')} value={form.service} onChange={e => setForm({ ...form, service: e.target.value })} />
             <div style={{ display: 'flex', gap: 8 }}>
-              {!scanActive && <button type="button" onClick={startScan} style={{ background: '#334155', border: 'none', color: '#e2e8f0', padding: '9px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>📷 Scan</button>}
-              <button type="submit" className="pos-btn-primary" style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Log</button>
+              {!scanActive && <button type="button" onClick={startScan} style={{ background: '#334155', border: 'none', color: '#e2e8f0', padding: '9px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13 }}>{tc('salon_products.scan')}</button>}
+              <button type="submit" className="pos-btn-primary" style={{ background: ACC, border: 'none', color: '#fff', padding: '9px 18px', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>{tc('salon_products.log')}</button>
             </div>
           </form>
 
@@ -269,9 +271,9 @@ export default function SalonProducts() {
               {usage.map((u, idx) => (
                 <div key={u.id} className="pos-item" style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#0f172a', borderRadius: 8, padding: '10px 14px', fontSize: 13, animationDelay: `${Math.min(idx, 8) * 40}ms` }}>
                   <span style={{ fontWeight: 600, flex: 1 }}>{u.product_name}</span>
-                  <span style={{ color: C.muted }}>{u.amount_used ? `${u.amount_used}${u.unit || ''}` : '—'}</span>
-                  <span style={{ color: C.muted }}>{u.service_name || 'General'}</span>
-                  <span style={{ color: ACC, fontWeight: 700 }}>{sym}{(u.cost || 0).toFixed(2)}/svc</span>
+                  <span style={{ color: C.muted }}>{u.amount_used ? `${u.amount_used}${u.unit || ''}` : tc('salon_products.usage_dash')}</span>
+                  <span style={{ color: C.muted }}>{u.service_name || tc('salon_products.usage_general')}</span>
+                  <span style={{ color: ACC, fontWeight: 700 }}>{tc('salon_products.usage_per_svc', { sym, cost: (u.cost || 0).toFixed(2) })}</span>
                 </div>
               ))}
             </div>

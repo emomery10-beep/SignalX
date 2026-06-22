@@ -36,13 +36,17 @@ import enRestaurant from '@/locales/en/restaurant.json'
 import enRetailStocktake from '@/locales/en/retail_stocktake.json'
 import enRepairTickets from '@/locales/en/repair_tickets.json'
 import enSalonBookings from '@/locales/en/salon_bookings.json'
+import enIntelligence from '@/locales/en/intelligence.json'
+import enRestaurantReservations from '@/locales/en/restaurant_reservations.json'
+import enSalonProducts from '@/locales/en/salon_products.json'
+import enLogisticsCollect from '@/locales/en/logistics_collect.json'
 
 type Dict = Record<string, unknown>
 
 // English-only for now — translation gated on API credits. The resolver falls
 // back to English for locales lacking a namespace, so pages render correctly.
 const CATALOG: Record<string, Record<string, Dict>> = {
-  en: { common: enCommon, sell: enSell, dashboard: enDashboard, inventory: enInventory, pos: enPos, logistics: enLogistics, factory: enFactory, salon_clients: enSalonClients, factory_capture: enFactoryCapture, factory_shift: enFactoryShift, logistics_intake: enLogisticsIntake, logistics_dashboard: enLogisticsDashboard, restaurant_deliveries: enRestaurantDeliveries, factory_waybill: enFactoryWaybill, repair_intake: enRepairIntake, factory_batch: enFactoryBatch, factory_downtime: enFactoryDowntime, factory_staff: enFactoryStaff, restaurant_waste: enRestaurantWaste, repair: enRepair, retail_products: enRetailProducts, factory_quality: enFactoryQuality, restaurant_orders: enRestaurantOrders, restaurant_floor: enRestaurantFloor, logistics_dispatch: enLogisticsDispatch, restaurant_online_orders: enRestaurantOnlineOrders, retail_customers: enRetailCustomers, restaurant_menu: enRestaurantMenu, restaurant: enRestaurant, retail_stocktake: enRetailStocktake, repair_tickets: enRepairTickets, salon_bookings: enSalonBookings },
+  en: { common: enCommon, sell: enSell, dashboard: enDashboard, inventory: enInventory, pos: enPos, logistics: enLogistics, factory: enFactory, salon_clients: enSalonClients, factory_capture: enFactoryCapture, factory_shift: enFactoryShift, logistics_intake: enLogisticsIntake, logistics_dashboard: enLogisticsDashboard, restaurant_deliveries: enRestaurantDeliveries, factory_waybill: enFactoryWaybill, repair_intake: enRepairIntake, factory_batch: enFactoryBatch, factory_downtime: enFactoryDowntime, factory_staff: enFactoryStaff, restaurant_waste: enRestaurantWaste, repair: enRepair, retail_products: enRetailProducts, factory_quality: enFactoryQuality, restaurant_orders: enRestaurantOrders, restaurant_floor: enRestaurantFloor, logistics_dispatch: enLogisticsDispatch, restaurant_online_orders: enRestaurantOnlineOrders, retail_customers: enRetailCustomers, restaurant_menu: enRestaurantMenu, restaurant: enRestaurant, retail_stocktake: enRetailStocktake, repair_tickets: enRepairTickets, salon_bookings: enSalonBookings, intelligence: enIntelligence, restaurant_reservations: enRestaurantReservations, salon_products: enSalonProducts, logistics_collect: enLogisticsCollect },
 }
 
 const BASE = 'en'

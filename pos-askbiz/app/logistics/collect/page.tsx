@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { isLogisticsClerkLevel, isLogisticsBranchLevel, isManagerOrAboveLevel, getRoleHomeRoute } from '@/lib/pos-role-client'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#0891b2'
 const ACC_LIGHT = 'rgba(8,145,178,.1)'
@@ -54,6 +55,7 @@ const inputSx: React.CSSProperties = { width: '100%', padding: '11px 12px', bord
 
 export default function CollectPage() {
   const router = useRouter()
+  const { tc } = useLang()
   const [staff, setStaff] = useState<Staff | null>(null)
   const [ready, setReady] = useState(false)
   const [parcels, setParcels] = useState<Parcel[]>([])
@@ -104,9 +106,9 @@ export default function CollectPage() {
 
   const handlePhoto = async (file: File) => {
     setErr('')
-    if (file.type && !ALLOWED_PHOTO.includes(file.type)) { setErr('Use a JPEG/PNG/WebP/HEIC image.'); return }
+    if (file.type && !ALLOWED_PHOTO.includes(file.type)) { setErr(tc('logistics_collect.err_photo_type')); return }
     setPhotoBusy(true)
-    try { setPhoto(await compressPhoto(file)) } catch { setErr('Could not process that photo.') }
+    try { setPhoto(await compressPhoto(file)) } catch { setErr(tc('logistics_collect.err_photo_process')) }
     setPhotoBusy(false)
   }
 
@@ -117,26 +119,26 @@ export default function CollectPage() {
       const img = await compressPhoto(file, 1800, 0.85)
       const res = await fetchWithTimeout(`${API}/api/pos/parcels/scan-id`, { method: 'POST', headers: hdrs(staff), body: JSON.stringify({ image: img }) }, 45000)
       const data = await res.json().catch(() => ({}))
-      if (!res.ok || !data.id_number) { setScanMsg('Couldn’t read the ID — type it in.'); return }
+      if (!res.ok || !data.id_number) { setScanMsg(tc('logistics_collect.err_id_read')); return }
       setIdNum(data.id_number)
-      setScanMsg(typeof data.confidence === 'number' && data.confidence < 0.6 ? '⚠️ Low confidence — check it matches.' : '✓ ID captured — verify it matches.')
-    } catch { setScanMsg('ID scan failed — type it in.') }
+      setScanMsg(typeof data.confidence === 'number' && data.confidence < 0.6 ? tc('logistics_collect.id_low_confidence') : tc('logistics_collect.id_captured'))
+    } catch { setScanMsg(tc('logistics_collect.err_id_failed')) }
     finally { setScanning(false) }
   }
 
   const release = async () => {
     if (!staff || !sel) return
     const sym = staff.currency_symbol || ''
-    if (!idNum.trim()) { setErr('Verify the receiver — scan or type their ID number.'); return }
-    if (!photo) { setErr('Take a photo of the parcel at handover.'); return }
-    if (sel.payment_status !== 'paid' && !markPaid) { setErr(`This parcel is ${sel.payment_status || 'unpaid'} (${sym}${(sel.fee_charged || 0).toFixed(2)}). Confirm payment before releasing.`); return }
+    if (!idNum.trim()) { setErr(tc('logistics_collect.err_verify_receiver')); return }
+    if (!photo) { setErr(tc('logistics_collect.err_photo_required')); return }
+    if (sel.payment_status !== 'paid' && !markPaid) { setErr(tc('logistics_collect.err_confirm_payment', { status: sel.payment_status || tc('logistics_collect.status_unpaid'), symbol: sym, amount: (sel.fee_charged || 0).toFixed(2) })); return }
     setReleasing(true); setErr('')
     try {
       // 1. upload handover photo (private bucket → signed url)
       let photoUrl: string | null = null, photoPath: string | null = null
       const up = await fetchWithTimeout(`${API}/api/pos/parcels/photo`, { method: 'POST', headers: hdrs(staff), body: JSON.stringify({ image: photo, tracking_number: sel.tracking_number }) }, 45000)
       const upData = await up.json().catch(() => ({}))
-      if (!up.ok) { setErr(upData.error || 'Photo upload failed — retake.'); setReleasing(false); return }
+      if (!up.ok) { setErr(upData.error || tc('logistics_collect.err_photo_upload_failed')); setReleasing(false); return }
       photoUrl = upData.url || null; photoPath = upData.path || null
 
       // 2. release → collected
@@ -151,14 +153,14 @@ export default function CollectPage() {
         }),
       }, 45000)
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) { setErr(data.error || 'Could not release parcel.'); setReleasing(false); return }
+      if (!res.ok) { setErr(data.error || tc('logistics_collect.err_release_failed')); setReleasing(false); return }
       setSel(null)
       await load(staff)
-    } catch { setErr('Network error — try again.') }
+    } catch { setErr(tc('logistics_collect.err_network_retry')) }
     finally { setReleasing(false) }
   }
 
-  if (!ready) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }}>Loading…</div>
+  if (!ready) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--pos-bg)' }}>{tc('logistics_collect.loading')}</div>
 
   const sym = staff?.currency_symbol || '$'
   const filtered = parcels.filter(p => {
@@ -173,25 +175,25 @@ export default function CollectPage() {
       <header style={{ background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ fontSize: 18 }} aria-hidden>📋</div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--pos-ink)' }}>Parcel Collection</div>
-          <div style={{ fontSize: 11, color: 'var(--pos-muted)' }}>{staff?.name} · hand parcels to customers</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--pos-ink)' }}>{tc('logistics_collect.header_title')}</div>
+          <div style={{ fontSize: 11, color: 'var(--pos-muted)' }}>{tc('logistics_collect.header_subtitle', { name: staff?.name || '' })}</div>
         </div>
         <button onClick={() => staff && load(staff)} style={{ background: ACC_LIGHT, color: ACC, border: `1px solid ${ACC_B}`, borderRadius: 8, padding: '6px 10px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>↻</button>
       </header>
 
       {/* Outgoing / Incoming switch */}
       <div style={{ display: 'flex', background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)' }}>
-        <button onClick={() => router.push('/logistics/intake')} style={{ flex: 1, padding: '10px 4px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: 'var(--pos-muted)', background: 'transparent', border: 'none', borderBottom: '2px solid transparent', cursor: 'pointer' }}>📤 Outgoing</button>
-        <div style={{ flex: 1, padding: '10px 4px', textAlign: 'center', fontSize: 12, fontWeight: 800, color: ACC, borderBottom: `2px solid ${ACC}` }}>📥 Incoming</div>
+        <button onClick={() => router.push('/logistics/intake')} style={{ flex: 1, padding: '10px 4px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: 'var(--pos-muted)', background: 'transparent', border: 'none', borderBottom: '2px solid transparent', cursor: 'pointer' }}>{tc('logistics_collect.tab_outgoing')}</button>
+        <div style={{ flex: 1, padding: '10px 4px', textAlign: 'center', fontSize: 12, fontWeight: 800, color: ACC, borderBottom: `2px solid ${ACC}` }}>{tc('logistics_collect.tab_incoming')}</div>
       </div>
 
       <main style={{ maxWidth: 500, margin: '0 auto', padding: 16 }}>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tracking #, name, phone…" style={{ ...inputSx, marginBottom: 12 }} />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder={tc('logistics_collect.search_placeholder')} style={{ ...inputSx, marginBottom: 12 }} />
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--pos-muted)' }}>Loading…</div>
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--pos-muted)' }}>{tc('logistics_collect.loading')}</div>
         ) : filtered.length === 0 ? (
           <div style={{ background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 12, padding: '32px 16px', textAlign: 'center', color: 'var(--pos-muted)', fontSize: 13 }}>
-            No parcels waiting for collection at your branch. They appear here once the handler receives them in.
+            {tc('logistics_collect.empty_state')}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -201,11 +203,11 @@ export default function CollectPage() {
                 <button key={p.id} onClick={() => openSheet(p)} style={{ textAlign: 'left', background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', borderRadius: 12, padding: 12, cursor: 'pointer' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                     <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 14, fontWeight: 800, color: 'var(--pos-ink)' }}>{p.tracking_number}</span>
-                    <span style={{ marginLeft: 'auto', background: paid ? 'var(--pos-success-pale)' : 'var(--pos-danger-pale)', color: paid ? GREEN : RED, padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700 }}>{paid ? 'Paid' : (p.payment_status || 'unpaid')}{!paid ? ` · ${sym}${(p.fee_charged || 0).toFixed(0)}` : ''}</span>
+                    <span style={{ marginLeft: 'auto', background: paid ? 'var(--pos-success-pale)' : 'var(--pos-danger-pale)', color: paid ? GREEN : RED, padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700 }}>{paid ? tc('logistics_collect.status_paid') : (p.payment_status || tc('logistics_collect.status_unpaid'))}{!paid ? ` · ${sym}${(p.fee_charged || 0).toFixed(0)}` : ''}</span>
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--pos-muted)', lineHeight: 1.5 }}>
-                    <div>📥 To: {p.receiver_name || '—'} {p.receiver_phone ? `· ${p.receiver_phone}` : ''}</div>
-                    <div>📦 {p.description || 'Parcel'}{p.weight_kg ? ` · ${p.weight_kg}kg` : ''} · from {p.sender_branch?.name || p.sender_name || '—'}</div>
+                    <div>{tc('logistics_collect.card_to_label', { name: p.receiver_name || tc('logistics_collect.card_dash') })} {p.receiver_phone ? `· ${p.receiver_phone}` : ''}</div>
+                    <div>📦 {p.description || tc('logistics_collect.card_parcel_fallback')}{p.weight_kg ? ` · ${p.weight_kg}kg` : ''} · {tc('logistics_collect.card_from', { origin: p.sender_branch?.name || p.sender_name || tc('logistics_collect.card_dash') })}</div>
                   </div>
                 </button>
               )
@@ -216,61 +218,61 @@ export default function CollectPage() {
 
       {/* Collection sheet */}
       {sel && (
-        <div role="dialog" aria-modal="true" aria-label="Release parcel" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={closeSheet}>
+        <div role="dialog" aria-modal="true" aria-label={tc('logistics_collect.sheet_aria')} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={closeSheet}>
           <div onClick={e => e.stopPropagation()} style={{ background: 'var(--pos-surface)', borderRadius: '16px 16px 0 0', padding: 20, width: '100%', maxWidth: 500, maxHeight: '92vh', overflow: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--pos-ink)' }}>Release {sel.tracking_number}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--pos-ink)' }}>{tc('logistics_collect.sheet_release_title', { tracking: sel.tracking_number })}</div>
               <button onClick={closeSheet} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: 'var(--pos-muted)' }}>×</button>
             </div>
-            <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 16 }}>To {sel.receiver_name || '—'} · {sel.receiver_phone || '—'}</div>
+            <div style={{ fontSize: 13, color: 'var(--pos-muted)', marginBottom: 16 }}>{tc('logistics_collect.sheet_to_line', { name: sel.receiver_name || tc('logistics_collect.card_dash'), phone: sel.receiver_phone || tc('logistics_collect.card_dash') })}</div>
 
             {/* Payment */}
-            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--pos-ink)', marginBottom: 6 }}>1 · Payment</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--pos-ink)', marginBottom: 6 }}>{tc('logistics_collect.step_payment')}</div>
             {sel.payment_status === 'paid' ? (
-              <div style={{ background: 'var(--pos-success-pale)', color: GREEN, borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, marginBottom: 16 }}>✓ Already paid</div>
+              <div style={{ background: 'var(--pos-success-pale)', color: GREEN, borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, marginBottom: 16 }}>{tc('logistics_collect.already_paid')}</div>
             ) : (
               <div style={{ marginBottom: 16 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: ACC_LIGHT, border: `1px solid ${ACC_B}`, borderRadius: 10, padding: '10px 14px', marginBottom: 8 }}>
-                  <span style={{ fontSize: 13, color: 'var(--pos-muted)' }}>Collect on delivery</span>
+                  <span style={{ fontSize: 13, color: 'var(--pos-muted)' }}>{tc('logistics_collect.collect_on_delivery')}</span>
                   <span style={{ fontSize: 20, fontWeight: 900, color: ACC }}>{sym}{(sel.fee_charged || 0).toFixed(2)}</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 8 }}>
-                  {([{ id: 'cash', label: '💵 Cash' }, { id: 'card', label: '💳 Card' }, { id: 'mobile_money', label: '📱 Mobile' }] as const).map(m => (
+                  {([{ id: 'cash', label: tc('logistics_collect.pay_method_cash') }, { id: 'card', label: tc('logistics_collect.pay_method_card') }, { id: 'mobile_money', label: tc('logistics_collect.pay_method_mobile') }] as const).map(m => (
                     <button key={m.id} onClick={() => setPayMethod(m.id)} style={{ padding: '10px 4px', border: `2px solid ${payMethod === m.id ? ACC : 'var(--pos-border)'}`, borderRadius: 10, background: payMethod === m.id ? ACC_LIGHT : 'var(--pos-surface)', color: payMethod === m.id ? ACC : 'var(--pos-ink)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{m.label}</button>
                   ))}
                 </div>
                 <label style={{ display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', fontSize: 13, color: 'var(--pos-ink)' }}>
                   <input type="checkbox" checked={markPaid} onChange={e => setMarkPaid(e.target.checked)} style={{ width: 20, height: 20, accentColor: ACC }} />
-                  Payment received in full
+                  {tc('logistics_collect.payment_received_full')}
                 </label>
               </div>
             )}
 
             {/* Receiver ID */}
-            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--pos-ink)', marginBottom: 6 }}>2 · Verify receiver ID</div>
-            <input value={idNum} onChange={e => setIdNum(e.target.value)} maxLength={40} placeholder="National ID / Passport" style={{ ...inputSx, marginBottom: 8 }} />
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--pos-ink)', marginBottom: 6 }}>{tc('logistics_collect.step_verify_id')}</div>
+            <input value={idNum} onChange={e => setIdNum(e.target.value)} maxLength={40} placeholder={tc('logistics_collect.id_placeholder')} style={{ ...inputSx, marginBottom: 8 }} />
             <input ref={idRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) scanId(f); e.target.value = '' }} />
-            <button onClick={() => idRef.current?.click()} disabled={scanning} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: ACC_LIGHT, color: ACC, border: `1px solid ${ACC_B}`, borderRadius: 10, padding: '8px 12px', fontSize: 13, fontWeight: 700, cursor: scanning ? 'wait' : 'pointer', marginBottom: scanMsg ? 4 : 16 }}>{scanning ? '⏳ Reading ID…' : '📷 Scan ID to auto-fill'}</button>
+            <button onClick={() => idRef.current?.click()} disabled={scanning} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: ACC_LIGHT, color: ACC, border: `1px solid ${ACC_B}`, borderRadius: 10, padding: '8px 12px', fontSize: 13, fontWeight: 700, cursor: scanning ? 'wait' : 'pointer', marginBottom: scanMsg ? 4 : 16 }}>{scanning ? tc('logistics_collect.scan_reading_id') : tc('logistics_collect.scan_id_autofill')}</button>
             {scanMsg && <div style={{ fontSize: 11.5, marginBottom: 16, color: scanMsg.startsWith('⚠️') ? '#ca8a04' : scanMsg.startsWith('✓') ? GREEN : 'var(--pos-muted)' }}>{scanMsg}</div>}
 
             {/* Parcel photo */}
-            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--pos-ink)', marginBottom: 6 }}>3 · Photo of parcel at handover</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--pos-ink)', marginBottom: 6 }}>{tc('logistics_collect.step_photo')}</div>
             <input ref={photoRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handlePhoto(f); e.target.value = '' }} />
             {photo ? (
               <div style={{ position: 'relative', marginBottom: 16 }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={photo} alt="Parcel at handover" style={{ width: '100%', borderRadius: 12, maxHeight: 220, objectFit: 'cover', border: `2px solid ${GREEN}` }} />
-                <button onClick={() => setPhoto(null)} style={{ position: 'absolute', top: 8, right: 8, background: RED, color: '#fff', border: 'none', borderRadius: 8, padding: '4px 10px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Retake</button>
+                <img src={photo} alt={tc('logistics_collect.alt_parcel_handover')} style={{ width: '100%', borderRadius: 12, maxHeight: 220, objectFit: 'cover', border: `2px solid ${GREEN}` }} />
+                <button onClick={() => setPhoto(null)} style={{ position: 'absolute', top: 8, right: 8, background: RED, color: '#fff', border: 'none', borderRadius: 8, padding: '4px 10px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{tc('logistics_collect.photo_retake')}</button>
               </div>
             ) : (
-              <button onClick={() => photoRef.current?.click()} disabled={photoBusy} style={{ width: '100%', padding: 14, border: `2px dashed ${ACC_B}`, borderRadius: 12, background: 'var(--pos-surface)', color: ACC, fontSize: 14, fontWeight: 700, cursor: photoBusy ? 'wait' : 'pointer', marginBottom: 16 }}>{photoBusy ? 'Processing…' : '📷 Take parcel photo'}</button>
+              <button onClick={() => photoRef.current?.click()} disabled={photoBusy} style={{ width: '100%', padding: 14, border: `2px dashed ${ACC_B}`, borderRadius: 12, background: 'var(--pos-surface)', color: ACC, fontSize: 14, fontWeight: 700, cursor: photoBusy ? 'wait' : 'pointer', marginBottom: 16 }}>{photoBusy ? tc('logistics_collect.photo_processing') : tc('logistics_collect.photo_take')}</button>
             )}
 
             {err && <div role="alert" style={{ color: RED, fontSize: 13, marginBottom: 12, padding: '10px 14px', background: 'var(--pos-danger-pale)', borderRadius: 10 }}>{err}</div>}
 
             <button onClick={release} disabled={releasing} aria-busy={releasing}
               style={{ width: '100%', background: GREEN, color: '#fff', border: 'none', borderRadius: 12, padding: 16, fontSize: 16, fontWeight: 900, cursor: releasing ? 'wait' : 'pointer', opacity: releasing ? 0.7 : 1 }}>
-              {releasing ? '⏳ Releasing…' : '✅ Release to customer'}
+              {releasing ? tc('logistics_collect.releasing') : tc('logistics_collect.release_button')}
             </button>
           </div>
         </div>

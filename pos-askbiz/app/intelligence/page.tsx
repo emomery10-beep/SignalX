@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#d08a59'
 const API = process.env.NEXT_PUBLIC_API_URL || ''
@@ -22,6 +23,7 @@ type Period = '1' | '7' | '30' | '90'
 export default function IntelligencePage() {
   const router = useRouter()
   const supabase = createClient()
+  const { tc } = useLang()
 
   const [ready, setReady]       = useState(false)
   const [sym, setSym]           = useState('£')
@@ -170,7 +172,7 @@ export default function IntelligencePage() {
         <div style="font-family:-apple-system,sans-serif;min-width:150px;padding:2px 0">
           <div style="font-weight:800;font-size:16px;color:var(--pos-ink)">${sym}${p.total.toFixed(2)}</div>
           <div style="font-size:12px;color:var(--pos-muted);margin-top:2px">${lbl}</div>
-          ${p.cashier_name ? `<div style="font-size:12px;color:var(--pos-muted)">by ${p.cashier_name}</div>` : ''}
+          ${p.cashier_name ? `<div style="font-size:12px;color:var(--pos-muted)">${tc('intelligence.popup_by', { name: p.cashier_name })}</div>` : ''}
           <div style="font-size:12px;color:var(--pos-muted);text-transform:capitalize">${p.payment_type}</div>
           ${p.cleanNotes ? `<div style="font-size:11px;color:var(--pos-hint);margin-top:2px">${p.cleanNotes}</div>` : ''}
         </div>
@@ -188,7 +190,7 @@ export default function IntelligencePage() {
     if (bounds.length > 0) {
       try { map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 }) } catch {}
     }
-  }, [geoPoints, sym, selected])
+  }, [geoPoints, sym, selected, tc])
 
   const flyTo = (p: GeoSale) => {
     setSelected(p)
@@ -200,7 +202,7 @@ export default function IntelligencePage() {
   const payIcon = (t: string) => t === 'cash' ? '💵' : t === 'card' ? '💳' : '📱'
 
   const periodLabel = (p: Period) =>
-    ({ '1': 'Today', '7': '7 days', '30': '30 days', '90': '90 days' }[p])
+    ({ '1': tc('intelligence.period_today'), '7': tc('intelligence.period_7_days'), '30': tc('intelligence.period_30_days'), '90': tc('intelligence.period_90_days') }[p])
 
   // Show nothing while checking auth
   if (!ready) return null
@@ -211,11 +213,11 @@ export default function IntelligencePage() {
       {/* Header */}
       <div style={{ padding: '14px 20px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)' }}>
         <div>
-          <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--pos-ink)' }}>Sales Map</div>
-          <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>Geo-tagged transactions</div>
+          <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--pos-ink)' }}>{tc('intelligence.header_title')}</div>
+          <div style={{ fontSize: 12, color: 'var(--pos-muted)' }}>{tc('intelligence.header_subtitle')}</div>
         </div>
         <button onClick={() => router.back()} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid var(--pos-border)', background: 'transparent', fontSize: 13, cursor: 'pointer', color: 'var(--pos-muted)' }}>
-          ← Back
+          {tc('intelligence.back')}
         </button>
       </div>
 
@@ -231,9 +233,9 @@ export default function IntelligencePage() {
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', background: 'var(--pos-surface)', borderBottom: '1px solid var(--pos-border)' }}>
         {[
-          { label: 'Sales',   value: loading ? '…' : String(allCount) },
-          { label: 'Revenue', value: loading ? '…' : `${sym}${revenue.toFixed(2)}` },
-          { label: 'On map',  value: loading ? '…' : String(geoPoints.length) },
+          { label: tc('intelligence.stat_sales'),   value: loading ? '…' : String(allCount) },
+          { label: tc('intelligence.stat_revenue'), value: loading ? '…' : `${sym}${revenue.toFixed(2)}` },
+          { label: tc('intelligence.stat_on_map'),  value: loading ? '…' : String(geoPoints.length) },
         ].map((s, i) => (
           <div key={i} style={{ padding: '10px 16px', borderRight: i < 2 ? '1px solid var(--pos-border)' : 'none' }}>
             <div style={{ fontSize: 10, color: 'var(--pos-hint)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>{s.label}</div>
@@ -250,16 +252,16 @@ export default function IntelligencePage() {
         {!loading && geoPoints.length === 0 && (
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(249,248,246,0.93)', gap: 8, zIndex: 999 }}>
             <div style={{ fontSize: 36 }}>🗺️</div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--pos-ink)' }}>No location data yet</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--pos-ink)' }}>{tc('intelligence.no_location_title')}</div>
             <div style={{ fontSize: 13, color: 'var(--pos-muted)', textAlign: 'center', maxWidth: 260, lineHeight: 1.5 }}>
-              Allow location access on the cashier's device when making a sale — each sale will appear as a pin here
+              {tc('intelligence.no_location_subtitle')}
             </div>
           </div>
         )}
 
         {loading && (
           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(249,248,246,0.8)', zIndex: 999 }}>
-            <div style={{ fontSize: 13, color: 'var(--pos-muted)' }}>Loading…</div>
+            <div style={{ fontSize: 13, color: 'var(--pos-muted)' }}>{tc('intelligence.loading')}</div>
           </div>
         )}
       </div>
@@ -281,7 +283,7 @@ export default function IntelligencePage() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '10px 20px 40px' }}>
         {geoPoints.length > 0 && (
           <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--pos-hint)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
-            {geoPoints.length} geo-tagged sale{geoPoints.length !== 1 ? 's' : ''}
+            {geoPoints.length !== 1 ? tc('intelligence.geo_tagged_sale_plural', { count: geoPoints.length }) : tc('intelligence.geo_tagged_sale', { count: geoPoints.length })}
           </div>
         )}
 
@@ -306,13 +308,13 @@ export default function IntelligencePage() {
         {!loading && geoPoints.length === 0 && allCount > 0 && (
           <div style={{ padding: '32px 0', textAlign: 'center' }}>
             <div style={{ fontSize: 28, marginBottom: 8 }}>📍</div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 4 }}>{allCount} sales — none geo-tagged yet</div>
-            <div style={{ fontSize: 13, color: 'var(--pos-muted)' }}>The cashier device must allow location access before checking out.</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 4 }}>{tc('intelligence.none_geo_tagged_title', { count: allCount })}</div>
+            <div style={{ fontSize: 13, color: 'var(--pos-muted)' }}>{tc('intelligence.none_geo_tagged_subtitle')}</div>
           </div>
         )}
 
         {!loading && allCount === 0 && (
-          <div style={{ padding: '32px 0', textAlign: 'center', color: 'var(--pos-muted)', fontSize: 14 }}>No sales in this period yet — try a different date range.</div>
+          <div style={{ padding: '32px 0', textAlign: 'center', color: 'var(--pos-muted)', fontSize: 14 }}>{tc('intelligence.no_sales_period')}</div>
         )}
       </div>
     </div>
