@@ -23,11 +23,14 @@ CREATE TABLE IF NOT EXISTS public.pos_factory_waybills (
   scheduled_at    timestamptz,
   dispatched_at   timestamptz NOT NULL DEFAULT now(),
 
-  -- is_on_time: null if no schedule, true/false if schedule set (15-min grace)
+  -- is_on_time: null if no schedule, true/false if schedule set (15-min grace).
+  -- Use timestamptz subtraction (IMMUTABLE) instead of scheduled_at + interval —
+  -- timestamptz + interval is only STABLE, which a generated column rejects.
+  -- Algebraically identical to: dispatched_at <= scheduled_at + 15min.
   is_on_time      boolean     GENERATED ALWAYS AS (
     CASE
       WHEN scheduled_at IS NOT NULL
-      THEN dispatched_at <= (scheduled_at + INTERVAL '15 minutes')
+      THEN (dispatched_at - scheduled_at) <= INTERVAL '15 minutes'
       ELSE NULL
     END
   ) STORED,

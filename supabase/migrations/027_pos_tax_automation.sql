@@ -3,6 +3,23 @@
 -- Adds global tax engine with jurisdiction support
 -- ============================================================
 
+-- Replay-safety: pos_locations is first referenced here (FK from
+-- pos_location_tax_settings) but its create-table lives in 033_multi_branch.
+-- On a clean replay 033 hasn't run yet, so ensure the table exists now. This
+-- mirrors 033's definition exactly; 033's CREATE IF NOT EXISTS then no-ops.
+-- No-op in prod (027 already recorded as applied; this body never re-runs).
+create table if not exists public.pos_locations (
+  id         uuid primary key default gen_random_uuid(),
+  owner_id   uuid not null references auth.users(id) on delete cascade,
+  name       text not null,
+  address    text,
+  phone      text,
+  is_active  boolean default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique(owner_id, name)
+);
+
 -- Create pos_tax_rules table (jurisdiction-specific tax rates)
 create table if not exists public.pos_tax_rules (
   id uuid primary key default gen_random_uuid(),
@@ -92,6 +109,12 @@ create index if not exists idx_pos_tax_audit_owner_date
 
 create index if not exists idx_pos_location_tax_settings_location
   on public.pos_location_tax_settings (owner_id, location_id);
+
+-- Replay-safety: these seed inserts filter profiles.role, but role was added to
+-- profiles out-of-band (no migration defines it; 001 has none). Ensure it exists
+-- so the predicate is valid. No-op in prod (role already there; 027 not re-run).
+-- On a fresh replay profiles is empty, so the inserts seed nothing either way.
+alter table public.profiles add column if not exists role text;
 
 -- Create default UK tax codes for quick setup
 insert into public.pos_item_tax_codes (owner_id, code, jurisdiction, category, rate, label, is_active)

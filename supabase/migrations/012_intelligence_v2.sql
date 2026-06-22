@@ -63,6 +63,12 @@ create table if not exists public.team_members (
   accepted_at timestamptz,
   status      text default 'pending'     -- 'pending' | 'active' | 'removed'
 );
+-- Replay-safety: migration 002 already created team_members (team_id-based,
+-- without org_id), so the create-table-if-not-exists above is a no-op on a clean
+-- replay and org_id never lands. Add it idempotently before the org_id index and
+-- policy below. No-op in any DB where the column already exists (incl. prod, where
+-- 012 is long since recorded as applied and this body never re-runs).
+alter table public.team_members add column if not exists org_id uuid;
 create index if not exists team_members_org on public.team_members(org_id, status);
 create index if not exists team_members_user on public.team_members(user_id);
 
