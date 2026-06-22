@@ -10,6 +10,8 @@ export interface AcademyCategory {
 export interface AcademyArticleSection {
   heading: string;
   body: string;
+  /** Optional illustrative image path shown beneath the section heading. */
+  image?: string;
 }
 
 export interface AcademyArticleFAQ {

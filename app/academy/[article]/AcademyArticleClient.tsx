@@ -116,6 +116,15 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
                 <p style={{ fontSize: 16, color: "#444", lineHeight: 1.8, margin: 0 }}>
                   {section.body}
                 </p>
+                {section.image && (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={section.image}
+                    alt={section.heading}
+                    loading="lazy"
+                    style={{ display: "block", width: "100%", maxWidth: 720, height: "auto", borderRadius: 12, margin: "20px 0 0", border: "1px solid #ececf0" }}
+                  />
+                )}
               </div>
             </div>
           ))}
