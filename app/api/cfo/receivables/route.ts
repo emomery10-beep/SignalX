@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getCurrencySymbol } from '@/lib/get-currency'
+import { getDateRange } from '@/lib/cfo-date-range'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -13,33 +14,43 @@ export async function GET() {
   const sym = await getCurrencySymbol(supabase, user.id)
   const now = new Date()
 
+  const periodKey = new URL(req.url).searchParams.get('period') || 'all'
+  const usePeriod = periodKey !== 'all'
+  const { start, end } = usePeriod ? getDateRange(periodKey, now) : { start: '', end: '' }
+
   // Fetch manual receivables, POS unpaid transactions, and ecommerce unpaid orders in parallel
+  let posQuery = supabase
+    .from('pos_transactions')
+    .select('id, total, customer_id, created_at, payment_type, payment_status, status, notes')
+    .eq('owner_id', user.id)
+    .in('payment_status', ['pending', 'failed'])
+    .neq('status', 'refunded')
+    .order('created_at', { ascending: true })
+    .limit(200)
+
+  let ecomQuery = supabase
+    .from('unified_data')
+    .select('source_record_id, product_name, source_type, net_revenue, record_date, payment_status, customer_region')
+    .eq('user_id', user.id)
+    .in('payment_status', ['pending', 'authorized', 'partially_paid', 'PENDING', 'AWAITING_PAYMENT'])
+    .order('record_date', { ascending: true })
+    .limit(200)
+
+  if (usePeriod) {
+    posQuery = posQuery.gte('created_at', start).lte('created_at', end + 'T23:59:59')
+    ecomQuery = ecomQuery.gte('record_date', start).lte('record_date', end)
+  }
+
   const [{ data: manualItems }, { data: posPending }, { data: ecomPending }] = await Promise.all([
-    // Manual receivables/payables
+    // Manual receivables/payables — always show all (ongoing bookkeeping entries)
     supabase
       .from('cfo_receivables')
       .select('*')
       .eq('user_id', user.id)
       .order('due_date', { ascending: true }),
 
-    // POS transactions with pending/failed payment (money owed to you)
-    supabase
-      .from('pos_transactions')
-      .select('id, total, customer_id, created_at, payment_type, payment_status, status, notes')
-      .eq('owner_id', user.id)
-      .in('payment_status', ['pending', 'failed'])
-      .neq('status', 'refunded')
-      .order('created_at', { ascending: true })
-      .limit(200),
-
-    // Ecommerce orders with pending/unpaid payment status from unified_data
-    supabase
-      .from('unified_data')
-      .select('source_record_id, product_name, source_type, net_revenue, record_date, payment_status, customer_region')
-      .eq('user_id', user.id)
-      .in('payment_status', ['pending', 'authorized', 'partially_paid', 'PENDING', 'AWAITING_PAYMENT'])
-      .order('record_date', { ascending: true })
-      .limit(200),
+    posQuery,
+    ecomQuery,
   ])
 
   // Build combined items list

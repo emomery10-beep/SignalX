@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 const INDIGO = '#6366F1'
 const RED = '#EF4444'
@@ -12,6 +13,28 @@ export interface CostConfig {
   variableCosts: CostLine[]
 }
 
+const buildDefaultFixed = (tc: (k: string, v?: Record<string, string | number>) => string): CostLine[] => [
+  { id: 'rent', label: tc('cfo_costconfig.fixedRent'), amount: 0 },
+  { id: 'salaries', label: tc('cfo_costconfig.fixedSalaries'), amount: 0 },
+  { id: 'insurance', label: tc('cfo_costconfig.fixedHealthInsurance'), amount: 0 },
+  { id: 'biz_insurance', label: tc('cfo_costconfig.fixedBizInsurance'), amount: 0 },
+  { id: 'software', label: tc('cfo_costconfig.fixedSoftware'), amount: 0 },
+  { id: 'equipment', label: tc('cfo_costconfig.fixedEquipment'), amount: 0 },
+  { id: 'loans', label: tc('cfo_costconfig.fixedLoans'), amount: 0 },
+  { id: 'phone', label: tc('cfo_costconfig.fixedPhone'), amount: 0 },
+  { id: 'accounting', label: tc('cfo_costconfig.fixedAccounting'), amount: 0 },
+]
+
+const buildDefaultVariable = (tc: (k: string, v?: Record<string, string | number>) => string): CostLine[] => [
+  { id: 'commissions', label: tc('cfo_costconfig.varCommissions'), amount: 0 },
+  { id: 'shipping', label: tc('cfo_costconfig.varShipping'), amount: 0 },
+  { id: 'ad_spend', label: tc('cfo_costconfig.varAdSpend'), amount: 0 },
+  { id: 'processing', label: tc('cfo_costconfig.varProcessing'), amount: 0 },
+  { id: 'packaging', label: tc('cfo_costconfig.varPackaging'), amount: 0 },
+  { id: 'contract', label: tc('cfo_costconfig.varContract'), amount: 0 },
+]
+
+// Static defaults for non-component contexts (loadCostConfig, etc.)
 const DEFAULT_FIXED: CostLine[] = [
   { id: 'rent', label: 'Rent / Lease', amount: 0 },
   { id: 'salaries', label: 'Salaries & Wages', amount: 0 },
@@ -63,17 +86,21 @@ interface Props {
 }
 
 export default function CostConfigDrawer({ open, initialSection = 'balance', onClose, onSaved, currencySymbol: sym }: Props) {
+  const { tc } = useLang()
   const [cashBalance, setCashBalance] = useState('')
   const [fixed, setFixed] = useState<CostLine[]>(DEFAULT_FIXED)
   const [variable, setVariable] = useState<CostLine[]>(DEFAULT_VARIABLE)
   const [section, setSection] = useState<'balance' | 'fixed' | 'variable'>(initialSection)
 
+  const defaultFixed = buildDefaultFixed(tc)
+  const defaultVariable = buildDefaultVariable(tc)
+
   useEffect(() => {
     if (!open) return
     const cfg = loadCostConfig()
     setCashBalance(cfg.cashBalance > 0 ? String(cfg.cashBalance) : '')
-    setFixed(cfg.fixedCosts.length ? cfg.fixedCosts : DEFAULT_FIXED)
-    setVariable(cfg.variableCosts.length ? cfg.variableCosts : DEFAULT_VARIABLE)
+    setFixed(cfg.fixedCosts.length ? cfg.fixedCosts : defaultFixed)
+    setVariable(cfg.variableCosts.length ? cfg.variableCosts : defaultVariable)
     setSection(initialSection)
   }, [open, initialSection])
 
@@ -119,8 +146,8 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
   }) => (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 130px 28px', gap: 6, paddingBottom: 6, borderBottom: '1px solid var(--b)', marginBottom: 8 }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Category</span>
-        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', textAlign: 'right', paddingRight: 8 }}>Monthly</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('cfo_costconfig.tableHeaderCategory')}</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', textAlign: 'right', paddingRight: 8 }}>{tc('cfo_costconfig.tableHeaderMonthly')}</span>
         <span />
       </div>
       {lines.map(line => (
@@ -128,7 +155,7 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
           <input
             value={line.label}
             onChange={e => updateLine(setter, line.id, 'label', e.target.value)}
-            placeholder="Category name"
+            placeholder={tc('cfo_costconfig.categoryNamePlaceholder')}
             style={inputStyle}
           />
           <div style={{ position: 'relative' }}>
@@ -151,9 +178,9 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
       <button
         onClick={() => addLine(setter)}
         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, width: '100%', padding: '6px 0', borderRadius: 7, border: `1px dashed ${accent}50`, background: 'transparent', color: accent, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}
-      >+ Add row</button>
+      >{tc('cfo_costconfig.addRow')}</button>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0 0', borderTop: '2px solid var(--b)', marginTop: 12 }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Monthly Total</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('cfo_costconfig.monthlyTotal')}</span>
         <span style={{ fontSize: 16, fontWeight: 700, color: accent }}>{fmt(total)}</span>
       </div>
     </div>
@@ -162,9 +189,9 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
   if (!open) return null
 
   const tabs: Array<{ id: 'balance' | 'fixed' | 'variable'; label: string; badge?: string }> = [
-    { id: 'balance', label: 'Cash Balance', badge: Number(cashBalance) > 0 ? fmt(Number(cashBalance)) : undefined },
-    { id: 'fixed', label: 'Fixed Costs', badge: fixedTotal > 0 ? fmt(fixedTotal) : undefined },
-    { id: 'variable', label: 'Variable Costs', badge: variableTotal > 0 ? fmt(variableTotal) : undefined },
+    { id: 'balance', label: tc('cfo_costconfig.tabCashBalance'), badge: Number(cashBalance) > 0 ? fmt(Number(cashBalance)) : undefined },
+    { id: 'fixed', label: tc('cfo_costconfig.tabFixedCosts'), badge: fixedTotal > 0 ? fmt(fixedTotal) : undefined },
+    { id: 'variable', label: tc('cfo_costconfig.tabVariableCosts'), badge: variableTotal > 0 ? fmt(variableTotal) : undefined },
   ]
 
   return (
@@ -174,8 +201,8 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
         {/* Header */}
         <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>Cost Configuration</div>
-            <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>Set once · Updates runway & burn calculations</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_costconfig.drawerTitle')}</div>
+            <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_costconfig.drawerSubtitle')}</div>
           </div>
           <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
         </div>
@@ -195,9 +222,9 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
           {section === 'balance' && (
             <div>
               <p style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 18, lineHeight: 1.6, margin: '0 0 18px' }}>
-                Your cash on hand right now — checking accounts, savings, petty cash. This drives your runway calculation.
+                {tc('cfo_costconfig.balanceDescription')}
               </p>
-              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Current Cash Balance</label>
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('cfo_costconfig.balanceLabel')}</label>
               <div style={{ position: 'relative', marginBottom: 14 }}>
                 <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 18, color: 'var(--tx3)', pointerEvents: 'none' }}>{sym}</span>
                 <input
@@ -205,7 +232,7 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
                   inputMode="decimal"
                   value={cashBalance}
                   onChange={e => setCashBalance(e.target.value.replace(/[^0-9.]/g, ''))}
-                  placeholder="e.g. 50000"
+                  placeholder={tc('cfo_costconfig.balancePlaceholder')}
                   style={{ width: '100%', fontSize: 24, fontWeight: 700, color: 'var(--tx)', background: 'var(--ev)', border: `2px solid ${INDIGO}40`, borderRadius: 10, padding: '12px 14px 12px 36px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
                   onFocus={e => { e.currentTarget.style.borderColor = INDIGO }}
                   onBlur={e => { e.currentTarget.style.borderColor = `${INDIGO}40` }}
@@ -213,7 +240,7 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
               </div>
               {Number(cashBalance) > 0 && (
                 <div style={{ padding: '10px 14px', borderRadius: 10, background: `${GREEN}08`, border: `1px solid ${GREEN}20`, fontSize: 12, color: 'var(--tx)', lineHeight: 1.5 }}>
-                  💰 Balance set to <strong>{fmt(Number(cashBalance))}</strong>. Your runway will be recalculated using this value.
+                  💰 {tc('cfo_costconfig.balanceSetMessage')} <strong>{fmt(Number(cashBalance))}</strong>. {tc('cfo_costconfig.balanceSetRunway')}
                 </div>
               )}
             </div>
@@ -221,7 +248,7 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
           {section === 'fixed' && (
             <div>
               <p style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 18, lineHeight: 1.6, margin: '0 0 18px' }}>
-                Costs that stay the same every month regardless of revenue. These are subtracted from gross profit to calculate net profit and daily burn rate.
+                {tc('cfo_costconfig.fixedDescription')}
               </p>
               <CostTable lines={fixed} setter={setFixed} total={fixedTotal} accent={RED} />
             </div>
@@ -229,7 +256,7 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
           {section === 'variable' && (
             <div>
               <p style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 18, lineHeight: 1.6, margin: '0 0 18px' }}>
-                Costs that scale with your volume — commissions, shipping, ad spend. These are used in contribution margin analysis.
+                {tc('cfo_costconfig.variableDescription')}
               </p>
               <CostTable lines={variable} setter={setVariable} total={variableTotal} accent={INDIGO} />
             </div>
@@ -239,10 +266,10 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
         {/* Footer */}
         <div style={{ padding: '14px 20px', borderTop: '1px solid var(--b)', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, background: 'var(--bg)' }}>
           <div style={{ flex: 1, fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4 }}>
-            Fixed <strong style={{ color: RED }}>{fmt(fixedTotal)}</strong>/mo · Variable <strong style={{ color: INDIGO }}>{fmt(variableTotal)}</strong>/mo
+            {tc('cfo_costconfig.footerFixed')} <strong style={{ color: RED }}>{fmt(fixedTotal)}</strong>/mo · {tc('cfo_costconfig.footerVariable')} <strong style={{ color: INDIGO }}>{fmt(variableTotal)}</strong>/mo
           </div>
-          <button onClick={onClose} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-          <button onClick={handleSave} style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Save</button>
+          <button onClick={onClose} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('cfo_costconfig.btnCancel')}</button>
+          <button onClick={handleSave} style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('cfo_costconfig.btnSave')}</button>
         </div>
       </div>
       <style>{`@keyframes drawerIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}`}</style>

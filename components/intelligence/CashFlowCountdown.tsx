@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface CashFlowData {
   runway: { days: number | null; label: string; status: string }
@@ -20,6 +21,7 @@ const STATUS_CONFIG: Record<string, { color: string; bg: string; icon: string }>
 }
 
 export default function CashFlowCountdown({ onAsk }: { onAsk?: (prompt: string) => void }) {
+  const { tc } = useLang()
   const [data, setData] = useState<CashFlowData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -38,7 +40,7 @@ export default function CashFlowCountdown({ onAsk }: { onAsk?: (prompt: string) 
       <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#10B981' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Cash Flow</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_cashcountdown.title')}</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[1, 2].map(i => (
@@ -67,13 +69,13 @@ export default function CashFlowCountdown({ onAsk }: { onAsk?: (prompt: string) 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#10B981' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Cash Flow</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_cashcountdown.title')}</span>
         </div>
         {onAsk && (
           <button
-            onClick={() => onAsk('Analyse my cash flow and runway. What should I do to improve it?')}
+            onClick={() => onAsk(tc('intel_cashcountdown.askPrompt'))}
             style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
-          >Ask AI</button>
+          >{tc('intel_cashcountdown.askAi')}</button>
         )}
       </div>
 
@@ -86,17 +88,17 @@ export default function CashFlowCountdown({ onAsk }: { onAsk?: (prompt: string) 
           </div>
           {data.cash.has_balance && (
             <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>
-              {fmt(data.cash.balance)} balance
+              {tc('intel_cashcountdown.balanceLabel', { amount: fmt(data.cash.balance) })}
               {data.trend.revenue_pct !== 0 && (
                 <span style={{ marginLeft: 6, color: data.trend.revenue_pct > 0 ? '#10B981' : '#EF4444' }}>
-                  {data.trend.revenue_pct > 0 ? '↑' : '↓'} {Math.abs(data.trend.revenue_pct)}% revenue
+                  {data.trend.revenue_pct > 0 ? '↑' : '↓'} {tc('intel_cashcountdown.revenueTrend', { pct: Math.abs(data.trend.revenue_pct) })}
                 </span>
               )}
             </div>
           )}
           {!data.cash.has_balance && data.runway.status === 'unknown' && (
             <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>
-              Add your cash balance in settings for runway tracking
+              {tc('intel_cashcountdown.addBalanceCta')}
             </div>
           )}
         </div>
@@ -104,9 +106,9 @@ export default function CashFlowCountdown({ onAsk }: { onAsk?: (prompt: string) 
 
       {/* Daily breakdown */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
-        <MetricBox label="Daily revenue" value={fmt(data.daily.revenue)} color="#10B981" />
-        <MetricBox label="Daily costs" value={fmt(data.daily.cogs + data.daily.fixed)} color="#EF4444" />
-        <MetricBox label="Daily net" value={`${data.daily.net_burn >= 0 ? '+' : ''}${fmt(data.daily.net_burn)}`} color={data.daily.net_burn >= 0 ? '#10B981' : '#EF4444'} />
+        <MetricBox label={tc('intel_cashcountdown.dailyRevenue')} value={fmt(data.daily.revenue)} color="#10B981" />
+        <MetricBox label={tc('intel_cashcountdown.dailyCosts')} value={fmt(data.daily.cogs + data.daily.fixed)} color="#EF4444" />
+        <MetricBox label={tc('intel_cashcountdown.dailyNet')} value={`${data.daily.net_burn >= 0 ? '+' : ''}${fmt(data.daily.net_burn)}`} color={data.daily.net_burn >= 0 ? '#10B981' : '#EF4444'} />
       </div>
 
       {/* Weekly cash flow sparkline */}

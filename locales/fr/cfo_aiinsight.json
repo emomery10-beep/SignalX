@@ -1,0 +1,10 @@
+{
+  "sectionTitle": "Analyse IA",
+  "poweredBy": "propulsé par Claude",
+  "refreshBtn": "Actualiser",
+  "analyzingBtn": "Analyse en cours...",
+  "analyzingBody": "Analyse de vos finances en cours...",
+  "noInsights": "Aucune analyse générée. Cliquez sur Actualiser pour réessayer.",
+  "askAi": "Demander à l'IA →",
+  "expandPrompt": "Développe cet aperçu financier : \"{title}\" — {body}. Donne-moi des prochaines étapes concrètes."
+}

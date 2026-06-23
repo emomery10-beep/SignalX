@@ -1,6 +1,9 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { getRegionConfig } from '@/lib/region-config'
+import { useLang } from '@/components/LanguageProvider'
+
+type Tc = (k: string, vars?: Record<string, string | number>) => string
 
 interface Receivable {
   id: string
@@ -20,6 +23,7 @@ interface Props {
   countryCode?: string | null
   onAsk?: (prompt: string) => void
   onTotalsChange?: (receivables: number, payables: number) => void
+  period?: string
 }
 
 function fmt(n: number, sym: string): string {
@@ -29,13 +33,16 @@ function fmt(n: number, sym: string): string {
 }
 
 const AGING_BUCKETS = [
-  { key: 'current', label: 'Current', color: '#22C55E' },
-  { key: 'overdue_30', label: '1-30 days', color: '#F59E0B' },
-  { key: 'overdue_60', label: '31-60 days', color: '#F97316' },
-  { key: 'overdue_90', label: '60+ days', color: '#EF4444' },
+  { key: 'current', color: '#22C55E' },
+  { key: 'overdue_30', color: '#F59E0B' },
+  { key: 'overdue_60', color: '#F97316' },
+  { key: 'overdue_90', color: '#EF4444' },
 ] as const
 
-export default function ReceivablesTracker({ currencySymbol: sym, countryCode, onAsk, onTotalsChange }: Props) {
+const bucketLabel = (tc: Tc, key: string): string => tc('cfo_receivables.bucket_' + key)
+
+export default function ReceivablesTracker({ currencySymbol: sym, countryCode, onAsk, onTotalsChange, period }: Props) {
+  const { tc } = useLang()
   const region = getRegionConfig(countryCode)
   const [view, setView] = useState<'receivables' | 'payables'>('receivables')
   const [items, setItems] = useState<Receivable[]>([])
@@ -46,7 +53,8 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
   const [expandedCustomer, setExpandedCustomer] = useState<string | null>(null)
 
   const loadItems = useCallback(() => {
-    fetch('/api/cfo/receivables')
+    const url = period ? `/api/cfo/receivables?period=${period}` : '/api/cfo/receivables'
+    fetch(url)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data?.items) return
@@ -66,7 +74,7 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [])
+  }, [period])
 
   useEffect(() => { loadItems() }, [loadItems])
 
@@ -154,22 +162,22 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#F97316' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>Receivables & Payables</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_receivables.title')}</span>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           {onAsk && overdueAmount > 0 && (
             <button
-              onClick={() => onAsk(`I have ${fmt(overdueAmount, sym)} in overdue ${view}. Total outstanding: ${fmt(totalAmount, sym)}. What's the best strategy to collect overdue amounts in ${region.countryName} without damaging business relationships?`)}
+              onClick={() => onAsk(tc('cfo_receivables.ask_prompt', { overdue: fmt(overdueAmount, sym), view: tc('cfo_receivables.view_' + view), total: fmt(totalAmount, sym), country: region.countryName }))}
               style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
             >
-              Ask AI
+              {tc('cfo_receivables.ask_ai')}
             </button>
           )}
           <button
             onClick={() => setShowAdd(!showAdd)}
             style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >
-            + Add
+            {tc('cfo_receivables.add')}
           </button>
         </div>
       </div>
@@ -189,7 +197,7 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
                 cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize',
               }}
             >
-              {v === 'receivables' ? 'Who Owes You' : 'What You Owe'}
+              {v === 'receivables' ? tc('cfo_receivables.tab_who_owes_you') : tc('cfo_receivables.tab_what_you_owe')}
             </button>
           ))}
         </div>
@@ -201,7 +209,7 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
               background: viewMode === m ? 'rgba(99,102,241,.08)' : 'transparent',
               color: viewMode === m ? '#6366F1' : 'var(--tx3)',
               cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize',
-            }}>{m === 'grouped' ? 'By Customer' : 'All Items'}</button>
+            }}>{m === 'grouped' ? tc('cfo_receivables.view_by_customer') : tc('cfo_receivables.view_all_items')}</button>
           ))}
         </div>
       </div>
@@ -209,11 +217,11 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
       {/* Summary */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b)' }}>
         <div style={{ padding: '10px 18px', background: 'var(--sf)', textAlign: 'center' }}>
-          <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Outstanding</div>
+          <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{tc('cfo_receivables.total_outstanding')}</div>
           <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(totalAmount, sym)}</div>
         </div>
         <div style={{ padding: '10px 18px', background: 'var(--sf)', textAlign: 'center' }}>
-          <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Overdue</div>
+          <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{tc('cfo_receivables.overdue')}</div>
           <div style={{ fontSize: 18, fontWeight: 700, color: overdueAmount > 0 ? '#EF4444' : '#22C55E', fontVariantNumeric: 'tabular-nums' }}>{fmt(overdueAmount, sym)}</div>
         </div>
       </div>
@@ -221,7 +229,7 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
       {/* Aging bar */}
       {totalAmount > 0 && (
         <div style={{ padding: '12px 18px', borderTop: '1px solid var(--b)' }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Aging</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('cfo_receivables.aging')}</div>
           <div style={{ height: 20, borderRadius: 6, overflow: 'hidden', display: 'flex', background: 'var(--ev, #e5e5e5)' }}>
             {agingData.map(b => b.pct > 0 ? (
               <div key={b.key} style={{ width: `${Math.min(b.pct, 100)}%`, background: b.color, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'width 300ms' }}>
@@ -231,7 +239,7 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 6, fontSize: 10, color: 'var(--tx3)' }}>
             {agingData.map(b => (
-              <span key={b.key}><span style={{ color: b.color }}>●</span> {b.label}: {fmt(b.amount, sym)}</span>
+              <span key={b.key}><span style={{ color: b.color }}>●</span> {bucketLabel(tc, b.key)}: {fmt(b.amount, sym)}</span>
             ))}
           </div>
         </div>
@@ -241,19 +249,19 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
       {showAdd && (
         <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)', background: 'rgba(99,102,241,.02)' }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', marginBottom: 8 }}>
-            Add {view === 'receivables' ? 'Receivable' : 'Payable'}
+            {view === 'receivables' ? tc('cfo_receivables.add_receivable') : tc('cfo_receivables.add_payable')}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
             <input
               type="text"
-              placeholder={view === 'receivables' ? 'Customer name' : 'Supplier name'}
+              placeholder={view === 'receivables' ? tc('cfo_receivables.placeholder_customer') : tc('cfo_receivables.placeholder_supplier')}
               value={newItem.counterparty}
               onChange={e => setNewItem(p => ({ ...p, counterparty: e.target.value }))}
               style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--b)', fontSize: 11, fontFamily: 'inherit', outline: 'none' }}
             />
             <input
               type="number"
-              placeholder="Amount"
+              placeholder={tc('cfo_receivables.placeholder_amount')}
               value={newItem.amount}
               onChange={e => setNewItem(p => ({ ...p, amount: e.target.value }))}
               style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--b)', fontSize: 11, fontFamily: 'inherit', outline: 'none' }}
@@ -268,7 +276,7 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
           <div style={{ display: 'flex', gap: 8 }}>
             <input
               type="text"
-              placeholder="Notes (optional)"
+              placeholder={tc('cfo_receivables.placeholder_notes')}
               value={newItem.notes}
               onChange={e => setNewItem(p => ({ ...p, notes: e.target.value }))}
               style={{ flex: 1, padding: '6px 10px', borderRadius: 6, border: '1px solid var(--b)', fontSize: 11, fontFamily: 'inherit', outline: 'none' }}
@@ -277,13 +285,13 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
               onClick={addItem}
               style={{ padding: '6px 14px', borderRadius: 6, border: 'none', background: '#6366F1', color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
             >
-              Add
+              {tc('cfo_receivables.btn_add')}
             </button>
             <button
               onClick={() => setShowAdd(false)}
               style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}
             >
-              Cancel
+              {tc('cfo_receivables.btn_cancel')}
             </button>
           </div>
         </div>
@@ -293,7 +301,7 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
       <div style={{ maxHeight: 400, overflowY: 'auto' }}>
         {filtered.length === 0 && (
           <div style={{ padding: '24px 18px', textAlign: 'center', color: 'var(--tx3)', fontSize: 12 }}>
-            No {view} tracked yet. Click "+ Add" to start tracking {view === 'receivables' ? 'who owes you' : 'what you owe'}.
+            {view === 'receivables' ? tc('cfo_receivables.empty_receivables') : tc('cfo_receivables.empty_payables')}
           </div>
         )}
 
@@ -311,8 +319,8 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{group.name}</div>
                   <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 1 }}>
-                    {group.items.length} item{group.items.length !== 1 ? 's' : ''}
-                    {group.maxOverdue > 0 && <span style={{ color: '#EF4444', fontWeight: 600 }}> · {group.maxOverdue}d overdue</span>}
+                    {group.items.length === 1 ? tc('cfo_receivables.item_count_one', { n: group.items.length }) : tc('cfo_receivables.item_count_many', { n: group.items.length })}
+                    {group.maxOverdue > 0 && <span style={{ color: '#EF4444', fontWeight: 600 }}> · {tc('cfo_receivables.days_overdue', { n: group.maxOverdue })}</span>}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -329,8 +337,8 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
                         <div style={{ width: 6, height: 6, borderRadius: '50%', background: b.color, flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
-                            Due {new Date(item.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                            {item.daysOverdue > 0 && <span style={{ color: '#EF4444', fontWeight: 600 }}> · {item.daysOverdue}d overdue</span>}
+                            {tc('cfo_receivables.due', { date: new Date(item.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) })}
+                            {item.daysOverdue > 0 && <span style={{ color: '#EF4444', fontWeight: 600 }}> · {tc('cfo_receivables.days_overdue', { n: item.daysOverdue })}</span>}
                             {item.notes && <span> · {item.notes}</span>}
                             {item.source && <span style={{ marginLeft: 4, fontSize: 9, fontWeight: 600, color: '#6366F1', textTransform: 'uppercase' }}>{item.source}</span>}
                           </div>
@@ -369,8 +377,8 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
                   )}
                 </div>
                 <div style={{ fontSize: 10, color: 'var(--tx3)' }}>
-                  Due {new Date(item.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                  {item.daysOverdue > 0 && <span style={{ color: '#EF4444', fontWeight: 600 }}> · {item.daysOverdue}d overdue</span>}
+                  {tc('cfo_receivables.due', { date: new Date(item.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) })}
+                  {item.daysOverdue > 0 && <span style={{ color: '#EF4444', fontWeight: 600 }}> · {tc('cfo_receivables.days_overdue', { n: item.daysOverdue })}</span>}
                   {item.notes && <span> · {item.notes}</span>}
                 </div>
               </div>
@@ -381,7 +389,7 @@ export default function ReceivablesTracker({ currencySymbol: sym, countryCode, o
                 <button
                   onClick={() => removeItem(item.id)}
                   style={{ fontSize: 12, color: 'var(--tx3)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '2px 4px', lineHeight: 1 }}
-                  title="Remove"
+                  title={tc('cfo_receivables.remove')}
                 >×</button>
               )}
             </div>

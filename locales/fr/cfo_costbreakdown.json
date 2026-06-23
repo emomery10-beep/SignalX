@@ -1,0 +1,13 @@
+{
+  "cfo_costbreakdown.heading": "Structure des coûts",
+  "cfo_costbreakdown.askAi": "Demander à l'IA",
+  "cfo_costbreakdown.askAiPrompt": "Ma structure des coûts : le coût des marchandises vendues représente {cogsPct}% du chiffre d'affaires ({cogsAmt}), les charges fixes sont de {fixedPct}% ({fixedAmt}). Quels sont les 3 principaux postes où je pourrais réduire les coûts sans freiner la croissance ?",
+  "cfo_costbreakdown.totalCosts": "Coûts totaux",
+  "cfo_costbreakdown.labelCogs": "Coût des marchandises vendues",
+  "cfo_costbreakdown.labelFixed": "Charges fixes / d'exploitation",
+  "cfo_costbreakdown.ofRevenue": "du chiffre d'affaires",
+  "cfo_costbreakdown.netProfit": "Bénéfice net",
+  "cfo_costbreakdown.whereEveryGoes": "Répartition de chaque {sym}100",
+  "cfo_costbreakdown.profitSuffix": " de bénéfice",
+  "cfo_costbreakdown.costsExceed": "Les coûts dépassent le chiffre d'affaires de {sym}{n} pour {sym}100 encaissés"
+}

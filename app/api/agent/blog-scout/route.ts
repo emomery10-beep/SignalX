@@ -136,9 +136,9 @@ async function runBlogScout() {
 
     // Sort by penalty ascending (freshest topics first), then shuffle within same penalty tier
     scoredQueries.sort((a, b) => a.penalty - b.penalty || Math.random() - 0.5)
-    const selected = scoredQueries.slice(0, 10)
+    const selected = scoredQueries.slice(0, 5)
 
-    log.push(`Selected 10 topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
+    log.push(`Selected 5 topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
     log.push('Searching Tavily for live data...')
 
     const searchResults = await Promise.allSettled(
@@ -147,7 +147,7 @@ async function runBlogScout() {
           searchDepth: 'advanced',
           maxResults: 5,
           includeAnswer: true,
-          topic: 'general',
+          topic: 'news',
           days: 14,
         }).then(result => ({ ...s, searchResult: result }))
       )
@@ -158,6 +158,11 @@ async function runBlogScout() {
         r.status === 'fulfilled' && !!r.value.searchResult?.results?.length
       )
       .map(r => r.value)
+
+    const rejectedCount = searchResults.filter(r => r.status === 'rejected').length
+    const nullCount = searchResults.filter(r => r.status === 'fulfilled' && !r.value.searchResult?.results?.length).length
+    if (rejectedCount > 0) log.push(`${rejectedCount} Tavily requests threw errors`)
+    if (nullCount > 0) log.push(`${nullCount} Tavily requests returned no results (null or empty — check TAVILY_API_KEY)`)
 
     if (validResults.length === 0) {
       log.push('No search results from any query — exiting')

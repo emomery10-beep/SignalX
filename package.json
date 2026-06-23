@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "i18n:audit": "node scripts/i18n-audit.mjs && node scripts/i18n-audit.mjs --app pos",
+    "i18n:fix": "node scripts/i18n-audit.mjs --fix --skip-typecheck && node scripts/i18n-audit.mjs --fix --skip-typecheck --app pos",
     "db:migrate": "supabase db push",
     "db:types": "supabase gen types typescript --local > lib/supabase/types.ts",
     "setup:factory-users": "node scripts/setup-factory-test-users.js",

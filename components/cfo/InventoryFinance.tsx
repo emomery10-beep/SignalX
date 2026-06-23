@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Product {
   name: string
@@ -59,6 +60,7 @@ function fmt(n: number, sym: string): string {
 }
 
 export default function InventoryFinance({ onAsk }: Props) {
+  const { tc } = useLang()
   const [products, setProducts] = useState<Product[]>([])
   const [summary, setSummary] = useState<Summary | null>(null)
   const [bySource, setBySource] = useState<SourceBreakdown[]>([])
@@ -91,7 +93,7 @@ export default function InventoryFinance({ onAsk }: Props) {
       <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', padding: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-          <span style={{ fontSize: 12, fontWeight: 700 }}>Inventory Finance</span>
+          <span style={{ fontSize: 12, fontWeight: 700 }}>{tc('cfo_inventory.title')}</span>
         </div>
         {[1, 2, 3].map(i => (
           <div key={i} style={{ height: 44, borderRadius: 10, background: 'var(--ev, #f3f2ef)', animation: 'pulse 1.5s infinite', marginBottom: 8 }} />
@@ -103,8 +105,8 @@ export default function InventoryFinance({ onAsk }: Props) {
   if (!summary || summary.total_products === 0) {
     return (
       <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', padding: '24px 18px', textAlign: 'center' }}>
-        <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 6 }}>No inventory data found</div>
-        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Connect a data source (POS, Shopify, Amazon, etc.) to track inventory.</div>
+        <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 6 }}>{tc('cfo_inventory.no_data_title')}</div>
+        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_inventory.no_data_desc')}</div>
       </div>
     )
   }
@@ -149,22 +151,22 @@ export default function InventoryFinance({ onAsk }: Props) {
       {/* Risk Alerts */}
       {(stockoutRisk.length > 0 || slowMoving.length > 0) && (
         <div style={{ borderRadius: 12, border: '1px solid rgba(239,68,68,.2)', background: 'rgba(239,68,68,.03)', padding: '12px 16px' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#EF4444', marginBottom: 8 }}>⚠ Inventory Alerts</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#EF4444', marginBottom: 8 }}>⚠ {tc('cfo_inventory.alerts_title')}</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {stockoutRisk.map((p, i) => (
               <div key={i} style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.15)', fontSize: 10 }}>
                 <span style={{ color: '#EF4444', fontWeight: 600 }}>🔴 {p.name}</span>
-                <span style={{ color: 'var(--tx3)', marginLeft: 4 }}>{p.daysRemaining}d stock left</span>
+                <span style={{ color: 'var(--tx3)', marginLeft: 4 }}>{tc('cfo_inventory.stock_left', { n: p.daysRemaining ?? 0 })}</span>
               </div>
             ))}
             {slowMoving.slice(0, 5).map((p, i) => (
               <div key={i} style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.15)', fontSize: 10 }}>
                 <span style={{ color: '#F59E0B', fontWeight: 600 }}>🟡 {p.name}</span>
-                <span style={{ color: 'var(--tx3)', marginLeft: 4 }}>{p.daysRemaining}d DIO · slow-moving</span>
+                <span style={{ color: 'var(--tx3)', marginLeft: 4 }}>{tc('cfo_inventory.dio_slow_moving', { n: p.daysRemaining ?? 0 })}</span>
               </div>
             ))}
             {slowMoving.length > 5 && (
-              <div style={{ padding: '4px 10px', fontSize: 10, color: 'var(--tx3)' }}>+{slowMoving.length - 5} more slow-moving</div>
+              <div style={{ padding: '4px 10px', fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_inventory.more_slow_moving', { n: slowMoving.length - 5 })}</div>
             )}
           </div>
         </div>
@@ -175,32 +177,41 @@ export default function InventoryFinance({ onAsk }: Props) {
         <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>Inventory Finance</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_inventory.title')}</span>
             <span style={{ fontSize: 10, color: 'var(--tx3)' }}>
-              {summary.total_products} products from {bySource.length} source{bySource.length !== 1 ? 's' : ''}
+              {bySource.length !== 1
+                ? tc('cfo_inventory.products_from_sources', { count: summary.total_products, sources: bySource.length })
+                : tc('cfo_inventory.products_from_source', { count: summary.total_products, sources: bySource.length })}
             </span>
           </div>
           {onAsk && (
             <button
-              onClick={() => onAsk(`My inventory across all sources: ${fmt(summary.total_value_cost, sym)} at cost (${fmt(summary.total_value_retail, sym)} retail), ${summary.stockout_rate}% stockout rate (${summary.out_of_stock} OOS, ${summary.low_stock} low stock). Sources: ${bySource.map(s => `${s.source} (${s.count} products, ${fmt(s.value, sym)})`).join(', ')}. What should I restock first, what dead stock should I discount, and how can I optimize across channels?`)}
+              onClick={() => onAsk(tc('cfo_inventory.ask_prompt', {
+                cost: fmt(summary.total_value_cost, sym),
+                retail: fmt(summary.total_value_retail, sym),
+                rate: summary.stockout_rate,
+                oos: summary.out_of_stock,
+                low: summary.low_stock,
+                sources: bySource.map(s => s.source + ' (' + s.count + ' products, ' + fmt(s.value, sym) + ')').join(', '),
+              }))}
               style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
             >
-              Ask AI
+              {tc('cfo_inventory.ask_ai')}
             </button>
           )}
         </div>
 
         {/* KPI metrics */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--b)' }}>
-          <MetricCell label="Value at Cost" value={fmt(summary.total_value_cost, sym)} color="var(--tx)" />
-          <MetricCell label="Value at Retail" value={fmt(summary.total_value_retail, sym)} color="#6366F1" />
-          <MetricCell label="Potential Profit" value={fmt(summary.potential_profit, sym)} color="#22C55E" />
-          <MetricCell label="Stockout Rate" value={`${summary.stockout_rate}%`} color={summary.stockout_rate > 50 ? '#EF4444' : summary.stockout_rate > 30 ? '#F59E0B' : '#22C55E'} />
+          <MetricCell label={tc('cfo_inventory.metric_value_cost')} value={fmt(summary.total_value_cost, sym)} color="var(--tx)" />
+          <MetricCell label={tc('cfo_inventory.metric_value_retail')} value={fmt(summary.total_value_retail, sym)} color="#6366F1" />
+          <MetricCell label={tc('cfo_inventory.metric_potential_profit')} value={fmt(summary.potential_profit, sym)} color="#22C55E" />
+          <MetricCell label={tc('cfo_inventory.metric_stockout_rate')} value={`${summary.stockout_rate}%`} color={summary.stockout_rate > 50 ? '#EF4444' : summary.stockout_rate > 30 ? '#F59E0B' : '#22C55E'} />
         </div>
 
         {/* Stock health bar */}
         <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--b)' }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Stock Health</div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{tc('cfo_inventory.stock_health')}</div>
           <div style={{ height: 20, borderRadius: 6, overflow: 'hidden', display: 'flex' }}>
             {summary.healthy_stock > 0 && (
               <div style={{ width: `${(summary.healthy_stock / summary.total_products) * 100}%`, background: '#22C55E', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'width 300ms' }}>
@@ -219,9 +230,9 @@ export default function InventoryFinance({ onAsk }: Props) {
             )}
           </div>
           <div style={{ display: 'flex', gap: 12, marginTop: 6, fontSize: 10, color: 'var(--tx3)' }}>
-            <span><span style={{ color: '#22C55E' }}>●</span> Healthy ({summary.healthy_stock})</span>
-            <span><span style={{ color: '#F59E0B' }}>●</span> Low ({summary.low_stock})</span>
-            <span><span style={{ color: '#EF4444' }}>●</span> Out ({summary.out_of_stock})</span>
+            <span><span style={{ color: '#22C55E' }}>●</span> {tc('cfo_inventory.legend_healthy', { n: summary.healthy_stock })}</span>
+            <span><span style={{ color: '#F59E0B' }}>●</span> {tc('cfo_inventory.legend_low', { n: summary.low_stock })}</span>
+            <span><span style={{ color: '#EF4444' }}>●</span> {tc('cfo_inventory.legend_out', { n: summary.out_of_stock })}</span>
           </div>
         </div>
       </div>
@@ -232,7 +243,7 @@ export default function InventoryFinance({ onAsk }: Props) {
           <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--b)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
               <div style={{ width: 3, height: 14, borderRadius: 2, background: '#F97316' }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>Inventory by Source</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_inventory.by_source')}</span>
             </div>
 
             {/* Source bar */}
@@ -269,8 +280,8 @@ export default function InventoryFinance({ onAsk }: Props) {
                   }}
                 >
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: SOURCE_COLORS[s.source] || '#6B7280', display: 'inline-block' }} />
-                  {s.source}: {s.count} products · {fmt(s.value, sym)}
-                  {s.lowOrOos > 0 && <span style={{ color: '#EF4444', fontWeight: 600 }}> ({s.lowOrOos} alerts)</span>}
+                  {tc('cfo_inventory.source_legend', { source: s.source, count: s.count, value: fmt(s.value, sym) })}
+                  {s.lowOrOos > 0 && <span style={{ color: '#EF4444', fontWeight: 600 }}>{tc('cfo_inventory.source_alerts', { n: s.lowOrOos })}</span>}
                 </button>
               ))}
             </div>
@@ -284,7 +295,7 @@ export default function InventoryFinance({ onAsk }: Props) {
           <div style={{ padding: '12px 18px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
               <div style={{ width: 3, height: 14, borderRadius: 2, background: '#22C55E' }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>Inventory by Category</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_inventory.by_category')}</span>
             </div>
             {byCategory.map((cat, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: i < byCategory.length - 1 ? '1px solid var(--b)' : undefined }}>
@@ -307,12 +318,12 @@ export default function InventoryFinance({ onAsk }: Props) {
         <div style={{ padding: '10px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             {([
-              ['all', 'All'],
-              ['out', 'Out of Stock'],
-              ['low', 'Low Stock'],
-              ['healthy', 'Healthy'],
-              ['risk', `🔴 Stockout Risk (${stockoutRisk.length})`],
-              ['slow', `🟡 Slow-Moving (${slowMoving.length})`],
+              ['all', tc('cfo_inventory.filter_all')],
+              ['out', tc('cfo_inventory.filter_out')],
+              ['low', tc('cfo_inventory.filter_low')],
+              ['healthy', tc('cfo_inventory.filter_healthy')],
+              ['risk', tc('cfo_inventory.filter_risk', { n: stockoutRisk.length })],
+              ['slow', tc('cfo_inventory.filter_slow', { n: slowMoving.length })],
             ] as const).map(([key, label]) => (
               <button
                 key={key}
@@ -340,7 +351,7 @@ export default function InventoryFinance({ onAsk }: Props) {
                 cursor: 'pointer', fontFamily: 'inherit',
               }}
             >
-              Products
+              {tc('cfo_inventory.view_products')}
             </button>
             {byCategory.length > 1 && (
               <button
@@ -353,7 +364,7 @@ export default function InventoryFinance({ onAsk }: Props) {
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}
               >
-                Categories
+                {tc('cfo_inventory.view_categories')}
               </button>
             )}
           </div>
@@ -361,8 +372,8 @@ export default function InventoryFinance({ onAsk }: Props) {
 
         {/* Sort row */}
         <div style={{ padding: '6px 18px', borderBottom: '1px solid var(--b)', display: 'flex', gap: 4, fontSize: 10, color: 'var(--tx3)' }}>
-          <span>Sort by:</span>
-          {([['value', 'Value'], ['margin', 'Margin'], ['stock', 'Stock Level'], ['units', 'Units Sold'], ['dio', 'DIO']] as const).map(([key, label]) => (
+          <span>{tc('cfo_inventory.sort_by')}</span>
+          {([['value', tc('cfo_inventory.sort_value')], ['margin', tc('cfo_inventory.sort_margin')], ['stock', tc('cfo_inventory.sort_stock')], ['units', tc('cfo_inventory.sort_units')], ['dio', tc('cfo_inventory.sort_dio')]] as const).map(([key, label]) => (
             <button
               key={key}
               onClick={() => setSortKey(key)}
@@ -381,8 +392,8 @@ export default function InventoryFinance({ onAsk }: Props) {
         {/* Product list */}
         <div style={{ padding: '8px 18px' }}>
           <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 6 }}>
-            Showing {Math.min(sorted.length, 30)} of {sorted.length} products
-            {sourceFilter && <span> · Filtered: <strong>{sourceFilter}</strong> <button onClick={() => setSourceFilter(null)} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, fontFamily: 'inherit' }}>clear</button></span>}
+            {tc('cfo_inventory.showing_products', { shown: Math.min(sorted.length, 30), total: sorted.length })}
+            {sourceFilter && <span>{tc('cfo_inventory.filtered_label')}<strong>{sourceFilter}</strong> <button onClick={() => setSourceFilter(null)} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, fontFamily: 'inherit' }}>{tc('cfo_inventory.clear')}</button></span>}
           </div>
           <div style={{ maxHeight: 500, overflowY: 'auto' }}>
             {sorted.slice(0, 50).map((p, i) => {
@@ -408,21 +419,21 @@ export default function InventoryFinance({ onAsk }: Props) {
                           background: SOURCE_COLORS[p.source] ? `${SOURCE_COLORS[p.source]}18` : 'rgba(107,114,128,.1)',
                           color: SOURCE_COLORS[p.source] || '#6B7280', flexShrink: 0,
                         }}>{p.source}</span>
-                        {p.isStockoutRisk && <span style={{ fontSize: 8, fontWeight: 700, color: '#EF4444', background: 'rgba(239,68,68,.1)', padding: '1px 4px', borderRadius: 3 }}>RISK</span>}
-                        {p.isSlowMoving && <span style={{ fontSize: 8, fontWeight: 700, color: '#F59E0B', background: 'rgba(245,158,11,.1)', padding: '1px 4px', borderRadius: 3 }}>SLOW</span>}
+                        {p.isStockoutRisk && <span style={{ fontSize: 8, fontWeight: 700, color: '#EF4444', background: 'rgba(239,68,68,.1)', padding: '1px 4px', borderRadius: 3 }}>{tc('cfo_inventory.badge_risk')}</span>}
+                        {p.isSlowMoving && <span style={{ fontSize: 8, fontWeight: 700, color: '#F59E0B', background: 'rgba(245,158,11,.1)', padding: '1px 4px', borderRadius: 3 }}>{tc('cfo_inventory.badge_slow')}</span>}
                       </div>
                       <div style={{ fontSize: 10, color: 'var(--tx3)', display: 'flex', gap: 8, marginTop: 1, flexWrap: 'wrap' }}>
-                        <span>{p.stock_quantity} units</span>
-                        {p.daysRemaining != null && <span style={{ color: p.isStockoutRisk ? '#EF4444' : p.isSlowMoving ? '#F59E0B' : 'var(--tx3)', fontWeight: p.isStockoutRisk || p.isSlowMoving ? 600 : 400 }}>{p.daysRemaining}d remaining</span>}
-                        <span style={{ color: p.margin_pct >= 40 ? '#22C55E' : p.margin_pct >= 20 ? '#F59E0B' : '#EF4444' }}>{p.margin_pct}% margin</span>
-                        {p.units_sold > 0 && <span>{p.units_sold} sold/mo</span>}
+                        <span>{tc('cfo_inventory.units', { n: p.stock_quantity })}</span>
+                        {p.daysRemaining != null && <span style={{ color: p.isStockoutRisk ? '#EF4444' : p.isSlowMoving ? '#F59E0B' : 'var(--tx3)', fontWeight: p.isStockoutRisk || p.isSlowMoving ? 600 : 400 }}>{tc('cfo_inventory.days_remaining', { n: p.daysRemaining })}</span>}
+                        <span style={{ color: p.margin_pct >= 40 ? '#22C55E' : p.margin_pct >= 20 ? '#F59E0B' : '#EF4444' }}>{tc('cfo_inventory.margin_pct', { n: p.margin_pct })}</span>
+                        {p.units_sold > 0 && <span>{tc('cfo_inventory.sold_per_mo', { n: p.units_sold })}</span>}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>
                         {fmt(p.value_at_cost, sym)}
                       </div>
-                      <div style={{ fontSize: 9, color: 'var(--tx3)' }}>tied up</div>
+                      <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_inventory.tied_up')}</div>
                     </div>
                     <span style={{ fontSize: 10, color: 'var(--tx3)', flexShrink: 0 }}>{isExpanded ? '▲' : '▼'}</span>
                   </div>
@@ -431,26 +442,26 @@ export default function InventoryFinance({ onAsk }: Props) {
                   {isExpanded && (
                     <div style={{ padding: '10px 14px 14px', background: 'rgba(99,102,241,.02)', borderTop: '1px solid var(--b)', borderRadius: '0 0 8px 8px' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
-                        <DrillMetric label="Cost Price" value={`${sym}${p.cost_price.toFixed(2)}`} />
-                        <DrillMetric label="Sale Price" value={`${sym}${p.price.toFixed(2)}`} />
-                        <DrillMetric label="Margin" value={`${p.margin_pct}%`} color={p.margin_pct >= 40 ? '#22C55E' : p.margin_pct >= 20 ? '#F59E0B' : '#EF4444'} />
-                        <DrillMetric label="Stock Qty" value={String(p.stock_quantity)} />
-                        <DrillMetric label="Units Sold" value={p.units_sold > 0 ? `${p.units_sold}/mo` : '—'} />
-                        <DrillMetric label="DIO" value={p.daysRemaining != null ? `${p.daysRemaining} days` : '—'} color={p.isStockoutRisk ? '#EF4444' : p.isSlowMoving ? '#F59E0B' : '#22C55E'} />
-                        <DrillMetric label="Value at Cost" value={fmt(p.value_at_cost, sym)} />
-                        <DrillMetric label="Value at Retail" value={fmt(p.value_at_retail, sym)} />
-                        <DrillMetric label="Category" value={p.category} />
+                        <DrillMetric label={tc('cfo_inventory.drill_cost_price')} value={`${sym}${p.cost_price.toFixed(2)}`} />
+                        <DrillMetric label={tc('cfo_inventory.drill_sale_price')} value={`${sym}${p.price.toFixed(2)}`} />
+                        <DrillMetric label={tc('cfo_inventory.drill_margin')} value={`${p.margin_pct}%`} color={p.margin_pct >= 40 ? '#22C55E' : p.margin_pct >= 20 ? '#F59E0B' : '#EF4444'} />
+                        <DrillMetric label={tc('cfo_inventory.drill_stock_qty')} value={String(p.stock_quantity)} />
+                        <DrillMetric label={tc('cfo_inventory.drill_units_sold')} value={p.units_sold > 0 ? tc('cfo_inventory.units_per_mo', { n: p.units_sold }) : '—'} />
+                        <DrillMetric label={tc('cfo_inventory.drill_dio')} value={p.daysRemaining != null ? tc('cfo_inventory.dio_days', { n: p.daysRemaining }) : '—'} color={p.isStockoutRisk ? '#EF4444' : p.isSlowMoving ? '#F59E0B' : '#22C55E'} />
+                        <DrillMetric label={tc('cfo_inventory.drill_value_cost')} value={fmt(p.value_at_cost, sym)} />
+                        <DrillMetric label={tc('cfo_inventory.drill_value_retail')} value={fmt(p.value_at_retail, sym)} />
+                        <DrillMetric label={tc('cfo_inventory.drill_category')} value={p.category} />
                       </div>
-                      {p.sku && <div style={{ fontSize: 10, color: 'var(--tx3)' }}>SKU: {p.sku}</div>}
-                      {p.isStockoutRisk && <div style={{ fontSize: 10, color: '#EF4444', fontWeight: 600, marginTop: 4 }}>⚠ Only {p.daysRemaining} days of stock remaining — reorder now</div>}
-                      {p.isSlowMoving && <div style={{ fontSize: 10, color: '#F59E0B', fontWeight: 600, marginTop: 4 }}>⚠ {p.daysRemaining} day DIO — consider discounting or bundling to move stock</div>}
+                      {p.sku && <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_inventory.sku_label', { sku: p.sku })}</div>}
+                      {p.isStockoutRisk && <div style={{ fontSize: 10, color: '#EF4444', fontWeight: 600, marginTop: 4 }}>{tc('cfo_inventory.risk_message', { n: p.daysRemaining ?? 0 })}</div>}
+                      {p.isSlowMoving && <div style={{ fontSize: 10, color: '#F59E0B', fontWeight: 600, marginTop: 4 }}>{tc('cfo_inventory.slow_message', { n: p.daysRemaining ?? 0 })}</div>}
                     </div>
                   )}
                 </div>
               )
             })}
             {sorted.length === 0 && (
-              <div style={{ padding: 16, textAlign: 'center', color: 'var(--tx3)', fontSize: 12 }}>No products match your filters</div>
+              <div style={{ padding: 16, textAlign: 'center', color: 'var(--tx3)', fontSize: 12 }}>{tc('cfo_inventory.no_match')}</div>
             )}
           </div>
         </div>

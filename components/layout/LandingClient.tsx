@@ -42,17 +42,17 @@ const CURRENCIES = [
 ] as const
 
 type BizType = 'retail'|'factory'|'restaurant'|'cargo'|'repair'
-const BIZ_TYPES = [
-  { id:'retail' as BizType,icon:'🛒',label:'Retail / Ecom',priceLabel:'Sale price',pricePh:'12.99',unitLabel:'Units sold',resultLabel:'COGS/UNIT',
-    fields:[{key:'a',label:'Materials',ph:'3.00'},{key:'b',label:'Labour',ph:'2.50'},{key:'c',label:'Shipping',ph:'1.20'},{key:'d',label:'Packaging',ph:'0.80'}]},
-  { id:'factory' as BizType,icon:'🏭',label:'Factory',priceLabel:'Unit sale price',pricePh:'24.00',unitLabel:'Batch size',resultLabel:'COST/UNIT',
-    fields:[{key:'a',label:'Raw materials',ph:'6.00'},{key:'b',label:'Direct labour',ph:'4.50'},{key:'c',label:'Machine time',ph:'2.00'},{key:'d',label:'Overhead/unit',ph:'1.50'}]},
-  { id:'restaurant' as BizType,icon:'🍽️',label:'Restaurant',priceLabel:'Menu price',pricePh:'16.50',unitLabel:'Covers/day',resultLabel:'FOOD COST',
-    fields:[{key:'a',label:'Ingredients',ph:'4.20'},{key:'b',label:'Prep labour',ph:'2.00'},{key:'c',label:'Packaging',ph:'0.50'},{key:'d',label:'Waste %',ph:'8'}]},
-  { id:'cargo' as BizType,icon:'🚛',label:'Cargo',priceLabel:'Revenue/trip',pricePh:'850',unitLabel:'Trips/month',resultLabel:'COST/TRIP',
-    fields:[{key:'a',label:'Fuel',ph:'180'},{key:'b',label:'Driver wages',ph:'120'},{key:'c',label:'Tolls & fees',ph:'45'},{key:'d',label:'Insurance',ph:'30'}]},
-  { id:'repair' as BizType,icon:'🔧',label:'Repair Shop',priceLabel:'Charge to customer',pricePh:'89.99',unitLabel:'Jobs/week',resultLabel:'PARTS+LABOUR',
-    fields:[{key:'a',label:'Parts cost',ph:'25.00'},{key:'b',label:'Labour (hrs)',ph:'1.5'},{key:'c',label:'Labour rate/hr',ph:'20'},{key:'d',label:'Diagnostic fee',ph:'0'}]},
+const buildBizTypes = (tc: (k: string) => string) => [
+  { id:'retail' as BizType,icon:'🛒',label:tc('landing.biz_retail_label'),priceLabel:tc('landing.biz_retail_price_label'),pricePh:'12.99',unitLabel:tc('landing.biz_retail_unit_label'),resultLabel:tc('landing.biz_retail_result_label'),
+    fields:[{key:'a',label:tc('landing.biz_retail_field_a'),ph:'3.00'},{key:'b',label:tc('landing.biz_retail_field_b'),ph:'2.50'},{key:'c',label:tc('landing.biz_retail_field_c'),ph:'1.20'},{key:'d',label:tc('landing.biz_retail_field_d'),ph:'0.80'}]},
+  { id:'factory' as BizType,icon:'🏭',label:tc('landing.biz_factory_label'),priceLabel:tc('landing.biz_factory_price_label'),pricePh:'24.00',unitLabel:tc('landing.biz_factory_unit_label'),resultLabel:tc('landing.biz_factory_result_label'),
+    fields:[{key:'a',label:tc('landing.biz_factory_field_a'),ph:'6.00'},{key:'b',label:tc('landing.biz_factory_field_b'),ph:'4.50'},{key:'c',label:tc('landing.biz_factory_field_c'),ph:'2.00'},{key:'d',label:tc('landing.biz_factory_field_d'),ph:'1.50'}]},
+  { id:'restaurant' as BizType,icon:'🍽️',label:tc('landing.biz_restaurant_label'),priceLabel:tc('landing.biz_restaurant_price_label'),pricePh:'16.50',unitLabel:tc('landing.biz_restaurant_unit_label'),resultLabel:tc('landing.biz_restaurant_result_label'),
+    fields:[{key:'a',label:tc('landing.biz_restaurant_field_a'),ph:'4.20'},{key:'b',label:tc('landing.biz_restaurant_field_b'),ph:'2.00'},{key:'c',label:tc('landing.biz_restaurant_field_c'),ph:'0.50'},{key:'d',label:tc('landing.biz_restaurant_field_d'),ph:'8',isPct:true}]},
+  { id:'cargo' as BizType,icon:'🚛',label:tc('landing.biz_cargo_label'),priceLabel:tc('landing.biz_cargo_price_label'),pricePh:'850',unitLabel:tc('landing.biz_cargo_unit_label'),resultLabel:tc('landing.biz_cargo_result_label'),
+    fields:[{key:'a',label:tc('landing.biz_cargo_field_a'),ph:'180'},{key:'b',label:tc('landing.biz_cargo_field_b'),ph:'120'},{key:'c',label:tc('landing.biz_cargo_field_c'),ph:'45'},{key:'d',label:tc('landing.biz_cargo_field_d'),ph:'30'}]},
+  { id:'repair' as BizType,icon:'🔧',label:tc('landing.biz_repair_label'),priceLabel:tc('landing.biz_repair_price_label'),pricePh:'89.99',unitLabel:tc('landing.biz_repair_unit_label'),resultLabel:tc('landing.biz_repair_result_label'),
+    fields:[{key:'a',label:tc('landing.biz_repair_field_a'),ph:'25.00'},{key:'b',label:tc('landing.biz_repair_field_b'),ph:'1.5'},{key:'c',label:tc('landing.biz_repair_field_c'),ph:'20'},{key:'d',label:tc('landing.biz_repair_field_d'),ph:'0'}]},
 ]
 
 // FAQS — kept in sync with the FAQPage JSON-LD schema in app/page.tsx (server-side)
@@ -72,10 +72,10 @@ function Logo({size=12,color='white'}:{size?:number;color?:string}) {
 }
 
 // ── Actual AskBiz "Ask" UI replica ────────────────────────────────────────────
-function AskUIReplica() {
+function AskUIReplica({tc}:{tc:(k:string)=>string}) {
   const [typed, setTyped] = useState('')
   const [phase, setPhase] = useState<'idle'|'typing'|'thinking'|'answer'>('idle')
-  const question = 'What is my best margin product this week?'
+  const question = tc('landing.ask_question')
 
   useEffect(() => {
     const start = setTimeout(() => setPhase('typing'), 1200)
@@ -116,14 +116,14 @@ function AskUIReplica() {
             <span style={{fontSize:12,fontWeight:700,color:'#1A1410'}}>AskBiz</span>
           </div>
           <div style={{marginLeft:'auto',display:'flex',gap:6}}>
-            {['Ask','Business','POS'].map((t,i)=>(
+            {[tc('landing.ask_nav_ask'),tc('landing.ask_nav_business'),tc('landing.ask_nav_pos')].map((t,i)=>(
               <span key={t} style={{fontSize:9,fontWeight:i===0?700:400,color:i===0?'#C97A44':'#AAA',borderBottom:i===0?'1px solid #C97A44':'1px solid transparent',paddingBottom:1}}>{t}</span>
             ))}
           </div>
         </div>
-        <div style={{flex:1,padding:'0 16px',fontSize:11,fontWeight:600,color:'#1A1410'}}>New conversation</div>
+        <div style={{flex:1,padding:'0 16px',fontSize:11,fontWeight:600,color:'#1A1410'}}>{tc('landing.ask_new_conversation')}</div>
         <div className="rep-hide-sm" style={{display:'flex',gap:6,padding:'0 14px'}}>
-          {['Run scenario','CFO view','Upload'].map(btn=>(
+          {[tc('landing.ask_btn_run_scenario'),tc('landing.ask_btn_cfo_view'),tc('landing.ask_btn_upload')].map(btn=>(
             <span key={btn} style={{fontSize:9,padding:'4px 8px',borderRadius:5,border:'1px solid #E5E5E5',color:'#888',cursor:'pointer'}}>{btn}</span>
           ))}
         </div>
@@ -131,12 +131,12 @@ function AskUIReplica() {
       <div style={{display:'flex',minHeight:350}}>
         {/* Left sidebar */}
         <div className="rep-hide-sm" style={{width:210,borderRight:'1px solid #F0F0F0',padding:'10px 8px',background:'#FAFAFA',flexShrink:0,display:'flex',flexDirection:'column',gap:3}}>
-          <div style={{fontSize:8,fontWeight:700,color:'#BBB',padding:'3px 8px',letterSpacing:'.1em',textTransform:'uppercase'}}>Quick Questions</div>
-          {['What are my top sellers?','Margin by product','Revenue vs last week','Stock running low'].map((q,i)=>(
+          <div style={{fontSize:8,fontWeight:700,color:'#BBB',padding:'3px 8px',letterSpacing:'.1em',textTransform:'uppercase'}}>{tc('landing.ask_quick_questions')}</div>
+          {[tc('landing.ask_q_top_sellers'),tc('landing.ask_q_margin_by_product'),tc('landing.ask_q_revenue_vs_last_week'),tc('landing.ask_q_stock_running_low')].map((q,i)=>(
             <div key={i} style={{fontSize:9,padding:'5px 8px',borderRadius:5,color:'#666',cursor:'pointer',lineHeight:1.3}}>{q}</div>
           ))}
-          <div style={{marginTop:6,fontSize:8,fontWeight:700,color:'#BBB',padding:'3px 8px',letterSpacing:'.1em',textTransform:'uppercase'}}>History</div>
-          {['My POS sales today are 87%...','Calculate my true landed cost...','What are my top sellers?'].map((h,i)=>(
+          <div style={{marginTop:6,fontSize:8,fontWeight:700,color:'#BBB',padding:'3px 8px',letterSpacing:'.1em',textTransform:'uppercase'}}>{tc('landing.ask_history')}</div>
+          {[tc('landing.ask_hist_0'),tc('landing.ask_hist_1'),tc('landing.ask_q_top_sellers')].map((h,i)=>(
             <div key={i} style={{fontSize:8,padding:'4px 8px',borderRadius:5,color:'#999',cursor:'pointer',lineHeight:1.4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{h}</div>
           ))}
         </div>
@@ -146,15 +146,15 @@ function AskUIReplica() {
             <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'20px 28px',gap:14}}>
               <div style={{width:38,height:38,borderRadius:10,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center'}}><Logo size={16}/></div>
               <div style={{textAlign:'center'}}>
-                <p style={{fontSize:15,fontWeight:700,color:'#1A1410',margin:'0 0 3px'}}>What do you want to know?</p>
-                <p style={{fontSize:10,color:'#999',margin:0}}>Just ask in plain English — no jargon, no spreadsheets needed.</p>
+                <p style={{fontSize:15,fontWeight:700,color:'#1A1410',margin:'0 0 3px'}}>{tc('landing.ask_empty_title')}</p>
+                <p style={{fontSize:10,color:'#999',margin:0}}>{tc('landing.ask_empty_sub')}</p>
               </div>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7,width:'100%',maxWidth:380}}>
                 {[
-                  {icon:'💱',title:'Currency Risk',sub:'What happens if the pound drops?'},
-                  {icon:'🏭',title:'My Suppliers',sub:'Who is the most reliable?'},
-                  {icon:'📦',title:'True Cost',sub:'What does shipping actually cost me?'},
-                  {icon:'🌍',title:'New Markets',sub:'Where should I sell next?'},
+                  {icon:'💱',title:tc('landing.ask_card_currency_title'),sub:tc('landing.ask_card_currency_sub')},
+                  {icon:'🏭',title:tc('landing.ask_card_suppliers_title'),sub:tc('landing.ask_card_suppliers_sub')},
+                  {icon:'📦',title:tc('landing.ask_card_true_cost_title'),sub:tc('landing.ask_card_true_cost_sub')},
+                  {icon:'🌍',title:tc('landing.ask_card_markets_title'),sub:tc('landing.ask_card_markets_sub')},
                 ].map((card,i)=>(
                   <div key={i} style={{padding:'9px 11px',borderRadius:8,border:'1px solid #F0F0F0',background:'#FAFAFA',cursor:'pointer'}}>
                     <div style={{fontSize:15,marginBottom:3}}>{card.icon}</div>
@@ -165,10 +165,10 @@ function AskUIReplica() {
               </div>
               <div style={{width:'100%',maxWidth:380,padding:'8px 11px',borderRadius:8,border:'1px dashed #E5E5E5',background:'#FAFAFA',display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
                 <div>
-                  <div style={{fontSize:10,fontWeight:600,color:'#1A1410',marginBottom:1}}>Get answers with your actual numbers</div>
-                  <div style={{fontSize:8,color:'#AAA'}}>Connect Shopify, Amazon, QuickBooks or upload a CSV</div>
+                  <div style={{fontSize:10,fontWeight:600,color:'#1A1410',marginBottom:1}}>{tc('landing.ask_connect_title')}</div>
+                  <div style={{fontSize:8,color:'#AAA'}}>{tc('landing.ask_connect_sub')}</div>
                 </div>
-                <span style={{fontSize:9,fontWeight:700,padding:'5px 9px',borderRadius:6,background:'#C97A44',color:'#fff',cursor:'pointer',whiteSpace:'nowrap',flexShrink:0}}>Connect →</span>
+                <span style={{fontSize:9,fontWeight:700,padding:'5px 9px',borderRadius:6,background:'#C97A44',color:'#fff',cursor:'pointer',whiteSpace:'nowrap',flexShrink:0}}>{tc('landing.ask_connect_btn')}</span>
               </div>
             </div>
           ) : (
@@ -193,14 +193,14 @@ function AskUIReplica() {
                   ):(
                     <div style={{flex:1}}>
                       <div style={{padding:'10px 13px',background:'#FAFAFA',border:'1px solid #F0F0F0',borderRadius:'3px 12px 12px 12px',fontSize:12,lineHeight:1.7,color:'#1A1410',marginBottom:7}}>
-                        <strong>Wireless Earbuds Pro</strong> is your highest-margin product this week — <strong style={{color:'#C97A44'}}>34.2% gross margin</strong>, £8.22 profit per unit across 143 units sold.<br/>
-                        <span style={{color:'#888',fontSize:11}}>⚠ Ginger Powder is running at a <span style={{color:'#dc2626',fontWeight:700}}>–566.7% margin</span> — likely a pricing or cost input error.</span>
+                        <strong>Wireless Earbuds Pro</strong> {tc('landing.ask_answer_main_a')} <strong style={{color:'#C97A44'}}>{tc('landing.ask_answer_main_b')}</strong>{tc('landing.ask_answer_main_c')}<br/>
+                        <span style={{color:'#888',fontSize:11}}>⚠ Ginger Powder {tc('landing.ask_answer_warn_a')}<span style={{color:'#dc2626',fontWeight:700}}>{tc('landing.ask_answer_warn_b')}</span>{tc('landing.ask_answer_warn_c')}</span>
                       </div>
                       <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
-                        {['Margin 34.2%','£1,175 this week','143 units'].map(chip=>(
+                        {[tc('landing.ask_chip_margin'),tc('landing.ask_chip_week'),tc('landing.ask_chip_units')].map(chip=>(
                           <span key={chip} style={{fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)'}}>{chip}</span>
                         ))}
-                        <span style={{fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:9999,background:'rgba(220,38,38,.08)',color:'#dc2626',border:'1px solid rgba(220,38,38,.2)'}}>⚠ Ginger review needed</span>
+                        <span style={{fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:9999,background:'rgba(220,38,38,.08)',color:'#dc2626',border:'1px solid rgba(220,38,38,.2)'}}>{tc('landing.ask_chip_ginger')}</span>
                       </div>
                     </div>
                   )}
@@ -211,7 +211,7 @@ function AskUIReplica() {
           {/* Input */}
           <div style={{borderTop:'1px solid #F0F0F0',padding:'9px 14px',display:'flex',alignItems:'center',gap:7,background:'#fff'}}>
             <div style={{flex:1,border:'1px solid #E5E5E5',borderRadius:8,padding:'7px 11px',fontSize:11,color:'#CCC',background:'#FAFAFA'}}>
-              {phase==='typing'?typed:'What do you want to know about your business?'}
+              {phase==='typing'?typed:tc('landing.ask_input_placeholder')}
             </div>
             <div style={{width:26,height:26,borderRadius:6,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0}}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
@@ -224,15 +224,15 @@ function AskUIReplica() {
 }
 
 // ── Monitor / Intelligence UI replica ─────────────────────────────────────────
-function MonitorUIReplica() {
+function MonitorUIReplica({tc}:{tc:(k:string)=>string}) {
   type MTab = 'overview'|'cfo'|'alerts'|'decisions'|'team'|'askai'|'ships'|'memory'|'market'
   const [tab, setTab] = useState<MTab>('overview')
   const [askQ, setAskQ] = useState('')
   const [askA, setAskA] = useState('')
   const TABS:{id:MTab;label:string}[] = [
-    {id:'overview',label:'Overview'},{id:'cfo',label:'CFO 📊'},{id:'alerts',label:'Alerts 🚨'},
-    {id:'decisions',label:'Decisions'},{id:'team',label:'Team'},{id:'askai',label:'Ask AI'},
-    {id:'ships',label:'Ships'},{id:'memory',label:'Memory'},{id:'market',label:'Market'},
+    {id:'overview',label:tc('landing.mon_tab_overview')},{id:'cfo',label:tc('landing.mon_tab_cfo')},{id:'alerts',label:tc('landing.mon_tab_alerts')},
+    {id:'decisions',label:tc('landing.mon_tab_decisions')},{id:'team',label:tc('landing.mon_tab_team')},{id:'askai',label:tc('landing.mon_tab_askai')},
+    {id:'ships',label:tc('landing.mon_tab_ships')},{id:'memory',label:tc('landing.mon_tab_memory')},{id:'market',label:tc('landing.mon_tab_market')},
   ]
   const pill=(txt:string,color:string,bg:string)=>(
     <span style={{fontSize:7,fontWeight:700,padding:'2px 6px',borderRadius:9999,background:bg,color,whiteSpace:'nowrap'}}>{txt}</span>
@@ -244,7 +244,7 @@ function MonitorUIReplica() {
         <div className="rep-chrome-sm" style={{width:170,borderRight:'1px solid #F0F0F0',height:42,display:'flex',alignItems:'center',padding:'0 12px',gap:8,background:'#FAFAFA',flexShrink:0}}>
           <div style={{width:20,height:20,borderRadius:5,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center'}}><Logo size={9}/></div>
           <span style={{fontSize:11,fontWeight:700,color:'#1A1410'}}>AskBiz</span>
-          <span style={{marginLeft:'auto',fontSize:8,padding:'1px 5px',borderRadius:9999,background:'rgba(201,122,68,.1)',color:'#C97A44',fontWeight:700}}>Monitor</span>
+          <span style={{marginLeft:'auto',fontSize:8,padding:'1px 5px',borderRadius:9999,background:'rgba(201,122,68,.1)',color:'#C97A44',fontWeight:700}}>{tc('landing.mon_badge')}</span>
         </div>
         <div style={{display:'flex',overflowX:'auto',flex:1,scrollbarWidth:'none'}} className="pos-tabs">
           {TABS.map(t=>(
@@ -260,8 +260,8 @@ function MonitorUIReplica() {
       {tab==='overview'&&(
         <div style={{padding:'16px 18px'}}>
           <div style={{marginBottom:12}}>
-            <div style={{fontSize:14,fontWeight:700,color:'#1A1410',marginBottom:1}}>Good morning</div>
-            <div style={{fontSize:9,color:'#AAA'}}>Sunday, 14 June 2026</div>
+            <div style={{fontSize:14,fontWeight:700,color:'#1A1410',marginBottom:1}}>{tc('landing.mon_good_morning')}</div>
+            <div style={{fontSize:9,color:'#AAA'}}>{tc('landing.mon_date_full')}</div>
           </div>
           <div className="rep-3col" style={{display:'grid',gridTemplateColumns:'1.5fr 1fr 1fr',gap:8,marginBottom:9}}>
             <div style={{padding:'11px 13px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',display:'flex',alignItems:'center',gap:11}}>
@@ -270,12 +270,12 @@ function MonitorUIReplica() {
                 <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:800,color:'#1A1410'}}>72</div>
               </div>
               <div>
-                <div style={{fontSize:8,color:'#AAA',marginBottom:1}}>Health Score</div>
-                <div style={{fontSize:11,fontWeight:700,color:'#1A1410'}}>Good</div>
-                <div style={{fontSize:7,color:'#16a34a',fontWeight:600}}>▲ +3 this week</div>
+                <div style={{fontSize:8,color:'#AAA',marginBottom:1}}>{tc('landing.mon_health_score')}</div>
+                <div style={{fontSize:11,fontWeight:700,color:'#1A1410'}}>{tc('landing.mon_health_good')}</div>
+                <div style={{fontSize:7,color:'#16a34a',fontWeight:600}}>{tc('landing.mon_health_delta')}</div>
               </div>
             </div>
-            {[{icon:'🚨',title:'Active Alerts',value:'2 flagged',color:'#fb923c'},{icon:'📈',title:'30-Day Trend',value:'▲ 34%',color:'#16a34a'}].map((c,i)=>(
+            {[{icon:'🚨',title:tc('landing.mon_active_alerts'),value:tc('landing.mon_active_alerts_value'),color:'#fb923c'},{icon:'📈',title:tc('landing.mon_30day_trend'),value:'▲ 34%',color:'#16a34a'}].map((c,i)=>(
               <div key={i} style={{padding:'11px 13px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0'}}>
                 <div style={{fontSize:14,marginBottom:4}}>{c.icon}</div>
                 <div style={{fontSize:8,color:'#AAA',marginBottom:1}}>{c.title}</div>
@@ -285,16 +285,16 @@ function MonitorUIReplica() {
           </div>
           <div style={{padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',marginBottom:7}}>
             <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
-              <span style={{fontSize:10}}>⏰</span><span style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>Daily Brief</span>
-              <span style={{fontSize:8,color:'#AAA',marginLeft:'auto'}}>Sun 14 June</span>
+              <span style={{fontSize:10}}>⏰</span><span style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>{tc('landing.mon_daily_brief')}</span>
+              <span style={{fontSize:8,color:'#AAA',marginLeft:'auto'}}>{tc('landing.mon_daily_brief_date')}</span>
             </div>
-            <p style={{fontSize:9,color:'#555',lineHeight:1.6,margin:0}}>Revenue is <strong>34% up</strong> on last week — driven by Wireless Earbuds Pro. Two alerts need attention: gross margin dropped from 45.6% → 32.1%, and 58% of products are low or out of stock.</p>
+            <p style={{fontSize:9,color:'#555',lineHeight:1.6,margin:0}}>{tc('landing.mon_daily_brief_body_a')} <strong>34% {tc('landing.mon_daily_brief_body_up')}</strong> {tc('landing.mon_daily_brief_body_b')}</p>
           </div>
-          {['Gross margin dropped from 45.6% → 32.1%','58% of products are low or out of stock (42 of 73)'].map((a,i)=>(
+          {[tc('landing.mon_ov_alert_0'),tc('landing.mon_ov_alert_1')].map((a,i)=>(
             <div key={i} style={{display:'flex',alignItems:'center',gap:7,padding:'6px 10px',borderRadius:7,background:'rgba(251,146,60,.07)',marginBottom:4}}>
               <span style={{width:5,height:5,borderRadius:'50%',background:'#fb923c',display:'block',flexShrink:0}}/>
               <span style={{fontSize:8,color:'#1A1410',flex:1}}>{a}</span>
-              <span style={{fontSize:7,color:'#C97A44',fontWeight:700,cursor:'pointer',flexShrink:0}}>View →</span>
+              <span style={{fontSize:7,color:'#C97A44',fontWeight:700,cursor:'pointer',flexShrink:0}}>{tc('landing.mon_view_arrow')}</span>
             </div>
           ))}
         </div>
@@ -303,9 +303,9 @@ function MonitorUIReplica() {
       {/* ── CFO ── */}
       {tab==='cfo'&&(
         <div style={{padding:'16px 18px'}}>
-          <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:12}}>📊 CFO Dashboard — This Week</div>
+          <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:12}}>{tc('landing.mon_cfo_header')}</div>
           <div className="rep-3col" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:12}}>
-            {[{label:'Revenue',value:'£3,247',sub:'▲ 34% vs last week',c:'#16a34a'},{label:'Gross Profit',value:'£1,109',sub:'34.2% margin',c:'#C97A44'},{label:'Net Margin',value:'26.1%',sub:'▲ 2.1pp vs prev',c:'#6366f1'}].map((k,i)=>(
+            {[{label:tc('landing.mon_cfo_revenue'),value:'£3,247',sub:tc('landing.mon_cfo_revenue_sub'),c:'#16a34a'},{label:tc('landing.mon_cfo_gross_profit'),value:'£1,109',sub:tc('landing.mon_cfo_gross_profit_sub'),c:'#C97A44'},{label:tc('landing.mon_cfo_net_margin'),value:'26.1%',sub:tc('landing.mon_cfo_net_margin_sub'),c:'#6366f1'}].map((k,i)=>(
               <div key={i} style={{padding:'10px 11px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0'}}>
                 <div style={{fontSize:8,color:'#AAA',marginBottom:3}}>{k.label}</div>
                 <div style={{fontSize:16,fontWeight:800,color:k.c,lineHeight:1}}>{k.value}</div>
@@ -314,8 +314,8 @@ function MonitorUIReplica() {
             ))}
           </div>
           <div style={{background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',overflow:'hidden',marginBottom:10}}>
-            <div style={{padding:'8px 12px',background:'#FAFAFA',borderBottom:'1px solid #F5F5F5',fontSize:8,fontWeight:700,color:'#AAA',letterSpacing:'.06em'}}>P&L SUMMARY</div>
-            {[{label:'Revenue',value:'£3,247',indent:false},{label:'Cost of Goods',value:'−£2,138',indent:true,color:'#ef4444'},{label:'Gross Profit',value:'£1,109',indent:false,bold:true,color:'#16a34a'},{label:'Operating Expenses',value:'−£260',indent:true,color:'#ef4444'},{label:'Net Profit',value:'£849',indent:false,bold:true,color:'#16a34a'}].map((r,i)=>(
+            <div style={{padding:'8px 12px',background:'#FAFAFA',borderBottom:'1px solid #F5F5F5',fontSize:8,fontWeight:700,color:'#AAA',letterSpacing:'.06em'}}>{tc('landing.mon_pnl_summary')}</div>
+            {[{label:tc('landing.pnl_revenue'),value:'£3,247',indent:false},{label:tc('landing.pnl_cost_of_goods'),value:'−£2,138',indent:true,color:'#ef4444'},{label:tc('landing.pnl_gross_profit'),value:'£1,109',indent:false,bold:true,color:'#16a34a'},{label:tc('landing.pnl_operating_expenses'),value:'−£260',indent:true,color:'#ef4444'},{label:tc('landing.pnl_net_profit'),value:'£849',indent:false,bold:true,color:'#16a34a'}].map((r,i)=>(
               <div key={i} style={{display:'flex',justifyContent:'space-between',padding:`5px ${r.indent?'20px':'12px'} 5px 12px`,borderTop:i>0?'1px solid #F8F8F8':'none'}}>
                 <span style={{fontSize:9,color:r.bold?'#1A1410':'#666',fontWeight:r.bold?700:400}}>{r.label}</span>
                 <span style={{fontSize:9,fontWeight:r.bold?700:500,color:r.color||'#1A1410'}}>{r.value}</span>
@@ -323,7 +323,7 @@ function MonitorUIReplica() {
             ))}
           </div>
           <div style={{display:'flex',gap:6}}>
-            {['View full P&L →','Cash flow →','Export PDF →'].map(a=>(
+            {[tc('landing.mon_cfo_act_pnl'),tc('landing.mon_cfo_act_cashflow'),tc('landing.mon_cfo_act_export')].map(a=>(
               <span key={a} style={{fontSize:8,padding:'4px 10px',borderRadius:5,border:'1px solid #E5E5E5',color:'#C97A44',cursor:'pointer',fontWeight:600}}>{a}</span>
             ))}
           </div>
@@ -334,14 +334,14 @@ function MonitorUIReplica() {
       {tab==='alerts'&&(
         <div style={{padding:'16px 18px'}}>
           <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
-            <span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>🚨 Active Alerts</span>
-            <span style={{fontSize:7,padding:'2px 7px',borderRadius:9999,background:'rgba(251,146,60,.1)',color:'#fb923c',fontWeight:700}}>2 unread</span>
+            <span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>{tc('landing.mon_alerts_header')}</span>
+            <span style={{fontSize:7,padding:'2px 7px',borderRadius:9999,background:'rgba(251,146,60,.1)',color:'#fb923c',fontWeight:700}}>{tc('landing.mon_alerts_unread')}</span>
           </div>
           {[
-            {sev:'HIGH',icon:'📉',title:'Gross margin dropped sharply',body:'Margin fell from 45.6% → 32.1% this week. Likely cause: supplier cost increase on Wireless Earbuds Pro. Recommended action: review COGS or raise price.',color:'#ef4444',bg:'rgba(239,68,68,.05)',time:'2h ago'},
-            {sev:'HIGH',icon:'📦',title:'58% of products low or out of stock',body:'42 of 73 tracked products are below reorder threshold. Top affected: Earbuds Pro (0 units), Phone Stand (3 units), USB Hub (1 unit).',color:'#ef4444',bg:'rgba(239,68,68,.05)',time:'4h ago'},
-            {sev:'MED',icon:'📱',title:'TikTok: high saves, zero orders',body:'Wireless Pro Earbuds has 340 saves this week but 0 TikTok Shop orders. Add a limited-time offer to convert interest.',color:'#f59e0b',bg:'rgba(245,158,11,.04)',time:'Yesterday'},
-            {sev:'LOW',icon:'🔍',title:'Competitor price drop detected',body:'EliteGadgets reduced prices by 15% on 3 overlapping SKUs. Monitor conversion rate over the next 48h.',color:'#6b7280',bg:'rgba(107,114,128,.04)',time:'2d ago'},
+            {sev:tc('landing.mon_sev_high'),icon:'📉',title:tc('landing.mon_alert_0_title'),body:tc('landing.mon_alert_0_body'),color:'#ef4444',bg:'rgba(239,68,68,.05)',time:tc('landing.mon_time_2h')},
+            {sev:tc('landing.mon_sev_high'),icon:'📦',title:tc('landing.mon_alert_1_title'),body:tc('landing.mon_alert_1_body'),color:'#ef4444',bg:'rgba(239,68,68,.05)',time:tc('landing.mon_time_4h')},
+            {sev:tc('landing.mon_sev_med'),icon:'📱',title:tc('landing.mon_alert_2_title'),body:tc('landing.mon_alert_2_body'),color:'#f59e0b',bg:'rgba(245,158,11,.04)',time:tc('landing.mon_time_yesterday')},
+            {sev:tc('landing.mon_sev_low'),icon:'🔍',title:tc('landing.mon_alert_3_title'),body:tc('landing.mon_alert_3_body'),color:'#6b7280',bg:'rgba(107,114,128,.04)',time:tc('landing.mon_time_2d')},
           ].map((a,i)=>(
             <div key={i} style={{padding:'10px 12px',borderRadius:9,border:`1px solid ${a.color}22`,background:a.bg,marginBottom:7}}>
               <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:5}}>
@@ -352,8 +352,8 @@ function MonitorUIReplica() {
               </div>
               <p style={{fontSize:8,color:'#555',lineHeight:1.5,margin:'0 0 6px'}}>{a.body}</p>
               <div style={{display:'flex',gap:5}}>
-                <span style={{fontSize:7,padding:'2px 8px',borderRadius:4,border:'1px solid #E5E5E5',color:'#C97A44',cursor:'pointer',fontWeight:600}}>Take action →</span>
-                <span style={{fontSize:7,padding:'2px 8px',borderRadius:4,border:'1px solid #E5E5E5',color:'#888',cursor:'pointer'}}>Dismiss</span>
+                <span style={{fontSize:7,padding:'2px 8px',borderRadius:4,border:'1px solid #E5E5E5',color:'#C97A44',cursor:'pointer',fontWeight:600}}>{tc('landing.mon_take_action')}</span>
+                <span style={{fontSize:7,padding:'2px 8px',borderRadius:4,border:'1px solid #E5E5E5',color:'#888',cursor:'pointer'}}>{tc('landing.mon_dismiss')}</span>
               </div>
             </div>
           ))}
@@ -363,13 +363,13 @@ function MonitorUIReplica() {
       {/* ── Decisions ── */}
       {tab==='decisions'&&(
         <div style={{padding:'16px 18px'}}>
-          <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:3}}>🧠 Decision Memory</div>
-          <div style={{fontSize:8,color:'#AAA',marginBottom:12}}>AskBiz remembers every decision you log. It tracks outcomes automatically and reminds you when to review.</div>
+          <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:3}}>{tc('landing.mon_dec_header')}</div>
+          <div style={{fontSize:8,color:'#AAA',marginBottom:12}}>{tc('landing.mon_dec_sub')}</div>
           {[
-            {date:'23 May',action:'Raised price of Wireless Earbuds Pro by 8% to recover margin',outcome:'+£340/mo revenue',status:'positive',review:'Due for review 23 Jun'},
-            {date:'15 May',action:'Paused TikTok ads for "Cable Kit" — ROAS below 1.2x',outcome:'Saved £200/mo ad spend',status:'positive',review:'Review if ROAS improves'},
-            {date:'3 May',action:'Ordered 500 extra units of USB Hub ahead of Q2',outcome:'Stock available — margin held',status:'positive',review:'No action needed'},
-            {date:'18 Apr',action:'Switched fulfilment to Royal Mail for orders under £20',outcome:'Awaiting 30-day data',status:'pending',review:'Review due 18 May'},
+            {date:'23 May',action:tc('landing.mon_dec_0_action'),outcome:tc('landing.mon_dec_0_outcome'),status:'positive',review:tc('landing.mon_dec_0_review')},
+            {date:'15 May',action:tc('landing.mon_dec_1_action'),outcome:tc('landing.mon_dec_1_outcome'),status:'positive',review:tc('landing.mon_dec_1_review')},
+            {date:'3 May',action:tc('landing.mon_dec_2_action'),outcome:tc('landing.mon_dec_2_outcome'),status:'positive',review:tc('landing.mon_dec_2_review')},
+            {date:'18 Apr',action:tc('landing.mon_dec_3_action'),outcome:tc('landing.mon_dec_3_outcome'),status:'pending',review:tc('landing.mon_dec_3_review')},
           ].map((d,i)=>(
             <div key={i} style={{padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',marginBottom:7}}>
               <div style={{display:'flex',alignItems:'flex-start',gap:7,marginBottom:5}}>
@@ -383,7 +383,7 @@ function MonitorUIReplica() {
             </div>
           ))}
           <div style={{textAlign:'center',marginTop:6}}>
-            <span style={{fontSize:8,color:'#C97A44',fontWeight:600,cursor:'pointer'}}>+ Log a new decision</span>
+            <span style={{fontSize:8,color:'#C97A44',fontWeight:600,cursor:'pointer'}}>{tc('landing.mon_dec_log_new')}</span>
           </div>
         </div>
       )}
@@ -392,12 +392,12 @@ function MonitorUIReplica() {
       {tab==='team'&&(
         <div style={{padding:'16px 18px'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-            <div><span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>👥 Team</span><span style={{fontSize:8,color:'#AAA',marginLeft:6}}>2 of 5 seats used</span></div>
-            <span style={{fontSize:8,padding:'4px 10px',borderRadius:5,background:'#C97A44',color:'#fff',fontWeight:700,cursor:'pointer'}}>+ Invite</span>
+            <div><span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>{tc('landing.mon_team_header')}</span><span style={{fontSize:8,color:'#AAA',marginLeft:6}}>{tc('landing.mon_team_seats')}</span></div>
+            <span style={{fontSize:8,padding:'4px 10px',borderRadius:5,background:'#C97A44',color:'#fff',fontWeight:700,cursor:'pointer'}}>{tc('landing.mon_team_invite')}</span>
           </div>
           {[
-            {name:'You (Admin)',email:'owner@askbiz.co',role:'Owner',last:'Now',avatar:'YO',active:true},
-            {name:'Sarah M.',email:'sarah@myshop.co',role:'Analyst',last:'2h ago',avatar:'SM',active:true},
+            {name:tc('landing.mon_team_0_name'),email:'owner@askbiz.co',role:tc('landing.mon_team_role_owner'),last:tc('landing.mon_team_now'),avatar:'YO',active:true},
+            {name:'Sarah M.',email:'sarah@myshop.co',role:tc('landing.mon_team_role_analyst'),last:tc('landing.mon_time_2h'),avatar:'SM',active:true},
           ].map((m,i)=>(
             <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',marginBottom:6}}>
               <div style={{width:30,height:30,borderRadius:'50%',background:'#F0EDE8',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'#C97A44',flexShrink:0,position:'relative'}}>
@@ -406,14 +406,14 @@ function MonitorUIReplica() {
               </div>
               <div style={{flex:1}}>
                 <div style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>{m.name}</div>
-                <div style={{fontSize:8,color:'#AAA'}}>{m.email} · {m.role} · Active {m.last}</div>
+                <div style={{fontSize:8,color:'#AAA'}}>{m.email} · {m.role} · {tc('landing.mon_team_active')} {m.last}</div>
               </div>
               {pill(m.role,'#C97A44','rgba(201,122,68,.08)')}
             </div>
           ))}
           <div style={{padding:'10px 12px',borderRadius:9,background:'rgba(201,122,68,.04)',border:'1px dashed rgba(201,122,68,.2)',textAlign:'center'}}>
-            <div style={{fontSize:9,color:'#C97A44',fontWeight:600,marginBottom:2}}>Invite your accountant or business partner</div>
-            <div style={{fontSize:8,color:'#AAA'}}>Each member gets their own AI context · Role-based access</div>
+            <div style={{fontSize:9,color:'#C97A44',fontWeight:600,marginBottom:2}}>{tc('landing.mon_team_invite_title')}</div>
+            <div style={{fontSize:8,color:'#AAA'}}>{tc('landing.mon_team_invite_sub')}</div>
           </div>
         </div>
       )}
@@ -421,10 +421,10 @@ function MonitorUIReplica() {
       {/* ── Ask AI ── */}
       {tab==='askai'&&(
         <div style={{padding:'16px 18px'}}>
-          <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:10}}>💬 Ask your business anything</div>
+          <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:10}}>{tc('landing.mon_askai_header')}</div>
           {[
-            {q:'What is my best margin product this week?',a:'Your best margin product is Wireless Earbuds Pro at 38.4% gross margin — generating £847 profit on £2,203 revenue this week. Margin is up 2.1pp vs last week.'},
-            {q:'Which products should I restock first?',a:'Prioritise: (1) Wireless Earbuds Pro — 0 units, 23 pending orders. (2) USB Hub — 1 unit, selling 8/day. (3) Phone Stand — 3 units, 5-day cover remaining.'},
+            {q:tc('landing.mon_askai_0_q'),a:tc('landing.mon_askai_0_a')},
+            {q:tc('landing.mon_askai_1_q'),a:tc('landing.mon_askai_1_a')},
           ].map((qa,i)=>(
             <div key={i} style={{marginBottom:10}}>
               <div style={{display:'flex',gap:7,marginBottom:5}}>
@@ -438,8 +438,8 @@ function MonitorUIReplica() {
             </div>
           ))}
           <div style={{display:'flex',gap:6,marginTop:8}}>
-            <input readOnly value={askQ} onChange={e=>setAskQ(e.target.value)} placeholder="Ask a question about your business…" style={{flex:1,height:32,padding:'0 10px',fontSize:9,border:'1px solid #E5E5E5',borderRadius:7,background:'#FAFAFA',color:'#1A1410',fontFamily:'inherit',outline:'none'}}/>
-            <span style={{fontSize:9,padding:'0 12px',height:32,display:'flex',alignItems:'center',borderRadius:7,background:'#C97A44',color:'#fff',fontWeight:700,cursor:'pointer',flexShrink:0}}>Ask →</span>
+            <input readOnly value={askQ} onChange={e=>setAskQ(e.target.value)} placeholder={tc('landing.mon_askai_placeholder')} style={{flex:1,height:32,padding:'0 10px',fontSize:9,border:'1px solid #E5E5E5',borderRadius:7,background:'#FAFAFA',color:'#1A1410',fontFamily:'inherit',outline:'none'}}/>
+            <span style={{fontSize:9,padding:'0 12px',height:32,display:'flex',alignItems:'center',borderRadius:7,background:'#C97A44',color:'#fff',fontWeight:700,cursor:'pointer',flexShrink:0}}>{tc('landing.mon_askai_btn')}</span>
           </div>
         </div>
       )}
@@ -447,9 +447,9 @@ function MonitorUIReplica() {
       {/* ── Ships ── */}
       {tab==='ships'&&(
         <div style={{padding:'16px 18px'}}>
-          <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:12}}>🚢 Shipments & Orders</div>
+          <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:12}}>{tc('landing.mon_ships_header')}</div>
           <div className="rep-3col" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:12}}>
-            {[{label:'In transit',value:'14',color:'#6366f1'},{label:'Delivered today',value:'7',color:'#16a34a'},{label:'Delayed',value:'2',color:'#ef4444'}].map((k,i)=>(
+            {[{label:tc('landing.mon_ships_in_transit'),value:'14',color:'#6366f1'},{label:tc('landing.mon_ships_delivered_today'),value:'7',color:'#16a34a'},{label:tc('landing.mon_ships_delayed'),value:'2',color:'#ef4444'}].map((k,i)=>(
               <div key={i} style={{padding:'9px 10px',background:'#fff',borderRadius:8,border:'1px solid #F0F0F0',textAlign:'center'}}>
                 <div style={{fontSize:14,fontWeight:800,color:k.color,marginBottom:2}}>{k.value}</div>
                 <div style={{fontSize:7,color:'#AAA'}}>{k.label}</div>
@@ -457,10 +457,10 @@ function MonitorUIReplica() {
             ))}
           </div>
           {[
-            {ref:'#UK-4421',item:'Wireless Earbuds Pro ×10',carrier:'Royal Mail',status:'In transit',eta:'Tomorrow',color:'#6366f1'},
-            {ref:'#UK-4420',item:'USB Hub ×50',carrier:'DPD',status:'Delivered',eta:'Today 10:31',color:'#16a34a'},
-            {ref:'#UK-4419',item:'Phone Stand ×25',carrier:'Hermes',status:'Delayed',eta:'ETA unknown',color:'#ef4444'},
-            {ref:'#UK-4418',item:'Cable Kit ×100',carrier:'Royal Mail',status:'In transit',eta:'Wed 18 Jun',color:'#6366f1'},
+            {ref:'#UK-4421',item:'Wireless Earbuds Pro ×10',carrier:'Royal Mail',status:tc('landing.mon_ships_status_in_transit'),eta:tc('landing.mon_ships_eta_tomorrow'),color:'#6366f1'},
+            {ref:'#UK-4420',item:'USB Hub ×50',carrier:'DPD',status:tc('landing.mon_ships_status_delivered'),eta:`${tc('landing.mon_ships_eta_today')} 10:31`,color:'#16a34a'},
+            {ref:'#UK-4419',item:'Phone Stand ×25',carrier:'Hermes',status:tc('landing.mon_ships_status_delayed'),eta:tc('landing.mon_ships_eta_unknown'),color:'#ef4444'},
+            {ref:'#UK-4418',item:'Cable Kit ×100',carrier:'Royal Mail',status:tc('landing.mon_ships_status_in_transit'),eta:'Wed 18 Jun',color:'#6366f1'},
           ].map((s,i)=>(
             <div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:'8px 0',borderTop:i>0?'1px solid #F5F5F5':'none'}}>
               <span style={{fontSize:7,color:'#888',fontWeight:700,flexShrink:0,fontFamily:'monospace'}}>{s.ref}</span>
@@ -477,14 +477,14 @@ function MonitorUIReplica() {
       {/* ── Memory ── */}
       {tab==='memory'&&(
         <div style={{padding:'16px 18px'}}>
-          <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:3}}>🧩 Business Memory</div>
-          <div style={{fontSize:8,color:'#AAA',marginBottom:12}}>Facts and context AskBiz has learned about your business. It uses these to give more relevant answers.</div>
+          <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:3}}>{tc('landing.mon_mem_header')}</div>
+          <div style={{fontSize:8,color:'#AAA',marginBottom:12}}>{tc('landing.mon_mem_sub')}</div>
           {[
-            {icon:'🏭',category:'Suppliers',fact:'Primary supplier for Earbuds Pro is ShenTech Ltd — 45-day lead time. Backup: ElectroHub (60 days, 8% higher cost).'},
-            {icon:'📦',category:'Products',fact:'Top 3 by revenue: (1) Wireless Earbuds Pro, (2) USB-C Hub, (3) Phone Stand. Earbuds Pro drives 67% of weekly revenue.'},
-            {icon:'🎯',category:'Goals',fact:'Target 35% gross margin across all SKUs by Q3. Current: 34.2%. Gap: 0.8pp.'},
-            {icon:'📣',category:'Channels',fact:'Primary sales: eBay (52%), Shopify (31%), Stripe direct (17%). TikTok Shop launched May 2026 — early data.'},
-            {icon:'💸',category:'Costs',fact:'Fulfilment: Royal Mail for <£20 orders, DPD for >£20. Storage: £340/month at Fulfilment Centre East.'},
+            {icon:'🏭',category:tc('landing.mon_mem_cat_suppliers'),fact:tc('landing.mon_mem_fact_suppliers')},
+            {icon:'📦',category:tc('landing.mon_mem_cat_products'),fact:tc('landing.mon_mem_fact_products')},
+            {icon:'🎯',category:tc('landing.mon_mem_cat_goals'),fact:tc('landing.mon_mem_fact_goals')},
+            {icon:'📣',category:tc('landing.mon_mem_cat_channels'),fact:tc('landing.mon_mem_fact_channels')},
+            {icon:'💸',category:tc('landing.mon_mem_cat_costs'),fact:tc('landing.mon_mem_fact_costs')},
           ].map((m,i)=>(
             <div key={i} style={{display:'flex',gap:9,padding:'9px 0',borderTop:i>0?'1px solid #F5F5F5':'none'}}>
               <div style={{width:26,height:26,borderRadius:6,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,flexShrink:0}}>{m.icon}</div>
@@ -500,13 +500,13 @@ function MonitorUIReplica() {
       {/* ── Market ── */}
       {tab==='market'&&(
         <div style={{padding:'16px 18px'}}>
-          <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:12}}>🌍 Market Intelligence</div>
+          <div style={{fontSize:10,fontWeight:700,color:'#1A1410',marginBottom:12}}>{tc('landing.mon_market_header')}</div>
           <div style={{background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',marginBottom:10,overflow:'hidden'}}>
-            <div style={{padding:'8px 12px',background:'#FAFAFA',borderBottom:'1px solid #F5F5F5',fontSize:8,fontWeight:700,color:'#AAA',letterSpacing:'.06em'}}>COMPETITOR WATCH</div>
+            <div style={{padding:'8px 12px',background:'#FAFAFA',borderBottom:'1px solid #F5F5F5',fontSize:8,fontWeight:700,color:'#AAA',letterSpacing:'.06em'}}>{tc('landing.mon_market_competitor_watch')}</div>
             {[
-              {name:'EliteGadgets',sku:'Bluetooth Earbuds X3',change:'Price ↓15%',when:'2d ago',impact:'High',color:'#ef4444'},
-              {name:'TechDen UK',sku:'USB-C 7-in-1 Hub',change:'New listing',when:'5d ago',impact:'Med',color:'#f59e0b'},
-              {name:'GadgetHub',sku:'Wireless Charger Pro',change:'Out of stock',when:'Today',impact:'Opportunity',color:'#16a34a'},
+              {name:'EliteGadgets',sku:'Bluetooth Earbuds X3',change:tc('landing.mon_market_change_price_down'),when:tc('landing.mon_time_2d'),impact:tc('landing.mon_market_impact_high'),color:'#ef4444'},
+              {name:'TechDen UK',sku:'USB-C 7-in-1 Hub',change:tc('landing.mon_market_change_new_listing'),when:tc('landing.mon_time_5d'),impact:tc('landing.mon_market_impact_med'),color:'#f59e0b'},
+              {name:'GadgetHub',sku:'Wireless Charger Pro',change:tc('landing.mon_market_change_oos'),when:tc('landing.mon_time_today'),impact:tc('landing.mon_market_impact_opportunity'),color:'#16a34a'},
             ].map((c,i)=>(
               <div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:'8px 12px',borderTop:i>0?'1px solid #F8F8F8':'none'}}>
                 <div style={{flex:1}}>
@@ -519,16 +519,16 @@ function MonitorUIReplica() {
             ))}
           </div>
           <div style={{background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',overflow:'hidden'}}>
-            <div style={{padding:'8px 12px',background:'#FAFAFA',borderBottom:'1px solid #F5F5F5',fontSize:8,fontWeight:700,color:'#AAA',letterSpacing:'.06em'}}>DEMAND SIGNALS (TIKTOK SAVES)</div>
+            <div style={{padding:'8px 12px',background:'#FAFAFA',borderBottom:'1px solid #F5F5F5',fontSize:8,fontWeight:700,color:'#AAA',letterSpacing:'.06em'}}>{tc('landing.mon_market_demand_signals')}</div>
             {[
-              {product:'Wireless Earbuds Pro',saves:'340',orders:'0',signal:'🔥 High demand — add offer'},
-              {product:'Phone Stand Flex',saves:'87',orders:'12',signal:'✅ Converting well'},
-              {product:'USB Hub 7-in-1',saves:'210',orders:'3',signal:'⚠️ Saves not converting'},
+              {product:'Wireless Earbuds Pro',saves:'340',orders:'0',signal:tc('landing.mon_market_signal_high')},
+              {product:'Phone Stand Flex',saves:'87',orders:'12',signal:tc('landing.mon_market_signal_converting')},
+              {product:'USB Hub 7-in-1',saves:'210',orders:'3',signal:tc('landing.mon_market_signal_not_converting')},
             ].map((d,i)=>(
               <div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:'8px 12px',borderTop:i>0?'1px solid #F8F8F8':'none'}}>
                 <div style={{flex:1}}>
                   <div style={{fontSize:9,fontWeight:600,color:'#1A1410'}}>{d.product}</div>
-                  <div style={{fontSize:7,color:'#AAA'}}>{d.saves} saves · {d.orders} orders</div>
+                  <div style={{fontSize:7,color:'#AAA'}}>{d.saves} {tc('landing.mon_market_saves')} · {d.orders} {tc('landing.mon_market_orders')}</div>
                 </div>
                 <span style={{fontSize:7,color:'#555'}}>{d.signal}</span>
               </div>
@@ -541,36 +541,36 @@ function MonitorUIReplica() {
 }
 
 // ── Sources / Connect UI replica ───────────────────────────────────────────────
-function SourcesUIReplica() {
+function SourcesUIReplica({tc}:{tc:(k:string)=>string}) {
   return (
     <div style={{background:'#FAFAFA',borderRadius:16,border:'1px solid #E5E5E5',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.09)',width:'100%',fontFamily:'system-ui,-apple-system,sans-serif'}}>
       <div style={{padding:'12px 18px',borderBottom:'1px solid #F0F0F0',background:'#fff',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div>
-          <span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>CONNECT A PLATFORM</span>
-          <span style={{fontSize:9,color:'#AAA',marginLeft:6}}>— 30 integrations</span>
+          <span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>{tc('landing.src_connect_platform')}</span>
+          <span style={{fontSize:9,color:'#AAA',marginLeft:6}}>{tc('landing.src_integrations_count')}</span>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:5,padding:'5px 10px',borderRadius:6,border:'1px solid #E5E5E5',background:'#FAFAFA'}}>
           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#AAA" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <span style={{fontSize:9,color:'#AAA'}}>Search integrations...</span>
+          <span style={{fontSize:9,color:'#AAA'}}>{tc('landing.src_search')}</span>
         </div>
       </div>
       <div style={{padding:'7px 18px 4px',background:'rgba(34,197,94,.04)',borderBottom:'1px solid rgba(34,197,94,.1)',display:'flex',alignItems:'center',gap:6}}>
-        <span style={{fontSize:9,color:'#16a34a',fontWeight:700}}>● CONNECTED (2)</span>
-        <span style={{fontSize:8,color:'#AAA'}}>Stripe · eBay Store — synced 1d ago</span>
+        <span style={{fontSize:9,color:'#16a34a',fontWeight:700}}>{tc('landing.src_connected_count')}</span>
+        <span style={{fontSize:8,color:'#AAA'}}>{tc('landing.src_connected_synced')}</span>
       </div>
       <div style={{maxHeight:300,overflowY:'auto'}}>
         {[
-          {cat:'E-COMMERCE',items:[
-            {icon:'🛒',name:'Shopify',desc:'Orders, products, inventory, customers',status:'connect'},
-            {icon:'📦',name:'Amazon FBA',desc:'FBA orders, inventory, fees, returns',status:'connect'},
-            {icon:'🛍️',name:'eBay Store',desc:'Listings, orders, seller metrics, fees',status:'connected'},
-            {icon:'🧵',name:'Etsy',desc:'Shop stats, orders, listings, revenue',status:'connect'},
-            {icon:'📱',name:'TikTok Shop',desc:'Orders, GMV, creator performance',status:'connect'},
+          {cat:tc('landing.src_cat_ecommerce'),items:[
+            {icon:'🛒',name:'Shopify',desc:tc('landing.src_desc_shopify'),status:'connect'},
+            {icon:'📦',name:'Amazon FBA',desc:tc('landing.src_desc_amazon'),status:'connect'},
+            {icon:'🛍️',name:'eBay Store',desc:tc('landing.src_desc_ebay'),status:'connected'},
+            {icon:'🧵',name:'Etsy',desc:tc('landing.src_desc_etsy'),status:'connect'},
+            {icon:'📱',name:'TikTok Shop',desc:tc('landing.src_desc_tiktok'),status:'connect'},
           ]},
-          {cat:'ACCOUNTING',items:[
-            {icon:'📒',name:'QuickBooks',desc:'P&L, invoices, expenses, cash flow',status:'connect'},
-            {icon:'🔵',name:'Xero',desc:'Accounts, bank feeds, payroll',status:'connect'},
-            {icon:'💳',name:'Stripe',desc:'Payments, disputes, subscriptions',status:'connected'},
+          {cat:tc('landing.src_cat_accounting'),items:[
+            {icon:'📒',name:'QuickBooks',desc:tc('landing.src_desc_quickbooks'),status:'connect'},
+            {icon:'🔵',name:'Xero',desc:tc('landing.src_desc_xero'),status:'connect'},
+            {icon:'💳',name:'Stripe',desc:tc('landing.src_desc_stripe'),status:'connected'},
           ]},
         ].map(section=>(
           <div key={section.cat}>
@@ -583,7 +583,7 @@ function SourcesUIReplica() {
                   <div style={{fontSize:8,color:'#AAA',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.desc}</div>
                 </div>
                 <span style={{fontSize:8,fontWeight:700,padding:'3px 9px',borderRadius:5,background:item.status==='connected'?'rgba(34,197,94,.1)':'rgba(201,122,68,.1)',color:item.status==='connected'?'#16a34a':'#C97A44',border:`1px solid ${item.status==='connected'?'rgba(34,197,94,.2)':'rgba(201,122,68,.2)'}`,whiteSpace:'nowrap',flexShrink:0,cursor:'pointer'}}>
-                  {item.status==='connected'?'CONNECTED':'Connect'}
+                  {item.status==='connected'?tc('landing.src_status_connected'):tc('landing.src_status_connect')}
                 </span>
               </div>
             ))}
@@ -596,18 +596,18 @@ function SourcesUIReplica() {
 
 // ── PoS Register UI replica ───────────────────────────────────────────────────
 // ── PoS full tabbed showcase ──────────────────────────────────────────────────
-function PosShowcase() {
+function PosShowcase({tc}:{tc:(k:string)=>string}) {
   type TabId = 'overview'|'operations'|'staff'|'branches'|'map'|'audit'|'payments'|'logistics'
   const [tab, setTab] = useState<TabId>('overview')
   const TABS:{id:TabId;label:string}[] = [
-    {id:'overview',label:'Overview'},
-    {id:'operations',label:'📦 Operations'},
-    {id:'staff',label:'Staff'},
-    {id:'branches',label:'Branches'},
-    {id:'map',label:'🗺️ Map'},
-    {id:'audit',label:'Audit'},
-    {id:'payments',label:'Payments'},
-    {id:'logistics',label:'🚛 Logistics'},
+    {id:'overview',label:tc('landing.pos_tab_overview')},
+    {id:'operations',label:tc('landing.pos_tab_operations')},
+    {id:'staff',label:tc('landing.pos_tab_staff')},
+    {id:'branches',label:tc('landing.pos_tab_branches')},
+    {id:'map',label:tc('landing.pos_tab_map')},
+    {id:'audit',label:tc('landing.pos_tab_audit')},
+    {id:'payments',label:tc('landing.pos_tab_payments')},
+    {id:'logistics',label:tc('landing.pos_tab_logistics')},
   ]
   return (
     <div style={{background:'#FAFAFA',borderRadius:16,border:'1px solid #E5E5E5',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.09)',width:'100%',fontFamily:'system-ui,-apple-system,sans-serif'}}>
@@ -629,8 +629,8 @@ function PosShowcase() {
           </div>
         </div>
         <div style={{display:'flex',gap:5,padding:'0 10px',flexShrink:0}}>
-          <span style={{fontSize:8,padding:'3px 7px',border:'1px solid #E5E5E5',borderRadius:5,color:'#888',background:'#FAFAFA',whiteSpace:'nowrap'}}>All Branches ▾</span>
-          <span style={{fontSize:8,padding:'3px 7px',border:'1px solid #E5E5E5',borderRadius:5,color:'#888',background:'#FAFAFA',whiteSpace:'nowrap'}}>All Sectors ▾</span>
+          <span style={{fontSize:8,padding:'3px 7px',border:'1px solid #E5E5E5',borderRadius:5,color:'#888',background:'#FAFAFA',whiteSpace:'nowrap'}}>{tc('landing.pos_all_branches')}</span>
+          <span style={{fontSize:8,padding:'3px 7px',border:'1px solid #E5E5E5',borderRadius:5,color:'#888',background:'#FAFAFA',whiteSpace:'nowrap'}}>{tc('landing.pos_all_sectors')}</span>
         </div>
       </div>
 
@@ -639,17 +639,17 @@ function PosShowcase() {
         <div style={{padding:'16px 18px'}}>
           {/* Date filters */}
           <div style={{display:'flex',gap:5,marginBottom:14,flexWrap:'wrap'}}>
-            {['Today','Yesterday','Last 7 days','Last 30 days'].map((d,i)=>(
+            {[tc('landing.pos_date_today'),tc('landing.pos_date_yesterday'),tc('landing.pos_date_7days'),tc('landing.pos_date_30days')].map((d,i)=>(
               <span key={d} style={{fontSize:9,padding:'4px 10px',borderRadius:5,border:`1px solid ${i===0?'#C97A44':'#E5E5E5'}`,background:i===0?'rgba(201,122,68,.08)':'#fff',color:i===0?'#C97A44':'#888',cursor:'pointer',fontWeight:i===0?700:400}}>{d}</span>
             ))}
           </div>
           {/* Top row: 4 KPI cards */}
           <div className="rep-4col" style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8,marginBottom:10}}>
             {[
-              {label:'Revenue',value:'£3,247',sub:'▲ 34% vs prev',color:'#16a34a'},
-              {label:'Sales',value:'143',sub:'▲ 12% vs prev',color:'#16a34a'},
-              {label:'Refunds',value:'3',sub:'▼ 2 vs prev',color:'#f87171'},
-              {label:'Low stock',value:'42',sub:'products',color:'#fb923c'},
+              {label:tc('landing.pos_kpi_revenue'),value:'£3,247',sub:tc('landing.pos_kpi_vs_prev_up34'),color:'#16a34a'},
+              {label:tc('landing.pos_kpi_sales'),value:'143',sub:tc('landing.pos_kpi_vs_prev_up12'),color:'#16a34a'},
+              {label:tc('landing.pos_kpi_refunds'),value:'3',sub:tc('landing.pos_kpi_vs_prev_down2'),color:'#f87171'},
+              {label:tc('landing.pos_kpi_low_stock'),value:'42',sub:tc('landing.pos_kpi_products'),color:'#fb923c'},
             ].map((k,i)=>(
               <div key={i} style={{padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0'}}>
                 <div style={{fontSize:9,color:'#AAA',marginBottom:5}}>{k.label}</div>
@@ -661,9 +661,9 @@ function PosShowcase() {
           {/* Second row: 3 cards */}
           <div className="rep-3col" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:10}}>
             {[
-              {label:'Gross profit',value:'£1,109',color:'#16a34a'},
-              {label:'Margin',value:'34.2%',color:'#C97A44'},
-              {label:'Avg sale',value:'£22.71',color:'#1A1410'},
+              {label:tc('landing.pos_kpi_gross_profit'),value:'£1,109',color:'#16a34a'},
+              {label:tc('landing.pos_kpi_margin'),value:'34.2%',color:'#C97A44'},
+              {label:tc('landing.pos_kpi_avg_sale'),value:'£22.71',color:'#1A1410'},
             ].map((k,i)=>(
               <div key={i} style={{padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0'}}>
                 <div style={{fontSize:9,color:'#AAA',marginBottom:5}}>{k.label}</div>
@@ -673,14 +673,14 @@ function PosShowcase() {
           </div>
           {/* Quick action pills */}
           <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:10}}>
-            {['📊 Analyse today','⭐ Top products','👤 Staff ranking','📦 Stock alerts'].map(a=>(
+            {[tc('landing.pos_qa_analyse'),tc('landing.pos_qa_top_products'),tc('landing.pos_qa_staff_ranking'),tc('landing.pos_qa_stock_alerts')].map(a=>(
               <span key={a} style={{fontSize:9,padding:'4px 10px',borderRadius:5,border:'1px solid #E5E5E5',color:'#555',background:'#fff',cursor:'pointer'}}>{a}</span>
             ))}
           </div>
           {/* Staff performance */}
           <div style={{background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',padding:'10px 12px'}}>
-            <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:8}}>Staff performance <span style={{color:'#C97A44',fontWeight:400,cursor:'pointer'}}>View all →</span></div>
-            {[{name:'Phidisia',role:'Cashier · Retail',sales:'KSh 1.8K',tx:6},{name:'James',role:'Inventory · Retail',sales:'KSh 480',tx:2}].map((s,i)=>(
+            <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:8}}>{tc('landing.pos_staff_perf')} <span style={{color:'#C97A44',fontWeight:400,cursor:'pointer'}}>{tc('landing.pos_view_all')}</span></div>
+            {[{name:'Phidisia',role:tc('landing.pos_role_cashier_retail'),sales:'KSh 1.8K',tx:6},{name:'James',role:tc('landing.pos_role_inventory_retail'),sales:'KSh 480',tx:2}].map((s,i)=>(
               <div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:'6px 0',borderTop:i>0?'1px solid #F5F5F5':'none'}}>
                 <div style={{width:24,height:24,borderRadius:'50%',background:'#F0F0F0',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'#555',flexShrink:0}}>{s.name[0]}</div>
                 <div style={{flex:1}}>
@@ -689,7 +689,7 @@ function PosShowcase() {
                 </div>
                 <div style={{textAlign:'right'}}>
                   <div style={{fontSize:10,fontWeight:700,color:'#16a34a'}}>{s.sales}</div>
-                  <div style={{fontSize:8,color:'#AAA'}}>{s.tx} transactions</div>
+                  <div style={{fontSize:8,color:'#AAA'}}>{s.tx} {tc('landing.pos_transactions')}</div>
                 </div>
               </div>
             ))}
@@ -701,34 +701,34 @@ function PosShowcase() {
         <div style={{padding:'14px 18px'}}>
           {/* Sector tabs */}
           <div style={{display:'flex',gap:5,marginBottom:14,flexWrap:'wrap'}}>
-            {[{icon:'🍽️',label:'Restaurant'},{icon:'🔧',label:'Repair'},{icon:'💈',label:'Salon'},{icon:'📦',label:'Retail',active:true},{icon:'🏭',label:'Factory'},{icon:'🚛',label:'Logistics'}].map(s=>(
+            {[{icon:'🍽️',label:tc('landing.pos_sector_restaurant')},{icon:'🔧',label:tc('landing.pos_sector_repair')},{icon:'💈',label:tc('landing.pos_sector_salon')},{icon:'📦',label:tc('landing.pos_sector_retail'),active:true},{icon:'🏭',label:tc('landing.pos_sector_factory')},{icon:'🚛',label:tc('landing.pos_sector_logistics')}].map(s=>(
               <span key={s.label} style={{fontSize:9,padding:'4px 10px',borderRadius:5,border:`1px solid ${s.active?'#C97A44':'#E5E5E5'}`,background:s.active?'rgba(201,122,68,.08)':'#fff',color:s.active?'#C97A44':'#888',cursor:'pointer',fontWeight:s.active?700:400,display:'flex',alignItems:'center',gap:3}}>
                 <span>{s.icon}</span>{s.label}
               </span>
             ))}
           </div>
-          <div style={{fontSize:11,fontWeight:700,color:'#1A1410',marginBottom:3}}>📦 Retail Operations</div>
-          <div style={{fontSize:9,color:'#AAA',marginBottom:12}}>Stock management, sales tracking, and supplier orders.</div>
+          <div style={{fontSize:11,fontWeight:700,color:'#1A1410',marginBottom:3}}>{tc('landing.pos_ops_header')}</div>
+          <div style={{fontSize:9,color:'#AAA',marginBottom:12}}>{tc('landing.pos_ops_sub')}</div>
           <div className="rep-5col" style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:7}}>
             {[
-              {icon:'📦',label:'Inventory',desc:'Stock levels & products',badge:'37',bdgColor:'#ef4444'},
-              {icon:'🛒',label:'Sales',desc:'Revenue & transactions'},
-              {icon:'👥',label:'Customers',desc:'Profiles, history & segments'},
-              {icon:'🏷️',label:'Promotions',desc:'Discounts, coupons & deals'},
-              {icon:'⭐',label:'Loyalty',desc:'Points, rewards & tiers'},
-              {icon:'↩️',label:'Returns',desc:'Refunds, exchanges & credits'},
-              {icon:'📊',label:'Reports',desc:'Sales, margins & insights'},
-              {icon:'📋',label:'Purchase Orders',desc:'Supplier orders & receiving',soon:true},
-              {icon:'🎁',label:'Gift Cards',desc:'Issue, redeem & balances',soon:true},
-              {icon:'👤',label:'Staff',desc:'Cashiers & permissions'},
-              {icon:'🏪',label:'Branches',desc:'Locations & stock by branch'},
-              {icon:'🗺️',label:'Map',desc:'Branch locations on map'},
-              {icon:'🔗',label:'Integrations',desc:'Xero, payments & more'},
-              {icon:'🔍',label:'Audit',desc:'Transaction & change log'},
+              {icon:'📦',label:tc('landing.pos_mod_inventory'),desc:tc('landing.pos_mod_inventory_desc'),badge:'37',bdgColor:'#ef4444'},
+              {icon:'🛒',label:tc('landing.pos_mod_sales'),desc:tc('landing.pos_mod_sales_desc')},
+              {icon:'👥',label:tc('landing.pos_mod_customers'),desc:tc('landing.pos_mod_customers_desc')},
+              {icon:'🏷️',label:tc('landing.pos_mod_promotions'),desc:tc('landing.pos_mod_promotions_desc')},
+              {icon:'⭐',label:tc('landing.pos_mod_loyalty'),desc:tc('landing.pos_mod_loyalty_desc')},
+              {icon:'↩️',label:tc('landing.pos_mod_returns'),desc:tc('landing.pos_mod_returns_desc')},
+              {icon:'📊',label:tc('landing.pos_mod_reports'),desc:tc('landing.pos_mod_reports_desc')},
+              {icon:'📋',label:tc('landing.pos_mod_purchase_orders'),desc:tc('landing.pos_mod_purchase_orders_desc'),soon:true},
+              {icon:'🎁',label:tc('landing.pos_mod_gift_cards'),desc:tc('landing.pos_mod_gift_cards_desc'),soon:true},
+              {icon:'👤',label:tc('landing.pos_mod_staff'),desc:tc('landing.pos_mod_staff_desc')},
+              {icon:'🏪',label:tc('landing.pos_mod_branches'),desc:tc('landing.pos_mod_branches_desc')},
+              {icon:'🗺️',label:tc('landing.pos_mod_map'),desc:tc('landing.pos_mod_map_desc')},
+              {icon:'🔗',label:tc('landing.pos_mod_integrations'),desc:tc('landing.pos_mod_integrations_desc')},
+              {icon:'🔍',label:tc('landing.pos_mod_audit'),desc:tc('landing.pos_mod_audit_desc')},
             ].map((m,i)=>(
               <div key={i} style={{padding:'10px 10px',borderRadius:9,border:'1px solid #F0F0F0',background:'#fff',cursor:'pointer',position:'relative'}}>
                 {m.badge&&<span style={{position:'absolute',top:6,right:6,fontSize:7,fontWeight:700,background:'#ef4444',color:'#fff',borderRadius:9999,padding:'1px 5px'}}>{m.badge}</span>}
-                {m.soon&&<span style={{position:'absolute',top:6,right:6,fontSize:7,fontWeight:700,background:'#F0F0F0',color:'#888',borderRadius:9999,padding:'1px 5px'}}>Soon</span>}
+                {m.soon&&<span style={{position:'absolute',top:6,right:6,fontSize:7,fontWeight:700,background:'#F0F0F0',color:'#888',borderRadius:9999,padding:'1px 5px'}}>{tc('landing.pos_soon')}</span>}
                 <div style={{fontSize:16,marginBottom:5}}>{m.icon}</div>
                 <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:2}}>{m.label}</div>
                 <div style={{fontSize:7,color:'#AAA',lineHeight:1.3}}>{m.desc}</div>
@@ -741,12 +741,12 @@ function PosShowcase() {
       {tab==='staff' && (
         <div style={{padding:'16px 18px'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
-            <div style={{fontSize:10,color:'#888'}}>2 of 2 seats used · <span style={{color:'#C97A44',fontWeight:600,cursor:'pointer'}}>Add seats →</span></div>
-            <span style={{fontSize:9,padding:'5px 12px',borderRadius:5,background:'#C97A44',color:'#fff',fontWeight:700,cursor:'pointer'}}>+ Add staff</span>
+            <div style={{fontSize:10,color:'#888'}}>{tc('landing.pos_staff_seats')} · <span style={{color:'#C97A44',fontWeight:600,cursor:'pointer'}}>{tc('landing.pos_add_seats')}</span></div>
+            <span style={{fontSize:9,padding:'5px 12px',borderRadius:5,background:'#C97A44',color:'#fff',fontWeight:700,cursor:'pointer'}}>{tc('landing.pos_add_staff')}</span>
           </div>
           {[
-            {name:'Phidisia',role:'cashier',sector:'retail',branch:'town',phone:'0797446343',pin:true,last:'13/06/2026'},
-            {name:'James',role:'inventory',sector:'retail',branch:'town',phone:'—',pin:true,last:'10/06/2026'},
+            {name:'Phidisia',role:tc('landing.pos_role_cashier'),sector:tc('landing.pos_sector_retail_lc'),branch:'town',phone:'0797446343',pin:true,last:'13/06/2026'},
+            {name:'James',role:tc('landing.pos_role_inventory'),sector:tc('landing.pos_sector_retail_lc'),branch:'town',phone:'—',pin:true,last:'10/06/2026'},
           ].map((s,i)=>(
             <div key={i} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',marginBottom:6}}>
               <div style={{width:32,height:32,borderRadius:'50%',background:'#F0EDE8',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'#C97A44',flexShrink:0}}>{s.name[0]}</div>
@@ -755,29 +755,29 @@ function PosShowcase() {
                   <span style={{fontSize:11,fontWeight:700,color:'#1A1410'}}>{s.name}</span>
                   <span style={{fontSize:8,padding:'1px 6px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:600}}>{s.sector}</span>
                 </div>
-                <div style={{fontSize:9,color:'#AAA'}}>{s.role} · {s.branch}{s.phone!=='—'?` · ${s.phone}`:''} · PIN {s.pin?'set':'not set'} · Last login {s.last}</div>
+                <div style={{fontSize:9,color:'#AAA'}}>{s.role} · {s.branch}{s.phone!=='—'?` · ${s.phone}`:''} · {tc('landing.pos_pin')} {s.pin?tc('landing.pos_pin_set'):tc('landing.pos_pin_not_set')} · {tc('landing.pos_last_login')} {s.last}</div>
               </div>
               <div style={{display:'flex',gap:5}}>
-                <span style={{fontSize:9,padding:'4px 10px',borderRadius:5,border:'1px solid #E5E5E5',color:'#555',cursor:'pointer'}}>Edit</span>
-                <span style={{fontSize:9,padding:'4px 10px',borderRadius:5,border:'1px solid #fca5a5',color:'#ef4444',cursor:'pointer'}}>Deactivate</span>
+                <span style={{fontSize:9,padding:'4px 10px',borderRadius:5,border:'1px solid #E5E5E5',color:'#555',cursor:'pointer'}}>{tc('landing.pos_edit')}</span>
+                <span style={{fontSize:9,padding:'4px 10px',borderRadius:5,border:'1px solid #fca5a5',color:'#ef4444',cursor:'pointer'}}>{tc('landing.pos_deactivate')}</span>
               </div>
             </div>
           ))}
           <div style={{marginTop:12,padding:'10px 12px',borderRadius:9,background:'rgba(201,122,68,.04)',border:'1px dashed rgba(201,122,68,.2)',textAlign:'center'}}>
-            <div style={{fontSize:10,color:'#C97A44',fontWeight:600,marginBottom:2}}>Add more cashiers & inventory staff</div>
-            <div style={{fontSize:9,color:'#AAA'}}>Each seat from £5/month · Role-based PIN access</div>
+            <div style={{fontSize:10,color:'#C97A44',fontWeight:600,marginBottom:2}}>{tc('landing.pos_staff_footer_title')}</div>
+            <div style={{fontSize:9,color:'#AAA'}}>{tc('landing.pos_staff_footer_sub')}</div>
           </div>
         </div>
       )}
 
       {tab==='payments' && (
         <div style={{padding:'16px 18px'}}>
-          <div style={{fontSize:11,fontWeight:700,color:'#1A1410',marginBottom:3}}>💳 Payment Methods</div>
-          <div style={{fontSize:9,color:'#AAA',marginBottom:12}}>Configure payment providers and enable customers to pay via Paystack or Stripe</div>
+          <div style={{fontSize:11,fontWeight:700,color:'#1A1410',marginBottom:3}}>{tc('landing.pos_pay_header')}</div>
+          <div style={{fontSize:9,color:'#AAA',marginBottom:12}}>{tc('landing.pos_pay_sub')}</div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:14}}>
             {[
-              {name:'Paystack',desc:'KE · Card & mobile payments active',color:'#059669',bg:'rgba(5,150,105,.05)',bd:'rgba(5,150,105,.2)'},
-              {name:'Stripe',desc:'Apple Pay · Google Pay · Cards active',color:'#6366f1',bg:'rgba(99,102,241,.05)',bd:'rgba(99,102,241,.2)'},
+              {name:'Paystack',desc:tc('landing.pos_pay_paystack_desc'),color:'#059669',bg:'rgba(5,150,105,.05)',bd:'rgba(5,150,105,.2)'},
+              {name:'Stripe',desc:tc('landing.pos_pay_stripe_desc'),color:'#6366f1',bg:'rgba(99,102,241,.05)',bd:'rgba(99,102,241,.2)'},
             ].map((p,i)=>(
               <div key={i} style={{padding:'10px 13px',borderRadius:9,background:p.bg,border:`1px solid ${p.bd}`,display:'flex',alignItems:'center',gap:9}}>
                 <div style={{width:28,height:28,borderRadius:6,background:p.bg,border:`1px solid ${p.bd}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,flexShrink:0}}>
@@ -787,7 +787,7 @@ function PosShowcase() {
                   <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:2}}>
                     <span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>{p.name}</span>
                     <span style={{width:5,height:5,borderRadius:'50%',background:p.color,display:'inline-block'}}/>
-                    <span style={{fontSize:8,color:p.color,fontWeight:600}}>Active</span>
+                    <span style={{fontSize:8,color:p.color,fontWeight:600}}>{tc('landing.pos_pay_active')}</span>
                   </div>
                   <div style={{fontSize:8,color:'#AAA'}}>{p.desc}</div>
                 </div>
@@ -795,11 +795,11 @@ function PosShowcase() {
             ))}
           </div>
           <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
-            <span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>Received Payments</span>
-            <span style={{fontSize:8,padding:'2px 7px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:700}}>6 received · KSh 2.0K</span>
+            <span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>{tc('landing.pos_pay_received_payments')}</span>
+            <span style={{fontSize:8,padding:'2px 7px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:700}}>{tc('landing.pos_pay_received_summary')}</span>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:7,marginBottom:12}}>
-            {[{label:'RECEIVED',value:'6',sub:'payments'},{label:'TOTAL',value:'KSh 2.0K',sub:'collected'},{label:'AVG',value:'KSh 337',sub:'per payment'}].map((k,i)=>(
+            {[{label:tc('landing.pos_pay_stat_received'),value:'6',sub:tc('landing.pos_pay_stat_payments')},{label:tc('landing.pos_pay_stat_total'),value:'KSh 2.0K',sub:tc('landing.pos_pay_stat_collected')},{label:tc('landing.pos_pay_stat_avg'),value:'KSh 337',sub:tc('landing.pos_pay_stat_per_payment')}].map((k,i)=>(
               <div key={i} style={{padding:'8px 10px',background:'#fff',borderRadius:8,border:'1px solid #F0F0F0',textAlign:'center'}}>
                 <div style={{fontSize:7,color:'#AAA',letterSpacing:'.08em',marginBottom:3}}>{k.label}</div>
                 <div style={{fontSize:13,fontWeight:800,color:'#16a34a'}}>{k.value}</div>
@@ -808,9 +808,9 @@ function PosShowcase() {
             ))}
           </div>
           {[
-            {name:'+254722173771',method:'Mpesa · paystack',time:'17h ago',ref:'#6255025614',amount:'KSh 1.8K'},
-            {name:'Customer',method:'Card · stripe',time:'3d ago',ref:'',amount:'KSh 100'},
-            {name:'+254713826241',method:'Mpesa · paystack',time:'5d ago',ref:'#6237054796',amount:'KSh 24'},
+            {name:'+254722173771',method:`Mpesa · paystack`,time:tc('landing.pos_pay_time_17h'),ref:'#6255025614',amount:'KSh 1.8K'},
+            {name:tc('landing.pos_pay_customer'),method:`${tc('landing.pos_pay_method_card')} · stripe`,time:tc('landing.pos_pay_time_3d'),ref:'',amount:'KSh 100'},
+            {name:'+254713826241',method:`Mpesa · paystack`,time:tc('landing.pos_pay_time_5d'),ref:'#6237054796',amount:'KSh 24'},
           ].map((t,i)=>(
             <div key={i} style={{display:'flex',alignItems:'center',gap:9,padding:'8px 0',borderTop:'1px solid #F5F5F5'}}>
               <div style={{width:22,height:22,borderRadius:5,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,flexShrink:0}}>📱</div>
@@ -819,17 +819,17 @@ function PosShowcase() {
                 <div style={{fontSize:8,color:'#AAA'}}>{t.method} · {t.time}{t.ref?` · ${t.ref}`:''}</div>
               </div>
               <span style={{fontSize:10,fontWeight:700,color:'#16a34a'}}>{t.amount}</span>
-              <span style={{fontSize:7,padding:'2px 7px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:700}}>Received</span>
+              <span style={{fontSize:7,padding:'2px 7px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:700}}>{tc('landing.pos_pay_status_received')}</span>
             </div>
           ))}
           {/* Payment Recovery */}
           <div style={{marginTop:16,borderRadius:9,border:'1px solid #F0F0F0',background:'#fff',overflow:'hidden'}}>
             <div style={{padding:'10px 14px',borderBottom:'1px solid #F5F5F5',display:'flex',alignItems:'center',gap:8}}>
               <div style={{width:3,height:14,borderRadius:9999,background:'#C97A44'}}/>
-              <span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>Payment Recovery</span>
+              <span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>{tc('landing.pos_pay_recovery')}</span>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:0}}>
-              {[{label:'FAILED',value:'0',sub:'KSh 0',color:'#ef4444'},{label:'RECOVERED',value:'0',sub:'KSh 0',color:'#16a34a'},{label:'RECOVERY RATE',value:'0%',sub:'of failed payments',color:'#888'},{label:'PENDING RETRY',value:'0',sub:'in queue',color:'#f59e0b'}].map((k,i)=>(
+              {[{label:tc('landing.pos_pay_rec_failed'),value:'0',sub:'KSh 0',color:'#ef4444'},{label:tc('landing.pos_pay_rec_recovered'),value:'0',sub:'KSh 0',color:'#16a34a'},{label:tc('landing.pos_pay_rec_rate'),value:'0%',sub:tc('landing.pos_pay_rec_rate_sub'),color:'#888'},{label:tc('landing.pos_pay_rec_pending'),value:'0',sub:tc('landing.pos_pay_rec_pending_sub'),color:'#f59e0b'}].map((k,i)=>(
                 <div key={i} style={{padding:'10px 0',textAlign:'center',borderRight:i<3?'1px solid #F5F5F5':'none'}}>
                   <div style={{fontSize:7,color:'#AAA',letterSpacing:'.06em',marginBottom:4}}>{k.label}</div>
                   <div style={{fontSize:16,fontWeight:800,color:k.color}}>{k.value}</div>
@@ -838,18 +838,18 @@ function PosShowcase() {
               ))}
             </div>
             <div style={{padding:'8px 14px',borderTop:'1px solid #F5F5F5',display:'flex',alignItems:'center',gap:8}}>
-              <span style={{fontSize:8,color:'#888'}}>Auto-retry:</span>
-              <span style={{fontSize:8,padding:'2px 8px',borderRadius:5,border:'1px solid #E5E5E5',color:'#555',background:'#FAFAFA'}}>Standard — Retry after 4h, 24h, 72h ▾</span>
+              <span style={{fontSize:8,color:'#888'}}>{tc('landing.pos_pay_auto_retry')}</span>
+              <span style={{fontSize:8,padding:'2px 8px',borderRadius:5,border:'1px solid #E5E5E5',color:'#555',background:'#FAFAFA'}}>{tc('landing.pos_pay_auto_retry_value')}</span>
             </div>
             <div style={{padding:'8px 14px 10px',borderTop:'1px solid #F5F5F5',display:'flex',gap:5,flexWrap:'wrap'}}>
-              {['All (0)','Failed (0)','Retrying (0)','Recovered (0)','Abandoned (0)'].map((f,i)=>(
+              {[tc('landing.pos_pay_filter_all'),tc('landing.pos_pay_filter_failed'),tc('landing.pos_pay_filter_retrying'),tc('landing.pos_pay_filter_recovered'),tc('landing.pos_pay_filter_abandoned')].map((f,i)=>(
                 <span key={f} style={{fontSize:8,padding:'3px 9px',borderRadius:5,border:`1px solid ${i===0?'#C97A44':'#E5E5E5'}`,background:i===0?'rgba(201,122,68,.06)':'transparent',color:i===0?'#C97A44':'#888',cursor:'pointer'}}>{f}</span>
               ))}
             </div>
             <div style={{padding:'24px 14px',textAlign:'center',borderTop:'1px solid #F5F5F5'}}>
               <div style={{width:28,height:28,borderRadius:'50%',background:'rgba(34,197,94,.1)',border:'2px solid #16a34a',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 8px',fontSize:14}}>✓</div>
-              <div style={{fontSize:11,fontWeight:700,color:'#16a34a',marginBottom:3}}>No failed payments</div>
-              <div style={{fontSize:9,color:'#AAA'}}>All payments are processing successfully. Failed payments will appear here automatically for recovery.</div>
+              <div style={{fontSize:11,fontWeight:700,color:'#16a34a',marginBottom:3}}>{tc('landing.pos_pay_no_failed')}</div>
+              <div style={{fontSize:9,color:'#AAA'}}>{tc('landing.pos_pay_no_failed_sub')}</div>
             </div>
           </div>
         </div>
@@ -858,8 +858,8 @@ function PosShowcase() {
       {tab==='branches' && (
         <div style={{padding:'16px 18px'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
-            <div style={{fontSize:10,color:'#888'}}>1 branch active</div>
-            <span style={{fontSize:9,padding:'5px 12px',borderRadius:5,background:'#C97A44',color:'#fff',fontWeight:700,cursor:'pointer'}}>+ Add branch</span>
+            <div style={{fontSize:10,color:'#888'}}>{tc('landing.pos_branch_active_count')}</div>
+            <span style={{fontSize:9,padding:'5px 12px',borderRadius:5,background:'#C97A44',color:'#fff',fontWeight:700,cursor:'pointer'}}>{tc('landing.pos_add_branch')}</span>
           </div>
           <div style={{background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',padding:'12px 14px',marginBottom:8}}>
             <div style={{display:'flex',alignItems:'center',gap:10}}>
@@ -867,18 +867,18 @@ function PosShowcase() {
               <div style={{flex:1}}>
                 <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:2}}>
                   <span style={{fontSize:11,fontWeight:700,color:'#1A1410'}}>Town Branch</span>
-                  <span style={{fontSize:8,padding:'1px 6px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:600}}>Active</span>
-                  <span style={{fontSize:8,padding:'1px 6px',borderRadius:9999,background:'rgba(201,122,68,.08)',color:'#C97A44',fontWeight:600}}>Main</span>
+                  <span style={{fontSize:8,padding:'1px 6px',borderRadius:9999,background:'rgba(34,197,94,.08)',color:'#16a34a',border:'1px solid rgba(34,197,94,.2)',fontWeight:600}}>{tc('landing.pos_branch_active')}</span>
+                  <span style={{fontSize:8,padding:'1px 6px',borderRadius:9999,background:'rgba(201,122,68,.08)',color:'#C97A44',fontWeight:600}}>{tc('landing.pos_branch_main')}</span>
                 </div>
-                <div style={{fontSize:9,color:'#AAA'}}>Nairobi, Kenya · 2 staff · 37 products in stock</div>
+                <div style={{fontSize:9,color:'#AAA'}}>Nairobi, Kenya · {tc('landing.pos_branch_meta')}</div>
               </div>
               <div style={{textAlign:'right'}}>
                 <div style={{fontSize:11,fontWeight:700,color:'#16a34a'}}>KSh 2.0K</div>
-                <div style={{fontSize:8,color:'#AAA'}}>revenue today</div>
+                <div style={{fontSize:8,color:'#AAA'}}>{tc('landing.pos_branch_revenue_today')}</div>
               </div>
             </div>
             <div style={{marginTop:10,display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6}}>
-              {[{label:'Sales today',value:'6'},{label:'Low stock',value:'37',color:'#ef4444'},{label:'Avg sale',value:'KSh 337'}].map((s,i)=>(
+              {[{label:tc('landing.pos_branch_sales_today'),value:'6'},{label:tc('landing.pos_branch_low_stock'),value:'37',color:'#ef4444'},{label:tc('landing.pos_branch_avg_sale'),value:'KSh 337'}].map((s,i)=>(
                 <div key={i} style={{padding:'6px 8px',background:'#FAFAFA',borderRadius:6,textAlign:'center'}}>
                   <div style={{fontSize:7,color:'#AAA',marginBottom:2}}>{s.label}</div>
                   <div style={{fontSize:11,fontWeight:700,color:s.color||'#1A1410'}}>{s.value}</div>
@@ -887,8 +887,8 @@ function PosShowcase() {
             </div>
           </div>
           <div style={{padding:'10px 12px',borderRadius:9,background:'rgba(201,122,68,.04)',border:'1px dashed rgba(201,122,68,.2)',textAlign:'center'}}>
-            <div style={{fontSize:10,color:'#C97A44',fontWeight:600,marginBottom:2}}>Expand to more locations</div>
-            <div style={{fontSize:9,color:'#AAA'}}>Each branch is a separate POS node with its own inventory and staff · Stock transfers between branches</div>
+            <div style={{fontSize:10,color:'#C97A44',fontWeight:600,marginBottom:2}}>{tc('landing.pos_branch_footer_title')}</div>
+            <div style={{fontSize:9,color:'#AAA'}}>{tc('landing.pos_branch_footer_sub')}</div>
           </div>
         </div>
       )}
@@ -896,10 +896,10 @@ function PosShowcase() {
       {tab==='map' && (
         <div style={{padding:'16px 18px'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-            <div style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>🗺️ Branch Locations</div>
+            <div style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>{tc('landing.pos_map_header')}</div>
             <div style={{display:'flex',gap:5}}>
-              <span style={{fontSize:8,padding:'3px 8px',border:'1px solid #E5E5E5',borderRadius:5,color:'#888',cursor:'pointer'}}>Satellite</span>
-              <span style={{fontSize:8,padding:'3px 8px',border:'1px solid #C97A44',borderRadius:5,color:'#C97A44',background:'rgba(201,122,68,.06)',cursor:'pointer'}}>Map</span>
+              <span style={{fontSize:8,padding:'3px 8px',border:'1px solid #E5E5E5',borderRadius:5,color:'#888',cursor:'pointer'}}>{tc('landing.pos_map_satellite')}</span>
+              <span style={{fontSize:8,padding:'3px 8px',border:'1px solid #C97A44',borderRadius:5,color:'#C97A44',background:'rgba(201,122,68,.06)',cursor:'pointer'}}>{tc('landing.pos_map_map')}</span>
             </div>
           </div>
           {/* Map placeholder */}
@@ -925,12 +925,12 @@ function PosShowcase() {
             <div style={{position:'absolute',top:'18%',left:'44%',background:'#fff',borderRadius:7,padding:'5px 9px',boxShadow:'0 4px 12px rgba(0,0,0,.12)',border:'1px solid #F0F0F0',minWidth:110}}>
               <div style={{fontSize:9,fontWeight:700,color:'#1A1410'}}>Town Branch</div>
               <div style={{fontSize:8,color:'#AAA'}}>Nairobi, Kenya</div>
-              <div style={{fontSize:8,color:'#16a34a',fontWeight:600,marginTop:2}}>● Active · 6 sales today</div>
+              <div style={{fontSize:8,color:'#16a34a',fontWeight:600,marginTop:2}}>{tc('landing.pos_map_tooltip_status')}</div>
             </div>
           </div>
           <div style={{marginTop:10,display:'flex',gap:8,flexWrap:'wrap'}}>
-            <span style={{fontSize:9,display:'flex',alignItems:'center',gap:4,color:'#888'}}><span style={{width:8,height:8,borderRadius:'50%',background:'#16a34a',display:'inline-block'}}/>Active branches</span>
-            <span style={{fontSize:9,display:'flex',alignItems:'center',gap:4,color:'#888'}}><span style={{width:8,height:8,borderRadius:'50%',background:'#E5E5E5',display:'inline-block'}}/>Inactive</span>
+            <span style={{fontSize:9,display:'flex',alignItems:'center',gap:4,color:'#888'}}><span style={{width:8,height:8,borderRadius:'50%',background:'#16a34a',display:'inline-block'}}/>{tc('landing.pos_map_legend_active')}</span>
+            <span style={{fontSize:9,display:'flex',alignItems:'center',gap:4,color:'#888'}}><span style={{width:8,height:8,borderRadius:'50%',background:'#E5E5E5',display:'inline-block'}}/>{tc('landing.pos_map_legend_inactive')}</span>
           </div>
         </div>
       )}
@@ -938,20 +938,20 @@ function PosShowcase() {
       {tab==='audit' && (
         <div style={{padding:'16px 18px'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-            <div style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>🔍 Audit Log</div>
+            <div style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>{tc('landing.pos_audit_header')}</div>
             <div style={{display:'flex',gap:5}}>
-              {['All','Sales','Stock','Staff','Settings'].map((f,i)=>(
+              {[tc('landing.pos_audit_filter_all'),tc('landing.pos_audit_filter_sales'),tc('landing.pos_audit_filter_stock'),tc('landing.pos_audit_filter_staff'),tc('landing.pos_audit_filter_settings')].map((f,i)=>(
                 <span key={f} style={{fontSize:8,padding:'3px 8px',border:`1px solid ${i===0?'#C97A44':'#E5E5E5'}`,borderRadius:5,color:i===0?'#C97A44':'#888',background:i===0?'rgba(201,122,68,.06)':'transparent',cursor:'pointer'}}>{f}</span>
               ))}
             </div>
           </div>
           {[
-            {icon:'🛒',action:'Sale completed',detail:'3x Maize flour · KSh 450',user:'Phidisia',time:'10:41 AM',branch:'Town'},
-            {icon:'📦',action:'Stock updated',detail:'Cooking oil — 50 units added',user:'James',time:'9:15 AM',branch:'Town'},
-            {icon:'🛒',action:'Sale completed',detail:'1x Sugar 2kg · KSh 280',user:'Phidisia',time:'9:02 AM',branch:'Town'},
-            {icon:'↩️',action:'Refund processed',detail:'Bread 400g · KSh 65 returned',user:'Phidisia',time:'8:47 AM',branch:'Town'},
-            {icon:'👤',action:'Staff login',detail:'Phidisia logged in via PIN',user:'System',time:'8:30 AM',branch:'Town'},
-            {icon:'⚙️',action:'Settings changed',detail:'Receipt footer updated',user:'Admin',time:'Yesterday',branch:'Town'},
+            {icon:'🛒',action:tc('landing.pos_audit_0_action'),detail:tc('landing.pos_audit_0_detail'),user:'Phidisia',time:'10:41 AM',branch:'Town'},
+            {icon:'📦',action:tc('landing.pos_audit_1_action'),detail:tc('landing.pos_audit_1_detail'),user:'James',time:'9:15 AM',branch:'Town'},
+            {icon:'🛒',action:tc('landing.pos_audit_0_action'),detail:tc('landing.pos_audit_2_detail'),user:'Phidisia',time:'9:02 AM',branch:'Town'},
+            {icon:'↩️',action:tc('landing.pos_audit_3_action'),detail:tc('landing.pos_audit_3_detail'),user:'Phidisia',time:'8:47 AM',branch:'Town'},
+            {icon:'👤',action:tc('landing.pos_audit_4_action'),detail:tc('landing.pos_audit_4_detail'),user:tc('landing.pos_audit_user_system'),time:'8:30 AM',branch:'Town'},
+            {icon:'⚙️',action:tc('landing.pos_audit_5_action'),detail:tc('landing.pos_audit_5_detail'),user:tc('landing.pos_audit_user_admin'),time:tc('landing.pos_audit_time_yesterday'),branch:'Town'},
           ].map((e,i)=>(
             <div key={i} style={{display:'flex',alignItems:'flex-start',gap:9,padding:'8px 0',borderTop:i>0?'1px solid #F5F5F5':'none'}}>
               <div style={{width:24,height:24,borderRadius:6,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,flexShrink:0,marginTop:1}}>{e.icon}</div>
@@ -966,17 +966,17 @@ function PosShowcase() {
             </div>
           ))}
           <div style={{marginTop:8,textAlign:'center'}}>
-            <span style={{fontSize:9,color:'#C97A44',cursor:'pointer',fontWeight:600}}>Load more entries →</span>
+            <span style={{fontSize:9,color:'#C97A44',cursor:'pointer',fontWeight:600}}>{tc('landing.pos_audit_load_more')}</span>
           </div>
         </div>
       )}
 
       {tab==='logistics' && (
         <div style={{padding:'16px 18px'}}>
-          <div style={{fontSize:11,fontWeight:700,color:'#1A1410',marginBottom:3}}>🚛 Logistics</div>
-          <div style={{fontSize:9,color:'#AAA',marginBottom:14}}>Track deliveries, supplier orders, and inter-branch stock transfers.</div>
+          <div style={{fontSize:11,fontWeight:700,color:'#1A1410',marginBottom:3}}>🚛 {tc('landing.pos_log_header')}</div>
+          <div style={{fontSize:9,color:'#AAA',marginBottom:14}}>{tc('landing.pos_log_sub')}</div>
           <div className="rep-3col" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,marginBottom:14}}>
-            {[{label:'Active deliveries',value:'0',icon:'🚛',color:'#C97A44'},{label:'Pending POs',value:'0',icon:'📋',color:'#6366f1'},{label:'Stock transfers',value:'0',icon:'↔️',color:'#16a34a'}].map((k,i)=>(
+            {[{label:tc('landing.pos_log_active_deliveries'),value:'0',icon:'🚛',color:'#C97A44'},{label:tc('landing.pos_log_pending_pos'),value:'0',icon:'📋',color:'#6366f1'},{label:tc('landing.pos_log_stock_transfers'),value:'0',icon:'↔️',color:'#16a34a'}].map((k,i)=>(
               <div key={i} style={{padding:'10px 12px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',textAlign:'center'}}>
                 <div style={{fontSize:18,marginBottom:4}}>{k.icon}</div>
                 <div style={{fontSize:16,fontWeight:800,color:k.color,marginBottom:2}}>{k.value}</div>
@@ -986,10 +986,10 @@ function PosShowcase() {
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
             {[
-              {icon:'📋',title:'Purchase Orders',desc:'Create orders for suppliers, track delivery status, and auto-update stock on receipt.',badge:'Soon'},
-              {icon:'↔️',title:'Branch Transfers',desc:'Move stock between branches with a full transfer log and confirmation workflow.',badge:'Soon'},
-              {icon:'🚛',title:'Delivery Tracking',desc:'Link orders to couriers and track deliveries from dispatch to customer door.',badge:'Soon'},
-              {icon:'📍',title:'Driver Map',desc:'Live GPS map of deliveries for same-day dispatch operations.',badge:'Soon'},
+              {icon:'📋',title:tc('landing.pos_log_po_title'),desc:tc('landing.pos_log_po_desc'),badge:tc('landing.pos_soon')},
+              {icon:'↔️',title:tc('landing.pos_log_transfers_title'),desc:tc('landing.pos_log_transfers_desc'),badge:tc('landing.pos_soon')},
+              {icon:'🚛',title:tc('landing.pos_log_delivery_title'),desc:tc('landing.pos_log_delivery_desc'),badge:tc('landing.pos_soon')},
+              {icon:'📍',title:tc('landing.pos_log_driver_title'),desc:tc('landing.pos_log_driver_desc'),badge:tc('landing.pos_soon')},
             ].map((m,i)=>(
               <div key={i} style={{padding:'12px 14px',background:'#fff',borderRadius:9,border:'1px solid #F0F0F0',position:'relative'}}>
                 <span style={{position:'absolute',top:8,right:8,fontSize:7,fontWeight:700,background:'#F0F0F0',color:'#888',borderRadius:9999,padding:'1px 6px'}}>{m.badge}</span>
@@ -1005,14 +1005,14 @@ function PosShowcase() {
   )
 }
 
-function PosUIReplica() {
+function PosUIReplica({tc}:{tc:(k:string)=>string}) {
   return (
     <div style={{background:'#FAFAFA',borderRadius:16,border:'1px solid #E5E5E5',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.09)',width:'100%',fontFamily:'system-ui,-apple-system,sans-serif'}}>
       <div style={{display:'flex',alignItems:'center',borderBottom:'1px solid #F0F0F0',background:'#fff',padding:'9px 14px',gap:7,overflowX:'auto'}}>
-        {['Register','Inventory','Shifts','Reports','Customers','Settings'].map((tab,i)=>(
+        {[tc('landing.posui_tab_register'),tc('landing.posui_tab_inventory'),tc('landing.posui_tab_shifts'),tc('landing.posui_tab_reports'),tc('landing.posui_tab_customers'),tc('landing.posui_tab_settings')].map((tab,i)=>(
           <span key={tab} style={{fontSize:9,fontWeight:i===0?700:400,color:i===0?'#C97A44':'#AAA',padding:'3px 9px',borderRadius:5,background:i===0?'rgba(201,122,68,.08)':'transparent',whiteSpace:'nowrap',cursor:'pointer',border:i===0?'1px solid rgba(201,122,68,.2)':'1px solid transparent'}}>{tab}</span>
         ))}
-        <span style={{marginLeft:'auto',fontSize:8,padding:'3px 8px',borderRadius:5,background:'rgba(34,197,94,.08)',color:'#16a34a',fontWeight:700,border:'1px solid rgba(34,197,94,.2)',flexShrink:0}}>● Open</span>
+        <span style={{marginLeft:'auto',fontSize:8,padding:'3px 8px',borderRadius:5,background:'rgba(34,197,94,.08)',color:'#16a34a',fontWeight:700,border:'1px solid rgba(34,197,94,.2)',flexShrink:0}}>● {tc('landing.posui_open')}</span>
       </div>
       <div className="rep-split" style={{display:'grid',gridTemplateColumns:'1.15fr 1fr',minHeight:320}}>
         {/* Left: basket */}
@@ -1020,13 +1020,13 @@ function PosUIReplica() {
           <div style={{display:'flex',gap:5,marginBottom:2}}>
             <div style={{flex:1,display:'flex',alignItems:'center',gap:5,padding:'6px 9px',borderRadius:6,border:'1px solid #E5E5E5',background:'#FAFAFA'}}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#CCC" strokeWidth="2"><rect x="3" y="3" width="4" height="4"/><rect x="17" y="3" width="4" height="4"/><rect x="3" y="17" width="4" height="4"/><path d="M7 3h8M3 7v2M21 7v2M7 21h4M15 21h2M21 17v2M15 15h6v6"/></svg>
-              <span style={{fontSize:9,color:'#CCC'}}>Scan barcode or search...</span>
+              <span style={{fontSize:9,color:'#CCC'}}>{tc('landing.pos_scan_placeholder')}</span>
             </div>
             <div style={{width:28,height:28,borderRadius:6,background:'#C97A44',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',flexShrink:0}}>
               <span style={{fontSize:12}}>📷</span>
             </div>
           </div>
-          <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:1}}>Current sale</div>
+          <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:1}}>{tc('landing.posui_current_sale')}</div>
           {[
             {name:'Wireless Earbuds Pro',sku:'SKU-0041',qty:2,price:'£24.99',margin:'34.2%'},
             {name:'Phone Case (Black)',sku:'SKU-0198',qty:1,price:'£8.50',margin:'28.7%'},
@@ -1035,7 +1035,7 @@ function PosUIReplica() {
             <div key={i} style={{display:'flex',alignItems:'center',gap:7,padding:'7px 9px',background:'#FAFAFA',borderRadius:7,border:'1px solid #F0F0F0'}}>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontSize:9,fontWeight:600,color:'#1A1410',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.name}</div>
-                <div style={{fontSize:7,color:'#CCC'}}>{item.sku} · Qty: {item.qty}</div>
+                <div style={{fontSize:7,color:'#CCC'}}>{item.sku} · {tc('landing.posui_qty')}: {item.qty}</div>
               </div>
               <div style={{textAlign:'right',flexShrink:0}}>
                 <div style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>{item.price}</div>
@@ -1046,19 +1046,19 @@ function PosUIReplica() {
           {/* AI nudge */}
           <div style={{padding:'7px 9px',borderRadius:7,background:'rgba(201,122,68,.06)',border:'1px solid rgba(201,122,68,.18)',display:'flex',gap:6,alignItems:'flex-start'}}>
             <span style={{fontSize:10,flexShrink:0}}>💡</span>
-            <p style={{fontSize:8,color:'#7B4C20',margin:0,lineHeight:1.4}}>Earbuds Pro is your best margin product this week. You&apos;ve sold 143 units — add 50 more to beat last week&apos;s record.</p>
+            <p style={{fontSize:8,color:'#7B4C20',margin:0,lineHeight:1.4}}>{tc('landing.posui_nudge')}</p>
           </div>
           <div style={{marginTop:'auto',borderTop:'1px solid #F0F0F0',paddingTop:8}}>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:9,color:'#AAA',marginBottom:3}}><span>Subtotal</span><span>£64.46</span></div>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:9,color:'#AAA',marginBottom:6}}><span>VAT (20%)</span><span>£12.89</span></div>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:13,fontWeight:800,color:'#1A1410'}}><span>Total</span><span style={{color:'#C97A44'}}>£77.35</span></div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:9,color:'#AAA',marginBottom:3}}><span>{tc('landing.posui_subtotal')}</span><span>£64.46</span></div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:9,color:'#AAA',marginBottom:6}}><span>{tc('landing.posui_vat')}</span><span>£12.89</span></div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:13,fontWeight:800,color:'#1A1410'}}><span>{tc('landing.posui_total')}</span><span style={{color:'#C97A44'}}>£77.35</span></div>
           </div>
         </div>
         {/* Right: payment */}
         <div style={{padding:'12px 14px',display:'flex',flexDirection:'column',gap:7,background:'#FAFAFA'}}>
-          <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:1}}>Payment</div>
+          <div style={{fontSize:9,fontWeight:700,color:'#1A1410',marginBottom:1}}>{tc('landing.posui_payment')}</div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:5}}>
-            {[{label:'Card',icon:'💳',active:true},{label:'Cash',icon:'💵',active:false},{label:'Mobile Money',icon:'📱',active:false},{label:'Split',icon:'⚡',active:false}].map((m,i)=>(
+            {[{label:tc('landing.posui_pay_card'),icon:'💳',active:true},{label:tc('landing.posui_pay_cash'),icon:'💵',active:false},{label:tc('landing.posui_pay_mobile'),icon:'📱',active:false},{label:tc('landing.posui_pay_split'),icon:'⚡',active:false}].map((m,i)=>(
               <div key={i} style={{padding:'7px 5px',borderRadius:7,border:`1px solid ${m.active?'rgba(201,122,68,.3)':'#E5E5E5'}`,background:m.active?'rgba(201,122,68,.06)':'#fff',textAlign:'center',cursor:'pointer'}}>
                 <div style={{fontSize:13,marginBottom:2}}>{m.icon}</div>
                 <div style={{fontSize:8,fontWeight:600,color:m.active?'#C97A44':'#AAA'}}>{m.label}</div>
@@ -1073,9 +1073,9 @@ function PosUIReplica() {
             ))}
           </div>
           <div style={{padding:'11px',borderRadius:9,background:'#C97A44',color:'#fff',textAlign:'center',fontWeight:700,fontSize:12,cursor:'pointer'}}>
-            Charge £77.35
+            {tc('landing.posui_charge')} £77.35
           </div>
-          <div style={{textAlign:'center',fontSize:8,color:'#AAA'}}>Email · SMS · Print receipt</div>
+          <div style={{textAlign:'center',fontSize:8,color:'#AAA'}}>{tc('landing.posui_receipt_options')}</div>
         </div>
       </div>
     </div>
@@ -1113,7 +1113,8 @@ function CalcResult({value,label,color}:{value:string;label:string;color:string}
 }
 
 // ── Calculator ────────────────────────────────────────────────────────────────
-function MiniCalcWidget() {
+function MiniCalcWidget({tc}:{tc:(k:string)=>string}) {
+  const BIZ_TYPES = buildBizTypes(tc)
   const [mode,setMode] = useState<'margin'|'industry'>('margin')
   const [biz,setBiz] = useState<BizType>('retail')
   const [cur,setCur] = useState(0)
@@ -1147,7 +1148,7 @@ function MiniCalcWidget() {
           {(['margin','industry'] as const).map(id=>(
             <button key={id} onClick={()=>setMode(id)}
               style={{padding:'7px 18px',fontSize:12,fontWeight:700,fontFamily:'var(--font-jakarta)',background:mode===id?T.acc:'transparent',color:mode===id?'#fff':T.tx3,border:'none',cursor:'pointer',transition:'all 150ms'}}>
-              {id==='margin'?'Profit Margin':'Cost of Goods'}
+              {id==='margin'?tc('landing.calc_mode_margin'):tc('landing.calc_mode_cogs')}
             </button>
           ))}
         </div>
@@ -1182,9 +1183,9 @@ function MiniCalcWidget() {
         {mode==='margin'?(
           <>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:7}}>
-              <CalcInput placeholder={`Cost (${sym})`} value={mc.cost} onChange={v=>setMc(p=>({...p,cost:v}))}/>
-              <CalcInput placeholder={`Sale price (${sym})`} value={mc.revenue} onChange={v=>setMc(p=>({...p,revenue:v}))}/>
-              <CalcInput placeholder="Units sold" value={mc.units} onChange={v=>setMc(p=>({...p,units:v}))} isInt/>
+              <CalcInput placeholder={tc('landing.calc_ph_cost').replace('{sym}',sym)} value={mc.cost} onChange={v=>setMc(p=>({...p,cost:v}))}/>
+              <CalcInput placeholder={tc('landing.calc_ph_sale_price').replace('{sym}',sym)} value={mc.revenue} onChange={v=>setMc(p=>({...p,revenue:v}))}/>
+              <CalcInput placeholder={tc('landing.calc_ph_units_sold')} value={mc.units} onChange={v=>setMc(p=>({...p,units:v}))} isInt/>
             </div>
             {mHasResult&&(
               <div style={{marginTop:10}}>
@@ -1192,10 +1193,10 @@ function MiniCalcWidget() {
                   <div style={{height:'100%',borderRadius:3,background:mc_(mMargin),transform:`scaleX(${Math.min(mMargin,100)/100})`,transformOrigin:'left center',transition:'transform 300ms cubic-bezier(0.16,1,0.3,1)'}}/>
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:mUnits>0?'1fr 1fr 1fr 1fr':'1fr 1fr 1fr',gap:5}}>
-                  <CalcResult value={`${mMargin.toFixed(1)}%`} label="Margin" color={mc_(mMargin)}/>
-                  <CalcResult value={`${sym}${mProfit.toFixed(2)}`} label="Profit" color={T.tx}/>
-                  <CalcResult value={`${mMarkup.toFixed(0)}%`} label="Markup" color={T.tx2}/>
-                  {mUnits>0&&<CalcResult value={`${sym}${(mProfit*mUnits).toLocaleString('en-GB',{maximumFractionDigits:0})}`} label="Total profit" color="#4ade80"/>}
+                  <CalcResult value={`${mMargin.toFixed(1)}%`} label={tc('landing.calc_label_margin')} color={mc_(mMargin)}/>
+                  <CalcResult value={`${sym}${mProfit.toFixed(2)}`} label={tc('landing.calc_label_profit')} color={T.tx}/>
+                  <CalcResult value={`${mMarkup.toFixed(0)}%`} label={tc('landing.calc_label_markup')} color={T.tx2}/>
+                  {mUnits>0&&<CalcResult value={`${sym}${(mProfit*mUnits).toLocaleString('en-GB',{maximumFractionDigits:0})}`} label={tc('landing.calc_label_total_profit')} color="#4ade80"/>}
                 </div>
               </div>
             )}
@@ -1203,7 +1204,7 @@ function MiniCalcWidget() {
         ):(
           <>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7,marginBottom:7}}>
-              {bt.fields.map(f=>(<CalcInput key={f.key} placeholder={`${f.label}${f.label.includes('%')?'':` (${sym})`}`} value={(iv as Record<string,string>)[f.key]} onChange={v=>setIv(p=>({...p,[f.key]:v}))}/>))}
+              {bt.fields.map(f=>(<CalcInput key={f.key} placeholder={`${f.label}${('isPct' in f && f.isPct)?'':` (${sym})`}`} value={(iv as Record<string,string>)[f.key]} onChange={v=>setIv(p=>({...p,[f.key]:v}))}/>))}
             </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7}}>
               <CalcInput placeholder={`${bt.priceLabel} (${sym})`} value={iv.price} onChange={v=>setIv(p=>({...p,price:v}))}/>
@@ -1218,8 +1219,8 @@ function MiniCalcWidget() {
                 )}
                 <div style={{display:'grid',gridTemplateColumns:iUnits>0&&iPrice>0?'1fr 1fr 1fr 1fr':iPrice>0?'1fr 1fr 1fr':'1fr',gap:5}}>
                   <CalcResult value={`${sym}${iCost.toFixed(2)}`} label={bt.resultLabel} color="#f87171"/>
-                  {iPrice>0&&<><CalcResult value={`${sym}${iGross.toFixed(2)}`} label="Gross profit" color={iGross>=0?'#4ade80':'#f87171'}/><CalcResult value={`${iMargin.toFixed(1)}%`} label="Margin" color={mc_(iMargin)}/></>}
-                  {iUnits>0&&iPrice>0&&<CalcResult value={`${sym}${(iGross*iUnits).toLocaleString('en-GB',{maximumFractionDigits:0})}`} label="Total profit" color="#4ade80"/>}
+                  {iPrice>0&&<><CalcResult value={`${sym}${iGross.toFixed(2)}`} label={tc('landing.calc_label_gross_profit')} color={iGross>=0?'#4ade80':'#f87171'}/><CalcResult value={`${iMargin.toFixed(1)}%`} label={tc('landing.calc_label_margin')} color={mc_(iMargin)}/></>}
+                  {iUnits>0&&iPrice>0&&<CalcResult value={`${sym}${(iGross*iUnits).toLocaleString('en-GB',{maximumFractionDigits:0})}`} label={tc('landing.calc_label_total_profit')} color="#4ade80"/>}
                 </div>
               </div>
             )}
@@ -1228,7 +1229,7 @@ function MiniCalcWidget() {
         <div style={{marginTop:8,textAlign:'center'}}>
           <Link href={mode==='margin'?'/free-tools/profit-margin-calculator':'/free-tools/cogs-calculator'}
             style={{fontSize:11,color:T.acc,fontWeight:600,textDecoration:'none'}}>
-            Open full {mode==='margin'?'Profit Margin':'COGS'} calculator →
+            {mode==='margin'?tc('landing.calc_open_full_margin'):tc('landing.calc_open_full_cogs')}
           </Link>
         </div>
       </div>
@@ -1524,7 +1525,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               <p style={{ fontSize:10,fontWeight:700,color:T.acc,letterSpacing:'.14em',textTransform:'uppercase',marginBottom:4,textAlign:'center' }}>
                 {tc('landing.hero_calc_eyebrow')}
               </p>
-              <MiniCalcWidget />
+              <MiniCalcWidget tc={tc} />
             </div>
           </div>
         </div>
@@ -1570,7 +1571,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               </div>
             </div>
             <div data-reveal data-reveal-delay="1">
-              <MonitorUIReplica />
+              <MonitorUIReplica tc={tc} />
             </div>
           </div>
         </div>
@@ -1581,7 +1582,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         <div style={{ maxWidth:1060,margin:'0 auto' }}>
           <div className="two-col" style={{ gap:'clamp(36px,5vw,64px)' }}>
             <div data-reveal>
-              <SourcesUIReplica />
+              <SourcesUIReplica tc={tc} />
             </div>
             <div data-reveal data-reveal-delay="1">
               <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:18 }}>{tc('landing.sources_eyebrow')}</p>
@@ -1616,7 +1617,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             </p>
           </div>
           <div data-reveal data-reveal-delay="1">
-            <PosShowcase />
+            <PosShowcase tc={tc} />
           </div>
           <div style={{ display:'flex',flexWrap:'wrap',gap:7,justifyContent:'center',marginTop:24 }}>
             {[0,1,2,3,4,5,6,7,8,9].map(i=>tc('landing.pos_pill_'+i)).map(f=>(

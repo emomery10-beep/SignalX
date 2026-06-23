@@ -1,0 +1,36 @@
+{
+  "title": "Scenario Planner",
+  "subtitle": "What happens if...? Adjust the sliders to model different scenarios.",
+
+  "quickScenariosLabel": "Quick Scenarios",
+  "adjustAssumptionsLabel": "Adjust Assumptions",
+  "projectedMonthlyLabel": "Projected Monthly",
+
+  "presetLose20Revenue": "Lose 20% revenue",
+  "presetHireEmployee": "Hire new employee",
+  "presetSupplierCosts": "Supplier +15% costs",
+  "presetOpen2ndLocation": "Open 2nd location",
+  "presetRaisePrices": "Raise prices 10%",
+  "presetSeasonalDip": "Seasonal dip 30%",
+
+  "sliderRevenue": "Revenue change",
+  "sliderCogs": "COGS change",
+  "sliderNewMonthly": "New monthly expense",
+  "sliderOneTime": "One-time expense",
+
+  "rowRevenue": "Revenue",
+  "rowCogs": "COGS",
+  "rowFixedCosts": "Fixed costs",
+  "rowNetProfit": "Net Profit",
+  "rowNetMargin": "Net Margin",
+
+  "cashRunwayLabel": "Cash Runway",
+  "runwayMonths": "{n} months",
+  "runwayCashPositive": "Cash positive",
+  "runwaySetBalance": "Set cash balance",
+  "runwayComparison": "Currently: {base} months → Scenario: {scenario} months",
+  "runwayChangeSuffix": "{delta} months",
+
+  "aboveBreakEven": "{amount}/month above break-even",
+  "belowBreakEven": "{amount}/month below break-even — need to increase revenue or cut costs"
+}

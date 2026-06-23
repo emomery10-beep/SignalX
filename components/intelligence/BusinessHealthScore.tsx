@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
+import { useLang } from '@/components/LanguageProvider'
 
 interface HealthComponent {
   name: string
@@ -99,6 +100,7 @@ function detectSectorFromBT(bt: string): string {
 }
 
 export default function BusinessHealthScore({ health, size = 'md', showComponents = false, onAsk }: Props) {
+  const { tc } = useLang()
   const [expanded, setExpanded] = useState(false)
   const [sectorKey, setSectorKey] = useState('default')
 
@@ -121,11 +123,11 @@ export default function BusinessHealthScore({ health, size = 'md', showComponent
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--ev)' }}>
         <div style={{ width: size === 'sm' ? 64 : 90, height: size === 'sm' ? 64 : 90, borderRadius: '50%', background: 'var(--ov)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600, textAlign: 'center', lineHeight: 1.3 }}>No<br/>Data</span>
+          <span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600, textAlign: 'center', lineHeight: 1.3 }}>{tc('intel_healthscore.noData')}</span>
         </div>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 3 }}>Business Health Score</div>
-          <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Upload your data to calculate your score</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 3 }}>{tc('intel_healthscore.title')}</div>
+          <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intel_healthscore.uploadCta')}</div>
         </div>
       </div>
     )
@@ -147,7 +149,7 @@ export default function BusinessHealthScore({ health, size = 'md', showComponent
             <span style={{ fontFamily: 'var(--font-sora)', fontSize: size === 'sm' ? 13 : 15, fontWeight: 700, color: c.text }}>
               {health.label}
             </span>
-            <span style={{ fontSize: 11, color: 'var(--tx3)' }}>Business Health Score</span>
+            <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_healthscore.title')}</span>
           </div>
           <p style={{ fontSize: 12, color: 'var(--tx2)', margin: 0, lineHeight: 1.5 }}>{health.summary}</p>
 
@@ -155,7 +157,7 @@ export default function BusinessHealthScore({ health, size = 'md', showComponent
             <button
               onClick={(e) => { e.stopPropagation(); onAsk?.(health.topIssue || '') }}
               style={{ marginTop: 8, fontSize: 11, color: c.text, background: 'transparent', border: `1px solid ${c.border}`, borderRadius: 9999, padding: '3px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
-              Ask AskBiz about this →
+              {tc('intel_healthscore.askAskBiz')}
             </button>
           )}
         </div>

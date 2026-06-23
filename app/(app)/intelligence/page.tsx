@@ -42,6 +42,9 @@ export default function IntelligencePage() {
   const [nowHour, setNowHour] = useState<number | null>(null)
   const [nowDateStr, setNowDateStr] = useState('')
 
+  // Profile (for personalised greeting)
+  const [greetingName, setGreetingName] = useState('')
+
   // Overview summary state
   const [cfoSnapshot, setCfoSnapshot] = useState<any>(null)
   const [logisticsHealth, setLogisticsHealth] = useState<any>(null)
@@ -93,6 +96,16 @@ export default function IntelligencePage() {
     const t = params.get('tab')
     const validTabs = ['overview','anomalies','decisions','team','sparring','shipments','courier','memory','market','connections','cfo','actions']
     if (t && validTabs.includes(t)) setTab(t)
+  }, [])
+
+  // Fetch profile for greeting name
+  useEffect(() => {
+    fetch('/api/profile')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d) setGreetingName(d.first_name || d.business_name || '')
+      })
+      .catch(() => {})
   }, [])
 
   // Fetch health, anomalies, history
@@ -371,7 +384,11 @@ export default function IntelligencePage() {
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--tx)', fontFamily: 'var(--font-sora, inherit)', lineHeight: 1.3 }}>
-                  {nowHour === null ? '' : nowHour < 12 ? tc('intelligence.greeting_morning') : nowHour < 17 ? tc('intelligence.greeting_afternoon') : tc('intelligence.greeting_evening')}
+                  {(() => {
+                  if (nowHour === null) return ''
+                  const key = nowHour < 12 ? 'intelligence.greeting_morning' : nowHour < 17 ? 'intelligence.greeting_afternoon' : 'intelligence.greeting_evening'
+                  return tc(key, { name: greetingName }).trimEnd()
+                })()}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>
                   {nowDateStr}

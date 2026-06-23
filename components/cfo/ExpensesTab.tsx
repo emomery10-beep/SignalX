@@ -1,6 +1,27 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import ReceiptScanner, { EXPENSE_CATEGORIES, type ScannedExpense } from './ReceiptScanner'
+import { useLang } from '@/components/LanguageProvider'
+
+// Maps backend category enum values → i18n key suffixes. Enum values stay as-is
+// for the API; only DISPLAY labels are translated.
+const CATEGORY_KEYS: Record<string, string> = {
+  'Supplier / Stock Purchase': 'cat_supplier_stock',
+  'Rent / Lease': 'cat_rent_lease',
+  'Payroll': 'cat_payroll',
+  'Utilities': 'cat_utilities',
+  'Software / SaaS': 'cat_software_saas',
+  'Marketing & Ads': 'cat_marketing_ads',
+  'Supplies': 'cat_supplies',
+  'Travel': 'cat_travel',
+  'Meals & Entertainment': 'cat_meals_entertainment',
+  'Shipping': 'cat_shipping',
+  'Professional Services': 'cat_professional_services',
+  'Equipment': 'cat_equipment',
+  'Insurance': 'cat_insurance',
+  'Taxes & Fees': 'cat_taxes_fees',
+  'Other': 'cat_other',
+}
 
 const INDIGO = '#6366F1'
 const GREEN = '#22C55E'
@@ -26,6 +47,9 @@ interface Props {
 type SortKey = 'date' | 'amount' | 'vendor' | 'category'
 
 export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
+  const { tc } = useLang()
+  // Translate a backend category enum value to its display label.
+  const catLabel = (c: string) => CATEGORY_KEYS[c] ? tc('cfo_expenses.' + CATEGORY_KEYS[c]) : c
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [loading, setLoading] = useState(true)
   const [showScanner, setShowScanner] = useState(false)
@@ -88,28 +112,28 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
       })
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}))
-        const msg = errData?.error || `Save failed (${res.status})`
+        const msg = errData?.error || tc('cfo_expenses.toast_save_failed', { status: res.status })
         showToast(`❌ ${msg}`)
         setSaving(false)
         return
       }
       await fetchExpenses()
-      showToast('✓ Expense saved')
+      showToast(tc('cfo_expenses.toast_saved'))
       setShowScanner(false)
       setShowManual(false)
       setManualForm({ vendor: '', date: new Date().toISOString().split('T')[0], amount: 0, category: 'Other', notes: '' })
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to save expense'
+      const msg = err instanceof Error ? err.message : tc('cfo_expenses.toast_generic_save_failed')
       showToast(`❌ ${msg}`)
     }
     setSaving(false)
   }
 
   const deleteExpense = async (id: string) => {
-    if (!confirm('Delete this expense?')) return
+    if (!confirm(tc('cfo_expenses.confirm_delete'))) return
     try {
       const res = await fetch(`/api/cfo/expenses?id=${id}`, { method: 'DELETE' })
-      if (res.ok) { await fetchExpenses(); showToast('Expense deleted') }
+      if (res.ok) { await fetchExpenses(); showToast(tc('cfo_expenses.toast_deleted')) }
     } catch {}
   }
 
@@ -131,15 +155,15 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
       })
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}))
-        showToast(`❌ ${errData?.error || 'Update failed'}`)
+        showToast(`❌ ${errData?.error || tc('cfo_expenses.toast_update_failed')}`)
         setSaving(false)
         return
       }
       await fetchExpenses()
       setEditingId(null)
-      showToast('✓ Expense updated')
+      showToast(tc('cfo_expenses.toast_updated'))
     } catch {
-      showToast('❌ Failed to update')
+      showToast(`❌ ${tc('cfo_expenses.toast_update_failed')}`)
     }
     setSaving(false)
   }
@@ -209,21 +233,21 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 4, height: 20, borderRadius: 4, background: INDIGO }} />
-          <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>Expenses</span>
-          {filtered.length > 0 && <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{filtered.length} items · {fmt(grandTotal)}</span>}
+          <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_expenses.heading')}</span>
+          {filtered.length > 0 && <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_expenses.items_summary', { n: filtered.length, total: fmt(grandTotal) })}</span>}
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             onClick={() => { setShowManual(false); setShowScanner(v => !v) }}
             style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            📷 Scan Receipt
+            {tc('cfo_expenses.scan_receipt')}
           </button>
           <button
             onClick={() => { setShowScanner(false); setShowManual(v => !v) }}
             style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 8, border: `1px solid ${INDIGO}40`, background: 'transparent', color: INDIGO, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            + Manual
+            {tc('cfo_expenses.manual')}
           </button>
         </div>
       </div>
@@ -240,39 +264,39 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
       {/* Manual entry form */}
       {showManual && (
         <div style={{ borderRadius: 12, border: `1px solid ${INDIGO}30`, background: `${INDIGO}04`, padding: '16px' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 12 }}>Add Expense Manually</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 12 }}>{tc('cfo_expenses.add_manually_title')}</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
             <div>
-              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>Vendor *</label>
-              <input value={manualForm.vendor} onChange={e => setManualForm(p => ({ ...p, vendor: e.target.value }))} placeholder="e.g. Safaricom" style={inputStyle} />
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_expenses.label_vendor')}</label>
+              <input value={manualForm.vendor} onChange={e => setManualForm(p => ({ ...p, vendor: e.target.value }))} placeholder={tc('cfo_expenses.placeholder_vendor')} style={inputStyle} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>Amount ({sym}) *</label>
-              <input type="number" min="0" step="0.01" value={manualForm.amount || ''} onChange={e => setManualForm(p => ({ ...p, amount: Number(e.target.value) }))} placeholder="0.00" style={inputStyle} />
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_expenses.label_amount', { sym })}</label>
+              <input type="number" min="0" step="0.01" value={manualForm.amount || ''} onChange={e => setManualForm(p => ({ ...p, amount: Number(e.target.value) }))} placeholder={tc('cfo_expenses.placeholder_amount')} style={inputStyle} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>Date *</label>
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_expenses.label_date')}</label>
               <input type="date" value={manualForm.date} onChange={e => setManualForm(p => ({ ...p, date: e.target.value }))} style={inputStyle} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>Category</label>
+              <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_expenses.label_category')}</label>
               <select value={manualForm.category} onChange={e => setManualForm(p => ({ ...p, category: e.target.value }))} style={{ ...inputStyle, cursor: 'pointer' }}>
-                {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{catLabel(c)}</option>)}
               </select>
             </div>
           </div>
           <div style={{ marginBottom: 12 }}>
-            <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>Notes (optional)</label>
-            <input value={manualForm.notes} onChange={e => setManualForm(p => ({ ...p, notes: e.target.value }))} placeholder="Description or reference" style={inputStyle} />
+            <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_expenses.label_notes')}</label>
+            <input value={manualForm.notes} onChange={e => setManualForm(p => ({ ...p, notes: e.target.value }))} placeholder={tc('cfo_expenses.placeholder_notes')} style={inputStyle} />
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setShowManual(false)} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+            <button onClick={() => setShowManual(false)} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>{tc('cfo_expenses.cancel')}</button>
             <button
               onClick={() => saveExpense(manualForm)}
               disabled={!manualForm.vendor || !manualForm.amount || saving}
               style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: (!manualForm.vendor || !manualForm.amount) ? 0.5 : 1 }}
             >
-              {saving ? 'Saving…' : 'Save Expense'}
+              {saving ? tc('cfo_expenses.saving') : tc('cfo_expenses.save_expense')}
             </button>
           </div>
         </div>
@@ -282,7 +306,7 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
       {categoryTotals.length > 0 && (
         <div style={{ borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', padding: '14px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>By Category</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_expenses.by_category')}</span>
             <span style={{ fontSize: 13, fontWeight: 700, color: RED }}>{fmt(grandTotal)}</span>
           </div>
           {/* Stacked bar */}
@@ -290,7 +314,7 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
             {categoryTotals.map((c, i) => {
               const pct = grandTotal > 0 ? (c.total / grandTotal) * 100 : 0
               const hues = [INDIGO, RED, YELLOW, GREEN, '#8B5CF6', '#F97316', '#06B6D4', '#EC4899']
-              return <div key={i} style={{ width: `${pct}%`, background: hues[i % hues.length], minWidth: 2 }} title={`${c.category}: ${fmt(c.total)}`} />
+              return <div key={i} style={{ width: `${pct}%`, background: hues[i % hues.length], minWidth: 2 }} title={`${catLabel(c.category)}: ${fmt(c.total)}`} />
             })}
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -303,7 +327,7 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
                   style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, padding: '3px 8px', borderRadius: 6, border: `1px solid ${hues[i % hues.length]}30`, background: filterCategory === c.category ? `${hues[i % hues.length]}20` : 'transparent', cursor: 'pointer', fontFamily: 'inherit', color: 'var(--tx)' }}
                 >
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: hues[i % hues.length], flexShrink: 0 }} />
-                  <span>{c.category}</span>
+                  <span>{catLabel(c.category)}</span>
                   <span style={{ color: 'var(--tx3)' }}>{fmt(c.total)}</span>
                 </button>
               )
@@ -321,7 +345,7 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
               {fmt(thisMonthTotal)}
             </span>
             <span style={{ fontSize: 12, color: 'var(--tx3)' }}>
-              {' '}from {thisMonthCount} expense{thisMonthCount !== 1 ? 's' : ''} contributing to this month&apos;s Operating Expenses in the P&amp;L
+              {' '}{tc('cfo_expenses.banner_prefix')} {thisMonthCount} {thisMonthCount !== 1 ? tc('cfo_expenses.banner_expense_many') : tc('cfo_expenses.banner_expense_one')} {tc('cfo_expenses.banner_suffix')}
             </span>
           </div>
         </div>
@@ -332,22 +356,22 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Search vendor, category…"
+          placeholder={tc('cfo_expenses.placeholder_search')}
           style={{ ...inputStyle, width: 'auto', flex: 1, minWidth: 140 }}
         />
         <select value={filterDateRange} onChange={e => setFilterDateRange(e.target.value as any)} style={{ ...inputStyle, width: 'auto', cursor: 'pointer' }}>
-          <option value="7d">Last 7 days</option>
-          <option value="30d">Last 30 days</option>
-          <option value="90d">Last 90 days</option>
-          <option value="all">All time</option>
+          <option value="7d">{tc('cfo_expenses.filter_7d')}</option>
+          <option value="30d">{tc('cfo_expenses.filter_30d')}</option>
+          <option value="90d">{tc('cfo_expenses.filter_90d')}</option>
+          <option value="all">{tc('cfo_expenses.filter_all')}</option>
         </select>
         <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} style={{ ...inputStyle, width: 'auto', cursor: 'pointer' }}>
-          <option value="All">All categories</option>
-          {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+          <option value="All">{tc('cfo_expenses.filter_all_categories')}</option>
+          {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{catLabel(c)}</option>)}
         </select>
         {onAsk && filtered.length > 0 && (
-          <button onClick={() => onAsk(`Analyze my expenses: total ${fmt(grandTotal)} across ${filtered.length} items. Top categories: ${categoryTotals.slice(0, 3).map(c => `${c.category} ${fmt(c.total)}`).join(', ')}. How can I reduce costs?`)} style={{ padding: '7px 10px', borderRadius: 7, border: `1px solid ${INDIGO}30`, background: `${INDIGO}08`, color: INDIGO, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
-            Ask AI
+          <button onClick={() => onAsk(tc('cfo_expenses.ask_ai_prompt', { total: fmt(grandTotal), count: filtered.length, top: categoryTotals.slice(0, 3).map(c => `${catLabel(c.category)} ${fmt(c.total)}`).join(', ') }))} style={{ padding: '7px 10px', borderRadius: 7, border: `1px solid ${INDIGO}30`, background: `${INDIGO}08`, color: INDIGO, fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+            {tc('cfo_expenses.ask_ai')}
           </button>
         )}
       </div>
@@ -355,31 +379,31 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
       {/* Setup needed state */}
       {setupNeeded && (
         <div style={{ borderRadius: 12, border: '1.5px solid #f59e0b40', background: '#f59e0b08', padding: '20px' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 6 }}>⚙️ Database setup required</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 6 }}>{tc('cfo_expenses.setup_title')}</div>
           <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.6, marginBottom: 12 }}>
-            The <code style={{ background: 'var(--ev)', padding: '1px 5px', borderRadius: 4 }}>cfo_expenses</code> table hasn't been created yet. Run the migration <code style={{ background: 'var(--ev)', padding: '1px 5px', borderRadius: 4 }}>20250605_cfo_expenses.sql</code> in your Supabase SQL editor, then reload.
+            {tc('cfo_expenses.setup_body_pre')} <code style={{ background: 'var(--ev)', padding: '1px 5px', borderRadius: 4 }}>cfo_expenses</code> {tc('cfo_expenses.setup_body_mid')} <code style={{ background: 'var(--ev)', padding: '1px 5px', borderRadius: 4 }}>20250605_cfo_expenses.sql</code> {tc('cfo_expenses.setup_body_post')}
           </div>
         </div>
       )}
 
       {/* Table */}
       {setupNeeded ? null : loading ? (
-        <div style={{ textAlign: 'center', padding: '30px', color: 'var(--tx3)', fontSize: 12 }}>Loading expenses…</div>
+        <div style={{ textAlign: 'center', padding: '30px', color: 'var(--tx3)', fontSize: 12 }}>{tc('cfo_expenses.loading')}</div>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px 20px', borderRadius: 12, border: '1px dashed var(--b)', background: 'var(--ev)' }}>
           <div style={{ fontSize: 32, marginBottom: 10 }}>🧾</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>No expenses yet</div>
-          <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Scan a receipt or add an expense manually to get started</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{tc('cfo_expenses.empty_title')}</div>
+          <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('cfo_expenses.empty_body')}</div>
         </div>
       ) : (
         <div style={{ borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
           {/* Table header */}
           <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 100px 90px 60px', gap: 4, padding: '8px 14px', background: 'var(--ev)', borderBottom: '1px solid var(--b)' }}>
             {[
-              { key: 'date' as SortKey, label: 'Date' },
-              { key: 'vendor' as SortKey, label: 'Vendor / Category' },
-              { key: 'category' as SortKey, label: 'Category' },
-              { key: 'amount' as SortKey, label: 'Amount', right: true },
+              { key: 'date' as SortKey, label: tc('cfo_expenses.col_date') },
+              { key: 'vendor' as SortKey, label: tc('cfo_expenses.col_vendor_category') },
+              { key: 'category' as SortKey, label: tc('cfo_expenses.col_category') },
+              { key: 'amount' as SortKey, label: tc('cfo_expenses.col_amount'), right: true },
             ].map(h => (
               <button key={h.key} onClick={() => toggleSort(h.key)} style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', justifyContent: h.right ? 'flex-end' : 'flex-start', padding: 0 }}>
                 {h.label}<SortIcon k={h.key} />
@@ -411,16 +435,16 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
                   <>
                     <input type="date" value={editForm.date} onChange={ev => setEditForm(p => ({ ...p, date: ev.target.value }))} style={cellInput} />
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <input value={editForm.vendor} onChange={ev => setEditForm(p => ({ ...p, vendor: ev.target.value }))} placeholder="Vendor" style={cellInput} />
-                      <input value={editForm.notes} onChange={ev => setEditForm(p => ({ ...p, notes: ev.target.value }))} placeholder="Notes (optional)" style={{ ...cellInput, fontSize: 11 }} />
+                      <input value={editForm.vendor} onChange={ev => setEditForm(p => ({ ...p, vendor: ev.target.value }))} placeholder={tc('cfo_expenses.placeholder_vendor_short')} style={cellInput} />
+                      <input value={editForm.notes} onChange={ev => setEditForm(p => ({ ...p, notes: ev.target.value }))} placeholder={tc('cfo_expenses.placeholder_notes_short')} style={{ ...cellInput, fontSize: 11 }} />
                     </div>
                     <select value={editForm.category} onChange={ev => setEditForm(p => ({ ...p, category: ev.target.value }))} style={{ ...cellInput, cursor: 'pointer' }}>
-                      {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                      {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{catLabel(c)}</option>)}
                     </select>
-                    <input type="number" min="0" step="0.01" value={editForm.amount || ''} onChange={ev => setEditForm(p => ({ ...p, amount: Number(ev.target.value) }))} placeholder="0.00" style={{ ...cellInput, textAlign: 'right' }} />
+                    <input type="number" min="0" step="0.01" value={editForm.amount || ''} onChange={ev => setEditForm(p => ({ ...p, amount: Number(ev.target.value) }))} placeholder={tc('cfo_expenses.placeholder_amount')} style={{ ...cellInput, textAlign: 'right' }} />
                     <div style={{ display: 'flex', gap: 4 }}>
-                      <button onClick={saveEdit} disabled={saving || !editForm.vendor} title="Save" style={{ flex: 1, height: 28, borderRadius: 6, border: 'none', background: INDIGO, color: '#fff', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (!editForm.vendor || saving) ? 0.5 : 1 }}>✓</button>
-                      <button onClick={cancelEdit} title="Cancel" style={{ flex: 1, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                      <button onClick={saveEdit} disabled={saving || !editForm.vendor} title={tc('cfo_expenses.title_save')} style={{ flex: 1, height: 28, borderRadius: 6, border: 'none', background: INDIGO, color: '#fff', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (!editForm.vendor || saving) ? 0.5 : 1 }}>✓</button>
+                      <button onClick={cancelEdit} title={tc('cfo_expenses.title_cancel')} style={{ flex: 1, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
                     </div>
                   </>
                 ) : (
@@ -430,11 +454,11 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
                       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.vendor}</div>
                       {e.notes && <div style={{ fontSize: 10, color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.notes}</div>}
                     </div>
-                    <span style={{ fontSize: 10, color: 'var(--tx3)', padding: '2px 6px', borderRadius: 5, background: 'var(--ev)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.category}</span>
+                    <span style={{ fontSize: 10, color: 'var(--tx3)', padding: '2px 6px', borderRadius: 5, background: 'var(--ev)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{catLabel(e.category)}</span>
                     <span style={{ fontSize: 13, fontWeight: 700, color: RED, textAlign: 'right' }}>{fmt(e.amount)}</span>
                     <div style={{ display: 'flex', gap: 4 }}>
-                      <button onClick={() => startEdit(e)} title="Edit" style={{ flex: 1, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✎</button>
-                      <button onClick={() => deleteExpense(e.id)} title="Delete" style={{ flex: 1, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                      <button onClick={() => startEdit(e)} title={tc('cfo_expenses.title_edit')} style={{ flex: 1, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✎</button>
+                      <button onClick={() => deleteExpense(e.id)} title={tc('cfo_expenses.title_delete')} style={{ flex: 1, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
                     </div>
                   </>
                 )}
@@ -445,7 +469,7 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
           {/* Footer total */}
           <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 100px 90px 60px', gap: 4, padding: '10px 14px', borderTop: '2px solid var(--b)', background: 'var(--ev)' }}>
             <div />
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)' }}>{filtered.length} expenses</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)' }}>{tc('cfo_expenses.footer_count', { n: filtered.length })}</span>
             <div />
             <span style={{ fontSize: 14, fontWeight: 700, color: RED, textAlign: 'right' }}>{fmt(grandTotal)}</span>
             <div />

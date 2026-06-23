@@ -1,0 +1,13 @@
+{
+  "cfo_costbreakdown.heading": "Cost Structure",
+  "cfo_costbreakdown.askAi": "Ask AI",
+  "cfo_costbreakdown.askAiPrompt": "My cost structure: COGS is {cogsPct}% of revenue ({cogsAmt}), fixed costs are {fixedPct}% ({fixedAmt}). What are the top 3 areas I could reduce costs without hurting growth?",
+  "cfo_costbreakdown.totalCosts": "Total costs",
+  "cfo_costbreakdown.labelCogs": "Cost of Goods Sold",
+  "cfo_costbreakdown.labelFixed": "Fixed / Operating Costs",
+  "cfo_costbreakdown.ofRevenue": "of revenue",
+  "cfo_costbreakdown.netProfit": "Net Profit",
+  "cfo_costbreakdown.whereEveryGoes": "Where every {sym}100 goes",
+  "cfo_costbreakdown.profitSuffix": " profit",
+  "cfo_costbreakdown.costsExceed": "Costs exceed revenue by {sym}{n} per {sym}100 earned"
+}

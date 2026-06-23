@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Alert {
   type: string
@@ -20,6 +21,7 @@ const SEVERITY_STYLE: Record<string, { bg: string; border: string; icon: string;
 }
 
 export default function CfoAlerts({ alerts, onNavigate }: Props) {
+  const { tc } = useLang()
   const [dismissed, setDismissed] = useState<Set<string>>(new Set())
 
   const visible = alerts.filter(a => !dismissed.has(a.type))
@@ -52,7 +54,7 @@ export default function CfoAlerts({ alerts, onNavigate }: Props) {
                   fontFamily: 'inherit', whiteSpace: 'nowrap',
                 }}
               >
-                View details
+                {tc('cfo_alerts.viewDetails')}
               </button>
             )}
             <button
@@ -62,7 +64,7 @@ export default function CfoAlerts({ alerts, onNavigate }: Props) {
                 border: 'none', cursor: 'pointer', padding: '0 2px',
                 lineHeight: 1, fontFamily: 'inherit',
               }}
-              title="Dismiss"
+              title={tc('cfo_alerts.dismiss')}
             >
               ×
             </button>

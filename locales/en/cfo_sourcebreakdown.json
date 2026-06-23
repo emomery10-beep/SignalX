@@ -1,0 +1,11 @@
+{
+  "heading": "Revenue by Source",
+  "channels": "({n} channels)",
+  "askAi": "Ask AI",
+  "askAiPrompt": "Revenue by source: {summary}. Which channels should I focus on growing and which are underperforming?",
+  "transactions": "{n} transactions · {pct}% of revenue",
+  "marginPct": "{n}% margin",
+  "metricRevenue": "Revenue",
+  "metricCogs": "COGS",
+  "metricGrossProfit": "Gross Profit"
+}

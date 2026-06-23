@@ -56,7 +56,6 @@ export async function tavilySearch(
 
   try {
     const body: Record<string, unknown> = {
-      api_key: TAVILY_API_KEY,
       query,
       search_depth: searchDepth,
       max_results: maxResults,
@@ -66,17 +65,22 @@ export async function tavilySearch(
 
     if (includeDomains?.length) body.include_domains = includeDomains
     if (excludeDomains?.length) body.exclude_domains = excludeDomains
-    if (days) body.days = days
+    // days param only works with topic: 'news' — guard it
+    if (days && topic === 'news') body.days = days
 
     const res = await fetch('https://api.tavily.com/search', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${TAVILY_API_KEY}`,
+      },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(8000), // 8s timeout — non-blocking
+      signal: AbortSignal.timeout(15000),
     })
 
     if (!res.ok) {
-      console.error(`[Tavily] API error ${res.status}: ${await res.text()}`)
+      const errText = await res.text()
+      console.error(`[Tavily] API error ${res.status}: ${errText}`)
       return null
     }
 

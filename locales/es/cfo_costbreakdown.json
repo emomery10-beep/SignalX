@@ -1,0 +1,13 @@
+{
+  "cfo_costbreakdown.heading": "Estructura de costos",
+  "cfo_costbreakdown.askAi": "Preguntar a IA",
+  "cfo_costbreakdown.askAiPrompt": "Mi estructura de costos: el COGS es el {cogsPct}% de los ingresos ({cogsAmt}), los costos fijos son el {fixedPct}% ({fixedAmt}). ¿Cuáles son las 3 principales áreas donde podría reducir costos sin frenar el crecimiento?",
+  "cfo_costbreakdown.totalCosts": "Costos totales",
+  "cfo_costbreakdown.labelCogs": "Costo de mercancía vendida",
+  "cfo_costbreakdown.labelFixed": "Costos fijos / operativos",
+  "cfo_costbreakdown.ofRevenue": "de los ingresos",
+  "cfo_costbreakdown.netProfit": "Utilidad neta",
+  "cfo_costbreakdown.whereEveryGoes": "En qué se usa cada {sym}100",
+  "cfo_costbreakdown.profitSuffix": " de utilidad",
+  "cfo_costbreakdown.costsExceed": "Los costos superan los ingresos en {sym}{n} por cada {sym}100 generados"
+}

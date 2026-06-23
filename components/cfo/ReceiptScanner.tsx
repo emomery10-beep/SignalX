@@ -1,5 +1,6 @@
 'use client'
 import { useState, useRef } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 const INDIGO = '#6366F1'
 const GREEN = '#22C55E'
@@ -25,6 +26,25 @@ export interface ScannedExpense {
   confidence: number
 }
 
+// Maps the canonical English category value to its i18n key suffix
+const CAT_KEY: Record<string, string> = {
+  'Supplier / Stock Purchase': 'catSupplierStock',
+  'Rent / Lease':              'catRentLease',
+  'Payroll':                   'catPayroll',
+  'Utilities':                 'catUtilities',
+  'Software / SaaS':           'catSoftwareSaas',
+  'Marketing & Ads':           'catMarketingAds',
+  'Supplies':                  'catSupplies',
+  'Travel':                    'catTravel',
+  'Meals & Entertainment':     'catMealsEntertainment',
+  'Shipping':                  'catShipping',
+  'Professional Services':     'catProfessionalServices',
+  'Equipment':                 'catEquipment',
+  'Insurance':                 'catInsurance',
+  'Taxes & Fees':              'catTaxesFees',
+  'Other':                     'catOther',
+}
+
 interface Props {
   currencySymbol: string
   onConfirm: (expense: ScannedExpense) => void
@@ -32,6 +52,7 @@ interface Props {
 }
 
 export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCancel }: Props) {
+  const { tc } = useLang()
   const [stage, setStage] = useState<'capture' | 'scanning' | 'review' | 'error'>('capture')
   const [preview, setPreview] = useState<string | null>(null)
   const [scanned, setScanned] = useState<ScannedExpense | null>(null)
@@ -41,8 +62,8 @@ export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCance
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
   const handleFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) { setErrorMsg('Please select an image file'); setStage('error'); return }
-    if (file.size > 10 * 1024 * 1024) { setErrorMsg('Image too large (max 10MB)'); setStage('error'); return }
+    if (!file.type.startsWith('image/')) { setErrorMsg(tc('cfo_receipts.errNotImage')); setStage('error'); return }
+    if (file.size > 10 * 1024 * 1024) { setErrorMsg(tc('cfo_receipts.errTooLarge')); setStage('error'); return }
 
     const reader = new FileReader()
     reader.onload = async (e) => {
@@ -72,7 +93,7 @@ export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCance
         setEditedExpense({ ...expense })
         setStage('review')
       } catch (err: any) {
-        setErrorMsg(err.message || 'Failed to scan receipt')
+        setErrorMsg(err.message || tc('cfo_receipts.errScanFailed'))
         setStage('error')
       }
     }
@@ -92,8 +113,8 @@ export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCance
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 18 }}>📷</span>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>Scan Receipt</div>
-            <div style={{ fontSize: 10, color: 'var(--tx3)' }}>AI extracts vendor, date, amount & category</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_receipts.headerTitle')}</div>
+            <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_receipts.headerSubtitle')}</div>
           </div>
         </div>
         <button onClick={onCancel} style={{ width: 28, height: 28, borderRadius: 7, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
@@ -110,8 +131,8 @@ export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCance
                 style={{ padding: '20px', borderRadius: 12, border: `2px dashed ${INDIGO}50`, background: `${INDIGO}06`, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, fontFamily: 'inherit' }}
               >
                 <span style={{ fontSize: 28 }}>📸</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: INDIGO }}>Take Photo</span>
-                <span style={{ fontSize: 10, color: 'var(--tx3)' }}>Camera (mobile)</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: INDIGO }}>{tc('cfo_receipts.takePhoto')}</span>
+                <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_receipts.takePhotoHint')}</span>
               </button>
               {/* Upload button */}
               <button
@@ -119,14 +140,14 @@ export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCance
                 style={{ padding: '20px', borderRadius: 12, border: `2px dashed var(--b)`, background: 'var(--ev)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, fontFamily: 'inherit' }}
               >
                 <span style={{ fontSize: 28 }}>🗂</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>Upload File</span>
-                <span style={{ fontSize: 10, color: 'var(--tx3)' }}>JPG, PNG, WEBP</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_receipts.uploadFile')}</span>
+                <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_receipts.uploadFileHint')}</span>
               </button>
             </div>
             <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
             <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
             <div style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.5 }}>
-              Claude AI will read your receipt and extract all the details. Review before saving.
+              {tc('cfo_receipts.captureFooter')}
             </div>
           </div>
         )}
@@ -136,12 +157,12 @@ export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCance
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
             {preview && (
               <div style={{ marginBottom: 14, borderRadius: 10, overflow: 'hidden', maxHeight: 200, display: 'flex', justifyContent: 'center' }}>
-                <img src={preview} alt="Receipt" style={{ maxHeight: 200, maxWidth: '100%', objectFit: 'contain', borderRadius: 10 }} />
+                <img src={preview} alt={tc('cfo_receipts.receiptImgAlt')} style={{ maxHeight: 200, maxWidth: '100%', objectFit: 'contain', borderRadius: 10 }} />
               </div>
             )}
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderRadius: 10, background: `${INDIGO}10`, border: `1px solid ${INDIGO}30` }}>
               <span style={{ fontSize: 18, animation: 'spin 1s linear infinite', display: 'inline-block' }}>⏳</span>
-              <span style={{ fontSize: 12, color: INDIGO, fontWeight: 600 }}>Reading receipt with AI…</span>
+              <span style={{ fontSize: 12, color: INDIGO, fontWeight: 600 }}>{tc('cfo_receipts.scanningLabel')}</span>
             </div>
             <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
           </div>
@@ -152,66 +173,66 @@ export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCance
           <div>
             {preview && (
               <div style={{ marginBottom: 14, borderRadius: 10, overflow: 'hidden', maxHeight: 160, display: 'flex', justifyContent: 'center', background: 'var(--ev)' }}>
-                <img src={preview} alt="Receipt" style={{ maxHeight: 160, maxWidth: '100%', objectFit: 'contain' }} />
+                <img src={preview} alt={tc('cfo_receipts.receiptImgAlt')} style={{ maxHeight: 160, maxWidth: '100%', objectFit: 'contain' }} />
               </div>
             )}
 
             {/* Confidence badge */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14 }}>
               <span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, background: scanned.confidence >= 80 ? `${GREEN}20` : scanned.confidence >= 60 ? `${YELLOW}20` : `${RED}20`, color: scanned.confidence >= 80 ? GREEN : scanned.confidence >= 60 ? YELLOW : RED }}>
-                {scanned.confidence}% confidence
+                {tc('cfo_receipts.confidenceBadge', { n: scanned.confidence })}
               </span>
               <span style={{ fontSize: 11, color: 'var(--tx3)' }}>
-                {scanned.confidence >= 80 ? 'Good read — verify key fields' : scanned.confidence >= 60 ? 'Partial read — please check all fields' : 'Low confidence — fill in manually'}
+                {scanned.confidence >= 80 ? tc('cfo_receipts.confidenceGood') : scanned.confidence >= 60 ? tc('cfo_receipts.confidencePartial') : tc('cfo_receipts.confidenceLow')}
               </span>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {/* Vendor */}
               <div>
-                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>Vendor / Merchant</label>
-                <input value={editedExpense.vendor} onChange={e => setEditedExpense(p => p ? { ...p, vendor: e.target.value } : p)} placeholder="e.g. Naivas Supermarket" style={inputStyle} />
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_receipts.labelVendor')}</label>
+                <input value={editedExpense.vendor} onChange={e => setEditedExpense(p => p ? { ...p, vendor: e.target.value } : p)} placeholder={tc('cfo_receipts.placeholderVendor')} style={inputStyle} />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 {/* Date */}
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>Date</label>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_receipts.labelDate')}</label>
                   <input type="date" value={editedExpense.date} onChange={e => setEditedExpense(p => p ? { ...p, date: e.target.value } : p)} style={inputStyle} />
                 </div>
                 {/* Amount */}
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>Amount ({sym})</label>
+                  <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_receipts.labelAmount', { sym })}</label>
                   <input type="number" min="0" step="0.01" value={editedExpense.amount || ''} onChange={e => setEditedExpense(p => p ? { ...p, amount: Number(e.target.value) } : p)} placeholder="0.00" style={inputStyle} />
                 </div>
               </div>
 
               {/* Category */}
               <div>
-                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>Category</label>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_receipts.labelCategory')}</label>
                 <select value={editedExpense.category} onChange={e => setEditedExpense(p => p ? { ...p, category: e.target.value } : p)} style={{ ...inputStyle, cursor: 'pointer' }}>
-                  {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{tc('cfo_receipts.' + CAT_KEY[c])}</option>)}
                 </select>
               </div>
 
               {/* Notes */}
               <div>
-                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>Notes (optional)</label>
-                <input value={editedExpense.notes} onChange={e => setEditedExpense(p => p ? { ...p, notes: e.target.value } : p)} placeholder="e.g. Team lunch, Client meeting..." style={inputStyle} />
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_receipts.labelNotes')}</label>
+                <input value={editedExpense.notes} onChange={e => setEditedExpense(p => p ? { ...p, notes: e.target.value } : p)} placeholder={tc('cfo_receipts.placeholderNotes')} style={inputStyle} />
               </div>
             </div>
 
             {/* Actions */}
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
               <button onClick={() => { setStage('capture'); setPreview(null); setScanned(null) }} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
-                Scan Again
+                {tc('cfo_receipts.btnScanAgain')}
               </button>
               <button
                 onClick={() => editedExpense && onConfirm(editedExpense)}
                 disabled={!editedExpense?.vendor || !editedExpense?.amount}
                 style={{ flex: 2, padding: '9px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: (!editedExpense?.vendor || !editedExpense?.amount) ? 0.5 : 1 }}
               >
-                Save Expense
+                {tc('cfo_receipts.btnSaveExpense')}
               </button>
             </div>
           </div>
@@ -221,10 +242,10 @@ export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCance
         {stage === 'error' && (
           <div style={{ textAlign: 'center', padding: '10px 0' }}>
             <div style={{ fontSize: 32, marginBottom: 10 }}>⚠️</div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>Scan failed</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{tc('cfo_receipts.errorTitle')}</div>
             <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 16 }}>{errorMsg}</div>
             <button onClick={() => setStage('capture')} style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-              Try Again
+              {tc('cfo_receipts.btnTryAgain')}
             </button>
           </div>
         )}

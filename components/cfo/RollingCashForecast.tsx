@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface WeekRow {
   label: string
@@ -46,6 +47,7 @@ function fmtLbl(d: Date): string {
 }
 
 export default function RollingCashForecast({ dailyCashflow, cashBalance, monthlyFixed, currencySymbol: sym, onAsk }: Props) {
+  const { tc } = useLang()
   const [receivables, setReceivables] = useState<any[]>([])
   const [selectedWeek, setSelectedWeek] = useState<string | null>(null)
 
@@ -92,7 +94,7 @@ export default function RollingCashForecast({ dailyCashflow, cashBalance, monthl
     const due = new Date(item.due_date + 'T00:00:00')
     if (isNaN(due.getTime())) continue
     const key = weekKey(getMonday(due))
-    const entry = { name: item.counterparty || 'Unknown', amount: item.amount || 0 }
+    const entry = { name: item.counterparty || tc('cfo_rolling.unknown_counterparty'), amount: item.amount || 0 }
     if (item.type === 'receivable') {
       if (!arByWeek.has(key)) arByWeek.set(key, [])
       arByWeek.get(key)!.push(entry)
@@ -171,23 +173,23 @@ export default function RollingCashForecast({ dailyCashflow, cashBalance, monthl
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>13-Week Cash Forecast</span>
-          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>4 actual · 9 projected</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_rolling.title')}</span>
+          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_rolling.subtitle')}</span>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: 10, fontSize: 10, color: 'var(--tx3)' }}>
-            <span><span style={{ color: '#22C55E' }}>■</span> Inflow</span>
-            <span><span style={{ color: '#EF4444' }}>■</span> Outflow</span>
-            <span><span style={{ color: '#6366F1' }}>—</span> Cash</span>
+            <span><span style={{ color: '#22C55E' }}>■</span> {tc('cfo_rolling.legend_inflow')}</span>
+            <span><span style={{ color: '#EF4444' }}>■</span> {tc('cfo_rolling.legend_outflow')}</span>
+            <span><span style={{ color: '#6366F1' }}>—</span> {tc('cfo_rolling.legend_cash')}</span>
           </div>
           {onAsk && (
             <button
               onClick={() => {
                 const lowestWeek = weeks.reduce((m, w) => w.endCash < m.endCash ? w : m)
-                onAsk(`My 13-week cash forecast shows: current balance ${fmt(cashBalance)}, lowest projected cash ${fmt(lowestWeek.endCash)} (week of ${lowestWeek.label}). Avg weekly inflow ${fmt(avgInflow)}, avg outflow ${fmt(avgOutflow)}. What should I do to improve my cash runway?`)
+                onAsk(tc('cfo_rolling.ask_prompt', { balance: fmt(cashBalance), lowest: fmt(lowestWeek.endCash), week: lowestWeek.label, avgIn: fmt(avgInflow), avgOut: fmt(avgOutflow) }))
               }}
               style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
-            >Ask AI</button>
+            >{tc('cfo_rolling.ask_ai')}</button>
           )}
         </div>
       </div>
@@ -270,8 +272,8 @@ export default function RollingCashForecast({ dailyCashflow, cashBalance, monthl
           })()}
 
           {/* Labels: Actual / Forecast */}
-          <text x={padL + gap + 1.5 * (barW + gap)} y={8} textAnchor="middle" fontSize={7} fill="var(--tx3)" fontStyle="italic">← Actual</text>
-          <text x={padL + gap + 6 * (barW + gap)} y={8} textAnchor="middle" fontSize={7} fill="var(--tx3)" fontStyle="italic">Forecast →</text>
+          <text x={padL + gap + 1.5 * (barW + gap)} y={8} textAnchor="middle" fontSize={7} fill="var(--tx3)" fontStyle="italic">{tc('cfo_rolling.axis_actual')}</text>
+          <text x={padL + gap + 6 * (barW + gap)} y={8} textAnchor="middle" fontSize={7} fill="var(--tx3)" fontStyle="italic">{tc('cfo_rolling.axis_forecast')}</text>
         </svg>
       </div>
 
@@ -279,24 +281,24 @@ export default function RollingCashForecast({ dailyCashflow, cashBalance, monthl
       {selectedWeekData && (
         <div style={{ margin: '0 18px 16px', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(99,102,241,.2)', background: 'rgba(99,102,241,.03)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>Week of {selectedWeekData.label}</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_rolling.week_of', { label: selectedWeekData.label })}</span>
             <button onClick={() => setSelectedWeek(null)} style={{ fontSize: 11, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>✕</button>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: selectedWeekData.items.length > 0 ? 10 : 0 }}>
-            <MiniMetric label="Inflow" value={fmt(selectedWeekData.inflow)} color="#22C55E" />
-            <MiniMetric label="Outflow" value={fmt(selectedWeekData.outflow)} color="#EF4444" />
-            <MiniMetric label="Net" value={fmt(selectedWeekData.net)} color={selectedWeekData.net >= 0 ? '#22C55E' : '#EF4444'} />
-            <MiniMetric label="Cash End" value={fmt(selectedWeekData.endCash)} color={cashColor(selectedWeekData.endCash)} />
+            <MiniMetric label={tc('cfo_rolling.metric_inflow')} value={fmt(selectedWeekData.inflow)} color="#22C55E" />
+            <MiniMetric label={tc('cfo_rolling.metric_outflow')} value={fmt(selectedWeekData.outflow)} color="#EF4444" />
+            <MiniMetric label={tc('cfo_rolling.metric_net')} value={fmt(selectedWeekData.net)} color={selectedWeekData.net >= 0 ? '#22C55E' : '#EF4444'} />
+            <MiniMetric label={tc('cfo_rolling.metric_cash_end')} value={fmt(selectedWeekData.endCash)} color={cashColor(selectedWeekData.endCash)} />
           </div>
           {selectedWeekData.items.length > 0 && (
             <div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Known Cash Flows</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('cfo_rolling.known_cash_flows')}</div>
               {selectedWeekData.items.map((item, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, padding: '4px 0', borderBottom: i < selectedWeekData.items.length - 1 ? '1px solid var(--b)' : undefined }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ width: 6, height: 6, borderRadius: '50%', background: item.type === 'ar' ? '#22C55E' : '#EF4444', display: 'inline-block', flexShrink: 0 }} />
                     <span style={{ color: 'var(--tx)' }}>{item.name}</span>
-                    <span style={{ fontSize: 9, color: 'var(--tx3)', background: 'var(--ev)', borderRadius: 4, padding: '1px 4px' }}>{item.type === 'ar' ? 'Receivable' : 'Payable'}</span>
+                    <span style={{ fontSize: 9, color: 'var(--tx3)', background: 'var(--ev)', borderRadius: 4, padding: '1px 4px' }}>{item.type === 'ar' ? tc('cfo_rolling.receivable') : tc('cfo_rolling.payable')}</span>
                   </div>
                   <span style={{ fontWeight: 600, color: item.type === 'ar' ? '#22C55E' : '#EF4444' }}>{item.type === 'ar' ? '+' : '-'}{fmt(item.amount)}</span>
                 </div>
@@ -304,23 +306,23 @@ export default function RollingCashForecast({ dailyCashflow, cashBalance, monthl
             </div>
           )}
           {!selectedWeekData.isActual && selectedWeekData.items.length === 0 && (
-            <div style={{ fontSize: 10, color: 'var(--tx3)', fontStyle: 'italic' }}>Forecast based on trailing weekly average. Add receivables/payables to include known flows.</div>
+            <div style={{ fontSize: 10, color: 'var(--tx3)', fontStyle: 'italic' }}>{tc('cfo_rolling.forecast_note')}</div>
           )}
         </div>
       )}
 
       {/* Summary row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--b)' }}>
-        <SummaryCell label="Current Cash" value={fmt(cashBalance)} color="#22C55E" />
-        <SummaryCell label="Avg Weekly In" value={fmt(avgInflow)} color="#22C55E" />
-        <SummaryCell label="Avg Weekly Out" value={fmt(avgOutflow)} color="#EF4444" />
-        <SummaryCell label="13-Wk Projection" value={fmt(weeks[weeks.length - 1].endCash)} color={cashColor(weeks[weeks.length - 1].endCash)} />
+        <SummaryCell label={tc('cfo_rolling.summary_current_cash')} value={fmt(cashBalance)} color="#22C55E" />
+        <SummaryCell label={tc('cfo_rolling.summary_avg_in')} value={fmt(avgInflow)} color="#22C55E" />
+        <SummaryCell label={tc('cfo_rolling.summary_avg_out')} value={fmt(avgOutflow)} color="#EF4444" />
+        <SummaryCell label={tc('cfo_rolling.summary_projection')} value={fmt(weeks[weeks.length - 1].endCash)} color={cashColor(weeks[weeks.length - 1].endCash)} />
       </div>
 
       {/* Low cash warnings */}
       {weeks.some(w => !w.isActual && w.endCash <= 0) && (
         <div style={{ padding: '10px 18px', borderTop: '1px solid var(--b)', background: 'rgba(239,68,68,.03)', fontSize: 11, color: '#EF4444', fontWeight: 500 }}>
-          ⚠ Cash goes negative in week of {weeks.find(w => !w.isActual && w.endCash <= 0)!.label} — action required
+          {tc('cfo_rolling.negative_warning', { week: weeks.find(w => !w.isActual && w.endCash <= 0)!.label })}
         </div>
       )}
     </div>

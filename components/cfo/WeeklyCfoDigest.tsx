@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Props {
   data: {
@@ -36,6 +37,7 @@ function getWeekRange(): string {
 }
 
 export default function WeeklyCfoDigest({ data, currencySymbol: sym, onAsk }: Props) {
+  const { tc } = useLang()
   const [emailSent, setEmailSent] = useState(false)
   const t = data.totals
   const c = data.comparison
@@ -50,50 +52,50 @@ export default function WeeklyCfoDigest({ data, currencySymbol: sym, onAsk }: Pr
     t.net_profit >= 0 ? 'healthy' : 'concern'
 
   const statusConfig = {
-    critical: { icon: '🔴', label: 'Needs Attention', color: '#EF4444', bg: 'rgba(239,68,68,.04)' },
-    warning: { icon: '🟡', label: 'Monitor', color: '#F59E0B', bg: 'rgba(245,158,11,.04)' },
-    healthy: { icon: '🟢', label: 'On Track', color: '#22C55E', bg: 'rgba(34,197,94,.04)' },
-    concern: { icon: '🟠', label: 'Review', color: '#F97316', bg: 'rgba(249,115,22,.04)' },
+    critical: { icon: '🔴', label: tc('cfo_weekly.statusNeedsAttention'), color: '#EF4444', bg: 'rgba(239,68,68,.04)' },
+    warning:  { icon: '🟡', label: tc('cfo_weekly.statusMonitor'),         color: '#F59E0B', bg: 'rgba(245,158,11,.04)' },
+    healthy:  { icon: '🟢', label: tc('cfo_weekly.statusOnTrack'),         color: '#22C55E', bg: 'rgba(34,197,94,.04)'  },
+    concern:  { icon: '🟠', label: tc('cfo_weekly.statusReview'),          color: '#F97316', bg: 'rgba(249,115,22,.04)' },
   }[overallStatus]
 
   const wins: string[] = []
   const concerns: string[] = []
 
-  if (revChange.dir === 'up' && revChange.pct > 5) wins.push(`Revenue up ${revChange.pct}% vs prior period`)
-  if (t.gross_margin_pct >= 35) wins.push(`Healthy gross margin at ${t.gross_margin_pct}%`)
-  if (t.net_profit > 0 && profitChange.dir === 'up') wins.push(`Net profit growing — ${fmt(t.net_profit, sym)} this period`)
-  if (data.inventory.stockout_rate < 15) wins.push(`Low stockout rate (${data.inventory.stockout_rate}%)`)
-  if (data.cash.runway_status === 'strong') wins.push(`Strong cash runway: ${data.cash.runway_months} months`)
+  if (revChange.dir === 'up' && revChange.pct > 5) wins.push(tc('cfo_weekly.winRevenueUp', { pct: revChange.pct }))
+  if (t.gross_margin_pct >= 35) wins.push(tc('cfo_weekly.winHealthyMargin', { pct: t.gross_margin_pct }))
+  if (t.net_profit > 0 && profitChange.dir === 'up') wins.push(tc('cfo_weekly.winNetProfitGrowing', { amount: fmt(t.net_profit, sym) }))
+  if (data.inventory.stockout_rate < 15) wins.push(tc('cfo_weekly.winLowStockout', { pct: data.inventory.stockout_rate }))
+  if (data.cash.runway_status === 'strong') wins.push(tc('cfo_weekly.winStrongRunway', { months: data.cash.runway_months ?? 0 }))
 
-  if (revChange.dir === 'down' && revChange.pct > 10) concerns.push(`Revenue down ${revChange.pct}% — investigate immediately`)
-  if (t.gross_margin_pct < 20) concerns.push(`Gross margin critically low at ${t.gross_margin_pct}%`)
-  if (t.net_profit < 0) concerns.push(`Operating at a net loss: ${fmt(t.net_profit, sym)}`)
-  if (data.inventory.stockout_rate > 40) concerns.push(`${data.inventory.stockout_rate}% stockout rate — revenue at risk`)
-  if (data.cash.runway_months != null && data.cash.runway_months < 3) concerns.push(`Cash runway below 3 months — ${data.cash.runway_months} months remaining`)
+  if (revChange.dir === 'down' && revChange.pct > 10) concerns.push(tc('cfo_weekly.concernRevenueDown', { pct: revChange.pct }))
+  if (t.gross_margin_pct < 20) concerns.push(tc('cfo_weekly.concernLowMargin', { pct: t.gross_margin_pct }))
+  if (t.net_profit < 0) concerns.push(tc('cfo_weekly.concernNetLoss', { amount: fmt(t.net_profit, sym) }))
+  if (data.inventory.stockout_rate > 40) concerns.push(tc('cfo_weekly.concernHighStockout', { pct: data.inventory.stockout_rate }))
+  if (data.cash.runway_months != null && data.cash.runway_months < 3) concerns.push(tc('cfo_weekly.concernLowRunway', { months: data.cash.runway_months }))
 
   criticalAlerts.forEach(a => concerns.push(a.message))
 
   const copyDigest = () => {
     const text = [
-      `WEEKLY CFO DIGEST — ${getWeekRange()}`,
-      `Status: ${statusConfig.label}`,
+      tc('cfo_weekly.copyTitle', { range: getWeekRange() }),
+      tc('cfo_weekly.copyStatus', { label: statusConfig.label }),
       '',
-      `FINANCIALS`,
-      `Revenue: ${fmt(t.revenue, sym)} (${revChange.dir === 'up' ? '+' : revChange.dir === 'down' ? '-' : ''}${revChange.pct}%)`,
-      `Gross Profit: ${fmt(t.gross_profit, sym)} (${t.gross_margin_pct}% margin)`,
-      `Net Profit: ${fmt(t.net_profit, sym)} (${t.net_margin_pct}% margin)`,
+      tc('cfo_weekly.copySectionFinancials'),
+      tc('cfo_weekly.copyRevenue', { value: fmt(t.revenue, sym), sign: revChange.dir === 'up' ? '+' : revChange.dir === 'down' ? '-' : '', pct: revChange.pct }),
+      tc('cfo_weekly.copyGrossProfit', { value: fmt(t.gross_profit, sym), margin: t.gross_margin_pct }),
+      tc('cfo_weekly.copyNetProfit', { value: fmt(t.net_profit, sym), margin: t.net_margin_pct }),
       '',
-      `CASH`,
-      `Balance: ${data.cash.balance > 0 ? fmt(data.cash.balance, sym) : 'Not set'}`,
-      `Runway: ${data.cash.runway_months != null ? `${data.cash.runway_months} months` : 'N/A'}`,
+      tc('cfo_weekly.copySectionCash'),
+      tc('cfo_weekly.copyCashBalance', { value: data.cash.balance > 0 ? fmt(data.cash.balance, sym) : tc('cfo_weekly.notSet') }),
+      tc('cfo_weekly.copyRunway', { value: data.cash.runway_months != null ? tc('cfo_weekly.runwayMonths', { n: data.cash.runway_months }) : tc('cfo_weekly.notAvailable') }),
       '',
-      `INVENTORY`,
-      `${data.inventory.total_products} products, ${data.inventory.low_or_oos} low/OOS (${data.inventory.stockout_rate}% stockout)`,
+      tc('cfo_weekly.copySectionInventory'),
+      tc('cfo_weekly.copyInventorySummary', { products: data.inventory.total_products, lowOos: data.inventory.low_or_oos, stockout: data.inventory.stockout_rate }),
       '',
-      wins.length > 0 ? `WINS\n${wins.map(w => `+ ${w}`).join('\n')}` : '',
-      concerns.length > 0 ? `\nCONCERNS\n${concerns.map(c => `! ${c}`).join('\n')}` : '',
+      wins.length > 0 ? tc('cfo_weekly.copyWinsSection') + '\n' + wins.map(w => `+ ${w}`).join('\n') : '',
+      concerns.length > 0 ? '\n' + tc('cfo_weekly.copyConcernsSection') + '\n' + concerns.map(c => `! ${c}`).join('\n') : '',
       '',
-      'Generated by AskBiz CFO',
+      tc('cfo_weekly.copyFooter'),
     ].filter(Boolean).join('\n')
 
     navigator.clipboard.writeText(text).then(() => {
@@ -108,23 +110,31 @@ export default function WeeklyCfoDigest({ data, currencySymbol: sym, onAsk }: Pr
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>Weekly CFO Digest</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_weekly.headerTitle')}</span>
           <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{getWeekRange()}</span>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           {onAsk && (
             <button
-              onClick={() => onAsk(`Generate a detailed weekly CFO narrative for my business. Revenue: ${fmt(t.revenue, sym)}, Gross profit: ${fmt(t.gross_profit, sym)} (${t.gross_margin_pct}%), Net profit: ${fmt(t.net_profit, sym)} (${t.net_margin_pct}%). ${concerns.length > 0 ? `Key concerns: ${concerns.join('; ')}` : 'No critical concerns.'} ${wins.length > 0 ? `Wins: ${wins.join('; ')}` : ''} Provide actionable recommendations for the coming week.`)}
+              onClick={() => onAsk(tc('cfo_weekly.aiNarrativePrompt', {
+                revenue: fmt(t.revenue, sym),
+                grossProfit: fmt(t.gross_profit, sym),
+                grossMargin: t.gross_margin_pct,
+                netProfit: fmt(t.net_profit, sym),
+                netMargin: t.net_margin_pct,
+                concerns: concerns.length > 0 ? tc('cfo_weekly.aiNarrativeKeyConcerns', { list: concerns.join('; ') }) : tc('cfo_weekly.aiNarrativeNoConcerns'),
+                wins: wins.length > 0 ? tc('cfo_weekly.aiNarrativeWins', { list: wins.join('; ') }) : '',
+              }))}
               style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
             >
-              AI Narrative
+              {tc('cfo_weekly.btnAiNarrative')}
             </button>
           )}
           <button
             onClick={copyDigest}
             style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >
-            {emailSent ? 'Copied!' : 'Copy Digest'}
+            {emailSent ? tc('cfo_weekly.btnCopied') : tc('cfo_weekly.btnCopyDigest')}
           </button>
         </div>
       </div>
@@ -135,25 +145,25 @@ export default function WeeklyCfoDigest({ data, currencySymbol: sym, onAsk }: Pr
         <div>
           <div style={{ fontSize: 13, fontWeight: 700, color: statusConfig.color }}>{statusConfig.label}</div>
           <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
-            {overallStatus === 'critical' ? `${criticalAlerts.length} critical issue${criticalAlerts.length > 1 ? 's' : ''} require immediate attention` :
-             overallStatus === 'warning' ? `${warningAlerts.length} area${warningAlerts.length > 1 ? 's' : ''} to monitor this week` :
-             overallStatus === 'healthy' ? 'Business metrics are within target ranges' :
-             'Review financials — operating at a loss this period'}
+            {overallStatus === 'critical' ? tc('cfo_weekly.bannerCritical', { n: criticalAlerts.length }) :
+             overallStatus === 'warning'  ? tc('cfo_weekly.bannerWarning',  { n: warningAlerts.length }) :
+             overallStatus === 'healthy'  ? tc('cfo_weekly.bannerHealthy') :
+             tc('cfo_weekly.bannerConcern')}
           </div>
         </div>
       </div>
 
       {/* Key metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 1, background: 'var(--b)' }}>
-        <DigestMetric label="Revenue" value={fmt(t.revenue, sym)} change={revChange} />
-        <DigestMetric label="Gross Profit" value={fmt(t.gross_profit, sym)} change={pctDiff(t.gross_profit, c.gross_profit)} sub={`${t.gross_margin_pct}% margin`} />
-        <DigestMetric label="Net Profit" value={fmt(t.net_profit, sym)} change={profitChange} sub={`${t.net_margin_pct}% margin`} highlight={t.net_profit < 0} />
+        <DigestMetric label={tc('cfo_weekly.metricRevenue')}    value={fmt(t.revenue, sym)}     change={revChange}                              />
+        <DigestMetric label={tc('cfo_weekly.metricGrossProfit')} value={fmt(t.gross_profit, sym)} change={pctDiff(t.gross_profit, c.gross_profit)} sub={tc('cfo_weekly.marginSub', { pct: t.gross_margin_pct })} />
+        <DigestMetric label={tc('cfo_weekly.metricNetProfit')}  value={fmt(t.net_profit, sym)}   change={profitChange}                           sub={tc('cfo_weekly.marginSub', { pct: t.net_margin_pct })} highlight={t.net_profit < 0} />
       </div>
 
       {/* Wins */}
       {wins.length > 0 && (
         <div style={{ padding: '12px 18px', borderTop: '1px solid var(--b)' }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: '#22C55E', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Wins This Period</div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#22C55E', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{tc('cfo_weekly.sectionWins')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {wins.map((w, i) => (
               <div key={i} style={{ display: 'flex', gap: 6, fontSize: 11, color: 'var(--tx2)' }}>
@@ -168,7 +178,7 @@ export default function WeeklyCfoDigest({ data, currencySymbol: sym, onAsk }: Pr
       {/* Concerns */}
       {concerns.length > 0 && (
         <div style={{ padding: '12px 18px', borderTop: '1px solid var(--b)', background: 'rgba(239,68,68,.02)' }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Action Items</div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{tc('cfo_weekly.sectionActionItems')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {concerns.map((c, i) => (
               <div key={i} style={{ display: 'flex', gap: 6, fontSize: 11, color: 'var(--tx2)' }}>
@@ -182,14 +192,14 @@ export default function WeeklyCfoDigest({ data, currencySymbol: sym, onAsk }: Pr
 
       {/* Quick stats footer */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 1, background: 'var(--b)', borderTop: '1px solid var(--b)' }}>
-        <MiniStat label="Cash" value={data.cash.balance > 0 ? fmt(data.cash.balance, sym) : '—'} />
-        <MiniStat label="Runway" value={data.cash.runway_months != null ? `${data.cash.runway_months}mo` : '—'} />
-        <MiniStat label="Products" value={`${data.inventory.total_products}`} />
-        <MiniStat label="Stockout" value={`${data.inventory.stockout_rate}%`} />
+        <MiniStat label={tc('cfo_weekly.statCash')}     value={data.cash.balance > 0 ? fmt(data.cash.balance, sym) : '—'} />
+        <MiniStat label={tc('cfo_weekly.statRunway')}   value={data.cash.runway_months != null ? `${data.cash.runway_months}mo` : '—'} />
+        <MiniStat label={tc('cfo_weekly.statProducts')} value={`${data.inventory.total_products}`} />
+        <MiniStat label={tc('cfo_weekly.statStockout')} value={`${data.inventory.stockout_rate}%`} />
       </div>
 
       <div style={{ padding: '8px 18px', fontSize: 9, color: 'var(--tx3)', textAlign: 'center', borderTop: '1px solid var(--b)' }}>
-        Auto-generated weekly digest · {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+        {tc('cfo_weekly.autoGeneratedFooter')} · {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
       </div>
     </div>
   )

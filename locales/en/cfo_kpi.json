@@ -1,0 +1,20 @@
+{
+  "title": "KPI Scorecard",
+  "onTargetBadge": "{met}/{total} on target",
+  "askAi": "Ask AI",
+  "askPrompt": "My KPI scorecard shows {met}/{total} on target. Off-target: {missed}. What should I prioritize to improve?",
+  "askPromptNone": "none",
+  "colKpi": "KPI",
+  "colTarget": "Target",
+  "colActual": "Actual",
+  "colStatus": "Status",
+  "colTrend": "Trend",
+  "labelGrossMargin": "Gross Margin",
+  "labelNetMargin": "Net Margin",
+  "labelRevenueGrowth": "Revenue Growth",
+  "labelStockoutRate": "Stockout Rate",
+  "labelCashRunway": "Cash Runway",
+  "labelHealthScore": "Health Score",
+  "editTargetTitle": "Click to edit target",
+  "footerHint": "Click any target value to customize. Targets are saved to your browser."
+}

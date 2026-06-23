@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface PnlMonth {
   month: string; revenue: number; cogs: number; fixed: number; net: number
@@ -29,6 +30,7 @@ function fmt(n: number, sym: string): string {
 type View = 'linked' | 'waterfall' | 'scenario'
 
 export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivablesSummary, currencySymbol: sym, onAsk }: Props) {
+  const { tc } = useLang()
   const [view, setView] = useState<View>('linked')
   const [revenueAdj, setRevenueAdj] = useState(0)  // % adjustment
   const [cogsAdj, setCogsAdj] = useState(0)
@@ -108,21 +110,21 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: INDIGO }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>3-Way Linked Forecast</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_threeway.title')}</span>
           <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: 'rgba(99,102,241,.08)', color: INDIGO }}>
-            P&L → Cash → Balance Sheet
+            {tc('cfo_threeway.badge')}
           </span>
         </div>
-        <button onClick={() => onAsk(`My 3-way linked forecast shows: ${projected.map(p => `${p.month}: Revenue ${fmt(p.revenue, sym)}, Net Profit ${fmt(p.netProfit, sym)}, Cash ${fmt(p.cashBalance, sym)}`).join('. ')}. Revenue growth trend: ${(forecast.avgRevGrowth * 100).toFixed(1)}% MoM. What risks should I watch for and how can I improve these projections?`)}
+        <button onClick={() => onAsk(tc('cfo_threeway.askPrompt', { summary: projected.map(p => tc('cfo_threeway.askMonthLine', { month: p.month, revenue: fmt(p.revenue, sym), net: fmt(p.netProfit, sym), cash: fmt(p.cashBalance, sym) })).join('. '), growth: (forecast.avgRevGrowth * 100).toFixed(1) }))}
           style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
-          Ask AI
+          {tc('cfo_threeway.askAi')}
         </button>
       </div>
 
       <div style={{ padding: '16px 18px' }}>
         {/* View tabs */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 16 }}>
-          {([['linked', 'Linked View'], ['waterfall', 'Cash Waterfall'], ['scenario', 'What-If']] as const).map(([id, label]) => (
+          {([['linked', tc('cfo_threeway.tabLinked')], ['waterfall', tc('cfo_threeway.tabWaterfall')], ['scenario', tc('cfo_threeway.tabScenario')]] as [View, string][]).map(([id, label]) => (
             <button key={id} onClick={() => setView(id)}
               style={{ fontSize: 11, fontWeight: view === id ? 600 : 400, padding: '5px 12px', borderRadius: 8, border: `1px solid ${view === id ? INDIGO + '30' : 'var(--b)'}`, background: view === id ? 'rgba(99,102,241,.06)' : 'transparent', color: view === id ? INDIGO : 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit' }}>
               {label}
@@ -141,20 +143,20 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
 
                 {/* P&L */}
                 <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--b)' }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: INDIGO, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>P&L</div>
-                  <Row label="Revenue" value={fmt(p.revenue, sym)} color="var(--tx)" />
-                  <Row label="COGS" value={fmt(-p.cogs, sym)} color={RED} />
-                  <Row label="Gross" value={fmt(p.grossProfit, sym)} color={p.grossProfit >= 0 ? GREEN : RED} />
-                  <Row label="Fixed" value={fmt(-p.fixed, sym)} color={RED} />
+                  <div style={{ fontSize: 9, fontWeight: 700, color: INDIGO, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('cfo_threeway.pnl')}</div>
+                  <Row label={tc('cfo_threeway.revenue')} value={fmt(p.revenue, sym)} color="var(--tx)" />
+                  <Row label={tc('cfo_threeway.cogs')} value={fmt(-p.cogs, sym)} color={RED} />
+                  <Row label={tc('cfo_threeway.gross')} value={fmt(p.grossProfit, sym)} color={p.grossProfit >= 0 ? GREEN : RED} />
+                  <Row label={tc('cfo_threeway.fixed')} value={fmt(-p.fixed, sym)} color={RED} />
                   <div style={{ borderTop: '1px solid var(--b)', paddingTop: 4, marginTop: 4 }}>
-                    <Row label="Net" value={fmt(p.netProfit, sym)} color={p.netProfit >= 0 ? GREEN : RED} bold />
+                    <Row label={tc('cfo_threeway.net')} value={fmt(p.netProfit, sym)} color={p.netProfit >= 0 ? GREEN : RED} bold />
                   </div>
                 </div>
 
                 {/* Cash Flow */}
                 <div style={{ padding: '8px 10px', borderBottom: '1px solid var(--b)' }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>Cash Flow</div>
-                  <Row label="Balance" value={fmt(p.cashBalance, sym)} color={p.cashBalance >= 0 ? GREEN : RED} bold />
+                  <div style={{ fontSize: 9, fontWeight: 700, color: GREEN, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('cfo_threeway.cashFlow')}</div>
+                  <Row label={tc('cfo_threeway.balance')} value={fmt(p.cashBalance, sym)} color={p.cashBalance >= 0 ? GREEN : RED} bold />
                   {/* Visual bar */}
                   <div style={{ marginTop: 4, height: 4, borderRadius: 2, background: 'var(--ev, #eee)', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${Math.min(100, (p.cashBalance / maxCash) * 100)}%`, borderRadius: 2, background: p.cashBalance >= 0 ? GREEN : RED, transition: 'width 300ms' }} />
@@ -163,12 +165,12 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
 
                 {/* Balance Sheet */}
                 <div style={{ padding: '8px 10px' }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: AMBER, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>Balance Sheet</div>
-                  <Row label="Cash" value={fmt(p.cashBalance, sym)} color="var(--tx)" />
-                  <Row label="Receivables" value={fmt(p.receivables, sym)} color="var(--tx)" />
-                  <Row label="Payables" value={fmt(-p.payables, sym)} color={RED} />
+                  <div style={{ fontSize: 9, fontWeight: 700, color: AMBER, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('cfo_threeway.balanceSheet')}</div>
+                  <Row label={tc('cfo_threeway.cash')} value={fmt(p.cashBalance, sym)} color="var(--tx)" />
+                  <Row label={tc('cfo_threeway.receivables')} value={fmt(p.receivables, sym)} color="var(--tx)" />
+                  <Row label={tc('cfo_threeway.payables')} value={fmt(-p.payables, sym)} color={RED} />
                   <div style={{ borderTop: '1px solid var(--b)', paddingTop: 4, marginTop: 4 }}>
-                    <Row label="Net Assets" value={fmt(p.netAssets, sym)} color={p.netAssets >= 0 ? GREEN : RED} bold />
+                    <Row label={tc('cfo_threeway.netAssets')} value={fmt(p.netAssets, sym)} color={p.netAssets >= 0 ? GREEN : RED} bold />
                   </div>
                 </div>
               </div>
@@ -180,7 +182,7 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
         {view === 'waterfall' && (
           <div>
             <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 14, lineHeight: 1.5 }}>
-              How cash flows from your P&L through working capital changes to your ending balance.
+              {tc('cfo_threeway.waterfallIntro')}
             </div>
             {projected.map((p, i) => {
               const prevCash = i === 0 ? cash.balance : projected[i - 1].cashBalance
@@ -192,14 +194,14 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
               return (
                 <div key={p.month} style={{ marginBottom: 12, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--ev, #f9f9f8)' }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 8 }}>{p.month}</div>
-                  <WaterfallRow label="Opening Cash" value={prevCash} sym={sym} />
-                  <WaterfallRow label="+ Net Profit" value={cashFromOps} sym={sym} positive />
-                  <WaterfallRow label="± Working Capital" value={-wcChange} sym={sym} />
+                  <WaterfallRow label={tc('cfo_threeway.openingCash')} value={prevCash} sym={sym} />
+                  <WaterfallRow label={tc('cfo_threeway.plusNetProfit')} value={cashFromOps} sym={sym} positive />
+                  <WaterfallRow label={tc('cfo_threeway.workingCapital')} value={-wcChange} sym={sym} />
                   <div style={{ borderTop: '2px solid var(--b)', marginTop: 6, paddingTop: 6 }}>
-                    <WaterfallRow label="= Closing Cash" value={p.cashBalance} sym={sym} bold />
+                    <WaterfallRow label={tc('cfo_threeway.closingCash')} value={p.cashBalance} sym={sym} bold />
                   </div>
                   <div style={{ marginTop: 6, fontSize: 10, color: netCashChange >= 0 ? GREEN : RED, fontWeight: 600 }}>
-                    {netCashChange >= 0 ? '↑' : '↓'} {fmt(Math.abs(netCashChange), sym)} net change
+                    {netCashChange >= 0 ? '↑' : '↓'} {tc('cfo_threeway.netChange', { amount: fmt(Math.abs(netCashChange), sym) })}
                   </div>
                 </div>
               )
@@ -211,17 +213,17 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
         {view === 'scenario' && (
           <div>
             <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 14, lineHeight: 1.5 }}>
-              Adjust assumptions and see how changes cascade through all three financial statements.
+              {tc('cfo_threeway.scenarioIntro')}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
-              <SliderRow label="Revenue growth" value={revenueAdj} onChange={setRevenueAdj} color={GREEN} />
-              <SliderRow label="COGS change" value={cogsAdj} onChange={setCogsAdj} color={RED} />
-              <SliderRow label="Fixed costs change" value={fixedAdj} onChange={setFixedAdj} color={AMBER} />
+              <SliderRow label={tc('cfo_threeway.revenueGrowth')} value={revenueAdj} onChange={setRevenueAdj} color={GREEN} />
+              <SliderRow label={tc('cfo_threeway.cogsChange')} value={cogsAdj} onChange={setCogsAdj} color={RED} />
+              <SliderRow label={tc('cfo_threeway.fixedCostsChange')} value={fixedAdj} onChange={setFixedAdj} color={AMBER} />
               {(revenueAdj !== 0 || cogsAdj !== 0 || fixedAdj !== 0) && (
                 <button onClick={() => { setRevenueAdj(0); setCogsAdj(0); setFixedAdj(0) }}
                   style={{ fontSize: 10, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0, textAlign: 'left' }}>
-                  Reset to baseline →
+                  {tc('cfo_threeway.resetBaseline')}
                 </button>
               )}
             </div>
@@ -229,10 +231,10 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
             {/* Impact summary */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 1, background: 'var(--b)', borderRadius: 10, overflow: 'hidden', marginBottom: 12 }}>
               {[
-                ['Month 3 Revenue', fmt(projected[2].revenue, sym), INDIGO],
-                ['Month 3 Net Profit', fmt(projected[2].netProfit, sym), projected[2].netProfit >= 0 ? GREEN : RED],
-                ['Month 3 Cash', fmt(projected[2].cashBalance, sym), projected[2].cashBalance >= 0 ? GREEN : RED],
-                ['Month 3 Net Assets', fmt(projected[2].netAssets, sym), projected[2].netAssets >= 0 ? GREEN : RED],
+                [tc('cfo_threeway.month3Revenue'), fmt(projected[2].revenue, sym), INDIGO],
+                [tc('cfo_threeway.month3NetProfit'), fmt(projected[2].netProfit, sym), projected[2].netProfit >= 0 ? GREEN : RED],
+                [tc('cfo_threeway.month3Cash'), fmt(projected[2].cashBalance, sym), projected[2].cashBalance >= 0 ? GREEN : RED],
+                [tc('cfo_threeway.month3NetAssets'), fmt(projected[2].netAssets, sym), projected[2].netAssets >= 0 ? GREEN : RED],
               ].map(([label, value, color]) => (
                 <div key={label} style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
                   <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{label}</div>
@@ -243,15 +245,15 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
 
             {/* Cascade visualization */}
             <div style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--ev, #f9f9f8)' }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 8 }}>CASCADE EFFECT</div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 8 }}>{tc('cfo_threeway.cascadeEffect')}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                <CascadeChip label="Revenue" change={revenueAdj} color={GREEN} />
+                <CascadeChip label={tc('cfo_threeway.revenue')} change={revenueAdj} color={GREEN} />
                 <Arrow />
-                <CascadeChip label="Gross Profit" change={projected[2].grossProfit > 0 ? ((projected[2].grossProfit / projected[2].revenue) * 100 - totals.gross_margin_pct) : 0} color={INDIGO} />
+                <CascadeChip label={tc('cfo_threeway.grossProfit')} change={projected[2].grossProfit > 0 ? ((projected[2].grossProfit / projected[2].revenue) * 100 - totals.gross_margin_pct) : 0} color={INDIGO} />
                 <Arrow />
-                <CascadeChip label="Net Profit" change={totals.net_profit > 0 ? ((projected[2].netProfit - totals.net_profit) / totals.net_profit) * 100 : 0} color={projected[2].netProfit >= 0 ? GREEN : RED} />
+                <CascadeChip label={tc('cfo_threeway.netProfit')} change={totals.net_profit > 0 ? ((projected[2].netProfit - totals.net_profit) / totals.net_profit) * 100 : 0} color={projected[2].netProfit >= 0 ? GREEN : RED} />
                 <Arrow />
-                <CascadeChip label="Cash" change={cash.balance > 0 ? ((projected[2].cashBalance - cash.balance) / cash.balance) * 100 : 0} color={projected[2].cashBalance >= 0 ? GREEN : RED} />
+                <CascadeChip label={tc('cfo_threeway.cash')} change={cash.balance > 0 ? ((projected[2].cashBalance - cash.balance) / cash.balance) * 100 : 0} color={projected[2].cashBalance >= 0 ? GREEN : RED} />
               </div>
             </div>
           </div>
@@ -259,9 +261,9 @@ export default function ThreeWayForecast({ pnlMonthly, totals, cash, receivables
 
         {/* Link explanation */}
         <div style={{ marginTop: 14, padding: '10px 12px', borderRadius: 8, background: 'rgba(99,102,241,.04)', border: '1px solid rgba(99,102,241,.12)' }}>
-          <div style={{ fontSize: 10, color: INDIGO, fontWeight: 600, marginBottom: 4 }}>How the 3 statements connect</div>
+          <div style={{ fontSize: 10, color: INDIGO, fontWeight: 600, marginBottom: 4 }}>{tc('cfo_threeway.howConnectTitle')}</div>
           <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.5 }}>
-            P&L net profit feeds into cash flow. Cash flow is adjusted for working capital (when you collect revenue vs pay bills). The ending cash balance flows into the balance sheet alongside receivables and payables.
+            {tc('cfo_threeway.howConnectBody')}
           </div>
         </div>
       </div>

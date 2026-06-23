@@ -17,15 +17,32 @@ async function getPostWithFallback(slug: string): Promise<BlogPost | null> {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
+
+    // Use JSONB containment operator (@>) — more reliable than content->>slug text filter
     const { data, error } = await supabase
       .from('agent_content')
       .select('content, created_at')
       .eq('type', 'blog')
       .eq('status', 'published')
-      .filter('content->>slug', 'eq', slug)
-      .single()
+      .contains('content', { slug })
+      .maybeSingle()
 
-    if (error || !data) return null
+    if (error || !data) {
+      // Fallback: fetch recent published posts and match slug in JS
+      const { data: rows } = await supabase
+        .from('agent_content')
+        .select('content, created_at')
+        .eq('type', 'blog')
+        .eq('status', 'published')
+        .order('created_at', { ascending: false })
+        .limit(500)
+      const match = (rows || []).find((r: any) => r.content?.slug === slug)
+      if (!match) return null
+      return {
+        ...match.content,
+        publishDate: match.content.publishDate || match.created_at?.slice(0, 10),
+      }
+    }
 
     return {
       ...data.content,

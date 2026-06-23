@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface SourceData {
   source: string
@@ -41,6 +42,7 @@ function fmt(n: number, sym: string): string {
 }
 
 export default function SourceBreakdown({ sources, currencySymbol: sym, onAsk }: Props) {
+  const { tc } = useLang()
   const [expanded, setExpanded] = useState<string | null>(null)
 
   if (!sources.length) return null
@@ -52,15 +54,15 @@ export default function SourceBreakdown({ sources, currencySymbol: sym, onAsk }:
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>Revenue by Source</span>
-          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>({sources.length} channels)</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_sourcebreakdown.heading')}</span>
+          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_sourcebreakdown.channels', { n: sources.length })}</span>
         </div>
         {onAsk && (
           <button
-            onClick={() => onAsk(`Revenue by source: ${sources.map(s => `${s.label}: ${fmt(s.revenue, sym)} (${s.margin_pct}% margin)`).join(', ')}. Which channels should I focus on growing and which are underperforming?`)}
+            onClick={() => onAsk(tc('cfo_sourcebreakdown.askAiPrompt', { summary: sources.map(s => `${s.label}: ${fmt(s.revenue, sym)} (${s.margin_pct}% margin)`).join(', ') }))}
             style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >
-            Ask AI
+            {tc('cfo_sourcebreakdown.askAi')}
           </button>
         )}
       </div>
@@ -116,19 +118,19 @@ export default function SourceBreakdown({ sources, currencySymbol: sym, onAsk }:
                 <div style={{ width: 10, height: 10, borderRadius: 3, background: color, flexShrink: 0, marginRight: 10 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{s.label}</div>
-                  <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{s.orders} transactions · {s.pct_of_total}% of revenue</div>
+                  <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_sourcebreakdown.transactions', { n: s.orders, pct: s.pct_of_total })}</div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(s.revenue, sym)}</div>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: s.margin_pct >= 35 ? '#22C55E' : s.margin_pct >= 20 ? '#F59E0B' : '#EF4444' }}>{s.margin_pct}% margin</div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: s.margin_pct >= 35 ? '#22C55E' : s.margin_pct >= 20 ? '#F59E0B' : '#EF4444' }}>{tc('cfo_sourcebreakdown.marginPct', { n: s.margin_pct })}</div>
                 </div>
                 <span style={{ fontSize: 10, color: 'var(--tx3)', marginLeft: 8, transition: 'transform 120ms', transform: isExpanded ? 'rotate(90deg)' : 'none' }}>▶</span>
               </div>
               {isExpanded && (
                 <div style={{ padding: '8px 18px 12px 38px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, borderTop: '1px solid var(--b)', background: 'rgba(99,102,241,.02)' }}>
-                  <MiniMetric label="Revenue" value={fmt(s.revenue, sym)} color={color} />
-                  <MiniMetric label="COGS" value={fmt(s.cogs, sym)} color="#F97316" />
-                  <MiniMetric label="Gross Profit" value={fmt(s.gross_profit, sym)} color={s.gross_profit >= 0 ? '#22C55E' : '#EF4444'} />
+                  <MiniMetric label={tc('cfo_sourcebreakdown.metricRevenue')} value={fmt(s.revenue, sym)} color={color} />
+                  <MiniMetric label={tc('cfo_sourcebreakdown.metricCogs')} value={fmt(s.cogs, sym)} color="#F97316" />
+                  <MiniMetric label={tc('cfo_sourcebreakdown.metricGrossProfit')} value={fmt(s.gross_profit, sym)} color={s.gross_profit >= 0 ? '#22C55E' : '#EF4444'} />
                 </div>
               )}
             </div>

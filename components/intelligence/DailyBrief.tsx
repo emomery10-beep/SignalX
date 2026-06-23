@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Brief {
   improved: string
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export default function DailyBrief({ onAsk }: Props) {
+  const { tc } = useLang()
   const [brief, setBrief] = useState<Brief | null>(null)
   const [loading, setLoading] = useState(true)
   const [dismissed, setDismissed] = useState(false)
@@ -56,7 +58,7 @@ export default function DailyBrief({ onAsk }: Props) {
             </svg>
           </div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#6366F1' }}>Daily Brief</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#6366F1' }}>{tc('intel_dailybrief.title')}</div>
             <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{today}</div>
           </div>
         </div>
@@ -77,7 +79,7 @@ export default function DailyBrief({ onAsk }: Props) {
         <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {/* Improved */}
           <div
-            onClick={() => onAsk?.(`Tell me more about this improvement: ${brief.improved}`)}
+            onClick={() => onAsk?.(tc('intel_dailybrief.improvedPrompt', { detail: brief.improved }))}
             style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', borderRadius: 8, padding: '6px 8px', margin: '-6px -8px', transition: 'background 150ms' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(34,197,94,.06)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
@@ -88,7 +90,7 @@ export default function DailyBrief({ onAsk }: Props) {
 
           {/* Worsened */}
           <div
-            onClick={() => onAsk?.(`Explain this issue and what I should do: ${brief.worsened}`)}
+            onClick={() => onAsk?.(tc('intel_dailybrief.worsenedPrompt', { detail: brief.worsened }))}
             style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', borderRadius: 8, padding: '6px 8px', margin: '-6px -8px', transition: 'background 150ms' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,.04)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
@@ -105,13 +107,13 @@ export default function DailyBrief({ onAsk }: Props) {
           }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="2" strokeLinecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             <p style={{ fontSize: 12, fontWeight: 600, color: '#6366F1', margin: 0, flex: 1, lineHeight: 1.4 }}>
-              Today: {brief.action}
+              {tc('intel_dailybrief.todayPrefix')} {brief.action}
             </p>
             {onAsk && (
               <button
                 onClick={() => onAsk(brief.action)}
                 style={{ fontSize: 11, color: '#6366F1', background: 'transparent', border: '1px solid rgba(99,102,241,.3)', borderRadius: 6, padding: '3px 9px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
-                Ask AskBiz
+                {tc('intel_dailybrief.askAskBiz')}
               </button>
             )}
           </div>

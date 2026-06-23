@@ -1,5 +1,7 @@
 'use client'
 
+import { useLang } from '@/components/LanguageProvider'
+
 interface KpiData {
   key: string
   label: string
@@ -60,6 +62,8 @@ function Sparkline({ data, color, width = 60, height = 22 }: { data: number[]; c
 }
 
 export default function FinancialSnapshot({ kpis, currencySymbol, loading, onNavigate }: Props) {
+  const { tc } = useLang()
+
   if (loading) {
     return (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
@@ -81,7 +85,7 @@ export default function FinancialSnapshot({ kpis, currencySymbol, loading, onNav
             ? isCurrency
               ? formatCurrency(kpi.value, currencySymbol)
               : `${kpi.value}`
-            : '—'
+            : tc('cfo_financialsnapshot.noValue')
         const targetTab = KPI_TAB_MAP[kpi.key]
         const isClickable = !!targetTab && !!onNavigate
 

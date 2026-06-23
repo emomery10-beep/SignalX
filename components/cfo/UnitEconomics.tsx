@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Props {
   totals: { revenue: number; cogs: number; gross_profit: number; fixed_costs: number; net_profit: number; gross_margin_pct: number; net_margin_pct: number }
@@ -20,6 +21,7 @@ function fmt(n: number, sym: string): string {
 }
 
 export default function UnitEconomics({ totals, marginByProduct, currencySymbol: sym, onAsk }: Props) {
+  const { tc } = useLang()
   const [cacInput, setCacInput] = useState<number | null>(null)
   const [ltvMonths, setLtvMonths] = useState(12)
   const [sortBy, setSortBy] = useState<'contribution' | 'margin' | 'revenue'>('contribution')
@@ -44,7 +46,7 @@ export default function UnitEconomics({ totals, marginByProduct, currencySymbol:
   const paybackMonths = monthlyGrossProfit > 0 ? cac / monthlyGrossProfit : 0
 
   const ltvColor = ltvCacRatio >= 3 ? GREEN : ltvCacRatio >= 1.5 ? AMBER : RED
-  const ltvLabel = ltvCacRatio >= 3 ? 'Healthy' : ltvCacRatio >= 1.5 ? 'Borderline' : 'Unprofitable'
+  const ltvLabel = ltvCacRatio >= 3 ? tc('cfo_uniteconomics.health_healthy') : ltvCacRatio >= 1.5 ? tc('cfo_uniteconomics.health_borderline') : tc('cfo_uniteconomics.health_unprofitable')
 
   // Product-level contribution sorted
   const sorted = [...products].sort((a, b) => {
@@ -60,7 +62,7 @@ export default function UnitEconomics({ totals, marginByProduct, currencySymbol:
   // Contribution waterfall categories
   const categories = new Map<string, { revenue: number; cogs: number; contribution: number; count: number }>()
   products.forEach(p => {
-    const cat = p.category || 'Uncategorized'
+    const cat = p.category || tc('cfo_uniteconomics.uncategorized')
     const existing = categories.get(cat) || { revenue: 0, cogs: 0, contribution: 0, count: 0 }
     existing.revenue += p.revenue
     existing.cogs += p.cogs
@@ -75,29 +77,38 @@ export default function UnitEconomics({ totals, marginByProduct, currencySymbol:
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: INDIGO }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>Unit Economics</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_uniteconomics.title')}</span>
           {ltvCacRatio > 0 && (
             <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
               background: `${ltvColor}15`, color: ltvColor }}>
-              LTV:CAC {ltvCacRatio.toFixed(1)}x · {ltvLabel}
+              {tc('cfo_uniteconomics.ltv_cac_badge', { ratio: ltvCacRatio.toFixed(1), label: ltvLabel })}
             </span>
           )}
         </div>
-        <button onClick={() => onAsk(`My unit economics: Avg revenue/unit ${fmt(avgRevenuePerUnit, sym)}, COGS/unit ${fmt(avgCogsPerUnit, sym)}, contribution/unit ${fmt(avgContributionPerUnit, sym)}, profit/unit ${fmt(avgProfitPerUnit, sym)}. LTV:CAC ratio ${ltvCacRatio.toFixed(1)}x, payback ${paybackMonths.toFixed(1)} months. ${heroes.length > 0 ? `Top products: ${heroes.map(h => h.name).join(', ')}.` : ''} ${zeros.length > 0 ? `Low-margin: ${zeros.map(z => z.name).join(', ')}.` : ''} How should I optimize my product mix for higher per-unit profitability?`)}
+        <button onClick={() => onAsk(tc('cfo_uniteconomics.ask_prompt', {
+            revPerUnit: fmt(avgRevenuePerUnit, sym),
+            cogsPerUnit: fmt(avgCogsPerUnit, sym),
+            contribPerUnit: fmt(avgContributionPerUnit, sym),
+            profitPerUnit: fmt(avgProfitPerUnit, sym),
+            ratio: ltvCacRatio.toFixed(1),
+            payback: paybackMonths.toFixed(1),
+            heroes: heroes.length > 0 ? tc('cfo_uniteconomics.ask_prompt_heroes', { names: heroes.map(h => h.name).join(', ') }) : '',
+            zeros: zeros.length > 0 ? tc('cfo_uniteconomics.ask_prompt_zeros', { names: zeros.map(z => z.name).join(', ') }) : '',
+          }))}
           style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
-          Ask AI
+          {tc('cfo_uniteconomics.ask_ai')}
         </button>
       </div>
 
       <div style={{ padding: '16px 18px' }}>
         {/* Per-unit breakdown */}
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Per-Unit Breakdown</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('cfo_uniteconomics.section_per_unit')}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--b)', borderRadius: 8, overflow: 'hidden', marginBottom: 16 }}>
           {([
-            ['Revenue', avgRevenuePerUnit, 'var(--tx)'],
-            ['COGS', avgCogsPerUnit, RED],
-            ['Contribution', avgContributionPerUnit, avgContributionPerUnit > 0 ? GREEN : RED],
-            ['Net Profit', avgProfitPerUnit, avgProfitPerUnit > 0 ? GREEN : RED],
+            [tc('cfo_uniteconomics.label_revenue'), avgRevenuePerUnit, 'var(--tx)'],
+            [tc('cfo_uniteconomics.label_cogs'), avgCogsPerUnit, RED],
+            [tc('cfo_uniteconomics.label_contribution'), avgContributionPerUnit, avgContributionPerUnit > 0 ? GREEN : RED],
+            [tc('cfo_uniteconomics.label_net_profit'), avgProfitPerUnit, avgProfitPerUnit > 0 ? GREEN : RED],
           ] as const).map(([label, value, color]) => (
             <div key={label} style={{ padding: '10px 6px', background: 'var(--sf)', textAlign: 'center' }}>
               <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{label}</div>
@@ -107,18 +118,18 @@ export default function UnitEconomics({ totals, marginByProduct, currencySymbol:
         </div>
 
         {/* LTV / CAC */}
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Customer Value</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('cfo_uniteconomics.section_customer_value')}</div>
         <div style={{ padding: 12, borderRadius: 8, border: '1px solid var(--b)', background: 'var(--ev, #f9f9f8)', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 10, color: 'var(--tx3)' }}>CAC {sym}</span>
+              <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_uniteconomics.cac_label', { sym })}</span>
               <input type="number" value={cacInput || ''} placeholder={cac.toFixed(0)}
                 onChange={e => setCacInput(Number(e.target.value) || null)}
                 style={{ width: 65, padding: '3px 6px', borderRadius: 5, border: '1px solid var(--b)', fontSize: 11, fontFamily: 'inherit', fontVariantNumeric: 'tabular-nums', background: 'var(--sf)', color: 'var(--tx)', outline: 'none', textAlign: 'right' }}
               />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 10, color: 'var(--tx3)' }}>LTV months</span>
+              <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_uniteconomics.ltv_months_label')}</span>
               <select value={ltvMonths} onChange={e => setLtvMonths(Number(e.target.value))}
                 style={{ padding: '3px 6px', borderRadius: 5, border: '1px solid var(--b)', fontSize: 11, fontFamily: 'inherit', background: 'var(--sf)', color: 'var(--tx)' }}>
                 {[3, 6, 12, 24, 36].map(m => <option key={m} value={m}>{m}mo</option>)}
@@ -128,17 +139,17 @@ export default function UnitEconomics({ totals, marginByProduct, currencySymbol:
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, textAlign: 'center' }}>
             <div>
               <div style={{ fontSize: 18, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{fmt(ltv, sym)}</div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>LTV ({ltvMonths}mo)</div>
+              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_uniteconomics.ltv_with_months', { months: ltvMonths })}</div>
             </div>
             <div>
               <div style={{ fontSize: 18, fontWeight: 700, color: ltvColor, fontVariantNumeric: 'tabular-nums' }}>{ltvCacRatio.toFixed(1)}x</div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>LTV:CAC ratio</div>
+              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_uniteconomics.ltv_cac_ratio')}</div>
             </div>
             <div>
               <div style={{ fontSize: 18, fontWeight: 700, color: paybackMonths <= 3 ? GREEN : paybackMonths <= 6 ? AMBER : RED, fontVariantNumeric: 'tabular-nums' }}>
                 {paybackMonths > 0 ? `${paybackMonths.toFixed(1)}mo` : '—'}
               </div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>CAC payback</div>
+              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_uniteconomics.cac_payback')}</div>
             </div>
           </div>
           {/* LTV:CAC visual bar */}
@@ -146,7 +157,7 @@ export default function UnitEconomics({ totals, marginByProduct, currencySymbol:
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--tx3)', marginBottom: 3 }}>
               <span>0x</span>
               <span style={{ color: AMBER, fontWeight: 600 }}>1.5x</span>
-              <span style={{ color: GREEN, fontWeight: 600 }}>3x+ (target)</span>
+              <span style={{ color: GREEN, fontWeight: 600 }}>{tc('cfo_uniteconomics.bar_target')}</span>
             </div>
             <div style={{ position: 'relative', height: 8, background: `linear-gradient(90deg, ${RED}, ${AMBER} 30%, ${GREEN} 60%, ${GREEN})`, borderRadius: 4, opacity: 0.3 }}>
               <div style={{
@@ -163,22 +174,22 @@ export default function UnitEconomics({ totals, marginByProduct, currencySymbol:
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
             {heroes.length > 0 && (
               <div style={{ padding: 10, borderRadius: 8, border: `1px solid ${GREEN}20`, background: `${GREEN}06` }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: GREEN, textTransform: 'uppercase', marginBottom: 6 }}>Top Performers</div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: GREEN, textTransform: 'uppercase', marginBottom: 6 }}>{tc('cfo_uniteconomics.section_top_performers')}</div>
                 {heroes.map(p => (
                   <div key={p.name} style={{ marginBottom: 4 }}>
                     <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', lineHeight: 1.3 }}>{p.name}</div>
-                    <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{p.margin_pct}% margin · {fmt(p.contribution, sym)}</div>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_uniteconomics.product_margin_contribution', { margin: p.margin_pct, contribution: fmt(p.contribution, sym) })}</div>
                   </div>
                 ))}
               </div>
             )}
             {zeros.length > 0 && (
               <div style={{ padding: 10, borderRadius: 8, border: `1px solid ${RED}20`, background: `${RED}06` }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: RED, textTransform: 'uppercase', marginBottom: 6 }}>Underperformers</div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: RED, textTransform: 'uppercase', marginBottom: 6 }}>{tc('cfo_uniteconomics.section_underperformers')}</div>
                 {zeros.map(p => (
                   <div key={p.name} style={{ marginBottom: 4 }}>
                     <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', lineHeight: 1.3 }}>{p.name}</div>
-                    <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{p.margin_pct}% margin · {fmt(p.contribution, sym)}</div>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_uniteconomics.product_margin_contribution', { margin: p.margin_pct, contribution: fmt(p.contribution, sym) })}</div>
                   </div>
                 ))}
               </div>
@@ -189,7 +200,7 @@ export default function UnitEconomics({ totals, marginByProduct, currencySymbol:
         {/* Category contribution */}
         {catArr.length > 1 && (
           <>
-            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Contribution by Category</div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('cfo_uniteconomics.section_contribution_by_category')}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
               {catArr.slice(0, 6).map(([cat, data]) => {
                 const pct = totals.revenue > 0 ? (data.contribution / totals.gross_profit) * 100 : 0
@@ -197,9 +208,9 @@ export default function UnitEconomics({ totals, marginByProduct, currencySymbol:
                 return (
                   <div key={cat}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-                      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--tx)' }}>{cat} ({data.count})</span>
+                      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--tx)' }}>{tc('cfo_uniteconomics.category_with_count', { category: cat, count: data.count })}</span>
                       <span style={{ fontSize: 11, fontWeight: 700, color: marginPct >= 40 ? GREEN : marginPct >= 20 ? AMBER : RED, fontVariantNumeric: 'tabular-nums' }}>
-                        {fmt(data.contribution, sym)} · {marginPct.toFixed(0)}%
+                        {tc('cfo_uniteconomics.category_value_margin', { contribution: fmt(data.contribution, sym), margin: marginPct.toFixed(0) })}
                       </span>
                     </div>
                     <div style={{ height: 5, background: 'var(--ev, #f3f2ef)', borderRadius: 3 }}>
@@ -216,14 +227,14 @@ export default function UnitEconomics({ totals, marginByProduct, currencySymbol:
         {hasProducts && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Product Detail</span>
+              <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{tc('cfo_uniteconomics.section_product_detail')}</span>
               <div style={{ display: 'flex', gap: 4 }}>
                 {(['contribution', 'margin', 'revenue'] as const).map(s => (
                   <button key={s} onClick={() => setSortBy(s)}
                     style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4,
                       background: sortBy === s ? 'rgba(99,102,241,.1)' : 'transparent',
                       color: sortBy === s ? INDIGO : 'var(--tx3)', border: 'none', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit', textTransform: 'capitalize' }}>
-                    {s}
+                    {tc('cfo_uniteconomics.sort_' + s)}
                   </button>
                 ))}
               </div>
@@ -232,10 +243,10 @@ export default function UnitEconomics({ totals, marginByProduct, currencySymbol:
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--b)' }}>
-                    <th style={{ textAlign: 'left', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>Product</th>
-                    <th style={{ textAlign: 'right', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>Revenue</th>
-                    <th style={{ textAlign: 'right', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>Margin</th>
-                    <th style={{ textAlign: 'right', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>Contrib.</th>
+                    <th style={{ textAlign: 'left', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('cfo_uniteconomics.col_product')}</th>
+                    <th style={{ textAlign: 'right', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('cfo_uniteconomics.col_revenue')}</th>
+                    <th style={{ textAlign: 'right', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('cfo_uniteconomics.col_margin')}</th>
+                    <th style={{ textAlign: 'right', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('cfo_uniteconomics.col_contribution')}</th>
                   </tr>
                 </thead>
                 <tbody>

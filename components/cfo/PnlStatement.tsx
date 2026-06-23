@@ -1,6 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { useLang } from '@/components/LanguageProvider'
+
+type Tc = (k: string, vars?: Record<string, string | number>) => string
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -126,7 +129,7 @@ function MiniSparkline({ data, color }: { data: number[]; color: string }) {
 /*  Waterfall Chart                                                    */
 /* ------------------------------------------------------------------ */
 
-function WaterfallChart({ totals, sym }: { totals: Props['totals']; sym: string }) {
+function WaterfallChart({ totals, sym, tc }: { totals: Props['totals']; sym: string; tc: Tc }) {
   const { revenue, cogs, gross_profit, fixed_costs, net_profit } = totals
   const maxVal = Math.max(revenue, gross_profit, Math.abs(net_profit), Math.abs(cogs), Math.abs(fixed_costs)) || 1
 
@@ -160,11 +163,11 @@ function WaterfallChart({ totals, sym }: { totals: Props['totals']; sym: string 
   const npH = scaleY(Math.abs(net_profit))
 
   const bars: BarDef[] = [
-    { label: 'Revenue', value: revenue, top: baseline - revH, height: revH, color: GREEN },
-    { label: 'COGS', value: -Math.abs(cogs), top: baseline - revH, height: cogsH, color: ORANGE },
-    { label: 'Gross Profit', value: gross_profit, top: baseline - gpH, height: gpH, color: gross_profit >= 0 ? GREEN : RED },
-    { label: 'Fixed Costs', value: -Math.abs(fixed_costs), top: baseline - gpH, height: fixedH, color: RED },
-    { label: 'Net Profit', value: net_profit, top: baseline - npH, height: npH, color: net_profit >= 0 ? GREEN : RED },
+    { label: tc('cfo_pnl.bar_revenue'), value: revenue, top: baseline - revH, height: revH, color: GREEN },
+    { label: tc('cfo_pnl.bar_cogs'), value: -Math.abs(cogs), top: baseline - revH, height: cogsH, color: ORANGE },
+    { label: tc('cfo_pnl.bar_gross_profit'), value: gross_profit, top: baseline - gpH, height: gpH, color: gross_profit >= 0 ? GREEN : RED },
+    { label: tc('cfo_pnl.bar_fixed_costs'), value: -Math.abs(fixed_costs), top: baseline - gpH, height: fixedH, color: RED },
+    { label: tc('cfo_pnl.bar_net_profit'), value: net_profit, top: baseline - npH, height: npH, color: net_profit >= 0 ? GREEN : RED },
   ]
 
   // For hanging bars: COGS hangs from top of Revenue, Fixed hangs from top of Gross Profit
@@ -216,7 +219,7 @@ function WaterfallChart({ totals, sym }: { totals: Props['totals']; sym: string 
 /*  Monthly Trend Chart                                                */
 /* ------------------------------------------------------------------ */
 
-function MonthlyTrendChart({ data, sym }: { data: NonNullable<Props['pnlMonthly']>; sym: string }) {
+function MonthlyTrendChart({ data, sym, tc }: { data: NonNullable<Props['pnlMonthly']>; sym: string; tc: Tc }) {
   const vbW = 600
   const vbH = 200
   const padL = 50
@@ -299,11 +302,11 @@ function MonthlyTrendChart({ data, sym }: { data: NonNullable<Props['pnlMonthly'
 
       {/* Legend */}
       <rect x={padL} y={4} width={8} height={8} rx={1} fill={GREEN} opacity={0.7} />
-      <text x={padL + 12} y={12} fontSize={8} fill="var(--tx3)">Revenue</text>
+      <text x={padL + 12} y={12} fontSize={8} fill="var(--tx3)">{tc('cfo_pnl.legend_revenue')}</text>
       <rect x={padL + 60} y={4} width={8} height={8} rx={1} fill={ORANGE} opacity={0.7} />
-      <text x={padL + 72} y={12} fontSize={8} fill="var(--tx3)">COGS</text>
+      <text x={padL + 72} y={12} fontSize={8} fill="var(--tx3)">{tc('cfo_pnl.legend_cogs')}</text>
       <line x1={padL + 115} y1={8} x2={padL + 130} y2={8} stroke={INDIGO} strokeWidth={1.5} />
-      <text x={padL + 134} y={12} fontSize={8} fill="var(--tx3)">Net Profit</text>
+      <text x={padL + 134} y={12} fontSize={8} fill="var(--tx3)">{tc('cfo_pnl.legend_net_profit')}</text>
     </svg>
   )
 }
@@ -313,6 +316,7 @@ function MonthlyTrendChart({ data, sym }: { data: NonNullable<Props['pnlMonthly'
 /* ------------------------------------------------------------------ */
 
 export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySource, currencySymbol: sym, onAsk }: Props) {
+  const { tc } = useLang()
   const [expandRevenue, setExpandRevenue] = useState(false)
   const [expandCogs, setExpandCogs] = useState(false)
 
@@ -397,13 +401,13 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
       <div style={{ ...CARD, paddingBottom: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--tx)' }}>Profit &amp; Loss Statement</h2>
+            <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: 'var(--tx)' }}>{tc('cfo_pnl.header_title')}</h2>
             <p style={{ fontSize: 11, color: 'var(--tx3)', margin: '4px 0 0' }}>
-              Current period vs prior period &middot; All figures in {sym}
+              {tc('cfo_pnl.header_subtitle', { sym })}
             </p>
           </div>
           <button
-            onClick={() => onAsk('Analyze my P&L statement. What are the key trends and areas of concern?')}
+            onClick={() => onAsk(tc('cfo_pnl.ask_ai_prompt'))}
             style={{
               fontSize: 12,
               fontWeight: 500,
@@ -416,13 +420,13 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
               whiteSpace: 'nowrap',
             }}
           >
-            Ask AI about this P&amp;L
+            {tc('cfo_pnl.ask_ai')}
           </button>
         </div>
 
         {/* ---- Waterfall ---- */}
         <div style={{ marginTop: 16 }}>
-          <WaterfallChart totals={totals} sym={sym} />
+          <WaterfallChart totals={totals} sym={sym} tc={tc} />
         </div>
       </div>
 
@@ -430,18 +434,18 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
       {/*  MAIN P&L TABLE                                               */}
       {/* ============================================================ */}
       <div style={CARD}>
-        <SectionBar color={INDIGO} label="Income Statement" />
+        <SectionBar color={INDIGO} label={tc('cfo_pnl.income_statement')} />
 
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th style={{ ...thStyle, width: '30%' }}>Line Item</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Current</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>% of Rev</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Prior Period</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Change</th>
-                <th style={{ ...thStyle, textAlign: 'center', width: 50 }}>Trend</th>
+                <th style={{ ...thStyle, width: '30%' }}>{tc('cfo_pnl.col_line_item')}</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>{tc('cfo_pnl.col_current')}</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>{tc('cfo_pnl.col_pct_of_rev')}</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>{tc('cfo_pnl.col_prior_period')}</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>{tc('cfo_pnl.col_change')}</th>
+                <th style={{ ...thStyle, textAlign: 'center', width: 50 }}>{tc('cfo_pnl.col_trend')}</th>
               </tr>
             </thead>
             <tbody>
@@ -452,7 +456,7 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
               >
                 <td style={{ ...tdStyle, fontWeight: 700, display: 'flex', alignItems: 'center' }}>
                   {pnlBySource?.length ? <ExpandIcon expanded={expandRevenue} /> : null}
-                  Revenue
+                  {tc('cfo_pnl.row_revenue')}
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700 }}>{fmt(totals.revenue, sym)}</td>
                 <td style={{ ...tdStyle, textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>100.0%</td>
@@ -474,7 +478,7 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
               >
                 <td style={{ ...tdStyle, color: ORANGE, display: 'flex', alignItems: 'center' }}>
                   {pnlBySource?.length ? <ExpandIcon expanded={expandCogs} /> : null}
-                  Cost of Goods Sold
+                  {tc('cfo_pnl.row_cogs')}
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', color: ORANGE }}>({fmt(totals.cogs, sym)})</td>
                 <td style={{ ...tdStyle, textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>
@@ -494,7 +498,7 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
               {/* ---------- GROSS PROFIT ---------- */}
               <tr>
                 <td style={{ ...tdStyle, fontWeight: 700, borderTop: `2px solid ${GREEN}`, paddingTop: 10 }}>
-                  Gross Profit
+                  {tc('cfo_pnl.row_gross_profit')}
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: totals.gross_profit >= 0 ? GREEN : RED, borderTop: `2px solid ${GREEN}`, paddingTop: 10 }}>
                   {fmt(totals.gross_profit, sym)}
@@ -513,7 +517,7 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
 
               {/* ---------- OPERATING EXPENSES ---------- */}
               <tr>
-                <td style={{ ...tdStyle, color: RED }}>Operating Expenses</td>
+                <td style={{ ...tdStyle, color: RED }}>{tc('cfo_pnl.row_operating_expenses')}</td>
                 <td style={{ ...tdStyle, textAlign: 'right', color: RED }}>({fmt(totals.fixed_costs, sym)})</td>
                 <td style={{ ...tdStyle, textAlign: 'right', fontSize: 11, color: 'var(--tx3)' }}>
                   {totals.revenue ? ((totals.fixed_costs / totals.revenue) * 100).toFixed(1) : '0.0'}%
@@ -526,7 +530,7 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
               {/* ---------- NET PROFIT ---------- */}
               <tr style={{ background: totals.net_profit >= 0 ? 'rgba(34,197,94,0.05)' : 'rgba(239,68,68,0.05)' }}>
                 <td style={{ ...tdStyle, fontWeight: 700, fontSize: 14, borderBottom: 'none' }}>
-                  Net Profit
+                  {tc('cfo_pnl.row_net_profit')}
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, fontSize: 14, color: totals.net_profit >= 0 ? GREEN : RED, borderBottom: 'none' }}>
                   {fmt(totals.net_profit, sym)}
@@ -552,22 +556,22 @@ export default function PnlStatement({ totals, comparison, pnlMonthly, pnlBySour
       {/* ============================================================ */}
       {pnlMonthly && pnlMonthly.length > 0 && (
         <div style={CARD}>
-          <SectionBar color={INDIGO} label="Monthly P&L Trend" />
+          <SectionBar color={INDIGO} label={tc('cfo_pnl.monthly_trend')} />
 
-          <MonthlyTrendChart data={pnlMonthly} sym={sym} />
+          <MonthlyTrendChart data={pnlMonthly} sym={sym} tc={tc} />
 
           {/* Monthly summary table */}
           <div style={{ overflowX: 'auto', marginTop: 12 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  <th style={{ ...thStyle, width: 80 }}>Month</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>Revenue</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>COGS</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>Fixed</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>Net</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>GM%</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>NM%</th>
+                  <th style={{ ...thStyle, width: 80 }}>{tc('cfo_pnl.col_month')}</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>{tc('cfo_pnl.col_revenue')}</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>{tc('cfo_pnl.col_cogs')}</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>{tc('cfo_pnl.col_fixed')}</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>{tc('cfo_pnl.col_net')}</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>{tc('cfo_pnl.col_gm_pct')}</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>{tc('cfo_pnl.col_nm_pct')}</th>
                 </tr>
               </thead>
               <tbody>

@@ -1,0 +1,10 @@
+{
+  "sectionTitle": "AI-inzichten",
+  "poweredBy": "mogelijk gemaakt door Claude",
+  "refreshBtn": "Vernieuwen",
+  "analyzingBtn": "Analyseren...",
+  "analyzingBody": "Uw financiën worden geanalyseerd...",
+  "noInsights": "Geen inzichten gegenereerd. Klik op Vernieuwen om het opnieuw te proberen.",
+  "askAi": "Vraag AI →",
+  "expandPrompt": "Breid dit CFO-inzicht uit: \"{title}\" — {body}. Geef me concrete vervolgstappen."
+}

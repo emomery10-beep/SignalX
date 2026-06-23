@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 import PeriodSelector from './PeriodSelector'
 import FinancialSnapshot from './FinancialSnapshot'
 import RevenueTrendChart from './RevenueTrendChart'
@@ -38,6 +39,8 @@ import ChurnAnalytics from './ChurnAnalytics'
 import FinancingReadiness from './FinancingReadiness'
 import ThreeWayForecast from './ThreeWayForecast'
 import RecoveredRevenue from './RecoveredRevenue'
+import MarketClimate from './MarketClimate'
+import { loadCostConfig, sumFixed } from './CostConfigDrawer'
 
 interface SnapshotData {
   currency_symbol: string
@@ -114,37 +117,51 @@ interface SnapshotData {
   }>
 }
 
-const SUB_TABS = [
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'pnl', label: 'P&L' },
-  { id: 'cashflow', label: 'Cash Flow' },
-  { id: 'margins', label: 'Margins' },
-  { id: 'inventory', label: 'Inventory' },
-  { id: 'receivables', label: 'Receivables' },
-  { id: 'expenses', label: 'Expenses' },
-  { id: 'budget', label: 'Budget' },
-  { id: 'forecasts', label: 'Forecasts' },
-  { id: 'tax', label: 'Tax' },
-  { id: 'reports', label: 'Reports' },
+const SUB_TAB_IDS = [
+  'dashboard', 'pnl', 'cashflow', 'margins', 'inventory', 'receivables',
+  'expenses', 'budget', 'forecasts', 'tax', 'reports',
 ] as const
 
-type SubTab = typeof SUB_TABS[number]['id']
+type SubTab = typeof SUB_TAB_IDS[number]
+
+const buildSubTabs = (tc: (k: string, vars?: Record<string, string | number>) => string): { id: SubTab; label: string }[] => [
+  { id: 'dashboard', label: tc('cfo_dashboard.tab_dashboard') },
+  { id: 'pnl', label: tc('cfo_dashboard.tab_pnl') },
+  { id: 'cashflow', label: tc('cfo_dashboard.tab_cashflow') },
+  { id: 'margins', label: tc('cfo_dashboard.tab_margins') },
+  { id: 'inventory', label: tc('cfo_dashboard.tab_inventory') },
+  { id: 'receivables', label: tc('cfo_dashboard.tab_receivables') },
+  { id: 'expenses', label: tc('cfo_dashboard.tab_expenses') },
+  { id: 'budget', label: tc('cfo_dashboard.tab_budget') },
+  { id: 'forecasts', label: tc('cfo_dashboard.tab_forecasts') },
+  { id: 'tax', label: tc('cfo_dashboard.tab_tax') },
+  { id: 'reports', label: tc('cfo_dashboard.tab_reports') },
+]
 
 interface Props {
   onAsk: (prompt: string) => void
 }
 
 export default function CfoDashboard({ onAsk }: Props) {
+  const { tc } = useLang()
+  const subTabs = buildSubTabs(tc)
   const [subTab, setSubTab] = useState<SubTab>('dashboard')
   const [period, setPeriod] = useState('this_month')
   const [data, setData] = useState<SnapshotData | null>(null)
   const [loading, setLoading] = useState(true)
   const [recTotals, setRecTotals] = useState<{ receivables: number; payables: number }>({ receivables: 0, payables: 0 })
   const [quickScanOpen, setQuickScanOpen] = useState(false)
+  const [costCfg, setCostCfg] = useState<{ cashBalance: number; monthlyFixed: number }>({ cashBalance: 0, monthlyFixed: 0 })
 
   const fetchData = useCallback((p: string) => {
     setLoading(true)
-    fetch(`/api/cfo/snapshot?period=${p}`)
+    const cfg = loadCostConfig()
+    const fixedTotal = sumFixed(cfg)
+    setCostCfg({ cashBalance: cfg.cashBalance, monthlyFixed: fixedTotal })
+    const url = `/api/cfo/snapshot?period=${p}` +
+      (cfg.cashBalance > 0 ? `&cash_balance=${cfg.cashBalance}` : '') +
+      (fixedTotal > 0 ? `&monthly_fixed_costs=${fixedTotal}` : '')
+    fetch(url)
       .then(r => r.ok ? r.json() : null)
       .then(d => setData(d))
       .catch(() => setData(null))
@@ -175,8 +192,8 @@ export default function CfoDashboard({ onAsk }: Props) {
       <div style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <div>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 2 }}>CFO</div>
-            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Financial intelligence · Real-time analytics · Actionable insights</div>
+            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 2 }}>{tc('cfo_dashboard.title')}</div>
+            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_dashboard.subtitle')}</div>
           </div>
           {!loading && data?.totals && data.totals.revenue > 0 && (
             <button
@@ -191,14 +208,14 @@ export default function CfoDashboard({ onAsk }: Props) {
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
               </svg>
-              Export Report
+              {tc('cfo_dashboard.export_report')}
             </button>
           )}
         </div>
 
         {/* Sub-tab navigation */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 12, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
-          {SUB_TABS.map(t => (
+          {subTabs.map(t => (
             <button
               key={t.id}
               onClick={() => setSubTab(t.id)}
@@ -224,6 +241,14 @@ export default function CfoDashboard({ onAsk }: Props) {
       {/* ─── DASHBOARD VIEW ─── */}
       {subTab === 'dashboard' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {/* Market Climate — today's macro + supply-chain conditions, personalised */}
+          <MarketClimate
+            currencySymbol={sym}
+            cashBalance={costCfg.cashBalance}
+            monthlyFixed={costCfg.monthlyFixed}
+            onAsk={onAsk}
+          />
+
           {/* KPI Snapshot */}
           <FinancialSnapshot
             kpis={data?.kpis || []}
@@ -243,13 +268,13 @@ export default function CfoDashboard({ onAsk }: Props) {
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ width: 3, height: 14, borderRadius: 2, background: '#22C55E' }} />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>P&L Summary</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('cfo_dashboard.pnl_summary')}</span>
                 </div>
                 <button
                   onClick={() => setSubTab('pnl')}
                   style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
                 >
-                  View full P&L →
+                  {tc('cfo_dashboard.view_full_pnl')}
                 </button>
               </div>
               <div style={{ padding: '12px 16px' }}>
@@ -257,17 +282,17 @@ export default function CfoDashboard({ onAsk }: Props) {
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--b)' }}>
                       <th style={{ textAlign: 'left', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}></th>
-                      <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>Amount</th>
-                      <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>% Rev</th>
-                      <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>vs Prior</th>
+                      <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_dashboard.col_amount')}</th>
+                      <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_dashboard.col_pct_rev')}</th>
+                      <th style={{ textAlign: 'right', padding: '6px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_dashboard.col_vs_prior')}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <PnlRow label="Revenue" amount={data.totals.revenue} pctRev={100} change={pctChange(data.totals.revenue, data.comparison.revenue)} sym={sym} bold />
-                    <PnlRow label="Cost of Goods" amount={-data.totals.cogs} pctRev={data.totals.revenue > 0 ? (data.totals.cogs / data.totals.revenue) * 100 : 0} change={pctChange(data.totals.cogs, data.comparison.cogs)} sym={sym} negative />
-                    <PnlRow label="Gross Profit" amount={data.totals.gross_profit} pctRev={data.totals.gross_margin_pct} change={pctChange(data.totals.gross_profit, data.comparison.gross_profit)} sym={sym} bold border />
-                    <PnlRow label="Fixed Costs" amount={-data.totals.fixed_costs} pctRev={data.totals.revenue > 0 ? (data.totals.fixed_costs / data.totals.revenue) * 100 : 0} sym={sym} negative />
-                    <PnlRow label="Net Profit" amount={data.totals.net_profit} pctRev={data.totals.net_margin_pct} change={pctChange(data.totals.net_profit, data.comparison.net_profit)} sym={sym} bold border highlight />
+                    <PnlRow label={tc('cfo_dashboard.row_revenue')} amount={data.totals.revenue} pctRev={100} change={pctChange(data.totals.revenue, data.comparison.revenue)} sym={sym} bold />
+                    <PnlRow label={tc('cfo_dashboard.row_cost_of_goods')} amount={-data.totals.cogs} pctRev={data.totals.revenue > 0 ? (data.totals.cogs / data.totals.revenue) * 100 : 0} change={pctChange(data.totals.cogs, data.comparison.cogs)} sym={sym} negative />
+                    <PnlRow label={tc('cfo_dashboard.row_gross_profit')} amount={data.totals.gross_profit} pctRev={data.totals.gross_margin_pct} change={pctChange(data.totals.gross_profit, data.comparison.gross_profit)} sym={sym} bold border />
+                    <PnlRow label={tc('cfo_dashboard.row_fixed_costs')} amount={-data.totals.fixed_costs} pctRev={data.totals.revenue > 0 ? (data.totals.fixed_costs / data.totals.revenue) * 100 : 0} sym={sym} negative />
+                    <PnlRow label={tc('cfo_dashboard.row_net_profit')} amount={data.totals.net_profit} pctRev={data.totals.net_margin_pct} change={pctChange(data.totals.net_profit, data.comparison.net_profit)} sym={sym} bold border highlight />
                   </tbody>
                 </table>
               </div>
@@ -290,39 +315,39 @@ export default function CfoDashboard({ onAsk }: Props) {
                 <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>EBITDA</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('cfo_dashboard.ebitda')}</span>
                     {ebitdaVal > 0 && (
                       <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
                         background: ebitdaMarginVal >= 20 ? 'rgba(34,197,94,.1)' : ebitdaMarginVal >= 10 ? 'rgba(245,158,11,.1)' : 'rgba(239,68,68,.1)',
                         color: ebitdaMarginVal >= 20 ? '#22C55E' : ebitdaMarginVal >= 10 ? '#F59E0B' : '#EF4444' }}>
-                        {ebitdaMarginVal.toFixed(1)}% margin
+                        {tc('cfo_dashboard.margin_badge', { n: ebitdaMarginVal.toFixed(1) })}
                       </span>
                     )}
                   </div>
                   <button onClick={() => setSubTab('pnl')}
                     style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
-                    Full EBITDA analysis →
+                    {tc('cfo_dashboard.full_ebitda_analysis')}
                   </button>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--b)' }}>
                   <div style={{ padding: '12px 14px', background: 'var(--sf)', textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 3 }}>EBITDA</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 3 }}>{tc('cfo_dashboard.ebitda_label')}</div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: ebitdaVal >= 0 ? '#22C55E' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{fmtCurrency(ebitdaVal)}</div>
                     {ebitdaChg != null && (
                       <div style={{ fontSize: 10, fontWeight: 600, color: ebitdaChg > 0 ? '#22C55E' : ebitdaChg < 0 ? '#EF4444' : 'var(--tx3)', marginTop: 2 }}>
-                        {ebitdaChg > 0 ? '▲' : ebitdaChg < 0 ? '▼' : '–'} {Math.abs(ebitdaChg).toFixed(1)}% vs prior
+                        {ebitdaChg > 0 ? '▲' : ebitdaChg < 0 ? '▼' : '–'} {tc('cfo_dashboard.vs_prior_pct', { n: Math.abs(ebitdaChg).toFixed(1) })}
                       </div>
                     )}
                   </div>
                   <div style={{ padding: '12px 14px', background: 'var(--sf)', textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 3 }}>Margin</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 3 }}>{tc('cfo_dashboard.margin')}</div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: ebitdaMarginVal >= 20 ? '#22C55E' : ebitdaMarginVal >= 10 ? '#F59E0B' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{ebitdaMarginVal.toFixed(1)}%</div>
-                    <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{ebitdaMarginVal >= 20 ? 'Healthy' : ebitdaMarginVal >= 10 ? 'Moderate' : 'Needs attention'}</div>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{ebitdaMarginVal >= 20 ? tc('cfo_dashboard.healthy') : ebitdaMarginVal >= 10 ? tc('cfo_dashboard.moderate') : tc('cfo_dashboard.needs_attention')}</div>
                   </div>
                   <div style={{ padding: '12px 14px', background: 'var(--sf)', textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 3 }}>Valuation (5x)</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx2)', marginBottom: 3 }}>{tc('cfo_dashboard.valuation_5x')}</div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: '#6366F1', fontVariantNumeric: 'tabular-nums' }}>{fmtCurrency(ebitdaVal * 5)}</div>
-                    <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>Avg. SME multiple</div>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_dashboard.avg_sme_multiple')}</div>
                   </div>
                 </div>
               </div>
@@ -402,9 +427,9 @@ export default function CfoDashboard({ onAsk }: Props) {
               />
             </>
           ) : loading ? (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>Loading P&L data...</div>
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('cfo_dashboard.loading_pnl')}</div>
           ) : (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>No data available. Connect a data source to see your P&L.</div>
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('cfo_dashboard.no_data_pnl')}</div>
           )}
         </div>
       )}
@@ -434,9 +459,10 @@ export default function CfoDashboard({ onAsk }: Props) {
               sourceBreakdown={data.source_breakdown}
               currencySymbol={sym}
               onAsk={onAsk}
+              onConfigSaved={() => fetchData(period)}
             />
           ) : loading ? (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>Loading cash flow data...</div>
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('cfo_dashboard.loading_cashflow')}</div>
           ) : null}
         </div>
       )}
@@ -455,9 +481,9 @@ export default function CfoDashboard({ onAsk }: Props) {
               onAsk={onAsk}
             />
           ) : loading ? (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>Loading margin data...</div>
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('cfo_dashboard.loading_margins')}</div>
           ) : (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>No data available. Connect a data source to analyze margins.</div>
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('cfo_dashboard.no_data_margins')}</div>
           )}
 
           {!loading && data?.margin_by_channel && data.margin_by_channel.length > 0 && (
@@ -507,6 +533,7 @@ export default function CfoDashboard({ onAsk }: Props) {
             countryCode={countryCode}
             onAsk={onAsk}
             onTotalsChange={(r, p) => setRecTotals({ receivables: r, payables: p })}
+            period={period}
           />
           {!loading && data?.totals && data.totals.revenue > 0 && (
             <WorkingCapitalCycle
@@ -551,9 +578,9 @@ export default function CfoDashboard({ onAsk }: Props) {
               onAsk={onAsk}
             />
           ) : loading ? (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>Loading...</div>
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('cfo_dashboard.loading')}</div>
           ) : (
-            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>Connect a data source to track budget vs actuals.</div>
+            <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('cfo_dashboard.no_data_budget')}</div>
           )}
         </div>
       )}
@@ -588,7 +615,7 @@ export default function CfoDashboard({ onAsk }: Props) {
             </>
           ) : (
             <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>
-              {loading ? 'Loading...' : 'Connect a data source to view forecasts.'}
+              {loading ? tc('cfo_dashboard.loading') : tc('cfo_dashboard.no_data_forecasts')}
             </div>
           )}
         </div>
@@ -608,7 +635,7 @@ export default function CfoDashboard({ onAsk }: Props) {
             />
           ) : (
             <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>
-              {loading ? 'Loading...' : 'Connect a data source to estimate tax obligations.'}
+              {loading ? tc('cfo_dashboard.loading') : tc('cfo_dashboard.no_data_tax')}
             </div>
           )}
         </div>
@@ -633,7 +660,7 @@ export default function CfoDashboard({ onAsk }: Props) {
         )}
         <button
           onClick={() => setQuickScanOpen(v => !v)}
-          title="Scan a receipt"
+          title={tc('cfo_dashboard.scan_a_receipt')}
           style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: '#6366F1', color: '#fff', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(99,102,241,.4)', transition: 'transform 150ms, box-shadow 150ms' }}
           onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(99,102,241,.5)' }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(99,102,241,.4)' }}
@@ -693,7 +720,7 @@ export default function CfoDashboard({ onAsk }: Props) {
             </>
           ) : (
             <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>
-              {loading ? 'Loading...' : 'Connect a data source to generate reports.'}
+              {loading ? tc('cfo_dashboard.loading') : tc('cfo_dashboard.no_data_reports')}
             </div>
           )}
         </div>
@@ -739,7 +766,7 @@ function PnlRow({ label, amount, pctRev, change, sym, bold, negative, border, hi
   )
 }
 
-function PnlFull({ data, sym, fmtCurrency, onAsk }: { data: SnapshotData; sym: string; fmtCurrency: (n: number) => string; onAsk: (s: string) => void }) {
+function PnlFull({ data, sym, fmtCurrency, onAsk, tc }: { data: SnapshotData; sym: string; fmtCurrency: (n: number) => string; onAsk: (s: string) => void; tc: (k: string, vars?: Record<string, string | number>) => string }) {
   const t = data.totals
   const c = data.comparison
   const pct = (curr: number, prev: number) => prev > 0 ? Math.round(((curr - prev) / prev) * 100) : null
@@ -748,14 +775,14 @@ function PnlFull({ data, sym, fmtCurrency, onAsk }: { data: SnapshotData; sym: s
     <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>Profit & Loss Statement</div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>Percentage-first · Variance highlighted</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_dashboard.pnl_statement_title')}</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{tc('cfo_dashboard.pnl_statement_subtitle')}</div>
         </div>
         <button
-          onClick={() => onAsk(`Analyze my P&L: Revenue ${fmtCurrency(t.revenue)}, COGS ${fmtCurrency(t.cogs)} (${Math.round((t.cogs / t.revenue) * 100)}%), Gross margin ${t.gross_margin_pct}%, Net profit ${fmtCurrency(t.net_profit)} (${t.net_margin_pct}%). What should I focus on improving?`)}
+          onClick={() => onAsk(tc('cfo_dashboard.ask_ai_pnl_prompt', { revenue: fmtCurrency(t.revenue), cogs: fmtCurrency(t.cogs), cogsPct: Math.round((t.cogs / t.revenue) * 100), grossMargin: t.gross_margin_pct, netProfit: fmtCurrency(t.net_profit), netMargin: t.net_margin_pct }))}
           style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
         >
-          Ask AI about this P&L
+          {tc('cfo_dashboard.ask_ai_pnl')}
         </button>
       </div>
 
@@ -764,28 +791,28 @@ function PnlFull({ data, sym, fmtCurrency, onAsk }: { data: SnapshotData; sym: s
           <thead>
             <tr style={{ borderBottom: '2px solid var(--b)' }}>
               <th style={{ textAlign: 'left', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, width: '35%' }}></th>
-              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>Current</th>
-              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>% of Rev</th>
-              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>Prior Period</th>
-              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>Change</th>
+              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_dashboard.col_current')}</th>
+              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_dashboard.col_pct_of_rev')}</th>
+              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_dashboard.col_prior_period')}</th>
+              <th style={{ textAlign: 'right', padding: '8px 0', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_dashboard.col_change')}</th>
             </tr>
           </thead>
           <tbody>
-            <FullPnlRow label="Revenue" current={t.revenue} pctRev={100} prior={c.revenue} change={pct(t.revenue, c.revenue)} sym={sym} bold />
-            <FullPnlRow label="Cost of Goods Sold" current={-t.cogs} pctRev={t.revenue > 0 ? (t.cogs / t.revenue) * 100 : 0} prior={-c.cogs} change={pct(t.cogs, c.cogs)} sym={sym} negative />
+            <FullPnlRow label={tc('cfo_dashboard.row_revenue')} current={t.revenue} pctRev={100} prior={c.revenue} change={pct(t.revenue, c.revenue)} sym={sym} bold />
+            <FullPnlRow label={tc('cfo_dashboard.row_cost_of_goods_sold')} current={-t.cogs} pctRev={t.revenue > 0 ? (t.cogs / t.revenue) * 100 : 0} prior={-c.cogs} change={pct(t.cogs, c.cogs)} sym={sym} negative />
 
             <tr style={{ borderTop: '2px solid var(--b)', background: 'rgba(34,197,94,.03)' }}>
-              <td style={{ padding: '9px 0', fontWeight: 700, fontSize: 13 }}>Gross Profit</td>
+              <td style={{ padding: '9px 0', fontWeight: 700, fontSize: 13 }}>{tc('cfo_dashboard.row_gross_profit')}</td>
               <td style={{ padding: '9px 0', textAlign: 'right', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmtCurrency(t.gross_profit)}</td>
               <td style={{ padding: '9px 0', textAlign: 'right', fontWeight: 700, color: t.gross_margin_pct >= 35 ? '#22C55E' : t.gross_margin_pct >= 20 ? '#F59E0B' : '#EF4444' }}>{t.gross_margin_pct}%</td>
               <td style={{ padding: '9px 0', textAlign: 'right', color: 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>{fmtCurrency(c.gross_profit)}</td>
               <td style={{ padding: '9px 0', textAlign: 'right' }}>{renderChange(pct(t.gross_profit, c.gross_profit))}</td>
             </tr>
 
-            <FullPnlRow label="Operating Expenses" current={-t.fixed_costs} pctRev={t.revenue > 0 ? (t.fixed_costs / t.revenue) * 100 : 0} sym={sym} negative />
+            <FullPnlRow label={tc('cfo_dashboard.row_operating_expenses')} current={-t.fixed_costs} pctRev={t.revenue > 0 ? (t.fixed_costs / t.revenue) * 100 : 0} sym={sym} negative />
 
             <tr style={{ borderTop: '2px solid var(--b)', background: t.net_profit >= 0 ? 'rgba(99,102,241,.04)' : 'rgba(239,68,68,.04)' }}>
-              <td style={{ padding: '10px 0', fontWeight: 800, fontSize: 14 }}>Net Profit</td>
+              <td style={{ padding: '10px 0', fontWeight: 800, fontSize: 14 }}>{tc('cfo_dashboard.row_net_profit')}</td>
               <td style={{ padding: '10px 0', textAlign: 'right', fontWeight: 800, fontSize: 14, color: t.net_profit >= 0 ? '#22C55E' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>
                 {fmtCurrency(t.net_profit)}
               </td>
@@ -849,21 +876,22 @@ function CashMetric({ label, value, color }: { label: string; value: string; col
   )
 }
 
-function WaterfallChart({ revenue, cogs, fixed, net, sym, fmtCurrency }: {
+function WaterfallChart({ revenue, cogs, fixed, net, sym, fmtCurrency, tc }: {
   revenue: number; cogs: number; fixed: number; net: number; sym: string; fmtCurrency: (n: number) => string
+  tc: (k: string, vars?: Record<string, string | number>) => string
 }) {
   const maxVal = Math.max(revenue, 1)
   const barH = 32
   const items = [
-    { label: 'Revenue', value: revenue, color: '#22C55E', width: (revenue / maxVal) * 100 },
-    { label: 'COGS', value: -cogs, color: '#F97316', width: (cogs / maxVal) * 100 },
-    { label: 'Fixed Costs', value: -fixed, color: '#EF4444', width: (fixed / maxVal) * 100 },
-    { label: 'Net Profit', value: net, color: net >= 0 ? '#22C55E' : '#EF4444', width: (Math.abs(net) / maxVal) * 100 },
+    { label: tc('cfo_dashboard.wf_revenue'), value: revenue, color: '#22C55E', width: (revenue / maxVal) * 100 },
+    { label: tc('cfo_dashboard.wf_cogs'), value: -cogs, color: '#F97316', width: (cogs / maxVal) * 100 },
+    { label: tc('cfo_dashboard.wf_fixed_costs'), value: -fixed, color: '#EF4444', width: (fixed / maxVal) * 100 },
+    { label: tc('cfo_dashboard.wf_net_profit'), value: net, color: net >= 0 ? '#22C55E' : '#EF4444', width: (Math.abs(net) / maxVal) * 100 },
   ]
 
   return (
     <div style={{ marginTop: 12 }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 10 }}>Cash Flow Waterfall</div>
+      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 10 }}>{tc('cfo_dashboard.cash_flow_waterfall')}</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {items.map(item => (
           <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

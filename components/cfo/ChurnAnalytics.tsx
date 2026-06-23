@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Props {
   totals: { revenue: number; cogs: number; gross_profit: number; fixed_costs: number; net_profit: number; gross_margin_pct: number; net_margin_pct: number }
@@ -51,6 +52,7 @@ function estimateCohorts(pnlMonthly: NonNullable<Props['pnlMonthly']>): CohortDa
 }
 
 export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, currencySymbol: sym, onAsk }: Props) {
+  const { tc } = useLang()
   const [view, setView] = useState<'overview' | 'cohort' | 'channel'>('overview')
 
   const cohorts = pnlMonthly ? estimateCohorts(pnlMonthly) : []
@@ -85,7 +87,7 @@ export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, cu
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: RED }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>Revenue Retention</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_churn.title')}</span>
           {hasCohorts && (
             <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
               background: `${nrrColor}15`, color: nrrColor }}>
@@ -93,9 +95,9 @@ export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, cu
             </span>
           )}
         </div>
-        <button onClick={() => onAsk(`My revenue retention metrics: Avg gross retention ${avgRetention.toFixed(1)}%, avg churn ${avgChurn.toFixed(1)}%, net revenue retention ${avgNetRetention.toFixed(1)}%. Monthly revenue at risk from churn: ${fmt(monthlyChurnRevenue, sym)}. Churn trend: ${churnTrend > 0 ? 'worsening' : 'improving'}. What strategies can reduce my revenue churn?`)}
+        <button onClick={() => onAsk(tc('cfo_churn.ask_prompt', { retention: avgRetention.toFixed(1), churn: avgChurn.toFixed(1), nrr: avgNetRetention.toFixed(1), atRisk: fmt(monthlyChurnRevenue, sym), trend: churnTrend > 0 ? tc('cfo_churn.trend_worsening') : tc('cfo_churn.trend_improving') }))}
           style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
-          Ask AI
+          {tc('cfo_churn.ask_ai')}
         </button>
       </div>
 
@@ -106,8 +108,8 @@ export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, cu
             <button key={v} onClick={() => setView(v)}
               style={{ fontSize: 10, padding: '4px 10px', borderRadius: 6,
                 background: view === v ? 'rgba(99,102,241,.1)' : 'transparent',
-                color: view === v ? INDIGO : 'var(--tx3)', border: 'none', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit', textTransform: 'capitalize' }}>
-              {v}
+                color: view === v ? INDIGO : 'var(--tx3)', border: 'none', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
+              {tc('cfo_churn.tab_' + v)}
             </button>
           ))}
         </div>
@@ -117,15 +119,15 @@ export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, cu
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--b)', borderRadius: 8, overflow: 'hidden', marginBottom: 14 }}>
               <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
-                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>Gross Retention</div>
+                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_churn.gross_retention')}</div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: avgRetention >= 90 ? GREEN : AMBER, fontVariantNumeric: 'tabular-nums' }}>{avgRetention.toFixed(1)}%</div>
               </div>
               <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
-                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>Monthly Churn</div>
+                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_churn.monthly_churn')}</div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: churnColor, fontVariantNumeric: 'tabular-nums' }}>{avgChurn.toFixed(1)}%</div>
               </div>
               <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
-                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>Net Retention</div>
+                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_churn.net_retention')}</div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: nrrColor, fontVariantNumeric: 'tabular-nums' }}>{avgNetRetention.toFixed(1)}%</div>
               </div>
             </div>
@@ -134,12 +136,12 @@ export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, cu
             <div style={{ padding: 12, borderRadius: 8, border: `1px solid ${RED}20`, background: `${RED}06`, marginBottom: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>Revenue at Risk</div>
-                  <div style={{ fontSize: 10, color: 'var(--tx3)' }}>Estimated monthly revenue lost to churn</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_churn.revenue_at_risk')}</div>
+                  <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_churn.revenue_at_risk_desc')}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: RED, fontVariantNumeric: 'tabular-nums' }}>{fmt(monthlyChurnRevenue, sym)}/mo</div>
-                  <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{fmt(annualChurnRevenue, sym)}/year</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: RED, fontVariantNumeric: 'tabular-nums' }}>{fmt(monthlyChurnRevenue, sym)}{tc('cfo_churn.per_month_suffix')}</div>
+                  <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{fmt(annualChurnRevenue, sym)}{tc('cfo_churn.per_year_suffix')}</div>
                 </div>
               </div>
             </div>
@@ -148,10 +150,10 @@ export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, cu
             {hasCohorts && (
               <>
                 <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-                  Churn Trend
+                  {tc('cfo_churn.churn_trend')}
                   {churnTrend !== 0 && (
                     <span style={{ marginLeft: 6, color: churnTrend > 0 ? RED : GREEN, fontWeight: 700 }}>
-                      {churnTrend > 0 ? '↑ worsening' : '↓ improving'}
+                      {churnTrend > 0 ? tc('cfo_churn.trend_up_worsening') : tc('cfo_churn.trend_down_improving')}
                     </span>
                   )}
                 </div>
@@ -174,19 +176,19 @@ export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, cu
 
             {/* Retention strategies */}
             <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 14, marginBottom: 8 }}>
-              Retention Strategies
+              {tc('cfo_churn.retention_strategies')}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {avgChurn > 5 && (
-                <InsightRow color={RED} label="High churn alert" value={`${avgChurn.toFixed(1)}% monthly — losing ${fmt(monthlyChurnRevenue, sym)} each month`} />
+                <InsightRow color={RED} label={tc('cfo_churn.high_churn_alert')} value={tc('cfo_churn.high_churn_value', { churn: avgChurn.toFixed(1), atRisk: fmt(monthlyChurnRevenue, sym) })} />
               )}
               {latestNetRetention < 100 && (
-                <InsightRow color={AMBER} label="Net revenue shrinking" value="Expansion revenue doesn't cover churn — focus on upselling existing customers" />
+                <InsightRow color={AMBER} label={tc('cfo_churn.net_shrinking')} value={tc('cfo_churn.net_shrinking_value')} />
               )}
               {latestNetRetention >= 110 && (
-                <InsightRow color={GREEN} label="Strong expansion" value={`${latestNetRetention.toFixed(0)}% NRR — existing customers are growing their spend`} />
+                <InsightRow color={GREEN} label={tc('cfo_churn.strong_expansion')} value={tc('cfo_churn.strong_expansion_value', { nrr: latestNetRetention.toFixed(0) })} />
               )}
-              <InsightRow color={INDIGO} label="Reduce churn by 1%" value={`Worth ${fmt(totals.revenue * 0.01, sym)}/mo (${fmt(totals.revenue * 0.01 * 12, sym)}/yr)`} />
+              <InsightRow color={INDIGO} label={tc('cfo_churn.reduce_churn')} value={tc('cfo_churn.reduce_churn_value', { monthly: fmt(totals.revenue * 0.01, sym), yearly: fmt(totals.revenue * 0.01 * 12, sym) })} />
             </div>
           </>
         )}
@@ -197,11 +199,11 @@ export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, cu
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--b)' }}>
-                  <th style={{ textAlign: 'left', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>Month</th>
-                  <th style={{ textAlign: 'right', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>Revenue</th>
-                  <th style={{ textAlign: 'right', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>Retention</th>
-                  <th style={{ textAlign: 'right', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>Churn</th>
-                  <th style={{ textAlign: 'right', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>NRR</th>
+                  <th style={{ textAlign: 'left', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('cfo_churn.col_month')}</th>
+                  <th style={{ textAlign: 'right', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('cfo_churn.col_revenue')}</th>
+                  <th style={{ textAlign: 'right', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('cfo_churn.col_retention')}</th>
+                  <th style={{ textAlign: 'right', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('cfo_churn.col_churn')}</th>
+                  <th style={{ textAlign: 'right', padding: '5px 0', fontSize: 9, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('cfo_churn.col_nrr')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -233,13 +235,13 @@ export default function ChurnAnalytics({ totals, pnlMonthly, marginByChannel, cu
                     <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(ch.revenue, sym)}</span>
                   </div>
                   <div style={{ display: 'flex', gap: 10, fontSize: 10, color: 'var(--tx3)' }}>
-                    <span>{ch.orders} orders</span>
-                    <span>{ch.margin_pct}% margin</span>
-                    <span style={{ color: riskColor, fontWeight: 600 }}>{share.toFixed(0)}% of revenue</span>
+                    <span>{tc('cfo_churn.orders', { n: ch.orders })}</span>
+                    <span>{tc('cfo_churn.margin', { n: ch.margin_pct })}</span>
+                    <span style={{ color: riskColor, fontWeight: 600 }}>{tc('cfo_churn.pct_of_revenue', { n: share.toFixed(0) })}</span>
                   </div>
                   {share > 50 && (
                     <div style={{ fontSize: 10, color: RED, fontWeight: 500, marginTop: 4 }}>
-                      Concentration risk: {share.toFixed(0)}% of revenue from one channel
+                      {tc('cfo_churn.concentration_risk', { n: share.toFixed(0) })}
                     </div>
                   )}
                 </div>

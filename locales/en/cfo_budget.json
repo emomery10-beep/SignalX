@@ -1,0 +1,44 @@
+{
+  "card_title": "Budget vs Actual",
+  "no_budget_badge": "No budget set",
+  "use_actuals_btn": "Use actuals as budget",
+  "ask_ai": "Ask AI",
+
+  "col_line_item": "Line Item",
+  "col_budget": "Budget",
+  "col_actual": "Actual",
+  "col_variance": "Variance",
+  "col_pct_var": "% Var",
+
+  "row_revenue": "Revenue",
+  "row_cogs": "Cost of Goods",
+  "row_gross_profit": "Gross Profit",
+  "row_operating_expenses": "Operating Expenses",
+  "row_net_profit": "Net Profit",
+
+  "set_budget_hint": "Click any Budget cell above to set your targets, or click “Use actuals as budget” to start from this period’s numbers.",
+  "set_label": "+ Set",
+
+  "attainment_title": "Budget Attainment",
+  "pct_of_budget": "{n}% of budget",
+  "actual_suffix": "{v} actual",
+  "budget_suffix": "{v} budget",
+
+  "monthly_trend_title": "Monthly Trend vs Budget",
+  "click_month_hint": "Click a month to drill in",
+  "col_month": "Month",
+  "col_bgt_rev": "Bgt Rev",
+  "col_gm": "GM%",
+  "col_net": "Net",
+  "col_bgt_net": "Bgt Net",
+
+  "detail_suffix": "Detail",
+  "detail_revenue": "Revenue",
+  "detail_cogs": "COGS",
+  "detail_gross_profit": "Gross Profit",
+  "detail_fixed_costs": "Fixed Costs",
+  "detail_net_profit": "Net Profit",
+  "budget_inline": "budget: {v}",
+
+  "ask_prompt": "My budget vs actual for this period: Revenue actual {revActual} vs budget {revBudget} ({revVar}). Net profit actual {netActual} vs budget {netBudget} ({netVar}). What’s causing the variances and what should I focus on?"
+}

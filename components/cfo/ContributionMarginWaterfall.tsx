@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Channel {
   source: string
@@ -52,6 +53,7 @@ function fmt(n: number, sym: string): string {
 }
 
 export default function ContributionMarginWaterfall({ channels, currencySymbol: sym, onAsk }: Props) {
+  const { tc } = useLang()
   const [platformFees, setPlatformFees] = useState<Record<string, number>>(() => ({ ...PLATFORM_FEES }))
   const [adSpendPct, setAdSpendPct] = useState<Record<string, number>>({})
   const [editingFees, setEditingFees] = useState(false)
@@ -121,29 +123,29 @@ export default function ContributionMarginWaterfall({ channels, currencySymbol: 
         <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 3, height: 14, borderRadius: 2, background: '#22C55E' }} />
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>Contribution Margin by Channel</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_contribution.title')}</span>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
             <button
               onClick={() => setEditingFees(!editingFees)}
               style={{ fontSize: 10, color: editingFees ? '#6366F1' : 'var(--tx3)', background: editingFees ? 'rgba(99,102,241,.08)' : 'transparent', border: editingFees ? '1px solid rgba(99,102,241,.3)' : '1px solid var(--b)', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
             >
-              {editingFees ? 'Done' : 'Edit Rates'}
+              {editingFees ? tc('cfo_contribution.done') : tc('cfo_contribution.edit_rates')}
             </button>
             {onAsk && (
               <button
-                onClick={() => onAsk(`My channel contribution margins: ${rows.map(r => `${r.label}: CM1 ${r.cm1Pct.toFixed(1)}%, CM2 (after ${(platformFees[r.source] ?? 0)}% platform fees) ${r.cm2Pct.toFixed(1)}%, CM3 (after ad spend) ${r.cm3Pct.toFixed(1)}%`).join('; ')}. Which channels are most profitable and what should I do?`)}
+                onClick={() => onAsk(tc('cfo_contribution.ask_prompt_intro') + rows.map(r => tc('cfo_contribution.ask_prompt_channel', { label: r.label, cm1: r.cm1Pct.toFixed(1), fee: (platformFees[r.source] ?? 0), cm2: r.cm2Pct.toFixed(1), cm3: r.cm3Pct.toFixed(1) })).join('; ') + tc('cfo_contribution.ask_prompt_question'))}
                 style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
-              >Ask AI</button>
+              >{tc('cfo_contribution.ask_ai')}</button>
             )}
           </div>
         </div>
 
         {/* CM level explanation */}
         <div style={{ padding: '8px 18px', borderBottom: '1px solid var(--b)', display: 'flex', gap: 16, fontSize: 10, color: 'var(--tx3)' }}>
-          <span><strong style={{ color: 'var(--tx)' }}>CM1</strong> = Revenue − COGS</span>
-          <span><strong style={{ color: 'var(--tx)' }}>CM2</strong> = CM1 − Platform fees</span>
-          <span><strong style={{ color: 'var(--tx)' }}>CM3</strong> = CM2 − Ad spend</span>
+          <span><strong style={{ color: 'var(--tx)' }}>CM1</strong> = {tc('cfo_contribution.cm1_formula')}</span>
+          <span><strong style={{ color: 'var(--tx)' }}>CM2</strong> = {tc('cfo_contribution.cm2_formula')}</span>
+          <span><strong style={{ color: 'var(--tx)' }}>CM3</strong> = {tc('cfo_contribution.cm3_formula')}</span>
         </div>
 
         {/* Table */}
@@ -151,14 +153,14 @@ export default function ContributionMarginWaterfall({ channels, currencySymbol: 
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--b)' }}>
-                <th style={{ textAlign: 'left', padding: '8px 18px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em' }}>Channel</th>
-                <th style={{ textAlign: 'right', padding: '8px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em' }}>Revenue</th>
-                <th style={{ textAlign: 'right', padding: '8px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em' }}>CM1</th>
-                {editingFees && <th style={{ textAlign: 'right', padding: '8px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>Plat. Fee</th>}
-                <th style={{ textAlign: 'right', padding: '8px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em' }}>CM2</th>
-                {editingFees && <th style={{ textAlign: 'right', padding: '8px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>Ad Spend</th>}
-                <th style={{ textAlign: 'right', padding: '8px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em' }}>CM3</th>
-                <th style={{ textAlign: 'right', padding: '8px 18px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>Visual</th>
+                <th style={{ textAlign: 'left', padding: '8px 18px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em' }}>{tc('cfo_contribution.col_channel')}</th>
+                <th style={{ textAlign: 'right', padding: '8px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em' }}>{tc('cfo_contribution.col_revenue')}</th>
+                <th style={{ textAlign: 'right', padding: '8px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em' }}>{tc('cfo_contribution.col_cm1')}</th>
+                {editingFees && <th style={{ textAlign: 'right', padding: '8px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_contribution.col_plat_fee')}</th>}
+                <th style={{ textAlign: 'right', padding: '8px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em' }}>{tc('cfo_contribution.col_cm2')}</th>
+                {editingFees && <th style={{ textAlign: 'right', padding: '8px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_contribution.col_ad_spend')}</th>}
+                <th style={{ textAlign: 'right', padding: '8px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10, textTransform: 'uppercase', letterSpacing: '.04em' }}>{tc('cfo_contribution.col_cm3')}</th>
+                <th style={{ textAlign: 'right', padding: '8px 18px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_contribution.col_visual')}</th>
               </tr>
             </thead>
             <tbody>
@@ -180,7 +182,7 @@ export default function ContributionMarginWaterfall({ channels, currencySymbol: 
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, display: 'inline-block', flexShrink: 0 }} />
                         <span style={{ fontWeight: 600, color: 'var(--tx)' }}>{row.label}</span>
-                        <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{row.orders} orders</span>
+                        <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_contribution.orders', { n: row.orders })}</span>
                       </div>
                     </td>
                     <td style={{ padding: '10px', textAlign: 'right', color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>
@@ -237,7 +239,7 @@ export default function ContributionMarginWaterfall({ channels, currencySymbol: 
             </tbody>
             <tfoot>
               <tr style={{ borderTop: '2px solid var(--b)', background: 'rgba(99,102,241,.02)' }}>
-                <td style={{ padding: '10px 18px', fontWeight: 700, color: 'var(--tx)', fontSize: 12 }}>Total</td>
+                <td style={{ padding: '10px 18px', fontWeight: 700, color: 'var(--tx)', fontSize: 12 }}>{tc('cfo_contribution.total')}</td>
                 <td style={{ padding: '10px', textAlign: 'right', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmt(totalRev, sym)}</td>
                 <td style={{ padding: '10px', textAlign: 'right', fontWeight: 700, color: pctColor(totalRev > 0 ? (totalCm1 / totalRev) * 100 : 0) }}>
                   {totalRev > 0 ? ((totalCm1 / totalRev) * 100).toFixed(1) : 0}%
@@ -260,17 +262,17 @@ export default function ContributionMarginWaterfall({ channels, currencySymbol: 
         {drillRow && (
           <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)', background: 'rgba(99,102,241,.02)' }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', marginBottom: 10 }}>
-              {drillRow.label} — Margin Waterfall
+              {tc('cfo_contribution.drill_title', { label: drillRow.label })}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {[
-                { label: 'Revenue', value: drillRow.revenue, pct: 100, color: '#6366F1' },
-                { label: '− COGS', value: -drillRow.cogs, pct: drillRow.revenue > 0 ? -(drillRow.cogs / drillRow.revenue) * 100 : 0, color: '#EF4444' },
-                { label: '= CM1 (Gross Profit)', value: drillRow.cm1, pct: drillRow.cm1Pct, color: '#22C55E', bold: true },
-                { label: `− Platform fees (${(platformFees[drillRow.source] ?? 0)}%)`, value: -drillRow.platformFeesAmt, pct: drillRow.revenue > 0 ? -(drillRow.platformFeesAmt / drillRow.revenue) * 100 : 0, color: '#F97316' },
-                { label: '= CM2 (After fees)', value: drillRow.cm2, pct: drillRow.cm2Pct, color: '#22C55E', bold: true },
-                { label: `− Ad spend (${(adSpendPct[drillRow.source] ?? 0)}%)`, value: -drillRow.adSpendAmt, pct: drillRow.revenue > 0 ? -(drillRow.adSpendAmt / drillRow.revenue) * 100 : 0, color: '#F97316' },
-                { label: '= CM3 (Contribution)', value: drillRow.cm3, pct: drillRow.cm3Pct, color: pctColor(drillRow.cm3Pct), bold: true },
+                { label: tc('cfo_contribution.step_revenue'), value: drillRow.revenue, pct: 100, color: '#6366F1' },
+                { label: tc('cfo_contribution.step_cogs'), value: -drillRow.cogs, pct: drillRow.revenue > 0 ? -(drillRow.cogs / drillRow.revenue) * 100 : 0, color: '#EF4444' },
+                { label: tc('cfo_contribution.step_cm1'), value: drillRow.cm1, pct: drillRow.cm1Pct, color: '#22C55E', bold: true },
+                { label: tc('cfo_contribution.step_platform_fees', { pct: (platformFees[drillRow.source] ?? 0) }), value: -drillRow.platformFeesAmt, pct: drillRow.revenue > 0 ? -(drillRow.platformFeesAmt / drillRow.revenue) * 100 : 0, color: '#F97316' },
+                { label: tc('cfo_contribution.step_cm2'), value: drillRow.cm2, pct: drillRow.cm2Pct, color: '#22C55E', bold: true },
+                { label: tc('cfo_contribution.step_ad_spend', { pct: (adSpendPct[drillRow.source] ?? 0) }), value: -drillRow.adSpendAmt, pct: drillRow.revenue > 0 ? -(drillRow.adSpendAmt / drillRow.revenue) * 100 : 0, color: '#F97316' },
+                { label: tc('cfo_contribution.step_cm3'), value: drillRow.cm3, pct: drillRow.cm3Pct, color: pctColor(drillRow.cm3Pct), bold: true },
               ].map((item, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ width: 180, fontSize: 11, fontWeight: item.bold ? 700 : 400, color: item.bold ? 'var(--tx)' : 'var(--tx3)', flexShrink: 0 }}>{item.label}</span>

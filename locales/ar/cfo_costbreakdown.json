@@ -1,0 +1,13 @@
+{
+  "cfo_costbreakdown.heading": "هيكل التكاليف",
+  "cfo_costbreakdown.askAi": "اسأل الذكاء الاصطناعي",
+  "cfo_costbreakdown.askAiPrompt": "هيكل تكاليفي: تكلفة البضاعة المباعة تمثل {cogsPct}% من الإيرادات ({cogsAmt})، والتكاليف الثابتة تمثل {fixedPct}% ({fixedAmt}). ما أبرز 3 مجالات يمكنني فيها خفض التكاليف دون الإضرار بالنمو؟",
+  "cfo_costbreakdown.totalCosts": "إجمالي التكاليف",
+  "cfo_costbreakdown.labelCogs": "تكلفة البضاعة المباعة",
+  "cfo_costbreakdown.labelFixed": "التكاليف الثابتة / التشغيلية",
+  "cfo_costbreakdown.ofRevenue": "من الإيرادات",
+  "cfo_costbreakdown.netProfit": "صافي الربح",
+  "cfo_costbreakdown.whereEveryGoes": "توزيع كل {sym}100",
+  "cfo_costbreakdown.profitSuffix": " ربح",
+  "cfo_costbreakdown.costsExceed": "التكاليف تتجاوز الإيرادات بمقدار {sym}{n} لكل {sym}100 مكتسب"
+}

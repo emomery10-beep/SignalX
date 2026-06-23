@@ -181,7 +181,7 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
       },
     },
 
-    // WebSite with SearchAction (for sitelinks search box)
+    // WebSite with SearchAction (enables sitelinks search box in Google/DDG)
     {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
@@ -190,6 +190,32 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
       name: 'AskBiz',
       description: 'AI business intelligence for SME founders',
       publisher: { '@id': 'https://askbiz.co/#org' },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: 'https://askbiz.co/search?q={search_term_string}',
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    },
+
+    // SiteNavigationElement — tells search engines which pages are primary nav
+    // This is the primary signal that generates sitelinks in Google/DuckDuckGo
+    {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'AskBiz Main Navigation',
+      itemListElement: [
+        { '@type': 'SiteNavigationElement', position: 1, name: 'Free Tools',    url: 'https://askbiz.co/free-tools',     description: 'Free calculators: landed cost, FX risk, VAT, profit margin, break-even' },
+        { '@type': 'SiteNavigationElement', position: 2, name: 'Point of Sale', url: 'https://askbiz.co/point-of-sale',  description: 'AI-powered point of sale system for retail and hospitality' },
+        { '@type': 'SiteNavigationElement', position: 3, name: 'Integrations',  url: 'https://askbiz.co/integrations',   description: 'Connect Shopify, Amazon, Stripe, QuickBooks and more' },
+        { '@type': 'SiteNavigationElement', position: 4, name: 'Blog',          url: 'https://askbiz.co/blog',           description: 'Business intelligence guides, SME strategy and market insights' },
+        { '@type': 'SiteNavigationElement', position: 5, name: 'Academy',       url: 'https://askbiz.co/academy',        description: '420+ free business intelligence courses and guides' },
+        { '@type': 'SiteNavigationElement', position: 6, name: 'Pricing',       url: 'https://askbiz.co/pricing',        description: 'AskBiz plans from free — Starter, Growth, Business' },
+        { '@type': 'SiteNavigationElement', position: 7, name: 'Help',          url: 'https://askbiz.co/help',           description: 'Help centre, FAQ and how-to guides' },
+        { '@type': 'SiteNavigationElement', position: 8, name: 'Compare',       url: 'https://askbiz.co/compare',        description: 'Compare AskBiz vs other business intelligence tools' },
+      ],
     },
 
     // FAQPage — targets featured snippets and AI Overviews

@@ -1,6 +1,9 @@
 'use client'
 import { useState } from 'react'
 import { getRegionConfig } from '@/lib/region-config'
+import { useLang } from '@/components/LanguageProvider'
+
+type TC = (k: string, vars?: Record<string, string | number>) => string
 
 interface Props {
   revenue: number
@@ -31,7 +34,7 @@ function fmt(n: number, sym: string): string {
   return `${sym}${Math.round(n).toLocaleString()}`
 }
 
-function computeCreditScore(props: Props): { total: number; maxTotal: number; grade: string; factors: ScoreFactor[] } {
+function computeCreditScore(props: Props, tc: TC): { total: number; maxTotal: number; grade: string; factors: ScoreFactor[] } {
   const factors: ScoreFactor[] = []
 
   // 1. Digital record quality (max 25)
@@ -42,12 +45,16 @@ function computeCreditScore(props: Props): { total: number; maxTotal: number; gr
   else if (props.daysWithData >= 90) digitalScore += 7
   else if (props.daysWithData >= 30) digitalScore += 4
   factors.push({
-    label: 'Digital Records',
+    label: tc('cfo_credit.factor_digital_label'),
     score: digitalScore,
     maxScore: 25,
-    detail: `${props.daysWithData} days of data${props.hasPos ? ', POS connected' : ''}${props.hasEcommerce ? ', e-commerce connected' : ''}`,
+    detail: tc('cfo_credit.factor_digital_detail', {
+      days: props.daysWithData,
+      pos: props.hasPos ? tc('cfo_credit.factor_digital_pos') : '',
+      ecom: props.hasEcommerce ? tc('cfo_credit.factor_digital_ecom') : '',
+    }),
     status: digitalScore >= 20 ? 'good' : digitalScore >= 12 ? 'fair' : 'poor',
-    tip: digitalScore < 20 ? 'Connect more data sources and maintain consistent digital records to improve this score.' : 'Strong digital footprint — lenders can verify your business activity.',
+    tip: digitalScore < 20 ? tc('cfo_credit.factor_digital_tip_low') : tc('cfo_credit.factor_digital_tip_high'),
   })
 
   // 2. Revenue consistency (max 20)
@@ -60,12 +67,12 @@ function computeCreditScore(props: Props): { total: number; maxTotal: number; gr
     else if (props.daysWithData >= 30) revenueScore += 4
   }
   factors.push({
-    label: 'Revenue Consistency',
+    label: tc('cfo_credit.factor_revenue_label'),
     score: Math.min(revenueScore, 20),
     maxScore: 20,
-    detail: `Monthly revenue: ${fmt(props.revenue, props.currencySymbol)}`,
+    detail: tc('cfo_credit.factor_revenue_detail', { revenue: fmt(props.revenue, props.currencySymbol) }),
     status: revenueScore >= 16 ? 'good' : revenueScore >= 8 ? 'fair' : 'poor',
-    tip: revenueScore < 16 ? 'Consistent monthly revenue improves lending decisions. Avoid cash-only periods.' : 'Revenue level and consistency look strong for lending.',
+    tip: revenueScore < 16 ? tc('cfo_credit.factor_revenue_tip_low') : tc('cfo_credit.factor_revenue_tip_high'),
   })
 
   // 3. Profitability (max 20)
@@ -77,12 +84,12 @@ function computeCreditScore(props: Props): { total: number; maxTotal: number; gr
   else if (props.netMarginPct >= 5) profitScore += 6
   else if (props.netMarginPct > 0) profitScore += 3
   factors.push({
-    label: 'Profitability',
+    label: tc('cfo_credit.factor_profit_label'),
     score: Math.min(profitScore, 20),
     maxScore: 20,
-    detail: `Gross margin ${props.grossMarginPct}%, Net margin ${props.netMarginPct}%`,
+    detail: tc('cfo_credit.factor_profit_detail', { gross: props.grossMarginPct, net: props.netMarginPct }),
     status: profitScore >= 16 ? 'good' : profitScore >= 8 ? 'fair' : 'poor',
-    tip: profitScore < 16 ? 'Lenders want to see healthy margins. Focus on COGS reduction and pricing optimization.' : 'Healthy margins signal strong ability to service debt.',
+    tip: profitScore < 16 ? tc('cfo_credit.factor_profit_tip_low') : tc('cfo_credit.factor_profit_tip_high'),
   })
 
   // 4. Cash management (max 20)
@@ -95,12 +102,15 @@ function computeCreditScore(props: Props): { total: number; maxTotal: number; gr
   if (props.stockoutRate < 20) cashScore += 6
   else if (props.stockoutRate < 40) cashScore += 3
   factors.push({
-    label: 'Cash Management',
+    label: tc('cfo_credit.factor_cash_label'),
     score: Math.min(cashScore, 20),
     maxScore: 20,
-    detail: `${props.runwayMonths != null ? `${props.runwayMonths}mo runway` : 'Runway not set'}, ${props.stockoutRate}% stockout`,
+    detail: tc('cfo_credit.factor_cash_detail', {
+      runway: props.runwayMonths != null ? tc('cfo_credit.factor_cash_runway', { months: props.runwayMonths }) : tc('cfo_credit.factor_cash_runway_unset'),
+      stockout: props.stockoutRate,
+    }),
     status: cashScore >= 14 ? 'good' : cashScore >= 8 ? 'fair' : 'poor',
-    tip: cashScore < 14 ? 'Build a cash reserve of 3-6 months expenses. Reduce stockouts to show operational control.' : 'Good cash position and inventory management.',
+    tip: cashScore < 14 ? tc('cfo_credit.factor_cash_tip_low') : tc('cfo_credit.factor_cash_tip_high'),
   })
 
   // 5. Compliance (max 15)
@@ -108,12 +118,12 @@ function computeCreditScore(props: Props): { total: number; maxTotal: number; gr
   if (props.hasPos) complianceScore += 5
   if (props.daysWithData >= 30) complianceScore += 5
   factors.push({
-    label: 'Tax & Compliance',
+    label: tc('cfo_credit.factor_compliance_label'),
     score: Math.min(complianceScore, 15),
     maxScore: 15,
-    detail: 'Based on tax compliance readiness and record-keeping consistency',
+    detail: tc('cfo_credit.factor_compliance_detail'),
     status: complianceScore >= 12 ? 'good' : complianceScore >= 7 ? 'fair' : 'poor',
-    tip: complianceScore < 12 ? 'Register with your tax authority and keep all receipts digital. Lenders check compliance status.' : 'Compliance posture looks solid for lending applications.',
+    tip: complianceScore < 12 ? tc('cfo_credit.factor_compliance_tip_low') : tc('cfo_credit.factor_compliance_tip_high'),
   })
 
   const total = factors.reduce((s, f) => s + f.score, 0)
@@ -125,8 +135,9 @@ function computeCreditScore(props: Props): { total: number; maxTotal: number; gr
 
 export default function CreditReadiness(props: Props) {
   const { currencySymbol: sym, countryCode, onAsk } = props
+  const { tc } = useLang()
   const [expanded, setExpanded] = useState<string | null>(null)
-  const result = computeCreditScore(props)
+  const result = computeCreditScore(props, tc)
   const region = getRegionConfig(countryCode)
 
   const gradeColor = result.grade === 'A' ? '#22C55E' : result.grade === 'B' ? '#22C55E' : result.grade === 'C' ? '#F59E0B' : '#EF4444'
@@ -138,15 +149,22 @@ export default function CreditReadiness(props: Props) {
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>Credit Readiness</span>
-          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>Lending eligibility score</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_credit.title')}</span>
+          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('cfo_credit.subtitle')}</span>
         </div>
         {onAsk && (
           <button
-            onClick={() => onAsk(`My credit readiness score is ${result.total}/${result.maxTotal} (Grade ${result.grade}). ${result.factors.filter(f => f.status === 'poor').map(f => `${f.label}: ${f.score}/${f.maxScore}`).join(', ')}. What should I improve first to qualify for business loans in ${region.countryName} (${region.lenders.slice(0, 3).map(l => l.name).join(', ')})?`)}
+            onClick={() => onAsk(tc('cfo_credit.ask_ai_prompt', {
+              total: result.total,
+              maxTotal: result.maxTotal,
+              grade: result.grade,
+              weakAreas: result.factors.filter(f => f.status === 'poor').map(f => f.label + ': ' + f.score + '/' + f.maxScore).join(', '),
+              country: region.countryName,
+              lenders: region.lenders.slice(0, 3).map(l => l.name).join(', '),
+            }))}
             style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >
-            Ask AI
+            {tc('cfo_credit.ask_ai')}
           </button>
         )}
       </div>
@@ -173,15 +191,15 @@ export default function CreditReadiness(props: Props) {
 
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', marginBottom: 4 }}>
-            {result.grade === 'A' ? 'Excellent — Ready for formal lending' :
-             result.grade === 'B' ? 'Good — Most lenders would consider' :
-             result.grade === 'C' ? 'Fair — Digital lenders available' :
-             'Needs Improvement — Build digital trail first'}
+            {result.grade === 'A' ? tc('cfo_credit.hero_grade_a') :
+             result.grade === 'B' ? tc('cfo_credit.hero_grade_b') :
+             result.grade === 'C' ? tc('cfo_credit.hero_grade_c') :
+             tc('cfo_credit.hero_grade_low')}
           </div>
           <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>
             {result.grade === 'A' || result.grade === 'B'
-              ? `Your digital records and financial performance are strong enough for ${region.lenders.filter(l => l.minGrade === 'B' || l.minGrade === 'A').map(l => l.name).join(', ')} products.`
-              : `Focus on the areas below to strengthen your profile. ${region.lenders.find(l => l.minGrade === 'C')?.name || 'Digital lenders'} may be available now.`}
+              ? tc('cfo_credit.hero_desc_high', { lenders: region.lenders.filter(l => l.minGrade === 'B' || l.minGrade === 'A').map(l => l.name).join(', ') })
+              : tc('cfo_credit.hero_desc_low', { lender: region.lenders.find(l => l.minGrade === 'C')?.name || tc('cfo_credit.hero_desc_low_fallback') })}
           </div>
         </div>
       </div>
@@ -219,7 +237,7 @@ export default function CreditReadiness(props: Props) {
                   <div style={{ marginBottom: 6 }}>{factor.detail}</div>
                   <div style={{ padding: '8px 12px', borderRadius: 8, background: factor.status === 'good' ? 'rgba(34,197,94,.04)' : 'rgba(245,158,11,.04)', border: `1px solid ${factor.status === 'good' ? 'rgba(34,197,94,.12)' : 'rgba(245,158,11,.12)'}` }}>
                     <span style={{ fontWeight: 600, color: factor.status === 'good' ? '#22C55E' : '#F59E0B' }}>
-                      {factor.status === 'good' ? 'Strength: ' : 'Improve: '}
+                      {factor.status === 'good' ? tc('cfo_credit.status_strength') : tc('cfo_credit.status_improve')}
                     </span>
                     {factor.tip}
                   </div>
@@ -232,70 +250,64 @@ export default function CreditReadiness(props: Props) {
 
       {/* DSCR & Debt Capacity */}
       <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)' }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>Debt Service Coverage</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>{tc('cfo_credit.dscr_section')}</div>
         {(() => {
           const annualNetIncome = props.revenue * 12 * (props.netMarginPct / 100)
           const estimatedDebtService = props.revenue * 12 * 0.1 // assume 10% of annual revenue as potential debt service
           const dscr = estimatedDebtService > 0 ? annualNetIncome / estimatedDebtService : 0
           const maxDebtService = annualNetIncome * 0.4 // max 40% of net income to debt
           const dscrColor = dscr >= 1.5 ? '#22C55E' : dscr >= 1.0 ? '#F59E0B' : '#EF4444'
-          const dscrLabel = dscr >= 1.5 ? 'Strong' : dscr >= 1.0 ? 'Adequate' : 'Weak'
+          const dscrLabel = dscr >= 1.5 ? tc('cfo_credit.dscr_strong') : dscr >= 1.0 ? tc('cfo_credit.dscr_adequate') : tc('cfo_credit.dscr_weak')
           return (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--b)', borderRadius: 8, overflow: 'hidden', marginBottom: 12 }}>
               <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
-                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 3 }}>DSCR</div>
+                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 3 }}>{tc('cfo_credit.dscr_label')}</div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: dscrColor, fontVariantNumeric: 'tabular-nums' }}>{dscr.toFixed(2)}x</div>
                 <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{dscrLabel}</div>
               </div>
               <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
-                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 3 }}>Max Debt Service</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(maxDebtService / 12, sym)}/mo</div>
-                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>40% of net income</div>
+                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 3 }}>{tc('cfo_credit.dscr_max_debt')}</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(maxDebtService / 12, sym)}{tc('cfo_credit.dscr_per_month')}</div>
+                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_credit.dscr_max_debt_note')}</div>
               </div>
               <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
-                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 3 }}>Borrowing Capacity</div>
+                <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--tx3)', marginBottom: 3 }}>{tc('cfo_credit.dscr_capacity')}</div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: '#6366F1', fontVariantNumeric: 'tabular-nums' }}>{fmt(maxDebtService * 3, sym)}</div>
-                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>Est. at ~3yr term</div>
+                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_credit.dscr_capacity_note')}</div>
               </div>
             </div>
           )
         })()}
         <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.4, padding: '6px 0' }}>
-          DSCR (Debt Service Coverage Ratio) measures ability to service debt. Lenders typically require 1.25x+. Estimates based on current net income.
+          {tc('cfo_credit.dscr_explainer')}
         </div>
       </div>
 
       {/* Financing comparison */}
       <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)' }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>Financing Options Comparison</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>{tc('cfo_credit.financing_section')}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {[
-            { type: 'Revenue-Based', rate: '6-12%', speed: '1-3 days', best: 'Seasonal businesses', minGrade: 'C' },
-            { type: 'Invoice Factoring', rate: '2-5%', speed: '24 hours', best: 'B2B with receivables', minGrade: 'C' },
-            { type: 'Term Loan', rate: '8-18%', speed: '1-4 weeks', best: 'Growth investment', minGrade: 'B' },
-            { type: 'Overdraft / LOC', rate: '10-20%', speed: '1-2 weeks', best: 'Cash flow gaps', minGrade: 'B' },
-            { type: 'Asset Finance', rate: '5-12%', speed: '1-2 weeks', best: 'Equipment purchase', minGrade: 'C' },
-          ].map(opt => {
+          {buildFinancingOptions(tc).map(opt => {
             const gradeOrder = ['F', 'D', 'C', 'B', 'A']
             const eligible = gradeOrder.indexOf(result.grade) >= gradeOrder.indexOf(opt.minGrade)
             return (
-              <div key={opt.type} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: 8, alignItems: 'center', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', opacity: eligible ? 1 : 0.5 }}>
+              <div key={opt.id} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: 8, alignItems: 'center', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--b)', opacity: eligible ? 1 : 0.5 }}>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{opt.type}</div>
                   <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{opt.best}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{opt.rate}</div>
-                  <div style={{ fontSize: 8, color: 'var(--tx3)' }}>Cost</div>
+                  <div style={{ fontSize: 8, color: 'var(--tx3)' }}>{tc('cfo_credit.financing_cost')}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx)' }}>{opt.speed}</div>
-                  <div style={{ fontSize: 8, color: 'var(--tx3)' }}>Speed</div>
+                  <div style={{ fontSize: 8, color: 'var(--tx3)' }}>{tc('cfo_credit.financing_speed')}</div>
                 </div>
                 <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
                   background: eligible ? 'rgba(34,197,94,.08)' : 'rgba(239,68,68,.06)',
                   color: eligible ? '#22C55E' : '#EF4444' }}>
-                  {eligible ? 'Eligible' : `Grade ${opt.minGrade}+`}
+                  {eligible ? tc('cfo_credit.financing_eligible') : tc('cfo_credit.financing_needs_grade', { grade: opt.minGrade })}
                 </span>
               </div>
             )
@@ -305,22 +317,32 @@ export default function CreditReadiness(props: Props) {
 
       {/* Lender products */}
       <div style={{ padding: '14px 18px', borderTop: '1px solid var(--b)', background: 'rgba(99,102,241,.02)' }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>Available Lending Products</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx2)', marginBottom: 8 }}>{tc('cfo_credit.lenders_section')}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {region.lenders.map(lender => (
-            <LenderRow key={lender.name} name={lender.name} range={lender.range} minGrade={lender.minGrade} currentGrade={result.grade} />
+            <LenderRow key={lender.name} name={lender.name} range={lender.range} minGrade={lender.minGrade} currentGrade={result.grade} tc={tc} />
           ))}
         </div>
       </div>
 
       <div style={{ padding: '10px 18px', borderTop: '1px solid var(--b)', fontSize: 10, color: 'var(--tx3)', lineHeight: 1.5 }}>
-        Score is indicative only — actual lending decisions depend on additional factors. {region.complianceTip}
+        {tc('cfo_credit.footer_disclaimer', { tip: region.complianceTip })}
       </div>
     </div>
   )
 }
 
-function LenderRow({ name, range, minGrade, currentGrade }: { name: string; range: string; minGrade: string; currentGrade: string }) {
+function buildFinancingOptions(tc: TC): { id: string; type: string; rate: string; speed: string; best: string; minGrade: string }[] {
+  return [
+    { id: 'revenue', type: tc('cfo_credit.financing_revenue_based'), rate: '6-12%', speed: '1-3 days', best: tc('cfo_credit.financing_revenue_based_best'), minGrade: 'C' },
+    { id: 'invoice', type: tc('cfo_credit.financing_invoice'), rate: '2-5%', speed: '24 hours', best: tc('cfo_credit.financing_invoice_best'), minGrade: 'C' },
+    { id: 'term', type: tc('cfo_credit.financing_term'), rate: '8-18%', speed: '1-4 weeks', best: tc('cfo_credit.financing_term_best'), minGrade: 'B' },
+    { id: 'overdraft', type: tc('cfo_credit.financing_overdraft'), rate: '10-20%', speed: '1-2 weeks', best: tc('cfo_credit.financing_overdraft_best'), minGrade: 'B' },
+    { id: 'asset', type: tc('cfo_credit.financing_asset'), rate: '5-12%', speed: '1-2 weeks', best: tc('cfo_credit.financing_asset_best'), minGrade: 'C' },
+  ]
+}
+
+function LenderRow({ name, range, minGrade, currentGrade, tc }: { name: string; range: string; minGrade: string; currentGrade: string; tc: TC }) {
   const gradeOrder = ['F', 'D', 'C', 'B', 'A']
   const eligible = gradeOrder.indexOf(currentGrade) >= gradeOrder.indexOf(minGrade)
 
@@ -335,7 +357,7 @@ function LenderRow({ name, range, minGrade, currentGrade }: { name: string; rang
         background: eligible ? 'rgba(34,197,94,.08)' : 'rgba(239,68,68,.06)',
         color: eligible ? '#22C55E' : '#EF4444',
       }}>
-        {eligible ? 'Likely eligible' : `Needs Grade ${minGrade}+`}
+        {eligible ? tc('cfo_credit.lender_likely_eligible') : tc('cfo_credit.lender_needs_grade', { grade: minGrade })}
       </span>
     </div>
   )

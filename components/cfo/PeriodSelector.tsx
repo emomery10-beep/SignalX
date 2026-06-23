@@ -1,14 +1,16 @@
 'use client'
 
-const PERIODS = [
-  { key: 'today', label: 'Today' },
-  { key: 'this_week', label: 'This Week' },
-  { key: 'this_month', label: 'This Month' },
-  { key: 'last_month', label: 'Last Month' },
-  { key: 'this_quarter', label: 'This Quarter' },
-  { key: 'ytd', label: 'YTD' },
-  { key: 'last_90', label: 'Last 90 Days' },
-] as const
+import { useLang } from '@/components/LanguageProvider'
+
+const buildPeriods = (tc: (k: string) => string) => [
+  { key: 'today', label: tc('cfo_period.today') },
+  { key: 'this_week', label: tc('cfo_period.thisWeek') },
+  { key: 'this_month', label: tc('cfo_period.thisMonth') },
+  { key: 'last_month', label: tc('cfo_period.lastMonth') },
+  { key: 'this_quarter', label: tc('cfo_period.thisQuarter') },
+  { key: 'ytd', label: tc('cfo_period.ytd') },
+  { key: 'last_90', label: tc('cfo_period.last90Days') },
+]
 
 interface Props {
   value: string
@@ -16,6 +18,9 @@ interface Props {
 }
 
 export default function PeriodSelector({ value, onChange }: Props) {
+  const { tc } = useLang()
+  const PERIODS = buildPeriods(tc)
+
   return (
     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
       {PERIODS.map(p => (

@@ -1,0 +1,45 @@
+{
+  "title": "Unit Economics",
+  "ltv_cac_badge": "LTV:CAC {ratio}x · {label}",
+  "ask_ai": "Ask AI",
+
+  "health_healthy": "Healthy",
+  "health_borderline": "Borderline",
+  "health_unprofitable": "Unprofitable",
+
+  "section_per_unit": "Per-Unit Breakdown",
+  "label_revenue": "Revenue",
+  "label_cogs": "COGS",
+  "label_contribution": "Contribution",
+  "label_net_profit": "Net Profit",
+
+  "section_customer_value": "Customer Value",
+  "cac_label": "CAC {sym}",
+  "ltv_months_label": "LTV months",
+  "ltv_with_months": "LTV ({months}mo)",
+  "ltv_cac_ratio": "LTV:CAC ratio",
+  "cac_payback": "CAC payback",
+  "bar_target": "3x+ (target)",
+
+  "section_top_performers": "Top Performers",
+  "section_underperformers": "Underperformers",
+  "product_margin_contribution": "{margin}% margin · {contribution}",
+
+  "section_contribution_by_category": "Contribution by Category",
+  "category_with_count": "{category} ({count})",
+  "category_value_margin": "{contribution} · {margin}%",
+  "uncategorized": "Uncategorized",
+
+  "section_product_detail": "Product Detail",
+  "sort_contribution": "Contribution",
+  "sort_margin": "Margin",
+  "sort_revenue": "Revenue",
+  "col_product": "Product",
+  "col_revenue": "Revenue",
+  "col_margin": "Margin",
+  "col_contribution": "Contrib.",
+
+  "ask_prompt": "My unit economics: Avg revenue/unit {revPerUnit}, COGS/unit {cogsPerUnit}, contribution/unit {contribPerUnit}, profit/unit {profitPerUnit}. LTV:CAC ratio {ratio}x, payback {payback} months. {heroes}{zeros}How should I optimize my product mix for higher per-unit profitability?",
+  "ask_prompt_heroes": "Top products: {names}. ",
+  "ask_prompt_zeros": "Low-margin: {names}. "
+}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { revalidatePath } from 'next/cache'
 
 export const runtime = 'nodejs'
 
@@ -90,16 +91,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `DB update failed: ${updateError.message}` }, { status: 500 })
   }
 
-  // Ping search engines so they pick up the new content
-  if (item.type === 'blog') {
-    const sitemapUrl = 'https://askbiz.co/sitemap.xml'
-    await Promise.allSettled([
-      fetch(`https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`),
-      fetch(`https://www.bing.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`),
-    ])
-  }
-
   const slug = (content?.slug) || item.content?.slug
+
+  // Invalidate ISR cache so the blog post is immediately available
+  if (item.type === 'blog' && slug) {
+    revalidatePath(`/blog/${slug}`)
+    revalidatePath('/blog')
+    revalidatePath('/sitemap.xml')
+  }
 
   return NextResponse.json({ success: true, action: 'approved', type: item.type, slug })
 }

@@ -2,6 +2,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { forecast, ForecastResult } from '@/lib/forecast'
 import ScenarioPlanner from './ScenarioPlanner'
+import { useLang } from '@/components/LanguageProvider'
 
 // ── Types ────────────────────────────────────────────────────
 interface PnlMonth {
@@ -40,13 +41,20 @@ interface Props {
 
 // ── Helpers ──────────────────────────────────────────────────
 const HORIZONS = [
-  { id: '1m', label: '1 Month', months: 1 },
-  { id: '3m', label: '3 Months', months: 3 },
-  { id: '6m', label: '6 Months', months: 6 },
-  { id: '12m', label: '12 Months', months: 12 },
+  { id: '1m', months: 1 },
+  { id: '3m', months: 3 },
+  { id: '6m', months: 6 },
+  { id: '12m', months: 12 },
 ] as const
 
 type HorizonId = typeof HORIZONS[number]['id']
+
+const buildHorizons = (tc: (k: string, vars?: Record<string, string | number>) => string) => [
+  { id: '1m' as const, label: tc('cfo_forecasts_tab.horizon_1m'), months: 1 },
+  { id: '3m' as const, label: tc('cfo_forecasts_tab.horizon_3m'), months: 3 },
+  { id: '6m' as const, label: tc('cfo_forecasts_tab.horizon_6m'), months: 6 },
+  { id: '12m' as const, label: tc('cfo_forecasts_tab.horizon_12m'), months: 12 },
+]
 
 const COLOURS = {
   actual: '#6366F1',
@@ -310,6 +318,8 @@ function WaterfallChart({ items, width, height, sym }: {
 
 // ── Main Component ───────────────────────────────────────────
 export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, currencySymbol: sym, onAsk }: Props) {
+  const { tc } = useLang()
+  const horizons = buildHorizons(tc)
   const [horizon, setHorizon] = useState<HorizonId>('3m')
   const months = HORIZONS.find(h => h.id === horizon)!.months
 
@@ -384,14 +394,14 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
   const waterfall = useMemo(() => {
     if (!totals || !cash) return null
     const items: { label: string; value: number; type: 'start' | 'add' | 'subtract' | 'total' }[] = [
-      { label: 'Starting Cash', value: cash.balance, type: 'start' },
-      { label: 'Revenue', value: totals.revenue, type: 'add' },
-      { label: 'COGS', value: -totals.cogs, type: 'subtract' },
-      { label: 'Fixed Costs', value: -totals.fixed_costs, type: 'subtract' },
-      { label: 'Ending Cash', value: cash.balance + totals.net_profit, type: 'total' },
+      { label: tc('cfo_forecasts_tab.waterfall_starting_cash'), value: cash.balance, type: 'start' },
+      { label: tc('cfo_forecasts_tab.waterfall_revenue'), value: totals.revenue, type: 'add' },
+      { label: tc('cfo_forecasts_tab.waterfall_cogs'), value: -totals.cogs, type: 'subtract' },
+      { label: tc('cfo_forecasts_tab.waterfall_fixed_costs'), value: -totals.fixed_costs, type: 'subtract' },
+      { label: tc('cfo_forecasts_tab.waterfall_ending_cash'), value: cash.balance + totals.net_profit, type: 'total' },
     ]
     return items
-  }, [totals, cash])
+  }, [totals, cash, tc])
 
   // ── Chart data for Revenue Forecast ────────────────────────
   const revChartData = useMemo(() => {
@@ -460,18 +470,17 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
     }
   }, [cashRunway])
 
-  // ── No data state ──────────────────────────────────────────
-  if (completedMonths.length < 2) {
-    // Show partial month hint if we have at least current month data
-    const hasCurrentOnly = currentPartial !== null && completedMonths.length < 1
+  // ── No data state — block only when zero completed months ────
+  if (completedMonths.length === 0) {
+    const hasCurrentOnly = currentPartial !== null
     return (
       <div style={{ padding: 40, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>
         <div style={{ fontSize: 32, marginBottom: 12 }}>📊</div>
-        <div style={{ fontWeight: 600, marginBottom: 6, color: 'var(--tx)' }}>Not enough data to forecast</div>
+        <div style={{ fontWeight: 600, marginBottom: 6, color: 'var(--tx)' }}>{tc('cfo_forecasts_tab.no_data_title')}</div>
         <div>
           {hasCurrentOnly
-            ? 'We can see your current month data — forecasting needs at least 1 completed prior month. Keep using your POS and this will unlock automatically.'
-            : 'At least 2 completed months of history is needed. Keep recording sales and forecasts will appear automatically.'}
+            ? tc('cfo_forecasts_tab.no_data_current_only')
+            : tc('cfo_forecasts_tab.no_data_none')}
         </div>
       </div>
     )
@@ -483,10 +492,18 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
+      {/* ── Limited data warning ─── */}
+      {completedMonths.length === 1 && (
+        <div style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.2)', fontSize: 11, color: '#92400e', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span>⚠️</span>
+          <span>{tc('cfo_forecasts_tab.limited_data_warning')}</span>
+        </div>
+      )}
+
       {/* ── Horizon selector ─── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600, marginRight: 4 }}>Forecast horizon:</span>
-        {HORIZONS.map(h => (
+        <span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 600, marginRight: 4 }}>{tc('cfo_forecasts_tab.horizon_label')}</span>
+        {horizons.map(h => (
           <button
             key={h.id}
             onClick={() => setHorizon(h.id)}
@@ -506,27 +523,27 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
         {[
           {
-            label: 'Projected Revenue',
+            label: tc('cfo_forecasts_tab.kpi_projected_revenue'),
             value: pnlForecast ? fmtMoney(pnlForecast.reduce((s, m) => s + m.revenue, 0), sym) : '-',
-            sub: `Next ${months}mo`,
+            sub: tc('cfo_forecasts_tab.kpi_next_months', { n: months }),
             color: '#6366F1',
           },
           {
-            label: 'Projected Net Profit',
+            label: tc('cfo_forecasts_tab.kpi_projected_net_profit'),
             value: pnlForecast ? fmtMoney(pnlForecast.reduce((s, m) => s + m.net, 0), sym) : '-',
-            sub: `Next ${months}mo`,
+            sub: tc('cfo_forecasts_tab.kpi_next_months', { n: months }),
             color: pnlForecast && pnlForecast.reduce((s, m) => s + m.net, 0) >= 0 ? '#22c55e' : '#ef4444',
           },
           {
-            label: 'Cash Runway',
-            value: runwayMonths != null ? `${runwayMonths} months` : 'Sustainable',
-            sub: runwayMonths != null ? 'Until cash runs out' : 'Cash positive',
+            label: tc('cfo_forecasts_tab.kpi_cash_runway'),
+            value: runwayMonths != null ? tc('cfo_forecasts_tab.kpi_runway_value', { n: runwayMonths }) : tc('cfo_forecasts_tab.kpi_runway_sustainable'),
+            sub: runwayMonths != null ? tc('cfo_forecasts_tab.kpi_runway_until_zero') : tc('cfo_forecasts_tab.kpi_runway_cash_positive'),
             color: runwayColor,
           },
           {
-            label: 'Forecast Accuracy',
+            label: tc('cfo_forecasts_tab.kpi_forecast_accuracy'),
             value: revForecast ? `${revForecast.accuracy.toFixed(0)}%` : '-',
-            sub: revForecast ? revForecast.method : 'N/A',
+            sub: revForecast ? revForecast.method : tc('cfo_forecasts_tab.kpi_accuracy_na'),
             color: '#d08a59',
           },
         ].map((kpi, i) => (
@@ -543,15 +560,15 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
         <div style={{ background: 'var(--sf, #fff)', border: '1px solid var(--b, #e8e6e1)', borderRadius: 12, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>Revenue Forecast</div>
-              <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Actuals vs projected with confidence band</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_forecasts_tab.revenue_forecast_title')}</div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_forecasts_tab.revenue_forecast_sub')}</div>
             </div>
             <div style={{ display: 'flex', gap: 12, fontSize: 10 }}>
               {[
-                { color: COLOURS.actual, label: 'Actual', dash: false },
-                { color: COLOURS.forecast, label: 'Forecast', dash: true },
-                { color: COLOURS.best, label: 'Best', dash: true },
-                { color: COLOURS.worst, label: 'Worst', dash: true },
+                { color: COLOURS.actual, label: tc('cfo_forecasts_tab.legend_actual'), dash: false },
+                { color: COLOURS.forecast, label: tc('cfo_forecasts_tab.legend_forecast'), dash: true },
+                { color: COLOURS.best, label: tc('cfo_forecasts_tab.legend_best'), dash: true },
+                { color: COLOURS.worst, label: tc('cfo_forecasts_tab.legend_worst'), dash: true },
               ].map(l => (
                 <span key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--tx3)' }}>
                   <span style={{ width: 16, height: 2, background: l.color, display: 'inline-block', borderRadius: 1, ...(l.dash ? { backgroundImage: `repeating-linear-gradient(90deg, ${l.color} 0 4px, transparent 4px 8px)`, background: 'none' } : {}) }} />
@@ -574,11 +591,11 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
         <div style={{ background: 'var(--sf, #fff)', border: '1px solid var(--b, #e8e6e1)', borderRadius: 12, padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>Cash Runway</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_forecasts_tab.cash_runway_title')}</div>
               <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
-                Projected cash balance based on forecasted P&L
+                {tc('cfo_forecasts_tab.cash_runway_sub')}
                 {runwayMonths != null && (
-                  <span style={{ color: runwayColor, fontWeight: 600 }}> — {runwayMonths} months until zero</span>
+                  <span style={{ color: runwayColor, fontWeight: 600 }}>{tc('cfo_forecasts_tab.cash_runway_until_zero', { n: runwayMonths })}</span>
                 )}
               </div>
             </div>
@@ -594,42 +611,42 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
       {pnlForecast && (
         <div style={{ background: 'var(--sf, #fff)', border: '1px solid var(--b, #e8e6e1)', borderRadius: 12, padding: 16, overflowX: 'auto' }}>
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>P&L Forecast</div>
-            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Projected income statement for the next {months} months</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_forecasts_tab.pnl_forecast_title')}</div>
+            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_forecasts_tab.pnl_forecast_sub', { n: months })}</div>
           </div>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
               <tr style={{ borderBottom: '2px solid var(--b, #e8e6e1)' }}>
-                <th style={{ textAlign: 'left', padding: '6px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>Line Item</th>
+                <th style={{ textAlign: 'left', padding: '6px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>{tc('cfo_forecasts_tab.table_line_item')}</th>
                 {/* Last 2 completed months + current partial */}
                 {completedMonths.slice(-2).map(m => (
                   <th key={m.month} style={{ textAlign: 'right', padding: '6px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>
                     {fmtMonthLabel(m.month)}
-                    <div style={{ fontSize: 8, color: '#6366F1', fontWeight: 400 }}>Actual</div>
+                    <div style={{ fontSize: 8, color: '#6366F1', fontWeight: 400 }}>{tc('cfo_forecasts_tab.table_tag_actual')}</div>
                   </th>
                 ))}
                 {currentPartial && (
                   <th style={{ textAlign: 'right', padding: '6px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>
                     {fmtMonthLabel(currentPartial.month)}
-                    <div style={{ fontSize: 8, color: '#f59e0b', fontWeight: 400 }}>Partial</div>
+                    <div style={{ fontSize: 8, color: '#f59e0b', fontWeight: 400 }}>{tc('cfo_forecasts_tab.table_tag_partial')}</div>
                   </th>
                 )}
                 {/* Forecast months */}
                 {pnlForecast.map(m => (
                   <th key={m.month} style={{ textAlign: 'right', padding: '6px 10px', color: 'var(--tx3)', fontWeight: 600, fontSize: 10 }}>
                     {fmtMonthLabel(m.month)}
-                    <div style={{ fontSize: 8, color: '#d08a59', fontWeight: 400 }}>Forecast</div>
+                    <div style={{ fontSize: 8, color: '#d08a59', fontWeight: 400 }}>{tc('cfo_forecasts_tab.table_tag_forecast')}</div>
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {[
-                { label: 'Revenue', key: 'revenue' as keyof PnlMonth, bold: false },
-                { label: 'COGS', key: 'cogs' as keyof PnlMonth, bold: false },
-                { label: 'Gross Profit', key: 'gross_profit' as const, bold: true },
-                { label: 'Fixed Costs', key: 'fixed' as keyof PnlMonth, bold: false },
-                { label: 'Net Profit', key: 'net' as keyof PnlMonth, bold: true },
+                { label: tc('cfo_forecasts_tab.row_revenue'), key: 'revenue' as keyof PnlMonth, bold: false },
+                { label: tc('cfo_forecasts_tab.row_cogs'), key: 'cogs' as keyof PnlMonth, bold: false },
+                { label: tc('cfo_forecasts_tab.row_gross_profit'), key: 'gross_profit' as const, bold: true },
+                { label: tc('cfo_forecasts_tab.row_fixed_costs'), key: 'fixed' as keyof PnlMonth, bold: false },
+                { label: tc('cfo_forecasts_tab.row_net_profit'), key: 'net' as keyof PnlMonth, bold: true },
               ].map(row => (
                 <tr key={row.key} style={{ borderBottom: '1px solid var(--b, #e8e6e1)' }}>
                   <td style={{ padding: '8px 10px', fontWeight: row.bold ? 700 : 400, color: 'var(--tx)' }}>{row.label}</td>
@@ -662,7 +679,7 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
               ))}
               {/* Margin row */}
               <tr>
-                <td style={{ padding: '8px 10px', fontSize: 11, color: 'var(--tx3)' }}>Net Margin</td>
+                <td style={{ padding: '8px 10px', fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_forecasts_tab.row_net_margin')}</td>
                 {completedMonths.slice(-2).map(m => (
                   <td key={m.month} style={{ textAlign: 'right', padding: '8px 10px', fontSize: 11, color: 'var(--tx3)' }}>
                     {m.net_margin_pct.toFixed(1)}%
@@ -688,8 +705,8 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
       {waterfall && (
         <div style={{ background: 'var(--sf, #fff)', border: '1px solid var(--b, #e8e6e1)', borderRadius: 12, padding: 16 }}>
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>Cash Flow Waterfall</div>
-            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Current period cash movement breakdown</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_forecasts_tab.waterfall_title')}</div>
+            <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_forecasts_tab.waterfall_sub')}</div>
           </div>
           <WaterfallChart items={waterfall} width={700} height={240} sym={sym} />
         </div>
@@ -709,9 +726,9 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
         const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length
         const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length
         const growthPct = firstAvg > 0 ? ((secondAvg - firstAvg) / firstAvg) * 100 : 0
-        if (growthPct > 10) patterns.push({ icon: '📈', label: 'Upward Trend', detail: `Revenue growing ~${growthPct.toFixed(0)}% across the period`, color: '#22c55e' })
-        else if (growthPct < -10) patterns.push({ icon: '📉', label: 'Declining Trend', detail: `Revenue declining ~${Math.abs(growthPct).toFixed(0)}% — investigate root cause`, color: '#ef4444' })
-        else patterns.push({ icon: '➡️', label: 'Stable Revenue', detail: 'Revenue is relatively flat — look for growth levers', color: '#f59e0b' })
+        if (growthPct > 10) patterns.push({ icon: '📈', label: tc('cfo_forecasts_tab.pattern_upward_label'), detail: tc('cfo_forecasts_tab.pattern_upward_detail', { n: growthPct.toFixed(0) }), color: '#22c55e' })
+        else if (growthPct < -10) patterns.push({ icon: '📉', label: tc('cfo_forecasts_tab.pattern_declining_label'), detail: tc('cfo_forecasts_tab.pattern_declining_detail', { n: Math.abs(growthPct).toFixed(0) }), color: '#ef4444' })
+        else patterns.push({ icon: '➡️', label: tc('cfo_forecasts_tab.pattern_stable_label'), detail: tc('cfo_forecasts_tab.pattern_stable_detail'), color: '#f59e0b' })
 
         // Seasonality (if enough months)
         if (n >= 6) {
@@ -719,7 +736,14 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
           const peaks = revs.filter(r => r > avg * 1.2).length
           const troughs = revs.filter(r => r < avg * 0.8).length
           if (peaks >= 2 && troughs >= 1) {
-            patterns.push({ icon: '🔄', label: 'Seasonal Pattern Detected', detail: `${peaks} peak month${peaks > 1 ? 's' : ''} and ${troughs} trough${troughs > 1 ? 's' : ''} — plan inventory and cash accordingly`, color: '#6366F1' })
+            const seasonalKey = peaks === 1 && troughs === 1
+              ? 'cfo_forecasts_tab.pattern_seasonal_detail_one_each'
+              : peaks === 1
+              ? 'cfo_forecasts_tab.pattern_seasonal_detail_one_peak'
+              : troughs === 1
+              ? 'cfo_forecasts_tab.pattern_seasonal_detail_one_trough'
+              : 'cfo_forecasts_tab.pattern_seasonal_detail'
+            patterns.push({ icon: '🔄', label: tc('cfo_forecasts_tab.pattern_seasonal_label'), detail: tc(seasonalKey, { peaks, troughs }), color: '#6366F1' })
           }
         }
 
@@ -729,16 +753,16 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
           const marginStart = margins.slice(0, 2).reduce((a, b) => a + b, 0) / 2
           const marginEnd = margins.slice(-2).reduce((a, b) => a + b, 0) / 2
           if (marginEnd < marginStart - 3) {
-            patterns.push({ icon: '⚠️', label: 'Margin Compression', detail: `Gross margin dropped from ${marginStart.toFixed(1)}% to ${marginEnd.toFixed(1)}% — rising COGS or pricing pressure`, color: '#ef4444' })
+            patterns.push({ icon: '⚠️', label: tc('cfo_forecasts_tab.pattern_compression_label'), detail: tc('cfo_forecasts_tab.pattern_compression_detail', { start: marginStart.toFixed(1), end: marginEnd.toFixed(1) }), color: '#ef4444' })
           } else if (marginEnd > marginStart + 3) {
-            patterns.push({ icon: '✅', label: 'Margin Expansion', detail: `Gross margin improved from ${marginStart.toFixed(1)}% to ${marginEnd.toFixed(1)}% — good cost control or pricing power`, color: '#22c55e' })
+            patterns.push({ icon: '✅', label: tc('cfo_forecasts_tab.pattern_expansion_label'), detail: tc('cfo_forecasts_tab.pattern_expansion_detail', { start: marginStart.toFixed(1), end: marginEnd.toFixed(1) }), color: '#22c55e' })
           }
         }
 
         // Volatility
         const avg = revs.reduce((a, b) => a + b, 0) / n
         const cv = avg > 0 ? Math.sqrt(revs.reduce((s, r) => s + Math.pow(r - avg, 2), 0) / n) / avg : 0
-        if (cv > 0.3) patterns.push({ icon: '🎢', label: 'High Volatility', detail: `Revenue varies significantly (CV: ${(cv * 100).toFixed(0)}%) — consider smoothing with subscriptions or retainers`, color: '#f59e0b' })
+        if (cv > 0.3) patterns.push({ icon: '🎢', label: tc('cfo_forecasts_tab.pattern_volatility_label'), detail: tc('cfo_forecasts_tab.pattern_volatility_detail', { n: (cv * 100).toFixed(0) }), color: '#f59e0b' })
 
         if (patterns.length === 0) return null
 
@@ -746,13 +770,13 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
           <div style={{ background: 'var(--sf, #fff)', border: '1px solid var(--b, #e8e6e1)', borderRadius: 12, padding: 16 }}>
             <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>Pattern Detection</div>
-                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Automatically identified from your financial data</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_forecasts_tab.pattern_title')}</div>
+                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_forecasts_tab.pattern_sub')}</div>
               </div>
               {onAsk && (
-                <button onClick={() => onAsk(`Patterns detected in my financials: ${patterns.map(p => `${p.label}: ${p.detail}`).join('. ')}. Based on these patterns, what should I do next?`)}
+                <button onClick={() => onAsk(tc('cfo_forecasts_tab.ask_ai_prompt', { summary: patterns.map(p => `${p.label}: ${p.detail}`).join('. ') }))}
                   style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit', flexShrink: 0 }}>
-                  Ask AI
+                  {tc('cfo_forecasts_tab.ask_ai')}
                 </button>
               )}
             </div>

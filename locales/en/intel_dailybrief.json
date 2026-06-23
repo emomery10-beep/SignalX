@@ -1,0 +1,7 @@
+{
+  "title": "Daily Brief",
+  "improvedPrompt": "Tell me more about this improvement: {detail}",
+  "worsenedPrompt": "Explain this issue and what I should do: {detail}",
+  "todayPrefix": "Today:",
+  "askAskBiz": "Ask AskBiz"
+}

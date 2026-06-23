@@ -284,33 +284,32 @@ export default function AppShellClient({ user, conversations, children }: {
         }}
       >
         {/* Logo row */}
-        <div style={{ padding: '13px 13px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-          <Link href="/home" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: 'var(--tx)' }}>
-            <div style={{ width: 26, height: 26, borderRadius: 7, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="13" height="13" viewBox="0 0 32 32" fill="none">
+        <div style={{ padding: '14px 12px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+          <Link href="/home" style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none', color: 'var(--tx)', minWidth: 0 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="15" height="15" viewBox="0 0 32 32" fill="none">
                 <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/>
                 <rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/>
                 <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
                 <path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <span style={{ fontFamily: 'var(--font-sora)', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
+            <span style={{ fontFamily: 'var(--font-sora)', fontSize: 15, fontWeight: 700, letterSpacing: '-.02em', whiteSpace: 'nowrap' }}>AskBiz</span>
           </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+            <NotificationBell />
             <button
               onClick={toggleCollapsed}
               title="Collapse sidebar"
               className="collapse-btn"
-              style={{ width: 28, height: 28, borderRadius: 7, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, flexShrink: 0 }}
+              style={{ width: 28, height: 28, borderRadius: 7, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, flexShrink: 0 }}
               onMouseEnter={e => (e.currentTarget.style.background = 'var(--ev)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round">
-                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 18l-6-6 6-6"/>
               </svg>
             </button>
-            <LanguageToggle />
-            <NotificationBell />
           </div>
         </div>
 
@@ -489,23 +488,26 @@ export default function AppShellClient({ user, conversations, children }: {
           </div>
         </div>
 
-        {/* User row — avatar terracotta */}
+        {/* User row — avatar + compact language toggle */}
         <div style={{ padding: '4px 8px 10px', flexShrink: 0 }}>
-          <div
-            onClick={() => setProfileOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 9px', borderRadius: 9, cursor: 'pointer', transition: 'background 150ms' }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'var(--ev)')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-          >
-            <div style={{ width: 28, height: 28, borderRadius: '50%', background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
-              {initials}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-sora)' }}>
-                {user.name}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div
+              onClick={() => setProfileOpen(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 9px', borderRadius: 9, cursor: 'pointer', transition: 'background 150ms', flex: 1, minWidth: 0 }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--ev)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            >
+              <div style={{ width: 28, height: 28, borderRadius: '50%', background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                {initials}
               </div>
-              <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'capitalize' }}>{user.plan} plan</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'var(--font-sora)' }}>
+                  {user.name}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'capitalize' }}>{user.plan} plan</div>
+              </div>
             </div>
+            <LanguageToggle compact />
           </div>
         </div>
       </aside>

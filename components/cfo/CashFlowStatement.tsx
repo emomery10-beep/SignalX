@@ -1,16 +1,18 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 import CostConfigDrawer, { loadCostConfig, type CostConfig } from './CostConfigDrawer'
 
 interface Props {
   totals: { revenue: number; cogs: number; gross_profit: number; fixed_costs: number; net_profit: number }
-  cash: { balance: number; monthly_fixed: number; runway_months: number | null; runway_status: string; daily_net_burn: number }
+  cash: { balance: number; monthly_fixed: number; monthly_fixed_total?: number; runway_months: number | null; runway_status: string; daily_net_burn: number }
   dailyCashflow?: Array<{ date: string; inflow: number; outflow: number; net: number }>
   receivablesAging?: { current: number; overdue_30: number; overdue_60: number; overdue_90: number }
   receivablesSummary?: { total_receivables: number; total_payables: number; overdue_receivables: number }
   sourceBreakdown?: Array<{ source: string; label: string; revenue: number; cogs: number; pct_of_total: number }>
   currencySymbol: string
   onAsk: (prompt: string) => void
+  onConfigSaved?: () => void
 }
 
 const GREEN = '#22C55E'
@@ -31,7 +33,9 @@ export default function CashFlowStatement({
   sourceBreakdown,
   currencySymbol: sym,
   onAsk,
+  onConfigSaved,
 }: Props) {
+  const { tc } = useLang()
   // ── Cost config from localStorage ──
   const [costConfig, setCostConfig] = useState<CostConfig | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -51,8 +55,9 @@ export default function CashFlowStatement({
 
   // Override API values with localStorage if set
   const userBalance = costConfig?.cashBalance && costConfig.cashBalance > 0 ? costConfig.cashBalance : cashProp.balance
-  const userMonthlyFixed = costConfig ? costConfig.fixedCosts.reduce((s, c) => s + (c.amount || 0), 0) : cashProp.monthly_fixed
-  const effectiveMonthlyFixed = userMonthlyFixed || cashProp.monthly_fixed
+  const autoMonthlyFixed = cashProp.monthly_fixed_total ?? cashProp.monthly_fixed
+  const userMonthlyFixed = costConfig ? costConfig.fixedCosts.reduce((s, c) => s + (c.amount || 0), 0) : autoMonthlyFixed
+  const effectiveMonthlyFixed = userMonthlyFixed || autoMonthlyFixed
 
   // Recompute daily burn if we have overrides
   const periodDays = dailyCashflow?.length || 30
@@ -84,6 +89,14 @@ export default function CashFlowStatement({
     if (status === 'critical') return RED
     if (status === 'warning') return YELLOW
     return GREEN
+  }
+
+  const statusLabel = (status: string) => {
+    if (status === 'critical') return tc('cfo_cashflow.status_critical')
+    if (status === 'warning') return tc('cfo_cashflow.status_warning')
+    if (status === 'healthy') return tc('cfo_cashflow.status_healthy')
+    if (status === 'strong') return tc('cfo_cashflow.status_strong')
+    return tc('cfo_cashflow.status_unknown')
   }
 
   // ── Chart data filtered by range ──
@@ -134,10 +147,10 @@ export default function CashFlowStatement({
 
   // ── Runway scenarios ──
   const runwayScenarios = [
-    { label: 'Current pace', revMult: 1, costMult: 1 },
-    { label: 'Revenue +20%', revMult: 1.2, costMult: 1 },
-    { label: 'Revenue −20%', revMult: 0.8, costMult: 1 },
-    { label: 'Fixed costs −15%', revMult: 1, costMult: 0.85 },
+    { label: tc('cfo_cashflow.runway_scenario_current'), revMult: 1, costMult: 1 },
+    { label: tc('cfo_cashflow.runway_scenario_rev_up'), revMult: 1.2, costMult: 1 },
+    { label: tc('cfo_cashflow.runway_scenario_rev_down'), revMult: 0.8, costMult: 1 },
+    { label: tc('cfo_cashflow.runway_scenario_fixed_down'), revMult: 1, costMult: 0.85 },
   ].map(s => {
     const dailyRev = avgDailyRevenue * s.revMult
     const dailyCost = avgDailyCogs + (effectiveMonthlyFixed * s.costMult / 30)
@@ -241,36 +254,36 @@ export default function CashFlowStatement({
   const renderBurnPanel = () => (
     <div style={{ gridColumn: '1 / -1', borderRadius: 12, border: `1px solid ${INDIGO}30`, background: `${INDIGO}04`, padding: '14px 16px', marginTop: 4 }}>
       <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>Daily Net Breakdown</span>
-        <button onClick={() => { onAsk(`My daily net is ${fmt(effectiveDailyBurn)}/day. Avg daily revenue ${fmt(avgDailyRevenue)}, avg COGS ${fmt(avgDailyCogs)}, daily fixed overhead ${fmt(effectiveMonthlyFixed / 30)}. Best day: ${bestDay?.date} (${fmt(bestDay?.net || 0)}), worst: ${worstDay?.date} (${fmt(worstDay?.net || 0)}). ${positiveDays} positive days vs ${negativeDays} negative. How do I improve?`) }} style={{ fontSize: 10, color: INDIGO, background: `${INDIGO}14`, border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>Ask AI</button>
+        <span>{tc('cfo_cashflow.burn_title')}</span>
+        <button onClick={() => { onAsk(tc('cfo_cashflow.burn_ask_prompt', { net: fmt(effectiveDailyBurn), revenue: fmt(avgDailyRevenue), cogs: fmt(avgDailyCogs), fixed: fmt(effectiveMonthlyFixed / 30), bestDate: bestDay?.date || '', bestNet: fmt(bestDay?.net || 0), worstDate: worstDay?.date || '', worstNet: fmt(worstDay?.net || 0), positive: positiveDays, negative: negativeDays })) }} style={{ fontSize: 10, color: INDIGO, background: `${INDIGO}14`, border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>{tc('cfo_cashflow.ask_ai')}</button>
       </div>
 
       {/* Formula */}
       <div style={{ padding: '10px 14px', borderRadius: 10, background: 'var(--ev)', marginBottom: 12, fontSize: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', color: 'var(--tx3)' }}>
           <span style={{ color: GREEN, fontWeight: 600 }}>{fmt(avgDailyRevenue)}/day</span>
-          <span>revenue</span>
+          <span>{tc('cfo_cashflow.burn_revenue')}</span>
           <span>−</span>
           <span style={{ color: ORANGE, fontWeight: 600 }}>{fmt(avgDailyCogs)}/day</span>
-          <span>COGS</span>
+          <span>{tc('cfo_cashflow.burn_cogs')}</span>
           <span>−</span>
           <span style={{ color: RED, fontWeight: 600 }}>{fmt(effectiveMonthlyFixed / 30)}/day</span>
-          <span>fixed</span>
+          <span>{tc('cfo_cashflow.burn_fixed')}</span>
           <span>=</span>
           <span style={{ color: effectiveDailyBurn >= 0 ? GREEN : RED, fontWeight: 700 }}>{fmt(effectiveDailyBurn)}/day</span>
         </div>
         {effectiveMonthlyFixed === 0 && (
-          <div style={{ fontSize: 10, color: YELLOW, marginTop: 6 }}>⚠ Fixed costs not set — set them in the Monthly Fixed Costs card for accurate burn rate</div>
+          <div style={{ fontSize: 10, color: YELLOW, marginTop: 6 }}>{tc('cfo_cashflow.burn_fixed_warning')}</div>
         )}
       </div>
 
       {/* Stats grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 12 }}>
         {[
-          { label: 'Best Day', value: bestDay ? fmt(bestDay.net) : '—', sub: bestDay?.date.slice(5) || '', color: GREEN },
-          { label: 'Worst Day', value: worstDay ? fmt(worstDay.net) : '—', sub: worstDay?.date.slice(5) || '', color: RED },
-          { label: 'Positive Days', value: `${positiveDays}`, sub: `of ${allDaily.length}`, color: GREEN },
-          { label: 'Avg Daily Net', value: fmt(avgNet), sub: 'this period', color: avgNet >= 0 ? GREEN : RED },
+          { label: tc('cfo_cashflow.burn_best_day'), value: bestDay ? fmt(bestDay.net) : '—', sub: bestDay?.date.slice(5) || '', color: GREEN },
+          { label: tc('cfo_cashflow.burn_worst_day'), value: worstDay ? fmt(worstDay.net) : '—', sub: worstDay?.date.slice(5) || '', color: RED },
+          { label: tc('cfo_cashflow.burn_positive_days'), value: `${positiveDays}`, sub: tc('cfo_cashflow.burn_of_total', { n: allDaily.length }), color: GREEN },
+          { label: tc('cfo_cashflow.burn_avg_daily_net'), value: fmt(avgNet), sub: tc('cfo_cashflow.burn_this_period'), color: avgNet >= 0 ? GREEN : RED },
         ].map(m => (
           <div key={m.label} style={{ textAlign: 'center', padding: '8px', borderRadius: 8, background: 'var(--sf)', border: '1px solid var(--b)' }}>
             <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 4 }}>{m.label}</div>
@@ -281,13 +294,13 @@ export default function CashFlowStatement({
       </div>
 
       {/* Sensitivity */}
-      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>Sensitivity</div>
+      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('cfo_cashflow.burn_sensitivity')}</div>
       <div style={{ borderRadius: 8, border: '1px solid var(--b)', overflow: 'hidden' }}>
         {[
-          { label: 'Revenue +10%', dn: avgDailyRevenue * 1.1 - avgDailyCogs - effectiveMonthlyFixed / 30 },
-          { label: 'Revenue −10%', dn: avgDailyRevenue * 0.9 - avgDailyCogs - effectiveMonthlyFixed / 30 },
-          { label: 'Revenue −20%', dn: avgDailyRevenue * 0.8 - avgDailyCogs - effectiveMonthlyFixed / 30 },
-          { label: 'Costs +10%', dn: avgDailyRevenue - avgDailyCogs * 1.1 - effectiveMonthlyFixed * 1.1 / 30 },
+          { label: tc('cfo_cashflow.burn_revenue_up_10'), dn: avgDailyRevenue * 1.1 - avgDailyCogs - effectiveMonthlyFixed / 30 },
+          { label: tc('cfo_cashflow.burn_revenue_down_10'), dn: avgDailyRevenue * 0.9 - avgDailyCogs - effectiveMonthlyFixed / 30 },
+          { label: tc('cfo_cashflow.burn_revenue_down_20'), dn: avgDailyRevenue * 0.8 - avgDailyCogs - effectiveMonthlyFixed / 30 },
+          { label: tc('cfo_cashflow.burn_costs_up_10'), dn: avgDailyRevenue - avgDailyCogs * 1.1 - effectiveMonthlyFixed * 1.1 / 30 },
         ].map((s, i) => (
           <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', borderTop: i > 0 ? '1px solid var(--b)' : undefined, fontSize: 11 }}>
             <span style={{ color: 'var(--tx3)' }}>{s.label}</span>
@@ -299,7 +312,7 @@ export default function CashFlowStatement({
       {/* Channel breakdown */}
       {sourceBreakdown && sourceBreakdown.length > 0 && (
         <div style={{ marginTop: 12 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>By Channel (period avg/day)</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('cfo_cashflow.burn_by_channel')}</div>
           {sourceBreakdown.map((s, i) => {
             const dailyRev = s.revenue / periodDays
             const dailyGP = (s.revenue - s.cogs) / periodDays
@@ -307,8 +320,8 @@ export default function CashFlowStatement({
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderTop: i > 0 ? '1px solid var(--b)' : undefined, fontSize: 11 }}>
                 <span style={{ color: 'var(--tx)' }}>{s.label}</span>
                 <div style={{ display: 'flex', gap: 10, fontSize: 10 }}>
-                  <span style={{ color: GREEN }}>{fmt(dailyRev)}/day rev</span>
-                  <span style={{ color: dailyGP >= 0 ? GREEN : RED, fontWeight: 600 }}>{fmt(dailyGP)}/day GP</span>
+                  <span style={{ color: GREEN }}>{tc('cfo_cashflow.burn_per_day_rev', { value: fmt(dailyRev) })}</span>
+                  <span style={{ color: dailyGP >= 0 ? GREEN : RED, fontWeight: 600 }}>{tc('cfo_cashflow.burn_per_day_gp', { value: fmt(dailyGP) })}</span>
                 </div>
               </div>
             )
@@ -326,40 +339,40 @@ export default function CashFlowStatement({
     return (
       <div style={{ gridColumn: '1 / -1', borderRadius: 12, border: `1px solid ${INDIGO}30`, background: `${INDIGO}04`, padding: '14px 16px', marginTop: 4 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>Cash Runway Analysis</span>
-          <button onClick={() => onAsk(isCashPositive ? `My business is cash positive — earning ${fmt(effectiveDailyBurn)}/day net. How do I best deploy this surplus to accelerate growth?` : `My cash runway: balance ${fmt(userBalance)}, daily burn ${fmt(Math.abs(effectiveDailyBurn))}, runway ${rwMonths ? rwMonths + ' months' : 'unknown'}. What actions will extend my runway most?`)} style={{ fontSize: 10, color: INDIGO, background: `${INDIGO}14`, border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>Ask AI</button>
+          <span>{tc('cfo_cashflow.runway_title')}</span>
+          <button onClick={() => onAsk(isCashPositive ? tc('cfo_cashflow.runway_ask_positive', { net: fmt(effectiveDailyBurn) }) : tc('cfo_cashflow.runway_ask_negative', { balance: fmt(userBalance), burn: fmt(Math.abs(effectiveDailyBurn)), runway: rwMonths ? tc('cfo_cashflow.runway_ask_runway_months', { n: rwMonths }) : tc('cfo_cashflow.runway_ask_runway_unknown') }))} style={{ fontSize: 10, color: INDIGO, background: `${INDIGO}14`, border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>{tc('cfo_cashflow.ask_ai')}</button>
         </div>
 
         {/* Status + formula */}
         <div style={{ padding: '10px 14px', borderRadius: 10, background: 'var(--ev)', marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
             <span style={{ padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, background: `${runwayColor(runwayStatus)}20`, color: runwayColor(runwayStatus) }}>
-              {runwayStatus.toUpperCase()}
+              {statusLabel(runwayStatus).toUpperCase()}
             </span>
             <span style={{ fontSize: 11, color: 'var(--tx3)' }}>
-              {isCashPositive ? 'Revenue exceeds all costs — no runway limit' : runwayStatus === 'critical' ? '< 1 month — act now' : runwayStatus === 'warning' ? '1–3 months — plan ahead' : runwayStatus === 'healthy' ? '3–6 months — monitor' : '> 6 months — strong position'}
+              {isCashPositive ? tc('cfo_cashflow.runway_desc_positive') : runwayStatus === 'critical' ? tc('cfo_cashflow.runway_desc_critical') : runwayStatus === 'warning' ? tc('cfo_cashflow.runway_desc_warning') : runwayStatus === 'healthy' ? tc('cfo_cashflow.runway_desc_healthy') : tc('cfo_cashflow.runway_desc_strong')}
             </span>
           </div>
           {userBalance > 0 && effectiveDailyBurn < 0 ? (
             <div style={{ fontSize: 12, color: 'var(--tx3)', display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
               <span style={{ color: GREEN, fontWeight: 600 }}>{fmt(userBalance)}</span>
-              <span>cash ÷</span>
-              <span style={{ color: RED, fontWeight: 600 }}>{fmt(Math.abs(effectiveDailyBurn))}/day</span>
-              <span>burn =</span>
-              <span style={{ fontWeight: 700, color: runwayColor(runwayStatus) }}>{rwDays} days ({rwMonths} months)</span>
+              <span>{tc('cfo_cashflow.runway_formula_cash_div')}</span>
+              <span style={{ color: RED, fontWeight: 600 }}>{tc('cfo_cashflow.runway_formula_burn', { value: fmt(Math.abs(effectiveDailyBurn)) })}</span>
+              <span>{tc('cfo_cashflow.runway_formula_burn_eq')}</span>
+              <span style={{ fontWeight: 700, color: runwayColor(runwayStatus) }}>{tc('cfo_cashflow.runway_formula_result', { days: rwDays ?? 0, months: rwMonths ?? 0 })}</span>
             </div>
           ) : effectiveDailyBurn >= 0 ? (
-            <div style={{ fontSize: 12, color: GREEN, fontWeight: 600 }}>Cash positive — revenue exceeds all costs ✓</div>
+            <div style={{ fontSize: 12, color: GREEN, fontWeight: 600 }}>{tc('cfo_cashflow.runway_cash_positive_line')}</div>
           ) : (
-            <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Set your cash balance to calculate runway</div>
+            <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('cfo_cashflow.runway_set_balance_line')}</div>
           )}
         </div>
 
         {/* Scenarios */}
-        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>Scenarios</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('cfo_cashflow.runway_scenarios')}</div>
         <div style={{ borderRadius: 8, border: '1px solid var(--b)', overflow: 'hidden', marginBottom: 12 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px', background: 'var(--ev)', borderBottom: '1px solid var(--b)' }}>
-            {['Scenario', 'Daily Net', 'Runway'].map(h => (
+            {[tc('cfo_cashflow.runway_col_scenario'), tc('cfo_cashflow.runway_col_daily_net'), tc('cfo_cashflow.runway_col_runway')].map(h => (
               <div key={h} style={{ padding: '6px 10px', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{h}</div>
             ))}
           </div>
@@ -368,14 +381,14 @@ export default function CashFlowStatement({
               <div style={{ padding: '8px 10px', fontSize: 11, color: 'var(--tx)', fontWeight: i === 0 ? 600 : 400 }}>{s.label}</div>
               <div style={{ padding: '8px 10px', fontSize: 11, fontWeight: 600, color: s.dailyNet >= 0 ? GREEN : RED }}>{fmt(s.dailyNet)}/day</div>
               <div style={{ padding: '8px 10px', fontSize: 11, fontWeight: 600, color: s.runwayMonths === null ? GREEN : runwayColor(s.runwayMonths <= 1 ? 'critical' : s.runwayMonths <= 3 ? 'warning' : 'healthy') }}>
-                {s.runwayMonths === null ? (s.dailyNet >= 0 ? 'Cash +ve' : '—') : `${s.runwayMonths} mo`}
+                {s.runwayMonths === null ? (s.dailyNet >= 0 ? tc('cfo_cashflow.runway_cash_positive_short') : '—') : tc('cfo_cashflow.runway_months_short', { n: s.runwayMonths })}
               </div>
             </div>
           ))}
         </div>
 
         {/* 12-month projection mini-chart */}
-        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>12-Month Cash Projection</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('cfo_cashflow.runway_projection_title')}</div>
         <div style={{ borderRadius: 8, background: 'var(--ev)', padding: '10px', position: 'relative', height: 70, overflow: 'hidden' }}>
           <svg viewBox="0 0 400 60" width="100%" height="60" style={{ display: 'block' }}>
             {(() => {
@@ -403,18 +416,18 @@ export default function CashFlowStatement({
               )
             })()}
           </svg>
-          <div style={{ position: 'absolute', bottom: 4, left: 10, fontSize: 9, color: 'var(--tx3)' }}>Now</div>
-          <div style={{ position: 'absolute', bottom: 4, right: 10, fontSize: 9, color: 'var(--tx3)' }}>12 mo</div>
+          <div style={{ position: 'absolute', bottom: 4, left: 10, fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_cashflow.runway_now')}</div>
+          <div style={{ position: 'absolute', bottom: 4, right: 10, fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_cashflow.runway_12mo')}</div>
           <div style={{ position: 'absolute', top: 4, right: 10, fontSize: 9, fontWeight: 600, color: projMonths[projMonths.length - 1].balance >= 0 ? GREEN : RED }}>{fmt(projMonths[projMonths.length - 1].balance)}</div>
         </div>
 
         {/* Target calculation */}
         {revenueGap !== null && effectiveDailyBurn < 0 && (
           <div style={{ marginTop: 10, padding: '10px 14px', borderRadius: 10, background: `${YELLOW}08`, border: `1px solid ${YELLOW}30`, fontSize: 11, color: 'var(--tx)', lineHeight: 1.6 }}>
-            💡 To reach <strong>12-month runway</strong>: need daily revenue of <strong style={{ color: GREEN }}>{fmt(revenueNeeded || 0)}</strong>
+            {tc('cfo_cashflow.runway_target_prefix')} <strong>{tc('cfo_cashflow.runway_target_12month')}</strong>: {tc('cfo_cashflow.runway_target_need')} <strong style={{ color: GREEN }}>{fmt(revenueNeeded || 0)}</strong>
             {revenueGap > 0
-              ? ` — that's ${fmt(revenueGap)}/day more than current (${Math.round((revenueGap / avgDailyRevenue) * 100)}% increase needed)`
-              : ` — you're already on track!`}
+              ? tc('cfo_cashflow.runway_target_more', { gap: fmt(revenueGap), pct: Math.round((revenueGap / avgDailyRevenue) * 100) })
+              : tc('cfo_cashflow.runway_target_on_track')}
           </div>
         )}
       </div>
@@ -455,8 +468,8 @@ export default function CashFlowStatement({
       <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', padding: '16px', marginTop: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', display: 'flex', alignItems: 'center', gap: 6 }}>
-            Daily Cash Flow
-            {selectedDay && <span style={{ fontSize: 10, color: INDIGO, fontWeight: 400 }}>· {selectedDay.slice(5)} selected</span>}
+            {tc('cfo_cashflow.chart_title')}
+            {selectedDay && <span style={{ fontSize: 10, color: INDIGO, fontWeight: 400 }}>{tc('cfo_cashflow.chart_selected', { date: selectedDay.slice(5) })}</span>}
           </div>
           {/* Range filter */}
           <div style={{ display: 'flex', gap: 3 }}>
@@ -524,14 +537,14 @@ export default function CashFlowStatement({
               <rect x={Math.min(tooltip.x + 8, W - 120)} y={tooltip.y - 36} width={110} height={52} rx={6} fill="var(--bg)" stroke="var(--b)" strokeWidth={1} />
               <text x={Math.min(tooltip.x + 14, W - 114)} y={tooltip.y - 22} fontSize={9} fill={GREEN} fontWeight={700}>▲ {fmt(tooltip.d.inflow)}</text>
               <text x={Math.min(tooltip.x + 14, W - 114)} y={tooltip.y - 10} fontSize={9} fill={RED} fontWeight={700}>▼ {fmt(tooltip.d.outflow)}</text>
-              <text x={Math.min(tooltip.x + 14, W - 114)} y={tooltip.y + 4} fontSize={9} fill={tooltip.d.net >= 0 ? GREEN : RED} fontWeight={700}>Net {fmt(tooltip.d.net)}</text>
+              <text x={Math.min(tooltip.x + 14, W - 114)} y={tooltip.y + 4} fontSize={9} fill={tooltip.d.net >= 0 ? GREEN : RED} fontWeight={700}>{tc('cfo_cashflow.chart_tooltip_net')} {fmt(tooltip.d.net)}</text>
               <text x={Math.min(tooltip.x + 14, W - 114)} y={tooltip.y + 16} fontSize={8} fill="var(--tx3)">{tooltip.d.date}</text>
             </g>
           )}
         </svg>
 
         <div style={{ display: 'flex', gap: 16, marginTop: 8, justifyContent: 'center' }}>
-          {[{ label: 'Inflow', color: GREEN }, { label: 'Outflow', color: RED }, { label: 'Cumulative Net', color: INDIGO }].map(l => (
+          {[{ label: tc('cfo_cashflow.chart_legend_inflow'), color: GREEN }, { label: tc('cfo_cashflow.chart_legend_outflow'), color: RED }, { label: tc('cfo_cashflow.chart_legend_cumulative'), color: INDIGO }].map(l => (
             <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--tx3)' }}>
               <span style={{ width: 8, height: 8, borderRadius: 2, background: l.color, display: 'inline-block' }} />
               {l.label}
@@ -554,14 +567,14 @@ export default function CashFlowStatement({
     return (
       <div style={{ borderRadius: 12, border: `1px solid ${INDIGO}30`, background: `${INDIGO}04`, padding: '14px 16px', marginTop: 8 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{selectedDay} — Day Detail</div>
-          <button onClick={() => setSelectedDay(null)} style={{ fontSize: 11, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>✕ Close</button>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_cashflow.day_detail_title', { date: selectedDay ?? '' })}</div>
+          <button onClick={() => setSelectedDay(null)} style={{ fontSize: 11, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>{tc('cfo_cashflow.day_detail_close')}</button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
           {[
-            { label: 'Inflow', value: fmt(selectedDayData.inflow), color: GREEN },
-            { label: 'Outflow', value: fmt(selectedDayData.outflow), color: RED },
-            { label: 'Net', value: fmt(selectedDayData.net), color: selectedDayData.net >= 0 ? GREEN : RED },
+            { label: tc('cfo_cashflow.day_detail_inflow'), value: fmt(selectedDayData.inflow), color: GREEN },
+            { label: tc('cfo_cashflow.day_detail_outflow'), value: fmt(selectedDayData.outflow), color: RED },
+            { label: tc('cfo_cashflow.day_detail_net'), value: fmt(selectedDayData.net), color: selectedDayData.net >= 0 ? GREEN : RED },
           ].map(m => (
             <div key={m.label} style={{ textAlign: 'center', padding: '8px', borderRadius: 8, background: 'var(--sf)', border: '1px solid var(--b)' }}>
               <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 4 }}>{m.label}</div>
@@ -571,21 +584,21 @@ export default function CashFlowStatement({
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 11 }}>
           <div style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--ev)', border: '1px solid var(--b)' }}>
-            <span style={{ color: 'var(--tx3)' }}>vs Period Avg </span>
+            <span style={{ color: 'var(--tx3)' }}>{tc('cfo_cashflow.day_detail_vs_period')}</span>
             <strong style={{ color: vsPeriodAvg >= 0 ? GREEN : RED }}>{vsPeriodAvg >= 0 ? '+' : ''}{fmt(vsPeriodAvg)}</strong>
           </div>
           <div style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--ev)', border: '1px solid var(--b)' }}>
-            <span style={{ color: 'var(--tx3)' }}>vs 7-Day Avg </span>
+            <span style={{ color: 'var(--tx3)' }}>{tc('cfo_cashflow.day_detail_vs_week')}</span>
             <strong style={{ color: vsWeekAvg >= 0 ? GREEN : RED }}>{vsWeekAvg >= 0 ? '+' : ''}{fmt(vsWeekAvg)}</strong>
           </div>
         </div>
         {sourceBreakdown && sourceBreakdown.length > 0 && (
           <div style={{ marginTop: 10 }}>
-            <div style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 6 }}>Revenue by Channel (daily avg proxy)</div>
+            <div style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 6 }}>{tc('cfo_cashflow.day_detail_revenue_by_channel')}</div>
             {sourceBreakdown.map((s, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderTop: i > 0 ? '1px solid var(--b)' : undefined, fontSize: 11 }}>
                 <span style={{ color: 'var(--tx)' }}>{s.label}</span>
-                <span style={{ color: GREEN, fontWeight: 600 }}>{fmt(s.revenue / periodDays)}/day</span>
+                <span style={{ color: GREEN, fontWeight: 600 }}>{tc('cfo_cashflow.day_detail_per_day', { value: fmt(s.revenue / periodDays) })}</span>
               </div>
             ))}
           </div>
@@ -600,15 +613,20 @@ export default function CashFlowStatement({
     return (
       <div style={{ borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', marginTop: 8, overflow: 'hidden' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: '1px solid var(--b)' }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>Daily Rollup</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_cashflow.rollup_title')}</span>
           <button onClick={() => setShowRollup(false)} style={{ fontSize: 11, color: 'var(--tx3)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>✕</button>
         </div>
         <div style={{ maxHeight: 300, overflowY: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
             <thead>
               <tr style={{ background: 'var(--ev)', position: 'sticky', top: 0 }}>
-                {['Date', 'Inflow', 'Outflow', 'Net'].map(h => (
-                  <th key={h} style={{ padding: '7px 12px', textAlign: h === 'Date' ? 'left' : 'right', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{h}</th>
+                {[
+                  { key: 'date', label: tc('cfo_cashflow.rollup_col_date') },
+                  { key: 'inflow', label: tc('cfo_cashflow.rollup_col_inflow') },
+                  { key: 'outflow', label: tc('cfo_cashflow.rollup_col_outflow') },
+                  { key: 'net', label: tc('cfo_cashflow.rollup_col_net') },
+                ].map(h => (
+                  <th key={h.key} style={{ padding: '7px 12px', textAlign: h.key === 'date' ? 'left' : 'right', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{h.label}</th>
                 ))}
               </tr>
             </thead>
@@ -638,21 +656,21 @@ export default function CashFlowStatement({
     const projColor = (bal: number) => bal < 0 ? RED : bal < lowThreshold ? YELLOW : GREEN
     return (
       <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', padding: '16px', marginTop: 12 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 12 }}>Cash Flow Projection</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 12 }}>{tc('cfo_cashflow.projection_title')}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
           {[30, 60, 90].map(days => {
             const bal = userBalance + dailyNet * days
             const c = projColor(bal)
             return (
               <div key={days} style={{ padding: '12px 14px', borderRadius: 12, border: `1px solid ${c}22`, background: `${c}08`, textAlign: 'center' }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{days} Days</div>
+                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{tc('cfo_cashflow.projection_days', { n: days })}</div>
                 <div style={{ fontSize: 18, fontWeight: 700, color: c, fontFamily: 'var(--font-sora, inherit)', letterSpacing: '-0.02em' }}>{fmt(bal)}</div>
               </div>
             )
           })}
         </div>
         <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 8, textAlign: 'center' }}>
-          Based on {fmt(effectiveDailyBurn)}/day net {effectiveMonthlyFixed > 0 ? '(including your fixed costs)' : ''}
+          {effectiveMonthlyFixed > 0 ? tc('cfo_cashflow.projection_basis_with_fixed', { value: fmt(effectiveDailyBurn) }) : tc('cfo_cashflow.projection_basis', { value: fmt(effectiveDailyBurn) })}
         </div>
       </div>
     )
@@ -662,25 +680,25 @@ export default function CashFlowStatement({
   const renderAging = () => {
     if (!hasAging) return null
     const buckets = [
-      { label: 'Current', value: receivablesAging!.current, color: GREEN },
-      { label: '30 Days', value: receivablesAging!.overdue_30, color: YELLOW },
-      { label: '60 Days', value: receivablesAging!.overdue_60, color: ORANGE },
-      { label: '90+ Days', value: receivablesAging!.overdue_90, color: RED },
+      { key: 'current', label: tc('cfo_cashflow.aging_current'), value: receivablesAging!.current, color: GREEN },
+      { key: '30', label: tc('cfo_cashflow.aging_30'), value: receivablesAging!.overdue_30, color: YELLOW },
+      { key: '60', label: tc('cfo_cashflow.aging_60'), value: receivablesAging!.overdue_60, color: ORANGE },
+      { key: '90', label: tc('cfo_cashflow.aging_90'), value: receivablesAging!.overdue_90, color: RED },
     ]
     return (
       <div style={{ borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', padding: '16px', marginTop: 12 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)' }}>Receivables Aging</div>
-          <div style={{ fontSize: 11, color: RED, fontWeight: 600 }}>At Risk: {fmt(atRisk)}</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)' }}>{tc('cfo_cashflow.aging_title')}</div>
+          <div style={{ fontSize: 11, color: RED, fontWeight: 600 }}>{tc('cfo_cashflow.aging_at_risk', { value: fmt(atRisk) })}</div>
         </div>
         <div style={{ display: 'flex', height: 20, borderRadius: 10, overflow: 'hidden', marginBottom: 14 }}>
-          {buckets.map(b => { const pct = agingTotal > 0 ? (b.value / agingTotal) * 100 : 0; return pct === 0 ? null : <div key={b.label} style={{ width: `${pct}%`, background: b.color, minWidth: 2 }} /> })}
+          {buckets.map(b => { const pct = agingTotal > 0 ? (b.value / agingTotal) * 100 : 0; return pct === 0 ? null : <div key={b.key} style={{ width: `${pct}%`, background: b.color, minWidth: 2 }} /> })}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
           {buckets.map(b => {
             const pct = agingTotal > 0 ? ((b.value / agingTotal) * 100).toFixed(1) : '0.0'
             return (
-              <div key={b.label} style={{ padding: '10px 12px', borderRadius: 10, border: `1px solid ${b.color}22`, background: `${b.color}08`, textAlign: 'center' }}>
+              <div key={b.key} style={{ padding: '10px 12px', borderRadius: 10, border: `1px solid ${b.color}22`, background: `${b.color}08`, textAlign: 'center' }}>
                 <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>{b.label}</div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: b.color, fontFamily: 'var(--font-sora, inherit)' }}>{fmt(b.value)}</div>
                 <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{pct}%</div>
@@ -698,10 +716,10 @@ export default function CashFlowStatement({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 4, height: 20, borderRadius: 4, background: INDIGO }} />
-          <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>Cash Flow Statement</span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_cashflow.title')}</span>
         </div>
-        <button onClick={() => onAsk('Analyze my cash flow and suggest improvements')} style={{ padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 600, background: `${INDIGO}14`, color: INDIGO, border: `1px solid ${INDIGO}30`, cursor: 'pointer', transition: 'background 150ms' }} onMouseEnter={e => (e.currentTarget.style.background = `${INDIGO}24`)} onMouseLeave={e => (e.currentTarget.style.background = `${INDIGO}14`)}>
-          Ask AI
+        <button onClick={() => onAsk(tc('cfo_cashflow.ask_prompt_main'))} style={{ padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 600, background: `${INDIGO}14`, color: INDIGO, border: `1px solid ${INDIGO}30`, cursor: 'pointer', transition: 'background 150ms' }} onMouseEnter={e => (e.currentTarget.style.background = `${INDIGO}24`)} onMouseLeave={e => (e.currentTarget.style.background = `${INDIGO}14`)}>
+          {tc('cfo_cashflow.ask_ai')}
         </button>
       </div>
 
@@ -709,35 +727,35 @@ export default function CashFlowStatement({
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 4 }}>
         <PositionCard
           id="balance"
-          label="Cash Balance"
+          label={tc('cfo_cashflow.card_cash_balance')}
           value={fmt(userBalance)}
           color={GREEN}
           notSet={userBalance === 0}
-          subLabel={costConfig?.cashBalance ? 'Manual' : undefined}
+          subLabel={costConfig?.cashBalance ? tc('cfo_cashflow.card_manual') : undefined}
           clickable
         />
         <PositionCard
           id="fixed"
-          label="Monthly Fixed Costs"
+          label={tc('cfo_cashflow.card_monthly_fixed')}
           value={fmt(effectiveMonthlyFixed)}
           color={RED}
           notSet={effectiveMonthlyFixed === 0}
-          subLabel={costConfig && costConfig.fixedCosts.some(c => c.amount > 0) ? 'Manual' : undefined}
+          subLabel={costConfig && costConfig.fixedCosts.some(c => c.amount > 0) ? tc('cfo_cashflow.card_manual') : autoMonthlyFixed > 0 ? tc('cfo_cashflow.card_from_expenses') : undefined}
           clickable
         />
         <PositionCard
           id="burn"
-          label={effectiveDailyBurn >= 0 ? 'Daily Net Gain' : 'Daily Net Burn'}
-          value={`${fmt(Math.abs(effectiveDailyBurn))}/day`}
+          label={effectiveDailyBurn >= 0 ? tc('cfo_cashflow.card_daily_net_gain') : tc('cfo_cashflow.card_daily_net_burn')}
+          value={tc('cfo_cashflow.card_per_day_suffix', { value: fmt(Math.abs(effectiveDailyBurn)) })}
           color={effectiveDailyBurn >= 0 ? GREEN : RED}
           clickable
         />
         <PositionCard
           id="runway"
-          label="Cash Runway"
-          value={isCashPositive ? 'Cash +' : effectiveRunwayMonths != null ? `${effectiveRunwayMonths.toFixed(1)} mo` : 'Set balance'}
+          label={tc('cfo_cashflow.card_cash_runway')}
+          value={isCashPositive ? tc('cfo_cashflow.card_cash_positive_short') : effectiveRunwayMonths != null ? tc('cfo_cashflow.card_months_short', { n: effectiveRunwayMonths.toFixed(1) }) : tc('cfo_cashflow.card_set_balance')}
           color={isCashPositive ? GREEN : runwayColor(runwayStatus)}
-          subLabel={runwayStatus !== 'unknown' ? runwayStatus.charAt(0).toUpperCase() + runwayStatus.slice(1) : undefined}
+          subLabel={runwayStatus !== 'unknown' ? statusLabel(runwayStatus) : undefined}
           clickable
         />
 
@@ -754,7 +772,7 @@ export default function CashFlowStatement({
       {allDaily.length > 0 && (
         <div style={{ textAlign: 'center', marginTop: 8 }}>
           <button onClick={() => setShowRollup(v => !v)} style={{ fontSize: 11, color: INDIGO, background: 'transparent', border: `1px solid ${INDIGO}30`, borderRadius: 7, padding: '4px 12px', cursor: 'pointer', fontFamily: 'inherit' }}>
-            {showRollup ? 'Hide' : 'Show'} Daily Rollup Table ({allDaily.length} days)
+            {showRollup ? tc('cfo_cashflow.rollup_toggle_hide', { n: allDaily.length }) : tc('cfo_cashflow.rollup_toggle_show', { n: allDaily.length })}
           </button>
         </div>
       )}
@@ -800,7 +818,7 @@ export default function CashFlowStatement({
         open={drawerOpen}
         initialSection={drawerSection}
         onClose={() => setDrawerOpen(false)}
-        onSaved={cfg => setCostConfig(cfg)}
+        onSaved={cfg => { setCostConfig(cfg); onConfigSaved?.() }}
         currencySymbol={sym}
       />
     </div>

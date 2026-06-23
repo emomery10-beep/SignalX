@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface KpiRow {
   key: string
@@ -56,7 +57,17 @@ function formatValue(val: number | null, unit: string, sym: string): string {
   }
 }
 
+const buildKpiLabels = (tc: (k: string, v?: Record<string, string | number>) => string) => ({
+  gross_margin: tc('cfo_kpi.labelGrossMargin'),
+  net_margin: tc('cfo_kpi.labelNetMargin'),
+  revenue_growth: tc('cfo_kpi.labelRevenueGrowth'),
+  stockout_rate: tc('cfo_kpi.labelStockoutRate'),
+  cash_runway: tc('cfo_kpi.labelCashRunway'),
+  health_score: tc('cfo_kpi.labelHealthScore'),
+})
+
 export default function KpiScorecard({ revenue, grossMarginPct, netMarginPct, runwayMonths, stockoutRate, healthScore, revenueChange, currencySymbol: sym, onAsk }: Props) {
+  const { tc } = useLang()
   const [editing, setEditing] = useState<string | null>(null)
   const [targets, setTargets] = useState<Record<string, number>>({
     gross_margin: 40,
@@ -82,13 +93,15 @@ export default function KpiScorecard({ revenue, grossMarginPct, netMarginPct, ru
     setEditing(null)
   }
 
+  const kpiLabels = buildKpiLabels(tc)
+
   const kpis: KpiRow[] = [
-    { key: 'gross_margin', label: 'Gross Margin', target: targets.gross_margin, actual: grossMarginPct, unit: '%', direction: 'above', history: [] },
-    { key: 'net_margin', label: 'Net Margin', target: targets.net_margin, actual: netMarginPct, unit: '%', direction: 'above', history: [] },
-    { key: 'revenue_growth', label: 'Revenue Growth', target: targets.revenue_growth, actual: revenueChange, unit: '%', direction: 'above', history: [] },
-    { key: 'stockout_rate', label: 'Stockout Rate', target: targets.stockout_rate, actual: stockoutRate, unit: '%', direction: 'below', history: [] },
-    { key: 'cash_runway', label: 'Cash Runway', target: targets.cash_runway, actual: runwayMonths, unit: 'months', direction: 'above', history: [] },
-    { key: 'health_score', label: 'Health Score', target: targets.health_score, actual: healthScore, unit: 'count', direction: 'above', history: [] },
+    { key: 'gross_margin', label: kpiLabels.gross_margin, target: targets.gross_margin, actual: grossMarginPct, unit: '%', direction: 'above', history: [] },
+    { key: 'net_margin', label: kpiLabels.net_margin, target: targets.net_margin, actual: netMarginPct, unit: '%', direction: 'above', history: [] },
+    { key: 'revenue_growth', label: kpiLabels.revenue_growth, target: targets.revenue_growth, actual: revenueChange, unit: '%', direction: 'above', history: [] },
+    { key: 'stockout_rate', label: kpiLabels.stockout_rate, target: targets.stockout_rate, actual: stockoutRate, unit: '%', direction: 'below', history: [] },
+    { key: 'cash_runway', label: kpiLabels.cash_runway, target: targets.cash_runway, actual: runwayMonths, unit: 'months', direction: 'above', history: [] },
+    { key: 'health_score', label: kpiLabels.health_score, target: targets.health_score, actual: healthScore, unit: 'count', direction: 'above', history: [] },
   ]
 
   const metCount = kpis.filter(k => {
@@ -101,13 +114,13 @@ export default function KpiScorecard({ revenue, grossMarginPct, netMarginPct, ru
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#6366F1' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>KPI Scorecard</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_kpi.title')}</span>
           <span style={{
             fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
             background: metCount >= 4 ? 'rgba(34,197,94,.1)' : metCount >= 2 ? 'rgba(245,158,11,.1)' : 'rgba(239,68,68,.1)',
             color: metCount >= 4 ? '#22C55E' : metCount >= 2 ? '#F59E0B' : '#EF4444',
           }}>
-            {metCount}/{kpis.length} on target
+            {tc('cfo_kpi.onTargetBadge', { met: metCount, total: kpis.length })}
           </span>
         </div>
         {onAsk && (
@@ -115,22 +128,22 @@ export default function KpiScorecard({ revenue, grossMarginPct, netMarginPct, ru
             onClick={() => {
               const missed = kpis.filter(k => k.actual != null && (k.direction === 'above' ? k.actual < k.target : k.actual > k.target))
               const missedStr = missed.map(k => `${k.label}: ${formatValue(k.actual, k.unit, sym)} (target: ${formatValue(k.target, k.unit, sym)})`).join(', ')
-              onAsk(`My KPI scorecard shows ${metCount}/${kpis.length} on target. Off-target: ${missedStr || 'none'}. What should I prioritize to improve?`)
+              onAsk(tc('cfo_kpi.askPrompt', { met: metCount, total: kpis.length, missed: missedStr || tc('cfo_kpi.askPromptNone') }))
             }}
             style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
           >
-            Ask AI
+            {tc('cfo_kpi.askAi')}
           </button>
         )}
       </div>
 
       {/* Header row */}
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 60px', padding: '8px 18px', borderBottom: '1px solid var(--b)', background: 'var(--ev, #f9f9f8)' }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)' }}>KPI</div>
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textAlign: 'right' }}>Target</div>
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textAlign: 'right' }}>Actual</div>
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textAlign: 'center' }}>Status</div>
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textAlign: 'center' }}>Trend</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)' }}>{tc('cfo_kpi.colKpi')}</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textAlign: 'right' }}>{tc('cfo_kpi.colTarget')}</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textAlign: 'right' }}>{tc('cfo_kpi.colActual')}</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textAlign: 'center' }}>{tc('cfo_kpi.colStatus')}</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textAlign: 'center' }}>{tc('cfo_kpi.colTrend')}</div>
       </div>
 
       {/* KPI rows */}
@@ -173,7 +186,7 @@ export default function KpiScorecard({ revenue, grossMarginPct, netMarginPct, ru
                     fontSize: 11, color: 'var(--tx3)', fontFamily: 'inherit', fontVariantNumeric: 'tabular-nums',
                     textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '2px',
                   }}
-                  title="Click to edit target"
+                  title={tc('cfo_kpi.editTargetTitle')}
                 >
                   {kpi.direction === 'above' ? '>' : '<'}{formatValue(kpi.target, kpi.unit, sym)}
                 </button>
@@ -195,7 +208,7 @@ export default function KpiScorecard({ revenue, grossMarginPct, netMarginPct, ru
       })}
 
       <div style={{ padding: '10px 18px', background: 'var(--ev, #f9f9f8)', fontSize: 10, color: 'var(--tx3)' }}>
-        Click any target value to customize. Targets are saved to your browser.
+        {tc('cfo_kpi.footerHint')}
       </div>
     </div>
   )

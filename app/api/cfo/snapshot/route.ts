@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getUserLocale } from '@/lib/get-currency'
+import { getDateRange } from '@/lib/cfo-date-range'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -179,8 +180,12 @@ export async function GET(request: NextRequest) {
   ])
 
   const overrides = (overridesRow?.overrides || {}) as Record<string, any>
-  const monthlyFixedCosts = overrides.monthly_fixed_costs || overrides.monthlyFixedCosts || 0
-  const cashBalance = overrides.cash_balance || overrides.cashBalance || 0
+  const monthlyFixedCosts =
+    overrides.monthly_fixed_costs || overrides.monthlyFixedCosts ||
+    Number(params.get('monthly_fixed_costs') || 0)
+  const cashBalance =
+    overrides.cash_balance || overrides.cashBalance ||
+    Number(params.get('cash_balance') || 0)
 
   // --- Stage 2: Split tracked expenses — supplier purchases → COGS, everything else → fixed costs ---
   const COGS_CATEGORIES = new Set(['Supplier / Stock Purchase'])
@@ -301,19 +306,29 @@ export async function GET(request: NextRequest) {
   const stockoutRate = totalProducts > 0 ? (lowOrOos / totalProducts) * 100 : 0
 
   // --- Cash runway ---
-  // dailyFixed = overhead estimate + tracked expenses averaged over the period
   const dailyFixed = (overheadForPeriod + trackedExpensesTotal) / periodDays
   const dailyNetBurn = (totalRevenue / periodDays) - (totalCogs / periodDays) - dailyFixed
+  // dailyTotalCosts = all spending regardless of revenue (COGS + fixed overhead + tracked expenses)
+  const dailyTotalCosts = (totalCogs / periodDays) + dailyFixed
   let runwayMonths: number | null = null
   let runwayStatus: 'critical' | 'warning' | 'healthy' | 'strong' | 'unknown' = 'unknown'
-  if (cashBalance > 0 && dailyNetBurn < 0) {
-    const runwayDays = cashBalance / Math.abs(dailyNetBurn)
-    runwayMonths = Math.round((runwayDays / 30) * 10) / 10
+  if (cashBalance > 0 && dailyTotalCosts > 0) {
+    if (dailyNetBurn < 0) {
+      // Burning cash: runway = balance / net burn rate
+      const runwayDays = cashBalance / Math.abs(dailyNetBurn)
+      runwayMonths = Math.round((runwayDays / 30) * 10) / 10
+    } else {
+      // Profitable: show conservative "zero-revenue survival" runway = balance / total costs
+      const runwayDays = cashBalance / dailyTotalCosts
+      runwayMonths = Math.round((runwayDays / 30) * 10) / 10
+    }
     if (runwayMonths <= 1) runwayStatus = 'critical'
     else if (runwayMonths <= 3) runwayStatus = 'warning'
     else if (runwayMonths <= 6) runwayStatus = 'healthy'
     else runwayStatus = 'strong'
-  } else if (dailyNetBurn >= 0) {
+  } else if (cashBalance <= 0) {
+    runwayStatus = 'unknown'
+  } else {
     runwayStatus = 'strong'
   }
 
@@ -376,7 +391,7 @@ export async function GET(request: NextRequest) {
       key: 'cash_runway',
       label: 'Cash Runway',
       value: runwayMonths,
-      valueLabel: runwayMonths != null ? `${runwayMonths} mo` : dailyNetBurn >= 0 ? 'Cash +ve' : 'Set balance',
+      valueLabel: runwayMonths != null ? `${runwayMonths} mo` : 'Set balance',
       status: runwayStatus === 'strong' ? 'green' : runwayStatus === 'healthy' ? 'green' : runwayStatus === 'warning' ? 'yellow' : runwayStatus === 'critical' ? 'red' : 'gray',
     },
     {
@@ -610,7 +625,15 @@ export async function GET(request: NextRequest) {
     cash: {
       balance: cashBalance,
       monthly_fixed: monthlyFixedCosts,           // overhead estimate only (for Scenario Planner base)
-      monthly_fixed_total: Math.round(monthlyFixedCosts + trackedExpensesTotal), // overhead + tracked expenses
+      monthly_fixed_total: (() => {
+        // Use average of completed months' fixed costs from pnl_monthly for a stable monthly rate
+        const currentMonth = now.toISOString().slice(0, 7)
+        const completed = pnlMonthly.filter(m => m.month < currentMonth && m.fixed > 0)
+        if (completed.length > 0) {
+          return Math.round(completed.reduce((s, m) => s + m.fixed, 0) / completed.length)
+        }
+        return Math.round(monthlyFixedCosts + trackedExpensesTotal)
+      })(),
       tracked_expenses_total: Math.round(trackedExpensesTotal),
       runway_months: runwayMonths,
       runway_status: runwayStatus,
@@ -650,63 +673,3 @@ function daysBetween(a: string, b: string): number {
   return Math.ceil((new Date(b).getTime() - new Date(a).getTime()) / 86400000) + 1
 }
 
-function getDateRange(key: string, now: Date) {
-  const today = now.toISOString().split('T')[0]
-  const y = now.getFullYear()
-  const m = now.getMonth()
-  const d = now.getDate()
-
-  switch (key) {
-    case 'today': {
-      const yesterday = new Date(now.getTime() - 86400000).toISOString().split('T')[0]
-      return { start: today, end: today, compStart: yesterday, compEnd: yesterday }
-    }
-    case 'this_week': {
-      const dow = now.getDay()
-      const mondayOffset = dow === 0 ? 6 : dow - 1
-      const monday = new Date(y, m, d - mondayOffset)
-      const prevMonday = new Date(monday.getTime() - 7 * 86400000)
-      const prevSunday = new Date(monday.getTime() - 86400000)
-      return {
-        start: monday.toISOString().split('T')[0],
-        end: today,
-        compStart: prevMonday.toISOString().split('T')[0],
-        compEnd: prevSunday.toISOString().split('T')[0],
-      }
-    }
-    case 'this_month': {
-      const monthStart = new Date(y, m, 1).toISOString().split('T')[0]
-      const prevMonthStart = new Date(y, m - 1, 1).toISOString().split('T')[0]
-      const prevMonthEnd = new Date(y, m, 0).toISOString().split('T')[0]
-      return { start: monthStart, end: today, compStart: prevMonthStart, compEnd: prevMonthEnd }
-    }
-    case 'last_month': {
-      const s = new Date(y, m - 1, 1).toISOString().split('T')[0]
-      const e = new Date(y, m, 0).toISOString().split('T')[0]
-      const cs = new Date(y, m - 2, 1).toISOString().split('T')[0]
-      const ce = new Date(y, m - 1, 0).toISOString().split('T')[0]
-      return { start: s, end: e, compStart: cs, compEnd: ce }
-    }
-    case 'this_quarter': {
-      const qm = Math.floor(m / 3) * 3
-      const qs = new Date(y, qm, 1).toISOString().split('T')[0]
-      const pqs = new Date(y, qm - 3, 1).toISOString().split('T')[0]
-      const pqe = new Date(y, qm, 0).toISOString().split('T')[0]
-      return { start: qs, end: today, compStart: pqs, compEnd: pqe }
-    }
-    case 'ytd': {
-      const ytdStart = `${y}-01-01`
-      const prevYtdStart = `${y - 1}-01-01`
-      const prevYtdEnd = `${y - 1}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-      return { start: ytdStart, end: today, compStart: prevYtdStart, compEnd: prevYtdEnd }
-    }
-    case 'last_90': {
-      const s90 = new Date(now.getTime() - 90 * 86400000).toISOString().split('T')[0]
-      const cs90 = new Date(now.getTime() - 180 * 86400000).toISOString().split('T')[0]
-      const ce90 = new Date(now.getTime() - 91 * 86400000).toISOString().split('T')[0]
-      return { start: s90, end: today, compStart: cs90, compEnd: ce90 }
-    }
-    default:
-      return getDateRange('this_month', now)
-  }
-}

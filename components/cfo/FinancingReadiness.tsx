@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Props {
   totals: { revenue: number; cogs: number; gross_profit: number; fixed_costs: number; net_profit: number; gross_margin_pct: number; net_margin_pct: number }
@@ -32,7 +33,94 @@ interface FinancingOption {
   monthlyPayment: number
 }
 
+const buildOptions = (
+  tc: (k: string, v?: Record<string, string | number>) => string,
+  totals: Props['totals'],
+  annualRevenue: number,
+  maxDebtFromRevenue: number,
+  maxInvoiceFinance: number,
+  maxDebtFromIncome: number,
+  receivables: number,
+): FinancingOption[] => [
+  {
+    type: tc('cfo_financing.optionRevenueBasedType'),
+    description: tc('cfo_financing.optionRevenueBasedDesc'),
+    typicalRate: tc('cfo_financing.optionRevenueBasedRate'),
+    typicalTerm: tc('cfo_financing.optionRevenueBasedTerm'),
+    bestFor: tc('cfo_financing.optionRevenueBasedBestFor'),
+    requirements: [
+      tc('cfo_financing.reqRevenueBasedTrading'),
+      tc('cfo_financing.reqRevenueBasedConsistent'),
+      tc('cfo_financing.reqRevenueBasedDigital'),
+    ],
+    eligible: totals.revenue > 0 && annualRevenue > 50000,
+    estimatedAmount: Math.round(maxDebtFromRevenue),
+    monthlyPayment: Math.round(maxDebtFromRevenue * 0.12 / 12),
+  },
+  {
+    type: tc('cfo_financing.optionInvoiceType'),
+    description: tc('cfo_financing.optionInvoiceDesc'),
+    typicalRate: tc('cfo_financing.optionInvoiceRate'),
+    typicalTerm: tc('cfo_financing.optionInvoiceTerm'),
+    bestFor: tc('cfo_financing.optionInvoiceBestFor'),
+    requirements: [
+      tc('cfo_financing.reqInvoiceOutstanding'),
+      tc('cfo_financing.reqInvoiceCreditworthy'),
+      tc('cfo_financing.reqInvoiceRecords'),
+    ],
+    eligible: receivables > 1000,
+    estimatedAmount: Math.round(maxInvoiceFinance),
+    monthlyPayment: Math.round(maxInvoiceFinance * 0.03),
+  },
+  {
+    type: tc('cfo_financing.optionTermLoanType'),
+    description: tc('cfo_financing.optionTermLoanDesc'),
+    typicalRate: tc('cfo_financing.optionTermLoanRate'),
+    typicalTerm: tc('cfo_financing.optionTermLoanTerm'),
+    bestFor: tc('cfo_financing.optionTermLoanBestFor'),
+    requirements: [
+      tc('cfo_financing.reqTermLoanTrading'),
+      tc('cfo_financing.reqTermLoanProfit'),
+      tc('cfo_financing.reqTermLoanPlan'),
+    ],
+    eligible: totals.net_profit > 0 && annualRevenue > 100000,
+    estimatedAmount: Math.round(maxDebtFromIncome),
+    monthlyPayment: maxDebtFromIncome > 0 ? Math.round((maxDebtFromIncome * 0.01) * (Math.pow(1.01, 36)) / (Math.pow(1.01, 36) - 1)) : 0,
+  },
+  {
+    type: tc('cfo_financing.optionOverdraftType'),
+    description: tc('cfo_financing.optionOverdraftDesc'),
+    typicalRate: tc('cfo_financing.optionOverdraftRate'),
+    typicalTerm: tc('cfo_financing.optionOverdraftTerm'),
+    bestFor: tc('cfo_financing.optionOverdraftBestFor'),
+    requirements: [
+      tc('cfo_financing.reqOverdraftAccount'),
+      tc('cfo_financing.reqOverdraftDeposits'),
+      tc('cfo_financing.reqOverdraftHistory'),
+    ],
+    eligible: totals.revenue > 0,
+    estimatedAmount: Math.round(totals.revenue * 2),
+    monthlyPayment: Math.round(totals.revenue * 2 * 0.015),
+  },
+  {
+    type: tc('cfo_financing.optionAssetType'),
+    description: tc('cfo_financing.optionAssetDesc'),
+    typicalRate: tc('cfo_financing.optionAssetRate'),
+    typicalTerm: tc('cfo_financing.optionAssetTerm'),
+    bestFor: tc('cfo_financing.optionAssetBestFor'),
+    requirements: [
+      tc('cfo_financing.reqAssetQuote'),
+      tc('cfo_financing.reqAssetHistory'),
+      tc('cfo_financing.reqAssetDeposit'),
+    ],
+    eligible: totals.revenue > 0,
+    estimatedAmount: Math.round(annualRevenue * 0.2),
+    monthlyPayment: Math.round(annualRevenue * 0.2 * 0.085 / 12),
+  },
+]
+
 export default function FinancingReadiness({ totals, cash, receivablesSummary, currencySymbol: sym, onAsk }: Props) {
+  const { tc } = useLang()
   const [loanAmount, setLoanAmount] = useState<number | null>(null)
   const [termMonths, setTermMonths] = useState(24)
 
@@ -48,63 +136,7 @@ export default function FinancingReadiness({ totals, cash, receivablesSummary, c
 
   const amount = loanAmount || Math.round(Math.max(maxDebtFromIncome, maxDebtFromRevenue) / 1000) * 1000
 
-  const options: FinancingOption[] = [
-    {
-      type: 'Revenue-Based Finance',
-      description: 'Repay a fixed % of daily/weekly revenue. Flexible — payments scale with sales.',
-      typicalRate: '8-15% factor',
-      typicalTerm: '6-18 months',
-      bestFor: 'Seasonal or variable revenue businesses',
-      requirements: ['6+ months trading history', 'Consistent revenue', 'Digital payment records'],
-      eligible: totals.revenue > 0 && annualRevenue > 50000,
-      estimatedAmount: Math.round(maxDebtFromRevenue),
-      monthlyPayment: Math.round(maxDebtFromRevenue * 0.12 / 12),
-    },
-    {
-      type: 'Invoice Factoring',
-      description: 'Sell unpaid invoices for immediate cash (typically 80-90% of face value).',
-      typicalRate: '2-5% per invoice',
-      typicalTerm: 'Per invoice',
-      bestFor: 'B2B businesses with outstanding receivables',
-      requirements: ['Outstanding invoices', 'Creditworthy debtors', 'Invoicing records'],
-      eligible: receivables > 1000,
-      estimatedAmount: Math.round(maxInvoiceFinance),
-      monthlyPayment: Math.round(maxInvoiceFinance * 0.03),
-    },
-    {
-      type: 'Term Loan',
-      description: 'Fixed monthly payments over a set period. Best for planned investments.',
-      typicalRate: '8-20% APR',
-      typicalTerm: '1-5 years',
-      bestFor: 'Equipment, expansion, or working capital',
-      requirements: ['12+ months trading', 'Positive net profit', 'Business plan'],
-      eligible: totals.net_profit > 0 && annualRevenue > 100000,
-      estimatedAmount: Math.round(maxDebtFromIncome),
-      monthlyPayment: maxDebtFromIncome > 0 ? Math.round((maxDebtFromIncome * 0.01) * (Math.pow(1.01, 36)) / (Math.pow(1.01, 36) - 1)) : 0,
-    },
-    {
-      type: 'Overdraft / Line of Credit',
-      description: 'Flexible borrowing up to a limit. Only pay interest on what you use.',
-      typicalRate: '10-22% APR',
-      typicalTerm: 'Revolving',
-      bestFor: 'Short-term cash flow gaps',
-      requirements: ['Active bank account', 'Regular deposits', '3+ months history'],
-      eligible: totals.revenue > 0,
-      estimatedAmount: Math.round(totals.revenue * 2),
-      monthlyPayment: Math.round(totals.revenue * 2 * 0.015),
-    },
-    {
-      type: 'Asset Finance / Leasing',
-      description: 'Finance specific equipment or vehicles. Asset acts as security.',
-      typicalRate: '5-12% APR',
-      typicalTerm: '2-5 years',
-      bestFor: 'Equipment, vehicles, machinery',
-      requirements: ['Quote for asset', 'Trading history', 'Ability to pay deposits'],
-      eligible: totals.revenue > 0,
-      estimatedAmount: Math.round(annualRevenue * 0.2),
-      monthlyPayment: Math.round(annualRevenue * 0.2 * 0.085 / 12),
-    },
-  ]
+  const options = buildOptions(tc, totals, annualRevenue, maxDebtFromRevenue, maxInvoiceFinance, maxDebtFromIncome, receivables)
 
   // Loan calculator
   const calcRate = 0.12 / 12 // 12% APR monthly
@@ -120,11 +152,11 @@ export default function FinancingReadiness({ totals, cash, receivablesSummary, c
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: INDIGO }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>Financing Options</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_financing.title')}</span>
         </div>
-        <button onClick={() => onAsk(`I need financing advice. Revenue: ${fmt(totals.revenue, sym)}/mo, net profit: ${fmt(totals.net_profit, sym)}/mo, cash: ${fmt(cash.balance, sym)}, receivables: ${fmt(receivables, sym)}. Max borrowing capacity: ~${fmt(Math.max(maxDebtFromIncome, maxDebtFromRevenue), sym)}. What financing option is best for my situation?`)}
+        <button onClick={() => onAsk(tc('cfo_financing.askAiPrompt', { revenue: fmt(totals.revenue, sym), netProfit: fmt(totals.net_profit, sym), cash: fmt(cash.balance, sym), receivables: fmt(receivables, sym), maxBorrow: fmt(Math.max(maxDebtFromIncome, maxDebtFromRevenue), sym) }))}
           style={{ fontSize: 10, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
-          Ask AI
+          {tc('cfo_financing.askAi')}
         </button>
       </div>
 
@@ -132,66 +164,66 @@ export default function FinancingReadiness({ totals, cash, receivablesSummary, c
         {/* Borrowing capacity */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--b)', borderRadius: 8, overflow: 'hidden', marginBottom: 16 }}>
           <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
-            <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>Income-Based</div>
+            <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_financing.capacityIncomeBased')}</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: maxDebtFromIncome > 0 ? INDIGO : 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>{fmt(maxDebtFromIncome, sym)}</div>
-            <div style={{ fontSize: 8, color: 'var(--tx3)' }}>40% net × 3yr</div>
+            <div style={{ fontSize: 8, color: 'var(--tx3)' }}>{tc('cfo_financing.capacityIncomeNote')}</div>
           </div>
           <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
-            <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>Revenue-Based</div>
+            <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_financing.capacityRevenueBased')}</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{fmt(maxDebtFromRevenue, sym)}</div>
-            <div style={{ fontSize: 8, color: 'var(--tx3)' }}>15% annual rev</div>
+            <div style={{ fontSize: 8, color: 'var(--tx3)' }}>{tc('cfo_financing.capacityRevenueNote')}</div>
           </div>
           <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
-            <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>Invoice Finance</div>
+            <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 3 }}>{tc('cfo_financing.capacityInvoiceFinance')}</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: maxInvoiceFinance > 0 ? INDIGO : 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>{fmt(maxInvoiceFinance, sym)}</div>
-            <div style={{ fontSize: 8, color: 'var(--tx3)' }}>85% receivables</div>
+            <div style={{ fontSize: 8, color: 'var(--tx3)' }}>{tc('cfo_financing.capacityInvoiceNote')}</div>
           </div>
         </div>
 
         {/* Quick loan calculator */}
         <div style={{ padding: 12, borderRadius: 8, border: '1px solid var(--b)', background: 'var(--ev, #f9f9f8)', marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', marginBottom: 10 }}>Loan Calculator</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', marginBottom: 10 }}>{tc('cfo_financing.calcTitle')}</div>
           <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 3 }}>Amount ({sym})</div>
+              <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 3 }}>{tc('cfo_financing.calcAmountLabel', { sym })}</div>
               <input type="number" value={loanAmount || ''} placeholder={String(amount)}
                 onChange={e => setLoanAmount(Number(e.target.value) || null)}
                 style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid var(--b)', fontSize: 12, fontFamily: 'inherit', background: 'var(--sf)', color: 'var(--tx)', outline: 'none' }}
               />
             </div>
             <div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 3 }}>Term</div>
+              <div style={{ fontSize: 9, color: 'var(--tx3)', marginBottom: 3 }}>{tc('cfo_financing.calcTermLabel')}</div>
               <select value={termMonths} onChange={e => setTermMonths(Number(e.target.value))}
                 style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid var(--b)', fontSize: 12, fontFamily: 'inherit', background: 'var(--sf)', color: 'var(--tx)' }}>
-                {[6, 12, 24, 36, 48, 60].map(m => <option key={m} value={m}>{m} months</option>)}
+                {[6, 12, 24, 36, 48, 60].map(m => <option key={m} value={m}>{tc('cfo_financing.calcMonths', { n: m })}</option>)}
               </select>
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, textAlign: 'center' }}>
             <div>
               <div style={{ fontSize: 16, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{fmt(calcPayment, sym)}</div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>Monthly payment</div>
+              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_financing.calcMonthlyPayment')}</div>
             </div>
             <div>
               <div style={{ fontSize: 16, fontWeight: 700, color: AMBER, fontVariantNumeric: 'tabular-nums' }}>{fmt(totalInterest, sym)}</div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>Total interest</div>
+              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_financing.calcTotalInterest')}</div>
             </div>
             <div>
               <div style={{ fontSize: 16, fontWeight: 700, color: affordability <= 30 ? GREEN : affordability <= 50 ? AMBER : RED, fontVariantNumeric: 'tabular-nums' }}>
                 {affordability < 999 ? `${affordability.toFixed(0)}%` : '—'}
               </div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>of net profit</div>
+              <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('cfo_financing.calcOfNetProfit')}</div>
             </div>
           </div>
           {affordability > 40 && affordability < 999 && (
             <div style={{ marginTop: 8, fontSize: 10, color: RED, fontWeight: 500, textAlign: 'center' }}>
-              Payment exceeds 40% of monthly net profit — consider a longer term or smaller amount
+              {tc('cfo_financing.calcAffordabilityWarning')}
             </div>
           )}
         </div>
 
         {/* Financing options */}
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Available Options</div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{tc('cfo_financing.availableOptionsLabel')}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {options.map(opt => (
             <FinancingOptionCard key={opt.type} option={opt} sym={sym} />
@@ -203,6 +235,7 @@ export default function FinancingReadiness({ totals, cash, receivablesSummary, c
 }
 
 function FinancingOptionCard({ option: opt, sym }: { option: FinancingOption; sym: string }) {
+  const { tc } = useLang()
   const [expanded, setExpanded] = useState(false)
 
   return (
@@ -215,13 +248,13 @@ function FinancingOptionCard({ option: opt, sym }: { option: FinancingOption; sy
             <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 6px', borderRadius: 4,
               background: opt.eligible ? `${GREEN}10` : `${RED}10`,
               color: opt.eligible ? GREEN : RED }}>
-              {opt.eligible ? 'Eligible' : 'Not eligible'}
+              {opt.eligible ? tc('cfo_financing.eligible') : tc('cfo_financing.notEligible')}
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {opt.eligible && (
               <span style={{ fontSize: 11, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>
-                Up to {fmt(opt.estimatedAmount, sym)}
+                {tc('cfo_financing.upTo')} {fmt(opt.estimatedAmount, sym)}
               </span>
             )}
             <span style={{ fontSize: 10, color: 'var(--tx3)', transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 200ms' }}>▼</span>
@@ -232,11 +265,11 @@ function FinancingOptionCard({ option: opt, sym }: { option: FinancingOption; sy
         <div style={{ padding: '0 12px 12px' }}>
           <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5, marginBottom: 8 }}>{opt.description}</div>
           <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
-            <div style={{ fontSize: 10 }}><span style={{ color: 'var(--tx3)' }}>Rate:</span> <strong>{opt.typicalRate}</strong></div>
-            <div style={{ fontSize: 10 }}><span style={{ color: 'var(--tx3)' }}>Term:</span> <strong>{opt.typicalTerm}</strong></div>
-            <div style={{ fontSize: 10 }}><span style={{ color: 'var(--tx3)' }}>Best for:</span> <strong>{opt.bestFor}</strong></div>
+            <div style={{ fontSize: 10 }}><span style={{ color: 'var(--tx3)' }}>{tc('cfo_financing.detailRate')}</span> <strong>{opt.typicalRate}</strong></div>
+            <div style={{ fontSize: 10 }}><span style={{ color: 'var(--tx3)' }}>{tc('cfo_financing.detailTerm')}</span> <strong>{opt.typicalTerm}</strong></div>
+            <div style={{ fontSize: 10 }}><span style={{ color: 'var(--tx3)' }}>{tc('cfo_financing.detailBestFor')}</span> <strong>{opt.bestFor}</strong></div>
           </div>
-          <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 4 }}>Requirements:</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 4 }}>{tc('cfo_financing.requirements')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {opt.requirements.map((r, i) => (
               <div key={i} style={{ fontSize: 10, color: 'var(--tx2)', paddingLeft: 8 }}>• {r}</div>

@@ -86,7 +86,7 @@ Reply with ONLY valid JSON, no markdown, no other text:
     console.log('[scan-product-full] front hash (first 20 chars):', front.substring(0, 20))
 
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 600,
       messages: [{
         role: 'user',

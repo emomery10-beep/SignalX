@@ -1,0 +1,10 @@
+{
+  "sectionTitle": "Análisis de IA",
+  "poweredBy": "desarrollado por Claude",
+  "refreshBtn": "Actualizar",
+  "analyzingBtn": "Analizando...",
+  "analyzingBody": "Analizando tus finanzas...",
+  "noInsights": "No se generaron análisis. Haz clic en Actualizar para intentarlo de nuevo.",
+  "askAi": "Preguntar a la IA →",
+  "expandPrompt": "Amplía este análisis del CFO: \"{title}\" — {body}. Dame los próximos pasos específicos."
+}

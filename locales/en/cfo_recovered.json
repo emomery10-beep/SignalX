@@ -1,0 +1,11 @@
+{
+  "title": "Payment Recovery",
+  "askAi": "Ask AI",
+  "askPrompt": "We have {failedCount} failed payments totalling {totalAmount}. We’ve recovered {recoveredAmount} ({recoveryRate}% rate). {pendingRetry} payments pending retry. How can we improve our recovery rate?",
+  "atRisk": "At Risk",
+  "recovered": "Recovered",
+  "recoveryRate": "Recovery Rate",
+  "failedPayments": "{n} failed payments",
+  "payments": "{n} payments",
+  "pending": "{n} pending"
+}

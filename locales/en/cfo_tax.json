@@ -1,0 +1,47 @@
+{
+  "header_title": "Tax & Compliance",
+  "ask_ai": "Ask AI",
+  "ask_prompt": "My monthly revenue is {revenue}, net profit {netProfit}. Estimated tax set-aside is {setAside} ({pct}% of revenue). Am I setting aside enough? What tax optimizations are available for {smbLabel}s?",
+
+  "set_aside_this_month": "Set Aside This Month",
+  "pct_of_revenue": "({pct}% of revenue)",
+
+  "income_tax": "Income Tax",
+  "turnover_tax": "Turnover Tax ({rate}%)",
+  "vat_with_rate": "{name} ({rate}%)",
+  "vat_detail": "{rate}% on taxable supplies",
+  "turnover_detail": "{rate}% of gross turnover",
+
+  "bracket_covered_by_turnover": "Covered by turnover tax",
+  "bracket_corporate_rate": "{rate}% corporate rate",
+  "bracket_smb_rate": "{rate}% SMB rate",
+
+  "compliance_title": "{system} Compliance",
+  "hide_details": "Hide details",
+  "learn_more": "Learn more",
+  "what_you_need": "What you need:",
+  "tip_prefix": "Tip: {tip}",
+
+  "opportunities_title": "Tax-Saving Opportunities",
+  "tip_pension_title": "Pension / Retirement Contributions",
+  "tip_pension_desc": "Contributing to a {pension} reduces taxable income. Up to {pct}% of profits is typically deductible.",
+  "default_pension_scheme": "pension scheme",
+  "tip_capital_title": "Capital Allowances",
+  "tip_capital_desc": "Equipment, computers, and vehicles purchased for business use can reduce taxable profit through capital allowances.",
+  "tip_input_credits_title": "Claim {name} Input Credits",
+  "tip_input_credits_desc": "Ensure all business purchases have valid {name} receipts. Many SMBs miss 2-5% of claimable input {name}.",
+  "tip_opt_income_title": "Consider Opting for Income Tax",
+  "tip_opt_income_desc": "With {margin}% net margin, standard income tax on profits may be lower than {rate}% turnover tax.",
+  "tip_timing_title": "Timing Expenses Before Year-End",
+  "tip_timing_desc": "Bringing forward planned purchases (stock, equipment, marketing) into the current period reduces this year’s tax bill.",
+
+  "upcoming_deadlines": "Upcoming Deadlines",
+  "vat_return": "{name} Return",
+  "annual_return": "Annual Return",
+
+  "due_date": "Due {date}",
+  "overdue": "OVERDUE",
+  "days_until": "{days} days",
+  "days_short": "{days}d",
+  "save_approx": "Save ~{amount}"
+}

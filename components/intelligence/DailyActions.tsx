@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Action {
   title: string
@@ -13,13 +14,15 @@ const TYPE_ICON: Record<string, string> = {
   customer: '👤', decision: '🎯', info: '✅',
 }
 
-const PRIORITY_LABEL: Record<number, { label: string; color: string; bg: string }> = {
-  1: { label: 'Now', color: '#EF4444', bg: 'rgba(239,68,68,.08)' },
-  2: { label: 'Today', color: '#F59E0B', bg: 'rgba(245,158,11,.08)' },
-  3: { label: 'This week', color: '#6366F1', bg: 'rgba(99,102,241,.08)' },
+const PRIORITY_STYLE: Record<number, { color: string; bg: string }> = {
+  1: { color: '#EF4444', bg: 'rgba(239,68,68,.08)' },
+  2: { color: '#F59E0B', bg: 'rgba(245,158,11,.08)' },
+  3: { color: '#6366F1', bg: 'rgba(99,102,241,.08)' },
 }
+const PRIORITY_KEY: Record<number, string> = { 1: 'priorityNow', 2: 'priorityToday', 3: 'priorityThisWeek' }
 
 export default function DailyActions({ onAsk, limit, onViewAll }: { onAsk?: (prompt: string) => void; limit?: number; onViewAll?: () => void }) {
+  const { tc } = useLang()
   const [actions, setActions] = useState<Action[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -44,7 +47,7 @@ export default function DailyActions({ onAsk, limit, onViewAll }: { onAsk?: (pro
       <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#8B5CF6' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Today&apos;s Actions</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_dailyactions.title')}</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {[1, 2, 3].map(i => (
@@ -64,19 +67,20 @@ export default function DailyActions({ onAsk, limit, onViewAll }: { onAsk?: (pro
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#8B5CF6' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Today&apos;s Actions</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_dailyactions.title')}</span>
           {urgentCount > 0 && (
             <span style={{ fontSize: 10, fontWeight: 700, color: '#EF4444', background: 'rgba(239,68,68,.1)', borderRadius: 6, padding: '1px 6px' }}>
-              {urgentCount} urgent
+              {tc('intel_dailyactions.urgentBadge', { n: urgentCount })}
             </span>
           )}
         </div>
-        <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{allVisible.length} action{allVisible.length !== 1 ? 's' : ''}</span>
+        <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{allVisible.length !== 1 ? tc('intel_dailyactions.actionCountPlural', { n: allVisible.length }) : tc('intel_dailyactions.actionCount', { n: allVisible.length })}</span>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {visible.map((action, i) => {
-          const p = PRIORITY_LABEL[action.priority] || PRIORITY_LABEL[3]
+          const p = PRIORITY_STYLE[action.priority] || PRIORITY_STYLE[3]
+          const pLabel = tc('intel_dailyactions.' + (PRIORITY_KEY[action.priority] || PRIORITY_KEY[3]))
           return (
             <div key={i} style={{
               display: 'flex', alignItems: 'flex-start', gap: 10,
@@ -92,21 +96,21 @@ export default function DailyActions({ onAsk, limit, onViewAll }: { onAsk?: (pro
                   <span style={{
                     fontSize: 9, fontWeight: 700, color: p.color, background: p.bg,
                     borderRadius: 4, padding: '1px 5px', textTransform: 'uppercase', letterSpacing: '.04em', flexShrink: 0,
-                  }}>{p.label}</span>
+                  }}>{pLabel}</span>
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4 }}>{action.why}</div>
               </div>
               <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginTop: 2 }}>
                 {onAsk && action.type !== 'info' && (
                   <button
-                    onClick={() => onAsk(`Help me with this action: ${action.title}. Context: ${action.why}`)}
+                    onClick={() => onAsk(tc('intel_dailyactions.askActionPrompt', { title: action.title, why: action.why }))}
                     style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
-                  >Ask AI</button>
+                  >{tc('intel_dailyactions.askAi')}</button>
                 )}
                 <button
                   onClick={() => dismiss(i)}
                   style={{ fontSize: 10, color: 'var(--tx3)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '3px 4px', fontFamily: 'inherit' }}
-                  title="Dismiss"
+                  title={tc('intel_dailyactions.dismiss')}
                 >✕</button>
               </div>
             </div>
@@ -124,7 +128,7 @@ export default function DailyActions({ onAsk, limit, onViewAll }: { onAsk?: (pro
             textAlign: 'center',
           }}
         >
-          View all {allVisible.length} actions →
+          {tc('intel_dailyactions.viewAll', { n: allVisible.length })}
         </button>
       )}
     </div>

@@ -4,11 +4,13 @@
 //   node scripts/i18n-audit.mjs            # audit the main app
 //   node scripts/i18n-audit.mjs --app pos  # audit pos-askbiz
 //   node scripts/i18n-audit.mjs --update   # rewrite the ratchet to current counts (only when intentionally burning debt down)
+//   node scripts/i18n-audit.mjs --fix      # auto-heal smart-quoted ("“ ”") locale JSON, then audit
 //
-// Exit code 0 = pass, 1 = a gate regressed. Wire into CI so a milestone can't
-// merge while it ADDS i18n debt. Existing debt is allowed (the ratchet); new
-// debt is not. Checks that depend on the locale catalogues skip cleanly until
-// Foundation F8 creates them, then activate automatically.
+// Exit code 0 = pass, 1 = a gate regressed, 2 = a config/baseline file is itself
+// unreadable. Wire into CI so a milestone can't merge while it ADDS i18n debt.
+// Existing debt is allowed (the ratchet); new debt is not. Checks that depend on
+// the locale catalogues skip cleanly until Foundation F8 creates them, then
+// activate automatically.
 
 import { execSync } from 'node:child_process'
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs'
@@ -20,8 +22,46 @@ const args = process.argv.slice(2)
 const APP = args.includes('--app') ? args[args.indexOf('--app') + 1] : 'main'
 const UPDATE = args.includes('--update')
 const SKIP_TYPECHECK = args.includes('--skip-typecheck')
+const FIX = args.includes('--fix')
 
-const base = JSON.parse(readFileSync(join(ROOT, 'docs/i18n/audit-baseline.json'), 'utf8'))
+// ── JSON resilience helpers ──────────────────────────────────────────────────
+// Locale files get corrupted by editors / translation tools that "smart-quote"
+// the JSON (“ ” instead of "). That used to crash the whole audit — and the
+// prebuild — with a raw stack trace. Now we parse defensively, pinpoint the
+// breakage (file:line:col), and can auto-heal smart-quote damage with --fix.
+
+// Pull a line:col out of a V8 JSON error ("...at position N (line L column C)").
+function locateJsonError(src, err) {
+  const lc = /line (\d+) column (\d+)/.exec(err.message)
+  if (lc) return { line: +lc[1], col: +lc[2] }
+  const pm = /position (\d+)/.exec(err.message)
+  if (pm) {
+    const pos = +pm[1]
+    const upto = src.slice(0, pos)
+    return { line: upto.split('\n').length, col: pos - upto.lastIndexOf('\n') }
+  }
+  return { line: 0, col: 0 }
+}
+
+// Smart double-quotes → straight quotes. Smart apostrophes (’) are valid inside
+// JSON strings, so they're left untouched. Only ever applied to files that FAIL
+// to parse, so legitimately-curly-but-valid files (terms, privacy…) are safe.
+const healSmartQuotes = (src) => src.replace(/[“”]/g, '"')
+
+function readJsonSafe(path) {
+  const src = readFileSync(path, 'utf8')
+  try { return { ok: true, data: JSON.parse(src), src } }
+  catch (err) {
+    return { ok: false, err, src, loc: locateJsonError(src, err), hasSmart: /[“”]/.test(src) }
+  }
+}
+
+const baseRead = readJsonSafe(join(ROOT, 'docs/i18n/audit-baseline.json'))
+if (!baseRead.ok) {
+  console.error(`\n✗ docs/i18n/audit-baseline.json is not valid JSON (line ${baseRead.loc.line}, column ${baseRead.loc.col}): ${baseRead.err.message}\n`)
+  process.exit(2)
+}
+const base = baseRead.data
 const SCAN_DIRS = APP === 'pos' ? ['pos-askbiz/app', 'pos-askbiz/components', 'pos-askbiz/lib'] : ['app', 'components', 'lib']
 const LOCALE_ROOT = APP === 'pos' ? 'pos-askbiz/locales' : 'locales'
 const ratchet = base.ratchet[APP === 'pos' ? 'pos' : 'main']
@@ -38,6 +78,41 @@ function count(pattern) {
     const out = execSync(`grep -rEn ${JSON.stringify(pattern)} ${dirs.join(' ')} 2>/dev/null | wc -l`, { cwd: ROOT })
     return parseInt(out.toString().trim(), 10) || 0
   } catch { return 0 }
+}
+
+// ── GATE 0: every locale file is valid JSON (with optional auto-heal) ────────
+// One smart-quoted file breaks `next build` (prebuild runs this) AND tc() at
+// runtime. Catch it here with a precise location instead of a stack trace; with
+// --fix, repair smart-quote corruption in place and re-validate.
+{
+  const localeRootAbs = join(ROOT, LOCALE_ROOT)
+  const broken = []
+  let healed = 0
+  if (existsSync(localeRootAbs)) {
+    for (const loc of readdirSync(localeRootAbs)) {
+      const locDir = join(localeRootAbs, loc)
+      let files
+      try { files = readdirSync(locDir).filter(f => f.endsWith('.json')) } catch { continue }
+      for (const file of files) {
+        const p = join(locDir, file)
+        let r = readJsonSafe(p)
+        if (!r.ok && FIX && r.hasSmart) {
+          const fixed = healSmartQuotes(r.src)
+          try { JSON.parse(fixed); writeFileSync(p, fixed); healed++; r = { ok: true } }
+          catch { /* still broken after heal — fall through to report */ }
+        }
+        if (!r.ok) broken.push({ rel: `${LOCALE_ROOT}/${loc}/${file}`, line: r.loc.line, col: r.loc.col, hasSmart: r.hasSmart })
+      }
+    }
+  }
+  if (healed) console.log(`\n  ⚙ auto-healed ${healed} smart-quoted locale file(s)`)
+  if (broken.length) {
+    const lines = broken.map(b =>
+      `\n      ${b.rel}:${b.line}:${b.col}${b.hasSmart ? '  ← smart quotes “ ” — run: node scripts/i18n-audit.mjs --fix' : ''}`).join('')
+    fail('valid-json', `${broken.length} invalid locale file(s):${lines}`)
+  } else {
+    pass('valid-json', healed ? `all locale JSON valid (auto-healed ${healed})` : 'all locale JSON parses')
+  }
 }
 
 // ── GATE 1: no NEW hardcoded locale literals (toLocale...('en-GB')) ──────────
@@ -59,9 +134,11 @@ if (existsSync(catRoot) && existsSync(join(catRoot, base.baseLocale))) {
   const keysOf = (loc, file) => {
     const p = join(catRoot, loc, file)
     if (!existsSync(p)) return null
+    const r = readJsonSafe(p)
+    if (!r.ok) return null   // invalid JSON already surfaced by GATE 0 — don't crash here
     const flat = (o, pre = '') => Object.entries(o).flatMap(([k, v]) =>
       v && typeof v === 'object' ? flat(v, `${pre}${k}.`) : [`${pre}${k}`])
-    return new Set(flat(JSON.parse(readFileSync(p, 'utf8'))))
+    return new Set(flat(r.data))
   }
   let totalMissing = 0
   const report = []
@@ -69,6 +146,7 @@ if (existsSync(catRoot) && existsSync(join(catRoot, base.baseLocale))) {
     let missing = 0
     for (const file of ns) {
       const en = keysOf(base.baseLocale, file)
+      if (en === null) continue   // base file unreadable — already failed by GATE 0
       const tr = keysOf(loc, file)
       if (tr === null) { missing += en.size; continue }
       for (const k of en) if (!tr.has(k)) missing++

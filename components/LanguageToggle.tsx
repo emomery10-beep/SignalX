@@ -9,7 +9,7 @@ import { ACTIVE_LOCALES, localePath, isAppPath, type Locale } from '@/lib/i18n-l
 // lib/i18n-locale, so adding a language updates the switcher automatically.
 const LANGS: Lang[] = ACTIVE_LOCALES as Lang[]
 
-export default function LanguageToggle() {
+export default function LanguageToggle({ compact }: { compact?: boolean }) {
   const { lang, setLang, langNames, langFlags } = useLang()
   const pathname = usePathname()
   const router = useRouter()
@@ -46,7 +46,13 @@ export default function LanguageToggle() {
       <button
         onClick={() => setOpen(o => !o)}
         title="Change language"
-        style={{
+        style={compact ? {
+          width: 30, height: 30, borderRadius: 7,
+          border: 'none', background: 'transparent',
+          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 16, lineHeight: 1, padding: 0,
+          transition: 'background 150ms',
+        } : {
           display: 'flex', alignItems: 'center', gap: 5,
           padding: '5px 10px', borderRadius: 9999,
           border: '1px solid var(--b2, rgba(255,255,255,.12))',
@@ -56,21 +62,31 @@ export default function LanguageToggle() {
           cursor: 'pointer', fontFamily: 'inherit',
           transition: 'all 150ms',
         }}
-        onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--b, rgba(255,255,255,.25))')}
-        onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--b2, rgba(255,255,255,.12))')}
+        onMouseEnter={e => {
+          if (compact) e.currentTarget.style.background = 'var(--ev)'
+          else e.currentTarget.style.borderColor = 'var(--b, rgba(255,255,255,.25))'
+        }}
+        onMouseLeave={e => {
+          if (compact) e.currentTarget.style.background = 'transparent'
+          else e.currentTarget.style.borderColor = 'var(--b2, rgba(255,255,255,.12))'
+        }}
       >
-        <span style={{ fontSize: 14 }}>{langFlags[lang]}</span>
-        <span>{lang.toUpperCase()}</span>
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-          style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 150ms' }}>
-          <path d="M6 9l6 6 6-6"/>
-        </svg>
+        <span style={{ fontSize: compact ? 16 : 14 }}>{langFlags[lang]}</span>
+        {!compact && <span>{lang.toUpperCase()}</span>}
+        {!compact && (
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+            style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 150ms' }}>
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        )}
       </button>
 
       {/* Dropdown */}
       {open && (
         <div style={{
-          position: 'absolute', top: 'calc(100% + 6px)', right: 0,
+          position: 'absolute',
+          ...(compact ? { bottom: 'calc(100% + 6px)' } : { top: 'calc(100% + 6px)' }),
+          right: 0,
           background: 'var(--sf, #1a1a2e)', border: '1px solid var(--b, rgba(255,255,255,.12))',
           borderRadius: 12, padding: 6, minWidth: 160,
           boxShadow: '0 8px 32px rgba(0,0,0,.4)',

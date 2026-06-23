@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Anomaly {
   id: string
@@ -35,11 +36,12 @@ const TYPE_ICON: Record<string, string> = {
 }
 
 export default function AnomalyFeed({ anomalies, onAsk, onDismiss, compact = false }: Props) {
+  const { tc } = useLang()
   if (!anomalies.length) {
     return (
       <div style={{ padding: '16px', textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>
         <div style={{ fontSize: 24, marginBottom: 8 }}>✅</div>
-        No alerts right now — everything looks normal.
+        {tc('intel_anomalyfeed.noAlerts')}
       </div>
     )
   }
@@ -85,14 +87,14 @@ export default function AnomalyFeed({ anomalies, onAsk, onDismiss, compact = fal
                   <button
                     onClick={() => onAsk(a.prompt!)}
                     style={{ fontSize: 11, fontWeight: 600, color: s.labelColor, background: 'transparent', border: `1px solid ${s.border}`, borderRadius: 9999, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
-                    Ask AskBiz about this →
+                    {tc('intel_anomalyfeed.askAskBiz')}
                   </button>
                 )}
                 {onDismiss && (
                   <button
                     onClick={() => onDismiss(a.id)}
                     style={{ fontSize: 11, color: 'var(--tx3)', background: 'transparent', border: '1px solid var(--b)', borderRadius: 9999, padding: '4px 10px', cursor: 'pointer', fontFamily: 'inherit' }}>
-                    Dismiss
+                    {tc('intel_anomalyfeed.dismiss')}
                   </button>
                 )}
               </div>

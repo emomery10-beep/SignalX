@@ -296,9 +296,11 @@ export async function POST(request: NextRequest) {
 
   const merged = { ...(existing?.overrides || {}), ...overrides }
 
-  await supabase
+  const { error: upsertError } = await supabase
     .from('cost_profile_overrides')
     .upsert({ user_id: user.id, overrides: merged, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+
+  if (upsertError) return NextResponse.json({ error: upsertError.message }, { status: 500 })
 
   return NextResponse.json({ success: true, overrides: merged })
 }
