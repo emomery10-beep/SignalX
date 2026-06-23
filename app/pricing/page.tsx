@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getLocale, getT } from '@/lib/i18n-server'
 import { localePath } from '@/lib/i18n-locale'
+import LanguageToggle from '@/components/LanguageToggle'
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = getT()
@@ -98,7 +99,10 @@ export default function PricingPage() {
           </div>
           <span style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
         </Link>
-        <Link href={localePath('/signin', locale)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{t('pricing.try_free')} →</Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <LanguageToggle />
+          <Link href={localePath('/signin', locale)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{t('pricing.try_free')} →</Link>
+        </div>
       </nav>
 
       <div style={{ maxWidth: 1060, margin: '0 auto', padding: 'clamp(40px,6vw,72px) clamp(16px,4vw,32px)' }}>

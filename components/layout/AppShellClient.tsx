@@ -8,6 +8,7 @@ import { useLang } from '@/components/LanguageProvider'
 import { useMotion } from '@/hooks/useMotion'
 import HelpWidget from '@/components/help/HelpWidget'
 import NotificationBell from '@/components/layout/NotificationBell'
+import LanguageToggle from '@/components/LanguageToggle'
 
 const PRIMARY_NAV = [
   { id: 'ask',        href: '/ask',          label: 'Ask',         icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' },
@@ -308,6 +309,7 @@ export default function AppShellClient({ user, conversations, children }: {
                 <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
               </svg>
             </button>
+            <LanguageToggle />
             <NotificationBell />
           </div>
         </div>

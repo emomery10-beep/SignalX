@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { LanguageProvider, useLang } from '@/components/LanguageProvider'
+import LanguageToggle from '@/components/LanguageToggle'
 import type { Lang } from '@/lib/i18n'
 import { COUNTRY_TO_LANG } from '@/lib/i18n'
 
@@ -1422,6 +1423,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
 
         <div style={{ display:'flex',alignItems:'center',gap:6,flexShrink:0 }}>
+          <LanguageToggle />
           <Link href="/signin" style={{ width:36,height:36,borderRadius:8,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',textDecoration:'none' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
