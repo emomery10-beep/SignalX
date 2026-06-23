@@ -1,0 +1,20 @@
+{
+  "heading": "Bestanden",
+  "subheading": "Upload en beheer je CSV- en XLSX-datasets",
+  "upload_button": "Bestand uploaden",
+  "uploading_button": "Uploaden…",
+  "uploading_status": "{name} uploaden…",
+  "upload_success": "✓ {name} geüpload — {count} rijen gereed",
+  "upload_error": "✗ {message}",
+  "upload_failed": "Upload mislukt",
+  "dropzone_uploading": "Je bestand wordt geüpload…",
+  "dropzone_idle": "Sleep je bestand hierheen of tik om te bladeren",
+  "dropzone_hint": "CSV of XLSX · Tot 50 MB · Je gegevens blijven privé",
+  "empty_state": "Nog geen bestanden geüpload. Sleep een CSV- of Excel-bestand hierheen om te beginnen.",
+  "meta_rows": "{count} rijen",
+  "meta_columns": "{count} kolommen",
+  "meta_size": "{size} KB",
+  "status_ready": "✓ Gereed",
+  "ask_about_this": "Stel een vraag hierover →",
+  "delete": "Verwijderen"
+}

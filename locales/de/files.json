@@ -1,0 +1,20 @@
+{
+  "heading": "Dateien",
+  "subheading": "CSV- und XLSX-Datensätze hochladen und verwalten",
+  "upload_button": "Datei hochladen",
+  "uploading_button": "Wird hochgeladen…",
+  "uploading_status": "{name} wird hochgeladen…",
+  "upload_success": "✓ {name} hochgeladen – {count} Zeilen bereit",
+  "upload_error": "✗ {message}",
+  "upload_failed": "Upload fehlgeschlagen",
+  "dropzone_uploading": "Datei wird hochgeladen…",
+  "dropzone_idle": "Datei hier ablegen oder zum Durchsuchen tippen",
+  "dropzone_hint": "CSV oder XLSX · Bis zu 50 MB · Ihre Daten bleiben privat",
+  "empty_state": "Noch keine Dateien hochgeladen. Legen Sie oben eine CSV- oder Excel-Datei ab, um zu beginnen.",
+  "meta_rows": "{count} Zeilen",
+  "meta_columns": "{count} Spalten",
+  "meta_size": "{size} KB",
+  "status_ready": "✓ Bereit",
+  "ask_about_this": "Dazu befragen →",
+  "delete": "Löschen"
+}

@@ -1,0 +1,23 @@
+{
+  "browse_all_suffix": "Artikel →",
+  "results_for_prefix": "Ergebnisse für",
+  "article_singular": "Artikel",
+  "article_plural": "Artikel",
+  "no_articles_found": "Keine Artikel gefunden",
+  "no_articles_found_for_prefix": "für",
+  "back_to_all_categories": "Zurück zu allen Kategorien",
+  "load_prefix": "",
+  "load_suffix": "weitere Artikel laden",
+  "showing_prefix": "Anzeige",
+  "showing_of": "von",
+  "footer_copyright": "© 2026 AskBiz. KI-gestützte Business Intelligence für KMU.",
+  "footer_home": "Startseite",
+  "footer_blog": "Blog",
+  "footer_help": "Hilfe",
+  "footer_academy": "Academy",
+  "footer_rules": "Regeln",
+  "footer_privacy": "Datenschutz",
+  "aria_toggle_categories": "Kategorien ein-/ausblenden",
+  "aria_collapse": "Einklappen",
+  "aria_expand": "Ausklappen"
+}

@@ -1,0 +1,20 @@
+{
+  "heading": "Fichiers",
+  "subheading": "Importez et gérez vos jeux de données CSV et XLSX",
+  "upload_button": "Importer un fichier",
+  "uploading_button": "Importation…",
+  "uploading_status": "Importation de {name}…",
+  "upload_success": "✓ {name} importé — {count} lignes prêtes",
+  "upload_error": "✗ {message}",
+  "upload_failed": "Échec de l'importation",
+  "dropzone_uploading": "Importation de votre fichier…",
+  "dropzone_idle": "Déposez votre fichier ici ou appuyez pour parcourir",
+  "dropzone_hint": "CSV ou XLSX · Jusqu'à 50 Mo · Vos données restent privées",
+  "empty_state": "Aucun fichier importé. Déposez un fichier CSV ou Excel ci-dessus pour commencer.",
+  "meta_rows": "{count} lignes",
+  "meta_columns": "{count} colonnes",
+  "meta_size": "{size} Ko",
+  "status_ready": "✓ Prêt",
+  "ask_about_this": "Interroger ce fichier →",
+  "delete": "Supprimer"
+}

@@ -1,0 +1,22 @@
+{
+  "page_title": "Branchenvorlagen",
+  "feature_name": "Branchenvorlagen",
+  "loading": "Wird geladen…",
+  "count_suffix_one": "Vorlage – klicke auf eine Frage, um sie zu verwenden",
+  "count_suffix_other": "Vorlagen – klicke auf eine Frage, um sie zu verwenden",
+  "search_placeholder": "Vorlagen oder Fragen suchen…",
+  "filter_all": "Alle",
+  "filter_retail": "Einzelhandel",
+  "filter_ecommerce": "Ecommerce",
+  "filter_distributor": "Distributor",
+  "filter_exporter": "Exporter",
+  "questions_count": "Fragen",
+  "use_arrow": "Verwenden →",
+  "hide_questions": "↑ Ausblenden",
+  "see_all_prefix": "↓ Alle anzeigen",
+  "see_all_suffix": "Fragen",
+  "use": "Verwenden",
+  "use_first_in_chat": "Erste Frage im Chat verwenden →",
+  "empty_title": "Keine Vorlagen gefunden",
+  "empty_desc": "Versuche einen anderen Suchbegriff oder Unternehmenstyp"
+}

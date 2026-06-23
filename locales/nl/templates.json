@@ -1,0 +1,22 @@
+{
+  "page_title": "Branchesjablonen",
+  "feature_name": "Branchesjablonen",
+  "loading": "Laden…",
+  "count_suffix_one": "sjabloon — klik op een vraag om deze te gebruiken",
+  "count_suffix_other": "sjablonen — klik op een vraag om deze te gebruiken",
+  "search_placeholder": "Zoek sjablonen of vragen…",
+  "filter_all": "Alle",
+  "filter_retail": "Detailhandel",
+  "filter_ecommerce": "Ecommerce",
+  "filter_distributor": "Distributeur",
+  "filter_exporter": "Exporteur",
+  "questions_count": "vragen",
+  "use_arrow": "Gebruik →",
+  "hide_questions": "↑ Verbergen",
+  "see_all_prefix": "↓ Bekijk alle",
+  "see_all_suffix": "vragen",
+  "use": "Gebruik",
+  "use_first_in_chat": "Eerste vraag in chat gebruiken →",
+  "empty_title": "Geen sjablonen gevonden",
+  "empty_desc": "Probeer een andere zoekopdracht of branchefilter"
+}

@@ -1,0 +1,22 @@
+{
+  "page_title": "Modèles sectoriels",
+  "feature_name": "Modèles sectoriels",
+  "loading": "Chargement…",
+  "count_suffix_one": "modèle — cliquez sur une question pour l'utiliser",
+  "count_suffix_other": "modèles — cliquez sur une question pour l'utiliser",
+  "search_placeholder": "Rechercher des modèles ou des questions…",
+  "filter_all": "Tous",
+  "filter_retail": "Commerce de détail",
+  "filter_ecommerce": "Ecommerce",
+  "filter_distributor": "Distributeur",
+  "filter_exporter": "Exportateur",
+  "questions_count": "questions",
+  "use_arrow": "Utiliser →",
+  "hide_questions": "↑ Masquer",
+  "see_all_prefix": "↓ Voir tous les",
+  "see_all_suffix": "questions",
+  "use": "Utiliser",
+  "use_first_in_chat": "Utiliser la première question dans le chat →",
+  "empty_title": "Aucun modèle trouvé",
+  "empty_desc": "Essayez un autre terme de recherche ou un autre type d'activité"
+}

@@ -1,0 +1,20 @@
+{
+  "heading": "Archivos",
+  "subheading": "Sube y gestiona tus conjuntos de datos CSV y XLSX",
+  "upload_button": "Subir archivo",
+  "uploading_button": "Subiendo…",
+  "uploading_status": "Subiendo {name}…",
+  "upload_success": "✓ {name} subido — {count} filas listas",
+  "upload_error": "✗ {message}",
+  "upload_failed": "Error al subir",
+  "dropzone_uploading": "Subiendo tu archivo…",
+  "dropzone_idle": "Suelta tu archivo aquí o toca para explorar",
+  "dropzone_hint": "CSV o XLSX · Hasta 50 MB · Tus datos son privados",
+  "empty_state": "Aún no hay archivos. Suelta un CSV o Excel arriba para comenzar.",
+  "meta_rows": "{count} filas",
+  "meta_columns": "{count} columnas",
+  "meta_size": "{size} KB",
+  "status_ready": "✓ Listo",
+  "ask_about_this": "Preguntar sobre esto →",
+  "delete": "Eliminar"
+}

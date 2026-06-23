@@ -1,0 +1,20 @@
+{
+  "heading": "الملفات",
+  "subheading": "رفع وإدارة مجموعات بيانات CSV وXLSX",
+  "upload_button": "رفع ملف",
+  "uploading_button": "جارٍ الرفع…",
+  "uploading_status": "جارٍ رفع {name}…",
+  "upload_success": "✓ تم رفع {name} — {count} صف جاهز",
+  "upload_error": "✗ {message}",
+  "upload_failed": "فشل الرفع",
+  "dropzone_uploading": "جارٍ رفع ملفك…",
+  "dropzone_idle": "أفلت ملفك هنا أو اضغط للاستعراض",
+  "dropzone_hint": "CSV أو XLSX · حتى 50 ميغابايت · بياناتك تبقى خاصة",
+  "empty_state": "لم يُرفع أي ملف بعد. أفلت ملف CSV أو Excel أعلاه للبدء.",
+  "meta_rows": "{count} صف",
+  "meta_columns": "{count} عمود",
+  "meta_size": "{size} كيلوبايت",
+  "status_ready": "✓ جاهز",
+  "ask_about_this": "اسأل عن هذا →",
+  "delete": "حذف"
+}

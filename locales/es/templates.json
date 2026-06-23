@@ -1,0 +1,22 @@
+{
+  "page_title": "Plantillas por sector",
+  "feature_name": "Plantillas por sector",
+  "loading": "Cargando…",
+  "count_suffix_one": "plantilla — haz clic en cualquier pregunta para usarla",
+  "count_suffix_other": "plantillas — haz clic en cualquier pregunta para usarla",
+  "search_placeholder": "Buscar plantillas o preguntas…",
+  "filter_all": "Todas",
+  "filter_retail": "Comercio minorista",
+  "filter_ecommerce": "Ecommerce",
+  "filter_distributor": "Distribuidor",
+  "filter_exporter": "Exportador",
+  "questions_count": "preguntas",
+  "use_arrow": "Usar →",
+  "hide_questions": "↑ Ocultar",
+  "see_all_prefix": "↓ Ver todas las",
+  "see_all_suffix": "preguntas",
+  "use": "Usar",
+  "use_first_in_chat": "Usar la primera pregunta en el chat →",
+  "empty_title": "No se encontraron plantillas",
+  "empty_desc": "Prueba con otra búsqueda o filtro de tipo de negocio"
+}

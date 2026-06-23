@@ -1,0 +1,22 @@
+{
+  "page_title": "قوالب الصناعة",
+  "feature_name": "قوالب الصناعة",
+  "loading": "جارٍ التحميل…",
+  "count_suffix_one": "قالب — انقر على أي سؤال لاستخدامه",
+  "count_suffix_other": "قوالب — انقر على أي سؤال لاستخدامه",
+  "search_placeholder": "ابحث في القوالب أو الأسئلة…",
+  "filter_all": "الكل",
+  "filter_retail": "تجزئة",
+  "filter_ecommerce": "تجارة إلكترونية",
+  "filter_distributor": "موزّع",
+  "filter_exporter": "مُصدِّر",
+  "questions_count": "أسئلة",
+  "use_arrow": "استخدم →",
+  "hide_questions": "↑ إخفاء",
+  "see_all_prefix": "↓ عرض كل",
+  "see_all_suffix": "أسئلة",
+  "use": "استخدم",
+  "use_first_in_chat": "استخدم أول سؤال في المحادثة →",
+  "empty_title": "لا توجد قوالب",
+  "empty_desc": "جرّب بحثاً مختلفاً أو فلتراً آخر لنوع النشاط التجاري"
+}
