@@ -1,0 +1,16 @@
+{
+  "staff_login": "Medewerkersinlog",
+  "email_label": "E-mailadres",
+  "email_hint": "Voer je zakelijke e-mailadres in om verder te gaan.",
+  "err_email_unrecognised": "E-mailadres niet herkend",
+  "err_network": "Netwerkfout — probeer het opnieuw",
+  "err_pin_incorrect": "Onjuiste pincode",
+  "checking": "Bezig met controleren…",
+  "continue": "Doorgaan →",
+  "greeting": "Hoi {name} 👋",
+  "pin_hint": "Voer je pincode in om je aan te melden.",
+  "signing_in": "Aanmelden…",
+  "sign_in": "Aanmelden →",
+  "use_different_email": "Gebruik een ander e-mailadres",
+  "loading_login": "Inlogpagina laden…"
+}

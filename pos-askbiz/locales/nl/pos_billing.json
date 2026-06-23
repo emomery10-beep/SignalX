@@ -1,0 +1,18 @@
+{
+  "loading_billing": "Facturering laden…",
+  "title": "💳 Abonnementen & facturering",
+  "sign_out": "Afmelden",
+  "upgrade_success": "✅ Upgrade geslaagd! Uw nieuwe licenties zijn nu actief.",
+  "upgrade_cancelled": "❌ Upgrade geannuleerd. Er zijn geen kosten in rekening gebracht.",
+  "seats_title": "Point of Sale-licenties",
+  "seats_active_one": "Actief — {count} licentie",
+  "seats_active_other": "Actief — {count} licenties",
+  "loading_seat_info": "Licentiegegevens laden…",
+  "seats_blurb_1": "Voeg kassamedewerkers en voorraadbeheerders toe aan uw winkel voor £5/licentie/maand. Met elke licentie kan één medewerker inloggen bij ",
+  "seats_blurb_2": " via e-mail of WhatsApp OTP op hun eigen telefoon. Het eigenaarsdashboard is altijd inbegrepen — licenties zijn alleen voor extra medewerkers.",
+  "bullet_roles": "✓ Kassa- en voorraadrollen",
+  "bullet_login": "✓ Inloggen via e-mail of WhatsApp OTP",
+  "bullet_receipts": "✓ WhatsApp-bonnen voor klanten",
+  "bullet_vat": "✓ MTD-compatibele btw-export",
+  "bullet_cancel": "✓ Op elk moment opzegbaar"
+}

@@ -1,0 +1,21 @@
+{
+  "header_title": "Mapa de ventas",
+  "header_subtitle": "Transacciones con geolocalización",
+  "back": "← Volver",
+  "period_today": "Hoy",
+  "period_7_days": "7 días",
+  "period_30_days": "30 días",
+  "period_90_days": "90 días",
+  "stat_sales": "Ventas",
+  "stat_revenue": "Ingresos",
+  "stat_on_map": "En el mapa",
+  "popup_by": "por {name}",
+  "no_location_title": "Sin datos de ubicación aún",
+  "no_location_subtitle": "Permite el acceso a la ubicación en el dispositivo de caja al realizar una venta — cada venta aparecerá como un marcador aquí",
+  "loading": "Cargando…",
+  "geo_tagged_sale": "{count} venta con geolocalización",
+  "geo_tagged_sale_plural": "{count} ventas con geolocalización",
+  "none_geo_tagged_title": "{count} ventas — ninguna con geolocalización aún",
+  "none_geo_tagged_subtitle": "El dispositivo de caja debe permitir el acceso a la ubicación antes de finalizar la compra.",
+  "no_sales_period": "Sin ventas en este período — prueba con otro rango de fechas."
+}

@@ -1,0 +1,21 @@
+{
+  "header_title": "Carte des ventes",
+  "header_subtitle": "Transactions géolocalisées",
+  "back": "← Retour",
+  "period_today": "Aujourd'hui",
+  "period_7_days": "7 jours",
+  "period_30_days": "30 jours",
+  "period_90_days": "90 jours",
+  "stat_sales": "Ventes",
+  "stat_revenue": "Chiffre d'affaires",
+  "stat_on_map": "Sur la carte",
+  "popup_by": "par {name}",
+  "no_location_title": "Aucune donnée de localisation",
+  "no_location_subtitle": "Autorisez l'accès à la localisation sur l'appareil du caissier lors d'une vente — chaque vente apparaîtra ici sous forme d'épingle",
+  "loading": "Chargement…",
+  "geo_tagged_sale": "{count} vente géolocalisée",
+  "geo_tagged_sale_plural": "{count} ventes géolocalisées",
+  "none_geo_tagged_title": "{count} ventes — aucune géolocalisée pour l'instant",
+  "none_geo_tagged_subtitle": "L'appareil du caissier doit autoriser l'accès à la localisation avant de finaliser un achat.",
+  "no_sales_period": "Aucune vente sur cette période — essayez une autre plage de dates."
+}

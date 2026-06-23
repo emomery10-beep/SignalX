@@ -1,0 +1,21 @@
+{
+  "loading": "Chargement…",
+  "error": "Une erreur s'est produite. Veuillez réessayer.",
+  "save": "Enregistrer",
+  "cancel": "Annuler",
+  "back": "Retour",
+  "close": "Fermer",
+  "confirm": "Confirmer",
+  "delete": "Supprimer",
+  "edit": "Modifier",
+  "search": "Rechercher",
+  "add": "Ajouter",
+  "done": "Terminé",
+  "total": "Total",
+  "subtotal": "Sous-total",
+  "tax": "Taxe",
+  "pay": "Payer",
+  "checkout": "Passer à la caisse",
+  "yes": "Oui",
+  "no": "Non"
+}

@@ -1,0 +1,21 @@
+{
+  "loading": "Wird geladen…",
+  "error": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+  "save": "Speichern",
+  "cancel": "Abbrechen",
+  "back": "Zurück",
+  "close": "Schließen",
+  "confirm": "Bestätigen",
+  "delete": "Löschen",
+  "edit": "Bearbeiten",
+  "search": "Suchen",
+  "add": "Hinzufügen",
+  "done": "Fertig",
+  "total": "Gesamt",
+  "subtotal": "Zwischensumme",
+  "tax": "Steuer",
+  "pay": "Bezahlen",
+  "checkout": "Zur Kasse",
+  "yes": "Ja",
+  "no": "Nein"
+}

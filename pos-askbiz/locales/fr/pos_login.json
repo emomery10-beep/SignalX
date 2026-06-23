@@ -1,0 +1,16 @@
+{
+  "staff_login": "Connexion employé",
+  "email_label": "Adresse e-mail",
+  "email_hint": "Saisissez votre e-mail professionnel pour continuer.",
+  "err_email_unrecognised": "E-mail non reconnu",
+  "err_network": "Erreur réseau — veuillez réessayer",
+  "err_pin_incorrect": "Code PIN incorrect",
+  "checking": "Vérification…",
+  "continue": "Continuer →",
+  "greeting": "Bonjour {name} 👋",
+  "pin_hint": "Saisissez votre code PIN pour vous connecter.",
+  "signing_in": "Connexion en cours…",
+  "sign_in": "Se connecter →",
+  "use_different_email": "Utiliser une autre adresse e-mail",
+  "loading_login": "Chargement de la connexion…"
+}

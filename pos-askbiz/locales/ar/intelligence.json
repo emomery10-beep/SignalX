@@ -1,0 +1,21 @@
+{
+  "header_title": "خريطة المبيعات",
+  "header_subtitle": "معاملات مُحددة جغرافياً",
+  "back": "→ رجوع",
+  "period_today": "اليوم",
+  "period_7_days": "7 أيام",
+  "period_30_days": "30 يوماً",
+  "period_90_days": "90 يوماً",
+  "stat_sales": "المبيعات",
+  "stat_revenue": "الإيرادات",
+  "stat_on_map": "على الخريطة",
+  "popup_by": "بواسطة {name}",
+  "no_location_title": "لا توجد بيانات موقع بعد",
+  "no_location_subtitle": "اسمح بالوصول إلى الموقع على جهاز أمين الصندوق عند إتمام البيع — سيظهر كل بيع كدبوس هنا",
+  "loading": "جارٍ التحميل…",
+  "geo_tagged_sale": "عملية بيع {count} مُحددة جغرافياً",
+  "geo_tagged_sale_plural": "{count} عملية بيع مُحددة جغرافياً",
+  "none_geo_tagged_title": "{count} عملية بيع — لا يوجد تحديد جغرافي بعد",
+  "none_geo_tagged_subtitle": "يجب أن يسمح جهاز أمين الصندوق بالوصول إلى الموقع قبل إتمام الدفع.",
+  "no_sales_period": "لا توجد مبيعات في هذه الفترة بعد — جرّب نطاقاً زمنياً مختلفاً."
+}

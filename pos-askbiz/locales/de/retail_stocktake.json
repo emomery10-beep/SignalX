@@ -1,0 +1,14 @@
+{
+  "empty_rows": "Noch keine Artikel – Regal scannen oder Produkte per Suche hinzufügen.",
+  "remove_btn": "Entfernen",
+  "saving": "Wird gespeichert…",
+  "submit_adjustments": "Anpassungen übernehmen ({count})",
+  "scan_modal_title": "Regal scannen",
+  "open_camera": "Kamera öffnen",
+  "choose_photo": "Foto auswählen",
+  "scan_hint": "Auf ein Regal richten – erkannte Artikel werden automatisch zur Zählung hinzugefügt.",
+  "capture": "Aufnehmen",
+  "cancel": "Abbrechen",
+  "scanning_fallback": "Wird erkannt…",
+  "try_again": "Erneut versuchen"
+}

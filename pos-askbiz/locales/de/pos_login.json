@@ -1,0 +1,16 @@
+{
+  "staff_login": "Mitarbeiter-Login",
+  "email_label": "E-Mail-Adresse",
+  "email_hint": "Gib deine geschäftliche E-Mail-Adresse ein, um fortzufahren.",
+  "err_email_unrecognised": "E-Mail-Adresse nicht erkannt",
+  "err_network": "Netzwerkfehler – bitte erneut versuchen",
+  "err_pin_incorrect": "Falscher PIN",
+  "checking": "Wird geprüft…",
+  "continue": "Weiter →",
+  "greeting": "Hallo {name} 👋",
+  "pin_hint": "Gib deinen PIN ein, um dich anzumelden.",
+  "signing_in": "Anmeldung läuft…",
+  "sign_in": "Anmelden →",
+  "use_different_email": "Andere E-Mail-Adresse verwenden",
+  "loading_login": "Login wird geladen…"
+}

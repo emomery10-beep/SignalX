@@ -1,0 +1,21 @@
+{
+  "header_title": "Verkaufskarte",
+  "header_subtitle": "Standortbasierte Transaktionen",
+  "back": "← Zurück",
+  "period_today": "Heute",
+  "period_7_days": "7 Tage",
+  "period_30_days": "30 Tage",
+  "period_90_days": "90 Tage",
+  "stat_sales": "Verkäufe",
+  "stat_revenue": "Umsatz",
+  "stat_on_map": "Auf der Karte",
+  "popup_by": "von {name}",
+  "no_location_title": "Noch keine Standortdaten",
+  "no_location_subtitle": "Erlaube den Standortzugriff auf dem Kassengerät beim Abschluss eines Verkaufs – jeder Verkauf erscheint dann als Pin hier",
+  "loading": "Wird geladen …",
+  "geo_tagged_sale": "{count} standortbasierter Verkauf",
+  "geo_tagged_sale_plural": "{count} standortbasierte Verkäufe",
+  "none_geo_tagged_title": "{count} Verkäufe – noch keiner mit Standort",
+  "none_geo_tagged_subtitle": "Das Kassengerät muss den Standortzugriff vor dem Kassiervorgang erlauben.",
+  "no_sales_period": "In diesem Zeitraum noch keine Verkäufe – versuche einen anderen Datumsbereich."
+}

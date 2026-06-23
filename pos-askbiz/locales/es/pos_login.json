@@ -1,0 +1,16 @@
+{
+  "staff_login": "Inicio de sesión del personal",
+  "email_label": "Correo electrónico",
+  "email_hint": "Ingresa tu correo de trabajo para continuar.",
+  "err_email_unrecognised": "Correo electrónico no reconocido",
+  "err_network": "Error de red — por favor, inténtalo de nuevo",
+  "err_pin_incorrect": "PIN incorrecto",
+  "checking": "Verificando…",
+  "continue": "Continuar →",
+  "greeting": "Hola {name} 👋",
+  "pin_hint": "Ingresa tu PIN para iniciar sesión.",
+  "signing_in": "Iniciando sesión…",
+  "sign_in": "Iniciar sesión →",
+  "use_different_email": "Usar un correo electrónico diferente",
+  "loading_login": "Cargando inicio de sesión…"
+}

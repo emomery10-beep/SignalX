@@ -1,0 +1,19 @@
+{
+  "eighty_sixed": "86'd",
+  "cancel": "Abbrechen",
+  "sending": "...",
+  "send_to_kitchen": "🍳 An die Küche",
+  "pay_named": "Bezahlen – {name}",
+  "pay_fallback": "Bestellung",
+  "discount_label": "Rabatt ({sym})",
+  "payment_method": "Zahlungsmethode",
+  "pay_card": "Karte",
+  "pay_cash": "Bargeld",
+  "pay_contactless": "kontaktlos",
+  "pay_split": "aufteilen",
+  "pay_voucher": "Gutschein",
+  "pay_mpesa": "mpesa",
+  "back": "Zurück",
+  "processing": "Verarbeitung...",
+  "charge": "✓ Abbuchen {sym}{amount}"
+}

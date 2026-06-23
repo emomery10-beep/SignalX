@@ -1,0 +1,18 @@
+{
+  "loading_billing": "Chargement de la facturation…",
+  "title": "💳 Plans & Facturation",
+  "sign_out": "Se déconnecter",
+  "upgrade_success": "✅ Mise à niveau réussie ! Vos nouveaux postes sont maintenant actifs.",
+  "upgrade_cancelled": "❌ Mise à niveau annulée. Aucun paiement n'a été effectué.",
+  "seats_title": "Postes POS",
+  "seats_active_one": "Actif — {count} poste",
+  "seats_active_other": "Actif — {count} postes",
+  "loading_seat_info": "Chargement des informations sur les postes…",
+  "seats_blurb_1": "Ajoutez des caissiers et du personnel d'inventaire à votre boutique pour 5 £/poste/mois. Chaque poste permet à un membre du personnel de se connecter à ",
+  "seats_blurb_2": " via OTP par e-mail ou WhatsApp sur son propre téléphone. Le tableau de bord du propriétaire est toujours inclus — les postes sont réservés au personnel supplémentaire uniquement.",
+  "bullet_roles": "✓ Rôles caissier & inventaire",
+  "bullet_login": "✓ Connexion par OTP e-mail ou WhatsApp",
+  "bullet_receipts": "✓ Reçus WhatsApp envoyés aux clients",
+  "bullet_vat": "✓ Export TVA compatible MTD",
+  "bullet_cancel": "✓ Résiliation à tout moment"
+}

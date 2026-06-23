@@ -1,0 +1,21 @@
+{
+  "loading": "Cargando…",
+  "error": "Algo salió mal. Por favor, inténtalo de nuevo.",
+  "save": "Guardar",
+  "cancel": "Cancelar",
+  "back": "Atrás",
+  "close": "Cerrar",
+  "confirm": "Confirmar",
+  "delete": "Eliminar",
+  "edit": "Editar",
+  "search": "Buscar",
+  "add": "Agregar",
+  "done": "Listo",
+  "total": "Total",
+  "subtotal": "Subtotal",
+  "tax": "Impuesto",
+  "pay": "Pagar",
+  "checkout": "Pagar",
+  "yes": "Sí",
+  "no": "No"
+}

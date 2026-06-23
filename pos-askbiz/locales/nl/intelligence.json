@@ -1,0 +1,21 @@
+{
+  "header_title": "Verkoopkaart",
+  "header_subtitle": "Geogelokaliseerde transacties",
+  "back": "← Terug",
+  "period_today": "Vandaag",
+  "period_7_days": "7 dagen",
+  "period_30_days": "30 dagen",
+  "period_90_days": "90 dagen",
+  "stat_sales": "Verkopen",
+  "stat_revenue": "Omzet",
+  "stat_on_map": "Op kaart",
+  "popup_by": "door {name}",
+  "no_location_title": "Nog geen locatiegegevens",
+  "no_location_subtitle": "Sta locatietoegang toe op het kassaapparaat bij het afrekenen — elke verkoop verschijnt hier als een pin",
+  "loading": "Laden…",
+  "geo_tagged_sale": "{count} geogelokaliseerde verkoop",
+  "geo_tagged_sale_plural": "{count} geogelokaliseerde verkopen",
+  "none_geo_tagged_title": "{count} verkopen — nog geen geogelokaliseerd",
+  "none_geo_tagged_subtitle": "Het kassaapparaat moet locatietoegang toestaan vóór het afrekenen.",
+  "no_sales_period": "Nog geen verkopen in deze periode — probeer een andere datumreeks."
+}

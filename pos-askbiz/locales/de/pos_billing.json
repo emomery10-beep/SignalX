@@ -1,0 +1,18 @@
+{
+  "loading_billing": "Abrechnung wird geladen…",
+  "title": "💳 Tarife & Abrechnung",
+  "sign_out": "Abmelden",
+  "upgrade_success": "✅ Upgrade erfolgreich! Ihre neuen Plätze sind jetzt aktiv.",
+  "upgrade_cancelled": "❌ Upgrade abgebrochen. Es wurden keine Kosten berechnet.",
+  "seats_title": "Point of Sale Plätze",
+  "seats_active_one": "Aktiv — {count} Platz",
+  "seats_active_other": "Aktiv — {count} Plätze",
+  "loading_seat_info": "Platzinformationen werden geladen…",
+  "seats_blurb_1": "Fügen Sie Kassierer- und Lagerpersonal zu Ihrem Geschäft für 5 £/Platz/Monat hinzu. Jeder Platz ermöglicht einem Mitarbeiter die Anmeldung bei ",
+  "seats_blurb_2": " per E-Mail oder WhatsApp-OTP auf dem eigenen Smartphone. Das Inhaber-Dashboard ist immer inbegriffen – Plätze sind ausschließlich für zusätzliches Personal.",
+  "bullet_roles": "✓ Kassierer- & Lagerrollen",
+  "bullet_login": "✓ Anmeldung per E-Mail oder WhatsApp-OTP",
+  "bullet_receipts": "✓ WhatsApp-Belege für Kunden",
+  "bullet_vat": "✓ MTD-kompatibler MwSt.-Export",
+  "bullet_cancel": "✓ Jederzeit kündbar"
+}

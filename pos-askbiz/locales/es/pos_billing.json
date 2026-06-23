@@ -1,0 +1,18 @@
+{
+  "loading_billing": "Cargando facturación…",
+  "title": "💳 Planes y facturación",
+  "sign_out": "Cerrar sesión",
+  "upgrade_success": "✅ ¡Actualización exitosa! Tus nuevos puestos ya están activos.",
+  "upgrade_cancelled": "❌ Actualización cancelada. No se realizó ningún cargo.",
+  "seats_title": "Puestos de punto de venta POS",
+  "seats_active_one": "Activo — {count} puesto",
+  "seats_active_other": "Activo — {count} puestos",
+  "loading_seat_info": "Cargando información de puestos…",
+  "seats_blurb_1": "Agrega cajeros y personal de inventario a tu tienda por £5/puesto/mes. Cada puesto permite que un miembro del personal inicie sesión en ",
+  "seats_blurb_2": " mediante correo electrónico o código OTP de WhatsApp desde su propio teléfono. El panel del propietario siempre está incluido; los puestos son solo para personal adicional.",
+  "bullet_roles": "✓ Roles de cajero e inventario",
+  "bullet_login": "✓ Inicio de sesión por correo electrónico o WhatsApp OTP",
+  "bullet_receipts": "✓ Recibos por WhatsApp a clientes",
+  "bullet_vat": "✓ Exportación de IVA compatible con MTD",
+  "bullet_cancel": "✓ Cancela en cualquier momento"
+}
