@@ -35,7 +35,7 @@ async function runSourceSignals(userId: string): Promise<Signal[]> {
     const { data: sources } = await service
       .from('connected_sources')
       .select('source_type, status, last_synced_at, created_at')
-      .eq('user_id', userId)
+      .eq('user_id', userId) as { data: { source_type: string; status: string | null; last_synced_at: string | null; created_at: string | null }[] | null }
 
     if (!sources || sources.length === 0) return []
 

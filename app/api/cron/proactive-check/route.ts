@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       const { data: sources } = await supabase
         .from('connected_sources')
         .select('source_type, status, last_synced_at, name, created_at')
-        .eq('user_id', userId)
+        .eq('user_id', userId) as { data: { source_type: string; status: string | null; last_synced_at: string | null; name: string | null; created_at: string | null }[] | null }
 
       if (sources?.length) {
         const SOURCE_LABELS: Record<string, string> = {
