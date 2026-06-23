@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient as createServerClient } from '@/lib/supabase/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/lib/supabase/types'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -17,7 +18,7 @@ export async function GET() {
   const { data: { user } } = await authClient.auth.getUser()
   if (!user) return NextResponse.json({ payments: [], stats: null }, { status: 401 })
 
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
@@ -42,7 +43,7 @@ export async function GET() {
   return fetchFromPosTransactions(supabase, user.id)
 }
 
-async function fetchFromPosPayments(supabase: ReturnType<typeof createClient>, userId: string) {
+async function fetchFromPosPayments(supabase: SupabaseClient<Database>, userId: string) {
   const { data: failed } = await supabase
     .from('pos_payments')
     .select('id, owner_id, transaction_id, customer_phone, amount, payment_method, provider, external_reference, status, error_message, initiated_at, completed_at, created_at')
@@ -64,7 +65,7 @@ async function fetchFromPosPayments(supabase: ReturnType<typeof createClient>, u
   return buildResponse(allPayments, 'pos_payments')
 }
 
-async function fetchFromPosTransactions(supabase: ReturnType<typeof createClient>, userId: string) {
+async function fetchFromPosTransactions(supabase: SupabaseClient<Database>, userId: string) {
   // Only get genuinely FAILED digital payments (not pending — pending just means webhook hasn't confirmed yet)
   const { data: failedTx } = await supabase
     .from('pos_transactions')

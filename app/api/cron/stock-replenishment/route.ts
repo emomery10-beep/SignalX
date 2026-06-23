@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { Database, Json } from '@/lib/supabase/types'
 import { createNotification } from '@/lib/create-notification'
 
 export const runtime = 'nodejs'
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
             run_id: `reorder_${ownerId}`,
             type: 'reorder_suggestion',
             status: 'pending',
-            content: s,
+            content: s as unknown as Json,
             verdict: s.urgency === 'critical' ? 'problem' : s.urgency === 'high' ? 'watch' : 'act',
             verdict_sentence: s.reason,
             key_insight: `${s.name}: order ${s.suggested_qty} ${s.unit}s (${s.days_until_stockout} days left)`,
@@ -150,7 +151,7 @@ interface ReorderSuggestion {
 }
 
 async function analyseOwnerInventory(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient<Database>,
   ownerId: string,
 ): Promise<ReorderSuggestion[]> {
   // Fetch active inventory for this owner
@@ -199,7 +200,7 @@ async function analyseOwnerInventory(
     const avgDailySales = sales.total / LOOKBACK_DAYS
 
     // Skip items with no sales history AND stock > threshold
-    if (avgDailySales === 0 && item.stock_qty > item.low_stock_threshold) continue
+    if (avgDailySales === 0 && item.stock_qty > (item.low_stock_threshold ?? 0)) continue
 
     // Calculate days until stockout
     const daysUntilStockout = avgDailySales > 0
@@ -231,7 +232,7 @@ async function analyseOwnerInventory(
     const trendMultiplier = salesTrend === 'rising' ? 1.2 : salesTrend === 'falling' ? 0.85 : 1
     const suggestedQty = Math.max(
       Math.ceil((projectedDemand * trendMultiplier) - item.stock_qty),
-      item.low_stock_threshold // At minimum, order enough to reach threshold
+      item.low_stock_threshold ?? 0 // At minimum, order enough to reach threshold
     )
 
     // Build reason string
@@ -256,7 +257,7 @@ async function analyseOwnerInventory(
       category: item.category,
       unit: item.unit || 'item',
       current_stock: item.stock_qty,
-      low_stock_threshold: item.low_stock_threshold,
+      low_stock_threshold: item.low_stock_threshold ?? 0,
       cost_price: item.cost_price || 0,
       sale_price: item.sale_price || 0,
       avg_daily_sales: Math.round(avgDailySales * 10) / 10,

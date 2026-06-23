@@ -430,6 +430,48 @@ export type Database = {
         }
         Relationships: []
       }
+      carrier_performance: {
+        Row: {
+          carrier_code: string | null
+          carrier_name: string | null
+          created_at: string
+          had_customs_hold: boolean | null
+          id: string
+          on_time: boolean | null
+          recorded_at: string
+          route_destination: string | null
+          route_origin: string | null
+          transit_days: number | null
+          user_id: string
+        }
+        Insert: {
+          carrier_code?: string | null
+          carrier_name?: string | null
+          created_at?: string
+          had_customs_hold?: boolean | null
+          id?: string
+          on_time?: boolean | null
+          recorded_at?: string
+          route_destination?: string | null
+          route_origin?: string | null
+          transit_days?: number | null
+          user_id: string
+        }
+        Update: {
+          carrier_code?: string | null
+          carrier_name?: string | null
+          created_at?: string
+          had_customs_hold?: boolean | null
+          id?: string
+          on_time?: boolean | null
+          recorded_at?: string
+          route_destination?: string | null
+          route_origin?: string | null
+          transit_days?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       cfo_expenses: {
         Row: {
           amount: number
@@ -1048,6 +1090,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      freight_quotes: {
+        Row: {
+          cheapest_rate: number | null
+          created_at: string
+          destination_country: string | null
+          destination_port: string | null
+          id: string
+          market_avg_rate: number | null
+          origin_country: string | null
+          origin_port: string | null
+          overpaying_amount: number | null
+          quoted_at: string
+          rates_snapshot: Json | null
+          shipment_mode: string | null
+          user_id: string
+          user_paid_rate: number | null
+          volume_cbm: number | null
+          weight_kg: number | null
+        }
+        Insert: {
+          cheapest_rate?: number | null
+          created_at?: string
+          destination_country?: string | null
+          destination_port?: string | null
+          id?: string
+          market_avg_rate?: number | null
+          origin_country?: string | null
+          origin_port?: string | null
+          overpaying_amount?: number | null
+          quoted_at?: string
+          rates_snapshot?: Json | null
+          shipment_mode?: string | null
+          user_id: string
+          user_paid_rate?: number | null
+          volume_cbm?: number | null
+          weight_kg?: number | null
+        }
+        Update: {
+          cheapest_rate?: number | null
+          created_at?: string
+          destination_country?: string | null
+          destination_port?: string | null
+          id?: string
+          market_avg_rate?: number | null
+          origin_country?: string | null
+          origin_port?: string | null
+          overpaying_amount?: number | null
+          quoted_at?: string
+          rates_snapshot?: Json | null
+          shipment_mode?: string | null
+          user_id?: string
+          user_paid_rate?: number | null
+          volume_cbm?: number | null
+          weight_kg?: number | null
+        }
+        Relationships: []
       }
       geo_cache: {
         Row: {
@@ -7309,13 +7408,66 @@ export type Database = {
         }
         Relationships: []
       }
+      shipment_alerts: {
+        Row: {
+          alert_level: string | null
+          alert_type: string | null
+          created_at: string
+          delay_days: number | null
+          financial_impact: number | null
+          id: string
+          is_read: boolean
+          message: string | null
+          shipment_id: string | null
+          tracking_number: string | null
+          user_id: string
+        }
+        Insert: {
+          alert_level?: string | null
+          alert_type?: string | null
+          created_at?: string
+          delay_days?: number | null
+          financial_impact?: number | null
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          shipment_id?: string | null
+          tracking_number?: string | null
+          user_id: string
+        }
+        Update: {
+          alert_level?: string | null
+          alert_type?: string | null
+          created_at?: string
+          delay_days?: number | null
+          financial_impact?: number | null
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          shipment_id?: string | null
+          tracking_number?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipment_alerts_shipment_id_fkey"
+            columns: ["shipment_id"]
+            isOneToOne: false
+            referencedRelation: "shipments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shipments: {
         Row: {
           actual_arrival: string | null
           carrier_code: string | null
+          carrier_name: string | null
           created_at: string
           customs_hold: boolean | null
           daily_financing_cost: number | null
+          delay_days: number | null
+          destination_country: string | null
           expected_arrival: string | null
           financial_impact: number | null
           id: string
@@ -7325,6 +7477,7 @@ export type Database = {
           last_update: string | null
           notes: string | null
           order_date: string | null
+          origin_country: string | null
           purchase_order_ref: string | null
           quantity: number | null
           risk_score: number | null
@@ -7346,9 +7499,12 @@ export type Database = {
         Insert: {
           actual_arrival?: string | null
           carrier_code?: string | null
+          carrier_name?: string | null
           created_at?: string
           customs_hold?: boolean | null
           daily_financing_cost?: number | null
+          delay_days?: number | null
+          destination_country?: string | null
           expected_arrival?: string | null
           financial_impact?: number | null
           id?: string
@@ -7358,6 +7514,7 @@ export type Database = {
           last_update?: string | null
           notes?: string | null
           order_date?: string | null
+          origin_country?: string | null
           purchase_order_ref?: string | null
           quantity?: number | null
           risk_score?: number | null
@@ -7379,9 +7536,12 @@ export type Database = {
         Update: {
           actual_arrival?: string | null
           carrier_code?: string | null
+          carrier_name?: string | null
           created_at?: string
           customs_hold?: boolean | null
           daily_financing_cost?: number | null
+          delay_days?: number | null
+          destination_country?: string | null
           expected_arrival?: string | null
           financial_impact?: number | null
           id?: string
@@ -7391,6 +7551,7 @@ export type Database = {
           last_update?: string | null
           notes?: string | null
           order_date?: string | null
+          origin_country?: string | null
           purchase_order_ref?: string | null
           quantity?: number | null
           risk_score?: number | null
