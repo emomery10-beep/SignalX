@@ -57,5 +57,5 @@ export function serperAnswer(res: SerperResponse | null): string {
   if (res.answerBox?.answer) return res.answerBox.answer
   if (res.answerBox?.snippet) return res.answerBox.snippet
   if (res.knowledgeGraph?.description) return res.knowledgeGraph.description
-  return res.organic.slice(0, 2).map(r => r.snippet).filter(Boolean).join(' ') || ''
+  return (res.organic || []).slice(0, 2).map(r => r.snippet).filter(Boolean).join(' ') || ''
 }

@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
   const fortyEightHoursAgo = new Date(now.getTime() - 48 * 3600000).toISOString()
 
   const [
-    { data: lowStock },
+    { data: allInventory },
     { data: staleQuotes },
     { data: staleSources },
     { data: unresolvedAnomalies },
@@ -41,11 +41,12 @@ export async function GET(req: NextRequest) {
     { data: recentTx },
     { data: pendingDecisions },
   ] = await Promise.all([
+    // Fetch all active items then filter client-side — PostgREST can't do
+    // column-to-column comparisons (stock_qty <= low_stock_threshold) in .or()
     supabase.from('inventory')
       .select('id, name, stock_qty, low_stock_threshold, sale_price')
       .eq('owner_id', user.id).eq('active', true)
-      .or('stock_qty.lte.low_stock_threshold')
-      .order('stock_qty', { ascending: true }).limit(10),
+      .order('stock_qty', { ascending: true }).limit(200),
 
     supabase.from('pos_service_jobs')
       .select('id, ticket_number, device_model, fault_description, quoted_price, created_at, status')
@@ -84,33 +85,40 @@ export async function GET(req: NextRequest) {
       .order('review_at', { ascending: true }).limit(3),
   ])
 
+  // Client-side column-to-column filter (PostgREST limitation)
+  const lowStock = (allInventory || []).filter(i => i.stock_qty <= (i.low_stock_threshold ?? 0))
+
+  // Sanitize user-controlled strings before interpolating into AI prompt
+  const safe = (s: string | null | undefined, max = 80) =>
+    (s || '').replace(/[\r\n]/g, ' ').slice(0, max)
+
   const signals: string[] = []
 
-  if (lowStock?.length) {
+  if (lowStock.length) {
     const outOfStock = lowStock.filter(i => i.stock_qty <= 0)
     const runningLow = lowStock.filter(i => i.stock_qty > 0)
-    if (outOfStock.length) signals.push(`OUT OF STOCK (${outOfStock.length}): ${outOfStock.map(i => i.name).join(', ')}`)
-    if (runningLow.length) signals.push(`LOW STOCK (${runningLow.length}): ${runningLow.map(i => `${i.name} (${i.stock_qty} left)`).join(', ')}`)
+    if (outOfStock.length) signals.push(`OUT OF STOCK (${outOfStock.length}): ${outOfStock.map(i => safe(i.name)).join(', ')}`)
+    if (runningLow.length) signals.push(`LOW STOCK (${runningLow.length}): ${runningLow.map(i => `${safe(i.name)} (${i.stock_qty} left)`).join(', ')}`)
   }
 
   if (staleQuotes?.length) {
-    signals.push(`STALE QUOTES (${staleQuotes.length}): ${staleQuotes.map(j => `#${j.ticket_number} ${j.device_model || 'repair'} — quoted ${Math.round((now.getTime() - new Date(j.created_at).getTime()) / 3600000)}h ago`).join('; ')}`)
+    signals.push(`STALE QUOTES (${staleQuotes.length}): ${staleQuotes.map(j => `#${j.ticket_number} ${safe(j.device_model) || 'repair'} — quoted ${Math.round((now.getTime() - new Date(j.created_at).getTime()) / 3600000)}h ago`).join('; ')}`)
   }
 
   if (staleSources?.length) {
-    signals.push(`STALE DATA SOURCES (${staleSources.length}): ${staleSources.map(s => `${s.name || s.source_type} — last synced ${Math.round((now.getTime() - new Date(s.last_synced_at).getTime()) / 3600000)}h ago`).join('; ')}`)
+    signals.push(`STALE DATA SOURCES (${staleSources.length}): ${staleSources.map(s => `${safe(s.name || s.source_type)} — last synced ${Math.round((now.getTime() - new Date(s.last_synced_at).getTime()) / 3600000)}h ago`).join('; ')}`)
   }
 
   if (unresolvedAnomalies?.length) {
-    signals.push(`UNRESOLVED ALERTS (${unresolvedAnomalies.length}): ${unresolvedAnomalies.map(a => `[${a.severity}] ${a.title}`).join('; ')}`)
+    signals.push(`UNRESOLVED ALERTS (${unresolvedAnomalies.length}): ${unresolvedAnomalies.map(a => `[${a.severity}] ${safe(a.title)}`).join('; ')}`)
   }
 
   if (atRiskCustomers?.length) {
-    signals.push(`AT-RISK HIGH-VALUE CUSTOMERS (${atRiskCustomers.length}): ${atRiskCustomers.map(c => `${c.name || c.phone} — spent ${sym}${c.total_spent}, last seen ${Math.round((now.getTime() - new Date(c.last_seen_at).getTime()) / 86400000)} days ago`).join('; ')}`)
+    signals.push(`AT-RISK HIGH-VALUE CUSTOMERS (${atRiskCustomers.length}): ${atRiskCustomers.map(c => `${safe(c.name || c.phone)} — spent ${sym}${c.total_spent}, last seen ${Math.round((now.getTime() - new Date(c.last_seen_at).getTime()) / 86400000)} days ago`).join('; ')}`)
   }
 
   if (pendingDecisions?.length) {
-    signals.push(`DECISIONS DUE FOR REVIEW (${pendingDecisions.length}): ${pendingDecisions.map(d => `"${d.title}" — due ${new Date(d.review_at).toLocaleDateString('en-GB')}`).join('; ')}`)
+    signals.push(`DECISIONS DUE FOR REVIEW (${pendingDecisions.length}): ${pendingDecisions.map(d => `"${safe(d.title)}" — due ${new Date(d.review_at).toLocaleDateString('en-GB')}`).join('; ')}`)
   }
 
   const dailyRevenue = (recentTx || []).reduce((s, t) => s + (t.total || 0), 0) / 7
@@ -149,10 +157,11 @@ Return ONLY the JSON array, no markdown.` }],
     const result = { actions, currency_symbol: sym }
     CACHE.set(user.id, { data: result, date: today() })
     return NextResponse.json(result)
-  } catch {
+  } catch (e) {
+    console.error('[daily-actions] Claude error:', e)
     const fallbackActions: any[] = []
-    if (lowStock?.some(i => i.stock_qty <= 0)) fallbackActions.push({ title: `Restock ${lowStock.filter(i => i.stock_qty <= 0).length} out-of-stock items`, why: 'These items cannot be sold until restocked.', priority: 1, type: 'restock' })
-    if (lowStock?.some(i => i.stock_qty > 0)) fallbackActions.push({ title: `Review ${lowStock.filter(i => i.stock_qty > 0).length} low-stock items`, why: 'Stock is running low and may run out soon.', priority: 2, type: 'restock' })
+    if (lowStock.some(i => i.stock_qty <= 0)) fallbackActions.push({ title: `Restock ${lowStock.filter(i => i.stock_qty <= 0).length} out-of-stock items`, why: 'These items cannot be sold until restocked.', priority: 1, type: 'restock' })
+    if (lowStock.some(i => i.stock_qty > 0)) fallbackActions.push({ title: `Review ${lowStock.filter(i => i.stock_qty > 0).length} low-stock items`, why: 'Stock is running low and may run out soon.', priority: 2, type: 'restock' })
     if (staleQuotes?.length) fallbackActions.push({ title: `Follow up on ${staleQuotes.length} stale repair quotes`, why: 'Customers may go elsewhere if not contacted.', priority: 2, type: 'followup' })
     if (unresolvedAnomalies?.length) fallbackActions.push({ title: `Review ${unresolvedAnomalies.length} unresolved alerts`, why: 'Alerts may indicate issues requiring attention.', priority: 2, type: 'alert' })
     if (staleSources?.length) fallbackActions.push({ title: `Reconnect ${staleSources.length} stale data sources`, why: 'Your analytics may be based on outdated data.', priority: 3, type: 'sync' })

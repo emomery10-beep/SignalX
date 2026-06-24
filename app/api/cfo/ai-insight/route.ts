@@ -91,7 +91,8 @@ Return ONLY valid JSON.`
 
     CACHE.set(user.id, { data: parsed, date: today() })
     return NextResponse.json(parsed)
-  } catch {
-    return NextResponse.json({ insights: [] })
+  } catch (e) {
+    console.error('[cfo/ai-insight] Claude error:', e)
+    return NextResponse.json({ insights: [], error: true }, { status: 500 })
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
+import { getCurrencySymbol } from '@/lib/get-currency'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -41,6 +42,7 @@ export async function GET() {
 
 async function generateBrief(userId: string, supabase: ReturnType<typeof createClient>) {
   const today = new Date().toISOString().slice(0, 10)
+  const sym = await getCurrencySymbol(supabase, userId)
 
   // ── Pull all context in parallel ──────────────────────────────
   const [
@@ -72,7 +74,7 @@ async function generateBrief(userId: string, supabase: ReturnType<typeof createC
   const posSalesToday = (posTx || []).filter((t: { status: string }) => t.status === 'completed').length
   const posRefunds   = (posTx || []).filter((t: { status: string }) => t.status.includes('refund')).length
   const posContext   = posSalesToday > 0 || (lowStockItems?.length ?? 0) > 0
-    ? `POS today: ${posSalesToday} sales, £${posRevToday.toFixed(2)} revenue${posRefunds > 0 ? `, ${posRefunds} refund${posRefunds > 1 ? 's' : ''}` : ''}.${(lowStockItems?.length ?? 0) > 0 ? ` Low/out of stock: ${(lowStockItems || []).slice(0, 3).map((i: { name: string }) => i.name).join(', ')}.` : ''}`
+    ? `POS today: ${posSalesToday} sales, ${sym}${posRevToday.toFixed(2)} revenue${posRefunds > 0 ? `, ${posRefunds} refund${posRefunds > 1 ? 's' : ''}` : ''}.${(lowStockItems?.length ?? 0) > 0 ? ` Low/out of stock: ${(lowStockItems || []).slice(0, 3).map((i: { name: string }) => i.name).join(', ')}.` : ''}`
     : ''
 
   // ── Logistics context for brief ─────────────────────────────
@@ -118,7 +120,7 @@ async function generateBrief(userId: string, supabase: ReturnType<typeof createC
     const totalRevenue = recentData.reduce((s, r) => s + (r.gross_revenue || 0), 0)
     const avgMargin = recentData.filter(r => r.gross_margin).reduce((s, r) => s + r.gross_margin, 0) / Math.max(recentData.filter(r => r.gross_margin).length, 1)
     const channels = [...new Set(recentData.map(r => r.channel).filter(Boolean))]
-    revenueContext = `Last 7 days: £${Math.round(totalRevenue).toLocaleString()} revenue, ${Math.round(avgMargin)}% avg margin. Channels: ${channels.join(', ')}.`
+    revenueContext = `Last 7 days: ${sym}${Math.round(totalRevenue).toLocaleString()} revenue, ${Math.round(avgMargin)}% avg margin. Channels: ${channels.join(', ')}.`
   }
 
   const sourcesContext = sources?.length

@@ -88,10 +88,10 @@ ${JSON.stringify(entries, null, 2)}`
   }
 }
 
-// Legal pages get HUMAN legal translation per jurisdiction — NEVER machine
-// translate them. Skipped unless explicitly named (node …mjs terms --force).
-// Includes the pos-askbiz app's legal namespaces (pos_* prefix).
-const HUMAN_ONLY = new Set([])
+// Legal pages received human translation in commit 98004b8. Guard them so a
+// future script run (node …mjs with no args) doesn't overwrite that work.
+// To retranslate one legal file on purpose: node …mjs terms --force
+const HUMAN_ONLY = new Set(['terms','privacy','dpa','pos_terms','pos_privacy','pos_cookies'])
 
 async function run() {
   const namespaces = onlyNs

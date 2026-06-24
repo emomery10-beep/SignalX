@@ -332,8 +332,10 @@ export default function AdminPage() {
           {tab==='Costs' && (() => {
             const total = apiUsage?.totalCostUsd || 0
             const dayOfMonth = new Date().getDate()
-            const dailyAvg = dayOfMonth > 0 ? total / dayOfMonth : 0
-            const monthlyProj = dailyAvg * 30
+            const dailyAvg = total / dayOfMonth
+            // Projection is unreliable in the first 5 days — show "—" to avoid
+            // a 30× inflation on day 1 (e.g. $10 spend → "$300 projected").
+            const monthlyProj = dayOfMonth >= 5 ? dailyAvg * 30 : null
 
             // Route → category
             const categorize = (r: string) => {
@@ -377,7 +379,7 @@ export default function AdminPage() {
                   {label:'This month (USD)',  value:'$'+(total).toFixed(4)},
                   {label:'≈ GBP',             value:'£'+(total*0.79).toFixed(2)},
                   {label:'Daily average',     value:'$'+dailyAvg.toFixed(3)},
-                  {label:'30-day projection', value:'$'+monthlyProj.toFixed(2)},
+                  {label:'30-day projection', value: monthlyProj !== null ? '$'+monthlyProj.toFixed(2) : '—'},
                   {label:'Input tokens',      value:((apiUsage?.totalInputTokens||0)/1000).toFixed(1)+'k'},
                   {label:'Output tokens',     value:((apiUsage?.totalOutputTokens||0)/1000).toFixed(1)+'k'},
                 ].map(({label,value})=>(
@@ -555,33 +557,6 @@ export default function AdminPage() {
             </div>
           </>}
 
-          {tab==='X Agent' && <>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-              <KV label={tc('admin.kv_total_activity')} value={xActivity.length} sub={tc('admin.kv_total_activity_sub')} color="#1d9bf0" />
-              <KV label={tc('admin.kv_posted')} value={xPosted} sub={tc('admin.kv_posted_sub')} color="#10b981" />
-              <KV label={tc('admin.kv_pending')} value={xPending} sub={tc('admin.kv_pending_sub')} color="#f59e0b" />
-              <KV label={tc('admin.kv_rejected')} value={xActivity.filter(x=>x.status==='rejected').length} sub={tc('admin.kv_rejected_sub')} color="#f87171" />
-            </div>
-            <div style={{marginBottom:16}}>
-              <a href="/admin/agent" style={{padding:'9px 18px',borderRadius:9999,border:'none',background:'#1d9bf0',color:'#fff',fontSize:13,fontWeight:600,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6}}>{tc('admin.open_x_agent')}</a>
-            </div>
-            <div style={{borderRadius:14,border:'1px solid var(--b)',overflow:'hidden',background:'var(--sf)'}}>
-              <div style={{padding:'12px 16px',borderBottom:'1px solid var(--b)',fontSize:12,fontWeight:600,color:'var(--tx2)',background:'var(--ev)'}}>{tc('admin.recent_activity')}</div>
-              {xActivity.length===0?<div style={{textAlign:'center',padding:40,color:'var(--tx3)'}}>{tc('admin.no_x_activity')}</div>:
-                xActivity.slice(0,20).map(item=>(
-                  <div key={item.id} style={{padding:'12px 16px',borderBottom:'1px solid var(--b)'}}>
-                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6,flexWrap:'wrap'}}>
-                      <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:9999,background:item.status==='posted'?'rgba(16,185,129,.1)':item.status==='pending'?'rgba(245,158,11,.1)':'rgba(248,113,113,.1)',color:item.status==='posted'?'#10b981':item.status==='pending'?'#f59e0b':'#f87171'}}>{item.status}</span>
-                      <span style={{fontSize:12,fontWeight:600,color:'var(--tx2)'}}>{'@'+item.tweet_author}</span>
-                      <span style={{fontSize:11,color:'var(--tx3)'}}>{new Date(item.created_at).toLocaleDateString('en-GB')}</span>
-                    </div>
-                    <p style={{fontSize:12,color:'var(--tx2)',margin:'0 0 6px',lineHeight:1.5}}>{(item.tweet_text||'').slice(0,120)}</p>
-                    <p style={{fontSize:12,color:'#6366F1',margin:0,borderLeft:'2px solid #6366F1',paddingLeft:8,lineHeight:1.5}}>{(item.generated_reply||'').slice(0,120)}</p>
-                  </div>
-                ))
-              }
-            </div>
-          </>}
 
         </>}
       </div>

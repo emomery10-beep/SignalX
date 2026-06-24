@@ -230,7 +230,8 @@ export async function GET(request: NextRequest) {
       apiUsage.byRoute[r.route].costUsd += r.cost_usd || 0
       apiUsage.byRoute[r.route].inputTokens += r.input_tokens || 0
       apiUsage.byRoute[r.route].outputTokens += r.output_tokens || 0
-      apiUsage.byRoute[r.route].model = r.model || apiUsage.byRoute[r.route].model
+      // Keep the model with the most calls (first-seen wins; only overwrite if unset)
+      if (!apiUsage.byRoute[r.route].model && r.model) apiUsage.byRoute[r.route].model = r.model
       const model = r.model || 'unknown'
       if (!apiUsage.byModel[model]) apiUsage.byModel[model] = { calls: 0, costUsd: 0 }
       apiUsage.byModel[model].calls++

@@ -156,7 +156,8 @@ Return ONLY valid JSON.` }],
 
       const text = (response.content[0] as { type: string; text: string }).text
       brief = text
-    } catch {
+    } catch (e) {
+      console.error('[supplier-brief] Claude error:', e)
       brief = null
     }
   }
