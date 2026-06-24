@@ -24,6 +24,11 @@ supabase/.temp
 .DS_Store
 Thumbs.db
 
+# CI workflow — pushing it needs a token with `workflow` scope, so it's kept out
+# of the local push (the i18n pipeline's `git add -A` was re-tracking it and
+# breaking pushes). Add/edit it via the GitHub web UI instead.
+.github/workflows/i18n-audit.yml
+
 # Editor
 .vscode/
 .idea/
