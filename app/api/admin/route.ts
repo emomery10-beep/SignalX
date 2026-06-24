@@ -209,22 +209,34 @@ export async function GET(request: NextRequest) {
     const apiUsageMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
     const { data: apiUsageRows } = await supabase
       .from('api_usage')
-      .select('route, model, input_tokens, output_tokens, cost_usd')
+      .select('route, model, input_tokens, output_tokens, cost_usd, created_at')
       .gte('created_at', apiUsageMonthStart)
+      .order('created_at', { ascending: true })
 
     const apiUsage = {
       totalCostUsd: 0,
       totalInputTokens: 0,
       totalOutputTokens: 0,
-      byRoute: {} as Record<string, { calls: number; costUsd: number }>,
+      byRoute: {} as Record<string, { calls: number; costUsd: number; model: string; inputTokens: number; outputTokens: number }>,
+      byModel: {} as Record<string, { calls: number; costUsd: number }>,
+      byDay: {} as Record<string, number>,
     }
     ;(apiUsageRows || []).forEach((r: any) => {
       apiUsage.totalCostUsd += r.cost_usd || 0
       apiUsage.totalInputTokens += r.input_tokens || 0
       apiUsage.totalOutputTokens += r.output_tokens || 0
-      if (!apiUsage.byRoute[r.route]) apiUsage.byRoute[r.route] = { calls: 0, costUsd: 0 }
+      if (!apiUsage.byRoute[r.route]) apiUsage.byRoute[r.route] = { calls: 0, costUsd: 0, model: r.model || '', inputTokens: 0, outputTokens: 0 }
       apiUsage.byRoute[r.route].calls++
       apiUsage.byRoute[r.route].costUsd += r.cost_usd || 0
+      apiUsage.byRoute[r.route].inputTokens += r.input_tokens || 0
+      apiUsage.byRoute[r.route].outputTokens += r.output_tokens || 0
+      apiUsage.byRoute[r.route].model = r.model || apiUsage.byRoute[r.route].model
+      const model = r.model || 'unknown'
+      if (!apiUsage.byModel[model]) apiUsage.byModel[model] = { calls: 0, costUsd: 0 }
+      apiUsage.byModel[model].calls++
+      apiUsage.byModel[model].costUsd += r.cost_usd || 0
+      const day = (r.created_at || '').slice(0, 10)
+      if (day) apiUsage.byDay[day] = (apiUsage.byDay[day] || 0) + (r.cost_usd || 0)
     })
 
     return NextResponse.json({

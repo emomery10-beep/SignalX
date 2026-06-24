@@ -329,77 +329,197 @@ export default function AdminPage() {
 
           {/* Content review moved to /admin/agent (Alice Watson) */}
 
-          {tab==='Costs' && <>
-            {/* Real Anthropic usage — tracked from api_usage table */}
-            {apiUsage && (
-              <div style={{padding:20,borderRadius:14,border:'1px solid rgba(99,102,241,.3)',background:'rgba(99,102,241,.06)',marginBottom:16}}>
-                <div style={{fontSize:13,fontWeight:600,color:'#6366F1',marginBottom:4}}>{tc('admin.anthropic_api_title')}</div>
-                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))',gap:12,marginBottom:16}}>
-                  {[
-                    {label:tc('admin.cost_total_cost'),value:'$'+(apiUsage.totalCostUsd||0).toFixed(4)+' USD'},
-                    {label:tc('admin.cost_gbp'),value:'£'+((apiUsage.totalCostUsd||0)*0.79).toFixed(4)},
-                    {label:tc('admin.cost_input_tokens'),value:((apiUsage.totalInputTokens||0)/1000).toFixed(1)+'k'},
-                    {label:tc('admin.cost_output_tokens'),value:((apiUsage.totalOutputTokens||0)/1000).toFixed(1)+'k'},
-                  ].map(({label,value})=>(
-                    <div key={label} style={{padding:'10px 12px',borderRadius:9,background:'var(--sf)',border:'1px solid var(--b)'}}>
-                      <div style={{fontSize:10,color:'var(--tx3)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.06em'}}>{label}</div>
-                      <div style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-sora)'}}>{value}</div>
-                    </div>
-                  ))}
-                </div>
-                {Object.keys(apiUsage.byRoute||{}).length > 0 && (
-                  <>
-                    <div style={{fontSize:11,fontWeight:600,color:'var(--tx3)',marginBottom:8,textTransform:'uppercase',letterSpacing:'.06em'}}>{tc('admin.breakdown_by_route')}</div>
-                    {Object.entries(apiUsage.byRoute as Record<string,{calls:number;costUsd:number}>)
-                      .sort((a,b)=>b[1].costUsd-a[1].costUsd)
-                      .map(([route,data])=>(
-                        <div key={route} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--b)',fontSize:12}}>
-                          <span style={{color:'var(--tx2)',fontFamily:'monospace'}}>{route}</span>
-                          <span style={{color:'var(--tx3)'}}>{tc('admin.route_calls', { calls: data.calls, cost: data.costUsd.toFixed(4) })}</span>
-                        </div>
-                      ))}
-                  </>
-                )}
-                {Object.keys(apiUsage.byRoute||{}).length === 0 && (
-                  <p style={{fontSize:12,color:'var(--tx3)',margin:0}}>{tc('admin.no_calls_logged')}</p>
-                )}
-              </div>
-            )}
-            <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
-              <div style={{fontSize:13,fontWeight:600,marginBottom:4}}>{tc('admin.other_monthly_costs')}</div>
-              <p style={{fontSize:12,color:'var(--tx3)',marginBottom:16}}>{tc('admin.other_monthly_costs_desc')}</p>
-              {[
-                {service:tc('admin.cost_tavily_service'),estimate:tc('admin.cost_tavily_estimate'),note:tc('admin.cost_tavily_note'),color:'#f59e0b'},
-                {service:tc('admin.cost_supabase_service'),estimate:tc('admin.cost_supabase_estimate'),note:tc('admin.cost_supabase_note'),color:'#10b981'},
-                {service:tc('admin.cost_vercel_service'),estimate:tc('admin.cost_vercel_estimate'),note:tc('admin.cost_vercel_note'),color:'#94a3b8'},
-                {service:tc('admin.cost_resend_service'),estimate:tc('admin.cost_resend_estimate'),note:tc('admin.cost_resend_note'),color:'#60a5fa'},
-              ].map(({service,estimate,note,color})=>(
-                <div key={service} style={{display:'flex',justifyContent:'space-between',padding:'12px 0',borderBottom:'1px solid var(--b)',flexWrap:'wrap',gap:8}}>
-                  <div>
-                    <div style={{fontWeight:600,fontSize:13,color}}>{service}</div>
-                    <div style={{fontSize:11,color:'var(--tx3)',marginTop:2}}>{note}</div>
-                  </div>
-                  <div style={{fontSize:13,fontWeight:600,color:'var(--tx2)'}}>{estimate}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{padding:20,borderRadius:14,border:'1px solid rgba(99,102,241,.2)',background:'rgba(99,102,241,.04)'}}>
-              <div style={{fontSize:13,fontWeight:600,color:'#6366F1',marginBottom:12}}>{tc('admin.unit_economics')}</div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          {tab==='Costs' && (() => {
+            const total = apiUsage?.totalCostUsd || 0
+            const dayOfMonth = new Date().getDate()
+            const dailyAvg = dayOfMonth > 0 ? total / dayOfMonth : 0
+            const monthlyProj = dailyAvg * 30
+
+            // Route → category
+            const categorize = (r: string) => {
+              if (r.includes('scout')) return 'scouts'
+              if (r.startsWith('pos/') || r.includes('/pos/')) return 'pos'
+              if (r.includes('cron/')) return 'cron'
+              if (r.includes('xagent') || r.startsWith('admin/')) return 'admin'
+              return 'product'
+            }
+            const CAT: Record<string,{label:string;color:string;dot:string}> = {
+              scouts:  {label:'Marketing scouts', color:'#dc2626', dot:'#fca5a5'},
+              product: {label:'Product features', color:'#6366F1', dot:'#a5b4fc'},
+              pos:     {label:'POS / scans',      color:'#0891b2', dot:'#67e8f9'},
+              cron:    {label:'Cron jobs',         color:'#7c3aed', dot:'#c4b5fd'},
+              admin:   {label:'Admin / X agent',   color:'#64748b', dot:'#cbd5e1'},
+            }
+            const byRoute = apiUsage?.byRoute as Record<string,{calls:number;costUsd:number;model:string;inputTokens:number;outputTokens:number}> || {}
+            const byModel = apiUsage?.byModel as Record<string,{calls:number;costUsd:number}> || {}
+            const byDay = apiUsage?.byDay as Record<string,number> || {}
+
+            // Build category groups sorted by total cost
+            const grouped: Record<string,{route:string;d:{calls:number;costUsd:number;model:string}}[]> = {}
+            Object.entries(byRoute).forEach(([route, d]) => {
+              const cat = categorize(route)
+              if (!grouped[cat]) grouped[cat] = []
+              grouped[cat].push({route, d})
+            })
+            const catTotals = Object.entries(grouped).map(([cat, routes]) => ({cat, subtotal: routes.reduce((s,r)=>s+r.d.costUsd,0)})).sort((a,b)=>b.subtotal-a.subtotal)
+
+            // 30-day sparkline
+            const days30 = Array.from({length:30},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(29-i));return d.toISOString().slice(0,10)})
+            const dayMax = Math.max(...days30.map(d=>byDay[d]||0), 0.0001)
+
+            const modelLabel = (m:string) => m.includes('haiku')?'Haiku':m.includes('sonnet')?'Sonnet':m.includes('opus')?'Opus':m.slice(0,8)
+            const modelColor = (m:string) => m.includes('haiku')?'#0891b2':m.includes('sonnet')?'#7c3aed':m.includes('opus')?'#dc2626':'#64748b'
+
+            return <>
+              {/* ── Summary KVs ── */}
+              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))',gap:10,marginBottom:16}}>
                 {[
-                  {label:tc('admin.ue_revenue_per_user'),value:'£'+(mrr/(payingCount||1)).toFixed(2)+'/mo'},
-                  {label:tc('admin.ue_claude_cost'),value:apiUsage?('$'+(apiUsage.totalCostUsd||0).toFixed(2)):'~£0.003/q'},
-                  {label:tc('admin.ue_gross_margin'),value:mrr>0?Math.max(0,Math.round((1-((apiUsage?.totalCostUsd||0)*0.79)/mrr)*100))+'%':'~85%'},
-                  {label:tc('admin.ue_ltv'),value:'£'+((mrr/(payingCount||1))*12).toFixed(0)},
+                  {label:'This month (USD)',  value:'$'+(total).toFixed(4)},
+                  {label:'≈ GBP',             value:'£'+(total*0.79).toFixed(2)},
+                  {label:'Daily average',     value:'$'+dailyAvg.toFixed(3)},
+                  {label:'30-day projection', value:'$'+monthlyProj.toFixed(2)},
+                  {label:'Input tokens',      value:((apiUsage?.totalInputTokens||0)/1000).toFixed(1)+'k'},
+                  {label:'Output tokens',     value:((apiUsage?.totalOutputTokens||0)/1000).toFixed(1)+'k'},
                 ].map(({label,value})=>(
                   <div key={label} style={{padding:'10px 12px',borderRadius:9,background:'var(--sf)',border:'1px solid var(--b)'}}>
-                    <div style={{fontSize:11,color:'var(--tx3)',marginBottom:4}}>{label}</div>
-                    <div style={{fontSize:18,fontWeight:700,fontFamily:'var(--font-sora)'}}>{value}</div>
+                    <div style={{fontSize:10,color:'var(--tx3)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.06em'}}>{label}</div>
+                    <div style={{fontSize:15,fontWeight:700,fontFamily:'var(--font-sora)'}}>{value}</div>
                   </div>
                 ))}
               </div>
-            </div>
-          </>}
+
+              {/* ── 30-day spend sparkline ── */}
+              {Object.keys(byDay).length > 0 && (
+                <div style={{padding:'16px 20px',borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
+                  <div style={{fontSize:11,fontWeight:600,color:'var(--tx3)',marginBottom:10,textTransform:'uppercase',letterSpacing:'.06em'}}>Spend — last 30 days</div>
+                  <div style={{display:'flex',alignItems:'flex-end',gap:2,height:60}}>
+                    {days30.map((d,i)=>{
+                      const v = byDay[d]||0
+                      const h = Math.max(v/dayMax*56,v>0?3:0)
+                      return <div key={d} title={d+': $'+v.toFixed(4)} style={{flex:1,display:'flex',alignItems:'flex-end',height:'100%'}}>
+                        <div style={{width:'100%',background:v>0?'#6366F1':'var(--ev)',borderRadius:'2px 2px 0 0',height:h+'px',opacity:v>0?0.8:0.2}}/>
+                      </div>
+                    })}
+                  </div>
+                  <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'var(--tx3)',marginTop:4}}>
+                    <span>{days30[0]}</span><span>today</span>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Model breakdown ── */}
+              {Object.keys(byModel).length > 0 && (
+                <div style={{padding:'16px 20px',borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
+                  <div style={{fontSize:11,fontWeight:600,color:'var(--tx3)',marginBottom:10,textTransform:'uppercase',letterSpacing:'.06em'}}>By model</div>
+                  {Object.entries(byModel).sort((a,b)=>b[1].costUsd-a[1].costUsd).map(([model,d])=>{
+                    const pct = total > 0 ? (d.costUsd/total*100) : 0
+                    const col = modelColor(model)
+                    return <div key={model} style={{marginBottom:10}}>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:4}}>
+                        <span style={{display:'flex',alignItems:'center',gap:6}}>
+                          <span style={{padding:'1px 7px',borderRadius:99,background:col+'22',color:col,fontSize:11,fontWeight:600}}>{modelLabel(model)}</span>
+                          <span style={{color:'var(--tx3)'}}>{d.calls} calls</span>
+                        </span>
+                        <span style={{fontWeight:600,color:'var(--tx)'}}>${d.costUsd.toFixed(4)} <span style={{color:'var(--tx3)',fontWeight:400}}>({Math.round(pct)}%)</span></span>
+                      </div>
+                      <div style={{height:5,borderRadius:99,background:'var(--ev)',overflow:'hidden'}}>
+                        <div style={{height:'100%',width:pct+'%',background:col,borderRadius:99}}/>
+                      </div>
+                    </div>
+                  })}
+                </div>
+              )}
+
+              {/* ── By category + route breakdown ── */}
+              {catTotals.length > 0 && (
+                <div style={{padding:'16px 20px',borderRadius:14,border:'1px solid rgba(99,102,241,.3)',background:'rgba(99,102,241,.04)',marginBottom:16}}>
+                  <div style={{fontSize:11,fontWeight:600,color:'#6366F1',marginBottom:12,textTransform:'uppercase',letterSpacing:'.06em'}}>Breakdown by route</div>
+                  {catTotals.map(({cat,subtotal})=>{
+                    const meta = CAT[cat as keyof typeof CAT] || CAT.product
+                    const pct = total > 0 ? (subtotal/total*100) : 0
+                    const routes = (grouped[cat]||[]).sort((a,b)=>b.d.costUsd-a.d.costUsd)
+                    return <div key={cat} style={{marginBottom:16}}>
+                      {/* Category header */}
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+                        <span style={{display:'flex',alignItems:'center',gap:6}}>
+                          <span style={{width:8,height:8,borderRadius:'50%',background:meta.color,display:'inline-block'}}/>
+                          <span style={{fontSize:12,fontWeight:600,color:meta.color}}>{meta.label}</span>
+                        </span>
+                        <span style={{fontSize:12,fontWeight:600,color:'var(--tx)'}}>${subtotal.toFixed(4)} <span style={{color:'var(--tx3)',fontWeight:400}}>({Math.round(pct)}%)</span></span>
+                      </div>
+                      {/* Category bar */}
+                      <div style={{height:4,borderRadius:99,background:'var(--ev)',overflow:'hidden',marginBottom:8}}>
+                        <div style={{height:'100%',width:pct+'%',background:meta.color,borderRadius:99}}/>
+                      </div>
+                      {/* Route rows */}
+                      {routes.map(({route,d})=>{
+                        const routePct = total > 0 ? (d.costUsd/total*100) : 0
+                        const col = modelColor(d.model||'')
+                        return <div key={route} style={{display:'grid',gridTemplateColumns:'1fr auto',gap:8,padding:'7px 10px',borderRadius:8,background:'var(--sf)',border:'1px solid var(--b)',marginBottom:5,alignItems:'center'}}>
+                          <div>
+                            <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:3}}>
+                              <span style={{fontSize:11,fontFamily:'monospace',color:'var(--tx2)'}}>{route}</span>
+                              {d.model && <span style={{padding:'0px 5px',borderRadius:99,background:col+'22',color:col,fontSize:10,fontWeight:600,whiteSpace:'nowrap'}}>{modelLabel(d.model)}</span>}
+                            </div>
+                            <div style={{height:3,borderRadius:99,background:'var(--ev)',overflow:'hidden'}}>
+                              <div style={{height:'100%',width:routePct+'%',background:meta.color,opacity:0.7,borderRadius:99}}/>
+                            </div>
+                          </div>
+                          <div style={{textAlign:'right',whiteSpace:'nowrap'}}>
+                            <div style={{fontSize:12,fontWeight:600,color:'var(--tx)'}}>${d.costUsd.toFixed(4)}</div>
+                            <div style={{fontSize:10,color:'var(--tx3)'}}>{d.calls} calls</div>
+                          </div>
+                        </div>
+                      })}
+                    </div>
+                  })}
+                </div>
+              )}
+              {(!apiUsage || Object.keys(byRoute).length===0) && (
+                <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16,fontSize:12,color:'var(--tx3)'}}>
+                  No API calls logged yet. Usage appears here once routes with logUsage are called.
+                </div>
+              )}
+
+              {/* ── Other monthly costs ── */}
+              <div style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:16}}>
+                <div style={{fontSize:13,fontWeight:600,marginBottom:4}}>{tc('admin.other_monthly_costs')}</div>
+                <p style={{fontSize:12,color:'var(--tx3)',marginBottom:16}}>{tc('admin.other_monthly_costs_desc')}</p>
+                {[
+                  {service:tc('admin.cost_tavily_service'),estimate:tc('admin.cost_tavily_estimate'),note:tc('admin.cost_tavily_note'),color:'#f59e0b'},
+                  {service:tc('admin.cost_supabase_service'),estimate:tc('admin.cost_supabase_estimate'),note:tc('admin.cost_supabase_note'),color:'#10b981'},
+                  {service:tc('admin.cost_vercel_service'),estimate:tc('admin.cost_vercel_estimate'),note:tc('admin.cost_vercel_note'),color:'#94a3b8'},
+                  {service:tc('admin.cost_resend_service'),estimate:tc('admin.cost_resend_estimate'),note:tc('admin.cost_resend_note'),color:'#60a5fa'},
+                ].map(({service,estimate,note,color})=>(
+                  <div key={service} style={{display:'flex',justifyContent:'space-between',padding:'12px 0',borderBottom:'1px solid var(--b)',flexWrap:'wrap',gap:8}}>
+                    <div>
+                      <div style={{fontWeight:600,fontSize:13,color}}>{service}</div>
+                      <div style={{fontSize:11,color:'var(--tx3)',marginTop:2}}>{note}</div>
+                    </div>
+                    <div style={{fontSize:13,fontWeight:600,color:'var(--tx2)'}}>{estimate}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* ── Unit economics ── */}
+              <div style={{padding:20,borderRadius:14,border:'1px solid rgba(99,102,241,.2)',background:'rgba(99,102,241,.04)'}}>
+                <div style={{fontSize:13,fontWeight:600,color:'#6366F1',marginBottom:12}}>{tc('admin.unit_economics')}</div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                  {[
+                    {label:tc('admin.ue_revenue_per_user'),value:'£'+(mrr/(payingCount||1)).toFixed(2)+'/mo'},
+                    {label:'API cost this month',value:total>0?('$'+total.toFixed(2)+'  (~$'+dailyAvg.toFixed(2)+'/day)'):'$0.00'},
+                    {label:tc('admin.ue_gross_margin'),value:mrr>0?Math.max(0,Math.round((1-(total*0.79)/mrr)*100))+'%':'~85%'},
+                    {label:tc('admin.ue_ltv'),value:'£'+((mrr/(payingCount||1))*12).toFixed(0)},
+                  ].map(({label,value})=>(
+                    <div key={label} style={{padding:'10px 12px',borderRadius:9,background:'var(--sf)',border:'1px solid var(--b)'}}>
+                      <div style={{fontSize:11,color:'var(--tx3)',marginBottom:4}}>{label}</div>
+                      <div style={{fontSize:15,fontWeight:700,fontFamily:'var(--font-sora)'}}>{value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          })()}
 
           {tab==='Growth' && <>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:12,marginBottom:24}}>
