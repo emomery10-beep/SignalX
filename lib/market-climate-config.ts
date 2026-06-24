@@ -191,6 +191,36 @@ export const SIGNAL_KIND_WEIGHT: Record<string, number> = {
   fx: 0.95, commodity: 0.85, demand: 0.75, rate: 0.5, index: 0.4,
 }
 
+// ── Channel mix (ecommerce vs POS vs wholesale) ───────────────────────────────
+// Drives which DEMAND signals matter: online sellers live and die by ad cost /
+// CAC; in-store shops by local footfall and consumer spending.
+export interface ChannelMix { ecommercePct: number; posPct: number; hasEcommerce: boolean; hasPos: boolean }
+
+const ECOMMERCE_SOURCES = ['shopify', 'woocommerce', 'amazon', 'ebay', 'etsy', 'tiktok', 'jumia', 'takealot', 'online', 'web', 'stripe']
+const POS_SOURCES = ['pos', 'square', 'in-store', 'instore', 'shop', 'counter']
+
+export function classifyChannel(sourceOrChannel: string): 'ecommerce' | 'pos' | 'other' {
+  const s = (sourceOrChannel || '').toLowerCase()
+  if (ECOMMERCE_SOURCES.some(k => s.includes(k))) return 'ecommerce'
+  if (POS_SOURCES.some(k => s.includes(k))) return 'pos'
+  return 'other'
+}
+
+// Consumer/demand signals for retail (non-commodity) businesses, tuned to how
+// they sell. Used in the fallback path and to nudge the LLM selector.
+export function buildRetailSignals(climate: CountryClimate, mix: ChannelMix): MarketSignalSpec[] {
+  const out: MarketSignalSpec[] = [
+    { key: 'consumer', label: 'Consumer Demand', query: `${climate.name} consumer spending retail demand confidence latest`, kind: 'demand' },
+  ]
+  if (mix.hasEcommerce) {
+    out.push({ key: 'adcost', label: 'Digital Ad Cost', query: `Meta Google online advertising cost CPM CPC trend ${climate.name} latest`, kind: 'demand' })
+  }
+  if (mix.hasPos && !mix.hasEcommerce) {
+    out.push({ key: 'footfall', label: 'Retail Footfall', query: `${climate.name} retail footfall high street store spending latest`, kind: 'demand' })
+  }
+  return out
+}
+
 // ── Supplier currency → shipping lane exposure ────────────────────────────────
 // The currency a supplier invoices in is a proxy for where goods ship FROM,
 // which tells us which trade-lane disruptions to watch.

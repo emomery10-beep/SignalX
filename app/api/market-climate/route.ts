@@ -13,7 +13,8 @@ import {
   getCountryClimate, isCountryMapped, getCountryName,
   detectSector, detectShippingLanes, getPortWatch,
   detectBusinessCommodities, SIGNAL_KIND_WEIGHT,
-  type MarketSignalSpec, type CountryClimate,
+  classifyChannel, buildRetailSignals,
+  type MarketSignalSpec, type CountryClimate, type ChannelMix,
 } from '@/lib/market-climate-config'
 import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
@@ -104,29 +105,42 @@ async function selectBusinessSignals(input: {
   climate: CountryClimate
   businessTerms: string[]
   sectorLabel: string
+  channelMix: ChannelMix
   userId: string
 }): Promise<MarketSignalSpec[]> {
-  const { climate } = input
+  const { climate, channelMix } = input
   const dedupe = (specs: MarketSignalSpec[]) => {
     const seen = new Set<string>(); const out: MarketSignalSpec[] = []
     for (const s of specs) if (s && !seen.has(s.key)) { seen.add(s.key); out.push(s) }
     return out.slice(0, 6)
   }
-  // Deterministic fallback: local FX + what they trade (keyword map) + anchors.
+  // Deterministic fallback: local FX + what they trade. Commodity businesses get
+  // commodity prices + index; retail/ecommerce businesses get consumer-demand and
+  // ad-cost signals tuned to how they sell.
   const kwCommodities = detectBusinessCommodities(input.businessTerms)
-  const fallback = dedupe([
-    climate.fx,
-    ...kwCommodities,
-    ...(kwCommodities.length ? [] : climate.commodities), // only use country default if nothing matched
-    climate.index,
-    climate.centralBank,
-  ])
+  const retail = buildRetailSignals(climate, channelMix)
+  const fallback = dedupe(
+    kwCommodities.length
+      ? [climate.fx, ...kwCommodities, climate.index, climate.centralBank]
+      : [climate.fx, ...retail, climate.centralBank]
+  )
 
   if (!process.env.ANTHROPIC_API_KEY || input.businessTerms.length === 0) return fallback
 
-  const prompt = `A business in ${climate.name} (sector: ${input.sectorLabel}) trades in: ${input.businessTerms.join(', ')}.
+  const channelLine = channelMix.hasEcommerce && channelMix.hasPos
+    ? `They sell both online (${channelMix.ecommercePct}% of revenue via ecommerce) and in-store (${channelMix.posPct}% via POS).`
+    : channelMix.hasEcommerce ? 'They sell primarily ONLINE (ecommerce).'
+    : channelMix.hasPos ? 'They sell primarily IN-STORE (POS / physical shop).'
+    : 'Channel mix unknown.'
 
-Pick the 4–5 LIVE market signals that most affect THIS business's costs, selling prices, or demand — specific to what they actually trade, not generic national indices. For a commodity producer/exporter include the commodity's world price AND its key import-market demand; for an importer include the relevant input price and FX.
+  const prompt = `A business in ${climate.name} (sector: ${input.sectorLabel}) trades in: ${input.businessTerms.join(', ')}.
+${channelLine}
+
+Pick the 4–5 LIVE market signals that most affect THIS business's costs, selling prices, or demand — specific to what they actually trade and how they sell, not generic national indices.
+- Commodity producer/exporter → the commodity's world price AND its key import-market demand.
+- Importer/retailer → the relevant input/import price and FX.
+- ONLINE sellers → include a digital ad-cost / CAC signal (Meta/Google) and consumer demand — these drive their economics.
+- IN-STORE sellers → include local consumer spending / footfall.
 
 Always include the local currency vs USD (${climate.fx.label}). Return ONLY JSON:
 {"signals":[{"key":"short_slug","label":"≤3 words","query":"web search for today's price/level/demand","kind":"commodity|demand|fx|index|rate"}]}`
@@ -183,7 +197,7 @@ export async function GET(request: NextRequest) {
   const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   const { data: records } = await supabase
     .from('unified_data')
-    .select('category, product_name, currency, cost_price, units_sold, gross_revenue')
+    .select('category, product_name, currency, cost_price, units_sold, gross_revenue, channel, source_type')
     .eq('user_id', user.id)
     .gte('record_date', since)
     .limit(2000)
@@ -194,6 +208,22 @@ export async function GET(request: NextRequest) {
   const sector = detectSector(categories)
   // Everything the business actually trades — feeds signal selection.
   const businessTerms = Array.from(new Set([...categories, ...productNames])).slice(0, 40)
+
+  // Channel mix — online vs in-store revenue share decides which demand signals
+  // matter (ad cost / CAC for ecommerce; footfall / local spend for POS).
+  let ecomRev = 0, posRev = 0, channelRev = 0
+  for (const r of rows) {
+    const rev = r.gross_revenue || 0
+    const cls = classifyChannel(r.source_type || r.channel || '')
+    if (cls === 'ecommerce') { ecomRev += rev; channelRev += rev }
+    else if (cls === 'pos') { posRev += rev; channelRev += rev }
+  }
+  const channelMix: ChannelMix = {
+    ecommercePct: channelRev > 0 ? Math.round((ecomRev / channelRev) * 100) : 0,
+    posPct: channelRev > 0 ? Math.round((posRev / channelRev) * 100) : 0,
+    hasEcommerce: ecomRev > 0,
+    hasPos: posRev > 0,
+  }
 
   // Spend by currency → import exposure + shipping lanes.
   const currencySpend = new Map<string, number>()
@@ -215,7 +245,8 @@ export async function GET(request: NextRequest) {
   // Cache is keyed by what the business actually trades, so two businesses in the
   // same country with different products get different signals.
   const termSig = businessTerms.join('|').toLowerCase().slice(0, 120)
-  const cacheKey = `${climate.code}:${sector.key}:${termSig}`
+  const chanSig = `${channelMix.hasEcommerce ? 'e' : ''}${channelMix.hasPos ? 'p' : ''}`
+  const cacheKey = `${climate.code}:${sector.key}:${chanSig}:${termSig}`
   const cached = signalCache.get(cacheKey)
   let signals: SignalReading[]
   let supply: SupplyReading
@@ -224,7 +255,7 @@ export async function GET(request: NextRequest) {
     signals = cached.signals
     supply = cached.supply
   } else {
-    const specs = await selectBusinessSignals({ climate, businessTerms, sectorLabel: sector.label, userId: user.id })
+    const specs = await selectBusinessSignals({ climate, businessTerms, sectorLabel: sector.label, channelMix, userId: user.id })
     const [signalReadings, laneReadings, portReading] = await Promise.all([
       Promise.all(specs.map(readSignal)),
       Promise.all(lanes.map(async l => {
