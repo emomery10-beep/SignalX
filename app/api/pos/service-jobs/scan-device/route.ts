@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
+import { logUsage } from '@/lib/log-usage'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -56,6 +57,7 @@ Set confidence 80-100 if text is clearly readable, 50-79 if partially readable, 
         ],
       }],
     })
+    logUsage({ route: 'pos/service-jobs/scan-device', model: 'claude-haiku-4-5-20251001', usage: response.usage, userId: auth.ownerId })
 
     const text = response.content[0].type === 'text' ? response.content[0].text.trim() : ''
     const jsonMatch = text.match(/\{[\s\S]*?\}/)

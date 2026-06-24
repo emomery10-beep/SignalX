@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosOwner } from '@/lib/pos-auth'
+import { logUsage } from '@/lib/log-usage'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -89,6 +90,7 @@ Keep it practical and actionable. Include real supplier types (e.g., "Beauty who
         },
       ],
     })
+    logUsage({ route: 'pos/ai/supplier-recommendations', model: 'claude-sonnet-4-6', usage: message.usage, userId: ownerId })
 
     const response = message.content[0].type === 'text' ? message.content[0].text : 'Unable to generate recommendations'
 

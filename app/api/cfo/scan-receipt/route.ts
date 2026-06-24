@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { logUsage } from '@/lib/log-usage'
 
 function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status })
@@ -65,6 +66,7 @@ Rules:
         ],
       }],
     })
+    logUsage({ route: 'cfo/scan-receipt', model: 'claude-haiku-4-5-20251001', usage: response.usage, userId: user.id })
 
     const text = response.content[0].type === 'text' ? response.content[0].text.trim() : ''
     const jsonMatch = text.match(/\{[\s\S]*?\}/)

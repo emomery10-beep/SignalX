@@ -123,7 +123,7 @@ async function runCarolyneScout() {
     })
 
     scoredQueries.sort((a, b) => a.penalty - b.penalty || Math.random() - 0.5)
-    const selected = scoredQueries.slice(0, 5)
+    const selected = scoredQueries.slice(0, 1)
 
     log.push(`Selected 5 topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
     log.push('Searching Tavily for East African market data...')
@@ -240,8 +240,8 @@ async function writeEABlogPost(input: SearchInput, recentPublished: RecentPost[]
     : ''
 
   const res = await anthropic.messages.create({
-    model:      'claude-sonnet-4-6',
-    max_tokens: 5000,
+    model:      'claude-haiku-4-5',
+    max_tokens: 3000,
     system: `You are Carolyne Kigathi, Head of Strategic Partnerships (East Africa) at AskBiz. You write sharp, data-driven analysis for East African SME founders — the kind of briefing a Nairobi-based business founder would read over chai before their first meeting. Your style:
 
 VOICE & TONE:
@@ -340,7 +340,7 @@ Return ONLY valid JSON (no markdown fences):
     }],
   })
 
-  logUsage({ route: 'agent/carolyne-scout', model: 'claude-sonnet-4-6', usage: res.usage })
+  logUsage({ route: 'agent/carolyne-scout', model: 'claude-haiku-4-5', usage: res.usage })
   const raw   = res.content[0].type === 'text' ? res.content[0].text : ''
   const clean = raw.replace(/```json\n?|```/g, '').trim()
   const parsed = JSON.parse(clean)

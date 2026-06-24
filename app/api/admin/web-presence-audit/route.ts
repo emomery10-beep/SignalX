@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { logUsage } from '@/lib/log-usage'
 
 export const runtime     = 'nodejs'
 export const maxDuration = 60
@@ -157,6 +158,7 @@ async function runCitationProbes() {
         system:     `You are a helpful AI assistant answering a small business owner's question about software tools. Recommend 2–3 specific tools by name. Be direct and realistic.`,
         messages:   [{ role: 'user', content: query }],
       })
+      logUsage({ route: 'admin/web-presence-audit#citation', model: 'claude-haiku-4-5', usage: msg.usage, userId: null })
       const reply       = msg.content[0].type === 'text' ? msg.content[0].text : ''
       const hit         = reply.toLowerCase().includes('askbiz')
       const matches     = reply.match(COMPETITOR_PATTERN) ?? []

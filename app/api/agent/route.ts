@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { tavilySearch } from '@/lib/tavily'
 import Anthropic from '@anthropic-ai/sdk'
+import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -170,6 +171,7 @@ Return this exact JSON:
 }`
     }],
   })
+  logUsage({ route: 'agent#analyze', model: 'claude-sonnet-4-6', usage: res.usage, userId: null })
 
   const raw = res.content[0].type === 'text' ? res.content[0].text : ''
   const clean = raw.replace(/```json|```/g, '').trim()
@@ -226,6 +228,7 @@ Return this JSON structure:
 }`
     }],
   })
+  logUsage({ route: 'agent#blog', model: 'claude-sonnet-4-6', usage: res.usage, userId: null })
 
   const raw = res.content[0].type === 'text' ? res.content[0].text : ''
   const clean = raw.replace(/```json|```/g, '').trim()
@@ -256,6 +259,7 @@ Return:
 }`
     }],
   })
+  logUsage({ route: 'agent#thread', model: 'claude-sonnet-4-6', usage: res.usage, userId: null })
 
   const raw = res.content[0].type === 'text' ? res.content[0].text : ''
   const clean = raw.replace(/```json|```/g, '').trim()
@@ -283,6 +287,7 @@ Return:
 }`
     }],
   })
+  logUsage({ route: 'agent#replies', model: 'claude-sonnet-4-6', usage: res.usage, userId: null })
 
   const raw = res.content[0].type === 'text' ? res.content[0].text : ''
   const clean = raw.replace(/```json|```/g, '').trim()

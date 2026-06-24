@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { searchTweetsViaTavily, postTweet, validateXCredentials, X_KEYWORD_PRESETS } from '@/lib/x-api'
 import Anthropic from '@anthropic-ai/sdk'
+import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -175,6 +176,7 @@ export async function POST(request: NextRequest) {
             max_tokens: 300,
             messages: [{ role: 'user', content: buildOriginalPostPrompt(query, angle) }],
           })
+          logUsage({ route: 'xagent#search', model: 'claude-sonnet-4-5', usage: res.usage, userId: null })
           const post = res.content[0].type === 'text' ? res.content[0].text.trim() : ''
           if (post) originalPosts.push({ topic: query, post: post.length > 255 ? post.slice(0, 252) + '...' : post })
         } catch (err: any) {
@@ -271,6 +273,7 @@ export async function POST(request: NextRequest) {
           content: buildReplyPrompt(body.tweetText || '', body.tweetAuthor || 'founder'),
         }],
       })
+      logUsage({ route: 'xagent#regenerate', model: 'claude-sonnet-4-5', usage: res.usage, userId: null })
       const reply = res.content[0].type === 'text' ? res.content[0].text.trim() : ''
       return safeJson({ reply: reply.length > 255 ? reply.slice(0, 252) + '...' : reply })
     }

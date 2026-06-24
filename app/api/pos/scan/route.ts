@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosOwner } from '@/lib/pos-auth'  // fix #20 — use shared auth helper
+import { logUsage } from '@/lib/log-usage'
 
 // CORS handled globally by next.config.js
 export async function OPTIONS() {
@@ -90,6 +91,7 @@ Reply ONLY with valid JSON, nothing else:
         ],
       }],
     })
+    logUsage({ route: 'pos/scan', model: 'claude-haiku-4-5-20251001', usage: aiResponse.usage, userId: ownerId })
 
     const text = aiResponse.content[0].type === 'text' ? aiResponse.content[0].text.trim() : ''
     console.log('[scan] Claude raw response:', text)

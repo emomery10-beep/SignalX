@@ -123,7 +123,7 @@ async function runMarketingScout() {
     })
 
     scoredQueries.sort((a, b) => a.penalty - b.penalty || Math.random() - 0.5)
-    const selected = scoredQueries.slice(0, 5)
+    const selected = scoredQueries.slice(0, 1)
 
     log.push(`Selected 5 topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
     log.push('Searching Tavily for marketing intelligence...')
@@ -240,8 +240,8 @@ async function writeMarketingBlogPost(input: SearchInput, recentPublished: Recen
     : ''
 
   const res = await anthropic.messages.create({
-    model:      'claude-sonnet-4-6',
-    max_tokens: 5000,
+    model:      'claude-haiku-4-5',
+    max_tokens: 3000,
     system: `You are Maya Chen, Head of Marketing Intelligence at AskBiz. You write sharp, data-led marketing guides for SME founders — the kind of briefing a growth-focused founder reads before their Monday morning standup. Your style:
 
 VOICE & TONE:
@@ -339,7 +339,7 @@ Return ONLY valid JSON (no markdown fences):
     }],
   })
 
-  logUsage({ route: 'agent/marketing-scout', model: 'claude-sonnet-4-6', usage: res.usage })
+  logUsage({ route: 'agent/marketing-scout', model: 'claude-haiku-4-5', usage: res.usage })
   const raw    = res.content[0].type === 'text' ? res.content[0].text : ''
   const clean  = raw.replace(/```json\n?|```/g, '').trim()
   const parsed = JSON.parse(clean)

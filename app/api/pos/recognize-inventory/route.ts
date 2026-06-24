@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosAuth } from '@/lib/pos-auth'
+import { logUsage } from '@/lib/log-usage'
 
 // Allow more time for AI image processing
 export const maxDuration = 60
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
 
     const anthropic = new Anthropic()
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-haiku-4-5',
       max_tokens: 500,
       messages: [{
         role: 'user',
@@ -89,6 +90,7 @@ Reply with ONLY valid JSON, no other text:
         ],
       }],
     })
+    logUsage({ route: 'pos/recognize-inventory', model: 'claude-haiku-4-5', usage: response.usage, userId: auth.ownerId })
 
     const content = response.content[0]
     if (content.type !== 'text') {

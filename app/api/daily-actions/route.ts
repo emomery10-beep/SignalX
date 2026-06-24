@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrencySymbol } from '@/lib/get-currency'
 import Anthropic from '@anthropic-ai/sdk'
+import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -128,6 +129,7 @@ Priority 1 = do now (revenue at risk), 2 = do today, 3 = this week.
 Sort by priority ascending. Be specific — use actual product names, customer names, amounts.
 Return ONLY the JSON array, no markdown.` }],
     })
+    logUsage({ route: 'daily-actions', model: 'claude-sonnet-4-6', usage: response.usage, userId: user.id })
 
     const text = (response.content[0] as { type: string; text: string }).text
     const actions = JSON.parse(text)

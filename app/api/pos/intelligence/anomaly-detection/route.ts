@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosOwner } from '@/lib/pos-auth'
 import Anthropic from '@anthropic-ai/sdk'
+import { logUsage } from '@/lib/log-usage'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -75,6 +76,7 @@ export async function POST(req: NextRequest) {
         },
       ],
     })
+    logUsage({ route: 'pos/intelligence/anomaly-detection', model: 'claude-sonnet-4-6', usage: message.usage, userId: ownerId })
 
     // Extract analysis from response
     const analysis = message.content[0].type === 'text' ? message.content[0].text : ''

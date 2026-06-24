@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosAuth } from '@/lib/pos-auth'
+import { logUsage } from '@/lib/log-usage'
 
 // Allow larger body for image uploads
 export const maxDuration = 60
@@ -96,6 +97,7 @@ Reply with ONLY valid JSON, no markdown, no other text:
         ],
       }],
     })
+    logUsage({ route: 'pos/scan-product-full', model: 'claude-haiku-4-5-20251001', usage: response.usage, userId: auth.ownerId })
 
     const text = response.content[0].type === 'text' ? response.content[0].text.trim() : ''
     console.log('[scan-product-full] Claude raw response:', text)

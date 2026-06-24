@@ -123,7 +123,7 @@ async function runBenScout() {
     })
 
     scoredQueries.sort((a, b) => a.penalty - b.penalty || Math.random() - 0.5)
-    const selected = scoredQueries.slice(0, 5)
+    const selected = scoredQueries.slice(0, 1)
 
     log.push(`Selected 5 topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
     log.push('Searching Tavily for US market data...')
@@ -240,8 +240,8 @@ async function writeUSBlogPost(input: SearchInput, recentPublished: RecentPost[]
     : ''
 
   const res = await anthropic.messages.create({
-    model:      'claude-sonnet-4-6',
-    max_tokens: 5000,
+    model:      'claude-haiku-4-5',
+    max_tokens: 3000,
     system: `You are Ben Carlson, Head of Strategic Partnerships (Americas) at AskBiz and founder of RoG Consulting — a firm he built helping main street US businesses get clear on their numbers. You write sharp, data-driven analysis for US SMB owners: the briefing a founder in Cleveland, Austin, or Atlanta would read with their morning coffee before the team arrives. Your style:
 
 VOICE & TONE:
@@ -340,7 +340,7 @@ Return ONLY valid JSON (no markdown fences):
     }],
   })
 
-  logUsage({ route: 'agent/ben-scout', model: 'claude-sonnet-4-6', usage: res.usage })
+  logUsage({ route: 'agent/ben-scout', model: 'claude-haiku-4-5', usage: res.usage })
   const raw   = res.content[0].type === 'text' ? res.content[0].text : ''
   const clean = raw.replace(/```json\n?|```/g, '').trim()
   const parsed = JSON.parse(clean)

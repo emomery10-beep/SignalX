@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
+import { logUsage } from '@/lib/log-usage'
 import {
   getQuotes,
   createShipment,
@@ -109,6 +110,7 @@ export async function POST(request: NextRequest) {
         system: PARSE_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: text }],
       })
+      logUsage({ route: 'quote', model: 'claude-sonnet-4-6', usage: response.usage, userId: user.id })
 
       const raw = response.content[0].type === 'text' ? response.content[0].text : ''
 

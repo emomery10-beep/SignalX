@@ -136,7 +136,7 @@ async function runBlogScout() {
 
     // Sort by penalty ascending (freshest topics first), then shuffle within same penalty tier
     scoredQueries.sort((a, b) => a.penalty - b.penalty || Math.random() - 0.5)
-    const selected = scoredQueries.slice(0, 5)
+    const selected = scoredQueries.slice(0, 1)
 
     log.push(`Selected 5 topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
     log.push('Searching Tavily for live data...')
@@ -267,8 +267,8 @@ async function writeBlogPost(input: SearchInput, recentPublished: RecentPost[] =
     : ''
 
   const res = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 5000,
+    model: 'claude-haiku-4-5',
+    max_tokens: 3000,
     system: `You are Alice Watson, Head of Market Intelligence at AskBiz. You write like a sharp, opinionated market analyst — not a content marketer. Your style:
 
 VOICE & TONE:
@@ -368,7 +368,7 @@ Return ONLY valid JSON (no markdown fences):
     }],
   })
 
-  logUsage({ route: 'agent/blog-scout', model: 'claude-sonnet-4-6', usage: res.usage })
+  logUsage({ route: 'agent/blog-scout', model: 'claude-haiku-4-5', usage: res.usage })
   const raw = res.content[0].type === 'text' ? res.content[0].text : ''
   const clean = raw.replace(/```json\n?|```/g, '').trim()
   const parsed = JSON.parse(clean)

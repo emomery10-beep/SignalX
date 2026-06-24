@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrencySymbol } from '@/lib/get-currency'
 import Anthropic from '@anthropic-ai/sdk'
+import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -139,6 +140,7 @@ ${signals}
 Format as JSON: {"leverage_points": ["point1", "point2", "point3"], "risks": ["risk1", "risk2"], "recommended_ask": "what to ask for", "talking_points": ["point1", "point2", "point3"], "timing": "when to negotiate"}
 Return ONLY valid JSON.` }],
       })
+      logUsage({ route: 'supplier-brief', model: 'claude-sonnet-4-6', usage: response.usage, userId: user.id })
 
       const text = (response.content[0] as { type: string; text: string }).text
       brief = text

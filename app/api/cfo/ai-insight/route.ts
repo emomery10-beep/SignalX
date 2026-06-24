@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { getRegionConfig } from '@/lib/region-config'
+import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -71,6 +72,7 @@ Format as JSON: {"insights": [{"title": "short title", "body": "1-2 sentence ins
 Return ONLY valid JSON.`
       }],
     })
+    logUsage({ route: 'cfo/ai-insight', model: 'claude-haiku-4-5', usage: response.usage, userId: user.id })
 
     const block = response.content[0]
     const text = block?.type === 'text' ? block.text : ''

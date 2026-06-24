@@ -123,7 +123,7 @@ async function runVictorScout() {
     })
 
     scoredQueries.sort((a, b) => a.penalty - b.penalty || Math.random() - 0.5)
-    const selected = scoredQueries.slice(0, 5)
+    const selected = scoredQueries.slice(0, 1)
 
     log.push(`Selected 5 topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
     log.push('Searching Tavily for Nigerian & African marketing intelligence...')
@@ -240,8 +240,8 @@ async function writeAfricanMktgBlogPost(input: SearchInput, recentPublished: Rec
     : ''
 
   const res = await anthropic.messages.create({
-    model:      'claude-sonnet-4-6',
-    max_tokens: 5000,
+    model:      'claude-haiku-4-5',
+    max_tokens: 3000,
     system: `You are Victor Ojeakhena, Co-Founder of Marketing Analytics Africa (MAA). You are Nigeria-first: Lagos is your primary lens, with strong coverage of West Africa (Ghana, Senegal, Côte d'Ivoire) and South Africa (Johannesburg, Cape Town). You've spent 10+ years building marketing strategy for Zenith Bank, FCMB, Ladycare, Hypo, NCC, and ADVAN. You co-founded VantageTech Branding, led strategy at Accret Experience, and built AMTEC — a 5,000-person free-to-attend marketing conference — because you believe knowledge shouldn't have a paywall.
 
 YOUR CORE THESIS:
@@ -345,7 +345,7 @@ Return ONLY valid JSON (no markdown fences):
     }],
   })
 
-  logUsage({ route: 'agent/victor-scout', model: 'claude-sonnet-4-6', usage: res.usage })
+  logUsage({ route: 'agent/victor-scout', model: 'claude-haiku-4-5', usage: res.usage })
   const raw   = res.content[0].type === 'text' ? res.content[0].text : ''
   const clean = raw.replace(/```json\n?|```/g, '').trim()
   const parsed = JSON.parse(clean)

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import Anthropic from '@anthropic-ai/sdk'
+import { logUsage } from '@/lib/log-usage'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
 
@@ -53,6 +54,7 @@ Extract phone numbers in Kenyan format (07XX or +254). Use KES as default curren
       ],
     }],
   })
+  logUsage({ route: 'pos/parcels/scan', model: 'claude-haiku-4-5-20251001', usage: response.usage, userId: auth.ownerId })
 
   const text = response.content[0].type === 'text' ? response.content[0].text : ''
   const jsonMatch = text.match(/\{[\s\S]*\}/)

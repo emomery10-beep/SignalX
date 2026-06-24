@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { logUsage } from '@/lib/log-usage'
 
 export const runtime   = 'nodejs'
 export const maxDuration = 60
@@ -180,6 +181,7 @@ export async function POST(req: NextRequest) {
     max_tokens: 2000,
     messages:   [{ role: 'user', content: prompt }],
   })
+  logUsage({ route: 'admin/ai-discovery-audit#manifest', model: 'claude-sonnet-4-5', usage: msg.usage, userId: null })
 
   const manifest = msg.content[0].type === 'text' ? msg.content[0].text.trim() : ''
 
@@ -219,6 +221,7 @@ If AskBiz (askbiz.co) would realistically appear for this query, mention it and 
 Otherwise give a realistic response without it. Be concise.`,
           messages: [{ role: 'user', content: p.probeQ }],
         })
+        logUsage({ route: 'admin/ai-discovery-audit#probe', model: 'claude-haiku-4-5', usage: msg.usage, userId: null })
         const reply = msg.content[0].type === 'text' ? msg.content[0].text : ''
         const hit   = reply.toLowerCase().includes('askbiz')
         return {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrencySymbol } from '@/lib/get-currency'
 import Anthropic from '@anthropic-ai/sdk'
+import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
 export const maxDuration = 20
@@ -91,6 +92,7 @@ ${context}
 
 Respond with plain text bullet points only, no markdown headers.` }],
         })
+        logUsage({ route: 'health-timemachine', model: 'claude-haiku-4-5-20251001', usage: response.usage, userId: user.id })
         analysis = (response.content[0] as { type: string; text: string }).text
       } catch {
         analysis = null

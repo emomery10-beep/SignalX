@@ -319,7 +319,10 @@ export async function askOnce({ messages, systemPrompt, userId }: {
   const response = await client.messages.create({
     model: MODEL,
     max_tokens: 2000,
-    system: systemPrompt,
+    // Cache the system prompt (business context). On follow-up questions within
+    // the 5-min window the cached prefix is read at ~0.1x input cost instead of
+    // full price — the bulk of the input on a multi-question session.
+    system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
     messages: messages.slice(-14) as Array<{ role: 'user' | 'assistant'; content: string }>,
   })
 
