@@ -24,6 +24,7 @@ interface ClimateData {
   mapped: boolean
   requested_country: string
   sector: { key: string; label: string; icon: string; import_pct: number }
+  tracking?: { sector: string; channel: string | null }
   condition: string
   condition_icon: string
   severity: number
@@ -164,6 +165,11 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
           <div>
             <div style={{ fontSize: 24, fontWeight: 900, color: '#fff', letterSpacing: '-.02em' }}>{data.condition} {data.condition_icon}</div>
             <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3, lineHeight: 1.5, maxWidth: 380 }}>{n.headline}</div>
+            {data.tracking && (
+              <div style={{ fontSize: 9, color: '#64748b', marginTop: 6, fontWeight: 600, letterSpacing: '.02em' }}>
+                {tc('cfo_marketclimate.trackingPrefix')} {[data.tracking.sector, data.tracking.channel, data.country].filter(Boolean).join(' · ')}
+              </div>
+            )}
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 9, color: '#475569', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('cfo_marketclimate.severityLabel')}</div>

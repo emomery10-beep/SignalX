@@ -334,6 +334,12 @@ export async function GET(request: NextRequest) {
     mapped,
     requested_country: requestedCountry,
     sector: { key: sector.key, label: sector.label, icon: sector.icon, import_pct: importPct },
+    tracking: {
+      sector: sector.label,
+      channel: channelMix.hasEcommerce && channelMix.hasPos ? 'ecommerce + POS'
+        : channelMix.hasEcommerce ? 'online'
+        : channelMix.hasPos ? 'in-store' : null,
+    },
     condition,
     condition_icon: conditionIcon,
     severity: totalSeverity,

@@ -43,6 +43,7 @@
   "refresh": "Refresh",
   "refreshing": "Refreshing…",
   "collapse": "Collapse",
+  "trackingPrefix": "Tracking:",
   "globalCoverageTitle": "Showing global signals",
   "globalCoverageBody": "Market Climate isn't tuned for {country} yet, so you're seeing global market signals. Your sector and supplier exposure are still personalised.",
   "globalCoverageCta": "Request {country} coverage →",
