@@ -12,6 +12,8 @@ const INDIGO = '#6366F1'
 const RED = '#EF4444'
 const AMBER = '#F59E0B'
 const GREEN = '#22C55E'
+const RED_INK = '#991b1b'
+const GREEN_INK = '#166534'
 
 interface Signal {
   key: string; label: string; kind: string; value: string
@@ -53,6 +55,45 @@ interface Props {
 const SEV_COLOR = (s: number) => s >= 66 ? RED : s >= 33 ? AMBER : GREEN
 const SEV_BG = (sev: 'ok' | 'watch' | 'alert') => sev === 'alert' ? RED : sev === 'watch' ? AMBER : GREEN
 
+// Scoped styles: keyframes, focus rings, hover, and reduced-motion fallbacks.
+// Rendered in every return branch so the collapsed bar gets them too.
+function Styles() {
+  return (
+    <style>{`
+      .mc *:focus-visible { outline: 2px solid ${INDIGO}; outline-offset: 2px; border-radius: 7px; }
+      .mc-iconbtn { transition: background .15s ease; }
+      .mc-iconbtn:hover:not(:disabled) { background: rgba(148,163,184,.30) !important; }
+      .mc-tab { transition: color .15s ease, background .15s ease; }
+      .mc-tab:hover { color: var(--tx2); }
+      .mc-row { transition: border-color .15s ease, background .15s ease; }
+      .mc-row:hover { border-color: ${INDIGO}55; }
+      .mc-bar { transition: border-color .15s ease; }
+      .mc-bar:hover { border-color: ${INDIGO}55; }
+      .mc-link { transition: opacity .15s ease; }
+      .mc-link:hover { opacity: .72; }
+      @keyframes mcSpin { from { transform: rotate(0) } to { transform: rotate(360deg) } }
+      @keyframes mcPulse { 0%, 100% { opacity: 1 } 50% { opacity: .35 } }
+      @keyframes mcFade { from { opacity: 0; transform: translateY(3px) } to { opacity: 1; transform: none } }
+      .mc-spin { animation: mcSpin .8s linear infinite; }
+      .mc-pulse { animation: mcPulse 1.8s ease-in-out infinite; }
+      .mc-fade { animation: mcFade .18s cubic-bezier(.22,1,.36,1); }
+      .mc-meter { transition: width .5s cubic-bezier(.22,1,.36,1); }
+      @media (prefers-reduced-motion: reduce) {
+        .mc-spin, .mc-pulse, .mc-fade { animation: none !important; }
+        .mc-meter { transition: none !important; }
+      }
+    `}</style>
+  )
+}
+
+/* ── Inline icons (stroke, currentColor) — no decorative emoji ── */
+const ico = { width: 13, height: 13, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+const IconCost = () => <svg {...ico}><path d="M3 7l9-4 9 4v10l-9 4-9-4V7z" /><path d="M3 7l9 4 9-4M12 11v10" /></svg>
+const IconLane = () => <svg {...ico}><circle cx="5" cy="12" r="2" /><circle cx="19" cy="12" r="2" /><path d="M7 12h10" strokeDasharray="2 2.5" /></svg>
+const IconPort = () => <svg {...ico}><circle cx="12" cy="5" r="2" /><path d="M12 7v12M8 11h8M5 14a7 7 0 0014 0" /></svg>
+const IconGlobe = () => <svg {...ico}><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 000 18 14 14 0 000-18" /></svg>
+const IconAlert = () => <svg {...ico}><path d="M10.3 4l-7.4 13A2 2 0 004.6 20h14.8a2 2 0 001.7-3L13.7 4a2 2 0 00-3.4 0z" /><path d="M12 9v4M12 17h.01" /></svg>
+
 export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, monthlyFixed = 0, defaultExpanded = false, onAsk }: Props) {
   const { tc, fmtDate } = useLang()
   const [data, setData] = useState<ClimateData | null>(null)
@@ -86,7 +127,7 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
   }
 
   if (loading) {
-    return <div style={{ height: 54, borderRadius: 12, border: '1px solid var(--b)', background: 'var(--ev, #f3f2ef)', animation: 'pulse 1.5s infinite' }} />
+    return <div className="mc"><Styles /><div className="mc-pulse" style={{ height: 54, borderRadius: 14, border: '1px solid var(--b)', background: 'var(--ev, #f3f2ef)' }} /></div>
   }
 
   if (!data) return null
@@ -98,27 +139,32 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
   // ── Collapsed: a single compact row. Click to expand the full widget. ──
   if (!expanded) {
     return (
-      <button
-        onClick={() => setExpanded(true)}
-        style={{
-          width: '100%', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
-          padding: '11px 14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)',
-          cursor: 'pointer', fontFamily: 'inherit',
-        }}
-      >
-        <span style={{ width: 9, height: 9, borderRadius: '50%', background: sevColor, flexShrink: 0, animation: data.severity >= 33 ? 'pulse 1.8s infinite' : 'none' }} />
-        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--tx3)' }}>{tc('cfo_marketclimate.headerTitle')} · {data.country}</span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{data.condition} {data.condition_icon}</span>
-        </div>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-          {extra > 0 && (
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#991b1b', whiteSpace: 'nowrap' }}>+{fmt(extra)}{tc('cfo_marketclimate.perMonth')}</span>
-          )}
-          <span style={{ fontSize: 12, fontWeight: 800, color: sevColor, whiteSpace: 'nowrap' }}>{data.severity}<span style={{ fontSize: 9, color: 'var(--tx3)' }}>/100</span></span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
-        </div>
-      </button>
+      <div className="mc">
+        <Styles />
+        <button
+          className="mc-bar"
+          onClick={() => setExpanded(true)}
+          aria-label={`${tc('cfo_marketclimate.headerTitle')} — ${data.condition}. ${tc('cfo_marketclimate.severityLabel')} ${data.severity}/100. ${tc('cfo_marketclimate.collapse')}`}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
+            padding: '11px 14px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)',
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          <span className={data.severity >= 33 ? 'mc-pulse' : undefined} style={{ width: 9, height: 9, borderRadius: '50%', background: sevColor, flexShrink: 0 }} />
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--tx3)' }}>{tc('cfo_marketclimate.headerTitle')} · {data.country}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{data.condition} {data.condition_icon}</span>
+          </div>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+            {extra > 0 && (
+              <span style={{ fontSize: 12, fontWeight: 700, color: RED_INK, whiteSpace: 'nowrap' }}>+{fmt(extra)}{tc('cfo_marketclimate.perMonth')}</span>
+            )}
+            <span style={{ fontSize: 12, fontWeight: 800, color: sevColor, whiteSpace: 'nowrap' }}>{data.severity}<span style={{ fontSize: 9, color: 'var(--tx3)' }}>/100</span></span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+          </div>
+        </button>
+      </div>
     )
   }
 
@@ -131,64 +177,72 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
   ]
 
   return (
-    <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid var(--b)', boxShadow: '0 2px 12px rgba(0,0,0,.04)' }}>
+    <section className="mc" role="region" aria-label={`${tc('cfo_marketclimate.headerTitle')} · ${data.country}`}
+      style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid var(--b)' }}>
+      <Styles />
       {/* ── Header ── */}
-      <div style={{ background: '#0f172a', padding: '16px 18px 14px', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse at 85% 40%, ${sevColor}33 0%, transparent 60%)` }} />
+      <div style={{ background: '#0f172a', padding: '16px 18px 12px', position: 'relative', overflow: 'hidden' }}>
+        <div aria-hidden style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse at 85% 30%, ${sevColor}30 0%, transparent 62%)` }} />
         <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.1em', color: '#64748b' }}>{tc('cfo_marketclimate.headerTitle')} · {data.country}</span>
+          <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.1em', color: '#94a3b8' }}>{tc('cfo_marketclimate.headerTitle')} · {data.country}</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: sevColor, animation: data.severity >= 33 ? 'pulse 1.8s infinite' : 'none' }} />
-            <span style={{ fontSize: 9, color: '#475569' }}>{tc('cfo_marketclimate.updatedAt')} {updated}</span>
+            <span className={data.severity >= 33 ? 'mc-pulse' : undefined} style={{ width: 7, height: 7, borderRadius: '50%', background: sevColor }} />
+            <span style={{ fontSize: 9, color: '#94a3b8' }}>{tc('cfo_marketclimate.updatedAt')} {updated}</span>
             <button
+              className="mc-iconbtn"
               onClick={() => load(true)}
               disabled={refreshing}
               title={refreshing ? tc('cfo_marketclimate.refreshing') : tc('cfo_marketclimate.refresh')}
               aria-label={refreshing ? tc('cfo_marketclimate.refreshing') : tc('cfo_marketclimate.refresh')}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: 6, border: 'none', background: 'rgba(148,163,184,.15)', color: '#94a3b8', cursor: refreshing ? 'default' : 'pointer', padding: 0 }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 7, border: 'none', background: 'rgba(148,163,184,.16)', color: '#cbd5e1', cursor: refreshing ? 'default' : 'pointer', padding: 0 }}
             >
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation: refreshing ? 'mcSpin 0.8s linear infinite' : 'none' }}>
+              <svg className={refreshing ? 'mc-spin' : undefined} width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M23 4v6h-6M1 20v-6h6" /><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
               </svg>
             </button>
             <button
+              className="mc-iconbtn"
               onClick={() => setExpanded(false)}
               title={tc('cfo_marketclimate.collapse')}
               aria-label={tc('cfo_marketclimate.collapse')}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: 6, border: 'none', background: 'rgba(148,163,184,.15)', color: '#94a3b8', cursor: 'pointer', padding: 0 }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 7, border: 'none', background: 'rgba(148,163,184,.16)', color: '#cbd5e1', cursor: 'pointer', padding: 0 }}
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 15l-6-6-6 6" /></svg>
             </button>
           </div>
         </div>
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-          <div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: '#fff', letterSpacing: '-.02em' }}>{data.condition} {data.condition_icon}</div>
-            <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 3, lineHeight: 1.5, maxWidth: 380 }}>{n.headline}</div>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 23, fontWeight: 800, color: '#fff', letterSpacing: '-.02em' }}>{data.condition} {data.condition_icon}</div>
+            <div style={{ fontSize: 11, color: '#cbd5e1', marginTop: 3, lineHeight: 1.5, maxWidth: 400 }}>{n.headline}</div>
             {data.tracking && (
-              <div style={{ fontSize: 9, color: '#64748b', marginTop: 6, fontWeight: 600, letterSpacing: '.02em' }}>
+              <div style={{ fontSize: 9.5, color: '#94a3b8', marginTop: 6, fontWeight: 600, letterSpacing: '.02em' }}>
                 {tc('cfo_marketclimate.trackingPrefix')} {[data.tracking.sector, data.tracking.channel, data.country].filter(Boolean).join(' · ')}
               </div>
             )}
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 9, color: '#475569', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('cfo_marketclimate.severityLabel')}</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: sevColor }}>{data.severity}<span style={{ fontSize: 11, color: '#475569' }}>/100</span></div>
+          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <div style={{ fontSize: 9, color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('cfo_marketclimate.severityLabel')}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: sevColor, lineHeight: 1.1 }}>{data.severity}<span style={{ fontSize: 11, color: '#94a3b8' }}>/100</span></div>
           </div>
+        </div>
+        {/* severity meter — gives the 0-100 number physical weight */}
+        <div aria-hidden style={{ position: 'relative', marginTop: 12, height: 3, borderRadius: 2, background: 'rgba(255,255,255,.09)', overflow: 'hidden' }}>
+          <div className="mc-meter" style={{ height: '100%', borderRadius: 2, width: `${Math.max(2, data.severity)}%`, background: sevColor }} />
         </div>
       </div>
 
       {/* ── Global-coverage notice (country not individually tuned) ── */}
       {!data.mapped && (
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 18px', background: 'rgba(99,102,241,.06)', borderBottom: '1px solid var(--b)' }}>
-          <span style={{ fontSize: 15, marginTop: 1 }}>🌍</span>
+          <span style={{ color: INDIGO, marginTop: 1, flexShrink: 0 }}><IconGlobe /></span>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: INDIGO, marginBottom: 2 }}>{tc('cfo_marketclimate.globalCoverageTitle')}</div>
-            <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>{tc('cfo_marketclimate.globalCoverageBody', { country: data.requested_country })}</div>
+            <div style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}>{tc('cfo_marketclimate.globalCoverageBody', { country: data.requested_country })}</div>
             {requested
-              ? <div style={{ fontSize: 11, color: GREEN, fontWeight: 600, marginTop: 4 }}>{tc('cfo_marketclimate.globalCoverageRequested', { country: data.requested_country })}</div>
+              ? <div style={{ fontSize: 11, color: GREEN_INK, fontWeight: 600, marginTop: 4 }}>{tc('cfo_marketclimate.globalCoverageRequested', { country: data.requested_country })}</div>
               : onAsk && (
-                <button onClick={() => { setRequested(true); onAsk(`Please add Market Climate coverage for ${data.requested_country} — I'd like local stock index, FX, and central bank signals.`) }}
+                <button className="mc-link" onClick={() => { setRequested(true); onAsk(`Please add Market Climate coverage for ${data.requested_country} — I'd like local stock index, FX, and central bank signals.`) }}
                   style={{ fontSize: 11, color: INDIGO, background: 'transparent', border: 'none', padding: '4px 0 0', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
                   {tc('cfo_marketclimate.globalCoverageCta', { country: data.requested_country })}
                 </button>
@@ -198,27 +252,34 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
       )}
 
       {/* ── Exposure strip ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', background: data.exposure.est_extra_monthly > 0 ? 'rgba(239,68,68,.05)' : 'rgba(34,197,94,.05)', borderLeft: `3px solid ${data.exposure.est_extra_monthly > 0 ? RED : GREEN}` }}>
-        <span style={{ fontSize: 20 }}>📦</span>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: data.exposure.est_extra_monthly > 0 ? RED : GREEN }}>{tc('cfo_marketclimate.estimatedExtraCost')}</div>
-          <div style={{ fontSize: 17, fontWeight: 800, color: data.exposure.est_extra_monthly > 0 ? '#991b1b' : '#166534' }}>
-            {data.exposure.est_extra_monthly > 0 ? '+' : ''}{fmt(data.exposure.est_extra_monthly)}{tc('cfo_marketclimate.perMonth')}
+      {(() => {
+        const isCost = extra > 0
+        const tint = isCost ? RED : GREEN
+        const ink = isCost ? RED_INK : GREEN_INK
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 18px', background: `${tint}0d`, borderBottom: '1px solid var(--b)' }}>
+            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 9, background: `${tint}1a`, color: tint, flexShrink: 0 }}><IconCost /></span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: ink }}>{tc('cfo_marketclimate.estimatedExtraCost')}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: ink }}>
+                {isCost ? `+${fmt(extra)}${tc('cfo_marketclimate.perMonth')}` : tc('cfo_marketclimate.noAddedCost')}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_marketclimate.importExposedPct', { n: data.exposure.import_pct })}</div>
+            </div>
+            {data.exposure.runway_months != null && (
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('cfo_marketclimate.runwayLabel')}</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--tx)' }}>{data.exposure.runway_months} {tc('cfo_marketclimate.monthsAbbr')}</div>
+              </div>
+            )}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_marketclimate.importExposedPct', { n: data.exposure.import_pct })}</div>
-        </div>
-        {data.exposure.runway_months != null && (
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 9, color: 'var(--tx3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('cfo_marketclimate.runwayLabel')}</div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--tx)' }}>{data.exposure.runway_months} {tc('cfo_marketclimate.monthsAbbr')}</div>
-          </div>
-        )}
-      </div>
+        )
+      })()}
 
       {/* ── Tabs ── */}
-      <div style={{ display: 'flex', background: 'var(--ev, #f9fafb)', borderBottom: '1px solid var(--b)' }}>
+      <div role="tablist" style={{ display: 'flex', background: 'var(--ev, #f9fafb)', borderBottom: '1px solid var(--b)' }}>
         {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
+          <button key={t.id} role="tab" aria-selected={tab === t.id} className="mc-tab" onClick={() => setTab(t.id)} style={{
             flex: 1, padding: '10px 4px', textAlign: 'center', fontSize: 11, fontWeight: tab === t.id ? 700 : 500,
             color: tab === t.id ? INDIGO : 'var(--tx3)', background: tab === t.id ? 'var(--sf)' : 'transparent',
             border: 'none', borderBottom: `2px solid ${tab === t.id ? INDIGO : 'transparent'}`, cursor: 'pointer', fontFamily: 'inherit',
@@ -227,10 +288,10 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
       </div>
 
       {/* ── Body ── */}
-      <div style={{ background: 'var(--sf)', padding: 16 }}>
-        {tab === 'now' && <NowPanel data={data} fmt={fmt} />}
+      <div key={tab} className="mc-fade" style={{ background: 'var(--sf)', padding: 16 }}>
+        {tab === 'now' && <NowPanel data={data} />}
         {tab === 'week' && <WeekPanel timeline={n.timeline} />}
-        {tab === 'stress' && <StressPanel exposure={data.exposure} sym={sym} fmt={fmt} />}
+        {tab === 'stress' && <StressPanel exposure={data.exposure} fmt={fmt} />}
         {tab === 'actions' && <ActionsPanel actions={n.actions} onAsk={onAsk} />}
         {tab === 'supply' && <SupplyPanel supply={data.supply} />}
       </div>
@@ -238,47 +299,64 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
       {/* ── Footer: ask AI ── */}
       {onAsk && (
         <div style={{ padding: '10px 16px', borderTop: '1px solid var(--b)', background: 'var(--sf)' }}>
-          <button onClick={() => onAsk(`Today's market climate is "${data.condition}" (severity ${data.severity}/100) for my ${data.sector.label} business in ${data.country}. Estimated extra cost ${fmt(data.exposure.est_extra_monthly)}/month. ${n.body} What should I prioritise this week?`)}
-            style={{ fontSize: 11, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 7, padding: '6px 12px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
+          <button className="mc-link" onClick={() => onAsk(`Today's market climate is "${data.condition}" (severity ${data.severity}/100) for my ${data.sector.label} business in ${data.country}. Estimated extra cost ${fmt(extra)}/month. ${n.body} What should I prioritise this week?`)}
+            style={{ fontSize: 11, color: INDIGO, background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 8, padding: '7px 13px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
             {tc('cfo_marketclimate.askAi')}
           </button>
         </div>
       )}
-      <style>{`@keyframes mcSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
-    </div>
+    </section>
   )
 }
 
 /* ── NOW: signals + plain-English read + opportunity ── */
-function NowPanel({ data, fmt }: { data: ClimateData; fmt: (n: number) => string }) {
+function NowPanel({ data }: { data: ClimateData }) {
   const { tc } = useLang()
   const n = data.narrative
+  const hasLive = data.signals.some(s => (s.value && s.value !== '—') || s.changePct != null)
+
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
-        {data.signals.map(s => {
-          const c = s.direction === 'down' ? RED : s.direction === 'up' ? GREEN : 'var(--tx3)'
-          return (
-            <div key={s.key} style={{ background: 'var(--ev, #f9fafb)', borderRadius: 10, padding: '10px 12px', border: '1px solid var(--b)' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 4 }}>{s.label}</div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: c }}>{s.value}</div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 4, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.summary}</div>
+      {!hasLive ? (
+        <div style={{ background: 'var(--ev, #f9fafb)', border: '1px solid var(--b)', borderRadius: 12, padding: 14, marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: AMBER, marginBottom: 6 }}>
+            <IconAlert />
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_marketclimate.dataUnavailable')}</span>
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5, marginBottom: data.signals.length ? 10 : 0 }}>{tc('cfo_marketclimate.dataUnavailableHint')}</div>
+          {data.signals.length > 0 && (
+            <div style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 600 }}>
+              {tc('cfo_marketclimate.trackingPrefix')} {data.signals.map(s => s.label).join(' · ')}
             </div>
-          )
-        })}
-      </div>
-
-      <div style={{ background: 'rgba(245,158,11,.08)', border: `1.5px solid ${AMBER}55`, borderRadius: 10, padding: 12, marginBottom: n.opportunity ? 10 : 0 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: AMBER, marginBottom: 6 }}>{tc('cfo_marketclimate.yourBusinessSpecifically')}</div>
-        <div style={{ fontSize: 12, color: 'var(--tx)', lineHeight: 1.6 }}>{n.body}</div>
-      </div>
-
-      {n.opportunity && (
-        <div style={{ background: 'rgba(34,197,94,.08)', border: `1.5px solid ${GREEN}55`, borderRadius: 10, padding: 12 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: GREEN, marginBottom: 6 }}>{tc('cfo_marketclimate.hiddenOpportunity')}</div>
-          <div style={{ fontSize: 12, color: 'var(--tx)', lineHeight: 1.6 }}>{n.opportunity}</div>
+          )}
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8, marginBottom: 12 }}>
+          {data.signals.map(s => {
+            const c = s.direction === 'down' ? RED : s.direction === 'up' ? GREEN : 'var(--tx2)'
+            const blank = !s.value || s.value === '—'
+            return (
+              <div key={s.key} style={{ background: 'var(--ev, #f9fafb)', borderRadius: 10, padding: '10px 12px' }}>
+                <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 4 }}>{s.label}</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: blank ? 'var(--tx3)' : c }}>{blank ? '—' : s.value}</div>
+                <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.summary}</div>
+              </div>
+            )
+          })}
         </div>
       )}
+
+      <Callout color={AMBER} label={tc('cfo_marketclimate.yourBusinessSpecifically')} body={n.body} />
+      {n.opportunity && <div style={{ marginTop: 10 }}><Callout color={GREEN} label={tc('cfo_marketclimate.hiddenOpportunity')} body={n.opportunity} /></div>}
+    </div>
+  )
+}
+
+function Callout({ color, label, body }: { color: string; label: string; body: string }) {
+  return (
+    <div style={{ background: `${color}14`, border: `1px solid ${color}40`, borderRadius: 10, padding: 12 }}>
+      <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color, marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 12, color: 'var(--tx)', lineHeight: 1.6 }}>{body}</div>
     </div>
   )
 }
@@ -296,7 +374,7 @@ function WeekPanel({ timeline }: { timeline: ClimateData['narrative']['timeline'
             <div style={{ width: 9, height: 9, borderRadius: '50%', background: dot(t.severity), marginTop: 4, flexShrink: 0 }} />
             {i !== timeline.length - 1 && <div style={{ width: 2, flex: 1, background: 'var(--b)', marginTop: 2 }} />}
           </div>
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, paddingBottom: 2 }}>
             <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)' }}>{t.when}</div>
             <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginTop: 1 }}>{t.title}</div>
             <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2, lineHeight: 1.5 }}>{t.detail}</div>
@@ -308,14 +386,13 @@ function WeekPanel({ timeline }: { timeline: ClimateData['narrative']['timeline'
 }
 
 /* ── 30 DAYS: live stress test ── */
-function StressPanel({ exposure, sym, fmt }: { exposure: ClimateData['exposure']; sym: string; fmt: (n: number) => string }) {
+function StressPanel({ exposure, fmt }: { exposure: ClimateData['exposure']; fmt: (n: number) => string }) {
   const { tc } = useLang()
   const [revDrop, setRevDrop] = useState(15)
   const [costRise, setCostRise] = useState(7)
   const [weeks, setWeeks] = useState(6)
 
   const result = useMemo(() => {
-    // Base monthly revenue inferred from import spend & runway where possible.
     const monthlyFixed = exposure.monthly_fixed || 0
     const baseRevenue = Math.max(exposure.monthly_import_spend * 2.2, monthlyFixed * 1.5, 100000)
     const baseCost = exposure.monthly_import_spend || baseRevenue * 0.55
@@ -329,23 +406,24 @@ function StressPanel({ exposure, sym, fmt }: { exposure: ClimateData['exposure']
     return { monthlyHit, newRunway: Math.round(newRunway * 10) / 10, beShift, verdict, ok: newRunway > 3 }
   }, [revDrop, costRise, weeks, exposure, tc])
 
-  const Slider = ({ label, val, set, min, max, suffix }: { label: string; val: number; set: (n: number) => void; min: number; max: number; suffix: string }) => (
+  // Inline rows (not a nested component) so dragging keeps focus and stays smooth.
+  const sliderRow = (label: string, val: number, set: (n: number) => void, min: number, max: number, prefix: string, unit: string) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-      <span style={{ fontSize: 11, color: 'var(--tx2)', fontWeight: 600, minWidth: 86 }}>{label}</span>
-      <input type="range" min={min} max={max} value={val} onChange={e => set(Number(e.target.value))} style={{ flex: 1, accentColor: INDIGO }} />
-      <span style={{ fontSize: 12, fontWeight: 700, color: INDIGO, minWidth: 38, textAlign: 'right' }}>{suffix}{val}{suffix === '' ? tc('cfo_marketclimate.weeksAbbr') : '%'}</span>
+      <label style={{ fontSize: 11, color: 'var(--tx2)', fontWeight: 600, minWidth: 86 }}>{label}</label>
+      <input type="range" min={min} max={max} value={val} onChange={e => set(Number(e.target.value))} aria-label={label} style={{ flex: 1, accentColor: INDIGO }} />
+      <span style={{ fontSize: 12, fontWeight: 700, color: INDIGO, minWidth: 40, textAlign: 'right' }}>{prefix}{val}{unit}</span>
     </div>
   )
 
   return (
     <div>
       <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>{tc('cfo_marketclimate.stressTestTitle')}</div>
-      <div style={{ background: 'var(--ev, #f9fafb)', borderRadius: 10, padding: 14, border: '1px solid var(--b)', marginBottom: 12 }}>
-        <Slider label={tc('cfo_marketclimate.sliderRevenueDrop')} val={revDrop} set={setRevDrop} min={0} max={40} suffix="–" />
-        <Slider label={tc('cfo_marketclimate.sliderCostIncrease')} val={costRise} set={setCostRise} min={0} max={30} suffix="+" />
-        <Slider label={tc('cfo_marketclimate.sliderDuration')} val={weeks} set={setWeeks} min={1} max={12} suffix="" />
+      <div style={{ background: 'var(--ev, #f9fafb)', borderRadius: 10, padding: 14, marginBottom: 12 }}>
+        {sliderRow(tc('cfo_marketclimate.sliderRevenueDrop'), revDrop, setRevDrop, 0, 40, '–', '%')}
+        {sliderRow(tc('cfo_marketclimate.sliderCostIncrease'), costRise, setCostRise, 0, 30, '+', '%')}
+        {sliderRow(tc('cfo_marketclimate.sliderDuration'), weeks, setWeeks, 1, 12, '', tc('cfo_marketclimate.weeksAbbr'))}
       </div>
-      <div style={{ background: result.ok ? 'rgba(34,197,94,.06)' : 'rgba(239,68,68,.06)', borderRadius: 10, padding: 12 }}>
+      <div style={{ background: result.ok ? `${GREEN}12` : `${RED}12`, border: `1px solid ${result.ok ? GREEN : RED}30`, borderRadius: 10, padding: 12 }}>
         <SRow label={tc('cfo_marketclimate.runwayCurrent')} val={exposure.runway_months != null ? tc('cfo_marketclimate.runwayMonthsVal', { n: exposure.runway_months }) : tc('cfo_marketclimate.runwaySetBalance')} ok />
         <SRow label={tc('cfo_marketclimate.runwayScenario')} val={tc('cfo_marketclimate.runwayMonthsVal', { n: result.newRunway })} ok={result.ok} />
         <SRow label={tc('cfo_marketclimate.monthlyProfitImpact')} val={`–${fmt(result.monthlyHit)}`} />
@@ -357,9 +435,9 @@ function StressPanel({ exposure, sym, fmt }: { exposure: ClimateData['exposure']
 }
 function SRow({ label, val, ok, last }: { label: string; val: string; ok?: boolean; last?: boolean }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: last ? 'none' : '1px solid rgba(0,0,0,.05)', fontSize: 11 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '5px 0', borderBottom: last ? 'none' : '1px solid var(--b)', fontSize: 11 }}>
       <span style={{ color: 'var(--tx3)' }}>{label}</span>
-      <span style={{ fontWeight: 700, color: ok ? '#166534' : '#991b1b' }}>{val}</span>
+      <span style={{ fontWeight: 700, color: ok ? GREEN_INK : RED_INK, textAlign: 'right' }}>{val}</span>
     </div>
   )
 }
@@ -368,21 +446,26 @@ function SRow({ label, val, ok, last }: { label: string; val: string; ok?: boole
 function ActionsPanel({ actions, onAsk }: { actions: ClimateData['narrative']['actions']; onAsk?: (s: string) => void }) {
   const { tc } = useLang()
   if (!actions.length) return <Empty msg={tc('cfo_marketclimate.emptyActions')} />
-  const bar = (u: string) => u === 'urgent' ? RED : u === 'soon' ? AMBER : '#cbd5e1'
+  const tone = (u: string) => u === 'urgent' ? RED : u === 'soon' ? AMBER : '#94a3b8'
   const label = (u: string) => u === 'urgent' ? tc('cfo_marketclimate.urgencyDoToday') : u === 'soon' ? tc('cfo_marketclimate.urgencyThisWeek') : tc('cfo_marketclimate.urgencyWatch')
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {actions.map((a, i) => (
-        <div key={i} onClick={() => onAsk?.(`Help me with this: ${a.title}. ${a.detail}`)} style={{ display: 'flex', gap: 10, padding: 12, borderRadius: 10, border: '1px solid var(--b)', cursor: onAsk ? 'pointer' : 'default', background: 'var(--ev, #f9fafb)' }}>
-          <div style={{ width: 5, borderRadius: 3, background: bar(a.urgency), alignSelf: 'stretch', flexShrink: 0 }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: bar(a.urgency), marginBottom: 3 }}>{label(a.urgency)}</div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 2 }}>{a.title}</div>
-            <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.45 }}>{a.detail}</div>
-          </div>
-          {onAsk && <span style={{ fontSize: 15, color: 'var(--tx3)', alignSelf: 'center' }}>›</span>}
-        </div>
-      ))}
+      {actions.map((a, i) => {
+        const t = tone(a.urgency)
+        const Tag = onAsk ? 'button' : 'div'
+        return (
+          <Tag key={i} className={onAsk ? 'mc-row' : undefined} {...(onAsk ? { type: 'button', onClick: () => onAsk(`Help me with this: ${a.title}. ${a.detail}`) } : {})}
+            style={{ display: 'flex', gap: 10, padding: 12, borderRadius: 10, border: '1px solid var(--b)', cursor: onAsk ? 'pointer' : 'default', background: 'var(--ev, #f9fafb)', textAlign: 'left', width: '100%', fontFamily: 'inherit' }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: t, marginTop: 4, flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: t, marginBottom: 3 }}>{label(a.urgency)}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 2 }}>{a.title}</div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.45 }}>{a.detail}</div>
+            </div>
+            {onAsk && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ alignSelf: 'center', flexShrink: 0 }}><path d="M9 6l6 6-6 6" /></svg>}
+          </Tag>
+        )
+      })}
     </div>
   )
 }
@@ -391,31 +474,27 @@ function ActionsPanel({ actions, onAsk }: { actions: ClimateData['narrative']['a
 function SupplyPanel({ supply }: { supply: ClimateData['supply'] }) {
   const { tc } = useLang()
   const badge = (sev: 'ok' | 'watch' | 'alert') => (
-    <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', padding: '2px 7px', borderRadius: 20, background: `${SEV_BG(sev)}1a`, color: SEV_BG(sev) }}>
+    <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', padding: '2px 8px', borderRadius: 20, background: `${SEV_BG(sev)}1a`, color: SEV_BG(sev), flexShrink: 0 }}>
       {sev === 'alert' ? tc('cfo_marketclimate.badgeDisrupted') : sev === 'watch' ? tc('cfo_marketclimate.badgeWatch') : tc('cfo_marketclimate.badgeClear')}
     </span>
   )
+  const cell = (icon: React.ReactNode, title: string, sev: 'ok' | 'watch' | 'alert', sub: string | null, status: string, key: string | number) => (
+    <div key={key} style={{ background: 'var(--ev, #f9fafb)', borderRadius: 10, padding: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: sub ? 3 : 5 }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 700, color: 'var(--tx)', minWidth: 0 }}>
+          <span style={{ color: 'var(--tx3)', flexShrink: 0 }}>{icon}</span>
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
+        </span>
+        {badge(sev)}
+      </div>
+      {sub && <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 5 }}>{tc('cfo_marketclimate.viaRoute')} {sub}</div>}
+      <div style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}>{status}</div>
+    </div>
+  )
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {supply.lanes.map((l, i) => (
-        <div key={i} style={{ background: 'var(--ev, #f9fafb)', borderRadius: 10, padding: 12, border: '1px solid var(--b)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>🚢 {l.lane}</span>
-            {badge(l.severity)}
-          </div>
-          <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 4 }}>{tc('cfo_marketclimate.viaRoute')} {l.route}</div>
-          <div style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}>{l.status}</div>
-        </div>
-      ))}
-      {supply.port && (
-        <div style={{ background: 'var(--ev, #f9fafb)', borderRadius: 10, padding: 12, border: '1px solid var(--b)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>⚓ {supply.port.port}</span>
-            {badge(supply.port.severity)}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}>{supply.port.status}</div>
-        </div>
-      )}
+      {supply.lanes.map((l, i) => cell(<IconLane />, l.lane, l.severity, l.route, l.status, i))}
+      {supply.port && cell(<IconPort />, supply.port.port, supply.port.severity, null, supply.port.status, 'port')}
     </div>
   )
 }
