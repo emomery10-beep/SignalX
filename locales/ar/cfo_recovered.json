@@ -1,0 +1,11 @@
+{
+  "title": "استرداد المدفوعات",
+  "askAi": "اسأل الذكاء الاصطناعي",
+  "askPrompt": "لدينا {failedCount} مدفوعات فاشلة بإجمالي {totalAmount}. استرددنا {recoveredAmount} (بمعدل {recoveryRate}%). {pendingRetry} مدفوعات في انتظار إعادة المحاولة. كيف يمكننا تحسين معدل الاسترداد؟",
+  "atRisk": "في خطر",
+  "recovered": "مُسترد",
+  "recoveryRate": "معدل الاسترداد",
+  "failedPayments": "{n} مدفوعات فاشلة",
+  "payments": "{n} مدفوعات",
+  "pending": "{n} قيد الانتظار"
+}

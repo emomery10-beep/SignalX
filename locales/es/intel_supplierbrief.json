@@ -1,0 +1,23 @@
+{
+  "title": "Resumen de proveedor",
+  "askAi": "Preguntar a la IA",
+  "askAiPrompt": "Analiza mis relaciones con proveedores y recomienda estrategias de negociación para mejorar los márgenes.",
+  "negotiationLeverage": "Ventaja negociadora",
+  "monthlySpend": "Gasto mensual",
+  "savingTarget": "Objetivo de ahorro del 5 %",
+  "annualImpact": "Impacto anual",
+  "concentrationRiskLabel": "Riesgo de concentración:",
+  "concentrationRiskSuffix": "— diversifica para fortalecer tu posición negociadora",
+  "lowMarginLabel": "Proveedores de bajo margen:",
+  "lowMarginSuffix": "— prioriza para renegociar",
+  "risingCostsLabel": "Costos en aumento:",
+  "risingCostsSuffix": "— fija tarifas o busca alternativas",
+  "saveBadge": "Ahorra ~{amount}/mes",
+  "supplierRowMeta": "{n} productos • {spend}/mes • {margin}% de margen",
+  "depBadge": "{dep}% dep.",
+  "generatingBrief": "Generando resumen para {name}...",
+  "negotiationBriefHeader": "Resumen de negociación — {name}",
+  "sectionLeverage": "VENTAJA",
+  "sectionRisks": "RIESGOS",
+  "sectionTalkingPoints": "PUNTOS CLAVE"
+}

@@ -1,0 +1,13 @@
+{
+  "title": "Acciones de hoy",
+  "urgentBadge": "{n} urgente",
+  "actionCount": "{n} acción",
+  "actionCountPlural": "{n} acciones",
+  "askAi": "Preguntar a la IA",
+  "dismiss": "Descartar",
+  "viewAll": "Ver las {n} acciones →",
+  "priorityNow": "Ahora",
+  "priorityToday": "Hoy",
+  "priorityThisWeek": "Esta semana",
+  "askActionPrompt": "Ayúdame con esta acción: {title}. Contexto: {why}"
+}

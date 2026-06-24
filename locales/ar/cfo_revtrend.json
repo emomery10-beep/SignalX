@@ -1,0 +1,22 @@
+{
+  "empty": "لا تتوفر بيانات لهذه الفترة. اربط مصدر بيانات لعرض اتجاهات الإيرادات.",
+  "title": "الإيرادات مقابل التكاليف",
+  "legendRevenue": "الإيرادات",
+  "legendCogs": "تكلفة البضاعة المباعة",
+  "legendFixed": "ثابتة",
+  "legendNet": "صافي",
+  "tipRev": "الإيرادات",
+  "tipCogs": "ت.ب.م",
+  "tipFixed": "ثابتة",
+  "tipNet": "صافي",
+  "detailedBreakdown": "تفصيل مفصّل",
+  "close": "إغلاق",
+  "rowRevenue": "الإيرادات",
+  "rowCogs": "تكلفة البضاعة المباعة",
+  "rowFixedCosts": "التكاليف الثابتة",
+  "grossProfit": "إجمالي الربح",
+  "totalCosts": "إجمالي التكاليف",
+  "netProfit": "صافي الربح",
+  "margin": "هامش {n}%",
+  "ofRevenue": "{n}% من الإيرادات"
+}

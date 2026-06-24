@@ -1,0 +1,21 @@
+{
+  "heading": "Entscheidungsgedächtnis",
+  "subheading": "AskBiz merkt sich jede Entscheidung und meldet sich nach 6 Wochen zurück",
+  "logDecisionBtn": "+ Entscheidung erfassen",
+  "logFormTitle": "Entscheidung erfassen",
+  "titlePlaceholder": "Was haben Sie entschieden? z. B. Preis für kabellose Ohrhörer um 1,50 £ erhöht",
+  "beforePlaceholder": "Vorher (z. B. 12,99 £)",
+  "afterPlaceholder": "Nachher (z. B. 14,49 £)",
+  "saving": "Wird gespeichert …",
+  "saveDecision": "Entscheidung speichern – AskBiz meldet sich in 6 Wochen",
+  "cancel": "Abbrechen",
+  "reviewBannerSingular": "🔔 {n} Entscheidung zur Überprüfung bereit",
+  "reviewBannerPlural": "🔔 {n} Entscheidungen zur Überprüfung bereit",
+  "askReviewBtn": "AskBiz um Auswertung bitten →",
+  "askReviewPrompt": "Überprüfe meine aktuellen Geschäftsentscheidungen und sag mir, was die Ergebnisse zeigen – was hat funktioniert und was sollte ich daraus lernen?",
+  "noDecisions": "Noch keine Entscheidungen erfasst. Jede Entscheidung, die Sie erfassen, wird nach 6 Wochen ausgewertet.",
+  "checksBack": "AskBiz meldet sich zurück: {date}",
+  "verdictGoodCall": "✓ Gute Entscheidung",
+  "verdictBadCall": "✗ Hat nicht funktioniert",
+  "verdictNeutral": "~ Gemischte Ergebnisse"
+}

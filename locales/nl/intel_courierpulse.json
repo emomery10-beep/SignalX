@@ -1,0 +1,17 @@
+{
+  "courierOperations": "🚛 Koerier Operaties",
+  "scoreOutOf": "/100",
+  "labelHealthy": "Gezond",
+  "labelAtRisk": "Op Risico",
+  "labelCritical": "Kritiek",
+  "today": "vandaag",
+  "inTransit": "onderweg",
+  "atBranch": "bij vestiging",
+  "failed": "mislukt",
+  "deliveryRate": "{rate}% bezorgingspercentage",
+  "stuckOver48h": "{n} vastgelopen >48u",
+  "unpaidRevenue": "KES {amount} onbetaald",
+  "fleetAvailable": "Beschikbaar",
+  "fleetInTransit": "Onderweg",
+  "fleetMaintenance": "Onderhoud"
+}

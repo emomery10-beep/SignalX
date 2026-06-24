@@ -1,0 +1,7 @@
+{
+  "title": "Dagelijks overzicht",
+  "improvedPrompt": "Vertel me meer over deze verbetering: {detail}",
+  "worsenedPrompt": "Leg dit probleem uit en wat ik moet doen: {detail}",
+  "todayPrefix": "Vandaag:",
+  "askAskBiz": "Vraag het AskBiz"
+}

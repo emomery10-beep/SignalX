@@ -1,0 +1,22 @@
+{
+  "empty": "Aucune donnée disponible pour cette période. Connectez une source de données pour voir les tendances de revenus.",
+  "title": "Revenus vs Coûts",
+  "legendRevenue": "Revenus",
+  "legendCogs": "CMV",
+  "legendFixed": "Fixes",
+  "legendNet": "Net",
+  "tipRev": "Rev.",
+  "tipCogs": "CMV",
+  "tipFixed": "Fixes",
+  "tipNet": "Net",
+  "detailedBreakdown": "Détail complet",
+  "close": "Fermer",
+  "rowRevenue": "Revenus",
+  "rowCogs": "CMV",
+  "rowFixedCosts": "Coûts fixes",
+  "grossProfit": "Bénéfice brut",
+  "totalCosts": "Coûts totaux",
+  "netProfit": "Bénéfice net",
+  "margin": "{n}% de marge",
+  "ofRevenue": "{n}% du chiffre d'affaires"
+}

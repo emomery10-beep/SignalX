@@ -45,18 +45,20 @@ interface Props {
   currencySymbol: string
   cashBalance?: number
   monthlyFixed?: number
+  defaultExpanded?: boolean
   onAsk?: (prompt: string) => void
 }
 
 const SEV_COLOR = (s: number) => s >= 66 ? RED : s >= 33 ? AMBER : GREEN
 const SEV_BG = (sev: 'ok' | 'watch' | 'alert') => sev === 'alert' ? RED : sev === 'watch' ? AMBER : GREEN
 
-export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, monthlyFixed = 0, onAsk }: Props) {
+export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, monthlyFixed = 0, defaultExpanded = false, onAsk }: Props) {
   const { tc, fmtDate } = useLang()
   const [data, setData] = useState<ClimateData | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [requested, setRequested] = useState(false)
+  const [expanded, setExpanded] = useState(defaultExpanded)
   const [tab, setTab] = useState<'now' | 'week' | 'stress' | 'actions' | 'supply'>('now')
 
   const load = useCallback((force = false) => {
@@ -83,20 +85,41 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
   }
 
   if (loading) {
-    return (
-      <div style={{ borderRadius: 16, overflow: 'hidden', border: '1px solid var(--b)' }}>
-        <div style={{ height: 96, background: '#0f172a' }} />
-        <div style={{ padding: 16, background: 'var(--sf)' }}>
-          {[1, 2].map(i => <div key={i} style={{ height: 40, borderRadius: 10, background: 'var(--ev, #f3f2ef)', animation: 'pulse 1.5s infinite', marginBottom: 8 }} />)}
-        </div>
-      </div>
-    )
+    return <div style={{ height: 54, borderRadius: 12, border: '1px solid var(--b)', background: 'var(--ev, #f3f2ef)', animation: 'pulse 1.5s infinite' }} />
   }
 
   if (!data) return null
   const n = data.narrative
   const sevColor = SEV_COLOR(data.severity)
   const updated = fmtDate(data.updated_at, { hour: '2-digit', minute: '2-digit' })
+  const extra = data.exposure.est_extra_monthly
+
+  // ── Collapsed: a single compact row. Click to expand the full widget. ──
+  if (!expanded) {
+    return (
+      <button
+        onClick={() => setExpanded(true)}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
+          padding: '11px 14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)',
+          cursor: 'pointer', fontFamily: 'inherit',
+        }}
+      >
+        <span style={{ width: 9, height: 9, borderRadius: '50%', background: sevColor, flexShrink: 0, animation: data.severity >= 33 ? 'pulse 1.8s infinite' : 'none' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--tx3)' }}>{tc('cfo_marketclimate.headerTitle')} · {data.country}</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{data.condition} {data.condition_icon}</span>
+        </div>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+          {extra > 0 && (
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#991b1b', whiteSpace: 'nowrap' }}>+{fmt(extra)}{tc('cfo_marketclimate.perMonth')}</span>
+          )}
+          <span style={{ fontSize: 12, fontWeight: 800, color: sevColor, whiteSpace: 'nowrap' }}>{data.severity}<span style={{ fontSize: 9, color: 'var(--tx3)' }}>/100</span></span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+        </div>
+      </button>
+    )
+  }
 
   const tabs: Array<{ id: typeof tab; label: string }> = [
     { id: 'now', label: tc('cfo_marketclimate.tabNow') },
@@ -126,6 +149,14 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation: refreshing ? 'mcSpin 0.8s linear infinite' : 'none' }}>
                 <path d="M23 4v6h-6M1 20v-6h6" /><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
               </svg>
+            </button>
+            <button
+              onClick={() => setExpanded(false)}
+              title={tc('cfo_marketclimate.collapse')}
+              aria-label={tc('cfo_marketclimate.collapse')}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: 6, border: 'none', background: 'rgba(148,163,184,.15)', color: '#94a3b8', cursor: 'pointer', padding: 0 }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 15l-6-6-6 6" /></svg>
             </button>
           </div>
         </div>

@@ -1,0 +1,17 @@
+{
+  "title": "Gegevensverbindingen",
+  "sourcesConnected": "{connected} van {total} bronnen verbonden",
+  "sourcesConnectedSuffix": "van {total} bronnen verbonden",
+  "manageSources": "Bronnen beheren →",
+  "coverageNone": "Verbind een bron om echte inzichten te krijgen",
+  "coverageLow": "Nog {n} verbindingen aanbevolen voor volledige dekking",
+  "coverageMid": "Goede dekking — meer verbindingen verbeteren de nauwkeurigheid",
+  "coverageHigh": "Uitstekende gegevensdekking voor uw bedrijf",
+  "filterAll": "Alle",
+  "statusNotConnected": "Niet verbonden",
+  "statusSyncError": "⚠ Synchronisatiefout",
+  "statusSynced": "Gesynchroniseerd {time}",
+  "detailName": "Naam:",
+  "detailActive": "Actief · synchroniseert",
+  "connect": "Verbinden →"
+}

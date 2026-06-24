@@ -1,0 +1,17 @@
+{
+  "title": "Conexiones de datos",
+  "sourcesConnected": "{connected} de {total} fuentes conectadas",
+  "sourcesConnectedSuffix": "de {total} fuentes conectadas",
+  "manageSources": "Gestionar fuentes →",
+  "coverageNone": "Conecta una fuente para empezar a obtener información real",
+  "coverageLow": "Se recomiendan {n} conexiones más para cobertura completa",
+  "coverageMid": "Buena cobertura — más conexiones mejoran la precisión de los datos",
+  "coverageHigh": "Excelente cobertura de datos en todo tu negocio",
+  "filterAll": "Todas",
+  "statusNotConnected": "No conectado",
+  "statusSyncError": "⚠ Error de sincronización",
+  "statusSynced": "Sincronizado {time}",
+  "detailName": "Nombre:",
+  "detailActive": "Activo · sincronizando",
+  "connect": "Conectar →"
+}

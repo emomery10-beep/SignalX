@@ -1,0 +1,17 @@
+{
+  "title": "Trésorerie",
+  "askAi": "Demander à l'IA",
+  "askPrompt": "Analyse ma trésorerie et ma piste. Que faire pour l'améliorer ?",
+  "balanceLabel": "Solde : {amount}",
+  "revenueTrend": "{pct}% de chiffre d'affaires",
+  "addBalanceCta": "Ajoutez votre solde de trésorerie dans les paramètres pour suivre votre piste",
+  "dailyRevenue": "Revenus journaliers",
+  "dailyCosts": "Coûts journaliers",
+  "dailyNet": "Net journalier",
+  "weeklyTitle": "Flux de trésorerie net hebdomadaire",
+  "twelveWeeksAgo": "Il y a 12 sem.",
+  "thisWeek": "Cette semaine",
+  "monthlyLabel": "Mensuel : {income} entrées, {expenses} sorties",
+  "aboveBreakeven": "{amount}/jour au-dessus du seuil de rentabilité",
+  "belowBreakeven": "{amount}/jour manquants pour atteindre le seuil de rentabilité"
+}

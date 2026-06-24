@@ -1,0 +1,17 @@
+{
+  "title": "Cashflow",
+  "askAi": "Vraag AI",
+  "askPrompt": "Analyseer mijn cashflow en financiële ruimte. Wat kan ik doen om dit te verbeteren?",
+  "balanceLabel": "{amount} saldo",
+  "revenueTrend": "{pct}% omzet",
+  "addBalanceCta": "Voeg je kassaldo toe in de instellingen voor het bijhouden van je financiële ruimte",
+  "dailyRevenue": "Dagelijkse omzet",
+  "dailyCosts": "Dagelijkse kosten",
+  "dailyNet": "Dagelijks netto",
+  "weeklyTitle": "Wekelijkse netto cashflow",
+  "twelveWeeksAgo": "12w geleden",
+  "thisWeek": "Deze week",
+  "monthlyLabel": "Maandelijks: {income} inkomsten, {expenses} uitgaven",
+  "aboveBreakeven": "{amount}/dag boven break-even",
+  "belowBreakeven": "{amount}/dag meer nodig om break-even te draaien"
+}

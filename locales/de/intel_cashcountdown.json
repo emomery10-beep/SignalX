@@ -1,0 +1,17 @@
+{
+  "title": "Cashflow",
+  "askAi": "KI fragen",
+  "askPrompt": "Analysiere meinen Cashflow und meine Liquiditätsreserve. Was kann ich tun, um sie zu verbessern?",
+  "balanceLabel": "{amount} Guthaben",
+  "revenueTrend": "{pct}% Umsatz",
+  "addBalanceCta": "Füge dein Barguthaben in den Einstellungen hinzu, um die Liquiditätsreserve zu verfolgen",
+  "dailyRevenue": "Täglicher Umsatz",
+  "dailyCosts": "Tägliche Kosten",
+  "dailyNet": "Tägliches Netto",
+  "weeklyTitle": "Wöchentlicher Netto-Cashflow",
+  "twelveWeeksAgo": "Vor 12 W.",
+  "thisWeek": "Diese Woche",
+  "monthlyLabel": "Monatlich: {income} ein, {expenses} aus",
+  "aboveBreakeven": "{amount}/Tag über dem Break-even",
+  "belowBreakeven": "Noch {amount}/Tag bis zum Break-even"
+}

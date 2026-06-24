@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Snapshot {
   week: string; avg_score: number; min_score: number; max_score: number
@@ -11,6 +12,7 @@ interface Milestone {
 }
 
 export default function HealthTimeMachine({ onAsk }: { onAsk?: (prompt: string) => void }) {
+  const { tc } = useLang()
   const [snapshots, setSnapshots] = useState<Snapshot[]>([])
   const [milestones, setMilestones] = useState<Milestone[]>([])
   const [totalChange, setTotalChange] = useState(0)
@@ -46,7 +48,7 @@ export default function HealthTimeMachine({ onAsk }: { onAsk?: (prompt: string) 
       <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#8B5CF6' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Time Machine</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_healthtm.timeMachine')}</span>
         </div>
         <div style={{ height: 120, borderRadius: 10, background: 'var(--ev, #f3f2ef)', animation: 'pulse 1.5s infinite' }} />
       </div>
@@ -66,13 +68,13 @@ export default function HealthTimeMachine({ onAsk }: { onAsk?: (prompt: string) 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#8B5CF6' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Time Machine</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_healthtm.timeMachine')}</span>
         </div>
         {onAsk && (
           <button
-            onClick={() => onAsk('How has my business health changed over time? What are the key trends and what should I focus on?')}
+            onClick={() => onAsk(tc('intel_healthtm.askAiPrompt'))}
             style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
-          >Ask AI</button>
+          >{tc('intel_healthtm.askAi')}</button>
         )}
       </div>
 
@@ -87,10 +89,10 @@ export default function HealthTimeMachine({ onAsk }: { onAsk?: (prompt: string) 
           {totalChange >= 0 ? '→ ↑' : '→ ↓'}
         </div>
         <div style={{ flex: 1, textAlign: 'center' }}>
-          <div style={{ fontSize: 10, color: 'var(--tx3)' }}>Now</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('intel_healthtm.now')}</div>
           <div style={{ fontSize: 20, fontWeight: 700, color: totalChange >= 0 ? '#10B981' : '#EF4444' }}>{current.avg_score}</div>
           <div style={{ fontSize: 10, color: totalChange >= 0 ? '#10B981' : '#EF4444' }}>
-            {totalChange >= 0 ? '+' : ''}{totalChange} pts
+            {totalChange >= 0 ? '+' : ''}{tc('intel_healthtm.totalChangePts', { pts: totalChange })}
           </div>
         </div>
       </div>
@@ -106,7 +108,7 @@ export default function HealthTimeMachine({ onAsk }: { onAsk?: (prompt: string) 
               <button
                 key={i}
                 onClick={() => compareWith(s.week)}
-                title={`${fmtWeek(s.week)}: ${s.avg_score}/100`}
+                title={tc('intel_healthtm.barTooltip', { date: fmtWeek(s.week), score: s.avg_score })}
                 style={{
                   flex: 1, height: h, maxWidth: 24, borderRadius: 3, border: 'none',
                   background: isSelected ? '#8B5CF6' : scoreColor + '80',
@@ -120,22 +122,22 @@ export default function HealthTimeMachine({ onAsk }: { onAsk?: (prompt: string) 
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
           <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{fmtWeek(snapshots[0].week)}</span>
-          <span style={{ fontSize: 9, color: 'var(--tx3)' }}>Click a bar to compare</span>
-          <span style={{ fontSize: 9, color: 'var(--tx3)' }}>Now</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_healthtm.clickBarToCompare')}</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_healthtm.now')}</span>
         </div>
       </div>
 
       {/* AI Analysis */}
       {loadingAnalysis && (
         <div style={{ padding: 10, borderRadius: 10, background: 'rgba(139,92,246,.04)', border: '1px solid rgba(139,92,246,.12)', fontSize: 12, color: 'var(--tx3)', textAlign: 'center' }}>
-          Analysing changes since {selectedWeek ? fmtWeek(selectedWeek) : ''}...
+          {tc('intel_healthtm.analysingChanges', { date: selectedWeek ? fmtWeek(selectedWeek) : '' })}
         </div>
       )}
 
       {analysis && !loadingAnalysis && (
         <div style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(139,92,246,.04)', border: '1px solid rgba(139,92,246,.12)', marginBottom: milestones.length ? 12 : 0 }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6', marginBottom: 6 }}>
-            Changes since {selectedWeek ? fmtWeek(selectedWeek) : ''}
+            {tc('intel_healthtm.changesSince', { date: selectedWeek ? fmtWeek(selectedWeek) : '' })}
           </div>
           <div style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{analysis}</div>
         </div>
@@ -144,7 +146,7 @@ export default function HealthTimeMachine({ onAsk }: { onAsk?: (prompt: string) 
       {/* Milestones */}
       {milestones.length > 0 && (
         <div>
-          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6, letterSpacing: '.02em' }}>KEY EVENTS</div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6, letterSpacing: '.02em' }}>{tc('intel_healthtm.keyEvents')}</div>
           {milestones.slice(0, 4).map((m, i) => {
             const isUp = m.score_after > m.score_before
             return (

@@ -1,4 +1,5 @@
 'use client'
+import { useLang } from '@/components/LanguageProvider'
 
 interface CfoMetric {
   label: string
@@ -20,6 +21,7 @@ const dirStyle = {
 }
 
 export default function CFOBlock({ summary, metrics, onExportPdf }: Props) {
+  const { tc } = useLang()
   if (!summary && !metrics?.length) return null
 
   return (
@@ -44,7 +46,7 @@ export default function CFOBlock({ summary, metrics, onExportPdf }: Props) {
             <path d="M8 21h8M12 17v4"/>
           </svg>
           <span style={{ fontSize: 11, fontWeight: 700, color: '#6366F1', letterSpacing: '.08em', textTransform: 'uppercase' }}>
-            CFO Summary
+            {tc('chat_cfoblock.headerLabel')}
           </span>
         </div>
         {onExportPdf && (
@@ -62,7 +64,7 @@ export default function CFOBlock({ summary, metrics, onExportPdf }: Props) {
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
             </svg>
-            Export report
+            {tc('chat_cfoblock.exportButton')}
           </button>
         )}
       </div>

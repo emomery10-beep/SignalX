@@ -1,0 +1,11 @@
+{
+  "heading": "Omzet per bron",
+  "channels": "({n} kanalen)",
+  "askAi": "Vraag AI",
+  "askAiPrompt": "Omzet per bron: {summary}. Op welke kanalen moet ik me richten om te groeien en welke presteren ondermaats?",
+  "transactions": "{n} transacties · {pct}% van de omzet",
+  "marginPct": "{n}% marge",
+  "metricRevenue": "Omzet",
+  "metricCogs": "Inkoopkosten",
+  "metricGrossProfit": "Brutowinst"
+}

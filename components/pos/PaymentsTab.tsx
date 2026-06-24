@@ -6,6 +6,7 @@ import { PaymentSetupCard } from '@/components/PaymentSetupCard'
 import { StripeSetupCard } from '@/components/StripeSetupCard'
 import DunningRecovery from './DunningRecovery'
 import ReceivedPayments from './ReceivedPayments'
+import { useLang } from '@/components/LanguageProvider'
 
 interface PaymentsTabProps {
   currencySymbol: string
@@ -13,6 +14,7 @@ interface PaymentsTabProps {
 }
 
 export default function PaymentsTab({ currencySymbol, staff }: PaymentsTabProps) {
+  const { tc } = useLang()
   const ownerStaff = staff?.[0] || null
   const [config, setConfig] = useState<any>(null)
   const searchParams = useSearchParams()
@@ -100,10 +102,10 @@ export default function PaymentsTab({ currencySymbol, staff }: PaymentsTabProps)
     <div style={{ padding: '24px 0' }}>
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ margin: '0 0 8px 0', fontSize: '20px', fontWeight: '700', color: 'var(--tx)' }}>
-          💳 Payment Methods
+          💳 {tc('pos_payments.title')}
         </h2>
         <p style={{ margin: 0, fontSize: '14px', color: 'var(--tx3)' }}>
-          Configure payment providers and enable customers to pay via Paystack or Stripe
+          {tc('pos_payments.subtitle')}
         </p>
       </div>
 
@@ -157,8 +159,8 @@ export default function PaymentsTab({ currencySymbol, staff }: PaymentsTabProps)
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 1, whiteSpace: 'nowrap' }}>
                   {config?.stripe_onboarding_complete
-                    ? 'Apple Pay · Google Pay · Cards active'
-                    : stripeResuming ? 'Loading Stripe link…' : 'Click to complete Stripe onboarding'}
+                    ? tc('pos_payments.stripeAppleGoogleActive')
+                    : stripeResuming ? tc('pos_payments.stripeLoadingLink') : tc('pos_payments.stripeCompleteOnboarding')}
                 </div>
               </div>
               <span style={{
@@ -167,14 +169,14 @@ export default function PaymentsTab({ currencySymbol, staff }: PaymentsTabProps)
                 background: config?.stripe_onboarding_complete ? 'rgba(16,185,129,.12)' : 'rgba(245,158,11,.1)',
                 color: config?.stripe_onboarding_complete ? '#059669' : '#d97706',
               }}>
-                {config?.stripe_onboarding_complete ? '● Active' : stripeResuming ? '…' : 'Pending KYC'}
+                {config?.stripe_onboarding_complete ? tc('pos_payments.stripeStatusActive') : stripeResuming ? tc('pos_payments.stripeStatusLoading') : tc('pos_payments.stripeStatusPending')}
               </span>
             </div>
           )}
         </div>
       ) : (
         <div style={{ padding: '24px', backgroundColor: 'var(--sf)', borderRadius: '8px', border: '1px solid var(--b)', color: 'var(--tx3)', textAlign: 'center' }}>
-          Loading payment configuration...
+          {tc('pos_payments.loadingConfig')}
         </div>
       )}
 
@@ -191,19 +193,19 @@ export default function PaymentsTab({ currencySymbol, staff }: PaymentsTabProps)
       {/* ── Fix Splits banner — Paystack active but no subaccount set up ── */}
       {paystackActive && config?.has_subaccount === false && (
         <div style={{ marginTop: 16, padding: '12px 14px', background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.3)', borderRadius: 12, maxWidth: 400 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#d97706', marginBottom: 4 }}>⚠ Platform splits not active</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#d97706', marginBottom: 4 }}>{tc('pos_payments.splitsNotActiveTitle')}</div>
           <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 10 }}>
-            Payments are going to the main account without splitting. Fix this to automatically route AskBiz's 2% platform fee on every transaction.
+            {tc('pos_payments.splitsNotActiveBody')}
           </div>
           {needsFixPhone && (
             <div style={{ marginBottom: 10 }}>
-              <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 6 }}>Enter your M-Pesa number to link:</div>
+              <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 6 }}>{tc('pos_payments.splitsEnterPhone')}</div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <input type="tel" placeholder="07XXXXXXXX" value={fixPhone} onChange={e => setFixPhone(e.target.value)}
+                <input type="tel" placeholder={tc('pos_payments.splitsPhonePlaceholder')} value={fixPhone} onChange={e => setFixPhone(e.target.value)}
                   style={{ flex: 1, fontSize: 13, padding: '6px 10px', borderRadius: 8, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx)' }} />
                 <button onClick={() => fixSubaccount(fixPhone)} disabled={fixingSubaccount || !fixPhone}
                   style={{ fontSize: 13, fontWeight: 600, padding: '6px 14px', borderRadius: 8, background: '#f59e0b', color: '#fff', border: 'none', cursor: 'pointer' }}>
-                  {fixingSubaccount ? '...' : 'Link'}
+                  {fixingSubaccount ? '...' : tc('pos_payments.splitsLinkBtn')}
                 </button>
               </div>
             </div>
@@ -216,7 +218,7 @@ export default function PaymentsTab({ currencySymbol, staff }: PaymentsTabProps)
           {!needsFixPhone && !fixSubaccountMsg && (
             <button onClick={() => fixSubaccount()} disabled={fixingSubaccount}
               style={{ fontSize: 13, fontWeight: 600, padding: '7px 16px', borderRadius: 8, background: '#f59e0b', color: '#fff', border: 'none', cursor: fixingSubaccount ? 'default' : 'pointer', opacity: fixingSubaccount ? 0.7 : 1 }}>
-              {fixingSubaccount ? 'Fixing...' : 'Fix Splits Now'}
+              {fixingSubaccount ? tc('pos_payments.splitsFixingBtn') : tc('pos_payments.splitsFixBtn')}
             </button>
           )}
         </div>

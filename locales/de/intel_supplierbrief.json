@@ -1,0 +1,23 @@
+{
+  "title": "Lieferantenübersicht",
+  "askAi": "KI fragen",
+  "askAiPrompt": "Analysiere meine Lieferantenbeziehungen und empfehle Verhandlungsstrategien für bessere Margen.",
+  "negotiationLeverage": "Verhandlungshebel",
+  "monthlySpend": "Monatliche Ausgaben",
+  "savingTarget": "5 % Einsparziel",
+  "annualImpact": "Jährliche Auswirkung",
+  "concentrationRiskLabel": "Konzentrationsrisiko:",
+  "concentrationRiskSuffix": "— diversifizieren, um die Verhandlungsposition zu stärken",
+  "lowMarginLabel": "Lieferanten mit niedrigen Margen:",
+  "lowMarginSuffix": "— vorrangig neu verhandeln",
+  "risingCostsLabel": "Steigende Kosten:",
+  "risingCostsSuffix": "— Preise festschreiben oder Alternativen suchen",
+  "saveBadge": "Ca. {amount}/Monat sparen",
+  "supplierRowMeta": "{n} Produkte • {spend}/Monat • {margin} % Marge",
+  "depBadge": "{dep} % Abhäng.",
+  "generatingBrief": "Übersicht für {name} wird erstellt …",
+  "negotiationBriefHeader": "Verhandlungsübersicht — {name}",
+  "sectionLeverage": "HEBEL",
+  "sectionRisks": "RISIKEN",
+  "sectionTalkingPoints": "GESPRÄCHSPUNKTE"
+}

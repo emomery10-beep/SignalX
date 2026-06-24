@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useStore } from '@/store'
 import { CURRENCIES } from '@/lib/geo'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Props {
   user: { name: string; email: string; plan: string; currency: string; bizType: string }
@@ -33,6 +34,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (s: any) => void }) {
 
 export default function SettingsOverlay({ user, geo, onClose }: Props) {
   const router = useRouter()
+  const { tc } = useLang()
   const supabase = createClient()
   const { updateSettings, settings } = useStore()
   const [currency, setCurrency] = useState(user.currency)
@@ -67,7 +69,7 @@ export default function SettingsOverlay({ user, geo, onClose }: Props) {
       <div style={{ background: 'var(--sf)', border: '1px solid var(--b2)', borderRadius: 22, width: '100%', maxWidth: 520, maxHeight: '88vh', overflowY: 'auto', boxShadow: 'var(--shl)' }}>
         {/* Header */}
         <div style={{ padding: '20px 24px 17px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--sf)', zIndex: 1 }}>
-          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 17, fontWeight: 600, letterSpacing: '-.02em' }}>Settings</div>
+          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 17, fontWeight: 600, letterSpacing: '-.02em' }}>{tc('layout_settingsoverlay.heading')}</div>
           <button onClick={onClose} style={{ width: 26, height: 26, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
@@ -75,54 +77,54 @@ export default function SettingsOverlay({ user, geo, onClose }: Props) {
 
         <div style={{ padding: '20px 24px' }}>
           {/* Account */}
-          <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--b)' }}>Account</div>
-          <Row label={user.name} desc={`${user.email} · ${user.plan} plan`}>
-            <button style={outlineBtn}>Edit</button>
+          <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--b)' }}>{tc('layout_settingsoverlay.sectionAccount')}</div>
+          <Row label={user.name} desc={tc('layout_settingsoverlay.accountDesc').replace('{email}', user.email).replace('{plan}', user.plan)}>
+            <button style={outlineBtn}>{tc('layout_settingsoverlay.accountEditBtn')}</button>
           </Row>
           <div style={{ marginBottom: 24 }}></div>
 
           {/* Localisation */}
-          <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--b)' }}>Localisation</div>
+          <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--b)' }}>{tc('layout_settingsoverlay.sectionLocalisation')}</div>
           {geo && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 11px', marginBottom: 12, borderRadius: 10, background: 'rgba(30,212,202,.06)', border: '1px solid rgba(30,212,202,.18)', fontSize: 12, color: '#47e2da' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-              Detected: {geo.region || geo.country || 'Global'} {geo.trendTopics?.length ? `· ${geo.trendTopics.length} trending topics` : ''}
+              {tc('layout_settingsoverlay.geoDetected').replace('{location}', geo.region || geo.country || 'Global')}{geo.trendTopics?.length ? ' ' + tc('layout_settingsoverlay.geoTrendingTopics').replace('{count}', String(geo.trendTopics.length)) : ''}
             </div>
           )}
-          <Row label="Currency" desc="Used in all AI answers and charts">
+          <Row label={tc('layout_settingsoverlay.rowCurrencyLabel')} desc={tc('layout_settingsoverlay.rowCurrencyDesc')}>
             <select value={currency} onChange={e => setCurrency(e.target.value)} style={{ fontFamily: 'inherit', fontSize: 12, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 10, padding: '6px 10px', outline: 'none', minWidth: 130 }}>
               {Object.entries(CURRENCIES).map(([code, c]) => (
                 <option key={code} value={code}>{c.flag} {code} — {c.name.split(' ').slice(0,2).join(' ')}</option>
               ))}
             </select>
           </Row>
-          <Row label="Business type" desc="Shapes how AskBiz frames answers">
+          <Row label={tc('layout_settingsoverlay.rowBizTypeLabel')} desc={tc('layout_settingsoverlay.rowBizTypeDesc')}>
             <select value={bizType} onChange={e => setBizType(e.target.value)} style={{ fontFamily: 'inherit', fontSize: 12, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 10, padding: '6px 10px', outline: 'none', minWidth: 130 }}>
-              <option value="retail">Retail / shop</option>
-              <option value="ecommerce">Ecommerce</option>
-              <option value="distributor">Distributor</option>
-              <option value="exporter">Exporter</option>
+              <option value="retail">{tc('layout_settingsoverlay.bizTypeRetail')}</option>
+              <option value="ecommerce">{tc('layout_settingsoverlay.bizTypeEcommerce')}</option>
+              <option value="distributor">{tc('layout_settingsoverlay.bizTypeDistributor')}</option>
+              <option value="exporter">{tc('layout_settingsoverlay.bizTypeExporter')}</option>
             </select>
           </Row>
           <div style={{ marginBottom: 24 }}></div>
 
           {/* AI preferences */}
-          <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--b)' }}>AI preferences</div>
-          <Row label="Include charts automatically" desc="Render charts when the answer has visual data"><Toggle on={showCharts} onChange={setShowCharts}/></Row>
-          <Row label="KPI summary cards" desc="Show key numbers as metric cards in answers"><Toggle on={showMetrics} onChange={setShowMetrics}/></Row>
-          <Row label="Follow-up suggestions" desc="Suggest next questions after every answer"><Toggle on={showFollowUps} onChange={setShowFollowUps}/></Row>
+          <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--b)' }}>{tc('layout_settingsoverlay.sectionAiPrefs')}</div>
+          <Row label={tc('layout_settingsoverlay.rowChartsLabel')} desc={tc('layout_settingsoverlay.rowChartsDesc')}><Toggle on={showCharts} onChange={setShowCharts}/></Row>
+          <Row label={tc('layout_settingsoverlay.rowMetricsLabel')} desc={tc('layout_settingsoverlay.rowMetricsDesc')}><Toggle on={showMetrics} onChange={setShowMetrics}/></Row>
+          <Row label={tc('layout_settingsoverlay.rowFollowUpsLabel')} desc={tc('layout_settingsoverlay.rowFollowUpsDesc')}><Toggle on={showFollowUps} onChange={setShowFollowUps}/></Row>
           <div style={{ marginBottom: 24 }}></div>
 
           {/* Security */}
-          <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--b)' }}>Security</div>
-          <Row label="Auth methods" desc="Email/password · Google OAuth · Magic link"><button style={outlineBtn}>Manage</button></Row>
-          <Row label="Sign out" desc=""><button onClick={signOut} style={{ ...outlineBtn, color: '#f48080', borderColor: 'rgba(232,64,64,.28)', background: 'rgba(232,64,64,.08)' }}>Sign out</button></Row>
+          <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--b)' }}>{tc('layout_settingsoverlay.sectionSecurity')}</div>
+          <Row label={tc('layout_settingsoverlay.rowAuthLabel')} desc={tc('layout_settingsoverlay.rowAuthDesc')}><button style={outlineBtn}>{tc('layout_settingsoverlay.rowAuthManageBtn')}</button></Row>
+          <Row label={tc('layout_settingsoverlay.rowSignOutLabel')} desc=""><button onClick={signOut} style={{ ...outlineBtn, color: '#f48080', borderColor: 'rgba(232,64,64,.28)', background: 'rgba(232,64,64,.08)' }}>{tc('layout_settingsoverlay.rowSignOutBtn')}</button></Row>
         </div>
 
         <div style={{ padding: '0 24px 24px', display: 'flex', gap: 10 }}>
-          <button onClick={onClose} style={{ ...outlineBtn, flex: 1, padding: 10, borderRadius: 9999, fontSize: 13 }}>Cancel</button>
+          <button onClick={onClose} style={{ ...outlineBtn, flex: 1, padding: 10, borderRadius: 9999, fontSize: 13 }}>{tc('layout_settingsoverlay.cancelBtn')}</button>
           <button onClick={save} disabled={saving} style={{ flex: 1, padding: 10, borderRadius: 9999, border: 'none', background: '#1ed4ca', color: '#04080f', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            {saving ? 'Saving…' : 'Save settings'}
+            {saving ? tc('layout_settingsoverlay.savingBtn') : tc('layout_settingsoverlay.saveBtn')}
           </button>
         </div>
       </div>

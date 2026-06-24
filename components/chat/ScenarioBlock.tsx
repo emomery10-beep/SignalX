@@ -1,4 +1,5 @@
 'use client'
+import { useLang } from '@/components/LanguageProvider'
 
 interface ScenarioItem { label: string; value: string }
 
@@ -9,15 +10,19 @@ interface Props {
   verdict: 'act' | 'watch' | 'problem' | null | undefined
 }
 
-const verdictStyle = {
-  act:     { color: '#16a34a', bg: 'rgba(34,197,94,.08)', border: 'rgba(34,197,94,.2)', label: '✓ Worth doing' },
-  watch:   { color: '#d97706', bg: 'rgba(245,158,11,.07)', border: 'rgba(245,158,11,.2)', label: '~ Marginal — review carefully' },
-  problem: { color: '#dc2626', bg: 'rgba(239,68,68,.07)', border: 'rgba(239,68,68,.2)', label: '✕ Not recommended' },
+function buildVerdictStyle(tc: (k: string) => string) {
+  return {
+    act:     { color: '#16a34a', bg: 'rgba(34,197,94,.08)', border: 'rgba(34,197,94,.2)', label: tc('chat_scenarioblock.verdictAct') },
+    watch:   { color: '#d97706', bg: 'rgba(245,158,11,.07)', border: 'rgba(245,158,11,.2)', label: tc('chat_scenarioblock.verdictWatch') },
+    problem: { color: '#dc2626', bg: 'rgba(239,68,68,.07)', border: 'rgba(239,68,68,.2)', label: tc('chat_scenarioblock.verdictProblem') },
+  }
 }
 
 export default function ScenarioBlock({ before, after, summary, verdict }: Props) {
+  const { tc } = useLang()
   if (!before?.length || !after?.length) return null
 
+  const verdictStyle = buildVerdictStyle(tc)
   const vs = verdict ? verdictStyle[verdict] : verdictStyle.watch
 
   return (
@@ -37,7 +42,7 @@ export default function ScenarioBlock({ before, after, summary, verdict }: Props
         justifyContent: 'space-between',
       }}>
         <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', letterSpacing: '.08em', textTransform: 'uppercase' }}>
-          ⚡ Scenario Analysis
+          {tc('chat_scenarioblock.headerLabel')}
         </span>
         <span style={{
           fontSize: 11, fontWeight: 600,
@@ -54,7 +59,7 @@ export default function ScenarioBlock({ before, after, summary, verdict }: Props
         {/* Before */}
         <div style={{ padding: '14px', borderRight: '1px solid var(--b)' }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', letterSpacing: '.08em', marginBottom: 10, textTransform: 'uppercase' }}>
-            Current
+            {tc('chat_scenarioblock.columnCurrent')}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {before.map((item, i) => (
@@ -69,7 +74,7 @@ export default function ScenarioBlock({ before, after, summary, verdict }: Props
         {/* After */}
         <div style={{ padding: '14px' }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: '#6366F1', letterSpacing: '.08em', marginBottom: 10, textTransform: 'uppercase' }}>
-            After Change
+            {tc('chat_scenarioblock.columnAfter')}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {after.map((item, i) => {
@@ -87,7 +92,7 @@ export default function ScenarioBlock({ before, after, summary, verdict }: Props
                     </span>
                     {changed && (
                       <span style={{ fontSize: 10, color: '#6366F1', opacity: 0.7 }}>
-                        ← was {beforeVal}
+                        {tc('chat_scenarioblock.wasBadge', { value: beforeVal })}
                       </span>
                     )}
                   </div>

@@ -1,5 +1,6 @@
 'use client'
 import { useState, useMemo, useCallback } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 // ── Color constants ──────────────────────────────────────────────────────────
 const GREEN  = '#16a34a'
@@ -212,6 +213,18 @@ function useSort<T extends string>(initial: T, initDir: SortDir = 'desc') {
   return { sortKey, sortDir, toggle }
 }
 
+// ── Sub-tab builder ───────────────────────────────────────────────────────────
+function buildSubTabs(tc: (key: string) => string): { id: SubTab; label: string }[] {
+  return [
+    { id: 'overview', label: tc('pos_salon.tabOverview') },
+    { id: 'bookings', label: tc('pos_salon.tabBookings') },
+    { id: 'clients', label: tc('pos_salon.tabClients') },
+    { id: 'staff', label: tc('pos_salon.tabStaff') },
+    { id: 'products', label: tc('pos_salon.tabProducts') },
+    { id: 'marketing', label: tc('pos_salon.tabMarketing') },
+  ]
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -223,6 +236,7 @@ export default function SalonTab({
   inventory,
 }: SalonTabProps) {
   const sym = currencySymbol || '$'
+  const { tc } = useLang()
   const [subTab, setSubTab] = useState<SubTab>('overview')
 
   // Normalise transactions defensively
@@ -563,14 +577,7 @@ export default function SalonTab({
   const isEmpty = txs.length === 0
 
   // ── Sub-tab bar ───────────────────────────────────────────────────────────────
-  const subTabs: { id: SubTab; label: string }[] = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'bookings', label: 'Bookings' },
-    { id: 'clients', label: 'Clients' },
-    { id: 'staff', label: 'Staff' },
-    { id: 'products', label: 'Products' },
-    { id: 'marketing', label: 'Marketing' },
-  ]
+  const subTabs = buildSubTabs(tc)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -580,9 +587,9 @@ export default function SalonTab({
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <span style={{ fontSize: 22 }}>💇</span>
         <div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)' }}>Salon Analytics</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_salon.salonAnalytics')}</div>
           <div style={{ fontSize: 12, color: 'var(--tx3)' }}>
-            {selectedLocation || 'All locations'} · derived from POS activity
+            {selectedLocation || tc('pos_salon.allLocations')} {tc('pos_salon.derivedFromPos')}
           </div>
         </div>
       </div>
@@ -652,6 +659,7 @@ export default function SalonTab({
 // SHARED PRESENTATION COMPONENTS
 // ─────────────────────────────────────────────────────────────────────────────
 function EmptyState() {
+  const { tc } = useLang()
   return (
     <div style={{
       border: '1px dashed var(--b)',
@@ -662,11 +670,10 @@ function EmptyState() {
     }}>
       <div style={{ fontSize: 34, marginBottom: 10 }}>💇</div>
       <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>
-        No salon activity yet
+        {tc('pos_salon.emptyTitle')}
       </div>
       <div style={{ fontSize: 13, color: 'var(--tx3)', maxWidth: 420, margin: '0 auto' }}>
-        Once you start ringing up services and products through the POS, this dashboard
-        will populate with bookings, client insights, stylist performance and more.
+        {tc('pos_salon.emptyBody')}
       </div>
     </div>
   )
@@ -781,13 +788,14 @@ function Td({ children, align = 'left', mono, color }: {
 }
 
 function SegmentBadge({ segment }: { segment: ClientSegment }) {
-  const cfg: Record<ClientSegment, { c: string; l: string }> = {
-    new:     { c: BLUE,   l: 'New' },
-    regular: { c: GREEN,  l: 'Regular' },
-    vip:     { c: PINK,   l: 'VIP' },
-    lapsed:  { c: AMBER,  l: 'Lapsed' },
+  const { tc } = useLang()
+  const cfg: Record<ClientSegment, { c: string; key: string }> = {
+    new:     { c: BLUE,   key: 'pos_salon.segNew' },
+    regular: { c: GREEN,  key: 'pos_salon.segRegular' },
+    vip:     { c: PINK,   key: 'pos_salon.segVip' },
+    lapsed:  { c: AMBER,  key: 'pos_salon.segLapsed' },
   }
-  const { c, l } = cfg[segment]
+  const { c, key } = cfg[segment]
   return (
     <span style={{
       display: 'inline-block',
@@ -799,7 +807,7 @@ function SegmentBadge({ segment }: { segment: ClientSegment }) {
       background: `${c}1a`,
       border: `1px solid ${c}55`,
     }}>
-      {l}
+      {tc(key)}
     </span>
   )
 }
@@ -851,10 +859,11 @@ function BarChartHours({ data, sym, color = PINK }: { data: number[]; sym: strin
 
 // ── SVG: donut chart ────────────────────────────────────────────────────────────
 function DonutChart({ data, sym }: { data: { name: string; value: number }[]; sym: string }) {
+  const { tc } = useLang()
   const total = data.reduce((s, d) => s + d.value, 0)
   const size = 160, r = 64, cx = size / 2, cy = size / 2, sw = 26
   if (total <= 0) {
-    return <div style={{ fontSize: 13, color: 'var(--tx3)', padding: 20 }}>No service revenue recorded.</div>
+    return <div style={{ fontSize: 13, color: 'var(--tx3)', padding: 20 }}>{tc('pos_salon.noServiceRevenue')}</div>
   }
   let acc = 0
   const circ = 2 * Math.PI * r
@@ -898,7 +907,8 @@ function DonutChart({ data, sym }: { data: { name: string; value: number }[]; sy
 function HBarChart({ data, sym, color = PINK }: {
   data: { label: string; value: number }[]; sym: string; color?: string
 }) {
-  if (!data.length) return <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No data.</div>
+  const { tc } = useLang()
+  if (!data.length) return <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_salon.noData')}</div>
   const max = Math.max(1, ...data.map(d => d.value))
   const rowH = 30
   const H = data.length * rowH + 8
@@ -939,49 +949,49 @@ function OverviewSub({
   occupancy: number
   quickStats: { busiestDay: string; peakHour: string; avgServicesPerClient: number }
 }) {
+  const { tc } = useLang()
   const [activeKpi, setActiveKpi] = useState<string | null>(null)
   const k = (id: string) => () => setActiveKpi(prev => (prev === id ? null : id))
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
-        <Kpi label="Today's Appts" value={String(stats.appts)} sub="transactions today" active={activeKpi === 'appts'} onClick={k('appts')} highlight />
-        <Kpi label="Walk-ins" value={String(stats.walkins)} sub="est. no customer record" active={activeKpi === 'walk'} onClick={k('walk')} />
-        <Kpi label="Revenue" value={fmtMoney(sym, stats.revenue)} sub="today" active={activeKpi === 'rev'} onClick={k('rev')} highlight />
-        <Kpi label="Avg Service Value" value={fmtMoney(sym, stats.avgService)} sub="per service ticket" active={activeKpi === 'avg'} onClick={k('avg')} />
-        <Kpi label="Return Client Rate" value={fmtPct(stats.returnRate)} sub="clients with 2+ visits" active={activeKpi === 'ret'} onClick={k('ret')} />
-        <Kpi label="Top Service" value={stats.topService} sub="by revenue" active={activeKpi === 'top'} onClick={k('top')} highlight />
+        <Kpi label={tc('pos_salon.kpiTodayAppts')} value={String(stats.appts)} sub={tc('pos_salon.kpiTransactionsToday')} active={activeKpi === 'appts'} onClick={k('appts')} highlight />
+        <Kpi label={tc('pos_salon.kpiWalkins')} value={String(stats.walkins)} sub={tc('pos_salon.kpiEstNoRecord')} active={activeKpi === 'walk'} onClick={k('walk')} />
+        <Kpi label={tc('pos_salon.kpiRevenue')} value={fmtMoney(sym, stats.revenue)} sub={tc('pos_salon.kpiToday')} active={activeKpi === 'rev'} onClick={k('rev')} highlight />
+        <Kpi label={tc('pos_salon.kpiAvgServiceValue')} value={fmtMoney(sym, stats.avgService)} sub={tc('pos_salon.kpiPerServiceTicket')} active={activeKpi === 'avg'} onClick={k('avg')} />
+        <Kpi label={tc('pos_salon.kpiReturnClientRate')} value={fmtPct(stats.returnRate)} sub={tc('pos_salon.kpiClientsWith2Visits')} active={activeKpi === 'ret'} onClick={k('ret')} />
+        <Kpi label={tc('pos_salon.kpiTopService')} value={stats.topService} sub={tc('pos_salon.kpiByRevenue')} active={activeKpi === 'top'} onClick={k('top')} highlight />
       </div>
 
       <Card>
-        <SectionTitle>Revenue by hour — today</SectionTitle>
+        <SectionTitle>{tc('pos_salon.revenueByHourToday')}</SectionTitle>
         {hourlyRevenue.some(v => v > 0)
           ? <BarChartHours data={hourlyRevenue} sym={sym} />
-          : <div style={{ fontSize: 13, color: 'var(--tx3)', padding: 16 }}>No transactions yet today. The chart shows busy vs quiet periods through the day.</div>}
+          : <div style={{ fontSize: 13, color: 'var(--tx3)', padding: 16 }}>{tc('pos_salon.noTransactionsToday')}</div>}
       </Card>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
         <Card>
-          <SectionTitle>Service mix by revenue</SectionTitle>
+          <SectionTitle>{tc('pos_salon.serviceMixByRevenue')}</SectionTitle>
           <DonutChart data={serviceBreakdown} sym={sym} />
         </Card>
         <Card>
-          <SectionTitle>Chair occupancy — today</SectionTitle>
+          <SectionTitle>{tc('pos_salon.chairOccupancyToday')}</SectionTitle>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <OccupancyRing pct={occupancy} />
             <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.6 }}>
-              Proportion of trading hours (09:00–18:00) with at least one transaction.
-              A proxy for chair utilisation until shift data is connected.
+              {tc('pos_salon.occupancyNote')}
             </div>
           </div>
         </Card>
       </div>
 
       <Card>
-        <SectionTitle>Quick stats</SectionTitle>
+        <SectionTitle>{tc('pos_salon.quickStats')}</SectionTitle>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
-          <MiniStat label="Busiest day" value={quickStats.busiestDay} />
-          <MiniStat label="Peak hour" value={quickStats.peakHour} />
-          <MiniStat label="Avg services / client" value={quickStats.avgServicesPerClient.toFixed(1)} />
+          <MiniStat label={tc('pos_salon.busiestDay')} value={quickStats.busiestDay} />
+          <MiniStat label={tc('pos_salon.peakHour')} value={quickStats.peakHour} />
+          <MiniStat label={tc('pos_salon.avgServicesPerClient')} value={quickStats.avgServicesPerClient.toFixed(1)} />
         </div>
       </Card>
     </div>
@@ -1021,6 +1031,7 @@ function OccupancyRing({ pct }: { pct: number }) {
 function BookingsSub({ sym, txs, stylists }: {
   sym: string; txs: Transaction[]; stylists: StylistRecord[]
 }) {
+  const { tc } = useLang()
   const [dateFilter, setDateFilter] = useState<string>('') // yyyy-mm-dd
   const [stylistFilter, setStylistFilter] = useState<string>('')
   const [serviceFilter, setServiceFilter] = useState<string>('')
@@ -1075,21 +1086,21 @@ function BookingsSub({ sym, txs, stylists }: {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <Card>
-        <SectionTitle>Today&apos;s timeline</SectionTitle>
+        <SectionTitle>{tc('pos_salon.todayTimeline')}</SectionTitle>
         {todayAppts.length
           ? <TimelineSVG appts={todayAppts.map(a => ({ epoch: a.epoch, duration: a.duration, label: a.client }))} />
-          : <div style={{ fontSize: 13, color: 'var(--tx3)', padding: 12 }}>No appointments logged today yet.</div>}
+          : <div style={{ fontSize: 13, color: 'var(--tx3)', padding: 12 }}>{tc('pos_salon.noAppointmentsToday')}</div>}
       </Card>
 
       <Card>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
           <input type="date" value={dateFilter} onChange={e => setDateFilter(e.target.value)} style={selectStyle} />
           <select value={stylistFilter} onChange={e => setStylistFilter(e.target.value)} style={selectStyle}>
-            <option value="">All stylists</option>
+            <option value="">{tc('pos_salon.allStylists')}</option>
             {stylists.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
           </select>
           <select value={serviceFilter} onChange={e => setServiceFilter(e.target.value)} style={selectStyle}>
-            <option value="">All services</option>
+            <option value="">{tc('pos_salon.allServices')}</option>
             {serviceCats.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
           {(dateFilter || stylistFilter || serviceFilter) && (
@@ -1097,11 +1108,11 @@ function BookingsSub({ sym, txs, stylists }: {
               onClick={() => { setDateFilter(''); setStylistFilter(''); setServiceFilter('') }}
               style={{ ...selectStyle, cursor: 'pointer', color: PINK, borderColor: PINK }}
             >
-              Clear
+              {tc('pos_salon.clear')}
             </button>
           )}
           <div style={{ marginLeft: 'auto', alignSelf: 'center', fontSize: 12, color: 'var(--tx3)' }}>
-            {filtered.length} appointment{filtered.length === 1 ? '' : 's'}
+            {tc('pos_salon.appointmentCount', { n: filtered.length })}
           </div>
         </div>
 
@@ -1109,7 +1120,15 @@ function BookingsSub({ sym, txs, stylists }: {
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
             <thead>
               <tr>
-                {['Time', 'Client', 'Service(s)', 'Stylist', 'Duration', 'Total', 'Payment'].map((h, i) => (
+                {[
+                  tc('pos_salon.colTime'),
+                  tc('pos_salon.colClient'),
+                  tc('pos_salon.colServices'),
+                  tc('pos_salon.colStylist'),
+                  tc('pos_salon.colDuration'),
+                  tc('pos_salon.colTotal'),
+                  tc('pos_salon.colPayment'),
+                ].map((h, i) => (
                   <th key={h} style={{
                     textAlign: i >= 4 && i !== 6 ? 'right' : 'left',
                     padding: '8px 10px', fontSize: 11, fontWeight: 700, color: 'var(--tx3)',
@@ -1121,7 +1140,7 @@ function BookingsSub({ sym, txs, stylists }: {
             </thead>
             <tbody>
               {filtered.length === 0 && (
-                <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>No appointments match the filters.</td></tr>
+                <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('pos_salon.noAppointmentsMatch')}</td></tr>
               )}
               {filtered.slice(0, 200).map((a, i) => (
                 <tr key={i}>
@@ -1146,10 +1165,9 @@ function BookingsSub({ sym, txs, stylists }: {
       </Card>
 
       <Card style={{ borderStyle: 'dashed' }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>📋 No-show tracking — coming soon</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>{tc('pos_salon.noShowComingSoonTitle')}</div>
         <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.6 }}>
-          A dedicated booking system will let you mark confirmed, completed and no-show appointments.
-          Until then, bookings are inferred from completed POS transactions, so no-shows aren&apos;t captured.
+          {tc('pos_salon.noShowComingSoonBody')}
         </div>
       </Card>
     </div>
@@ -1195,6 +1213,7 @@ type ClientSortKey = 'name' | 'visits' | 'totalSpend' | 'lastVisit' | 'avgSpend'
 function ClientsSub({ sym, clients, retentionRate }: {
   sym: string; clients: ClientRecord[]; retentionRate: number
 }) {
+  const { tc } = useLang()
   const { sortKey, sortDir, toggle } = useSort<ClientSortKey>('totalSpend')
   const [segFilter, setSegFilter] = useState<ClientSegment | 'all'>('all')
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -1220,20 +1239,20 @@ function ClientsSub({ sym, clients, retentionRate }: {
   }, [clients, segFilter, sortKey, sortDir])
 
   const segChips: { id: ClientSegment | 'all'; label: string }[] = [
-    { id: 'all', label: `All (${clients.length})` },
-    { id: 'new', label: `New (${clients.filter(c => c.segment === 'new').length})` },
-    { id: 'regular', label: `Regular (${clients.filter(c => c.segment === 'regular').length})` },
-    { id: 'vip', label: `VIP (${clients.filter(c => c.segment === 'vip').length})` },
-    { id: 'lapsed', label: `Lapsed (${clients.filter(c => c.segment === 'lapsed').length})` },
+    { id: 'all', label: tc('pos_salon.segChipAll', { n: clients.length }) },
+    { id: 'new', label: tc('pos_salon.segChipNew', { n: clients.filter(c => c.segment === 'new').length }) },
+    { id: 'regular', label: tc('pos_salon.segChipRegular', { n: clients.filter(c => c.segment === 'regular').length }) },
+    { id: 'vip', label: tc('pos_salon.segChipVip', { n: clients.filter(c => c.segment === 'vip').length }) },
+    { id: 'lapsed', label: tc('pos_salon.segChipLapsed', { n: clients.filter(c => c.segment === 'lapsed').length }) },
   ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
-        <Kpi label="Total Clients" value={String(clients.length)} highlight />
-        <Kpi label="60-day Retention" value={fmtPct(retentionRate)} sub="returned within 60d" />
-        <Kpi label="VIP Clients" value={String(clients.filter(c => c.segment === 'vip').length)} sub="6+ visits" />
-        <Kpi label="Lapsed" value={String(clients.filter(c => c.segment === 'lapsed').length)} sub=">60 days inactive" />
+        <Kpi label={tc('pos_salon.kpiTotalClients')} value={String(clients.length)} highlight />
+        <Kpi label={tc('pos_salon.kpi60DayRetention')} value={fmtPct(retentionRate)} sub={tc('pos_salon.kpiReturnedWithin60d')} />
+        <Kpi label={tc('pos_salon.kpiVipClients')} value={String(clients.filter(c => c.segment === 'vip').length)} sub={tc('pos_salon.kpi6PlusVisits')} />
+        <Kpi label={tc('pos_salon.kpiLapsed')} value={String(clients.filter(c => c.segment === 'lapsed').length)} sub={tc('pos_salon.kpi60DaysInactive')} />
       </div>
 
       <Card>
@@ -1254,20 +1273,20 @@ function ClientsSub({ sym, clients, retentionRate }: {
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>
             <thead>
               <tr>
-                <SortHeader label="Name" k="name" sortKey={sortKey} sortDir={sortDir} onSort={toggle} />
-                <th style={thStyle('left')}>Phone</th>
-                <SortHeader label="Visits" k="visits" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
-                <SortHeader label="Total Spend" k="totalSpend" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
-                <SortHeader label="Last Visit" k="lastVisit" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
-                <SortHeader label="Avg Spend" k="avgSpend" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
-                <th style={thStyle('left')}>Favourite</th>
-                <th style={thStyle('left')}>Segment</th>
-                <SortHeader label="Health" k="health" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
+                <SortHeader label={tc('pos_salon.colName')} k="name" sortKey={sortKey} sortDir={sortDir} onSort={toggle} />
+                <th style={thStyle('left')}>{tc('pos_salon.colPhone')}</th>
+                <SortHeader label={tc('pos_salon.colVisits')} k="visits" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
+                <SortHeader label={tc('pos_salon.colTotalSpend')} k="totalSpend" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
+                <SortHeader label={tc('pos_salon.colLastVisit')} k="lastVisit" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
+                <SortHeader label={tc('pos_salon.colAvgSpend')} k="avgSpend" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
+                <th style={thStyle('left')}>{tc('pos_salon.colFavourite')}</th>
+                <th style={thStyle('left')}>{tc('pos_salon.colSegment')}</th>
+                <SortHeader label={tc('pos_salon.colHealth')} k="health" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 && (
-                <tr><td colSpan={9} style={{ padding: 24, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>No clients in this segment.</td></tr>
+                <tr><td colSpan={9} style={{ padding: 24, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('pos_salon.noClientsInSegment')}</td></tr>
               )}
               {rows.slice(0, 300).map(c => {
                 const open = expanded === c.key
@@ -1289,7 +1308,7 @@ function ClientsSub({ sym, clients, retentionRate }: {
                         <td colSpan={9} style={{ padding: 0, background: 'var(--ev)', borderBottom: '1px solid var(--b)' }}>
                           <div style={{ padding: 14 }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>
-                              Visit history ({c.history.length})
+                              {tc('pos_salon.visitHistory', { n: c.history.length })}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                               {c.history.slice(0, 20).map((h, i) => (
@@ -1331,6 +1350,7 @@ function thStyle(align: 'left' | 'right'): React.CSSProperties {
 type StylistSortKey = 'name' | 'appointments' | 'revenue' | 'avgTicket' | 'retention' | 'productAttach'
 
 function StaffSub({ sym, stylists }: { sym: string; stylists: StylistRecord[] }) {
+  const { tc } = useLang()
   const { sortKey, sortDir, toggle } = useSort<StylistSortKey>('revenue')
   const [expanded, setExpanded] = useState<string | null>(null)
 
@@ -1355,27 +1375,27 @@ function StaffSub({ sym, stylists }: { sym: string; stylists: StylistRecord[] })
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <Card>
-        <SectionTitle>Revenue per stylist (last 30 days)</SectionTitle>
+        <SectionTitle>{tc('pos_salon.revenuePerStylist')}</SectionTitle>
         <HBarChart data={stylists.map(s => ({ label: s.name, value: s.revenue }))} sym={sym} />
       </Card>
 
       <Card>
-        <SectionTitle>Stylist performance</SectionTitle>
+        <SectionTitle>{tc('pos_salon.stylistPerformance')}</SectionTitle>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>
             <thead>
               <tr>
-                <SortHeader label="Stylist" k="name" sortKey={sortKey} sortDir={sortDir} onSort={toggle} />
-                <SortHeader label="Appts (30d)" k="appointments" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
-                <SortHeader label="Revenue" k="revenue" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
-                <SortHeader label="Avg Ticket" k="avgTicket" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
-                <SortHeader label="Retention" k="retention" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
-                <SortHeader label="Product Attach" k="productAttach" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
+                <SortHeader label={tc('pos_salon.colStylistName')} k="name" sortKey={sortKey} sortDir={sortDir} onSort={toggle} />
+                <SortHeader label={tc('pos_salon.colAppts30d')} k="appointments" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
+                <SortHeader label={tc('pos_salon.colRevenue')} k="revenue" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
+                <SortHeader label={tc('pos_salon.colAvgTicket')} k="avgTicket" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
+                <SortHeader label={tc('pos_salon.colRetention')} k="retention" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
+                <SortHeader label={tc('pos_salon.colProductAttach')} k="productAttach" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 && (
-                <tr><td colSpan={6} style={{ padding: 24, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>No stylist activity in the last 30 days.</td></tr>
+                <tr><td colSpan={6} style={{ padding: 24, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('pos_salon.noStylistActivity')}</td></tr>
               )}
               {rows.map(s => {
                 const open = expanded === s.name
@@ -1394,11 +1414,11 @@ function StaffSub({ sym, stylists }: { sym: string; stylists: StylistRecord[] })
                         <td colSpan={6} style={{ padding: 0, background: 'var(--ev)', borderBottom: '1px solid var(--b)' }}>
                           <div style={{ padding: 14 }}>
                             <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', marginBottom: 12, fontSize: 12, color: 'var(--tx3)' }}>
-                              <span>Unique clients: <b style={{ color: 'var(--tx)' }}>{s.uniqueClients}</b></span>
-                              <span>Returning: <b style={{ color: 'var(--tx)' }}>{s.returningClients}</b></span>
-                              <span>Utilisation: <b style={{ color: 'var(--tx)' }}>—</b> <span style={{ fontStyle: 'italic' }}>(needs shift data)</span></span>
+                              <span>{tc('pos_salon.uniqueClients')} <b style={{ color: 'var(--tx)' }}>{s.uniqueClients}</b></span>
+                              <span>{tc('pos_salon.returning')} <b style={{ color: 'var(--tx)' }}>{s.returningClients}</b></span>
+                              <span>{tc('pos_salon.utilisation')} <b style={{ color: 'var(--tx)' }}>—</b> <span style={{ fontStyle: 'italic' }}>({tc('pos_salon.needsShiftData')})</span></span>
                             </div>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>Recent clients</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>{tc('pos_salon.recentClients')}</div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                               {s.clients.slice(0, 15).map((cl, i) => (
                                 <div key={i} style={{ display: 'flex', gap: 10, fontSize: 12 }}>
@@ -1422,11 +1442,9 @@ function StaffSub({ sym, stylists }: { sym: string; stylists: StylistRecord[] })
       </Card>
 
       <Card style={{ borderStyle: 'dashed' }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>💰 Commission calculator — coming soon</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>{tc('pos_salon.commissionComingSoonTitle')}</div>
         <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.6 }}>
-          Configure per-stylist commission rates (service %, retail %, tiered targets) to auto-calculate
-          payouts from the revenue figures above. Utilisation (transactions per hour worked) will activate once
-          shift/rota data is connected.
+          {tc('pos_salon.commissionComingSoonBody')}
         </div>
       </Card>
     </div>
@@ -1441,6 +1459,7 @@ type ProductSortKey = 'name' | 'stock' | 'price' | 'cost' | 'margin' | 'unitsSol
 function ProductsSub({ sym, products, attachmentRate }: {
   sym: string; products: ProductRecord[]; attachmentRate: number
 }) {
+  const { tc } = useLang()
   const { sortKey, sortDir, toggle } = useSort<ProductSortKey>('revenue')
   const LOW_STOCK = 5
 
@@ -1469,19 +1488,19 @@ function ProductsSub({ sym, products, attachmentRate }: {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
-        <Kpi label="Retail Products" value={String(products.length)} highlight />
-        <Kpi label="Product Attach Rate" value={fmtPct(attachmentRate)} sub="services w/ a retail add-on" highlight />
-        <Kpi label="Low Stock" value={String(lowStock.length)} sub={`≤ ${LOW_STOCK} units`} />
-        <Kpi label="Retail Revenue (30d)" value={fmtMoney(sym, products.reduce((s, p) => s + p.revenue, 0))} />
+        <Kpi label={tc('pos_salon.kpiRetailProducts')} value={String(products.length)} highlight />
+        <Kpi label={tc('pos_salon.kpiProductAttachRate')} value={fmtPct(attachmentRate)} sub={tc('pos_salon.kpiServicesWithRetailAddon')} highlight />
+        <Kpi label={tc('pos_salon.kpiLowStock')} value={String(lowStock.length)} sub={tc('pos_salon.kpiLowStockUnits', { n: LOW_STOCK })} />
+        <Kpi label={tc('pos_salon.kpiRetailRevenue')} value={fmtMoney(sym, products.reduce((s, p) => s + p.revenue, 0))} />
       </div>
 
       {lowStock.length > 0 && (
         <Card style={{ borderColor: AMBER, background: 'rgba(202,138,4,.06)' }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: AMBER, marginBottom: 8 }}>⚠ Low stock alerts</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: AMBER, marginBottom: 8 }}>{tc('pos_salon.lowStockAlerts')}</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {lowStock.map(p => (
               <span key={p.name} style={{ fontSize: 12, padding: '3px 10px', borderRadius: 9999, background: 'var(--sf)', border: `1px solid ${AMBER}55`, color: 'var(--tx2)' }}>
-                {p.name} · <b style={{ color: AMBER }}>{p.stock} left</b>
+                {p.name} · <b style={{ color: AMBER }}>{p.stock} {tc('pos_salon.left')}</b>
               </span>
             ))}
           </div>
@@ -1489,30 +1508,30 @@ function ProductsSub({ sym, products, attachmentRate }: {
       )}
 
       <Card>
-        <SectionTitle>Top selling products (last 30 days)</SectionTitle>
+        <SectionTitle>{tc('pos_salon.topSellingProducts')}</SectionTitle>
         {topSelling.length
           ? <HBarChart data={topSelling.map(p => ({ label: p.name, value: p.revenue }))} sym={sym} color={PURPLE} />
-          : <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No retail sales recorded in the last 30 days.</div>}
+          : <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_salon.noRetailSales')}</div>}
       </Card>
 
       <Card>
-        <SectionTitle>Retail catalogue</SectionTitle>
+        <SectionTitle>{tc('pos_salon.retailCatalogue')}</SectionTitle>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>
             <thead>
               <tr>
-                <SortHeader label="Product" k="name" sortKey={sortKey} sortDir={sortDir} onSort={toggle} />
-                <SortHeader label="Stock" k="stock" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
-                <SortHeader label="Price" k="price" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
-                <SortHeader label="Cost" k="cost" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
-                <SortHeader label="Margin" k="margin" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
-                <SortHeader label="Units Sold (30d)" k="unitsSold" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
-                <SortHeader label="Revenue" k="revenue" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
+                <SortHeader label={tc('pos_salon.colProduct')} k="name" sortKey={sortKey} sortDir={sortDir} onSort={toggle} />
+                <SortHeader label={tc('pos_salon.colStock')} k="stock" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
+                <SortHeader label={tc('pos_salon.colPrice')} k="price" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
+                <SortHeader label={tc('pos_salon.colCost')} k="cost" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
+                <SortHeader label={tc('pos_salon.colMargin')} k="margin" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
+                <SortHeader label={tc('pos_salon.colUnitsSold')} k="unitsSold" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
+                <SortHeader label={tc('pos_salon.colRevenue')} k="revenue" sortKey={sortKey} sortDir={sortDir} onSort={toggle} align="right" />
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 && (
-                <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>No salon-relevant retail products found in inventory.</td></tr>
+                <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: 'var(--tx3)', fontSize: 13 }}>{tc('pos_salon.noRetailProducts')}</td></tr>
               )}
               {rows.map((p, i) => (
                 <tr key={p.name + i}>
@@ -1541,6 +1560,7 @@ function MarketingSub({ sym, clients, segmentCounts }: {
   clients: ClientRecord[]
   segmentCounts: { new: number; regular: number; vip: number; lapsed: number }
 }) {
+  const { tc } = useLang()
   // Rebooking: avg days between visits per client (only those with 2+ visits)
   const rebooking = useMemo(() => {
     const gaps: number[] = []
@@ -1568,24 +1588,24 @@ function MarketingSub({ sym, clients, segmentCounts }: {
   const birthdays = clients.filter(c => c.birthdayMonth === month)
 
   const segData = [
-    { name: 'New', value: segmentCounts.new, c: BLUE },
-    { name: 'Regular', value: segmentCounts.regular, c: GREEN },
-    { name: 'VIP', value: segmentCounts.vip, c: PINK },
-    { name: 'Lapsed', value: segmentCounts.lapsed, c: AMBER },
+    { name: tc('pos_salon.segNew'), value: segmentCounts.new, c: BLUE },
+    { name: tc('pos_salon.segRegular'), value: segmentCounts.regular, c: GREEN },
+    { name: tc('pos_salon.segVip'), value: segmentCounts.vip, c: PINK },
+    { name: tc('pos_salon.segLapsed'), value: segmentCounts.lapsed, c: AMBER },
   ]
   const segTotal = segData.reduce((s, d) => s + d.value, 0)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
-        <Kpi label="Avg Rebooking Gap" value={rebooking > 0 ? `${rebooking.toFixed(0)}d` : '—'} sub="days between visits" highlight />
-        <Kpi label="Est. Client LTV" value={fmtMoney(sym, clv)} sub="avg spend × projected visits" highlight />
-        <Kpi label="VIP + Regular" value={String(segmentCounts.vip + segmentCounts.regular)} sub="loyal client base" />
-        <Kpi label="Win-back Targets" value={String(segmentCounts.lapsed)} sub="lapsed clients" />
+        <Kpi label={tc('pos_salon.kpiAvgRebookingGap')} value={rebooking > 0 ? `${rebooking.toFixed(0)}d` : '—'} sub={tc('pos_salon.kpiDaysBetweenVisits')} highlight />
+        <Kpi label={tc('pos_salon.kpiEstClientLtv')} value={fmtMoney(sym, clv)} sub={tc('pos_salon.kpiAvgSpendProjected')} highlight />
+        <Kpi label={tc('pos_salon.kpiVipPlusRegular')} value={String(segmentCounts.vip + segmentCounts.regular)} sub={tc('pos_salon.kpiLoyalClientBase')} />
+        <Kpi label={tc('pos_salon.kpiWinBackTargets')} value={String(segmentCounts.lapsed)} sub={tc('pos_salon.kpiLapsedClients')} />
       </div>
 
       <Card>
-        <SectionTitle>Client segments</SectionTitle>
+        <SectionTitle>{tc('pos_salon.clientSegments')}</SectionTitle>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {segData.map(s => (
             <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1602,7 +1622,7 @@ function MarketingSub({ sym, clients, segmentCounts }: {
       </Card>
 
       <Card>
-        <SectionTitle>🎂 Birthdays this month</SectionTitle>
+        <SectionTitle>{tc('pos_salon.birthdaysThisMonth')}</SectionTitle>
         {birthdays.length ? (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {birthdays.map(c => (
@@ -1613,18 +1633,15 @@ function MarketingSub({ sym, clients, segmentCounts }: {
           </div>
         ) : (
           <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.6 }}>
-            No client birthdays this month, or birthday data isn&apos;t captured yet. Add birthdays to client
-            profiles to power automated birthday offers.
+            {tc('pos_salon.noBirthdays')}
           </div>
         )}
       </Card>
 
       <Card style={{ borderStyle: 'dashed' }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>🎁 Loyalty program — coming soon</div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx2)', marginBottom: 4 }}>{tc('pos_salon.loyaltyComingSoonTitle')}</div>
         <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.6 }}>
-          Launch a points-based loyalty scheme: clients earn points per visit and spend, unlock rewards, and
-          receive automated win-back messages once they lapse. The {segmentCounts.lapsed} lapsed and{' '}
-          {segmentCounts.vip} VIP clients above are prime targets for your first campaigns.
+          {tc('pos_salon.loyaltyComingSoonBody', { lapsed: segmentCounts.lapsed, vip: segmentCounts.vip })}
         </div>
       </Card>
     </div>

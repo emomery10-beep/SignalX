@@ -1,0 +1,20 @@
+{
+  "title": "Cross-Sector Intel",
+  "askAi": "Ask AI",
+  "askAiPrompt": "How do my metrics compare to other sectors? Where am I underperforming and what can I learn from top sectors?",
+  "compareWithSectors": "Compare with sectors",
+  "youBadge": "YOU",
+  "businesses": "{n} businesses",
+  "sectorRetail": "Retail",
+  "sectorEcommerce": "E-commerce",
+  "sectorRestaurant": "Restaurant",
+  "sectorFoodBev": "Food & Bev",
+  "sectorImportExport": "Import/Export",
+  "sectorSaas": "SaaS",
+  "sectorServices": "Services",
+  "sectorFashion": "Fashion",
+  "sectorHealthBeauty": "Health & Beauty",
+  "sectorSalon": "Salon",
+  "sectorRepair": "Repair",
+  "sectorFactory": "Factory"
+}

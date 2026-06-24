@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { detectGeoFromTimezone } from '@/lib/geo'
+import { useLang } from '@/components/LanguageProvider'
 
 interface WaterfallBar {
   label: string
@@ -37,21 +38,26 @@ const COLORS = {
   total:    '#6366F1',
 }
 
-const DRILL_PROMPTS: Record<string, string> = {
-  Revenue: 'What are my revenue trends, top revenue sources, and how can I increase sales?',
-  COGS: 'Break down my cost of goods sold — which products have the highest cost ratio?',
-  'Gross Profit': 'Analyse my gross profit margins — which products are most and least profitable?',
-  Operating: 'What are my operating expenses and how can I reduce overhead costs?',
-  'Stock Cost': 'Show me my inventory holding costs, slow-moving stock, and dead stock items',
-  'Net Margin': 'Give me a full net margin analysis with recommendations to improve profitability',
+function buildDrillPrompts(tc: (key: string) => string): Record<string, string> {
+  return {
+    Revenue: tc('intel_revwaterfall.drillPromptRevenue'),
+    COGS: tc('intel_revwaterfall.drillPromptCogs'),
+    'Gross Profit': tc('intel_revwaterfall.drillPromptGrossProfit'),
+    Operating: tc('intel_revwaterfall.drillPromptOperating'),
+    'Stock Cost': tc('intel_revwaterfall.drillPromptStockCost'),
+    'Net Margin': tc('intel_revwaterfall.drillPromptNetMargin'),
+  }
 }
 
 export default function RevenueWaterfall({ health, onAsk, onDrillChange }: RevenueWaterfallProps) {
+  const { tc } = useLang()
   const [expanded, setExpanded] = useState(false)
   const [hovered, setHovered] = useState<number | null>(null)
   const [drillItem, setDrillItem] = useState<string | null>(null)
   const [posMetrics, setPosMetrics] = useState<PosMetrics | null>(null)
   const [loadingMetrics, setLoadingMetrics] = useState(false)
+
+  const DRILL_PROMPTS = buildDrillPrompts(tc)
 
   // Notify parent of drill state changes
   useEffect(() => {
@@ -124,17 +130,17 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
   const hasData = components.length > 0
 
   const bars: WaterfallBar[] = hasData ? [
-    { label: 'Revenue', value: 100, type: 'positive', detail: growth ? `Growth signal: ${growth.label}` : 'Gross revenue baseline', key: 'Revenue' },
-    { label: 'COGS', value: profitability ? -(100 - profitability.score * 5) / 2 : -40, type: 'negative', detail: profitability ? `Margin signal: ${profitability.label}` : 'Cost of goods sold', key: 'COGS' },
-    { label: 'Gross Profit', value: profitability ? profitability.score * 5 : 60, type: 'total', detail: `${profitability ? (profitability.score * 5).toFixed(0) : '60'}% gross margin`, key: 'Gross Profit' },
-    { label: 'Operating', value: risk ? -(risk.score < 10 ? 25 : 15) : -20, type: 'negative', detail: risk ? `Risk signal: ${risk.label}` : 'Operating expenses', key: 'Operating' },
-    { label: 'Stock Cost', value: inventory ? -(20 - inventory.score) * 1.2 : -10, type: 'negative', detail: inventory ? `Inventory signal: ${inventory.label}` : 'Inventory holding cost', key: 'Stock Cost' },
-    { label: 'Net Margin', value: liquidity ? liquidity.score * 3 : 30, type: 'total', detail: liquidity ? `Cash signal: ${liquidity.label}` : 'Net margin estimate', key: 'Net Margin' },
+    { label: tc('intel_revwaterfall.barLabelRevenue'), value: 100, type: 'positive', detail: growth ? tc('intel_revwaterfall.barDetailGrowthSignal').replace('{label}', growth.label) : tc('intel_revwaterfall.barDetailGrossRevenueBaseline'), key: 'Revenue' },
+    { label: tc('intel_revwaterfall.barLabelCogs'), value: profitability ? -(100 - profitability.score * 5) / 2 : -40, type: 'negative', detail: profitability ? tc('intel_revwaterfall.barDetailMarginSignal').replace('{label}', profitability.label) : tc('intel_revwaterfall.barDetailCostOfGoods'), key: 'COGS' },
+    { label: tc('intel_revwaterfall.barLabelGrossProfit'), value: profitability ? profitability.score * 5 : 60, type: 'total', detail: tc('intel_revwaterfall.barDetailGrossMarginPct').replace('{pct}', profitability ? (profitability.score * 5).toFixed(0) : '60'), key: 'Gross Profit' },
+    { label: tc('intel_revwaterfall.barLabelOperating'), value: risk ? -(risk.score < 10 ? 25 : 15) : -20, type: 'negative', detail: risk ? tc('intel_revwaterfall.barDetailRiskSignal').replace('{label}', risk.label) : tc('intel_revwaterfall.barDetailOperatingExpenses'), key: 'Operating' },
+    { label: tc('intel_revwaterfall.barLabelStockCost'), value: inventory ? -(20 - inventory.score) * 1.2 : -10, type: 'negative', detail: inventory ? tc('intel_revwaterfall.barDetailInventorySignal').replace('{label}', inventory.label) : tc('intel_revwaterfall.barDetailInventoryHolding'), key: 'Stock Cost' },
+    { label: tc('intel_revwaterfall.barLabelNetMargin'), value: liquidity ? liquidity.score * 3 : 30, type: 'total', detail: liquidity ? tc('intel_revwaterfall.barDetailCashSignal').replace('{label}', liquidity.label) : tc('intel_revwaterfall.barDetailNetMarginEstimate'), key: 'Net Margin' },
   ] : []
 
   const maxAbs = bars.length > 0 ? Math.max(...bars.map(b => Math.abs(b.value))) : 100
-  const netMargin = bars.find(b => b.label === 'Net Margin')
-  const grossProfit = bars.find(b => b.label === 'Gross Profit')
+  const netMargin = bars.find(b => b.key === 'Net Margin')
+  const grossProfit = bars.find(b => b.key === 'Gross Profit')
   const netMarginVal = netMargin ? netMargin.value.toFixed(0) : '--'
   const grossProfitVal = grossProfit ? grossProfit.value.toFixed(0) : '--'
 
@@ -142,7 +148,7 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
 
   function renderDrillDown(barKey: string) {
     if (!posMetrics) return loadingMetrics ? (
-      <div style={{ padding: 16, textAlign: 'center', fontSize: 12, color: 'var(--tx3)' }}>Loading POS data...</div>
+      <div style={{ padding: 16, textAlign: 'center', fontSize: 12, color: 'var(--tx3)' }}>{tc('intel_revwaterfall.loadingPos')}</div>
     ) : null
 
     const m = posMetrics
@@ -153,11 +159,11 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
     if (barKey === 'Revenue') return (
       <div style={{ animation: 'fadeIn 200ms ease' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
-          <div style={cardStyle}><div style={labelStyle}>Total revenue</div><div style={{ ...valStyle, color: '#22C55E' }}>{fmt(m.totalRevenue)}</div></div>
-          <div style={cardStyle}><div style={labelStyle}>Transactions</div><div style={{ ...valStyle, color: 'var(--tx)' }}>{m.txnCount}</div></div>
-          <div style={cardStyle}><div style={labelStyle}>Avg sale</div><div style={{ ...valStyle, color: '#6366F1' }}>{fmt(m.avgSale)}</div></div>
+          <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillRevenueTotalRevenue')}</div><div style={{ ...valStyle, color: '#22C55E' }}>{fmt(m.totalRevenue)}</div></div>
+          <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillRevenueTransactions')}</div><div style={{ ...valStyle, color: 'var(--tx)' }}>{m.txnCount}</div></div>
+          <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillRevenueAvgSale')}</div><div style={{ ...valStyle, color: '#6366F1' }}>{fmt(m.avgSale)}</div></div>
         </div>
-        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>Top revenue products</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('intel_revwaterfall.drillRevenueTopProducts')}</div>
         {m.topItems.slice(0, 5).map((it, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderBottom: '1px solid var(--b)' }}>
             <span style={{ width: 14, fontSize: 10, fontWeight: 700, color: i < 3 ? '#22C55E' : 'var(--tx3)', textAlign: 'right' }}>{i + 1}</span>
@@ -171,17 +177,17 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
     if (barKey === 'COGS') return (
       <div style={{ animation: 'fadeIn 200ms ease' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
-          <div style={cardStyle}><div style={labelStyle}>Total COGS</div><div style={{ ...valStyle, color: '#EF4444' }}>{fmt(m.totalCost)}</div></div>
-          <div style={cardStyle}><div style={labelStyle}>Cost ratio</div><div style={{ ...valStyle, color: m.totalRevenue > 0 ? (m.totalCost / m.totalRevenue > 0.5 ? '#EF4444' : '#F59E0B') : 'var(--tx)' }}>{m.totalRevenue > 0 ? (m.totalCost / m.totalRevenue * 100).toFixed(0) : 0}%</div></div>
-          <div style={cardStyle}><div style={labelStyle}>Avg cost/sale</div><div style={{ ...valStyle, color: 'var(--tx)' }}>{fmt(m.txnCount > 0 ? m.totalCost / m.txnCount : 0)}</div></div>
+          <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillCogsTotalCogs')}</div><div style={{ ...valStyle, color: '#EF4444' }}>{fmt(m.totalCost)}</div></div>
+          <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillCogsCostRatio')}</div><div style={{ ...valStyle, color: m.totalRevenue > 0 ? (m.totalCost / m.totalRevenue > 0.5 ? '#EF4444' : '#F59E0B') : 'var(--tx)' }}>{m.totalRevenue > 0 ? (m.totalCost / m.totalRevenue * 100).toFixed(0) : 0}%</div></div>
+          <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillCogsAvgCostPerSale')}</div><div style={{ ...valStyle, color: 'var(--tx)' }}>{fmt(m.txnCount > 0 ? m.totalCost / m.txnCount : 0)}</div></div>
         </div>
-        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>Highest cost products</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('intel_revwaterfall.drillCogsHighestCost')}</div>
         {m.topItems.sort((a, b) => b.cost - a.cost).slice(0, 5).map((it, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderBottom: '1px solid var(--b)' }}>
             <span style={{ width: 14, fontSize: 10, fontWeight: 700, color: i < 3 ? '#EF4444' : 'var(--tx3)', textAlign: 'right' }}>{i + 1}</span>
             <span style={{ flex: 1, fontSize: 11, color: 'var(--tx2)' }}>{it.name}</span>
             <span style={{ fontSize: 10, fontWeight: 600, color: '#EF4444' }}>{fmt(it.cost)}</span>
-            <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{it.revenue > 0 ? (it.cost / it.revenue * 100).toFixed(0) : 0}% ratio</span>
+            <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{it.revenue > 0 ? (it.cost / it.revenue * 100).toFixed(0) : 0}{tc('intel_revwaterfall.drillCogsRatioSuffix')}</span>
           </div>
         ))}
       </div>
@@ -190,11 +196,11 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
     if (barKey === 'Gross Profit') return (
       <div style={{ animation: 'fadeIn 200ms ease' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
-          <div style={cardStyle}><div style={labelStyle}>Gross profit</div><div style={{ ...valStyle, color: '#22C55E' }}>{fmt(m.grossProfit)}</div></div>
-          <div style={cardStyle}><div style={labelStyle}>Gross margin</div><div style={{ ...valStyle, color: m.grossMargin >= 40 ? '#22C55E' : m.grossMargin >= 20 ? '#F59E0B' : '#EF4444' }}>{m.grossMargin.toFixed(1)}%</div></div>
-          <div style={cardStyle}><div style={labelStyle}>Revenue</div><div style={{ ...valStyle, color: 'var(--tx)' }}>{fmt(m.totalRevenue)}</div></div>
+          <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillGrossProfitGrossProfit')}</div><div style={{ ...valStyle, color: '#22C55E' }}>{fmt(m.grossProfit)}</div></div>
+          <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillGrossProfitGrossMargin')}</div><div style={{ ...valStyle, color: m.grossMargin >= 40 ? '#22C55E' : m.grossMargin >= 20 ? '#F59E0B' : '#EF4444' }}>{m.grossMargin.toFixed(1)}%</div></div>
+          <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillGrossProfitRevenue')}</div><div style={{ ...valStyle, color: 'var(--tx)' }}>{fmt(m.totalRevenue)}</div></div>
         </div>
-        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>Margin by product</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{tc('intel_revwaterfall.drillGrossProfitMarginByProduct')}</div>
         {[...m.topItems].sort((a, b) => {
           const mA = a.revenue > 0 ? (a.revenue - a.cost) / a.revenue : 0
           const mB = b.revenue > 0 ? (b.revenue - b.cost) / b.revenue : 0
@@ -217,11 +223,11 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
     if (barKey === 'Stock Cost') return (
       <div style={{ animation: 'fadeIn 200ms ease' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 12 }}>
-          <div style={cardStyle}><div style={labelStyle}>Inventory value</div><div style={{ ...valStyle, color: '#F59E0B' }}>{fmt(m.inventoryValue)}</div></div>
-          <div style={cardStyle}><div style={labelStyle}>Stock-to-revenue</div><div style={{ ...valStyle, color: m.totalRevenue > 0 && m.inventoryValue / m.totalRevenue > 0.5 ? '#EF4444' : '#22C55E' }}>{m.totalRevenue > 0 ? (m.inventoryValue / m.totalRevenue * 100).toFixed(0) : 0}%</div></div>
+          <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillStockInventoryValue')}</div><div style={{ ...valStyle, color: '#F59E0B' }}>{fmt(m.inventoryValue)}</div></div>
+          <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillStockStockToRevenue')}</div><div style={{ ...valStyle, color: m.totalRevenue > 0 && m.inventoryValue / m.totalRevenue > 0.5 ? '#EF4444' : '#22C55E' }}>{m.totalRevenue > 0 ? (m.inventoryValue / m.totalRevenue * 100).toFixed(0) : 0}%</div></div>
         </div>
         <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>
-          Inventory holding cost affects your margins. A stock-to-revenue ratio above 50% may indicate overstocking.
+          {tc('intel_revwaterfall.drillStockHoldingNote')}
         </div>
       </div>
     )
@@ -230,12 +236,12 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
     return (
       <div style={{ animation: 'fadeIn 200ms ease' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
-          <div style={cardStyle}><div style={labelStyle}>Revenue</div><div style={{ ...valStyle, color: '#22C55E' }}>{fmt(m.totalRevenue)}</div></div>
-          <div style={cardStyle}><div style={labelStyle}>Total costs</div><div style={{ ...valStyle, color: '#EF4444' }}>{fmt(m.totalCost)}</div></div>
-          <div style={cardStyle}><div style={labelStyle}>Net profit</div><div style={{ ...valStyle, color: m.grossProfit >= 0 ? '#6366F1' : '#EF4444' }}>{fmt(m.grossProfit)}</div></div>
+          <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillSummaryRevenue')}</div><div style={{ ...valStyle, color: '#22C55E' }}>{fmt(m.totalRevenue)}</div></div>
+          <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillSummaryTotalCosts')}</div><div style={{ ...valStyle, color: '#EF4444' }}>{fmt(m.totalCost)}</div></div>
+          <div style={cardStyle}><div style={labelStyle}>{tc('intel_revwaterfall.drillSummaryNetProfit')}</div><div style={{ ...valStyle, color: m.grossProfit >= 0 ? '#6366F1' : '#EF4444' }}>{fmt(m.grossProfit)}</div></div>
         </div>
         <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>
-          {barKey === 'Operating' ? 'Operating expenses include rent, utilities, staff costs and other overhead. Connect your accounting data for exact figures.' : `Your net margin is ${m.grossMargin.toFixed(0)}% based on POS data. This reflects product margins only; connect accounting for full P&L.`}
+          {barKey === 'Operating' ? tc('intel_revwaterfall.drillOperatingNote') : tc('intel_revwaterfall.drillNetMarginNote').replace('{margin}', m.grossMargin.toFixed(0))}
         </div>
       </div>
     )
@@ -244,8 +250,8 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
   if (!hasData) {
     return (
       <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--sf) 0%, rgba(99,102,241,.02) 100%)', fontSize: 13, color: 'var(--tx3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span>Upload data to see margin breakdown</span>
-        <button onClick={() => onAsk('Show me a revenue and margin breakdown for my business')} style={{ fontSize: 12, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>Ask AskBiz &rarr;</button>
+        <span>{tc('intel_revwaterfall.uploadPrompt')}</span>
+        <button onClick={() => onAsk(tc('intel_revwaterfall.askAskBizPrompt'))} style={{ fontSize: 12, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>{tc('intel_revwaterfall.askAskBiz')}</button>
       </div>
     )
   }
@@ -264,9 +270,9 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
         onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--b)' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>Revenue &amp; Margin</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{tc('intel_revwaterfall.miniCardTitle')}</span>
           <div style={{ display: 'flex', gap: 8 }}>
-            {[['#22C55E', 'Rev'], ['#EF4444', 'Cost'], ['#6366F1', 'Margin']].map(([c, l]) => (
+            {[['#22C55E', tc('intel_revwaterfall.legendRev')], ['#EF4444', tc('intel_revwaterfall.legendCost')], ['#6366F1', tc('intel_revwaterfall.legendMargin')]].map(([c, l]) => (
               <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 9, color: 'var(--tx3)' }}>
                 <div style={{ width: 6, height: 6, borderRadius: 1, background: c }} />{l}
               </div>
@@ -276,12 +282,12 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
         <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
           <div>
             <span style={{ fontSize: 22, fontWeight: 800, color: '#22C55E', fontFamily: 'var(--font-sora, inherit)', lineHeight: 1 }}>{grossProfitVal}%</span>
-            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>gross margin</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{tc('intel_revwaterfall.grossMarginLabel')}</div>
           </div>
           <div style={{ width: 1, background: 'var(--b)' }} />
           <div>
             <span style={{ fontSize: 22, fontWeight: 800, color: '#6366F1', fontFamily: 'var(--font-sora, inherit)', lineHeight: 1 }}>{netMarginVal}%</span>
-            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>net margin</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 2 }}>{tc('intel_revwaterfall.netMarginLabel')}</div>
           </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -301,8 +307,8 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
           })}
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--b)' }}>
-          <span style={{ fontSize: 9, color: 'var(--tx3)', opacity: 0.7 }}>Based on health score signals</span>
-          <span style={{ fontSize: 9, color: '#6366F1', fontWeight: 600 }}>Tap to expand</span>
+          <span style={{ fontSize: 9, color: 'var(--tx3)', opacity: 0.7 }}>{tc('intel_revwaterfall.basedOnHealth')}</span>
+          <span style={{ fontSize: 9, color: '#6366F1', fontWeight: 600 }}>{tc('intel_revwaterfall.tapToExpand')}</span>
         </div>
       </div>
 
@@ -315,8 +321,8 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
           <div onClick={e => e.stopPropagation()} style={{ background: 'var(--sf)', borderRadius: 20, padding: '24px 28px', width: '100%', maxWidth: 640, maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <div>
-                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 15, fontWeight: 700 }}>Revenue &amp; Margin Breakdown</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>Click any metric to drill down &middot; {posMetrics ? 'real POS data' : 'health score signals'}</div>
+                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 15, fontWeight: 700 }}>{tc('intel_revwaterfall.modalTitle')}</div>
+                <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>{tc('intel_revwaterfall.modalSubtitle').replace('{dataSource}', posMetrics ? tc('intel_revwaterfall.dataSourcePos') : tc('intel_revwaterfall.dataSourceHealth'))}</div>
               </div>
               <button onClick={() => { setExpanded(false); setDrillItem(null) }} style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx3)' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -326,8 +332,8 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
             {/* KPI row */}
             <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
               {[
-                { label: 'Gross Margin', value: posMetrics ? `${posMetrics.grossMargin.toFixed(0)}%` : `${grossProfitVal}%`, color: '#22C55E', sub: posMetrics ? fmt(posMetrics.grossProfit) : undefined },
-                { label: 'Net Margin', value: `${netMarginVal}%`, color: '#6366F1', sub: posMetrics ? fmt(posMetrics.totalRevenue) + ' rev' : undefined },
+                { label: tc('intel_revwaterfall.kpiGrossMargin'), value: posMetrics ? `${posMetrics.grossMargin.toFixed(0)}%` : `${grossProfitVal}%`, color: '#22C55E', sub: posMetrics ? fmt(posMetrics.grossProfit) : undefined },
+                { label: tc('intel_revwaterfall.kpiNetMargin'), value: `${netMarginVal}%`, color: '#6366F1', sub: posMetrics ? fmt(posMetrics.totalRevenue) + tc('intel_revwaterfall.kpiRevSuffix') : undefined },
               ].map(k => (
                 <div key={k.label} style={{ flex: 1, padding: '12px 14px', borderRadius: 12, background: `${k.color}08`, border: `1px solid ${k.color}20` }}>
                   <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>{k.label}</div>
@@ -371,10 +377,10 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
                     {isDrill && (
                       <div style={{ marginLeft: 102, marginTop: 8, marginBottom: 12, padding: 14, borderRadius: 12, border: `1px solid ${c}20`, background: `${c}04` }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: c }}>{bar.label} breakdown</div>
-                          <button onClick={(e) => { e.stopPropagation(); onAsk(DRILL_PROMPTS[bar.key] || `Analyse my ${bar.label.toLowerCase()} in detail`) }}
+                          <div style={{ fontSize: 12, fontWeight: 700, color: c }}>{tc('intel_revwaterfall.barBreakdownLabel').replace('{label}', bar.label)}</div>
+                          <button onClick={(e) => { e.stopPropagation(); onAsk(DRILL_PROMPTS[bar.key] || tc('intel_revwaterfall.drillPromptFallback').replace('{label}', bar.label.toLowerCase())) }}
                             style={{ fontSize: 9, color: c, fontWeight: 600, background: `${c}10`, border: `1px solid ${c}20`, borderRadius: 6, padding: '3px 8px', cursor: 'pointer', fontFamily: 'inherit' }}>
-                            Ask AI &rarr;
+                            {tc('intel_revwaterfall.askAi')}
                           </button>
                         </div>
                         {renderDrillDown(bar.key)}
@@ -394,7 +400,7 @@ export default function RevenueWaterfall({ health, onAsk, onDrillChange }: Reven
             )}
 
             <div style={{ marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--b)', fontSize: 11, color: 'var(--tx3)' }}>
-              {posMetrics ? `Based on ${posMetrics.txnCount} transactions in the last 30 days.` : 'Index-relative to health score signals. Connect accounting for exact values.'}
+              {posMetrics ? tc('intel_revwaterfall.detailFooterPos').replace('{count}', String(posMetrics.txnCount)) : tc('intel_revwaterfall.detailFooterHealth')}
             </div>
           </div>
         </div>

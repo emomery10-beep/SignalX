@@ -7,6 +7,7 @@ import {
   StaffTemplate,
   getTemplatesByType,
 } from '@/lib/staff-templates'
+import { useLang } from '@/components/LanguageProvider'
 
 interface StaffTemplatesTabProps {
   onSelectTemplate?: (template: StaffTemplate) => void
@@ -17,6 +18,7 @@ export default function StaffTemplatesTab({
   onSelectTemplate,
   businessType = 'restaurant',
 }: StaffTemplatesTabProps) {
+  const { tc } = useLang()
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const templates = getTemplatesByType(businessType)
 
@@ -24,12 +26,12 @@ export default function StaffTemplatesTab({
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 32 }}>
         <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>
-          {businessType === 'factory' ? '🏭 Factory' : '🍽️ Restaurant'} Staff
-          Role Templates
+          {businessType === 'factory'
+            ? tc('pos_stafftemplates.headingFactory')
+            : tc('pos_stafftemplates.headingRestaurant')}
         </h2>
         <p style={{ fontSize: 13, color: '#888', marginBottom: 24 }}>
-          Pre-configured role templates with standard permissions. Use these as
-          a starting point when creating staff members.
+          {tc('pos_stafftemplates.subtitle')}
         </p>
 
         <div
@@ -94,7 +96,7 @@ export default function StaffTemplatesTab({
               >
                 <div>
                   <span style={{ color: '#999', display: 'block' }}>
-                    Team Size
+                    {tc('pos_stafftemplates.teamSizeLabel')}
                   </span>
                   <span
                     style={{
@@ -109,7 +111,7 @@ export default function StaffTemplatesTab({
                 </div>
                 <div>
                   <span style={{ color: '#999', display: 'block' }}>
-                    Permissions
+                    {tc('pos_stafftemplates.permissionsLabel')}
                   </span>
                   <span
                     style={{
@@ -133,7 +135,7 @@ export default function StaffTemplatesTab({
                 }}
               >
                 <span style={{ fontSize: 11, color: '#999', fontWeight: 600 }}>
-                  PERMISSIONS
+                  {tc('pos_stafftemplates.permissionsHeading')}
                 </span>
                 <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                   {template.defaultPermissions.map((perm) => (
@@ -174,7 +176,7 @@ export default function StaffTemplatesTab({
                   textAlign: 'left',
                 }}
               >
-                {expandedId === template.id ? '▼' : '▶'} View responsibilities
+                {expandedId === template.id ? '▼' : '▶'} {tc('pos_stafftemplates.viewResponsibilities')}
               </button>
 
               {/* Expanded Responsibilities */}
@@ -187,7 +189,7 @@ export default function StaffTemplatesTab({
                   }}
                 >
                   <span style={{ fontSize: 11, color: '#999', fontWeight: 600 }}>
-                    RESPONSIBILITIES
+                    {tc('pos_stafftemplates.responsibilitiesHeading')}
                   </span>
                   <ul
                     style={{
@@ -204,7 +206,7 @@ export default function StaffTemplatesTab({
                     ))}
                     {template.responsibilities.length > 5 && (
                       <li style={{ color: '#999', fontStyle: 'italic' }}>
-                        +{template.responsibilities.length - 5} more
+                        {tc('pos_stafftemplates.moreResponsibilities', { count: template.responsibilities.length - 5 })}
                       </li>
                     )}
                   </ul>
@@ -237,7 +239,7 @@ export default function StaffTemplatesTab({
                       '#d08a59'
                   }}
                 >
-                  Use This Template
+                  {tc('pos_stafftemplates.useTemplate')}
                 </button>
               )}
             </div>
@@ -256,9 +258,7 @@ export default function StaffTemplatesTab({
         }}
       >
         <p style={{ fontSize: 13, margin: 0, color: '#0066cc' }}>
-          <strong>💡 Tip:</strong> These templates are starting points. You can
-          customize permissions for any staff member after creation. New
-          permissions or modifications won't affect existing staff.
+          {tc('pos_stafftemplates.tipText')}
         </p>
       </div>
     </div>

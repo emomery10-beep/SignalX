@@ -1,0 +1,17 @@
+{
+  "courierOperations": "🚛 Operaciones de mensajería",
+  "scoreOutOf": "/100",
+  "labelHealthy": "Saludable",
+  "labelAtRisk": "En riesgo",
+  "labelCritical": "Crítico",
+  "today": "hoy",
+  "inTransit": "en tránsito",
+  "atBranch": "en sucursal",
+  "failed": "fallido",
+  "deliveryRate": "{rate}% de tasa de entrega",
+  "stuckOver48h": "{n} detenidos >48h",
+  "unpaidRevenue": "KES {amount} sin pagar",
+  "fleetAvailable": "Disponible",
+  "fleetInTransit": "En tránsito",
+  "fleetMaintenance": "Mantenimiento"
+}

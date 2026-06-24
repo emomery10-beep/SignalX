@@ -1,0 +1,21 @@
+{
+  "heading": "حساسية السعر",
+  "productsCount": "{n} منتج",
+  "askAi": "اسأل الذكاء الاصطناعي",
+  "askAiPrompt": "حلّل حساسية أسعار منتجاتي. ما المنتجات التي يمكنني رفع أسعارها بأمان؟",
+  "sensitivityElastic": "حساس للسعر",
+  "sensitivityInelastic": "مرن تجاه السعر",
+  "sensitivityUnitElastic": "متوازن",
+  "sensitivityInverse": "تأثير الفخامة",
+  "sensitivityStable": "مستقر",
+  "priceLabel": "السعر",
+  "volumeLabel": "الكمية",
+  "marginLabel": "الهامش:",
+  "suggestedPrice": "💰 السعر المقترح لهامش {targetMargin}%: {sym}{price} (+{pct}%)",
+  "simulatorHeading": "محاكي تأثير الأرباح والخسائر",
+  "priceChangeLabel": "تغيير السعر:",
+  "perMonth": "/شهر",
+  "statCurrent": "الحالي",
+  "statProjected": "المتوقع",
+  "statChange": "التغيير"
+}

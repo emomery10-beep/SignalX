@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Props {
   isActive: boolean
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function VoiceVisualizer({ isActive, transcript, analyserNode, onStop }: Props) {
+  const { tc } = useLang()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animRef = useRef<number>(0)
 
@@ -94,7 +96,7 @@ export default function VoiceVisualizer({ isActive, transcript, analyserNode, on
         fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         fontFamily: 'var(--font-dm)',
       }}>
-        {transcript || 'Listening…'}
+        {transcript || tc('chat_voiceviz.listening')}
       </div>
 
       {/* Stop button */}
@@ -106,7 +108,7 @@ export default function VoiceVisualizer({ isActive, transcript, analyserNode, on
           background: 'rgba(244,128,128,0.2)', border: '1px solid rgba(244,128,128,0.4)',
           color: '#f48080', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
-        title="Stop recording"
+        title={tc('chat_voiceviz.stopRecordingTitle')}
       >
         <svg width="10" height="10" viewBox="0 0 10 10"><rect x="1" y="1" width="8" height="8" rx="1" fill="currentColor"/></svg>
       </button>

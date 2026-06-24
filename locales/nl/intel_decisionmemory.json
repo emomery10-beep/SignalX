@@ -1,0 +1,21 @@
+{
+  "heading": "Beslissingsgeheugen",
+  "subheading": "AskBiz onthoudt elke beslissing en komt er na 6 weken op terug",
+  "logDecisionBtn": "+ Beslissing vastleggen",
+  "logFormTitle": "Leg een beslissing vast",
+  "titlePlaceholder": "Wat heb je besloten? bijv. Prijs van draadloze oordopjes met €1,50 verhoogd",
+  "beforePlaceholder": "Voor (bijv. €12,99)",
+  "afterPlaceholder": "Na (bijv. €14,49)",
+  "saving": "Opslaan…",
+  "saveDecision": "Beslissing opslaan — AskBiz komt er over 6 weken op terug",
+  "cancel": "Annuleren",
+  "reviewBannerSingular": "🔔 {n} beslissing klaar voor beoordeling",
+  "reviewBannerPlural": "🔔 {n} beslissingen klaar voor beoordeling",
+  "askReviewBtn": "Laat AskBiz de resultaten beoordelen →",
+  "askReviewPrompt": "Beoordeel mijn recente zakelijke beslissingen en vertel me wat de uitkomsten aangeven — wat werkte er en wat kan ik ervan leren?",
+  "noDecisions": "Nog geen beslissingen vastgelegd. Elke zakelijke beslissing die je vastlegt, wordt na 6 weken beoordeeld.",
+  "checksBack": "AskBiz komt terug op: {date}",
+  "verdictGoodCall": "✓ Goede keuze",
+  "verdictBadCall": "✗ Heeft niet gewerkt",
+  "verdictNeutral": "~ Gemengde resultaten"
+}

@@ -1,0 +1,17 @@
+{
+  "title": "اتصالات البيانات",
+  "sourcesConnected": "{connected} من أصل {total} مصادر متصلة",
+  "sourcesConnectedSuffix": "من أصل {total} مصادر متصلة",
+  "manageSources": "إدارة المصادر ←",
+  "coverageNone": "قم بتوصيل مصدر للبدء في الحصول على رؤى حقيقية",
+  "coverageLow": "يُوصى بـ {n} اتصالات إضافية للتغطية الكاملة",
+  "coverageMid": "تغطية جيدة — المزيد من الاتصالات يحسّن دقة البيانات",
+  "coverageHigh": "تغطية بيانات ممتازة عبر نشاطك التجاري",
+  "filterAll": "الكل",
+  "statusNotConnected": "غير متصل",
+  "statusSyncError": "⚠ خطأ في المزامنة",
+  "statusSynced": "تمت المزامنة {time}",
+  "detailName": "الاسم:",
+  "detailActive": "نشط · جارٍ المزامنة",
+  "connect": "اتصال ←"
+}

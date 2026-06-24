@@ -1,0 +1,17 @@
+{
+  "courierOperations": "🚛 Courier Operations",
+  "scoreOutOf": "/100",
+  "labelHealthy": "Healthy",
+  "labelAtRisk": "At Risk",
+  "labelCritical": "Critical",
+  "today": "today",
+  "inTransit": "in transit",
+  "atBranch": "at branch",
+  "failed": "failed",
+  "deliveryRate": "{rate}% delivery rate",
+  "stuckOver48h": "{n} stuck >48h",
+  "unpaidRevenue": "KES {amount} unpaid",
+  "fleetAvailable": "Available",
+  "fleetInTransit": "In Transit",
+  "fleetMaintenance": "Maintenance"
+}

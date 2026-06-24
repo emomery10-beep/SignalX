@@ -1,44 +1,50 @@
 'use client'
 
 import { useState } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface StripeSetupCardProps {
   staff: { owner_id: string; email: string; name?: string }
   onConfigLoaded?: (cfg: any) => void
 }
 
-const STRIPE_COUNTRIES = [
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'US', name: 'United States' },
-  { code: 'IE', name: 'Ireland' },
-  { code: 'DE', name: 'Germany' },
-  { code: 'FR', name: 'France' },
-  { code: 'NL', name: 'Netherlands' },
-  { code: 'BE', name: 'Belgium' },
-  { code: 'AT', name: 'Austria' },
-  { code: 'SE', name: 'Sweden' },
-  { code: 'NO', name: 'Norway' },
-  { code: 'DK', name: 'Denmark' },
-  { code: 'FI', name: 'Finland' },
-  { code: 'ES', name: 'Spain' },
-  { code: 'IT', name: 'Italy' },
-  { code: 'PT', name: 'Portugal' },
-  { code: 'AU', name: 'Australia' },
-  { code: 'NZ', name: 'New Zealand' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'SG', name: 'Singapore' },
-  { code: 'HK', name: 'Hong Kong' },
-  { code: 'JP', name: 'Japan' },
-  { code: 'MY', name: 'Malaysia' },
-]
+function buildStripeCountries(tc: (key: string) => string) {
+  return [
+    { code: 'GB', name: tc('stripe_setupcard.countryGB') },
+    { code: 'US', name: tc('stripe_setupcard.countryUS') },
+    { code: 'IE', name: tc('stripe_setupcard.countryIE') },
+    { code: 'DE', name: tc('stripe_setupcard.countryDE') },
+    { code: 'FR', name: tc('stripe_setupcard.countryFR') },
+    { code: 'NL', name: tc('stripe_setupcard.countryNL') },
+    { code: 'BE', name: tc('stripe_setupcard.countryBE') },
+    { code: 'AT', name: tc('stripe_setupcard.countryAT') },
+    { code: 'SE', name: tc('stripe_setupcard.countrySE') },
+    { code: 'NO', name: tc('stripe_setupcard.countryNO') },
+    { code: 'DK', name: tc('stripe_setupcard.countryDK') },
+    { code: 'FI', name: tc('stripe_setupcard.countryFI') },
+    { code: 'ES', name: tc('stripe_setupcard.countryES') },
+    { code: 'IT', name: tc('stripe_setupcard.countryIT') },
+    { code: 'PT', name: tc('stripe_setupcard.countryPT') },
+    { code: 'AU', name: tc('stripe_setupcard.countryAU') },
+    { code: 'NZ', name: tc('stripe_setupcard.countryNZ') },
+    { code: 'CA', name: tc('stripe_setupcard.countryCA') },
+    { code: 'SG', name: tc('stripe_setupcard.countrySG') },
+    { code: 'HK', name: tc('stripe_setupcard.countryHK') },
+    { code: 'JP', name: tc('stripe_setupcard.countryJP') },
+    { code: 'MY', name: tc('stripe_setupcard.countryMY') },
+  ]
+}
 
 export function StripeSetupCard({ staff, onConfigLoaded }: StripeSetupCardProps) {
+  const { tc } = useLang()
   const [showModal, setShowModal] = useState(false)
   const [country, setCountry] = useState('GB')
   const [businessName, setBusinessName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+
+  const STRIPE_COUNTRIES = buildStripeCountries(tc)
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
@@ -54,7 +60,7 @@ export function StripeSetupCard({ staff, onConfigLoaded }: StripeSetupCardProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!businessName || !country) { setError('Please fill in all fields'); return }
+    if (!businessName || !country) { setError(tc('stripe_setupcard.errorFillFields')); return }
 
     setLoading(true)
     setError('')
@@ -75,7 +81,7 @@ export function StripeSetupCard({ staff, onConfigLoaded }: StripeSetupCardProps)
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error || 'Failed to connect Stripe')
+        setError(data.error || tc('stripe_setupcard.errorFailedConnect'))
         return
       }
 
@@ -91,7 +97,7 @@ export function StripeSetupCard({ staff, onConfigLoaded }: StripeSetupCardProps)
         setTimeout(() => setShowModal(false), 1200)
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred')
+      setError(err.message || tc('stripe_setupcard.errorGeneric'))
     } finally {
       setLoading(false)
     }
@@ -121,10 +127,10 @@ export function StripeSetupCard({ staff, onConfigLoaded }: StripeSetupCardProps)
         </div>
         <div>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', whiteSpace: 'nowrap' }}>
-            + Connect Stripe
+            {tc('stripe_setupcard.connectStripeButton')}
           </div>
           <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 1, whiteSpace: 'nowrap' }}>
-            Apple Pay · Google Pay · International cards
+            {tc('stripe_setupcard.paymentMethods')}
           </div>
         </div>
       </div>
@@ -142,8 +148,8 @@ export function StripeSetupCard({ staff, onConfigLoaded }: StripeSetupCardProps)
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
               <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(99,91,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>💜</div>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>Connect Stripe</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>Apple Pay · Google Pay · International cards</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>{tc('stripe_setupcard.connectStripeTitle')}</div>
+                <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>{tc('stripe_setupcard.paymentMethods')}</div>
               </div>
             </div>
 
@@ -154,14 +160,14 @@ export function StripeSetupCard({ staff, onConfigLoaded }: StripeSetupCardProps)
             )}
             {success && (
               <div style={{ padding: '8px 12px', backgroundColor: '#ede9fe', borderRadius: 9, border: '1px solid #ddd6fe', marginBottom: 14, color: '#5b21b6', fontSize: 12 }}>
-                Stripe connected! Opening Stripe onboarding...
+                {tc('stripe_setupcard.successMessage')}
               </div>
             )}
 
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: 12 }}>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
-                  Business Country <span style={{ color: '#ef4444' }}>*</span>
+                  {tc('stripe_setupcard.businessCountryLabel')} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <select
                   value={country}
@@ -177,20 +183,20 @@ export function StripeSetupCard({ staff, onConfigLoaded }: StripeSetupCardProps)
 
               <div style={{ marginBottom: 18 }}>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
-                  Business Name <span style={{ color: '#ef4444' }}>*</span>
+                  {tc('stripe_setupcard.businessNameLabel')} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
                   type="text"
                   value={businessName}
                   onChange={e => setBusinessName(e.target.value)}
                   disabled={loading}
-                  placeholder="Your business name"
+                  placeholder={tc('stripe_setupcard.businessNamePlaceholder')}
                   style={inputStyle}
                 />
               </div>
 
               <div style={{ padding: '8px 12px', background: 'rgba(99,91,255,.06)', borderRadius: 9, marginBottom: 16, fontSize: 11, color: '#5b21b6', lineHeight: 1.5 }}>
-                You'll be redirected to Stripe to complete identity verification (KYC). Once approved, Apple Pay, Google Pay and international cards will be enabled.
+                {tc('stripe_setupcard.kycDisclaimer')}
               </div>
 
               <div style={{ display: 'flex', gap: 10 }}>
@@ -204,7 +210,7 @@ export function StripeSetupCard({ staff, onConfigLoaded }: StripeSetupCardProps)
                     cursor: !businessName || loading ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  {loading ? 'Connecting...' : 'Continue to Stripe →'}
+                  {loading ? tc('stripe_setupcard.buttonConnecting') : tc('stripe_setupcard.buttonContinue')}
                 </button>
                 <button
                   type="button"
@@ -212,7 +218,7 @@ export function StripeSetupCard({ staff, onConfigLoaded }: StripeSetupCardProps)
                   disabled={loading}
                   style={{ padding: '11px 18px', borderRadius: 10, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx)', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
                 >
-                  Cancel
+                  {tc('stripe_setupcard.buttonCancel')}
                 </button>
               </div>
             </form>

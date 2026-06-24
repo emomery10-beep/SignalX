@@ -1,4 +1,5 @@
 'use client'
+import { useLang } from '@/components/LanguageProvider'
 
 interface CompetitorItem {
   source: string
@@ -18,16 +19,20 @@ const positionStyle = {
   expensive: { color: '#dc2626', bg: 'rgba(239,68,68,.08)', icon: '↑' },
 }
 
-const marketLabels = {
-  cheapest:    { label: 'You are the cheapest', sub: 'Room to raise prices — test a 5-10% increase.', color: '#16a34a' },
-  competitive: { label: 'You are competitively priced', sub: 'Good position. Monitor for changes.', color: '#0284c7' },
-  premium:     { label: 'You are premium priced', sub: 'Ensure your brand justifies the premium.', color: '#7c3aed' },
-  overpriced:  { label: 'You are above market price', sub: 'Risk of losing customers. Consider a price adjustment.', color: '#dc2626' },
+function buildMarketLabels(tc: (k: string) => string) {
+  return {
+    cheapest:    { label: tc('chat_competitorwatch.marketCheapestLabel'),    sub: tc('chat_competitorwatch.marketCheapestSub'),    color: '#16a34a' },
+    competitive: { label: tc('chat_competitorwatch.marketCompetitiveLabel'), sub: tc('chat_competitorwatch.marketCompetitiveSub'), color: '#0284c7' },
+    premium:     { label: tc('chat_competitorwatch.marketPremiumLabel'),     sub: tc('chat_competitorwatch.marketPremiumSub'),     color: '#7c3aed' },
+    overpriced:  { label: tc('chat_competitorwatch.overpricedLabel'),        sub: tc('chat_competitorwatch.overpricedSub'),        color: '#dc2626' },
+  }
 }
 
 export default function CompetitorWatch({ data, marketPosition }: Props) {
+  const { tc } = useLang()
   if (!data?.length) return null
 
+  const marketLabels = buildMarketLabels(tc)
   const summary = marketPosition ? marketLabels[marketPosition] : null
 
   return (
@@ -50,7 +55,7 @@ export default function CompetitorWatch({ data, marketPosition }: Props) {
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
         <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', letterSpacing: '.08em', textTransform: 'uppercase' }}>
-          Competitor Watch
+          {tc('chat_competitorwatch.headerLabel')}
         </span>
         {summary && (
           <span style={{

@@ -1,0 +1,18 @@
+{
+  "noData": "Noch keine Verkaufsdaten",
+  "noDataAsk": "AskBiz fragen →",
+  "noDataAskPrompt": "Auf welche Produkte sollte ich mich beim Verkauf konzentrieren?",
+  "title": "Top-Produkte",
+  "kpiProducts": "Produkte",
+  "kpiAvgMargin": "Ø Marge",
+  "kpiUnitsSold": "Verkaufte Einheiten",
+  "colRank": "#",
+  "colProduct": "Produkt",
+  "colRevenue": "Umsatz",
+  "colQty": "Menge",
+  "colMargin": "Marge",
+  "qtySold": "{n} verkauft",
+  "footnote": "Nach Umsatz sortiert · aus POS-Daten",
+  "collapse": "← Einklappen",
+  "tapToAnalyse": "Zum Analysieren tippen →"
+}

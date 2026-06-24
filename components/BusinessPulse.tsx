@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import type { Signal, SignalSeverity } from '@/lib/signal-engine'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Props {
   onActionClick: (s: string) => void
@@ -21,6 +22,7 @@ function SignalCard({
   isNew: boolean
   onDismiss: (id: string) => void
 }) {
+  const { tc } = useLang()
   const [entered, setEntered]   = useState(false)  // slide-in done
   const [exiting, setExiting]   = useState(false)  // exit animation in progress
   const c = SEVERITY_COLORS[signal.severity]
@@ -119,7 +121,7 @@ function SignalCard({
             e.currentTarget.style.color = 'var(--tx3)'
           }}
         >
-          Dismiss
+          {tc('business_pulse.dismiss')}
         </button>
       </div>
 
@@ -132,7 +134,7 @@ function SignalCard({
           borderRadius: 9999, padding: '2px 6px',
           letterSpacing: '.06em', textTransform: 'uppercase',
         }}>
-          NEW
+          {tc('business_pulse.newBadge')}
         </div>
       )}
     </div>
@@ -141,6 +143,7 @@ function SignalCard({
 
 // ── BusinessPulse panel ────────────────────────────────────────────────────────
 export default function BusinessPulse({ onActionClick }: Props) {
+  const { tc } = useLang()
   const [signals, setSignals]       = useState<Signal[]>([])
   const [loading, setLoading]       = useState(true)
   const [open, setOpen]             = useState(true)
@@ -242,7 +245,7 @@ export default function BusinessPulse({ onActionClick }: Props) {
         {open && (
           <>
             <span style={{ fontFamily: 'var(--font-sora)', fontSize: 13, fontWeight: 600, flex: 1, whiteSpace: 'nowrap' }}>
-              Business Pulse
+              {tc('business_pulse.panelTitle')}
             </span>
             {hasSignals && (
               <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 9999, background: redCount > 0 ? '#ef4444' : '#f59e0b', color: '#fff' }}>
@@ -280,12 +283,12 @@ export default function BusinessPulse({ onActionClick }: Props) {
                   <path d="M20 6L9 17l-5-5"/>
                 </svg>
               </div>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 13, fontWeight: 600, color: '#22c55e', marginBottom: 6 }}>All clear</div>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 13, fontWeight: 600, color: '#22c55e', marginBottom: 6 }}>{tc('business_pulse.allClear')}</div>
               <p style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.65 }}>
-                Your business is running smoothly. No urgent actions needed.
+                {tc('business_pulse.allClearBody')}
               </p>
               <p style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 10, lineHeight: 1.5 }}>
-                Upload fresh data to run a new health check.
+                {tc('business_pulse.uploadPrompt')}
               </p>
             </div>
           )}
@@ -304,7 +307,7 @@ export default function BusinessPulse({ onActionClick }: Props) {
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
             </svg>
-            Run health check
+            {tc('business_pulse.runHealthCheck')}
           </button>
         </div>
       )}

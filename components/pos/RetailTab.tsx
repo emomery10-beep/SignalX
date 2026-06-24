@@ -1,5 +1,6 @@
 'use client'
 import { useState, useMemo } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 const GREEN = '#16a34a'
 const RED = '#dc2626'
@@ -114,12 +115,13 @@ function ABCBadge({ cls }: { cls: 'A' | 'B' | 'C' }) {
 }
 
 function StatusPill({ refunded }: { refunded: boolean }) {
+  const { tc } = useLang()
   return (
     <span style={{
       fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase',
       color: refunded ? RED : GREEN, background: refunded ? 'rgba(220,38,38,.1)' : 'rgba(22,163,74,.1)',
     }}>
-      {refunded ? 'Refunded' : 'Completed'}
+      {refunded ? tc('pos_retail.statusRefunded') : tc('pos_retail.statusCompleted')}
     </span>
   )
 }
@@ -153,11 +155,12 @@ function SortHeader({
 
 // ---------- SVG charts ----------
 function BarChart({ data, compare, symbol, color }: { data: number[]; compare?: number[]; symbol: string; color: string }) {
+  const { tc } = useLang()
   const w = 720, h = 180, pad = 24
   const max = Math.max(1, ...data, ...(compare || []))
   const bw = (w - pad * 2) / data.length
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h} role="img" aria-label="Hourly sales">
+    <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h} role="img" aria-label={tc('pos_retail.ariaHourlySales')}>
       {[0.25, 0.5, 0.75, 1].map((g) => (
         <line key={g} x1={pad} x2={w - pad} y1={h - pad - (h - pad * 2) * g} y2={h - pad - (h - pad * 2) * g} stroke="var(--b)" strokeWidth={1} />
       ))}
@@ -181,6 +184,7 @@ function BarChart({ data, compare, symbol, color }: { data: number[]; compare?: 
 }
 
 function DonutChart({ segments, size = 160 }: { segments: { label: string; value: number; color: string }[]; size?: number }) {
+  const { tc } = useLang()
   const total = segments.reduce((s, x) => s + x.value, 0) || 1
   const r = size / 2 - 12
   const cx = size / 2, cy = size / 2
@@ -207,7 +211,7 @@ function DonutChart({ segments, size = 160 }: { segments: { label: string; value
         )
       })}
       <text x={cx} y={cy - 2} fontSize={20} fontWeight={800} fill="var(--tx)" textAnchor="middle">{fmtInt(total)}</text>
-      <text x={cx} y={cy + 16} fontSize={10} fill="var(--tx3)" textAnchor="middle">TOTAL</text>
+      <text x={cx} y={cy + 16} fontSize={10} fill="var(--tx3)" textAnchor="middle">{tc('pos_retail.donutTotal')}</text>
     </svg>
   )
 }
@@ -289,6 +293,7 @@ function Card({ title, children, right }: { title: string; children: React.React
 
 // ===================================================================
 export default function RetailTab({ currencySymbol, selectedLocation, transactions, staff, inventory }: RetailTabProps) {
+  const { tc } = useLang()
   const [subTab, setSubTab] = useState<SubTab>('overview')
 
   const txns = useMemo(() => Array.isArray(transactions) ? transactions : [], [transactions])
@@ -303,12 +308,12 @@ export default function RetailTab({ currencySymbol, selectedLocation, transactio
       {/* Sub-tab nav */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid var(--b)', flexWrap: 'wrap' }}>
         {([
-          ['overview', 'Overview'],
-          ['transactions', 'Transactions'],
-          ['products', 'Products'],
-          ['customers', 'Customers'],
-          ['promotions', 'Promotions'],
-          ['returns', 'Returns'],
+          ['overview', tc('pos_retail.subTabOverview')],
+          ['transactions', tc('pos_retail.subTabTransactions')],
+          ['products', tc('pos_retail.subTabProducts')],
+          ['customers', tc('pos_retail.subTabCustomers')],
+          ['promotions', tc('pos_retail.subTabPromotions')],
+          ['returns', tc('pos_retail.subTabReturns')],
         ] as [SubTab, string][]).map(([key, label]) => (
           <button
             key={key}
@@ -342,6 +347,7 @@ export default function RetailTab({ currencySymbol, selectedLocation, transactio
 function OverviewSub({ symbol, txns, completedTxns, refundedTxns, inv }: {
   symbol: string; txns: any[]; completedTxns: any[]; refundedTxns: any[]; inv: any[]
 }) {
+  const { tc } = useLang()
   const m = useMemo(() => {
     const todayStart = startOfToday()
     const todayTxns = completedTxns.filter((t) => new Date(t.created_at).getTime() >= todayStart)
@@ -400,7 +406,7 @@ function OverviewSub({ symbol, txns, completedTxns, refundedTxns, inv }: {
     }
   }, [completedTxns, refundedTxns, txns, inv])
 
-  if (!txns.length) return <EmptyState icon="📦" title="No retail transactions yet" hint="Sales will appear here once the POS records transactions." />
+  if (!txns.length) return <EmptyState icon="📦" title={tc('pos_retail.emptyNoRetailTxns')} hint={tc('pos_retail.emptyNoRetailTxnsHint')} />
 
   const cashCard = m.payments.cash + m.payments.card
   const cashRatio = cashCard ? (m.payments.cash / cashCard) * 100 : 0
@@ -408,55 +414,55 @@ function OverviewSub({ symbol, txns, completedTxns, refundedTxns, inv }: {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
-        <KpiCard label="Today's Sales" value={fmt(symbol, m.todaySales)} sub={`${m.todayCount} transactions`} accent={ACC} />
-        <KpiCard label="Avg Basket Size" value={fmt(symbol, m.basket)} sub="per transaction" />
-        <KpiCard label="Items / Transaction" value={m.itemsPerTx.toFixed(1)} sub="units" />
-        <KpiCard label="Gross Margin" value={pct(m.grossMargin)} accent={m.grossMargin >= 30 ? GREEN : AMBER} sub="across all sales" />
-        <KpiCard label="Refund Rate" value={pct(m.refundRate)} accent={m.refundRate > 5 ? RED : GREEN} sub={`${refundedTxns.length} refunds`} />
-        <KpiCard label="Top Seller" value={m.topSeller.length > 14 ? m.topSeller.slice(0, 14) + '…' : m.topSeller} sub={`${fmtInt(m.topSellerQty)} units sold`} accent={ACC} />
+        <KpiCard label={tc('pos_retail.kpiTodaySales')} value={fmt(symbol, m.todaySales)} sub={tc('pos_retail.kpiTodayTransactions', { n: m.todayCount })} accent={ACC} />
+        <KpiCard label={tc('pos_retail.kpiAvgBasket')} value={fmt(symbol, m.basket)} sub={tc('pos_retail.kpiAvgBasketSub')} />
+        <KpiCard label={tc('pos_retail.kpiItemsPerTx')} value={m.itemsPerTx.toFixed(1)} sub={tc('pos_retail.kpiItemsPerTxSub')} />
+        <KpiCard label={tc('pos_retail.kpiGrossMargin')} value={pct(m.grossMargin)} accent={m.grossMargin >= 30 ? GREEN : AMBER} sub={tc('pos_retail.kpiGrossMarginSub')} />
+        <KpiCard label={tc('pos_retail.kpiRefundRate')} value={pct(m.refundRate)} accent={m.refundRate > 5 ? RED : GREEN} sub={tc('pos_retail.kpiRefunds', { n: refundedTxns.length })} />
+        <KpiCard label={tc('pos_retail.kpiTopSeller')} value={m.topSeller.length > 14 ? m.topSeller.slice(0, 14) + '…' : m.topSeller} sub={tc('pos_retail.kpiTopSellerSub', { n: fmtInt(m.topSellerQty) })} accent={ACC} />
       </div>
 
-      <Card title="Hourly Sales — Today vs Yesterday">
+      <Card title={tc('pos_retail.cardHourlySales')}>
         <BarChart data={m.hourly} compare={m.hourlyPrev} symbol={symbol} color={ACC} />
         <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--tx3)', marginTop: 8 }}>
-          <span><span style={{ display: 'inline-block', width: 10, height: 10, background: ACC, borderRadius: 2, marginRight: 5 }} />Today</span>
-          <span><span style={{ display: 'inline-block', width: 10, height: 10, background: ACC, opacity: 0.25, borderRadius: 2, marginRight: 5 }} />Yesterday</span>
+          <span><span style={{ display: 'inline-block', width: 10, height: 10, background: ACC, borderRadius: 2, marginRight: 5 }} />{tc('pos_retail.legendToday')}</span>
+          <span><span style={{ display: 'inline-block', width: 10, height: 10, background: ACC, opacity: 0.25, borderRadius: 2, marginRight: 5 }} />{tc('pos_retail.legendYesterday')}</span>
         </div>
       </Card>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 18 }}>
-        <Card title="Payment Methods">
+        <Card title={tc('pos_retail.cardPaymentMethods')}>
           <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
             <DonutChart segments={[
-              { label: 'Cash', value: Math.round(m.payments.cash), color: GREEN },
-              { label: 'Card', value: Math.round(m.payments.card), color: '#3b82f6' },
-              { label: 'Mobile', value: Math.round(m.payments.mobile), color: '#a855f7' },
-              { label: 'Other', value: Math.round(m.payments.other), color: AMBER },
+              { label: tc('pos_retail.paymentCash'), value: Math.round(m.payments.cash), color: GREEN },
+              { label: tc('pos_retail.paymentCard'), value: Math.round(m.payments.card), color: '#3b82f6' },
+              { label: tc('pos_retail.paymentMobile'), value: Math.round(m.payments.mobile), color: '#a855f7' },
+              { label: tc('pos_retail.paymentOther'), value: Math.round(m.payments.other), color: AMBER },
             ]} />
             <div style={{ flex: 1, minWidth: 130 }}>
               <Legend items={[
-                { label: 'Cash', color: GREEN, value: fmt(symbol, m.payments.cash) },
-                { label: 'Card', color: '#3b82f6', value: fmt(symbol, m.payments.card) },
-                { label: 'Mobile', color: '#a855f7', value: fmt(symbol, m.payments.mobile) },
-                { label: 'Other', color: AMBER, value: fmt(symbol, m.payments.other) },
+                { label: tc('pos_retail.paymentCash'), color: GREEN, value: fmt(symbol, m.payments.cash) },
+                { label: tc('pos_retail.paymentCard'), color: '#3b82f6', value: fmt(symbol, m.payments.card) },
+                { label: tc('pos_retail.paymentMobile'), color: '#a855f7', value: fmt(symbol, m.payments.mobile) },
+                { label: tc('pos_retail.paymentOther'), color: AMBER, value: fmt(symbol, m.payments.other) },
               ]} />
             </div>
           </div>
         </Card>
 
-        <Card title="Category Revenue">
+        <Card title={tc('pos_retail.cardCategoryRevenue')}>
           {m.categoryRev.length
             ? <HBars data={m.categoryRev} symbol={symbol} />
-            : <EmptyState icon="🏷️" title="No category data" />}
+            : <EmptyState icon="🏷️" title={tc('pos_retail.emptyCategoryData')} />}
         </Card>
       </div>
 
-      <Card title="Quick Stats">
+      <Card title={tc('pos_retail.cardQuickStats')}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14 }}>
-          <QuickStat label="Total Items Sold" value={fmtInt(m.totalItems)} />
-          <QuickStat label="Unique Customers" value={fmtInt(m.uniqueCustomers)} />
-          <QuickStat label="Cash vs Card" value={`${cashRatio.toFixed(0)}% / ${(100 - cashRatio).toFixed(0)}%`} />
-          <QuickStat label="Completed Sales" value={fmtInt(completedTxns.length)} />
+          <QuickStat label={tc('pos_retail.quickStatTotalItems')} value={fmtInt(m.totalItems)} />
+          <QuickStat label={tc('pos_retail.quickStatUniqueCustomers')} value={fmtInt(m.uniqueCustomers)} />
+          <QuickStat label={tc('pos_retail.quickStatCashVsCard')} value={`${cashRatio.toFixed(0)}% / ${(100 - cashRatio).toFixed(0)}%`} />
+          <QuickStat label={tc('pos_retail.quickStatCompletedSales')} value={fmtInt(completedTxns.length)} />
         </div>
       </Card>
     </div>
@@ -487,6 +493,7 @@ const tdStyle: React.CSSProperties = { padding: '10px 12px', fontSize: 13, color
 // TRANSACTIONS
 // ===================================================================
 function TransactionsSub({ symbol, txns, staff }: { symbol: string; txns: any[]; staff: any[] }) {
+  const { tc } = useLang()
   const [search, setSearch] = useState('')
   const [payFilter, setPayFilter] = useState('all')
   const [cashierFilter, setCashierFilter] = useState('all')
@@ -533,38 +540,38 @@ function TransactionsSub({ symbol, txns, staff }: { symbol: string; txns: any[];
     return { sales, refunds, cash, card, net: sales - refunds }
   }, [filtered])
 
-  if (!txns.length) return <EmptyState icon="🧾" title="No transactions" hint="Recorded sales will be listed here." />
+  if (!txns.length) return <EmptyState icon="🧾" title={tc('pos_retail.emptyNoTxns')} hint={tc('pos_retail.emptyNoTxnsHint')} />
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-        <input placeholder="Search receipt, product, customer…" value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 220 }} />
+        <input placeholder={tc('pos_retail.filterSearchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 220 }} />
         <select value={payFilter} onChange={(e) => setPayFilter(e.target.value)} style={selectStyle}>
-          <option value="all">All payments</option>
-          <option value="cash">Cash</option>
-          <option value="card">Card</option>
-          <option value="mobile">Mobile</option>
+          <option value="all">{tc('pos_retail.filterAllPayments')}</option>
+          <option value="cash">{tc('pos_retail.filterCash')}</option>
+          <option value="card">{tc('pos_retail.filterCard')}</option>
+          <option value="mobile">{tc('pos_retail.filterMobile')}</option>
         </select>
         <select value={cashierFilter} onChange={(e) => setCashierFilter(e.target.value)} style={selectStyle}>
-          <option value="all">All cashiers</option>
+          <option value="all">{tc('pos_retail.filterAllCashiers')}</option>
           {cashiers.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={selectStyle}>
-          <option value="all">All statuses</option>
-          <option value="completed">Completed</option>
-          <option value="refunded">Refunded</option>
+          <option value="all">{tc('pos_retail.filterAllStatuses')}</option>
+          <option value="completed">{tc('pos_retail.filterCompleted')}</option>
+          <option value="refunded">{tc('pos_retail.filterRefunded')}</option>
         </select>
         <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={inputStyle} />
         <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={inputStyle} />
       </div>
 
-      <Card title="Z-Report — End of Day Summary" right={<span style={{ fontSize: 12, color: 'var(--tx3)' }}>{filtered.length} txns</span>}>
+      <Card title={tc('pos_retail.cardZReport')} right={<span style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_retail.zTxns', { n: filtered.length })}</span>}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
-          <ZStat label="Total Sales" value={fmt(symbol, z.sales)} accent={GREEN} />
-          <ZStat label="Total Refunds" value={fmt(symbol, z.refunds)} accent={RED} />
-          <ZStat label="Net" value={fmt(symbol, z.net)} accent={ACC} />
-          <ZStat label="Cash Expected" value={fmt(symbol, z.cash)} />
-          <ZStat label="Card Totals" value={fmt(symbol, z.card)} />
+          <ZStat label={tc('pos_retail.zTotalSales')} value={fmt(symbol, z.sales)} accent={GREEN} />
+          <ZStat label={tc('pos_retail.zTotalRefunds')} value={fmt(symbol, z.refunds)} accent={RED} />
+          <ZStat label={tc('pos_retail.zNet')} value={fmt(symbol, z.net)} accent={ACC} />
+          <ZStat label={tc('pos_retail.zCashExpected')} value={fmt(symbol, z.cash)} />
+          <ZStat label={tc('pos_retail.zCardTotals')} value={fmt(symbol, z.card)} />
         </div>
       </Card>
 
@@ -573,13 +580,13 @@ function TransactionsSub({ symbol, txns, staff }: { symbol: string; txns: any[];
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: 'var(--ev)' }}>
-                <th style={thStyle}>Receipt #</th>
-                <th style={thStyle}>Date / Time</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Items</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Total</th>
-                <th style={thStyle}>Payment</th>
-                <th style={thStyle}>Cashier</th>
-                <th style={thStyle}>Status</th>
+                <th style={thStyle}>{tc('pos_retail.colReceiptNo')}</th>
+                <th style={thStyle}>{tc('pos_retail.colDateTime')}</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>{tc('pos_retail.colItems')}</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>{tc('pos_retail.colTotal')}</th>
+                <th style={thStyle}>{tc('pos_retail.colPayment')}</th>
+                <th style={thStyle}>{tc('pos_retail.colCashier')}</th>
+                <th style={thStyle}>{tc('pos_retail.colStatus')}</th>
               </tr>
             </thead>
             <tbody>
@@ -611,7 +618,7 @@ function TransactionsSub({ symbol, txns, staff }: { symbol: string; txns: any[];
             </tbody>
           </table>
         </div>
-        {!filtered.length && <EmptyState icon="🔍" title="No matching transactions" hint="Try adjusting your filters." />}
+        {!filtered.length && <EmptyState icon="🔍" title={tc('pos_retail.emptyNoMatchingTxns')} hint={tc('pos_retail.emptyNoMatchingTxnsHint')} />}
       </div>
     </div>
   )
@@ -631,18 +638,19 @@ function ZStat({ label, value, accent }: { label: string; value: string; accent?
 }
 
 function TxnDetail({ t, symbol }: { t: any; symbol: string }) {
+  const { tc } = useLang()
   const items = Array.isArray(t.pos_items) ? t.pos_items : []
   return (
     <div style={{ padding: 16 }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 12 }}>
         <thead>
           <tr>
-            <th style={{ ...thStyle, padding: '6px 8px' }}>Item</th>
-            <th style={{ ...thStyle, padding: '6px 8px', textAlign: 'right' }}>Qty</th>
-            <th style={{ ...thStyle, padding: '6px 8px', textAlign: 'right' }}>Unit</th>
-            <th style={{ ...thStyle, padding: '6px 8px', textAlign: 'right' }}>Cost</th>
-            <th style={{ ...thStyle, padding: '6px 8px', textAlign: 'right' }}>Margin</th>
-            <th style={{ ...thStyle, padding: '6px 8px', textAlign: 'right' }}>Line Total</th>
+            <th style={{ ...thStyle, padding: '6px 8px' }}>{tc('pos_retail.txnDetailItem')}</th>
+            <th style={{ ...thStyle, padding: '6px 8px', textAlign: 'right' }}>{tc('pos_retail.txnDetailQty')}</th>
+            <th style={{ ...thStyle, padding: '6px 8px', textAlign: 'right' }}>{tc('pos_retail.txnDetailUnit')}</th>
+            <th style={{ ...thStyle, padding: '6px 8px', textAlign: 'right' }}>{tc('pos_retail.txnDetailCost')}</th>
+            <th style={{ ...thStyle, padding: '6px 8px', textAlign: 'right' }}>{tc('pos_retail.txnDetailMargin')}</th>
+            <th style={{ ...thStyle, padding: '6px 8px', textAlign: 'right' }}>{tc('pos_retail.txnDetailLineTotal')}</th>
           </tr>
         </thead>
         <tbody>
@@ -665,12 +673,12 @@ function TxnDetail({ t, symbol }: { t: any; symbol: string }) {
         </tbody>
       </table>
       <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 13, color: 'var(--tx2)' }}>
-        <span>Subtotal: <b style={{ color: 'var(--tx)' }}>{fmt(symbol, t.subtotal || 0)}</b></span>
-        <span>Discount: <b style={{ color: t.discount_amount ? RED : 'var(--tx)' }}>{fmt(symbol, t.discount_amount || 0)}</b></span>
-        <span>Tax: <b style={{ color: 'var(--tx)' }}>{fmt(symbol, t.tax_amount || 0)}</b></span>
-        <span>Payment: <b style={{ color: 'var(--tx)', textTransform: 'capitalize' }}>{t.payment_type || '—'}</b></span>
-        <span>Total: <b style={{ color: ACC }}>{fmt(symbol, t.total || 0)}</b></span>
-        {t.pos_customers?.name && <span>Customer: <b style={{ color: 'var(--tx)' }}>{t.pos_customers.name}</b></span>}
+        <span>{tc('pos_retail.txnDetailSubtotal')}<b style={{ color: 'var(--tx)' }}>{fmt(symbol, t.subtotal || 0)}</b></span>
+        <span>{tc('pos_retail.txnDetailDiscount')}<b style={{ color: t.discount_amount ? RED : 'var(--tx)' }}>{fmt(symbol, t.discount_amount || 0)}</b></span>
+        <span>{tc('pos_retail.txnDetailTax')}<b style={{ color: 'var(--tx)' }}>{fmt(symbol, t.tax_amount || 0)}</b></span>
+        <span>{tc('pos_retail.txnDetailPayment')}<b style={{ color: 'var(--tx)', textTransform: 'capitalize' }}>{t.payment_type || '—'}</b></span>
+        <span>{tc('pos_retail.txnDetailTotal')}<b style={{ color: ACC }}>{fmt(symbol, t.total || 0)}</b></span>
+        {t.pos_customers?.name && <span>{tc('pos_retail.txnDetailCustomer')}<b style={{ color: 'var(--tx)' }}>{t.pos_customers.name}</b></span>}
       </div>
     </div>
   )
@@ -688,6 +696,7 @@ interface ProductRow {
 }
 
 function ProductsSub({ symbol, completedTxns, inv }: { symbol: string; completedTxns: any[]; inv: any[] }) {
+  const { tc } = useLang()
   const [sortKey, setSortKey] = useState('revenue30')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [search, setSearch] = useState('')
@@ -789,58 +798,58 @@ function ProductsSub({ symbol, completedTxns, inv }: { symbol: string; completed
     return r
   }, [rows, search, catFilter, sortKey, sortDir])
 
-  if (!inv.length) return <EmptyState icon="📦" title="No inventory" hint="Add products to the catalog to unlock analytics." />
+  if (!inv.length) return <EmptyState icon="📦" title={tc('pos_retail.emptyNoInventory')} hint={tc('pos_retail.emptyNoInventoryHint')} />
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 18 }}>
-        <Card title="ABC Analysis">
+        <Card title={tc('pos_retail.cardAbcAnalysis')}>
           <StackedBar a={abcDist.A} b={abcDist.B} c={abcDist.C} />
           <div style={{ marginTop: 12 }}>
             <Legend items={[
-              { label: 'A — top revenue (~80%)', color: GREEN, value: `${abcDist.A} SKUs` },
-              { label: 'B — mid revenue', color: AMBER, value: `${abcDist.B} SKUs` },
-              { label: 'C — long tail', color: RED, value: `${abcDist.C} SKUs` },
+              { label: tc('pos_retail.abcLegendA'), color: GREEN, value: tc('pos_retail.abcSkus', { n: abcDist.A }) },
+              { label: tc('pos_retail.abcLegendB'), color: AMBER, value: tc('pos_retail.abcSkus', { n: abcDist.B }) },
+              { label: tc('pos_retail.abcLegendC'), color: RED, value: tc('pos_retail.abcSkus', { n: abcDist.C }) },
             ]} />
           </div>
           <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 10, lineHeight: 1.5 }}>
-            Focus reorder budget on A items — they drive most of your revenue. Trim C-class slow movers.
+            {tc('pos_retail.abcTip')}
           </div>
         </Card>
 
-        <Card title="Inventory Valuation">
+        <Card title={tc('pos_retail.cardInventoryValuation')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <ValRow label="At Cost" value={fmt(symbol, valuation.cost)} accent={AMBER} />
-            <ValRow label="At Retail" value={fmt(symbol, valuation.retail)} accent={ACC} />
-            <ValRow label="Potential Margin" value={fmt(symbol, valuation.retail - valuation.cost)} accent={GREEN} />
-            <ValRow label="Units in Stock" value={fmtInt(valuation.units)} />
+            <ValRow label={tc('pos_retail.valAtCost')} value={fmt(symbol, valuation.cost)} accent={AMBER} />
+            <ValRow label={tc('pos_retail.valAtRetail')} value={fmt(symbol, valuation.retail)} accent={ACC} />
+            <ValRow label={tc('pos_retail.valPotentialMargin')} value={fmt(symbol, valuation.retail - valuation.cost)} accent={GREEN} />
+            <ValRow label={tc('pos_retail.valUnitsInStock')} value={fmtInt(valuation.units)} />
           </div>
         </Card>
 
-        <Card title="Dead Stock Alert" right={<span style={{ fontSize: 12, color: deadStock.length ? RED : GREEN, fontWeight: 700 }}>{deadStock.length}</span>}>
+        <Card title={tc('pos_retail.cardDeadStockAlert')} right={<span style={{ fontSize: 12, color: deadStock.length ? RED : GREEN, fontWeight: 700 }}>{deadStock.length}</span>}>
           {deadStock.length ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 180, overflowY: 'auto' }}>
               {deadStock.slice(0, 8).map((r) => (
                 <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 8, borderRadius: 8, background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.18)' }}>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{r.name}</div>
-                    <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{r.daysSinceSold === 9999 ? 'never sold' : `${r.daysSinceSold}d since last sale`} · {r.stock} in stock</div>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{r.daysSinceSold === 9999 ? tc('pos_retail.deadStockNeverSold') : tc('pos_retail.deadStockDaysSince', { n: r.daysSinceSold })} · {r.stock} in stock</div>
                   </div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: RED }}>{fmt(symbol, r.carryingCost)}</div>
                 </div>
               ))}
             </div>
-          ) : <EmptyState icon="✅" title="No dead stock" hint="Everything is moving." />}
+          ) : <EmptyState icon="✅" title={tc('pos_retail.emptyNoDeadStock')} hint={tc('pos_retail.emptyNoDeadStockHint')} />}
         </Card>
       </div>
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-        <input placeholder="Search product or SKU…" value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 220 }} />
+        <input placeholder={tc('pos_retail.filterSearchProduct')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 220 }} />
         <select value={catFilter} onChange={(e) => setCatFilter(e.target.value)} style={selectStyle}>
-          <option value="all">All categories</option>
+          <option value="all">{tc('pos_retail.filterAllCategories')}</option>
           {categories.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
-        <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{display.length} products</span>
+        <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_retail.productsCount', { n: display.length })}</span>
       </div>
 
       <div style={{ borderRadius: 12, border: '1px solid var(--b)', overflow: 'hidden', background: 'var(--sf)' }}>
@@ -848,19 +857,19 @@ function ProductsSub({ symbol, completedTxns, inv }: { symbol: string; completed
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: 'var(--ev)' }}>
-                <th style={{ ...thStyle, width: 44 }}>ABC</th>
-                <SortHeader label="Name" col="name" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortHeader label="SKU" col="sku" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortHeader label="Category" col="category" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortHeader label="Stock" col="stock" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortHeader label="Price" col="price" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortHeader label="Cost" col="cost" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortHeader label="Margin %" col="margin" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortHeader label="Sold 30d" col="unitsSold30" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortHeader label="Rev 30d" col="revenue30" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortHeader label="Sell-Thru" col="sellThrough" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortHeader label="GMROI" col="gmroi" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortHeader label="Stock Age" col="daysSinceSold" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <th style={{ ...thStyle, width: 44 }}>{tc('pos_retail.colAbcClass')}</th>
+                <SortHeader label={tc('pos_retail.colName')} col="name" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortHeader label={tc('pos_retail.colSku')} col="sku" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortHeader label={tc('pos_retail.colCategory')} col="category" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortHeader label={tc('pos_retail.colStock')} col="stock" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortHeader label={tc('pos_retail.colPrice')} col="price" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortHeader label={tc('pos_retail.colCostHdr')} col="cost" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortHeader label={tc('pos_retail.colMarginPct')} col="margin" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortHeader label={tc('pos_retail.colSold30d')} col="unitsSold30" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortHeader label={tc('pos_retail.colRev30d')} col="revenue30" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortHeader label={tc('pos_retail.colSellThru')} col="sellThrough" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortHeader label={tc('pos_retail.colGmroi')} col="gmroi" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortHeader label={tc('pos_retail.colStockAge')} col="daysSinceSold" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               </tr>
             </thead>
             <tbody>
@@ -871,8 +880,8 @@ function ProductsSub({ symbol, completedTxns, inv }: { symbol: string; completed
                     <td style={tdStyle}><ABCBadge cls={r.abc} /></td>
                     <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--tx)' }}>
                       {r.name}
-                      {lowStock && <span style={{ fontSize: 10, fontWeight: 700, color: AMBER, marginLeft: 6 }}>LOW</span>}
-                      {r.deadStock && <span style={{ fontSize: 10, fontWeight: 700, color: RED, marginLeft: 6 }}>DEAD</span>}
+                      {lowStock && <span style={{ fontSize: 10, fontWeight: 700, color: AMBER, marginLeft: 6 }}>{tc('pos_retail.badgeLow')}</span>}
+                      {r.deadStock && <span style={{ fontSize: 10, fontWeight: 700, color: RED, marginLeft: 6 }}>{tc('pos_retail.badgeDead')}</span>}
                     </td>
                     <td style={{ ...tdStyle, color: 'var(--tx3)', fontFamily: 'monospace', fontSize: 12 }}>{r.sku}</td>
                     <td style={tdStyle}>{r.category}</td>
@@ -884,19 +893,18 @@ function ProductsSub({ symbol, completedTxns, inv }: { symbol: string; completed
                     <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600, color: 'var(--tx)' }}>{fmt(symbol, r.revenue30)}</td>
                     <td style={{ ...tdStyle, textAlign: 'right' }}>{pct(r.sellThrough)}</td>
                     <td style={{ ...tdStyle, textAlign: 'right', color: r.gmroi >= 2 ? GREEN : r.gmroi >= 1 ? AMBER : RED, fontWeight: 600 }}>{r.gmroi.toFixed(2)}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', color: r.daysSinceSold >= 90 ? RED : r.daysSinceSold >= 30 ? AMBER : 'var(--tx3)' }}>{r.daysSinceSold === 9999 ? 'never' : `${r.daysSinceSold}d`}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', color: r.daysSinceSold >= 90 ? RED : r.daysSinceSold >= 30 ? AMBER : 'var(--tx3)' }}>{r.daysSinceSold === 9999 ? tc('pos_retail.stockAgeNever') : tc('pos_retail.stockAgeDays', { n: r.daysSinceSold })}</td>
                   </tr>
                 )
               })}
             </tbody>
           </table>
         </div>
-        {!display.length && <EmptyState icon="🔍" title="No matching products" />}
+        {!display.length && <EmptyState icon="🔍" title={tc('pos_retail.emptyNoMatchingProducts')} />}
       </div>
 
       <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.6, padding: '0 4px' }}>
-        <b style={{ color: 'var(--tx2)' }}>GMROI</b> = gross margin $ ÷ average inventory cost. Above 2.0 (green) is healthy; below 1.0 (red) means inventory isn't earning its keep.
-        <b style={{ color: 'var(--tx2)' }}> Sell-through</b> = units sold ÷ (units sold + stock on hand) over the last 30 days.
+        {tc('pos_retail.gmroiTip')}
       </div>
     </div>
   )
@@ -921,6 +929,7 @@ interface CustomerRow {
 }
 
 function CustomersSub({ symbol, txns }: { symbol: string; txns: any[] }) {
+  const { tc } = useLang()
   const [sortKey, setSortKey] = useState('spend')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -983,40 +992,40 @@ function CustomersSub({ symbol, txns }: { symbol: string; txns: any[] }) {
 
   const topSpenders = useMemo(() => [...customers].sort((a, b) => b.spend - a.spend).slice(0, 5), [customers])
 
-  if (!customers.length) return <EmptyState icon="👥" title="No customer data" hint="Attach customers to transactions to build profiles." />
+  if (!customers.length) return <EmptyState icon="👥" title={tc('pos_retail.emptyNoCustomers')} hint={tc('pos_retail.emptyNoCustomersHint')} />
 
   const segColors: Record<string, string> = { New: ACC, Returning: '#3b82f6', Loyal: GREEN, Lapsed: RED }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 18 }}>
-        <Card title="Customer Segments">
+        <Card title={tc('pos_retail.cardCustomerSegments')}>
           <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
             <DonutChart segments={[
-              { label: 'New', value: segments.New, color: ACC },
-              { label: 'Returning', value: segments.Returning, color: '#3b82f6' },
-              { label: 'Loyal', value: segments.Loyal, color: GREEN },
-              { label: 'Lapsed', value: segments.Lapsed, color: RED },
+              { label: tc('pos_retail.segNew'), value: segments.New, color: ACC },
+              { label: tc('pos_retail.segReturning'), value: segments.Returning, color: '#3b82f6' },
+              { label: tc('pos_retail.segLoyal'), value: segments.Loyal, color: GREEN },
+              { label: tc('pos_retail.segLapsed'), value: segments.Lapsed, color: RED },
             ]} />
             <div style={{ flex: 1, minWidth: 130 }}>
               <Legend items={[
-                { label: 'New (1 order)', color: ACC, value: `${segments.New}` },
-                { label: 'Returning (2-5)', color: '#3b82f6', value: `${segments.Returning}` },
-                { label: 'Loyal (6+)', color: GREEN, value: `${segments.Loyal}` },
-                { label: 'Lapsed (90d+)', color: RED, value: `${segments.Lapsed}` },
+                { label: tc('pos_retail.legendNew'), color: ACC, value: `${segments.New}` },
+                { label: tc('pos_retail.legendReturning'), color: '#3b82f6', value: `${segments.Returning}` },
+                { label: tc('pos_retail.legendLoyal'), color: GREEN, value: `${segments.Loyal}` },
+                { label: tc('pos_retail.legendLapsed'), color: RED, value: `${segments.Lapsed}` },
               ]} />
             </div>
           </div>
         </Card>
 
-        <Card title="Top Spenders">
+        <Card title={tc('pos_retail.cardTopSpenders')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {topSpenders.map((c, i) => (
               <div key={c.phone} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 8, borderRadius: 8, background: 'var(--ev)' }}>
                 <span style={{ fontSize: 13, fontWeight: 800, color: ACC, width: 20 }}>#{i + 1}</span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{c.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{c.phone} · {c.orders} orders</div>
+                  <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{c.phone} · {tc('pos_retail.topSpenderOrders', { n: c.orders })}</div>
                 </div>
                 <span style={{ fontSize: 14, fontWeight: 700, color: GREEN }}>{fmt(symbol, c.spend)}</span>
               </div>
@@ -1027,13 +1036,13 @@ function CustomersSub({ symbol, txns }: { symbol: string; txns: any[] }) {
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         <select value={segFilter} onChange={(e) => setSegFilter(e.target.value)} style={selectStyle}>
-          <option value="all">All segments</option>
-          <option value="New">New</option>
-          <option value="Returning">Returning</option>
-          <option value="Loyal">Loyal</option>
-          <option value="Lapsed">Lapsed</option>
+          <option value="all">{tc('pos_retail.filterAllSegments')}</option>
+          <option value="New">{tc('pos_retail.segNew')}</option>
+          <option value="Returning">{tc('pos_retail.segReturning')}</option>
+          <option value="Loyal">{tc('pos_retail.segLoyal')}</option>
+          <option value="Lapsed">{tc('pos_retail.segLapsed')}</option>
         </select>
-        <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{display.length} customers</span>
+        <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_retail.customersCount', { n: display.length })}</span>
       </div>
 
       <div style={{ borderRadius: 12, border: '1px solid var(--b)', overflow: 'hidden', background: 'var(--sf)' }}>
@@ -1041,13 +1050,13 @@ function CustomersSub({ symbol, txns }: { symbol: string; txns: any[] }) {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: 'var(--ev)' }}>
-                <SortHeader label="Name" col="name" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <th style={thStyle}>Phone</th>
-                <th style={thStyle}>Segment</th>
-                <SortHeader label="Orders" col="orders" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortHeader label="Total Spend" col="spend" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortHeader label="Avg Basket" col="avgBasket" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortHeader label="Last Visit" col="lastVisit" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortHeader label={tc('pos_retail.colName')} col="name" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <th style={thStyle}>{tc('pos_retail.colPhone')}</th>
+                <th style={thStyle}>{tc('pos_retail.colSegment')}</th>
+                <SortHeader label={tc('pos_retail.colOrders')} col="orders" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortHeader label={tc('pos_retail.colTotalSpend')} col="spend" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortHeader label={tc('pos_retail.colAvgBasket')} col="avgBasket" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortHeader label={tc('pos_retail.colLastVisit')} col="lastVisit" align="right" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               </tr>
             </thead>
             <tbody>
@@ -1069,12 +1078,12 @@ function CustomersSub({ symbol, txns }: { symbol: string; txns: any[] }) {
                     {open && (
                       <tr>
                         <td colSpan={7} style={{ padding: 16, borderTop: '1px solid var(--b)', background: 'var(--ev)' }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>Purchase History — LTV {fmt(symbol, c.ltv)}</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx2)', marginBottom: 8 }}>{tc('pos_retail.purchaseHistoryLtv', { amount: fmt(symbol, c.ltv) })}</div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                             {c.history.map((h) => (
                               <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '6px 0', borderBottom: '1px solid var(--b)' }}>
                                 <span style={{ color: 'var(--tx3)' }}>{shortId(h.id)} · {fmtDateTime(h.date)}</span>
-                                <span style={{ color: 'var(--tx2)' }}>{h.items} items · <b style={{ color: 'var(--tx)' }}>{fmt(symbol, h.total)}</b></span>
+                                <span style={{ color: 'var(--tx2)' }}>{tc('pos_retail.purchaseHistoryItems', { n: h.items })} · <b style={{ color: 'var(--tx)' }}>{fmt(symbol, h.total)}</b></span>
                               </div>
                             ))}
                           </div>
@@ -1096,6 +1105,7 @@ function CustomersSub({ symbol, txns }: { symbol: string; txns: any[] }) {
 // PROMOTIONS
 // ===================================================================
 function PromotionsSub({ symbol, txns }: { symbol: string; txns: any[] }) {
+  const { tc } = useLang()
   const m = useMemo(() => {
     const completed = txns.filter((t) => !isRefunded(t))
     let totalDiscount = 0, discountedRev = 0, nonDiscountedRev = 0, discountedCount = 0
@@ -1118,38 +1128,38 @@ function PromotionsSub({ symbol, txns }: { symbol: string; txns: any[] }) {
     return { totalDiscount, avgDiscountPct, discountedCount, discountedRev, nonDiscountedRev, mostDiscounted, completedCount: completed.length }
   }, [txns])
 
-  if (!txns.length) return <EmptyState icon="🏷️" title="No promotion data" hint="Discounts applied at checkout will be analyzed here." />
+  if (!txns.length) return <EmptyState icon="🏷️" title={tc('pos_retail.emptyNoPromoData')} hint={tc('pos_retail.emptyNoPromoDataHint')} />
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
-        <KpiCard label="Total Discounts" value={fmt(symbol, m.totalDiscount)} accent={AMBER} />
-        <KpiCard label="Avg Discount %" value={pct(m.avgDiscountPct)} />
-        <KpiCard label="Discounted Txns" value={fmtInt(m.discountedCount)} sub={`of ${m.completedCount} sales`} />
-        <KpiCard label="Discount Rate" value={pct(m.completedCount ? (m.discountedCount / m.completedCount) * 100 : 0)} accent={ACC} />
+        <KpiCard label={tc('pos_retail.kpiTotalDiscounts')} value={fmt(symbol, m.totalDiscount)} accent={AMBER} />
+        <KpiCard label={tc('pos_retail.kpiAvgDiscountPct')} value={pct(m.avgDiscountPct)} />
+        <KpiCard label={tc('pos_retail.kpiDiscountedTxns')} value={fmtInt(m.discountedCount)} sub={tc('pos_retail.kpiDiscountTxnsSub', { n: m.completedCount })} />
+        <KpiCard label={tc('pos_retail.kpiDiscountRate')} value={pct(m.completedCount ? (m.discountedCount / m.completedCount) * 100 : 0)} accent={ACC} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 18 }}>
-        <Card title="Discount Impact">
+        <Card title={tc('pos_retail.cardDiscountImpact')}>
           <HBars data={[
-            { label: 'Discounted revenue', value: m.discountedRev, color: AMBER },
-            { label: 'Full-price revenue', value: m.nonDiscountedRev, color: ACC },
+            { label: tc('pos_retail.discountedRevLabel'), value: m.discountedRev, color: AMBER },
+            { label: tc('pos_retail.fullPriceRevLabel'), value: m.nonDiscountedRev, color: ACC },
           ]} symbol={symbol} />
           <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 12, lineHeight: 1.5 }}>
-            Compares revenue from transactions that used a discount against full-price sales.
+            {tc('pos_retail.discountImpactTip')}
           </div>
         </Card>
 
-        <Card title="Most Discounted Items">
-          {m.mostDiscounted.length ? <HBars data={m.mostDiscounted} symbol={symbol} /> : <EmptyState icon="🏷️" title="No discounted items" />}
+        <Card title={tc('pos_retail.cardMostDiscountedItems')}>
+          {m.mostDiscounted.length ? <HBars data={m.mostDiscounted} symbol={symbol} /> : <EmptyState icon="🏷️" title={tc('pos_retail.emptyNoDiscountedItems')} />}
         </Card>
       </div>
 
-      <Card title="Create a Promotion">
+      <Card title={tc('pos_retail.cardCreatePromotion')}>
         <div style={{ padding: '24px 16px', textAlign: 'center', border: '1px dashed var(--b)', borderRadius: 10, background: ACC_BG }}>
           <div style={{ fontSize: 28, marginBottom: 6 }}>✨</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>Promotion builder coming soon</div>
-          <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 4 }}>Schedule percentage, fixed-amount, and BOGO offers across products and categories.</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_retail.promoComingSoon')}</div>
+          <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 4 }}>{tc('pos_retail.promoComingSoonSub')}</div>
         </div>
       </Card>
     </div>
@@ -1160,6 +1170,7 @@ function PromotionsSub({ symbol, txns }: { symbol: string; txns: any[] }) {
 // RETURNS
 // ===================================================================
 function ReturnsSub({ symbol, refundedTxns, txns }: { symbol: string; refundedTxns: any[]; txns: any[] }) {
+  const { tc } = useLang()
   const m = useMemo(() => {
     const totalRefund = refundedTxns.reduce((s, t) => s + Math.abs(t.total || 0), 0)
     const returnRate = txns.length ? (refundedTxns.length / txns.length) * 100 : 0
@@ -1199,20 +1210,20 @@ function ReturnsSub({ symbol, refundedTxns, txns }: { symbol: string; refundedTx
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
-        <KpiCard label="Total Refunds" value={fmt(symbol, m.totalRefund)} accent={RED} />
-        <KpiCard label="Return Rate" value={pct(m.returnRate)} accent={m.returnRate > 5 ? RED : GREEN} />
-        <KpiCard label="Refunded Txns" value={fmtInt(refundedTxns.length)} />
+        <KpiCard label={tc('pos_retail.kpiTotalRefunds')} value={fmt(symbol, m.totalRefund)} accent={RED} />
+        <KpiCard label={tc('pos_retail.kpiReturnRate')} value={pct(m.returnRate)} accent={m.returnRate > 5 ? RED : GREEN} />
+        <KpiCard label={tc('pos_retail.kpiRefundedTxns')} value={fmtInt(refundedTxns.length)} />
       </div>
 
-      <Card title="Refund Trend — Last 8 Weeks">
-        {refundedTxns.length ? <LineChart points={m.weekly} symbol={symbol} color={RED} /> : <EmptyState icon="📉" title="No refund history" />}
+      <Card title={tc('pos_retail.cardRefundTrend')}>
+        {refundedTxns.length ? <LineChart points={m.weekly} symbol={symbol} color={RED} /> : <EmptyState icon="📉" title={tc('pos_retail.emptyNoRefundHistory')} />}
       </Card>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 18 }}>
-        <Card title="Most Returned Products">
-          {m.topReturned.length ? <HBars data={m.topReturned} symbol={symbol} /> : <EmptyState icon="📦" title="No returned products" />}
+        <Card title={tc('pos_retail.cardMostReturnedProducts')}>
+          {m.topReturned.length ? <HBars data={m.topReturned} symbol={symbol} /> : <EmptyState icon="📦" title={tc('pos_retail.emptyNoReturnedProducts')} />}
         </Card>
-        <Card title="Return Reasons">
+        <Card title={tc('pos_retail.cardReturnReasons')}>
           {m.reasonList.length ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {m.reasonList.map((r) => (
@@ -1222,21 +1233,21 @@ function ReturnsSub({ symbol, refundedTxns, txns }: { symbol: string; refundedTx
                 </div>
               ))}
             </div>
-          ) : <EmptyState icon="📝" title="No reason data" hint="Capture reasons at refund time to populate this." />}
+          ) : <EmptyState icon="📝" title={tc('pos_retail.emptyNoReasonData')} hint={tc('pos_retail.emptyNoReasonDataHint')} />}
         </Card>
       </div>
 
       <div style={{ borderRadius: 12, border: '1px solid var(--b)', overflow: 'hidden', background: 'var(--sf)' }}>
-        <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)', fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>Refunded Transactions</div>
+        <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--b)', fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_retail.refundedTxnsTitle')}</div>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: 'var(--ev)' }}>
-                <th style={thStyle}>Date</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Items Returned</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Refund Amount</th>
-                <th style={thStyle}>Payment</th>
-                <th style={thStyle}>Cashier</th>
+                <th style={thStyle}>{tc('pos_retail.colDate')}</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>{tc('pos_retail.colItemsReturned')}</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>{tc('pos_retail.colRefundAmount')}</th>
+                <th style={thStyle}>{tc('pos_retail.colPayment')}</th>
+                <th style={thStyle}>{tc('pos_retail.colCashier')}</th>
               </tr>
             </thead>
             <tbody>
@@ -1256,7 +1267,7 @@ function ReturnsSub({ symbol, refundedTxns, txns }: { symbol: string; refundedTx
             </tbody>
           </table>
         </div>
-        {!refundedTxns.length && <EmptyState icon="✅" title="No returns" hint="Refunded transactions will appear here." />}
+        {!refundedTxns.length && <EmptyState icon="✅" title={tc('pos_retail.emptyNoReturns')} hint={tc('pos_retail.emptyNoReturnsHint')} />}
       </div>
     </div>
   )

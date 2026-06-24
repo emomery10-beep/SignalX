@@ -1,0 +1,18 @@
+{
+  "noData": "Nog geen verkoopgegevens",
+  "noDataAsk": "Vraag AskBiz →",
+  "noDataAskPrompt": "Op welke producten moet ik me richten?",
+  "title": "Topproducten",
+  "kpiProducts": "Producten",
+  "kpiAvgMargin": "Gem. marge",
+  "kpiUnitsSold": "Verkochte eenheden",
+  "colRank": "#",
+  "colProduct": "Product",
+  "colRevenue": "Omzet",
+  "colQty": "Aantal",
+  "colMargin": "Marge",
+  "qtySold": "{n} verkocht",
+  "footnote": "Gerangschikt op omzet · op basis van POS-gegevens",
+  "collapse": "← Inklappen",
+  "tapToAnalyse": "Tik om te analyseren →"
+}

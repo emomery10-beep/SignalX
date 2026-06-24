@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Decision {
   id: string
@@ -29,14 +30,14 @@ const TYPE_COLORS: Record<string, string> = {
   strategy: '#8B5CF6',
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  pricing: 'Pricing', stock: 'Stock', supplier: 'Supplier', product: 'Product', strategy: 'Strategy',
+const TYPE_LABEL_KEYS: Record<string, string> = {
+  pricing: 'typeLabels_pricing', stock: 'typeLabels_stock', supplier: 'typeLabels_supplier', product: 'typeLabels_product', strategy: 'typeLabels_strategy',
 }
 
-function verdictConfig(verdict: string | null | undefined) {
-  if (verdict === 'good_call') return { label: 'Good call', color: '#22C55E', bg: 'rgba(34,197,94,0.1)' }
-  if (verdict === 'bad_call')  return { label: "Didn't work", color: '#EF4444', bg: 'rgba(239,68,68,0.1)' }
-  if (verdict === 'neutral')   return { label: 'Mixed', color: '#F59E0B', bg: 'rgba(245,158,11,0.1)' }
+function verdictConfig(verdict: string | null | undefined, tc: (k: string) => string) {
+  if (verdict === 'good_call') return { label: tc('intel_decisiontimeline.verdictGood'), color: '#22C55E', bg: 'rgba(34,197,94,0.1)' }
+  if (verdict === 'bad_call')  return { label: tc('intel_decisiontimeline.verdictBad'),  color: '#EF4444', bg: 'rgba(239,68,68,0.1)' }
+  if (verdict === 'neutral')   return { label: tc('intel_decisiontimeline.verdictNeutral'), color: '#F59E0B', bg: 'rgba(245,158,11,0.1)' }
   return null
 }
 
@@ -51,15 +52,16 @@ function formatDate(iso: string) {
 }
 
 export default function DecisionTimeline({ decisions, onAsk }: DecisionTimelineProps) {
+  const { tc } = useLang()
   const [selected, setSelected] = useState<string | null>(null)
 
   if (!decisions.length) {
     return (
       <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--tx3)' }}>
         <div style={{ fontSize: 28, marginBottom: 12 }}>📝</div>
-        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>No decisions logged yet</div>
+        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 6 }}>{tc('intel_decisiontimeline.emptyTitle')}</div>
         <div style={{ fontSize: 12, lineHeight: 1.6, maxWidth: 280, margin: '0 auto' }}>
-          Log your first business decision and AskBiz will check back in 6 weeks to see how it played out.
+          {tc('intel_decisiontimeline.emptyDesc')}
         </div>
       </div>
     )
@@ -79,22 +81,22 @@ export default function DecisionTimeline({ decisions, onAsk }: DecisionTimelineP
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 20, padding: '12px 16px', borderRadius: 12, background: 'var(--sf)', border: '1px solid var(--b)' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora)' }}>{decisions.length}</div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Total decisions</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_decisiontimeline.statTotal')}</div>
         </div>
         <div style={{ width: 1, background: 'var(--b)', alignSelf: 'stretch' }} />
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora)' }}>{reviewed}</div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Reviewed</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_decisiontimeline.statReviewed')}</div>
         </div>
         <div style={{ width: 1, background: 'var(--b)', alignSelf: 'stretch' }} />
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 20, fontWeight: 700, color: '#22C55E', fontFamily: 'var(--font-sora)' }}>{goodCalls}</div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Good calls</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_decisiontimeline.statGoodCalls')}</div>
         </div>
         <div style={{ width: 1, background: 'var(--b)', alignSelf: 'stretch' }} />
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 20, fontWeight: 700, color: '#EF4444', fontFamily: 'var(--font-sora)' }}>{badCalls}</div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Missed calls</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_decisiontimeline.statMissedCalls')}</div>
         </div>
         {reviewed > 0 && (
           <>
@@ -103,7 +105,7 @@ export default function DecisionTimeline({ decisions, onAsk }: DecisionTimelineP
               <div style={{ fontSize: 20, fontWeight: 700, color: '#6366F1', fontFamily: 'var(--font-sora)' }}>
                 {Math.round((goodCalls / reviewed) * 100)}%
               </div>
-              <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Success rate</div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_decisiontimeline.statSuccessRate')}</div>
             </div>
           </>
         )}
@@ -112,7 +114,7 @@ export default function DecisionTimeline({ decisions, onAsk }: DecisionTimelineP
             <div style={{ width: 1, background: 'var(--b)', alignSelf: 'stretch' }} />
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 20, fontWeight: 700, color: '#F59E0B', fontFamily: 'var(--font-sora)' }}>{dueCt}</div>
-              <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Due for review</div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_decisiontimeline.statDueForReview')}</div>
             </div>
           </>
         )}
@@ -128,7 +130,7 @@ export default function DecisionTimeline({ decisions, onAsk }: DecisionTimelineP
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {sorted.map((decision, i) => {
-            const verdict  = verdictConfig(decision.review_verdict)
+            const verdict  = verdictConfig(decision.review_verdict, tc)
             const due      = isReviewDue(decision)
             const typeCol  = TYPE_COLORS[decision.decision_type] || '#6b6760'
             const isOpen   = selected === decision.id
@@ -171,7 +173,7 @@ export default function DecisionTimeline({ decisions, onAsk }: DecisionTimelineP
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
                       {due && !verdict && (
                         <span style={{ fontSize: 10, fontWeight: 700, color: '#F59E0B', background: 'rgba(245,158,11,0.12)', padding: '2px 7px', borderRadius: 9999 }}>
-                          Review due
+                          {tc('intel_decisiontimeline.badgeReviewDue')}
                         </span>
                       )}
                       {verdict && (
@@ -184,7 +186,7 @@ export default function DecisionTimeline({ decisions, onAsk }: DecisionTimelineP
                   {/* Meta row */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 11, fontWeight: 600, color: typeCol, background: typeCol + '12', padding: '2px 7px', borderRadius: 9999 }}>
-                      {TYPE_LABELS[decision.decision_type] || decision.decision_type}
+                      {tc('intel_decisiontimeline.' + (TYPE_LABEL_KEYS[decision.decision_type] || 'typeLabels_strategy'))}
                     </span>
                     <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{formatDate(decision.created_at)}</span>
                     {decision.product && <span style={{ fontSize: 11, color: 'var(--tx3)' }}>· {decision.product}</span>}
@@ -200,19 +202,19 @@ export default function DecisionTimeline({ decisions, onAsk }: DecisionTimelineP
                         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                           {decision.before_value && (
                             <div style={{ fontSize: 11, padding: '4px 10px', borderRadius: 8, background: 'var(--ev)', color: 'var(--tx3)' }}>
-                              Before: <strong style={{ color: 'var(--tx2)' }}>{decision.before_value}</strong>
+                              {tc('intel_decisiontimeline.labelBefore')} <strong style={{ color: 'var(--tx2)' }}>{decision.before_value}</strong>
                             </div>
                           )}
                           {decision.after_value && (
                             <div style={{ fontSize: 11, padding: '4px 10px', borderRadius: 8, background: 'var(--ev)', color: 'var(--tx3)' }}>
-                              After: <strong style={{ color: typeCol }}>{decision.after_value}</strong>
+                              {tc('intel_decisiontimeline.labelAfter')} <strong style={{ color: typeCol }}>{decision.after_value}</strong>
                             </div>
                           )}
                         </div>
                       )}
                       {decision.review_at && (
                         <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
-                          {decision.reviewed ? `Reviewed ${formatDate(decision.review_at)}` : `Review scheduled: ${formatDate(decision.review_at)}`}
+                          {decision.reviewed ? tc('intel_decisiontimeline.reviewedOn', { date: formatDate(decision.review_at) }) : tc('intel_decisiontimeline.reviewScheduled', { date: formatDate(decision.review_at) })}
                         </div>
                       )}
                       {decision.review_result && (
@@ -221,10 +223,10 @@ export default function DecisionTimeline({ decisions, onAsk }: DecisionTimelineP
                         </div>
                       )}
                       <button
-                        onClick={e => { e.stopPropagation(); onAsk(`Analyse this decision I made: ${decision.title}. ${decision.description || ''}`) }}
+                        onClick={e => { e.stopPropagation(); onAsk(tc('intel_decisiontimeline.askPrompt', { title: decision.title, description: decision.description || '' })) }}
                         style={{ alignSelf: 'flex-start', padding: '6px 12px', borderRadius: 8, border: 'none', background: typeCol, color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                       >
-                        Ask AskBiz →
+                        {tc('intel_decisiontimeline.askAskBiz')}
                       </button>
                     </div>
                   )}

@@ -1,0 +1,12 @@
+{
+  "timeMachine": "Time Machine",
+  "askAi": "KI fragen",
+  "askAiPrompt": "Wie hat sich die Gesundheit meines Unternehmens im Laufe der Zeit verändert? Was sind die wichtigsten Trends und worauf sollte ich mich konzentrieren?",
+  "now": "Jetzt",
+  "clickBarToCompare": "Balken anklicken zum Vergleichen",
+  "analysingChanges": "Änderungen seit {date} werden analysiert...",
+  "changesSince": "Änderungen seit {date}",
+  "keyEvents": "WICHTIGE EREIGNISSE",
+  "barTooltip": "{date}: {score}/100",
+  "totalChangePts": "{pts} Pkt."
+}

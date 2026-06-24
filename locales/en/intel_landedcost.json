@@ -1,0 +1,82 @@
+{
+  "title": "Landed Cost Calculator",
+  "subtitle": "Calculate your true cost per unit including freight, duty, VAT, and FX — then see your actual margin.",
+
+  "sectionProduct": "Product details",
+  "labelOrigin": "Origin",
+  "labelQuantity": "Quantity",
+  "placeholderQuantity": "e.g. 500",
+  "labelSupplierPrice": "Supplier price / unit ({sym})",
+  "placeholderSupplierPrice": "e.g. 8.50",
+  "labelSellingPrice": "Selling price / unit ({sym})",
+  "placeholderSellingPrice": "e.g. 24.99",
+  "labelFxBuffer": "FX buffer (%)",
+  "placeholderFxBuffer": "2",
+  "labelDutyCategory": "Duty category",
+  "labelCustomDutyRate": "Custom duty rate (%)",
+  "placeholderCustomDutyRate": "e.g. 6.5",
+
+  "sectionShipping": "Shipping & handling",
+  "placeholderCostDescription": "Cost description",
+
+  "btnCalculate": "Calculate →",
+
+  "alertOverEstimatingTitle": "You were over-estimating margin by {gap}",
+  "alertOverEstimatingBody": "Naive margin: {naive} → True margin: {true}",
+
+  "statLandedCostPerUnit": "Landed cost / unit",
+  "statActualMargin": "Actual margin",
+  "statBreakEvenPrice": "Break-even price",
+
+  "importDutyLabel": "Import duty ({rate})",
+  "supplierCostLabel": "Supplier cost (incl. FX buffer)",
+  "costFallbackLabel": "Cost {n}",
+
+  "importVatLabel": "Import VAT:",
+  "importVatRecoverable": "{amount} (recoverable if VAT registered)",
+  "vatToggleHide": "Hide",
+  "vatToggleShow": "What is this?",
+  "vatExplanation": "Import VAT is paid at the border but recoverable on your next VAT return if you are VAT registered. It is a cash flow cost — typically 30-60 days — not a permanent cost.",
+
+  "btnAskAskBiz": "Ask AskBiz to analyse this →",
+  "btnReset": "Reset",
+
+  "askPrompt": "What is my true landed cost and margin? I import from {origin} at {sym}{unitCost}/unit, sell at {sym}{sellingPrice}, duty rate {dutyRate}%.",
+
+  "emptyHeading": "Know your true margin before you buy",
+  "emptyBody": "Enter your product details above. Freight, duty, and FX typically add 15-30% to your real cost per unit.",
+
+  "dutySelectCategory": "Select category…",
+  "dutyElectronics": "Electronics & components",
+  "dutyClothing": "Clothing & apparel",
+  "dutyFootwear": "Footwear",
+  "dutyFurniture": "Furniture & homeware",
+  "dutyToys": "Toys & games",
+  "dutyFood": "Food & beverage",
+  "dutyBeauty": "Beauty & personal care",
+  "dutyMachinery": "Machinery & equipment",
+  "dutyPlastics": "Plastics & rubber goods",
+  "dutyMetals": "Metals & metal products",
+  "dutyTextiles": "Textiles (not clothing)",
+  "dutyBags": "Bags & luggage",
+  "dutySports": "Sports equipment",
+  "dutyCustomRate": "Custom rate",
+
+  "originCN": "🇨🇳 China",
+  "originIN": "🇮🇳 India",
+  "originTR": "🇹🇷 Turkey",
+  "originBD": "🇧🇩 Bangladesh",
+  "originVN": "🇻🇳 Vietnam",
+  "originPK": "🇵🇰 Pakistan",
+  "originEU": "🇪🇺 European Union",
+  "originUS": "🇺🇸 United States",
+  "originNG": "🇳🇬 Nigeria",
+  "originGH": "🇬🇭 Ghana",
+  "originOT": "🌍 Other",
+
+  "extraSeaFreight": "Sea/Air freight",
+  "extraFreightInsurance": "Freight insurance",
+  "extraPortHandling": "Port & handling charges",
+  "extraCustomsBroker": "Customs broker fee",
+  "extraLastMile": "Last-mile delivery"
+}

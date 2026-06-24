@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLang } from '@/components/LanguageProvider'
 
 interface ConnectedSource {
   id: string
@@ -66,6 +67,7 @@ function timeAgo(iso: string | null) {
 }
 
 export default function IntegrationHub() {
+  const { tc } = useLang()
   const router = useRouter()
   const [connected, setConnected] = useState<ConnectedSource[]>([])
   const [loading, setLoading] = useState(true)
@@ -93,16 +95,16 @@ export default function IntegrationHub() {
       {/* Header stats */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
         <div>
-          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>Data Connections</div>
+          <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>{tc('intel_integrationhub.title')}</div>
           <div style={{ fontSize: 12, color: 'var(--tx3)' }}>
-            <span style={{ fontWeight: 700, color: connectedCount > 0 ? '#22C55E' : 'var(--tx3)' }}>{connectedCount}</span> of {totalCount} sources connected
+            <span style={{ fontWeight: 700, color: connectedCount > 0 ? '#22C55E' : 'var(--tx3)' }}>{connectedCount}</span> {tc('intel_integrationhub.sourcesConnectedSuffix', { total: totalCount })}
           </div>
         </div>
         <button
           onClick={() => router.push('/sources')}
           style={{ padding: '8px 16px', borderRadius: 9999, border: 'none', background: '#6366F1', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
         >
-          Manage sources →
+          {tc('intel_integrationhub.manageSources')}
         </button>
       </div>
 
@@ -118,10 +120,10 @@ export default function IntegrationHub() {
           }} />
         </div>
         <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>
-          {connectedCount === 0 && 'Connect a source to start getting real insights'}
-          {connectedCount > 0 && connectedCount < 5 && `${5 - connectedCount} more connections recommended for full coverage`}
-          {connectedCount >= 5 && connectedCount < 10 && 'Good coverage — more connections improve data accuracy'}
-          {connectedCount >= 10 && 'Excellent data coverage across your business'}
+          {connectedCount === 0 && tc('intel_integrationhub.coverageNone')}
+          {connectedCount > 0 && connectedCount < 5 && tc('intel_integrationhub.coverageLow', { n: 5 - connectedCount })}
+          {connectedCount >= 5 && connectedCount < 10 && tc('intel_integrationhub.coverageMid')}
+          {connectedCount >= 10 && tc('intel_integrationhub.coverageHigh')}
         </div>
       </div>
 
@@ -131,7 +133,7 @@ export default function IntegrationHub() {
           onClick={() => setActiveCategory(null)}
           style={{ padding: '5px 12px', borderRadius: 9999, border: `1px solid ${!activeCategory ? '#6366F1' : 'var(--b)'}`, background: !activeCategory ? '#6366F110' : 'transparent', color: !activeCategory ? '#6366F1' : 'var(--tx3)', fontSize: 12, fontWeight: !activeCategory ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit' }}
         >
-          All
+          {tc('intel_integrationhub.filterAll')}
         </button>
         {CATEGORIES.map(cat => {
           const catSources = ALL_SOURCES.filter(s => s.category === cat)
@@ -194,16 +196,16 @@ export default function IntegrationHub() {
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 2 }}>{source.label}</div>
                 <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
                   {isConnected
-                    ? (hasError ? '⚠ Sync error' : `Synced ${timeAgo(liveSource?.last_synced_at || null)}`)
-                    : 'Not connected'
+                    ? (hasError ? tc('intel_integrationhub.statusSyncError') : tc('intel_integrationhub.statusSynced', { time: timeAgo(liveSource?.last_synced_at || null) }))
+                    : tc('intel_integrationhub.statusNotConnected')
                   }
                 </div>
                 {/* Expanded detail */}
                 {isExpanded && isConnected && liveSource && (
                   <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid var(--b)' }}>
-                    <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Name: <span style={{ color: 'var(--tx2)' }}>{liveSource.name}</span></div>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('intel_integrationhub.detailName')} <span style={{ color: 'var(--tx2)' }}>{liveSource.name}</span></div>
                     {hasError && <div style={{ fontSize: 11, color: '#EF4444' }}>{liveSource.error_message}</div>}
-                    {!hasError && <div style={{ fontSize: 11, color: '#22C55E' }}>Active · syncing</div>}
+                    {!hasError && <div style={{ fontSize: 11, color: '#22C55E' }}>{tc('intel_integrationhub.detailActive')}</div>}
                   </div>
                 )}
                 {isExpanded && !isConnected && (
@@ -212,7 +214,7 @@ export default function IntegrationHub() {
                       onClick={e => { e.stopPropagation(); router.push('/sources') }}
                       style={{ width: '100%', padding: '6px 0', borderRadius: 8, border: 'none', background: '#6366F1', color: '#fff', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                     >
-                      Connect →
+                      {tc('intel_integrationhub.connect')}
                     </button>
                   </div>
                 )}

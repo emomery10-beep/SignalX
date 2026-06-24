@@ -1,0 +1,23 @@
+{
+  "title": "ملخص المورد",
+  "askAi": "اسأل الذكاء الاصطناعي",
+  "askAiPrompt": "حلّل علاقاتي مع الموردين واقترح استراتيجيات تفاوض لتحسين الهوامش.",
+  "negotiationLeverage": "أوراق التفاوض",
+  "monthlySpend": "الإنفاق الشهري",
+  "savingTarget": "هدف التوفير 5%",
+  "annualImpact": "الأثر السنوي",
+  "concentrationRiskLabel": "مخاطر التركّز:",
+  "concentrationRiskSuffix": "— نوّع الموردين لتعزيز موقف التفاوض",
+  "lowMarginLabel": "موردو الهامش المنخفض:",
+  "lowMarginSuffix": "— أولوية لإعادة التفاوض",
+  "risingCostsLabel": "التكاليف المتصاعدة:",
+  "risingCostsSuffix": "— ثبّت الأسعار أو ابحث عن بدائل",
+  "saveBadge": "وفّر ~{amount}/شهر",
+  "supplierRowMeta": "{n} منتجات • {spend}/شهر • هامش {margin}%",
+  "depBadge": "اعتماد {dep}%",
+  "generatingBrief": "جارٍ إنشاء الملخص لـ {name}...",
+  "negotiationBriefHeader": "ملخص التفاوض — {name}",
+  "sectionLeverage": "أوراق الضغط",
+  "sectionRisks": "المخاطر",
+  "sectionTalkingPoints": "نقاط النقاش"
+}

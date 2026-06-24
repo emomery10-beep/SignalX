@@ -1,0 +1,20 @@
+{
+  "cfo_logistics": {
+    "title": "Logistiek & Zendingen",
+    "provider": "Track17",
+    "emptyState": "Geen actieve zendingen gevolgd. Voeg zendingen toe via de Track17-integratie om het effect op het werkkapitaal te zien.",
+    "askAi": "Vraag AI",
+    "askPrompt": "Mijn zendingen: {inTransitCount} onderweg ter waarde van {inTransitValue}, {delayedCount} vertraagd ({delayedValue} in gevaar), financieringskosten {financingCost}, gem. levering {avgDays} dagen. Hoe kan ik de logistiekkosten en het werkkapitaal dat vastzit in transit verlagen?",
+    "metricInTransit": "Onderweg",
+    "metricDelayed": "Vertraagd",
+    "metricAvgDelivery": "Gem. levering",
+    "metricFinanceCost": "Financieringskosten",
+    "workingCapitalDays": "werkkapitaaldagen",
+    "capitalTiedUp": "vastgelegd kapitaal",
+    "shipmentHealth": "Zendingsstatus",
+    "onTime": "{n} op tijd",
+    "delayedCount": "{n} vertraagd",
+    "atRiskWarning": "{n} zending gemarkeerd als risicovol — kan leiden tot voorraadtekort of omzetverlies bij verdere vertraging.",
+    "inTransitSummary": "{value} aan voorraad is momenteel onderweg. Dit kapitaal is gemiddeld {days} dagen vastgelegd totdat de goederen aankomen en verkocht kunnen worden."
+  }
+}

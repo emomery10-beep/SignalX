@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface ReceivedPayment {
   id: string
@@ -30,17 +31,6 @@ function fmt(n: number, sym: string): string {
   return `${sym}${Math.round(abs).toLocaleString()}`
 }
 
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'Just now'
-  if (mins < 60) return `${mins}m ago`
-  const h = Math.floor(mins / 60)
-  if (h < 24) return `${h}h ago`
-  const d = Math.floor(h / 24)
-  return `${d}d ago`
-}
-
 const METHOD_ICONS: Record<string, string> = {
   mpesa: '📱',
   mobile: '📱',
@@ -50,9 +40,21 @@ const METHOD_ICONS: Record<string, string> = {
 }
 
 export default function ReceivedPayments({ currencySymbol: sym }: Props) {
+  const { tc } = useLang()
   const [payments, setPayments] = useState<ReceivedPayment[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
+
+  function timeAgo(iso: string): string {
+    const diff = Date.now() - new Date(iso).getTime()
+    const mins = Math.floor(diff / 60000)
+    if (mins < 1) return tc('pos_receivedpay.justNow')
+    if (mins < 60) return tc('pos_receivedpay.minutesAgo').replace('{mins}', String(mins))
+    const h = Math.floor(mins / 60)
+    if (h < 24) return tc('pos_receivedpay.hoursAgo').replace('{h}', String(h))
+    const d = Math.floor(h / 24)
+    return tc('pos_receivedpay.daysAgo').replace('{d}', String(d))
+  }
 
   const fetchData = useCallback(async () => {
     try {
@@ -75,10 +77,10 @@ export default function ReceivedPayments({ currencySymbol: sym }: Props) {
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: GREEN }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>Received Payments</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_receivedpay.title')}</span>
           {hasData && (
             <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: 'rgba(34,197,94,.08)', color: GREEN }}>
-              {payments.length} received · {fmt(total, sym)}
+              {tc('pos_receivedpay.headerBadge').replace('{count}', String(payments.length)).replace('{total}', fmt(total, sym))}
             </span>
           )}
         </div>
@@ -89,31 +91,31 @@ export default function ReceivedPayments({ currencySymbol: sym }: Props) {
         {hasData && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--b)', borderRadius: 10, overflow: 'hidden', marginBottom: 16 }}>
             <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
-              <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 3 }}>Received</div>
+              <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 3 }}>{tc('pos_receivedpay.statReceivedLabel')}</div>
               <div style={{ fontSize: 16, fontWeight: 700, color: GREEN, fontVariantNumeric: 'tabular-nums' }}>{payments.length}</div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 1 }}>payments</div>
+              <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 1 }}>{tc('pos_receivedpay.statReceivedSub')}</div>
             </div>
             <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
-              <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 3 }}>Total</div>
+              <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 3 }}>{tc('pos_receivedpay.statTotalLabel')}</div>
               <div style={{ fontSize: 16, fontWeight: 700, color: GREEN, fontVariantNumeric: 'tabular-nums' }}>{fmt(total, sym)}</div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 1 }}>collected</div>
+              <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 1 }}>{tc('pos_receivedpay.statTotalSub')}</div>
             </div>
             <div style={{ padding: '10px 8px', background: 'var(--sf)', textAlign: 'center' }}>
-              <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 3 }}>Avg</div>
+              <div style={{ fontSize: 8, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 3 }}>{tc('pos_receivedpay.statAvgLabel')}</div>
               <div style={{ fontSize: 16, fontWeight: 700, color: INDIGO, fontVariantNumeric: 'tabular-nums' }}>{fmt(payments.length > 0 ? total / payments.length : 0, sym)}</div>
-              <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 1 }}>per payment</div>
+              <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 1 }}>{tc('pos_receivedpay.statAvgSub')}</div>
             </div>
           </div>
         )}
 
         {/* Payment list */}
         {loading ? (
-          <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 12 }}>Loading...</div>
+          <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 12 }}>{tc('pos_receivedpay.loading')}</div>
         ) : !hasData ? (
           <div style={{ padding: '28px 16px', textAlign: 'center' }}>
-            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No digital payments received yet.</div>
+            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_receivedpay.emptyTitle')}</div>
             <p style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5, margin: '6px 0 0' }}>
-              Payments via M-Pesa, card, or mobile money will appear here once confirmed.
+              {tc('pos_receivedpay.emptyBody')}
             </p>
           </div>
         ) : (
@@ -125,7 +127,7 @@ export default function ReceivedPayments({ currencySymbol: sym }: Props) {
                     <span style={{ fontSize: 16 }}>{METHOD_ICONS[payment.payment_method] || '💳'}</span>
                     <div>
                       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>
-                        {payment.customer_phone || payment.customer_name || payment.cashier_name || 'Customer'}
+                        {payment.customer_phone || payment.customer_name || payment.cashier_name || tc('pos_receivedpay.defaultCustomer')}
                       </div>
                       <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 1 }}>
                         <span style={{ textTransform: 'capitalize' }}>{payment.payment_method?.replace('_', ' ')}</span>
@@ -140,7 +142,7 @@ export default function ReceivedPayments({ currencySymbol: sym }: Props) {
                       {fmt(payment.amount, sym)}
                     </div>
                     <span style={{ fontSize: 9, fontWeight: 600, padding: '1px 6px', borderRadius: 9999, background: 'rgba(34,197,94,.08)', border: '1px solid rgba(34,197,94,.2)', color: GREEN }}>
-                      {payment.payment_status === 'paid' ? 'Paid' : 'Received'}
+                      {payment.payment_status === 'paid' ? tc('pos_receivedpay.statusPaid') : tc('pos_receivedpay.statusReceived')}
                     </span>
                   </div>
                 </div>

@@ -1,0 +1,12 @@
+{
+  "timeMachine": "آلة الزمن",
+  "askAi": "اسأل الذكاء الاصطناعي",
+  "askAiPrompt": "كيف تغيّرت صحة عملي بمرور الوقت؟ ما أبرز الاتجاهات وما الذي يجب أن أركّز عليه؟",
+  "now": "الآن",
+  "clickBarToCompare": "انقر على شريط للمقارنة",
+  "analysingChanges": "جارٍ تحليل التغييرات منذ {date}...",
+  "changesSince": "التغييرات منذ {date}",
+  "keyEvents": "الأحداث الرئيسية",
+  "barTooltip": "{date}: {score}/100",
+  "totalChangePts": "{pts} نقطة"
+}

@@ -1,0 +1,17 @@
+{
+  "title": "Data Connections",
+  "sourcesConnected": "{connected} of {total} sources connected",
+  "sourcesConnectedSuffix": "of {total} sources connected",
+  "manageSources": "Manage sources →",
+  "coverageNone": "Connect a source to start getting real insights",
+  "coverageLow": "{n} more connections recommended for full coverage",
+  "coverageMid": "Good coverage — more connections improve data accuracy",
+  "coverageHigh": "Excellent data coverage across your business",
+  "filterAll": "All",
+  "statusNotConnected": "Not connected",
+  "statusSyncError": "⚠ Sync error",
+  "statusSynced": "Synced {time}",
+  "detailName": "Name:",
+  "detailActive": "Active · syncing",
+  "connect": "Connect →"
+}

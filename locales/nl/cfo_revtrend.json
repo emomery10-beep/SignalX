@@ -1,0 +1,22 @@
+{
+  "empty": "Geen gegevens beschikbaar voor deze periode. Koppel een gegevensbron om omzettrends te bekijken.",
+  "title": "Omzet vs Kosten",
+  "legendRevenue": "Omzet",
+  "legendCogs": "IVK",
+  "legendFixed": "Vast",
+  "legendNet": "Netto",
+  "tipRev": "Omzet",
+  "tipCogs": "IVK",
+  "tipFixed": "Vast",
+  "tipNet": "Netto",
+  "detailedBreakdown": "Gedetailleerde uitsplitsing",
+  "close": "Sluiten",
+  "rowRevenue": "Omzet",
+  "rowCogs": "IVK",
+  "rowFixedCosts": "Vaste kosten",
+  "grossProfit": "Brutwinst",
+  "totalCosts": "Totale kosten",
+  "netProfit": "Nettowinst",
+  "margin": "{n}% marge",
+  "ofRevenue": "{n}% van de omzet"
+}

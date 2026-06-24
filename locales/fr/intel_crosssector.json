@@ -1,0 +1,20 @@
+{
+  "title": "Analyse intersectorielle",
+  "askAi": "Demander à l'IA",
+  "askAiPrompt": "Comment mes indicateurs se comparent-ils à ceux des autres secteurs ? Où suis-je en retard et que puis-je apprendre des secteurs les plus performants ?",
+  "compareWithSectors": "Comparer avec les secteurs",
+  "youBadge": "VOUS",
+  "businesses": "{n} entreprises",
+  "sectorRetail": "Commerce de détail",
+  "sectorEcommerce": "E-commerce",
+  "sectorRestaurant": "Restaurant",
+  "sectorFoodBev": "Alimentation & Boissons",
+  "sectorImportExport": "Import/Export",
+  "sectorSaas": "SaaS",
+  "sectorServices": "Services",
+  "sectorFashion": "Mode",
+  "sectorHealthBeauty": "Santé & Beauté",
+  "sectorSalon": "Salon",
+  "sectorRepair": "Réparation",
+  "sectorFactory": "Industrie"
+}

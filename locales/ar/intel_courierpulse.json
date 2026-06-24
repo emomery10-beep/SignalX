@@ -1,0 +1,17 @@
+{
+  "courierOperations": "🚛 عمليات التوصيل",
+  "scoreOutOf": "/100",
+  "labelHealthy": "سليم",
+  "labelAtRisk": "في خطر",
+  "labelCritical": "حرج",
+  "today": "اليوم",
+  "inTransit": "في الطريق",
+  "atBranch": "في الفرع",
+  "failed": "فشل",
+  "deliveryRate": "نسبة التوصيل {rate}%",
+  "stuckOver48h": "{n} متوقف أكثر من 48 ساعة",
+  "unpaidRevenue": "KES {amount} غير مدفوع",
+  "fleetAvailable": "متاح",
+  "fleetInTransit": "في الطريق",
+  "fleetMaintenance": "الصيانة"
+}

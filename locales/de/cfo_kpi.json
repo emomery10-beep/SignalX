@@ -1,0 +1,20 @@
+{
+  "title": "KPI-Scorecard",
+  "onTargetBadge": "{met}/{total} im Zielbereich",
+  "askAi": "KI fragen",
+  "askPrompt": "Meine KPI-Scorecard zeigt {met}/{total} im Zielbereich. Nicht erreicht: {missed}. Was sollte ich priorisieren, um die Ergebnisse zu verbessern?",
+  "askPromptNone": "keine",
+  "colKpi": "KPI",
+  "colTarget": "Zielwert",
+  "colActual": "Ist-Wert",
+  "colStatus": "Status",
+  "colTrend": "Trend",
+  "labelGrossMargin": "Bruttogewinnmarge",
+  "labelNetMargin": "Nettogewinnmarge",
+  "labelRevenueGrowth": "Umsatzwachstum",
+  "labelStockoutRate": "Fehlbestandsquote",
+  "labelCashRunway": "Liquiditätsreichweite",
+  "labelHealthScore": "Gesundheitsscore",
+  "editTargetTitle": "Zum Bearbeiten klicken",
+  "footerHint": "Klicken Sie auf einen Zielwert, um ihn anzupassen. Zielwerte werden in Ihrem Browser gespeichert."
+}

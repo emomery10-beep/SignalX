@@ -1,0 +1,7 @@
+{
+  "title": "Resumen diario",
+  "improvedPrompt": "Cuéntame más sobre esta mejora: {detail}",
+  "worsenedPrompt": "Explica este problema y qué debo hacer: {detail}",
+  "todayPrefix": "Hoy:",
+  "askAskBiz": "Pregunta a AskBiz"
+}

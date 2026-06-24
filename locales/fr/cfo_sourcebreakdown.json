@@ -1,0 +1,11 @@
+{
+  "heading": "Revenus par source",
+  "channels": "({n} canaux)",
+  "askAi": "Demander à l'IA",
+  "askAiPrompt": "Revenus par source : {summary}. Sur quels canaux devrais-je concentrer mes efforts de croissance et lesquels sont sous-performants ?",
+  "transactions": "{n} transactions · {pct}% des revenus",
+  "marginPct": "Marge {n}%",
+  "metricRevenue": "Revenus",
+  "metricCogs": "Coût des ventes",
+  "metricGrossProfit": "Bénéfice brut"
+}

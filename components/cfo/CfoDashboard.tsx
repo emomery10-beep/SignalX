@@ -39,7 +39,6 @@ import ChurnAnalytics from './ChurnAnalytics'
 import FinancingReadiness from './FinancingReadiness'
 import ThreeWayForecast from './ThreeWayForecast'
 import RecoveredRevenue from './RecoveredRevenue'
-import MarketClimate from './MarketClimate'
 import { loadCostConfig, sumFixed } from './CostConfigDrawer'
 
 interface SnapshotData {
@@ -151,13 +150,11 @@ export default function CfoDashboard({ onAsk }: Props) {
   const [loading, setLoading] = useState(true)
   const [recTotals, setRecTotals] = useState<{ receivables: number; payables: number }>({ receivables: 0, payables: 0 })
   const [quickScanOpen, setQuickScanOpen] = useState(false)
-  const [costCfg, setCostCfg] = useState<{ cashBalance: number; monthlyFixed: number }>({ cashBalance: 0, monthlyFixed: 0 })
 
   const fetchData = useCallback((p: string) => {
     setLoading(true)
     const cfg = loadCostConfig()
     const fixedTotal = sumFixed(cfg)
-    setCostCfg({ cashBalance: cfg.cashBalance, monthlyFixed: fixedTotal })
     const url = `/api/cfo/snapshot?period=${p}` +
       (cfg.cashBalance > 0 ? `&cash_balance=${cfg.cashBalance}` : '') +
       (fixedTotal > 0 ? `&monthly_fixed_costs=${fixedTotal}` : '')
@@ -241,14 +238,6 @@ export default function CfoDashboard({ onAsk }: Props) {
       {/* ─── DASHBOARD VIEW ─── */}
       {subTab === 'dashboard' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {/* Market Climate — today's macro + supply-chain conditions, personalised */}
-          <MarketClimate
-            currencySymbol={sym}
-            cashBalance={costCfg.cashBalance}
-            monthlyFixed={costCfg.monthlyFixed}
-            onAsk={onAsk}
-          />
-
           {/* KPI Snapshot */}
           <FinancialSnapshot
             kpis={data?.kpis || []}

@@ -5,21 +5,17 @@
 
   "tab_overview": "Overview",
   "tab_cfo": "🏛️ CFO",
-  "tab_anomalies": "Alerts",
-  "tab_decisions": "Decisions",
   "tab_team": "Team",
-  "tab_sparring": "Ask AI",
   "tab_shipments": "📦 Ships",
   "tab_courier": "🚛 Courier",
-  "tab_memory": "🧠 Memory",
+  "tab_logistics": "🚚 Logistics",
+  "logistics_heading": "Logistics Intelligence",
+  "logistics_sub": "Incoming supplies & outgoing deliveries in one view",
+  "logistics_sub_outgoing": "Outgoing",
+  "logistics_sub_incoming": "Incoming",
   "tab_market": "🌍 Market",
-  "tab_connections": "🔗 Connect",
   "tab_actions": "⚡ Actions",
 
-  "sparring_prompt_0": "Should I launch in Germany?",
-  "sparring_prompt_1": "Is now a good time to raise my prices?",
-  "sparring_prompt_2": "What is my biggest business risk?",
-  "sparring_prompt_3": "Hire or use freelancers?",
 
   "kpi_health_label": "Health Score",
   "kpi_health_loading": "Loading...",
@@ -90,13 +86,7 @@
   "qa_cfo_title": "CFO",
   "qa_cfo_sub": "Financials",
 
-  "alerts_heading": "Active Alerts",
-  "alerts_sub": "AskBiz monitors your data and flags anything that needs attention",
 
-  "decisions_heading": "Decision Memory",
-  "decisions_sub": "Log decisions · AskBiz reviews outcomes in 6 weeks",
-  "decisions_view_timeline": "⏱ Timeline",
-  "decisions_view_cards": "📋 Cards",
 
   "shipments_heading": "Shipment Intelligence",
   "shipments_sub": "Real-time tracking · Financial impact · Supplier scoring",
@@ -114,13 +104,6 @@
   "courier_qa_routes": "Route performance",
   "courier_qa_stuck": "Stuck parcels",
 
-  "sparring_heading": "AI Sparring Partner",
-  "sparring_sub": "Scenario planning · What-if analysis · Strategic decisions",
-  "sparring_placeholder": "Ask a strategic question... e.g. Should I expand to Germany? Is now a good time to raise prices?",
-  "sparring_thinking": "Thinking...",
-  "sparring_ask": "Ask →",
-  "sparring_no_response": "No response generated.",
-  "sparring_could_not_connect": "Could not connect.",
 
   "market_heading": "Market Intelligence",
   "market_sub": "Real market prices, channels, and routes — merchant data + live web signals",

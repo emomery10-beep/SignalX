@@ -1,0 +1,13 @@
+{
+  "title": "Heutige Aufgaben",
+  "urgentBadge": "{n} dringend",
+  "actionCount": "{n} Aufgabe",
+  "actionCountPlural": "{n} Aufgaben",
+  "askAi": "KI fragen",
+  "dismiss": "Schließen",
+  "viewAll": "Alle {n} Aufgaben anzeigen →",
+  "priorityNow": "Jetzt",
+  "priorityToday": "Heute",
+  "priorityThisWeek": "Diese Woche",
+  "askActionPrompt": "Hilf mir bei dieser Aufgabe: {title}. Kontext: {why}"
+}

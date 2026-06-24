@@ -1,0 +1,11 @@
+{
+  "bellTitle": "Notifications",
+  "tabPulse": "Pulse",
+  "tabNotifications": "Notifications",
+  "pulseEmptyHeading": "All clear",
+  "pulseEmptyBody": "No urgent actions needed. Upload fresh data to run a health check.",
+  "signalDismiss": "Dismiss",
+  "pulseRefresh": "Run health check",
+  "notifMarkAllRead": "Mark all read",
+  "notifEmpty": "No notifications yet"
+}

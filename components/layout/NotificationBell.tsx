@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLang } from '@/components/LanguageProvider'
 
 /* ── Notification (from /api/notifications) ── */
 interface Notification {
@@ -58,6 +59,7 @@ function timeAgo(iso: string): string {
 
 export default function NotificationBell() {
   const router = useRouter()
+  const { tc } = useLang()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [signals, setSignals] = useState<Signal[]>([])
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => {
@@ -145,7 +147,7 @@ export default function NotificationBell() {
       {/* Bell button */}
       <button
         onClick={() => setOpen(v => !v)}
-        title="Notifications"
+        title={tc('layout_notifbell.bellTitle')}
         style={{
           width: 27, height: 27, borderRadius: 7,
           border: '1px solid var(--b2)', background: 'transparent',
@@ -197,7 +199,7 @@ export default function NotificationBell() {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
               </svg>
-              Pulse
+              {tc('layout_notifbell.tabPulse')}
               {visibleSignals.length > 0 && (
                 <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 9999, background: redSignals > 0 ? '#ef4444' : '#f59e0b', color: '#fff' }}>
                   {visibleSignals.length}
@@ -217,7 +219,7 @@ export default function NotificationBell() {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0"/>
               </svg>
-              Notifications
+              {tc('layout_notifbell.tabNotifications')}
               {unread > 0 && (
                 <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 9999, background: '#d08a59', color: '#fff' }}>
                   {unread}
@@ -236,9 +238,9 @@ export default function NotificationBell() {
                       <path d="M20 6L9 17l-5-5"/>
                     </svg>
                   </div>
-                  <div style={{ fontFamily: 'var(--font-sora)', fontSize: 13, fontWeight: 600, color: '#22c55e', marginBottom: 4 }}>All clear</div>
+                  <div style={{ fontFamily: 'var(--font-sora)', fontSize: 13, fontWeight: 600, color: '#22c55e', marginBottom: 4 }}>{tc('layout_notifbell.pulseEmptyHeading')}</div>
                   <p style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5, margin: 0 }}>
-                    No urgent actions needed. Upload fresh data to run a health check.
+                    {tc('layout_notifbell.pulseEmptyBody')}
                   </p>
                 </div>
               ) : (
@@ -280,7 +282,7 @@ export default function NotificationBell() {
                             onClick={() => dismissSignal(signal.id)}
                             style={{ fontSize: 11, padding: '4px 8px', borderRadius: 9999, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit' }}
                           >
-                            Dismiss
+                            {tc('layout_notifbell.signalDismiss')}
                           </button>
                         </div>
                       </div>
@@ -300,7 +302,7 @@ export default function NotificationBell() {
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                     <path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
                   </svg>
-                  Run health check
+                  {tc('layout_notifbell.pulseRefresh')}
                 </button>
               </div>
             </div>
@@ -313,7 +315,7 @@ export default function NotificationBell() {
               {unread > 0 && (
                 <div style={{ padding: '8px 14px 4px', display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
                   <button onClick={markAll} style={{ fontSize: 11, color: '#6366F1', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
-                    Mark all read
+                    {tc('layout_notifbell.notifMarkAllRead')}
                   </button>
                 </div>
               )}
@@ -324,7 +326,7 @@ export default function NotificationBell() {
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="1.5" strokeLinecap="round" style={{ margin: '0 auto 8px', display: 'block' }}>
                       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0"/>
                     </svg>
-                    <p style={{ margin: 0, fontSize: 12, color: 'var(--tx3)' }}>No notifications yet</p>
+                    <p style={{ margin: 0, fontSize: 12, color: 'var(--tx3)' }}>{tc('layout_notifbell.notifEmpty')}</p>
                   </div>
                 ) : (
                   notifications.map(n => (

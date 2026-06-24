@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 const TEAL = '#0891b2'
 const GREEN = '#16a34a'
@@ -22,7 +23,16 @@ interface CourierHealth {
   stuckOver48h: number
 }
 
+function buildFleetItems(tc: (key: string) => string) {
+  return [
+    { l: tc('intel_courierpulse.fleetAvailable'), key: 'available', c: GREEN },
+    { l: tc('intel_courierpulse.fleetInTransit'), key: 'inTransit', c: '#6366f1' },
+    { l: tc('intel_courierpulse.fleetMaintenance'), key: 'maintenance', c: RED },
+  ]
+}
+
 export default function CourierPulseCard({ onAsk }: { onAsk?: (prompt: string) => void }) {
+  const { tc } = useLang()
   const [data, setData] = useState<CourierHealth | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -76,10 +86,14 @@ export default function CourierPulseCard({ onAsk }: { onAsk?: (prompt: string) =
   const color = score >= 70 ? GREEN : score >= 45 ? AMBER : RED
   const bg = score >= 70 ? 'rgba(22,163,74,.08)' : score >= 45 ? 'rgba(217,119,6,.08)' : 'rgba(220,38,38,.08)'
   const border = score >= 70 ? 'rgba(22,163,74,.2)' : score >= 45 ? 'rgba(217,119,6,.2)' : 'rgba(220,38,38,.2)'
-  const label = score >= 70 ? 'Healthy' : score >= 45 ? 'At Risk' : 'Critical'
+  const labelKey = score >= 70 ? 'labelHealthy' : score >= 45 ? 'labelAtRisk' : 'labelCritical'
+  const label = tc('intel_courierpulse.' + labelKey)
 
   const circ = 2 * Math.PI * 36
   const dashOffset = circ - (score / 100) * circ
+
+  const fleetItems = buildFleetItems(tc)
+  const fleetValues = [data.trucksAvailable, data.trucksInTransit, data.trucksMaintenance]
 
   return (
     <div style={{ padding: 16, borderRadius: 14, border: `1px solid ${border}`, background: bg }}>
@@ -93,39 +107,35 @@ export default function CourierPulseCard({ onAsk }: { onAsk?: (prompt: string) =
           </svg>
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ fontSize: 18, fontWeight: 700, color, fontFamily: 'var(--font-sora)', lineHeight: 1 }}>{score}</span>
-            <span style={{ fontSize: 8, color: 'var(--tx3)' }}>/100</span>
+            <span style={{ fontSize: 8, color: 'var(--tx3)' }}>{tc('intel_courierpulse.scoreOutOf')}</span>
           </div>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>🚛 Courier Operations</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('intel_courierpulse.courierOperations')}</span>
             <span style={{ fontSize: 10, fontWeight: 600, color, background: bg, border: `1px solid ${border}`, padding: '1px 6px', borderRadius: 9999 }}>{label}</span>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
-            <span style={{ fontSize: 11, color: 'var(--tx2)' }}><strong>{data.todayIn}</strong> today</span>
-            <span style={{ fontSize: 11, color: '#6366f1' }}><strong>{data.inTransit}</strong> in transit</span>
-            <span style={{ fontSize: 11, color: AMBER }}><strong>{data.atBranch}</strong> at branch</span>
-            {data.failed > 0 && <span style={{ fontSize: 11, color: RED }}><strong>{data.failed}</strong> failed</span>}
+            <span style={{ fontSize: 11, color: 'var(--tx2)' }}><strong>{data.todayIn}</strong> {tc('intel_courierpulse.today')}</span>
+            <span style={{ fontSize: 11, color: '#6366f1' }}><strong>{data.inTransit}</strong> {tc('intel_courierpulse.inTransit')}</span>
+            <span style={{ fontSize: 11, color: AMBER }}><strong>{data.atBranch}</strong> {tc('intel_courierpulse.atBranch')}</span>
+            {data.failed > 0 && <span style={{ fontSize: 11, color: RED }}><strong>{data.failed}</strong> {tc('intel_courierpulse.failed')}</span>}
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 11, color: GREEN }}>{data.deliveryRate}% delivery rate</span>
-            {data.stuckOver48h > 0 && <span style={{ fontSize: 11, color: RED }}>{data.stuckOver48h} stuck &gt;48h</span>}
-            {data.unpaidRevenue > 0 && <span style={{ fontSize: 11, color: AMBER }}>KES {data.unpaidRevenue.toLocaleString()} unpaid</span>}
+            <span style={{ fontSize: 11, color: GREEN }}>{tc('intel_courierpulse.deliveryRate').replace('{rate}', String(data.deliveryRate))}</span>
+            {data.stuckOver48h > 0 && <span style={{ fontSize: 11, color: RED }}>{tc('intel_courierpulse.stuckOver48h', { n: data.stuckOver48h })}</span>}
+            {data.unpaidRevenue > 0 && <span style={{ fontSize: 11, color: AMBER }}>{tc('intel_courierpulse.unpaidRevenue').replace('{amount}', data.unpaidRevenue.toLocaleString())}</span>}
           </div>
         </div>
       </div>
 
       {/* Fleet strip */}
       <div style={{ display: 'flex', gap: 16, marginTop: 12, paddingTop: 10, borderTop: `1px solid ${border}` }}>
-        {[
-          { l: 'Available', v: data.trucksAvailable, c: GREEN },
-          { l: 'In Transit', v: data.trucksInTransit, c: '#6366f1' },
-          { l: 'Maintenance', v: data.trucksMaintenance, c: RED },
-        ].map(f => (
-          <div key={f.l} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        {fleetItems.map((f, i) => (
+          <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <div style={{ width: 6, height: 6, borderRadius: 3, background: f.c }} />
             <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{f.l}</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: f.c }}>{f.v}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: f.c }}>{fleetValues[i]}</span>
           </div>
         ))}
       </div>

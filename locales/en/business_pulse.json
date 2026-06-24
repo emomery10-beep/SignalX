@@ -1,0 +1,9 @@
+{
+  "dismiss": "Dismiss",
+  "newBadge": "NEW",
+  "panelTitle": "Business Pulse",
+  "allClear": "All clear",
+  "allClearBody": "Your business is running smoothly. No urgent actions needed.",
+  "uploadPrompt": "Upload fresh data to run a new health check.",
+  "runHealthCheck": "Run health check"
+}

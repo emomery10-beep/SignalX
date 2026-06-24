@@ -1,0 +1,20 @@
+{
+  "title": "بطاقة مؤشرات الأداء",
+  "onTargetBadge": "{met}/{total} ضمن الهدف",
+  "askAi": "اسأل الذكاء الاصطناعي",
+  "askPrompt": "تُظهر بطاقة مؤشرات الأداء لديّ {met}/{total} ضمن الهدف. خارج الهدف: {missed}. ما الذي يجب أن أُولِيه الأولوية للتحسين؟",
+  "askPromptNone": "لا شيء",
+  "colKpi": "مؤشر الأداء",
+  "colTarget": "الهدف",
+  "colActual": "الفعلي",
+  "colStatus": "الحالة",
+  "colTrend": "الاتجاه",
+  "labelGrossMargin": "هامش الربح الإجمالي",
+  "labelNetMargin": "هامش الربح الصافي",
+  "labelRevenueGrowth": "نمو الإيرادات",
+  "labelStockoutRate": "معدل نفاد المخزون",
+  "labelCashRunway": "المدة النقدية المتاحة",
+  "labelHealthScore": "درجة الصحة المالية",
+  "editTargetTitle": "انقر لتعديل الهدف",
+  "footerHint": "انقر على أي قيمة هدف لتخصيصها. يتم حفظ الأهداف في متصفحك."
+}

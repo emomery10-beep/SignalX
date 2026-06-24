@@ -1,0 +1,22 @@
+{
+  "empty": "Keine Daten für diesen Zeitraum verfügbar. Verbinden Sie eine Datenquelle, um Umsatztrends zu sehen.",
+  "title": "Umsatz vs. Kosten",
+  "legendRevenue": "Umsatz",
+  "legendCogs": "COGS",
+  "legendFixed": "Fixkosten",
+  "legendNet": "Netto",
+  "tipRev": "Umsat.",
+  "tipCogs": "COGS",
+  "tipFixed": "Fix",
+  "tipNet": "Netto",
+  "detailedBreakdown": "Detaillierte Aufschlüsselung",
+  "close": "Schließen",
+  "rowRevenue": "Umsatz",
+  "rowCogs": "COGS",
+  "rowFixedCosts": "Fixkosten",
+  "grossProfit": "Bruttogewinn",
+  "totalCosts": "Gesamtkosten",
+  "netProfit": "Nettogewinn",
+  "margin": "{n}% Marge",
+  "ofRevenue": "{n}% des Umsatzes"
+}

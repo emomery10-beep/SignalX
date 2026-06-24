@@ -1,6 +1,7 @@
 'use client'
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLang } from '@/components/LanguageProvider'
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const ACC  = '#d08a59'
@@ -13,22 +14,26 @@ const SF   = '#ffffff'
 const EV   = '#f3f2ef'
 
 // ── Currency pairs ────────────────────────────────────────────────────────────
-const CURRENCIES = [
-  { code: 'USD', label: 'US Dollar', flag: '🇺🇸', symbol: '$' },
-  { code: 'EUR', label: 'Euro',      flag: '🇪🇺', symbol: '€' },
-  { code: 'CNY', label: 'Chinese Yuan', flag: '🇨🇳', symbol: '¥' },
-  { code: 'INR', label: 'Indian Rupee', flag: '🇮🇳', symbol: '₹' },
-  { code: 'TRY', label: 'Turkish Lira', flag: '🇹🇷', symbol: '₺' },
-  { code: 'NGN', label: 'Nigerian Naira', flag: '🇳🇬', symbol: '₦' },
-  { code: 'AED', label: 'UAE Dirham',  flag: '🇦🇪', symbol: 'د.إ' },
-  { code: 'JPY', label: 'Japanese Yen', flag: '🇯🇵', symbol: '¥' },
-]
+function buildCurrencies(tc: (k: string) => string) {
+  return [
+    { code: 'USD', label: tc('intel_fxrisk.currencyUsd'), flag: '🇺🇸', symbol: '$' },
+    { code: 'EUR', label: tc('intel_fxrisk.currencyEur'), flag: '🇪🇺', symbol: '€' },
+    { code: 'CNY', label: tc('intel_fxrisk.currencyCny'), flag: '🇨🇳', symbol: '¥' },
+    { code: 'INR', label: tc('intel_fxrisk.currencyInr'), flag: '🇮🇳', symbol: '₹' },
+    { code: 'TRY', label: tc('intel_fxrisk.currencyTry'), flag: '🇹🇷', symbol: '₺' },
+    { code: 'NGN', label: tc('intel_fxrisk.currencyNgn'), flag: '🇳🇬', symbol: '₦' },
+    { code: 'AED', label: tc('intel_fxrisk.currencyAed'), flag: '🇦🇪', symbol: 'د.إ' },
+    { code: 'JPY', label: tc('intel_fxrisk.currencyJpy'), flag: '🇯🇵', symbol: '¥' },
+  ]
+}
 
-const SCENARIOS = [
-  { pct: 5,  label: 'Mild',     colour: '#d97706', bg: 'rgba(245,158,11,.06)',  border: 'rgba(245,158,11,.2)' },
-  { pct: 10, label: 'Moderate', colour: '#dc2626', bg: 'rgba(239,68,68,.06)',   border: 'rgba(239,68,68,.2)' },
-  { pct: 15, label: 'Severe',   colour: '#7f1d1d', bg: 'rgba(127,29,29,.06)',   border: 'rgba(127,29,29,.2)' },
-]
+function buildScenarios(tc: (k: string) => string) {
+  return [
+    { pct: 5,  label: tc('intel_fxrisk.scenarioMild'),     colour: '#d97706', bg: 'rgba(245,158,11,.06)',  border: 'rgba(245,158,11,.2)' },
+    { pct: 10, label: tc('intel_fxrisk.scenarioModerate'), colour: '#dc2626', bg: 'rgba(239,68,68,.06)',   border: 'rgba(239,68,68,.2)' },
+    { pct: 15, label: tc('intel_fxrisk.scenarioSevere'),   colour: '#7f1d1d', bg: 'rgba(127,29,29,.06)',   border: 'rgba(127,29,29,.2)' },
+  ]
+}
 
 interface ProductLine {
   id:     string
@@ -63,6 +68,7 @@ function calcScenarios(
   lines: ProductLine[],
   totalSpend: number,
   minMargin: number,
+  SCENARIOS: Array<{ pct: number; label: string; colour: string; bg: string; border: string }>,
 ): ScenarioResult[] {
   return SCENARIOS.map(s => {
     const costIncreaseFactor = s.pct / 100
@@ -96,6 +102,10 @@ function calcScenarios(
 
 export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) => void; sym?: string }) {
   const router = useRouter()
+  const { tc } = useLang()
+
+  const CURRENCIES = buildCurrencies(tc)
+  const SCENARIOS  = buildScenarios(tc)
 
   // ── Inputs ──────────────────────────────────────────────────────────────────
   const [importCurrency, setImportCurrency] = useState('USD')
@@ -128,10 +138,10 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
     const spend = parseFloat(totalMonthlySpend) || 0
     const min   = parseFloat(minMargin) || 0
     if (spend <= 0) return
-    const res = calcScenarios(lines, spend, min)
+    const res = calcScenarios(lines, spend, min, SCENARIOS)
     setResults(res)
     setCalculated(true)
-  }, [lines, totalMonthlySpend, minMargin])
+  }, [lines, totalMonthlySpend, minMargin, SCENARIOS])
 
   const askDeep = useCallback(() => {
     const validLines = lines.filter(l => l.name.trim() && parseFloat(l.spend) > 0)
@@ -162,23 +172,23 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, color: TX, marginBottom: 4 }}>
-          FX Risk Modeller
+          {tc('intel_fxrisk.title')}
         </div>
         <div style={{ fontSize: 13, color: TX2, lineHeight: 1.6 }}>
-          Model the impact of sterling depreciation on your import costs and product margins. Find out which lines go below your minimum margin — before the currency moves.
+          {tc('intel_fxrisk.subtitle')}
         </div>
       </div>
 
       {/* Inputs */}
       <div style={{ background: SF, border: `1px solid ${B}`, borderRadius: 16, padding: '18px 20px', marginBottom: 16 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>
-          Your import exposure
+          {tc('intel_fxrisk.sectionImportExposure')}
         </div>
 
         {/* Currency + total spend */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
           <div>
-            <div style={{ fontSize: 12, color: TX3, marginBottom: 5, fontWeight: 500 }}>Import currency</div>
+            <div style={{ fontSize: 12, color: TX3, marginBottom: 5, fontWeight: 500 }}>{tc('intel_fxrisk.labelImportCurrency')}</div>
             <select
               value={importCurrency}
               onChange={e => { setImportCurrency(e.target.value); setCalculated(false) }}
@@ -190,30 +200,30 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
             </select>
           </div>
           <div>
-            <div style={{ fontSize: 12, color: TX3, marginBottom: 5, fontWeight: 500 }}>Monthly import spend ({sym})</div>
+            <div style={{ fontSize: 12, color: TX3, marginBottom: 5, fontWeight: 500 }}>{tc('intel_fxrisk.labelMonthlySpend', { sym })}</div>
             <input
               style={inp}
               type="number"
               value={totalMonthlySpend}
               onChange={e => { setTotalMonthlySpend(e.target.value); setCalculated(false) }}
-              placeholder="e.g. 15000"
+              placeholder={tc('intel_fxrisk.placeholderTotalSpend')}
             />
           </div>
           <div>
-            <div style={{ fontSize: 12, color: TX3, marginBottom: 5, fontWeight: 500 }}>Min acceptable margin (%)</div>
+            <div style={{ fontSize: 12, color: TX3, marginBottom: 5, fontWeight: 500 }}>{tc('intel_fxrisk.labelMinMargin')}</div>
             <input
               style={inp}
               type="number"
               value={minMargin}
               onChange={e => { setMinMargin(e.target.value); setCalculated(false) }}
-              placeholder="e.g. 20"
+              placeholder={tc('intel_fxrisk.placeholderMinMargin')}
             />
           </div>
         </div>
 
         {/* Product lines */}
         <div style={{ fontSize: 12, color: TX3, marginBottom: 8, fontWeight: 500 }}>
-          Product lines — add each line separately for a breakdown
+          {tc('intel_fxrisk.labelProductLines')}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
           {lines.map((line, i) => (
@@ -222,7 +232,7 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
                 style={inp}
                 value={line.name}
                 onChange={e => updateLine(line.id, 'name', e.target.value)}
-                placeholder={`Product line ${i + 1}`}
+                placeholder={tc('intel_fxrisk.placeholderProductLine', { n: i + 1 })}
               />
               <div style={{ position: 'relative' }}>
                 <input
@@ -230,7 +240,7 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
                   type="number"
                   value={line.margin}
                   onChange={e => updateLine(line.id, 'margin', e.target.value)}
-                  placeholder="Margin %"
+                  placeholder={tc('intel_fxrisk.placeholderMargin')}
                 />
                 <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: TX3 }}>%</span>
               </div>
@@ -241,7 +251,7 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
                   type="number"
                   value={line.spend}
                   onChange={e => updateLine(line.id, 'spend', e.target.value)}
-                  placeholder="Monthly spend"
+                  placeholder={tc('intel_fxrisk.placeholderMonthlySpend')}
                 />
               </div>
               {lines.length > 1 ? (
@@ -263,7 +273,7 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
             onClick={addLine}
             style={{ fontSize: 12, color: TX2, background: 'transparent', border: `1px dashed ${B2}`, borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            + Add product line
+            {tc('intel_fxrisk.btnAddLine')}
           </button>
           <div style={{ flex: 1 }}/>
           <button
@@ -271,7 +281,7 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
             disabled={!totalMonthlySpend || parseFloat(totalMonthlySpend) <= 0}
             style={{ padding: '9px 22px', background: ACC, color: '#fff', border: 'none', borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: !totalMonthlySpend ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: !totalMonthlySpend ? .6 : 1, boxShadow: '0 2px 8px rgba(208,138,89,.25)', transition: 'opacity 150ms' }}
           >
-            Model scenarios →
+            {tc('intel_fxrisk.btnModelScenarios')}
           </button>
         </div>
       </div>
@@ -285,10 +295,12 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#dc2626', marginTop: 4, flexShrink: 0 }}/>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', marginBottom: 3 }}>
-                  {atRiskLines.length} product line{atRiskLines.length > 1 ? 's' : ''} fall below your {minMargin}% minimum in a severe scenario
+                  {atRiskLines.length > 1
+                    ? tc('intel_fxrisk.riskBannerTitlePlural', { n: atRiskLines.length, minMargin })
+                    : tc('intel_fxrisk.riskBannerTitle', { n: atRiskLines.length, minMargin })}
                 </div>
                 <div style={{ fontSize: 12, color: TX2, lineHeight: 1.5 }}>
-                  {atRiskLines.map(l => l.name).join(', ')} — annual impact up to {formatCurrency(worstCase?.annualImpact || 0, sym)} if sterling falls 15% against the {importCurrency}.
+                  {tc('intel_fxrisk.riskBannerBody', { lines: atRiskLines.map(l => l.name).join(', '), amount: formatCurrency(worstCase?.annualImpact || 0, sym), currency: importCurrency })}
                 </div>
               </div>
             </div>
@@ -296,7 +308,7 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
             <div style={{ background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', borderRadius: 12, padding: '13px 16px', marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
               <span style={{ fontSize: 20 }}>✅</span>
               <div style={{ fontSize: 13, color: '#16a34a', fontWeight: 600 }}>
-                All product lines stay above {minMargin}% margin even in a severe 15% depreciation scenario.
+                {tc('intel_fxrisk.allSafeMsg', { minMargin })}
               </div>
             </div>
           )}
@@ -309,17 +321,17 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
                   <span style={{ fontSize: 11, fontWeight: 700, color: s.colour, background: 'rgba(255,255,255,.5)', padding: '2px 8px', borderRadius: 9999, textTransform: 'uppercase', letterSpacing: '.06em' }}>
                     {s.label}
                   </span>
-                  <span style={{ fontSize: 11, color: TX3 }}>−{s.pct}% GBP</span>
+                  <span style={{ fontSize: 11, color: TX3 }}>{tc('intel_fxrisk.labelGbpFall', { pct: s.pct })}</span>
                 </div>
                 <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, color: s.colour, marginBottom: 2 }}>
                   {formatCurrency(s.annualImpact, sym)}
                 </div>
-                <div style={{ fontSize: 11, color: TX3, marginBottom: 10 }}>annual margin impact</div>
-                <div style={{ fontSize: 11, color: TX3, marginBottom: 6 }}>+{formatCurrency(s.costIncrease, sym)}/mo extra costs</div>
+                <div style={{ fontSize: 11, color: TX3, marginBottom: 10 }}>{tc('intel_fxrisk.labelAnnualMarginImpact')}</div>
+                <div style={{ fontSize: 11, color: TX3, marginBottom: 6 }}>{tc('intel_fxrisk.labelExtraCosts', { amount: formatCurrency(s.costIncrease, sym) })}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {s.lines.map((l, j) => (
                     <div key={j} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11 }}>
-                      <span style={{ color: TX2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60%' }}>{l.name || `Line ${j + 1}`}</span>
+                      <span style={{ color: TX2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60%' }}>{l.name || tc('intel_fxrisk.fallbackLineName', { n: j + 1 })}</span>
                       <span style={{ fontWeight: 600, color: l.belowMin ? '#dc2626' : '#16a34a', flexShrink: 0 }}>
                         {l.originalMargin.toFixed(0)}% → {l.newMargin.toFixed(1)}%{l.belowMin ? ' ⚠' : ''}
                       </span>
@@ -333,15 +345,15 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
           {/* What to do */}
           <div style={{ background: SF, border: `1px solid ${B}`, borderRadius: 14, padding: '16px 18px', marginBottom: 16 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>
-              Recommended actions
+              {tc('intel_fxrisk.sectionRecommendedActions')}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
               {[
-                atRiskLines.length > 0 ? `Review pricing on ${atRiskLines.map(l => l.name).join(', ')} — a ${(atRiskLines[0]?.originalMargin - atRiskLines[0]?.newMargin || 0).toFixed(1)}pp margin loss needs a price increase or cost reduction to offset` : null,
-                parseFloat(totalMonthlySpend) > 5000 ? `Consider a forward currency contract to lock in the current GBP/${importCurrency} rate on your next 3-6 months of purchases` : null,
-                `Ask your suppliers about pricing in GBP or EUR to eliminate ${importCurrency} exposure entirely on new contracts`,
-                `Build a 10% FX buffer into your landed cost calculations for all ${importCurrency}-denominated purchases`,
-                `Set a sterling alert — if GBP/${importCurrency} falls more than 5% from today's rate, review pricing across all affected lines`,
+                atRiskLines.length > 0 ? tc('intel_fxrisk.actionReviewPricing', { lines: atRiskLines.map(l => l.name).join(', '), pp: (atRiskLines[0]?.originalMargin - atRiskLines[0]?.newMargin || 0).toFixed(1) }) : null,
+                parseFloat(totalMonthlySpend) > 5000 ? tc('intel_fxrisk.actionForwardContract', { currency: importCurrency }) : null,
+                tc('intel_fxrisk.actionSupplierGbp', { currency: importCurrency }),
+                tc('intel_fxrisk.actionFxBuffer', { currency: importCurrency }),
+                tc('intel_fxrisk.actionSetAlert', { currency: importCurrency }),
               ].filter(Boolean).map((action, i) => (
                 <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                   <div style={{ width: 20, height: 20, borderRadius: '50%', background: EV, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: ACC, flexShrink: 0, marginTop: 1 }}>
@@ -359,13 +371,13 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
               onClick={askDeep}
               style={{ flex: 1, padding: '11px', background: ACC, color: '#fff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(208,138,89,.25)' }}
             >
-              Ask AskBiz to model this in full →
+              {tc('intel_fxrisk.btnAskDeep')}
             </button>
             <button
               onClick={() => { setCalculated(false); setResults(null) }}
               style={{ padding: '11px 16px', color: TX3, background: 'transparent', border: `1px solid ${B}`, borderRadius: 10, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
             >
-              Reset
+              {tc('intel_fxrisk.btnReset')}
             </button>
           </div>
         </>
@@ -376,16 +388,20 @@ export default function FXRisk({ onAsk, sym = '£' }: { onAsk: (prompt: string) 
         <div style={{ padding: '28px 20px', textAlign: 'center', background: SF, border: `1px solid ${B}`, borderRadius: 14 }}>
           <div style={{ fontSize: 36, marginBottom: 12 }}>💱</div>
           <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 600, color: TX, marginBottom: 6 }}>
-            Know your FX exposure before the rate moves
+            {tc('intel_fxrisk.emptyTitle')}
           </div>
           <p style={{ fontSize: 13, color: TX3, lineHeight: 1.65, maxWidth: 400, margin: '0 auto 16px' }}>
-            Enter your import currency, monthly spend, and product margins above. AskBiz will model mild, moderate, and severe depreciation scenarios and show you exactly which lines go below your minimum margin.
+            {tc('intel_fxrisk.emptyBody')}
           </p>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-            {['I import from China in USD', 'My biggest exposure is EUR suppliers', 'I buy in dollars and sell in pounds'].map((p, i) => (
+            {[
+              tc('intel_fxrisk.promptChina'),
+              tc('intel_fxrisk.promptEur'),
+              tc('intel_fxrisk.promptDollarPound'),
+            ].map((p, i) => (
               <button
                 key={i}
-                onClick={() => onAsk(p + ' — what is my currency risk?')}
+                onClick={() => onAsk(p + tc('intel_fxrisk.promptSuffix'))}
                 style={{ fontSize: 12, color: ACC, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 9999, padding: '5px 12px', cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 {p}

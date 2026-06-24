@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface TeamMember {
   id: string
@@ -28,202 +29,220 @@ interface RoleDetail {
   useCases: string[]
 }
 
-const LEVEL_BADGE: Record<string, { label: string; bg: string; fg: string }> = {
-  full:  { label: 'Full',    bg: 'rgba(34,197,94,.12)',  fg: '#16a34a' },
-  edit:  { label: 'Edit',    bg: 'rgba(59,130,246,.12)', fg: '#2563eb' },
-  view:  { label: 'View',    bg: 'rgba(168,162,158,.12)', fg: '#78716c' },
-  none:  { label: 'None',    bg: 'rgba(239,68,68,.08)',  fg: '#dc2626' },
+function buildLevelBadge(tc: (k: string) => string): Record<string, { label: string; bg: string; fg: string }> {
+  return {
+    full: { label: tc('intel_teampanel.levelFull'), bg: 'rgba(34,197,94,.12)',   fg: '#16a34a' },
+    edit: { label: tc('intel_teampanel.levelEdit'), bg: 'rgba(59,130,246,.12)',  fg: '#2563eb' },
+    view: { label: tc('intel_teampanel.levelView'), bg: 'rgba(168,162,158,.12)', fg: '#78716c' },
+    none: { label: tc('intel_teampanel.levelNone'), bg: 'rgba(239,68,68,.08)',   fg: '#dc2626' },
+  }
 }
 
-const ROLES: Record<string, RoleDetail> = {
-  owner: {
-    label: 'Owner',
-    color: '#6366F1',
-    desc: 'Full access to everything',
-    who: 'The business owner or founder. One per organisation.',
-    emoji: '👑',
-    permissions: [
-      { area: 'Dashboards & Reports', level: 'full' },
-      { area: 'AI Chat & Questions', level: 'full' },
-      { area: 'Business Tools', level: 'full' },
-      { area: 'CFO Mode & Financials', level: 'full' },
-      { area: 'Data Sources', level: 'full' },
-      { area: 'Team Management', level: 'full' },
-      { area: 'Billing & Subscription', level: 'full' },
-      { area: 'POS & Inventory', level: 'full' },
-      { area: 'Settings', level: 'full' },
-    ],
-    cannotAccess: [],
-    useCases: [
-      'Manages billing, team, and all settings',
-      'Full control over data connections and integrations',
-      'Can delete data, remove members, and cancel plans',
-    ],
-  },
-  admin: {
-    label: 'Admin',
-    color: '#7c3aed',
-    desc: 'Full access + can invite members',
-    who: 'A trusted co-founder, operations manager, or senior partner.',
-    emoji: '🛡️',
-    permissions: [
-      { area: 'Dashboards & Reports', level: 'full' },
-      { area: 'AI Chat & Questions', level: 'full' },
-      { area: 'Business Tools', level: 'full' },
-      { area: 'CFO Mode & Financials', level: 'full' },
-      { area: 'Data Sources', level: 'full' },
-      { area: 'Team Management', level: 'edit' },
-      { area: 'Billing & Subscription', level: 'view' },
-      { area: 'POS & Inventory', level: 'full' },
-      { area: 'Settings', level: 'edit' },
-    ],
-    cannotAccess: [
-      'Cannot change billing or cancel subscription',
-      'Cannot remove the Owner',
-      'Cannot delete the organisation',
-    ],
-    useCases: [
-      'Invites and manages team members',
-      'Connects new data sources',
-      'Full operational access to all intelligence tools',
-    ],
-  },
-  analyst: {
-    label: 'Analyst',
-    color: '#0284c7',
-    desc: 'Read and write, no billing',
-    who: 'A data-savvy team member who runs reports and analyses trends.',
-    emoji: '📊',
-    permissions: [
-      { area: 'Dashboards & Reports', level: 'full' },
-      { area: 'AI Chat & Questions', level: 'full' },
-      { area: 'Business Tools', level: 'full' },
-      { area: 'CFO Mode & Financials', level: 'view' },
-      { area: 'Data Sources', level: 'view' },
-      { area: 'Team Management', level: 'none' },
-      { area: 'Billing & Subscription', level: 'none' },
-      { area: 'POS & Inventory', level: 'view' },
-      { area: 'Settings', level: 'view' },
-    ],
-    cannotAccess: [
-      'Cannot invite or remove team members',
-      'Cannot access billing or subscription',
-      'Cannot connect or disconnect data sources',
-      'Cannot modify POS inventory or settings',
-    ],
-    useCases: [
-      'Runs AI-powered analyses and saves reports',
-      'Monitors dashboards, alerts, and anomalies',
-      'Creates forecasts and expansion opportunity research',
-    ],
-  },
-  accountant: {
-    label: 'Accountant',
-    color: '#16a34a',
-    desc: 'Financial data and CFO reports only',
-    who: 'Your external accountant, bookkeeper, or financial advisor.',
-    emoji: '🧮',
-    permissions: [
-      { area: 'Dashboards & Reports', level: 'view' },
-      { area: 'AI Chat & Questions', level: 'edit' },
-      { area: 'Business Tools', level: 'none' },
-      { area: 'CFO Mode & Financials', level: 'full' },
-      { area: 'Data Sources', level: 'none' },
-      { area: 'Team Management', level: 'none' },
-      { area: 'Billing & Subscription', level: 'none' },
-      { area: 'POS & Inventory', level: 'none' },
-      { area: 'Settings', level: 'none' },
-    ],
-    cannotAccess: [
-      'Cannot access non-financial dashboards or tools',
-      'Cannot see POS transactions or inventory',
-      'Cannot manage team, billing, data sources, or settings',
-      'Cannot access supplier or expansion tools',
-    ],
-    useCases: [
-      'Reviews P&L summaries and cash runway reports',
-      'Runs CFO Mode reports for board preparation',
-      'Asks financial questions about revenue, margins, and cash flow',
-    ],
-  },
-  buyer: {
-    label: 'Buyer',
-    color: '#d97706',
-    desc: 'Inventory and supply chain only',
-    who: 'A purchasing manager, procurement lead, or stock controller.',
-    emoji: '📦',
-    permissions: [
-      { area: 'Dashboards & Reports', level: 'view' },
-      { area: 'AI Chat & Questions', level: 'edit' },
-      { area: 'Business Tools', level: 'view' },
-      { area: 'CFO Mode & Financials', level: 'none' },
-      { area: 'Data Sources', level: 'none' },
-      { area: 'Team Management', level: 'none' },
-      { area: 'Billing & Subscription', level: 'none' },
-      { area: 'POS & Inventory', level: 'full' },
-      { area: 'Settings', level: 'none' },
-    ],
-    cannotAccess: [
-      'Cannot access financial reports or CFO Mode',
-      'Cannot manage team, billing, or settings',
-      'Cannot connect or disconnect data sources',
-      'Cannot view revenue or margin data',
-    ],
-    useCases: [
-      'Manages inventory levels, reorder points, and stock alerts',
-      'Uses Supplier Scorecard and Landed Cost tools',
-      'Runs AI questions about stock, suppliers, and purchasing',
-    ],
-  },
-  viewer: {
-    label: 'Viewer',
-    color: '#94a3b8',
-    desc: 'Read-only access',
-    who: 'An investor, advisor, or board member who needs visibility without editing.',
-    emoji: '👁️',
-    permissions: [
-      { area: 'Dashboards & Reports', level: 'view' },
-      { area: 'AI Chat & Questions', level: 'view' },
-      { area: 'Business Tools', level: 'view' },
-      { area: 'CFO Mode & Financials', level: 'view' },
-      { area: 'Data Sources', level: 'none' },
-      { area: 'Team Management', level: 'none' },
-      { area: 'Billing & Subscription', level: 'none' },
-      { area: 'POS & Inventory', level: 'view' },
-      { area: 'Settings', level: 'none' },
-    ],
-    cannotAccess: [
-      'Cannot create, edit, or delete anything',
-      'Cannot ask AI questions (view saved answers only)',
-      'Cannot access settings, billing, team, or data sources',
-    ],
-    useCases: [
-      'Views dashboards and saved reports',
-      'Monitors Business Pulse score and KPIs',
-      'Reviews board-ready CFO summaries',
-    ],
-  },
+function buildRoles(tc: (k: string) => string): Record<string, RoleDetail> {
+  const area = {
+    dashboards:    tc('intel_teampanel.areaPermDashboards'),
+    aiChat:        tc('intel_teampanel.areaPermAiChat'),
+    businessTools: tc('intel_teampanel.areaPermBusinessTools'),
+    cfo:           tc('intel_teampanel.areaPermCfo'),
+    dataSources:   tc('intel_teampanel.areaPermDataSources'),
+    team:          tc('intel_teampanel.areaPermTeam'),
+    billing:       tc('intel_teampanel.areaPermBilling'),
+    pos:           tc('intel_teampanel.areaPermPos'),
+    settings:      tc('intel_teampanel.areaPermSettings'),
+  }
+  return {
+    owner: {
+      label: tc('intel_teampanel.roleOwnerLabel'),
+      color: '#6366F1',
+      desc:  tc('intel_teampanel.roleOwnerDesc'),
+      who:   tc('intel_teampanel.roleOwnerWho'),
+      emoji: '👑',
+      permissions: [
+        { area: area.dashboards,    level: 'full' },
+        { area: area.aiChat,        level: 'full' },
+        { area: area.businessTools, level: 'full' },
+        { area: area.cfo,           level: 'full' },
+        { area: area.dataSources,   level: 'full' },
+        { area: area.team,          level: 'full' },
+        { area: area.billing,       level: 'full' },
+        { area: area.pos,           level: 'full' },
+        { area: area.settings,      level: 'full' },
+      ],
+      cannotAccess: [],
+      useCases: [
+        tc('intel_teampanel.roleOwnerUseCase0'),
+        tc('intel_teampanel.roleOwnerUseCase1'),
+        tc('intel_teampanel.roleOwnerUseCase2'),
+      ],
+    },
+    admin: {
+      label: tc('intel_teampanel.roleAdminLabel'),
+      color: '#7c3aed',
+      desc:  tc('intel_teampanel.roleAdminDesc'),
+      who:   tc('intel_teampanel.roleAdminWho'),
+      emoji: '🛡️',
+      permissions: [
+        { area: area.dashboards,    level: 'full' },
+        { area: area.aiChat,        level: 'full' },
+        { area: area.businessTools, level: 'full' },
+        { area: area.cfo,           level: 'full' },
+        { area: area.dataSources,   level: 'full' },
+        { area: area.team,          level: 'edit' },
+        { area: area.billing,       level: 'view' },
+        { area: area.pos,           level: 'full' },
+        { area: area.settings,      level: 'edit' },
+      ],
+      cannotAccess: [
+        tc('intel_teampanel.roleAdminCannotAccess0'),
+        tc('intel_teampanel.roleAdminCannotAccess1'),
+        tc('intel_teampanel.roleAdminCannotAccess2'),
+      ],
+      useCases: [
+        tc('intel_teampanel.roleAdminUseCase0'),
+        tc('intel_teampanel.roleAdminUseCase1'),
+        tc('intel_teampanel.roleAdminUseCase2'),
+      ],
+    },
+    analyst: {
+      label: tc('intel_teampanel.roleAnalystLabel'),
+      color: '#0284c7',
+      desc:  tc('intel_teampanel.roleAnalystDesc'),
+      who:   tc('intel_teampanel.roleAnalystWho'),
+      emoji: '📊',
+      permissions: [
+        { area: area.dashboards,    level: 'full' },
+        { area: area.aiChat,        level: 'full' },
+        { area: area.businessTools, level: 'full' },
+        { area: area.cfo,           level: 'view' },
+        { area: area.dataSources,   level: 'view' },
+        { area: area.team,          level: 'none' },
+        { area: area.billing,       level: 'none' },
+        { area: area.pos,           level: 'view' },
+        { area: area.settings,      level: 'view' },
+      ],
+      cannotAccess: [
+        tc('intel_teampanel.roleAnalystCannotAccess0'),
+        tc('intel_teampanel.roleAnalystCannotAccess1'),
+        tc('intel_teampanel.roleAnalystCannotAccess2'),
+        tc('intel_teampanel.roleAnalystCannotAccess3'),
+      ],
+      useCases: [
+        tc('intel_teampanel.roleAnalystUseCase0'),
+        tc('intel_teampanel.roleAnalystUseCase1'),
+        tc('intel_teampanel.roleAnalystUseCase2'),
+      ],
+    },
+    accountant: {
+      label: tc('intel_teampanel.roleAccountantLabel'),
+      color: '#16a34a',
+      desc:  tc('intel_teampanel.roleAccountantDesc'),
+      who:   tc('intel_teampanel.roleAccountantWho'),
+      emoji: '🧮',
+      permissions: [
+        { area: area.dashboards,    level: 'view' },
+        { area: area.aiChat,        level: 'edit' },
+        { area: area.businessTools, level: 'none' },
+        { area: area.cfo,           level: 'full' },
+        { area: area.dataSources,   level: 'none' },
+        { area: area.team,          level: 'none' },
+        { area: area.billing,       level: 'none' },
+        { area: area.pos,           level: 'none' },
+        { area: area.settings,      level: 'none' },
+      ],
+      cannotAccess: [
+        tc('intel_teampanel.roleAccountantCannotAccess0'),
+        tc('intel_teampanel.roleAccountantCannotAccess1'),
+        tc('intel_teampanel.roleAccountantCannotAccess2'),
+        tc('intel_teampanel.roleAccountantCannotAccess3'),
+      ],
+      useCases: [
+        tc('intel_teampanel.roleAccountantUseCase0'),
+        tc('intel_teampanel.roleAccountantUseCase1'),
+        tc('intel_teampanel.roleAccountantUseCase2'),
+      ],
+    },
+    buyer: {
+      label: tc('intel_teampanel.roleBuyerLabel'),
+      color: '#d97706',
+      desc:  tc('intel_teampanel.roleBuyerDesc'),
+      who:   tc('intel_teampanel.roleBuyerWho'),
+      emoji: '📦',
+      permissions: [
+        { area: area.dashboards,    level: 'view' },
+        { area: area.aiChat,        level: 'edit' },
+        { area: area.businessTools, level: 'view' },
+        { area: area.cfo,           level: 'none' },
+        { area: area.dataSources,   level: 'none' },
+        { area: area.team,          level: 'none' },
+        { area: area.billing,       level: 'none' },
+        { area: area.pos,           level: 'full' },
+        { area: area.settings,      level: 'none' },
+      ],
+      cannotAccess: [
+        tc('intel_teampanel.roleBuyerCannotAccess0'),
+        tc('intel_teampanel.roleBuyerCannotAccess1'),
+        tc('intel_teampanel.roleBuyerCannotAccess2'),
+        tc('intel_teampanel.roleBuyerCannotAccess3'),
+      ],
+      useCases: [
+        tc('intel_teampanel.roleBuyerUseCase0'),
+        tc('intel_teampanel.roleBuyerUseCase1'),
+        tc('intel_teampanel.roleBuyerUseCase2'),
+      ],
+    },
+    viewer: {
+      label: tc('intel_teampanel.roleViewerLabel'),
+      color: '#94a3b8',
+      desc:  tc('intel_teampanel.roleViewerDesc'),
+      who:   tc('intel_teampanel.roleViewerWho'),
+      emoji: '👁️',
+      permissions: [
+        { area: area.dashboards,    level: 'view' },
+        { area: area.aiChat,        level: 'view' },
+        { area: area.businessTools, level: 'view' },
+        { area: area.cfo,           level: 'view' },
+        { area: area.dataSources,   level: 'none' },
+        { area: area.team,          level: 'none' },
+        { area: area.billing,       level: 'none' },
+        { area: area.pos,           level: 'view' },
+        { area: area.settings,      level: 'none' },
+      ],
+      cannotAccess: [
+        tc('intel_teampanel.roleViewerCannotAccess0'),
+        tc('intel_teampanel.roleViewerCannotAccess1'),
+        tc('intel_teampanel.roleViewerCannotAccess2'),
+      ],
+      useCases: [
+        tc('intel_teampanel.roleViewerUseCase0'),
+        tc('intel_teampanel.roleViewerUseCase1'),
+        tc('intel_teampanel.roleViewerUseCase2'),
+      ],
+    },
+  }
+}
+
+function buildPermissionAreas(tc: (k: string) => string): string[] {
+  return [
+    tc('intel_teampanel.areaPermDashboards'),
+    tc('intel_teampanel.areaPermAiChat'),
+    tc('intel_teampanel.areaPermBusinessTools'),
+    tc('intel_teampanel.areaPermCfo'),
+    tc('intel_teampanel.areaPermDataSources'),
+    tc('intel_teampanel.areaPermTeam'),
+    tc('intel_teampanel.areaPermBilling'),
+    tc('intel_teampanel.areaPermPos'),
+    tc('intel_teampanel.areaPermSettings'),
+  ]
 }
 
 /* ───────── Comparison view ───────── */
-
-const PERMISSION_AREAS = [
-  'Dashboards & Reports',
-  'AI Chat & Questions',
-  'Business Tools',
-  'CFO Mode & Financials',
-  'Data Sources',
-  'Team Management',
-  'Billing & Subscription',
-  'POS & Inventory',
-  'Settings',
-]
 
 const COMPARE_ROLES = ['owner', 'admin', 'analyst', 'accountant', 'buyer', 'viewer'] as const
 
 /* ───────── Component ───────── */
 
 export default function TeamPanel() {
+  const { tc } = useLang()
   const [members, setMembers] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
   const [inviting, setInviting] = useState(false)
@@ -231,6 +250,10 @@ export default function TeamPanel() {
   const [toast, setToast] = useState('')
   const [expandedRole, setExpandedRole] = useState<string | null>(null)
   const [showCompare, setShowCompare] = useState(false)
+
+  const LEVEL_BADGE = buildLevelBadge(tc)
+  const ROLES = buildRoles(tc)
+  const PERMISSION_AREAS = buildPermissionAreas(tc)
 
   useEffect(() => {
     fetch('/api/team').then(r => r.json()).then(d => setMembers(d.members || [])).finally(() => setLoading(false))
@@ -248,13 +271,13 @@ export default function TeamPanel() {
         setMembers(m => [...m, data.member])
         setForm({ email: '', role: 'analyst', name: '' })
         if (data.emailSent) {
-          showToast(`Invitation email sent to ${form.email}`)
+          showToast(tc('intel_teampanel.toastEmailSent').replace('{email}', form.email))
         } else {
-          showToast(`Added — share this link: ${data.acceptUrl}`)
+          showToast(tc('intel_teampanel.toastShareLink').replace('{url}', data.acceptUrl))
           navigator.clipboard?.writeText(data.acceptUrl).catch(() => {})
         }
       } else {
-        showToast(data.error || 'Failed to invite')
+        showToast(data.error || tc('intel_teampanel.toastFailedDefault'))
       }
     } finally { setInviting(false) }
   }
@@ -276,14 +299,14 @@ export default function TeamPanel() {
       {/* Header */}
       <div style={{ marginBottom: 20, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
         <div>
-          <h2 style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Your Team</h2>
+          <h2 style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>{tc('intel_teampanel.headingTeam')}</h2>
           <p style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5 }}>
-            Give your accountant, ops manager, or buyer their own view — filtered to what they need. Click a role to see detailed permissions.
+            {tc('intel_teampanel.headingDesc')}
           </p>
         </div>
         <button onClick={() => setShowCompare(v => !v)}
           style={{ padding: '6px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: showCompare ? 'rgba(99,102,241,.08)' : 'transparent', color: showCompare ? '#6366F1' : 'var(--tx2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
-          {showCompare ? '← Back to roles' : '⬡ Compare all roles'}
+          {showCompare ? tc('intel_teampanel.btnBackToRoles') : tc('intel_teampanel.btnCompareRoles')}
         </button>
       </div>
 
@@ -294,7 +317,7 @@ export default function TeamPanel() {
             <thead>
               <tr>
                 <th style={{ textAlign: 'left', padding: '8px 10px', borderBottom: '2px solid var(--b)', fontFamily: 'var(--font-sora)', fontWeight: 700, color: 'var(--tx)', fontSize: 12 }}>
-                  Permission area
+                  {tc('intel_teampanel.tablePermissionArea')}
                 </th>
                 {COMPARE_ROLES.map(r => {
                   const role = ROLES[r]
@@ -385,7 +408,7 @@ export default function TeamPanel() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
                   {/* Permissions */}
                   <div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.04em' }}>Permissions</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.04em' }}>{tc('intel_teampanel.sectionPermissions')}</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                       {role.permissions.map(p => {
                         const badge = LEVEL_BADGE[p.level]
@@ -405,7 +428,7 @@ export default function TeamPanel() {
                   <div>
                     {/* Use cases */}
                     <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.04em' }}>Best for</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.04em' }}>{tc('intel_teampanel.sectionBestFor')}</div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                         {role.useCases.map((u, i) => (
                           <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
@@ -421,7 +444,7 @@ export default function TeamPanel() {
                     {/* Cannot access */}
                     {role.cannotAccess.length > 0 && (
                       <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#dc2626', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.04em' }}>Cannot access</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#dc2626', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.04em' }}>{tc('intel_teampanel.sectionCannotAccess')}</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                           {role.cannotAccess.map((c, i) => (
                             <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
@@ -444,9 +467,9 @@ export default function TeamPanel() {
 
       {/* ───── Invite form ───── */}
       <div style={{ padding: '16px', borderRadius: 14, border: '1px solid rgba(99,102,241,.2)', background: 'rgba(99,102,241,.03)', marginBottom: 20 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#6366F1', marginBottom: 12 }}>Invite a team member</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#6366F1', marginBottom: 12 }}>{tc('intel_teampanel.inviteTitle')}</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 8, alignItems: 'end' }}>
-          <input placeholder="their@email.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+          <input placeholder={tc('intel_teampanel.invitePlaceholder')} value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
             style={{ padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--sf)', fontSize: 13, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none' }}/>
           <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
             style={{ padding: '9px 10px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--sf)', fontSize: 13, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none' }}>
@@ -456,7 +479,7 @@ export default function TeamPanel() {
           </select>
           <button onClick={invite} disabled={!form.email || inviting}
             style={{ padding: '9px 16px', borderRadius: 9, border: 'none', background: '#6366F1', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
-            {inviting ? 'Sending…' : 'Send Invite'}
+            {inviting ? tc('intel_teampanel.btnSending') : tc('intel_teampanel.btnSendInvite')}
           </button>
         </div>
       </div>
@@ -468,7 +491,7 @@ export default function TeamPanel() {
         </div>
       ) : members.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--tx3)', fontSize: 13 }}>
-          No team members yet. Invite your accountant, ops manager, or co-founder.
+          {tc('intel_teampanel.emptyMembers')}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -488,11 +511,11 @@ export default function TeamPanel() {
                     {roleInfo.emoji} {roleInfo.label}
                   </span>
                   {m.status === 'pending' && (
-                    <span style={{ fontSize: 11, color: '#d97706', background: 'rgba(245,158,11,.1)', padding: '2px 8px', borderRadius: 9999 }}>Pending</span>
+                    <span style={{ fontSize: 11, color: '#d97706', background: 'rgba(245,158,11,.1)', padding: '2px 8px', borderRadius: 9999 }}>{tc('intel_teampanel.statusPending')}</span>
                   )}
                   <button onClick={() => removeOrUpdate(m.id, { status: 'removed' })}
                     style={{ padding: '4px 8px', borderRadius: 7, border: '1px solid var(--b)', background: 'transparent', fontSize: 11, color: 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit' }}>
-                    Remove
+                    {tc('intel_teampanel.btnRemove')}
                   </button>
                 </div>
               </div>

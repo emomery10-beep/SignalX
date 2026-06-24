@@ -1,0 +1,22 @@
+{
+  "empty": "No hay datos disponibles para este período. Conecta una fuente de datos para ver las tendencias de ingresos.",
+  "title": "Ingresos vs Costos",
+  "legendRevenue": "Ingresos",
+  "legendCogs": "CMV",
+  "legendFixed": "Fijos",
+  "legendNet": "Neto",
+  "tipRev": "Ing.",
+  "tipCogs": "CMV",
+  "tipFixed": "Fijos",
+  "tipNet": "Neto",
+  "detailedBreakdown": "Desglose detallado",
+  "close": "Cerrar",
+  "rowRevenue": "Ingresos",
+  "rowCogs": "CMV",
+  "rowFixedCosts": "Costos fijos",
+  "grossProfit": "Ganancia bruta",
+  "totalCosts": "Costos totales",
+  "netProfit": "Ganancia neta",
+  "margin": "{n}% de margen",
+  "ofRevenue": "{n}% de los ingresos"
+}

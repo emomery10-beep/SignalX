@@ -4,19 +4,16 @@ import { useRouter } from 'next/navigation'
 import { useLang } from '@/components/LanguageProvider'
 import DailyBrief from '@/components/intelligence/DailyBrief'
 import AnomalyFeed from '@/components/intelligence/AnomalyFeed'
-import DecisionMemory from '@/components/intelligence/DecisionMemory'
 import TeamPanel from '@/components/intelligence/TeamPanel'
 import LogisticsPulseCard from '@/components/LogisticsPulseCard'
 import CourierPulseCard from '@/components/intelligence/CourierPulseCard'
-import BusinessMemory from '@/components/intelligence/BusinessMemory'
 import FeatureGate from '@/components/gates/FeatureGate'
 import { usePlan } from '@/lib/hooks/usePlan'
 import KpiStrip from '@/components/intelligence/KpiStrip'
 import MiniTrendChart from '@/components/intelligence/MiniTrendChart'
-import IntegrationHub from '@/components/intelligence/IntegrationHub'
 import CfoDashboard from '@/components/cfo/CfoDashboard'
+import MarketClimate from '@/components/cfo/MarketClimate'
 import RevenueWaterfall from '@/components/intelligence/RevenueWaterfall'
-import DecisionTimeline from '@/components/intelligence/DecisionTimeline'
 import TopProducts from '@/components/intelligence/TopProducts'
 import PosPulse from '@/components/intelligence/PosPulse'
 import DailyActions from '@/components/intelligence/DailyActions'
@@ -49,6 +46,8 @@ export default function IntelligencePage() {
   const [cfoSnapshot, setCfoSnapshot] = useState<any>(null)
   const [logisticsHealth, setLogisticsHealth] = useState<any>(null)
   const [courierSummary, setCourierSummary] = useState<any>(null)
+  // Logistics merged tab — sub-view: 'outgoing' (ships) | 'incoming' (courier)
+  const [logisticsView, setLogisticsView] = useState<'outgoing' | 'incoming'>('outgoing')
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -63,16 +62,6 @@ export default function IntelligencePage() {
     setNowHour(d.getHours())
     setNowDateStr(d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))
   }, [])
-
-  // Decisions state (for timeline)
-  const [decisions, setDecisions] = useState<any[]>([])
-  const [decisionsLoaded, setDecisionsLoaded] = useState(false)
-  const [decisionView, setDecisionView] = useState<'timeline' | 'cards'>('timeline')
-
-  // Sparring state
-  const [sparringInput, setSparringInput] = useState('')
-  const [sparringResponse, setSparringResponse] = useState('')
-  const [sparringSending, setSparringSending] = useState(false)
 
   // Contextual widget state
   const [waterfallDrill, setWaterfallDrill] = useState<string | null>(null)
@@ -90,11 +79,20 @@ export default function IntelligencePage() {
     setTimeout(() => window.dispatchEvent(new CustomEvent('askbiz:send', { detail: prompt })), 400)
   }, [router])
 
+  // Open the merged Logistics tab on a given sub-view
+  const openLogistics = useCallback((view: 'outgoing' | 'incoming') => {
+    setLogisticsView(view)
+    setTab('logistics')
+  }, [])
+
   // Restore tab from URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const t = params.get('tab')
-    const validTabs = ['overview','anomalies','decisions','team','sparring','shipments','courier','memory','market','connections','cfo','actions']
+    const validTabs = ['overview','team','logistics','market','cfo','actions']
+    // Legacy deep-links: shipments/courier now live inside the merged Logistics tab
+    if (t === 'shipments') { setTab('logistics'); setLogisticsView('outgoing'); return }
+    if (t === 'courier')   { setTab('logistics'); setLogisticsView('incoming'); return }
     if (t && validTabs.includes(t)) setTab(t)
   }, [])
 
@@ -177,39 +175,6 @@ export default function IntelligencePage() {
     })
   }, [])
 
-  // Fetch decisions when decisions tab is active (lazy)
-  useEffect(() => {
-    if ((tab === 'decisions') && !decisionsLoaded) {
-      fetch('/api/decisions')
-        .then(r => r.ok ? r.json() : [])
-        .then(data => {
-          setDecisions(Array.isArray(data) ? data : (data?.decisions || []))
-          setDecisionsLoaded(true)
-        })
-        .catch(() => setDecisionsLoaded(true))
-    }
-  }, [tab, decisionsLoaded])
-
-  const dismissAnomaly = async (id: string) => {
-    await fetch('/api/health/anomaly', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, seen: true }) })
-    setAnomalies(prev => prev.filter(a => a.id !== id))
-  }
-
-  const askSparring = async () => {
-    if (!sparringInput.trim()) return
-    setSparringSending(true)
-    setSparringResponse('')
-    try {
-      const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: [{ role: 'user', content: sparringInput }], streaming: false }) })
-      const data = await res.json()
-      setSparringResponse(data.answer_text || tc('intelligence.sparring_no_response'))
-    } catch {
-      setSparringResponse(tc('intelligence.sparring_could_not_connect'))
-    } finally {
-      setSparringSending(false)
-    }
-  }
-
   const searchMarket = async () => {
     if (!mktQuery.trim()) return
     setMktLoading(true)
@@ -236,30 +201,15 @@ export default function IntelligencePage() {
     : 0
 
   // Plan gates
-  const canAlerts    = !planLoading && (planId === 'growth' || planId === 'business')
-  const canDecisions = !planLoading && planId === 'business'
   const canCfo       = !planLoading && planId === 'business'
 
   const tabs = [
     { id: 'overview',     label: tc('intelligence.tab_overview') },
     { id: 'cfo',          label: tc('intelligence.tab_cfo'),       locked: !canCfo },
-    { id: 'anomalies',    label: tc('intelligence.tab_anomalies'), badge: canAlerts ? (criticalCount + warningCount) : 0, locked: !canAlerts },
-    { id: 'decisions',    label: tc('intelligence.tab_decisions'), locked: !canDecisions },
     { id: 'team',         label: tc('intelligence.tab_team') },
-    { id: 'sparring',     label: tc('intelligence.tab_sparring') },
-    { id: 'shipments',    label: tc('intelligence.tab_shipments') },
-    { id: 'courier',      label: tc('intelligence.tab_courier') },
-    { id: 'memory',       label: tc('intelligence.tab_memory') },
+    { id: 'logistics',    label: tc('intelligence.tab_logistics') },
     { id: 'market',       label: tc('intelligence.tab_market') },
-    { id: 'connections',  label: tc('intelligence.tab_connections') },
     { id: 'actions',      label: tc('intelligence.tab_actions') },
-  ]
-
-  const sparringPrompts = [
-    tc('intelligence.sparring_prompt_0'),
-    tc('intelligence.sparring_prompt_1'),
-    tc('intelligence.sparring_prompt_2'),
-    tc('intelligence.sparring_prompt_3'),
   ]
 
   // Sparkline data from score history
@@ -287,7 +237,7 @@ export default function IntelligencePage() {
       value: criticalCount + warningCount || '—',
       sub: criticalCount > 0 ? tc('intelligence.kpi_alerts_critical', { n: criticalCount }) : warningCount > 0 ? tc('intelligence.kpi_alerts_warnings', { n: warningCount }) : tc('intelligence.kpi_alerts_clear'),
       accentColor: criticalCount > 0 ? '#EF4444' : warningCount > 0 ? '#F59E0B' : '#22C55E',
-      onClick: () => setTab('anomalies'),
+      onClick: () => router.push('/alerts'),
     },
     {
       label: tc('intelligence.kpi_trend_label'),
@@ -304,7 +254,7 @@ export default function IntelligencePage() {
       value: connectedCount || '—',
       sub: connectedCount === 0 ? tc('intelligence.kpi_sources_none') : connectedCount === 1 ? tc('intelligence.kpi_sources_pos') : tc('intelligence.kpi_sources_live', { n: connectedCount }),
       accentColor: connectedCount > 0 ? '#6366F1' : undefined,
-      onClick: () => setTab('connections'),
+      onClick: () => router.push('/sources'),
     },
   ]
 
@@ -363,11 +313,6 @@ export default function IntelligencePage() {
                   <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
               )}
-              {t.badge ? (
-                <span style={{ fontSize: 10, fontWeight: 700, background: '#EF4444', color: '#fff', borderRadius: 9999, padding: '1px 6px' }}>
-                  {t.badge}
-                </span>
-              ) : null}
             </button>
           ))}
         </div>
@@ -398,6 +343,14 @@ export default function IntelligencePage() {
 
             {/* ── Hero KPI section ── */}
             <KpiStrip cards={kpiCards} />
+
+            {/* ── Market Climate (compact — click to expand) ── */}
+            <MarketClimate
+              currencySymbol={cfoSnapshot?.currency_symbol || 'KSh'}
+              cashBalance={cfoSnapshot?.cash?.balance || 0}
+              monthlyFixed={cfoSnapshot?.cash?.monthly_fixed_total || 0}
+              onAsk={askAskBiz}
+            />
 
             {/* ── Daily brief ── */}
             <DailyBrief onAsk={askAskBiz}/>
@@ -451,7 +404,7 @@ export default function IntelligencePage() {
                   {/* Shipments card */}
                   {logisticsHealth && (
                     <button
-                      onClick={() => setTab('shipments')}
+                      onClick={() => openLogistics('outgoing')}
                       style={{
                         padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)',
                         textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', transition: 'box-shadow 200ms',
@@ -477,7 +430,7 @@ export default function IntelligencePage() {
                   {/* Courier card */}
                   {courierSummary && courierSummary.total > 0 && (
                     <button
-                      onClick={() => setTab('courier')}
+                      onClick={() => openLogistics('incoming')}
                       style={{
                         padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)',
                         textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', transition: 'box-shadow 200ms',
@@ -507,7 +460,7 @@ export default function IntelligencePage() {
             {/* ── Data Connection Health ── */}
             {connectedCount < totalSources && connectedCount < 5 && (
               <button
-                onClick={() => setTab('connections')}
+                onClick={() => router.push('/sources')}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 12, width: '100%',
                   padding: '12px 16px', borderRadius: 12,
@@ -611,7 +564,7 @@ export default function IntelligencePage() {
                     }}>{anomalies.length}</span>
                   </div>
                   <button
-                    onClick={() => setTab('anomalies')}
+                    onClick={() => router.push('/alerts')}
                     style={{ fontSize: 11, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}
                   >
                     {tc('intelligence.view_all')}
@@ -645,7 +598,7 @@ export default function IntelligencePage() {
                     sub: tc('intelligence.qa_whatif_sub'),
                     gradient: 'linear-gradient(135deg, rgba(245,158,11,.08) 0%, rgba(245,158,11,.02) 100%)',
                     border: 'rgba(245,158,11,.18)',
-                    action: () => setTab('sparring'),
+                    action: () => askAskBiz('Run a what-if scenario for my business — what happens to profit if I raise prices 10%?'),
                   },
                 ].map((card, i) => (
                   <button
@@ -687,8 +640,8 @@ export default function IntelligencePage() {
               {/* Bottom row: secondary actions (compact grid) */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
                 {[
-                  { emoji: '📦', title: tc('intelligence.qa_ships_title'), sub: tc('intelligence.qa_ships_sub'), color: 'rgba(34,197,94,.06)', border: 'rgba(34,197,94,.15)', action: () => setTab('shipments') },
-                  { emoji: '🚛', title: tc('intelligence.qa_courier_title'), sub: tc('intelligence.qa_courier_sub'), color: 'rgba(8,145,178,.06)', border: 'rgba(8,145,178,.15)', action: () => setTab('courier') },
+                  { emoji: '📦', title: tc('intelligence.qa_ships_title'), sub: tc('intelligence.qa_ships_sub'), color: 'rgba(34,197,94,.06)', border: 'rgba(34,197,94,.15)', action: () => openLogistics('outgoing') },
+                  { emoji: '🚛', title: tc('intelligence.qa_courier_title'), sub: tc('intelligence.qa_courier_sub'), color: 'rgba(8,145,178,.06)', border: 'rgba(8,145,178,.15)', action: () => openLogistics('incoming') },
                   { emoji: '🌍', title: tc('intelligence.qa_market_title'), sub: tc('intelligence.qa_market_sub'), color: 'rgba(208,138,89,.06)', border: 'rgba(208,138,89,.15)', action: () => setTab('market') },
                   { emoji: '🏛️', title: tc('intelligence.qa_cfo_title'), sub: tc('intelligence.qa_cfo_sub'), color: 'rgba(99,102,241,.06)', border: 'rgba(99,102,241,.15)', action: () => setTab('cfo') },
                 ].map((card, i) => (
@@ -719,183 +672,116 @@ export default function IntelligencePage() {
         )}
 
         {/* ─── ALERTS ─── */}
-        {tab === 'anomalies' && (
-          <div style={{ maxWidth: 720 }}>
-            <FeatureGate planId={planId} feature="anomaly_alerts">
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', marginBottom: 4 }}>{tc('intelligence.alerts_heading')}</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intelligence.alerts_sub')}</div>
-              </div>
-              <AnomalyFeed anomalies={anomalies} onAsk={askAskBiz} onDismiss={dismissAnomaly}/>
-            </FeatureGate>
-          </div>
-        )}
-
-        {/* ─── DECISIONS ─── */}
-        {tab === 'decisions' && (
-          <div style={{ maxWidth: 720 }}>
-            <FeatureGate planId={planId} feature="decision_memory">
-              {/* View toggle */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
-                <div>
-                  <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>{tc('intelligence.decisions_heading')}</div>
-                  <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intelligence.decisions_sub')}</div>
-                </div>
-                <div style={{ display: 'flex', borderRadius: 9999, border: '1px solid var(--b)', overflow: 'hidden', background: 'var(--sf)' }}>
-                  {(['timeline', 'cards'] as const).map(v => (
-                    <button
-                      key={v}
-                      onClick={() => setDecisionView(v)}
-                      style={{
-                        padding: '6px 14px',
-                        border: 'none',
-                        background: decisionView === v ? '#6366F1' : 'transparent',
-                        color: decisionView === v ? '#fff' : 'var(--tx3)',
-                        fontSize: 12,
-                        fontWeight: decisionView === v ? 600 : 400,
-                        cursor: 'pointer',
-                        fontFamily: 'inherit',
-                        transition: 'all 150ms',
-                      }}
-                    >
-                      {v === 'timeline' ? tc('intelligence.decisions_view_timeline') : tc('intelligence.decisions_view_cards')}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {decisionView === 'timeline' ? (
-                decisionsLoaded
-                  ? <DecisionTimeline decisions={decisions} onAsk={askAskBiz}/>
-                  : <div style={{ height: 200, borderRadius: 14, background: 'var(--ev)', animation: 'shimmer 1.4s infinite' }}/>
-              ) : (
-                <DecisionMemory onAsk={askAskBiz}/>
-              )}
-            </FeatureGate>
-          </div>
-        )}
-
         {/* ─── TEAM ─── */}
         {tab === 'team' && <div style={{ maxWidth: 720 }}><TeamPanel/></div>}
 
-        {/* ─── WHAT I KNOW ─── */}
-        {tab === 'memory' && <div style={{ maxWidth: 720 }}><BusinessMemory onAsk={askAskBiz}/></div>}
-
         {/* ─── SHIPMENTS ─── */}
-        {tab === 'shipments' && (
+        {/* ─── LOGISTICS (merged Ships + Courier) ─── */}
+        {tab === 'logistics' && (
           <div style={{ maxWidth: 720 }}>
-            <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-              <div>
-                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>{tc('intelligence.shipments_heading')}</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intelligence.shipments_sub')}</div>
-              </div>
-              <button
-                onClick={() => router.push('/shipments')}
-                style={{ padding: '8px 16px', borderRadius: 9999, border: 'none', background: '#6366F1', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-              >
-                {tc('intelligence.shipments_open_full')}
-              </button>
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>{tc('intelligence.logistics_heading')}</div>
+              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intelligence.logistics_sub')}</div>
             </div>
-            <LogisticsPulseCard />
-            <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 12, background: 'var(--sf)', border: '1px solid var(--b)' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>{tc('intelligence.quick_actions')}</div>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                {[
-                  { label: tc('intelligence.shipments_qa_add'), action: () => router.push('/shipments') },
-                  { label: tc('intelligence.shipments_qa_at_risk'), action: () => router.push('/shipments?filter=at_risk') },
-                  { label: tc('intelligence.shipments_qa_delay'), action: () => askAskBiz('Which of my shipments are delayed and what is the financial impact?') },
-                  { label: tc('intelligence.shipments_qa_supplier'), action: () => askAskBiz('Which supplier has the best delivery reliability based on my shipment history?') },
-                ].map((item, i) => (
-                  <button
-                    key={i}
-                    onClick={item.action}
-                    style={{ padding: '8px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx2)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms' }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#6366F1'; e.currentTarget.style.color = '#6366F1' }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.color = 'var(--tx2)' }}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* ─── COURIER ─── */}
-        {tab === 'courier' && (
-          <div style={{ maxWidth: 720 }}>
-            <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-              <div>
-                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>{tc('intelligence.courier_heading')}</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intelligence.courier_sub')}</div>
-              </div>
-            </div>
-            <CourierPulseCard onAsk={askAskBiz} />
-            <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 12, background: 'var(--sf)', border: '1px solid var(--b)' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>{tc('intelligence.quick_actions')}</div>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                {[
-                  { label: tc('intelligence.courier_qa_failures'), action: () => askAskBiz('Analyse our delivery failures — what are the top reasons and which routes are worst?') },
-                  { label: tc('intelligence.courier_qa_revenue_risk'), action: () => askAskBiz('How much courier revenue is unpaid? Which parcels should we chase first?') },
-                  { label: tc('intelligence.courier_qa_fleet'), action: () => askAskBiz('How well are we using our truck fleet? Any bottlenecks or underutilized vehicles?') },
-                  { label: tc('intelligence.courier_qa_routes'), action: () => askAskBiz('Which courier routes are most profitable and which have the highest failure rate?') },
-                  { label: tc('intelligence.courier_qa_stuck'), action: () => askAskBiz('Which parcels have been at branch for over 48 hours and need urgent dispatch?') },
-                ].map((item, i) => (
+            {/* Sub-tab toggle — Outgoing (ships) / Incoming (courier) */}
+            <div style={{ display: 'inline-flex', padding: 3, borderRadius: 10, background: 'var(--bg)', border: '1px solid var(--b)', marginBottom: 18 }}>
+              {([
+                { id: 'outgoing', emoji: '📦', label: tc('intelligence.logistics_sub_outgoing'), accent: '#6366F1' },
+                { id: 'incoming', emoji: '🚛', label: tc('intelligence.logistics_sub_incoming'), accent: '#0891b2' },
+              ] as const).map(s => {
+                const active = logisticsView === s.id
+                return (
                   <button
-                    key={i}
-                    onClick={item.action}
-                    style={{ padding: '8px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx2)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms' }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#0891b2'; e.currentTarget.style.color = '#0891b2' }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.color = 'var(--tx2)' }}
+                    key={s.id}
+                    onClick={() => setLogisticsView(s.id)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      padding: '7px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                      fontSize: 13, fontWeight: active ? 600 : 500,
+                      background: active ? 'var(--sf)' : 'transparent',
+                      color: active ? s.accent : 'var(--tx3)',
+                      boxShadow: active ? '0 1px 4px rgba(0,0,0,.08), 0 0 0 1px var(--b)' : 'none',
+                      transition: 'all 150ms',
+                    }}
                   >
-                    {item.label}
+                    <span style={{ fontSize: 15 }}>{s.emoji}</span>
+                    {s.label}
                   </button>
-                ))}
-              </div>
+                )
+              })}
             </div>
-          </div>
-        )}
 
-        {/* ─── ASK ASKBIZ / SPARRING ─── */}
-        {tab === 'sparring' && (
-          <div style={{ maxWidth: 720 }}>
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>{tc('intelligence.sparring_heading')}</div>
-              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intelligence.sparring_sub')}</div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16, padding: '16px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)' }}>
-              <textarea
-                value={sparringInput}
-                onChange={e => setSparringInput(e.target.value)}
-                placeholder={tc('intelligence.sparring_placeholder')}
-                rows={3}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx)', fontSize: 14, fontFamily: 'inherit', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
-              />
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                <button
-                  onClick={askSparring}
-                  disabled={sparringSending || !sparringInput.trim()}
-                  style={{ padding: '9px 20px', borderRadius: 10, border: 'none', background: '#6366F1', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: sparringSending || !sparringInput.trim() ? 0.5 : 1 }}
-                >
-                  {sparringSending ? tc('intelligence.sparring_thinking') : tc('intelligence.sparring_ask')}
-                </button>
+            {/* ── OUTGOING (Ships) ── */}
+            {logisticsView === 'outgoing' && (
+              <div>
+                <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                  <div>
+                    <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{tc('intelligence.shipments_heading')}</div>
+                    <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intelligence.shipments_sub')}</div>
+                  </div>
+                  <button
+                    onClick={() => router.push('/shipments')}
+                    style={{ padding: '8px 16px', borderRadius: 9999, border: 'none', background: '#6366F1', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    {tc('intelligence.shipments_open_full')}
+                  </button>
+                </div>
+                <LogisticsPulseCard />
+                <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 12, background: 'var(--sf)', border: '1px solid var(--b)' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>{tc('intelligence.quick_actions')}</div>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    {[
+                      { label: tc('intelligence.shipments_qa_add'), action: () => router.push('/shipments') },
+                      { label: tc('intelligence.shipments_qa_at_risk'), action: () => router.push('/shipments?filter=at_risk') },
+                      { label: tc('intelligence.shipments_qa_delay'), action: () => askAskBiz('Which of my shipments are delayed and what is the financial impact?') },
+                      { label: tc('intelligence.shipments_qa_supplier'), action: () => askAskBiz('Which supplier has the best delivery reliability based on my shipment history?') },
+                    ].map((item, i) => (
+                      <button
+                        key={i}
+                        onClick={item.action}
+                        style={{ padding: '8px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx2)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms' }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#6366F1'; e.currentTarget.style.color = '#6366F1' }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.color = 'var(--tx2)' }}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
-            {/* Prompt suggestions */}
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-              {sparringPrompts.map((p, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSparringInput(p)}
-                  style={{ padding: '6px 12px', borderRadius: 9999, border: '1px solid var(--b)', background: 'var(--sf)', color: 'var(--tx3)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-            {sparringResponse && (
-              <div style={{ padding: '16px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)', fontSize: 13, color: 'var(--tx2)', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>
-                {sparringResponse}
+            )}
+
+            {/* ── INCOMING (Courier) ── */}
+            {logisticsView === 'incoming' && (
+              <div>
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{tc('intelligence.courier_heading')}</div>
+                  <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intelligence.courier_sub')}</div>
+                </div>
+                <CourierPulseCard onAsk={askAskBiz} />
+                <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 12, background: 'var(--sf)', border: '1px solid var(--b)' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>{tc('intelligence.quick_actions')}</div>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    {[
+                      { label: tc('intelligence.courier_qa_failures'), action: () => askAskBiz('Analyse our delivery failures — what are the top reasons and which routes are worst?') },
+                      { label: tc('intelligence.courier_qa_revenue_risk'), action: () => askAskBiz('How much courier revenue is unpaid? Which parcels should we chase first?') },
+                      { label: tc('intelligence.courier_qa_fleet'), action: () => askAskBiz('How well are we using our truck fleet? Any bottlenecks or underutilized vehicles?') },
+                      { label: tc('intelligence.courier_qa_routes'), action: () => askAskBiz('Which courier routes are most profitable and which have the highest failure rate?') },
+                      { label: tc('intelligence.courier_qa_stuck'), action: () => askAskBiz('Which parcels have been at branch for over 48 hours and need urgent dispatch?') },
+                    ].map((item, i) => (
+                      <button
+                        key={i}
+                        onClick={item.action}
+                        style={{ padding: '8px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx2)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms' }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#0891b2'; e.currentTarget.style.color = '#0891b2' }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.color = 'var(--tx2)' }}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -1093,9 +979,6 @@ export default function IntelligencePage() {
             )}
           </div>
         )}
-
-        {/* ─── CONNECTIONS ─── */}
-        {tab === 'connections' && <IntegrationHub />}
 
         {/* ─── CFO MODE ─── */}
         {tab === 'cfo' && (

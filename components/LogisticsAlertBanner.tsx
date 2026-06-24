@@ -1,9 +1,11 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLang } from '@/components/LanguageProvider'
 
 export default function LogisticsAlertBanner() {
   const router = useRouter()
+  const { tc } = useLang()
   const [data, setData] = useState<any>(null)
   const [dismissed, setDismissed] = useState(false)
 
@@ -27,12 +29,12 @@ export default function LogisticsAlertBanner() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 20 }}>📦</span>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>Track your shipments</div>
-            <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Add tracking numbers to get stockout alerts, customs warnings, and financial impact in real time.</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{tc('logistics_alertbanner.trackShipmentsTitle')}</div>
+            <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('logistics_alertbanner.trackShipmentsDesc')}</div>
           </div>
         </div>
         <button onClick={() => router.push('/shipments')} style={{ padding: '7px 14px', borderRadius: 9999, border: 'none', background: '#6366F1', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
-          Add shipment →
+          {tc('logistics_alertbanner.addShipment')}
         </button>
       </div>
     )
@@ -45,10 +47,10 @@ export default function LogisticsAlertBanner() {
       <div style={{ marginBottom: 16, padding: '10px 16px', borderRadius: 12, background: 'rgba(245,158,11,.06)', border: '1px solid rgba(245,158,11,.2)', display: 'flex', alignItems: 'center', gap: 10 }}>
         <span style={{ fontSize: 16 }}>⚠️</span>
         <div style={{ fontSize: 13, color: '#d97706', flex: 1 }}>
-          <strong>{health.at_risk || 0} shipment{health.at_risk !== 1 ? 's' : ''} at risk</strong> · {health.summary || ''}
+          <strong>{tc(health.at_risk !== 1 ? 'logistics_alertbanner.shipmentsAtRiskPlural' : 'logistics_alertbanner.shipmentsAtRiskSingular', { n: health.at_risk || 0 })}</strong> · {health.summary || ''}
         </div>
         <button onClick={() => router.push('/shipments')} style={{ padding: '5px 12px', borderRadius: 9999, border: '1px solid rgba(245,158,11,.3)', background: 'transparent', color: '#d97706', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
-          View →
+          {tc('logistics_alertbanner.view')}
         </button>
       </div>
     )
@@ -66,10 +68,10 @@ export default function LogisticsAlertBanner() {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 16 }}>{isCritical ? '🚨' : '⚠️'}</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color }}>{top.title || 'Shipment Alert'}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color }}>{top.title || tc('logistics_alertbanner.shipmentAlertFallback')}</span>
             {top.financial_impact > 0 && (
               <span style={{ fontSize: 11, fontWeight: 600, color, background: bg, border: `1px solid ${border}`, padding: '1px 7px', borderRadius: 9999 }}>
-                £{(top.financial_impact || 0).toFixed(0)} impact
+                {tc('logistics_alertbanner.financialImpact', { amount: (top.financial_impact || 0).toFixed(0) })}
               </span>
             )}
           </div>
@@ -78,11 +80,11 @@ export default function LogisticsAlertBanner() {
         <p style={{ fontSize: 13, color: 'var(--tx2)', margin: '0 0 10px', lineHeight: 1.5 }}>{top.message || ''}</p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button onClick={() => router.push('/shipments')} style={{ padding: '7px 14px', borderRadius: 9999, border: 'none', background: color, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-            View shipment →
+            {tc('logistics_alertbanner.viewShipment')}
           </button>
-          <button onClick={() => { router.push('/ask'); setTimeout(() => window.dispatchEvent(new CustomEvent('askbiz:send', { detail: `What should I do about shipment ${top.tracking_number}? What are my options?` })), 400) }}
+          <button onClick={() => { router.push('/ask'); setTimeout(() => window.dispatchEvent(new CustomEvent('askbiz:send', { detail: tc('logistics_alertbanner.askBizPrompt', { trackingNumber: top.tracking_number }) })), 400) }}
             style={{ padding: '7px 14px', borderRadius: 9999, border: `1px solid ${border}`, background: 'transparent', color, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
-            Ask AskBiz →
+            {tc('logistics_alertbanner.askAskBiz')}
           </button>
         </div>
       </div>
@@ -90,12 +92,12 @@ export default function LogisticsAlertBanner() {
       {brief && (brief.delayed > 0 || brief.customs_holds > 0) && (
         <div style={{ padding: '8px 14px', borderRadius: 10, background: 'var(--ev)', border: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
           <div style={{ fontSize: 12, color: 'var(--tx2)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            {(brief.on_track || 0) > 0 && <span>✅ {brief.on_track} on track</span>}
-            {(brief.delayed || 0) > 0 && <span style={{ color: '#d97706' }}>⏱ {brief.delayed} delayed</span>}
-            {(brief.customs_holds || 0) > 0 && <span style={{ color: '#dc2626' }}>🛃 {brief.customs_holds} customs hold</span>}
+            {(brief.on_track || 0) > 0 && <span>✅ {tc('logistics_alertbanner.onTrack', { n: brief.on_track })}</span>}
+            {(brief.delayed || 0) > 0 && <span style={{ color: '#d97706' }}>⏱ {tc('logistics_alertbanner.delayed', { n: brief.delayed })}</span>}
+            {(brief.customs_holds || 0) > 0 && <span style={{ color: '#dc2626' }}>🛃 {tc('logistics_alertbanner.customsHold', { n: brief.customs_holds })}</span>}
           </div>
           <button onClick={() => router.push('/shipments')} style={{ fontSize: 12, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
-            View all →
+            {tc('logistics_alertbanner.viewAll')}
           </button>
         </div>
       )}

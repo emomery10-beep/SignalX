@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 import ShareableInsight from './ShareableInsight'
 import VerdictBar from './VerdictBar'
 import ScenarioBlock from './ScenarioBlock'
@@ -127,6 +128,7 @@ function KpiCardBlock({ cards }: { cards: KpiCard[] }) {
 
 // ── MAIN RESULT BLOCK ─────────────────────────────────────────────────────────
 export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode }: Props) {
+  const { tc } = useLang()
   const sym = geo?.currencySymbol || '$'
 
   if (result.scope_violation) {
@@ -205,7 +207,7 @@ export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode
         <MiniLineChart
           labels={result.chart_labels!}
           values={result.chart_values!}
-          label={result.chart_label || result.chart_type || 'Trend'}
+          label={result.chart_label || result.chart_type || tc('chat_resultblock.chartLabelFallback')}
           symbol={sym}
         />
       )}
@@ -262,7 +264,7 @@ export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode
       {/* 7. Recommendations */}
       {hasRecs && (
         <div style={{ padding: '12px 14px', borderRadius: 13, border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 12 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>🎯 Recommendations</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>{tc('chat_resultblock.recommendationsHeader')}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
             {result.recommendations!.map((r, i) => (
               <div key={i} style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
@@ -291,7 +293,7 @@ export default function ResultBlock({ result, question, onFollowUp, geo, cfoMode
       {/* Share insight */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
         <ShareableInsight
-          question={question || 'Business insight from AskBiz'}
+          question={question || tc('chat_resultblock.shareInsightFallback')}
           result={result}
         />
       </div>

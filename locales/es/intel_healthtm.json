@@ -1,0 +1,12 @@
+{
+  "timeMachine": "Máquina del tiempo",
+  "askAi": "Preguntar a la IA",
+  "askAiPrompt": "¿Cómo ha evolucionado la salud de mi negocio con el tiempo? ¿Cuáles son las tendencias clave y en qué debería enfocarme?",
+  "now": "Ahora",
+  "clickBarToCompare": "Haz clic en una barra para comparar",
+  "analysingChanges": "Analizando cambios desde {date}...",
+  "changesSince": "Cambios desde {date}",
+  "keyEvents": "EVENTOS CLAVE",
+  "barTooltip": "{date}: {score}/100",
+  "totalChangePts": "{pts} pts"
+}

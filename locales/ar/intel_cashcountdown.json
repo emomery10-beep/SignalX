@@ -1,0 +1,17 @@
+{
+  "title": "التدفق النقدي",
+  "askAi": "اسأل الذكاء الاصطناعي",
+  "askPrompt": "حلّل التدفق النقدي ومدة البقاء المالي لديّ. ما الذي يجب فعله لتحسينه؟",
+  "balanceLabel": "رصيد {amount}",
+  "revenueTrend": "{pct}% إيرادات",
+  "addBalanceCta": "أضف رصيدك النقدي في الإعدادات لتتبع مدة البقاء المالي",
+  "dailyRevenue": "الإيرادات اليومية",
+  "dailyCosts": "التكاليف اليومية",
+  "dailyNet": "الصافي اليومي",
+  "weeklyTitle": "صافي التدفق النقدي الأسبوعي",
+  "twelveWeeksAgo": "منذ 12 أسبوعاً",
+  "thisWeek": "هذا الأسبوع",
+  "monthlyLabel": "شهرياً: {income} دخلاً، {expenses} مصروفاً",
+  "aboveBreakeven": "تكسب {amount}/يوم فوق نقطة التعادل",
+  "belowBreakeven": "تحتاج {amount}/يوم إضافياً للوصول إلى نقطة التعادل"
+}

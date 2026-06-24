@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import type { AIResult } from '@/lib/ai'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Props {
   lastResult: AIResult | null
@@ -72,13 +73,17 @@ const LEVEL_STYLE = {
   neutral: { dot: '#94A3B8', text: 'var(--tx3)', border: 'var(--b)',             bg: 'transparent'          },
 }
 
-const DEFAULT_SIGNALS: Signal[] = [
-  { text: 'What should my profit margin actually be for my business type?', query: 'What is a healthy profit margin for my type of business and how do I hit it?', level: 'neutral' },
-  { text: 'Where am I most likely losing money without realising it?', query: 'Where am I most likely losing money without realising it in my business?', level: 'neutral' },
-  { text: 'How do I know which products are worth keeping and which to cut?', query: 'What criteria should I use to decide which products to keep selling and which to stop?', level: 'neutral' },
-]
+function buildDefaultSignals(tc: (key: string) => string): Signal[] {
+  return [
+    { text: tc('chat_pulsebar.defaultSignal0Text'), query: tc('chat_pulsebar.defaultSignal0Query'), level: 'neutral' },
+    { text: tc('chat_pulsebar.defaultSignal1Text'), query: tc('chat_pulsebar.defaultSignal1Query'), level: 'neutral' },
+    { text: tc('chat_pulsebar.defaultSignal2Text'), query: tc('chat_pulsebar.defaultSignal2Query'), level: 'neutral' },
+  ]
+}
 
 export default function PulseBar({ lastResult, onAsk, hasData }: Props) {
+  const { tc } = useLang()
+  const DEFAULT_SIGNALS = buildDefaultSignals(tc)
   const [signal, setSignal] = useState<Signal | null>(null)
   const [defaultIdx, setDefaultIdx] = useState(0)
   const [visible, setVisible] = useState(true)
@@ -120,7 +125,7 @@ export default function PulseBar({ lastResult, onAsk, hasData }: Props) {
       onClick={() => onAsk(active.query)}
       onMouseEnter={e => { e.currentTarget.style.opacity = '.85' }}
       onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
-      title="Click to ask about this"
+      title={tc('chat_pulsebar.clickToAsk')}
     >
       <span style={{
         width: 7, height: 7, borderRadius: '50%',

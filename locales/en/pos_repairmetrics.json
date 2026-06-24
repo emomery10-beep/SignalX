@@ -1,0 +1,13 @@
+{
+  "sectionTitle": "Repair Services",
+  "activeJobsLabel": "Active jobs",
+  "activeJobsSub": "{intake} intake · {inProgress} in progress · {completed} ready",
+  "collectedTodayLabel": "Collected today",
+  "repairRevenueLabel": "Repair revenue",
+  "repairRevenueSub": "today",
+  "avgTurnaroundLabel": "Avg turnaround",
+  "warrantyClaimsLabel": "Warranty claims",
+  "inProgress": "in progress",
+  "intake": "intake",
+  "ready": "ready"
+}

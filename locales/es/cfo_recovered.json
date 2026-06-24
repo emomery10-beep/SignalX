@@ -1,0 +1,11 @@
+{
+  "title": "Recuperación de pagos",
+  "askAi": "Preguntar a la IA",
+  "askPrompt": "Tenemos {failedCount} pagos fallidos por un total de {totalAmount}. Hemos recuperado {recoveredAmount} (tasa del {recoveryRate}%). {pendingRetry} pagos pendientes de reintento. ¿Cómo podemos mejorar nuestra tasa de recuperación?",
+  "atRisk": "En riesgo",
+  "recovered": "Recuperado",
+  "recoveryRate": "Tasa de recuperación",
+  "failedPayments": "{n} pagos fallidos",
+  "payments": "{n} pagos",
+  "pending": "{n} pendientes"
+}

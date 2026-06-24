@@ -1,0 +1,5 @@
+{
+  "workingCapitalPrompt": "Bewerte meine Working-Capital-Position – Forderungen, Verbindlichkeiten, Lagerbestand. Wo liegen die Engpässe im Cash-Conversion-Cycle?",
+  "costStructureLabel": "Kostenstruktur",
+  "costStructurePrompt": "Analysiere meine Kostenstruktur und identifiziere die 3 größten Bereiche, in denen ich Kosten senken kann, ohne das Wachstum zu beeinträchtigen."
+}

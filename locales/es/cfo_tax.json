@@ -1,0 +1,15 @@
+{
+  "tip_input_credits_desc": "Asegúrate de que todas las compras empresariales tengan recibos de {name} válidos. Muchas pymes pierden entre el 2 y el 5 % de los créditos de {name} reclamables.",
+  "tip_opt_income_title": "Considera optar por el impuesto sobre la renta",
+  "tip_opt_income_desc": "Con un margen neto del {margin} %, el impuesto sobre la renta estándar sobre beneficios puede ser inferior al impuesto sobre facturación del {rate} %.",
+  "tip_timing_title": "Adelantar gastos antes del cierre del ejercicio",
+  "tip_timing_desc": "Adelantar compras planificadas (inventario, equipos, marketing) al período actual reduce la factura fiscal de este año.",
+  "upcoming_deadlines": "Próximos vencimientos",
+  "vat_return": "Declaración de {name}",
+  "annual_return": "Declaración anual",
+  "due_date": "Vence el {date}",
+  "overdue": "VENCIDO",
+  "days_until": "{days} días",
+  "days_short": "{days}d",
+  "save_approx": "Ahorra ~{amount}"
+}

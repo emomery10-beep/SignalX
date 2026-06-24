@@ -1,0 +1,20 @@
+{
+  "title": "Sectoroverstijgende inzichten",
+  "askAi": "Vraag AI",
+  "askAiPrompt": "Hoe verhouden mijn statistieken zich tot andere sectoren? Waar presteer ik ondermaats en wat kan ik leren van topsectoren?",
+  "compareWithSectors": "Vergelijk met sectoren",
+  "youBadge": "JIJ",
+  "businesses": "{n} bedrijven",
+  "sectorRetail": "Detailhandel",
+  "sectorEcommerce": "E-commerce",
+  "sectorRestaurant": "Restaurant",
+  "sectorFoodBev": "Eten & Drinken",
+  "sectorImportExport": "Import/Export",
+  "sectorSaas": "SaaS",
+  "sectorServices": "Diensten",
+  "sectorFashion": "Mode",
+  "sectorHealthBeauty": "Gezondheid & Schoonheid",
+  "sectorSalon": "Salon",
+  "sectorRepair": "Reparatie",
+  "sectorFactory": "Fabriek"
+}

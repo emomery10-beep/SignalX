@@ -1,0 +1,20 @@
+{
+  "cfo_logistics": {
+    "title": "Logistique & Expéditions",
+    "provider": "Track17",
+    "emptyState": "Aucune expédition active suivie. Ajoutez des expéditions via l'intégration Track17 pour visualiser leur impact sur le fonds de roulement.",
+    "askAi": "Demander à l'IA",
+    "askPrompt": "Mes expéditions : {inTransitCount} en transit pour {inTransitValue}, {delayedCount} en retard ({delayedValue} à risque), coût de financement {financingCost}, livraison moyenne {avgDays} jours. Comment réduire mes coûts logistiques et le fonds de roulement immobilisé en transit ?",
+    "metricInTransit": "En transit",
+    "metricDelayed": "En retard",
+    "metricAvgDelivery": "Livraison moy.",
+    "metricFinanceCost": "Coût de financement",
+    "workingCapitalDays": "jours de fonds de roulement",
+    "capitalTiedUp": "capital immobilisé",
+    "shipmentHealth": "Santé des expéditions",
+    "onTime": "{n} à l'heure",
+    "delayedCount": "{n} en retard",
+    "atRiskWarning": "{n} expédition signalée comme à risque — risque de rupture de stock ou de perte de revenus en cas de nouveau retard.",
+    "inTransitSummary": "{value} de stocks sont actuellement en transit. Ce capital est immobilisé en moyenne pendant {days} jours, jusqu'à réception et mise en vente des marchandises."
+  }
+}

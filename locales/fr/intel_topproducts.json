@@ -1,0 +1,18 @@
+{
+  "noData": "Aucune donnée de vente",
+  "noDataAsk": "Demander à AskBiz →",
+  "noDataAskPrompt": "Sur quels produits devrais-je concentrer mes ventes ?",
+  "title": "Meilleurs produits",
+  "kpiProducts": "Produits",
+  "kpiAvgMargin": "Marge moy.",
+  "kpiUnitsSold": "Unités vendues",
+  "colRank": "#",
+  "colProduct": "Produit",
+  "colRevenue": "Chiffre d'affaires",
+  "colQty": "Qté",
+  "colMargin": "Marge",
+  "qtySold": "{n} vendus",
+  "footnote": "Classement par CA · données POS",
+  "collapse": "← Réduire",
+  "tapToAnalyse": "Appuyer pour analyser →"
+}

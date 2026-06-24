@@ -114,7 +114,7 @@ export default function CashFlowCountdown({ onAsk }: { onAsk?: (prompt: string) 
       {/* Weekly cash flow sparkline */}
       {weekly.length > 0 && (
         <div style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 6, fontWeight: 600 }}>Weekly net cash flow</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 6, fontWeight: 600 }}>{tc('intel_cashcountdown.weeklyTitle')}</div>
           <div style={{ display: 'flex', alignItems: 'end', gap: 2, height: 40 }}>
             {weekly.map((w, i) => {
               const h = Math.max(2, (Math.abs(w.net) / maxAbs) * 36)
@@ -133,8 +133,8 @@ export default function CashFlowCountdown({ onAsk }: { onAsk?: (prompt: string) 
             })}
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
-            <span style={{ fontSize: 9, color: 'var(--tx3)' }}>12w ago</span>
-            <span style={{ fontSize: 9, color: 'var(--tx3)' }}>This week</span>
+            <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_cashcountdown.twelveWeeksAgo')}</span>
+            <span style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_cashcountdown.thisWeek')}</span>
           </div>
         </div>
       )}
@@ -146,7 +146,7 @@ export default function CashFlowCountdown({ onAsk }: { onAsk?: (prompt: string) 
         border: '1px solid var(--b)', background: 'var(--sf)',
         fontSize: 11, color: 'var(--tx3)',
       }}>
-        <span>Monthly: {fmt(data.monthly.revenue)} in, {fmt(data.monthly.cogs + data.monthly.fixed_costs)} out</span>
+        <span>{tc('intel_cashcountdown.monthlyLabel', { income: fmt(data.monthly.revenue), expenses: fmt(data.monthly.cogs + data.monthly.fixed_costs) })}</span>
         <span style={{ fontWeight: 700, color: data.monthly.net >= 0 ? '#10B981' : '#EF4444' }}>
           {data.monthly.net >= 0 ? '+' : ''}{fmt(data.monthly.net)}
         </span>
@@ -156,8 +156,8 @@ export default function CashFlowCountdown({ onAsk }: { onAsk?: (prompt: string) 
       {data.daily.breakeven > 0 && (
         <div style={{ marginTop: 8, fontSize: 11, color: 'var(--tx3)', textAlign: 'center' }}>
           {data.daily.breakeven_gap >= 0
-            ? <span>Earning <strong style={{ color: '#10B981' }}>{fmt(data.daily.breakeven_gap)}/day</strong> above breakeven</span>
-            : <span>Need <strong style={{ color: '#EF4444' }}>{fmt(Math.abs(data.daily.breakeven_gap))}/day</strong> more to break even</span>
+            ? <span>{tc('intel_cashcountdown.aboveBreakeven', { amount: fmt(data.daily.breakeven_gap) + '/day' })}</span>
+            : <span>{tc('intel_cashcountdown.belowBreakeven', { amount: fmt(Math.abs(data.daily.breakeven_gap)) + '/day' })}</span>
           }
         </div>
       )}

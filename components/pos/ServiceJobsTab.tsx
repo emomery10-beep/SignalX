@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#d08a59'
 const ACC_BG = 'rgba(208,138,89,.08)'
@@ -53,23 +54,16 @@ interface Props {
   notify: (msg: string, ok?: boolean) => void
 }
 
-const STATUS_COLORS: Record<JobStatus, { bg: string; text: string; label: string }> = {
-  intake: { bg: 'rgba(99,102,241,.1)', text: '#6366f1', label: 'Intake' },
-  quoted: { bg: 'rgba(202,138,4,.1)', text: AMBER, label: 'Quoted' },
-  accepted: { bg: 'rgba(59,130,246,.1)', text: '#3b82f6', label: 'Accepted' },
-  in_progress: { bg: 'rgba(168,85,247,.1)', text: '#a855f7', label: 'In Progress' },
-  completed: { bg: 'rgba(22,163,74,.1)', text: GREEN, label: 'Completed' },
-  collected: { bg: 'rgba(22,163,74,.2)', text: GREEN, label: 'Collected' },
-  cancelled: { bg: 'rgba(220,38,38,.1)', text: RED, label: 'Cancelled' },
-}
-
-function StatusBadge({ status }: { status: JobStatus }) {
-  const s = STATUS_COLORS[status] || STATUS_COLORS.intake
-  return (
-    <span style={{ fontSize: 11, fontWeight: 700, color: s.text, background: s.bg, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-      {s.label}
-    </span>
-  )
+function buildStatusColors(tc: (key: string) => string): Record<JobStatus, { bg: string; text: string; label: string }> {
+  return {
+    intake: { bg: 'rgba(99,102,241,.1)', text: '#6366f1', label: tc('pos_servicejobs.statusIntake') },
+    quoted: { bg: 'rgba(202,138,4,.1)', text: AMBER, label: tc('pos_servicejobs.statusQuoted') },
+    accepted: { bg: 'rgba(59,130,246,.1)', text: '#3b82f6', label: tc('pos_servicejobs.statusAccepted') },
+    in_progress: { bg: 'rgba(168,85,247,.1)', text: '#a855f7', label: tc('pos_servicejobs.statusInProgress') },
+    completed: { bg: 'rgba(22,163,74,.1)', text: GREEN, label: tc('pos_servicejobs.statusCompleted') },
+    collected: { bg: 'rgba(22,163,74,.2)', text: GREEN, label: tc('pos_servicejobs.statusCollected') },
+    cancelled: { bg: 'rgba(220,38,38,.1)', text: RED, label: tc('pos_servicejobs.statusCancelled') },
+  }
 }
 
 function fmt(symbol: string, amount: number): string {
@@ -90,6 +84,9 @@ function timeAgo(date: string): string {
 }
 
 export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff, notify }: Props) {
+  const { tc } = useLang()
+  const STATUS_COLORS = buildStatusColors(tc)
+
   const defaultHeaders: Record<string, string> = { 'Content-Type': 'application/json' }
   const [view, setView] = useState<SubView>('queue')
   const [jobs, setJobs] = useState<ServiceJob[]>([])
@@ -176,7 +173,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
       }
       setScanning(true)
     } catch (err) {
-      notify('Camera access denied', false)
+      notify(tc('pos_servicejobs.cameraAccessDenied'), false)
     }
   }
 
@@ -198,7 +195,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
     const base64 = canvasRef.current.toDataURL('image/jpeg', 0.85).split(',')[1]
     stopCamera()
 
-    notify('Scanning device label...')
+    notify(tc('pos_servicejobs.scanningDevice'))
     try {
       const res = await fetch('/api/pos/service-jobs/scan-device', {
         method: 'POST',
@@ -217,19 +214,19 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
           device_description: [data.device.color, data.device.storage, data.device.model_number].filter(Boolean).join(', ') || prev.device_description,
           intake_photo_url: `data:image/jpeg;base64,${base64}`, // stored temporarily, uploaded properly after job creation
         }))
-        notify(`Identified: ${data.device.model || 'Unknown device'}`)
+        notify(tc('pos_servicejobs.deviceIdentifiedNotify').replace('{model}', data.device.model || 'Unknown device'))
       } else {
-        notify('Could not read device label — fill in manually', false)
+        notify(tc('pos_servicejobs.unableToReadLabel'), false)
       }
     } catch (err) {
-      notify('Scan failed', false)
+      notify(tc('pos_servicejobs.scanFailed'), false)
     }
   }
 
   // ── Create job ─────────────────────────────────────────────
   const createJob = async () => {
     if (!formData.fault_description.trim()) {
-      notify('Fault description is required', false)
+      notify(tc('pos_servicejobs.faultRequired'), false)
       return
     }
 
@@ -272,7 +269,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
         }).catch(err => console.error('Intake photo upload failed:', err))
       }
 
-      notify(`Job created: ${data.job.ticket_number}`)
+      notify(tc('pos_servicejobs.jobCreatedNotify').replace('{ticket}', data.job.ticket_number))
       setLastCreatedJob(data.job)
       // Keep customer info but clear device-specific fields for multi-device flow
       const keepCustomer = { customer_phone: formData.customer_phone, customer_name: formData.customer_name }
@@ -282,7 +279,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
       setShowAddAnother(true)
       fetchJobs()
     } catch (err) {
-      notify('Failed to create job', false)
+      notify(tc('pos_servicejobs.failedCreateJob'), false)
     }
   }
 
@@ -299,12 +296,12 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
         notify(data.error, false)
         return
       }
-      notify('Job updated')
+      notify(tc('pos_servicejobs.jobUpdatedNotify'))
       setSelectedJob(data.job)
       fetchJobs()
       if (selectedJob) fetchHistory(jobId)
     } catch (err) {
-      notify('Failed to update job', false)
+      notify(tc('pos_servicejobs.failedUpdateJob'), false)
     }
   }
 
@@ -325,7 +322,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
       }
       setCaptureCheckout(true)
     } catch {
-      notify('Camera access denied', false)
+      notify(tc('pos_servicejobs.cameraAccessDenied'), false)
     }
   }
 
@@ -352,13 +349,13 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
       const data = await res.json()
       if (data.url) {
         setSelectedJob(prev => prev ? { ...prev, checkout_photo_url: data.url } : prev)
-        notify('Checkout photo saved')
+        notify(tc('pos_servicejobs.checkoutPhotoSaved'))
         fetchJobs()
       } else {
-        notify(data.error || 'Upload failed', false)
+        notify(data.error || tc('pos_servicejobs.photoUploadFailed'), false)
       }
     } catch {
-      notify('Photo upload failed', false)
+      notify(tc('pos_servicejobs.photoUploadFailed'), false)
     }
   }
 
@@ -372,10 +369,10 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
       })
       const data = await res.json()
       if (data.error) { notify(data.error, false); return }
-      notify(data.message || 'Quote sent')
+      notify(data.message || tc('pos_servicejobs.jobUpdatedNotify'))
       if (selectedJob) fetchHistory(jobId)
     } catch {
-      notify('Failed to send quote', false)
+      notify(tc('pos_servicejobs.failedSendQuote'), false)
     }
   }
 
@@ -406,21 +403,21 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
   if (view === 'new_job') return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <button onClick={() => { setView('queue'); stopCamera() }} style={{ ...btnSecondary, padding: '6px 14px' }}>← Back</button>
-        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700 }}>New Service Job</div>
+        <button onClick={() => { setView('queue'); stopCamera() }} style={{ ...btnSecondary, padding: '6px 14px' }}>{tc('pos_servicejobs.backBtn')}</button>
+        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700 }}>{tc('pos_servicejobs.newJobTitle')}</div>
       </div>
 
       {/* Camera / Scan section */}
       <div style={{ marginBottom: 20, padding: 16, borderRadius: 12, border: `1px solid ${ACC_BORDER}`, background: ACC_BG }}>
-        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Scan Device Label</div>
+        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>{tc('pos_servicejobs.scanDeviceLabel')}</div>
         {!scanning ? (
-          <button onClick={startCamera} style={btnPrimary}>📷 Open Camera</button>
+          <button onClick={startCamera} style={btnPrimary}>{tc('pos_servicejobs.openCamera')}</button>
         ) : (
           <div>
             <video ref={videoRef} style={{ width: '100%', maxWidth: 400, borderRadius: 8 }} playsInline muted />
             <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-              <button onClick={captureAndScan} style={btnPrimary}>📸 Capture & Scan</button>
-              <button onClick={stopCamera} style={btnSecondary}>Cancel</button>
+              <button onClick={captureAndScan} style={btnPrimary}>{tc('pos_servicejobs.captureAndScan')}</button>
+              <button onClick={stopCamera} style={btnSecondary}>{tc('pos_servicejobs.cancelBtn')}</button>
             </div>
           </div>
         )}
@@ -428,19 +425,21 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
 
         {scanResult && (
           <div style={{ marginTop: 12, padding: 12, borderRadius: 8, background: 'var(--sf)', border: '1px solid var(--b)' }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: GREEN, marginBottom: 6 }}>Device Identified (confidence: {scanResult.confidence}%)</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: GREEN, marginBottom: 6 }}>{tc('pos_servicejobs.deviceIdentified').replace('{confidence}', String(scanResult.confidence))}</div>
             <div style={{ fontSize: 13 }}>{scanResult.model || 'Unknown'}{scanResult.storage ? ` · ${scanResult.storage}` : ''}{scanResult.color ? ` · ${scanResult.color}` : ''}</div>
-            {scanResult.serial && <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>Serial: {scanResult.serial}</div>}
+            {scanResult.serial && <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>{tc('pos_servicejobs.serialLabel').replace('{serial}', scanResult.serial)}</div>}
           </div>
         )}
 
         {warrantyInfo && (
           <div style={{ marginTop: 10, padding: 12, borderRadius: 8, background: warrantyInfo.is_under_warranty ? 'rgba(22,163,74,.08)' : 'rgba(220,38,38,.08)', border: `1px solid ${warrantyInfo.is_under_warranty ? GREEN : RED}40` }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: warrantyInfo.is_under_warranty ? GREEN : RED }}>
-              {warrantyInfo.is_under_warranty ? `Under Warranty (${warrantyInfo.days_remaining} days left)` : 'Warranty Expired'}
+              {warrantyInfo.is_under_warranty
+                ? tc('pos_servicejobs.underWarranty').replace('{days}', String(warrantyInfo.days_remaining))
+                : tc('pos_servicejobs.warrantyExpired')}
             </div>
             <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>
-              Previous repair: {warrantyInfo.previous_ticket} — {warrantyInfo.previous_repair}
+              {tc('pos_servicejobs.previousRepair').replace('{ticket}', warrantyInfo.previous_ticket).replace('{repair}', warrantyInfo.previous_repair)}
             </div>
           </div>
         )}
@@ -449,39 +448,39 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
       {/* Form fields */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>Customer Phone</label>
-          <input value={formData.customer_phone} onChange={e => setFormData(p => ({ ...p, customer_phone: e.target.value }))} style={inputStyle} placeholder="+44..." />
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.customerPhoneLabel')}</label>
+          <input value={formData.customer_phone} onChange={e => setFormData(p => ({ ...p, customer_phone: e.target.value }))} style={inputStyle} placeholder={tc('pos_servicejobs.customerPhonePlaceholder')} />
         </div>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>Customer Name</label>
-          <input value={formData.customer_name} onChange={e => setFormData(p => ({ ...p, customer_name: e.target.value }))} style={inputStyle} placeholder="Name" />
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.customerNameLabel')}</label>
+          <input value={formData.customer_name} onChange={e => setFormData(p => ({ ...p, customer_name: e.target.value }))} style={inputStyle} placeholder={tc('pos_servicejobs.customerNamePlaceholder')} />
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>Device Model</label>
-          <input value={formData.device_model} onChange={e => setFormData(p => ({ ...p, device_model: e.target.value }))} style={inputStyle} placeholder="iPhone 14 Pro" />
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.deviceModelLabel')}</label>
+          <input value={formData.device_model} onChange={e => setFormData(p => ({ ...p, device_model: e.target.value }))} style={inputStyle} placeholder={tc('pos_servicejobs.deviceModelPlaceholder')} />
         </div>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>Serial / IMEI</label>
-          <input value={formData.device_serial} onChange={e => setFormData(p => ({ ...p, device_serial: e.target.value }))} style={inputStyle} placeholder="Serial number" />
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.serialImeiLabel')}</label>
+          <input value={formData.device_serial} onChange={e => setFormData(p => ({ ...p, device_serial: e.target.value }))} style={inputStyle} placeholder={tc('pos_servicejobs.serialPlaceholder')} />
         </div>
       </div>
 
       <div style={{ marginBottom: 12 }}>
-        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>Device Description</label>
-        <input value={formData.device_description} onChange={e => setFormData(p => ({ ...p, device_description: e.target.value }))} style={inputStyle} placeholder="Color, storage, physical condition..." />
+        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.deviceDescriptionLabel')}</label>
+        <input value={formData.device_description} onChange={e => setFormData(p => ({ ...p, device_description: e.target.value }))} style={inputStyle} placeholder={tc('pos_servicejobs.deviceDescriptionPlaceholder')} />
       </div>
 
       <div style={{ marginBottom: 12 }}>
-        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>Fault Description *</label>
-        <textarea value={formData.fault_description} onChange={e => setFormData(p => ({ ...p, fault_description: e.target.value }))} style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} placeholder="Describe the issue..." />
+        <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.faultDescriptionLabel')}</label>
+        <textarea value={formData.fault_description} onChange={e => setFormData(p => ({ ...p, fault_description: e.target.value }))} style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} placeholder={tc('pos_servicejobs.faultDescriptionPlaceholder')} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>Service Preset</label>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.servicePresetLabel')}</label>
           <select value={formData.preset_id} onChange={e => {
             const preset = presets.find(p => p.id === e.target.value)
             setFormData(p => ({
@@ -491,18 +490,18 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
               estimated_minutes: preset ? String(preset.estimated_minutes) : p.estimated_minutes,
             }))
           }} style={inputStyle}>
-            <option value="">Select preset...</option>
+            <option value="">{tc('pos_servicejobs.selectPresetPlaceholder')}</option>
             {presets.map(p => (
               <option key={p.id} value={p.id}>{p.name} — {fmt(currencySymbol, p.price)}</option>
             ))}
           </select>
         </div>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>Quoted Price</label>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.quotedPriceLabel')}</label>
           <input type="number" value={formData.quoted_price} onChange={e => setFormData(p => ({ ...p, quoted_price: e.target.value }))} style={inputStyle} placeholder="0.00" step="0.01" />
         </div>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>Est. Minutes</label>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4, display: 'block' }}>{tc('pos_servicejobs.estMinutesLabel')}</label>
           <input type="number" value={formData.estimated_minutes} onChange={e => setFormData(p => ({ ...p, estimated_minutes: e.target.value }))} style={inputStyle} placeholder="60" />
         </div>
       </div>
@@ -511,17 +510,17 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
       {showAddAnother && lastCreatedJob && (
         <div style={{ marginTop: 16, padding: 16, borderRadius: 12, border: `1px solid ${GREEN}40`, background: 'rgba(22,163,74,.05)' }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: GREEN, marginBottom: 6 }}>
-            Job {lastCreatedJob.ticket_number} created successfully
+            {tc('pos_servicejobs.addAnotherJobCreated').replace('{ticket}', lastCreatedJob.ticket_number)}
           </div>
           <div style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 12 }}>
-            Same customer ({formData.customer_name || formData.customer_phone || 'Walk-in'}) dropping off another device?
+            {tc('pos_servicejobs.addAnotherPrompt').replace('{customer}', formData.customer_name || formData.customer_phone || tc('pos_servicejobs.walkinFallback'))}
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={() => { setShowAddAnother(false); setLastCreatedJob(null) }} style={btnPrimary}>
-              + Add Another Device
+              {tc('pos_servicejobs.addAnotherBtn')}
             </button>
             <button onClick={() => { setShowAddAnother(false); setLastCreatedJob(null); setFormData({ customer_phone: '', customer_name: '', device_model: '', device_serial: '', device_description: '', fault_description: '', preset_id: '', quoted_price: '', estimated_minutes: '', intake_photo_url: '' }); setView('queue') }} style={btnSecondary}>
-              Done
+              {tc('pos_servicejobs.doneBtn')}
             </button>
           </div>
         </div>
@@ -529,8 +528,8 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
 
       {!showAddAnother && (
         <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-          <button onClick={createJob} style={btnPrimary}>Create Job</button>
-          <button onClick={() => setView('queue')} style={btnSecondary}>Cancel</button>
+          <button onClick={createJob} style={btnPrimary}>{tc('pos_servicejobs.createJobBtn')}</button>
+          <button onClick={() => setView('queue')} style={btnSecondary}>{tc('pos_servicejobs.cancelBtn')}</button>
         </div>
       )}
     </div>
@@ -546,51 +545,51 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
     return (
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <button onClick={() => { setView('queue'); setSelectedJob(null) }} style={{ ...btnSecondary, padding: '6px 14px' }}>← Back</button>
+          <button onClick={() => { setView('queue'); setSelectedJob(null) }} style={{ ...btnSecondary, padding: '6px 14px' }}>{tc('pos_servicejobs.backBtn')}</button>
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700 }}>{j.ticket_number}</div>
-            <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{j.device_model || 'Unknown device'} · {timeAgo(j.created_at)}</div>
+            <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{j.device_model || tc('pos_servicejobs.unknownDevice')} · {timeAgo(j.created_at)}</div>
           </div>
-          <StatusBadge status={j.status} />
+          <StatusBadge status={j.status} statusColors={STATUS_COLORS} />
         </div>
 
         {/* Job info grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
           <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>Customer</div>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>{j.customer_name || j.customer_phone || 'Walk-in'}</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_servicejobs.customerSection')}</div>
+            <div style={{ fontSize: 14, fontWeight: 600 }}>{j.customer_name || j.customer_phone || tc('pos_servicejobs.walkinFallback')}</div>
             {j.customer_phone && <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{j.customer_phone}</div>}
           </div>
           <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>Device</div>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>{j.device_model || 'Not scanned'}</div>
-            {j.device_serial && <div style={{ fontSize: 12, color: 'var(--tx3)' }}>SN: {j.device_serial}</div>}
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_servicejobs.deviceSection')}</div>
+            <div style={{ fontSize: 14, fontWeight: 600 }}>{j.device_model || tc('pos_servicejobs.notScanned')}</div>
+            {j.device_serial && <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_servicejobs.serialShort').replace('{serial}', j.device_serial)}</div>}
           </div>
           <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>Price</div>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>{j.quoted_price ? fmt(currencySymbol, j.quoted_price) : 'Not quoted'}</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_servicejobs.priceSection')}</div>
+            <div style={{ fontSize: 14, fontWeight: 600 }}>{j.quoted_price ? fmt(currencySymbol, j.quoted_price) : tc('pos_servicejobs.notQuoted')}</div>
             {j.original_quoted_price && j.original_quoted_price !== j.quoted_price && (
-              <div style={{ fontSize: 12, color: AMBER }}>Originally: {fmt(currencySymbol, j.original_quoted_price)}</div>
+              <div style={{ fontSize: 12, color: AMBER }}>{tc('pos_servicejobs.originallyPrice').replace('{price}', fmt(currencySymbol, j.original_quoted_price))}</div>
             )}
           </div>
         </div>
 
         {/* Fault & notes */}
         <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>Fault Description</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_servicejobs.faultDescriptionSection')}</div>
           <div style={{ fontSize: 13 }}>{j.fault_description}</div>
         </div>
 
         {j.engineer_notes && (
           <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>Engineer Notes</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_servicejobs.engineerNotesSection')}</div>
             <div style={{ fontSize: 13 }}>{j.engineer_notes}</div>
           </div>
         )}
 
         {j.additional_issues && (
           <div style={{ padding: 14, borderRadius: 10, border: `1px solid ${AMBER}40`, background: `rgba(202,138,4,.05)`, marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: AMBER, marginBottom: 4 }}>Additional Issues Found</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: AMBER, marginBottom: 4 }}>{tc('pos_servicejobs.additionalIssuesSection')}</div>
             <div style={{ fontSize: 13 }}>{j.additional_issues}</div>
           </div>
         )}
@@ -598,9 +597,9 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
         {/* Assignment */}
         {canAssign && (
           <div style={{ padding: 14, borderRadius: 10, border: `1px solid ${ACC_BORDER}`, background: ACC_BG, marginBottom: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Assign to Engineer</div>
+            <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>{tc('pos_servicejobs.assignEngineer')}</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {engineers.length === 0 && <div style={{ fontSize: 12, color: 'var(--tx3)' }}>No engineers added yet — add staff with the "engineer" role</div>}
+              {engineers.length === 0 && <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_servicejobs.noEngineers')}</div>}
               {engineers.map(eng => (
                 <button key={eng.id} onClick={() => updateJob(j.id, { assigned_to: eng.id, status: j.status === 'accepted' ? 'in_progress' : j.status })}
                   style={{ ...btnSecondary, padding: '6px 12px', fontSize: 12, background: j.assigned_to === eng.id ? ACC_BG : 'transparent', borderColor: j.assigned_to === eng.id ? ACC : ACC_BORDER }}>
@@ -614,12 +613,12 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
         {/* Warranty info */}
         {j.warranty_expires_at && (
           <div style={{ padding: 14, borderRadius: 10, border: `1px solid ${GREEN}40`, background: 'rgba(22,163,74,.05)', marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: GREEN, marginBottom: 4 }}>Warranty</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: GREEN, marginBottom: 4 }}>{tc('pos_servicejobs.warrantySection')}</div>
             <div style={{ fontSize: 13 }}>
-              Expires: {new Date(j.warranty_expires_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+              {tc('pos_servicejobs.warrantyExpires').replace('{date}', new Date(j.warranty_expires_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }))}
               {new Date(j.warranty_expires_at) > new Date()
-                ? ` (${Math.ceil((new Date(j.warranty_expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days left)`
-                : ' (expired)'}
+                ? tc('pos_servicejobs.warrantyDaysLeft').replace('{days}', String(Math.ceil((new Date(j.warranty_expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))))
+                : tc('pos_servicejobs.warrantyExpiredSuffix')}
             </div>
           </div>
         )}
@@ -629,10 +628,10 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
           <div style={{ padding: 14, borderRadius: 10, border: `1px solid ${AMBER}40`, background: 'rgba(202,138,4,.05)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 20 }}>⚠️</span>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: AMBER }}>No checkout photo attached</div>
-              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Recommended: take a photo of the repaired device before handing back to customer</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: AMBER }}>{tc('pos_servicejobs.noCheckoutPhotoTitle')}</div>
+              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_servicejobs.noCheckoutPhotoDesc')}</div>
             </div>
-            <button onClick={startCheckoutCamera} style={{ ...btnSecondary, padding: '6px 12px', fontSize: 12, marginLeft: 'auto' }}>📷 Take Photo</button>
+            <button onClick={startCheckoutCamera} style={{ ...btnSecondary, padding: '6px 12px', fontSize: 12, marginLeft: 'auto' }}>{tc('pos_servicejobs.takePhotoBtn')}</button>
           </div>
         )}
 
@@ -640,8 +639,8 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
           <div style={{ marginBottom: 16 }}>
             <video ref={checkoutVideoRef} style={{ width: '100%', maxWidth: 400, borderRadius: 8 }} playsInline muted />
             <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-              <button onClick={() => captureCheckoutPhoto(j.id)} style={btnPrimary}>📸 Capture</button>
-              <button onClick={() => { checkoutStreamRef.current?.getTracks().forEach(t => t.stop()); setCaptureCheckout(false) }} style={btnSecondary}>Cancel</button>
+              <button onClick={() => captureCheckoutPhoto(j.id)} style={btnPrimary}>{tc('pos_servicejobs.captureBtn')}</button>
+              <button onClick={() => { checkoutStreamRef.current?.getTracks().forEach(t => t.stop()); setCaptureCheckout(false) }} style={btnSecondary}>{tc('pos_servicejobs.cancelBtn')}</button>
             </div>
           </div>
         )}
@@ -652,72 +651,72 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
           {j.status === 'intake' && (
             <button onClick={() => {
-              const price = prompt('Enter quoted price:')
+              const price = prompt(tc('pos_servicejobs.setQuotePrompt'))
               if (price) updateJob(j.id, { status: 'quoted', quoted_price: Number(price) })
-            }} style={btnPrimary}>Set Quote</button>
+            }} style={btnPrimary}>{tc('pos_servicejobs.setQuoteBtn')}</button>
           )}
           {j.status === 'quoted' && (
             <>
-              <button onClick={() => updateJob(j.id, { status: 'accepted' })} style={btnPrimary}>Customer Accepted</button>
-              <button onClick={() => sendQuoteLink(j.id)} style={btnSecondary}>Send Quote via SMS</button>
+              <button onClick={() => updateJob(j.id, { status: 'accepted' })} style={btnPrimary}>{tc('pos_servicejobs.customerAcceptedBtn')}</button>
+              <button onClick={() => sendQuoteLink(j.id)} style={btnSecondary}>{tc('pos_servicejobs.sendQuoteSmsBtn')}</button>
             </>
           )}
           {j.status === 'accepted' && j.assigned_to && (
-            <button onClick={() => updateJob(j.id, { status: 'in_progress' })} style={btnPrimary}>Start Repair</button>
+            <button onClick={() => updateJob(j.id, { status: 'in_progress' })} style={btnPrimary}>{tc('pos_servicejobs.startRepairBtn')}</button>
           )}
           {j.status === 'in_progress' && (
             <>
-              <button onClick={() => updateJob(j.id, { status: 'completed' })} style={{ ...btnPrimary, background: GREEN }}>Mark Complete</button>
+              <button onClick={() => updateJob(j.id, { status: 'completed' })} style={{ ...btnPrimary, background: GREEN }}>{tc('pos_servicejobs.markCompleteBtn')}</button>
               <button onClick={() => {
-                const notes = prompt('Describe additional issues:')
-                const price = prompt('New quoted price:')
-                if (notes && price) updateJob(j.id, { status: 'quoted', additional_issues: notes, quoted_price: Number(price), history_note: `Re-quoted: ${notes}` })
-              }} style={{ ...btnSecondary, borderColor: AMBER, color: AMBER }}>Found More Issues</button>
+                const notes = prompt(tc('pos_servicejobs.additionalIssuesPrompt'))
+                const price = prompt(tc('pos_servicejobs.newPricePrompt'))
+                if (notes && price) updateJob(j.id, { status: 'quoted', additional_issues: notes, quoted_price: Number(price), history_note: 'Re-quoted: ' + notes })
+              }} style={{ ...btnSecondary, borderColor: AMBER, color: AMBER }}>{tc('pos_servicejobs.foundMoreIssuesBtn')}</button>
             </>
           )}
           {j.status === 'completed' && (
-            <button onClick={() => updateJob(j.id, { status: 'collected' })} style={{ ...btnPrimary, background: GREEN }}>Customer Collected & Paid</button>
+            <button onClick={() => updateJob(j.id, { status: 'collected' })} style={{ ...btnPrimary, background: GREEN }}>{tc('pos_servicejobs.customerCollectedBtn')}</button>
           )}
           {!['collected', 'cancelled'].includes(j.status) && (
             <button onClick={() => {
-              const reason = prompt('Cancel reason:')
+              const reason = prompt(tc('pos_servicejobs.cancelJobPrompt'))
               if (reason) updateJob(j.id, { status: 'cancelled', cancel_reason: reason })
-            }} style={{ ...btnSecondary, borderColor: RED, color: RED }}>Cancel Job</button>
+            }} style={{ ...btnSecondary, borderColor: RED, color: RED }}>{tc('pos_servicejobs.cancelJobBtn')}</button>
           )}
         </div>
 
         {/* Engineer notes input (for engineers working on the job) */}
         {j.status === 'in_progress' && (
           <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Update Engineer Notes</div>
+            <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>{tc('pos_servicejobs.updateEngineerNotes')}</div>
             <textarea
               defaultValue={j.engineer_notes || ''}
               onBlur={e => { if (e.target.value !== (j.engineer_notes || '')) updateJob(j.id, { engineer_notes: e.target.value }) }}
               style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }}
-              placeholder="Notes about the repair work..."
+              placeholder={tc('pos_servicejobs.engineerNotesPlaceholder')}
             />
           </div>
         )}
 
         {/* Timeline / History */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Timeline</div>
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>{tc('pos_servicejobs.timelineTitle')}</div>
           {historyLoading ? (
-            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Loading...</div>
+            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_servicejobs.timelineLoading')}</div>
           ) : history.length === 0 ? (
-            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No history yet</div>
+            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_servicejobs.timelineEmpty')}</div>
           ) : (
             <div style={{ borderLeft: `2px solid ${ACC_BORDER}`, paddingLeft: 16 }}>
               {history.map((h, i) => (
                 <div key={h.id} style={{ marginBottom: i < history.length - 1 ? 16 : 0, position: 'relative' }}>
                   <div style={{ position: 'absolute', left: -21, top: 4, width: 10, height: 10, borderRadius: '50%', background: ACC, border: '2px solid var(--sf)' }} />
                   <div style={{ fontSize: 12, fontWeight: 600 }}>
-                    {h.from_status ? <><StatusBadge status={h.from_status as JobStatus} /> → </> : null}
-                    <StatusBadge status={h.to_status as JobStatus} />
+                    {h.from_status ? <><StatusBadge status={h.from_status as JobStatus} statusColors={STATUS_COLORS} /> → </> : null}
+                    <StatusBadge status={h.to_status as JobStatus} statusColors={STATUS_COLORS} />
                   </div>
                   {h.notes && <div style={{ fontSize: 12, color: 'var(--tx2)', marginTop: 4 }}>{h.notes}</div>}
                   <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>
-                    {h.staff?.name || 'System'} · {new Date(h.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    {h.staff?.name || tc('pos_servicejobs.systemAuthor')} · {new Date(h.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
               ))}
@@ -729,14 +728,14 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {j.intake_photo_url && (
             <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>Intake Photo</div>
-              <img src={j.intake_photo_url} alt="Intake" style={{ width: '100%', borderRadius: 8, maxHeight: 200, objectFit: 'cover' }} />
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('pos_servicejobs.intakePhotoLabel')}</div>
+              <img src={j.intake_photo_url} alt={tc('pos_servicejobs.intakePhotoLabel')} style={{ width: '100%', borderRadius: 8, maxHeight: 200, objectFit: 'cover' }} />
             </div>
           )}
           {j.checkout_photo_url && (
             <div style={{ padding: 14, borderRadius: 10, border: '1px solid var(--b)' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>Checkout Photo</div>
-              <img src={j.checkout_photo_url} alt="Checkout" style={{ width: '100%', borderRadius: 8, maxHeight: 200, objectFit: 'cover' }} />
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('pos_servicejobs.checkoutPhotoLabel')}</div>
+              <img src={j.checkout_photo_url} alt={tc('pos_servicejobs.checkoutPhotoLabel')} style={{ width: '100%', borderRadius: 8, maxHeight: 200, objectFit: 'cover' }} />
             </div>
           )}
         </div>
@@ -748,8 +747,8 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, flex: 1 }}>Service Jobs</div>
-        <button onClick={() => setView('new_job')} style={btnPrimary}>+ New Job</button>
+        <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, flex: 1 }}>{tc('pos_servicejobs.serviceJobsTitle')}</div>
+        <button onClick={() => setView('new_job')} style={btnPrimary}>{tc('pos_servicejobs.newJobBtn')}</button>
       </div>
 
       {/* Filters */}
@@ -760,7 +759,7 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
             background: statusFilter === s ? ACC_BG : 'var(--sf)', color: statusFilter === s ? ACC : 'var(--tx3)',
             fontSize: 12, fontWeight: statusFilter === s ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit',
           }}>
-            {s === 'all' ? 'All' : STATUS_COLORS[s]?.label || s}
+            {s === 'all' ? tc('pos_servicejobs.filterAll') : STATUS_COLORS[s]?.label || s}
             {s !== 'all' && <span style={{ marginLeft: 4, opacity: 0.6 }}>({jobs.filter(j => j.status === s).length})</span>}
           </button>
         ))}
@@ -769,18 +768,18 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
       {/* Search */}
       <div style={{ marginBottom: 16 }}>
         <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-          style={{ ...inputStyle, maxWidth: 300 }} placeholder="Search ticket, customer, device..." />
+          style={{ ...inputStyle, maxWidth: 300 }} placeholder={tc('pos_servicejobs.searchPlaceholder')} />
       </div>
 
       {/* Jobs list */}
       {loading ? (
-        <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Loading jobs...</div>
+        <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_servicejobs.loadingJobs')}</div>
       ) : jobs.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--tx3)' }}>
           <div style={{ fontSize: 40, marginBottom: 10 }}>🔧</div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>No service jobs yet</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_servicejobs.emptyStateTitle')}</div>
           <div style={{ fontSize: 13, marginTop: 8, maxWidth: 300, margin: '8px auto 0' }}>
-            Create your first job by clicking "New Job" and scanning a device.
+            {tc('pos_servicejobs.emptyStateDesc')}
           </div>
         </div>
       ) : (
@@ -793,14 +792,14 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                   <span style={{ fontSize: 14, fontWeight: 700 }}>{j.ticket_number}</span>
-                  <StatusBadge status={j.status} />
+                  <StatusBadge status={j.status} statusColors={STATUS_COLORS} />
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--tx2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {j.device_model || 'Unknown device'} — {j.fault_description}
+                  {j.device_model || tc('pos_servicejobs.unknownDevice')} — {j.fault_description}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>
-                  {j.customer_name || j.customer_phone || 'Walk-in'}
-                  {j.assigned_staff && ` · Engineer: ${j.assigned_staff.name}`}
+                  {j.customer_name || j.customer_phone || tc('pos_servicejobs.walkinFallback')}
+                  {j.assigned_staff && tc('pos_servicejobs.engineerSuffix').replace('{name}', j.assigned_staff.name)}
                   {j.location && ` · ${j.location.name}`}
                 </div>
               </div>
@@ -813,5 +812,14 @@ export default function ServiceJobsTab({ currencySymbol, selectedLocation, staff
         </div>
       )}
     </div>
+  )
+}
+
+function StatusBadge({ status, statusColors }: { status: JobStatus; statusColors: Record<JobStatus, { bg: string; text: string; label: string }> }) {
+  const s = statusColors[status] || statusColors.intake
+  return (
+    <span style={{ fontSize: 11, fontWeight: 700, color: s.text, background: s.bg, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+      {s.label}
+    </span>
   )
 }

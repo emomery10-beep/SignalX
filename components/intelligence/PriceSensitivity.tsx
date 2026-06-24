@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useMemo } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Product {
   sku: string; name: string; channel: string
@@ -10,21 +11,34 @@ interface Product {
   monthly_units: number; monthly_revenue: number
 }
 
-const SENSITIVITY_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
-  elastic:      { label: 'Price Sensitive', color: '#EF4444', icon: '🔴' },
-  inelastic:    { label: 'Price Resilient', color: '#10B981', icon: '🟢' },
-  unit_elastic: { label: 'Balanced',        color: '#F59E0B', icon: '🟡' },
-  inverse:      { label: 'Premium Effect',  color: '#6366F1', icon: '💎' },
-  stable:       { label: 'Stable',          color: 'var(--tx3)', icon: '⚪' },
+const SENSITIVITY_ICONS: Record<string, { color: string; icon: string }> = {
+  elastic:      { color: '#EF4444', icon: '🔴' },
+  inelastic:    { color: '#10B981', icon: '🟢' },
+  unit_elastic: { color: '#F59E0B', icon: '🟡' },
+  inverse:      { color: '#6366F1', icon: '💎' },
+  stable:       { color: 'var(--tx3)', icon: '⚪' },
+}
+
+function buildSensitivityConfig(tc: (key: string) => string): Record<string, { label: string; color: string; icon: string }> {
+  return {
+    elastic:      { label: tc('intel_pricesensitivity.sensitivityElastic'),     color: '#EF4444',      icon: '🔴' },
+    inelastic:    { label: tc('intel_pricesensitivity.sensitivityInelastic'),   color: '#10B981',      icon: '🟢' },
+    unit_elastic: { label: tc('intel_pricesensitivity.sensitivityUnitElastic'), color: '#F59E0B',      icon: '🟡' },
+    inverse:      { label: tc('intel_pricesensitivity.sensitivityInverse'),     color: '#6366F1',      icon: '💎' },
+    stable:       { label: tc('intel_pricesensitivity.sensitivityStable'),      color: 'var(--tx3)',   icon: '⚪' },
+  }
 }
 
 export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) => void }) {
+  const { tc } = useLang()
   const [products, setProducts] = useState<Product[]>([])
   const [insights, setInsights] = useState<string[]>([])
   const [summary, setSummary] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string | null>(null)
   const [sym, setSym] = useState('£')
+
+  const SENSITIVITY_CONFIG = buildSensitivityConfig(tc)
 
   useEffect(() => {
     fetch('/api/price-sensitivity')
@@ -44,7 +58,7 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
       <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#F97316' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Price Sensitivity</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_pricesensitivity.heading')}</span>
         </div>
         {[1, 2].map(i => (
           <div key={i} style={{ height: 44, borderRadius: 10, background: 'var(--ev, #f3f2ef)', animation: 'pulse 1.5s infinite', marginBottom: 8 }} />
@@ -63,14 +77,14 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#F97316' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Price Sensitivity</span>
-          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{summary?.total_analysed} products</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_pricesensitivity.heading')}</span>
+          <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('intel_pricesensitivity.productsCount', { n: summary?.total_analysed })}</span>
         </div>
         {onAsk && (
           <button
-            onClick={() => onAsk('Analyse my product price sensitivity. Which products can I safely increase prices on?')}
+            onClick={() => onAsk(tc('intel_pricesensitivity.askAiPrompt'))}
             style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
-          >Ask AI</button>
+          >{tc('intel_pricesensitivity.askAi')}</button>
         )}
       </div>
 
@@ -109,7 +123,7 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
 
       {/* P&L Impact Simulator */}
       {products.length > 0 && (
-        <PriceImpactSimulator products={products} sym={sym} />
+        <PriceImpactSimulator products={products} sym={sym} tc={tc} />
       )}
 
       {/* Product list */}
@@ -135,22 +149,22 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
               </div>
               <div style={{ display: 'flex', gap: 12, fontSize: 10, color: 'var(--tx3)', marginBottom: p.opportunity || suggestedPrice ? 4 : 0 }}>
                 <span>
-                  Price {p.price_change_pct > 0 ? '↑' : p.price_change_pct < 0 ? '↓' : '→'}
+                  {tc('intel_pricesensitivity.priceLabel')} {p.price_change_pct > 0 ? '↑' : p.price_change_pct < 0 ? '↓' : '→'}
                   <span style={{ color: p.price_change_pct > 0 ? '#EF4444' : p.price_change_pct < 0 ? '#10B981' : 'var(--tx3)' }}>
                     {' '}{Math.abs(p.price_change_pct)}%
                   </span>
                 </span>
                 <span>
-                  Volume {p.volume_change_pct > 0 ? '↑' : p.volume_change_pct < 0 ? '↓' : '→'}
+                  {tc('intel_pricesensitivity.volumeLabel')} {p.volume_change_pct > 0 ? '↑' : p.volume_change_pct < 0 ? '↓' : '→'}
                   <span style={{ color: p.volume_change_pct > 0 ? '#10B981' : p.volume_change_pct < 0 ? '#EF4444' : 'var(--tx3)' }}>
                     {' '}{Math.abs(p.volume_change_pct)}%
                   </span>
                 </span>
-                <span>Margin: <span style={{ fontWeight: 600, color: p.margin_pct >= 40 ? '#10B981' : p.margin_pct >= 20 ? '#F59E0B' : '#EF4444' }}>{p.margin_pct}%</span></span>
+                <span>{tc('intel_pricesensitivity.marginLabel')} <span style={{ fontWeight: 600, color: p.margin_pct >= 40 ? '#10B981' : p.margin_pct >= 20 ? '#F59E0B' : '#EF4444' }}>{p.margin_pct}%</span></span>
               </div>
               {suggestedPrice && (
                 <div style={{ fontSize: 10, color: '#10B981', fontWeight: 600, paddingLeft: 18, marginBottom: p.opportunity ? 2 : 0 }}>
-                  💰 Suggested price for {targetMargin}% margin: {sym}{suggestedPrice.toFixed(2)} (+{((suggestedPrice - p.current_price) / p.current_price * 100).toFixed(1)}%)
+                  {tc('intel_pricesensitivity.suggestedPrice', { targetMargin, sym, price: suggestedPrice.toFixed(2), pct: ((suggestedPrice - p.current_price) / p.current_price * 100).toFixed(1) })}
                 </div>
               )}
               {p.opportunity && (
@@ -166,7 +180,7 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
   )
 }
 
-function PriceImpactSimulator({ products, sym }: { products: Product[]; sym: string }) {
+function PriceImpactSimulator({ products, sym, tc }: { products: Product[]; sym: string; tc: (key: string, vars?: Record<string, unknown>) => string }) {
   const [pctChange, setPctChange] = useState(5)
 
   const impact = useMemo(() => {
@@ -199,13 +213,13 @@ function PriceImpactSimulator({ products, sym }: { products: Product[]; sym: str
   return (
     <div style={{ padding: 12, borderRadius: 10, border: '1px solid var(--b)', background: 'var(--ev, #f9f9f8)', marginBottom: 12 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>P&L Impact Simulator</span>
+        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)' }}>{tc('intel_pricesensitivity.simulatorHeading')}</span>
         <span style={{ fontSize: 11, fontWeight: 700, color: impact.revDelta >= 0 ? '#10B981' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>
-          {impact.revDelta >= 0 ? '+' : ''}{fmtN(impact.revDelta)}/mo
+          {impact.revDelta >= 0 ? '+' : ''}{fmtN(impact.revDelta)}{tc('intel_pricesensitivity.perMonth')}
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-        <span style={{ fontSize: 10, color: 'var(--tx3)', flexShrink: 0 }}>Price change:</span>
+        <span style={{ fontSize: 10, color: 'var(--tx3)', flexShrink: 0 }}>{tc('intel_pricesensitivity.priceChangeLabel')}</span>
         <input type="range" min={-20} max={20} step={1} value={pctChange}
           onChange={e => setPctChange(Number(e.target.value))}
           style={{ flex: 1, accentColor: '#6366F1' }}
@@ -217,16 +231,16 @@ function PriceImpactSimulator({ products, sym }: { products: Product[]; sym: str
       <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center', fontSize: 10 }}>
         <div>
           <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmtN(impact.totalRevenue)}</div>
-          <div style={{ color: 'var(--tx3)' }}>Current</div>
+          <div style={{ color: 'var(--tx3)' }}>{tc('intel_pricesensitivity.statCurrent')}</div>
         </div>
         <div style={{ fontSize: 16, color: 'var(--tx3)', alignSelf: 'center' }}>→</div>
         <div>
           <div style={{ fontWeight: 700, fontSize: 13, color: impact.revDelta >= 0 ? '#10B981' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{fmtN(impact.newRevenue)}</div>
-          <div style={{ color: 'var(--tx3)' }}>Projected</div>
+          <div style={{ color: 'var(--tx3)' }}>{tc('intel_pricesensitivity.statProjected')}</div>
         </div>
         <div>
           <div style={{ fontWeight: 700, fontSize: 13, color: impact.revDelta >= 0 ? '#10B981' : '#EF4444', fontVariantNumeric: 'tabular-nums' }}>{impact.pctDelta >= 0 ? '+' : ''}{impact.pctDelta.toFixed(1)}%</div>
-          <div style={{ color: 'var(--tx3)' }}>Change</div>
+          <div style={{ color: 'var(--tx3)' }}>{tc('intel_pricesensitivity.statChange')}</div>
         </div>
       </div>
     </div>

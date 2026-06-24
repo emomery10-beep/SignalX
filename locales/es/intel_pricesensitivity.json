@@ -1,0 +1,21 @@
+{
+  "heading": "Sensibilidad al precio",
+  "productsCount": "{n} productos",
+  "askAi": "Preguntar a la IA",
+  "askAiPrompt": "Analiza la sensibilidad al precio de mis productos. ¿En cuáles puedo subir los precios sin riesgo?",
+  "sensitivityElastic": "Sensible al precio",
+  "sensitivityInelastic": "Resistente al precio",
+  "sensitivityUnitElastic": "Equilibrado",
+  "sensitivityInverse": "Efecto premium",
+  "sensitivityStable": "Estable",
+  "priceLabel": "Precio",
+  "volumeLabel": "Volumen",
+  "marginLabel": "Margen:",
+  "suggestedPrice": "💰 Precio sugerido para un margen del {targetMargin}%: {sym}{price} (+{pct}%)",
+  "simulatorHeading": "Simulador de impacto en P&L",
+  "priceChangeLabel": "Cambio de precio:",
+  "perMonth": "/mes",
+  "statCurrent": "Actual",
+  "statProjected": "Proyectado",
+  "statChange": "Variación"
+}

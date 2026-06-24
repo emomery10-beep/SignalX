@@ -1,0 +1,21 @@
+{
+  "heading": "Mémoire des décisions",
+  "subheading": "AskBiz mémorise chaque décision et fait un suivi dans 6 semaines",
+  "logDecisionBtn": "+ Enregistrer une décision",
+  "logFormTitle": "Enregistrer une décision",
+  "titlePlaceholder": "Qu'avez-vous décidé ? Ex. : Augmentation du prix des écouteurs sans fil de 1,50 £",
+  "beforePlaceholder": "Avant (ex. : 12,99 £)",
+  "afterPlaceholder": "Après (ex. : 14,49 £)",
+  "saving": "Enregistrement…",
+  "saveDecision": "Enregistrer la décision — AskBiz fera un suivi dans 6 semaines",
+  "cancel": "Annuler",
+  "reviewBannerSingular": "🔔 {n} décision prête pour révision",
+  "reviewBannerPlural": "🔔 {n} décisions prêtes pour révision",
+  "askReviewBtn": "Demander à AskBiz d'analyser les résultats →",
+  "askReviewPrompt": "Analyse mes décisions commerciales récentes et dis-moi ce que les résultats indiquent — qu'est-ce qui a fonctionné et qu'est-ce que je devrais en retenir ?",
+  "noDecisions": "Aucune décision enregistrée pour l'instant. Chaque décision que vous enregistrez sera révisée dans 6 semaines.",
+  "checksBack": "AskBiz fait un suivi le : {date}",
+  "verdictGoodCall": "✓ Bonne décision",
+  "verdictBadCall": "✗ N'a pas fonctionné",
+  "verdictNeutral": "~ Résultats mitigés"
+}

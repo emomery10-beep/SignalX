@@ -1,0 +1,11 @@
+{
+  "heading": "Umsatz nach Quelle",
+  "channels": "({n} Kanäle)",
+  "askAi": "KI fragen",
+  "askAiPrompt": "Umsatz nach Quelle: {summary}. Welche Kanäle sollte ich stärker ausbauen und welche entwickeln sich unterdurchschnittlich?",
+  "transactions": "{n} Transaktionen · {pct}% des Umsatzes",
+  "marginPct": "{n}% Marge",
+  "metricRevenue": "Umsatz",
+  "metricCogs": "COGS",
+  "metricGrossProfit": "Bruttogewinn"
+}

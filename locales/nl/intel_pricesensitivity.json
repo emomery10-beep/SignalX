@@ -1,0 +1,21 @@
+{
+  "heading": "Prijsgevoeligheid",
+  "productsCount": "{n} producten",
+  "askAi": "Vraag AI",
+  "askAiPrompt": "Analyseer de prijsgevoeligheid van mijn producten. Voor welke producten kan ik de prijs veilig verhogen?",
+  "sensitivityElastic": "Prijsgevoelig",
+  "sensitivityInelastic": "Prijsbestendig",
+  "sensitivityUnitElastic": "Evenwichtig",
+  "sensitivityInverse": "Premium-effect",
+  "sensitivityStable": "Stabiel",
+  "priceLabel": "Prijs",
+  "volumeLabel": "Volume",
+  "marginLabel": "Marge:",
+  "suggestedPrice": "💰 Aanbevolen prijs voor {targetMargin}% marge: {sym}{price} (+{pct}%)",
+  "simulatorHeading": "W&V-impactsimulator",
+  "priceChangeLabel": "Prijswijziging:",
+  "perMonth": "/mnd",
+  "statCurrent": "Huidig",
+  "statProjected": "Verwacht",
+  "statChange": "Verschil"
+}

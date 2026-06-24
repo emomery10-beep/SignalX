@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface KpiCard {
   label: string
@@ -64,9 +65,10 @@ function Sparkline({ data, color, height = 28, width = 64 }: { data: number[]; c
 }
 
 function TrendBadge({ trend, label }: { trend: 'up' | 'down' | 'flat'; label?: string }) {
+  const { tc } = useLang()
   const color = trend === 'up' ? '#22C55E' : trend === 'down' ? '#EF4444' : 'var(--tx3)'
   const bg = trend === 'up' ? 'rgba(34,197,94,.1)' : trend === 'down' ? 'rgba(239,68,68,.1)' : 'rgba(0,0,0,.04)'
-  const arrow = trend === 'up' ? '↑' : trend === 'down' ? '↓' : '→'
+  const arrow = trend === 'up' ? tc('intel_kpistrip.trendUp') : trend === 'down' ? tc('intel_kpistrip.trendDown') : tc('intel_kpistrip.trendFlat')
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 3,

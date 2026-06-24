@@ -1,0 +1,23 @@
+{
+  "title": "Leveranciersoverzicht",
+  "askAi": "Vraag AI",
+  "askAiPrompt": "Analyseer mijn leveranciersrelaties en stel onderhandelingsstrategieën voor betere marges voor.",
+  "negotiationLeverage": "Onderhandelingsvoordeel",
+  "monthlySpend": "Maandelijkse uitgaven",
+  "savingTarget": "Bespaardoel van 5%",
+  "annualImpact": "Jaarlijks effect",
+  "concentrationRiskLabel": "Concentratierisico:",
+  "concentrationRiskSuffix": "— diversifieer om uw onderhandelingspositie te versterken",
+  "lowMarginLabel": "Leveranciers met lage marge:",
+  "lowMarginSuffix": "— prioriteer voor heronderhandeling",
+  "risingCostsLabel": "Stijgende kosten:",
+  "risingCostsSuffix": "— zet tarieven vast of zoek alternatieven",
+  "saveBadge": "Bespaar ~{amount}/mnd",
+  "supplierRowMeta": "{n} producten • {spend}/mnd • {margin}% marge",
+  "depBadge": "{dep}% afh.",
+  "generatingBrief": "Overzicht genereren voor {name}...",
+  "negotiationBriefHeader": "Onderhandelingsoverzicht — {name}",
+  "sectionLeverage": "VOORDEEL",
+  "sectionRisks": "RISICO'S",
+  "sectionTalkingPoints": "GESPREKSPUNTEN"
+}

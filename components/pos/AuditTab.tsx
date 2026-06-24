@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 // ── Color constants ──────────────────────────────────────────────────────────
 const ACC    = '#d08a59'
@@ -87,39 +88,42 @@ const SECTOR_EVENT_GROUPS: Record<string, EventGroup[]> = {
   all:        ['all', 'transactions', 'jobs', 'captures', 'inventory', 'staff', 'deliveries'],
 }
 
-const EVENT_GROUP_LABELS: Record<EventGroup, string> = {
-  all:          'All',
-  transactions: 'Transactions',
-  jobs:         'Jobs',
-  captures:     'Captures',
-  inventory:    'Inventory',
-  staff:        'Staff',
-  deliveries:   'Deliveries',
+function buildEventGroupLabels(tc: (k: string) => string): Record<EventGroup, string> {
+  return {
+    all:          tc('pos_audit.groupAll'),
+    transactions: tc('pos_audit.groupTransactions'),
+    jobs:         tc('pos_audit.groupJobs'),
+    captures:     tc('pos_audit.groupCaptures'),
+    inventory:    tc('pos_audit.groupInventory'),
+    staff:        tc('pos_audit.groupStaff'),
+    deliveries:   tc('pos_audit.groupDeliveries'),
+  }
 }
 
-// ── Empty state messages ─────────────────────────────────────────────────────
-const EMPTY_STATES: Record<string, string> = {
-  retail:     'No stock adjustments, refunds or staff changes yet.',
-  repair:     'No job status changes or part movements recorded yet.',
-  factory:    'No capture submissions or approvals yet.',
-  logistics:  'No parcel status updates recorded yet.',
-  salon:      'No transactions, staff or shift events yet.',
-  restaurant: 'No transactions or shift events yet.',
-  all:        'No audit events yet. Events are recorded automatically as your team works.',
+function buildEmptyStates(tc: (k: string) => string): Record<string, string> {
+  return {
+    retail:     tc('pos_audit.emptyRetail'),
+    repair:     tc('pos_audit.emptyRepair'),
+    factory:    tc('pos_audit.emptyFactory'),
+    logistics:  tc('pos_audit.emptyLogistics'),
+    salon:      tc('pos_audit.emptySalon'),
+    restaurant: tc('pos_audit.emptyRestaurant'),
+    all:        tc('pos_audit.emptyAll'),
+  }
 }
 
 // ── Relative time ─────────────────────────────────────────────────────────────
-function relativeTime(isoString: string): string {
+function relativeTime(isoString: string, tc: (k: string, vars?: Record<string, string | number>) => string): string {
   const date = new Date(isoString)
   const now  = new Date()
   const diffMs = now.getTime() - date.getTime()
   const diffMins = Math.floor(diffMs / 60000)
 
-  if (diffMins < 1) return 'Just now'
-  if (diffMins < 60) return `${diffMins} min ago`
+  if (diffMins < 1) return tc('pos_audit.timeJustNow')
+  if (diffMins < 60) return tc('pos_audit.timeMinAgo', { mins: diffMins })
 
   const diffHrs = Math.floor(diffMins / 60)
-  if (diffHrs < 24) return `${diffHrs} hr ago`
+  if (diffHrs < 24) return tc('pos_audit.timeHrAgo', { hrs: diffHrs })
 
   const isYesterday =
     now.getDate() - date.getDate() === 1 &&
@@ -128,7 +132,7 @@ function relativeTime(isoString: string): string {
 
   const hhmm = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 
-  if (isYesterday) return `Yesterday ${hhmm}`
+  if (isYesterday) return tc('pos_audit.timeYesterday', { time: hhmm })
 
   const ddMon = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
   return `${ddMon} ${hhmm}`
@@ -189,6 +193,7 @@ function Pill({ label, active, onClick }: { label: string; active: boolean; onCl
 
 // ── Main component ───────────────────────────────────────────────────────────
 export default function AuditTab({ selectedSector, currencySymbol: _currencySymbol, onBack }: AuditTabProps) {
+  const { tc } = useLang()
   const [events,     setEvents]     = useState<UnifiedAuditEvent[]>([])
   const [loading,    setLoading]    = useState(true)
   const [page,       setPage]       = useState(0)
@@ -198,6 +203,9 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
   const [eventGroup, setEventGroup] = useState<EventGroup>('all')
   const [date,       setDate]       = useState('')  // empty = all-time, no date filter
   const [loadingMore, setLoadingMore] = useState(false)
+
+  const EVENT_GROUP_LABELS = buildEventGroupLabels(tc)
+  const EMPTY_STATES = buildEmptyStates(tc)
 
   const LIMIT = 50
 
@@ -319,11 +327,11 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
             fontFamily: 'inherit',
           }}
         >
-          ← Back
+          {tc('pos_audit.backBtn')}
         </button>
 
         <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, flex: 1 }}>
-          Audit Log
+          {tc('pos_audit.title')}
         </div>
 
         {/* Summary chips */}
@@ -337,7 +345,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
             fontWeight: 600,
             fontFamily: 'var(--font-sora)',
           }}>
-            {total.toLocaleString()} event{total !== 1 ? 's' : ''}
+            {tc(total !== 1 ? 'pos_audit.eventsCountPlural' : 'pos_audit.eventsCount', { count: total.toLocaleString() })}
           </span>
           {highCount > 0 && (
             <span style={{
@@ -349,14 +357,14 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
               fontWeight: 700,
               fontFamily: 'var(--font-sora)',
             }}>
-              ⚠ {highCount} high severity
+              {tc('pos_audit.highSeverityChip', { count: highCount })}
             </span>
           )}
           {/* Re-fetch button */}
           <button
             onClick={() => fetchEvents(true)}
             disabled={loading}
-            title="Refresh"
+            title={tc('pos_audit.refreshTitle')}
             style={{
               width: 32,
               height: 32,
@@ -413,7 +421,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
               fontFamily: 'var(--font-sora)',
             }}
           >
-            All time
+            {tc('pos_audit.dateAllTime')}
           </button>
           {/* Today shortcut */}
           <button
@@ -430,7 +438,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
               fontFamily: 'var(--font-sora)',
             }}
           >
-            Today
+            {tc('pos_audit.dateToday')}
           </button>
           <input
             type="date"
@@ -455,7 +463,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Search events, actors..."
+          placeholder={tc('pos_audit.searchPlaceholder')}
           style={{
             padding: '6px 14px',
             borderRadius: 9999,
@@ -488,10 +496,10 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
             {sectorIcon(selectedSector)}
           </div>
           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--tx)', marginBottom: 8, fontFamily: 'var(--font-sora)' }}>
-            Nothing to show
+            {tc('pos_audit.emptyTitle')}
           </div>
           <div style={{ fontSize: 13, maxWidth: 340, margin: '0 auto', lineHeight: 1.6 }}>
-            {search.trim() ? `No events matching "${search}"` : emptyMessage}
+            {search.trim() ? tc('pos_audit.emptySearchMessage', { search }) : emptyMessage}
           </div>
         </div>
       ) : (
@@ -604,7 +612,9 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
                           padding: '2px 8px',
                           borderRadius: 9999,
                         }}>
-                          by {event.actor}{event.actor_role ? ` (${event.actor_role})` : ''}
+                          {event.actor_role
+                            ? tc('pos_audit.actorWithRole', { actor: event.actor, role: event.actor_role })
+                            : tc('pos_audit.actorPrefix', { actor: event.actor })}
                         </span>
                       )}
 
@@ -640,7 +650,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
                       {/* Expand hint */}
                       {metaEntries.length > 0 && (
                         <span style={{ fontSize: 10, color: 'var(--tx3)', marginLeft: 2 }}>
-                          {expanded ? '▲ less' : '▼ details'}
+                          {expanded ? tc('pos_audit.expandLess') : tc('pos_audit.expandDetails')}
                         </span>
                       )}
                     </div>
@@ -655,7 +665,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
                     paddingTop: 2,
                     whiteSpace: 'nowrap',
                   }}>
-                    {relativeTime(event.created_at)}
+                    {relativeTime(event.created_at, tc)}
                   </div>
                 </div>
 
@@ -675,7 +685,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
                       textTransform: 'uppercase',
                       letterSpacing: '.4px',
                     }}>
-                      Metadata
+                      {tc('pos_audit.metadataHeading')}
                     </div>
                     <div style={{
                       display: 'grid',
@@ -705,7 +715,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
       {!loading && visibleEvents.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between', paddingTop: 4 }}>
           <span style={{ fontSize: 12, color: 'var(--tx3)' }}>
-            Showing {visibleEvents.length.toLocaleString()} of {total.toLocaleString()}
+            {tc('pos_audit.showingCount', { shown: visibleEvents.length.toLocaleString(), total: total.toLocaleString() })}
           </span>
           {visibleEvents.length < total && (
             <button
@@ -725,7 +735,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
                 transition: 'opacity .15s',
               }}
             >
-              {loadingMore ? 'Loading…' : 'Load more'}
+              {loadingMore ? tc('pos_audit.loadingMore') : tc('pos_audit.loadMore')}
             </button>
           )}
         </div>

@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Supplier {
   name: string; product_count: number; products: string[]
@@ -14,6 +15,7 @@ interface Brief {
 }
 
 export default function SupplierBrief({ onAsk }: { onAsk?: (prompt: string) => void }) {
+  const { tc } = useLang()
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [brief, setBrief] = useState<Brief | null>(null)
   const [briefSupplier, setBriefSupplier] = useState('')
@@ -50,7 +52,7 @@ export default function SupplierBrief({ onAsk }: { onAsk?: (prompt: string) => v
       <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#EF4444' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Supplier Brief</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_supplierbrief.title')}</span>
         </div>
         {[1, 2].map(i => (
           <div key={i} style={{ height: 48, borderRadius: 10, background: 'var(--ev, #f3f2ef)', animation: 'pulse 1.5s infinite', marginBottom: 8 }} />
@@ -69,13 +71,13 @@ export default function SupplierBrief({ onAsk }: { onAsk?: (prompt: string) => v
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#EF4444' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Supplier Brief</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_supplierbrief.title')}</span>
         </div>
         {onAsk && (
           <button
-            onClick={() => onAsk('Analyse my supplier relationships and recommend negotiation strategies for better margins.')}
+            onClick={() => onAsk(tc('intel_supplierbrief.askAiPrompt'))}
             style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
-          >Ask AI</button>
+          >{tc('intel_supplierbrief.askAi')}</button>
         )}
       </div>
 
@@ -89,35 +91,35 @@ export default function SupplierBrief({ onAsk }: { onAsk?: (prompt: string) => v
 
         return (
           <div style={{ padding: 12, borderRadius: 10, border: '1px solid rgba(16,185,129,.15)', background: 'rgba(16,185,129,.04)', marginBottom: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#10B981', textTransform: 'uppercase', marginBottom: 6 }}>Negotiation Leverage</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#10B981', textTransform: 'uppercase', marginBottom: 6 }}>{tc('intel_supplierbrief.negotiationLeverage')}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, textAlign: 'center', marginBottom: 8 }}>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)', fontVariantNumeric: 'tabular-nums' }}>{fmt(totalSpend)}</div>
-                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>Monthly spend</div>
+                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_supplierbrief.monthlySpend')}</div>
               </div>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#10B981', fontVariantNumeric: 'tabular-nums' }}>{fmt(potentialSavings5pct)}</div>
-                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>5% saving target</div>
+                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_supplierbrief.savingTarget')}</div>
               </div>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#10B981', fontVariantNumeric: 'tabular-nums' }}>{fmt(potentialSavings5pct * 12)}</div>
-                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>Annual impact</div>
+                <div style={{ fontSize: 9, color: 'var(--tx3)' }}>{tc('intel_supplierbrief.annualImpact')}</div>
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               {highDep.length > 0 && (
                 <div style={{ fontSize: 10, color: '#F59E0B', lineHeight: 1.4 }}>
-                  ⚠️ <strong>Concentration risk:</strong> {highDep.map(s => `${s.name} (${s.dependency_pct}%)`).join(', ')} — diversify to strengthen negotiation position
+                  ⚠️ <strong>{tc('intel_supplierbrief.concentrationRiskLabel')}</strong> {highDep.map(s => `${s.name} (${s.dependency_pct}%)`).join(', ')} {tc('intel_supplierbrief.concentrationRiskSuffix')}
                 </div>
               )}
               {lowMargin.length > 0 && (
                 <div style={{ fontSize: 10, color: '#EF4444', lineHeight: 1.4 }}>
-                  📉 <strong>Low-margin suppliers:</strong> {lowMargin.slice(0, 2).map(s => `${s.name} (${s.avg_margin}%)`).join(', ')} — prioritize for renegotiation
+                  📉 <strong>{tc('intel_supplierbrief.lowMarginLabel')}</strong> {lowMargin.slice(0, 2).map(s => `${s.name} (${s.avg_margin}%)`).join(', ')} {tc('intel_supplierbrief.lowMarginSuffix')}
                 </div>
               )}
               {risingCost.length > 0 && (
                 <div style={{ fontSize: 10, color: '#EF4444', lineHeight: 1.4 }}>
-                  📈 <strong>Rising costs:</strong> {risingCost.slice(0, 2).map(s => `${s.name} (+${s.spend_trend_pct}%)`).join(', ')} — lock in rates or find alternatives
+                  📈 <strong>{tc('intel_supplierbrief.risingCostsLabel')}</strong> {risingCost.slice(0, 2).map(s => `${s.name} (+${s.spend_trend_pct}%)`).join(', ')} {tc('intel_supplierbrief.risingCostsSuffix')}
                 </div>
               )}
             </div>
@@ -148,18 +150,18 @@ export default function SupplierBrief({ onAsk }: { onAsk?: (prompt: string) => v
                   <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{s.name}</span>
                   {discountSuggestion > 0 && (
                     <span style={{ fontSize: 9, color: '#10B981', background: 'rgba(16,185,129,.1)', borderRadius: 4, padding: '1px 5px', fontWeight: 600 }}>
-                      Save ~{fmt(discountSuggestion)}/mo
+                      {tc('intel_supplierbrief.saveBadge', { amount: fmt(discountSuggestion) })}
                     </span>
                   )}
                 </div>
                 <div style={{ fontSize: 10, color: 'var(--tx3)' }}>
-                  {s.product_count} products • {fmt(s.monthly_spend)}/mo • {s.avg_margin}% margin
+                  {tc('intel_supplierbrief.supplierRowMeta', { n: s.product_count, spend: fmt(s.monthly_spend), margin: s.avg_margin })}
                 </div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 {s.dependency_pct > 30 && (
                   <span style={{ fontSize: 9, color: '#F59E0B', background: 'rgba(245,158,11,.1)', borderRadius: 4, padding: '1px 5px', fontWeight: 700 }}>
-                    {s.dependency_pct}% dep
+                    {tc('intel_supplierbrief.depBadge', { dep: s.dependency_pct })}
                   </span>
                 )}
                 {s.spend_trend_pct > 10 && (
@@ -174,14 +176,14 @@ export default function SupplierBrief({ onAsk }: { onAsk?: (prompt: string) => v
       {/* Negotiation brief */}
       {loadingBrief && (
         <div style={{ padding: 12, borderRadius: 10, background: 'var(--ev, #f3f2ef)', textAlign: 'center', fontSize: 12, color: 'var(--tx3)' }}>
-          Generating brief for {selectedSupplier}...
+          {tc('intel_supplierbrief.generatingBrief', { name: selectedSupplier })}
         </div>
       )}
 
       {brief && !loadingBrief && (
         <div style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(99,102,241,.15)', background: 'rgba(99,102,241,.03)' }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: '#6366F1', marginBottom: 8 }}>
-            Negotiation Brief — {briefSupplier}
+            {tc('intel_supplierbrief.negotiationBriefHeader', { name: briefSupplier })}
           </div>
 
           {brief.raw ? (
@@ -196,7 +198,7 @@ export default function SupplierBrief({ onAsk }: { onAsk?: (prompt: string) => v
 
               {brief.leverage_points?.length ? (
                 <div style={{ marginBottom: 8 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#10B981', marginBottom: 4 }}>LEVERAGE</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#10B981', marginBottom: 4 }}>{tc('intel_supplierbrief.sectionLeverage')}</div>
                   {brief.leverage_points.map((p, i) => (
                     <div key={i} style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5, paddingLeft: 10 }}>• {p}</div>
                   ))}
@@ -205,7 +207,7 @@ export default function SupplierBrief({ onAsk }: { onAsk?: (prompt: string) => v
 
               {brief.risks?.length ? (
                 <div style={{ marginBottom: 8 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#EF4444', marginBottom: 4 }}>RISKS</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#EF4444', marginBottom: 4 }}>{tc('intel_supplierbrief.sectionRisks')}</div>
                   {brief.risks.map((r, i) => (
                     <div key={i} style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5, paddingLeft: 10 }}>• {r}</div>
                   ))}
@@ -214,7 +216,7 @@ export default function SupplierBrief({ onAsk }: { onAsk?: (prompt: string) => v
 
               {brief.talking_points?.length ? (
                 <div style={{ marginBottom: 8 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#6366F1', marginBottom: 4 }}>TALKING POINTS</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#6366F1', marginBottom: 4 }}>{tc('intel_supplierbrief.sectionTalkingPoints')}</div>
                   {brief.talking_points.map((t, i) => (
                     <div key={i} style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5, paddingLeft: 10 }}>• {t}</div>
                   ))}

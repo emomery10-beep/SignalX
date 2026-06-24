@@ -1,0 +1,20 @@
+{
+  "title": "Inteligencia Multisectorial",
+  "askAi": "Preguntar a la IA",
+  "askAiPrompt": "¿Cómo se comparan mis métricas con otros sectores? ¿Dónde estoy rindiendo por debajo y qué puedo aprender de los sectores líderes?",
+  "compareWithSectors": "Comparar con sectores",
+  "youBadge": "TÚ",
+  "businesses": "{n} negocios",
+  "sectorRetail": "Comercio minorista",
+  "sectorEcommerce": "E-commerce",
+  "sectorRestaurant": "Restaurante",
+  "sectorFoodBev": "Alimentos y bebidas",
+  "sectorImportExport": "Importación/Exportación",
+  "sectorSaas": "SaaS",
+  "sectorServices": "Servicios",
+  "sectorFashion": "Moda",
+  "sectorHealthBeauty": "Salud y belleza",
+  "sectorSalon": "Salón",
+  "sectorRepair": "Reparación",
+  "sectorFactory": "Fábrica"
+}

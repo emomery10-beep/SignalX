@@ -1,0 +1,17 @@
+{
+  "courierOperations": "🚛 Kurierbetrieb",
+  "scoreOutOf": "/100",
+  "labelHealthy": "Gesund",
+  "labelAtRisk": "Gefährdet",
+  "labelCritical": "Kritisch",
+  "today": "heute",
+  "inTransit": "unterwegs",
+  "atBranch": "in der Filiale",
+  "failed": "fehlgeschlagen",
+  "deliveryRate": "{rate}% Lieferquote",
+  "stuckOver48h": "{n} seit >48 Std. blockiert",
+  "unpaidRevenue": "KES {amount} ausstehend",
+  "fleetAvailable": "Verfügbar",
+  "fleetInTransit": "Unterwegs",
+  "fleetMaintenance": "Wartung"
+}

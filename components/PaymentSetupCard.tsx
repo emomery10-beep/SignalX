@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface PaymentSetupCardProps {
   staff: any
@@ -48,6 +49,7 @@ interface Bank {
 }
 
 export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProps & { onConfigLoaded?: (cfg: any) => void }) {
+  const { tc } = useLang()
   const [showModal, setShowModal] = useState(false)
   const [selectedCountry, setSelectedCountry] = useState<string>('')
   const [businessName, setBusinessName] = useState<string>('')
@@ -112,18 +114,18 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
     e.preventDefault()
 
     if (!selectedCountry || !businessName || !staff?.email) {
-      setError(!staff?.email ? 'Account email not found. Please update your profile.' : 'Please fill in all required fields')
+      setError(!staff?.email ? tc('payment_setupcard.errorEmailMissing') : tc('payment_setupcard.errorRequiredFields'))
       return
     }
 
     // Validate Paystack-specific fields
     if (provider === 'paystack') {
       if (settlementType === 'mpesa' && !mpesaPhone) {
-        setError('Please enter your M-Pesa phone number')
+        setError(tc('payment_setupcard.errorMpesaPhone'))
         return
       }
       if (settlementType === 'bank' && (!selectedBank || !accountNumber)) {
-        setError('Please select a bank and enter your account number')
+        setError(tc('payment_setupcard.errorBankFields'))
         return
       }
     }
@@ -176,7 +178,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error || 'Failed to set up payment provider')
+        setError(data.error || tc('payment_setupcard.errorGeneric'))
         return
       }
 
@@ -192,7 +194,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
         setTimeout(() => setShowModal(false), 1500)
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred')
+      setError(err.message || tc('payment_setupcard.errorNetwork'))
     } finally {
       setLoading(false)
     }
@@ -214,7 +216,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
       })
       const data = await res.json()
       if (data.success || data.already_exists) {
-        setFixSubaccountMsg('✅ Splits fixed! Platform fee now active on all payments.')
+        setFixSubaccountMsg(tc('payment_setupcard.fixSplitsSuccess'))
         setNeedsFixPhone(false)
         setCurrentConfig((c: any) => ({ ...c, has_subaccount: true, needs_subaccount_fix: false }))
         onConfigLoaded?.({ ...currentConfig, has_subaccount: true, needs_subaccount_fix: false })
@@ -222,10 +224,10 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
         setNeedsFixPhone(true)
         setFixSubaccountMsg(null)
       } else {
-        setFixSubaccountMsg(`⚠ ${data.error || 'Could not create subaccount — Paystack may need to verify your M-Pesa number.'}`)
+        setFixSubaccountMsg(tc('payment_setupcard.fixSplitsErrorGeneric', { error: data.error || 'Could not create subaccount — Paystack may need to verify your M-Pesa number.' }))
       }
     } catch {
-      setFixSubaccountMsg('⚠ Network error — please try again.')
+      setFixSubaccountMsg(tc('payment_setupcard.fixSplitsErrorNetwork'))
     } finally {
       setFixingSubaccount(false)
     }
@@ -233,16 +235,16 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
 
   const statusLabel = currentConfig?.is_active
     ? currentConfig.payment_provider === 'stripe' && !currentConfig.stripe_onboarding_complete
-      ? 'Pending KYC'
-      : 'Active'
+      ? tc('payment_setupcard.statusPendingKyc')
+      : tc('payment_setupcard.statusActiveLabel')
     : currentConfig?.configured === false
       ? null
       : null
 
   const providerLabel = currentConfig?.payment_provider === 'paystack'
-    ? 'Paystack'
+    ? tc('payment_setupcard.providerPaystack')
     : currentConfig?.payment_provider === 'stripe'
-      ? 'Stripe'
+      ? tc('payment_setupcard.providerStripe')
       : null
 
   const inputStyle: React.CSSProperties = {
@@ -291,17 +293,17 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
         {/* Text */}
         <div>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' }}>
-            {statusLabel === 'Active' ? providerLabel : 'Payment Setup'}
-            {statusLabel === 'Active' && (
+            {statusLabel === tc('payment_setupcard.statusActiveLabel') ? providerLabel : tc('payment_setupcard.widgetLabel')}
+            {statusLabel === tc('payment_setupcard.statusActiveLabel') && (
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
             )}
           </div>
           <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 1, whiteSpace: 'nowrap' }}>
-            {statusLabel === 'Active'
-              ? `${currentConfig?.country || ''} · Card & mobile payments active`
-              : statusLabel === 'Pending KYC'
-                ? 'Stripe verification pending'
-                : 'Connect Stripe or Paystack'}
+            {statusLabel === tc('payment_setupcard.statusActiveLabel')
+              ? tc('payment_setupcard.cardMobilePaymentsActive', { country: currentConfig?.country || '' })
+              : statusLabel === tc('payment_setupcard.statusPendingKyc')
+                ? tc('payment_setupcard.stripeVerificationPending')
+                : tc('payment_setupcard.connectStripeOrPaystack')}
           </div>
         </div>
 
@@ -312,10 +314,10 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
           <span style={{
             fontSize: 11, fontWeight: 600, borderRadius: 9999,
             padding: '3px 10px', flexShrink: 0, whiteSpace: 'nowrap',
-            background: statusLabel === 'Active' ? 'rgba(16,185,129,.12)' : 'rgba(245,158,11,.1)',
-            color: statusLabel === 'Active' ? '#059669' : '#d97706',
+            background: statusLabel === tc('payment_setupcard.statusActiveLabel') ? 'rgba(16,185,129,.12)' : 'rgba(245,158,11,.1)',
+            color: statusLabel === tc('payment_setupcard.statusActiveLabel') ? '#059669' : '#d97706',
           }}>
-            {statusLabel === 'Active' ? '● Active' : statusLabel}
+            {statusLabel === tc('payment_setupcard.statusActiveLabel') ? tc('payment_setupcard.statusActive') : statusLabel}
           </span>
         ) : (
           <button
@@ -328,7 +330,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
               whiteSpace: 'nowrap', cursor: 'pointer',
             }}
           >
-            Set Up
+            {tc('payment_setupcard.btnSetUp')}
           </button>
         )}
       </div>
@@ -363,9 +365,9 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                 💳
               </div>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>Payment Setup</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>{tc('payment_setupcard.modalTitle')}</div>
                 <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>
-                  Connect Stripe or Paystack to accept payments
+                  {tc('payment_setupcard.modalSubtitle')}
                 </div>
               </div>
             </div>
@@ -378,7 +380,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
             )}
             {success && (
               <div style={{ padding: '8px 12px', backgroundColor: '#d1fae5', borderRadius: 9, border: '1px solid #a7f3d0', marginBottom: 14, color: '#065f46', fontSize: 12 }}>
-                {provider === 'stripe' ? 'Redirecting to Stripe onboarding...' : 'Payment setup complete! M-Pesa & cards are now enabled.'}
+                {provider === 'stripe' ? tc('payment_setupcard.successStripe') : tc('payment_setupcard.successPaystack')}
               </div>
             )}
 
@@ -387,7 +389,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
               {/* Country */}
               <div style={{ marginBottom: 12 }}>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
-                  Country <span style={{ color: '#ef4444' }}>*</span>
+                  {tc('payment_setupcard.labelCountry')} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <select
                   value={selectedCountry}
@@ -401,10 +403,10 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                   disabled={loading}
                   style={{ ...inputStyle, cursor: 'pointer' }}
                 >
-                  <option value="">Select country</option>
+                  <option value="">{tc('payment_setupcard.selectCountry')}</option>
                   {COUNTRY_OPTIONS.map(c => (
                     <option key={c.code} value={c.code}>
-                      {c.name} ({c.provider === 'paystack' ? 'Paystack' : 'Stripe'})
+                      {c.name} ({c.provider === 'paystack' ? tc('payment_setupcard.providerPaystack') : tc('payment_setupcard.providerStripe')})
                     </option>
                   ))}
                 </select>
@@ -418,23 +420,23 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                 }}>
                   {provider === 'paystack'
                     ? hasMpesa
-                      ? '✓ M-Pesa & card payments · Fee: ~3.5%'
-                      : '✓ Card & bank payments · Fee: ~3.5%'
-                    : '✓ Stripe Connect · KYC required · Fee: ~4.9%'}
+                      ? tc('payment_setupcard.bannerPaystackMpesa')
+                      : tc('payment_setupcard.bannerPaystackBank')
+                    : tc('payment_setupcard.bannerStripe')}
                 </div>
               )}
 
               {/* Business Name */}
               <div style={{ marginBottom: 12 }}>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
-                  Business Name <span style={{ color: '#ef4444' }}>*</span>
+                  {tc('payment_setupcard.labelBusinessName')} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
                   type="text"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                   disabled={loading}
-                  placeholder="Your business name"
+                  placeholder={tc('payment_setupcard.placeholderBusinessName')}
                   style={inputStyle}
                 />
               </div>
@@ -443,7 +445,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
               {provider === 'stripe' && (
                 <div style={{ marginBottom: 18 }}>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
-                    Contact Phone
+                    {tc('payment_setupcard.labelContactPhone')}
                   </label>
                   <input
                     type="tel"
@@ -463,7 +465,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                   border: '1px solid var(--b)', background: 'rgba(245,158,11,.03)',
                 }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', marginBottom: 10 }}>
-                    Settlement Account
+                    {tc('payment_setupcard.sectionSettlementAccount')}
                   </div>
 
                   {/* M-Pesa / Bank toggle (only for M-Pesa countries) */}
@@ -479,7 +481,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                           fontSize: 12, fontWeight: 600, cursor: 'pointer',
                         }}
                       >
-                        📱 M-Pesa
+                        {tc('payment_setupcard.btnMpesa')}
                       </button>
                       <button
                         type="button"
@@ -491,7 +493,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                           fontSize: 12, fontWeight: 600, cursor: 'pointer',
                         }}
                       >
-                        🏦 Bank Account
+                        {tc('payment_setupcard.btnBankAccount')}
                       </button>
                     </div>
                   )}
@@ -500,7 +502,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                   {settlementType === 'mpesa' && hasMpesa && (
                     <div>
                       <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
-                        M-Pesa Phone Number <span style={{ color: '#ef4444' }}>*</span>
+                        {tc('payment_setupcard.labelMpesaPhone')} <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <input
                         type="tel"
@@ -511,7 +513,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                         style={inputStyle}
                       />
                       <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4 }}>
-                        This number will receive settlements and be used to prompt M-Pesa payments from customers at the POS
+                        {tc('payment_setupcard.mpesaPhoneHint')}
                       </div>
                     </div>
                   )}
@@ -521,11 +523,11 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                     <div>
                       <div style={{ marginBottom: 10 }}>
                         <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
-                          Bank <span style={{ color: '#ef4444' }}>*</span>
+                          {tc('payment_setupcard.labelBank')} <span style={{ color: '#ef4444' }}>*</span>
                         </label>
                         {banksLoading ? (
                           <div style={{ ...inputStyle, color: 'var(--tx3)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                            Loading banks...
+                            {tc('payment_setupcard.loadingBanks')}
                           </div>
                         ) : (
                           <select
@@ -534,7 +536,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                             disabled={loading}
                             style={{ ...inputStyle, cursor: 'pointer' }}
                           >
-                            <option value="">Select bank</option>
+                            <option value="">{tc('payment_setupcard.selectBank')}</option>
                             {banks.map(b => (
                               <option key={b.code} value={b.code}>
                                 {b.name}
@@ -545,14 +547,14 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--tx)', marginBottom: 4 }}>
-                          Account Number <span style={{ color: '#ef4444' }}>*</span>
+                          {tc('payment_setupcard.labelAccountNumber')} <span style={{ color: '#ef4444' }}>*</span>
                         </label>
                         <input
                           type="text"
                           value={accountNumber}
                           onChange={(e) => setAccountNumber(e.target.value)}
                           disabled={loading}
-                          placeholder={selectedCountryData?.code === 'NG' ? '0123456789' : 'Account number'}
+                          placeholder={selectedCountryData?.code === 'NG' ? tc('payment_setupcard.placeholderAccountNumberNg') : tc('payment_setupcard.placeholderAccountNumber')}
                           style={inputStyle}
                         />
                       </div>
@@ -574,12 +576,12 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                   }}
                 >
                   {loading
-                    ? 'Setting up...'
+                    ? tc('payment_setupcard.btnLoading')
                     : provider === 'stripe'
-                      ? 'Continue to Stripe'
+                      ? tc('payment_setupcard.btnContinueStripe')
                       : provider === 'paystack'
-                        ? settlementType === 'mpesa' ? 'Connect M-Pesa' : 'Connect Bank Account'
-                        : 'Set Up Payments'}
+                        ? settlementType === 'mpesa' ? tc('payment_setupcard.btnConnectMpesa') : tc('payment_setupcard.btnConnectBank')
+                        : tc('payment_setupcard.btnSetUpPayments')}
                 </button>
                 <button
                   type="button"
@@ -592,7 +594,7 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
                     cursor: 'pointer',
                   }}
                 >
-                  Cancel
+                  {tc('payment_setupcard.btnCancel')}
                 </button>
               </div>
             </form>
@@ -600,15 +602,15 @@ export function PaymentSetupCard({ staff, onConfigLoaded }: PaymentSetupCardProp
             {/* Setup steps hint */}
             <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--b)', fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>
               {provider === 'stripe' ? (
-                <span>1. Fill in details → 2. Continue to Stripe → 3. Complete KYC → 4. Accept payments</span>
+                <span>{tc('payment_setupcard.hintStripe')}</span>
               ) : provider === 'paystack' ? (
                 hasMpesa ? (
-                  <span>1. Enter business details → 2. Connect M-Pesa number → 3. Cashiers can prompt M-Pesa payments from POS</span>
+                  <span>{tc('payment_setupcard.hintPaystackMpesa')}</span>
                 ) : (
-                  <span>1. Enter business details → 2. Select bank & account → 3. Cards enabled instantly</span>
+                  <span>{tc('payment_setupcard.hintPaystackBank')}</span>
                 )
               ) : (
-                <span>Select a country to see the setup flow for your region</span>
+                <span>{tc('payment_setupcard.hintDefault')}</span>
               )}
             </div>
           </div>

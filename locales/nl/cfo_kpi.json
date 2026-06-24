@@ -1,0 +1,20 @@
+{
+  "title": "KPI Scorecard",
+  "onTargetBadge": "{met}/{total} op doel",
+  "askAi": "Vraag AI",
+  "askPrompt": "Mijn KPI Scorecard toont {met}/{total} op doel. Niet op doel: {missed}. Wat moet ik prioriteren om te verbeteren?",
+  "askPromptNone": "geen",
+  "colKpi": "KPI",
+  "colTarget": "Doel",
+  "colActual": "Werkelijk",
+  "colStatus": "Status",
+  "colTrend": "Trend",
+  "labelGrossMargin": "Brutomarge",
+  "labelNetMargin": "Nettomarge",
+  "labelRevenueGrowth": "Omzetgroei",
+  "labelStockoutRate": "Uitverkooppercentage",
+  "labelCashRunway": "Kasreserve",
+  "labelHealthScore": "Gezondheidsscore",
+  "editTargetTitle": "Klik om doel te bewerken",
+  "footerHint": "Klik op een doelwaarde om aan te passen. Doelen worden opgeslagen in je browser."
+}

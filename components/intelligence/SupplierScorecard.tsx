@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC  = '#d08a59'
 const TX   = '#1a1916'
@@ -60,18 +61,23 @@ const GRADE_STYLE: Record<string, { text: string; bg: string; border: string }> 
   F: { text: '#dc2626', bg: 'rgba(220,38,38,.1)',   border: 'rgba(220,38,38,.25)'  },
 }
 
-function buildRecommendation(s: SupplierScore): string {
-  if (s.grade === 'A') return 'Excellent reliability. Prioritise this supplier for your most time-sensitive orders.'
-  if (s.grade === 'B') return `Good performance. Minor delays averaging ${s.avgDelayDays.toFixed(1)} days — monitor but no action required.`
+type TcFn = (key: string, vars?: Record<string, string | number>) => string
+
+function buildRecommendation(s: SupplierScore, tc: TcFn): string {
+  if (s.grade === 'A') return tc('intel_supplierscorecard.recGradeA')
+  if (s.grade === 'B') return tc('intel_supplierscorecard.recGradeB', { avgDelay: s.avgDelayDays.toFixed(1) })
   if (s.grade === 'C') {
-    if (s.customsHoldCount > 0) return `${s.customsHoldCount} customs hold${s.customsHoldCount > 1 ? 's' : ''} detected — review documentation requirements before next order.`
-    return `On-time rate of ${s.onTimeRate.toFixed(0)}% is below acceptable. Raise with supplier and build 7-day safety stock buffer.`
+    if (s.customsHoldCount > 0) {
+      const key = s.customsHoldCount > 1 ? 'recGradeCCustomsPlural' : 'recGradeCCustoms'
+      return tc('intel_supplierscorecard.' + key, { customsCount: s.customsHoldCount })
+    }
+    return tc('intel_supplierscorecard.recGradeCOnTime', { onTimeRate: s.onTimeRate.toFixed(0) })
   }
-  if (s.grade === 'D') return `Significant delays averaging ${s.avgDelayDays.toFixed(1)} days. Financial impact ${s.totalFinancialImpact.toFixed(0)}. Begin qualifying an alternative supplier.`
-  return `Critical reliability failure. ${s.delayedCount} of ${s.shipmentCount} shipments delayed. Urgently diversify — this supplier is costing your business.`
+  if (s.grade === 'D') return tc('intel_supplierscorecard.recGradeD', { avgDelay: s.avgDelayDays.toFixed(1), financialImpact: s.totalFinancialImpact.toFixed(0) })
+  return tc('intel_supplierscorecard.recGradeF', { delayedCount: s.delayedCount, shipmentCount: s.shipmentCount })
 }
 
-function scoreSuppliers(shipments: Shipment[]): SupplierScore[] {
+function scoreSuppliers(shipments: Shipment[], tc: TcFn): SupplierScore[] {
   // Group by supplier
   const map = new Map<string, Shipment[]>()
   for (const s of shipments) {
@@ -116,7 +122,7 @@ function scoreSuppliers(shipments: Shipment[]): SupplierScore[] {
         totalFinancialImpact, totalValue, score, grade, carriers,
         recommendation: '',
       }
-      draft.recommendation = buildRecommendation(draft)
+      draft.recommendation = buildRecommendation(draft, tc)
       return draft
     })
     .filter(s => s.shipmentCount > 0)
@@ -137,6 +143,7 @@ function ScoreBar({ value, max = 100, colour }: { value: number; max?: number; c
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (prompt: string) => void; sym?: string }) {
+  const { tc } = useLang()
   const [shipments, setShipments] = useState<Shipment[]>([])
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState('')
@@ -150,11 +157,11 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
         if (data?.shipments) setShipments(data.shipments)
         else if (Array.isArray(data)) setShipments(data)
       })
-      .catch(() => setError('Could not load shipment data'))
+      .catch(() => setError(tc('intel_supplierscorecard.couldNotLoad')))
       .finally(() => setLoading(false))
   }, [])
 
-  const suppliers = scoreSuppliers(shipments)
+  const suppliers = scoreSuppliers(shipments, tc)
 
   const sorted = [...suppliers].sort((a, b) => {
     if (sortBy === 'score')     return b.score - a.score
@@ -167,6 +174,17 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
   const avgScore    = suppliers.length > 0 ? Math.round(suppliers.reduce((s, x) => s + x.score, 0) / suppliers.length) : 0
   const atRisk      = suppliers.filter(s => s.grade === 'D' || s.grade === 'F')
   const totalImpact = suppliers.reduce((s, x) => s + x.totalFinancialImpact, 0)
+
+  // Footer note key selection
+  const ss = shipments.length === 1
+  const sl = suppliers.length === 1
+  const footerKey = ss && sl
+    ? 'footerNote'
+    : !ss && !sl
+    ? 'footerNotePlural'
+    : ss && !sl
+    ? 'footerNoteShipmentSingularSupplierPlural'
+    : 'footerNoteShipmentPluralSupplierSingular'
 
   if (loading) {
     return (
@@ -189,16 +207,16 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
       <div style={{ padding: '32px 20px', textAlign: 'center', background: SF, border: `1px solid ${B}`, borderRadius: 16 }}>
         <div style={{ fontSize: 36, marginBottom: 12 }}>📦</div>
         <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 600, color: TX, marginBottom: 6 }}>
-          No supplier data yet
+          {tc('intel_supplierscorecard.noSupplierDataTitle')}
         </div>
         <p style={{ fontSize: 13, color: TX3, lineHeight: 1.65, maxWidth: 340, margin: '0 auto 16px' }}>
-          Add shipments with supplier names and AskBiz will automatically build your supplier scorecard as deliveries arrive.
+          {tc('intel_supplierscorecard.noSupplierDataBody')}
         </p>
         <button
-          onClick={() => onAsk('How do I set up supplier tracking in AskBiz to monitor delivery performance?')}
+          onClick={() => onAsk(tc('intel_supplierscorecard.onAskNoData'))}
           style={{ fontSize: 13, fontWeight: 600, color: ACC, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 9999, padding: '8px 18px', cursor: 'pointer', fontFamily: 'inherit' }}
         >
-          How to get started →
+          {tc('intel_supplierscorecard.howToGetStarted')}
         </button>
       </div>
     )
@@ -209,20 +227,20 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
       {/* Header */}
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, color: TX, marginBottom: 4 }}>
-          Supplier Scorecard
+          {tc('intel_supplierscorecard.headerTitle')}
         </div>
         <div style={{ fontSize: 13, color: TX2, lineHeight: 1.5 }}>
-          On-time delivery, customs holds, delay days, and financial impact — scored per supplier from your shipment history.
+          {tc('intel_supplierscorecard.headerSubtitle')}
         </div>
       </div>
 
       {/* Summary KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 16 }}>
         {[
-          { label: 'Suppliers tracked', value: String(suppliers.length),         colour: TX },
-          { label: 'Avg score',         value: String(avgScore) + '/100',        colour: avgScore >= 70 ? '#16a34a' : avgScore >= 50 ? '#d97706' : '#dc2626' },
-          { label: 'At risk',           value: String(atRisk.length),            colour: atRisk.length > 0 ? '#dc2626' : '#16a34a' },
-          { label: 'Total delay cost',  value: totalImpact > 0 ? `${sym}${totalImpact.toFixed(0)}` : `${sym}0`, colour: totalImpact > 500 ? '#dc2626' : TX },
+          { label: tc('intel_supplierscorecard.kpiSuppliersTracked'), value: String(suppliers.length),         colour: TX },
+          { label: tc('intel_supplierscorecard.kpiAvgScore'),         value: String(avgScore) + '/100',        colour: avgScore >= 70 ? '#16a34a' : avgScore >= 50 ? '#d97706' : '#dc2626' },
+          { label: tc('intel_supplierscorecard.kpiAtRisk'),           value: String(atRisk.length),            colour: atRisk.length > 0 ? '#dc2626' : '#16a34a' },
+          { label: tc('intel_supplierscorecard.kpiTotalDelayCost'),   value: totalImpact > 0 ? `${sym}${totalImpact.toFixed(0)}` : `${sym}0`, colour: totalImpact > 500 ? '#dc2626' : TX },
         ].map((k, i) => (
           <div key={i} style={{ background: SF, border: `1px solid ${B}`, borderRadius: 12, padding: '12px 14px' }}>
             <div style={{ fontSize: 11, color: TX3, marginBottom: 5, fontWeight: 500 }}>{k.label}</div>
@@ -233,14 +251,14 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
 
       {/* Sort controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        <span style={{ fontSize: 12, color: TX3 }}>Sort by:</span>
+        <span style={{ fontSize: 12, color: TX3 }}>{tc('intel_supplierscorecard.sortBy')}</span>
         {(['score', 'shipments', 'impact'] as const).map(s => (
           <button
             key={s}
             onClick={() => setSortBy(s)}
-            style={{ fontSize: 12, fontWeight: sortBy === s ? 600 : 400, color: sortBy === s ? ACC : TX3, background: sortBy === s ? 'rgba(208,138,89,.08)' : 'transparent', border: `1px solid ${sortBy === s ? 'rgba(208,138,89,.3)' : B}`, borderRadius: 9999, padding: '3px 11px', cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize' }}
+            style={{ fontSize: 12, fontWeight: sortBy === s ? 600 : 400, color: sortBy === s ? ACC : TX3, background: sortBy === s ? 'rgba(208,138,89,.08)' : 'transparent', border: `1px solid ${sortBy === s ? 'rgba(208,138,89,.3)' : B}`, borderRadius: 9999, padding: '3px 11px', cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            {s === 'impact' ? 'Financial impact' : s}
+            {tc('intel_supplierscorecard.' + (s === 'score' ? 'sortScore' : s === 'shipments' ? 'sortShipments' : 'sortImpact'))}
           </button>
         ))}
       </div>
@@ -267,26 +285,28 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 14, fontWeight: 600, color: TX }}>{supplier.name}</span>
-                    <span style={{ fontSize: 11, color: TX3 }}>{supplier.shipmentCount} shipment{supplier.shipmentCount > 1 ? 's' : ''}</span>
+                    <span style={{ fontSize: 11, color: TX3 }}>
+                      {tc('intel_supplierscorecard.' + (supplier.shipmentCount === 1 ? 'shipmentSingular' : 'shipmentPlural'), { n: supplier.shipmentCount })}
+                    </span>
                     {supplier.customsHoldCount > 0 && (
                       <span style={{ fontSize: 10, fontWeight: 600, color: '#dc2626', background: 'rgba(220,38,38,.08)', padding: '1px 7px', borderRadius: 9999 }}>
-                        {supplier.customsHoldCount} customs hold{supplier.customsHoldCount > 1 ? 's' : ''}
+                        {tc('intel_supplierscorecard.' + (supplier.customsHoldCount === 1 ? 'customsHoldSingular' : 'customsHoldPlural'), { n: supplier.customsHoldCount })}
                       </span>
                     )}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, maxWidth: 400 }}>
                     <div>
-                      <div style={{ fontSize: 10, color: TX3, marginBottom: 2 }}>On-time rate</div>
+                      <div style={{ fontSize: 10, color: TX3, marginBottom: 2 }}>{tc('intel_supplierscorecard.metricOnTimeRate')}</div>
                       <ScoreBar value={supplier.onTimeRate} colour={supplier.onTimeRate >= 80 ? '#16a34a' : supplier.onTimeRate >= 60 ? '#d97706' : '#dc2626'}/>
                       <div style={{ fontSize: 11, fontWeight: 600, color: supplier.onTimeRate >= 80 ? '#16a34a' : supplier.onTimeRate >= 60 ? '#d97706' : '#dc2626', marginTop: 2 }}>{supplier.onTimeRate.toFixed(0)}%</div>
                     </div>
                     <div>
-                      <div style={{ fontSize: 10, color: TX3, marginBottom: 2 }}>Avg delay</div>
+                      <div style={{ fontSize: 10, color: TX3, marginBottom: 2 }}>{tc('intel_supplierscorecard.metricAvgDelay')}</div>
                       <ScoreBar value={Math.max(0, 14 - supplier.avgDelayDays)} max={14} colour={supplier.avgDelayDays <= 2 ? '#16a34a' : supplier.avgDelayDays <= 5 ? '#d97706' : '#dc2626'}/>
                       <div style={{ fontSize: 11, fontWeight: 600, color: supplier.avgDelayDays <= 2 ? '#16a34a' : supplier.avgDelayDays <= 5 ? '#d97706' : '#dc2626', marginTop: 2 }}>{supplier.avgDelayDays.toFixed(1)}d</div>
                     </div>
                     <div>
-                      <div style={{ fontSize: 10, color: TX3, marginBottom: 2 }}>Composite score</div>
+                      <div style={{ fontSize: 10, color: TX3, marginBottom: 2 }}>{tc('intel_supplierscorecard.metricCompositeScore')}</div>
                       <ScoreBar value={supplier.score} colour={g.text}/>
                       <div style={{ fontSize: 11, fontWeight: 600, color: g.text, marginTop: 2 }}>{supplier.score}/100</div>
                     </div>
@@ -297,7 +317,7 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   {supplier.totalFinancialImpact > 0 && (
                     <>
-                      <div style={{ fontSize: 11, color: TX3, marginBottom: 2 }}>Delay cost</div>
+                      <div style={{ fontSize: 11, color: TX3, marginBottom: 2 }}>{tc('intel_supplierscorecard.delayCost')}</div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#dc2626' }}>−{sym}{supplier.totalFinancialImpact.toFixed(0)}</div>
                     </>
                   )}
@@ -313,19 +333,19 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
 
                   {/* Recommendation */}
                   <div style={{ padding: '10px 13px', borderRadius: 10, background: g.bg, border: `1px solid ${g.border}`, marginBottom: 14 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: g.text, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>Recommendation</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: g.text, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>{tc('intel_supplierscorecard.recommendationLabel')}</div>
                     <div style={{ fontSize: 13, color: TX2, lineHeight: 1.55 }}>{supplier.recommendation}</div>
                   </div>
 
                   {/* Detail grid */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 14 }}>
                     {[
-                      { label: 'Total shipments',  value: String(supplier.shipmentCount) },
-                      { label: 'Delivered',         value: String(supplier.deliveredCount) },
-                      { label: 'Delayed',           value: String(supplier.delayedCount),       warn: supplier.delayedCount > 0 },
-                      { label: 'Customs holds',     value: String(supplier.customsHoldCount),   warn: supplier.customsHoldCount > 0 },
-                      { label: 'Total value',       value: supplier.totalValue > 0 ? `${sym}${supplier.totalValue.toLocaleString()}` : '—' },
-                      { label: 'Financial impact',  value: supplier.totalFinancialImpact > 0 ? `−${sym}${supplier.totalFinancialImpact.toFixed(0)}` : `${sym}0`, warn: supplier.totalFinancialImpact > 500 },
+                      { label: tc('intel_supplierscorecard.detailTotalShipments'),  value: String(supplier.shipmentCount) },
+                      { label: tc('intel_supplierscorecard.detailDelivered'),        value: String(supplier.deliveredCount) },
+                      { label: tc('intel_supplierscorecard.detailDelayed'),          value: String(supplier.delayedCount),       warn: supplier.delayedCount > 0 },
+                      { label: tc('intel_supplierscorecard.detailCustomsHolds'),     value: String(supplier.customsHoldCount),   warn: supplier.customsHoldCount > 0 },
+                      { label: tc('intel_supplierscorecard.detailTotalValue'),       value: supplier.totalValue > 0 ? `${sym}${supplier.totalValue.toLocaleString()}` : '—' },
+                      { label: tc('intel_supplierscorecard.detailFinancialImpact'),  value: supplier.totalFinancialImpact > 0 ? `−${sym}${supplier.totalFinancialImpact.toFixed(0)}` : `${sym}0`, warn: supplier.totalFinancialImpact > 500 },
                     ].map((item, i) => (
                       <div key={i} style={{ background: SF, borderRadius: 9, padding: '9px 11px', border: `1px solid ${B}` }}>
                         <div style={{ fontSize: 11, color: TX3, marginBottom: 3 }}>{item.label}</div>
@@ -337,7 +357,7 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
                   {/* Carriers */}
                   {supplier.carriers.length > 0 && (
                     <div style={{ marginBottom: 14 }}>
-                      <div style={{ fontSize: 11, color: TX3, marginBottom: 6 }}>Carriers used</div>
+                      <div style={{ fontSize: 11, color: TX3, marginBottom: 6 }}>{tc('intel_supplierscorecard.carriersUsed')}</div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         {supplier.carriers.map(c => (
                           <span key={c} style={{ fontSize: 12, color: TX2, background: SF, border: `1px solid ${B}`, borderRadius: 9999, padding: '2px 10px' }}>{c}</span>
@@ -349,17 +369,17 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
                   {/* Ask AskBiz */}
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <button
-                      onClick={() => onAsk(`Analyse ${supplier.name}'s delivery performance. They have a ${supplier.onTimeRate.toFixed(0)}% on-time rate, average delay of ${supplier.avgDelayDays.toFixed(1)} days, ${supplier.customsHoldCount} customs holds, and have cost me ${sym}${supplier.totalFinancialImpact.toFixed(0)} in financial impact. Should I find an alternative supplier?`)}
+                      onClick={() => onAsk(tc('intel_supplierscorecard.onAskAnalyse', { supplierName: supplier.name, onTimeRate: supplier.onTimeRate.toFixed(0), avgDelay: supplier.avgDelayDays.toFixed(1), customsHolds: supplier.customsHoldCount, sym, financialImpact: supplier.totalFinancialImpact.toFixed(0) }))}
                       style={{ fontSize: 12, fontWeight: 600, color: ACC, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 9, padding: '7px 13px', cursor: 'pointer', fontFamily: 'inherit' }}
                     >
-                      Ask AskBiz about this supplier →
+                      {tc('intel_supplierscorecard.askAskBiz')}
                     </button>
                     {(supplier.grade === 'D' || supplier.grade === 'F') && (
                       <button
-                        onClick={() => onAsk(`I need to find an alternative to ${supplier.name} who ships ${supplier.carriers[0] || 'internationally'}. What should I look for in a replacement supplier and how do I qualify them?`)}
+                        onClick={() => onAsk(tc('intel_supplierscorecard.onAskAlternative', { supplierName: supplier.name, carrier: supplier.carriers[0] || tc('intel_supplierscorecard.internationally') }))}
                         style={{ fontSize: 12, color: '#dc2626', background: 'rgba(220,38,38,.06)', border: '1px solid rgba(220,38,38,.2)', borderRadius: 9, padding: '7px 13px', cursor: 'pointer', fontFamily: 'inherit' }}
                       >
-                        Find alternative supplier →
+                        {tc('intel_supplierscorecard.findAlternative')}
                       </button>
                     )}
                   </div>
@@ -372,7 +392,7 @@ export default function SupplierScorecard({ onAsk, sym = '£' }: { onAsk: (promp
 
       {/* Footer note */}
       <div style={{ marginTop: 14, fontSize: 11, color: TX3, textAlign: 'center', lineHeight: 1.5 }}>
-        Scores calculated from {shipments.length} shipment{shipments.length !== 1 ? 's' : ''} across {suppliers.length} supplier{suppliers.length !== 1 ? 's' : ''} · Updates automatically as deliveries arrive
+        {tc('intel_supplierscorecard.' + footerKey, { shipments: shipments.length, suppliers: suppliers.length })}
       </div>
     </div>
   )

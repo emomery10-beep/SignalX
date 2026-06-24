@@ -1,0 +1,7 @@
+{
+  "title": "الملخص اليومي",
+  "improvedPrompt": "أخبرني المزيد عن هذا التحسين: {detail}",
+  "worsenedPrompt": "اشرح هذه المشكلة وما الذي يجب أن أفعله: {detail}",
+  "todayPrefix": "اليوم:",
+  "askAskBiz": "اسأل AskBiz"
+}

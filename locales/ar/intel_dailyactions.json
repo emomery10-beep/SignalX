@@ -1,0 +1,13 @@
+{
+  "title": "إجراءات اليوم",
+  "urgentBadge": "{n} عاجل",
+  "actionCount": "{n} إجراء",
+  "actionCountPlural": "{n} إجراءات",
+  "askAi": "اسأل الذكاء الاصطناعي",
+  "dismiss": "تجاهل",
+  "viewAll": "عرض جميع الـ {n} إجراءات →",
+  "priorityNow": "الآن",
+  "priorityToday": "اليوم",
+  "priorityThisWeek": "هذا الأسبوع",
+  "askActionPrompt": "ساعدني في هذا الإجراء: {title}. السياق: {why}"
+}

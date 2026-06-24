@@ -1,0 +1,20 @@
+{
+  "title": "Cuadro de KPIs",
+  "onTargetBadge": "{met}/{total} en objetivo",
+  "askAi": "Preguntar a la IA",
+  "askPrompt": "Mi cuadro de KPIs muestra {met}/{total} en objetivo. Fuera de objetivo: {missed}. ¿Qué debería priorizar para mejorar?",
+  "askPromptNone": "ninguno",
+  "colKpi": "KPI",
+  "colTarget": "Objetivo",
+  "colActual": "Real",
+  "colStatus": "Estado",
+  "colTrend": "Tendencia",
+  "labelGrossMargin": "Margen bruto",
+  "labelNetMargin": "Margen neto",
+  "labelRevenueGrowth": "Crecimiento de ingresos",
+  "labelStockoutRate": "Tasa de rotura de stock",
+  "labelCashRunway": "Reserva de efectivo",
+  "labelHealthScore": "Puntuación de salud",
+  "editTargetTitle": "Haz clic para editar el objetivo",
+  "footerHint": "Haz clic en cualquier valor objetivo para personalizarlo. Los objetivos se guardan en tu navegador."
+}

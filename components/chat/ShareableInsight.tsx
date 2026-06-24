@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { withUtm } from '@/lib/utm'
+import { useLang } from '@/components/LanguageProvider'
 
 interface KpiCard { label: string; value: string; trend?: string; status?: string }
 
@@ -21,6 +22,7 @@ interface Props {
 type State = 'idle' | 'loading' | 'copied' | 'error'
 
 export default function ShareableInsight({ question, result }: Props) {
+  const { tc } = useLang()
   const [state, setState] = useState<State>('idle')
   const [shareUrl, setShareUrl] = useState<string | null>(null)
 
@@ -63,11 +65,15 @@ export default function ShareableInsight({ question, result }: Props) {
   const isGreen = state === 'copied'
   const isRed = state === 'error'
 
+  const titleAttr = shareUrl
+    ? tc('chat_shareableinsight.titleWithUrl', { url: shareUrl })
+    : tc('chat_shareableinsight.titleDefault')
+
   return (
     <button
       onClick={handleShare}
       disabled={state === 'loading'}
-      title={shareUrl ? `Share: ${shareUrl}` : 'Create a shareable link for this insight'}
+      title={titleAttr}
       style={{
         display: 'flex', alignItems: 'center', gap: 5,
         padding: '5px 12px', borderRadius: 9999,
@@ -98,10 +104,10 @@ export default function ShareableInsight({ question, result }: Props) {
           <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
         </svg>
       )}
-      {state === 'idle' && 'Share'}
-      {state === 'loading' && 'Creating link…'}
-      {state === 'copied' && 'Link copied!'}
-      {state === 'error' && 'Try again'}
+      {state === 'idle' && tc('chat_shareableinsight.labelIdle')}
+      {state === 'loading' && tc('chat_shareableinsight.labelLoading')}
+      {state === 'copied' && tc('chat_shareableinsight.labelCopied')}
+      {state === 'error' && tc('chat_shareableinsight.labelError')}
     </button>
   )
 }

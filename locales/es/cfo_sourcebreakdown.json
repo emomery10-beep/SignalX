@@ -1,0 +1,11 @@
+{
+  "heading": "Ingresos por fuente",
+  "channels": "({n} canales)",
+  "askAi": "Preguntar a la IA",
+  "askAiPrompt": "Ingresos por fuente: {summary}. ¿En qué canales debería enfocarme para crecer y cuáles tienen bajo rendimiento?",
+  "transactions": "{n} transacciones · {pct}% de los ingresos",
+  "marginPct": "{n}% de margen",
+  "metricRevenue": "Ingresos",
+  "metricCogs": "CMV",
+  "metricGrossProfit": "Ganancia bruta"
+}

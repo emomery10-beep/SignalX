@@ -1,0 +1,23 @@
+{
+  "title": "Résumé fournisseur",
+  "askAi": "Demander à l'IA",
+  "askAiPrompt": "Analyse mes relations fournisseurs et recommande des stratégies de négociation pour améliorer les marges.",
+  "negotiationLeverage": "Leviers de négociation",
+  "monthlySpend": "Dépenses mensuelles",
+  "savingTarget": "Objectif d'économie de 5 %",
+  "annualImpact": "Impact annuel",
+  "concentrationRiskLabel": "Risque de concentration :",
+  "concentrationRiskSuffix": "— diversifiez pour renforcer votre position de négociation",
+  "lowMarginLabel": "Fournisseurs à faible marge :",
+  "lowMarginSuffix": "— à prioriser pour renégociation",
+  "risingCostsLabel": "Coûts en hausse :",
+  "risingCostsSuffix": "— bloquez les tarifs ou trouvez des alternatives",
+  "saveBadge": "Économisez ~{amount}/mois",
+  "supplierRowMeta": "{n} produits • {spend}/mois • {margin} % de marge",
+  "depBadge": "{dep} % dépen.",
+  "generatingBrief": "Génération du résumé pour {name}…",
+  "negotiationBriefHeader": "Résumé de négociation — {name}",
+  "sectionLeverage": "LEVIERS",
+  "sectionRisks": "RISQUES",
+  "sectionTalkingPoints": "POINTS DE DISCUSSION"
+}

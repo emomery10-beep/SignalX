@@ -1,0 +1,11 @@
+{
+  "title": "Betalingsherstel",
+  "askAi": "Vraag AI",
+  "askPrompt": "We hebben {failedCount} mislukte betalingen met een totaalbedrag van {totalAmount}. We hebben {recoveredAmount} teruggevorderd ({recoveryRate}% herstelpercentage). {pendingRetry} betalingen staan klaar voor herpoging. Hoe kunnen we ons herstelpercentage verbeteren?",
+  "atRisk": "Risico",
+  "recovered": "Hersteld",
+  "recoveryRate": "Herstelpercentage",
+  "failedPayments": "{n} mislukte betalingen",
+  "payments": "{n} betalingen",
+  "pending": "{n} in behandeling"
+}

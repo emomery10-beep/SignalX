@@ -1,0 +1,17 @@
+{
+  "title": "Datenverbindungen",
+  "sourcesConnected": "{connected} von {total} Quellen verbunden",
+  "sourcesConnectedSuffix": "von {total} Quellen verbunden",
+  "manageSources": "Quellen verwalten →",
+  "coverageNone": "Verbinde eine Quelle, um echte Einblicke zu erhalten",
+  "coverageLow": "{n} weitere Verbindungen für vollständige Abdeckung empfohlen",
+  "coverageMid": "Gute Abdeckung – weitere Verbindungen verbessern die Datengenauigkeit",
+  "coverageHigh": "Hervorragende Datenabdeckung in deinem Unternehmen",
+  "filterAll": "Alle",
+  "statusNotConnected": "Nicht verbunden",
+  "statusSyncError": "⚠ Synchronisierungsfehler",
+  "statusSynced": "Synchronisiert {time}",
+  "detailName": "Name:",
+  "detailActive": "Aktiv · wird synchronisiert",
+  "connect": "Verbinden →"
+}

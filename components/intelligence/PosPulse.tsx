@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { detectGeoFromTimezone } from '@/lib/geo'
+import { useLang } from '@/components/LanguageProvider'
 
 interface PosPulseProps {
   onAsk: (prompt: string) => void
@@ -67,6 +68,7 @@ function detectSector(bt: string): { label: string; emoji: string } {
 }
 
 export default function PosPulse({ onAsk }: PosPulseProps) {
+  const { tc } = useLang()
   const [sales, setSales] = useState<SalesData | null>(null)
   const [lowStock, setLowStock] = useState<LowStockItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -77,6 +79,12 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
   const [periodDrill, setPeriodDrill] = useState<'yesterday' | 'prevWeek' | null>(null)
   const [sym, setSym] = useState('$')
   const [sectorInfo, setSectorInfo] = useState({ label: 'POS Pulse', emoji: '📊' })
+
+  const DRILL_SECTIONS = [
+    { id: 'time', label: tc('intel_pospulse.drillTime'), icon: '⏰' },
+    { id: 'categories', label: tc('intel_pospulse.drillCategories'), icon: '🏷️' },
+    { id: 'payments', label: tc('intel_pospulse.drillPayments'), icon: '💳' },
+  ]
 
   useEffect(() => {
     const geo = detectGeoFromTimezone()
@@ -291,78 +299,71 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
 
   const kpiCards: KpiMeta[] = !sales ? [] : [
     {
-      id: 'dailyAvg', label: 'Daily Average', value: fmt(dailyAvg), color: 'var(--tx)', icon: '📊',
+      id: 'dailyAvg', label: tc('intel_pospulse.kpiDailyAvgLabel'), value: fmt(dailyAvg), color: 'var(--tx)', icon: '📊',
       status: dailyAvg > 0 ? 'good' : 'warning',
-      benchmark: dailyAvg > 0 ? `${fmt(dailyAvg)} per day over 7 days` : 'No baseline yet',
+      benchmark: dailyAvg > 0 ? tc('intel_pospulse.kpiDailyAvgBenchmarkYes', { value: fmt(dailyAvg) }) : tc('intel_pospulse.kpiDailyAvgBenchmarkNo'),
       tips: dailyAvg > 0
-        ? ['Your daily average factors in slow and busy days', 'Use this as a baseline to measure promotional impact', 'Track this weekly — a rising average signals healthy growth', 'If flat or declining, check foot traffic and marketing reach']
-        : ['Start recording sales to establish a baseline', 'Consistent daily tracking unlocks trend analysis'],
-      action: dailyAvg > 0 ? 'Set a daily target 10% above your current average and track progress' : 'Record at least 7 days of sales data to establish a meaningful average',
-      askPrompt: 'Analyse my daily sales average — is it trending up or down? What days are pulling the average down and what can I do about it?',
+        ? [tc('intel_pospulse.kpiDailyAvgTip1'), tc('intel_pospulse.kpiDailyAvgTip2'), tc('intel_pospulse.kpiDailyAvgTip3'), tc('intel_pospulse.kpiDailyAvgTip4')]
+        : [tc('intel_pospulse.kpiDailyAvgTipNo1'), tc('intel_pospulse.kpiDailyAvgTipNo2')],
+      action: dailyAvg > 0 ? tc('intel_pospulse.kpiDailyAvgActionYes') : tc('intel_pospulse.kpiDailyAvgActionNo'),
+      askPrompt: tc('intel_pospulse.kpiDailyAvgAskPrompt'),
     },
     {
-      id: 'todayVsAvg', label: 'Today vs Average', value: `${todayVsAvg >= 0 ? '+' : ''}${todayVsAvg.toFixed(0)}%`, color: todayVsAvg >= 0 ? '#22C55E' : '#EF4444', icon: '📈',
+      id: 'todayVsAvg', label: tc('intel_pospulse.kpiTodayVsAvgLabel'), value: `${todayVsAvg >= 0 ? '+' : ''}${todayVsAvg.toFixed(0)}%`, color: todayVsAvg >= 0 ? '#22C55E' : '#EF4444', icon: '📈',
       status: todayVsAvg >= -10 ? (todayVsAvg >= 10 ? 'good' : 'warning') : 'critical',
-      benchmark: todayVsAvg >= 10 ? 'Above average — great day so far' : todayVsAvg >= -10 ? 'Tracking around average' : 'Significantly below average',
+      benchmark: todayVsAvg >= 10 ? tc('intel_pospulse.kpiTodayVsAvgBenchmarkAbove') : todayVsAvg >= -10 ? tc('intel_pospulse.kpiTodayVsAvgBenchmarkAround') : tc('intel_pospulse.kpiTodayVsAvgBenchmarkBelow'),
       tips: todayVsAvg >= 0
-        ? ['Today is outperforming your weekly average', 'Check what is driving the uplift — promotion, day of week, weather?', 'Replicate winning conditions on slower days']
-        : ['Today is tracking below your average', 'Check: Is it early in the day? The pace may pick up', 'Consider a flash promotion or social media push to drive traffic', 'Compare with the same day last week for context'],
-      action: todayVsAvg >= 0 ? 'Document what made today successful so you can replicate it' : 'Consider a limited-time offer to boost sales before end of day',
+        ? [tc('intel_pospulse.kpiTodayVsAvgTipAbove1'), tc('intel_pospulse.kpiTodayVsAvgTipAbove2'), tc('intel_pospulse.kpiTodayVsAvgTipAbove3')]
+        : [tc('intel_pospulse.kpiTodayVsAvgTipBelow1'), tc('intel_pospulse.kpiTodayVsAvgTipBelow2'), tc('intel_pospulse.kpiTodayVsAvgTipBelow3'), tc('intel_pospulse.kpiTodayVsAvgTipBelow4')],
+      action: todayVsAvg >= 0 ? tc('intel_pospulse.kpiTodayVsAvgActionAbove') : tc('intel_pospulse.kpiTodayVsAvgActionBelow'),
       askPrompt: `Today's sales are ${todayVsAvg >= 0 ? 'above' : 'below'} my average by ${Math.abs(todayVsAvg).toFixed(0)}%. Analyse why and suggest actions to ${todayVsAvg >= 0 ? 'maintain momentum' : 'recover'}.`,
     },
     {
-      id: 'grossMargin', label: 'Gross Margin', value: `${grossMarginWeek.toFixed(0)}%`, color: grossMarginWeek >= 40 ? '#22C55E' : grossMarginWeek >= 20 ? '#F59E0B' : '#EF4444', icon: '💰',
+      id: 'grossMargin', label: tc('intel_pospulse.kpiGrossMarginLabel'), value: `${grossMarginWeek.toFixed(0)}%`, color: grossMarginWeek >= 40 ? '#22C55E' : grossMarginWeek >= 20 ? '#F59E0B' : '#EF4444', icon: '💰',
       status: grossMarginWeek >= 40 ? 'good' : grossMarginWeek >= 20 ? 'warning' : 'critical',
-      benchmark: grossMarginWeek >= 50 ? 'Excellent — top-tier margin' : grossMarginWeek >= 40 ? 'Healthy margins for most sectors' : grossMarginWeek >= 20 ? 'Below average — review pricing and costs' : 'Critical — margins too thin to sustain',
+      benchmark: grossMarginWeek >= 50 ? tc('intel_pospulse.kpiGrossMarginBenchmarkExcellent') : grossMarginWeek >= 40 ? tc('intel_pospulse.kpiGrossMarginBenchmarkHealthy') : grossMarginWeek >= 20 ? tc('intel_pospulse.kpiGrossMarginBenchmarkBelow') : tc('intel_pospulse.kpiGrossMarginBenchmarkCritical'),
       tips: grossMarginWeek >= 40
-        ? ['Margins are healthy — protect your pricing power', 'Look for premium upsell opportunities to widen margins further', 'Monitor supplier costs for any creeping increases', 'Consider whether volume growth could dilute margins']
+        ? [tc('intel_pospulse.kpiGrossMarginTipGood1'), tc('intel_pospulse.kpiGrossMarginTipGood2'), tc('intel_pospulse.kpiGrossMarginTipGood3'), tc('intel_pospulse.kpiGrossMarginTipGood4')]
         : grossMarginWeek >= 20
-        ? ['Margins are tight — review your top cost items', 'Negotiate better rates with your top 3 suppliers', 'Consider bundling low-margin items with high-margin ones', 'Check if any products are selling below cost']
-        : ['Margins are critically low — urgent action needed', 'Audit every product for profitability', 'Consider discontinuing items with negative margins', 'Raise prices where the market will bear it — even 5% helps'],
-      action: grossMarginWeek >= 40 ? 'Focus on maintaining margins while growing volume — avoid unnecessary discounting' : 'Urgently review your pricing and cost structure this week',
+        ? [tc('intel_pospulse.kpiGrossMarginTipWarn1'), tc('intel_pospulse.kpiGrossMarginTipWarn2'), tc('intel_pospulse.kpiGrossMarginTipWarn3'), tc('intel_pospulse.kpiGrossMarginTipWarn4')]
+        : [tc('intel_pospulse.kpiGrossMarginTipCrit1'), tc('intel_pospulse.kpiGrossMarginTipCrit2'), tc('intel_pospulse.kpiGrossMarginTipCrit3'), tc('intel_pospulse.kpiGrossMarginTipCrit4')],
+      action: grossMarginWeek >= 40 ? tc('intel_pospulse.kpiGrossMarginActionGood') : tc('intel_pospulse.kpiGrossMarginActionBad'),
       askPrompt: `My gross margin is ${grossMarginWeek.toFixed(0)}%. Break down which products are pulling margins up vs down, and give me specific actions to improve profitability.`,
     },
     {
-      id: 'avgBasket', label: 'Avg Basket', value: fmt(sales.avgBasket), color: '#6366F1', icon: '🛒',
+      id: 'avgBasket', label: tc('intel_pospulse.kpiAvgBasketLabel'), value: fmt(sales.avgBasket), color: '#6366F1', icon: '🛒',
       status: sales.avgBasket > 0 ? 'good' : 'warning',
-      benchmark: sales.avgBasket > 0 ? `${fmt(sales.avgBasket)} per transaction this week` : 'No transactions yet',
+      benchmark: sales.avgBasket > 0 ? tc('intel_pospulse.kpiAvgBasketBenchmarkYes', { value: fmt(sales.avgBasket) }) : tc('intel_pospulse.kpiAvgBasketBenchmarkNo'),
       tips: sales.avgBasket > 0
-        ? ['Average basket size indicates customer spending per visit', 'Upselling and cross-selling can increase basket value by 15-30%', 'Bundle offers and combo deals are proven basket builders', 'Staff training on suggestive selling has the highest ROI', 'Track basket size by time of day — lunch vs dinner baskets often differ significantly']
-        : ['Start tracking to see your average transaction value'],
-      action: sales.avgBasket > 0 ? 'Introduce a "frequently bought together" suggestion or create a combo deal to boost basket size' : 'Record sales to start tracking basket sizes',
+        ? [tc('intel_pospulse.kpiAvgBasketTip1'), tc('intel_pospulse.kpiAvgBasketTip2'), tc('intel_pospulse.kpiAvgBasketTip3'), tc('intel_pospulse.kpiAvgBasketTip4'), tc('intel_pospulse.kpiAvgBasketTip5')]
+        : [tc('intel_pospulse.kpiAvgBasketTipNo')],
+      action: sales.avgBasket > 0 ? tc('intel_pospulse.kpiAvgBasketActionYes') : tc('intel_pospulse.kpiAvgBasketActionNo'),
       askPrompt: `My average basket size is ${fmt(sales.avgBasket)}. How does this compare to similar businesses? What specific upselling strategies could increase it?`,
     },
     {
-      id: 'netSales', label: 'Net Sales Today', value: fmt(todayNetSales), color: 'var(--tx)', icon: '💵',
+      id: 'netSales', label: tc('intel_pospulse.kpiNetSalesLabel'), value: fmt(todayNetSales), color: 'var(--tx)', icon: '💵',
       status: todayNetSales > 0 ? 'good' : sales.todayRefunds > 0 ? 'critical' : 'warning',
-      benchmark: sales.todayRefunds > 0 ? `${fmt(sales.todayRefunds)} lost to refunds today` : 'No refunds today — clean sales',
+      benchmark: sales.todayRefunds > 0 ? tc('intel_pospulse.kpiNetSalesBenchmarkRefunds', { value: fmt(sales.todayRefunds) }) : tc('intel_pospulse.kpiNetSalesBenchmarkClean'),
       tips: [
-        'Net sales = gross revenue minus refunds and discounts',
-        sales.todayRefunds > 0 ? `Refunds: ${fmt(sales.todayRefunds)} — investigate the cause` : 'No refunds today — great quality control',
-        sales.todayDiscounts > 0 ? `Discounts: ${fmt(sales.todayDiscounts)} — ensure these are driving volume` : 'No discounts applied today',
-        'High refund rates often signal product quality issues or mismatched expectations',
-        'Track your discount-to-revenue ratio — over 10% may indicate pricing problems',
+        tc('intel_pospulse.kpiNetSalesTip1'),
+        sales.todayRefunds > 0 ? tc('intel_pospulse.kpiNetSalesTipRefunds', { value: fmt(sales.todayRefunds) }) : tc('intel_pospulse.kpiNetSalesTipNoRefunds'),
+        sales.todayDiscounts > 0 ? tc('intel_pospulse.kpiNetSalesTipDiscounts', { value: fmt(sales.todayDiscounts) }) : tc('intel_pospulse.kpiNetSalesTipNoDiscounts'),
+        tc('intel_pospulse.kpiNetSalesTip4'),
+        tc('intel_pospulse.kpiNetSalesTip5'),
       ],
-      action: sales.todayRefunds > 0 ? 'Investigate the root cause of refunds — is it product quality, wrong items, or buyer remorse?' : 'Keep refund rates low by maintaining quality and clear product descriptions',
+      action: sales.todayRefunds > 0 ? tc('intel_pospulse.kpiNetSalesActionRefunds') : tc('intel_pospulse.kpiNetSalesActionClean'),
       askPrompt: `Analyse my net sales breakdown — I have ${fmt(sales.todayRevenue)} gross, ${fmt(sales.todayRefunds)} refunds, ${fmt(sales.todayDiscounts)} discounts. What patterns do you see and how can I reduce leakage?`,
     },
     {
-      id: 'peakHour', label: 'Peak Hour', value: sales.topHour, color: '#F59E0B', icon: '⏰',
+      id: 'peakHour', label: tc('intel_pospulse.kpiPeakHourLabel'), value: sales.topHour, color: '#F59E0B', icon: '⏰',
       status: sales.topHourRevenue > 0 ? 'good' : 'warning',
-      benchmark: sales.topHourRevenue > 0 ? `${fmt(sales.topHourRevenue)} revenue in peak hour` : 'No peak identified yet',
+      benchmark: sales.topHourRevenue > 0 ? tc('intel_pospulse.kpiPeakHourBenchmarkYes', { value: fmt(sales.topHourRevenue) }) : tc('intel_pospulse.kpiPeakHourBenchmarkNo'),
       tips: sales.topHourRevenue > 0
-        ? ['Your busiest trading hour — ensure full staffing during this window', 'Pre-prepare stock and supplies before peak to avoid bottlenecks', 'Consider premium pricing or time-limited offers during peak', 'Track peak hour changes by day of week — weekday vs weekend peaks differ', 'Off-peak hours are opportunities for promotions to flatten demand']
-        : ['Record more sales data to identify your peak trading hour'],
-      action: sales.topHourRevenue > 0 ? 'Ensure you have maximum staff coverage during peak hour and pre-stage your most popular items' : 'Track sales by hour for at least a week to identify patterns',
+        ? [tc('intel_pospulse.kpiPeakHourTip1'), tc('intel_pospulse.kpiPeakHourTip2'), tc('intel_pospulse.kpiPeakHourTip3'), tc('intel_pospulse.kpiPeakHourTip4'), tc('intel_pospulse.kpiPeakHourTip5')]
+        : [tc('intel_pospulse.kpiPeakHourTipNo')],
+      action: sales.topHourRevenue > 0 ? tc('intel_pospulse.kpiPeakHourActionYes') : tc('intel_pospulse.kpiPeakHourActionNo'),
       askPrompt: `My peak hour is ${sales.topHour} with ${fmt(sales.topHourRevenue)} revenue. Analyse my hourly patterns — how can I maximize peak revenue and improve off-peak performance?`,
     },
-  ]
-
-  // Sales drill sections
-  const DRILL_SECTIONS = [
-    { id: 'time', label: 'Time Analysis', icon: '⏰' },
-    { id: 'categories', label: 'Category & Mix', icon: '🏷️' },
-    { id: 'payments', label: 'Payments & Staff', icon: '💳' },
   ]
 
   return (
@@ -386,7 +387,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                 textTransform: 'uppercase', letterSpacing: '.06em', transition: 'all 100ms',
               }}
             >
-              {v === 'sales' ? 'Sales' : 'Stock'}
+              {v === 'sales' ? tc('intel_pospulse.tabSales') : tc('intel_pospulse.tabStock')}
               {v === 'stock' && critCount > 0 && (
                 <span style={{ marginLeft: 4, fontSize: 8, background: '#EF4444', color: '#fff', borderRadius: 4, padding: '0 4px', fontWeight: 700 }}>{critCount}</span>
               )}
@@ -406,20 +407,20 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
               {/* Primary KPIs */}
               <div style={{ display: 'flex', gap: 12, marginBottom: 10, overflow: 'hidden' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Today</div>
+                  <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>{tc('intel_pospulse.today')}</div>
                   <span style={{ fontSize: 20, fontWeight: 800, color: '#6366F1', fontFamily: 'var(--font-sora, inherit)', lineHeight: 1, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {fmt(sales!.todayRevenue)}
                   </span>
-                  <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{sales!.todayTxns} txns · {sales!.itemsSold > 0 ? `${Math.round(sales!.itemsSold / Math.max(1, sales!.weekTxns) * sales!.todayTxns)} items` : ''}</div>
+                  <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{tc('intel_pospulse.txns', { n: sales!.todayTxns })} · {sales!.itemsSold > 0 ? tc('intel_pospulse.items', { n: Math.round(sales!.itemsSold / Math.max(1, sales!.weekTxns) * sales!.todayTxns) }) : ''}</div>
                 </div>
                 <div style={{ width: 1, background: 'var(--b)', flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>This Week</div>
+                  <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>{tc('intel_pospulse.thisWeek')}</div>
                   <span style={{ fontSize: 20, fontWeight: 800, color: 'var(--tx)', fontFamily: 'var(--font-sora, inherit)', lineHeight: 1, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {fmt(sales!.weekRevenue)}
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                    <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{sales!.weekTxns} txns</span>
+                    <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('intel_pospulse.txns', { n: sales!.weekTxns })}</span>
                     {weekVsPrev !== 0 && (
                       <span style={{ fontSize: 10, fontWeight: 700, color: weekVsPrev > 0 ? '#22C55E' : '#EF4444', background: weekVsPrev > 0 ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.1)', borderRadius: 4, padding: '0 4px' }}>
                         {weekVsPrev > 0 ? '↑' : '↓'}{Math.abs(weekVsPrev).toFixed(0)}%
@@ -432,23 +433,23 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
               {/* Compact KPI grid */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(70px, 1fr))', gap: 6, marginBottom: 10 }}>
                 <div style={{ padding: '6px 8px', borderRadius: 8, background: 'var(--ev)' }}>
-                  <div style={{ fontSize: 8, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Daily avg</div>
+                  <div style={{ fontSize: 8, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>{tc('intel_pospulse.dailyAvgLabel')}</div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--tx)' }}>{fmt(dailyAvg)}</div>
                 </div>
                 <div style={{ padding: '6px 8px', borderRadius: 8, background: 'var(--ev)' }}>
-                  <div style={{ fontSize: 8, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Today vs avg</div>
+                  <div style={{ fontSize: 8, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>{tc('intel_pospulse.todayVsAvgLabel')}</div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: todayVsAvg >= 0 ? '#22C55E' : '#EF4444' }}>
                     {todayVsAvg >= 0 ? '+' : ''}{todayVsAvg.toFixed(0)}%
                   </div>
                 </div>
                 <div style={{ padding: '6px 8px', borderRadius: 8, background: 'var(--ev)' }}>
-                  <div style={{ fontSize: 8, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Gross margin</div>
+                  <div style={{ fontSize: 8, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>{tc('intel_pospulse.grossMarginLabel')}</div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: grossMarginWeek >= 40 ? '#22C55E' : grossMarginWeek >= 20 ? '#F59E0B' : '#EF4444' }}>
                     {grossMarginWeek.toFixed(0)}%
                   </div>
                 </div>
                 <div style={{ padding: '6px 8px', borderRadius: 8, background: 'var(--ev)' }}>
-                  <div style={{ fontSize: 8, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Avg basket</div>
+                  <div style={{ fontSize: 8, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>{tc('intel_pospulse.avgBasketLabel')}</div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: '#6366F1' }}>{fmt(sales!.avgBasket)}</div>
                 </div>
               </div>
@@ -456,11 +457,11 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
               {/* Net sales + Peak hour */}
               <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
                 <div style={{ flex: 1, padding: '6px 8px', borderRadius: 8, background: 'var(--ev)' }}>
-                  <div style={{ fontSize: 8, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2, fontWeight: 700 }}>Net sales today</div>
+                  <div style={{ fontSize: 8, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2, fontWeight: 700 }}>{tc('intel_pospulse.netSalesTodayLabel')}</div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--tx)' }}>{fmt(todayNetSales)}</div>
                 </div>
                 <div style={{ flex: 1, padding: '6px 8px', borderRadius: 8, background: 'var(--ev)' }}>
-                  <div style={{ fontSize: 8, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2, fontWeight: 700 }}>Peak hour</div>
+                  <div style={{ fontSize: 8, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2, fontWeight: 700 }}>{tc('intel_pospulse.peakHourLabel')}</div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: '#F59E0B' }}>{sales!.topHour}</div>
                 </div>
               </div>
@@ -490,23 +491,23 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
               <div style={{ display: 'flex', gap: 12, padding: '8px 0 0', borderTop: '1px solid var(--b)', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--tx3)' }}>
                   <div style={{ width: 6, height: 6, borderRadius: 1, background: grossMarginWeek >= 40 ? '#22C55E' : '#F59E0B' }} />
-                  {grossMarginWeek.toFixed(0)}% margin
+                  {grossMarginWeek.toFixed(0)}{tc('intel_pospulse.marginFooter')}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--tx3)' }}>
                   <div style={{ width: 6, height: 6, borderRadius: 1, background: '#F59E0B' }} />
-                  {fmt(sales!.avgBasket)} avg
+                  {fmt(sales!.avgBasket)} {tc('intel_pospulse.avgFooter')}
                 </div>
                 <button
                   onClick={() => setSalesDrill('time')}
                   style={{ fontSize: 9, color: '#6366F1', fontWeight: 600, marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
                 >
-                  Tap to analyse →
+                  {tc('intel_pospulse.tapToAnalyse')}
                 </button>
               </div>
             </>
           ) : (
             <div style={{ fontSize: 13, color: 'var(--tx3)', padding: '8px 0' }}>
-              No sales recorded yet today
+              {tc('intel_pospulse.noSalesToday')}
             </div>
           )}
         </div>
@@ -520,15 +521,15 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
               {expanded && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10, animation: 'fadeIn 200ms ease' }}>
                   <div style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--ev)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Low stock</div>
+                    <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>{tc('intel_pospulse.lowStockLabel')}</div>
                     <div style={{ fontSize: 16, fontWeight: 800, color: '#F59E0B' }}>{lowStock.length}</div>
                   </div>
                   <div style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--ev)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Critical</div>
+                    <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>{tc('intel_pospulse.criticalLabel')}</div>
                     <div style={{ fontSize: 16, fontWeight: 800, color: '#EF4444' }}>{critCount}</div>
                   </div>
                   <div style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--ev)' }}>
-                    <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Out of stock</div>
+                    <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>{tc('intel_pospulse.outOfStockLabel')}</div>
                     <div style={{ fontSize: 16, fontWeight: 800, color: '#EF4444' }}>{lowStock.filter(i => i.qty === 0).length}</div>
                   </div>
                 </div>
@@ -538,13 +539,13 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ width: 6, height: 6, borderRadius: 6, background: URGENCY_COLOR[item.urgency], flexShrink: 0 }} />
                     <span style={{ fontSize: 11, color: 'var(--tx2)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: URGENCY_COLOR[item.urgency], flexShrink: 0 }}>{item.qty === 0 ? 'OUT' : `${item.qty} left`}</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: URGENCY_COLOR[item.urgency], flexShrink: 0 }}>{item.qty === 0 ? tc('intel_pospulse.outText') : tc('intel_pospulse.leftText', { n: item.qty })}</span>
                   </div>
                 ))}
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, paddingTop: 8, borderTop: '1px solid var(--b)' }}>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  {[['#EF4444', 'Critical'], ['#F59E0B', 'Low'], ['#6366F1', 'Watch']].map(([c, l]) => (
+                  {([['#EF4444', tc('intel_pospulse.legendCritical')], ['#F59E0B', tc('intel_pospulse.legendLow')], ['#6366F1', tc('intel_pospulse.legendWatch')]] as [string, string][]).map(([c, l]) => (
                     <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 9, color: 'var(--tx3)' }}>
                       <div style={{ width: 5, height: 5, borderRadius: 5, background: c }} />{l}
                     </div>
@@ -552,12 +553,12 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                 </div>
                 <button onClick={() => setExpanded(e => !e)}
                   style={{ fontSize: 9, color: '#6366F1', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
-                  {expanded ? '← Collapse' : 'Tap to reorder →'}
+                  {expanded ? tc('intel_pospulse.collapseBtn') : tc('intel_pospulse.reorderBtn')}
                 </button>
               </div>
             </>
           ) : (
-            <div style={{ fontSize: 13, color: 'var(--tx3)', padding: '8px 0' }}>All stock levels healthy</div>
+            <div style={{ fontSize: 13, color: 'var(--tx3)', padding: '8px 0' }}>{tc('intel_pospulse.allStockHealthy')}</div>
           )}
         </div>
       )}
@@ -574,7 +575,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                   {sectorInfo.emoji} {sectorInfo.label}
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>
-                  This week: <strong style={{ color: '#6366F1' }}>{fmt(sales!.weekRevenue)}</strong> · {sales!.weekTxns} transactions
+                  {tc('intel_pospulse.thisWeekLabel')}<strong style={{ color: '#6366F1' }}>{fmt(sales!.weekRevenue)}</strong> · {tc('intel_pospulse.txns', { n: sales!.weekTxns })}
                 </div>
               </div>
               <button onClick={() => { setSalesDrill(null); setKpiDrill(null); setPeriodDrill(null) }} style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx3)' }}>
@@ -586,7 +587,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
             {!kpiDrill && (
               <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(99,102,241,.06)', border: '1px solid rgba(99,102,241,.12)', marginBottom: 14, fontSize: 11, color: '#6366F1', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                Click any metric for a deeper analysis
+                {tc('intel_pospulse.clickMetricHint')}
               </div>
             )}
 
@@ -622,7 +623,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '8px 10px', borderRadius: 8, background: 'var(--ev)' }}>
                           <span style={{ width: 8, height: 8, borderRadius: '50%', background: sc, flexShrink: 0 }} />
                           <div>
-                            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Benchmark</div>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('intel_pospulse.benchmarkLabel')}</div>
                             <div style={{ fontSize: 12, fontWeight: 600, color: sc }}>{kpi.benchmark}</div>
                           </div>
                         </div>
@@ -636,7 +637,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                           const avgY = chartH - (avg / maxR) * (chartH - 20)
                           return (
                             <div style={{ marginBottom: 14, padding: '10px 12px', borderRadius: 10, background: 'var(--ev)' }}>
-                              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Daily Revenue (7 days)</div>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('intel_pospulse.chartDailyRevenue')}</div>
                               <svg width="100%" viewBox={`0 0 ${chartW} ${chartH + 20}`} style={{ overflow: 'visible' }}>
                                 {/* Average line */}
                                 <line x1="0" y1={avgY} x2={chartW} y2={avgY} stroke={sc} strokeWidth="1.5" strokeDasharray="6 3" opacity="0.6"/>
@@ -667,14 +668,14 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                           const chartW = 200, chartH = 100, barW = 60
                           return (
                             <div style={{ marginBottom: 14, padding: '10px 12px', borderRadius: 10, background: 'var(--ev)' }}>
-                              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Today vs 7-Day Average</div>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('intel_pospulse.chartTodayVsAvg')}</div>
                               <svg width="100%" viewBox={`0 0 ${chartW} ${chartH + 24}`} style={{ overflow: 'visible' }}>
                                 {/* Today bar */}
                                 {(() => { const h = (todayR / maxR) * chartH; return (
                                   <g>
                                     <rect x={25} y={chartH - h} width={barW} height={h} rx="6" fill={todayVsAvg >= 0 ? '#22C55E' : '#EF4444'}/>
                                     <text x={25 + barW / 2} y={chartH - h - 5} fill="var(--tx)" fontSize="10" textAnchor="middle" fontWeight="700">{fmt(todayR)}</text>
-                                    <text x={25 + barW / 2} y={chartH + 14} fill="var(--tx3)" fontSize="10" textAnchor="middle" fontWeight="600">Today</text>
+                                    <text x={25 + barW / 2} y={chartH + 14} fill="var(--tx3)" fontSize="10" textAnchor="middle" fontWeight="600">{tc('intel_pospulse.chartTodayLabel')}</text>
                                   </g>
                                 )})()}
                                 {/* Avg bar */}
@@ -682,7 +683,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                                   <g>
                                     <rect x={115} y={chartH - h} width={barW} height={h} rx="6" fill="#6366F140"/>
                                     <text x={115 + barW / 2} y={chartH - h - 5} fill="var(--tx2)" fontSize="10" textAnchor="middle" fontWeight="700">{fmt(avgR)}</text>
-                                    <text x={115 + barW / 2} y={chartH + 14} fill="var(--tx3)" fontSize="10" textAnchor="middle" fontWeight="600">Average</text>
+                                    <text x={115 + barW / 2} y={chartH + 14} fill="var(--tx3)" fontSize="10" textAnchor="middle" fontWeight="600">{tc('intel_pospulse.chartAverageLabel')}</text>
                                   </g>
                                 )})()}
                               </svg>
@@ -698,14 +699,14 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                           const chartW = 280, chartH = 100, barW = 55
                           return (
                             <div style={{ marginBottom: 14, padding: '10px 12px', borderRadius: 10, background: 'var(--ev)' }}>
-                              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Revenue vs Cost of Goods (7d)</div>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('intel_pospulse.chartRevVsCogs')}</div>
                               <svg width="100%" viewBox={`0 0 ${chartW} ${chartH + 24}`} style={{ overflow: 'visible' }}>
                                 {/* Revenue bar */}
                                 {(() => { const h = (rev / maxR) * chartH; return (
                                   <g>
                                     <rect x={30} y={chartH - h} width={barW} height={h} rx="6" fill="#22C55E"/>
                                     <text x={30 + barW / 2} y={chartH - h - 5} fill="#22C55E" fontSize="9" textAnchor="middle" fontWeight="700">{fmt(rev)}</text>
-                                    <text x={30 + barW / 2} y={chartH + 14} fill="var(--tx3)" fontSize="9" textAnchor="middle" fontWeight="600">Revenue</text>
+                                    <text x={30 + barW / 2} y={chartH + 14} fill="var(--tx3)" fontSize="9" textAnchor="middle" fontWeight="600">{tc('intel_pospulse.chartRevenueLabel')}</text>
                                   </g>
                                 )})()}
                                 {/* COGS bar */}
@@ -713,7 +714,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                                   <g>
                                     <rect x={110} y={chartH - h} width={barW} height={h} rx="6" fill="#EF4444"/>
                                     <text x={110 + barW / 2} y={chartH - h - 5} fill="#EF4444" fontSize="9" textAnchor="middle" fontWeight="700">{fmt(cogs)}</text>
-                                    <text x={110 + barW / 2} y={chartH + 14} fill="var(--tx3)" fontSize="9" textAnchor="middle" fontWeight="600">COGS</text>
+                                    <text x={110 + barW / 2} y={chartH + 14} fill="var(--tx3)" fontSize="9" textAnchor="middle" fontWeight="600">{tc('intel_pospulse.chartCogsLabel')}</text>
                                   </g>
                                 )})()}
                                 {/* Profit bar */}
@@ -721,7 +722,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                                   <g>
                                     <rect x={190} y={chartH - h} width={barW} height={Math.max(h, 2)} rx="6" fill={sc}/>
                                     <text x={190 + barW / 2} y={Math.max(chartH - h - 5, 10)} fill={sc} fontSize="9" textAnchor="middle" fontWeight="700">{fmt(profit)}</text>
-                                    <text x={190 + barW / 2} y={chartH + 14} fill="var(--tx3)" fontSize="9" textAnchor="middle" fontWeight="600">Profit</text>
+                                    <text x={190 + barW / 2} y={chartH + 14} fill="var(--tx3)" fontSize="9" textAnchor="middle" fontWeight="600">{tc('intel_pospulse.chartProfitLabel')}</text>
                                   </g>
                                 )})()}
                                 {/* Margin line */}
@@ -744,7 +745,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                           const areaPath = linePath + ` L${points[points.length - 1].x},${chartH - 10} L${points[0].x},${chartH - 10} Z`
                           return (
                             <div style={{ marginBottom: 14, padding: '10px 12px', borderRadius: 10, background: 'var(--ev)' }}>
-                              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Avg Basket Size (7 days)</div>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('intel_pospulse.chartAvgBasket')}</div>
                               <svg width="100%" viewBox={`0 0 ${chartW} ${chartH + 16}`} style={{ overflow: 'visible' }}>
                                 <defs><linearGradient id="basketGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#6366F1" stopOpacity="0.2"/><stop offset="100%" stopColor="#6366F1" stopOpacity="0"/></linearGradient></defs>
                                 <path d={areaPath} fill="url(#basketGrad)"/>
@@ -767,16 +768,16 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                           const disc = sales!.todayDiscounts
                           const net = todayNetSales
                           const steps = [
-                            { label: 'Gross', value: gross, color: '#22C55E', cum: gross },
-                            { label: 'Refunds', value: -ref, color: '#EF4444', cum: gross - ref },
-                            { label: 'Discounts', value: -disc, color: '#F59E0B', cum: gross - ref - disc },
-                            { label: 'Net', value: net, color: '#6366F1', cum: net },
+                            { label: tc('intel_pospulse.chartGrossLabel'), value: gross, color: '#22C55E', cum: gross },
+                            { label: tc('intel_pospulse.chartRefundsLabel'), value: -ref, color: '#EF4444', cum: gross - ref },
+                            { label: tc('intel_pospulse.chartDiscountsLabel'), value: -disc, color: '#F59E0B', cum: gross - ref - disc },
+                            { label: tc('intel_pospulse.chartNetLabel'), value: net, color: '#6366F1', cum: net },
                           ]
                           const maxV = Math.max(gross, 1)
                           const chartW = 320, chartH = 110, barW = 50, gap = 25
                           return (
                             <div style={{ marginBottom: 14, padding: '10px 12px', borderRadius: 10, background: 'var(--ev)' }}>
-                              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Net Sales Waterfall</div>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('intel_pospulse.chartNetWaterfall')}</div>
                               <svg width="100%" viewBox={`0 0 ${chartW} ${chartH + 24}`} style={{ overflow: 'visible' }}>
                                 {steps.map((s, i) => {
                                   const x = 15 + i * (barW + gap)
@@ -820,7 +821,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                           const gap = 3
                           return (
                             <div style={{ marginBottom: 14, padding: '10px 12px', borderRadius: 10, background: 'var(--ev)' }}>
-                              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Hourly Sales Today</div>
+                              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('intel_pospulse.chartHourlySalesToday')}</div>
                               <svg width="100%" viewBox={`0 0 ${chartW} ${chartH + 18}`} style={{ overflow: 'visible' }}>
                                 {hours.map((h, i) => {
                                   const barH = (h.revenue / maxR) * (chartH - 10)
@@ -851,7 +852,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
 
                         {/* Analysis tips */}
                         <div style={{ marginBottom: 12 }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Analysis</div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('intel_pospulse.analysisLabel')}</div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                             {kpi.tips.map((tip, ti) => (
                               <div key={ti} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'var(--tx2)', lineHeight: 1.5 }}>
@@ -864,7 +865,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
 
                         {/* Recommended action */}
                         <div style={{ padding: '10px 12px', borderRadius: 8, background: `${sc}10`, border: `1px dashed ${sc}30`, marginBottom: 12 }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: sc, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>Recommended Action</div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: sc, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>{tc('intel_pospulse.recommendedAction')}</div>
                           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', lineHeight: 1.4 }}>{kpi.action}</div>
                         </div>
 
@@ -874,7 +875,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                           style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: `1px solid ${sc}30`, background: `${sc}08`, color: sc, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                          Ask AI for deeper {kpi.label.toLowerCase()} analysis →
+                          {tc('intel_pospulse.askAiDeeper', { label: kpi.label.toLowerCase() })}
                         </button>
                       </div>
                     )}
@@ -887,8 +888,8 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
             {projectedToday > 0 && nowHour < 20 && nowHour >= 8 && (
               <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(99,102,241,.05)', border: '1px solid rgba(99,102,241,.1)', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ fontSize: 9, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '.06em', fontWeight: 700 }}>Projected end of day</div>
-                  <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>at current pace</div>
+                  <div style={{ fontSize: 9, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '.06em', fontWeight: 700 }}>{tc('intel_pospulse.projectedEod')}</div>
+                  <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{tc('intel_pospulse.atCurrentPace')}</div>
                 </div>
                 <div style={{ fontSize: 18, fontWeight: 800, color: '#6366F1' }}>{fmt(projectedToday)}</div>
               </div>
@@ -916,7 +917,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
             {/* ── Time Analysis ── */}
             {salesDrill === 'time' && (
               <div style={{ animation: 'fadeIn 200ms ease' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>Today&apos;s hourly sales</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>{tc('intel_pospulse.todayHourlySales')}</div>
                 <div style={{ display: 'flex', gap: 3, marginBottom: 16 }}>
                   {Array.from({ length: 14 }).map((_, i) => {
                     const hour = i + 7
@@ -951,8 +952,8 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div>
-                      <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Yesterday</div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{fmt(sales!.yesterdayRevenue)} <span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 400 }}>({sales!.yesterdayTxns} txns)</span></div>
+                      <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>{tc('intel_pospulse.yesterdayLabel')}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{fmt(sales!.yesterdayRevenue)} <span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 400 }}>({tc('intel_pospulse.txns', { n: sales!.yesterdayTxns })})</span></div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -963,7 +964,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                         background: sales!.todayRevenue >= sales!.yesterdayRevenue ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.1)',
                       }}>
                         {sales!.todayRevenue >= sales!.yesterdayRevenue ? '↑' : '↓'}
-                        {Math.abs(((sales!.todayRevenue - sales!.yesterdayRevenue) / sales!.yesterdayRevenue) * 100).toFixed(0)}% vs yesterday
+                        {Math.abs(((sales!.todayRevenue - sales!.yesterdayRevenue) / sales!.yesterdayRevenue) * 100).toFixed(0)}{tc('intel_pospulse.vsYesterday')}
                       </span>
                     )}
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round" style={{ transition: 'transform 200ms', transform: periodDrill === 'yesterday' ? 'rotate(90deg)' : 'rotate(0deg)', opacity: 0.5 }}><polyline points="9 18 15 12 9 6"/></svg>
@@ -983,7 +984,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                   const chartW = 420, chartH = 100, barW = Math.min((chartW - 20) / hours.length / 2 - 1, 12), gap = 2
                   return (
                     <div style={{ padding: '14px', borderRadius: '0 0 10px 10px', border: '1px solid #6366F115', borderTop: 'none', background: 'rgba(99,102,241,.02)', marginBottom: 12, animation: 'fadeIn 200ms ease' }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Today vs Yesterday — Hourly Comparison</div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('intel_pospulse.chartTodayVsYestHourly')}</div>
                       <svg width="100%" viewBox={`0 0 ${chartW} ${chartH + 24}`} style={{ overflow: 'visible' }}>
                         {hours.map((h, i) => {
                           const x = 5 + i * (barW * 2 + gap * 3)
@@ -1001,13 +1002,13 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                         })}
                         {/* Legend */}
                         <rect x={chartW - 100} y={-2} width="8" height="8" rx="2" fill="#6366F130"/>
-                        <text x={chartW - 88} y={6} fill="var(--tx3)" fontSize="8">Yesterday</text>
+                        <text x={chartW - 88} y={6} fill="var(--tx3)" fontSize="8">{tc('intel_pospulse.chartYesterdayLegend')}</text>
                         <rect x={chartW - 45} y={-2} width="8" height="8" rx="2" fill="#6366F1"/>
-                        <text x={chartW - 33} y={6} fill="var(--tx3)" fontSize="8">Today</text>
+                        <text x={chartW - 33} y={6} fill="var(--tx3)" fontSize="8">{tc('intel_pospulse.chartTodayLegend')}</text>
                       </svg>
                       <div style={{ display: 'flex', gap: 12, marginTop: 10, fontSize: 11, color: 'var(--tx2)' }}>
-                        <span>Yesterday total: <strong>{fmt(sales!.yesterdayRevenue)}</strong></span>
-                        <span>Today so far: <strong>{fmt(sales!.todayRevenue)}</strong></span>
+                        <span>{tc('intel_pospulse.yesterdayTotal')}<strong>{fmt(sales!.yesterdayRevenue)}</strong></span>
+                        <span>{tc('intel_pospulse.todaySoFar')}<strong>{fmt(sales!.todayRevenue)}</strong></span>
                         <span style={{ color: sales!.todayRevenue >= sales!.yesterdayRevenue ? '#22C55E' : '#EF4444', fontWeight: 700 }}>
                           {sales!.todayRevenue >= sales!.yesterdayRevenue ? '↑' : '↓'}{sales!.yesterdayRevenue > 0 ? Math.abs(((sales!.todayRevenue - sales!.yesterdayRevenue) / sales!.yesterdayRevenue) * 100).toFixed(0) : 0}%
                         </span>
@@ -1024,8 +1025,8 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                       style={{ padding: '12px 14px', borderRadius: periodDrill === 'prevWeek' ? '10px 10px 0 0' : 10, border: periodDrill === 'prevWeek' ? '1px solid #6366F130' : '1px dashed var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', transition: 'all 150ms' }}
                     >
                       <div>
-                        <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Previous week</div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{fmt(sales!.prevWeekRevenue)} <span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 400 }}>({sales!.prevWeekTxns} txns)</span></div>
+                        <div style={{ fontSize: 10, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>{tc('intel_pospulse.prevWeekLabel')}</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}>{fmt(sales!.prevWeekRevenue)} <span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 400 }}>({tc('intel_pospulse.txns', { n: sales!.prevWeekTxns })})</span></div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         {weekVsPrev !== 0 && (
@@ -1034,7 +1035,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                             color: weekVsPrev > 0 ? '#22C55E' : '#EF4444',
                             background: weekVsPrev > 0 ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.1)',
                           }}>
-                            {weekVsPrev > 0 ? '↑' : '↓'}{Math.abs(weekVsPrev).toFixed(0)}% week-over-week
+                            {weekVsPrev > 0 ? '↑' : '↓'}{Math.abs(weekVsPrev).toFixed(0)}{tc('intel_pospulse.weekOverWeek')}
                           </span>
                         )}
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round" style={{ transition: 'transform 200ms', transform: periodDrill === 'prevWeek' ? 'rotate(90deg)' : 'rotate(0deg)', opacity: 0.5 }}><polyline points="9 18 15 12 9 6"/></svg>
@@ -1051,7 +1052,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                       const prevAvgY = chartH - 10 - (prevAvg / maxR) * (chartH - 30)
                       return (
                         <div style={{ padding: '14px', borderRadius: '0 0 10px 10px', border: '1px solid #6366F115', borderTop: 'none', background: 'rgba(99,102,241,.02)', animation: 'fadeIn 200ms ease' }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>This Week Daily — vs Previous Week Average</div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('intel_pospulse.chartThisWeekVsPrev')}</div>
                           <svg width="100%" viewBox={`0 0 ${chartW} ${chartH + 20}`} style={{ overflow: 'visible' }}>
                             {/* Prev week avg line */}
                             {prevAvg > 0 && (
@@ -1075,8 +1076,8 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                             })}
                           </svg>
                           <div style={{ display: 'flex', gap: 12, marginTop: 10, fontSize: 11, color: 'var(--tx2)' }}>
-                            <span>This week: <strong>{fmt(sales!.weekRevenue)}</strong></span>
-                            <span>Prev week: <strong>{fmt(sales!.prevWeekRevenue)}</strong></span>
+                            <span>{tc('intel_pospulse.thisWeekLabel')}<strong>{fmt(sales!.weekRevenue)}</strong></span>
+                            <span>{tc('intel_pospulse.prevWeekLabelShort')}<strong>{fmt(sales!.prevWeekRevenue)}</strong></span>
                             <span style={{ color: weekVsPrev > 0 ? '#22C55E' : '#EF4444', fontWeight: 700 }}>
                               {weekVsPrev > 0 ? '↑' : '↓'}{Math.abs(weekVsPrev).toFixed(0)}%
                             </span>
@@ -1095,7 +1096,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                 {/* Category revenue bars */}
                 {Object.keys(sales!.categoryBreakdown).length > 0 ? (
                   <>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>Category contribution (7d)</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>{tc('intel_pospulse.categoryContribution')}</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
                       {(() => {
                         const cats = Object.entries(sales!.categoryBreakdown).sort((a, b) => b[1].revenue - a[1].revenue)
@@ -1113,7 +1114,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                                   <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', textTransform: 'capitalize' }}>{cat}</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                  <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{d.count} items</span>
+                                  <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_pospulse.itemsCount', { n: d.count })}</span>
                                   <span style={{ fontSize: 12, fontWeight: 700, color: c }}>{pct.toFixed(1)}%</span>
                                   <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{fmt(d.revenue)}</span>
                                 </div>
@@ -1136,13 +1137,13 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                       return (
                         <div style={{ padding: '12px 14px', borderRadius: 10, border: `1px solid ${riskColor}20`, background: `${riskColor}06` }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Concentration risk</span>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('intel_pospulse.concentrationRisk')}</span>
                             <span style={{ fontSize: 11, fontWeight: 700, color: riskColor, background: `${riskColor}15`, borderRadius: 6, padding: '2px 8px', textTransform: 'capitalize' }}>{risk}</span>
                           </div>
                           <div style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.5 }}>
-                            {risk === 'high' && `Your top category accounts for ${topPct.toFixed(0)}% of revenue. Consider diversifying to reduce dependency.`}
-                            {risk === 'moderate' && `Top category is ${topPct.toFixed(0)}% of revenue. Room to improve mix diversity.`}
-                            {risk === 'low' && `Good mix diversity — top category is only ${topPct.toFixed(0)}% of revenue.`}
+                            {risk === 'high' && tc('intel_pospulse.concentrationHigh', { pct: topPct.toFixed(0) })}
+                            {risk === 'moderate' && tc('intel_pospulse.concentrationModerate', { pct: topPct.toFixed(0) })}
+                            {risk === 'low' && tc('intel_pospulse.concentrationLow', { pct: topPct.toFixed(0) })}
                           </div>
                         </div>
                       )
@@ -1151,7 +1152,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                 ) : (
                   <div style={{ padding: '24px 16px', borderRadius: 10, background: 'var(--ev)', textAlign: 'center' }}>
                     <div style={{ fontSize: 20, marginBottom: 6 }}>🏷️</div>
-                    <div style={{ fontSize: 12, color: 'var(--tx3)' }}>No category data available yet. Tag your products with categories to see the mix breakdown.</div>
+                    <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intel_pospulse.noCategoryData')}</div>
                   </div>
                 )}
               </div>
@@ -1163,7 +1164,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                 {/* Payment methods */}
                 {Object.keys(sales!.paymentBreakdown).length > 0 && (
                   <div style={{ marginBottom: 16 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>Payment methods (7d)</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>{tc('intel_pospulse.paymentMethods')}</div>
                     <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                       {Object.entries(sales!.paymentBreakdown).sort((a, b) => b[1] - a[1]).map(([type, count]) => {
                         const pct = sales!.weekTxns > 0 ? (count / sales!.weekTxns * 100) : 0
@@ -1171,7 +1172,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                           <div key={type} style={{ flex: 1, padding: '12px 10px', borderRadius: 10, background: 'var(--ev)', textAlign: 'center' }}>
                             <div style={{ fontSize: 20, fontWeight: 800, color: '#6366F1' }}>{count}</div>
                             <div style={{ fontSize: 11, textTransform: 'capitalize', color: 'var(--tx)', fontWeight: 600, marginTop: 2 }}>{type}</div>
-                            <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{pct.toFixed(0)}% of transactions</div>
+                            <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{tc('intel_pospulse.pctOfTransactions', { pct: pct.toFixed(0) })}</div>
                           </div>
                         )
                       })}
@@ -1182,7 +1183,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                 {/* Staff leaderboard */}
                 {sales!.staffSales.length > 0 && sales!.staffSales[0].name !== 'Unknown' && (
                   <div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>Staff performance (7d)</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 10 }}>{tc('intel_pospulse.staffPerformance')}</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {sales!.staffSales.map((s, i) => {
                         const barPct = sales!.staffSales[0].revenue > 0 ? (s.revenue / sales!.staffSales[0].revenue) : 0
@@ -1193,7 +1194,7 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
                                 {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`}
                               </span>
                               <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</span>
-                              <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{s.txns} txns</span>
+                              <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_pospulse.txns', { n: s.txns })}</span>
                               <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--tx)' }}>{fmt(s.revenue)}</span>
                             </div>
                             <div style={{ height: 6, background: 'var(--ev)', borderRadius: 3, overflow: 'hidden' }}>
@@ -1213,16 +1214,16 @@ export default function PosPulse({ onAsk }: PosPulseProps) {
               <button
                 onClick={() => {
                   const prompts: Record<string, string> = {
-                    time: 'Analyse my sales time patterns — which hours and days are performing best? Where should I focus staffing?',
-                    categories: 'Analyse my product category mix — am I too dependent on one category? What should I promote or diversify into?',
-                    payments: 'Analyse my payment methods and staff performance — who are my top performers and how can I improve the team?',
+                    time: tc('intel_pospulse.askPromptTime'),
+                    categories: tc('intel_pospulse.askPromptCategories'),
+                    payments: tc('intel_pospulse.askPromptPayments'),
                   }
-                  onAsk(prompts[salesDrill!] || 'Analyse my POS sales data in detail')
+                  onAsk(prompts[salesDrill!] || tc('intel_pospulse.askPromptDefault'))
                 }}
                 style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #6366F130', background: 'rgba(99,102,241,.06)', color: '#6366F1', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                Ask AI for deeper analysis →
+                {tc('intel_pospulse.askAiFooter')}
               </button>
             </div>
           </div>

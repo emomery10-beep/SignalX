@@ -1,0 +1,20 @@
+{
+  "cfo_logistics": {
+    "title": "Logística y envíos",
+    "provider": "Track17",
+    "emptyState": "No hay envíos activos en seguimiento. Agrega envíos mediante la integración con Track17 para ver el impacto logístico en el capital de trabajo.",
+    "askAi": "Preguntar a la IA",
+    "askPrompt": "Mis envíos: {inTransitCount} en tránsito por {inTransitValue}, {delayedCount} retrasados ({delayedValue} en riesgo), costo de financiamiento {financingCost}, entrega promedio {avgDays} días. ¿Cómo puedo reducir los costos logísticos y el capital de trabajo inmovilizado en tránsito?",
+    "metricInTransit": "En tránsito",
+    "metricDelayed": "Retrasados",
+    "metricAvgDelivery": "Entrega promedio",
+    "metricFinanceCost": "Costo financiero",
+    "workingCapitalDays": "días de capital de trabajo",
+    "capitalTiedUp": "capital inmovilizado",
+    "shipmentHealth": "Estado de los envíos",
+    "onTime": "{n} a tiempo",
+    "delayedCount": "{n} retrasados",
+    "atRiskWarning": "{n} envío marcado como en riesgo: podría provocar quiebre de stock o pérdida de ingresos si se retrasa más.",
+    "inTransitSummary": "{value} en inventario se encuentran actualmente en tránsito. Este capital permanece inmovilizado un promedio de {days} días hasta que la mercancía llega y puede venderse."
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "title": "Tableau de bord KPI",
+  "onTargetBadge": "{met}/{total} dans la cible",
+  "askAi": "Demander à l'IA",
+  "askPrompt": "Mon tableau de bord KPI affiche {met}/{total} dans la cible. Hors cible : {missed}. Que devrais-je prioriser pour m'améliorer ?",
+  "askPromptNone": "aucun",
+  "colKpi": "KPI",
+  "colTarget": "Objectif",
+  "colActual": "Réel",
+  "colStatus": "Statut",
+  "colTrend": "Tendance",
+  "labelGrossMargin": "Marge brute",
+  "labelNetMargin": "Marge nette",
+  "labelRevenueGrowth": "Croissance du chiffre d'affaires",
+  "labelStockoutRate": "Taux de rupture de stock",
+  "labelCashRunway": "Autonomie de trésorerie",
+  "labelHealthScore": "Score de santé",
+  "editTargetTitle": "Cliquez pour modifier l'objectif",
+  "footerHint": "Cliquez sur n'importe quelle valeur cible pour la personnaliser. Les objectifs sont enregistrés dans votre navigateur."
+}

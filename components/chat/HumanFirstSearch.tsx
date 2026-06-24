@@ -1,144 +1,153 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
-const PROMPTS = {
-  noData: [
-    "Show me how a 10% price rise would look.",
-    "What's a 'good' profit for a shop like mine?",
-    "Which of my products would sell best in Dubai?",
-    "Show me how to save £500 a month on shipping.",
-    "What should my profit margin actually be?",
-    "How do I know if my prices are too low?",
-    "What does a healthy cash flow look like?",
-    "How much stock should I be holding?",
-  ],
-  dataConnected: [
-    "What should I restock today?",
-    "Which products are just sitting on the shelf?",
-    "How much did I actually make after fees?",
-    "Who are my top 10 customers this month?",
-    "Which product is making me the most money?",
-    "Where am I losing money without knowing it?",
-    "What's my busiest day of the week?",
-    "Which items should I stop selling?",
-  ],
-  marketActive: [
-    "Are people buying more of this lately?",
-    "What are the new tax rules for selling to the EU?",
-    "Is my pricing cheaper or more expensive than competitors?",
-    "What's the hot product in my niche right now?",
-    "What are my competitors charging for this?",
-    "Is there a trend I should be jumping on?",
-    "What's happening with shipping costs right now?",
-    "Which market should I expand into next?",
-  ],
+function buildPrompts(tc: (key: string) => string) {
+  return {
+    noData: [
+      tc('chat_humanfirst.noData0'),
+      tc('chat_humanfirst.noData1'),
+      tc('chat_humanfirst.noData2'),
+      tc('chat_humanfirst.noData3'),
+      tc('chat_humanfirst.noData4'),
+      tc('chat_humanfirst.noData5'),
+      tc('chat_humanfirst.noData6'),
+      tc('chat_humanfirst.noData7'),
+    ],
+    dataConnected: [
+      tc('chat_humanfirst.dataConnected0'),
+      tc('chat_humanfirst.dataConnected1'),
+      tc('chat_humanfirst.dataConnected2'),
+      tc('chat_humanfirst.dataConnected3'),
+      tc('chat_humanfirst.dataConnected4'),
+      tc('chat_humanfirst.dataConnected5'),
+      tc('chat_humanfirst.dataConnected6'),
+      tc('chat_humanfirst.dataConnected7'),
+    ],
+    marketActive: [
+      tc('chat_humanfirst.marketActive0'),
+      tc('chat_humanfirst.marketActive1'),
+      tc('chat_humanfirst.marketActive2'),
+      tc('chat_humanfirst.marketActive3'),
+      tc('chat_humanfirst.marketActive4'),
+      tc('chat_humanfirst.marketActive5'),
+      tc('chat_humanfirst.marketActive6'),
+      tc('chat_humanfirst.marketActive7'),
+    ],
+  }
 }
 
-const BIZ_PROMPTS: Record<string, string[]> = {
-  ecommerce: [
-    "Which products have the best return on ad spend?",
-    "What's my average order value this month?",
-    "Which listings are getting clicks but no sales?",
-    "How do I reduce my cart abandonment rate?",
-    "What's my bestseller on Amazon vs Shopify?",
-    "Am I paying too much in platform fees?",
-    "Which products should I bundle together?",
-    "What's my refund rate and is it too high?",
-  ],
-  retail: [
-    "Which products are not moving off the shelf?",
-    "What's my busiest day of the week?",
-    "How much stock should I order this month?",
-    "Which items have the highest profit margin?",
-    "Am I pricing my products correctly for my area?",
-    "How do I know when to run a sale?",
-    "What's a healthy stock turnover for my shop?",
-    "Which suppliers are giving me the best deal?",
-  ],
-  distributor: [
-    "Which customers order the most each month?",
-    "What's my average delivery cost per order?",
-    "Which routes are costing me the most in fuel?",
-    "Am I giving too many discounts to bulk buyers?",
-    "Which products have the highest distribution margin?",
-    "How do I spot a customer who might churn?",
-    "What's my on-time delivery rate this month?",
-    "Which warehouse locations are most efficient?",
-  ],
-  manufacturer: [
-    "What's my cost per unit to make this product?",
-    "How do I know if my factory is running efficiently?",
-    "Which raw materials are eating my margin?",
-    "What happens to my profit if steel prices rise 15%?",
-    "How much should I charge to break even?",
-    "Which production line is the most profitable?",
-    "Am I undercharging for my products?",
-    "What's a good gross margin for a manufacturer?",
-  ],
-  importer: [
-    "What's my true landed cost including duty and freight?",
-    "What happens to my margin if GBP drops 10%?",
-    "Which supplier is the most reliable?",
-    "How do I reduce my customs duty bill?",
-    "What's the cheapest shipping route from China?",
-    "Am I holding too much stock from one supplier?",
-    "Which products have the best import margin?",
-    "How do I protect myself from currency swings?",
-  ],
-  exporter: [
-    "Which country should I expand into next?",
-    "What are the customs rules for selling to the US?",
-    "How do I price my products for export?",
-    "What's the best way to get paid in foreign currency?",
-    "Which export market has the lowest competition?",
-    "How do I reduce my international shipping costs?",
-    "What documentation do I need to export to the EU?",
-    "Which of my products travels best internationally?",
-  ],
-  services: [
-    "What should my day rate actually be?",
-    "How many clients do I need to hit my target income?",
-    "Am I undercharging for my services?",
-    "What's a healthy utilisation rate for my team?",
-    "Which service line makes me the most money?",
-    "How do I improve my invoice payment time?",
-    "What's a good profit margin for a services business?",
-    "Which clients are costing me more than they pay?",
-  ],
-  food_bev: [
-    "What's my food cost percentage and is it too high?",
-    "Which dishes have the best profit margin?",
-    "How much waste am I producing each week?",
-    "Am I pricing my menu correctly?",
-    "What's a healthy gross margin for a café?",
-    "How do I reduce my ingredient costs?",
-    "Which suppliers are giving me the freshest produce?",
-    "What's my revenue per table per hour?",
-  ],
+function buildBizPrompts(tc: (key: string) => string): Record<string, string[]> {
+  return {
+    ecommerce: [
+      tc('chat_humanfirst.bizEcommerce0'),
+      tc('chat_humanfirst.bizEcommerce1'),
+      tc('chat_humanfirst.bizEcommerce2'),
+      tc('chat_humanfirst.bizEcommerce3'),
+      tc('chat_humanfirst.bizEcommerce4'),
+      tc('chat_humanfirst.bizEcommerce5'),
+      tc('chat_humanfirst.bizEcommerce6'),
+      tc('chat_humanfirst.bizEcommerce7'),
+    ],
+    retail: [
+      tc('chat_humanfirst.bizRetail0'),
+      tc('chat_humanfirst.bizRetail1'),
+      tc('chat_humanfirst.bizRetail2'),
+      tc('chat_humanfirst.bizRetail3'),
+      tc('chat_humanfirst.bizRetail4'),
+      tc('chat_humanfirst.bizRetail5'),
+      tc('chat_humanfirst.bizRetail6'),
+      tc('chat_humanfirst.bizRetail7'),
+    ],
+    distributor: [
+      tc('chat_humanfirst.bizDistributor0'),
+      tc('chat_humanfirst.bizDistributor1'),
+      tc('chat_humanfirst.bizDistributor2'),
+      tc('chat_humanfirst.bizDistributor3'),
+      tc('chat_humanfirst.bizDistributor4'),
+      tc('chat_humanfirst.bizDistributor5'),
+      tc('chat_humanfirst.bizDistributor6'),
+      tc('chat_humanfirst.bizDistributor7'),
+    ],
+    manufacturer: [
+      tc('chat_humanfirst.bizManufacturer0'),
+      tc('chat_humanfirst.bizManufacturer1'),
+      tc('chat_humanfirst.bizManufacturer2'),
+      tc('chat_humanfirst.bizManufacturer3'),
+      tc('chat_humanfirst.bizManufacturer4'),
+      tc('chat_humanfirst.bizManufacturer5'),
+      tc('chat_humanfirst.bizManufacturer6'),
+      tc('chat_humanfirst.bizManufacturer7'),
+    ],
+    importer: [
+      tc('chat_humanfirst.bizImporter0'),
+      tc('chat_humanfirst.bizImporter1'),
+      tc('chat_humanfirst.bizImporter2'),
+      tc('chat_humanfirst.bizImporter3'),
+      tc('chat_humanfirst.bizImporter4'),
+      tc('chat_humanfirst.bizImporter5'),
+      tc('chat_humanfirst.bizImporter6'),
+      tc('chat_humanfirst.bizImporter7'),
+    ],
+    exporter: [
+      tc('chat_humanfirst.bizExporter0'),
+      tc('chat_humanfirst.bizExporter1'),
+      tc('chat_humanfirst.bizExporter2'),
+      tc('chat_humanfirst.bizExporter3'),
+      tc('chat_humanfirst.bizExporter4'),
+      tc('chat_humanfirst.bizExporter5'),
+      tc('chat_humanfirst.bizExporter6'),
+      tc('chat_humanfirst.bizExporter7'),
+    ],
+    services: [
+      tc('chat_humanfirst.bizServices0'),
+      tc('chat_humanfirst.bizServices1'),
+      tc('chat_humanfirst.bizServices2'),
+      tc('chat_humanfirst.bizServices3'),
+      tc('chat_humanfirst.bizServices4'),
+      tc('chat_humanfirst.bizServices5'),
+      tc('chat_humanfirst.bizServices6'),
+      tc('chat_humanfirst.bizServices7'),
+    ],
+    food_bev: [
+      tc('chat_humanfirst.bizFoodBev0'),
+      tc('chat_humanfirst.bizFoodBev1'),
+      tc('chat_humanfirst.bizFoodBev2'),
+      tc('chat_humanfirst.bizFoodBev3'),
+      tc('chat_humanfirst.bizFoodBev4'),
+      tc('chat_humanfirst.bizFoodBev5'),
+      tc('chat_humanfirst.bizFoodBev6'),
+      tc('chat_humanfirst.bizFoodBev7'),
+    ],
+  }
 }
 
-export const SIDEBAR_CHIPS: Record<string, { label: string; query: string }[]> = {
-  noData: [
-    { label: "Show me how a 10% price rise would look.", query: "Show me how a 10% price rise would look on my profit." },
-    { label: "What's a 'good' profit for a shop like mine?", query: "What's a good profit margin for a shop like mine?" },
-    { label: "Show me how to save £500 a month on shipping.", query: "Show me how to save £500 a month on shipping costs." },
-  ],
-  dataConnected: [
-    { label: "What should I restock today?", query: "What should I restock today based on my sales?" },
-    { label: "How much did I actually make after fees?", query: "How much did I actually make after all fees this month?" },
-    { label: "Which products are just sitting on the shelf?", query: "Which products are just sitting on the shelf?" },
-  ],
-  marketActive: [
-    { label: "What's the hot product in my niche right now?", query: "What's the hot product in my niche right now?" },
-    { label: "Is my pricing cheaper than my competitors?", query: "Is my pricing cheaper or more expensive than my competitors?" },
-    { label: "What are the new tax rules for the EU?", query: "What are the new tax rules for selling to the EU in 2026?" },
-  ],
+export function buildSidebarChips(tc: (key: string) => string): Record<string, { label: string; query: string }[]> {
+  return {
+    noData: [
+      { label: tc('chat_humanfirst.sidebarNoData0Label'), query: tc('chat_humanfirst.sidebarNoData0Query') },
+      { label: tc('chat_humanfirst.sidebarNoData1Label'), query: tc('chat_humanfirst.sidebarNoData1Query') },
+      { label: tc('chat_humanfirst.sidebarNoData2Label'), query: tc('chat_humanfirst.sidebarNoData2Query') },
+    ],
+    dataConnected: [
+      { label: tc('chat_humanfirst.sidebarDataConnected0Label'), query: tc('chat_humanfirst.sidebarDataConnected0Query') },
+      { label: tc('chat_humanfirst.sidebarDataConnected1Label'), query: tc('chat_humanfirst.sidebarDataConnected1Query') },
+      { label: tc('chat_humanfirst.sidebarDataConnected2Label'), query: tc('chat_humanfirst.sidebarDataConnected2Query') },
+    ],
+    marketActive: [
+      { label: tc('chat_humanfirst.sidebarMarketActive0Label'), query: tc('chat_humanfirst.sidebarMarketActive0Query') },
+      { label: tc('chat_humanfirst.sidebarMarketActive1Label'), query: tc('chat_humanfirst.sidebarMarketActive1Query') },
+      { label: tc('chat_humanfirst.sidebarMarketActive2Label'), query: tc('chat_humanfirst.sidebarMarketActive2Query') },
+    ],
+  }
 }
 
-export const CHIP_OPENERS: Record<string, string> = {
-  noData: "Since your data isn't connected yet, here's a sample of how I can help — with your real numbers, this gets even sharper. ",
-  dataConnected: "Great question! Let's look at your numbers — ",
-  marketActive: "I'm pulling live market data on this right now — ",
+export function buildChipOpeners(tc: (key: string) => string): Record<string, string> {
+  return {
+    noData: tc('chat_humanfirst.chipOpenerNoData'),
+    dataConnected: tc('chat_humanfirst.chipOpenerDataConnected'),
+    marketActive: tc('chat_humanfirst.chipOpenerMarketActive'),
+  }
 }
 
 interface Props {
@@ -156,26 +165,35 @@ interface Props {
   bizType?: string
 }
 
-const SIMULATE_PROMPTS = [
-  "What if I raised all my prices by 10%?",
-  "What if my supplier cost went up 20%?",
-  "What if I entered the German market?",
-  "What if I stopped selling my 3 worst products?",
-  "What if I offered free shipping on orders over £50?",
-  "What if I doubled my marketing spend?",
-]
+function buildSimulatePrompts(tc: (key: string) => string): string[] {
+  return [
+    tc('chat_humanfirst.simulate0'),
+    tc('chat_humanfirst.simulate1'),
+    tc('chat_humanfirst.simulate2'),
+    tc('chat_humanfirst.simulate3'),
+    tc('chat_humanfirst.simulate4'),
+    tc('chat_humanfirst.simulate5'),
+  ]
+}
 
-const CFO_PROMPTS = [
-  "Provide a gross margin analysis by product line.",
-  "What is our current cash conversion cycle?",
-  "Analyse EBITDA trend over the last 6 months.",
-  "Which customer segments have the highest LTV?",
-  "What is our current working capital position?",
-]
+function buildCfoPrompts(tc: (key: string) => string): string[] {
+  return [
+    tc('chat_humanfirst.cfo0'),
+    tc('chat_humanfirst.cfo1'),
+    tc('chat_humanfirst.cfo2'),
+    tc('chat_humanfirst.cfo3'),
+    tc('chat_humanfirst.cfo4'),
+  ]
+}
 
 export default function HumanFirstSearch({
   userState, onSend, inputValue, onInputChange, onKeyDown, inputRef, isLoading, simulateMode, cfoMode, onVoiceToggle, isRecording, bizType,
 }: Props) {
+  const { tc } = useLang()
+  const PROMPTS = buildPrompts(tc)
+  const BIZ_PROMPTS = buildBizPrompts(tc)
+  const SIMULATE_PROMPTS = buildSimulatePrompts(tc)
+  const CFO_PROMPTS = buildCfoPrompts(tc)
   const [placeholderIdx, setPlaceholderIdx] = useState(0)
   const [displayedText, setDisplayedText] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
@@ -254,7 +272,7 @@ export default function HumanFirstSearch({
             ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'
           }}
           onKeyDown={onKeyDown}
-          placeholder={inputValue ? '' : displayedText + (displayedText ? '|' : 'Ask anything about your business…')}
+          placeholder={inputValue ? '' : displayedText + (displayedText ? '|' : tc('chat_humanfirst.placeholderFallback'))}
           rows={1}
           disabled={isLoading}
           style={{
@@ -277,7 +295,7 @@ export default function HumanFirstSearch({
         {hasVoice && (
           <button
             onClick={onVoiceToggle}
-            title={isRecording ? 'Stop recording' : 'Speak your question'}
+            title={isRecording ? tc('chat_humanfirst.voiceStopTitle') : tc('chat_humanfirst.voiceSpeakTitle')}
             style={{
               position: 'absolute',
               right: 48,

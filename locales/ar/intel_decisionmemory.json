@@ -1,0 +1,21 @@
+{
+  "heading": "ذاكرة القرارات",
+  "subheading": "يتذكر AskBiz كل قرار ويعود للمراجعة بعد 6 أسابيع",
+  "logDecisionBtn": "+ تسجيل قرار",
+  "logFormTitle": "تسجيل قرار",
+  "titlePlaceholder": "ما الذي قررته؟ مثال: رفعت سعر سماعات Wireless Earbuds بمقدار £1.50",
+  "beforePlaceholder": "قبل (مثال: £12.99)",
+  "afterPlaceholder": "بعد (مثال: £14.49)",
+  "saving": "جارٍ الحفظ…",
+  "saveDecision": "حفظ القرار — سيراجعه AskBiz بعد 6 أسابيع",
+  "cancel": "إلغاء",
+  "reviewBannerSingular": "🔔 {n} قرار جاهز للمراجعة",
+  "reviewBannerPlural": "🔔 {n} قرارات جاهزة للمراجعة",
+  "askReviewBtn": "اطلب من AskBiz مراجعة النتائج ←",
+  "askReviewPrompt": "راجع قراراتي التجارية الأخيرة وأخبرني بما تشير إليه النتائج — ما الذي نجح وما الذي ينبغي أن أتعلم منه؟",
+  "noDecisions": "لم يتم تسجيل أي قرارات بعد. سيتم مراجعة كل قرار تجاري تسجله خلال 6 أسابيع.",
+  "checksBack": "AskBiz يراجع بتاريخ: {date}",
+  "verdictGoodCall": "✓ قرار صائب",
+  "verdictBadCall": "✗ لم ينجح",
+  "verdictNeutral": "~ نتائج متباينة"
+}

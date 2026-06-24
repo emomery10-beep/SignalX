@@ -1,4 +1,5 @@
 'use client'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Props {
   verdict: 'act' | 'watch' | 'problem' | null | undefined
@@ -7,21 +8,29 @@ interface Props {
   onAction?: () => void
 }
 
-const CONFIG = {
-  act:     { bg: 'rgba(34,197,94,.08)',  border: 'rgba(34,197,94,.25)',  dot: '#22C55E', label: 'ACT NOW',        labelColor: '#16a34a', glow: 'rgba(34,197,94,.15)'  },
-  watch:   { bg: 'rgba(245,158,11,.07)', border: 'rgba(245,158,11,.25)', dot: '#F59E0B', label: 'WATCH',           labelColor: '#d97706', glow: 'rgba(245,158,11,.12)' },
-  problem: { bg: 'rgba(239,68,68,.07)',  border: 'rgba(239,68,68,.25)',  dot: '#EF4444', label: 'ACTION NEEDED',  labelColor: '#dc2626', glow: 'rgba(239,68,68,.15)'  },
+function buildConfig(tc: (k: string) => string) {
+  return {
+    act:     { bg: 'rgba(34,197,94,.08)',  border: 'rgba(34,197,94,.25)',  dot: '#22C55E', label: tc('chat_verdictbar.actLabel'),     labelColor: '#16a34a', glow: 'rgba(34,197,94,.15)'  },
+    watch:   { bg: 'rgba(245,158,11,.07)', border: 'rgba(245,158,11,.25)', dot: '#F59E0B', label: tc('chat_verdictbar.watchLabel'),   labelColor: '#d97706', glow: 'rgba(245,158,11,.12)' },
+    problem: { bg: 'rgba(239,68,68,.07)',  border: 'rgba(239,68,68,.25)',  dot: '#EF4444', label: tc('chat_verdictbar.problemLabel'), labelColor: '#dc2626', glow: 'rgba(239,68,68,.15)'  },
+  }
 }
 
-const MARKET_BADGE: Record<string, { label: string; color: string; bg: string }> = {
-  cheapest:    { label: '↓ Cheapest in market',  color: '#16a34a', bg: 'rgba(34,197,94,.1)'   },
-  competitive: { label: '≈ Competitive pricing', color: '#0284c7', bg: 'rgba(2,132,199,.1)'   },
-  premium:     { label: '↑ Premium positioned',  color: '#7c3aed', bg: 'rgba(124,58,237,.1)'  },
-  overpriced:  { label: '⚠ Above market price',  color: '#dc2626', bg: 'rgba(239,68,68,.1)'   },
+function buildMarketBadge(tc: (k: string) => string): Record<string, { label: string; color: string; bg: string }> {
+  return {
+    cheapest:    { label: tc('chat_verdictbar.marketCheapest'),    color: '#16a34a', bg: 'rgba(34,197,94,.1)'   },
+    competitive: { label: tc('chat_verdictbar.marketCompetitive'), color: '#0284c7', bg: 'rgba(2,132,199,.1)'   },
+    premium:     { label: tc('chat_verdictbar.marketPremium'),     color: '#7c3aed', bg: 'rgba(124,58,237,.1)'  },
+    overpriced:  { label: tc('chat_verdictbar.marketOverpriced'),  color: '#dc2626', bg: 'rgba(239,68,68,.1)'   },
+  }
 }
 
 export default function VerdictBar({ verdict, sentence, marketPosition }: Props) {
+  const { tc } = useLang()
   if (!verdict || !sentence) return null
+
+  const CONFIG = buildConfig(tc)
+  const MARKET_BADGE = buildMarketBadge(tc)
 
   const c = CONFIG[verdict]
   const market = marketPosition ? MARKET_BADGE[marketPosition] : null

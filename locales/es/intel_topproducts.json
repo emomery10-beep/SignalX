@@ -1,0 +1,18 @@
+{
+  "noData": "Sin datos de ventas aún",
+  "noDataAsk": "Pregunta a AskBiz →",
+  "noDataAskPrompt": "¿En qué productos debería enfocarme para vender?",
+  "title": "Productos destacados",
+  "kpiProducts": "Productos",
+  "kpiAvgMargin": "Margen prom.",
+  "kpiUnitsSold": "Unidades vendidas",
+  "colRank": "#",
+  "colProduct": "Producto",
+  "colRevenue": "Ingresos",
+  "colQty": "Cant.",
+  "colMargin": "Margen",
+  "qtySold": "{n} vendidos",
+  "footnote": "Ingresos ordenados · datos de POS",
+  "collapse": "← Contraer",
+  "tapToAnalyse": "Toca para analizar →"
+}

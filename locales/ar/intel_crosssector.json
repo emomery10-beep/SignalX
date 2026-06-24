@@ -1,0 +1,20 @@
+{
+  "title": "استخبارات متعددة القطاعات",
+  "askAi": "اسأل الذكاء الاصطناعي",
+  "askAiPrompt": "كيف تُقارن مقاييسي بالقطاعات الأخرى؟ أين أُقصّر وماذا يمكنني أن أتعلم من القطاعات الرائدة؟",
+  "compareWithSectors": "مقارنة مع القطاعات",
+  "youBadge": "أنت",
+  "businesses": "{n} شركات",
+  "sectorRetail": "تجزئة",
+  "sectorEcommerce": "تجارة إلكترونية",
+  "sectorRestaurant": "مطاعم",
+  "sectorFoodBev": "أغذية ومشروبات",
+  "sectorImportExport": "استيراد/تصدير",
+  "sectorSaas": "SaaS",
+  "sectorServices": "خدمات",
+  "sectorFashion": "أزياء",
+  "sectorHealthBeauty": "صحة وجمال",
+  "sectorSalon": "صالونات",
+  "sectorRepair": "إصلاح وصيانة",
+  "sectorFactory": "تصنيع"
+}

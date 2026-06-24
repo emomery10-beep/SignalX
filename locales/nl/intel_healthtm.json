@@ -1,0 +1,12 @@
+{
+  "timeMachine": "Tijdmachine",
+  "askAi": "Vraag AI",
+  "askAiPrompt": "Hoe is de gezondheid van mijn bedrijf in de loop van de tijd veranderd? Wat zijn de belangrijkste trends en waarop moet ik me richten?",
+  "now": "Nu",
+  "clickBarToCompare": "Klik op een balk om te vergelijken",
+  "analysingChanges": "Wijzigingen analyseren sinds {date}...",
+  "changesSince": "Wijzigingen sinds {date}",
+  "keyEvents": "BELANGRIJKE GEBEURTENISSEN",
+  "barTooltip": "{date}: {score}/100",
+  "totalChangePts": "{pts} ptn"
+}

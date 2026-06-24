@@ -1,0 +1,18 @@
+{
+  "noData": "لا توجد بيانات مبيعات بعد",
+  "noDataAsk": "اسأل AskBiz →",
+  "noDataAskPrompt": "ما المنتجات التي يجب أن أركز على بيعها؟",
+  "title": "أفضل المنتجات",
+  "kpiProducts": "المنتجات",
+  "kpiAvgMargin": "متوسط الهامش",
+  "kpiUnitsSold": "الوحدات المباعة",
+  "colRank": "#",
+  "colProduct": "المنتج",
+  "colRevenue": "الإيراد",
+  "colQty": "الكمية",
+  "colMargin": "الهامش",
+  "qtySold": "تم بيع {n}",
+  "footnote": "مرتبة حسب الإيراد · من بيانات POS",
+  "collapse": "→ طي",
+  "tapToAnalyse": "اضغط للتحليل →"
+}

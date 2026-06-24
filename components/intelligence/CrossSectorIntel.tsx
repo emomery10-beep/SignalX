@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface Ranking {
   key: string; label: string; value: number; unit: string
@@ -11,14 +12,23 @@ interface SectorComparison {
   metrics: { key: string; label: string; user_value: number; benchmark_value: number | null; diff_pct: number | null; unit: string; sample_size: number }[]
 }
 
-const SECTOR_LABEL: Record<string, string> = {
-  retail: 'Retail', ecommerce: 'E-commerce', restaurant: 'Restaurant',
-  'food-bev': 'Food & Bev', 'import-export': 'Import/Export',
-  saas: 'SaaS', services: 'Services', fashion: 'Fashion', 'health-beauty': 'Health & Beauty',
-  salon: 'Salon', repair: 'Repair', factory: 'Factory',
+const SECTOR_KEY_MAP: Record<string, string> = {
+  retail: 'sectorRetail',
+  ecommerce: 'sectorEcommerce',
+  restaurant: 'sectorRestaurant',
+  'food-bev': 'sectorFoodBev',
+  'import-export': 'sectorImportExport',
+  saas: 'sectorSaas',
+  services: 'sectorServices',
+  fashion: 'sectorFashion',
+  'health-beauty': 'sectorHealthBeauty',
+  salon: 'sectorSalon',
+  repair: 'sectorRepair',
+  factory: 'sectorFactory',
 }
 
 export default function CrossSectorIntel({ onAsk }: { onAsk?: (prompt: string) => void }) {
+  const { tc } = useLang()
   const [rankings, setRankings] = useState<Ranking[]>([])
   const [comparisons, setComparisons] = useState<SectorComparison[]>([])
   const [userSector, setUserSector] = useState('')
@@ -44,7 +54,7 @@ export default function CrossSectorIntel({ onAsk }: { onAsk?: (prompt: string) =
       <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'var(--sf)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#F59E0B' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Cross-Sector Intel</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_crosssector.title')}</span>
         </div>
         {[1, 2, 3].map(i => (
           <div key={i} style={{ height: 36, borderRadius: 10, background: 'var(--ev, #f3f2ef)', animation: 'pulse 1.5s infinite', marginBottom: 8 }} />
@@ -59,22 +69,27 @@ export default function CrossSectorIntel({ onAsk }: { onAsk?: (prompt: string) =
     ? (Math.abs(v) >= 1000 ? `${sym}${(v / 1000).toFixed(1)}k` : `${sym}${v.toFixed(0)}`)
     : `${v.toFixed(1)}%`
 
+  const getSectorLabel = (sector: string) => {
+    const key = SECTOR_KEY_MAP[sector]
+    return key ? tc('intel_crosssector.' + key) : sector
+  }
+
   return (
     <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--sf) 0%, rgba(245,158,11,.02) 100%)' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#F59E0B' }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>Cross-Sector Intel</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_crosssector.title')}</span>
           <span style={{ fontSize: 10, color: 'var(--tx3)', background: 'var(--ev, #f3f2ef)', borderRadius: 6, padding: '1px 6px' }}>
-            {SECTOR_LABEL[userSector] || userSector}
+            {getSectorLabel(userSector)}
           </span>
         </div>
         {onAsk && (
           <button
-            onClick={() => onAsk('How do my metrics compare to other sectors? Where am I underperforming and what can I learn from top sectors?')}
+            onClick={() => onAsk(tc('intel_crosssector.askAiPrompt'))}
             style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
-          >Ask AI</button>
+          >{tc('intel_crosssector.askAi')}</button>
         )}
       </div>
 
@@ -108,7 +123,7 @@ export default function CrossSectorIntel({ onAsk }: { onAsk?: (prompt: string) =
 
       {/* Sector comparisons */}
       <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', marginBottom: 8, letterSpacing: '.02em' }}>
-        Compare with sectors
+        {tc('intel_crosssector.compareWithSectors')}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {comparisons.slice(0, 8).map(comp => (
@@ -125,10 +140,10 @@ export default function CrossSectorIntel({ onAsk }: { onAsk?: (prompt: string) =
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>
-                  {SECTOR_LABEL[comp.sector] || comp.sector}
+                  {getSectorLabel(comp.sector)}
                 </span>
                 {comp.is_user_sector && (
-                  <span style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.1)', borderRadius: 4, padding: '1px 5px', fontWeight: 700 }}>YOU</span>
+                  <span style={{ fontSize: 9, color: '#6366F1', background: 'rgba(99,102,241,.1)', borderRadius: 4, padding: '1px 5px', fontWeight: 700 }}>{tc('intel_crosssector.youBadge')}</span>
                 )}
               </div>
               <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{expanded === comp.sector ? '▴' : '▾'}</span>
@@ -151,7 +166,7 @@ export default function CrossSectorIntel({ onAsk }: { onAsk?: (prompt: string) =
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 1 }}>{m.sample_size} businesses</div>
+                      <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 1 }}>{tc('intel_crosssector.businesses', { n: m.sample_size })}</div>
                     </div>
                   )
                 })}

@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useMemo, useCallback } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 // ── Color constants ──────────────────────────────────────────────────────────
 const ACC    = '#d08a59'   // restaurant accent
@@ -81,14 +82,51 @@ type ServerRow = {
 }
 
 // ── Sub-tab config ─────────────────────────────────────────────────────────────
-const SUB_TABS: { id: SubTab; label: string }[] = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'orders',   label: 'Orders' },
-  { id: 'menu',     label: 'Menu Engineering' },
-  { id: 'floor',    label: 'Floor' },
-  { id: 'staff',    label: 'Staff' },
-  { id: 'kitchen',  label: 'Kitchen' },
-]
+function buildSubTabs(tc: (key: string) => string): { id: SubTab; label: string }[] {
+  return [
+    { id: 'overview', label: tc('pos_restaurant.tabOverview') },
+    { id: 'orders',   label: tc('pos_restaurant.tabOrders') },
+    { id: 'menu',     label: tc('pos_restaurant.tabMenu') },
+    { id: 'floor',    label: tc('pos_restaurant.tabFloor') },
+    { id: 'staff',    label: tc('pos_restaurant.tabStaff') },
+    { id: 'kitchen',  label: tc('pos_restaurant.tabKitchen') },
+  ]
+}
+
+function buildOrderCols(tc: (key: string) => string): { id: string; label: string; align?: 'right' | 'left' }[] {
+  return [
+    { id: 'order',   label: tc('pos_restaurant.colOrder') },
+    { id: 'time',    label: tc('pos_restaurant.colTime') },
+    { id: 'server',  label: tc('pos_restaurant.colServer') },
+    { id: 'items',   label: tc('pos_restaurant.colItems'), align: 'right' },
+    { id: 'total',   label: tc('pos_restaurant.colTotal'), align: 'right' },
+    { id: 'payment', label: tc('pos_restaurant.colPayment') },
+    { id: 'status',  label: tc('pos_restaurant.colStatus') },
+  ]
+}
+
+function buildMenuCols(tc: (key: string) => string): { id: string; label: string; align?: 'right' | 'left' }[] {
+  return [
+    { id: 'name',     label: tc('pos_restaurant.colItem') },
+    { id: 'category', label: tc('pos_restaurant.colCategory') },
+    { id: 'units',    label: tc('pos_restaurant.colUnits'), align: 'right' },
+    { id: 'revenue',  label: tc('pos_restaurant.colRevenue'), align: 'right' },
+    { id: 'foodCost', label: tc('pos_restaurant.colFoodCost'), align: 'right' },
+    { id: 'marginPct',label: tc('pos_restaurant.colMarginPct'), align: 'right' },
+    { id: 'class',    label: tc('pos_restaurant.colClassification') },
+  ]
+}
+
+function buildStaffCols(tc: (key: string) => string): { id: string; label: string; align?: 'right' | 'left' }[] {
+  return [
+    { id: 'name',      label: tc('pos_restaurant.colServer') },
+    { id: 'orders',    label: tc('pos_restaurant.colOrders'), align: 'right' },
+    { id: 'revenue',   label: tc('pos_restaurant.colRevenue'), align: 'right' },
+    { id: 'avgTicket', label: tc('pos_restaurant.colAvgTicket'), align: 'right' },
+    { id: 'voids',     label: tc('pos_restaurant.colVoids'), align: 'right' },
+    { id: 'tips',      label: tc('pos_restaurant.colTips'), align: 'right' },
+  ]
+}
 
 const CLASSIFICATION_COLOR: Record<Classification, string> = {
   Star:      C_STAR,
@@ -274,6 +312,7 @@ function KpiCard({
   change: number | null
   onClick: () => void
 }) {
+  const { tc } = useLang()
   const hasChange = change !== null && Number.isFinite(change)
   const up = (change ?? 0) >= 0
   const changeColor = !hasChange ? 'var(--tx3)' : up ? GREEN : RED
@@ -301,8 +340,8 @@ function KpiCard({
       </div>
       <div style={{ fontSize: 12, fontWeight: 600, color: changeColor }}>
         {hasChange
-          ? `${up ? '▲' : '▼'} ${Math.abs(change as number).toFixed(1)}% vs yesterday`
-          : '— no prior data'}
+          ? (up ? '▲' : '▼') + ' ' + Math.abs(change as number).toFixed(1) + '% ' + tc('pos_restaurant.vsYesterday')
+          : tc('pos_restaurant.noPriorData')}
       </div>
     </button>
   )
@@ -310,6 +349,8 @@ function KpiCard({
 
 // ── Sub-tab strip ──────────────────────────────────────────────────────────────
 function SubTabStrip({ active, onChange }: { active: SubTab; onChange: (t: SubTab) => void }) {
+  const { tc } = useLang()
+  const tabs = buildSubTabs(tc)
   return (
     <div style={{
       display: 'flex',
@@ -318,7 +359,7 @@ function SubTabStrip({ active, onChange }: { active: SubTab; onChange: (t: SubTa
       overflowX: 'auto',
       flexWrap: 'nowrap',
     }}>
-      {SUB_TABS.map((t) => {
+      {tabs.map((t) => {
         const isActive = t.id === active
         return (
           <button
@@ -402,6 +443,7 @@ export default function RestaurantTab({
   staff,
   inventory,
 }: RestaurantTabProps) {
+  const { tc } = useLang()
   const [subTab, setSubTab]             = useState<SubTab>('overview')
   const [searchQuery, setSearchQuery]   = useState('')
   const [sortField, setSortField]       = useState<string>('time')
@@ -849,7 +891,7 @@ export default function RestaurantTab({
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
         <div style={{ fontSize: 20 }}>🍴</div>
         <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--tx)', fontFamily: 'var(--font-sora)' }}>
-          Restaurant Analytics
+          {tc('pos_restaurant.restaurantAnalytics')}
         </div>
         {selectedLocation !== 'all' && (
           <span style={{
@@ -871,7 +913,7 @@ export default function RestaurantTab({
       {/* ──────────────────────── OVERVIEW ──────────────────────── */}
       {subTab === 'overview' && (
         noData ? (
-          <EmptyState icon="🍴" title="No transactions yet" sub="Restaurant analytics will appear here once orders start coming in through your POS." />
+          <EmptyState icon="🍴" title={tc('pos_restaurant.noTransactionsTitle')} sub={tc('pos_restaurant.noTransactionsSub')} />
         ) : (
           <OverviewPanel
             currencySymbol={currencySymbol}
@@ -912,7 +954,7 @@ export default function RestaurantTab({
       {/* ──────────────────────── MENU ENGINEERING ──────────────────────── */}
       {subTab === 'menu' && (
         menuRows.length === 0 ? (
-          <EmptyState icon="🧩" title="No menu data yet" sub="The menu engineering matrix needs sold items with prices to plot stars, puzzles, plowhorses and dogs." />
+          <EmptyState icon="🧩" title={tc('pos_restaurant.noMenuDataTitle')} sub={tc('pos_restaurant.noMenuDataSub')} />
         ) : (
           <MenuEngineeringPanel
             currencySymbol={currencySymbol}
@@ -934,7 +976,7 @@ export default function RestaurantTab({
       {/* ──────────────────────── STAFF ──────────────────────── */}
       {subTab === 'staff' && (
         serverRows.length === 0 ? (
-          <EmptyState icon="🧑‍🍳" title="No server data yet" sub="Server performance appears once staff start ringing up orders." />
+          <EmptyState icon="🧑‍🍳" title={tc('pos_restaurant.noServerDataTitle')} sub={tc('pos_restaurant.noServerDataSub')} />
         ) : (
           <StaffPanel
             currencySymbol={currencySymbol}
@@ -975,6 +1017,7 @@ function OverviewPanel({
   voidsComps: any
   onNavigate: (t: SubTab) => void
 }) {
+  const { tc } = useLang()
   const maxHourly = Math.max(1, ...hourly.todayHours, ...hourly.yestHours)
 
   // SVG chart geometry
@@ -993,37 +1036,37 @@ function OverviewPanel({
       {/* KPI cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
         <KpiCard
-          label="Revenue Today"
+          label={tc('pos_restaurant.kpiRevenueToday')}
           value={fmtMoney(currencySymbol, kpis.revToday)}
           change={pctChange(kpis.revToday, kpis.revYest)}
           onClick={() => onNavigate('orders')}
         />
         <KpiCard
-          label="Covers"
+          label={tc('pos_restaurant.kpiCovers')}
           value={String(kpis.coversToday)}
           change={pctChange(kpis.coversToday, kpis.coversYest)}
           onClick={() => onNavigate('orders')}
         />
         <KpiCard
-          label="Avg Ticket"
+          label={tc('pos_restaurant.kpiAvgTicket')}
           value={fmtMoney(currencySymbol, kpis.avgTicketToday)}
           change={pctChange(kpis.avgTicketToday, kpis.avgTicketYest)}
           onClick={() => onNavigate('orders')}
         />
         <KpiCard
-          label="Refunds"
+          label={tc('pos_restaurant.kpiRefunds')}
           value={String(kpis.refundToday)}
           change={pctChange(kpis.refundToday, kpis.refundYest)}
           onClick={() => onNavigate('orders')}
         />
         <KpiCard
-          label="Voids"
+          label={tc('pos_restaurant.kpiVoids')}
           value={String(kpis.voidToday)}
           change={pctChange(kpis.voidToday, kpis.voidYest)}
           onClick={() => onNavigate('orders')}
         />
         <KpiCard
-          label="Top Seller"
+          label={tc('pos_restaurant.kpiTopSeller')}
           value={kpis.topSeller}
           change={null}
           onClick={() => onNavigate('menu')}
@@ -1032,13 +1075,13 @@ function OverviewPanel({
 
       {/* Hourly revenue chart */}
       <div style={cardStyle}>
-        <SectionTitle>Hourly Revenue · Today vs Yesterday</SectionTitle>
+        <SectionTitle>{tc('pos_restaurant.hourlyRevenueSectionTitle')}</SectionTitle>
         <div style={{ display: 'flex', gap: 16, marginBottom: 8, fontSize: 12, color: 'var(--tx2)' }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 12, height: 12, borderRadius: 3, background: ACC, display: 'inline-block' }} /> Today
+            <span style={{ width: 12, height: 12, borderRadius: 3, background: ACC, display: 'inline-block' }} /> {tc('pos_restaurant.legendToday')}
           </span>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 12, height: 12, borderRadius: 3, background: 'var(--tx3)', display: 'inline-block', opacity: 0.5 }} /> Yesterday
+            <span style={{ width: 12, height: 12, borderRadius: 3, background: 'var(--tx3)', display: 'inline-block', opacity: 0.5 }} /> {tc('pos_restaurant.legendYesterday')}
           </span>
         </div>
         <div style={{ width: '100%', overflowX: 'auto' }}>
@@ -1097,16 +1140,16 @@ function OverviewPanel({
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
         {/* Order type breakdown */}
         <div style={cardStyle}>
-          <SectionTitle>Order Type Breakdown · Today</SectionTitle>
+          <SectionTitle>{tc('pos_restaurant.orderTypeBreakdownTitle')}</SectionTitle>
           <div style={{ display: 'flex', height: 12, borderRadius: 6, overflow: 'hidden', marginBottom: 14 }}>
-            <div style={{ width: `${orderTypes.dineInPct}%`, background: ACC }} title="Dine-in" />
-            <div style={{ width: `${orderTypes.takeawayPct}%`, background: TEAL }} title="Takeaway" />
-            <div style={{ width: `${orderTypes.onlinePct}%`, background: INDIGO }} title="Online" />
+            <div style={{ width: `${orderTypes.dineInPct}%`, background: ACC }} title={tc('pos_restaurant.dineIn')} />
+            <div style={{ width: `${orderTypes.takeawayPct}%`, background: TEAL }} title={tc('pos_restaurant.takeaway')} />
+            <div style={{ width: `${orderTypes.onlinePct}%`, background: INDIGO }} title={tc('pos_restaurant.online')} />
           </div>
           {[
-            { label: 'Dine-in', count: orderTypes.dineIn, pct: orderTypes.dineInPct, color: ACC },
-            { label: 'Takeaway', count: orderTypes.takeaway, pct: orderTypes.takeawayPct, color: TEAL },
-            { label: 'Online', count: orderTypes.online, pct: orderTypes.onlinePct, color: INDIGO },
+            { label: tc('pos_restaurant.dineIn'), count: orderTypes.dineIn, pct: orderTypes.dineInPct, color: ACC },
+            { label: tc('pos_restaurant.takeaway'), count: orderTypes.takeaway, pct: orderTypes.takeawayPct, color: TEAL },
+            { label: tc('pos_restaurant.online'), count: orderTypes.online, pct: orderTypes.onlinePct, color: INDIGO },
           ].map((row) => (
             <div key={row.label} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0' }}>
               <span style={{ width: 10, height: 10, borderRadius: 3, background: row.color, flexShrink: 0 }} />
@@ -1119,23 +1162,23 @@ function OverviewPanel({
 
         {/* Voids & comps */}
         <div style={cardStyle}>
-          <SectionTitle>Voids & Comps · Today</SectionTitle>
+          <SectionTitle>{tc('pos_restaurant.voidsCompsSectionTitle')}</SectionTitle>
           <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
             <div style={{ flex: 1, padding: 12, borderRadius: 10, background: 'var(--ev)' }}>
-              <div style={{ fontSize: 11, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700 }}>Voided</div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700 }}>{tc('pos_restaurant.voided')}</div>
               <div style={{ fontSize: 20, fontWeight: 800, color: RED, fontFamily: 'var(--font-sora)' }}>
                 {fmtMoney(currencySymbol, voidsComps.voidTotal)}
               </div>
             </div>
             <div style={{ flex: 1, padding: 12, borderRadius: 10, background: 'var(--ev)' }}>
-              <div style={{ fontSize: 11, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700 }}>Comped</div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)', textTransform: 'uppercase', fontWeight: 700 }}>{tc('pos_restaurant.comped')}</div>
               <div style={{ fontSize: 20, fontWeight: 800, color: AMBER, fontFamily: 'var(--font-sora)' }}>
                 {fmtMoney(currencySymbol, voidsComps.compTotal)}
               </div>
             </div>
           </div>
           <div style={{ fontSize: 13, color: 'var(--tx2)' }}>
-            Top void reason:{' '}
+            {tc('pos_restaurant.topVoidReason')}{' '}
             <span style={{ fontWeight: 700, color: 'var(--tx)' }}>{voidsComps.topVoidReason}</span>
             {voidsComps.topVoidCount > 0 && (
               <span style={{ color: 'var(--tx3)' }}> ({voidsComps.topVoidCount})</span>
@@ -1191,6 +1234,9 @@ function OrdersPanel({
   expandedOrder: string | null
   setExpandedOrder: (id: string | null) => void
 }) {
+  const { tc } = useLang()
+  const cols = buildOrderCols(tc)
+
   const selectStyle: React.CSSProperties = {
     padding: '7px 10px',
     borderRadius: 8,
@@ -1202,16 +1248,6 @@ function OrdersPanel({
     cursor: 'pointer',
   }
 
-  const cols: { id: string; label: string; align?: 'right' | 'left' }[] = [
-    { id: 'order',   label: 'Order #' },
-    { id: 'time',    label: 'Time' },
-    { id: 'server',  label: 'Server' },
-    { id: 'items',   label: 'Items', align: 'right' },
-    { id: 'total',   label: 'Total', align: 'right' },
-    { id: 'payment', label: 'Payment' },
-    { id: 'status',  label: 'Status' },
-  ]
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {/* Filters */}
@@ -1219,7 +1255,7 @@ function OrdersPanel({
         <input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search orders, servers, items…"
+          placeholder={tc('pos_restaurant.searchPlaceholder')}
           style={{
             flex: '1 1 220px',
             minWidth: 180,
@@ -1233,17 +1269,17 @@ function OrdersPanel({
           }}
         />
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={selectStyle}>
-          <option value="all">All statuses</option>
-          <option value="completed">Completed</option>
-          <option value="refund">Refunded</option>
-          <option value="void">Voided</option>
+          <option value="all">{tc('pos_restaurant.allStatuses')}</option>
+          <option value="completed">{tc('pos_restaurant.statusCompleted')}</option>
+          <option value="refund">{tc('pos_restaurant.statusRefunded')}</option>
+          <option value="void">{tc('pos_restaurant.statusVoided')}</option>
         </select>
         <select value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value)} style={selectStyle}>
-          <option value="all">All payments</option>
+          <option value="all">{tc('pos_restaurant.allPayments')}</option>
           {paymentOptions.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
         <select value={serverFilter} onChange={(e) => setServerFilter(e.target.value)} style={selectStyle}>
-          <option value="all">All servers</option>
+          <option value="all">{tc('pos_restaurant.allServers')}</option>
           {serverOptions.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
         <input
@@ -1254,10 +1290,10 @@ function OrdersPanel({
         />
       </div>
 
-      <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{orders.length} orders</div>
+      <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_restaurant.ordersCount', { n: orders.length })}</div>
 
       {orders.length === 0 ? (
-        <EmptyState icon="🧾" title="No matching orders" sub="Try adjusting your filters or search." />
+        <EmptyState icon="🧾" title={tc('pos_restaurant.noMatchingOrdersTitle')} sub={tc('pos_restaurant.noMatchingOrdersSub')} />
       ) : (
         <div style={{ ...cardStyle, padding: 0, overflow: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -1313,14 +1349,15 @@ function OrdersPanel({
 }
 
 function OrderDetail({ currencySymbol, t }: { currencySymbol: string; t: Tx }) {
+  const { tc } = useLang()
   const items = t.pos_items ?? []
   return (
     <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
-        Line Items
+        {tc('pos_restaurant.lineItems')}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {items.length === 0 && <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No line items recorded.</div>}
+        {items.length === 0 && <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_restaurant.noLineItems')}</div>}
         {items.map((it, i) => (
           <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--tx)' }}>
@@ -1342,26 +1379,26 @@ function OrderDetail({ currencySymbol, t }: { currencySymbol: string; t: Tx }) {
 
       {/* Totals */}
       <div style={{ borderTop: '1px solid var(--b)', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <DetailRow label="Subtotal" value={fmtMoney(currencySymbol, Number(t.subtotal ?? 0))} />
+        <DetailRow label={tc('pos_restaurant.subtotal')} value={fmtMoney(currencySymbol, Number(t.subtotal ?? 0))} />
         {Number(t.discount_amount ?? 0) > 0 && (
-          <DetailRow label="Discount" value={`-${fmtMoney(currencySymbol, Number(t.discount_amount))}`} color={GREEN} />
+          <DetailRow label={tc('pos_restaurant.discount')} value={`-${fmtMoney(currencySymbol, Number(t.discount_amount))}`} color={GREEN} />
         )}
         {Number(t.tip_amount ?? 0) > 0 && (
-          <DetailRow label="Tip" value={fmtMoney(currencySymbol, Number(t.tip_amount))} />
+          <DetailRow label={tc('pos_restaurant.tip')} value={fmtMoney(currencySymbol, Number(t.tip_amount))} />
         )}
-        <DetailRow label="Total" value={fmtMoney(currencySymbol, txTotal(t))} bold />
+        <DetailRow label={tc('pos_restaurant.total')} value={fmtMoney(currencySymbol, txTotal(t))} bold />
       </div>
 
       {/* Meta */}
       <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: 12, color: 'var(--tx2)' }}>
-        <span>Payment: <strong style={{ color: 'var(--tx)', textTransform: 'capitalize' }}>{t.payment_type ?? '—'}</strong></span>
-        {t.pos_customers?.name && <span>Customer: <strong style={{ color: 'var(--tx)' }}>{t.pos_customers.name}</strong></span>}
-        {t.table != null && <span>Table: <strong style={{ color: 'var(--tx)' }}>{String(t.table)}</strong></span>}
+        <span>{tc('pos_restaurant.paymentLabel')} <strong style={{ color: 'var(--tx)', textTransform: 'capitalize' }}>{t.payment_type ?? '—'}</strong></span>
+        {t.pos_customers?.name && <span>{tc('pos_restaurant.customerLabel')} <strong style={{ color: 'var(--tx)' }}>{t.pos_customers.name}</strong></span>}
+        {t.table != null && <span>{tc('pos_restaurant.tableLabel')} <strong style={{ color: 'var(--tx)' }}>{String(t.table)}</strong></span>}
       </div>
 
       {statusOf(t).includes('void') && (t.void_reason || t.notes) && (
         <div style={{ fontSize: 12, color: RED, background: `${RED}14`, padding: '8px 12px', borderRadius: 8 }}>
-          <strong>Void reason:</strong> {t.void_reason ?? t.notes}
+          <strong>{tc('pos_restaurant.voidReason')}</strong> {t.void_reason ?? t.notes}
         </div>
       )}
     </div>
@@ -1397,7 +1434,9 @@ function MenuEngineeringPanel({
   sortDir: SortDir
   onSort: (f: string) => void
 }) {
+  const { tc } = useLang()
   const [hovered, setHovered] = useState<string | null>(null)
+  const cols = buildMenuCols(tc)
 
   // Chart geometry
   const W = 720
@@ -1420,22 +1459,12 @@ function MenuEngineeringPanel({
   const crossX = xOf(medians.units)
   const crossY = yOf(medians.margin)
 
-  const cols: { id: string; label: string; align?: 'right' | 'left' }[] = [
-    { id: 'name',     label: 'Item' },
-    { id: 'category', label: 'Category' },
-    { id: 'units',    label: 'Units', align: 'right' },
-    { id: 'revenue',  label: 'Revenue', align: 'right' },
-    { id: 'foodCost', label: 'Food Cost', align: 'right' },
-    { id: 'marginPct',label: 'Margin %', align: 'right' },
-    { id: 'class',    label: 'Classification' },
-  ]
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={cardStyle}>
-        <SectionTitle>Menu Engineering Matrix</SectionTitle>
+        <SectionTitle>{tc('pos_restaurant.menuEngineeringTitle')}</SectionTitle>
         <div style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 12 }}>
-          Popularity (units sold) vs contribution margin per unit. Crosshairs at medians.
+          {tc('pos_restaurant.menuEngineeringDesc')}
         </div>
         <div style={{ width: '100%', overflowX: 'auto' }}>
           <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ minWidth: 560, display: 'block' }}>
@@ -1453,15 +1482,15 @@ function MenuEngineeringPanel({
             <line x1={padL} y1={crossY} x2={padL + plotW} y2={crossY} stroke="var(--tx3)" strokeWidth={1} strokeDasharray="4 4" />
 
             {/* Quadrant labels */}
-            <text x={padL + plotW - 8} y={padT + 16} fontSize={13} fill={C_STAR} fontWeight={700} textAnchor="end">⭐ Stars</text>
-            <text x={padL + 8} y={padT + 16} fontSize={13} fill={C_PUZZLE} fontWeight={700} textAnchor="start">🧩 Puzzles</text>
-            <text x={padL + plotW - 8} y={padT + plotH - 8} fontSize={13} fill={C_PLOWHORSE} fontWeight={700} textAnchor="end">🐴 Plowhorses</text>
-            <text x={padL + 8} y={padT + plotH - 8} fontSize={13} fill={C_DOG} fontWeight={700} textAnchor="start">🐕 Dogs</text>
+            <text x={padL + plotW - 8} y={padT + 16} fontSize={13} fill={C_STAR} fontWeight={700} textAnchor="end">{tc('pos_restaurant.quadrantStars')}</text>
+            <text x={padL + 8} y={padT + 16} fontSize={13} fill={C_PUZZLE} fontWeight={700} textAnchor="start">{tc('pos_restaurant.quadrantPuzzles')}</text>
+            <text x={padL + plotW - 8} y={padT + plotH - 8} fontSize={13} fill={C_PLOWHORSE} fontWeight={700} textAnchor="end">{tc('pos_restaurant.quadrantPlowhorses')}</text>
+            <text x={padL + 8} y={padT + plotH - 8} fontSize={13} fill={C_DOG} fontWeight={700} textAnchor="start">{tc('pos_restaurant.quadrantDogs')}</text>
 
             {/* Axis titles */}
-            <text x={padL + plotW / 2} y={H - 8} fontSize={11} fill="var(--tx2)" textAnchor="middle">Popularity (units sold) →</text>
+            <text x={padL + plotW / 2} y={H - 8} fontSize={11} fill="var(--tx2)" textAnchor="middle">{tc('pos_restaurant.axisPopularity')}</text>
             <text x={14} y={padT + plotH / 2} fontSize={11} fill="var(--tx2)" textAnchor="middle" transform={`rotate(-90 14 ${padT + plotH / 2})`}>
-              Contribution margin / unit →
+              {tc('pos_restaurant.axisMargin')}
             </text>
 
             {/* Y axis ticks */}
@@ -1554,6 +1583,8 @@ function FloorPanel({
   stats: { totalTables: number; occupied: number; avgTurnMin: number; avgSpend: number }
   todayTx: Tx[]
 }) {
+  const { tc } = useLang()
+
   // Section performance (group by t.notes-derived section if present; else skip)
   const sections = useMemo(() => {
     const map = new Map<string, { count: number; revenue: number }>()
@@ -1569,10 +1600,10 @@ function FloorPanel({
   }, [todayTx])
 
   const tiles = [
-    { label: 'Total Tables', value: String(stats.totalTables), color: ACC },
-    { label: 'Occupied Now', value: String(stats.occupied), color: TEAL },
-    { label: 'Avg Turn Time', value: `${stats.avgTurnMin} min`, color: INDIGO },
-    { label: 'Avg Spend / Table', value: fmtMoney(currencySymbol, stats.avgSpend), color: GREEN },
+    { label: tc('pos_restaurant.totalTables'), value: String(stats.totalTables), color: ACC },
+    { label: tc('pos_restaurant.occupiedNow'), value: String(stats.occupied), color: TEAL },
+    { label: tc('pos_restaurant.avgTurnTime'), value: stats.avgTurnMin + ' ' + tc('pos_restaurant.min'), color: INDIGO },
+    { label: tc('pos_restaurant.avgSpendPerTable'), value: fmtMoney(currencySymbol, stats.avgSpend), color: GREEN },
   ]
 
   return (
@@ -1591,9 +1622,9 @@ function FloorPanel({
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th style={thStyle}>Section</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Orders</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Revenue</th>
+                <th style={thStyle}>{tc('pos_restaurant.colSection')}</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>{tc('pos_restaurant.colOrders')}</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>{tc('pos_restaurant.colRevenue')}</th>
               </tr>
             </thead>
             <tbody>
@@ -1609,7 +1640,7 @@ function FloorPanel({
         </div>
       ) : (
         <div style={{ ...cardStyle, fontSize: 13, color: 'var(--tx2)' }}>
-          Section-level performance data isn&apos;t available in these transactions.
+          {tc('pos_restaurant.noSectionData')}
         </div>
       )}
 
@@ -1628,7 +1659,7 @@ function FloorPanel({
           fontSize: 14,
         }}
       >
-        <span>🪑 Open full floor management on pos.askbiz.co</span>
+        <span>{tc('pos_restaurant.floorManagementLink')}</span>
         <span>→</span>
       </a>
     </div>
@@ -1657,28 +1688,21 @@ function StaffPanel({
   setExpandedServer: (n: string | null) => void
   ordersByServer: (name: string) => Tx[]
 }) {
+  const { tc } = useLang()
   const totalRevenue = rows.reduce((a, r) => a + r.revenue, 0)
   const activeStaff = rows.filter((r) => r.orders > 0).length
   const revPerStaff = activeStaff ? totalRevenue / activeStaff : 0
-
-  const cols: { id: string; label: string; align?: 'right' | 'left' }[] = [
-    { id: 'name',      label: 'Server' },
-    { id: 'orders',    label: 'Orders', align: 'right' },
-    { id: 'revenue',   label: 'Revenue', align: 'right' },
-    { id: 'avgTicket', label: 'Avg Ticket', align: 'right' },
-    { id: 'voids',     label: 'Voids', align: 'right' },
-    { id: 'tips',      label: 'Tips', align: 'right' },
-  ]
+  const cols = buildStaffCols(tc)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
         <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>Active Staff</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('pos_restaurant.activeStaff')}</div>
           <div style={{ fontSize: 24, fontWeight: 800, color: ACC, fontFamily: 'var(--font-sora)' }}>{activeStaff}</div>
         </div>
         <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>Revenue / Staff</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('pos_restaurant.revenuePerStaff')}</div>
           <div style={{ fontSize: 24, fontWeight: 800, color: GREEN, fontFamily: 'var(--font-sora)' }}>{fmtMoney(currencySymbol, revPerStaff)}</div>
         </div>
       </div>
@@ -1714,7 +1738,7 @@ function StaffPanel({
                     <tr>
                       <td colSpan={cols.length} style={{ padding: 16, background: 'var(--ev)', borderBottom: '1px solid var(--b)' }}>
                         <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: 10 }}>
-                          Recent orders
+                          {tc('pos_restaurant.recentOrders')}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                           {ordersByServer(r.name).map((t, i) => (
@@ -1727,7 +1751,7 @@ function StaffPanel({
                             </div>
                           ))}
                           {ordersByServer(r.name).length === 0 && (
-                            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No recent orders.</div>
+                            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_restaurant.noRecentOrders')}</div>
                           )}
                         </div>
                       </td>
@@ -1753,26 +1777,27 @@ function KitchenPanel({
   currencySymbol: string
   stats: { avgPrepMin: number; prepCount: number; topItems: { name: string; units: number }[] }
 }) {
+  const { tc } = useLang()
   const maxUnits = Math.max(1, ...stats.topItems.map((i) => i.units))
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
         <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>Avg Prep Time</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase' }}>{tc('pos_restaurant.avgPrepTime')}</div>
           <div style={{ fontSize: 24, fontWeight: 800, color: ACC, fontFamily: 'var(--font-sora)' }}>
-            {stats.prepCount ? `${stats.avgPrepMin} min` : '—'}
+            {stats.prepCount ? stats.avgPrepMin + ' ' + tc('pos_restaurant.min') : '—'}
           </div>
           <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
-            {stats.prepCount ? `from ${stats.prepCount} completed orders` : 'no completion timestamps'}
+            {stats.prepCount ? tc('pos_restaurant.fromCompletedOrders', { n: stats.prepCount }) : tc('pos_restaurant.noCompletionTimestamps')}
           </div>
         </div>
       </div>
 
       <div style={cardStyle}>
-        <SectionTitle>Most Ordered Today</SectionTitle>
+        <SectionTitle>{tc('pos_restaurant.mostOrderedToday')}</SectionTitle>
         {stats.topItems.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No items sold today yet.</div>
+          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_restaurant.noItemsSoldToday')}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {stats.topItems.map((it) => (
@@ -1805,7 +1830,7 @@ function KitchenPanel({
           fontSize: 14,
         }}
       >
-        <span>👨‍🍳 Open live Kitchen Display System on pos.askbiz.co</span>
+        <span>{tc('pos_restaurant.kitchenDisplayLink')}</span>
         <span>→</span>
       </a>
     </div>

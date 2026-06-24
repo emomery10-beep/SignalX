@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
+import { useLang } from '@/components/LanguageProvider'
 
 interface HealthComponent {
   name: string
@@ -159,6 +160,7 @@ function getComponentAnalysis(comp: HealthComponent, sector: Sector): { tips: st
 }
 
 export default function MiniTrendChart({ history, label = 'Health Trend', height = 120, onAsk, forceExpanded, onClose }: MiniTrendChartProps) {
+  const { tc } = useLang()
   const [expanded, setExpanded] = useState(false)
 
   // Allow parent to force-open the modal
@@ -256,7 +258,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 6 }}>
           <span style={{ fontSize: 28, fontWeight: 800, color: barColor(lastScore), fontFamily: 'var(--font-sora, inherit)', lineHeight: 1 }}>{lastScore}</span>
-          <span style={{ fontSize: 11, color: 'var(--tx3)' }}>/100</span>
+          <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_minitrend.perHundred')}</span>
         </div>
         <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block', height: 'auto', maxHeight: height, overflow: 'visible' }} onMouseMove={handleMouseMove} onMouseLeave={() => setHovered(null)}>
           <rect x={padL} y={toY(100)} width={chartW} height={toY(65) - toY(100)} fill="rgba(34,197,94,.04)" />
@@ -274,9 +276,9 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
           })}
           <circle cx={toX(items.length - 1)} cy={toY(lastScore)} r="6" fill={barColor(lastScore)} opacity="0.15" />
         </svg>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 9, color: 'var(--tx3)', opacity: 0.7 }}><span>30 days ago</span><span>Today</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 9, color: 'var(--tx3)', opacity: 0.7 }}><span>{tc('intel_minitrend.thirtyDaysAgo')}</span><span>{tc('intel_minitrend.today')}</span></div>
         <div style={{ display: 'flex', gap: 10, marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--b)' }}>
-          {[['#22C55E', 'Healthy 65+'], ['#F59E0B', 'Watch 45–64'], ['#EF4444', 'Risk <45']].map(([c, l]) => (
+          {([['#22C55E', tc('intel_minitrend.legendHealthy')], ['#F59E0B', tc('intel_minitrend.legendWatch')], ['#EF4444', tc('intel_minitrend.legendRisk')]] as [string, string][]).map(([c, l]) => (
             <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 9, color: 'var(--tx3)' }}><div style={{ width: 6, height: 6, borderRadius: 1, background: c }} />{l}</div>
           ))}
         </div>
@@ -291,7 +293,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
               <div>
                 <div style={{ fontFamily: 'var(--font-sora)', fontSize: 15, fontWeight: 700, color: 'var(--tx)' }}>{label}</div>
                 <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>
-                  Score: <strong style={{ color: barColor(lastScore) }}>{lastScore}/100</strong> · <span style={{ color: deltaColor }}>{deltaLabel} vs 30 days ago</span>
+                  {tc('intel_minitrend.scoreLabel')} <strong style={{ color: barColor(lastScore) }}>{lastScore}{tc('intel_minitrend.perHundred')}</strong> · <span style={{ color: deltaColor }}>{deltaLabel} {tc('intel_minitrend.vsThirtyDays')}</span>
                 </div>
               </div>
               <button onClick={() => { setExpanded(false); setSelectedBar(null); setDrilledComponent(null); onClose?.() }} style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid var(--b)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--tx3)' }}>
@@ -302,7 +304,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
             {selectedBar === null && (
               <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(99,102,241,.06)', border: '1px solid rgba(99,102,241,.12)', marginBottom: 14, fontSize: 11, color: '#6366F1', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                Click any bar to see the full health breakdown for that day
+                {tc('intel_minitrend.clickBarHint')}
               </div>
             )}
 
@@ -346,7 +348,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                 </div>
               ))}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 10, color: 'var(--tx3)' }}><span>30 days ago</span><span>Today</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 10, color: 'var(--tx3)' }}><span>{tc('intel_minitrend.thirtyDaysAgo')}</span><span>{tc('intel_minitrend.today')}</span></div>
 
             {/* ── Selected day deep-dive ── */}
             {selectedItem && (
@@ -363,7 +365,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontSize: 24, fontWeight: 800, color: barColor(selectedScore), fontFamily: 'var(--font-sora, inherit)', lineHeight: 1 }}>{selectedScore}</div>
-                      <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>/100</div>
+                      <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{tc('intel_minitrend.perHundred')}</div>
                     </div>
                   </div>
 
@@ -372,7 +374,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                       <span style={{ fontSize: 16, fontWeight: 800, color: dayDelta > 0 ? '#22C55E' : dayDelta < 0 ? '#EF4444' : 'var(--tx3)' }}>
                         {dayDelta > 0 ? '↑' : dayDelta < 0 ? '↓' : '→'} {dayDelta > 0 ? '+' : ''}{dayDelta} pts
                       </span>
-                      <span style={{ fontSize: 11, color: 'var(--tx3)' }}>vs previous day ({prevScore})</span>
+                      <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('intel_minitrend.vsPreviousDay')} ({prevScore})</span>
                     </div>
                   )}
 
@@ -380,7 +382,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                   {selectedItem.components && selectedItem.components.length > 0 ? (
                     <div>
                       <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 10 }}>
-                        Click any component to dive deeper
+                        {tc('intel_minitrend.clickComponentHint')}
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {(() => {
@@ -409,7 +411,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                       <span style={{ fontSize: 16, fontWeight: 800, color: statusDot(orig.status) }}>{orig.score}</span>
-                                      <span style={{ fontSize: 10, color: 'var(--tx3)' }}>/20</span>
+                                      <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{tc('intel_minitrend.perTwenty')}</span>
                                       {comp.change !== 0 && (
                                         <span style={{ fontSize: 10, fontWeight: 700, color: comp.change > 0 ? '#22C55E' : '#EF4444', background: comp.change > 0 ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.1)', borderRadius: 4, padding: '1px 5px' }}>
                                           {comp.change > 0 ? '+' : ''}{comp.change}
@@ -431,7 +433,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '8px 10px', borderRadius: 8, background: 'var(--ev)' }}>
                                       <span style={{ fontSize: 14 }}>🎯</span>
                                       <div>
-                                        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Benchmark</div>
+                                        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('intel_minitrend.benchmarkLabel')}</div>
                                         <div style={{ fontSize: 12, fontWeight: 600, color: statusDot(orig.status) }}>{analysis.benchmark}</div>
                                       </div>
                                     </div>
@@ -450,7 +452,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
 
                                     {/* Analysis tips */}
                                     <div style={{ marginBottom: 12 }}>
-                                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>Analysis</div>
+                                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8 }}>{tc('intel_minitrend.analysisLabel')}</div>
                                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                         {analysis.tips.map((tip, ti) => (
                                           <div key={ti} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'var(--tx2)', lineHeight: 1.5 }}>
@@ -463,7 +465,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
 
                                     {/* Recommended action */}
                                     <div style={{ padding: '10px 12px', borderRadius: 8, background: `${statusDot(orig.status)}10`, border: `1px dashed ${statusDot(orig.status)}30`, marginBottom: 12 }}>
-                                      <div style={{ fontSize: 10, fontWeight: 700, color: statusDot(orig.status), textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>Recommended Action</div>
+                                      <div style={{ fontSize: 10, fontWeight: 700, color: statusDot(orig.status), textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 4 }}>{tc('intel_minitrend.recommendedAction')}</div>
                                       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', lineHeight: 1.4 }}>{analysis.action}</div>
                                     </div>
 
@@ -474,7 +476,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                                         style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: `1px solid ${statusDot(orig.status)}30`, background: `${statusDot(orig.status)}08`, color: statusDot(orig.status), fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                                       >
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                                        Ask AI for deeper {sn.name.toLowerCase()} analysis →
+                                        {tc('intel_minitrend.askAiButton', { name: sn.name.toLowerCase() })}
                                       </button>
                                     )}
                                   </div>
@@ -486,14 +488,14 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
                       </div>
 
                       <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, background: 'var(--ev)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)' }}>Total component score</span>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)' }}>{tc('intel_minitrend.totalComponentScore')}</span>
                         <span style={{ fontSize: 14, fontWeight: 800, color: barColor(selectedScore) }}>{selectedItem.components.reduce((s, c) => s + c.score, 0)}/100</span>
                       </div>
                     </div>
                   ) : (
                     <div style={{ padding: '20px 16px', borderRadius: 10, background: 'var(--ev)', textAlign: 'center' }}>
                       <div style={{ fontSize: 20, marginBottom: 6 }}>📊</div>
-                      <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.5 }}>Component breakdown not available for this day.<br/>Newer health checks include full component-level data.</div>
+                      <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.5 }}>{tc('intel_minitrend.noBreakdownTitle')}<br/>{tc('intel_minitrend.noBreakdownBody')}</div>
                     </div>
                   )}
                 </div>
@@ -501,7 +503,7 @@ export default function MiniTrendChart({ history, label = 'Health Trend', height
             )}
 
             <div style={{ display: 'flex', gap: 16, marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--b)' }}>
-              {[['#22C55E', 'Healthy (65+)'], ['#F59E0B', 'Watch (45–64)'], ['#EF4444', 'At Risk (<45)']].map(([col, lbl]) => (
+              {([['#22C55E', tc('intel_minitrend.modalLegendHealthy')], ['#F59E0B', tc('intel_minitrend.modalLegendWatch')], ['#EF4444', tc('intel_minitrend.modalLegendAtRisk')]] as [string, string][]).map(([col, lbl]) => (
                 <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--tx3)' }}>
                   <div style={{ width: 10, height: 10, borderRadius: 2, background: col }} />{lbl}
                 </div>

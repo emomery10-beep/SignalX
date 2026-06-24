@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useLang } from '@/components/LanguageProvider'
 
 const API = process.env.NEXT_PUBLIC_API_URL || ''
 
@@ -25,6 +26,7 @@ export default function PosMobilePayment({
   onPaymentComplete,
   onPaymentFailed,
 }: PosMobilePaymentProps) {
+  const { tc } = useLang()
   const supabase = createClient()
   const [status, setStatus] = useState<'idle' | 'sending' | 'waiting' | 'completed' | 'failed'>('idle')
   const [phoneInput, setPhoneInput] = useState(customerPhone)
@@ -155,19 +157,19 @@ export default function PosMobilePayment({
     <div style={{ marginTop: 14 }}>
       {/* Amount banner */}
       <div style={{ padding: '12px 16px', background: GREEN, borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>M-Pesa payment</span>
+        <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{tc('pos_mobilepayment.mPesaPayment')}</span>
         <span style={{ color: '#fff', fontSize: 22, fontWeight: 900 }}>{currencySymbol}{amount.toFixed(2)}</span>
       </div>
 
       <div style={{ background: '#fff', border: '1px solid #e5e2dc', borderTop: 'none', borderRadius: '0 0 16px 16px', padding: '16px' }}>
         <div style={{ fontSize: 12, fontWeight: 600, color: '#6b6760', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Ask customer for their M-Pesa number
+          {tc('pos_mobilepayment.askCustomerForNumber')}
         </div>
 
         <input
           ref={inputRef}
           type="tel"
-          placeholder="07XX XXX XXX"
+          placeholder={tc('pos_mobilepayment.phonePlaceholder')}
           value={phoneInput}
           onChange={(e) => setPhoneInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && phoneInput && sendMpesaPrompt()}
@@ -207,11 +209,11 @@ export default function PosMobilePayment({
             gap: 8,
           }}
         >
-          📲 Send M-Pesa prompt
+          {tc('pos_mobilepayment.sendMpesaPrompt')}
         </button>
 
         <div style={{ marginTop: 10, fontSize: 11, color: '#9ca3af', textAlign: 'center' }}>
-          Customer will get a popup on their phone to confirm payment
+          {tc('pos_mobilepayment.customerWillGetPopup')}
         </div>
       </div>
     </div>
@@ -221,8 +223,8 @@ export default function PosMobilePayment({
   if (status === 'sending') return (
     <div style={{ marginTop: 14, padding: '24px 16px', background: '#fff', borderRadius: 16, border: '1px solid #e5e2dc', textAlign: 'center' }}>
       <div style={{ fontSize: 28, marginBottom: 8 }}>📲</div>
-      <div style={{ fontSize: 14, fontWeight: 600, color: '#1a1916' }}>Sending to {phoneInput}...</div>
-      <div style={{ fontSize: 12, color: '#6b6760', marginTop: 4 }}>Just a moment</div>
+      <div style={{ fontSize: 14, fontWeight: 600, color: '#1a1916' }}>{tc('pos_mobilepayment.sendingTo', { phone: phoneInput })}</div>
+      <div style={{ fontSize: 12, color: '#6b6760', marginTop: 4 }}>{tc('pos_mobilepayment.justAMoment')}</div>
     </div>
   )
 
@@ -230,7 +232,7 @@ export default function PosMobilePayment({
   if (status === 'waiting') return (
     <div style={{ marginTop: 14 }}>
       <div style={{ padding: '12px 16px', background: GREEN, borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>Waiting for customer</span>
+        <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{tc('pos_mobilepayment.waitingForCustomer')}</span>
         <span style={{ color: '#fff', fontSize: 22, fontWeight: 900 }}>{currencySymbol}{amount.toFixed(2)}</span>
       </div>
 
@@ -238,19 +240,19 @@ export default function PosMobilePayment({
         <div style={{ fontSize: 40, marginBottom: 12 }}>📱</div>
 
         <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1916', marginBottom: 4 }}>
-          Check their phone
+          {tc('pos_mobilepayment.checkTheirPhone')}
         </div>
         <div style={{ fontSize: 13, color: '#6b6760', marginBottom: 16 }}>
-          M-Pesa prompt sent to <strong>{phoneInput}</strong>
-          <br />Ask them to enter their M-Pesa PIN to confirm
+          {tc('pos_mobilepayment.mpesaPromptSentTo')} <strong>{phoneInput}</strong>
+          <br />{tc('pos_mobilepayment.askThemToEnterPin')}
         </div>
 
         <div style={{ padding: '10px', background: 'rgba(22,163,74,.06)', borderRadius: 10, border: '1px solid rgba(22,163,74,.15)', marginBottom: 12 }}>
           <div style={{ fontSize: 12, color: GREEN, fontWeight: 600 }}>
-            ⏳ Waiting for PIN confirmation...
+            {tc('pos_mobilepayment.waitingForPinConfirmation')}
           </div>
           <div style={{ fontSize: 11, color: '#6b6760', marginTop: 2 }}>
-            Updates automatically when paid
+            {tc('pos_mobilepayment.updatesAutomatically')}
           </div>
         </div>
 
@@ -258,7 +260,7 @@ export default function PosMobilePayment({
           onClick={() => setStatus('idle')}
           style={{ fontSize: 12, color: '#6b6760', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
         >
-          Wrong number? Send again
+          {tc('pos_mobilepayment.wrongNumberSendAgain')}
         </button>
       </div>
     </div>
@@ -268,8 +270,8 @@ export default function PosMobilePayment({
   if (status === 'completed') return (
     <div style={{ marginTop: 14, padding: '24px', background: 'rgba(22,163,74,.06)', border: '2px solid rgba(22,163,74,.3)', borderRadius: 16, textAlign: 'center' }}>
       <div style={{ fontSize: 40, marginBottom: 8 }}>✅</div>
-      <div style={{ fontSize: 18, fontWeight: 800, color: GREEN }}>M-Pesa payment received!</div>
-      <div style={{ fontSize: 13, color: '#6b6760', marginTop: 4 }}>{currencySymbol}{amount.toFixed(2)} from {phoneInput}</div>
+      <div style={{ fontSize: 18, fontWeight: 800, color: GREEN }}>{tc('pos_mobilepayment.mpesaPaymentReceived')}</div>
+      <div style={{ fontSize: 13, color: '#6b6760', marginTop: 4 }}>{tc('pos_mobilepayment.amountFrom', { currencySymbol, amount: amount.toFixed(2), phone: phoneInput })}</div>
     </div>
   )
 
@@ -278,10 +280,10 @@ export default function PosMobilePayment({
     <div style={{ marginTop: 14, padding: '20px 16px', background: 'rgba(220,38,38,.05)', border: '1px solid rgba(220,38,38,.2)', borderRadius: 16, textAlign: 'center' }}>
       <div style={{ fontSize: 28, marginBottom: 8 }}>❌</div>
       <div style={{ fontSize: 14, fontWeight: 600, color: '#dc2626', marginBottom: 12 }}>
-        Payment failed or timed out
+        {tc('pos_mobilepayment.paymentFailedOrTimedOut')}
       </div>
       <button onClick={() => setStatus('idle')} style={{ padding: '10px 20px', borderRadius: 10, background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
-        Try again
+        {tc('pos_mobilepayment.tryAgain')}
       </button>
     </div>
   )

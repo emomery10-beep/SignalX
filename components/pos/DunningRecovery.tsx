@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface FailedPayment {
   id: string
@@ -42,46 +43,57 @@ function fmt(n: number, sym: string): string {
   return `${sym}${Math.round(abs).toLocaleString()}`
 }
 
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime()
-  const h = Math.floor(diff / 3600000)
-  if (h < 1) return 'Just now'
-  if (h < 24) return `${h}h ago`
-  const d = Math.floor(h / 24)
-  return `${d}d ago`
+function buildStatusColors(tc: (k: string) => string): Record<string, { bg: string; border: string; text: string; label: string }> {
+  return {
+    failed:    { bg: 'rgba(239,68,68,.06)', border: 'rgba(239,68,68,.2)', text: RED, label: tc('pos_dunning.statusFailed') },
+    retrying:  { bg: 'rgba(245,158,11,.06)', border: 'rgba(245,158,11,.2)', text: AMBER, label: tc('pos_dunning.statusRetrying') },
+    recovered: { bg: 'rgba(34,197,94,.06)', border: 'rgba(34,197,94,.2)', text: GREEN, label: tc('pos_dunning.statusRecovered') },
+    abandoned: { bg: 'rgba(107,114,128,.06)', border: 'rgba(107,114,128,.2)', text: '#6b7280', label: tc('pos_dunning.statusAbandoned') },
+  }
 }
 
-const STATUS_COLORS: Record<string, { bg: string; border: string; text: string; label: string }> = {
-  failed:    { bg: 'rgba(239,68,68,.06)', border: 'rgba(239,68,68,.2)', text: RED, label: 'Failed' },
-  retrying:  { bg: 'rgba(245,158,11,.06)', border: 'rgba(245,158,11,.2)', text: AMBER, label: 'Retrying' },
-  recovered: { bg: 'rgba(34,197,94,.06)', border: 'rgba(34,197,94,.2)', text: GREEN, label: 'Recovered' },
-  abandoned: { bg: 'rgba(107,114,128,.06)', border: 'rgba(107,114,128,.2)', text: '#6b7280', label: 'Abandoned' },
+function buildFailureReasons(tc: (k: string) => string): Record<string, string> {
+  return {
+    insufficient_funds: tc('pos_dunning.reasonInsufficientFunds'),
+    card_declined: tc('pos_dunning.reasonCardDeclined'),
+    expired_card: tc('pos_dunning.reasonExpiredCard'),
+    network_error: tc('pos_dunning.reasonNetworkError'),
+    authentication_required: tc('pos_dunning.reasonAuthRequired'),
+    mpesa_timeout: tc('pos_dunning.reasonMpesaTimeout'),
+    mpesa_insufficient: tc('pos_dunning.reasonMpesaInsufficient'),
+    unknown: tc('pos_dunning.reasonUnknown'),
+  }
 }
 
-const FAILURE_REASONS: Record<string, string> = {
-  insufficient_funds: 'Insufficient funds',
-  card_declined: 'Card declined',
-  expired_card: 'Expired card',
-  network_error: 'Network error',
-  authentication_required: 'Authentication required',
-  mpesa_timeout: 'M-Pesa timeout',
-  mpesa_insufficient: 'M-Pesa insufficient balance',
-  unknown: 'Unknown error',
+function buildRetrySchedules(tc: (k: string) => string) {
+  return [
+    { label: tc('pos_dunning.scheduleAggressiveLabel'), value: 'aggressive', desc: tc('pos_dunning.scheduleAggressiveDesc'), intervals: [1, 6, 24] },
+    { label: tc('pos_dunning.scheduleStandardLabel'), value: 'standard', desc: tc('pos_dunning.scheduleStandardDesc'), intervals: [4, 24, 72] },
+    { label: tc('pos_dunning.scheduleGentleLabel'), value: 'gentle', desc: tc('pos_dunning.scheduleGentleDesc'), intervals: [24, 72, 168] },
+  ]
 }
-
-const RETRY_SCHEDULES = [
-  { label: 'Aggressive', value: 'aggressive', desc: 'Retry after 1h, 6h, 24h', intervals: [1, 6, 24] },
-  { label: 'Standard', value: 'standard', desc: 'Retry after 4h, 24h, 72h', intervals: [4, 24, 72] },
-  { label: 'Gentle', value: 'gentle', desc: 'Retry after 24h, 72h, 168h', intervals: [24, 72, 168] },
-]
 
 export default function DunningRecovery({ currencySymbol: sym }: Props) {
+  const { tc } = useLang()
   const [payments, setPayments] = useState<FailedPayment[]>([])
   const [stats, setStats] = useState<DunningStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [retrySchedule, setRetrySchedule] = useState('standard')
   const [filter, setFilter] = useState<'all' | 'failed' | 'retrying' | 'recovered' | 'abandoned'>('all')
   const [sendingReminder, setSendingReminder] = useState<string | null>(null)
+
+  const STATUS_COLORS = buildStatusColors(tc)
+  const FAILURE_REASONS = buildFailureReasons(tc)
+  const RETRY_SCHEDULES = buildRetrySchedules(tc)
+
+  function timeAgo(iso: string): string {
+    const diff = Date.now() - new Date(iso).getTime()
+    const h = Math.floor(diff / 3600000)
+    if (h < 1) return tc('pos_dunning.justNow')
+    if (h < 24) return tc('pos_dunning.hoursAgo').replace('{h}', String(h))
+    const d = Math.floor(h / 24)
+    return tc('pos_dunning.daysAgo').replace('{d}', String(d))
+  }
 
   const fetchData = useCallback(async () => {
     try {
@@ -91,7 +103,6 @@ export default function DunningRecovery({ currencySymbol: sym }: Props) {
         setPayments(data.payments || [])
         setStats(data.stats || null)
       } else {
-        // API doesn't exist yet — use demo data
         generateDemoData()
       }
     } catch {
@@ -159,10 +170,10 @@ export default function DunningRecovery({ currencySymbol: sym }: Props) {
       <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ width: 3, height: 14, borderRadius: 2, background: RED }} />
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>Payment Recovery</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('pos_dunning.title')}</span>
           {stats && stats.total_failed > 0 && (
             <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4, background: 'rgba(239,68,68,.08)', color: RED }}>
-              {stats.total_failed} failed · {fmt(stats.total_amount, sym)} at risk
+              {tc('pos_dunning.atRisk').replace('{count}', String(stats.total_failed)).replace('{amount}', fmt(stats.total_amount, sym))}
             </span>
           )}
         </div>
@@ -172,16 +183,16 @@ export default function DunningRecovery({ currencySymbol: sym }: Props) {
         {/* Stats row */}
         {stats && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--b)', borderRadius: 10, overflow: 'hidden', marginBottom: 16 }}>
-            <StatCell label="Failed" value={stats.total_failed.toString()} sub={fmt(stats.total_amount, sym)} color={RED} />
-            <StatCell label="Recovered" value={stats.recovered_count.toString()} sub={fmt(stats.recovered_amount, sym)} color={GREEN} />
-            <StatCell label="Recovery Rate" value={`${stats.recovery_rate.toFixed(0)}%`} sub="of failed payments" color={stats.recovery_rate >= 50 ? GREEN : AMBER} />
-            <StatCell label="Pending Retry" value={stats.pending_retry.toString()} sub="in queue" color={AMBER} />
+            <StatCell label={tc('pos_dunning.statFailed')} value={stats.total_failed.toString()} sub={fmt(stats.total_amount, sym)} color={RED} />
+            <StatCell label={tc('pos_dunning.statRecovered')} value={stats.recovered_count.toString()} sub={fmt(stats.recovered_amount, sym)} color={GREEN} />
+            <StatCell label={tc('pos_dunning.statRecoveryRate')} value={`${stats.recovery_rate.toFixed(0)}%`} sub={tc('pos_dunning.statRecoveryRateSub')} color={stats.recovery_rate >= 50 ? GREEN : AMBER} />
+            <StatCell label={tc('pos_dunning.statPendingRetry')} value={stats.pending_retry.toString()} sub={tc('pos_dunning.statPendingRetrySub')} color={AMBER} />
           </div>
         )}
 
         {/* Retry schedule selector */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, padding: '8px 12px', borderRadius: 8, background: 'var(--ev, #f9f9f8)' }}>
-          <span style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 600 }}>Auto-retry:</span>
+          <span style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 600 }}>{tc('pos_dunning.autoRetryLabel')}</span>
           <select value={retrySchedule} onChange={e => setRetrySchedule(e.target.value)}
             style={{ fontSize: 11, padding: '3px 6px', borderRadius: 5, border: '1px solid var(--b)', background: 'var(--sf)', fontFamily: 'inherit', color: 'var(--tx)' }}>
             {RETRY_SCHEDULES.map(s => (
@@ -201,14 +212,14 @@ export default function DunningRecovery({ currencySymbol: sym }: Props) {
                 color: filter === f ? INDIGO : 'var(--tx3)',
                 cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize',
               }}>
-              {f} {f !== 'all' ? `(${payments.filter(p => p.status === f).length})` : `(${payments.length})`}
+              {tc('pos_dunning.filter' + f.charAt(0).toUpperCase() + f.slice(1))} {f !== 'all' ? `(${payments.filter(p => p.status === f).length})` : `(${payments.length})`}
             </button>
           ))}
         </div>
 
         {/* Payment list */}
         {loading ? (
-          <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 12 }}>Loading...</div>
+          <div style={{ padding: 20, textAlign: 'center', color: 'var(--tx3)', fontSize: 12 }}>{tc('pos_dunning.loading')}</div>
         ) : !hasData ? (
           <div style={{ padding: '28px 16px', textAlign: 'center' }}>
             <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
@@ -216,9 +227,9 @@ export default function DunningRecovery({ currencySymbol: sym }: Props) {
                 <path d="M20 6L9 17l-5-5"/>
               </svg>
             </div>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 13, fontWeight: 600, color: GREEN, marginBottom: 4 }}>No failed payments</div>
+            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 13, fontWeight: 600, color: GREEN, marginBottom: 4 }}>{tc('pos_dunning.emptyTitle')}</div>
             <p style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5, margin: 0 }}>
-              All payments are processing successfully. Failed payments will appear here automatically for recovery.
+              {tc('pos_dunning.emptyBody')}
             </p>
           </div>
         ) : (
@@ -250,7 +261,7 @@ export default function DunningRecovery({ currencySymbol: sym }: Props) {
                       <div style={{ height: '100%', width: `${(payment.retry_count / payment.max_retries) * 100}%`, borderRadius: 2, background: sc.text, transition: 'width 300ms' }} />
                     </div>
                     <span style={{ fontSize: 9, color: 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>
-                      {payment.retry_count}/{payment.max_retries} retries
+                      {tc('pos_dunning.retryProgress').replace('{count}', String(payment.retry_count)).replace('{max}', String(payment.max_retries))}
                     </span>
                   </div>
 
@@ -259,23 +270,26 @@ export default function DunningRecovery({ currencySymbol: sym }: Props) {
                     <div style={{ display: 'flex', gap: 5 }}>
                       <button onClick={() => retryPayment(payment.id)}
                         style={{ fontSize: 10, fontWeight: 600, padding: '4px 10px', borderRadius: 6, border: 'none', background: INDIGO, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
-                        Retry Now
+                        {tc('pos_dunning.btnRetryNow')}
                       </button>
                       <button onClick={() => sendReminder(payment.id)}
                         style={{ fontSize: 10, fontWeight: 500, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx)', cursor: 'pointer', fontFamily: 'inherit' }}>
-                        {sendingReminder === payment.id ? 'Sent!' : 'Send Reminder'}
+                        {sendingReminder === payment.id ? tc('pos_dunning.btnReminderSent') : tc('pos_dunning.btnSendReminder')}
                       </button>
                       {payment.retry_count >= payment.max_retries && (
                         <button onClick={() => abandonPayment(payment.id)}
                           style={{ fontSize: 10, fontWeight: 500, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit' }}>
-                          Mark Lost
+                          {tc('pos_dunning.btnMarkLost')}
                         </button>
                       )}
                     </div>
                   )}
                   {payment.status === 'recovered' && payment.recovered_at && (
                     <div style={{ fontSize: 10, color: GREEN, fontWeight: 500 }}>
-                      Recovered {timeAgo(payment.recovered_at)} after {payment.retry_count} {payment.retry_count === 1 ? 'retry' : 'retries'}
+                      {tc('pos_dunning.recoveredLine')
+                        .replace('{when}', timeAgo(payment.recovered_at))
+                        .replace('{count}', String(payment.retry_count))
+                        .replace('{word}', payment.retry_count === 1 ? tc('pos_dunning.retryWord') : tc('pos_dunning.retriesWord'))}
                     </div>
                   )}
                 </div>
@@ -286,9 +300,9 @@ export default function DunningRecovery({ currencySymbol: sym }: Props) {
 
         {/* Recovery tips */}
         <div style={{ marginTop: 14, padding: '10px 12px', borderRadius: 8, background: 'rgba(99,102,241,.04)', border: '1px solid rgba(99,102,241,.12)' }}>
-          <div style={{ fontSize: 10, color: INDIGO, fontWeight: 600, marginBottom: 4 }}>Recovery tips</div>
+          <div style={{ fontSize: 10, color: INDIGO, fontWeight: 600, marginBottom: 4 }}>{tc('pos_dunning.tipsTitle')}</div>
           <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.6 }}>
-            Automated retries recover 30-40% of failed payments. SMS/WhatsApp reminders with a payment link recover an additional 15-20%. Most recoveries happen within the first 48 hours.
+            {tc('pos_dunning.tipsBody')}
           </div>
         </div>
       </div>

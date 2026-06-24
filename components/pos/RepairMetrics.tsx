@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#d08a59'
 const GREEN = '#16a34a'
@@ -29,6 +30,7 @@ function fmt(symbol: string, amount: number): string {
 }
 
 export default function RepairMetrics({ currencySymbol, selectedLocation }: Props) {
+  const { tc } = useLang()
   const [metrics, setMetrics] = useState<Metrics | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -92,29 +94,33 @@ export default function RepairMetrics({ currencySymbol, selectedLocation }: Prop
     padding: '14px 16px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)',
   }
 
+  const activeJobsSub = [
+    metrics.intake > 0 ? `${metrics.intake} ${tc('pos_repairmetrics.intake')}` : '',
+    metrics.in_progress > 0 ? `${metrics.in_progress} ${tc('pos_repairmetrics.inProgress')}` : '',
+    metrics.completed > 0 ? `${metrics.completed} ${tc('pos_repairmetrics.ready')}` : '',
+  ].filter(Boolean).join(' · ')
+
   return (
     <div style={{ marginBottom: 24 }}>
-      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 10 }}>Repair Services</div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 10 }}>{tc('pos_repairmetrics.sectionTitle')}</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
         <div style={cardStyle}>
-          <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Active jobs</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_repairmetrics.activeJobsLabel')}</div>
           <div style={{ fontSize: 22, fontWeight: 800, color: metrics.active_jobs > 0 ? ACC : 'var(--tx)' }}>{metrics.active_jobs}</div>
-          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>
-            {metrics.intake > 0 && `${metrics.intake} intake · `}{metrics.in_progress > 0 && `${metrics.in_progress} in progress · `}{metrics.completed > 0 && `${metrics.completed} ready`}
-          </div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{activeJobsSub}</div>
         </div>
         <div style={cardStyle}>
-          <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Collected today</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_repairmetrics.collectedTodayLabel')}</div>
           <div style={{ fontSize: 22, fontWeight: 800, color: metrics.collected_today > 0 ? GREEN : 'var(--tx)' }}>{metrics.collected_today}</div>
         </div>
         <div style={cardStyle}>
-          <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Repair revenue</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_repairmetrics.repairRevenueLabel')}</div>
           <div style={{ fontSize: 22, fontWeight: 800, color: metrics.revenue_today > 0 ? GREEN : 'var(--tx)' }}>{fmt(currencySymbol, metrics.revenue_today)}</div>
-          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>today</div>
+          <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 2 }}>{tc('pos_repairmetrics.repairRevenueSub')}</div>
         </div>
         {metrics.avg_turnaround_hours !== null && (
           <div style={cardStyle}>
-            <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Avg turnaround</div>
+            <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_repairmetrics.avgTurnaroundLabel')}</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: metrics.avg_turnaround_hours <= 24 ? GREEN : metrics.avg_turnaround_hours <= 72 ? AMBER : RED }}>
               {metrics.avg_turnaround_hours < 24 ? `${metrics.avg_turnaround_hours}h` : `${Math.round(metrics.avg_turnaround_hours / 24)}d`}
             </div>
@@ -122,7 +128,7 @@ export default function RepairMetrics({ currencySymbol, selectedLocation }: Prop
         )}
         {metrics.warranty_claims > 0 && (
           <div style={cardStyle}>
-            <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Warranty claims</div>
+            <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_repairmetrics.warrantyClaimsLabel')}</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: RED }}>{metrics.warranty_claims}</div>
           </div>
         )}

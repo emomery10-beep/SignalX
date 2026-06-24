@@ -1,0 +1,11 @@
+{
+  "title": "Zahlungswiederherstellung",
+  "askAi": "KI fragen",
+  "askPrompt": "Wir haben {failedCount} fehlgeschlagene Zahlungen mit einem Gesamtbetrag von {totalAmount}. Wir haben {recoveredAmount} wiederhergestellt (Rate: {recoveryRate}%). {pendingRetry} Zahlungen stehen zur erneuten Verarbeitung aus. Wie können wir unsere Wiederherstellungsrate verbessern?",
+  "atRisk": "Gefährdet",
+  "recovered": "Wiederhergestellt",
+  "recoveryRate": "Wiederherstellungsrate",
+  "failedPayments": "{n} fehlgeschlagene Zahlungen",
+  "payments": "{n} Zahlungen",
+  "pending": "{n} ausstehend"
+}

@@ -1,0 +1,13 @@
+{
+  "title": "Acties van vandaag",
+  "urgentBadge": "{n} urgent",
+  "actionCount": "{n} actie",
+  "actionCountPlural": "{n} acties",
+  "askAi": "Vraag AI",
+  "dismiss": "Sluiten",
+  "viewAll": "Bekijk alle {n} acties →",
+  "priorityNow": "Nu",
+  "priorityToday": "Vandaag",
+  "priorityThisWeek": "Deze week",
+  "askActionPrompt": "Help me met deze actie: {title}. Context: {why}"
+}

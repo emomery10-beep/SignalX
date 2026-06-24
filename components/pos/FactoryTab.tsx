@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useMemo, useCallback, Fragment } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 // ── Color constants ──────────────────────────────────────────
 const GREEN = '#16a34a'
@@ -144,18 +145,22 @@ const TYPE_STYLE: Record<CaptureType, { bg: string; text: string; label: string 
 }
 
 function StatusBadge({ status }: { status: CaptureStatus }) {
+  const { tc } = useLang()
   const s = STATUS_STYLE[status] || STATUS_STYLE.pending
+  const label = tc('pos_factory.status' + (status === 'pending' ? 'Pending' : status === 'approved' ? 'Approved' : 'Rejected'))
   return (
     <span style={{ fontSize: 11, fontWeight: 700, color: s.text, background: s.bg, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-      {s.label}
+      {label}
     </span>
   )
 }
 function TypeBadge({ type }: { type: CaptureType }) {
+  const { tc } = useLang()
   const s = TYPE_STYLE[type] || TYPE_STYLE.intake
+  const label = tc('pos_factory.type' + (type === 'intake' ? 'Intake' : type === 'output' ? 'Output' : type === 'wastage' ? 'Wastage' : 'Dispatch'))
   return (
     <span style={{ fontSize: 11, fontWeight: 700, color: s.text, background: s.bg, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-      {s.label}
+      {label}
     </span>
   )
 }
@@ -209,6 +214,7 @@ function EmptyState({ icon, title, hint }: { icon: string; title: string; hint?:
 
 // ── SVG: combined output bars + wastage overlay line ─────────
 function OutputBarChart({ days, currencySymbol }: { days: { key: string; output: number; wastage: number }[]; currencySymbol: string }) {
+  const { tc } = useLang()
   const W = 760, H = 220, padL = 36, padR = 16, padT = 16, padB = 28
   const innerW = W - padL - padR, innerH = H - padT - padB
   const maxOut = Math.max(1, ...days.map(d => d.output))
@@ -250,8 +256,8 @@ function OutputBarChart({ days, currencySymbol }: { days: { key: string; output:
         })}
       </svg>
       <div style={{ display: 'flex', gap: 16, fontSize: 11, color: 'var(--tx3)', marginTop: 4 }}>
-        <span><span style={{ display: 'inline-block', width: 10, height: 10, background: ACC, borderRadius: 2, marginRight: 4 }} />Units produced</span>
-        <span><span style={{ display: 'inline-block', width: 10, height: 2, background: RED, marginRight: 4, verticalAlign: 'middle' }} />Wastage (units)</span>
+        <span><span style={{ display: 'inline-block', width: 10, height: 10, background: ACC, borderRadius: 2, marginRight: 4 }} />{tc('pos_factory.unitsProduced')}</span>
+        <span><span style={{ display: 'inline-block', width: 10, height: 2, background: RED, marginRight: 4, verticalAlign: 'middle' }} />{tc('pos_factory.wastageUnits')}</span>
       </div>
     </div>
   )
@@ -261,8 +267,9 @@ function OutputBarChart({ days, currencySymbol }: { days: { key: string; output:
 function HBarChart({ data, color, currencySymbol, valueIsMoney }: {
   data: { label: string; value: number }[]; color: string; currencySymbol: string; valueIsMoney?: boolean
 }) {
+  const { tc } = useLang()
   const max = Math.max(1, ...data.map(d => d.value))
-  if (data.length === 0) return <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No data</div>
+  if (data.length === 0) return <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noData')}</div>
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {data.map(d => (
@@ -284,10 +291,11 @@ function HBarChart({ data, color, currencySymbol, valueIsMoney }: {
 function LineChart({ points, color, yLabel, formatY }: {
   points: { label: string; value: number }[]; color: string; yLabel?: string; formatY?: (n: number) => string
 }) {
+  const { tc } = useLang()
   const W = 760, H = 200, padL = 40, padR = 16, padT = 16, padB = 28
   const innerW = W - padL - padR, innerH = H - padT - padB
   const max = Math.max(1, ...points.map(p => p.value))
-  if (points.length === 0) return <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No data</div>
+  if (points.length === 0) return <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noData')}</div>
   const step = innerW / Math.max(1, points.length - 1)
   const poly = points.map((p, i) => {
     const x = padL + i * step
@@ -328,8 +336,9 @@ function LineChart({ points, color, yLabel, formatY }: {
 
 // ── SVG: pie chart (cost breakdown) ──────────────────────────
 function PieChart({ slices, currencySymbol }: { slices: { label: string; value: number; color: string }[]; currencySymbol: string }) {
+  const { tc } = useLang()
   const total = slices.reduce((s, x) => s + x.value, 0)
-  if (total <= 0) return <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No cost data</div>
+  if (total <= 0) return <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noCostData')}</div>
   const R = 80, C = 100
   let acc = 0
   const arcs = slices.map(s => {
@@ -386,6 +395,7 @@ const tdStyle: React.CSSProperties = { padding: '8px 10px', fontSize: 13, border
 // MAIN COMPONENT
 // ═════════════════════════════════════════════════════════════
 export default function FactoryTab({ currencySymbol, selectedLocation, transactions, staff, inventory, previewCaptures }: FactoryTabProps) {
+  const { tc } = useLang()
   const [subTab, setSubTab] = useState<SubTab>('overview')
   const [captures, setCaptures] = useState<FactoryCapture[]>([])
   const [loading, setLoading] = useState(true)
@@ -496,12 +506,12 @@ export default function FactoryTab({ currencySymbol, selectedLocation, transacti
 
   // ═══════════════════ SUB-TAB BAR ════════════════════════════
   const subTabs: { id: SubTab; label: string }[] = [
-    { id: 'overview', label: 'Overview' },
-    { id: 'production', label: 'Production' },
-    { id: 'quality', label: 'Quality' },
-    { id: 'inventory', label: 'Inventory' },
-    { id: 'dispatch', label: 'Dispatch' },
-    { id: 'costing', label: 'Costing' },
+    { id: 'overview', label: tc('pos_factory.tabOverview') },
+    { id: 'production', label: tc('pos_factory.tabProduction') },
+    { id: 'quality', label: tc('pos_factory.tabQuality') },
+    { id: 'inventory', label: tc('pos_factory.tabInventory') },
+    { id: 'dispatch', label: tc('pos_factory.tabDispatch') },
+    { id: 'costing', label: tc('pos_factory.tabCosting') },
   ]
 
   // ═══════════════════ RENDER ════════════════════════════════
@@ -510,10 +520,10 @@ export default function FactoryTab({ currencySymbol, selectedLocation, transacti
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
         <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, flex: 1 }}>
-          <span style={{ marginRight: 8 }}>🏭</span>Factory Analytics
+          <span style={{ marginRight: 8 }}>🏭</span>{tc('pos_factory.factoryAnalytics')}
         </div>
         <button onClick={fetchCaptures} style={{ padding: '8px 16px', borderRadius: 10, background: 'transparent', color: 'var(--tx)', fontSize: 13, fontWeight: 600, border: `1px solid ${ACC_BORDER}`, cursor: 'pointer', fontFamily: 'inherit' }}>
-          ↻ Refresh
+          {tc('pos_factory.refresh')}
         </button>
       </div>
 
@@ -533,7 +543,7 @@ export default function FactoryTab({ currencySymbol, selectedLocation, transacti
       </div>
 
       {loading ? (
-        <div style={{ fontSize: 13, color: 'var(--tx3)', padding: 20 }}>Loading factory data...</div>
+        <div style={{ fontSize: 13, color: 'var(--tx3)', padding: 20 }}>{tc('pos_factory.loadingFactoryData')}</div>
       ) : (
         <>
           {subTab === 'overview' && (
@@ -583,6 +593,7 @@ function OverviewView(props: {
   kpiFocus: string | null; focusKpi: (k: string, t?: SubTab) => void
   captures: FactoryCapture[]
 }) {
+  const { tc } = useLang()
   const { currencySymbol, unitsToday, wastagePct, dispatchCount, pendingCount, efficiency, salesRevenue, dailySeries, statusBreakdown, kpiFocus, focusKpi, captures } = props
   const totalStatus = statusBreakdown.pending + statusBreakdown.approved + statusBreakdown.rejected
   const periodOutput = dailySeries.reduce((s, d) => s + d.output, 0)
@@ -592,40 +603,40 @@ function OverviewView(props: {
     <div>
       {/* 6 KPI cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
-        <KpiCard label="Units Produced Today" value={fmtInt(unitsToday)} sub="from output captures" accent={ACC} onClick={() => focusKpi('output', 'production')} active={kpiFocus === 'output'} />
-        <KpiCard label="Wastage %" value={pct(wastagePct)} sub="of total output" accent={wastagePct > 5 ? RED : GREEN} onClick={() => focusKpi('wastage', 'quality')} active={kpiFocus === 'wastage'} />
-        <KpiCard label="Dispatch Count" value={fmtInt(dispatchCount)} sub="shipments logged" accent="#a855f7" onClick={() => focusKpi('dispatch', 'dispatch')} active={kpiFocus === 'dispatch'} />
-        <KpiCard label="Pending Approvals" value={fmtInt(pendingCount)} sub="awaiting sign-off" accent={pendingCount > 0 ? AMBER : GREEN} onClick={() => focusKpi('pending', 'production')} active={kpiFocus === 'pending'} />
-        <KpiCard label="Production Efficiency" value={pct(efficiency)} sub="output ÷ intake" accent={efficiency >= 80 ? GREEN : AMBER} onClick={() => focusKpi('efficiency', 'costing')} active={kpiFocus === 'efficiency'} />
-        <KpiCard label="Revenue from Sales" value={fmt(currencySymbol, salesRevenue)} sub="all transactions" accent={GREEN} />
+        <KpiCard label={tc('pos_factory.unitsTodayLabel')} value={fmtInt(unitsToday)} sub={tc('pos_factory.fromOutputCaptures')} accent={ACC} onClick={() => focusKpi('output', 'production')} active={kpiFocus === 'output'} />
+        <KpiCard label={tc('pos_factory.wastagePctLabel')} value={pct(wastagePct)} sub={tc('pos_factory.ofTotalOutput')} accent={wastagePct > 5 ? RED : GREEN} onClick={() => focusKpi('wastage', 'quality')} active={kpiFocus === 'wastage'} />
+        <KpiCard label={tc('pos_factory.dispatchCountLabel')} value={fmtInt(dispatchCount)} sub={tc('pos_factory.shipmentsLogged')} accent="#a855f7" onClick={() => focusKpi('dispatch', 'dispatch')} active={kpiFocus === 'dispatch'} />
+        <KpiCard label={tc('pos_factory.pendingApprovalsLabel')} value={fmtInt(pendingCount)} sub={tc('pos_factory.awaitingSignOff')} accent={pendingCount > 0 ? AMBER : GREEN} onClick={() => focusKpi('pending', 'production')} active={kpiFocus === 'pending'} />
+        <KpiCard label={tc('pos_factory.productionEfficiencyLabel')} value={pct(efficiency)} sub={tc('pos_factory.outputDivIntake')} accent={efficiency >= 80 ? GREEN : AMBER} onClick={() => focusKpi('efficiency', 'costing')} active={kpiFocus === 'efficiency'} />
+        <KpiCard label={tc('pos_factory.revenueFromSalesLabel')} value={fmt(currencySymbol, salesRevenue)} sub={tc('pos_factory.allTransactions')} accent={GREEN} />
       </div>
 
       {/* Daily output + wastage chart */}
-      <Section title="Daily Output (last 30 days)" right={<span style={{ fontSize: 12, color: 'var(--tx3)' }}>{fmtInt(periodOutput)} units total</span>}>
+      <Section title={tc('pos_factory.dailyOutputTitle')} right={<span style={{ fontSize: 12, color: 'var(--tx3)' }}>{fmtInt(periodOutput)} units total</span>}>
         {periodOutput === 0 ? (
-          <EmptyState icon="📊" title="No production logged yet" hint="Output captures from the factory floor will appear here once recorded." />
+          <EmptyState icon="📊" title={tc('pos_factory.noProductionTitle')} hint={tc('pos_factory.noProductionHint')} />
         ) : (
           <OutputBarChart days={dailySeries} currencySymbol={currencySymbol} />
         )}
       </Section>
 
       {/* Production vs Dispatch */}
-      <Section title="Production vs Dispatch">
+      <Section title={tc('pos_factory.productionVsDispatch')}>
         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ flex: 1, minWidth: 200 }}>
             <HBarChart
-              data={[{ label: 'Produced', value: periodOutput }, { label: 'Dispatched', value: periodDispatch }]}
+              data={[{ label: tc('pos_factory.produced'), value: periodOutput }, { label: tc('pos_factory.dispatched'), value: periodDispatch }]}
               color={ACC} currencySymbol={currencySymbol}
             />
           </div>
           <div style={{ minWidth: 200 }}>
             {periodOutput >= periodDispatch ? (
               <div style={{ fontSize: 13, color: 'var(--tx2)' }}>
-                Producing <strong style={{ color: ACC }}>{fmtInt(periodOutput - periodDispatch)}</strong> more units than shipping — inventory is building up.
+                {tc('pos_factory.producingMore', { n: fmtInt(periodOutput - periodDispatch) })}
               </div>
             ) : (
               <div style={{ fontSize: 13, color: 'var(--tx2)' }}>
-                Shipping <strong style={{ color: RED }}>{fmtInt(periodDispatch - periodOutput)}</strong> more than produced — drawing down stock.
+                {tc('pos_factory.shippingMore', { n: fmtInt(periodDispatch - periodOutput) })}
               </div>
             )}
           </div>
@@ -633,16 +644,16 @@ function OverviewView(props: {
       </Section>
 
       {/* Work status breakdown */}
-      <Section title="Work Status Breakdown">
+      <Section title={tc('pos_factory.workStatusBreakdown')}>
         {totalStatus === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No captures recorded.</div>
+          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noCapturesRecorded')}</div>
         ) : (
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             {(['approved', 'pending', 'rejected'] as CaptureStatus[]).map(s => (
               <div key={s} style={{ flex: 1, minWidth: 140, padding: 14, borderRadius: 10, background: 'var(--ev)', border: '1px solid var(--b)' }}>
                 <div style={{ marginBottom: 6 }}><StatusBadge status={s} /></div>
                 <div style={{ fontSize: 22, fontWeight: 800, fontFamily: 'var(--font-sora)' }}>{statusBreakdown[s]}</div>
-                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{pct((statusBreakdown[s] / totalStatus) * 100)} of all</div>
+                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{pct((statusBreakdown[s] / totalStatus) * 100)} {tc('pos_factory.ofAll')}</div>
               </div>
             ))}
           </div>
@@ -658,6 +669,7 @@ function OverviewView(props: {
 function ProductionView({ captures, staffName, currencySymbol }: {
   captures: FactoryCapture[]; staffName: (id?: string | null) => string | null; currencySymbol: string
 }) {
+  const { tc } = useLang()
   const [typeFilter, setTypeFilter] = useState<'all' | 'intake' | 'output'>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | CaptureStatus>('all')
   const [productFilter, setProductFilter] = useState('')
@@ -754,24 +766,28 @@ function ProductionView({ captures, staffName, currencySymbol }: {
   return (
     <div>
       {/* Filters */}
-      <Section title="Production Log">
+      <Section title={tc('pos_factory.productionLog')}>
         <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
           {(['all', 'intake', 'output'] as const).map(t => (
-            <button key={t} onClick={() => setTypeFilter(t)} style={filterBtn(typeFilter === t)}>{t === 'all' ? 'All Types' : TYPE_STYLE[t].label}</button>
+            <button key={t} onClick={() => setTypeFilter(t)} style={filterBtn(typeFilter === t)}>
+              {t === 'all' ? tc('pos_factory.allTypes') : tc('pos_factory.type' + (t === 'intake' ? 'Intake' : 'Output'))}
+            </button>
           ))}
           <span style={{ width: 1, background: 'var(--b)', margin: '0 4px' }} />
           {(['all', 'approved', 'pending', 'rejected'] as const).map(s => (
-            <button key={s} onClick={() => setStatusFilter(s)} style={filterBtn(statusFilter === s)}>{s === 'all' ? 'All Status' : STATUS_STYLE[s].label}</button>
+            <button key={s} onClick={() => setStatusFilter(s)} style={filterBtn(statusFilter === s)}>
+              {s === 'all' ? tc('pos_factory.allStatus') : tc('pos_factory.status' + (s === 'pending' ? 'Pending' : s === 'approved' ? 'Approved' : 'Rejected'))}
+            </button>
           ))}
         </div>
         <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search product..." style={{ ...inputStyle, flex: 1, minWidth: 160 }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={tc('pos_factory.searchProductPlaceholder')} style={{ ...inputStyle, flex: 1, minWidth: 160 }} />
           <select value={productFilter} onChange={e => setProductFilter(e.target.value)} style={inputStyle}>
-            <option value="">All products</option>
+            <option value="">{tc('pos_factory.allProducts')}</option>
             {products.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
           <select value={operatorFilter} onChange={e => setOperatorFilter(e.target.value)} style={inputStyle}>
-            <option value="all">All operators</option>
+            <option value="all">{tc('pos_factory.allOperators')}</option>
             {operators.map(o => <option key={o} value={o}>{o}</option>)}
           </select>
           <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} style={inputStyle} />
@@ -779,20 +795,20 @@ function ProductionView({ captures, staffName, currencySymbol }: {
         </div>
 
         {filtered.length === 0 ? (
-          <EmptyState icon="🛠️" title="No production records" hint="Adjust filters or record intake/output captures on the factory floor." />
+          <EmptyState icon="🛠️" title={tc('pos_factory.noProductionRecords')} hint={tc('pos_factory.noProductionRecordsHint')} />
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
               <thead>
                 <tr>
-                  <Th label="Date" col="created_at" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
-                  <Th label="Type" col="type" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
-                  <Th label="Product" col="product" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
-                  <Th label="Qty" col="quantity" sortCol={sortCol} sortDir={sortDir} onSort={onSort} align="right" />
-                  <Th label="Unit" />
-                  <Th label="Operator" />
-                  <Th label="Status" col="status" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
-                  <Th label="Notes" />
+                  <Th label={tc('pos_factory.colDate')} col="created_at" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <Th label={tc('pos_factory.colType')} col="type" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <Th label={tc('pos_factory.colProduct')} col="product" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <Th label={tc('pos_factory.colQty')} col="quantity" sortCol={sortCol} sortDir={sortDir} onSort={onSort} align="right" />
+                  <Th label={tc('pos_factory.colUnit')} />
+                  <Th label={tc('pos_factory.colOperator')} />
+                  <Th label={tc('pos_factory.colStatus')} col="status" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                  <Th label={tc('pos_factory.colNotes')} />
                 </tr>
               </thead>
               <tbody>
@@ -816,19 +832,19 @@ function ProductionView({ captures, staffName, currencySymbol }: {
                           <td colSpan={8} style={{ padding: 14, background: 'var(--ev)', borderBottom: '1px solid var(--b)' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                               <div>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', marginBottom: 4 }}>DETAILS</div>
-                                <div style={{ fontSize: 13 }}>Captured: {fullDateTime(c.created_at)}</div>
-                                <div style={{ fontSize: 13 }}>Type: {TYPE_STYLE[c.type].label} · Status: {STATUS_STYLE[c.status].label}</div>
-                                <div style={{ fontSize: 13 }}>Quantity: {fmtInt(Number(c.quantity) || 0)} {c.unit || ''}</div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_factory.detailsLabel')}</div>
+                                <div style={{ fontSize: 13 }}>{tc('pos_factory.capturedLabel')} {fullDateTime(c.created_at)}</div>
+                                <div style={{ fontSize: 13 }}>{tc('pos_factory.typeLabel')} {tc('pos_factory.type' + (c.type === 'intake' ? 'Intake' : c.type === 'output' ? 'Output' : c.type === 'wastage' ? 'Wastage' : 'Dispatch'))} · {tc('pos_factory.statusLabel')} {tc('pos_factory.status' + (c.status === 'pending' ? 'Pending' : c.status === 'approved' ? 'Approved' : 'Rejected'))}</div>
+                                <div style={{ fontSize: 13 }}>{tc('pos_factory.quantityLabel')} {fmtInt(Number(c.quantity) || 0)} {c.unit || ''}</div>
                                 {c.notes && <div style={{ fontSize: 13, marginTop: 6, color: 'var(--tx2)' }}>{c.notes}</div>}
                               </div>
                               <div>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', marginBottom: 4 }}>APPROVAL</div>
-                                <div style={{ fontSize: 13 }}>{c.approved_by ? `Approved by ${staffName(c.approved_by) || c.approved_by}` : 'Not yet approved'}</div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', marginBottom: 4 }}>{tc('pos_factory.approvalLabel')}</div>
+                                <div style={{ fontSize: 13 }}>{c.approved_by ? tc('pos_factory.approvedBy', { name: staffName(c.approved_by) || c.approved_by }) : tc('pos_factory.notYetApproved')}</div>
                                 {c.photos && c.photos.length > 0 && (
                                   <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
                                     {c.photos.map((p, i) => (
-                                      <img key={i} src={p} alt={`capture ${i + 1}`} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--b)' }} />
+                                      <img key={i} src={p} alt={tc('pos_factory.capturePhoto', { n: i + 1 })} style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--b)' }} />
                                     ))}
                                   </div>
                                 )}
@@ -847,14 +863,14 @@ function ProductionView({ captures, staffName, currencySymbol }: {
       </Section>
 
       {/* Yield per product */}
-      <Section title="Yield by Product (output ÷ intake)">
+      <Section title={tc('pos_factory.yieldByProduct')}>
         {yields.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Record both intake and output captures to compute yield.</div>
+          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noYieldData')}</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 480 }}>
               <thead><tr>
-                <Th label="Product" /><Th label="Intake" align="right" /><Th label="Output" align="right" /><Th label="Yield" align="right" />
+                <Th label={tc('pos_factory.colProduct')} /><Th label={tc('pos_factory.colIntake')} align="right" /><Th label={tc('pos_factory.colOutput')} align="right" /><Th label={tc('pos_factory.colYield')} align="right" />
               </tr></thead>
               <tbody>
                 {yields.map(y => (
@@ -872,14 +888,14 @@ function ProductionView({ captures, staffName, currencySymbol }: {
       </Section>
 
       {/* Batch tracking */}
-      <Section title="Batch Tracking (by date & product)">
+      <Section title={tc('pos_factory.batchTrackingTitle')}>
         {batches.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No batches yet.</div>
+          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noBatches')}</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
               <thead><tr>
-                <Th label="Date" /><Th label="Product" /><Th label="Captures" align="right" /><Th label="Intake" align="right" /><Th label="Output" align="right" /><Th label="Yield" align="right" />
+                <Th label={tc('pos_factory.colDate')} /><Th label={tc('pos_factory.colProduct')} /><Th label={tc('pos_factory.colCaptures')} align="right" /><Th label={tc('pos_factory.colIntake')} align="right" /><Th label={tc('pos_factory.colOutput')} align="right" /><Th label={tc('pos_factory.colYield')} align="right" />
               </tr></thead>
               <tbody>
                 {batches.map(b => {
@@ -911,6 +927,7 @@ function QualityView({ captures, wastages, costForCapture, totalWaste, currencyS
   captures: FactoryCapture[]; wastages: FactoryCapture[]; costForCapture: (c: FactoryCapture) => number
   totalWaste: number; currencySymbol: string; staffName: (id?: string | null) => string | null
 }) {
+  const { tc } = useLang()
   const totalCaptures = captures.length
   const rejected = useMemo(() => captures.filter(c => c.status === 'rejected'), [captures])
   const rejectionRate = totalCaptures > 0 ? (rejected.length / totalCaptures) * 100 : 0
@@ -950,40 +967,40 @@ function QualityView({ captures, wastages, costForCapture, totalWaste, currencyS
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
-        <KpiCard label="Rejection Rate" value={pct(rejectionRate)} sub={`${rejected.length} of ${totalCaptures} captures`} accent={rejectionRate > 5 ? RED : GREEN} />
-        <KpiCard label="First Pass Yield" value={pct(firstPassYield)} sub="approved on first decision" accent={firstPassYield >= 90 ? GREEN : AMBER} />
-        <KpiCard label="Total Wastage" value={fmtInt(totalWaste)} sub="units wasted" accent={RED} />
-        <KpiCard label="Cost of Waste" value={fmt(currencySymbol, costOfWaste)} sub="wasted material value" accent={RED} />
+        <KpiCard label={tc('pos_factory.rejectionRateLabel')} value={pct(rejectionRate)} sub={tc('pos_factory.rejectionRateSub', { rejected: rejected.length, total: totalCaptures })} accent={rejectionRate > 5 ? RED : GREEN} />
+        <KpiCard label={tc('pos_factory.firstPassYieldLabel')} value={pct(firstPassYield)} sub={tc('pos_factory.approvedFirstDecision')} accent={firstPassYield >= 90 ? GREEN : AMBER} />
+        <KpiCard label={tc('pos_factory.totalWastageLabel')} value={fmtInt(totalWaste)} sub={tc('pos_factory.unitsWasted')} accent={RED} />
+        <KpiCard label={tc('pos_factory.costOfWasteLabel')} value={fmt(currencySymbol, costOfWaste)} sub={tc('pos_factory.wastedMaterialValue')} accent={RED} />
       </div>
 
-      <Section title="Wastage by Product">
+      <Section title={tc('pos_factory.wastageByProduct')}>
         <HBarChart data={wasteByProduct} color={RED} currencySymbol={currencySymbol} />
       </Section>
 
-      <Section title="Wastage by Reason">
+      <Section title={tc('pos_factory.wastageByReason')}>
         {wasteByReason.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No wastage recorded.</div>
+          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noWastageRecorded')}</div>
         ) : (
           <HBarChart data={wasteByReason} color={AMBER} currencySymbol={currencySymbol} />
         )}
       </Section>
 
-      <Section title="Rejection Rate Trend (weekly)">
+      <Section title={tc('pos_factory.rejectionRateTrend')}>
         {rejectionTrend.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Not enough data for a trend yet.</div>
+          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.notEnoughTrendData')}</div>
         ) : (
-          <LineChart points={rejectionTrend} color={RED} yLabel="% rejected per week" formatY={(n) => pct(n)} />
+          <LineChart points={rejectionTrend} color={RED} yLabel={tc('pos_factory.pctRejectedPerWeek')} formatY={(n) => pct(n)} />
         )}
       </Section>
 
-      <Section title="Non-Conformance Log (rejected captures)">
+      <Section title={tc('pos_factory.nonConformanceLog')}>
         {rejected.length === 0 ? (
-          <EmptyState icon="✅" title="No rejections" hint="All recorded captures have passed quality checks." />
+          <EmptyState icon="✅" title={tc('pos_factory.noRejectionsTitle')} hint={tc('pos_factory.noRejectionsHint')} />
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 640 }}>
               <thead><tr>
-                <Th label="Date" /><Th label="Type" /><Th label="Product" /><Th label="Qty" align="right" /><Th label="Reason" /><Th label="Corrective Action" />
+                <Th label={tc('pos_factory.colDate')} /><Th label={tc('pos_factory.colType')} /><Th label={tc('pos_factory.colProduct')} /><Th label={tc('pos_factory.colQty')} align="right" /><Th label={tc('pos_factory.colReason')} /><Th label={tc('pos_factory.colCorrectiveAction')} />
               </tr></thead>
               <tbody>
                 {rejected.map(c => (
@@ -993,7 +1010,7 @@ function QualityView({ captures, wastages, costForCapture, totalWaste, currencyS
                     <td style={{ ...tdStyle, fontWeight: 600 }}>{c.product || '—'}</td>
                     <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtInt(Number(c.quantity) || 0)}</td>
                     <td style={{ ...tdStyle, color: 'var(--tx2)' }}>{c.notes || wasteReason(c.notes)}</td>
-                    <td style={{ ...tdStyle, color: 'var(--tx3)' }}>{c.approved_by ? `Reviewed by ${staffName(c.approved_by) || c.approved_by}` : 'Pending review'}</td>
+                    <td style={{ ...tdStyle, color: 'var(--tx3)' }}>{c.approved_by ? tc('pos_factory.reviewedBy', { name: staffName(c.approved_by) || c.approved_by }) : tc('pos_factory.pendingReview')}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1011,6 +1028,7 @@ function QualityView({ captures, wastages, costForCapture, totalWaste, currencyS
 function InventoryView({ inv, intakes, currencySymbol }: {
   inv: InventoryItem[]; intakes: FactoryCapture[]; currencySymbol: string
 }) {
+  const { tc } = useLang()
   const [sortCol, setSortCol] = useState('name')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
   const onSort = (c: string) => {
@@ -1061,41 +1079,41 @@ function InventoryView({ inv, intakes, currencySymbol }: {
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
-        <KpiCard label="Stock Value (at cost)" value={fmt(currencySymbol, stockValue)} sub={`${rows.length} items`} accent={ACC} />
-        <KpiCard label="Raw Materials Value" value={fmt(currencySymbol, rawValue)} sub="raw inventory" accent="#3b82f6" />
-        <KpiCard label="Finished Goods Value" value={fmt(currencySymbol, finishedValue)} sub="finished inventory" accent={GREEN} />
-        <KpiCard label="Low Stock Items" value={fmtInt(lowStock.length)} sub="at/below reorder point" accent={lowStock.length > 0 ? RED : GREEN} />
+        <KpiCard label={tc('pos_factory.stockValueLabel')} value={fmt(currencySymbol, stockValue)} sub={tc('pos_factory.itemsCount', { n: rows.length })} accent={ACC} />
+        <KpiCard label={tc('pos_factory.rawMaterialsValueLabel')} value={fmt(currencySymbol, rawValue)} sub={tc('pos_factory.rawInventory')} accent="#3b82f6" />
+        <KpiCard label={tc('pos_factory.finishedGoodsValueLabel')} value={fmt(currencySymbol, finishedValue)} sub={tc('pos_factory.finishedInventory')} accent={GREEN} />
+        <KpiCard label={tc('pos_factory.lowStockItemsLabel')} value={fmtInt(lowStock.length)} sub={tc('pos_factory.atBelowReorderPoint')} accent={lowStock.length > 0 ? RED : GREEN} />
       </div>
 
       {lowStock.length > 0 && (
-        <Section title="Reorder Suggestions">
+        <Section title={tc('pos_factory.reorderSuggestions')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {lowStock.map(r => (
               <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, background: 'rgba(220,38,38,.06)', border: `1px solid ${RED}33` }}>
                 <span style={{ fontSize: 16 }}>⚠️</span>
                 <div style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{r.name}</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{fmtInt(r.qty)} {r.unit} left · reorder at {fmtInt(r.reorder)}</div>
+                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('pos_factory.reorderHint', { qty: fmtInt(r.qty), unit: r.unit, reorder: fmtInt(r.reorder) })}</div>
               </div>
             ))}
           </div>
         </Section>
       )}
 
-      <Section title="Inventory (raw materials & finished goods)">
+      <Section title={tc('pos_factory.inventoryTitle')}>
         {rows.length === 0 ? (
-          <EmptyState icon="📦" title="No inventory items" hint="Inventory items will appear here once added to the catalogue." />
+          <EmptyState icon="📦" title={tc('pos_factory.noInventoryTitle')} hint={tc('pos_factory.noInventoryHint')} />
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>
               <thead><tr>
-                <Th label="Name" col="name" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
-                <Th label="Category" col="category" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
-                <Th label="Stock" col="qty" sortCol={sortCol} sortDir={sortDir} onSort={onSort} align="right" />
-                <Th label="Unit" />
-                <Th label="Cost" col="cost" sortCol={sortCol} sortDir={sortDir} onSort={onSort} align="right" />
-                <Th label="Value" col="value" sortCol={sortCol} sortDir={sortDir} onSort={onSort} align="right" />
-                <Th label="Reorder" col="reorder" sortCol={sortCol} sortDir={sortDir} onSort={onSort} align="right" />
-                <Th label="Days of Stock" col="daysOfStock" sortCol={sortCol} sortDir={sortDir} onSort={onSort} align="right" />
+                <Th label={tc('pos_factory.colName')} col="name" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                <Th label={tc('pos_factory.colCategory')} col="category" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                <Th label={tc('pos_factory.colStock')} col="qty" sortCol={sortCol} sortDir={sortDir} onSort={onSort} align="right" />
+                <Th label={tc('pos_factory.colUnit')} />
+                <Th label={tc('pos_factory.colCost')} col="cost" sortCol={sortCol} sortDir={sortDir} onSort={onSort} align="right" />
+                <Th label={tc('pos_factory.colValue')} col="value" sortCol={sortCol} sortDir={sortDir} onSort={onSort} align="right" />
+                <Th label={tc('pos_factory.colReorder')} col="reorder" sortCol={sortCol} sortDir={sortDir} onSort={onSort} align="right" />
+                <Th label={tc('pos_factory.colDaysOfStock')} col="daysOfStock" sortCol={sortCol} sortDir={sortDir} onSort={onSort} align="right" />
               </tr></thead>
               <tbody>
                 {rows.map(r => (
@@ -1127,6 +1145,7 @@ function InventoryView({ inv, intakes, currencySymbol }: {
 function DispatchView({ dispatches, staffName, currencySymbol }: {
   dispatches: FactoryCapture[]; staffName: (id?: string | null) => string | null; currencySymbol: string
 }) {
+  const { tc } = useLang()
   const [sortCol, setSortCol] = useState('created_at')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const onSort = (c: string) => {
@@ -1165,15 +1184,15 @@ function DispatchView({ dispatches, staffName, currencySymbol }: {
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
-        <KpiCard label="Total Shipments" value={fmtInt(dispatches.length)} sub="dispatch captures" accent="#a855f7" />
-        <KpiCard label="Units Dispatched" value={fmtInt(totalDispatched)} sub="across all shipments" accent={ACC} />
-        <KpiCard label="Pending Dispatches" value={fmtInt(pending.length)} sub="awaiting approval" accent={pending.length > 0 ? AMBER : GREEN} />
-        <KpiCard label="On-Time Rate" value="—" sub="tracking coming soon" accent="var(--tx3)" />
+        <KpiCard label={tc('pos_factory.totalShipmentsLabel')} value={fmtInt(dispatches.length)} sub={tc('pos_factory.dispatchCaptures')} accent="#a855f7" />
+        <KpiCard label={tc('pos_factory.unitsDispatchedLabel')} value={fmtInt(totalDispatched)} sub={tc('pos_factory.acrossAllShipments')} accent={ACC} />
+        <KpiCard label={tc('pos_factory.pendingDispatchesLabel')} value={fmtInt(pending.length)} sub={tc('pos_factory.awaitingApproval')} accent={pending.length > 0 ? AMBER : GREEN} />
+        <KpiCard label={tc('pos_factory.onTimeRateLabel')} value="—" sub={tc('pos_factory.trackingComingSoon')} accent="var(--tx3)" />
       </div>
 
-      <Section title="Dispatch Volume (weekly)">
+      <Section title={tc('pos_factory.dispatchVolumeWeekly')}>
         {weekly.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No dispatches recorded.</div>
+          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noDispatchesRecorded')}</div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 160, padding: '0 4px' }}>
             {weekly.map(w => (
@@ -1188,33 +1207,33 @@ function DispatchView({ dispatches, staffName, currencySymbol }: {
       </Section>
 
       {pending.length > 0 && (
-        <Section title="Pending Dispatches">
+        <Section title={tc('pos_factory.pendingDispatchesTitle')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {pending.map(d => (
               <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, background: ACC_BG, border: `1px solid ${ACC_BORDER}` }}>
                 <span style={{ fontSize: 14 }}>⏳</span>
                 <div style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{d.product || 'Unknown'} — {fmtInt(Number(d.quantity) || 0)} {d.unit || ''}</div>
-                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{d.destination || d.notes || 'No destination'}</div>
+                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{d.destination || d.notes || tc('pos_factory.noDestination')}</div>
               </div>
             ))}
           </div>
         </Section>
       )}
 
-      <Section title="Shipments">
+      <Section title={tc('pos_factory.shipmentsTitle')}>
         {rows.length === 0 ? (
-          <EmptyState icon="🚚" title="No dispatches yet" hint="Dispatch captures from the factory will appear here." />
+          <EmptyState icon="🚚" title={tc('pos_factory.noDispatchesTitle')} hint={tc('pos_factory.noDispatchesHint')} />
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 680 }}>
               <thead><tr>
-                <Th label="Date" col="created_at" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
-                <Th label="Product" col="product" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
-                <Th label="Qty" col="quantity" sortCol={sortCol} sortDir={sortDir} onSort={onSort} align="right" />
-                <Th label="Unit" />
-                <Th label="Destination" />
-                <Th label="Status" col="status" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
-                <Th label="Approved By" />
+                <Th label={tc('pos_factory.colDate')} col="created_at" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                <Th label={tc('pos_factory.colProduct')} col="product" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                <Th label={tc('pos_factory.colQty')} col="quantity" sortCol={sortCol} sortDir={sortDir} onSort={onSort} align="right" />
+                <Th label={tc('pos_factory.colUnit')} />
+                <Th label={tc('pos_factory.colDestination')} />
+                <Th label={tc('pos_factory.colStatus')} col="status" sortCol={sortCol} sortDir={sortDir} onSort={onSort} />
+                <Th label={tc('pos_factory.colApprovedBy')} />
               </tr></thead>
               <tbody>
                 {rows.map(d => (
@@ -1246,6 +1265,7 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
   sellByProduct: Map<string, number>
   totalOutput: number; currencySymbol: string
 }) {
+  const { tc } = useLang()
   // assumptions — editable estimates for labor + overhead
   const [laborPerUnit, setLaborPerUnit] = useState(0.5)
   const [overheadPct, setOverheadPct] = useState(15)
@@ -1258,9 +1278,9 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
   const wasteCost = useMemo(() => wastages.reduce((s, c) => s + (Number(c.quantity) || 0) * costForCapture(c), 0), [wastages, costForCapture])
 
   const pieSlices = [
-    { label: 'Materials', value: totalMaterialCost, color: ACC },
-    { label: 'Labor', value: totalLabor, color: '#3b82f6' },
-    { label: 'Overhead', value: totalOverhead, color: '#a855f7' },
+    { label: tc('pos_factory.pieMaterials'), value: totalMaterialCost, color: ACC },
+    { label: tc('pos_factory.pieLabor'), value: totalLabor, color: '#3b82f6' },
+    { label: tc('pos_factory.pieOverhead'), value: totalOverhead, color: '#a855f7' },
   ].filter(s => s.value > 0)
 
   // standard vs actual material usage per product
@@ -1332,51 +1352,51 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
     <div>
       {/* Assumptions */}
       <div style={{ padding: 14, borderRadius: 12, border: `1px solid ${ACC_BORDER}`, background: ACC_BG, marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: ACC }}>Costing Assumptions</div>
+        <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: ACC }}>{tc('pos_factory.costingAssumptions')}</div>
         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
           <label style={{ fontSize: 12, color: 'var(--tx2)' }}>
-            Labor / unit ({currencySymbol})
+            {tc('pos_factory.laborPerUnit', { symbol: currencySymbol })}
             <input type="number" step="0.01" value={laborPerUnit} onChange={e => setLaborPerUnit(Number(e.target.value) || 0)} style={{ ...inputStyle, marginLeft: 8 }} />
           </label>
           <label style={{ fontSize: 12, color: 'var(--tx2)' }}>
-            Overhead %
+            {tc('pos_factory.overheadPct')}
             <input type="number" step="1" value={overheadPct} onChange={e => setOverheadPct(Number(e.target.value) || 0)} style={{ ...inputStyle, marginLeft: 8 }} />
           </label>
-          <span style={{ fontSize: 11, color: 'var(--tx3)' }}>Adjust to recompute cost per unit, trends & margins.</span>
+          <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('pos_factory.adjustToRecompute')}</span>
         </div>
       </div>
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
-        <KpiCard label="Production Cost / Unit" value={fmt(currencySymbol, costPerUnit)} sub="materials + labor + overhead" accent={ACC} />
-        <KpiCard label="Total Production Cost" value={fmt(currencySymbol, totalProductionCost)} sub={`${fmtInt(totalOutput)} units`} accent="var(--tx)" />
-        <KpiCard label="Material Cost" value={fmt(currencySymbol, totalMaterialCost)} sub="from intake captures" accent="#3b82f6" />
-        <KpiCard label="Wastage Cost" value={fmt(currencySymbol, wasteCost)} sub="value of wasted materials" accent={RED} />
+        <KpiCard label={tc('pos_factory.productionCostPerUnit')} value={fmt(currencySymbol, costPerUnit)} sub={tc('pos_factory.materialsLaborOverhead')} accent={ACC} />
+        <KpiCard label={tc('pos_factory.totalProductionCost')} value={fmt(currencySymbol, totalProductionCost)} sub={tc('pos_factory.totalOutputUnits', { n: fmtInt(totalOutput) })} accent="var(--tx)" />
+        <KpiCard label={tc('pos_factory.materialCostLabel')} value={fmt(currencySymbol, totalMaterialCost)} sub={tc('pos_factory.fromIntakeCaptures')} accent="#3b82f6" />
+        <KpiCard label={tc('pos_factory.wastageCostLabel')} value={fmt(currencySymbol, wasteCost)} sub={tc('pos_factory.valueOfWastedMaterials')} accent={RED} />
       </div>
 
       {/* Material cost breakdown pie */}
-      <Section title="Cost Component Breakdown">
+      <Section title={tc('pos_factory.costComponentBreakdown')}>
         <PieChart slices={pieSlices} currencySymbol={currencySymbol} />
       </Section>
 
       {/* Cost per unit trend */}
-      <Section title="Production Cost per Unit — Trend (weekly)">
+      <Section title={tc('pos_factory.costPerUnitTrend')}>
         {costTrend.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Need intake + output captures to chart cost trend.</div>
+          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noTrendData')}</div>
         ) : (
-          <LineChart points={costTrend} color={ACC} yLabel={`cost per unit (${currencySymbol})`} formatY={(n) => fmt(currencySymbol, n)} />
+          <LineChart points={costTrend} color={ACC} yLabel={tc('pos_factory.costPerUnitLabel', { symbol: currencySymbol })} formatY={(n) => fmt(currencySymbol, n)} />
         )}
       </Section>
 
       {/* Standard vs Actual */}
-      <Section title="Standard vs Actual Material Cost">
+      <Section title={tc('pos_factory.stdVsActualTitle')}>
         {stdVsActual.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No material cost data available.</div>
+          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noMaterialCostData')}</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
               <thead><tr>
-                <Th label="Product" /><Th label="Standard (sell ref)" align="right" /><Th label="Actual / Unit" align="right" /><Th label="Variance" align="right" />
+                <Th label={tc('pos_factory.colProduct')} /><Th label={tc('pos_factory.colStandardSellRef')} align="right" /><Th label={tc('pos_factory.colActualPerUnit')} align="right" /><Th label={tc('pos_factory.colVariance')} align="right" />
               </tr></thead>
               <tbody>
                 {stdVsActual.map(r => (
@@ -1396,14 +1416,14 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
       </Section>
 
       {/* Margin analysis */}
-      <Section title="Margin Analysis (production cost vs selling price)">
+      <Section title={tc('pos_factory.marginAnalysisTitle')}>
         {margins.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>No cost data to compute margins.</div>
+          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('pos_factory.noMarginData')}</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
               <thead><tr>
-                <Th label="Product" /><Th label="Full Cost / Unit" align="right" /><Th label="Selling Price" align="right" /><Th label="Margin" align="right" />
+                <Th label={tc('pos_factory.colProduct')} /><Th label={tc('pos_factory.colFullCostPerUnit')} align="right" /><Th label={tc('pos_factory.colSellingPrice')} align="right" /><Th label={tc('pos_factory.colMargin')} align="right" />
               </tr></thead>
               <tbody>
                 {margins.map(r => (
@@ -1424,9 +1444,9 @@ function CostingView({ intakes, outputs, wastages, costForCapture, sellByProduct
 
       {/* Overhead allocation placeholder */}
       <div style={{ padding: 16, borderRadius: 12, border: '1px dashed var(--b)', background: 'var(--ev)', textAlign: 'center' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx2)', marginBottom: 4 }}>Activity-Based Overhead Allocation — coming soon</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx2)', marginBottom: 4 }}>{tc('pos_factory.overheadComingSoonTitle')}</div>
         <div style={{ fontSize: 12, color: 'var(--tx3)', maxWidth: 460, margin: '0 auto' }}>
-          Allocate rent, utilities and equipment depreciation across product lines by machine-hours and floor space. Currently overhead is applied as a flat {overheadPct}% of materials + labor.
+          {tc('pos_factory.overheadComingSoonDesc', { pct: overheadPct })}
         </div>
       </div>
     </div>

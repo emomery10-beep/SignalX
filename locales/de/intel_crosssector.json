@@ -1,0 +1,20 @@
+{
+  "title": "Branchenübergreifende Analyse",
+  "askAi": "KI fragen",
+  "askAiPrompt": "Wie schneiden meine Kennzahlen im Vergleich zu anderen Branchen ab? Wo liege ich zurück und was kann ich von den Top-Branchen lernen?",
+  "compareWithSectors": "Mit Branchen vergleichen",
+  "youBadge": "SIE",
+  "businesses": "{n} Unternehmen",
+  "sectorRetail": "Einzelhandel",
+  "sectorEcommerce": "E-Commerce",
+  "sectorRestaurant": "Restaurant",
+  "sectorFoodBev": "Lebensmittel & Getränke",
+  "sectorImportExport": "Import/Export",
+  "sectorSaas": "SaaS",
+  "sectorServices": "Dienstleistungen",
+  "sectorFashion": "Mode",
+  "sectorHealthBeauty": "Gesundheit & Schönheit",
+  "sectorSalon": "Salon",
+  "sectorRepair": "Reparatur",
+  "sectorFactory": "Produktion"
+}

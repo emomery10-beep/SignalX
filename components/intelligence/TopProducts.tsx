@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { detectGeoFromTimezone } from '@/lib/geo'
+import { useLang } from '@/components/LanguageProvider'
 
 interface ProductRow {
   name: string
@@ -14,6 +15,7 @@ interface TopProductsProps {
 }
 
 export default function TopProducts({ onAsk }: TopProductsProps) {
+  const { tc } = useLang()
   const [products, setProducts] = useState<ProductRow[]>([])
   const [allProducts, setAllProducts] = useState<ProductRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -82,8 +84,8 @@ export default function TopProducts({ onAsk }: TopProductsProps) {
   if (products.length === 0) {
     return (
       <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--sf) 0%, rgba(34,197,94,.02) 100%)', fontSize: 13, color: 'var(--tx3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span>No sales data yet</span>
-        <button onClick={() => onAsk('What products should I focus on selling?')} style={{ fontSize: 12, color: '#22C55E', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>Ask AskBiz &rarr;</button>
+        <span>{tc('intel_topproducts.noData')}</span>
+        <button onClick={() => onAsk(tc('intel_topproducts.noDataAskPrompt'))} style={{ fontSize: 12, color: '#22C55E', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>{tc('intel_topproducts.noDataAsk')}</button>
       </div>
     )
   }
@@ -102,7 +104,7 @@ export default function TopProducts({ onAsk }: TopProductsProps) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
-            Top Products
+            {tc('intel_topproducts.title')}
           </span>
           <span style={{ fontSize: 9, color: 'var(--tx3)', opacity: 0.7 }}>30d</span>
         </div>
@@ -115,15 +117,15 @@ export default function TopProducts({ onAsk }: TopProductsProps) {
       {expanded && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: 8, marginBottom: 12, animation: 'fadeIn 200ms ease' }}>
           <div style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--ev)' }}>
-            <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Products</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>{tc('intel_topproducts.kpiProducts')}</div>
             <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--tx)' }}>{allProducts.length}</div>
           </div>
           <div style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--ev)' }}>
-            <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Avg margin</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>{tc('intel_topproducts.kpiAvgMargin')}</div>
             <div style={{ fontSize: 16, fontWeight: 800, color: avgMargin >= 40 ? '#22C55E' : avgMargin >= 20 ? '#F59E0B' : '#EF4444' }}>{avgMargin.toFixed(0)}%</div>
           </div>
           <div style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--ev)' }}>
-            <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>Units sold</div>
+            <div style={{ fontSize: 9, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 2 }}>{tc('intel_topproducts.kpiUnitsSold')}</div>
             <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--tx)' }}>{Math.round(allProducts.reduce((s, p) => s + p.qty, 0))}</div>
           </div>
         </div>
@@ -132,11 +134,11 @@ export default function TopProducts({ onAsk }: TopProductsProps) {
       {/* Header row for expanded table */}
       {expanded && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, paddingBottom: 6, borderBottom: '1px solid var(--b)' }}>
-          <span style={{ width: 14, fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textAlign: 'right', flexShrink: 0 }}>#</span>
-          <span style={{ flex: 1, fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>Product</span>
-          <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', width: 50, textAlign: 'right' }}>Revenue</span>
-          <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', width: 40, textAlign: 'right' }}>Qty</span>
-          <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', width: 40, textAlign: 'right' }}>Margin</span>
+          <span style={{ width: 14, fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textAlign: 'right', flexShrink: 0 }}>{tc('intel_topproducts.colRank')}</span>
+          <span style={{ flex: 1, fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('intel_topproducts.colProduct')}</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', width: 50, textAlign: 'right' }}>{tc('intel_topproducts.colRevenue')}</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', width: 40, textAlign: 'right' }}>{tc('intel_topproducts.colQty')}</span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', width: 40, textAlign: 'right' }}>{tc('intel_topproducts.colMargin')}</span>
         </div>
       )}
 
@@ -173,7 +175,7 @@ export default function TopProducts({ onAsk }: TopProductsProps) {
                     {p.name}
                   </span>
                   <div style={{ display: 'flex', gap: 8, fontSize: 10, flexShrink: 0 }}>
-                    <span style={{ color: 'var(--tx3)' }}>{p.qty} sold</span>
+                    <span style={{ color: 'var(--tx3)' }}>{tc('intel_topproducts.qtySold', { n: p.qty })}</span>
                     <span style={{ color: p.margin >= 40 ? '#22C55E' : p.margin >= 20 ? '#F59E0B' : '#EF4444', fontWeight: 600 }}>
                       {p.margin.toFixed(0)}%
                     </span>
@@ -195,12 +197,12 @@ export default function TopProducts({ onAsk }: TopProductsProps) {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, paddingTop: 8, borderTop: '1px solid var(--b)' }}>
-        <span style={{ fontSize: 9, color: 'var(--tx3)', opacity: 0.7 }}>Revenue ranked · from POS data</span>
+        <span style={{ fontSize: 9, color: 'var(--tx3)', opacity: 0.7 }}>{tc('intel_topproducts.footnote')}</span>
         <button
           onClick={() => setExpanded(e => !e)}
           style={{ fontSize: 9, color: '#22C55E', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
         >
-          {expanded ? '← Collapse' : 'Tap to analyse →'}
+          {expanded ? tc('intel_topproducts.collapse') : tc('intel_topproducts.tapToAnalyse')}
         </button>
       </div>
     </div>
