@@ -111,5 +111,15 @@
   "row_accounts_payable": "Verbindlichkeiten",
   "row_net_financing": "Netto-Finanzierung",
   "row_no_receivables": "Keine Forderungsdaten vorhanden",
-  "net_cash_position": "NETTO-CASHPOSITION"
+  "net_cash_position": "NETTO-CASHPOSITION",
+  "burn_fixed": "fest",
+  "burn_fixed_warning": "Fixkosten nicht gesetzt – setzen Sie diese für eine genaue Burn-Rate",
+  "burn_best_day": "Bester Tag",
+  "burn_worst_day": "Schlechtester Tag",
+  "burn_positive_days": "Positive Tage",
+  "burn_avg_daily_net": "Durchschnittliches Tages-Netto",
+  "burn_of_total": "von {n}",
+  "burn_this_period": "in diesem Zeitraum",
+  "burn_sensitivity": "Sensitivität",
+  "burn_revenue_up_10": "Umsatz +10%"
 }

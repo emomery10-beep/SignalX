@@ -143,5 +143,15 @@
   "pdf_data_quality_notes": "HINWEISE ZUR DATENQUALITÄT",
   "share_forecast": "Prognose teilen",
   "share_desc": "Jeder mit diesem Link kann dieses Prognoseergebnis einsehen.",
-  "copied": "Kopiert!"
+  "copied": "Kopiert!",
+  "best_badge": "BEST",
+  "comparison_empty": "Klicken Sie auf „Alle Methoden vergleichen\", um die am besten geeignete Methode für Ihre Daten zu finden.",
+  "whatif_simulator": "Was-wäre-wenn-Simulator",
+  "whatif_desc": "Passen Sie historische Daten an und sehen Sie, wie sich die Prognose ändert. Testen Sie Szenarien wie „Was wäre, wenn die Umsätze letzten Monat um 20% gesunken wären?\"",
+  "whatif_change": "Änderung (%)",
+  "whatif_from_period": "Ab Zeitraum",
+  "whatif_to_period": "Bis Zeitraum",
+  "whatif_preset_drop": "Umsatz -20%",
+  "whatif_preset_spike": "Umsatz +30%",
+  "whatif_preset_flat": "Gleichbleibend (-5%)"
 }

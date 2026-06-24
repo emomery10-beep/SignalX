@@ -19,5 +19,15 @@
   "planFree": "Kostenlos",
   "planStarter": "Starter",
   "planGrowth": "Growth",
-  "planEnterprise": "Enterprise"
+  "planEnterprise": "Enterprise",
+  "enable": "Aktivieren",
+  "delete": "Löschen",
+  "deleteConfirm": "Diesen API-Schlüssel löschen? Alle Integrationen, die ihn verwenden, hören sofort auf zu funktionieren.",
+  "newApiKeyTitle": "Neuer API-Schlüssel",
+  "keyNameLabel": "Schlüsselname",
+  "keyNamePlaceholder": "z. B. Produktion, Meine Shopify-App",
+  "modeLabel": "Modus",
+  "modeGenericDescription": "Kontext in jeder Anfrage senden",
+  "modeAccountDescription": "Verwendet Ihre verbundenen AskBiz-Daten",
+  "creating": "Erstelle…"
 }

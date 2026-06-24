@@ -26,5 +26,15 @@
   "overdue": "VENCIDO",
   "days_until": "{days} días",
   "days_short": "{days}d",
-  "save_approx": "Ahorra ~{amount}"
+  "save_approx": "Ahorra ~{amount}",
+  "header_title": "Impuestos y cumplimiento",
+  "ask_ai": "Preguntar a IA",
+  "ask_prompt": "Mis ingresos mensuales son {revenue}, beneficio neto {netProfit}. La reserva fiscal estimada es {setAside} ({pct}% de ingresos). Que optimizaciones fiscales hay disponibles para {smbLabel}?",
+  "set_aside_this_month": "Reserva de este mes",
+  "pct_of_revenue": "({pct}% de ingresos)",
+  "income_tax": "Impuesto sobre la renta",
+  "turnover_tax": "Impuesto sobre el volumen de negocios ({rate}%)",
+  "vat_with_rate": "{name} ({rate}%)",
+  "vat_detail": "{rate}% sobre operaciones gravadas",
+  "turnover_detail": "{rate}% del volumen de negocios bruto"
 }

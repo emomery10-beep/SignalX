@@ -1,1 +1,10 @@
-{}
+{
+  "sectionTitle": "KI-Einblicke",
+  "poweredBy": "powered by Claude",
+  "refreshBtn": "Aktualisieren",
+  "analyzingBtn": "Analysiere…",
+  "analyzingBody": "Ihre Finanzen werden analysiert…",
+  "noInsights": "Keine Einblicke generiert. Klicken Sie auf Aktualisieren, um es erneut zu versuchen.",
+  "askAi": "KI fragen →",
+  "expandPrompt": "Erläutern Sie diesen CFO-Einblick: „{title}\" — {body}. Geben Sie konkrete nächste Schritte."
+}

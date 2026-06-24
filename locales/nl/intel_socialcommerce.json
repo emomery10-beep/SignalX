@@ -48,5 +48,9 @@
   "noSignalsSub": "Alle producten met veel opslagen worden omgezet in bestellingen.",
   "signalSaves": "🔖 {n} opslagen",
   "signalViews": "👁 {n} weergaven",
-  "signalSaveRate": "📈 {rate}% opslagpercentage"
+  "signalSaveRate": "📈 {rate}% opslagpercentage",
+  "convertSalesBtn": "Hoe saves omzetten naar verkopen →",
+  "convertSalesPrompt": "„{productName}\" heeft {saves} saves op {platform} maar 0 bestellingen. Wat zijn de meest waarschijnlijke redenen en wat moet ik direct doen?",
+  "checkStockBtn": "Voorraadniveau controleren →",
+  "checkStockPrompt": "Controleer mijn voorraad voor „{productName}\" – ik krijg {saves} saves op {platform} en verwacht een piek in de vraag. Heb ik genoeg voorraad?"
 }

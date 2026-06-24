@@ -157,5 +157,15 @@
   "faq_13_a": "Ihre Daten sind sowohl im Ruhezustand als auch bei der Übertragung verschlüsselt. Wir verwenden Ihre Geschäftsdaten niemals zum Training von KI-Modellen.",
   "alert_something_wrong": "Etwas ist schiefgelaufen",
   "alert_something_wrong_retry": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
-  "alert_checkout_failed": "Bezahlung fehlgeschlagen ({status}). {detail}"
+  "alert_checkout_failed": "Bezahlung fehlgeschlagen ({status}). {detail}",
+  "faq_6_a": "Ein visueller Verbindungs-Tab für alle Pläne mit allen 31 unterstützten Datenquellen – E-Commerce, Buchhaltung, Zahlungen, Marketing, Logistik und Social. Grüner Punkt = synchronisiert, rot = Fehler, grau = nicht verbunden.",
+  "faq_7_q": "Was bedeutet „automatisch aus Daten befüllt\"?",
+  "faq_7_a": "In den Growth- und Business-Plänen laden Tools wie FX-Risiko automatisch Ihre Produktkosten, Margen und Lieferantendaten aus verbundenen Quellen.",
+  "faq_8_q": "Wie funktioniert Social Commerce?",
+  "faq_8_a": "Verbinden Sie TikTok Shop, Instagram Shopping oder Pinterest. AskBiz verfolgt Konversionsraten, Saves und virale Produkte – und benachrichtigt Sie bei hohen Saves ohne Bestellungen.",
+  "faq_9_q": "Wie funktioniert die Churn-Intelligence?",
+  "faq_9_a": "AskBiz scannt monatlich Ihre Kundendaten und bewertet das Abwanderungsrisiko basierend auf Zeit seit letzter Bestellung und Kaufhäufigkeit.",
+  "faq_10_q": "Wie funktionieren Team-Sitze?",
+  "faq_10_a": "Der Business-Plan umfasst bis zu 5 Teammitglieder mit eigenen Logins und Rollen – Eigentümer, Admin, Analyst, Buchhalter, Einkäufer oder Betrachter.",
+  "faq_11_q": "Wie funktionieren POS-Sitze?"
 }

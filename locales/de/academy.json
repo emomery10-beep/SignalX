@@ -21,7 +21,7 @@
   "no_articles_found": "Keine Artikel gefunden",
   "no_articles_found_for_prefix": "für",
   "back_to_all_categories": "Zurück zu allen Kategorien",
-  "load_prefix": "",
+  "load_prefix": "Weitere",
   "load_suffix": "weitere Artikel laden",
   "showing_prefix": "Anzeige",
   "showing_of": "von",
@@ -34,5 +34,15 @@
   "footer_privacy": "Datenschutz",
   "aria_toggle_categories": "Kategorien ein-/ausblenden",
   "aria_collapse": "Einklappen",
-  "aria_expand": "Ausklappen"
+  "aria_expand": "Ausklappen",
+  "link_free_tools": "Kostenlose Tools",
+  "read_time_min": "Min",
+  "page_title": "Akademie",
+  "intro_suffix": "+ kostenlose Leitfäden zu allen Kennzahlen, Konzepten und Tools für KMU-Gründer —",
+  "intro_categories_suffix": "Kategorien",
+  "search_placeholder": "Artikel suchen — z. B. Bruttomargen, Churn, Incoterms…",
+  "promo_learning_paths_title": "Lernpfade",
+  "promo_learning_paths_desc": "8 kuratierte Sequenzen – strukturierter Weg vom Einsteiger zum Fortgeschrittenen",
+  "promo_checklists_title": "Checklisten",
+  "promo_checklists_desc": "Interaktive Checklisten für Monatsabschluss, Fundraising, Produktlaunches und mehr"
 }

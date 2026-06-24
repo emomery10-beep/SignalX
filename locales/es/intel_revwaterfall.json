@@ -56,5 +56,15 @@
   "drillPromptOperating": "¿Cuáles son mis gastos operativos y cómo puedo reducir los costos generales?",
   "drillPromptStockCost": "Muéstrame los costos de mantenimiento de inventario, el stock de movimiento lento y los artículos sin rotación",
   "drillPromptNetMargin": "Dame un análisis completo del margen neto con recomendaciones para mejorar la rentabilidad",
-  "drillPromptFallback": "Analiza mi {label} en detalle"
+  "drillPromptFallback": "Analiza mi {label} en detalle",
+  "barDetailGrowthSignal": "Señal de crecimiento: {label}",
+  "barDetailGrossRevenueBaseline": "Base de ingresos brutos",
+  "barDetailMarginSignal": "Señal de margen: {label}",
+  "barDetailCostOfGoods": "Coste de bienes vendidos",
+  "barDetailGrossMarginPct": "{pct}% de margen bruto",
+  "barDetailRiskSignal": "Señal de riesgo: {label}",
+  "barDetailOperatingExpenses": "Gastos operativos",
+  "barDetailInventorySignal": "Señal de inventario: {label}",
+  "barDetailInventoryHolding": "Coste de mantenimiento de inventario",
+  "barDetailCashSignal": "Señal de efectivo: {label}"
 }

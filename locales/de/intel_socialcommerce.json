@@ -48,5 +48,9 @@
   "noSignalsSub": "Alle Produkte mit vielen Merkspeicherungen werden zu Bestellungen konvertiert.",
   "signalSaves": "🔖 {n} Merkspeicherungen",
   "signalViews": "👁 {n} Aufrufe",
-  "signalSaveRate": "📈 {rate}% Merkrate"
+  "signalSaveRate": "📈 {rate}% Merkrate",
+  "convertSalesBtn": "Wie man Saves in Verkäufe umwandelt →",
+  "convertSalesPrompt": "„{productName}\" hat {saves} Saves auf {platform} aber 0 Bestellungen. Was sind die wahrscheinlichsten Gründe und was soll ich sofort tun?",
+  "checkStockBtn": "Lagerbestand prüfen →",
+  "checkStockPrompt": "Prüfen Sie meinen Lagerbestand für „{productName}\" – ich erhalte {saves} Saves auf {platform} und erwarte einen Nachfrage-Anstieg. Habe ich genug Lager?"
 }

@@ -111,5 +111,15 @@
   "sidebarMarketActive2Query": "Was sind die neuen Steuervorschriften für den Verkauf in die EU im Jahr 2026?",
   "chipOpenerNoData": "Da deine Daten noch nicht verbunden sind, zeige ich dir ein Beispiel, wie ich helfen kann – mit deinen echten Zahlen wird es noch präziser. ",
   "chipOpenerDataConnected": "Gute Frage! Schauen wir uns deine Zahlen an – ",
-  "chipOpenerMarketActive": "Ich rufe gerade aktuelle Marktdaten dazu ab – "
+  "chipOpenerMarketActive": "Ich rufe gerade aktuelle Marktdaten dazu ab – ",
+  "bizFoodBev6": "Welche Lieferanten liefern mir die frischesten Produkte?",
+  "bizFoodBev7": "Was ist mein Umsatz pro Tisch pro Stunde?",
+  "sidebarNoData0Label": "Zeig mir, wie eine 10% Preiserhöhung aussieht.",
+  "sidebarNoData0Query": "Zeig mir, wie eine 10% Preiserhöhung meinen Gewinn beeinflussen würde.",
+  "sidebarNoData1Label": "Was ist ein guter Gewinn für ein Geschäft wie meins?",
+  "sidebarNoData1Query": "Was ist eine gute Gewinnmarge für ein Geschäft wie meins?",
+  "sidebarNoData2Label": "Zeig mir, wie ich 500 Euro pro Monat beim Versand sparen kann.",
+  "sidebarNoData2Query": "Zeig mir, wie ich 500 Euro pro Monat bei den Versandkosten sparen kann.",
+  "sidebarDataConnected0Label": "Was soll ich heute nachbestellen?",
+  "sidebarDataConnected0Query": "Was soll ich heute basierend auf meinen Verkäufen nachbestellen?"
 }

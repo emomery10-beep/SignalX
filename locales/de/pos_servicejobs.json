@@ -90,5 +90,15 @@
   "failedUpdateJob": "Auftrag konnte nicht aktualisiert werden",
   "checkoutPhotoSaved": "Checkout-Foto gespeichert",
   "photoUploadFailed": "Foto-Upload fehlgeschlagen",
-  "failedSendQuote": "Angebot konnte nicht gesendet werden"
+  "failedSendQuote": "Angebot konnte nicht gesendet werden",
+  "additionalIssuesSection": "Weitere gefundene Probleme",
+  "assignEngineer": "Techniker zuweisen",
+  "noEngineers": "Noch keine Techniker hinzugefügt – fügen Sie Mitarbeiter mit der Rolle „Techniker\" hinzu",
+  "warrantySection": "Garantie",
+  "warrantyExpires": "Läuft ab: {date}",
+  "warrantyDaysLeft": " ({days} Tage verbleibend)",
+  "warrantyExpiredSuffix": " (abgelaufen)",
+  "noCheckoutPhotoTitle": "Kein Kassenbeleg-Foto angehängt",
+  "noCheckoutPhotoDesc": "Empfohlen: Machen Sie ein Foto des reparierten Geräts, bevor es an den Kunden zurückgegeben wird",
+  "takePhotoBtn": "Foto aufnehmen"
 }

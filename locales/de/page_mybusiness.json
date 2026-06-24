@@ -78,5 +78,15 @@
   "qaRunForecast": "Prognose ausführen",
   "qaAskDesc": "Sprechen Sie in einfachem Deutsch mit Ihren Daten",
   "qaUploadDesc": "CSV- oder Excel-Datei",
-  "qaAlertDesc": "Bei Änderungen benachrichtigt werden"
+  "qaAlertDesc": "Bei Änderungen benachrichtigt werden",
+  "qaForecastDesc": "Zukünftige Nachfrage vorhersagen",
+  "filesTitle": "Ihre Dateien",
+  "filesManage": "Verwalten →",
+  "filesUploadLabel": "CSV- oder Excel-Datei hochladen",
+  "filesRows": "{count} Zeilen",
+  "filesAsk": "Fragen →",
+  "noDataTitle": "Verbinden Sie Ihre Daten, um Mein Unternehmen freizuschalten",
+  "noDataBody": "Verbinden Sie Shopify, Amazon oder Stripe – oder laden Sie eine CSV-Datei hoch – und AskBiz füllt diese Seite mit Ihren echten Zahlen.",
+  "noDataConnectBtn": "Daten verbinden →",
+  "noDataUploadBtn": "Datei hochladen"
 }

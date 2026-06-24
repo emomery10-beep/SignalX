@@ -38,5 +38,12 @@
   "prompt1": "Was sind meine tatsächlichen Einstandskosten für mein meistverkauftes Produkt?",
   "prompt2": "Welcher meiner Lieferanten erbringt unterdurchschnittliche Leistungen?",
   "prompt3": "Modelliere mein Währungsrisiko, wenn das Pfund Sterling um 10 % fällt",
-  "prompt4": "In welchen Exportmarkt sollte ich zuerst eintreten?"
+  "prompt4": "In welchen Exportmarkt sollte ich zuerst eintreten?",
+  "prompt5": "Welche Produkte haben das größte Social-Commerce-Potenzial?",
+  "prompt6": "Was ist der Marktpreis für mein meistverkauftes Produkt?",
+  "marketInputPlaceholder": "Marktpreise suchen – z. B. kabellose Ohrhörer Deutschland",
+  "marketSearching": "Suche…",
+  "marketSearch": "Suchen",
+  "marketEmptyState": "Geben Sie ein Produkt oder eine Kategorie ein, um aktuelle Marktpreise kanalübergreifend zu suchen.",
+  "marketNoResults": "Keine Ergebnisse gefunden."
 }
