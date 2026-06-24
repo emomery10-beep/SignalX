@@ -9,5 +9,16 @@
   "cfo_costbreakdown.netProfit": "Nettowinst",
   "cfo_costbreakdown.whereEveryGoes": "Waar elke {sym}100 naartoe gaat",
   "cfo_costbreakdown.profitSuffix": " winst",
-  "cfo_costbreakdown.costsExceed": "Kosten overtreffen de omzet met {sym}{n} per verdiende {sym}100"
+  "cfo_costbreakdown.costsExceed": "Kosten overtreffen de omzet met {sym}{n} per verdiende {sym}100",
+  "heading": "Kostenstructuur",
+  "askAi": "AI vragen",
+  "askAiPrompt": "Mijn kostenstructuur: COGS is {cogsPct}% van de omzet ({cogsAmt}), vaste kosten zijn {fixedPct}% ({fixedAmt}). Wat zijn de 3 belangrijkste gebieden waar ik kosten kan verlagen zonder de groei te schaden?",
+  "totalCosts": "Totale kosten",
+  "labelCogs": "Kosten van verkochte goederen",
+  "labelFixed": "Vaste / operationele kosten",
+  "ofRevenue": "van de omzet",
+  "netProfit": "Nettowinst",
+  "whereEveryGoes": "Waar elke {sym}100 naartoe gaat",
+  "profitSuffix": " winst",
+  "costsExceed": "Kosten overschrijden omzet met {sym}{n} per verdiende {sym}100"
 }

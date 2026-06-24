@@ -9,5 +9,16 @@
   "cfo_costbreakdown.netProfit": "Bénéfice net",
   "cfo_costbreakdown.whereEveryGoes": "Répartition de chaque {sym}100",
   "cfo_costbreakdown.profitSuffix": " de bénéfice",
-  "cfo_costbreakdown.costsExceed": "Les coûts dépassent le chiffre d'affaires de {sym}{n} pour {sym}100 encaissés"
+  "cfo_costbreakdown.costsExceed": "Les coûts dépassent le chiffre d'affaires de {sym}{n} pour {sym}100 encaissés",
+  "heading": "Structure des coûts",
+  "askAi": "Demander à l'IA",
+  "askAiPrompt": "Ma structure de coûts : le COGS représente {cogsPct}% du chiffre d'affaires ({cogsAmt}), les coûts fixes sont {fixedPct}% ({fixedAmt}). Quels sont les 3 principaux domaines où je pourrais réduire les coûts sans nuire à la croissance ?",
+  "totalCosts": "Coûts totaux",
+  "labelCogs": "Coût des marchandises vendues",
+  "labelFixed": "Coûts fixes / d'exploitation",
+  "ofRevenue": "du chiffre d'affaires",
+  "netProfit": "Bénéfice net",
+  "whereEveryGoes": "Où va chaque {sym}100",
+  "profitSuffix": " de bénéfice",
+  "costsExceed": "Les coûts dépassent les revenus de {sym}{n} pour chaque {sym}100 gagné"
 }

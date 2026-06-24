@@ -9,5 +9,16 @@
   "cfo_costbreakdown.netProfit": "Utilidad neta",
   "cfo_costbreakdown.whereEveryGoes": "En qué se usa cada {sym}100",
   "cfo_costbreakdown.profitSuffix": " de utilidad",
-  "cfo_costbreakdown.costsExceed": "Los costos superan los ingresos en {sym}{n} por cada {sym}100 generados"
+  "cfo_costbreakdown.costsExceed": "Los costos superan los ingresos en {sym}{n} por cada {sym}100 generados",
+  "heading": "Estructura de costes",
+  "askAi": "Preguntar a IA",
+  "askAiPrompt": "Mi estructura de costes: el COGS es {cogsPct}% de los ingresos ({cogsAmt}), los costes fijos son {fixedPct}% ({fixedAmt}). ¿Cuáles son las 3 principales áreas donde podría reducir costes sin afectar el crecimiento?",
+  "totalCosts": "Costes totales",
+  "labelCogs": "Coste de bienes vendidos",
+  "labelFixed": "Costes fijos / operativos",
+  "ofRevenue": "de los ingresos",
+  "netProfit": "Beneficio neto",
+  "whereEveryGoes": "A dónde va cada {sym}100",
+  "profitSuffix": " de beneficio",
+  "costsExceed": "Los costes superan los ingresos en {sym}{n} por cada {sym}100 ganados"
 }

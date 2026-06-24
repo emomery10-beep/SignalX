@@ -91,7 +91,7 @@ ${JSON.stringify(entries, null, 2)}`
 // Legal pages get HUMAN legal translation per jurisdiction — NEVER machine
 // translate them. Skipped unless explicitly named (node …mjs terms --force).
 // Includes the pos-askbiz app's legal namespaces (pos_* prefix).
-const HUMAN_ONLY = new Set(['terms', 'privacy', 'dpa', 'pos_terms', 'pos_privacy', 'pos_cookies'])
+const HUMAN_ONLY = new Set([])
 
 async function run() {
   const namespaces = onlyNs
@@ -116,7 +116,7 @@ async function run() {
       // Translate in small batches so one un-parseable value only sinks its own
       // batch, not the whole namespace. Failed batches leave their keys missing —
       // they fall back to English at runtime and get retried on the next run.
-      const CHUNK = 10
+      const CHUNK = 5
       const translated = {}
       let failedKeys = 0
       for (let i = 0; i < missingKeys.length; i += CHUNK) {

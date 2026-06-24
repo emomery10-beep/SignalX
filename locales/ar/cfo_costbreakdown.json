@@ -9,5 +9,16 @@
   "cfo_costbreakdown.netProfit": "صافي الربح",
   "cfo_costbreakdown.whereEveryGoes": "توزيع كل {sym}100",
   "cfo_costbreakdown.profitSuffix": " ربح",
-  "cfo_costbreakdown.costsExceed": "التكاليف تتجاوز الإيرادات بمقدار {sym}{n} لكل {sym}100 مكتسب"
+  "cfo_costbreakdown.costsExceed": "التكاليف تتجاوز الإيرادات بمقدار {sym}{n} لكل {sym}100 مكتسب",
+  "heading": "هيكل التكاليف",
+  "askAi": "اسأل الذكاء الاصطناعي",
+  "askAiPrompt": "هيكل تكاليفي: تكلفة البضائع المباعة {cogsPct}% من الإيرادات ({cogsAmt})، التكاليف الثابتة {fixedPct}% ({fixedAmt}). ما أهم 3 مجالات يمكنني تخفيض التكاليف فيها دون الإضرار بالنمو؟",
+  "totalCosts": "إجمالي التكاليف",
+  "labelCogs": "تكلفة البضائع المباعة",
+  "labelFixed": "التكاليف الثابتة / التشغيلية",
+  "ofRevenue": "من الإيرادات",
+  "netProfit": "صافي الربح",
+  "whereEveryGoes": "أين تذهب كل {sym}100",
+  "profitSuffix": " ربح",
+  "costsExceed": "التكاليف تتجاوز الإيرادات بمقدار {sym}{n} لكل {sym}100 مكتسب"
 }
