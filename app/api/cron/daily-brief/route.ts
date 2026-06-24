@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
 
       try {
         const res = await anthropic.messages.create({
-          model: 'claude-sonnet-4-6',
+          model: 'claude-haiku-4-5',
           max_tokens: 400,
           messages: [{
             role: 'user',
@@ -98,7 +98,7 @@ Return exactly:
           }],
         })
 
-        logUsage({ route: 'cron/daily-brief', model: 'claude-sonnet-4-6', usage: res.usage, userId: profile.id })
+        logUsage({ route: 'cron/daily-brief', model: 'claude-haiku-4-5', usage: res.usage, userId: profile.id })
         const raw = res.content[0].type === 'text' ? res.content[0].text : ''
         const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim())
         brief = { ...brief, improved: parsed.improved || brief.improved, worsened: parsed.worsened || brief.worsened, action: parsed.action || brief.action }
