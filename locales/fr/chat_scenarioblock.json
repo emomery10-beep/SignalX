@@ -1,0 +1,9 @@
+{
+  "headerLabel": "⚡ Analyse de scénarios",
+  "verdictAct": "✓ Rentable",
+  "verdictWatch": "~ Marginal — à examiner attentivement",
+  "verdictProblem": "✕ Déconseillé",
+  "columnCurrent": "Actuel",
+  "columnAfter": "Après modification",
+  "wasBadge": "← était {value}"
+}

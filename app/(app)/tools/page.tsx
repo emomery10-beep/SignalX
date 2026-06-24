@@ -6,6 +6,7 @@ import SupplierScorecard from '@/components/intelligence/SupplierScorecard'
 import LandedCost from '@/components/intelligence/LandedCost'
 import ExportMarkets from '@/components/intelligence/ExportMarkets'
 import SocialCommerce from '@/components/intelligence/SocialCommerce'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#d08a59'
 const TX  = '#1a1916'
@@ -15,13 +16,13 @@ const B   = 'rgba(0,0,0,.08)'
 const SF  = '#ffffff'
 const EV  = '#f3f2ef'
 
-function getTools(sym: string) { return [
+function buildTools(sym: string, tc: (key: string, vars?: Record<string, string | number>) => string) { return [
   {
-    id: 'fx', label: 'FX Risk Modeller', icon: '💱',
-    colour: '#6366F1', bg: 'rgba(99,102,241,.08)', tags: ['Importers', 'Currency'],
+    id: 'fx', label: tc('page_tools.toolFxLabel'), icon: '💱',
+    colour: '#6366F1', bg: 'rgba(99,102,241,.08)', tags: [tc('page_tools.tagImporters'), tc('page_tools.tagCurrency')],
     preview: (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '.06em' }}>Import currency</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('page_tools.fxImportCurrency')}</div>
         <div style={{ display: 'flex', gap: 6 }}>
           {['🇺🇸 USD', '🇨🇳 CNY', '🇪🇺 EUR'].map(c => (
             <span key={c} style={{ fontSize: 11, padding: '4px 8px', borderRadius: 7, border: '1px solid rgba(99,102,241,.2)', background: 'rgba(99,102,241,.05)', color: '#6366F1', fontWeight: 600 }}>{c}</span>
@@ -30,13 +31,13 @@ function getTools(sym: string) { return [
         <div style={{ height: 6, borderRadius: 9999, background: 'rgba(99,102,241,.12)', overflow: 'hidden', marginTop: 4 }}>
           <div style={{ height: '100%', width: '62%', borderRadius: 9999, background: '#6366F1' }}/>
         </div>
-        <div style={{ fontSize: 11, color: TX2 }}>GBP/USD at <strong style={{ color: TX }}>1.27</strong> · −2.1% exposure risk</div>
+        <div style={{ fontSize: 11, color: TX2 }}>{tc('page_tools.fxGbpUsdAt')} <strong style={{ color: TX }}>1.27</strong> {tc('page_tools.fxExposureRisk')}</div>
       </div>
     ),
   },
   {
-    id: 'suppliers', label: 'Supplier Scorecard', icon: '🏭',
-    colour: '#16a34a', bg: 'rgba(34,197,94,.08)', tags: ['Shipments', 'Auto-populated'],
+    id: 'suppliers', label: tc('page_tools.toolSuppliersLabel'), icon: '🏭',
+    colour: '#16a34a', bg: 'rgba(34,197,94,.08)', tags: [tc('page_tools.tagShipments'), tc('page_tools.tagAutoPopulated')],
     preview: (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
         {[['Top Supplier Co', 'A', '#16a34a'], ['Global Parts Ltd', 'B+', '#65a30d'], ['FastShip Inc', 'C', '#d97706']].map(([name, grade, col]) => (
@@ -45,31 +46,31 @@ function getTools(sym: string) { return [
             <span style={{ fontSize: 13, fontWeight: 800, color: col as string, fontFamily: 'var(--font-sora)' }}>{grade}</span>
           </div>
         ))}
-        <div style={{ fontSize: 10, color: TX3, marginTop: 2 }}>Expand to grade all suppliers →</div>
+        <div style={{ fontSize: 10, color: TX3, marginTop: 2 }}>{tc('page_tools.supplierExpandHint')}</div>
       </div>
     ),
   },
   {
-    id: 'landed', label: 'Landed Cost', icon: '🧮',
-    colour: '#d08a59', bg: 'rgba(208,138,89,.08)', tags: ['Importers', 'Margin'],
+    id: 'landed', label: tc('page_tools.toolLandedLabel'), icon: '🧮',
+    colour: '#d08a59', bg: 'rgba(208,138,89,.08)', tags: [tc('page_tools.tagImporters'), tc('page_tools.tagMargin')],
     preview: (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {[['Product cost', `${sym}12.40`], ['Freight', `${sym}1.80`], ['Duty (12%)', `${sym}1.49`], ['VAT (20%)', `${sym}3.14`]].map(([label, val]) => (
+        {[[tc('page_tools.landedProductCost'), sym + '12.40'], [tc('page_tools.landedFreight'), sym + '1.80'], [tc('page_tools.landedDuty'), sym + '1.49'], [tc('page_tools.landedVat'), sym + '3.14']].map(([label, val]) => (
           <div key={label as string} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
             <span style={{ color: TX2 }}>{label}</span>
             <span style={{ fontWeight: 600, color: TX }}>{val}</span>
           </div>
         ))}
         <div style={{ borderTop: `1px solid ${B}`, paddingTop: 6, display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-          <span style={{ fontWeight: 700, color: TX }}>True landed cost</span>
+          <span style={{ fontWeight: 700, color: TX }}>{tc('page_tools.landedTrueCost')}</span>
           <span style={{ fontWeight: 800, color: ACC, fontFamily: 'var(--font-sora)' }}>{sym}18.83</span>
         </div>
       </div>
     ),
   },
   {
-    id: 'export', label: 'Export Markets', icon: '🌍',
-    colour: '#0284c7', bg: 'rgba(2,132,199,.08)', tags: ['Export', 'Growth'],
+    id: 'export', label: tc('page_tools.toolExportLabel'), icon: '🌍',
+    colour: '#0284c7', bg: 'rgba(2,132,199,.08)', tags: [tc('page_tools.tagExport'), tc('page_tools.tagGrowth')],
     preview: (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
         {[['🇩🇪 Germany', 87], ['🇺🇸 United States', 81], ['🇦🇺 Australia', 74]].map(([mkt, score]) => (
@@ -87,8 +88,8 @@ function getTools(sym: string) { return [
     ),
   },
   {
-    id: 'social', label: 'Social Commerce', icon: '📱',
-    colour: '#E1306C', bg: 'rgba(225,48,108,.08)', tags: ['Social', 'Demand'],
+    id: 'social', label: tc('page_tools.toolSocialLabel'), icon: '📱',
+    colour: '#E1306C', bg: 'rgba(225,48,108,.08)', tags: [tc('page_tools.tagSocial'), tc('page_tools.tagDemand')],
     preview: (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
         {[['TikTok Shop', '🔥 Trending', '#E1306C'], ['Instagram', '📈 Rising', '#9333ea'], ['Pinterest', '🟡 Stable', '#d97706']].map(([ch, status, col]) => (
@@ -97,20 +98,20 @@ function getTools(sym: string) { return [
             <span style={{ fontWeight: 700, color: col as string }}>{status}</span>
           </div>
         ))}
-        <div style={{ fontSize: 10, color: TX3 }}>Tap to see viral products →</div>
+        <div style={{ fontSize: 10, color: TX3 }}>{tc('page_tools.socialTapHint')}</div>
       </div>
     ),
   },
   {
-    id: 'market', label: 'Market Intelligence', icon: '🔍',
-    colour: '#d08a59', bg: 'rgba(208,138,89,.08)', tags: ['Pricing', 'Export'],
+    id: 'market', label: tc('page_tools.toolMarketLabel'), icon: '🔍',
+    colour: '#d08a59', bg: 'rgba(208,138,89,.08)', tags: [tc('page_tools.tagPricing'), tc('page_tools.tagExport')],
     preview: (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ padding: '8px 11px', borderRadius: 8, border: `1px solid ${B}`, background: EV, fontSize: 11, color: TX3 }}>
-          Search market prices…
+          {tc('page_tools.marketSearchPlaceholder')}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-          {[['Wireless earbuds', `${sym}24.99`, 'Amazon'], ['Running shoes', `${sym}67.50`, 'Zalando']].map(([p, price, ch]) => (
+          {[['Wireless earbuds', sym + '24.99', 'Amazon'], ['Running shoes', sym + '67.50', 'Zalando']].map(([p, price, ch]) => (
             <div key={p as string} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
               <span style={{ color: TX2 }}>{p}</span>
               <span style={{ fontWeight: 700, color: ACC }}>{price} <span style={{ color: TX3, fontWeight: 400 }}>· {ch}</span></span>
@@ -123,6 +124,7 @@ function getTools(sym: string) { return [
 ] }
 
 export default function ToolsPage() {
+  const { tc } = useLang()
   const router = useRouter()
   const [expandedTool, setExpandedTool] = useState<string | null>(null)
   const [health, setHealth]             = useState<any>(null)
@@ -186,7 +188,7 @@ export default function ToolsPage() {
     ? health.score >= 65 ? '#22c55e' : health.score >= 45 ? '#f59e0b' : '#ef4444'
     : TX3
 
-  const tools = getTools(sym)
+  const tools = buildTools(sym, tc)
   const activeTool = tools.find(t => t.id === expandedTool)
 
   return (
@@ -196,9 +198,9 @@ export default function ToolsPage() {
         {/* Context strip */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
           {[
-            { label: 'Health Score',      value: health?.score != null ? `${health.score}/100` : '—', colour: healthColour },
-            { label: 'Active Alerts',     value: alertCount > 0 ? `${alertCount} alerts` : 'All clear', colour: alertCount > 0 ? '#ef4444' : '#22c55e' },
-            { label: 'Connected Sources', value: sourceCount > 0 ? `${sourceCount} connected` : 'None yet', colour: sourceCount > 0 ? '#6366f1' : TX3 },
+            { label: tc('page_tools.chipHealthScore'),      value: health?.score != null ? `${health.score}/100` : '—', colour: healthColour },
+            { label: tc('page_tools.chipActiveAlerts'),     value: alertCount > 0 ? tc('page_tools.chipAlerts', { count: alertCount }) : tc('page_tools.chipAllClear'), colour: alertCount > 0 ? '#ef4444' : '#22c55e' },
+            { label: tc('page_tools.chipConnectedSources'), value: sourceCount > 0 ? tc('page_tools.chipConnected', { count: sourceCount }) : tc('page_tools.chipNoneYet'), colour: sourceCount > 0 ? '#6366f1' : TX3 },
           ].map(chip => (
             <div key={chip.label} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 14px', borderRadius: 9999, background: SF, border: `1px solid ${B}`, fontSize: 13 }}>
               <span style={{ color: TX3, fontSize: 12 }}>{chip.label}</span>
@@ -247,7 +249,7 @@ export default function ToolsPage() {
               {/* Expand hint */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: tool.colour }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-                Expand
+                {tc('page_tools.cardExpand')}
               </div>
             </div>
           ))}
@@ -255,15 +257,15 @@ export default function ToolsPage() {
 
         {/* Quick prompts */}
         <div style={{ padding: '16px 18px', borderRadius: 14, background: EV, border: `1px solid ${B}` }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>Or ask AskBiz directly</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>{tc('page_tools.quickPromptsLabel')}</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {[
-              'What is my true landed cost on my best-selling product?',
-              'Which of my suppliers is underperforming?',
-              'Model my FX risk if sterling falls 10%',
-              'Which export market should I enter first?',
-              'Which products have the most social commerce potential?',
-              'What is the market price for my best-selling product?',
+              tc('page_tools.prompt1'),
+              tc('page_tools.prompt2'),
+              tc('page_tools.prompt3'),
+              tc('page_tools.prompt4'),
+              tc('page_tools.prompt5'),
+              tc('page_tools.prompt6'),
             ].map((prompt, i) => (
               <button key={i} onClick={() => askAskBiz(prompt)}
                 style={{ fontSize: 12, color: ACC, background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 9999, padding: '6px 13px', cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -333,19 +335,19 @@ export default function ToolsPage() {
                   <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
                     <input type="text" value={mktQuery} onChange={e => setMktQuery(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && searchMarket()}
-                      placeholder="Search market prices — e.g. 'wireless earbuds UK'"
+                      placeholder={tc('page_tools.marketInputPlaceholder')}
                       style={{ flex: 1, padding: '11px 14px', borderRadius: 10, border: `1.5px solid ${B}`, fontSize: 14, fontFamily: 'inherit', color: TX, outline: 'none', background: EV }} />
                     <button onClick={searchMarket} disabled={mktLoading}
                       style={{ padding: '11px 20px', borderRadius: 10, border: 'none', background: ACC, color: '#fff', fontSize: 14, fontWeight: 600, cursor: mktLoading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: mktLoading ? 0.7 : 1, whiteSpace: 'nowrap' }}>
-                      {mktLoading ? 'Searching…' : 'Search'}
+                      {mktLoading ? tc('page_tools.marketSearching') : tc('page_tools.marketSearch')}
                     </button>
                   </div>
-                  {!mktResult && !mktLoading && <div style={{ fontSize: 13, color: TX3 }}>Enter a product or category to search live market prices across channels and regions.</div>}
+                  {!mktResult && !mktLoading && <div style={{ fontSize: 13, color: TX3 }}>{tc('page_tools.marketEmptyState')}</div>}
                   {mktResult?.error && <div style={{ padding: '14px 16px', borderRadius: 10, background: 'rgba(239,68,68,.07)', color: '#ef4444', fontSize: 14 }}>{mktResult.error}</div>}
                   {mktResult && !mktResult.error && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {(mktResult.products || mktResult.results || []).length === 0
-                        ? <div style={{ fontSize: 14, color: TX3 }}>No results found.</div>
+                        ? <div style={{ fontSize: 14, color: TX3 }}>{tc('page_tools.marketNoResults')}</div>
                         : (mktResult.products || mktResult.results || []).map((item: any, i: number) => (
                           <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: 10, border: `1px solid ${B}`, background: EV, gap: 12, flexWrap: 'wrap' }}>
                             <div style={{ fontWeight: 600, fontSize: 14, color: TX, flex: 1 }}>{item.name || item.title || item.product || '—'}</div>

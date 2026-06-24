@@ -1,0 +1,11 @@
+{
+  "bellTitle": "Notificaciones",
+  "tabPulse": "Pulso",
+  "tabNotifications": "Notificaciones",
+  "pulseEmptyHeading": "Todo en orden",
+  "pulseEmptyBody": "No hay acciones urgentes. Sube datos recientes para ejecutar un diagnóstico.",
+  "signalDismiss": "Descartar",
+  "pulseRefresh": "Ejecutar diagnóstico",
+  "notifMarkAllRead": "Marcar todo como leído",
+  "notifEmpty": "Aún no hay notificaciones"
+}

@@ -1,0 +1,11 @@
+{
+  "bellTitle": "Benachrichtigungen",
+  "tabPulse": "Pulse",
+  "tabNotifications": "Benachrichtigungen",
+  "pulseEmptyHeading": "Alles in Ordnung",
+  "pulseEmptyBody": "Keine dringenden Maßnahmen erforderlich. Lade aktuelle Daten hoch, um eine Systemprüfung durchzuführen.",
+  "signalDismiss": "Schließen",
+  "pulseRefresh": "Systemprüfung starten",
+  "notifMarkAllRead": "Alle als gelesen markieren",
+  "notifEmpty": "Noch keine Benachrichtigungen"
+}

@@ -1,0 +1,9 @@
+{
+  "dismiss": "Cerrar",
+  "newBadge": "NUEVO",
+  "panelTitle": "Pulso del negocio",
+  "allClear": "Todo en orden",
+  "allClearBody": "Tu negocio funciona sin problemas. No hay acciones urgentes pendientes.",
+  "uploadPrompt": "Sube datos actualizados para ejecutar un nuevo diagnóstico.",
+  "runHealthCheck": "Ejecutar diagnóstico"
+}

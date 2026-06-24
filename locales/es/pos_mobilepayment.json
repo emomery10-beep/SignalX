@@ -1,0 +1,20 @@
+{
+  "mPesaPayment": "Pago por M-Pesa",
+  "askCustomerForNumber": "Pídele al cliente su número de M-Pesa",
+  "phonePlaceholder": "07XX XXX XXX",
+  "sendMpesaPrompt": "📲 Enviar solicitud de M-Pesa",
+  "customerWillGetPopup": "El cliente recibirá una notificación en su teléfono para confirmar el pago",
+  "sendingTo": "Enviando a {phone}...",
+  "justAMoment": "Un momento",
+  "waitingForCustomer": "Esperando al cliente",
+  "checkTheirPhone": "Dile que revise su teléfono",
+  "mpesaPromptSentTo": "Solicitud de M-Pesa enviada a",
+  "askThemToEnterPin": "Pídele que ingrese su PIN de M-Pesa para confirmar",
+  "waitingForPinConfirmation": "⏳ Esperando confirmación del PIN...",
+  "updatesAutomatically": "Se actualiza automáticamente al recibir el pago",
+  "wrongNumberSendAgain": "¿Número incorrecto? Enviar de nuevo",
+  "mpesaPaymentReceived": "¡Pago por M-Pesa recibido!",
+  "amountFrom": "{currencySymbol}{amount} de {phone}",
+  "paymentFailedOrTimedOut": "El pago falló o se agotó el tiempo de espera",
+  "tryAgain": "Reintentar"
+}

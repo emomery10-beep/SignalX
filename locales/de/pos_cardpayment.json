@@ -1,0 +1,18 @@
+{
+  "generatingTitle": "Zahlungslink wird generiert...",
+  "generatingSubtitle": "Einen Moment",
+  "amountDue": "Fälliger Betrag",
+  "showQrInstruction": "Zeigen Sie dem Kunden diesen QR-Code",
+  "scanToPayAlt": "Zum Bezahlen scannen",
+  "scanQrTitle": "QR scannen",
+  "scanQrSubtitle": "mit beliebiger Kamera",
+  "walletTitle": "Apple / Google Pay",
+  "walletSubtitle": "Auf Gerät tippen zum Bezahlen",
+  "waitingMessage": "⏳ Warten auf Zahlung des Kunden...",
+  "waitingSubtitle": "Seite wird automatisch aktualisiert",
+  "shareLink": "Stattdessen Zahlungslink teilen",
+  "paymentReceived": "Zahlung eingegangen!",
+  "paymentReceivedDetail": "{symbol}{amount} per Karte",
+  "paymentFailed": "Zahlung fehlgeschlagen",
+  "tryAgain": "Erneut versuchen"
+}

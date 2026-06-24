@@ -1,0 +1,9 @@
+{
+  "logistics_pulsecard": {
+    "title": "📦 Logística",
+    "outOf100": "/100",
+    "active": "activo",
+    "atRisk": "en riesgo",
+    "customsHold": "retención aduanera"
+  }
+}

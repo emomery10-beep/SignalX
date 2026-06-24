@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useLang } from '@/components/LanguageProvider'
 
 interface KPI { label: string; value: string; sub: string; trend: 'up'|'down'|'flat'; color: string; icon: string; bg: string }
 interface Insight { id: string; type: 'alert'|'trend'|'tip'|'win'; message: string; action: string; urgency: 'high'|'medium'|'low' }
@@ -16,20 +17,24 @@ interface Widget {
   type: 'revenue' | 'margins' | 'stock' | 'products' | 'insights' | 'actions'
 }
 
-const WIDGETS: Widget[] = [
-  { id: 'revenue',  title: 'Revenue Trend',     subtitle: 'Track sales over time',         icon: '📈', accent: '#d08a59', accentBg: 'rgba(208,138,89,.1)',  type: 'revenue'  },
-  { id: 'margins',  title: 'Margin Health',      subtitle: 'Margin distribution breakdown', icon: '📊', accent: '#22c55e', accentBg: 'rgba(34,197,94,.1)',   type: 'margins'  },
-  { id: 'stock',    title: 'Stock Monitor',      subtitle: 'Low stock & reorder alerts',    icon: '📦', accent: '#f48080', accentBg: 'rgba(244,128,128,.1)', type: 'stock'    },
-  { id: 'products', title: 'Top Products',       subtitle: 'Best performers by revenue',    icon: '🏆', accent: '#8c6fe0', accentBg: 'rgba(140,111,224,.1)', type: 'products' },
-  { id: 'insights', title: 'Business Insights',  subtitle: 'AI-detected patterns & alerts', icon: '💡', accent: '#f5c55a', accentBg: 'rgba(245,197,90,.1)',  type: 'insights' },
-  { id: 'actions',  title: 'Quick Actions',      subtitle: 'Jump to common tasks',          icon: '⚡', accent: '#47e2da', accentBg: 'rgba(71,226,218,.1)',  type: 'actions'  },
-]
+function buildWidgets(tc: (k: string) => string): Widget[] {
+  return [
+    { id: 'revenue',  title: tc('page_dashboards.widgetRevTitle'),      subtitle: tc('page_dashboards.widgetRevSub'),      icon: '📈', accent: '#d08a59', accentBg: 'rgba(208,138,89,.1)',  type: 'revenue'  },
+    { id: 'margins',  title: tc('page_dashboards.widgetMarginsTitle'),   subtitle: tc('page_dashboards.widgetMarginsSub'),   icon: '📊', accent: '#22c55e', accentBg: 'rgba(34,197,94,.1)',   type: 'margins'  },
+    { id: 'stock',    title: tc('page_dashboards.widgetStockTitle'),     subtitle: tc('page_dashboards.widgetStockSub'),     icon: '📦', accent: '#f48080', accentBg: 'rgba(244,128,128,.1)', type: 'stock'    },
+    { id: 'products', title: tc('page_dashboards.widgetProductsTitle'),  subtitle: tc('page_dashboards.widgetProductsSub'),  icon: '🏆', accent: '#8c6fe0', accentBg: 'rgba(140,111,224,.1)', type: 'products' },
+    { id: 'insights', title: tc('page_dashboards.widgetInsightsTitle'),  subtitle: tc('page_dashboards.widgetInsightsSub'),  icon: '💡', accent: '#f5c55a', accentBg: 'rgba(245,197,90,.1)',  type: 'insights' },
+    { id: 'actions',  title: tc('page_dashboards.widgetActionsTitle'),   subtitle: tc('page_dashboards.widgetActionsSub'),   icon: '⚡', accent: '#47e2da', accentBg: 'rgba(71,226,218,.1)',  type: 'actions'  },
+  ]
+}
 
-const DASH_TABS = [
-  { key: 'overview',   label: '📋 Overview' },
-  { key: 'revenue',    label: '💰 Revenue' },
-  { key: 'inventory',  label: '📦 Inventory' },
-]
+function buildDashTabs(tc: (k: string) => string) {
+  return [
+    { key: 'overview',   label: tc('page_dashboards.tabOverview') },
+    { key: 'revenue',    label: tc('page_dashboards.tabRevenue') },
+    { key: 'inventory',  label: tc('page_dashboards.tabInventory') },
+  ]
+}
 
 type DashTab = 'overview' | 'revenue' | 'inventory'
 
@@ -101,8 +106,11 @@ function MiniDonut({ pct, color }: { pct: number; color: string }) {
 }
 
 export default function DashboardPage() {
+  const { tc } = useLang()
   const router = useRouter()
   const supabase = createClient()
+  const WIDGETS = buildWidgets(tc)
+  const DASH_TABS = buildDashTabs(tc)
   const [activeTab, setActiveTab] = useState<DashTab>('overview')
   const [openWidget, setOpenWidget] = useState<Widget | null>(null)
   const [cardOrigin, setCardOrigin] = useState({ x: '50vw', y: '50vh' })
@@ -349,12 +357,12 @@ export default function DashboardPage() {
   })
 
   const quickActions = [
-    { label: 'Ask a question', icon: '💬', href: '/ask' },
-    { label: 'Upload a file',  icon: '📂', href: '/files' },
-    { label: 'Set an alert',   icon: '🔔', href: '/alerts' },
-    { label: 'Run forecast',   icon: '📈', href: '/forecasts' },
-    { label: 'View tools',     icon: '🔧', href: '/tools' },
-    { label: 'Sources',        icon: '🔗', href: '/sources' },
+    { label: tc('page_dashboards.actionAsk'),      icon: '💬', href: '/ask' },
+    { label: tc('page_dashboards.actionUpload'),   icon: '📂', href: '/files' },
+    { label: tc('page_dashboards.actionAlert'),    icon: '🔔', href: '/alerts' },
+    { label: tc('page_dashboards.actionForecast'), icon: '📈', href: '/forecasts' },
+    { label: tc('page_dashboards.actionTools'),    icon: '🔧', href: '/tools' },
+    { label: tc('page_dashboards.actionSources'),  icon: '🔗', href: '/sources' },
   ]
 
   return (
@@ -379,16 +387,16 @@ export default function DashboardPage() {
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
             <div>
               <div style={{ fontFamily: 'var(--font-sora)', fontSize: 20, fontWeight: 700, letterSpacing: '-.025em', marginBottom: 3 }}>
-                Dashboards
+                {tc('page_dashboards.pageTitle')}
               </div>
               <div style={{ fontSize: 13, color: 'var(--tx2)' }}>
-                Live metrics for {loading ? '…' : userName} — click any widget to expand
+                {tc('page_dashboards.pageSubtitle', { name: loading ? '…' : userName })}
               </div>
             </div>
             <button onClick={() => router.push('/ask')}
               style={{ padding: '9px 18px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              Ask AskBiz
+              {tc('page_dashboards.btnAskAskbiz')}
             </button>
           </div>
 
@@ -437,7 +445,7 @@ export default function DashboardPage() {
                     {widget.icon}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--tx3)', background: 'var(--ev)', borderRadius: 9999, padding: '3px 9px', fontWeight: 500 }}>
-                    Click to expand
+                    {tc('page_dashboards.widgetClickExpand')}
                   </div>
                 </div>
 
@@ -457,8 +465,8 @@ export default function DashboardPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                     <MiniDonut pct={avgMargin} color="#22c55e"/>
                     <div>
-                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>Distribution</div>
-                      {[{ label: 'High >25%', c: '#22c55e', v: highMargin }, { label: 'Mid', c: '#d08a59', v: midMargin }, { label: 'Low <15%', c: '#f48080', v: lowMargin }].map((m, i) => (
+                      <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{tc('page_dashboards.marginsDistribution')}</div>
+                      {[{ label: tc('page_dashboards.marginsHigh'), c: '#22c55e', v: highMargin }, { label: tc('page_dashboards.marginsMid'), c: '#d08a59', v: midMargin }, { label: tc('page_dashboards.marginsLow'), c: '#f48080', v: lowMargin }].map((m, i) => (
                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
                           <div style={{ width: 7, height: 7, borderRadius: '50%', background: m.c, flexShrink: 0 }}/>
                           <div style={{ fontSize: 10, color: 'var(--tx2)', flex: 1 }}>{m.label}</div>
@@ -479,11 +487,11 @@ export default function DashboardPage() {
                         <div style={{ fontSize: 11, fontWeight: 600, color: s.low ? '#f48080' : '#22c55e', flexShrink: 0 }}>{s.qty} left</div>
                       </div>
                     )) : (
-                      <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Upload data to monitor stock</div>
+                      <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('page_dashboards.stockUploadCta')}</div>
                     )}
                     {stockItems.filter(s => s.low).length > 0 && (
                       <div style={{ marginTop: 6, fontSize: 11, color: '#f48080', fontWeight: 600 }}>
-                        ⚠ {stockItems.filter(s => s.low).length} items need restocking
+                        {tc('page_dashboards.stockNeedRestock', { count: stockItems.filter(s => s.low).length })}
                       </div>
                     )}
                   </div>
@@ -492,7 +500,7 @@ export default function DashboardPage() {
                   <div>
                     <MiniBars data={products.slice(0, 7).map(p => p.value)} accent="#8c6fe0"/>
                     <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 6 }}>
-                      {products.length > 0 ? `Top: ${products[0].name.slice(0, 16)}` : 'Upload data to see products'}
+                      {products.length > 0 ? `Top: ${products[0].name.slice(0, 16)}` : tc('page_dashboards.productsUploadCta')}
                     </div>
                   </div>
                 )}
@@ -525,15 +533,15 @@ export default function DashboardPage() {
           {uploads.length === 0 && !loading && (
             <div style={{ marginTop: 20, padding: '16px 20px', borderRadius: 14, border: '1px solid rgba(208,138,89,.25)', background: 'rgba(208,138,89,.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
               <div>
-                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 600, marginBottom: 3 }}>Power up your dashboards</div>
-                <div style={{ fontSize: 13, color: 'var(--tx2)' }}>Upload a CSV or connect Shopify to see live metrics across all widgets.</div>
+                <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 600, marginBottom: 3 }}>{tc('page_dashboards.ctaTitle')}</div>
+                <div style={{ fontSize: 13, color: 'var(--tx2)' }}>{tc('page_dashboards.ctaBody')}</div>
               </div>
               <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                 <button onClick={() => router.push('/files')} style={{ padding: '8px 16px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-                  Upload file →
+                  {tc('page_dashboards.ctaUploadBtn')}
                 </button>
                 <button onClick={() => router.push('/sources')} style={{ padding: '8px 16px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 13, cursor: 'pointer' }}>
-                  Connect source
+                  {tc('page_dashboards.ctaConnectBtn')}
                 </button>
               </div>
             </div>
@@ -587,7 +595,7 @@ export default function DashboardPage() {
               {openWidget.type === 'revenue' && (
                 <div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 12, marginBottom: 24 }}>
-                    {[{ label: 'Total revenue', value: kpis[0]?.value || '—', color: '#d08a59' }, { label: '7-day trend', value: revTrend[revTrend.length-1] > revTrend[0] ? '↑ Growing' : '↓ Falling', color: revTrend[revTrend.length-1] > revTrend[0] ? '#22c55e' : '#f48080' }, { label: 'Peak day', value: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][revTrend.indexOf(Math.max(...revTrend))], color: 'var(--acc)' }].map((s, i) => (
+                    {[{ label: tc('page_dashboards.modalRevTotalRevenue'), value: kpis[0]?.value || '—', color: '#d08a59' }, { label: tc('page_dashboards.modalRevTrend'), value: revTrend[revTrend.length-1] > revTrend[0] ? tc('page_dashboards.modalRevGrowing') : tc('page_dashboards.modalRevFalling'), color: revTrend[revTrend.length-1] > revTrend[0] ? '#22c55e' : '#f48080' }, { label: tc('page_dashboards.modalRevPeakDay'), value: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][revTrend.indexOf(Math.max(...revTrend))], color: 'var(--acc)' }].map((s, i) => (
                       <div key={i} style={{ padding: '16px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--bg)' }}>
                         <div style={{ fontFamily: 'var(--font-sora)', fontSize: 20, fontWeight: 700, color: s.color, marginBottom: 4 }}>{s.value}</div>
                         <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{s.label}</div>
@@ -598,8 +606,8 @@ export default function DashboardPage() {
                     {uploads.length === 0
                       ? <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 10 }}>
                           <div style={{ fontSize: 32 }}>📊</div>
-                          <div style={{ fontSize: 14, color: 'var(--tx3)' }}>Upload data to see your revenue chart</div>
-                          <button onClick={() => { setOpenWidget(null); router.push('/files') }} style={{ padding: '8px 16px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--acc)', fontFamily: 'inherit', fontSize: 13, cursor: 'pointer' }}>Upload CSV →</button>
+                          <div style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('page_dashboards.modalRevUploadCta')}</div>
+                          <button onClick={() => { setOpenWidget(null); router.push('/files') }} style={{ padding: '8px 16px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--acc)', fontFamily: 'inherit', fontSize: 13, cursor: 'pointer' }}>{tc('page_dashboards.modalUploadCsvBtn')}</button>
                         </div>
                       : <canvas ref={chartRef}/>
                     }
@@ -611,7 +619,7 @@ export default function DashboardPage() {
               {openWidget.type === 'margins' && (
                 <div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 12, marginBottom: 24 }}>
-                    {[{ label: 'Avg margin', value: `${avgMargin}%`, color: avgMargin > 20 ? '#22c55e' : '#f48080' }, { label: 'High margin (>25%)', value: highMargin, color: '#22c55e' }, { label: 'Low margin (<15%)', value: lowMargin, color: '#f48080' }].map((s, i) => (
+                    {[{ label: tc('page_dashboards.modalMarginsAvg'), value: `${avgMargin}%`, color: avgMargin > 20 ? '#22c55e' : '#f48080' }, { label: tc('page_dashboards.modalMarginsHighLabel'), value: highMargin, color: '#22c55e' }, { label: tc('page_dashboards.modalMarginsLowLabel'), value: lowMargin, color: '#f48080' }].map((s, i) => (
                       <div key={i} style={{ padding: '16px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--bg)' }}>
                         <div style={{ fontFamily: 'var(--font-sora)', fontSize: 22, fontWeight: 700, color: s.color, marginBottom: 4 }}>{s.value}</div>
                         <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{s.label}</div>
@@ -620,13 +628,13 @@ export default function DashboardPage() {
                   </div>
                   <div style={{ position: 'relative', height: 220 }}>
                     {uploads.length === 0
-                      ? <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, color: 'var(--tx3)' }}>Upload data to see margin distribution</div>
+                      ? <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, color: 'var(--tx3)' }}>{tc('page_dashboards.modalMarginsUploadCta')}</div>
                       : <canvas ref={chart2Ref}/>
                     }
                   </div>
                   {avgMargin < 20 && (
                     <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: 12, background: 'rgba(244,128,128,.07)', border: '1px solid rgba(244,128,128,.2)', fontSize: 13, color: 'var(--tx)' }}>
-                      ⚠ Average margin below 20% — consider reviewing pricing or supplier costs.
+                      {tc('page_dashboards.modalMarginsWarning')}
                     </div>
                   )}
                 </div>
@@ -636,7 +644,7 @@ export default function DashboardPage() {
               {openWidget.type === 'stock' && (
                 <div>
                   <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
-                    {[{ label: 'Critical (< 5)',  value: stockItems.filter(s => s.qty < 5).length,  color: '#f48080' }, { label: 'Low (< 10)',    value: stockItems.filter(s => s.low).length,      color: '#f5c55a' }, { label: 'OK',          value: stockItems.filter(s => !s.low).length,     color: '#22c55e' }].map((s, i) => (
+                    {[{ label: tc('page_dashboards.modalStockCritical'), value: stockItems.filter(s => s.qty < 5).length, color: '#f48080' }, { label: tc('page_dashboards.modalStockLow'), value: stockItems.filter(s => s.low).length, color: '#f5c55a' }, { label: tc('page_dashboards.modalStockOk'), value: stockItems.filter(s => !s.low).length, color: '#22c55e' }].map((s, i) => (
                       <div key={i} style={{ flex: 1, minWidth: 100, padding: '14px 16px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--bg)', textAlign: 'center' }}>
                         <div style={{ fontFamily: 'var(--font-sora)', fontSize: 24, fontWeight: 700, color: s.color }}>{s.value}</div>
                         <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 3 }}>{s.label}</div>
@@ -649,14 +657,14 @@ export default function DashboardPage() {
                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderRadius: 12, border: `1px solid ${s.low ? 'rgba(244,128,128,.2)' : 'var(--b)'}`, background: s.low ? 'rgba(244,128,128,.04)' : 'var(--bg)', marginBottom: 8 }}>
                           <div style={{ width: 8, height: 8, borderRadius: '50%', background: s.qty < 5 ? '#f48080' : s.low ? '#f5c55a' : '#22c55e', flexShrink: 0 }}/>
                           <div style={{ flex: 1, fontSize: 13 }}>{s.name}</div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: s.qty < 5 ? '#f48080' : s.low ? '#f5c55a' : '#22c55e' }}>{s.qty} units</div>
-                          {s.low && <div style={{ fontSize: 11, color: '#f48080', fontWeight: 500 }}>Restock soon</div>}
+                          <div style={{ fontSize: 13, fontWeight: 600, color: s.qty < 5 ? '#f48080' : s.low ? '#f5c55a' : '#22c55e' }}>{tc('page_dashboards.modalStockUnits', { count: s.qty })}</div>
+                          {s.low && <div style={{ fontSize: 11, color: '#f48080', fontWeight: 500 }}>{tc('page_dashboards.modalStockRestockSoon')}</div>}
                         </div>
                       ))}
                     </div>
                   ) : (
                     <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--tx3)', fontSize: 14 }}>
-                      Upload a file with stock/quantity columns to monitor inventory
+                      {tc('page_dashboards.modalStockUploadCta')}
                     </div>
                   )}
                 </div>
@@ -667,7 +675,7 @@ export default function DashboardPage() {
                 <div>
                   <div style={{ position: 'relative', height: 220, marginBottom: 20 }}>
                     {uploads.length === 0
-                      ? <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, color: 'var(--tx3)' }}>Upload data to see top products</div>
+                      ? <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, color: 'var(--tx3)' }}>{tc('page_dashboards.modalProductsUploadCta')}</div>
                       : <canvas ref={chartRef}/>
                     }
                   </div>
@@ -688,7 +696,7 @@ export default function DashboardPage() {
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, fontSize: 12, color: '#22c55e' }}>
                     <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'pulse 2s infinite' }}/>
-                    AskBiz is watching your data live
+                    {tc('page_dashboards.modalInsightsLive')}
                   </div>
                   {insights.map(ins => (
                     <div key={ins.id} onClick={() => handleInsightAction(ins.action)}
@@ -703,7 +711,7 @@ export default function DashboardPage() {
                     </div>
                   ))}
                   <button onClick={() => router.push('/ask')} style={{ width: '100%', marginTop: 8, padding: '12px', borderRadius: 12, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-                    Ask AskBiz a question →
+                    {tc('page_dashboards.modalInsightsAskBtn')}
                   </button>
                 </div>
               )}

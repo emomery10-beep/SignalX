@@ -1,0 +1,17 @@
+{
+  "trackShipmentsTitle": "Sendungen verfolgen",
+  "trackShipmentsDesc": "Füge Sendungsnummern hinzu, um Echtzeit-Warnungen bei Lagerengpässen, Zollproblemen und finanziellen Auswirkungen zu erhalten.",
+  "addShipment": "Sendung hinzufügen →",
+  "shipmentsAtRiskSingular": "{n} Sendung gefährdet",
+  "shipmentsAtRiskPlural": "{n} Sendungen gefährdet",
+  "view": "Anzeigen →",
+  "shipmentAlertFallback": "Sendungswarnung",
+  "financialImpact": "£{amount} Auswirkung",
+  "viewShipment": "Sendung anzeigen →",
+  "askAskBiz": "AskBiz fragen →",
+  "askBizPrompt": "Was soll ich wegen Sendung {trackingNumber} tun? Welche Optionen habe ich?",
+  "onTrack": "{n} pünktlich",
+  "delayed": "{n} verzögert",
+  "customsHold": "{n} im Zoll",
+  "viewAll": "Alle anzeigen →"
+}

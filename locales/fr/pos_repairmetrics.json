@@ -1,0 +1,13 @@
+{
+  "sectionTitle": "Services de réparation",
+  "activeJobsLabel": "Travaux en cours",
+  "activeJobsSub": "{intake} en attente · {inProgress} en cours · {completed} prêt",
+  "collectedTodayLabel": "Encaissé aujourd'hui",
+  "repairRevenueLabel": "Revenus de réparation",
+  "repairRevenueSub": "aujourd'hui",
+  "avgTurnaroundLabel": "Délai moyen",
+  "warrantyClaimsLabel": "Demandes de garantie",
+  "inProgress": "en cours",
+  "intake": "en attente",
+  "ready": "prêt"
+}

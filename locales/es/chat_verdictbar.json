@@ -1,0 +1,9 @@
+{
+  "actLabel": "ACTUAR AHORA",
+  "watchLabel": "OBSERVAR",
+  "problemLabel": "ACCIÓN REQUERIDA",
+  "marketCheapest": "↓ El más barato del mercado",
+  "marketCompetitive": "≈ Precio competitivo",
+  "marketPremium": "↑ Posicionado como premium",
+  "marketOverpriced": "⚠ Por encima del precio de mercado"
+}

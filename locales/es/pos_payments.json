@@ -1,0 +1,18 @@
+{
+  "title": "Métodos de pago",
+  "subtitle": "Configura los proveedores de pago y permite que tus clientes paguen con Paystack o Stripe",
+  "loadingConfig": "Cargando configuración de pago...",
+  "stripeAppleGoogleActive": "Apple Pay · Google Pay · Tarjetas activas",
+  "stripeLoadingLink": "Cargando enlace de Stripe…",
+  "stripeCompleteOnboarding": "Haz clic para completar el registro en Stripe",
+  "stripeStatusActive": "● Activo",
+  "stripeStatusPending": "KYC pendiente",
+  "stripeStatusLoading": "…",
+  "splitsNotActiveTitle": "⚠ División de pagos no activa",
+  "splitsNotActiveBody": "Los pagos se envían a la cuenta principal sin división. Corrígelo para enrutar automáticamente la comisión del 2% de AskBiz en cada transacción.",
+  "splitsEnterPhone": "Ingresa tu número de M-Pesa para vincularlo:",
+  "splitsPhonePlaceholder": "07XXXXXXXX",
+  "splitsLinkBtn": "Vincular",
+  "splitsFixBtn": "Corregir divisiones ahora",
+  "splitsFixingBtn": "Corrigiendo..."
+}

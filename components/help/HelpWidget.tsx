@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { HELP_ARTICLES, HELP_TOPICS, searchArticles, getPopularArticles, type HelpArticle } from '@/lib/help-content'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC  = '#d08a59'
 const SF   = '#ffffff'
@@ -30,19 +31,24 @@ const SECTION_MAP: [string, string][] = [
   ['/cfo',          'advanced-intelligence'],
 ]
 
-const QUICK_LINKS = [
-  { label: 'Getting started',  href: '/help/topic/getting-started' },
-  { label: 'FAQ',              href: '/help/faq' },
-  { label: 'Glossary',         href: '/help/glossary' },
-]
+function buildQuickLinks(tc: (k: string) => string) {
+  return [
+    { label: tc('help_helpwidget.gettingStarted'), href: '/help/topic/getting-started' },
+    { label: tc('help_helpwidget.faq'),            href: '/help/faq' },
+    { label: tc('help_helpwidget.glossary'),       href: '/help/glossary' },
+  ]
+}
 
 export default function HelpWidget() {
+  const { tc } = useLang()
   const [open,    setOpen]    = useState(false)
   const [query,   setQuery]   = useState('')
   const [results, setResults] = useState<HelpArticle[]>([])
   const panelRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const pathname = usePathname()
+
+  const QUICK_LINKS = buildQuickLinks(tc)
 
   // Close on outside click
   useEffect(() => {
@@ -82,10 +88,10 @@ export default function HelpWidget() {
     const match = SECTION_MAP.find(([p]) => pathname?.startsWith(p))
     if (match) {
       const topic = HELP_TOPICS.find(t => t.slug === match[1])
-      return topic ? `Help for ${topic.title}` : 'Suggested articles'
+      return topic ? tc('help_helpwidget.helpFor') + topic.title : tc('help_helpwidget.suggestedArticles')
     }
-    return 'Popular articles'
-  }, [pathname])
+    return tc('help_helpwidget.popularArticles')
+  }, [pathname, tc])
 
   return (
     <div ref={panelRef} style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 990, fontFamily: 'DM Sans, system-ui' }}>
@@ -101,7 +107,7 @@ export default function HelpWidget() {
           {/* Header */}
           <div style={{ padding: '14px 16px 12px', borderBottom: `1px solid ${BD}`, background: ACC }}>
             <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 700, color: SF, fontFamily: 'Sora, system-ui' }}>
-              Help Centre
+              {tc('help_helpwidget.panelTitle')}
             </p>
             {/* Search */}
             <div style={{ position: 'relative' }}>
@@ -109,7 +115,7 @@ export default function HelpWidget() {
                 width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.7)" strokeWidth="2" strokeLinecap="round">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
               </svg>
-              <input ref={inputRef} type="text" placeholder="Search help articles…"
+              <input ref={inputRef} type="text" placeholder={tc('help_helpwidget.searchPlaceholder')}
                 value={query} onChange={e => setQuery(e.target.value)}
                 style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px 8px 30px', fontSize: 13, background: 'rgba(255,255,255,.2)', border: '1.5px solid rgba(255,255,255,.3)', borderRadius: 8, color: SF, outline: 'none', fontFamily: 'inherit' }}
               />
@@ -121,7 +127,7 @@ export default function HelpWidget() {
             {results.length > 0 ? (
               <div>
                 <p style={{ fontSize: 10, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', padding: '10px 14px 4px', margin: 0 }}>
-                  Search results
+                  {tc('help_helpwidget.searchResults')}
                 </p>
                 {results.map(a => (
                   <Link key={a.slug} href={`/help/${a.slug}`} onClick={() => { setOpen(false); setQuery('') }}
@@ -146,7 +152,7 @@ export default function HelpWidget() {
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: TX, lineHeight: 1.35, marginBottom: 2 }}>{a.title}</div>
-                      <div style={{ fontSize: 11, color: TX3 }}>{a.readTime} min read</div>
+                      <div style={{ fontSize: 11, color: TX3 }}>{tc('help_helpwidget.minRead', { min: a.readTime })}</div>
                     </div>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}>
                       <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -156,7 +162,7 @@ export default function HelpWidget() {
 
                 {/* Quick links */}
                 <p style={{ fontSize: 10, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', padding: '10px 14px 4px', margin: 0 }}>
-                  Quick links
+                  {tc('help_helpwidget.quickLinks')}
                 </p>
                 {QUICK_LINKS.map(l => (
                   <Link key={l.href} href={l.href} onClick={() => setOpen(false)}
@@ -177,11 +183,11 @@ export default function HelpWidget() {
           <div style={{ padding: '10px 14px', borderTop: `1px solid ${BD}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Link href="/help" onClick={() => setOpen(false)}
               style={{ fontSize: 12, color: ACC, fontWeight: 600, textDecoration: 'none' }}>
-              Full Help Centre →
+              {tc('help_helpwidget.fullHelpCentre')}
             </Link>
             <a href="mailto:hello@askbiz.co"
               style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>
-              Email support
+              {tc('help_helpwidget.emailSupport')}
             </a>
           </div>
         </div>
@@ -190,7 +196,7 @@ export default function HelpWidget() {
       {/* ── Toggle button ── */}
       <button
         onClick={() => setOpen(v => !v)}
-        aria-label={open ? 'Close help' : 'Open help'}
+        aria-label={open ? tc('help_helpwidget.closeHelp') : tc('help_helpwidget.openHelp')}
         style={{
           width: 44, height: 44, borderRadius: '50%',
           background: open ? TX2 : ACC, border: 'none',

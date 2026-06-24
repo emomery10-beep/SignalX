@@ -1,0 +1,8 @@
+{
+  "titleDefault": "Maak een deelbare link voor dit inzicht",
+  "titleWithUrl": "Delen: {url}",
+  "labelIdle": "Delen",
+  "labelLoading": "Link aanmaken…",
+  "labelCopied": "Link gekopieerd!",
+  "labelError": "Opnieuw proberen"
+}

@@ -1,0 +1,11 @@
+{
+  "bellTitle": "Meldingen",
+  "tabPulse": "Pulse",
+  "tabNotifications": "Meldingen",
+  "pulseEmptyHeading": "Alles in orde",
+  "pulseEmptyBody": "Geen urgente acties vereist. Upload nieuwe gegevens om een gezondheidscheck uit te voeren.",
+  "signalDismiss": "Sluiten",
+  "pulseRefresh": "Gezondheidscheck uitvoeren",
+  "notifMarkAllRead": "Alles als gelezen markeren",
+  "notifEmpty": "Nog geen meldingen"
+}

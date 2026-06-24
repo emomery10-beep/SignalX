@@ -1,0 +1,9 @@
+{
+  "logistics_pulsecard": {
+    "title": "📦 Logistik",
+    "outOf100": "/100",
+    "active": "aktiv",
+    "atRisk": "gefährdet",
+    "customsHold": "Zollstopp"
+  }
+}

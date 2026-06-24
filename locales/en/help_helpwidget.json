@@ -1,0 +1,19 @@
+{
+  "help_helpwidget": {
+    "panelTitle": "Help Centre",
+    "searchPlaceholder": "Search help articles…",
+    "searchResults": "Search results",
+    "suggestedArticles": "Suggested articles",
+    "popularArticles": "Popular articles",
+    "helpFor": "Help for {topic}",
+    "quickLinks": "Quick links",
+    "minRead": "{min} min read",
+    "fullHelpCentre": "Full Help Centre →",
+    "emailSupport": "Email support",
+    "openHelp": "Open help",
+    "closeHelp": "Close help",
+    "gettingStarted": "Getting started",
+    "faq": "FAQ",
+    "glossary": "Glossary"
+  }
+}

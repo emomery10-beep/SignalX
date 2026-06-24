@@ -1,0 +1,18 @@
+{
+  "title": "Betaalmethoden",
+  "subtitle": "Configureer betaalproviders en stel klanten in staat te betalen via Paystack of Stripe",
+  "loadingConfig": "Betalingsconfiguratie laden...",
+  "stripeAppleGoogleActive": "Apple Pay · Google Pay · Kaarten actief",
+  "stripeLoadingLink": "Stripe-link laden…",
+  "stripeCompleteOnboarding": "Klik om de Stripe-onboarding te voltooien",
+  "stripeStatusActive": "● Actief",
+  "stripeStatusPending": "KYC in behandeling",
+  "stripeStatusLoading": "…",
+  "splitsNotActiveTitle": "⚠ Platformsplitsing niet actief",
+  "splitsNotActiveBody": "Betalingen gaan naar het hoofdaccount zonder splitsing. Los dit op om de platformvergoeding van 2% van AskBiz automatisch door te berekenen op elke transactie.",
+  "splitsEnterPhone": "Voer uw M-Pesa-nummer in om te koppelen:",
+  "splitsPhonePlaceholder": "07XXXXXXXX",
+  "splitsLinkBtn": "Koppelen",
+  "splitsFixBtn": "Splitsing nu herstellen",
+  "splitsFixingBtn": "Herstellen..."
+}

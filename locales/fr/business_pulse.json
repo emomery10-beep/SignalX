@@ -1,0 +1,9 @@
+{
+  "dismiss": "Ignorer",
+  "newBadge": "NOUVEAU",
+  "panelTitle": "Tableau de bord",
+  "allClear": "Tout est en ordre",
+  "allClearBody": "Votre activité fonctionne sans problème. Aucune action urgente requise.",
+  "uploadPrompt": "Importez de nouvelles données pour lancer un bilan de santé.",
+  "runHealthCheck": "Lancer le bilan de santé"
+}

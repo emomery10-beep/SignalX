@@ -6,13 +6,7 @@ import { useStore } from '@/store'
 import type { AIResult } from '@/lib/ai'
 import { parseFile } from '@/lib/file/parser'
 import ResultBlock from '@/components/chat/ResultBlock'
-
-const BIZ_QUESTIONS: Record<string, string[]> = {
-  retail:      ['Which items should I restock urgently?','What is my best margin product?','Can I increase my prices by 5%?','Where am I losing money?'],
-  ecommerce:   ['Which SKUs have the highest return rate?','Show me my best-performing category','What is my fulfilment cost per order?','Which products should I discount?'],
-  distributor: ['Which routes are most profitable?','Show me margin trends by region','Where is demand growing fastest?','Which customers are behind on payment?'],
-  exporter:    ['How is FX affecting my margins?','Which market has the highest demand?','Show me my top products by value','What is my average cost per shipment?'],
-}
+import { useLang } from '@/components/LanguageProvider'
 
 interface Message {
   id: string
@@ -22,21 +16,33 @@ interface Message {
   timestamp: Date
 }
 
+function buildBizQuestions(tc: (key: string) => string): Record<string, string[]> {
+  return {
+    retail:      [tc('page_chat_id.bizRetail0'), tc('page_chat_id.bizRetail1'), tc('page_chat_id.bizRetail2'), tc('page_chat_id.bizRetail3')],
+    ecommerce:   [tc('page_chat_id.bizEcommerce0'), tc('page_chat_id.bizEcommerce1'), tc('page_chat_id.bizEcommerce2'), tc('page_chat_id.bizEcommerce3')],
+    distributor: [tc('page_chat_id.bizDistributor0'), tc('page_chat_id.bizDistributor1'), tc('page_chat_id.bizDistributor2'), tc('page_chat_id.bizDistributor3')],
+    exporter:    [tc('page_chat_id.bizExporter0'), tc('page_chat_id.bizExporter1'), tc('page_chat_id.bizExporter2'), tc('page_chat_id.bizExporter3')],
+  }
+}
+
 export default function ChatConversationPage() {
   const params = useParams()
   const conversationId = params.id as string
   const router = useRouter()
   const supabase = createClient()
   const { user, geo, settings, session, setActiveFile, setLastResult } = useStore()
+  const { tc } = useLang()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [uploadedFile, setUploadedFile] = useState<{ name: string; summary: string; sample: unknown[] } | null>(null)
   const [uploading, setUploading] = useState(false)
   const [isLoading, setIsLoadingLocal] = useState(false)
-  const [convTitle, setConvTitle] = useState('Conversation')
+  const [convTitle, setConvTitle] = useState(tc('page_chat_id.newConversation'))
   const [winW, setWinW] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200)
   const chatRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  const BIZ_QUESTIONS = buildBizQuestions(tc)
 
   const scrollToBottom = () => { chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: 'smooth' }) }
   useEffect(() => { scrollToBottom() }, [messages])
@@ -146,11 +152,11 @@ export default function ChatConversationPage() {
     } catch {
       setMessages(m => [...m, {
         id: (Date.now() + 1).toString(), role: 'assistant',
-        content: 'Could not reach the AI. Check your connection and try again.',
+        content: tc('page_chat_id.aiError'),
         timestamp: new Date()
       }])
     } finally { setIsLoadingLocal(false) }
-  }, [input, messages, isLoading, conversationId, geo, settings, uploadedFile, session, user?.name, router, supabase, setLastResult])
+  }, [input, messages, isLoading, conversationId, geo, settings, uploadedFile, session, user?.name, router, supabase, setLastResult, tc])
 
   const handleKeyDown = (e: any) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
@@ -170,7 +176,7 @@ export default function ChatConversationPage() {
       {/* Topbar */}
       <div style={{ height:50, padding:'0 18px', borderBottom:'1px solid var(--b)', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0, background:'var(--sf)', gap:10 }}>
         <div style={{ fontSize:13, fontWeight:500, flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-          {isEmpty ? 'New conversation' : convTitle}
+          {isEmpty ? tc('page_chat_id.newConversation') : convTitle}
         </div>
         {uploadedFile && (
           <div style={{ display:'flex', alignItems:'center', gap:5, padding:'3px 9px', borderRadius:9999, background:'rgba(30,212,202,.08)', border:'1px solid rgba(30,212,202,.18)', fontSize:11, color:'#47e2da', flexShrink:0, maxWidth:200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
@@ -181,7 +187,7 @@ export default function ChatConversationPage() {
         <div style={{ display:'flex', gap:7, flexShrink:0 }}>
           <label style={{ display:'flex', alignItems:'center', gap:6, padding:'5px 13px', borderRadius:9999, border:'1px solid var(--b2)', background:'transparent', color:'var(--tx)', fontSize:12, cursor:'pointer', whiteSpace:'nowrap' }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            {uploading ? 'Uploading…' : 'Upload'}
+            {uploading ? tc('page_chat_id.uploadingLabel') : tc('page_chat_id.uploadLabel')}
             <input type="file" accept=".csv,.xlsx,.xls" style={{ display:'none' }} onChange={e => e.target.files?.[0] && handleFileUpload(e.target.files[0])}/>
           </label>
         </div>
@@ -195,9 +201,9 @@ export default function ChatConversationPage() {
               <div style={{ width:50, height:50, borderRadius:14, background:'#6366F1', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 18px' }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#04080f" strokeWidth="2" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
               </div>
-              <div style={{ fontFamily:'var(--font-sora)', fontSize:19, fontWeight:600, marginBottom:7 }}>Ask anything about your data</div>
+              <div style={{ fontFamily:'var(--font-sora)', fontSize:19, fontWeight:600, marginBottom:7 }}>{tc('page_chat_id.emptyHeading')}</div>
               <div style={{ fontSize:13, color:'var(--tx2)', lineHeight:1.65, maxWidth:360, marginBottom:26 }}>
-                {geo ? `Showing prices in ${geo.currencySymbol} · ${geo.country}` : 'Upload a file then ask a business question in plain English.'}
+                {geo ? tc('page_chat_id.emptySubGeo').replace('{symbol}', geo.currencySymbol).replace('{country}', geo.country) : tc('page_chat_id.emptySubDefault')}
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:7, maxWidth:460, width:'100%' }}>
                 {suggestions.map((q, i) => (
@@ -205,7 +211,7 @@ export default function ChatConversationPage() {
                     onMouseEnter={e => { e.currentTarget.style.borderColor='var(--b2)'; e.currentTarget.style.background='var(--ov)' }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor='var(--b)'; e.currentTarget.style.background='var(--ev)' }}>
                     <div style={{ fontSize:12, fontWeight:500, marginBottom:3 }}>{q}</div>
-                    <div style={{ fontSize:11, color:'var(--tx3)' }}>Tap to ask</div>
+                    <div style={{ fontSize:11, color:'var(--tx3)' }}>{tc('page_chat_id.tapToAsk')}</div>
                   </div>
                 ))}
               </div>
@@ -249,7 +255,7 @@ export default function ChatConversationPage() {
         <div style={{ maxWidth: 'min(680px, 100%)', margin:'0 auto' }}>
           <div style={{ display:'flex', gap:7, alignItems:'flex-end', background:'var(--ev)', border:'1px solid var(--b2)', borderRadius:16, padding:'8px 8px 8px 13px', transition:'border-color 180ms' }}>
             <textarea ref={inputRef} value={input} onChange={autoResize} onKeyDown={handleKeyDown}
-              placeholder="Ask a question about your data… (Enter to send)" rows={1}
+              placeholder={tc('page_chat_id.inputPlaceholder')} rows={1}
               style={{ flex:1, background:'transparent', border:'none', outline:'none', color:'var(--tx)', fontFamily:'var(--font-dm,DM Sans,sans-serif)', fontSize:13, lineHeight:1.5, resize:'none', minHeight:20, maxHeight:120, overflowY:'auto' }}/>
             <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
               <label style={{ width:28, height:28, borderRadius:6, border:'1px solid var(--b)', background:'transparent', color:'var(--tx3)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>

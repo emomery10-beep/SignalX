@@ -42,6 +42,7 @@
   "viaRoute": "via",
   "refresh": "Vernieuwen",
   "refreshing": "Vernieuwen…",
+  "collapse": "Samenvouwen",
   "globalCoverageTitle": "Globale signalen worden weergegeven",
   "globalCoverageBody": "Marktklimaat is nog niet afgestemd op {country}, dus je ziet wereldwijde marktsignalen. Je sector en leveranciersblootstelling zijn nog steeds gepersonaliseerd.",
   "globalCoverageCta": "Dekking voor {country} aanvragen →",

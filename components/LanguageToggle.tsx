@@ -10,7 +10,7 @@ import { ACTIVE_LOCALES, localePath, isAppPath, type Locale } from '@/lib/i18n-l
 const LANGS: Lang[] = ACTIVE_LOCALES as Lang[]
 
 export default function LanguageToggle({ compact }: { compact?: boolean }) {
-  const { lang, setLang, langNames, langFlags } = useLang()
+  const { lang, setLang, langNames, langFlags, tc } = useLang()
   const pathname = usePathname()
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -45,7 +45,7 @@ export default function LanguageToggle({ compact }: { compact?: boolean }) {
       {/* Toggle button */}
       <button
         onClick={() => setOpen(o => !o)}
-        title="Change language"
+        title={tc('lang_toggle.changeLanguage')}
         style={compact ? {
           width: 30, height: 30, borderRadius: 7,
           border: 'none', background: 'transparent',

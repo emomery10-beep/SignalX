@@ -116,7 +116,7 @@ async function run() {
       // Translate in small batches so one un-parseable value only sinks its own
       // batch, not the whole namespace. Failed batches leave their keys missing —
       // they fall back to English at runtime and get retried on the next run.
-      const CHUNK = 25
+      const CHUNK = 10
       const translated = {}
       let failedKeys = 0
       for (let i = 0; i < missingKeys.length; i += CHUNK) {

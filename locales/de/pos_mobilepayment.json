@@ -1,0 +1,20 @@
+{
+  "mPesaPayment": "M-Pesa-Zahlung",
+  "askCustomerForNumber": "Kunden nach ihrer M-Pesa-Nummer fragen",
+  "phonePlaceholder": "07XX XXX XXX",
+  "sendMpesaPrompt": "📲 M-Pesa-Anfrage senden",
+  "customerWillGetPopup": "Der Kunde erhält eine Benachrichtigung auf seinem Telefon zur Zahlungsbestätigung",
+  "sendingTo": "Wird gesendet an {phone}...",
+  "justAMoment": "Einen Moment bitte",
+  "waitingForCustomer": "Warte auf Kunden",
+  "checkTheirPhone": "Bitte das Telefon prüfen",
+  "mpesaPromptSentTo": "M-Pesa-Anfrage gesendet an",
+  "askThemToEnterPin": "Bitte den Kunden, zur Bestätigung seine M-Pesa-PIN einzugeben",
+  "waitingForPinConfirmation": "⏳ Warte auf PIN-Bestätigung...",
+  "updatesAutomatically": "Wird nach Zahlung automatisch aktualisiert",
+  "wrongNumberSendAgain": "Falsche Nummer? Erneut senden",
+  "mpesaPaymentReceived": "M-Pesa-Zahlung eingegangen!",
+  "amountFrom": "{currencySymbol}{amount} von {phone}",
+  "paymentFailedOrTimedOut": "Zahlung fehlgeschlagen oder abgelaufen",
+  "tryAgain": "Erneut versuchen"
+}

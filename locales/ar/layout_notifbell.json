@@ -1,0 +1,11 @@
+{
+  "bellTitle": "الإشعارات",
+  "tabPulse": "النبض",
+  "tabNotifications": "الإشعارات",
+  "pulseEmptyHeading": "كل شيء على ما يرام",
+  "pulseEmptyBody": "لا توجد إجراءات عاجلة. ارفع بيانات جديدة لإجراء فحص شامل.",
+  "signalDismiss": "تجاهل",
+  "pulseRefresh": "إجراء فحص شامل",
+  "notifMarkAllRead": "تحديد الكل كمقروء",
+  "notifEmpty": "لا توجد إشعارات بعد"
+}

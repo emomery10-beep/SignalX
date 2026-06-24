@@ -1,0 +1,13 @@
+{
+  "sectionTitle": "Reparaturdienste",
+  "activeJobsLabel": "Aktive Aufträge",
+  "activeJobsSub": "{intake} Eingang · {inProgress} in Bearbeitung · {completed} bereit",
+  "collectedTodayLabel": "Heute eingenommen",
+  "repairRevenueLabel": "Reparaturumsatz",
+  "repairRevenueSub": "heute",
+  "avgTurnaroundLabel": "Ø Bearbeitungszeit",
+  "warrantyClaimsLabel": "Garantieansprüche",
+  "inProgress": "in Bearbeitung",
+  "intake": "Eingang",
+  "ready": "bereit"
+}

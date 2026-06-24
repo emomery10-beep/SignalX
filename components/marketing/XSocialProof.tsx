@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 interface XReply {
   tweet_author: string
@@ -10,6 +11,7 @@ interface XReply {
 }
 
 export default function XSocialProof({ limit = 6 }: { limit?: number }) {
+  const { tc } = useLang()
   const [replies, setReplies] = useState<XReply[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -31,13 +33,13 @@ export default function XSocialProof({ limit = 6 }: { limit?: number }) {
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '5px 14px', borderRadius: 9999, background: 'rgba(29,155,240,.08)', border: '1px solid rgba(29,155,240,.2)' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="#1d9bf0"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.736l7.748-8.855L1.254 2.25H8.08l4.261 5.636 5.903-5.636zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#1d9bf0' }}>Live from our community</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#1d9bf0' }}>{tc('marketing_xproof.liveBadge')}</span>
           </div>
           <h2 style={{ fontFamily: 'var(--font-sora)', fontSize: 'clamp(20px,3vw,26px)', fontWeight: 700, letterSpacing: '-.02em', marginBottom: 8 }}>
-            Real answers for real business problems
+            {tc('marketing_xproof.heading')}
           </h2>
           <p style={{ fontSize: 14, color: 'var(--tx3)', maxWidth: 480, margin: '0 auto' }}>
-            We help business owners on X every day — here's what that looks like.
+            {tc('marketing_xproof.subheading')}
           </p>
         </div>
 
@@ -93,7 +95,7 @@ export default function XSocialProof({ limit = 6 }: { limit?: number }) {
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#1d9bf0', fontWeight: 500 }}>
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="#1d9bf0"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.736l7.748-8.855L1.254 2.25H8.08l4.261 5.636 5.903-5.636z"/></svg>
-                  View on X
+                  {tc('marketing_xproof.viewOnX')}
                 </div>
               </div>
             </a>
@@ -103,7 +105,7 @@ export default function XSocialProof({ limit = 6 }: { limit?: number }) {
         {/* CTA */}
         <div style={{ textAlign: 'center', marginTop: 32 }}>
           <a href="https://askbiz.co" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '11px 22px', borderRadius: 9999, background: '#6366F1', color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 600, fontFamily: 'var(--font-sora)' }}>
-            Get answers for your business →
+            {tc('marketing_xproof.ctaButton')}
           </a>
         </div>
       </div>

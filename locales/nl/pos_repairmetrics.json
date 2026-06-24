@@ -1,0 +1,13 @@
+{
+  "sectionTitle": "Reparatiediensten",
+  "activeJobsLabel": "Actieve opdrachten",
+  "activeJobsSub": "{intake} intake · {inProgress} in behandeling · {completed} gereed",
+  "collectedTodayLabel": "Vandaag geïncasseerd",
+  "repairRevenueLabel": "Reparatie-omzet",
+  "repairRevenueSub": "vandaag",
+  "avgTurnaroundLabel": "Gem. doorlooptijd",
+  "warrantyClaimsLabel": "Garantieclaims",
+  "inProgress": "in behandeling",
+  "intake": "intake",
+  "ready": "gereed"
+}

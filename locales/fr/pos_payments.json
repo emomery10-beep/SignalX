@@ -1,0 +1,18 @@
+{
+  "title": "Moyens de paiement",
+  "subtitle": "Configurez vos prestataires de paiement et permettez à vos clients de payer via Paystack ou Stripe",
+  "loadingConfig": "Chargement de la configuration de paiement…",
+  "stripeAppleGoogleActive": "Apple Pay · Google Pay · Cartes actives",
+  "stripeLoadingLink": "Chargement du lien Stripe…",
+  "stripeCompleteOnboarding": "Cliquez pour finaliser l'intégration Stripe",
+  "stripeStatusActive": "● Actif",
+  "stripeStatusPending": "KYC en attente",
+  "stripeStatusLoading": "…",
+  "splitsNotActiveTitle": "⚠ Répartition des paiements inactive",
+  "splitsNotActiveBody": "Les paiements sont dirigés vers le compte principal sans répartition. Corrigez cela pour router automatiquement les frais de plateforme AskBiz de 2 % sur chaque transaction.",
+  "splitsEnterPhone": "Saisissez votre numéro M-Pesa à associer :",
+  "splitsPhonePlaceholder": "07XXXXXXXX",
+  "splitsLinkBtn": "Associer",
+  "splitsFixBtn": "Corriger la répartition",
+  "splitsFixingBtn": "Correction…"
+}

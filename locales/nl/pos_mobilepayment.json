@@ -1,0 +1,20 @@
+{
+  "mPesaPayment": "M-Pesa-betaling",
+  "askCustomerForNumber": "Vraag de klant om hun M-Pesa-nummer",
+  "phonePlaceholder": "07XX XXX XXX",
+  "sendMpesaPrompt": "📲 M-Pesa-verzoek versturen",
+  "customerWillGetPopup": "De klant ontvangt een melding op hun telefoon om de betaling te bevestigen",
+  "sendingTo": "Versturen naar {phone}...",
+  "justAMoment": "Ogenblik geduld",
+  "waitingForCustomer": "Wachten op klant",
+  "checkTheirPhone": "Laat hen hun telefoon controleren",
+  "mpesaPromptSentTo": "M-Pesa-verzoek verzonden naar",
+  "askThemToEnterPin": "Vraag hen hun M-Pesa-pincode in te voeren ter bevestiging",
+  "waitingForPinConfirmation": "⏳ Wachten op pincode-bevestiging...",
+  "updatesAutomatically": "Wordt automatisch bijgewerkt na betaling",
+  "wrongNumberSendAgain": "Verkeerd nummer? Opnieuw versturen",
+  "mpesaPaymentReceived": "M-Pesa-betaling ontvangen!",
+  "amountFrom": "{currencySymbol}{amount} van {phone}",
+  "paymentFailedOrTimedOut": "Betaling mislukt of verlopen",
+  "tryAgain": "Opnieuw proberen"
+}

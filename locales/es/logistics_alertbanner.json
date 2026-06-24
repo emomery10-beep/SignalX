@@ -1,0 +1,17 @@
+{
+  "trackShipmentsTitle": "Rastrea tus envíos",
+  "trackShipmentsDesc": "Añade números de seguimiento para recibir alertas de falta de stock, avisos de aduanas e impacto financiero en tiempo real.",
+  "addShipment": "Añadir envío →",
+  "shipmentsAtRiskSingular": "{n} envío en riesgo",
+  "shipmentsAtRiskPlural": "{n} envíos en riesgo",
+  "view": "Ver →",
+  "shipmentAlertFallback": "Alerta de envío",
+  "financialImpact": "£{amount} de impacto",
+  "viewShipment": "Ver envío →",
+  "askAskBiz": "Preguntar a AskBiz →",
+  "askBizPrompt": "¿Qué debo hacer con el envío {trackingNumber}? ¿Cuáles son mis opciones?",
+  "onTrack": "{n} en camino",
+  "delayed": "{n} con retraso",
+  "customsHold": "{n} retenido en aduana",
+  "viewAll": "Ver todos →"
+}

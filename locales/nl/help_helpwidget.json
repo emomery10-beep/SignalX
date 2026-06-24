@@ -1,0 +1,19 @@
+{
+  "help_helpwidget": {
+    "panelTitle": "Helpcentrum",
+    "searchPlaceholder": "Zoek helpartikelen…",
+    "searchResults": "Zoekresultaten",
+    "suggestedArticles": "Aanbevolen artikelen",
+    "popularArticles": "Populaire artikelen",
+    "helpFor": "Help voor {topic}",
+    "quickLinks": "Snelle koppelingen",
+    "minRead": "{min} min lezen",
+    "fullHelpCentre": "Volledig helpcentrum →",
+    "emailSupport": "E-mailondersteuning",
+    "openHelp": "Help openen",
+    "closeHelp": "Help sluiten",
+    "gettingStarted": "Aan de slag",
+    "faq": "FAQ",
+    "glossary": "Woordenlijst"
+  }
+}

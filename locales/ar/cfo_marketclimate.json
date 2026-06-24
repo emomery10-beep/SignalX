@@ -42,6 +42,7 @@
   "viaRoute": "عبر",
   "refresh": "تحديث",
   "refreshing": "جارٍ التحديث…",
+  "collapse": "طي",
   "globalCoverageTitle": "عرض الإشارات العالمية",
   "globalCoverageBody": "لم يتم ضبط مناخ السوق لـ {country} بعد، لذا تظهر لك إشارات السوق العالمية. لا يزال قطاعك وتعرّضك للموردين مخصَّصَين لك.",
   "globalCoverageCta": "طلب تغطية {country} ←",

@@ -42,6 +42,7 @@
   "viaRoute": "über",
   "refresh": "Aktualisieren",
   "refreshing": "Wird aktualisiert …",
+  "collapse": "Einklappen",
   "globalCoverageTitle": "Globale Signale werden angezeigt",
   "globalCoverageBody": "Market Climate ist noch nicht für {country} verfügbar, daher siehst du globale Marktsignale. Dein Sektor und deine Lieferantenrisiken sind weiterhin personalisiert.",
   "globalCoverageCta": "{country}-Abdeckung anfragen →",

@@ -1,0 +1,18 @@
+{
+  "generatingTitle": "جارٍ إنشاء رابط الدفع...",
+  "generatingSubtitle": "لحظة من فضلك",
+  "amountDue": "المبلغ المستحق",
+  "showQrInstruction": "اعرض هذا الرمز على العميل",
+  "scanToPayAlt": "امسح للدفع",
+  "scanQrTitle": "مسح QR",
+  "scanQrSubtitle": "بأي كاميرا",
+  "walletTitle": "Apple / Google Pay",
+  "walletSubtitle": "انقر للدفع على الجهاز",
+  "waitingMessage": "⏳ في انتظار دفع العميل...",
+  "waitingSubtitle": "تتحدث الصفحة تلقائياً",
+  "shareLink": "مشاركة رابط الدفع بدلاً من ذلك",
+  "paymentReceived": "تم استلام الدفع!",
+  "paymentReceivedDetail": "{symbol}{amount} بالبطاقة",
+  "paymentFailed": "فشل الدفع",
+  "tryAgain": "حاول مجدداً"
+}

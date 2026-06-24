@@ -1,0 +1,8 @@
+{
+  "gates_featuregate": {
+    "featureLabel": "Fonctionnalité {label}",
+    "upgradeTo": "Passer à {label} →",
+    "seeAllPlans": "Voir tous les forfaits",
+    "currentPlan": "Vous êtes sur le forfait {plan}"
+  }
+}

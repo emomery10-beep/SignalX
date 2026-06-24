@@ -1,0 +1,8 @@
+{
+  "titleDefault": "إنشاء رابط قابل للمشاركة لهذه المعلومة",
+  "titleWithUrl": "مشاركة: {url}",
+  "labelIdle": "مشاركة",
+  "labelLoading": "جارٍ إنشاء الرابط…",
+  "labelCopied": "تم نسخ الرابط!",
+  "labelError": "حاول مجدداً"
+}

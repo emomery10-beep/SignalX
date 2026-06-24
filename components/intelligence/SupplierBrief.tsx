@@ -176,7 +176,7 @@ export default function SupplierBrief({ onAsk }: { onAsk?: (prompt: string) => v
       {/* Negotiation brief */}
       {loadingBrief && (
         <div style={{ padding: 12, borderRadius: 10, background: 'var(--ev, #f3f2ef)', textAlign: 'center', fontSize: 12, color: 'var(--tx3)' }}>
-          {tc('intel_supplierbrief.generatingBrief', { name: selectedSupplier })}
+          {tc('intel_supplierbrief.generatingBrief', { name: selectedSupplier ?? '' })}
         </div>
       )}
 

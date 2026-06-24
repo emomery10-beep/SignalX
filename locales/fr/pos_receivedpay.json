@@ -1,0 +1,20 @@
+{
+  "title": "Paiements reçus",
+  "headerBadge": "{count} reçus · {total}",
+  "statReceivedLabel": "Reçus",
+  "statReceivedSub": "paiements",
+  "statTotalLabel": "Total",
+  "statTotalSub": "collecté",
+  "statAvgLabel": "Moy.",
+  "statAvgSub": "par paiement",
+  "loading": "Chargement...",
+  "emptyTitle": "Aucun paiement numérique reçu pour l'instant.",
+  "emptyBody": "Les paiements via M-Pesa, carte ou mobile money apparaîtront ici une fois confirmés.",
+  "defaultCustomer": "Client",
+  "statusPaid": "Payé",
+  "statusReceived": "Reçu",
+  "justNow": "À l'instant",
+  "minutesAgo": "il y a {mins} min",
+  "hoursAgo": "il y a {h} h",
+  "daysAgo": "il y a {d} j"
+}

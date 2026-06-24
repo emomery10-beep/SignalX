@@ -1,0 +1,8 @@
+{
+  "titleDefault": "Crear un enlace compartible para este análisis",
+  "titleWithUrl": "Compartir: {url}",
+  "labelIdle": "Compartir",
+  "labelLoading": "Creando enlace…",
+  "labelCopied": "¡Enlace copiado!",
+  "labelError": "Reintentar"
+}

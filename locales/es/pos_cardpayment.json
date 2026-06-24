@@ -1,0 +1,18 @@
+{
+  "generatingTitle": "Generando enlace de pago...",
+  "generatingSubtitle": "Un momento",
+  "amountDue": "Monto a pagar",
+  "showQrInstruction": "Muestra este código QR al cliente",
+  "scanToPayAlt": "Escanear para pagar",
+  "scanQrTitle": "Escanear QR",
+  "scanQrSubtitle": "con cualquier cámara",
+  "walletTitle": "Apple / Google Pay",
+  "walletSubtitle": "toca para pagar en el dispositivo",
+  "waitingMessage": "⏳ Esperando que el cliente pague...",
+  "waitingSubtitle": "La página se actualiza automáticamente",
+  "shareLink": "Compartir enlace de pago",
+  "paymentReceived": "¡Pago recibido!",
+  "paymentReceivedDetail": "{symbol}{amount} con tarjeta",
+  "paymentFailed": "Pago fallido",
+  "tryAgain": "Intentar de nuevo"
+}

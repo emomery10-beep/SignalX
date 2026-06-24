@@ -1,5 +1,6 @@
 'use client'
 import { useRouter } from 'next/navigation'
+import { useLang } from '@/components/LanguageProvider'
 
 interface PaywallProps {
   type: 'soft_warning' | 'limit_reached' | 'feature_locked'
@@ -9,8 +10,20 @@ interface PaywallProps {
   planNeeded?: 'growth' | 'business'
 }
 
+function buildFeatures(tc: (k: string) => string) {
+  return [
+    tc('billing_paywall.feature500Questions'),
+    tc('billing_paywall.feature10Uploads'),
+    tc('billing_paywall.featureExpansion'),
+    tc('billing_paywall.featureLiveSync'),
+    tc('billing_paywall.featureAlerts'),
+    tc('billing_paywall.featureTrial'),
+  ]
+}
+
 export default function Paywall({ type, questionsUsed = 0, questionLimit = 10, feature, planNeeded = 'growth' }: PaywallProps) {
   const router = useRouter()
+  const { tc } = useLang()
 
   const upgrade = async () => {
     const res = await fetch('/api/billing', {
@@ -35,29 +48,33 @@ export default function Paywall({ type, questionsUsed = 0, questionLimit = 10, f
     })
   }
 
+  const featureLabel = feature || 'This feature'
+
   const content = {
     soft_warning: {
       emoji: '📈',
-      title: "You're getting a lot out of AskBiz",
-      body: `You've used ${questionsUsed} of your ${questionLimit} monthly questions. You're clearly finding value — unlock more so you never have to stop mid-analysis.`,
-      cta: 'Unlock more questions →',
-      secondary: 'View plans',
+      title: tc('billing_paywall.softWarningTitle'),
+      body: tc('billing_paywall.softWarningBody', { questionsUsed, questionLimit }),
+      cta: tc('billing_paywall.softWarningCta'),
+      secondary: tc('billing_paywall.softWarningSecondary'),
     },
     limit_reached: {
       emoji: '🚀',
-      title: "You've made the most of your free plan",
-      body: `You've used all ${questionLimit} free questions this month. Upgrade to keep going — your data and conversations are all saved and waiting.`,
-      cta: 'Continue with Growth — £19/month →',
-      secondary: 'View all plans',
+      title: tc('billing_paywall.limitReachedTitle'),
+      body: tc('billing_paywall.limitReachedBody', { questionLimit }),
+      cta: tc('billing_paywall.limitReachedCta'),
+      secondary: tc('billing_paywall.limitReachedSecondary'),
     },
     feature_locked: {
       emoji: '✨',
-      title: `${feature || 'This feature'} is on Growth`,
-      body: `${feature || 'This'} is available on the Growth plan. Upgrade to unlock expansion intelligence, live sync, alerts, forecasts, and more.`,
-      cta: 'Unlock Growth — £19/month →',
-      secondary: 'See what else is included',
+      title: tc('billing_paywall.featureLockedTitle', { feature: featureLabel }),
+      body: tc('billing_paywall.featureLockedBody', { feature: featureLabel }),
+      cta: tc('billing_paywall.featureLockedCta'),
+      secondary: tc('billing_paywall.featureLockedSecondary'),
     },
   }[type]
+
+  const features = buildFeatures(tc)
 
   return (
     <div onMouseEnter={logTrigger} style={{ maxWidth:460, margin:'16px auto', padding:'24px 26px', borderRadius:18, border:'1px solid rgba(30,212,202,.28)', background:'linear-gradient(135deg,rgba(30,212,202,.06),rgba(146,104,248,.06))', textAlign:'center' }}>
@@ -71,14 +88,7 @@ export default function Paywall({ type, questionsUsed = 0, questionLimit = 10, f
 
       {/* Feature highlights */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:7, marginBottom:20, textAlign:'left' }}>
-        {[
-          '500 AI questions/month',
-          '10 file uploads',
-          'Expansion intelligence',
-          'Live data sync',
-          'Alerts & forecasts',
-          '7-day free trial',
-        ].map((f, i) => (
+        {features.map((f, i) => (
           <div key={i} style={{ fontSize:11, color:'var(--tx2)', padding:'6px 10px', borderRadius:8, background:'rgba(30,212,202,.07)', border:'1px solid rgba(30,212,202,.15)' }}>
             ✓ {f}
           </div>
@@ -94,7 +104,7 @@ export default function Paywall({ type, questionsUsed = 0, questionLimit = 10, f
       </button>
 
       <div style={{ fontSize:11, color:'var(--tx3)', marginTop:10 }}>
-        7-day free trial · Cancel anytime · Price locked for early adopters
+        {tc('billing_paywall.footer')}
       </div>
     </div>
   )

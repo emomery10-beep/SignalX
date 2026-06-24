@@ -1,0 +1,18 @@
+{
+  "generatingTitle": "Betaallink aanmaken...",
+  "generatingSubtitle": "Even geduld",
+  "amountDue": "Te betalen bedrag",
+  "showQrInstruction": "Toon deze QR-code aan de klant",
+  "scanToPayAlt": "Scan om te betalen",
+  "scanQrTitle": "Scan QR",
+  "scanQrSubtitle": "met elke camera",
+  "walletTitle": "Apple / Google Pay",
+  "walletSubtitle": "tik om te betalen op dit apparaat",
+  "waitingMessage": "⏳ Wachten op betaling van klant...",
+  "waitingSubtitle": "Pagina wordt automatisch bijgewerkt",
+  "shareLink": "Deel in plaats daarvan de betaallink",
+  "paymentReceived": "Betaling ontvangen!",
+  "paymentReceivedDetail": "{symbol}{amount} via kaart",
+  "paymentFailed": "Betaling mislukt",
+  "tryAgain": "Opnieuw proberen"
+}

@@ -3,17 +3,20 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import DiscoveryAgentCard from '@/components/admin/DiscoveryAgentCard'
+import { useLang } from '@/components/LanguageProvider'
 
 const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
 
-const PRESETS = [
-  { id: 'sme_pain',         label: 'SME Pain Points',    query: 'small business struggling cash flow margins' },
-  { id: 'shopify_problems', label: 'Shopify Problems',    query: 'shopify margins profit not making money' },
-  { id: 'amazon_sellers',   label: 'Amazon Seller Pain',  query: 'amazon fba fees margins profit' },
-  { id: 'ecommerce_data',   label: 'eCommerce Data Qs',   query: 'ecommerce analytics best selling product track sales' },
-  { id: 'ai_business',      label: 'AI for Business',     query: 'AI small business analytics data insights founder' },
-  { id: 'uk_retail',        label: 'UK Retail Pain',      query: 'UK retail shop inflation costs margins' },
-]
+function buildPresets(tc: (k: string) => string) {
+  return [
+    { id: 'sme_pain',         label: tc('page_admin_agent.presetSmePain'),        query: 'small business struggling cash flow margins' },
+    { id: 'shopify_problems', label: tc('page_admin_agent.presetShopifyProblems'), query: 'shopify margins profit not making money' },
+    { id: 'amazon_sellers',   label: tc('page_admin_agent.presetAmazonSellers'),   query: 'amazon fba fees margins profit' },
+    { id: 'ecommerce_data',   label: tc('page_admin_agent.presetEcommerceData'),   query: 'ecommerce analytics best selling product track sales' },
+    { id: 'ai_business',      label: tc('page_admin_agent.presetAiBusiness'),      query: 'AI small business analytics data insights founder' },
+    { id: 'uk_retail',        label: tc('page_admin_agent.presetUkRetail'),        query: 'UK retail shop inflation costs margins' },
+  ]
+}
 
 interface AgentItem {
   id: string; run_id: string; type: 'blog' | 'thread' | 'smart_reply'
@@ -30,6 +33,8 @@ const VERDICT_STYLE = {
 }
 
 export default function AgentAdminPage() {
+  const { tc } = useLang()
+  const PRESETS = buildPresets(tc)
   const router = useRouter()
   const supabase = createClient()
   const [authorized, setAuthorized] = useState(false)
@@ -141,7 +146,7 @@ export default function AgentAdminPage() {
       const res = await fetch(`/api/cron/${jobId}?secret=dev-test`)
       const data = await res.json()
       setAutoJobs(prev => ({...prev, [jobId]: {running: false, result: data, lastRun: new Date().toISOString()}}))
-      showToast(data.success ? `${jobId} completed` : (data.error || 'Failed'), !!data.success)
+      showToast(data.success ? tc('page_admin_agent.jobCompleted', { jobId }) : (data.error || 'Failed'), !!data.success)
     } catch (e) {
       setAutoJobs(prev => ({...prev, [jobId]: {running: false, result: {error: String(e)}, lastRun: null}}))
       showToast(String(e), false)
@@ -341,9 +346,9 @@ export default function AgentAdminPage() {
       const res = await fetch('/api/agent/blog-scout?secret=dev-test')
       const data = await res.json()
       setAliceRunLog(data.log || [String(data.error || 'Unknown error')])
-      if (data.success) { showToast(`Alice drafted ${data.blogsGenerated} blog posts`); setAliceLoading(true); setAliceFilter('published'); loadAliceCounts() }
-      else showToast('Scout failed — check log', false)
-    } catch (e) { setAliceRunLog([`Error: ${String(e)}`]); showToast('Scout failed', false) }
+      if (data.success) { showToast(tc('page_admin_agent.aliceDrafted', { n: data.blogsGenerated })); setAliceLoading(true); setAliceFilter('published'); loadAliceCounts() }
+      else showToast(tc('page_admin_agent.scoutFailedLog'), false)
+    } catch (e) { setAliceRunLog([`Error: ${String(e)}`]); showToast(tc('page_admin_agent.scoutFailed'), false) }
     finally { setAliceRunning(false) }
   }
 
@@ -353,9 +358,9 @@ export default function AgentAdminPage() {
       const res  = await fetch('/api/agent/victor-scout?secret=dev-test')
       const data = await res.json()
       setVictorRunLog(data.log || [String(data.error || 'Unknown error')])
-      if (data.success) { showToast(`Victor drafted ${data.blogsGenerated} posts`); setVictorLoading(true); setVictorFilter('published'); loadVictorCounts() }
-      else showToast('Scout failed — check log', false)
-    } catch (e) { setVictorRunLog([`Error: ${String(e)}`]); showToast('Scout failed', false) }
+      if (data.success) { showToast(tc('page_admin_agent.victorDrafted', { n: data.blogsGenerated })); setVictorLoading(true); setVictorFilter('published'); loadVictorCounts() }
+      else showToast(tc('page_admin_agent.scoutFailedLog'), false)
+    } catch (e) { setVictorRunLog([`Error: ${String(e)}`]); showToast(tc('page_admin_agent.scoutFailed'), false) }
     finally { setVictorRunning(false) }
   }
 
@@ -381,9 +386,9 @@ export default function AgentAdminPage() {
       const data = await res.json()
       if (!res.ok || !data.success) { showToast(data.error || `Failed (${res.status})`, false); return }
       if (action === 'approve' && data.slug) {
-        showToast(`Published → askbiz.co/blog/${data.slug}`)
+        showToast(tc('page_admin_agent.publishedToBlog', { slug: data.slug }))
       } else {
-        showToast(action === 'approve' ? 'Authorised & published' : 'Rejected')
+        showToast(action === 'approve' ? tc('page_admin_agent.authorisedAndPublished') : tc('page_admin_agent.toastRejected'))
       }
       setVictorPreview(null)
       setVictorItems(prev => prev.filter(item => item.id !== id))
@@ -403,9 +408,9 @@ export default function AgentAdminPage() {
       const res  = await fetch('/api/agent/ben-scout?secret=dev-test')
       const data = await res.json()
       setBenRunLog(data.log || [String(data.error || 'Unknown error')])
-      if (data.success) { showToast(`Ben drafted ${data.blogsGenerated} posts`); setBenLoading(true); setBenFilter('published'); loadBenCounts() }
-      else showToast('Scout failed — check log', false)
-    } catch (e) { setBenRunLog([`Error: ${String(e)}`]); showToast('Scout failed', false) }
+      if (data.success) { showToast(tc('page_admin_agent.benDrafted', { n: data.blogsGenerated })); setBenLoading(true); setBenFilter('published'); loadBenCounts() }
+      else showToast(tc('page_admin_agent.scoutFailedLog'), false)
+    } catch (e) { setBenRunLog([`Error: ${String(e)}`]); showToast(tc('page_admin_agent.scoutFailed'), false) }
     finally { setBenRunning(false) }
   }
 
@@ -431,9 +436,9 @@ export default function AgentAdminPage() {
       const data = await res.json()
       if (!res.ok || !data.success) { showToast(data.error || `Failed (${res.status})`, false); return }
       if (action === 'approve' && data.slug) {
-        showToast(`Published → askbiz.co/blog/${data.slug}`)
+        showToast(tc('page_admin_agent.publishedToBlog', { slug: data.slug }))
       } else {
-        showToast(action === 'approve' ? 'Authorised & published' : 'Rejected')
+        showToast(action === 'approve' ? tc('page_admin_agent.authorisedAndPublished') : tc('page_admin_agent.toastRejected'))
       }
       setBenPreview(null)
       setBenItems(prev => prev.filter(item => item.id !== id))
@@ -453,9 +458,9 @@ export default function AgentAdminPage() {
       const res  = await fetch('/api/agent/carolyne-scout?secret=dev-test')
       const data = await res.json()
       setCarolyneRunLog(data.log || [String(data.error || 'Unknown error')])
-      if (data.success) { showToast(`Carolyne drafted ${data.blogsGenerated} posts`); setCarolyneLoading(true); setCarolyneFilter('published'); loadCarolyneCounts() }
-      else showToast('Scout failed — check log', false)
-    } catch (e) { setCarolyneRunLog([`Error: ${String(e)}`]); showToast('Scout failed', false) }
+      if (data.success) { showToast(tc('page_admin_agent.carolyneDrafted', { n: data.blogsGenerated })); setCarolyneLoading(true); setCarolyneFilter('published'); loadCarolyneCounts() }
+      else showToast(tc('page_admin_agent.scoutFailedLog'), false)
+    } catch (e) { setCarolyneRunLog([`Error: ${String(e)}`]); showToast(tc('page_admin_agent.scoutFailed'), false) }
     finally { setCarolyneRunning(false) }
   }
 
@@ -465,9 +470,9 @@ export default function AgentAdminPage() {
       const res  = await fetch('/api/agent/marketing-scout?secret=dev-test')
       const data = await res.json()
       setMayaRunLog(data.log || [String(data.error || 'Unknown error')])
-      if (data.success) { showToast(`Maya drafted ${data.blogsGenerated} posts`); setMayaLoading(true); setMayaFilter('published'); loadMayaCounts() }
-      else showToast('Scout failed — check log', false)
-    } catch (e) { setMayaRunLog([`Error: ${String(e)}`]); showToast('Scout failed', false) }
+      if (data.success) { showToast(tc('page_admin_agent.mayaDrafted', { n: data.blogsGenerated })); setMayaLoading(true); setMayaFilter('published'); loadMayaCounts() }
+      else showToast(tc('page_admin_agent.scoutFailedLog'), false)
+    } catch (e) { setMayaRunLog([`Error: ${String(e)}`]); showToast(tc('page_admin_agent.scoutFailed'), false) }
     finally { setMayaRunning(false) }
   }
 
@@ -493,9 +498,9 @@ export default function AgentAdminPage() {
       const data = await res.json()
       if (!res.ok || !data.success) { showToast(data.error || `Failed (${res.status})`, false); return }
       if (action === 'approve' && data.slug) {
-        showToast(`Published → askbiz.co/blog/${data.slug}`)
+        showToast(tc('page_admin_agent.publishedToBlog', { slug: data.slug }))
       } else {
-        showToast(action === 'approve' ? 'Authorised & published' : 'Rejected')
+        showToast(action === 'approve' ? tc('page_admin_agent.authorisedAndPublished') : tc('page_admin_agent.toastRejected'))
       }
       setMayaPreview(null)
       setMayaItems(prev => prev.filter(item => item.id !== id))
@@ -540,9 +545,9 @@ export default function AgentAdminPage() {
         return
       }
       if (action === 'approve' && data.slug) {
-        showToast(`Published → askbiz.co/blog/${data.slug}`)
+        showToast(tc('page_admin_agent.publishedToBlog', { slug: data.slug }))
       } else {
-        showToast(action === 'approve' ? 'Published to blog' : 'Rejected')
+        showToast(action === 'approve' ? tc('page_admin_agent.publishedToBlogToast') : tc('page_admin_agent.toastRejected'))
       }
       setAlicePreview(null)
       // Optimistically remove from local list and update counts
@@ -572,7 +577,7 @@ export default function AgentAdminPage() {
       })
       const data = await res.json()
       if (!res.ok || !data.success) { showToast(data.error || `Failed (${res.status})`, false); return }
-      showToast(action === 'approve' ? 'Authorised & published' : 'Rejected')
+      showToast(action === 'approve' ? tc('page_admin_agent.authorisedAndPublished') : tc('page_admin_agent.toastRejected'))
       setCarolynePreview(null)
       setCarolyneItems(prev => prev.filter(item => item.id !== id))
       setCarolyneCounts(prev => ({
@@ -600,9 +605,9 @@ export default function AgentAdminPage() {
       const d = await res.json()
       if (d.success) {
         setSecReport(d.report)
-        showToast(`Audit complete — ${d.report.passed}/${d.report.total_checks} passed`)
+        showToast(tc('page_admin_agent.auditComplete', { passed: d.report.passed, total: d.report.total_checks }))
         loadSecHistory()
-      } else showToast(d.error || 'Audit failed', false)
+      } else showToast(d.error || tc('page_admin_agent.auditFailed'), false)
     } catch (e: any) { showToast(e.message, false) }
     finally { setSecRunning(false) }
   }
@@ -623,7 +628,7 @@ export default function AgentAdminPage() {
       a.download = `askbiz-security-audit-${new Date().toISOString().slice(0, 10)}.csv`
       a.click()
       URL.revokeObjectURL(url)
-      showToast('CSV exported')
+      showToast(tc('page_admin_agent.csvExported'))
     } catch (e: any) { showToast(e.message, false) }
     finally { setSecExporting(false) }
   }
@@ -640,9 +645,9 @@ export default function AgentAdminPage() {
       const res = await fetch('/api/agent?secret=dev-test')
       const data = await res.json()
       setRunLog(data.log || [String(data.error || 'Unknown error')])
-      if (data.success) { showToast(`Agent complete — ${data.itemsSaved} items saved`); loadItems() }
-      else showToast('Agent failed — check log', false)
-    } catch (e) { setRunLog([`Error: ${String(e)}`]); showToast('Agent failed', false) }
+      if (data.success) { showToast(tc('page_admin_agent.agentComplete', { n: data.itemsSaved })); loadItems() }
+      else showToast(tc('page_admin_agent.agentFailed'), false)
+    } catch (e) { setRunLog([`Error: ${String(e)}`]); showToast(tc('page_admin_agent.agentFailed'), false) }
     finally { setRunning(false) }
   }
 
@@ -651,7 +656,7 @@ export default function AgentAdminPage() {
     try {
       const res = await fetch('/api/agent/approve', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({id, action}) })
       const data = await res.json()
-      if (data.success) { showToast(action === 'approve' ? '✅ Approved' : '🗑 Rejected'); loadItems() }
+      if (data.success) { showToast(action === 'approve' ? tc('page_admin_agent.approved') : tc('page_admin_agent.rejectedIcon')); loadItems() }
       else showToast(data.error || 'Failed', false)
     } catch (e) { showToast(String(e), false) }
     finally { setActionLoading(null) }
@@ -666,7 +671,7 @@ export default function AgentAdminPage() {
       if (!res.ok) throw new Error(d.error || 'Search failed')
       setXResults(d.tweets || [])
       setXTab('results')
-      showToast(`Generated ${d.tweets?.length || 0} original posts`)
+      showToast(tc('page_admin_agent.generatedPosts', { n: d.tweets?.length || 0 }))
       loadXQueue()
     } catch (e: any) { showToast(e.message, false) }
     finally { setSearching(false) }
@@ -676,7 +681,7 @@ export default function AgentAdminPage() {
     // Get the reply text — for results use item.reply, for queue use item.generated_reply
     const replyText = isResult ? item.reply : item.generated_reply
     if (!replyText || replyText.trim().length === 0) {
-      showToast('No reply text to post', false)
+      showToast(tc('page_admin_agent.noReplyText'), false)
       return
     }
     const tweetId = isResult ? null : (item.tweet_id || null)
@@ -692,7 +697,7 @@ export default function AgentAdminPage() {
       const d = await res.json()
       if (!res.ok) throw new Error(d.error || 'Post failed')
       const postedId = d.postedId
-      showToast('Posted to X! 🐦')
+      showToast(tc('page_admin_agent.postedToX'))
       setEditId(null)
       if (isResult) {
         // Update item with posted ID so View link appears
@@ -704,7 +709,7 @@ export default function AgentAdminPage() {
 
   const handleXReject = async (id: string) => {
     await fetch('/api/xagent', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'reject', activityId:id}) })
-    showToast('Rejected'); loadXQueue()
+    showToast(tc('page_admin_agent.toastRejected')); loadXQueue()
   }
 
   const handleXRegen = async (item: any, isResult = false) => {
@@ -718,7 +723,7 @@ export default function AgentAdminPage() {
     finally { setPosting(null) }
   }
 
-  if (loading) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',color:'var(--tx3)',fontSize:14}}>Checking access…</div>
+  if (loading) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',color:'var(--tx3)',fontSize:14}}>{tc('page_admin_agent.checkingAccess')}</div>
   if (!authorized) return null
 
   const runs = items.reduce<Record<string, AgentItem[]>>((acc, item) => {
@@ -739,27 +744,27 @@ export default function AgentAdminPage() {
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:24,flexWrap:'wrap',gap:12}}>
           <div>
             <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4}}>
-              <button onClick={()=>router.push('/admin')} style={{padding:'4px 10px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>← Back</button>
-              <h1 style={{fontSize:20,fontWeight:700,fontFamily:'var(--font-sora)',margin:0}}>Agents</h1>
-              <span style={{fontSize:11,padding:'2px 8px',borderRadius:9999,background:'rgba(99,102,241,.1)',color:'#6366F1',fontWeight:600}}>Admin Only</span>
+              <button onClick={()=>router.push('/admin')} style={{padding:'4px 10px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.back')}</button>
+              <h1 style={{fontSize:20,fontWeight:700,fontFamily:'var(--font-sora)',margin:0}}>{tc('page_admin_agent.heading')}</h1>
+              <span style={{fontSize:11,padding:'2px 8px',borderRadius:9999,background:'rgba(99,102,241,.1)',color:'#6366F1',fontWeight:600}}>{tc('page_admin_agent.adminOnly')}</span>
             </div>
             <p style={{fontSize:13,color:'var(--tx3)',margin:0}}>
               {mainTab === 'marketing-specialist' ? (
-                agentTab === 'alice'    ? 'Runs daily at 4am UTC · Scan → Draft → Review → Publish' :
-                agentTab === 'victor'   ? 'Runs daily at 4:15am UTC · Nigeria, West & South Africa · Scan → Draft → Review → Publish' :
-                agentTab === 'carolyne' ? 'Runs daily at 4:30am UTC · East Africa · Scan → Draft → Review → Publish' :
-                agentTab === 'ben'      ? 'Runs daily at 5am UTC · US market · Scan → Draft → Review → Publish' :
-                                          'Runs daily at 5:15am UTC · Global marketing intelligence · Scan → Draft → Review → Publish'
-              ) : mainTab === 'automation' ? 'Background jobs that keep AskBiz data fresh and indexes current' :
-                  mainTab === 'security'  ? 'Automated compliance checks · Weekly audit on Mondays at 6am' :
-                  'Runs daily at 6am UTC · Scout → Analyse → Write → Review'}
+                agentTab === 'alice'    ? tc('page_admin_agent.subtitleAlice') :
+                agentTab === 'victor'   ? tc('page_admin_agent.subtitleVictor') :
+                agentTab === 'carolyne' ? tc('page_admin_agent.subtitleCarolyne') :
+                agentTab === 'ben'      ? tc('page_admin_agent.subtitleBen') :
+                                          tc('page_admin_agent.subtitleMaya')
+              ) : mainTab === 'automation' ? tc('page_admin_agent.subtitleAutomation') :
+                  mainTab === 'security'  ? tc('page_admin_agent.subtitleSecurity') :
+                  tc('page_admin_agent.subtitleAgent')}
             </p>
           </div>
         </div>
 
         {/* Main tabs */}
         <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',marginBottom:0,display:'flex',gap:0,overflowX:'auto'}}>
-          {([['marketing-specialist','Marketing Specialist'],['automation','Automation'],['security','Security & GDPR']] as const).map(([t,label]) => {
+          {([['marketing-specialist',tc('page_admin_agent.tabMarketingSpecialist')],['automation',tc('page_admin_agent.tabAutomation')],['security',tc('page_admin_agent.tabSecurity')]] as [string,string][]).map(([t,label]) => {
             const tabColor = t === 'marketing-specialist' ? '#6366F1' : t === 'automation' ? '#ea580c' : '#16a34a'
             const active = mainTab === t
             return (
@@ -773,7 +778,7 @@ export default function AgentAdminPage() {
         {/* Agent sub-tabs (shown only inside Marketing Specialist) */}
         {mainTab === 'marketing-specialist' && (
           <div style={{borderBottom:'1px solid var(--b)',marginBottom:24,display:'flex',gap:0,overflowX:'auto',background:'var(--sf)',paddingLeft:8}}>
-            {([['alice','Alice Watson','#6366F1'],['victor','Victor Ojeakhena','#ea580c'],['carolyne','Carolyne Kigathi','#16a34a'],['ben','Ben Carlson','#1d4ed8'],['maya','Maya Chen','#e11d48']] as const).map(([t,label,color]) => {
+            {([['alice',tc('page_admin_agent.tabAlice'),'#6366F1'],['victor',tc('page_admin_agent.tabVictor'),'#ea580c'],['carolyne',tc('page_admin_agent.tabCarolyne'),'#16a34a'],['ben',tc('page_admin_agent.tabBen'),'#1d4ed8'],['maya',tc('page_admin_agent.tabMaya'),'#e11d48']] as [string,string,string][]).map(([t,label,color]) => {
               const active = agentTab === t
               return (
                 <button key={t} onClick={()=>setAgentTab(t as any)} style={{padding:'8px 16px',border:'none',background:'transparent',fontSize:12,fontWeight:active?600:400,color:active?color:'var(--tx3)',borderBottom:active?`2px solid ${color}`:'2px solid transparent',cursor:'pointer',fontFamily:'inherit',flexShrink:0,whiteSpace:'nowrap',transition:'color 150ms'}}>
@@ -791,12 +796,12 @@ export default function AgentAdminPage() {
             <div style={{display:'flex',alignItems:'center',gap:16,padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:20}}>
               <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg, #6366F1 0%, #818cf8 100%)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:20,fontWeight:700,color:'#fff',fontFamily:'var(--font-sora)'}}>AW</div>
               <div style={{flex:1}}>
-                <div style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)'}}>Alice Watson</div>
-                <div style={{fontSize:12,color:'#6366F1',fontWeight:600,marginBottom:4}}>Head of Market Intelligence</div>
-                <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>Scans live news daily via Tavily, drafts 10 blog posts targeting AskBiz&apos;s core value areas. Posts go live on the blog once you authorise them.</div>
+                <div style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)'}}>{tc('page_admin_agent.tabAlice')}</div>
+                <div style={{fontSize:12,color:'#6366F1',fontWeight:600,marginBottom:4}}>{tc('page_admin_agent.aliceRole')}</div>
+                <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>{tc('page_admin_agent.aliceDesc')}</div>
               </div>
               <button onClick={runAliceScout} disabled={aliceRunning} style={{padding:'10px 20px',borderRadius:9999,border:'none',background:aliceRunning?'var(--b)':'#6366F1',color:aliceRunning?'var(--tx3)':'#fff',fontSize:13,fontWeight:600,cursor:aliceRunning?'wait':'pointer',fontFamily:'inherit',flexShrink:0,transition:'background 200ms, color 200ms, opacity 200ms'}}>
-                {aliceRunning ? 'Writing...' : 'Run Alice Now'}
+                {aliceRunning ? tc('page_admin_agent.writing') : tc('page_admin_agent.runAliceNow')}
               </button>
             </div>
 
@@ -815,10 +820,10 @@ export default function AgentAdminPage() {
                   <div style={{height:22,borderRadius:6,background:'var(--ev)',width:'35%'}}/>
                 </div>
               )) : [
-                {label:'Pending Review',value:aliceCounts.pending,color:'#f59e0b'},
-                {label:'Published',value:aliceCounts.published,color:'#10b981'},
-                {label:'Rejected',value:aliceCounts.rejected,color:'#94a3b8'},
-                {label:'Total Drafts',value:aliceCounts.total,color:'var(--tx)'},
+                {label:tc('page_admin_agent.statPendingReview'),value:aliceCounts.pending,color:'#f59e0b'},
+                {label:tc('page_admin_agent.statPublished'),value:aliceCounts.published,color:'#10b981'},
+                {label:tc('page_admin_agent.statRejected'),value:aliceCounts.rejected,color:'#94a3b8'},
+                {label:tc('page_admin_agent.statTotalDrafts'),value:aliceCounts.total,color:'var(--tx)'},
               ].map(({label,value,color}) => (
                 <div key={label} style={{padding:14,borderRadius:12,border:'1px solid var(--b)',background:'var(--sf)'}}>
                   <div style={{fontSize:10,fontWeight:600,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>{label}</div>
@@ -838,8 +843,8 @@ export default function AgentAdminPage() {
             {aliceItems.length === 0 ? (
               <div style={{textAlign:'center',padding:'60px 0',color:'var(--tx3)'}}>
                 <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg,#6366F1,#818cf8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:700,color:'#fff',fontFamily:'var(--font-sora)',margin:'0 auto 16px',opacity:.7}}>AW</div>
-                <div style={{fontSize:14,fontWeight:500,marginBottom:6,color:'var(--tx)'}}>No drafts yet</div>
-                <div style={{fontSize:12,maxWidth:280,margin:'0 auto',lineHeight:1.6}}>Hit &quot;Run Alice Now&quot; to have her scan today&apos;s news and draft 10 blog posts ready for review.</div>
+                <div style={{fontSize:14,fontWeight:500,marginBottom:6,color:'var(--tx)'}}>{tc('page_admin_agent.noDraftsYet')}</div>
+                <div style={{fontSize:12,maxWidth:280,margin:'0 auto',lineHeight:1.6}}>{tc('page_admin_agent.aliceEmptyDesc')}</div>
               </div>
             ) : (
               <div style={{borderRadius:14,border:'1px solid var(--b)',overflow:'hidden',background:'var(--sf)'}}>
@@ -855,12 +860,12 @@ export default function AgentAdminPage() {
                       <span style={{fontSize:11,color:'var(--tx3)'}}>{new Date(item.created_at).toLocaleDateString('en-GB')}</span>
                       {item.status === 'pending' && (
                         <div style={{display:'flex',gap:6}} onClick={e => e.stopPropagation()}>
-                          <button onClick={() => handleAliceAction(item.id, 'approve')} disabled={aliceActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'none',background:'#10b981',color:'#fff',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise</button>
-                          <button onClick={() => handleAliceAction(item.id, 'reject')} disabled={aliceActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
+                          <button onClick={() => handleAliceAction(item.id, 'approve')} disabled={aliceActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'none',background:'#10b981',color:'#fff',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.authorise')}</button>
+                          <button onClick={() => handleAliceAction(item.id, 'reject')} disabled={aliceActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.reject')}</button>
                         </div>
                       )}
                       {item.status === 'published' && blog.slug && (
-                        <a href={`/blog/${blog.slug}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{padding:'4px 12px',borderRadius:6,border:'1px solid rgba(16,185,129,.3)',background:'rgba(16,185,129,.08)',color:'#10b981',fontSize:11,fontWeight:600,textDecoration:'none',fontFamily:'inherit'}}>View on Blog ↗</a>
+                        <a href={`/blog/${blog.slug}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{padding:'4px 12px',borderRadius:6,border:'1px solid rgba(16,185,129,.3)',background:'rgba(16,185,129,.08)',color:'#10b981',fontSize:11,fontWeight:600,textDecoration:'none',fontFamily:'inherit'}}>{tc('page_admin_agent.viewOnBlog')}</a>
                       )}
                     </div>
                   )
@@ -877,14 +882,14 @@ export default function AgentAdminPage() {
                     <div style={{display:'flex',alignItems:'center',gap:10}}>
                       <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(135deg, #6366F1, #818cf8)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'#fff'}}>AW</div>
                       <div>
-                        <div style={{fontSize:13,fontWeight:600,color:'var(--tx)'}}>Alice Watson</div>
+                        <div style={{fontSize:13,fontWeight:600,color:'var(--tx)'}}>{tc('page_admin_agent.tabAlice')}</div>
                         <div style={{fontSize:11,color:'var(--tx3)'}}>{alicePreview.content?.cluster} · {new Date(alicePreview.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
                       </div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
                       {alicePreview.status === 'pending' && <>
-                        <button onClick={() => handleAliceAction(alicePreview.id, 'approve')} disabled={aliceActing===alicePreview.id} style={{padding:'6px 16px',borderRadius:8,border:'none',background:'#10b981',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise & Publish</button>
-                        <button onClick={() => handleAliceAction(alicePreview.id, 'reject')} disabled={aliceActing===alicePreview.id} style={{padding:'6px 16px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
+                        <button onClick={() => handleAliceAction(alicePreview.id, 'approve')} disabled={aliceActing===alicePreview.id} style={{padding:'6px 16px',borderRadius:8,border:'none',background:'#10b981',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.authoriseAndPublish')}</button>
+                        <button onClick={() => handleAliceAction(alicePreview.id, 'reject')} disabled={aliceActing===alicePreview.id} style={{padding:'6px 16px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.reject')}</button>
                       </>}
                       <button onClick={() => setAlicePreview(null)} aria-label="Close preview" style={{padding:'6px 10px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:14,cursor:'pointer',fontFamily:'inherit',lineHeight:1}}>×</button>
                     </div>
@@ -894,20 +899,20 @@ export default function AgentAdminPage() {
                   <div style={{padding:24}}>
                     {/* Byline */}
                     <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16,fontSize:12,color:'var(--tx3)'}}>
-                      <span style={{fontWeight:600,color:'var(--tx)'}}>Written by Alice Watson</span>
+                      <span style={{fontWeight:600,color:'var(--tx)'}}>{tc('page_admin_agent.writtenByAlice')}</span>
                       <span>·</span>
                       <span>{alicePreview.content?.publishDate}</span>
                       <span>·</span>
-                      <span>{alicePreview.content?.readTime} min read</span>
+                      <span>{tc('page_admin_agent.minRead', { n: alicePreview.content?.readTime })}</span>
                       {alicePreview.source_url && <>
                         <span>·</span>
-                        <a href={alicePreview.source_url} target="_blank" rel="noopener noreferrer" style={{color:'#6366F1',textDecoration:'none'}}>Source →</a>
+                        <a href={alicePreview.source_url} target="_blank" rel="noopener noreferrer" style={{color:'#6366F1',textDecoration:'none'}}>{tc('page_admin_agent.source')}</a>
                       </>}
                     </div>
 
                     {/* Title */}
                     {alicePreview.status === 'pending' ? (
-                      <input value={aliceEditTitle} onChange={e => setAliceEditTitle(e.target.value)} placeholder="Article title" style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:8,padding:'8px 12px',width:'100%',marginBottom:16,background:'transparent',boxSizing:'border-box'}} />
+                      <input value={aliceEditTitle} onChange={e => setAliceEditTitle(e.target.value)} placeholder={tc('page_admin_agent.articleTitlePlaceholder')} style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:8,padding:'8px 12px',width:'100%',marginBottom:16,background:'transparent',boxSizing:'border-box'}} />
                     ) : (
                       <h1 style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',marginBottom:16,marginTop:0}}>{alicePreview.content?.title}</h1>
                     )}
@@ -915,7 +920,7 @@ export default function AgentAdminPage() {
                     {/* TLDR */}
                     {alicePreview.content?.tldr && (
                       <div style={{padding:'12px 16px',borderRadius:10,background:'rgba(99,102,241,.05)',border:'1px solid rgba(99,102,241,.15)',marginBottom:24,fontSize:13,color:'var(--tx2)',lineHeight:1.6}}>
-                        <strong style={{color:'#6366F1',fontSize:11,textTransform:'uppercase',letterSpacing:'.06em'}}>TL;DR</strong><br/>{alicePreview.content.tldr}
+                        <strong style={{color:'#6366F1',fontSize:11,textTransform:'uppercase',letterSpacing:'.06em'}}>{tc('page_admin_agent.tldr')}</strong><br/>{alicePreview.content.tldr}
                       </div>
                     )}
 
@@ -924,8 +929,8 @@ export default function AgentAdminPage() {
                       <div key={i} style={{marginBottom:24}}>
                         {alicePreview.status === 'pending' ? (
                           <>
-                            <input value={sec.heading} onChange={e => { const s = [...aliceEditSections]; s[i] = {...s[i], heading: e.target.value}; setAliceEditSections(s) }} placeholder="Section heading" style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:6,padding:'6px 10px',width:'100%',marginBottom:8,background:'transparent',boxSizing:'border-box'}} />
-                            <textarea value={sec.body} onChange={e => { const s = [...aliceEditSections]; s[i] = {...s[i], body: e.target.value}; setAliceEditSections(s) }} rows={5} placeholder="Write section content…" style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:6,padding:'8px 10px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent',boxSizing:'border-box'}} />
+                            <input value={sec.heading} onChange={e => { const s = [...aliceEditSections]; s[i] = {...s[i], heading: e.target.value}; setAliceEditSections(s) }} placeholder={tc('page_admin_agent.sectionHeadingPlaceholder')} style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:6,padding:'6px 10px',width:'100%',marginBottom:8,background:'transparent',boxSizing:'border-box'}} />
+                            <textarea value={sec.body} onChange={e => { const s = [...aliceEditSections]; s[i] = {...s[i], body: e.target.value}; setAliceEditSections(s) }} rows={5} placeholder={tc('page_admin_agent.writeSectionPlaceholder')} style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:6,padding:'8px 10px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent',boxSizing:'border-box'}} />
                           </>
                         ) : (
                           <>
@@ -939,7 +944,7 @@ export default function AgentAdminPage() {
                     {/* PAA */}
                     {alicePreview.content?.paa?.length > 0 && (
                       <div style={{marginTop:24,padding:16,borderRadius:10,border:'1px solid var(--b)',background:'rgba(0,0,0,.02)'}}>
-                        <h3 style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:12,marginTop:0}}>People Also Ask</h3>
+                        <h3 style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:12,marginTop:0}}>{tc('page_admin_agent.peopleAlsoAsk')}</h3>
                         {alicePreview.content.paa.map((qa: any, i: number) => (
                           <div key={i} style={{marginBottom:12}}>
                             <div style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:4}}>{qa.q}</div>
@@ -970,12 +975,12 @@ export default function AgentAdminPage() {
             <div style={{display:'flex',alignItems:'center',gap:16,padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:20}}>
               <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg, #ea580c 0%, #fb923c 100%)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:18,fontWeight:700,color:'#fff',fontFamily:'var(--font-sora)'}}>VO</div>
               <div style={{flex:1}}>
-                <div style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)'}}>Victor Ojeakhena</div>
-                <div style={{fontSize:12,color:'#ea580c',fontWeight:600,marginBottom:4}}>Co-Founder, Marketing Analytics Africa</div>
-                <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>Tracks what actually works in Lagos, Accra, and Johannesburg — real Nigerian benchmarks, not California averages. Drafts 10 African marketing posts daily grounded in MAA research.</div>
+                <div style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)'}}>{tc('page_admin_agent.tabVictor')}</div>
+                <div style={{fontSize:12,color:'#ea580c',fontWeight:600,marginBottom:4}}>{tc('page_admin_agent.victorRole')}</div>
+                <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>{tc('page_admin_agent.victorDesc')}</div>
               </div>
               <button onClick={runVictorScout} disabled={victorRunning} style={{padding:'10px 20px',borderRadius:9999,border:'none',background:victorRunning?'var(--b)':'#ea580c',color:victorRunning?'var(--tx3)':'#fff',fontSize:13,fontWeight:600,cursor:victorRunning?'wait':'pointer',fontFamily:'inherit',flexShrink:0,transition:'background 200ms, color 200ms'}}>
-                {victorRunning ? 'Writing...' : 'Run Victor Now'}
+                {victorRunning ? tc('page_admin_agent.writing') : tc('page_admin_agent.runVictorNow')}
               </button>
             </div>
 
@@ -994,10 +999,10 @@ export default function AgentAdminPage() {
                   <div style={{height:22,borderRadius:6,background:'var(--ev)',width:'35%'}}/>
                 </div>
               )) : [
-                {label:'Pending Review', value:victorCounts.pending,   color:'#f59e0b'},
-                {label:'Published',      value:victorCounts.published,  color:'#10b981'},
-                {label:'Rejected',       value:victorCounts.rejected,   color:'#94a3b8'},
-                {label:'Total Drafts',   value:victorCounts.total,      color:'var(--tx)'},
+                {label:tc('page_admin_agent.statPendingReview'), value:victorCounts.pending,   color:'#f59e0b'},
+                {label:tc('page_admin_agent.statPublished'),     value:victorCounts.published,  color:'#10b981'},
+                {label:tc('page_admin_agent.statRejected'),      value:victorCounts.rejected,   color:'#94a3b8'},
+                {label:tc('page_admin_agent.statTotalDrafts'),   value:victorCounts.total,      color:'var(--tx)'},
               ].map(({label,value,color}) => (
                 <div key={label} style={{padding:14,borderRadius:12,border:'1px solid var(--b)',background:'var(--sf)'}}>
                   <div style={{fontSize:10,fontWeight:600,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>{label}</div>
@@ -1017,8 +1022,8 @@ export default function AgentAdminPage() {
             {victorItems.length === 0 ? (
               <div style={{textAlign:'center',padding:'60px 0',color:'var(--tx3)'}}>
                 <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg,#ea580c,#fb923c)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:700,color:'#fff',fontFamily:'var(--font-sora)',margin:'0 auto 16px',opacity:.7}}>VO</div>
-                <div style={{fontSize:14,fontWeight:500,marginBottom:6,color:'var(--tx)'}}>No drafts yet</div>
-                <div style={{fontSize:12,maxWidth:300,margin:'0 auto',lineHeight:1.6}}>Hit &quot;Run Victor Now&quot; to have him scan Nigerian and African marketing signals and draft 10 posts grounded in real MAA data.</div>
+                <div style={{fontSize:14,fontWeight:500,marginBottom:6,color:'var(--tx)'}}>{tc('page_admin_agent.noDraftsYet')}</div>
+                <div style={{fontSize:12,maxWidth:300,margin:'0 auto',lineHeight:1.6}}>{tc('page_admin_agent.victorEmptyDesc')}</div>
               </div>
             ) : (
               <div style={{borderRadius:14,border:'1px solid var(--b)',overflow:'hidden',background:'var(--sf)'}}>
@@ -1034,12 +1039,12 @@ export default function AgentAdminPage() {
                       <span style={{fontSize:11,color:'var(--tx3)'}}>{new Date(item.created_at).toLocaleDateString('en-GB')}</span>
                       {item.status === 'pending' && (
                         <div style={{display:'flex',gap:6}} onClick={e => e.stopPropagation()}>
-                          <button onClick={() => handleVictorAction(item.id, 'approve')} disabled={victorActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'none',background:'#ea580c',color:'#fff',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise</button>
-                          <button onClick={() => handleVictorAction(item.id, 'reject')} disabled={victorActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
+                          <button onClick={() => handleVictorAction(item.id, 'approve')} disabled={victorActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'none',background:'#ea580c',color:'#fff',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.authorise')}</button>
+                          <button onClick={() => handleVictorAction(item.id, 'reject')} disabled={victorActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.reject')}</button>
                         </div>
                       )}
                       {item.status === 'published' && blog.slug && (
-                        <a href={`/blog/${blog.slug}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{padding:'4px 12px',borderRadius:6,border:'1px solid rgba(234,88,12,.3)',background:'rgba(234,88,12,.08)',color:'#ea580c',fontSize:11,fontWeight:600,textDecoration:'none',fontFamily:'inherit'}}>View on Blog ↗</a>
+                        <a href={`/blog/${blog.slug}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{padding:'4px 12px',borderRadius:6,border:'1px solid rgba(234,88,12,.3)',background:'rgba(234,88,12,.08)',color:'#ea580c',fontSize:11,fontWeight:600,textDecoration:'none',fontFamily:'inherit'}}>{tc('page_admin_agent.viewOnBlog')}</a>
                       )}
                     </div>
                   )
@@ -1055,14 +1060,14 @@ export default function AgentAdminPage() {
                     <div style={{display:'flex',alignItems:'center',gap:10}}>
                       <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(135deg,#ea580c,#fb923c)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'#fff'}}>VO</div>
                       <div>
-                        <div style={{fontSize:13,fontWeight:600,color:'var(--tx)'}}>Victor Ojeakhena</div>
+                        <div style={{fontSize:13,fontWeight:600,color:'var(--tx)'}}>{tc('page_admin_agent.tabVictor')}</div>
                         <div style={{fontSize:11,color:'var(--tx3)'}}>{victorPreview.content?.cluster} · {new Date(victorPreview.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
                       </div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
                       {victorPreview.status === 'pending' && <>
-                        <button onClick={() => handleVictorAction(victorPreview.id, 'approve')} disabled={victorActing===victorPreview.id} style={{padding:'6px 16px',borderRadius:8,border:'none',background:'#ea580c',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise & Publish</button>
-                        <button onClick={() => handleVictorAction(victorPreview.id, 'reject')} disabled={victorActing===victorPreview.id} style={{padding:'6px 16px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
+                        <button onClick={() => handleVictorAction(victorPreview.id, 'approve')} disabled={victorActing===victorPreview.id} style={{padding:'6px 16px',borderRadius:8,border:'none',background:'#ea580c',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.authoriseAndPublish')}</button>
+                        <button onClick={() => handleVictorAction(victorPreview.id, 'reject')} disabled={victorActing===victorPreview.id} style={{padding:'6px 16px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.reject')}</button>
                       </>}
                       <button onClick={() => setVictorPreview(null)} aria-label="Close preview" style={{padding:'6px 10px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:14,cursor:'pointer',fontFamily:'inherit',lineHeight:1}}>×</button>
                     </div>
@@ -1070,21 +1075,21 @@ export default function AgentAdminPage() {
 
                   <div style={{padding:24}}>
                     <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16,fontSize:12,color:'var(--tx3)'}}>
-                      <span style={{fontWeight:600,color:'var(--tx)'}}>Written by Victor Ojeakhena</span>
+                      <span style={{fontWeight:600,color:'var(--tx)'}}>{tc('page_admin_agent.writtenByVictor')}</span>
                       <span>·</span><span>{victorPreview.content?.publishDate}</span>
-                      <span>·</span><span>{victorPreview.content?.readTime} min read</span>
-                      {victorPreview.source_url && <><span>·</span><a href={victorPreview.source_url} target="_blank" rel="noopener noreferrer" style={{color:'#ea580c',textDecoration:'none'}}>Source →</a></>}
+                      <span>·</span><span>{tc('page_admin_agent.minRead', { n: victorPreview.content?.readTime })}</span>
+                      {victorPreview.source_url && <><span>·</span><a href={victorPreview.source_url} target="_blank" rel="noopener noreferrer" style={{color:'#ea580c',textDecoration:'none'}}>{tc('page_admin_agent.source')}</a></>}
                     </div>
 
                     {victorPreview.status === 'pending' ? (
-                      <input value={victorEditTitle} onChange={e => setVictorEditTitle(e.target.value)} placeholder="Article title" style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:8,padding:'8px 12px',width:'100%',marginBottom:16,background:'transparent',boxSizing:'border-box'}} />
+                      <input value={victorEditTitle} onChange={e => setVictorEditTitle(e.target.value)} placeholder={tc('page_admin_agent.articleTitlePlaceholder')} style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:8,padding:'8px 12px',width:'100%',marginBottom:16,background:'transparent',boxSizing:'border-box'}} />
                     ) : (
                       <h1 style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',marginBottom:16,marginTop:0}}>{victorPreview.content?.title}</h1>
                     )}
 
                     {victorPreview.content?.tldr && (
                       <div style={{padding:'12px 16px',borderRadius:10,background:'rgba(234,88,12,.05)',border:'1px solid rgba(234,88,12,.15)',marginBottom:24,fontSize:13,color:'var(--tx2)',lineHeight:1.6}}>
-                        <strong style={{color:'#ea580c',fontSize:11,textTransform:'uppercase',letterSpacing:'.06em'}}>TL;DR</strong><br/>{victorPreview.content.tldr}
+                        <strong style={{color:'#ea580c',fontSize:11,textTransform:'uppercase',letterSpacing:'.06em'}}>{tc('page_admin_agent.tldr')}</strong><br/>{victorPreview.content.tldr}
                       </div>
                     )}
 
@@ -1092,8 +1097,8 @@ export default function AgentAdminPage() {
                       <div key={i} style={{marginBottom:24}}>
                         {victorPreview.status === 'pending' ? (
                           <>
-                            <input value={sec.heading} onChange={e => { const s = [...victorEditSections]; s[i] = {...s[i], heading: e.target.value}; setVictorEditSections(s) }} placeholder="Section heading" style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:6,padding:'6px 10px',width:'100%',marginBottom:8,background:'transparent',boxSizing:'border-box'}} />
-                            <textarea value={sec.body} onChange={e => { const s = [...victorEditSections]; s[i] = {...s[i], body: e.target.value}; setVictorEditSections(s) }} rows={5} placeholder="Write section content…" style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:6,padding:'8px 10px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent',boxSizing:'border-box'}} />
+                            <input value={sec.heading} onChange={e => { const s = [...victorEditSections]; s[i] = {...s[i], heading: e.target.value}; setVictorEditSections(s) }} placeholder={tc('page_admin_agent.sectionHeadingPlaceholder')} style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:6,padding:'6px 10px',width:'100%',marginBottom:8,background:'transparent',boxSizing:'border-box'}} />
+                            <textarea value={sec.body} onChange={e => { const s = [...victorEditSections]; s[i] = {...s[i], body: e.target.value}; setVictorEditSections(s) }} rows={5} placeholder={tc('page_admin_agent.writeSectionPlaceholder')} style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:6,padding:'8px 10px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent',boxSizing:'border-box'}} />
                           </>
                         ) : (
                           <>
@@ -1106,7 +1111,7 @@ export default function AgentAdminPage() {
 
                     {victorPreview.content?.paa?.length > 0 && (
                       <div style={{marginTop:24,padding:16,borderRadius:10,border:'1px solid var(--b)',background:'rgba(0,0,0,.02)'}}>
-                        <h3 style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:12,marginTop:0}}>People Also Ask</h3>
+                        <h3 style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:12,marginTop:0}}>{tc('page_admin_agent.peopleAlsoAsk')}</h3>
                         {victorPreview.content.paa.map((qa: any, i: number) => (
                           <div key={i} style={{marginBottom:12}}>
                             <div style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:4}}>{qa.q}</div>
@@ -1136,12 +1141,12 @@ export default function AgentAdminPage() {
             <div style={{display:'flex',alignItems:'center',gap:16,padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:20}}>
               <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg, #16a34a 0%, #4ade80 100%)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:18,fontWeight:700,color:'#fff',fontFamily:'var(--font-sora)'}}>CK</div>
               <div style={{flex:1}}>
-                <div style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)'}}>Carolyne Kigathi</div>
-                <div style={{fontSize:12,color:'#16a34a',fontWeight:600,marginBottom:4}}>Head of Strategic Partnerships, East Africa</div>
-                <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>Tracks regulatory shifts, mobile money trends, and SME growth signals across Kenya, Uganda, Tanzania, and Rwanda — drafts 10 East Africa-focused posts daily ready for your review.</div>
+                <div style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)'}}>{tc('page_admin_agent.tabCarolyne')}</div>
+                <div style={{fontSize:12,color:'#16a34a',fontWeight:600,marginBottom:4}}>{tc('page_admin_agent.carolyneRole')}</div>
+                <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>{tc('page_admin_agent.carolyneDesc')}</div>
               </div>
               <button onClick={runCarolyneScout} disabled={carolyneRunning} style={{padding:'10px 20px',borderRadius:9999,border:'none',background:carolyneRunning?'var(--b)':'#16a34a',color:carolyneRunning?'var(--tx3)':'#fff',fontSize:13,fontWeight:600,cursor:carolyneRunning?'wait':'pointer',fontFamily:'inherit',flexShrink:0,transition:'background 200ms, color 200ms, opacity 200ms'}}>
-                {carolyneRunning ? 'Writing...' : 'Run Carolyne Now'}
+                {carolyneRunning ? tc('page_admin_agent.writing') : tc('page_admin_agent.runCarolyneNow')}
               </button>
             </div>
 
@@ -1160,10 +1165,10 @@ export default function AgentAdminPage() {
                   <div style={{height:22,borderRadius:6,background:'var(--ev)',width:'35%'}}/>
                 </div>
               )) : [
-                {label:'Pending Review', value:carolyneCounts.pending,   color:'#f59e0b'},
-                {label:'Published',      value:carolyneCounts.published,  color:'#10b981'},
-                {label:'Rejected',       value:carolyneCounts.rejected,   color:'#94a3b8'},
-                {label:'Total Drafts',   value:carolyneCounts.total,      color:'var(--tx)'},
+                {label:tc('page_admin_agent.statPendingReview'), value:carolyneCounts.pending,   color:'#f59e0b'},
+                {label:tc('page_admin_agent.statPublished'),     value:carolyneCounts.published,  color:'#10b981'},
+                {label:tc('page_admin_agent.statRejected'),      value:carolyneCounts.rejected,   color:'#94a3b8'},
+                {label:tc('page_admin_agent.statTotalDrafts'),   value:carolyneCounts.total,      color:'var(--tx)'},
               ].map(({label,value,color}) => (
                 <div key={label} style={{padding:14,borderRadius:12,border:'1px solid var(--b)',background:'var(--sf)'}}>
                   <div style={{fontSize:10,fontWeight:600,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>{label}</div>
@@ -1183,8 +1188,8 @@ export default function AgentAdminPage() {
             {carolyneItems.length === 0 ? (
               <div style={{textAlign:'center',padding:'60px 0',color:'var(--tx3)'}}>
                 <div style={{fontSize:32,marginBottom:12}}>🌍</div>
-                <div style={{fontSize:14,fontWeight:500,marginBottom:4}}>No drafts yet</div>
-                <div style={{fontSize:12}}>Hit &quot;Run Carolyne Now&quot; to have her scan East African markets and draft 10 posts.</div>
+                <div style={{fontSize:14,fontWeight:500,marginBottom:4}}>{tc('page_admin_agent.noDraftsYet')}</div>
+                <div style={{fontSize:12}}>{tc('page_admin_agent.carolyneEmptyDesc')}</div>
               </div>
             ) : (
               <div style={{borderRadius:14,border:'1px solid var(--b)',overflow:'hidden',background:'var(--sf)'}}>
@@ -1200,12 +1205,12 @@ export default function AgentAdminPage() {
                       <span style={{fontSize:11,color:'var(--tx3)'}}>{new Date(item.created_at).toLocaleDateString('en-GB')}</span>
                       {item.status === 'pending' && (
                         <div style={{display:'flex',gap:6}} onClick={e => e.stopPropagation()}>
-                          <button onClick={() => handleCarolyneAction(item.id, 'approve')} disabled={carolyneActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'none',background:'#16a34a',color:'#fff',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise</button>
-                          <button onClick={() => handleCarolyneAction(item.id, 'reject')} disabled={carolyneActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
+                          <button onClick={() => handleCarolyneAction(item.id, 'approve')} disabled={carolyneActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'none',background:'#16a34a',color:'#fff',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.authorise')}</button>
+                          <button onClick={() => handleCarolyneAction(item.id, 'reject')} disabled={carolyneActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.reject')}</button>
                         </div>
                       )}
                       {item.status === 'published' && blog.slug && (
-                        <a href={`/blog/${blog.slug}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{padding:'4px 12px',borderRadius:6,border:'1px solid rgba(22,163,74,.3)',background:'rgba(22,163,74,.08)',color:'#16a34a',fontSize:11,fontWeight:600,textDecoration:'none',fontFamily:'inherit'}}>View on Blog ↗</a>
+                        <a href={`/blog/${blog.slug}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{padding:'4px 12px',borderRadius:6,border:'1px solid rgba(22,163,74,.3)',background:'rgba(22,163,74,.08)',color:'#16a34a',fontSize:11,fontWeight:600,textDecoration:'none',fontFamily:'inherit'}}>{tc('page_admin_agent.viewOnBlog')}</a>
                       )}
                     </div>
                   )
@@ -1222,14 +1227,14 @@ export default function AgentAdminPage() {
                     <div style={{display:'flex',alignItems:'center',gap:10}}>
                       <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(135deg, #16a34a, #4ade80)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'#fff'}}>CK</div>
                       <div>
-                        <div style={{fontSize:13,fontWeight:600,color:'var(--tx)'}}>Carolyne Kigathi</div>
+                        <div style={{fontSize:13,fontWeight:600,color:'var(--tx)'}}>{tc('page_admin_agent.tabCarolyne')}</div>
                         <div style={{fontSize:11,color:'var(--tx3)'}}>{carolynePreview.content?.cluster} · {new Date(carolynePreview.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
                       </div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
                       {carolynePreview.status === 'pending' && <>
-                        <button onClick={() => handleCarolyneAction(carolynePreview.id, 'approve')} disabled={carolyneActing===carolynePreview.id} style={{padding:'6px 16px',borderRadius:8,border:'none',background:'#16a34a',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise & Publish</button>
-                        <button onClick={() => handleCarolyneAction(carolynePreview.id, 'reject')} disabled={carolyneActing===carolynePreview.id} style={{padding:'6px 16px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
+                        <button onClick={() => handleCarolyneAction(carolynePreview.id, 'approve')} disabled={carolyneActing===carolynePreview.id} style={{padding:'6px 16px',borderRadius:8,border:'none',background:'#16a34a',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.authoriseAndPublish')}</button>
+                        <button onClick={() => handleCarolyneAction(carolynePreview.id, 'reject')} disabled={carolyneActing===carolynePreview.id} style={{padding:'6px 16px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.reject')}</button>
                       </>}
                       <button onClick={() => setCarolynePreview(null)} aria-label="Close preview" style={{padding:'6px 10px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:14,cursor:'pointer',fontFamily:'inherit',lineHeight:1}}>×</button>
                     </div>
@@ -1238,21 +1243,21 @@ export default function AgentAdminPage() {
                   {/* Modal body */}
                   <div style={{padding:24}}>
                     <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16,fontSize:12,color:'var(--tx3)'}}>
-                      <span style={{fontWeight:600,color:'var(--tx)'}}>Written by Carolyne Kigathi</span>
+                      <span style={{fontWeight:600,color:'var(--tx)'}}>{tc('page_admin_agent.writtenByCarolyne')}</span>
                       <span>·</span><span>{carolynePreview.content?.publishDate}</span>
-                      <span>·</span><span>{carolynePreview.content?.readTime} min read</span>
-                      {carolynePreview.source_url && <><span>·</span><a href={carolynePreview.source_url} target="_blank" rel="noopener noreferrer" style={{color:'#16a34a',textDecoration:'none'}}>Source →</a></>}
+                      <span>·</span><span>{tc('page_admin_agent.minRead', { n: carolynePreview.content?.readTime })}</span>
+                      {carolynePreview.source_url && <><span>·</span><a href={carolynePreview.source_url} target="_blank" rel="noopener noreferrer" style={{color:'#16a34a',textDecoration:'none'}}>{tc('page_admin_agent.source')}</a></>}
                     </div>
 
                     {carolynePreview.status === 'pending' ? (
-                      <input value={carolyneEditTitle} onChange={e => setCarolyneEditTitle(e.target.value)} placeholder="Article title" style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:8,padding:'8px 12px',width:'100%',marginBottom:16,background:'transparent',boxSizing:'border-box'}} />
+                      <input value={carolyneEditTitle} onChange={e => setCarolyneEditTitle(e.target.value)} placeholder={tc('page_admin_agent.articleTitlePlaceholder')} style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:8,padding:'8px 12px',width:'100%',marginBottom:16,background:'transparent',boxSizing:'border-box'}} />
                     ) : (
                       <h1 style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',marginBottom:16,marginTop:0}}>{carolynePreview.content?.title}</h1>
                     )}
 
                     {carolynePreview.content?.tldr && (
                       <div style={{padding:'12px 16px',borderRadius:10,background:'rgba(22,163,74,.05)',border:'1px solid rgba(22,163,74,.15)',marginBottom:24,fontSize:13,color:'var(--tx2)',lineHeight:1.6}}>
-                        <strong style={{color:'#16a34a',fontSize:11,textTransform:'uppercase',letterSpacing:'.06em'}}>TL;DR</strong><br/>{carolynePreview.content.tldr}
+                        <strong style={{color:'#16a34a',fontSize:11,textTransform:'uppercase',letterSpacing:'.06em'}}>{tc('page_admin_agent.tldr')}</strong><br/>{carolynePreview.content.tldr}
                       </div>
                     )}
 
@@ -1260,8 +1265,8 @@ export default function AgentAdminPage() {
                       <div key={i} style={{marginBottom:24}}>
                         {carolynePreview.status === 'pending' ? (
                           <>
-                            <input value={sec.heading} onChange={e => { const s = [...carolyneEditSections]; s[i] = {...s[i], heading: e.target.value}; setCarolyneEditSections(s) }} placeholder="Section heading" style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:6,padding:'6px 10px',width:'100%',marginBottom:8,background:'transparent',boxSizing:'border-box'}} />
-                            <textarea value={sec.body} onChange={e => { const s = [...carolyneEditSections]; s[i] = {...s[i], body: e.target.value}; setCarolyneEditSections(s) }} rows={5} placeholder="Write section content…" style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:6,padding:'8px 10px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent',boxSizing:'border-box'}} />
+                            <input value={sec.heading} onChange={e => { const s = [...carolyneEditSections]; s[i] = {...s[i], heading: e.target.value}; setCarolyneEditSections(s) }} placeholder={tc('page_admin_agent.sectionHeadingPlaceholder')} style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:6,padding:'6px 10px',width:'100%',marginBottom:8,background:'transparent',boxSizing:'border-box'}} />
+                            <textarea value={sec.body} onChange={e => { const s = [...carolyneEditSections]; s[i] = {...s[i], body: e.target.value}; setCarolyneEditSections(s) }} rows={5} placeholder={tc('page_admin_agent.writeSectionPlaceholder')} style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:6,padding:'8px 10px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent',boxSizing:'border-box'}} />
                           </>
                         ) : (
                           <>
@@ -1274,7 +1279,7 @@ export default function AgentAdminPage() {
 
                     {carolynePreview.content?.paa?.length > 0 && (
                       <div style={{marginTop:24,padding:16,borderRadius:10,border:'1px solid var(--b)',background:'rgba(0,0,0,.02)'}}>
-                        <h3 style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:12,marginTop:0}}>People Also Ask</h3>
+                        <h3 style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:12,marginTop:0}}>{tc('page_admin_agent.peopleAlsoAsk')}</h3>
                         {carolynePreview.content.paa.map((qa: any, i: number) => (
                           <div key={i} style={{marginBottom:12}}>
                             <div style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:4}}>{qa.q}</div>
@@ -1304,12 +1309,12 @@ export default function AgentAdminPage() {
             <div style={{display:'flex',alignItems:'center',gap:16,padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:20}}>
               <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg, #1d4ed8 0%, #60a5fa 100%)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:18,fontWeight:700,color:'#fff',fontFamily:'var(--font-sora)'}}>BC</div>
               <div style={{flex:1}}>
-                <div style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)'}}>Ben Carlson</div>
-                <div style={{fontSize:12,color:'#1d4ed8',fontWeight:600,marginBottom:4}}>Head of Strategic Partnerships, Americas · Founder, RoG Consulting</div>
-                <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>Tracks IRS rulings, Fed moves, Shopify & Amazon shifts, and Main Street signals across the US — drafts 10 US-focused posts daily ready for your review.</div>
+                <div style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)'}}>{tc('page_admin_agent.tabBen')}</div>
+                <div style={{fontSize:12,color:'#1d4ed8',fontWeight:600,marginBottom:4}}>{tc('page_admin_agent.benRole')}</div>
+                <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>{tc('page_admin_agent.benDesc')}</div>
               </div>
               <button onClick={runBenScout} disabled={benRunning} style={{padding:'10px 20px',borderRadius:9999,border:'none',background:benRunning?'var(--b)':'#1d4ed8',color:benRunning?'var(--tx3)':'#fff',fontSize:13,fontWeight:600,cursor:benRunning?'wait':'pointer',fontFamily:'inherit',flexShrink:0,transition:'background 200ms, color 200ms'}}>
-                {benRunning ? 'Writing...' : 'Run Ben Now'}
+                {benRunning ? tc('page_admin_agent.writing') : tc('page_admin_agent.runBenNow')}
               </button>
             </div>
 
@@ -1328,10 +1333,10 @@ export default function AgentAdminPage() {
                   <div style={{height:22,borderRadius:6,background:'var(--ev)',width:'35%'}}/>
                 </div>
               )) : [
-                {label:'Pending Review', value:benCounts.pending,   color:'#f59e0b'},
-                {label:'Published',      value:benCounts.published,  color:'#10b981'},
-                {label:'Rejected',       value:benCounts.rejected,   color:'#94a3b8'},
-                {label:'Total Drafts',   value:benCounts.total,      color:'var(--tx)'},
+                {label:tc('page_admin_agent.statPendingReview'), value:benCounts.pending,   color:'#f59e0b'},
+                {label:tc('page_admin_agent.statPublished'),     value:benCounts.published,  color:'#10b981'},
+                {label:tc('page_admin_agent.statRejected'),      value:benCounts.rejected,   color:'#94a3b8'},
+                {label:tc('page_admin_agent.statTotalDrafts'),   value:benCounts.total,      color:'var(--tx)'},
               ].map(({label,value,color}) => (
                 <div key={label} style={{padding:14,borderRadius:12,border:'1px solid var(--b)',background:'var(--sf)'}}>
                   <div style={{fontSize:10,fontWeight:600,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>{label}</div>
@@ -1351,8 +1356,8 @@ export default function AgentAdminPage() {
             {benItems.length === 0 ? (
               <div style={{textAlign:'center',padding:'60px 0',color:'var(--tx3)'}}>
                 <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg,#1d4ed8,#60a5fa)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:700,color:'#fff',fontFamily:'var(--font-sora)',margin:'0 auto 16px',opacity:.7}}>BC</div>
-                <div style={{fontSize:14,fontWeight:500,marginBottom:6,color:'var(--tx)'}}>No drafts yet</div>
-                <div style={{fontSize:12,maxWidth:280,margin:'0 auto',lineHeight:1.6}}>Hit &quot;Run Ben Now&quot; to have him scan US market signals and draft 10 posts ready for review.</div>
+                <div style={{fontSize:14,fontWeight:500,marginBottom:6,color:'var(--tx)'}}>{tc('page_admin_agent.noDraftsYet')}</div>
+                <div style={{fontSize:12,maxWidth:280,margin:'0 auto',lineHeight:1.6}}>{tc('page_admin_agent.benEmptyDesc')}</div>
               </div>
             ) : (
               <div style={{borderRadius:14,border:'1px solid var(--b)',overflow:'hidden',background:'var(--sf)'}}>
@@ -1368,12 +1373,12 @@ export default function AgentAdminPage() {
                       <span style={{fontSize:11,color:'var(--tx3)'}}>{new Date(item.created_at).toLocaleDateString('en-GB')}</span>
                       {item.status === 'pending' && (
                         <div style={{display:'flex',gap:6}} onClick={e => e.stopPropagation()}>
-                          <button onClick={() => handleBenAction(item.id, 'approve')} disabled={benActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'none',background:'#1d4ed8',color:'#fff',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise</button>
-                          <button onClick={() => handleBenAction(item.id, 'reject')} disabled={benActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
+                          <button onClick={() => handleBenAction(item.id, 'approve')} disabled={benActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'none',background:'#1d4ed8',color:'#fff',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.authorise')}</button>
+                          <button onClick={() => handleBenAction(item.id, 'reject')} disabled={benActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.reject')}</button>
                         </div>
                       )}
                       {item.status === 'published' && blog.slug && (
-                        <a href={`/blog/${blog.slug}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{padding:'4px 12px',borderRadius:6,border:'1px solid rgba(29,78,216,.3)',background:'rgba(29,78,216,.08)',color:'#1d4ed8',fontSize:11,fontWeight:600,textDecoration:'none',fontFamily:'inherit'}}>View on Blog ↗</a>
+                        <a href={`/blog/${blog.slug}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{padding:'4px 12px',borderRadius:6,border:'1px solid rgba(29,78,216,.3)',background:'rgba(29,78,216,.08)',color:'#1d4ed8',fontSize:11,fontWeight:600,textDecoration:'none',fontFamily:'inherit'}}>{tc('page_admin_agent.viewOnBlog')}</a>
                       )}
                     </div>
                   )
@@ -1390,14 +1395,14 @@ export default function AgentAdminPage() {
                     <div style={{display:'flex',alignItems:'center',gap:10}}>
                       <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(135deg,#1d4ed8,#60a5fa)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'#fff'}}>BC</div>
                       <div>
-                        <div style={{fontSize:13,fontWeight:600,color:'var(--tx)'}}>Ben Carlson</div>
+                        <div style={{fontSize:13,fontWeight:600,color:'var(--tx)'}}>{tc('page_admin_agent.tabBen')}</div>
                         <div style={{fontSize:11,color:'var(--tx3)'}}>{benPreview.content?.cluster} · {new Date(benPreview.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
                       </div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
                       {benPreview.status === 'pending' && <>
-                        <button onClick={() => handleBenAction(benPreview.id, 'approve')} disabled={benActing===benPreview.id} style={{padding:'6px 16px',borderRadius:8,border:'none',background:'#1d4ed8',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise & Publish</button>
-                        <button onClick={() => handleBenAction(benPreview.id, 'reject')} disabled={benActing===benPreview.id} style={{padding:'6px 16px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
+                        <button onClick={() => handleBenAction(benPreview.id, 'approve')} disabled={benActing===benPreview.id} style={{padding:'6px 16px',borderRadius:8,border:'none',background:'#1d4ed8',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.authoriseAndPublish')}</button>
+                        <button onClick={() => handleBenAction(benPreview.id, 'reject')} disabled={benActing===benPreview.id} style={{padding:'6px 16px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.reject')}</button>
                       </>}
                       <button onClick={() => setBenPreview(null)} aria-label="Close preview" style={{padding:'6px 10px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:14,cursor:'pointer',fontFamily:'inherit',lineHeight:1}}>×</button>
                     </div>
@@ -1406,21 +1411,21 @@ export default function AgentAdminPage() {
                   {/* Modal body */}
                   <div style={{padding:24}}>
                     <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16,fontSize:12,color:'var(--tx3)'}}>
-                      <span style={{fontWeight:600,color:'var(--tx)'}}>Written by Ben Carlson</span>
+                      <span style={{fontWeight:600,color:'var(--tx)'}}>{tc('page_admin_agent.writtenByBen')}</span>
                       <span>·</span><span>{benPreview.content?.publishDate}</span>
-                      <span>·</span><span>{benPreview.content?.readTime} min read</span>
-                      {benPreview.source_url && <><span>·</span><a href={benPreview.source_url} target="_blank" rel="noopener noreferrer" style={{color:'#1d4ed8',textDecoration:'none'}}>Source →</a></>}
+                      <span>·</span><span>{tc('page_admin_agent.minRead', { n: benPreview.content?.readTime })}</span>
+                      {benPreview.source_url && <><span>·</span><a href={benPreview.source_url} target="_blank" rel="noopener noreferrer" style={{color:'#1d4ed8',textDecoration:'none'}}>{tc('page_admin_agent.source')}</a></>}
                     </div>
 
                     {benPreview.status === 'pending' ? (
-                      <input value={benEditTitle} onChange={e => setBenEditTitle(e.target.value)} placeholder="Article title" style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:8,padding:'8px 12px',width:'100%',marginBottom:16,background:'transparent',boxSizing:'border-box'}} />
+                      <input value={benEditTitle} onChange={e => setBenEditTitle(e.target.value)} placeholder={tc('page_admin_agent.articleTitlePlaceholder')} style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:8,padding:'8px 12px',width:'100%',marginBottom:16,background:'transparent',boxSizing:'border-box'}} />
                     ) : (
                       <h1 style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',marginBottom:16,marginTop:0}}>{benPreview.content?.title}</h1>
                     )}
 
                     {benPreview.content?.tldr && (
                       <div style={{padding:'12px 16px',borderRadius:10,background:'rgba(29,78,216,.05)',border:'1px solid rgba(29,78,216,.15)',marginBottom:24,fontSize:13,color:'var(--tx2)',lineHeight:1.6}}>
-                        <strong style={{color:'#1d4ed8',fontSize:11,textTransform:'uppercase',letterSpacing:'.06em'}}>TL;DR</strong><br/>{benPreview.content.tldr}
+                        <strong style={{color:'#1d4ed8',fontSize:11,textTransform:'uppercase',letterSpacing:'.06em'}}>{tc('page_admin_agent.tldr')}</strong><br/>{benPreview.content.tldr}
                       </div>
                     )}
 
@@ -1428,8 +1433,8 @@ export default function AgentAdminPage() {
                       <div key={i} style={{marginBottom:24}}>
                         {benPreview.status === 'pending' ? (
                           <>
-                            <input value={sec.heading} onChange={e => { const s = [...benEditSections]; s[i] = {...s[i], heading: e.target.value}; setBenEditSections(s) }} placeholder="Section heading" style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:6,padding:'6px 10px',width:'100%',marginBottom:8,background:'transparent',boxSizing:'border-box'}} />
-                            <textarea value={sec.body} onChange={e => { const s = [...benEditSections]; s[i] = {...s[i], body: e.target.value}; setBenEditSections(s) }} rows={5} placeholder="Write section content…" style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:6,padding:'8px 10px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent',boxSizing:'border-box'}} />
+                            <input value={sec.heading} onChange={e => { const s = [...benEditSections]; s[i] = {...s[i], heading: e.target.value}; setBenEditSections(s) }} placeholder={tc('page_admin_agent.sectionHeadingPlaceholder')} style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:6,padding:'6px 10px',width:'100%',marginBottom:8,background:'transparent',boxSizing:'border-box'}} />
+                            <textarea value={sec.body} onChange={e => { const s = [...benEditSections]; s[i] = {...s[i], body: e.target.value}; setBenEditSections(s) }} rows={5} placeholder={tc('page_admin_agent.writeSectionPlaceholder')} style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:6,padding:'8px 10px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent',boxSizing:'border-box'}} />
                           </>
                         ) : (
                           <>
@@ -1442,7 +1447,7 @@ export default function AgentAdminPage() {
 
                     {benPreview.content?.paa?.length > 0 && (
                       <div style={{marginTop:24,padding:16,borderRadius:10,border:'1px solid var(--b)',background:'rgba(0,0,0,.02)'}}>
-                        <h3 style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:12,marginTop:0}}>People Also Ask</h3>
+                        <h3 style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:12,marginTop:0}}>{tc('page_admin_agent.peopleAlsoAsk')}</h3>
                         {benPreview.content.paa.map((qa: any, i: number) => (
                           <div key={i} style={{marginBottom:12}}>
                             <div style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:4}}>{qa.q}</div>
@@ -1472,12 +1477,12 @@ export default function AgentAdminPage() {
             <div style={{display:'flex',alignItems:'center',gap:16,padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:20}}>
               <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg, #e11d48 0%, #fb7185 100%)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:18,fontWeight:700,color:'#fff',fontFamily:'var(--font-sora)'}}>MC</div>
               <div style={{flex:1}}>
-                <div style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)'}}>Maya Chen</div>
-                <div style={{fontSize:12,color:'#e11d48',fontWeight:600,marginBottom:4}}>Head of Marketing Intelligence</div>
-                <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>Tracks Meta Ads CPMs, TikTok Shop shifts, email marketing benchmarks, and SEO signals globally — drafts 10 marketing-focused posts daily ready for your review.</div>
+                <div style={{fontSize:16,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)'}}>{tc('page_admin_agent.tabMaya')}</div>
+                <div style={{fontSize:12,color:'#e11d48',fontWeight:600,marginBottom:4}}>{tc('page_admin_agent.mayaRole')}</div>
+                <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>{tc('page_admin_agent.mayaDesc')}</div>
               </div>
               <button onClick={runMayaScout} disabled={mayaRunning} style={{padding:'10px 20px',borderRadius:9999,border:'none',background:mayaRunning?'var(--b)':'#e11d48',color:mayaRunning?'var(--tx3)':'#fff',fontSize:13,fontWeight:600,cursor:mayaRunning?'wait':'pointer',fontFamily:'inherit',flexShrink:0,transition:'background 200ms, color 200ms'}}>
-                {mayaRunning ? 'Writing...' : 'Run Maya Now'}
+                {mayaRunning ? tc('page_admin_agent.writing') : tc('page_admin_agent.runMayaNow')}
               </button>
             </div>
 
@@ -1496,10 +1501,10 @@ export default function AgentAdminPage() {
                   <div style={{height:22,borderRadius:6,background:'var(--ev)',width:'35%'}}/>
                 </div>
               )) : [
-                {label:'Pending Review', value:mayaCounts.pending,   color:'#f59e0b'},
-                {label:'Published',      value:mayaCounts.published,  color:'#10b981'},
-                {label:'Rejected',       value:mayaCounts.rejected,   color:'#94a3b8'},
-                {label:'Total Drafts',   value:mayaCounts.total,      color:'var(--tx)'},
+                {label:tc('page_admin_agent.statPendingReview'), value:mayaCounts.pending,   color:'#f59e0b'},
+                {label:tc('page_admin_agent.statPublished'),     value:mayaCounts.published,  color:'#10b981'},
+                {label:tc('page_admin_agent.statRejected'),      value:mayaCounts.rejected,   color:'#94a3b8'},
+                {label:tc('page_admin_agent.statTotalDrafts'),   value:mayaCounts.total,      color:'var(--tx)'},
               ].map(({label,value,color}) => (
                 <div key={label} style={{padding:14,borderRadius:12,border:'1px solid var(--b)',background:'var(--sf)'}}>
                   <div style={{fontSize:10,fontWeight:600,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>{label}</div>
@@ -1519,8 +1524,8 @@ export default function AgentAdminPage() {
             {mayaItems.length === 0 ? (
               <div style={{textAlign:'center',padding:'60px 0',color:'var(--tx3)'}}>
                 <div style={{width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg,#e11d48,#fb7185)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:700,color:'#fff',fontFamily:'var(--font-sora)',margin:'0 auto 16px',opacity:.7}}>MC</div>
-                <div style={{fontSize:14,fontWeight:500,marginBottom:6,color:'var(--tx)'}}>No drafts yet</div>
-                <div style={{fontSize:12,maxWidth:280,margin:'0 auto',lineHeight:1.6}}>Hit &quot;Run Maya Now&quot; to have her scan global marketing signals and draft 10 posts ready for review.</div>
+                <div style={{fontSize:14,fontWeight:500,marginBottom:6,color:'var(--tx)'}}>{tc('page_admin_agent.noDraftsYet')}</div>
+                <div style={{fontSize:12,maxWidth:280,margin:'0 auto',lineHeight:1.6}}>{tc('page_admin_agent.mayaEmptyDesc')}</div>
               </div>
             ) : (
               <div style={{borderRadius:14,border:'1px solid var(--b)',overflow:'hidden',background:'var(--sf)'}}>
@@ -1536,12 +1541,12 @@ export default function AgentAdminPage() {
                       <span style={{fontSize:11,color:'var(--tx3)'}}>{new Date(item.created_at).toLocaleDateString('en-GB')}</span>
                       {item.status === 'pending' && (
                         <div style={{display:'flex',gap:6}} onClick={e => e.stopPropagation()}>
-                          <button onClick={() => handleMayaAction(item.id, 'approve')} disabled={mayaActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'none',background:'#e11d48',color:'#fff',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise</button>
-                          <button onClick={() => handleMayaAction(item.id, 'reject')} disabled={mayaActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
+                          <button onClick={() => handleMayaAction(item.id, 'approve')} disabled={mayaActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'none',background:'#e11d48',color:'#fff',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.authorise')}</button>
+                          <button onClick={() => handleMayaAction(item.id, 'reject')} disabled={mayaActing===item.id} style={{padding:'4px 12px',borderRadius:6,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:11,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.reject')}</button>
                         </div>
                       )}
                       {item.status === 'published' && blog.slug && (
-                        <a href={`/blog/${blog.slug}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{padding:'4px 12px',borderRadius:6,border:'1px solid rgba(225,29,72,.3)',background:'rgba(225,29,72,.08)',color:'#e11d48',fontSize:11,fontWeight:600,textDecoration:'none',fontFamily:'inherit'}}>View on Blog ↗</a>
+                        <a href={`/blog/${blog.slug}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{padding:'4px 12px',borderRadius:6,border:'1px solid rgba(225,29,72,.3)',background:'rgba(225,29,72,.08)',color:'#e11d48',fontSize:11,fontWeight:600,textDecoration:'none',fontFamily:'inherit'}}>{tc('page_admin_agent.viewOnBlog')}</a>
                       )}
                     </div>
                   )
@@ -1557,41 +1562,41 @@ export default function AgentAdminPage() {
                     <div style={{display:'flex',alignItems:'center',gap:10}}>
                       <div style={{width:32,height:32,borderRadius:'50%',background:'linear-gradient(135deg,#e11d48,#fb7185)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'#fff'}}>MC</div>
                       <div>
-                        <div style={{fontSize:13,fontWeight:600,color:'var(--tx)'}}>Maya Chen</div>
+                        <div style={{fontSize:13,fontWeight:600,color:'var(--tx)'}}>{tc('page_admin_agent.tabMaya')}</div>
                         <div style={{fontSize:11,color:'var(--tx3)'}}>{mayaPreview.content?.cluster} · {new Date(mayaPreview.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
                       </div>
                     </div>
                     <div style={{display:'flex',gap:8}}>
                       {mayaPreview.status === 'pending' && <>
-                        <button onClick={() => handleMayaAction(mayaPreview.id, 'approve')} disabled={mayaActing===mayaPreview.id} style={{padding:'6px 16px',borderRadius:8,border:'none',background:'#e11d48',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Authorise & Publish</button>
-                        <button onClick={() => handleMayaAction(mayaPreview.id, 'reject')} disabled={mayaActing===mayaPreview.id} style={{padding:'6px 16px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
+                        <button onClick={() => handleMayaAction(mayaPreview.id, 'approve')} disabled={mayaActing===mayaPreview.id} style={{padding:'6px 16px',borderRadius:8,border:'none',background:'#e11d48',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.authoriseAndPublish')}</button>
+                        <button onClick={() => handleMayaAction(mayaPreview.id, 'reject')} disabled={mayaActing===mayaPreview.id} style={{padding:'6px 16px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'#f87171',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.reject')}</button>
                       </>}
                       <button onClick={() => setMayaPreview(null)} aria-label="Close preview" style={{padding:'6px 10px',borderRadius:8,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:14,cursor:'pointer',fontFamily:'inherit',lineHeight:1}}>×</button>
                     </div>
                   </div>
                   <div style={{padding:24}}>
                     <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16,fontSize:12,color:'var(--tx3)'}}>
-                      <span style={{fontWeight:600,color:'var(--tx)'}}>Written by Maya Chen</span>
+                      <span style={{fontWeight:600,color:'var(--tx)'}}>{tc('page_admin_agent.writtenByMaya')}</span>
                       <span>·</span><span>{mayaPreview.content?.publishDate}</span>
-                      <span>·</span><span>{mayaPreview.content?.readTime} min read</span>
-                      {mayaPreview.source_url && <><span>·</span><a href={mayaPreview.source_url} target="_blank" rel="noopener noreferrer" style={{color:'#e11d48',textDecoration:'none'}}>Source →</a></>}
+                      <span>·</span><span>{tc('page_admin_agent.minRead', { n: mayaPreview.content?.readTime })}</span>
+                      {mayaPreview.source_url && <><span>·</span><a href={mayaPreview.source_url} target="_blank" rel="noopener noreferrer" style={{color:'#e11d48',textDecoration:'none'}}>{tc('page_admin_agent.source')}</a></>}
                     </div>
                     {mayaPreview.status === 'pending' ? (
-                      <input value={mayaEditTitle} onChange={e => setMayaEditTitle(e.target.value)} placeholder="Article title" style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:8,padding:'8px 12px',width:'100%',marginBottom:16,background:'transparent',boxSizing:'border-box'}} />
+                      <input value={mayaEditTitle} onChange={e => setMayaEditTitle(e.target.value)} placeholder={tc('page_admin_agent.articleTitlePlaceholder')} style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:8,padding:'8px 12px',width:'100%',marginBottom:16,background:'transparent',boxSizing:'border-box'}} />
                     ) : (
                       <h1 style={{fontSize:22,fontWeight:700,fontFamily:'var(--font-sora)',color:'var(--tx)',marginBottom:16,marginTop:0}}>{mayaPreview.content?.title}</h1>
                     )}
                     {mayaPreview.content?.tldr && (
                       <div style={{padding:'12px 16px',borderRadius:10,background:'rgba(225,29,72,.05)',border:'1px solid rgba(225,29,72,.15)',marginBottom:24,fontSize:13,color:'var(--tx2)',lineHeight:1.6}}>
-                        <strong style={{color:'#e11d48',fontSize:11,textTransform:'uppercase',letterSpacing:'.06em'}}>TL;DR</strong><br/>{mayaPreview.content.tldr}
+                        <strong style={{color:'#e11d48',fontSize:11,textTransform:'uppercase',letterSpacing:'.06em'}}>{tc('page_admin_agent.tldr')}</strong><br/>{mayaPreview.content.tldr}
                       </div>
                     )}
                     {(mayaPreview.status === 'pending' ? mayaEditSections : mayaPreview.content?.sections || []).map((sec: any, i: number) => (
                       <div key={i} style={{marginBottom:24}}>
                         {mayaPreview.status === 'pending' ? (
                           <>
-                            <input value={sec.heading} onChange={e => { const s = [...mayaEditSections]; s[i] = {...s[i], heading: e.target.value}; setMayaEditSections(s) }} placeholder="Section heading" style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:6,padding:'6px 10px',width:'100%',marginBottom:8,background:'transparent',boxSizing:'border-box'}} />
-                            <textarea value={sec.body} onChange={e => { const s = [...mayaEditSections]; s[i] = {...s[i], body: e.target.value}; setMayaEditSections(s) }} rows={5} placeholder="Write section content…" style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:6,padding:'8px 10px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent',boxSizing:'border-box'}} />
+                            <input value={sec.heading} onChange={e => { const s = [...mayaEditSections]; s[i] = {...s[i], heading: e.target.value}; setMayaEditSections(s) }} placeholder={tc('page_admin_agent.sectionHeadingPlaceholder')} style={{fontSize:16,fontWeight:600,fontFamily:'var(--font-sora)',color:'var(--tx)',border:'1px solid var(--b)',borderRadius:6,padding:'6px 10px',width:'100%',marginBottom:8,background:'transparent',boxSizing:'border-box'}} />
+                            <textarea value={sec.body} onChange={e => { const s = [...mayaEditSections]; s[i] = {...s[i], body: e.target.value}; setMayaEditSections(s) }} rows={5} placeholder={tc('page_admin_agent.writeSectionPlaceholder')} style={{fontSize:13,lineHeight:1.7,color:'var(--tx2)',border:'1px solid var(--b)',borderRadius:6,padding:'8px 10px',width:'100%',resize:'vertical',fontFamily:'inherit',background:'transparent',boxSizing:'border-box'}} />
                           </>
                         ) : (
                           <>
@@ -1603,7 +1608,7 @@ export default function AgentAdminPage() {
                     ))}
                     {mayaPreview.content?.paa?.length > 0 && (
                       <div style={{marginTop:24,padding:16,borderRadius:10,border:'1px solid var(--b)',background:'rgba(0,0,0,.02)'}}>
-                        <h3 style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:12,marginTop:0}}>People Also Ask</h3>
+                        <h3 style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:12,marginTop:0}}>{tc('page_admin_agent.peopleAlsoAsk')}</h3>
                         {mayaPreview.content.paa.map((qa: any, i: number) => (
                           <div key={i} style={{marginBottom:12}}>
                             <div style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:4}}>{qa.q}</div>
@@ -1634,7 +1639,7 @@ export default function AgentAdminPage() {
                 <button key={f} onClick={()=>setFilter(f)} style={{padding:'6px 14px',borderRadius:9999,border:`1px solid ${filter===f?'#6366F1':'var(--b2)'}`,background:filter===f?'rgba(99,102,241,.1)':'transparent',color:filter===f?'#6366F1':'var(--tx3)',fontSize:12,fontWeight:filter===f?600:400,cursor:'pointer',fontFamily:'inherit',textTransform:'capitalize'}}>{f}</button>
               ))}
             </div>
-            {Object.keys(runs).length === 0 && <div style={{textAlign:'center',padding:'60px 0',color:'var(--tx3)',fontSize:14}}>No content yet — run the agent to generate your first batch.</div>}
+            {Object.keys(runs).length === 0 && <div style={{textAlign:'center',padding:'60px 0',color:'var(--tx3)',fontSize:14}}>{tc('page_admin_agent.agentNoContent')}</div>}
             {Object.entries(runs).map(([runId, runItems]) => {
               const fi = runItems[0]
               const vs = fi.verdict ? VERDICT_STYLE[fi.verdict as keyof typeof VERDICT_STYLE] : null
@@ -1643,8 +1648,8 @@ export default function AgentAdminPage() {
                   <div style={{padding:'14px 16px',borderBottom:'1px solid var(--b)',background:'var(--ev)'}}>
                     <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
                       <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{fi.source_title||'Agent Run'}</div>
-                        <div style={{fontSize:11,color:'var(--tx3)'}}>{new Date(fi.created_at).toLocaleString('en-GB')} · Query: "{fi.source_query}"</div>
+                        <div style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{fi.source_title||tc('page_admin_agent.agentRun')}</div>
+                        <div style={{fontSize:11,color:'var(--tx3)'}}>{new Date(fi.created_at).toLocaleString('en-GB')} · {tc('page_admin_agent.queryColon', { query: fi.source_query })}</div>
                       </div>
                       {vs && <span style={{fontSize:11,fontWeight:600,color:vs.color,background:vs.bg,border:`1px solid ${vs.border}`,padding:'3px 10px',borderRadius:9999,flexShrink:0}}>{vs.label}</span>}
                     </div>
@@ -1654,10 +1659,10 @@ export default function AgentAdminPage() {
                     <div key={item.id} style={{borderBottom:'1px solid var(--b)'}}>
                       <div onClick={()=>setExpandedId(expandedId===item.id?null:item.id)} style={{padding:'12px 16px',display:'flex',alignItems:'center',gap:10,cursor:'pointer',userSelect:'none'}} onMouseEnter={e=>e.currentTarget.style.background='var(--ev)'} onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
                         <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:6,background:item.type==='blog'?'rgba(99,102,241,.1)':item.type==='thread'?'rgba(34,197,94,.1)':'rgba(245,158,11,.1)',color:item.type==='blog'?'#6366F1':item.type==='thread'?'#16a34a':'#d97706',textTransform:'uppercase',letterSpacing:'.06em'}}>
-                          {item.type==='blog'?'📝 Blog':item.type==='thread'?'🧵 Thread':'💬 Replies'}
+                          {item.type==='blog'?tc('page_admin_agent.typeBlog'):item.type==='thread'?tc('page_admin_agent.typeThread'):tc('page_admin_agent.typeReplies')}
                         </span>
                         <span style={{fontSize:11,color:item.status==='pending'?'#d97706':item.status==='published'?'#16a34a':'#94a3b8',fontWeight:500}}>
-                          {item.status==='pending'?'⏳ Pending':item.status==='published'?'✅ Published':'🗑 Rejected'}
+                          {item.status==='pending'?tc('page_admin_agent.statusPending'):item.status==='published'?tc('page_admin_agent.statusPublished'):tc('page_admin_agent.statusRejected')}
                         </span>
                         <span style={{fontSize:12,color:'var(--tx3)',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
                           {item.type==='blog'?(item.content as any).title||'Blog post':item.type==='thread'?`${(item.content as any).tweets?.[0]?.text?.slice(0,60)||'Thread'}…`:`${(item.content as any).replies?.length||0} smart replies`}
@@ -1669,9 +1674,9 @@ export default function AgentAdminPage() {
                           <div style={{padding:12,borderRadius:10,background:'var(--bg)',border:'1px solid var(--b)',fontSize:12,color:'var(--tx2)',lineHeight:1.6,maxHeight:320,overflowY:'auto',fontFamily:'monospace',marginBottom:12,whiteSpace:'pre-wrap',wordBreak:'break-word'}}>{JSON.stringify(item.content,null,2)}</div>
                           {item.status==='pending' && (
                             <div style={{display:'flex',gap:8}}>
-                              <button onClick={()=>handleAction(item.id,'approve')} disabled={actionLoading===item.id} style={{flex:1,padding:'9px',borderRadius:9,border:'none',background:'#6366F1',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{actionLoading===item.id?'Processing…':item.type==='blog'?'✅ Approve & Add to Blog':'✅ Approve'}</button>
-                              <button onClick={()=>handleAction(item.id,'reject')} disabled={actionLoading===item.id} style={{padding:'9px 16px',borderRadius:9,border:'1px solid var(--b2)',background:'transparent',color:'var(--tx3)',fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
-                              {item.source_url && <a href={item.source_url} target="_blank" rel="noopener noreferrer" style={{padding:'9px 14px',borderRadius:9,border:'1px solid var(--b2)',background:'transparent',color:'var(--tx3)',fontSize:12,textDecoration:'none',display:'flex',alignItems:'center'}}>Source ↗</a>}
+                              <button onClick={()=>handleAction(item.id,'approve')} disabled={actionLoading===item.id} style={{flex:1,padding:'9px',borderRadius:9,border:'none',background:'#6366F1',color:'#fff',fontSize:13,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{actionLoading===item.id?tc('page_admin_agent.processing'):item.type==='blog'?tc('page_admin_agent.approveAndAddToBlog'):tc('page_admin_agent.approve')}</button>
+                              <button onClick={()=>handleAction(item.id,'reject')} disabled={actionLoading===item.id} style={{padding:'9px 16px',borderRadius:9,border:'1px solid var(--b2)',background:'transparent',color:'var(--tx3)',fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.reject')}</button>
+                              {item.source_url && <a href={item.source_url} target="_blank" rel="noopener noreferrer" style={{padding:'9px 14px',borderRadius:9,border:'1px solid var(--b2)',background:'transparent',color:'var(--tx3)',fontSize:12,textDecoration:'none',display:'flex',alignItems:'center'}}>{tc('page_admin_agent.sourceLink')}</a>}
                             </div>
                           )}
                         </div>
@@ -1688,9 +1693,9 @@ export default function AgentAdminPage() {
         {mainTab === 'x' && (
           <>
             <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20,flexWrap:'wrap'}}>
-              {xConnected===null && <span style={{fontSize:12,color:'var(--tx3)'}}>Checking X connection...</span>}
-              {xConnected===true && <div style={{padding:'5px 12px',borderRadius:9999,background:'rgba(34,197,94,.1)',border:'1px solid rgba(34,197,94,.3)',fontSize:12,fontWeight:600,color:'#16a34a'}}>✓ Connected {xUsername}</div>}
-              {xConnected===false && <div style={{padding:'5px 12px',borderRadius:9999,background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',fontSize:12,fontWeight:600,color:'#dc2626'}}>X not connected v2</div>}
+              {xConnected===null && <span style={{fontSize:12,color:'var(--tx3)'}}>{tc('page_admin_agent.xChecking')}</span>}
+              {xConnected===true && <div style={{padding:'5px 12px',borderRadius:9999,background:'rgba(34,197,94,.1)',border:'1px solid rgba(34,197,94,.3)',fontSize:12,fontWeight:600,color:'#16a34a'}}>{tc('page_admin_agent.xConnected')} {xUsername}</div>}
+              {xConnected===false && <div style={{padding:'5px 12px',borderRadius:9999,background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',fontSize:12,fontWeight:600,color:'#dc2626'}}>{tc('page_admin_agent.xNotConnected')}</div>}
             </div>
 
             <div className="tab-strip" style={{borderBottom:'1px solid var(--b)',marginBottom:20}}>
@@ -1704,11 +1709,11 @@ export default function AgentAdminPage() {
             {xTab === 'search' && (
               <>
                 <div style={{...card,marginBottom:16}}>
-                  <div style={{fontSize:12,fontWeight:700,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:12}}>Keyword strategy</div>
+                  <div style={{fontSize:12,fontWeight:700,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:12}}>{tc('page_admin_agent.xKeywordStrategy')}</div>
                   <div style={{display:'flex',gap:8,marginBottom:14}}>
                     {['preset','custom'].map(m => (
                       <button key={m} onClick={()=>setUseCustom(m==='custom')} style={{padding:'5px 12px',borderRadius:9999,border:`1px solid ${useCustom===(m==='custom')?'#6366F1':'var(--b)'}`,background:useCustom===(m==='custom')?'rgba(99,102,241,.08)':'transparent',color:useCustom===(m==='custom')?'#6366F1':'var(--tx3)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>
-                        {m==='preset'?'Use preset':'Custom query'}
+                        {m==='preset'?tc('page_admin_agent.xUsePreset'):tc('page_admin_agent.xCustomQuery')}
                       </button>
                     ))}
                   </div>
@@ -1725,10 +1730,10 @@ export default function AgentAdminPage() {
                   )}
                   <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap'}}>
                     <label style={{fontSize:12,color:'var(--tx2)',display:'flex',alignItems:'center',gap:6}}>
-                      Results: <select value={maxResults} onChange={e=>setMaxResults(Number(e.target.value))} style={{padding:'3px 6px',borderRadius:6,border:'1px solid var(--b)',background:'var(--bg)',fontSize:12,fontFamily:'inherit'}}>{[5,10,20].map(n=><option key={n}>{n}</option>)}</select>
+                      {tc('page_admin_agent.xResultsLabel')} <select value={maxResults} onChange={e=>setMaxResults(Number(e.target.value))} style={{padding:'3px 6px',borderRadius:6,border:'1px solid var(--b)',background:'var(--bg)',fontSize:12,fontFamily:'inherit'}}>{[5,10,20].map(n=><option key={n}>{n}</option>)}</select>
                     </label>
                     <button onClick={handleXSearch} disabled={searching} style={{padding:'8px 18px',borderRadius:9999,border:'none',background:searching?'var(--b)':'#6366F1',color:searching?'var(--tx3)':'#fff',fontSize:13,fontWeight:600,cursor:searching?'not-allowed':'pointer',fontFamily:'inherit'}}>
-                      {searching?'Searching...':'Search & Generate Replies'}
+                      {searching?tc('page_admin_agent.xSearching'):tc('page_admin_agent.xSearchAndGenerate')}
                     </button>
                   </div>
                 </div>
@@ -1739,15 +1744,15 @@ export default function AgentAdminPage() {
                       <p style={{fontSize:13,color:'var(--tx)',margin:'6px 0 0',lineHeight:1.6}}>{item.tweet?.text}</p>
                     </div>
                     <div style={cs}>
-                      <div style={{fontSize:10,fontWeight:700,color:'#6366F1',marginBottom:4}}>AI REPLY</div>
+                      <div style={{fontSize:10,fontWeight:700,color:'#6366F1',marginBottom:4}}>{tc('page_admin_agent.aiReply')}</div>
                       {editId===item.tweet?.id ? <textarea value={editText} onChange={e=>setEditText(e.target.value)} rows={2} style={{width:'100%',padding:8,borderRadius:8,border:'1px solid var(--b)',background:'var(--bg)',fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/> : <p style={{fontSize:13,margin:0,lineHeight:1.6,color:'var(--tx)'}}>{item.reply}</p>}
-                      <div style={{fontSize:10,color:'var(--tx3)',marginTop:4}}>{(editId===item.tweet?.id?editText:item.reply)?.length||0}/255</div>
+                      <div style={{fontSize:10,color:'var(--tx3)',marginTop:4}}>{tc('page_admin_agent.charLimit', { n: (editId===item.tweet?.id?editText:item.reply)?.length||0 })}</div>
                     </div>
                     <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                      <button onClick={()=>handleXPost(item,true)} disabled={posting===item.tweet?.id} style={{padding:'6px 14px',borderRadius:9999,border:'none',background:'#1d9bf0',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{posting===item.tweet?.id?'Posting...':'Post Reply'}</button>
-                      <button onClick={()=>{setEditId(item.tweet?.id);setEditText(item.reply)}} style={{padding:'6px 12px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>Edit</button>
-                      <button onClick={()=>handleXRegen(item,true)} style={{padding:'6px 12px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>Regenerate</button>
-                      {item.tweet?.id && item.tweet.id !== 'null' && <a href={'https://x.com/i/web/status/'+item.tweet.id} target="_blank" rel="noopener noreferrer" style={{padding:'6px 12px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:12,textDecoration:'none'}}>View</a>}
+                      <button onClick={()=>handleXPost(item,true)} disabled={posting===item.tweet?.id} style={{padding:'6px 14px',borderRadius:9999,border:'none',background:'#1d9bf0',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{posting===item.tweet?.id?tc('page_admin_agent.posting'):tc('page_admin_agent.postReply')}</button>
+                      <button onClick={()=>{setEditId(item.tweet?.id);setEditText(item.reply)}} style={{padding:'6px 12px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.edit')}</button>
+                      <button onClick={()=>handleXRegen(item,true)} style={{padding:'6px 12px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.regenerate')}</button>
+                      {item.tweet?.id && item.tweet.id !== 'null' && <a href={'https://x.com/i/web/status/'+item.tweet.id} target="_blank" rel="noopener noreferrer" style={{padding:'6px 12px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:12,textDecoration:'none'}}>{tc('page_admin_agent.view')}</a>}
                     </div>
                   </div>
                 ))}
@@ -1756,37 +1761,37 @@ export default function AgentAdminPage() {
 
             {xTab === 'results' && (
               xResults.length === 0
-                ? <div style={{textAlign:'center',padding:'40px 0',color:'var(--tx3)'}}>No results yet. Run a search to generate posts.</div>
+                ? <div style={{textAlign:'center',padding:'40px 0',color:'var(--tx3)'}}>{tc('page_admin_agent.xNoResults')}</div>
                 : xResults.map((item, i) => (
                   <div key={i} style={{padding:16,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:12}}>
                     <div style={{marginBottom:8}}>
-                      <span style={{fontSize:11,fontWeight:600,color:'#6366F1',background:'rgba(99,102,241,.08)',padding:'2px 8px',borderRadius:9999}}>Original post</span>
+                      <span style={{fontSize:11,fontWeight:600,color:'#6366F1',background:'rgba(99,102,241,.08)',padding:'2px 8px',borderRadius:9999}}>{tc('page_admin_agent.originalPost')}</span>
                       <p style={{fontSize:13,color:'var(--tx)',margin:'8px 0 0',lineHeight:1.6}}>{item.reply}</p>
                     </div>
-                    <div style={{fontSize:10,color:'var(--tx3)',marginBottom:10}}>{item.reply?.length||0}/255 characters</div>
+                    <div style={{fontSize:10,color:'var(--tx3)',marginBottom:10}}>{tc('page_admin_agent.charCount', { n: item.reply?.length||0 })}</div>
                     <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
                       <button onClick={()=>handleXPost(item,true)} disabled={posting===item.tweet?.id} style={{padding:'6px 14px',borderRadius:9999,border:'none',background:'#1d9bf0',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>
-                        {posting===item.tweet?.id?'Posting...':'Post to X'}
+                        {posting===item.tweet?.id?tc('page_admin_agent.posting'):tc('page_admin_agent.postToX')}
                       </button>
-                      <button onClick={()=>{setEditId(item.tweet?.id);setEditText(item.reply)}} style={{padding:'6px 12px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>Edit</button>
-                      <button onClick={()=>handleXRegen(item,true)} style={{padding:'6px 12px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>Regenerate</button>
-                      {item.postedId && <a href={'https://x.com/i/web/status/'+item.postedId} target="_blank" rel="noopener noreferrer" style={{padding:'6px 12px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'#1d9bf0',fontSize:12,fontWeight:600,textDecoration:'none'}}>✓ View on X ↗</a>}
+                      <button onClick={()=>{setEditId(item.tweet?.id);setEditText(item.reply)}} style={{padding:'6px 12px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.edit')}</button>
+                      <button onClick={()=>handleXRegen(item,true)} style={{padding:'6px 12px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.regenerate')}</button>
+                      {item.postedId && <a href={'https://x.com/i/web/status/'+item.postedId} target="_blank" rel="noopener noreferrer" style={{padding:'6px 12px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'#1d9bf0',fontSize:12,fontWeight:600,textDecoration:'none'}}>{tc('page_admin_agent.viewOnX')}</a>}
                     </div>
                   </div>
                 ))
             )}
 
             {xTab === 'queue' && (
-              xQueue.length===0 ? <div style={{textAlign:'center',padding:'40px 0',color:'var(--tx3)'}}>No pending posts. Run a search to generate new ones.</div> :
+              xQueue.length===0 ? <div style={{textAlign:'center',padding:'40px 0',color:'var(--tx3)'}}>{tc('page_admin_agent.xNoPending')}</div> :
               <>
               <div style={{display:'flex',justifyContent:'flex-end',marginBottom:10}}>
                 <button onClick={async()=>{
-                  if(!confirm('Clear all pending posts from queue?')) return
+                  if(!confirm(tc('page_admin_agent.xClearQueueConfirm'))) return
                   await fetch('/api/xagent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'clear_queue'})})
                   setXQueue([])
-                  showToast('Queue cleared')
+                  showToast(tc('page_admin_agent.xQueueCleared'))
                 }} style={{padding:'6px 14px',borderRadius:9999,border:'1px solid rgba(239,68,68,.3)',background:'transparent',color:'#dc2626',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>
-                  🗑 Clear queue
+                  {tc('page_admin_agent.xClearQueue')}
                 </button>
               </div>
               {xQueue.map(item => (
@@ -1796,16 +1801,16 @@ export default function AgentAdminPage() {
                     <p style={{fontSize:13,color:'var(--tx)',margin:'6px 0 0',lineHeight:1.6}}>{item.tweet_text}</p>
                   </div>
                   <div style={cs}>
-                    <div style={{fontSize:10,fontWeight:700,color:'#6366F1',marginBottom:4}}>AI REPLY</div>
+                    <div style={{fontSize:10,fontWeight:700,color:'#6366F1',marginBottom:4}}>{tc('page_admin_agent.aiReply')}</div>
                     {editId===item.id ? <textarea value={editText} onChange={e=>setEditText(e.target.value)} rows={2} style={{width:'100%',padding:8,borderRadius:8,border:'1px solid var(--b)',background:'var(--bg)',fontSize:13,fontFamily:'inherit',outline:'none',boxSizing:'border-box'}}/> : <p style={{fontSize:13,margin:0,lineHeight:1.6,color:'var(--tx)'}}>{item.generated_reply}</p>}
-                    <div style={{fontSize:10,color:'var(--tx3)',marginTop:4}}>{(editId===item.id?editText:item.generated_reply)?.length||0}/255</div>
+                    <div style={{fontSize:10,color:'var(--tx3)',marginTop:4}}>{tc('page_admin_agent.charLimit', { n: (editId===item.id?editText:item.generated_reply)?.length||0 })}</div>
                   </div>
                   <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                    <button onClick={()=>handleXPost(item)} disabled={posting===item.id} style={{padding:'6px 14px',borderRadius:9999,border:'none',background:'#1d9bf0',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{posting===item.id?'Posting...':'Post Reply'}</button>
-                    <button onClick={()=>{setEditId(item.id);setEditText(item.generated_reply)}} style={{padding:'6px 12px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>Edit</button>
-                    <button onClick={()=>handleXRegen(item)} style={{padding:'6px 12px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>Regenerate</button>
-                    <button onClick={()=>handleXReject(item.id)} style={{padding:'6px 12px',borderRadius:9999,border:'1px solid rgba(239,68,68,.3)',background:'transparent',color:'#dc2626',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>Reject</button>
-                    {item.tweet_id && item.tweet_id !== 'null' && <a href={'https://x.com/i/web/status/'+item.tweet_id} target="_blank" rel="noopener noreferrer" style={{padding:'6px 12px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:12,textDecoration:'none'}}>View on X</a>}
+                    <button onClick={()=>handleXPost(item)} disabled={posting===item.id} style={{padding:'6px 14px',borderRadius:9999,border:'none',background:'#1d9bf0',color:'#fff',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>{posting===item.id?tc('page_admin_agent.posting'):tc('page_admin_agent.postReply')}</button>
+                    <button onClick={()=>{setEditId(item.id);setEditText(item.generated_reply)}} style={{padding:'6px 12px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.edit')}</button>
+                    <button onClick={()=>handleXRegen(item)} style={{padding:'6px 12px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.regenerate')}</button>
+                    <button onClick={()=>handleXReject(item.id)} style={{padding:'6px 12px',borderRadius:9999,border:'1px solid rgba(239,68,68,.3)',background:'transparent',color:'#dc2626',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.reject')}</button>
+                    {item.tweet_id && item.tweet_id !== 'null' && <a href={'https://x.com/i/web/status/'+item.tweet_id} target="_blank" rel="noopener noreferrer" style={{padding:'6px 12px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx3)',fontSize:12,textDecoration:'none'}}>{tc('page_admin_agent.viewOnXPlain')}</a>}
                   </div>
                 </div>
               ))}
@@ -1813,11 +1818,11 @@ export default function AgentAdminPage() {
             )}
 
             {xTab === 'history' && (
-              xHistory.length===0 ? <div style={{textAlign:'center',padding:'40px 0',color:'var(--tx3)'}}>No history yet.</div> :
+              xHistory.length===0 ? <div style={{textAlign:'center',padding:'40px 0',color:'var(--tx3)'}}>{tc('page_admin_agent.xNoHistory')}</div> :
               xHistory.map(item => (
                 <div key={item.id} style={{...card,opacity:0.8}}>
                   <div style={{display:'flex',gap:8,marginBottom:8}}>
-                    <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:9999,background:item.status==='posted'?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)',color:item.status==='posted'?'#16a34a':'#dc2626'}}>{item.status==='posted'?'Posted':'Rejected'}</span>
+                    <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:9999,background:item.status==='posted'?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)',color:item.status==='posted'?'#16a34a':'#dc2626'}}>{item.status==='posted'?tc('page_admin_agent.historyStatusPosted'):tc('page_admin_agent.historyStatusRejected')}</span>
                     <span style={{fontSize:11,color:'var(--tx3)'}}>@{item.tweet_author} · {new Date(item.created_at).toLocaleDateString()}</span>
                   </div>
                   <p style={{fontSize:12,color:'var(--tx2)',margin:'0 0 6px',lineHeight:1.5}}>{item.tweet_text}</p>
@@ -1832,18 +1837,18 @@ export default function AgentAdminPage() {
         {mainTab === 'automation' && (
           <>
             <div style={{marginBottom:20}}>
-              <div style={{fontSize:14,fontWeight:600,color:'var(--tx)'}}>Automated Jobs</div>
-              <div style={{fontSize:12,color:'var(--tx3)',marginTop:2}}>Cron jobs that run automatically on schedule. You can also trigger them manually.</div>
+              <div style={{fontSize:14,fontWeight:600,color:'var(--tx)'}}>{tc('page_admin_agent.automationHeading')}</div>
+              <div style={{fontSize:12,color:'var(--tx3)',marginTop:2}}>{tc('page_admin_agent.automationDesc')}</div>
             </div>
 
             {([
-              {id:'source-sync',   icon:'🔄', name:'Source Data Sync',     desc:'Refreshes all connected Shopify, Stripe, Xero, Amazon data.',         schedule:'Daily at 5am'},
-              {id:'daily-brief',   icon:'📋', name:'Daily Brief Generator', desc:'Pre-generates AI morning briefs for all users + emails them.',        schedule:'Daily at 7am'},
-              {id:'token-refresh', icon:'🔑', name:'OAuth Token Refresh',   desc:'Pre-emptively refreshes tokens for all integrations before expiry.',  schedule:'Daily at 1am'},
-              {id:'stale-content', icon:'🧹', name:'Stale Content Cleanup', desc:'Deletes rejected + stale pending content older than 30 days.',        schedule:'Weekly Sunday 5am'},
-              {id:'seo-monitor',   icon:'📊', name:'SEO Monitor',           desc:'Checks Google Search Console for traffic drops + broken pages.',      schedule:'Weekly Monday 9am'},
-              {id:'stock-replenishment', icon:'📦', name:'Stock Replenishment', desc:'Analyses POS sales velocity, predicts stockouts, generates reorder suggestions for all users.', schedule:'Daily at 6am'},
-            ] as const).map(job => {
+              {id:'source-sync',        icon:'🔄', name:tc('page_admin_agent.jobSourceSyncName'),        desc:tc('page_admin_agent.jobSourceSyncDesc'),        schedule:tc('page_admin_agent.jobSourceSyncSchedule')},
+              {id:'daily-brief',        icon:'📋', name:tc('page_admin_agent.jobDailyBriefName'),        desc:tc('page_admin_agent.jobDailyBriefDesc'),        schedule:tc('page_admin_agent.jobDailyBriefSchedule')},
+              {id:'token-refresh',      icon:'🔑', name:tc('page_admin_agent.jobTokenRefreshName'),      desc:tc('page_admin_agent.jobTokenRefreshDesc'),      schedule:tc('page_admin_agent.jobTokenRefreshSchedule')},
+              {id:'stale-content',      icon:'🧹', name:tc('page_admin_agent.jobStaleContentName'),      desc:tc('page_admin_agent.jobStaleContentDesc'),      schedule:tc('page_admin_agent.jobStaleContentSchedule')},
+              {id:'seo-monitor',        icon:'📊', name:tc('page_admin_agent.jobSeoMonitorName'),        desc:tc('page_admin_agent.jobSeoMonitorDesc'),        schedule:tc('page_admin_agent.jobSeoMonitorSchedule')},
+              {id:'stock-replenishment',icon:'📦', name:tc('page_admin_agent.jobStockReplenishmentName'),desc:tc('page_admin_agent.jobStockReplenishmentDesc'),schedule:tc('page_admin_agent.jobStockReplenishmentSchedule')},
+            ] as {id:string;icon:string;name:string;desc:string;schedule:string}[]).map(job => {
               const state = autoJobs[job.id]
               return (
                 <div key={job.id} style={{padding:20,borderRadius:14,border:'1px solid var(--b)',background:'var(--sf)',marginBottom:12}}>
@@ -1857,13 +1862,13 @@ export default function AgentAdminPage() {
                       <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>{job.desc}</div>
                     </div>
                     <button onClick={() => runAutoJob(job.id)} disabled={state?.running} style={{padding:'10px 20px',borderRadius:9999,border:'none',background:state?.running?'var(--b)':'#6366F1',color:state?.running?'var(--tx3)':'#fff',fontSize:13,fontWeight:600,cursor:state?.running?'wait':'pointer',fontFamily:'inherit',flexShrink:0}}>
-                      {state?.running ? 'Running...' : 'Run Now'}
+                      {state?.running ? tc('page_admin_agent.running') : tc('page_admin_agent.runNow')}
                     </button>
                   </div>
 
                   {state?.lastRun && (
                     <div style={{marginTop:12,fontSize:11,color:'var(--tx3)'}}>
-                      Last run: {new Date(state.lastRun).toLocaleString('en-GB')}
+                      {tc('page_admin_agent.lastRun')} {new Date(state.lastRun).toLocaleString('en-GB')}
                     </div>
                   )}
 
@@ -1885,10 +1890,10 @@ export default function AgentAdminPage() {
                 <div style={{width:44,height:44,borderRadius:12,background:'rgba(16,185,129,.08)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,flexShrink:0}}>✨</div>
                 <div style={{flex:1}}>
                   <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:2}}>
-                    <span style={{fontSize:14,fontWeight:600,color:'var(--tx)'}}>Blog Auto-Publish</span>
-                    <span style={{fontSize:10,padding:'2px 8px',borderRadius:9999,background:'rgba(16,185,129,.1)',color:'#10b981',fontWeight:600}}>Active</span>
+                    <span style={{fontSize:14,fontWeight:600,color:'var(--tx)'}}>{tc('page_admin_agent.blogAutoPublishName')}</span>
+                    <span style={{fontSize:10,padding:'2px 8px',borderRadius:9999,background:'rgba(16,185,129,.1)',color:'#10b981',fontWeight:600}}>{tc('page_admin_agent.active')}</span>
                   </div>
-                  <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>High-quality blog posts (score 80+) are auto-published by Alice Watson. Lower-scoring posts go to Pending Review. Google & Bing are pinged on every publish.</div>
+                  <div style={{fontSize:12,color:'var(--tx3)',lineHeight:1.5}}>{tc('page_admin_agent.blogAutoPublishDesc')}</div>
                 </div>
               </div>
             </div>
@@ -1901,15 +1906,15 @@ export default function AgentAdminPage() {
             {/* Header row */}
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,flexWrap:'wrap',gap:10}}>
               <div>
-                <div style={{fontSize:14,fontWeight:600,color:'var(--tx)'}}>Security & GDPR Audit</div>
-                <div style={{fontSize:12,color:'var(--tx3)',marginTop:2}}>Automated monthly (1st of the month) · 9 check categories · Reports stored for compliance evidence</div>
+                <div style={{fontSize:14,fontWeight:600,color:'var(--tx)'}}>{tc('page_admin_agent.securityHeading')}</div>
+                <div style={{fontSize:12,color:'var(--tx3)',marginTop:2}}>{tc('page_admin_agent.securityDesc')}</div>
               </div>
               <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
                 <button onClick={()=>exportSecurityCsv()} disabled={secExporting || secHistory.length===0} style={{padding:'8px 14px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:12,fontWeight:500,cursor:secHistory.length===0?'not-allowed':'pointer',fontFamily:'inherit',opacity:secHistory.length===0?0.5:1}}>
-                  {secExporting?'Exporting...':'📥 Export All CSV'}
+                  {secExporting?tc('page_admin_agent.exporting'):tc('page_admin_agent.exportAllCsv')}
                 </button>
                 <button onClick={runSecurityAudit} disabled={secRunning} style={{padding:'8px 16px',borderRadius:9999,border:'none',background:secRunning?'var(--b)':'#6366F1',color:secRunning?'var(--tx3)':'#fff',fontSize:12,fontWeight:600,cursor:secRunning?'wait':'pointer',fontFamily:'inherit'}}>
-                  {secRunning?'Running Audit...':'Run Audit Now'}
+                  {secRunning?tc('page_admin_agent.runningAudit'):tc('page_admin_agent.runAuditNow')}
                 </button>
               </div>
             </div>
@@ -1920,12 +1925,12 @@ export default function AgentAdminPage() {
                 {/* Summary cards */}
                 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))',gap:10,marginBottom:20}}>
                   {[
-                    {label:'Overall',value:SEC_STATUS[secReport.overall_status as keyof typeof SEC_STATUS]?.label||'—',color:SEC_STATUS[secReport.overall_status as keyof typeof SEC_STATUS]?.color||'var(--tx)'},
-                    {label:'Total Checks',value:secReport.total_checks,color:'var(--tx)'},
-                    {label:'Passed',value:secReport.passed,color:'#16a34a'},
-                    {label:'Warnings',value:secReport.warnings,color:'#d97706'},
-                    {label:'Failures',value:secReport.failures,color:'#dc2626'},
-                    {label:'Duration',value:secReport.duration_ms+'ms',color:'var(--tx3)'},
+                    {label:tc('page_admin_agent.secStatOverall'),value:SEC_STATUS[secReport.overall_status as keyof typeof SEC_STATUS]?.label||'—',color:SEC_STATUS[secReport.overall_status as keyof typeof SEC_STATUS]?.color||'var(--tx)'},
+                    {label:tc('page_admin_agent.secStatTotalChecks'),value:secReport.total_checks,color:'var(--tx)'},
+                    {label:tc('page_admin_agent.secStatPassed'),value:secReport.passed,color:'#16a34a'},
+                    {label:tc('page_admin_agent.secStatWarnings'),value:secReport.warnings,color:'#d97706'},
+                    {label:tc('page_admin_agent.secStatFailures'),value:secReport.failures,color:'#dc2626'},
+                    {label:tc('page_admin_agent.secStatDuration'),value:tc('page_admin_agent.durationMs', { n: secReport.duration_ms }),color:'var(--tx3)'},
                   ].map(({label,value,color})=>(
                     <div key={label} style={{padding:14,borderRadius:12,border:'1px solid var(--b)',background:'var(--sf)'}}>
                       <div style={{fontSize:10,fontWeight:600,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:6}}>{label}</div>
@@ -1949,7 +1954,7 @@ export default function AgentAdminPage() {
                         <div style={{display:'flex',alignItems:'center',gap:10}}>
                           <span style={{fontSize:14,fontWeight:700,color:st?.color}}>{st?.icon}</span>
                           <span style={{fontSize:13,fontWeight:600,color:'var(--tx)'}}>{cat.category}</span>
-                          <span style={{fontSize:11,color:'var(--tx3)'}}>{cat.checks.length} checks</span>
+                          <span style={{fontSize:11,color:'var(--tx3)'}}>{tc('page_admin_agent.checks', { n: cat.checks.length })}</span>
                         </div>
                         <div style={{display:'flex',alignItems:'center',gap:8}}>
                           <span style={{fontSize:11,fontWeight:600,color:st?.color,background:st?.bg,border:`1px solid ${st?.border}`,padding:'2px 10px',borderRadius:9999}}>{st?.label}</span>
@@ -1979,7 +1984,7 @@ export default function AgentAdminPage() {
                 {/* Sub-processors */}
                 {secReport.sub_processors && (
                   <div style={{marginTop:16,padding:16,borderRadius:12,border:'1px solid var(--b)',background:'var(--sf)'}}>
-                    <div style={{fontSize:12,fontWeight:700,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:10}}>GDPR Sub-Processors</div>
+                    <div style={{fontSize:12,fontWeight:700,color:'var(--tx3)',textTransform:'uppercase',letterSpacing:'.08em',marginBottom:10}}>{tc('page_admin_agent.gdprSubProcessors')}</div>
                     <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
                       {secReport.sub_processors.map((sp: string) => (
                         <span key={sp} style={{padding:'4px 10px',borderRadius:9999,background:'rgba(99,102,241,.06)',border:'1px solid rgba(99,102,241,.15)',fontSize:11,color:'#6366F1',fontWeight:500}}>{sp}</span>
@@ -1993,15 +1998,15 @@ export default function AgentAdminPage() {
             {!secReport && !secRunning && (
               <div style={{textAlign:'center',padding:'60px 0',color:'var(--tx3)'}}>
                 <div style={{fontSize:32,marginBottom:12}}>🛡</div>
-                <div style={{fontSize:14,fontWeight:500,marginBottom:4}}>No audit reports yet</div>
-                <div style={{fontSize:12}}>Run your first security & GDPR audit to generate a report.</div>
+                <div style={{fontSize:14,fontWeight:500,marginBottom:4}}>{tc('page_admin_agent.secNoReports')}</div>
+                <div style={{fontSize:12}}>{tc('page_admin_agent.secNoReportsDesc')}</div>
               </div>
             )}
 
             {/* Audit history */}
             {secHistory.length > 0 && (
               <div style={{marginTop:24}}>
-                <div style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:12}}>Audit History</div>
+                <div style={{fontSize:13,fontWeight:600,color:'var(--tx)',marginBottom:12}}>{tc('page_admin_agent.auditHistory')}</div>
                 <div style={{borderRadius:12,border:'1px solid var(--b)',overflow:'hidden',background:'var(--sf)'}}>
                   {secHistory.map((audit: any) => {
                     const st = SEC_STATUS[audit.overall_status as keyof typeof SEC_STATUS]
@@ -2009,14 +2014,14 @@ export default function AgentAdminPage() {
                       <div key={audit.run_id} style={{padding:'12px 16px',borderBottom:'1px solid var(--b)',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:8}}>
                         <div style={{display:'flex',alignItems:'center',gap:10}}>
                           <span style={{fontSize:11,fontWeight:600,color:st?.color,background:st?.bg,border:`1px solid ${st?.border}`,padding:'2px 10px',borderRadius:9999}}>{st?.icon} {st?.label}</span>
-                          <span style={{fontSize:12,color:'var(--tx2)'}}>{audit.passed}/{audit.total_checks} passed</span>
-                          {audit.failures > 0 && <span style={{fontSize:11,color:'#dc2626',fontWeight:500}}>{audit.failures} failures</span>}
-                          {audit.warnings > 0 && <span style={{fontSize:11,color:'#d97706',fontWeight:500}}>{audit.warnings} warnings</span>}
+                          <span style={{fontSize:12,color:'var(--tx2)'}}>{tc('page_admin_agent.auditPassed', { passed: audit.passed, total: audit.total_checks })}</span>
+                          {audit.failures > 0 && <span style={{fontSize:11,color:'#dc2626',fontWeight:500}}>{tc('page_admin_agent.auditFailures', { n: audit.failures })}</span>}
+                          {audit.warnings > 0 && <span style={{fontSize:11,color:'#d97706',fontWeight:500}}>{tc('page_admin_agent.auditWarnings', { n: audit.warnings })}</span>}
                         </div>
                         <div style={{display:'flex',alignItems:'center',gap:8}}>
                           <span style={{fontSize:11,color:'var(--tx3)'}}>{new Date(audit.created_at).toLocaleString('en-GB')}</span>
-                          <button onClick={()=>{setSecReport(audit.report);window.scrollTo({top:0,behavior:'smooth'})}} style={{padding:'4px 10px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:11,cursor:'pointer',fontFamily:'inherit'}}>View</button>
-                          <button onClick={()=>exportSecurityCsv(audit.run_id)} style={{padding:'4px 10px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:11,cursor:'pointer',fontFamily:'inherit'}}>CSV</button>
+                          <button onClick={()=>{setSecReport(audit.report);window.scrollTo({top:0,behavior:'smooth'})}} style={{padding:'4px 10px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:11,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.view')}</button>
+                          <button onClick={()=>exportSecurityCsv(audit.run_id)} style={{padding:'4px 10px',borderRadius:9999,border:'1px solid var(--b)',background:'transparent',color:'var(--tx2)',fontSize:11,cursor:'pointer',fontFamily:'inherit'}}>{tc('page_admin_agent.csv')}</button>
                         </div>
                       </div>
                     )

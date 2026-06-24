@@ -1,0 +1,20 @@
+{
+  "title": "Ontvangen betalingen",
+  "headerBadge": "{count} ontvangen · {total}",
+  "statReceivedLabel": "Ontvangen",
+  "statReceivedSub": "betalingen",
+  "statTotalLabel": "Totaal",
+  "statTotalSub": "geïnd",
+  "statAvgLabel": "Gem.",
+  "statAvgSub": "per betaling",
+  "loading": "Laden...",
+  "emptyTitle": "Nog geen digitale betalingen ontvangen.",
+  "emptyBody": "Betalingen via M-Pesa, kaart of mobiel geld verschijnen hier zodra ze bevestigd zijn.",
+  "defaultCustomer": "Klant",
+  "statusPaid": "Betaald",
+  "statusReceived": "Ontvangen",
+  "justNow": "Zojuist",
+  "minutesAgo": "{mins}m geleden",
+  "hoursAgo": "{h}u geleden",
+  "daysAgo": "{d}d geleden"
+}

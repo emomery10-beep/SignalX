@@ -1,0 +1,23 @@
+{
+  "billing_paywall": {
+    "softWarningTitle": "أنت تستفيد كثيراً من AskBiz",
+    "softWarningBody": "لقد استخدمت {questionsUsed} من أصل {questionLimit} سؤالاً شهرياً. من الواضح أنك تجد قيمة حقيقية — افتح المزيد حتى لا تتوقف في منتصف تحليلك.",
+    "softWarningCta": "افتح المزيد من الأسئلة →",
+    "softWarningSecondary": "عرض الخطط",
+    "limitReachedTitle": "لقد استفدت إلى أقصى حد من خطتك المجانية",
+    "limitReachedBody": "لقد استخدمت جميع الأسئلة المجانية البالغة {questionLimit} هذا الشهر. رقِّ خطتك لمواصلة العمل — بياناتك ومحادثاتك محفوظة وجاهزة.",
+    "limitReachedCta": "تابع مع Growth — £19/شهر →",
+    "limitReachedSecondary": "عرض جميع الخطط",
+    "featureLockedTitle": "{feature} متاح في Growth",
+    "featureLockedBody": "{feature} متاح ضمن خطة Growth. رقِّ خطتك لفتح ذكاء التوسع، والمزامنة الفورية، والتنبيهات، والتوقعات، والمزيد.",
+    "featureLockedCta": "افتح Growth — £19/شهر →",
+    "featureLockedSecondary": "اطّلع على ما هو مدرج أيضاً",
+    "feature500Questions": "500 سؤال بالذكاء الاصطناعي/شهرياً",
+    "feature10Uploads": "10 تحميلات ملفات",
+    "featureExpansion": "ذكاء التوسع",
+    "featureLiveSync": "مزامنة البيانات الفورية",
+    "featureAlerts": "التنبيهات والتوقعات",
+    "featureTrial": "تجربة مجانية لمدة 7 أيام",
+    "footer": "تجربة مجانية 7 أيام · إلغاء في أي وقت · سعر مثبّت للمستخدمين الأوائل"
+  }
+}

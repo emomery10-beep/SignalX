@@ -1,0 +1,19 @@
+{
+  "help_helpwidget": {
+    "panelTitle": "Centre d'aide",
+    "searchPlaceholder": "Rechercher des articles…",
+    "searchResults": "Résultats de recherche",
+    "suggestedArticles": "Articles suggérés",
+    "popularArticles": "Articles populaires",
+    "helpFor": "Aide pour {topic}",
+    "quickLinks": "Liens rapides",
+    "minRead": "{min} min de lecture",
+    "fullHelpCentre": "Centre d'aide complet →",
+    "emailSupport": "Assistance par e-mail",
+    "openHelp": "Ouvrir l'aide",
+    "closeHelp": "Fermer l'aide",
+    "gettingStarted": "Premiers pas",
+    "faq": "FAQ",
+    "glossary": "Glossaire"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "billing_paywall": {
+    "softWarningTitle": "Je haalt veel uit AskBiz",
+    "softWarningBody": "Je hebt {questionsUsed} van je {questionLimit} maandelijkse vragen gebruikt. Je vindt duidelijk waarde — ontgrendel er meer zodat je nooit midden in een analyse hoeft te stoppen.",
+    "softWarningCta": "Meer vragen ontgrendelen →",
+    "softWarningSecondary": "Plannen bekijken",
+    "limitReachedTitle": "Je hebt het maximale uit je gratis plan gehaald",
+    "limitReachedBody": "Je hebt deze maand alle {questionLimit} gratis vragen gebruikt. Upgrade om door te gaan — je gegevens en gesprekken zijn opgeslagen en wachten op je.",
+    "limitReachedCta": "Doorgaan met Growth — £19/maand →",
+    "limitReachedSecondary": "Alle plannen bekijken",
+    "featureLockedTitle": "{feature} zit in Growth",
+    "featureLockedBody": "{feature} is beschikbaar in het Growth-plan. Upgrade om uitbreidingsintelligentie, live synchronisatie, meldingen, prognoses en meer te ontgrendelen.",
+    "featureLockedCta": "Growth ontgrendelen — £19/maand →",
+    "featureLockedSecondary": "Bekijk wat er nog meer is inbegrepen",
+    "feature500Questions": "500 AI-vragen/maand",
+    "feature10Uploads": "10 bestandsuploads",
+    "featureExpansion": "Uitbreidingsintelligentie",
+    "featureLiveSync": "Live datasynchronisatie",
+    "featureAlerts": "Meldingen & prognoses",
+    "featureTrial": "7 dagen gratis proberen",
+    "footer": "7 dagen gratis proberen · Op elk moment opzeggen · Prijs gegarandeerd voor early adopters"
+  }
+}

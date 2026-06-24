@@ -1,0 +1,23 @@
+{
+  "billing_paywall": {
+    "softWarningTitle": "Estás sacándole mucho partido a AskBiz",
+    "softWarningBody": "Has usado {questionsUsed} de tus {questionLimit} preguntas mensuales. Claramente le estás encontrando valor — desbloquea más para no tener que parar a mitad de un análisis.",
+    "softWarningCta": "Desbloquear más preguntas →",
+    "softWarningSecondary": "Ver planes",
+    "limitReachedTitle": "Has aprovechado al máximo tu plan gratuito",
+    "limitReachedBody": "Has usado las {questionLimit} preguntas gratuitas de este mes. Actualiza tu plan para continuar — tus datos y conversaciones están guardados y listos.",
+    "limitReachedCta": "Continuar con Growth — 19 £/mes →",
+    "limitReachedSecondary": "Ver todos los planes",
+    "featureLockedTitle": "{feature} está en Growth",
+    "featureLockedBody": "{feature} está disponible en el plan Growth. Actualiza para desbloquear inteligencia de expansión, sincronización en vivo, alertas, previsiones y más.",
+    "featureLockedCta": "Desbloquear Growth — 19 £/mes →",
+    "featureLockedSecondary": "Ver qué más está incluido",
+    "feature500Questions": "500 preguntas de IA/mes",
+    "feature10Uploads": "10 cargas de archivos",
+    "featureExpansion": "Inteligencia de expansión",
+    "featureLiveSync": "Sincronización de datos en vivo",
+    "featureAlerts": "Alertas y previsiones",
+    "featureTrial": "7 días de prueba gratis",
+    "footer": "7 días de prueba gratis · Cancela cuando quieras · Precio bloqueado para primeros usuarios"
+  }
+}

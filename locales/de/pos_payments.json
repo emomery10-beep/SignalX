@@ -1,0 +1,18 @@
+{
+  "title": "Zahlungsmethoden",
+  "subtitle": "Zahlungsanbieter konfigurieren und Kunden die Zahlung über Paystack oder Stripe ermöglichen",
+  "loadingConfig": "Zahlungskonfiguration wird geladen...",
+  "stripeAppleGoogleActive": "Apple Pay · Google Pay · Karten aktiv",
+  "stripeLoadingLink": "Stripe-Link wird geladen…",
+  "stripeCompleteOnboarding": "Klicken, um das Stripe-Onboarding abzuschließen",
+  "stripeStatusActive": "● Aktiv",
+  "stripeStatusPending": "KYC ausstehend",
+  "stripeStatusLoading": "…",
+  "splitsNotActiveTitle": "⚠ Plattform-Splits nicht aktiv",
+  "splitsNotActiveBody": "Zahlungen gehen ohne Aufteilung auf das Hauptkonto. Beheben Sie dies, um die 2%-Plattformgebühr von AskBiz bei jeder Transaktion automatisch weiterzuleiten.",
+  "splitsEnterPhone": "M-Pesa-Nummer zum Verknüpfen eingeben:",
+  "splitsPhonePlaceholder": "07XXXXXXXX",
+  "splitsLinkBtn": "Verknüpfen",
+  "splitsFixBtn": "Splits jetzt korrigieren",
+  "splitsFixingBtn": "Wird korrigiert..."
+}

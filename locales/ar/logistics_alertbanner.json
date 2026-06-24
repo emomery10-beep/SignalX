@@ -1,0 +1,17 @@
+{
+  "trackShipmentsTitle": "تتبع شحناتك",
+  "trackShipmentsDesc": "أضف أرقام التتبع للحصول على تنبيهات نفاد المخزون وتحذيرات الجمارك والتأثير المالي في الوقت الفعلي.",
+  "addShipment": "إضافة شحنة ←",
+  "shipmentsAtRiskSingular": "{n} شحنة في خطر",
+  "shipmentsAtRiskPlural": "{n} شحنات في خطر",
+  "view": "عرض ←",
+  "shipmentAlertFallback": "تنبيه الشحنة",
+  "financialImpact": "تأثير بقيمة £{amount}",
+  "viewShipment": "عرض الشحنة ←",
+  "askAskBiz": "اسأل AskBiz ←",
+  "askBizPrompt": "ماذا يجب أن أفعل بشأن الشحنة {trackingNumber}؟ ما هي خياراتي؟",
+  "onTrack": "{n} في الموعد",
+  "delayed": "{n} متأخرة",
+  "customsHold": "{n} موقوفة جمركياً",
+  "viewAll": "عرض الكل ←"
+}

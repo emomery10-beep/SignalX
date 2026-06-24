@@ -1,0 +1,9 @@
+{
+  "headerLabel": "⚡ Scenarioanalyse",
+  "verdictAct": "✓ De moeite waard",
+  "verdictWatch": "~ Marginaal — controleer zorgvuldig",
+  "verdictProblem": "✕ Niet aanbevolen",
+  "columnCurrent": "Huidig",
+  "columnAfter": "Na wijziging",
+  "wasBadge": "← was {value}"
+}

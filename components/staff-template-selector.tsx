@@ -9,6 +9,7 @@ import {
   QUICK_START_RECOMMENDATIONS,
   getTemplatesByType,
 } from '@/lib/staff-templates'
+import { useLang } from '@/components/LanguageProvider'
 
 interface StaffTemplateSelectorProps {
   type: StaffTemplateType
@@ -25,6 +26,7 @@ export function StaffTemplateSelector({
   businessSize = 'medium',
   maxSelectable,
 }: StaffTemplateSelectorProps) {
+  const { tc } = useLang()
   const [selectedTemplates, setSelectedTemplates] = useState<Set<string>>(
     new Set()
   )
@@ -75,11 +77,10 @@ export function StaffTemplateSelector({
       {/* Header */}
       <div className="space-y-2">
         <h2 className="text-2xl font-bold">
-          Set Up Your {type === 'factory' ? 'Factory' : 'Restaurant'} Team
+          {type === 'factory' ? tc('staff_selector.headingFactory') : tc('staff_selector.headingRestaurant')}
         </h2>
         <p className="text-gray-400">
-          Select or customize staff roles for your team. Each role includes
-          pre-configured permissions and responsibilities.
+          {tc('staff_selector.headingSubtitle')}
         </p>
       </div>
 
@@ -90,10 +91,10 @@ export function StaffTemplateSelector({
             <span className="text-lg">💡</span>
             <div>
               <h3 className="font-semibold text-white">
-                Recommended for {businessSize} teams
+                {tc('staff_selector.quickStartTitle').replace('{size}', businessSize)}
               </h3>
               <p className="mt-1 text-sm text-gray-300">
-                We recommend these {recommendedIds.length} roles to get started:
+                {tc('staff_selector.quickStartSubtitle').replace('{count}', String(recommendedIds.length))}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {recommendedIds.map((id) => {
@@ -114,7 +115,7 @@ export function StaffTemplateSelector({
             onClick={handleQuickStart}
             className="w-full rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
           >
-            Use Recommended Roles
+            {tc('staff_selector.quickStartButton')}
           </button>
         </div>
       )}
@@ -122,7 +123,7 @@ export function StaffTemplateSelector({
       {/* Templates Grid */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
-          All Available Roles
+          {tc('staff_selector.allRolesLabel')}
         </h3>
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -143,7 +144,7 @@ export function StaffTemplateSelector({
                 {/* Recommended Badge */}
                 {isRecommended && (
                   <div className="absolute right-3 top-3 rounded bg-green-500/20 px-2 py-1 text-xs font-semibold text-green-300">
-                    ⭐ Recommended
+                    {tc('staff_selector.recommendedBadge')}
                   </div>
                 )}
 
@@ -175,13 +176,13 @@ export function StaffTemplateSelector({
                   {/* Quick Info */}
                   <div className="space-y-1 border-t border-gray-700 pt-3">
                     <div className="flex justify-between text-xs">
-                      <span className="text-gray-500">Team Size:</span>
+                      <span className="text-gray-500">{tc('staff_selector.teamSizeLabel')}</span>
                       <span className="text-gray-300">
                         {template.suggestedTeamSize}
                       </span>
                     </div>
                     <div className="flex justify-between text-xs">
-                      <span className="text-gray-500">Permissions:</span>
+                      <span className="text-gray-500">{tc('staff_selector.permissionsLabel')}</span>
                       <span className="text-gray-300">
                         {template.defaultPermissions.length}
                       </span>
@@ -198,7 +199,7 @@ export function StaffTemplateSelector({
                     }}
                     className="mt-2 flex w-full items-center justify-between rounded px-2 py-1 text-xs font-medium text-blue-400 hover:bg-blue-500/10"
                   >
-                    <span>View Responsibilities</span>
+                    <span>{tc('staff_selector.viewResponsibilities')}</span>
                     <span>{expandedId === template.id ? '▼' : '▶'}</span>
                   </button>
 
@@ -207,7 +208,7 @@ export function StaffTemplateSelector({
                     <div className="space-y-2 border-t border-gray-700 pt-3">
                       <div>
                         <p className="mb-1 text-xs font-semibold uppercase text-gray-400">
-                          Responsibilities
+                          {tc('staff_selector.responsibilitiesHeading')}
                         </p>
                         <ul className="space-y-1">
                           {template.responsibilities.slice(0, 5).map((resp) => (
@@ -220,7 +221,7 @@ export function StaffTemplateSelector({
                           ))}
                           {template.responsibilities.length > 5 && (
                             <li className="text-xs text-gray-400">
-                              + {template.responsibilities.length - 5} more
+                              {tc('staff_selector.moreItems').replace('{count}', String(template.responsibilities.length - 5))}
                             </li>
                           )}
                         </ul>
@@ -228,7 +229,7 @@ export function StaffTemplateSelector({
 
                       <div>
                         <p className="mb-1 text-xs font-semibold uppercase text-gray-400">
-                          Permissions
+                          {tc('staff_selector.permissionsHeading')}
                         </p>
                         <div className="flex flex-wrap gap-1">
                           {template.defaultPermissions.map((perm) => (
@@ -254,7 +255,7 @@ export function StaffTemplateSelector({
       <div className="space-y-3 rounded-lg border border-gray-700 bg-gray-900/50 p-4">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-300">
-            Selected Roles:{' '}
+            {tc('staff_selector.selectedRoles')}{' '}
             <span className="text-blue-400">{selectedTemplates.size}</span>
             {maxSelectable && (
               <span className="text-gray-500">
@@ -269,7 +270,7 @@ export function StaffTemplateSelector({
               onClick={() => setSelectedTemplates(new Set())}
               className="text-xs text-gray-400 hover:text-gray-200"
             >
-              Clear
+              {tc('staff_selector.clearButton')}
             </button>
           )}
         </div>
@@ -306,16 +307,17 @@ export function StaffTemplateSelector({
           }`}
         >
           {selectedTemplates.size === 0
-            ? 'Select at least one role'
-            : `Confirm ${selectedTemplates.size} Role${selectedTemplates.size !== 1 ? 's' : ''}`}
+            ? tc('staff_selector.selectAtLeastOne')
+            : selectedTemplates.size !== 1
+              ? tc('staff_selector.confirmRolePlural').replace('{count}', String(selectedTemplates.size))
+              : tc('staff_selector.confirmRoleSingular').replace('{count}', String(selectedTemplates.size))}
         </button>
       </div>
 
       {/* Help Text */}
       <div className="text-xs text-gray-500">
         <p>
-          💡 <strong>Tip:</strong> You can customize permissions for each role
-          after setup. Team members can be assigned one or more roles.
+          {tc('staff_selector.tipText')}
         </p>
       </div>
     </div>

@@ -1,0 +1,13 @@
+{
+  "sectionTitle": "Servicios de reparación",
+  "activeJobsLabel": "Trabajos activos",
+  "activeJobsSub": "{intake} recibidos · {inProgress} en progreso · {completed} listos",
+  "collectedTodayLabel": "Cobrado hoy",
+  "repairRevenueLabel": "Ingresos por reparación",
+  "repairRevenueSub": "hoy",
+  "avgTurnaroundLabel": "Tiempo promedio de entrega",
+  "warrantyClaimsLabel": "Reclamaciones de garantía",
+  "inProgress": "en progreso",
+  "intake": "recibidos",
+  "ready": "listos"
+}

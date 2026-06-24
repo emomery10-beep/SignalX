@@ -1,0 +1,9 @@
+{
+  "headerLabel": "⚡ Análisis de escenarios",
+  "verdictAct": "✓ Vale la pena",
+  "verdictWatch": "~ Marginal — revisa con cuidado",
+  "verdictProblem": "✕ No recomendado",
+  "columnCurrent": "Actual",
+  "columnAfter": "Tras el cambio",
+  "wasBadge": "← era {value}"
+}

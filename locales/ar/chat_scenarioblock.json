@@ -1,0 +1,9 @@
+{
+  "headerLabel": "⚡ تحليل السيناريوهات",
+  "verdictAct": "✓ يستحق التنفيذ",
+  "verdictWatch": "~ هامشي — راجع بعناية",
+  "verdictProblem": "✕ غير موصى به",
+  "columnCurrent": "الحالي",
+  "columnAfter": "بعد التغيير",
+  "wasBadge": "← كان {value}"
+}

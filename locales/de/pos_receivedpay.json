@@ -1,0 +1,20 @@
+{
+  "title": "Eingegangene Zahlungen",
+  "headerBadge": "{count} eingegangen · {total}",
+  "statReceivedLabel": "Eingegangen",
+  "statReceivedSub": "Zahlungen",
+  "statTotalLabel": "Gesamt",
+  "statTotalSub": "eingenommen",
+  "statAvgLabel": "Ø",
+  "statAvgSub": "pro Zahlung",
+  "loading": "Wird geladen …",
+  "emptyTitle": "Noch keine digitalen Zahlungen eingegangen.",
+  "emptyBody": "Zahlungen per M-Pesa, Karte oder Mobile Money erscheinen hier, sobald sie bestätigt wurden.",
+  "defaultCustomer": "Kunde",
+  "statusPaid": "Bezahlt",
+  "statusReceived": "Eingegangen",
+  "justNow": "Gerade eben",
+  "minutesAgo": "Vor {mins} Min.",
+  "hoursAgo": "Vor {h} Std.",
+  "daysAgo": "Vor {d} T."
+}

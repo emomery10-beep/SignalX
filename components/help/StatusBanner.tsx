@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 // ─── Edit this to control the banner ──────────────────────────────────────────
 // type: 'none' hides it. Change id when you update the message so it re-shows.
@@ -17,6 +18,7 @@ const C = {
 }
 
 export default function StatusBanner() {
+  const { tc } = useLang()
   const [show, setShow] = useState(false)
 
   useEffect(() => {
@@ -40,12 +42,12 @@ export default function StatusBanner() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
         <a href="/help/topic/troubleshooting"
           style={{ fontSize: 12, color: s.dot, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-          View updates →
+          {tc('help_statusbanner.viewUpdates')}
         </a>
         <button
           onClick={() => { localStorage.setItem(`sb-${STATUS.id}`, '1'); setShow(false) }}
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: s.tx, fontSize: 20, lineHeight: 1, padding: 0, opacity: 0.5 }}
-          aria-label="Dismiss status banner">
+          aria-label={tc('help_statusbanner.dismiss')}>
           ×
         </button>
       </div>

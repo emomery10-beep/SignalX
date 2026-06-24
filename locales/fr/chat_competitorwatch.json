@@ -1,0 +1,11 @@
+{
+  "headerLabel": "Veille concurrentielle",
+  "marketCheapestLabel": "Vous êtes le moins cher",
+  "marketCheapestSub": "Marge de manœuvre pour augmenter les prix — testez une hausse de 5 à 10 %.",
+  "marketCompetitiveLabel": "Vos prix sont compétitifs",
+  "marketCompetitiveSub": "Bonne position. Surveillez les évolutions.",
+  "marketPremiumLabel": "Vous êtes positionné haut de gamme",
+  "marketPremiumSub": "Assurez-vous que votre marque justifie ce positionnement premium.",
+  "overpricedLabel": "Vous êtes au-dessus du prix du marché",
+  "overpricedSub": "Risque de perdre des clients. Envisagez un ajustement de prix."
+}

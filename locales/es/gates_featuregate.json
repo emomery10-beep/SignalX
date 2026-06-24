@@ -1,0 +1,8 @@
+{
+  "gates_featuregate": {
+    "featureLabel": "Función {label}",
+    "upgradeTo": "Actualizar a {label} →",
+    "seeAllPlans": "Ver todos los planes",
+    "currentPlan": "Estás en el plan {plan}"
+  }
+}

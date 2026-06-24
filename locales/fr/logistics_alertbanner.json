@@ -1,0 +1,17 @@
+{
+  "trackShipmentsTitle": "Suivez vos expéditions",
+  "trackShipmentsDesc": "Ajoutez des numéros de suivi pour recevoir des alertes de rupture de stock, des avertissements douaniers et l'impact financier en temps réel.",
+  "addShipment": "Ajouter une expédition →",
+  "shipmentsAtRiskSingular": "{n} expédition à risque",
+  "shipmentsAtRiskPlural": "{n} expéditions à risque",
+  "view": "Voir →",
+  "shipmentAlertFallback": "Alerte expédition",
+  "financialImpact": "Impact de £{amount}",
+  "viewShipment": "Voir l'expédition →",
+  "askAskBiz": "Demander à AskBiz →",
+  "askBizPrompt": "Que dois-je faire concernant l'expédition {trackingNumber} ? Quelles sont mes options ?",
+  "onTrack": "{n} en cours",
+  "delayed": "{n} en retard",
+  "customsHold": "{n} en attente douanière",
+  "viewAll": "Tout voir →"
+}

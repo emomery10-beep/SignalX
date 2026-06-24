@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useLang } from '@/components/LanguageProvider'
 
 /* ─── types ──────────────────────────────────────────────────────────── */
 export type PlatformStatus = 'listed' | 'missing' | 'weak'
@@ -46,12 +47,14 @@ const SEED: AuditData = {
   lastRun: '2026-06-12T08:04:00Z',
 }
 
-/* ─── status config ──────────────────────────────────────────────────── */
-const STATUS = {
-  listed:  { label: 'Listed',     color: 'var(--green)',    bg: 'var(--green-bg)',  border: 'var(--green-bd)',  icon: '✓' },
-  missing: { label: 'Not listed', color: 'var(--red)',      bg: 'var(--red-bg)',    border: 'var(--red-bd)',    icon: '✕' },
-  weak:    { label: 'Weak',       color: 'var(--amber)',    bg: 'var(--amber-bg)',  border: 'var(--amber-bd)',  icon: '!' },
-} as const
+/* ─── status config builder ───────────────────────────────────────────── */
+function buildStatus(tc: (key: string) => string) {
+  return {
+    listed:  { label: tc('admin_discoverycard.statusListed'),  color: 'var(--green)',    bg: 'var(--green-bg)',  border: 'var(--green-bd)',  icon: '✓' },
+    missing: { label: tc('admin_discoverycard.statusMissing'), color: 'var(--red)',      bg: 'var(--red-bg)',    border: 'var(--red-bd)',    icon: '✕' },
+    weak:    { label: tc('admin_discoverycard.statusWeak'),    color: 'var(--amber)',    bg: 'var(--amber-bg)',  border: 'var(--amber-bd)',  icon: '!' },
+  } as const
+}
 
 /* ─── Probe row ──────────────────────────────────────────────────────── */
 function ProbeRow({ log, index }: { log: ProbeResult; index: number }) {
@@ -79,13 +82,23 @@ function PlatformRow({
   index,
   onGenerate,
   generating,
+  status,
+  labelGenerate,
+  labelGenerating,
+  labelGenerateAriaPrefix,
+  labelScoreAria,
 }: {
   platform: Platform
   index: number
   onGenerate: (id: string) => void
   generating: string | null
+  status: ReturnType<typeof buildStatus>
+  labelGenerate: string
+  labelGenerating: string
+  labelGenerateAriaPrefix: string
+  labelScoreAria: string
 }) {
-  const cfg = STATUS[platform.status]
+  const cfg = status[platform.status]
   const isGenerating = generating === platform.id
 
   return (
@@ -118,19 +131,19 @@ function PlatformRow({
             className="manifest-btn"
             onClick={() => onGenerate(platform.id)}
             disabled={!!generating}
-            aria-label={`Generate manifest for ${platform.name}`}
+            aria-label={labelGenerateAriaPrefix.replace('{platform}', platform.name)}
           >
             {isGenerating ? (
               <span className="manifest-btn-loading">
                 <span className="spinner" aria-hidden="true" />
-                Generating…
+                {labelGenerating}
               </span>
             ) : (
-              <>→ Generate manifest</>
+              <>{labelGenerate}</>
             )}
           </button>
         ) : (
-          <div className="score-cell" aria-label={`Visibility score: ${platform.score} out of 10`}>
+          <div className="score-cell" aria-label={labelScoreAria.replace('{score}', String(platform.score))}>
             <div className="score-bar" role="progressbar" aria-valuenow={platform.score} aria-valuemin={0} aria-valuemax={10}>
               <div
                 className="score-fill"
@@ -147,6 +160,7 @@ function PlatformRow({
 
 /* ─── Main card ──────────────────────────────────────────────────────── */
 export default function DiscoveryAgentCard() {
+  const { tc } = useLang()
   const [expanded,   setExpanded]   = useState(false)
   const [auditData,  setAuditData]  = useState<AuditData>(SEED)
   const [loading,    setLoading]    = useState(true)
@@ -158,11 +172,22 @@ export default function DiscoveryAgentCard() {
   const toastTimer  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const supabase    = createClient()
 
+  const STATUS = buildStatus(tc)
+
   // derived
   const listed  = auditData.platforms.filter(p => p.status === 'listed').length
   const missing = auditData.platforms.filter(p => p.status === 'missing').length
   const weak    = auditData.platforms.filter(p => p.status === 'weak').length
   const avg     = Math.round(auditData.platforms.reduce((s, p) => s + p.score, 0) / auditData.platforms.length)
+
+  const buildStats = (tc: (key: string) => string) => [
+    { label: tc('admin_discoverycard.statListed'),   val: listed,       key: 'listed'  },
+    { label: tc('admin_discoverycard.statMissing'),  val: missing,      key: 'missing' },
+    { label: tc('admin_discoverycard.statWeak'),     val: weak,         key: 'weak'    },
+    { label: tc('admin_discoverycard.statAvgScore'), val: `${avg}/10`,  key: 'avg'     },
+  ] as const
+
+  const stats = buildStats(tc)
 
   const showToast = useCallback((msg: string, ok = true) => {
     if (toastTimer.current) clearTimeout(toastTimer.current)
@@ -217,15 +242,15 @@ export default function DiscoveryAgentCard() {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Audit failed')
+      if (!res.ok) throw new Error(data.error || tc('admin_discoverycard.auditFailed'))
       if (data.platforms) {
         setAuditData(data)
         try { localStorage.setItem('dac_audit_v2', JSON.stringify(data)) } catch {}
       }
       setExpanded(true)
-      showToast('Audit complete — results updated')
+      showToast(tc('admin_discoverycard.auditComplete'))
     } catch (e) {
-      showToast(e instanceof Error ? e.message : 'Audit failed', false)
+      showToast(e instanceof Error ? e.message : tc('admin_discoverycard.auditFailed'), false)
     } finally {
       setAuditing(false)
     }
@@ -240,7 +265,7 @@ export default function DiscoveryAgentCard() {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Generation failed')
+      if (!res.ok) throw new Error(data.error || tc('admin_discoverycard.generationFailed'))
       if (data.manifest) {
         setAuditData(prev => {
           const updated = {
@@ -253,14 +278,14 @@ export default function DiscoveryAgentCard() {
           try { localStorage.setItem('dac_audit_v2', JSON.stringify(updated)) } catch {}
           return updated
         })
-        showToast(`✓ Manifest generated for ${platformId}`)
+        showToast(tc('admin_discoverycard.manifestGenerated').replace('{platform}', platformId))
       }
     } catch (e) {
-      showToast(e instanceof Error ? e.message : 'Generation failed', false)
+      showToast(e instanceof Error ? e.message : tc('admin_discoverycard.generationFailed'), false)
     } finally {
       setGenerating(null)
     }
-  }, [getToken, showToast])
+  }, [getToken, showToast, tc])
 
   const generateAll = async () => {
     setGenAll(true)
@@ -272,7 +297,7 @@ export default function DiscoveryAgentCard() {
         done++
         await new Promise(r => setTimeout(r, 200))
       }
-      showToast(`⚡ ${done} manifests generated`)
+      showToast(tc('admin_discoverycard.manifestsGenerated').replace('{count}', String(done)))
     } finally {
       setGenAll(false)
     }
@@ -293,7 +318,7 @@ export default function DiscoveryAgentCard() {
       <div
         className={`dac-card ${missing > 0 ? 'dac-card--gap' : ''} ${loading ? 'dac-card--loading' : ''}`}
         role="region"
-        aria-label="AI Discovery Registration Agent"
+        aria-label={tc('admin_discoverycard.cardAriaLabel')}
         aria-busy={loading}
       >
         {/* header */}
@@ -302,26 +327,23 @@ export default function DiscoveryAgentCard() {
 
           <div className="dac-meta">
             <div className="dac-title-row">
-              <h3 className="dac-title">AI Discovery Registration Agent</h3>
-              <span className="dac-schedule">Weekly Mon 8am</span>
+              <h3 className="dac-title">{tc('admin_discoverycard.title')}</h3>
+              <span className="dac-schedule">{tc('admin_discoverycard.schedule')}</span>
               {missing > 0 && (
                 <span className="dac-gap-badge" role="status" aria-live="polite">
-                  {missing} gap{missing !== 1 ? 's' : ''}
+                  {missing !== 1
+                    ? tc('admin_discoverycard.gapBadgePlural').replace('{count}', String(missing))
+                    : tc('admin_discoverycard.gapBadge').replace('{count}', String(missing))}
                 </span>
               )}
             </div>
             <p className="dac-desc">
-              Keeps AskBiz listed across AI search &amp; discovery platforms. Runs probe questions weekly, detects gaps, and auto-generates registration manifests.
+              {tc('admin_discoverycard.description')}
             </p>
 
             {/* stat strip */}
-            <div className="dac-stats" role="list" aria-label="Coverage summary">
-              {([
-                { label: 'Listed',     val: listed,       key: 'listed'  },
-                { label: 'Missing',    val: missing,      key: 'missing' },
-                { label: 'Weak',       val: weak,         key: 'weak'    },
-                { label: 'Avg score',  val: `${avg}/10`,  key: 'avg'     },
-              ] as const).map(s => (
+            <div className="dac-stats" role="list" aria-label={tc('admin_discoverycard.coverageSummaryLabel')}>
+              {stats.map(s => (
                 <div key={s.key} className={`dac-stat dac-stat--${s.key}`} role="listitem">
                   <span className="dac-stat-val">{s.val}</span>
                   <span className="dac-stat-label">{s.label}</span>
@@ -345,7 +367,7 @@ export default function DiscoveryAgentCard() {
               >
                 ↓
               </span>
-              {expanded ? 'Hide' : 'Detail'}
+              {expanded ? tc('admin_discoverycard.toggleHide') : tc('admin_discoverycard.toggleDetail')}
             </button>
             <button
               className={`dac-audit-btn ${auditing ? 'dac-audit-btn--loading' : ''}`}
@@ -356,10 +378,10 @@ export default function DiscoveryAgentCard() {
               {auditing ? (
                 <>
                   <span className="spinner spinner--light" aria-hidden="true" />
-                  Auditing…
+                  {tc('admin_discoverycard.auditing')}
                 </>
               ) : (
-                'Run Audit'
+                tc('admin_discoverycard.runAudit')
               )}
             </button>
           </div>
@@ -367,10 +389,10 @@ export default function DiscoveryAgentCard() {
 
         {/* last run */}
         {loading ? (
-          <div className="dac-last-run dac-last-run--loading">Loading last results…</div>
+          <div className="dac-last-run dac-last-run--loading">{tc('admin_discoverycard.loadingLastRun')}</div>
         ) : auditData.lastRun && (
           <div className="dac-last-run">
-            Last run: {new Date(auditData.lastRun).toLocaleString('en-GB')}
+            {tc('admin_discoverycard.lastRun').replace('{datetime}', new Date(auditData.lastRun).toLocaleString('en-GB'))}
           </div>
         )}
 
@@ -388,18 +410,18 @@ export default function DiscoveryAgentCard() {
             <div className="dac-body">
 
               {/* platform table */}
-              <section aria-label="Platform coverage">
-                <h4 className="dac-section-label">Platform Coverage</h4>
+              <section aria-label={tc('admin_discoverycard.platformCoverageLabel')}>
+                <h4 className="dac-section-label">{tc('admin_discoverycard.platformCoverageHeading')}</h4>
                 <div
                   className="platform-table"
                   role="table"
-                  aria-label="AI platform registration status"
+                  aria-label={tc('admin_discoverycard.platformTableLabel')}
                 >
                   <div className="platform-table-head" role="row">
-                    <span role="columnheader">Platform</span>
-                    <span role="columnheader">Checked</span>
-                    <span role="columnheader">Status</span>
-                    <span role="columnheader">Action / Score</span>
+                    <span role="columnheader">{tc('admin_discoverycard.colPlatform')}</span>
+                    <span role="columnheader">{tc('admin_discoverycard.colChecked')}</span>
+                    <span role="columnheader">{tc('admin_discoverycard.colStatus')}</span>
+                    <span role="columnheader">{tc('admin_discoverycard.colActionScore')}</span>
                   </div>
                   {auditData.platforms.map((p, i) => (
                     <PlatformRow
@@ -408,14 +430,19 @@ export default function DiscoveryAgentCard() {
                       index={i}
                       onGenerate={generateManifest}
                       generating={generating}
+                      status={STATUS}
+                      labelGenerate={tc('admin_discoverycard.generateManifest')}
+                      labelGenerating={tc('admin_discoverycard.generating')}
+                      labelGenerateAriaPrefix={tc('admin_discoverycard.generateManifestAriaLabel')}
+                      labelScoreAria={tc('admin_discoverycard.visibilityScoreAriaLabel')}
                     />
                   ))}
                 </div>
               </section>
 
               {/* probe log */}
-              <section aria-label="Visibility probe results">
-                <h4 className="dac-section-label">Last Probe Run — Visibility Test</h4>
+              <section aria-label={tc('admin_discoverycard.probeLogLabel')}>
+                <h4 className="dac-section-label">{tc('admin_discoverycard.probeLogHeading')}</h4>
                 <div role="list">
                   {auditData.probeLog.map((log, i) => (
                     <ProbeRow key={i} log={log} index={i} />
@@ -434,10 +461,10 @@ export default function DiscoveryAgentCard() {
                   {genAll ? (
                     <>
                       <span className="spinner spinner--light" aria-hidden="true" />
-                      Generating manifests…
+                      {tc('admin_discoverycard.generatingAll')}
                     </>
                   ) : (
-                    `⚡ Generate All Missing Manifests (${missing})`
+                    tc('admin_discoverycard.generateAll').replace('{count}', String(missing))
                   )}
                 </button>
               </div>

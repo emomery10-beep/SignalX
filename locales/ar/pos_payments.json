@@ -1,0 +1,18 @@
+{
+  "title": "طرق الدفع",
+  "subtitle": "ضبط مزودي الدفع وتمكين العملاء من الدفع عبر Paystack أو Stripe",
+  "loadingConfig": "جارٍ تحميل إعدادات الدفع...",
+  "stripeAppleGoogleActive": "Apple Pay · Google Pay · البطاقات مفعّلة",
+  "stripeLoadingLink": "جارٍ تحميل رابط Stripe…",
+  "stripeCompleteOnboarding": "انقر لإكمال تهيئة حساب Stripe",
+  "stripeStatusActive": "● مفعّل",
+  "stripeStatusPending": "في انتظار التحقق KYC",
+  "stripeStatusLoading": "…",
+  "splitsNotActiveTitle": "⚠ تقسيم المدفوعات غير مفعّل",
+  "splitsNotActiveBody": "تذهب المدفوعات إلى الحساب الرئيسي دون تقسيم. أصلح هذا لتوجيه عمولة AskBiz البالغة 2% تلقائيًا على كل معاملة.",
+  "splitsEnterPhone": "أدخل رقم M-Pesa للربط:",
+  "splitsPhonePlaceholder": "07XXXXXXXX",
+  "splitsLinkBtn": "ربط",
+  "splitsFixBtn": "إصلاح التقسيم الآن",
+  "splitsFixingBtn": "جارٍ الإصلاح..."
+}

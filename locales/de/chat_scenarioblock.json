@@ -1,0 +1,9 @@
+{
+  "headerLabel": "⚡ Szenarioanalyse",
+  "verdictAct": "✓ Empfehlenswert",
+  "verdictWatch": "~ Grenzwertig – sorgfältig prüfen",
+  "verdictProblem": "✕ Nicht empfohlen",
+  "columnCurrent": "Aktuell",
+  "columnAfter": "Nach Änderung",
+  "wasBadge": "← war {value}"
+}

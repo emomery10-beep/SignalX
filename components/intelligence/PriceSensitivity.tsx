@@ -180,7 +180,7 @@ export default function PriceSensitivity({ onAsk }: { onAsk?: (prompt: string) =
   )
 }
 
-function PriceImpactSimulator({ products, sym, tc }: { products: Product[]; sym: string; tc: (key: string, vars?: Record<string, unknown>) => string }) {
+function PriceImpactSimulator({ products, sym, tc }: { products: Product[]; sym: string; tc: (key: string, vars?: Record<string, string | number>) => string }) {
   const [pctChange, setPctChange] = useState(5)
 
   const impact = useMemo(() => {

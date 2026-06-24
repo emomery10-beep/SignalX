@@ -1,0 +1,20 @@
+{
+  "title": "المدفوعات المستلمة",
+  "headerBadge": "{count} مستلم · {total}",
+  "statReceivedLabel": "المستلم",
+  "statReceivedSub": "مدفوعات",
+  "statTotalLabel": "الإجمالي",
+  "statTotalSub": "المحصّل",
+  "statAvgLabel": "المتوسط",
+  "statAvgSub": "لكل دفعة",
+  "loading": "جارٍ التحميل...",
+  "emptyTitle": "لم يتم استلام أي مدفوعات رقمية بعد.",
+  "emptyBody": "ستظهر المدفوعات عبر M-Pesa أو البطاقة أو المحافظ الإلكترونية هنا بعد تأكيدها.",
+  "defaultCustomer": "عميل",
+  "statusPaid": "مدفوع",
+  "statusReceived": "مستلم",
+  "justNow": "الآن",
+  "minutesAgo": "منذ {mins} د",
+  "hoursAgo": "منذ {h} س",
+  "daysAgo": "منذ {d} ي"
+}

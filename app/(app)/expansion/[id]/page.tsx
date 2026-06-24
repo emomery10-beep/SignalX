@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { useLang } from '@/components/LanguageProvider'
 
 const MOCK_CANDIDATE = {
   id: '1',
@@ -51,6 +52,7 @@ const RISK_BG: Record<string, string> = { low: 'rgba(34,197,94,.1)', medium: 'rg
 export default function CandidateDetailPage() {
   const router = useRouter()
   const params = useParams()
+  const { tc } = useLang()
   const [c] = useState(MOCK_CANDIDATE)
   const [status, setStatus] = useState(c.status)
   const [saving, setSaving] = useState(false)
@@ -82,9 +84,9 @@ export default function CandidateDetailPage() {
     const monthlyProfit = Math.round(grossMargin * effectiveUnits)
     const breakEvenUnits = Math.ceil(totalCost / grossMargin * totalCost / sellPrice * expectedUnits)
     const contributionMarginPct = grossMarginPct
-    const verdict = grossMarginPct >= 30 ? '✅ Strong — worth launching'
-      : grossMarginPct >= 20 ? '⚠️ Viable — watch costs'
-      : '❌ Weak — revisit pricing or costs'
+    const verdict = grossMarginPct >= 30 ? tc('page_expansion_id.verdictStrong')
+      : grossMarginPct >= 20 ? tc('page_expansion_id.verdictViable')
+      : tc('page_expansion_id.verdictWeak')
     setSimResult({ grossMarginPct, contributionMarginPct, breakEvenUnits: Math.max(breakEvenUnits, 10), monthlyProfit, verdict })
   }
 
@@ -104,11 +106,11 @@ export default function CandidateDetailPage() {
       <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--b)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <button onClick={() => router.back()}
           style={{ padding: '6px 12px', borderRadius: 9999, border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontFamily: 'inherit', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
-          ← Back
+          {tc('page_expansion_id.backButton')}
         </button>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 600 }}>{c.candidate_name}</div>
-          <div style={{ fontSize: 13, color: 'var(--tx2)', marginTop: 2 }}>Expansion candidate · Adjacent category</div>
+          <div style={{ fontSize: 13, color: 'var(--tx2)', marginTop: 2 }}>{tc('page_expansion_id.headerSubtitle')}</div>
         </div>
         {/* Status buttons */}
         <div style={{ display: 'flex', gap: 8 }}>
@@ -126,12 +128,12 @@ export default function CandidateDetailPage() {
         {/* Score + top metrics */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(140px,1fr))', gap: 12 }}>
           {[
-            { label: 'Opportunity score', value: `${c.opportunity_score}/100`, color: 'var(--acc)' },
-            { label: 'Est. gross margin', value: `${c.financial.estimated_margin_pct}%`, color: '#22c55e' },
-            { label: 'Est. monthly profit', value: `KSh ${c.financial.estimated_monthly_profit.toLocaleString()}`, color: '#22c55e' },
-            { label: 'Break-even units', value: `${c.financial.break_even_units} units`, color: 'var(--tx)' },
-            { label: 'Opening order', value: `${c.financial.recommended_opening_order} units`, color: 'var(--tx)' },
-            { label: 'Recover in', value: `${c.financial.months_to_recover} months`, color: 'var(--tx)' },
+            { label: tc('page_expansion_id.metricOpportunityScore'), value: `${c.opportunity_score}/100`, color: 'var(--acc)' },
+            { label: tc('page_expansion_id.metricEstGrossMargin'), value: `${c.financial.estimated_margin_pct}%`, color: '#22c55e' },
+            { label: tc('page_expansion_id.metricEstMonthlyProfit'), value: `KSh ${c.financial.estimated_monthly_profit.toLocaleString()}`, color: '#22c55e' },
+            { label: tc('page_expansion_id.metricBreakEvenUnits'), value: tc('page_expansion_id.metricBreakEvenUnitsValue').replace('{units}', String(c.financial.break_even_units)), color: 'var(--tx)' },
+            { label: tc('page_expansion_id.metricOpeningOrder'), value: tc('page_expansion_id.metricOpeningOrderValue').replace('{units}', String(c.financial.recommended_opening_order)), color: 'var(--tx)' },
+            { label: tc('page_expansion_id.metricRecoverIn'), value: tc('page_expansion_id.metricRecoverInValue').replace('{months}', String(c.financial.months_to_recover)), color: 'var(--tx)' },
           ].map((m, i) => (
             <div key={i} style={{ padding: '14px 16px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)' }}>
               <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, color: m.color }}>{m.value}</div>
@@ -141,18 +143,18 @@ export default function CandidateDetailPage() {
         </div>
 
         {/* Why this */}
-        <Card title="Why this product?">
+        <Card title={tc('page_expansion_id.cardWhyProduct')}>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--tx2)' }}>{c.why_it_fits}</p>
         </Card>
 
         {/* Evidence */}
-        <Card title="Demand evidence">
+        <Card title={tc('page_expansion_id.cardDemandEvidence')}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 12 }}>
             {[
-              { icon: '📊', label: 'Internal demand', text: c.evidence.internal_demand },
-              { icon: '📈', label: 'Trend signal', text: c.evidence.trend_signal },
-              { icon: '💰', label: 'Margin signal', text: c.evidence.margin_signal },
-              { icon: '👥', label: 'Customer fit', text: c.evidence.customer_fit },
+              { icon: '📊', label: tc('page_expansion_id.evidenceInternalDemandLabel'), text: c.evidence.internal_demand },
+              { icon: '📈', label: tc('page_expansion_id.evidenceTrendSignalLabel'), text: c.evidence.trend_signal },
+              { icon: '💰', label: tc('page_expansion_id.evidenceMarginSignalLabel'), text: c.evidence.margin_signal },
+              { icon: '👥', label: tc('page_expansion_id.evidenceCustomerFitLabel'), text: c.evidence.customer_fit },
             ].map((e, i) => (
               <div key={i} style={{ padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--bg)' }}>
                 <div style={{ fontSize: 16, marginBottom: 6 }}>{e.icon}</div>
@@ -164,33 +166,33 @@ export default function CandidateDetailPage() {
         </Card>
 
         {/* Cannibalization */}
-        <Card title="Cannibalisation risk">
+        <Card title={tc('page_expansion_id.cardCannibalisationRisk')}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
             <div style={{ padding: '10px 18px', borderRadius: 12, background: RISK_BG[c.cannibalization.risk_level], flexShrink: 0, textAlign: 'center' }}>
               <div style={{ fontFamily: 'var(--font-sora)', fontSize: 20, fontWeight: 700, color: RISK_COLOR[c.cannibalization.risk_level] }}>
                 {c.cannibalization.risk_level.toUpperCase()}
               </div>
-              <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>Risk level</div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{tc('page_expansion_id.riskLevelLabel')}</div>
             </div>
             <div>
               <p style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--tx2)', marginBottom: 8 }}>{c.cannibalization.explanation}</p>
               {c.cannibalization.affected_skus.length > 0 && (
-                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Affected SKUs: {c.cannibalization.affected_skus.join(', ')}</div>
+                <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('page_expansion_id.affectedSkusLabel').replace('{skus}', c.cannibalization.affected_skus.join(', '))}</div>
               )}
             </div>
           </div>
         </Card>
 
         {/* Simulator */}
-        <Card title="Profit simulator — adjust and rerun">
+        <Card title={tc('page_expansion_id.cardProfitSimulator')}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 12, marginBottom: 16 }}>
             {[
-              { key: 'sellPrice', label: 'Selling price (KSh)', min: 50, max: 2000, step: 5 },
-              { key: 'landedCost', label: 'Landed cost (KSh)', min: 10, max: 1500, step: 5 },
-              { key: 'packagingCost', label: 'Packaging cost (KSh)', min: 0, max: 200, step: 1 },
-              { key: 'shippingCost', label: 'Shipping cost (KSh)', min: 0, max: 200, step: 1 },
-              { key: 'expectedUnits', label: 'Expected units/month', min: 10, max: 5000, step: 10 },
-              { key: 'returnRatePct', label: 'Return rate (%)', min: 0, max: 20, step: 0.5 },
+              { key: 'sellPrice', label: tc('page_expansion_id.simFieldSellPrice'), min: 50, max: 2000, step: 5 },
+              { key: 'landedCost', label: tc('page_expansion_id.simFieldLandedCost'), min: 10, max: 1500, step: 5 },
+              { key: 'packagingCost', label: tc('page_expansion_id.simFieldPackagingCost'), min: 0, max: 200, step: 1 },
+              { key: 'shippingCost', label: tc('page_expansion_id.simFieldShippingCost'), min: 0, max: 200, step: 1 },
+              { key: 'expectedUnits', label: tc('page_expansion_id.simFieldExpectedUnits'), min: 10, max: 5000, step: 10 },
+              { key: 'returnRatePct', label: tc('page_expansion_id.simFieldReturnRate'), min: 0, max: 20, step: 0.5 },
             ].map(f => (
               <div key={f.key}>
                 <label style={{ fontSize: 12, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>{f.label}</label>
@@ -208,15 +210,15 @@ export default function CandidateDetailPage() {
           </div>
           <button onClick={runSimulator}
             style={{ padding: '9px 20px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer', marginBottom: 16 }}>
-            Recalculate →
+            {tc('page_expansion_id.recalculateButton')}
           </button>
           {simResult && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(160px,1fr))', gap: 10 }}>
               {[
-                { label: 'Gross margin', value: `${simResult.grossMarginPct}%`, color: simResult.grossMarginPct >= 30 ? '#22c55e' : simResult.grossMarginPct >= 20 ? '#f5c55a' : '#f48080' },
-                { label: 'Monthly profit', value: `KSh ${simResult.monthlyProfit.toLocaleString()}`, color: '#22c55e' },
-                { label: 'Break-even units', value: `${simResult.breakEvenUnits}`, color: 'var(--tx)' },
-                { label: 'Verdict', value: simResult.verdict, color: 'var(--tx)', wide: true },
+                { label: tc('page_expansion_id.simResultGrossMargin'), value: `${simResult.grossMarginPct}%`, color: simResult.grossMarginPct >= 30 ? '#22c55e' : simResult.grossMarginPct >= 20 ? '#f5c55a' : '#f48080' },
+                { label: tc('page_expansion_id.simResultMonthlyProfit'), value: `KSh ${simResult.monthlyProfit.toLocaleString()}`, color: '#22c55e' },
+                { label: tc('page_expansion_id.simResultBreakEvenUnits'), value: `${simResult.breakEvenUnits}`, color: 'var(--tx)' },
+                { label: tc('page_expansion_id.simResultVerdict'), value: simResult.verdict, color: 'var(--tx)', wide: true },
               ].map((r, i) => (
                 <div key={i} style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid var(--b)', background: 'var(--ev)', gridColumn: r.wide ? '1 / -1' : undefined }}>
                   <div style={{ fontFamily: 'var(--font-sora)', fontSize: r.wide ? 14 : 18, fontWeight: 700, color: r.color }}>{r.value}</div>
@@ -228,15 +230,15 @@ export default function CandidateDetailPage() {
         </Card>
 
         {/* Launch plan */}
-        <Card title="Launch plan">
+        <Card title={tc('page_expansion_id.cardLaunchPlan')}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 12 }}>
             {[
-              { icon: '📍', label: 'Best region to test', value: c.launch.best_region },
-              { icon: '📣', label: 'Best channel', value: c.launch.best_channel },
-              { icon: '📅', label: 'Minimum test length', value: `${c.launch.test_length_days} days` },
-              { icon: '🎯', label: 'Success threshold', value: c.launch.success_threshold },
-              { icon: '📦', label: 'Opening order', value: `${c.financial.recommended_opening_order} units — ${c.launch.opening_order_rationale}` },
-              { icon: '💰', label: 'Suggested price', value: c.financial.suggested_price_range },
+              { icon: '📍', label: tc('page_expansion_id.launchBestRegion'), value: c.launch.best_region },
+              { icon: '📣', label: tc('page_expansion_id.launchBestChannel'), value: c.launch.best_channel },
+              { icon: '📅', label: tc('page_expansion_id.launchTestLength'), value: tc('page_expansion_id.launchTestLengthValue').replace('{days}', String(c.launch.test_length_days)) },
+              { icon: '🎯', label: tc('page_expansion_id.launchSuccessThreshold'), value: c.launch.success_threshold },
+              { icon: '📦', label: tc('page_expansion_id.launchOpeningOrder'), value: tc('page_expansion_id.launchOpeningOrderValue').replace('{units}', String(c.financial.recommended_opening_order)).replace('{rationale}', c.launch.opening_order_rationale) },
+              { icon: '💰', label: tc('page_expansion_id.launchSuggestedPrice'), value: c.financial.suggested_price_range },
             ].map((l, i) => (
               <div key={i} style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--bg)' }}>
                 <div style={{ fontSize: 14, marginBottom: 5 }}>{l.icon}</div>
@@ -248,7 +250,7 @@ export default function CandidateDetailPage() {
         </Card>
 
         {/* Risks */}
-        <Card title="Risk flags">
+        <Card title={tc('page_expansion_id.cardRiskFlags')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {c.risks.map((r, i) => (
               <div key={i} style={{ display: 'flex', gap: 10, padding: '10px 14px', borderRadius: 10, border: '1px solid rgba(245,197,90,.25)', background: 'rgba(245,197,90,.06)', fontSize: 13, color: 'var(--tx2)', lineHeight: 1.55 }}>
@@ -261,12 +263,12 @@ export default function CandidateDetailPage() {
         {/* Chat CTA */}
         <div style={{ padding: '16px 20px', borderRadius: 14, border: '1px solid rgba(208,138,89,.2)', background: 'rgba(208,138,89,.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 3 }}>Want to dig deeper?</div>
-            <div style={{ fontSize: 13, color: 'var(--tx2)' }}>Ask AskBiz anything about this opportunity in the chat.</div>
+            <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 3 }}>{tc('page_expansion_id.ctaHeading')}</div>
+            <div style={{ fontSize: 13, color: 'var(--tx2)' }}>{tc('page_expansion_id.ctaBody')}</div>
           </div>
           <button onClick={() => router.push('/chat')}
             style={{ padding: '8px 18px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            Ask in chat →
+            {tc('page_expansion_id.ctaButton')}
           </button>
         </div>
 

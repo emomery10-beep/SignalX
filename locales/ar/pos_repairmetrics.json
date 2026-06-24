@@ -1,0 +1,13 @@
+{
+  "sectionTitle": "خدمات الإصلاح",
+  "activeJobsLabel": "المهام النشطة",
+  "activeJobsSub": "{intake} استلام · {inProgress} قيد التنفيذ · {completed} جاهز",
+  "collectedTodayLabel": "المحصّل اليوم",
+  "repairRevenueLabel": "إيرادات الإصلاح",
+  "repairRevenueSub": "اليوم",
+  "avgTurnaroundLabel": "متوسط وقت التسليم",
+  "warrantyClaimsLabel": "مطالبات الضمان",
+  "inProgress": "قيد التنفيذ",
+  "intake": "استلام",
+  "ready": "جاهز"
+}

@@ -1,9 +1,11 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLang } from '@/components/LanguageProvider'
 
 export default function LogisticsPulseCard() {
   const router = useRouter()
+  const { tc } = useLang()
   const [health, setHealth] = useState<any>(null)
   const [score, setScore] = useState(0)
 
@@ -47,19 +49,19 @@ export default function LogisticsPulseCard() {
           </svg>
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ fontSize: 18, fontWeight: 700, color, fontFamily: 'var(--font-sora)', lineHeight: 1 }}>{score}</span>
-            <span style={{ fontSize: 8, color: 'var(--tx3)' }}>/100</span>
+            <span style={{ fontSize: 8, color: 'var(--tx3)' }}>{tc('logistics_pulsecard.outOf100')}</span>
           </div>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>📦 Logistics</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{tc('logistics_pulsecard.title')}</span>
             <span style={{ fontSize: 10, fontWeight: 600, color, background: bg, border: `1px solid ${border}`, padding: '1px 6px', borderRadius: 9999 }}>{health.label || ''}</span>
           </div>
           <p style={{ fontSize: 12, color: 'var(--tx3)', margin: '0 0 8px', lineHeight: 1.5 }}>{health.summary || ''}</p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {health.active_shipments > 0 && <span style={{ fontSize: 11, color: 'var(--tx2)' }}><strong>{health.active_shipments}</strong> active</span>}
-            {health.at_risk > 0 && <span style={{ fontSize: 11, color: '#d97706' }}><strong>{health.at_risk}</strong> at risk</span>}
-            {health.customs_holds > 0 && <span style={{ fontSize: 11, color: '#dc2626' }}><strong>{health.customs_holds}</strong> customs hold</span>}
+            {health.active_shipments > 0 && <span style={{ fontSize: 11, color: 'var(--tx2)' }}><strong>{health.active_shipments}</strong> {tc('logistics_pulsecard.active')}</span>}
+            {health.at_risk > 0 && <span style={{ fontSize: 11, color: '#d97706' }}><strong>{health.at_risk}</strong> {tc('logistics_pulsecard.atRisk')}</span>}
+            {health.customs_holds > 0 && <span style={{ fontSize: 11, color: '#dc2626' }}><strong>{health.customs_holds}</strong> {tc('logistics_pulsecard.customsHold')}</span>}
           </div>
         </div>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>

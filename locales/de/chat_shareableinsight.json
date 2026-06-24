@@ -1,0 +1,8 @@
+{
+  "titleDefault": "Teilbaren Link für diesen Einblick erstellen",
+  "titleWithUrl": "Teilen: {url}",
+  "labelIdle": "Teilen",
+  "labelLoading": "Link wird erstellt…",
+  "labelCopied": "Link kopiert!",
+  "labelError": "Erneut versuchen"
+}

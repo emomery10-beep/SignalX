@@ -42,6 +42,7 @@
   "viaRoute": "via",
   "refresh": "Actualiser",
   "refreshing": "Actualisation…",
+  "collapse": "Réduire",
   "globalCoverageTitle": "Affichage des signaux mondiaux",
   "globalCoverageBody": "Market Climate n'est pas encore configuré pour {country}, vous consultez donc des signaux de marché mondiaux. Votre secteur et votre exposition fournisseurs restent personnalisés.",
   "globalCoverageCta": "Demander la couverture {country} →",

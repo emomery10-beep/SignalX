@@ -1,0 +1,23 @@
+{
+  "billing_paywall": {
+    "softWarningTitle": "Sie holen viel aus AskBiz heraus",
+    "softWarningBody": "Sie haben {questionsUsed} von {questionLimit} monatlichen Fragen genutzt. Sie schöpfen den Mehrwert klar aus – holen Sie sich mehr, damit Ihre Analyse nie unterbrochen wird.",
+    "softWarningCta": "Mehr Fragen freischalten →",
+    "softWarningSecondary": "Pläne ansehen",
+    "limitReachedTitle": "Sie haben Ihren kostenlosen Plan voll ausgeschöpft",
+    "limitReachedBody": "Sie haben diesen Monat alle {questionLimit} kostenlosen Fragen verbraucht. Führen Sie ein Upgrade durch, um weiterzumachen – Ihre Daten und Gespräche sind gespeichert und warten auf Sie.",
+    "limitReachedCta": "Mit Growth weitermachen – 19 £/Monat →",
+    "limitReachedSecondary": "Alle Pläne ansehen",
+    "featureLockedTitle": "{feature} ist im Growth-Plan enthalten",
+    "featureLockedBody": "{feature} ist im Growth-Plan verfügbar. Führen Sie ein Upgrade durch, um Expansions-Insights, Live-Sync, Benachrichtigungen, Prognosen und mehr freizuschalten.",
+    "featureLockedCta": "Growth freischalten – 19 £/Monat →",
+    "featureLockedSecondary": "Weitere Inhalte ansehen",
+    "feature500Questions": "500 KI-Fragen/Monat",
+    "feature10Uploads": "10 Datei-Uploads",
+    "featureExpansion": "Expansions-Insights",
+    "featureLiveSync": "Live-Datensynchronisierung",
+    "featureAlerts": "Benachrichtigungen & Prognosen",
+    "featureTrial": "7 Tage kostenlos testen",
+    "footer": "7 Tage kostenlos testen · Jederzeit kündbar · Preis für Early Adopters festgeschrieben"
+  }
+}

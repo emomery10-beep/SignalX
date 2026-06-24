@@ -1,0 +1,8 @@
+{
+  "titleDefault": "Créer un lien partageable pour cet aperçu",
+  "titleWithUrl": "Partager : {url}",
+  "labelIdle": "Partager",
+  "labelLoading": "Création du lien…",
+  "labelCopied": "Lien copié !",
+  "labelError": "Réessayer"
+}

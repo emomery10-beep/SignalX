@@ -1,0 +1,17 @@
+{
+  "trackShipmentsTitle": "Volg uw zendingen",
+  "trackShipmentsDesc": "Voeg trackingnummers toe voor realtime meldingen over voorraadtekorten, douanewaarschuwingen en financiële impact.",
+  "addShipment": "Zending toevoegen →",
+  "shipmentsAtRiskSingular": "{n} zending in gevaar",
+  "shipmentsAtRiskPlural": "{n} zendingen in gevaar",
+  "view": "Bekijken →",
+  "shipmentAlertFallback": "Zendingswaarschuwing",
+  "financialImpact": "£{amount} impact",
+  "viewShipment": "Zending bekijken →",
+  "askAskBiz": "Vraag AskBiz →",
+  "askBizPrompt": "Wat moet ik doen met zending {trackingNumber}? Wat zijn mijn opties?",
+  "onTrack": "{n} op schema",
+  "delayed": "{n} vertraagd",
+  "customsHold": "{n} in douanevertraging",
+  "viewAll": "Alles bekijken →"
+}
