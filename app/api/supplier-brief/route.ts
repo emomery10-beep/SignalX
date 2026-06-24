@@ -9,14 +9,25 @@ export const maxDuration = 30
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
+// In-process cache: prevents repeat Claude calls when users tab-switch or refresh.
+// Per-user, 2h TTL. Supplier data doesn't change that fast.
+const CACHE = new Map<string, { data: unknown; at: number }>()
+const CACHE_TTL_MS = 2 * 60 * 60 * 1000
+
 export async function GET(req: NextRequest) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const sym = await getCurrencySymbol(supabase, user.id)
   const { searchParams } = new URL(req.url)
   const supplierName = searchParams.get('supplier')
+  const cacheKey = `${user.id}:${supplierName || ''}`
+  const cached = CACHE.get(cacheKey)
+  if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
+    return NextResponse.json(cached.data)
+  }
+
+  const sym = await getCurrencySymbol(supabase, user.id)
 
   const days = 90
   const since = new Date(Date.now() - days * 86400000).toISOString().split('T')[0]
@@ -131,7 +142,7 @@ export async function GET(req: NextRequest) {
 
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-haiku-4-5',
         max_tokens: 600,
         messages: [{ role: 'user', content: `You are a procurement strategist. Generate a concise negotiation brief for renegotiating terms with this supplier.
 
@@ -140,7 +151,7 @@ ${signals}
 Format as JSON: {"leverage_points": ["point1", "point2", "point3"], "risks": ["risk1", "risk2"], "recommended_ask": "what to ask for", "talking_points": ["point1", "point2", "point3"], "timing": "when to negotiate"}
 Return ONLY valid JSON.` }],
       })
-      logUsage({ route: 'supplier-brief', model: 'claude-sonnet-4-6', usage: response.usage, userId: user.id })
+      logUsage({ route: 'supplier-brief', model: 'claude-haiku-4-5', usage: response.usage, userId: user.id })
 
       const text = (response.content[0] as { type: string; text: string }).text
       brief = text
@@ -149,13 +160,15 @@ Return ONLY valid JSON.` }],
     }
   }
 
-  return NextResponse.json({
+  const result = {
     suppliers: suppliers.slice(0, 15),
     total_monthly_spend: totalSpend,
     brief: brief ? tryParse(brief) : null,
     brief_supplier: targetSupplier?.name || null,
     currency_symbol: sym,
-  })
+  }
+  CACHE.set(cacheKey, { data: result, at: Date.now() })
+  return NextResponse.json(result)
 }
 
 function tryParse(text: string) {

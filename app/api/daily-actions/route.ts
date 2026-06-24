@@ -9,10 +9,20 @@ export const maxDuration = 30
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
+// In-process cache: prevents repeat Claude calls when users tab-switch or refresh.
+// Per-user, 30-min TTL. Works within a warm serverless instance.
+const CACHE = new Map<string, { data: unknown; at: number }>()
+const CACHE_TTL_MS = 30 * 60 * 1000
+
 export async function GET() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const cached = CACHE.get(user.id)
+  if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
+    return NextResponse.json(cached.data)
+  }
 
   const sym = await getCurrencySymbol(supabase, user.id)
 
@@ -108,15 +118,17 @@ export async function GET() {
   }
 
   if (signals.length === 0) {
-    return NextResponse.json({
+    const emptyResult = {
       actions: [{ title: 'All clear', why: 'No urgent actions detected today. Keep up the good work.', priority: 3, type: 'info' }],
       currency_symbol: sym,
-    })
+    }
+    CACHE.set(user.id, { data: emptyResult, at: Date.now() })
+    return NextResponse.json(emptyResult)
   }
 
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-haiku-4-5',
       max_tokens: 800,
       messages: [{ role: 'user', content: `You are a business operations assistant. Given these signals from a small business, produce a prioritised daily action list.
 
@@ -129,11 +141,13 @@ Priority 1 = do now (revenue at risk), 2 = do today, 3 = this week.
 Sort by priority ascending. Be specific — use actual product names, customer names, amounts.
 Return ONLY the JSON array, no markdown.` }],
     })
-    logUsage({ route: 'daily-actions', model: 'claude-sonnet-4-6', usage: response.usage, userId: user.id })
+    logUsage({ route: 'daily-actions', model: 'claude-haiku-4-5', usage: response.usage, userId: user.id })
 
     const text = (response.content[0] as { type: string; text: string }).text
     const actions = JSON.parse(text)
-    return NextResponse.json({ actions, currency_symbol: sym })
+    const result = { actions, currency_symbol: sym }
+    CACHE.set(user.id, { data: result, at: Date.now() })
+    return NextResponse.json(result)
   } catch {
     const fallbackActions: any[] = []
     if (lowStock?.some(i => i.stock_qty <= 0)) fallbackActions.push({ title: `Restock ${lowStock.filter(i => i.stock_qty <= 0).length} out-of-stock items`, why: 'These items cannot be sold until restocked.', priority: 1, type: 'restock' })
