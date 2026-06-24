@@ -1,13 +1,14 @@
 // ── /api/market-climate ───────────────────────────────────────────────────────
-// Turns today's macro conditions into a personalised business warning.
-// Reads: the user's location, sector (from scanned data), supplier currencies,
-// and cash position. Fetches: live market + shipping signals via Tavily.
-// Returns: a weighted severity score, a real cash-impact estimate, a time-horizon
-// playbook, ranked actions, and a supply-chain read — all specific to this business.
+// Turns today's macro + product-level conditions into a personalised business
+// warning. Reads: POS/receipt scan history, supplier sourcing context, location.
+// Searches: Tavily + Google (Serper) in parallel for product prices, shipping
+// disruptions, and market rates — all specific to what THIS business sells and
+// where they source it from.
 // ─────────────────────────────────────────────────────────────────────────────
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getUserLocale } from '@/lib/get-currency'
+import { marketSearch } from '@/lib/market-search'
 import { tavilySearch } from '@/lib/tavily'
 import {
   getCountryClimate, isCountryMapped, getCountryName,
@@ -16,6 +17,7 @@ import {
   classifyChannel, buildRetailSignals,
   type MarketSignalSpec, type CountryClimate, type ChannelMix,
 } from '@/lib/market-climate-config'
+import type { SupplierSource } from '@/app/api/supplier-context/route'
 import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 
@@ -48,13 +50,19 @@ interface SupplyReading {
   port: { port: string; status: string; severity: 'ok' | 'watch' | 'alert' } | null
 }
 
-// Pull a single signal from Tavily and parse a rough direction/number from the answer.
+// Pull a single signal using dual search (Tavily + Google). Falls back to a
+// rephrased query so transient Tavily outages don't leave cards blank.
 async function readSignal(spec: MarketSignalSpec): Promise<SignalReading> {
-  const res = await tavilySearch(spec.query, {
-    searchDepth: 'basic', maxResults: 3, includeAnswer: true, topic: 'news', days: 3,
+  const fallbackQuery = spec.query
+    .replace(/today/gi, 'latest')
+    .replace(/current/gi, 'recent')
+  const res = await marketSearch(spec.query, {
+    topic: 'news',
+    days: 3,
+    fallbackQuery,
   })
-  const answer = res?.answer || res?.results?.[0]?.content || ''
-  const hasData = !!answer
+  const answer = res.answer
+  const hasData = res.hasData
   const { value, direction, changePct } = parseSignal(answer, spec.kind)
   return {
     key: spec.key, label: spec.label, kind: spec.kind,
@@ -62,6 +70,63 @@ async function readSignal(spec: MarketSignalSpec): Promise<SignalReading> {
     summary: hasData ? answer.slice(0, 160).trim() : 'No fresh reading available.',
     hasData,
   }
+}
+
+// Build product-specific signal specs from supplier context.
+// e.g. "Vaseline sourced from UK" → query "Vaseline petroleum jelly wholesale
+// price UK 2025" + "GBP/KES exchange rate today"
+function buildSupplierSignals(
+  sources: SupplierSource[],
+  climate: CountryClimate,
+): MarketSignalSpec[] {
+  const specs: MarketSignalSpec[] = []
+  const seen = new Set<string>()
+
+  for (const src of sources.slice(0, 6)) {
+    const p = src.product.trim()
+    const country = src.sourceCountry.trim()
+    const currency = src.currency || ''
+
+    // Product price in source market
+    const priceKey = `price_${p.toLowerCase().replace(/\s+/g, '_').slice(0, 16)}`
+    if (!seen.has(priceKey)) {
+      seen.add(priceKey)
+      specs.push({
+        key: priceKey,
+        label: `${p.slice(0, 20)} price`,
+        query: `${p} wholesale price ${country} ${new Date().getFullYear()} supplier cost`,
+        kind: 'commodity',
+      })
+    }
+
+    // FX pair if they pay in a foreign currency
+    if (currency && currency !== climate.currency) {
+      const fxKey = `fx_${currency.toLowerCase()}`
+      if (!seen.has(fxKey)) {
+        seen.add(fxKey)
+        specs.push({
+          key: fxKey,
+          label: `${currency} / ${climate.currency}`,
+          query: `${currency} to ${climate.currency} exchange rate today`,
+          kind: 'fx',
+        })
+      }
+    }
+
+    // Shipping disruption for the source country → destination
+    const laneKey = `lane_${country.toLowerCase().replace(/\s+/g, '_').slice(0, 12)}`
+    if (!seen.has(laneKey)) {
+      seen.add(laneKey)
+      specs.push({
+        key: laneKey,
+        label: `${country} → ${climate.name}`,
+        query: `shipping freight disruption ${country} to ${climate.name} 2025 delay`,
+        kind: 'demand',
+      })
+    }
+  }
+
+  return specs.slice(0, 8)
 }
 
 // Lightweight numeric/direction parser — best-effort, degrades to neutral.
@@ -226,19 +291,50 @@ export async function GET(request: NextRequest) {
 
   // ── 1. Read this business's exposure from scanned/unified data (90 days) ─────
   const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  const { data: records } = await supabase
-    .from('unified_data')
-    .select('category, product_name, currency, cost_price, units_sold, gross_revenue, channel, source_type')
-    .eq('user_id', user.id)
-    .gte('record_date', since)
-    .limit(2000)
+  const [{ data: records }, { data: posRecords }, { data: overridesRow }] = await Promise.all([
+    supabase
+      .from('unified_data')
+      .select('category, product_name, currency, cost_price, units_sold, gross_revenue, channel, source_type')
+      .eq('user_id', user.id)
+      .gte('record_date', since)
+      .limit(2000),
+    // Also pull directly from POS scan history for product names
+    supabase
+      .from('pos_items')
+      .select('name, category, sku')
+      .eq('user_id', user.id)
+      .limit(200),
+    // Supplier context saved by user
+    supabase
+      .from('cost_profile_overrides')
+      .select('overrides')
+      .eq('user_id', user.id)
+      .single(),
+  ])
 
   const rows = records || []
+  const posItems = posRecords || []
+
+  // Merge product names from unified_data AND pos_items for richer signal selection
   const categories = Array.from(new Set(rows.map(r => r.category || r.product_name || '').filter(Boolean)))
-  const productNames = Array.from(new Set(rows.map(r => r.product_name || '').filter(Boolean)))
+  const productNames = Array.from(new Set([
+    ...rows.map(r => r.product_name || ''),
+    ...posItems.map(p => p.name || p.category || ''),
+  ].filter(Boolean)))
   const sector = detectSector(categories)
   // Everything the business actually trades — feeds signal selection.
   const businessTerms = Array.from(new Set([...categories, ...productNames])).slice(0, 40)
+
+  // Supplier sourcing context saved by user (where they buy each product from)
+  const overrides = (overridesRow?.overrides as Record<string, unknown>) || {}
+  const supplierContext = overrides.supplier_sources as { sources: SupplierSource[] } | undefined
+  const supplierSources: SupplierSource[] = supplierContext?.sources || []
+
+  // Products we know about but have no supplier origin for — these become prompts in the UI
+  const knownProductsWithoutSource = businessTerms
+    .filter(t => !supplierSources.some(s => s.product.toLowerCase() === t.toLowerCase()))
+    .slice(0, 5)
+    .map(product => ({ product }))
 
   // Channel mix — online vs in-store revenue share decides which demand signals
   // matter (ad cost / CAC for ecommerce; footfall / local spend for POS).
@@ -279,7 +375,8 @@ export async function GET(request: NextRequest) {
   const runwayMonths = (cashBalance > 0 && monthlyFixed > 0) ? Math.round((cashBalance / monthlyFixed) * 10) / 10 : null
   const termSig = businessTerms.join('|').toLowerCase().slice(0, 120)
   const chanSig = `${channelMix.hasEcommerce ? 'e' : ''}${channelMix.hasPos ? 'p' : ''}`
-  const cacheKey = `${climate.code}:${sector.key}:${chanSig}:${termSig}`
+  const supplierSig = supplierSources.map(s => `${s.product}:${s.sourceCountry}`).join('|').slice(0, 80)
+  const cacheKey = `${climate.code}:${sector.key}:${chanSig}:${termSig}:${supplierSig}`
 
   type CacheRow = { payload: { signals: SignalReading[]; supply: SupplyReading; narrative: Narrative }; fetched_at: string }
   let cacheRow: CacheRow | null = null
@@ -306,17 +403,34 @@ export async function GET(request: NextRequest) {
     narrative = cacheRow.payload.narrative
     fetchedAt = cacheRow.fetched_at
   } else {
-    const specs = await selectBusinessSignals({ climate, businessTerms, sectorLabel: sector.label, channelMix, userId: user.id })
+    // Select signals: supplier-specific specs first, then AI-selected macro signals
+    const supplierSpecs = buildSupplierSignals(supplierSources, climate)
+    const macroSpecs = await selectBusinessSignals({ climate, businessTerms, sectorLabel: sector.label, channelMix, userId: user.id })
+    // Merge: supplier specs take priority (they're the most personalised), then macro
+    const seenKeys = new Set(supplierSpecs.map(s => s.key))
+    const combinedSpecs = [
+      ...supplierSpecs,
+      ...macroSpecs.filter(s => !seenKeys.has(s.key)),
+    ].slice(0, 8)
+
+    // Supplier shipping lanes: derive from supplier source countries + currency lanes
+    const supplierCountries = supplierSources.map(s => s.sourceCountry).filter(Boolean)
+    const supplierCurrencies = supplierSources.map(s => s.currency).filter(Boolean) as string[]
+    const allImportCurrencies = Array.from(new Set([...importCurrencies, ...supplierCurrencies]))
+    const allLanes = detectShippingLanes(allImportCurrencies.length ? allImportCurrencies : [climate.currency])
+
     const [signalReadings, laneReadings, portReading] = await Promise.all([
-      Promise.all(specs.map(readSignal)),
-      Promise.all(lanes.map(async l => {
-        const r = await tavilySearch(l.freightQuery, { searchDepth: 'basic', maxResults: 2, includeAnswer: true, topic: 'news', days: 5 })
-        const graded = gradeDisruption(r?.answer || r?.results?.[0]?.content || '')
+      Promise.all(combinedSpecs.map(readSignal)),
+      Promise.all(allLanes.map(async l => {
+        const res = await marketSearch(l.freightQuery, { topic: 'news', days: 5,
+          fallbackQuery: `${l.lane} shipping freight latest news disruption` })
+        const graded = gradeDisruption(res.answer)
         return { lane: l.lane, route: l.route, status: graded.status, severity: graded.severity }
       })),
       portWatch
-        ? tavilySearch(portWatch.query, { searchDepth: 'basic', maxResults: 2, includeAnswer: true, topic: 'news', days: 7 })
-            .then(r => { const g = gradeDisruption(r?.answer || r?.results?.[0]?.content || ''); return { port: portWatch.port, status: g.status, severity: g.severity } })
+        ? marketSearch(portWatch.query, { topic: 'news', days: 7,
+            fallbackQuery: `${portWatch.port} port shipping congestion latest` })
+            .then(res => { const g = gradeDisruption(res.answer); return { port: portWatch.port, status: g.status, severity: g.severity } })
         : Promise.resolve(null),
     ])
     signals = signalReadings
@@ -380,6 +494,10 @@ export async function GET(request: NextRequest) {
       monthly_fixed: monthlyFixed,
     },
     narrative,
+    // Supplier intelligence
+    supplier_sources: supplierSources,
+    // Products we track but don't know the source country for — shown as prompts in UI
+    missing_context: knownProductsWithoutSource,
     updated_at: fetchedAt,
     cached: useCache,
   })

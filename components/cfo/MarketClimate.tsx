@@ -20,6 +20,8 @@ interface Signal {
   direction: 'up' | 'down' | 'flat'; changePct: number | null; summary: string
 }
 interface Lane { lane: string; route: string; status: string; severity: 'ok' | 'watch' | 'alert' }
+interface SupplierSource { product: string; sourceCountry: string; supplierName?: string; currency?: string }
+interface MissingContext { product: string }
 interface ClimateData {
   currency_symbol: string
   country: string
@@ -41,6 +43,8 @@ interface ClimateData {
     timeline: Array<{ when: string; title: string; detail: string; severity: 'alert' | 'watch' | 'info' }>
     actions: Array<{ urgency: 'urgent' | 'soon' | 'watch'; title: string; detail: string }>
   }
+  supplier_sources: SupplierSource[]
+  missing_context: MissingContext[]
   updated_at: string
 }
 
@@ -200,6 +204,16 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
               <span style={{ flex: 1, fontSize: 11, fontWeight: 600, color: wcInk, lineHeight: 1.45 }}>{topAction.title}</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={wcInk} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: .5 }}><path d="M9 6l6 6-6 6" /></svg>
             </button>
+          )}
+
+          {/* Supplier context prompts — shown when we know products but not where they're sourced */}
+          {data.missing_context?.length > 0 && (
+            <SupplierPrompts
+              missing={data.missing_context}
+              wcInk={wcInk}
+              wcBorder={wcBorder}
+              onSaved={() => load(true)}
+            />
           )}
 
           {/* Footer */}
@@ -548,4 +562,86 @@ function SupplyPanel({ supply }: { supply: ClimateData['supply'] }) {
 
 function Empty({ msg }: { msg: string }) {
   return <div style={{ padding: 18, textAlign: 'center', fontSize: 12, color: 'var(--tx3)' }}>{msg}</div>
+}
+
+// ── Supplier prompts — inline card asking where the user sources unknown products ──
+// Saves to /api/supplier-context, then triggers a market climate refresh so
+// the new source country feeds directly into signal selection.
+function SupplierPrompts({ missing, wcInk, wcBorder, onSaved }: {
+  missing: MissingContext[]
+  wcInk: string
+  wcBorder: string
+  onSaved: () => void
+}) {
+  const [idx, setIdx] = useState(0)
+  const [country, setCountry] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [done, setDone] = useState(false)
+
+  if (done || missing.length === 0) return null
+  const current = missing[idx]
+  if (!current) return null
+
+  const save = async () => {
+    if (!country.trim()) return
+    setSaving(true)
+    try {
+      await fetch('/api/supplier-context', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ upsert: { product: current.product, sourceCountry: country.trim() } }),
+      })
+      if (idx + 1 >= missing.length) {
+        setDone(true)
+        onSaved()
+      } else {
+        setIdx(i => i + 1)
+        setCountry('')
+      }
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div style={{ margin: '0 20px 12px', padding: '12px 14px', background: 'rgba(0,0,0,.06)', borderRadius: 12, border: `1px solid ${wcBorder}` }}>
+      <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: wcInk, opacity: .6, marginBottom: 6 }}>
+        Help us track your costs · {idx + 1} of {missing.length}
+      </div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: wcInk, marginBottom: 8 }}>
+        Where do you buy your <em>{current.product}</em> from?
+      </div>
+      <div style={{ display: 'flex', gap: 6 }}>
+        <input
+          value={country}
+          onChange={e => setCountry(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && save()}
+          placeholder="e.g. UK, China, India, Ethiopia…"
+          style={{
+            flex: 1, fontSize: 12, padding: '7px 10px', borderRadius: 8,
+            border: `1.5px solid ${wcBorder}`, background: 'rgba(255,255,255,.7)',
+            color: wcInk, fontFamily: 'inherit', outline: 'none',
+          }}
+        />
+        <button
+          onClick={save}
+          disabled={saving || !country.trim()}
+          style={{
+            padding: '7px 14px', borderRadius: 8, border: 'none',
+            background: wcInk, color: '#fff', fontSize: 12, fontWeight: 700,
+            cursor: saving || !country.trim() ? 'default' : 'pointer',
+            opacity: saving || !country.trim() ? .5 : 1, fontFamily: 'inherit',
+          }}
+        >
+          {saving ? '…' : 'Save'}
+        </button>
+        <button
+          onClick={() => { if (idx + 1 >= missing.length) setDone(true); else { setIdx(i => i + 1); setCountry('') } }}
+          style={{ padding: '7px 10px', borderRadius: 8, border: `1px solid ${wcBorder}`, background: 'transparent', color: wcInk, fontSize: 11, cursor: 'pointer', opacity: .6, fontFamily: 'inherit' }}
+        >
+          Skip
+        </button>
+      </div>
+    </div>
+  )
 }
