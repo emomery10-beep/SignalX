@@ -284,7 +284,8 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
       <div role="tablist" style={{ display: 'flex', background: 'var(--ev, #f9fafb)', borderBottom: '1px solid var(--b)' }}>
         {tabs.map(t => (
           <button key={t.id} role="tab" aria-selected={tab === t.id} className="mc-tab" onClick={() => setTab(t.id)} style={{
-            flex: 1, padding: '10px 4px', textAlign: 'center', fontSize: 11, fontWeight: tab === t.id ? 700 : 500,
+            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 4px',
+            fontSize: 11, fontWeight: tab === t.id ? 700 : 500, whiteSpace: 'nowrap',
             color: tab === t.id ? INDIGO : 'var(--tx3)', background: tab === t.id ? 'var(--sf)' : 'transparent',
             border: 'none', borderBottom: `2px solid ${tab === t.id ? INDIGO : 'transparent'}`, cursor: 'pointer', fontFamily: 'inherit',
           }}>{t.label}</button>

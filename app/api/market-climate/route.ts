@@ -40,6 +40,7 @@ interface SignalReading {
   direction: 'up' | 'down' | 'flat'
   changePct: number | null
   summary: string        // one-line plain-English read
+  hasData: boolean       // true only when Tavily returned a real reading
 }
 
 interface SupplyReading {
@@ -53,11 +54,13 @@ async function readSignal(spec: MarketSignalSpec): Promise<SignalReading> {
     searchDepth: 'basic', maxResults: 3, includeAnswer: true, topic: 'news', days: 3,
   })
   const answer = res?.answer || res?.results?.[0]?.content || ''
+  const hasData = !!answer
   const { value, direction, changePct } = parseSignal(answer, spec.kind)
   return {
     key: spec.key, label: spec.label, kind: spec.kind,
-    value, direction, changePct,
-    summary: answer ? answer.slice(0, 160).trim() : 'No fresh reading available.',
+    value: hasData ? value : '—', direction, changePct,
+    summary: hasData ? answer.slice(0, 160).trim() : 'No fresh reading available.',
+    hasData,
   }
 }
 
@@ -326,14 +329,17 @@ export async function GET(request: NextRequest) {
       sym, condition: d0.condition, totalSeverity: d0.totalSeverity, climate, sector, signals, supply,
       importPct, estExtraMonthly: estExtra0, monthlyImportSpend, runwayMonths, userId: user.id,
     })
-    // Merge Claude-cleaned values so cards show a real reading instead of "—".
-    if (narrative.readings?.length) {
-      const byKey = new Map(narrative.readings.map(r => [r.key, r]))
-      signals = signals.map(s => {
-        const r = byKey.get(s.key)
-        return r ? { ...s, value: r.value && r.value !== '—' ? r.value : s.value, direction: r.direction || s.direction, changePct: r.changePct ?? s.changePct } : s
-      })
-    }
+    // Merge Claude-cleaned values so cards show a real reading instead of "—",
+    // but ONLY where Tavily actually returned data — never let the model invent
+    // a value for a signal that had no live reading.
+    const byKey = new Map((narrative.readings || []).map(r => [r.key, r]))
+    signals = signals.map(s => {
+      if (!s.hasData) return { ...s, value: '—', direction: 'flat', changePct: null }
+      const r = byKey.get(s.key)
+      return r && r.value && r.value !== '—'
+        ? { ...s, value: r.value, direction: r.direction || s.direction, changePct: r.changePct ?? s.changePct }
+        : s
+    })
     fetchedAt = new Date().toISOString()
     try {
       await supabase.from('market_climate_cache').upsert(
@@ -423,7 +429,7 @@ ${supplyLines || '- No supply chain data'}
 
 Write a tight, plain-English read for this specific owner. No jargon, no hedging. Return ONLY valid JSON:
 {
-  "readings": [ {"key":"<the [key] from each signal>","value":"a clean current value from the snippet e.g. '$1,820/t' or '▼ 2.3%' or 'KSh 162'; if the snippet truly has no number, a 2-3 word state like 'Holding steady'","direction":"up|down|flat","changePct": number or null} , ... one per signal ],
+  "readings": [ {"key":"<the [key] from each signal>","value":"a clean current value taken from the snippet e.g. '$1,820/t' or '▼ 2.3%' or 'KSh 162'. ONLY if the snippet contains a real figure or clear qualitative move. If the snippet says 'No fresh reading' or has no real data, return null — never invent a value or a state.","direction":"up|down|flat","changePct": number or null} , ... one per signal ],
   "headline": "max 7 words, concrete",
   "body": "2 sentences max. What today's conditions mean for THEIR costs specifically.",
   "opportunity": "1 sentence if there's a hidden upside (e.g. local sourcing now cheaper), else null",
