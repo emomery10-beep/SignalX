@@ -81,7 +81,7 @@ ${urgencyIndicators > 0 ? `⚠️ URGENT: ${urgencyIndicators} item(s) are OUT O
 Keep it practical and actionable. Include real supplier types (e.g., "Beauty wholesale distributors", "FMCG suppliers", "Direct from manufacturers").`
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-haiku-4-5',
       max_tokens: 1500,
       messages: [
         {
@@ -90,7 +90,7 @@ Keep it practical and actionable. Include real supplier types (e.g., "Beauty who
         },
       ],
     })
-    logUsage({ route: 'pos/ai/supplier-recommendations', model: 'claude-sonnet-4-6', usage: message.usage, userId: ownerId })
+    logUsage({ route: 'pos/ai/supplier-recommendations', model: 'claude-haiku-4-5', usage: message.usage, userId: ownerId })
 
     const response = message.content[0].type === 'text' ? message.content[0].text : 'Unable to generate recommendations'
 

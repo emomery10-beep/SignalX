@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
     const prompt = buildAnalysisPrompt(analysisData, periodDays)
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-haiku-4-5',
       max_tokens: 1024,
       messages: [
         {
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
         },
       ],
     })
-    logUsage({ route: 'pos/intelligence/anomaly-detection', model: 'claude-sonnet-4-6', usage: message.usage, userId: ownerId })
+    logUsage({ route: 'pos/intelligence/anomaly-detection', model: 'claude-haiku-4-5', usage: message.usage, userId: ownerId })
 
     // Extract analysis from response
     const analysis = message.content[0].type === 'text' ? message.content[0].text : ''

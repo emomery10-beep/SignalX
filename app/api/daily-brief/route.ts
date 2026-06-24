@@ -157,7 +157,7 @@ async function generateBrief(userId: string, supabase: ReturnType<typeof createC
     ].filter(Boolean).join('\n')
 
     const res = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-haiku-4-5',
       max_tokens: 400,
       messages: [{
         role: 'user',
@@ -174,7 +174,7 @@ Return exactly:
 }`,
       }],
     })
-    logUsage({ route: 'daily-brief', model: 'claude-sonnet-4-6', usage: res.usage, userId })
+    logUsage({ route: 'daily-brief', model: 'claude-haiku-4-5', usage: res.usage, userId })
 
     const raw = res.content[0].type === 'text' ? res.content[0].text : ''
     const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim())

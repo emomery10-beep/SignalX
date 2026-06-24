@@ -105,12 +105,12 @@ export async function POST(request: NextRequest) {
       }
 
       const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-haiku-4-5',
         max_tokens: 500,
         system: PARSE_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: text }],
       })
-      logUsage({ route: 'quote', model: 'claude-sonnet-4-6', usage: response.usage, userId: user.id })
+      logUsage({ route: 'quote', model: 'claude-haiku-4-5', usage: response.usage, userId: user.id })
 
       const raw = response.content[0].type === 'text' ? response.content[0].text : ''
 
