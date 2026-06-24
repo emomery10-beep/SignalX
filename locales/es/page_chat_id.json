@@ -1,1 +1,27 @@
-{}
+{
+  "newConversation": "Nueva conversación",
+  "uploadingLabel": "Subiendo…",
+  "uploadLabel": "Subir",
+  "emptyHeading": "Pregunta lo que quieras sobre tus datos",
+  "emptySubGeo": "Mostrando precios en {symbol} · {country}",
+  "emptySubDefault": "Sube un archivo y haz una pregunta de negocio en lenguaje sencillo.",
+  "tapToAsk": "Toca para preguntar",
+  "aiError": "No se pudo conectar con la IA. Revisa tu conexión e inténtalo de nuevo.",
+  "inputPlaceholder": "Haz una pregunta sobre tus datos… (Intro para enviar)",
+  "bizRetail0": "¿Qué artículos debo reabastecer con urgencia?",
+  "bizRetail1": "¿Cuál es mi producto con mayor margen?",
+  "bizRetail2": "¿Puedo subir mis precios un 5%?",
+  "bizRetail3": "¿En qué estoy perdiendo dinero?",
+  "bizEcommerce0": "¿Qué SKUs tienen la mayor tasa de devolución?",
+  "bizEcommerce1": "Muéstrame mi categoría con mejor rendimiento",
+  "bizEcommerce2": "¿Cuál es mi costo de fulfillment por pedido?",
+  "bizEcommerce3": "¿Qué productos debería descontar?",
+  "bizDistributor0": "¿Qué rutas son las más rentables?",
+  "bizDistributor1": "Muéstrame las tendencias de margen por región",
+  "bizDistributor2": "¿Dónde está creciendo más rápido la demanda?",
+  "bizDistributor3": "¿Qué clientes tienen pagos pendientes?",
+  "bizExporter0": "¿Cómo afecta el tipo de cambio a mis márgenes?",
+  "bizExporter1": "¿Qué mercado tiene la mayor demanda?",
+  "bizExporter2": "Muéstrame mis productos principales por valor",
+  "bizExporter3": "¿Cuál es mi costo promedio por envío?"
+}

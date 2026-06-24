@@ -1,1 +1,13 @@
-{}
+{
+  "headingFactory": "🏭 Plantillas de roles para personal de fábrica",
+  "headingRestaurant": "🍽️ Plantillas de roles para personal de restaurante",
+  "subtitle": "Plantillas de roles preconfiguradas con permisos estándar. Úsalas como punto de partida al crear miembros del equipo.",
+  "teamSizeLabel": "Tamaño del equipo",
+  "permissionsLabel": "Permisos",
+  "permissionsHeading": "PERMISOS",
+  "responsibilitiesHeading": "RESPONSABILIDADES",
+  "viewResponsibilities": "Ver responsabilidades",
+  "moreResponsibilities": "+{count} más",
+  "useTemplate": "Usar esta plantilla",
+  "tipText": "💡 Consejo: Estas plantillas son puntos de partida. Puedes personalizar los permisos de cualquier miembro del personal después de crearlo. Los nuevos permisos o modificaciones no afectarán al personal existente."
+}

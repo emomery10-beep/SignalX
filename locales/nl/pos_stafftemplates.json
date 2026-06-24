@@ -1,1 +1,13 @@
-{}
+{
+  "headingFactory": "🏭 Fabriek Personeelsrol Sjablonen",
+  "headingRestaurant": "🍽️ Restaurant Personeelsrol Sjablonen",
+  "subtitle": "Vooraf ingestelde rolsjablonen met standaardrechten. Gebruik deze als startpunt bij het aanmaken van personeelsleden.",
+  "teamSizeLabel": "Teamgrootte",
+  "permissionsLabel": "Rechten",
+  "permissionsHeading": "RECHTEN",
+  "responsibilitiesHeading": "VERANTWOORDELIJKHEDEN",
+  "viewResponsibilities": "Verantwoordelijkheden bekijken",
+  "moreResponsibilities": "+{count} meer",
+  "useTemplate": "Dit Sjabloon Gebruiken",
+  "tipText": "💡 Tip: Deze sjablonen zijn een startpunt. Je kunt de rechten van elk personeelslid na aanmaken aanpassen. Nieuwe rechten of wijzigingen hebben geen invloed op bestaand personeel."
+}

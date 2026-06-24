@@ -1,1 +1,22 @@
-{}
+{
+  "headingFactory": "Ihr Fabrikteam einrichten",
+  "headingRestaurant": "Ihr Restaurantteam einrichten",
+  "headingSubtitle": "Wählen Sie Mitarbeiterrollen für Ihr Team aus oder passen Sie diese an. Jede Rolle umfasst vorkonfigurierte Berechtigungen und Aufgaben.",
+  "quickStartTitle": "Empfohlen für {size}-Teams",
+  "quickStartSubtitle": "Wir empfehlen diese {count} Rollen für den Einstieg:",
+  "quickStartButton": "Empfohlene Rollen verwenden",
+  "allRolesLabel": "Alle verfügbaren Rollen",
+  "teamSizeLabel": "Teamgröße:",
+  "permissionsLabel": "Berechtigungen:",
+  "viewResponsibilities": "Aufgaben anzeigen",
+  "responsibilitiesHeading": "Aufgaben",
+  "permissionsHeading": "Berechtigungen",
+  "moreItems": "+ {count} weitere",
+  "recommendedBadge": "⭐ Empfohlen",
+  "selectedRoles": "Ausgewählte Rollen:",
+  "clearButton": "Löschen",
+  "confirmRoleSingular": "{count} Rolle bestätigen",
+  "confirmRolePlural": "{count} Rollen bestätigen",
+  "selectAtLeastOne": "Mindestens eine Rolle auswählen",
+  "tipText": "💡 Tipp: Du kannst die Berechtigungen für jede Rolle nach der Einrichtung anpassen. Teammitglieder können eine oder mehrere Rollen erhalten."
+}

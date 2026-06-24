@@ -1,1 +1,27 @@
-{}
+{
+  "sectionHeading": "Klantbehoud",
+  "riskLabelAtRisk": "🔴 At risk",
+  "riskLabelWatch": "🟡 Let op",
+  "riskLabelChurned": "⚫ Verloren",
+  "riskLabelHealthy": "🟢 Gezond",
+  "emptyHeading": "Analyseer uw klanten op verlooprisico",
+  "emptyBody": "Upload een CSV-bestand met klantordergegevens en AskBiz markeert automatisch wie het risico loopt niet terug te komen.",
+  "scanNow": "Nu scannen",
+  "scanning": "Bezig met scannen…",
+  "uploadDataFirst": "Upload eerst gegevens",
+  "noDataBody": "Je geüploade gegevens bevatten geen klantenkolommen. Upload een CSV met een klant-ID-kolom en een besteldatumkolom om churnscan in te schakelen.",
+  "uploadCustomerData": "Klantgegevens uploaden →",
+  "allHealthy": "Alle klanten in goede staat",
+  "customersScored": "{n} klanten gescoord · Laatste scan {date}",
+  "rescan": "Opnieuw scannen",
+  "askAskBiz": "Vraag AskBiz ↗",
+  "askAllAtRisk": "Toon al mijn klanten met risico en hun churnrisicoscores",
+  "atRiskStat": "{n} met risico · {symbol}{ltv} LTV",
+  "watchStat": "{n} om in de gaten te houden",
+  "watchExtra": "+ {n} in de gaten",
+  "customerRowMeta": "{days}d sinds laatste bestelling · {orders} bestellingen · {symbol}{ltv} LTV",
+  "analyse": "Analyseren →",
+  "showLess": "Minder weergeven",
+  "showMore": "{n} meer klanten weergeven",
+  "askCustomerPrompt": "Vertel me meer over de aankoopgeschiedenis van {name} en waarom ze mogelijk afhaken. Laatste bestelling was {days} dagen geleden, {orders} bestellingen in totaal, lifetime waarde {symbol}{ltv}."
+}

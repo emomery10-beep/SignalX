@@ -140,34 +140,76 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
   const dataAgeMs = data.updated_at ? Date.now() - new Date(data.updated_at).getTime() : Infinity
   const canRefresh = dataAgeMs >= 11 * 60 * 60 * 1000
 
-  // ── Collapsed: a single compact row. Click to expand the full widget. ──
+  // ── Collapsed: Weather Card (Option A) — gradient background, emoji, body, top action ──
+  const wcBg = data.severity >= 66
+    ? 'linear-gradient(135deg, #fef2f2 0%, #fecaca 100%)'
+    : data.severity >= 33
+    ? 'linear-gradient(135deg, #fffbeb 0%, #fde68a 100%)'
+    : 'linear-gradient(135deg, #f0fdf4 0%, #bbf7d0 100%)'
+  const wcBorder = data.severity >= 66 ? '#fca5a5' : data.severity >= 33 ? '#fcd34d' : '#86efac'
+  const wcInk = data.severity >= 66 ? '#991b1b' : data.severity >= 33 ? '#92400e' : '#14532d'
+  const wcMuted = data.severity >= 66 ? '#ef444480' : data.severity >= 33 ? '#f59e0b80' : '#22c55e80'
+  const topAction = n.actions.find(a => a.urgency === 'urgent') || n.actions[0]
+
   if (!expanded) {
     return (
       <div className="mc">
         <Styles />
-        <button
-          className="mc-bar"
-          onClick={() => setExpanded(true)}
-          aria-label={`${tc('cfo_marketclimate.headerTitle')} — ${data.condition}. ${tc('cfo_marketclimate.severityLabel')} ${data.severity}/100. ${tc('cfo_marketclimate.collapse')}`}
-          style={{
-            width: '100%', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
-            padding: '11px 14px', borderRadius: 14, border: '1px solid var(--b)', background: 'var(--sf)',
-            cursor: 'pointer', fontFamily: 'inherit',
-          }}
-        >
-          <span className={data.severity >= 33 ? 'mc-pulse' : undefined} style={{ width: 9, height: 9, borderRadius: '50%', background: sevColor, flexShrink: 0 }} />
-          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--tx3)' }}>{tc('cfo_marketclimate.headerTitle')} · {data.country}</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)' }}>{data.condition} {data.condition_icon}</span>
-          </div>
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ borderRadius: 16, border: `1.5px solid ${wcBorder}`, overflow: 'hidden', background: wcBg }}>
+          {/* Card body — click anywhere to expand */}
+          <button
+            className="mc-bar"
+            onClick={() => setExpanded(true)}
+            aria-label={`${tc('cfo_marketclimate.headerTitle')} — ${data.condition}. Tap to see full analysis.`}
+            style={{ width: '100%', textAlign: 'left', padding: '18px 20px 14px', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', display: 'block' }}
+          >
+            {/* Top row: label + emoji */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.1em', color: wcMuted, marginBottom: 3 }}>
+                  {tc('cfo_marketclimate.headerTitle')} · {data.country}
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: wcInk, letterSpacing: '-.01em', lineHeight: 1.1 }}>
+                  {data.condition}
+                </div>
+              </div>
+              <span style={{ fontSize: 36, lineHeight: 1, marginTop: -2 }}>{data.condition_icon}</span>
+            </div>
+
+            {/* Body: personalised impact */}
+            <div style={{ fontSize: 12, color: wcInk, lineHeight: 1.65, opacity: .85, marginBottom: extra > 0 ? 10 : 0 }}>
+              {n.body}
+            </div>
+
+            {/* Cost pill */}
             {extra > 0 && (
-              <span style={{ fontSize: 12, fontWeight: 700, color: RED_INK, whiteSpace: 'nowrap' }}>+{fmt(extra)}{tc('cfo_marketclimate.perMonth')}</span>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 20, background: 'rgba(0,0,0,.07)', marginBottom: 2 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: wcInk }}>+{fmt(extra)}{tc('cfo_marketclimate.perMonth')}</span>
+                <span style={{ fontSize: 10, color: wcInk, opacity: .65 }}>{tc('cfo_marketclimate.estimatedExtraCost')}</span>
+              </div>
             )}
-            <span style={{ fontSize: 12, fontWeight: 800, color: sevColor, whiteSpace: 'nowrap' }}>{data.severity}<span style={{ fontSize: 9, color: 'var(--tx3)' }}>/100</span></span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+          </button>
+
+          {/* Action strip */}
+          {topAction && (
+            <button
+              onClick={() => setExpanded(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 20px', background: 'rgba(0,0,0,.06)', border: 'none', borderTop: `1px solid ${wcBorder}`, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}
+            >
+              <span style={{ fontSize: 14 }}>💡</span>
+              <span style={{ flex: 1, fontSize: 11, fontWeight: 600, color: wcInk, lineHeight: 1.45 }}>{topAction.title}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={wcInk} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: .5 }}><path d="M9 6l6 6-6 6" /></svg>
+            </button>
+          )}
+
+          {/* Footer */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 20px 10px', opacity: .55 }}>
+            <span style={{ fontSize: 9, fontWeight: 600, color: wcInk, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+              {data.sector.label} · {data.sector.import_pct}% import exposed
+            </span>
+            <span style={{ fontSize: 9, color: wcInk }}>{tc('cfo_marketclimate.updatedAt')} {updated}</span>
           </div>
-        </button>
+        </div>
       </div>
     )
   }

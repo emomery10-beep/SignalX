@@ -1,1 +1,13 @@
-{}
+{
+  "headingFactory": "🏭 Modèles de rôles pour le personnel d'usine",
+  "headingRestaurant": "🍽️ Modèles de rôles pour le personnel de restaurant",
+  "subtitle": "Modèles de rôles préconfigurés avec des autorisations standard. Utilisez-les comme point de départ lors de la création de membres du personnel.",
+  "teamSizeLabel": "Taille de l'équipe",
+  "permissionsLabel": "Autorisations",
+  "permissionsHeading": "AUTORISATIONS",
+  "responsibilitiesHeading": "RESPONSABILITÉS",
+  "viewResponsibilities": "Voir les responsabilités",
+  "moreResponsibilities": "+{count} de plus",
+  "useTemplate": "Utiliser ce modèle",
+  "tipText": "💡 Conseil : Ces modèles sont des points de départ. Vous pouvez personnaliser les autorisations de chaque membre du personnel après sa création. Les nouvelles autorisations ou modifications n'affecteront pas le personnel existant."
+}

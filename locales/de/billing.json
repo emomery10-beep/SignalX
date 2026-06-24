@@ -148,5 +148,14 @@
   "faq_4_a": "Eine exklusive visuelle Ansicht im Business-Tarif innerhalb des Decision Memory. Jede von dir eingetragene Geschäftsentscheidung erscheint auf einer horizontalen Zeitleiste, farblich nach Ergebnis kodiert: Grün für gute Entscheidungen, Rot für verpasste Chancen, pulsierendes Gold für Entscheidungen, die zur Überprüfung anstehen. Eine Statistikleiste zeigt deine Gesamterfolgsquote.",
   "faq_5_q": "Was beinhaltet der CFO-Modus?",
   "faq_5_a": "Sechs KI-generierte, präsentationsfertige Berichte: G&V-Zusammenfassung, Cash-Runway, Margenanalyse, Board-Bericht, Betriebskapital und Kostenstruktur. Ergebnisse verwenden eine prozentbasierte Sprache und erscheinen inline mit einer Folgeschaltfläche. Nur im Business-Tarif.",
-  "faq_6_q": "Was ist der Integration Hub?"
+  "faq_6_q": "Was ist der Integration Hub?",
+  "faq_11_a": "Kostenlos starten – bis zu 5 Mitarbeiter, keine Kreditkarte erforderlich. POS-Plätze kosten {price}/Platz/Monat. Jeder Platz ermöglicht einer Kassenkraft oder einem Lagermitarbeiter die Anmeldung bei pos.askbiz.co per E-Mail oder WhatsApp-OTP auf dem eigenen Smartphone. Das Inhaber-Dashboard ist immer kostenlos enthalten.",
+  "faq_12_q": "Werden Preise in meiner Landeswährung angezeigt?",
+  "faq_12_a_kes": "Ja – Preise werden in Kenianischen Schilling (KES) angezeigt. Sie können per M-Pesa, Airtel Money oder Karte über PesaPal bezahlen.",
+  "faq_12_a_gbp": "Preise werden in GBP angezeigt. Beim Bezahlen rechnet Stripe automatisch zum aktuellen Wechselkurs in Ihre Landeswährung um.",
+  "faq_13_q": "Sind meine Daten sicher?",
+  "faq_13_a": "Ihre Daten sind sowohl im Ruhezustand als auch bei der Übertragung verschlüsselt. Wir verwenden Ihre Geschäftsdaten niemals zum Training von KI-Modellen.",
+  "alert_something_wrong": "Etwas ist schiefgelaufen",
+  "alert_something_wrong_retry": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+  "alert_checkout_failed": "Bezahlung fehlgeschlagen ({status}). {detail}"
 }

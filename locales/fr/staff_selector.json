@@ -1,1 +1,22 @@
-{}
+{
+  "headingFactory": "Configurez votre équipe d'usine",
+  "headingRestaurant": "Configurez votre équipe de restaurant",
+  "headingSubtitle": "Sélectionnez ou personnalisez les rôles du personnel. Chaque rôle inclut des autorisations et des responsabilités préconfigurées.",
+  "quickStartTitle": "Recommandé pour les équipes de {size} personnes",
+  "quickStartSubtitle": "Nous recommandons ces {count} rôles pour démarrer :",
+  "quickStartButton": "Utiliser les rôles recommandés",
+  "allRolesLabel": "Tous les rôles disponibles",
+  "teamSizeLabel": "Taille de l'équipe :",
+  "permissionsLabel": "Autorisations :",
+  "viewResponsibilities": "Voir les responsabilités",
+  "responsibilitiesHeading": "Responsabilités",
+  "permissionsHeading": "Autorisations",
+  "moreItems": "+ {count} de plus",
+  "recommendedBadge": "⭐ Recommandé",
+  "selectedRoles": "Rôles sélectionnés :",
+  "clearButton": "Effacer",
+  "confirmRoleSingular": "Confirmer {count} rôle",
+  "confirmRolePlural": "Confirmer {count} rôles",
+  "selectAtLeastOne": "Sélectionnez au moins un rôle",
+  "tipText": "💡 Conseil : Vous pouvez personnaliser les autorisations de chaque rôle après la configuration. Les membres de l'équipe peuvent se voir attribuer un ou plusieurs rôles."
+}

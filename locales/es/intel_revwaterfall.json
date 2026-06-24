@@ -48,5 +48,13 @@
   "barLabelGrossProfit": "Ganancia bruta",
   "barLabelOperating": "Operativo",
   "barLabelStockCost": "Costo de stock",
-  "barLabelNetMargin": "Margen neto"
+  "barLabelNetMargin": "Margen neto",
+  "barDetailNetMarginEstimate": "Estimación de margen neto",
+  "drillPromptRevenue": "¿Cuáles son mis tendencias de ingresos, principales fuentes de ingresos y cómo puedo aumentar las ventas?",
+  "drillPromptCogs": "Desglosa mi costo de bienes vendidos: ¿qué productos tienen la mayor relación de costos?",
+  "drillPromptGrossProfit": "Analiza mis márgenes de ganancia bruta: ¿qué productos son los más y menos rentables?",
+  "drillPromptOperating": "¿Cuáles son mis gastos operativos y cómo puedo reducir los costos generales?",
+  "drillPromptStockCost": "Muéstrame los costos de mantenimiento de inventario, el stock de movimiento lento y los artículos sin rotación",
+  "drillPromptNetMargin": "Dame un análisis completo del margen neto con recomendaciones para mejorar la rentabilidad",
+  "drillPromptFallback": "Analiza mi {label} en detalle"
 }

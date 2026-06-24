@@ -1,1 +1,27 @@
-{}
+{
+  "sectionHeading": "Retención de clientes",
+  "riskLabelAtRisk": "🔴 En riesgo",
+  "riskLabelWatch": "🟡 En observación",
+  "riskLabelChurned": "⚫ Perdido",
+  "riskLabelHealthy": "🟢 Saludable",
+  "emptyHeading": "Analiza tus clientes para detectar riesgo de abandono",
+  "emptyBody": "Sube un CSV con los datos de pedidos de tus clientes y AskBiz marcará automáticamente quiénes corren el riesgo de no volver.",
+  "scanNow": "Analizar ahora",
+  "scanning": "Analizando…",
+  "uploadDataFirst": "Primero sube los datos",
+  "noDataBody": "Los datos cargados no tienen columnas de clientes. Sube un CSV con columnas de ID de cliente y fecha de pedido para activar el análisis de abandono.",
+  "uploadCustomerData": "Subir datos de clientes →",
+  "allHealthy": "Todos los clientes están en buen estado",
+  "customersScored": "{n} clientes puntuados · Último análisis {date}",
+  "rescan": "Volver a analizar",
+  "askAskBiz": "Preguntar a AskBiz ↗",
+  "askAllAtRisk": "Muéstrame todos mis clientes en riesgo y sus puntuaciones de abandono",
+  "atRiskStat": "{n} en riesgo · {symbol}{ltv} LTV",
+  "watchStat": "{n} a vigilar",
+  "watchExtra": "+ {n} a vigilar",
+  "customerRowMeta": "{days}d desde el último pedido · {orders} pedidos · {symbol}{ltv} VTV",
+  "analyse": "Analizar →",
+  "showLess": "Ver menos",
+  "showMore": "Ver {n} clientes más",
+  "askCustomerPrompt": "Cuéntame sobre el historial de compras de {name} y por qué podría estar abandonando. El último pedido fue hace {days} días, {orders} pedidos en total, valor de por vida {symbol}{ltv}."
+}

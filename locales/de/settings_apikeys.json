@@ -1,1 +1,23 @@
-{}
+{
+  "copied": "✓ Kopiert",
+  "copy": "Kopieren",
+  "keyCreatedNotice": "✓ Schlüssel erstellt – jetzt kopieren, er wird nicht erneut angezeigt",
+  "dismissSaved": "Gespeichert – schließen",
+  "noKeysTitle": "Noch keine API-Schlüssel",
+  "noKeysSubtitle": "Erstelle einen Schlüssel, um AskBiz in deine eigenen Produkte zu integrieren",
+  "disabled": "Deaktiviert",
+  "usageThisMonth": "{requests} / {limit} diesen Monat",
+  "lastUsed": "Zuletzt verwendet {date}",
+  "disable": "Deaktivieren",
+  "createKey": "Schlüssel erstellen",
+  "cancel": "Abbrechen",
+  "createNewApiKey": "Neuen API-Schlüssel erstellen",
+  "docsPrompt": "Lies die API-Dokumentation, um loszulegen",
+  "viewDocs": "Docs ansehen →",
+  "errorLoadKeys": "Schlüssel konnten nicht geladen werden",
+  "errorCreateKey": "Schlüssel konnte nicht erstellt werden",
+  "planFree": "Kostenlos",
+  "planStarter": "Starter",
+  "planGrowth": "Growth",
+  "planEnterprise": "Enterprise"
+}

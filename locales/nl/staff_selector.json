@@ -1,1 +1,22 @@
-{}
+{
+  "headingFactory": "Stel je fabrieksteam in",
+  "headingRestaurant": "Stel je restaurantteam in",
+  "headingSubtitle": "Selecteer of pas personeelsrollen aan voor je team. Elke rol bevat vooraf ingestelde rechten en verantwoordelijkheden.",
+  "quickStartTitle": "Aanbevolen voor {size}-teams",
+  "quickStartSubtitle": "We raden deze {count} rollen aan om mee te beginnen:",
+  "quickStartButton": "Gebruik aanbevolen rollen",
+  "allRolesLabel": "Alle beschikbare rollen",
+  "teamSizeLabel": "Teamgrootte:",
+  "permissionsLabel": "Rechten:",
+  "viewResponsibilities": "Bekijk verantwoordelijkheden",
+  "responsibilitiesHeading": "Verantwoordelijkheden",
+  "permissionsHeading": "Rechten",
+  "moreItems": "+ {count} meer",
+  "recommendedBadge": "⭐ Aanbevolen",
+  "selectedRoles": "Geselecteerde rollen:",
+  "clearButton": "Wissen",
+  "confirmRoleSingular": "{count} rol bevestigen",
+  "confirmRolePlural": "{count} rollen bevestigen",
+  "selectAtLeastOne": "Selecteer minimaal één rol",
+  "tipText": "💡 Tip: Na de installatie kun je de rechten per rol aanpassen. Teamleden kunnen een of meer rollen toegewezen krijgen."
+}

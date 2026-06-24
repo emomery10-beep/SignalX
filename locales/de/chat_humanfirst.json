@@ -98,5 +98,18 @@
   "bizFoodBev2": "Wie viel Abfall produziere ich pro Woche?",
   "bizFoodBev3": "Sind meine Menüpreise richtig kalkuliert?",
   "bizFoodBev4": "Was ist eine gesunde Bruttomarge für ein Café?",
-  "bizFoodBev5": "Wie senke ich meine Zutatenkosten?"
+  "bizFoodBev5": "Wie senke ich meine Zutatenkosten?",
+  "sidebarDataConnected1Label": "Was habe ich nach Gebühren tatsächlich verdient?",
+  "sidebarDataConnected1Query": "Was habe ich diesen Monat nach allen Gebühren tatsächlich verdient?",
+  "sidebarDataConnected2Label": "Welche Produkte verkaufen sich nicht?",
+  "sidebarDataConnected2Query": "Welche Produkte verkaufen sich nicht?",
+  "sidebarMarketActive0Label": "Was ist gerade das Trendprodukt in meiner Nische?",
+  "sidebarMarketActive0Query": "Was ist gerade das Trendprodukt in meiner Nische?",
+  "sidebarMarketActive1Label": "Bin ich günstiger als meine Konkurrenten?",
+  "sidebarMarketActive1Query": "Sind meine Preise günstiger oder teurer als die meiner Konkurrenten?",
+  "sidebarMarketActive2Label": "Was sind die neuen Steuerregeln für die EU?",
+  "sidebarMarketActive2Query": "Was sind die neuen Steuervorschriften für den Verkauf in die EU im Jahr 2026?",
+  "chipOpenerNoData": "Da deine Daten noch nicht verbunden sind, zeige ich dir ein Beispiel, wie ich helfen kann – mit deinen echten Zahlen wird es noch präziser. ",
+  "chipOpenerDataConnected": "Gute Frage! Schauen wir uns deine Zahlen an – ",
+  "chipOpenerMarketActive": "Ich rufe gerade aktuelle Marktdaten dazu ab – "
 }

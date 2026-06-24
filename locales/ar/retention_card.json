@@ -1,1 +1,27 @@
-{}
+{
+  "sectionHeading": "الاحتفاظ بالعملاء",
+  "riskLabelAtRisk": "🔴 في خطر",
+  "riskLabelWatch": "🟡 تحت المراقبة",
+  "riskLabelChurned": "⚫ مفقود",
+  "riskLabelHealthy": "🟢 بخير",
+  "emptyHeading": "افحص عملاءك للكشف عن خطر الإلغاء",
+  "emptyBody": "ارفع ملف CSV يحتوي على بيانات طلبات العملاء وسيقوم AskBiz تلقائياً بتحديد من هم عرضة لعدم العودة.",
+  "scanNow": "افحص الآن",
+  "scanning": "جارٍ الفحص…",
+  "uploadDataFirst": "ارفع البيانات أولاً",
+  "noDataBody": "بياناتك المرفوعة لا تحتوي على أعمدة العملاء. ارفع ملف CSV يتضمن عمود معرّف العميل وعمود تاريخ الطلب لتفعيل فحص الإلغاء.",
+  "uploadCustomerData": "رفع بيانات العملاء ←",
+  "allHealthy": "جميع العملاء بوضع جيد",
+  "customersScored": "{n} عميل مُقيَّم · آخر فحص {date}",
+  "rescan": "إعادة الفحص",
+  "askAskBiz": "اسأل AskBiz ↗",
+  "askAllAtRisk": "أرِني جميع عملائي المعرّضين للخطر ودرجات خطر إلغائهم",
+  "atRiskStat": "{n} في خطر · {symbol}{ltv} LTV",
+  "watchStat": "{n} تحت المراقبة",
+  "watchExtra": "+ {n} للمراقبة",
+  "customerRowMeta": "{days}ي منذ آخر طلب · {orders} طلبات · {symbol}{ltv} القيمة الإجمالية",
+  "analyse": "تحليل ←",
+  "showLess": "عرض أقل",
+  "showMore": "عرض {n} عملاء إضافيين",
+  "askCustomerPrompt": "أخبرني عن سجل مشتريات {name} وأسباب احتمال توقفه عن الشراء. آخر طلب كان منذ {days} يوم، إجمالي الطلبات {orders}، القيمة الإجمالية {symbol}{ltv}."
+}

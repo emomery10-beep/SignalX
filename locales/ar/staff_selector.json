@@ -1,1 +1,22 @@
-{}
+{
+  "headingFactory": "إعداد فريق المصنع",
+  "headingRestaurant": "إعداد فريق المطعم",
+  "headingSubtitle": "اختر أدوار الموظفين أو خصّصها لفريقك. تتضمن كل دور صلاحيات ومهام مُعدَّة مسبقًا.",
+  "quickStartTitle": "موصى به لفرق {size}",
+  "quickStartSubtitle": "نوصي بهذه الأدوار الـ {count} للبدء:",
+  "quickStartButton": "استخدام الأدوار الموصى بها",
+  "allRolesLabel": "جميع الأدوار المتاحة",
+  "teamSizeLabel": "حجم الفريق:",
+  "permissionsLabel": "الصلاحيات:",
+  "viewResponsibilities": "عرض المهام",
+  "responsibilitiesHeading": "المسؤوليات",
+  "permissionsHeading": "الصلاحيات",
+  "moreItems": "+ {count} المزيد",
+  "recommendedBadge": "⭐ موصى به",
+  "selectedRoles": "الأدوار المحددة:",
+  "clearButton": "مسح",
+  "confirmRoleSingular": "تأكيد {count} دور",
+  "confirmRolePlural": "تأكيد {count} أدوار",
+  "selectAtLeastOne": "يرجى تحديد دور واحد على الأقل",
+  "tipText": "💡 نصيحة: يمكنك تخصيص الصلاحيات لكل دور بعد الإعداد. يمكن تعيين دور واحد أو أكثر لأعضاء الفريق."
+}

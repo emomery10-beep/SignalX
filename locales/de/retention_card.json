@@ -1,1 +1,27 @@
-{}
+{
+  "sectionHeading": "Kundenbindung",
+  "riskLabelAtRisk": "🔴 Gefährdet",
+  "riskLabelWatch": "🟡 Beobachten",
+  "riskLabelChurned": "⚫ Abgewandert",
+  "riskLabelHealthy": "🟢 Gesund",
+  "emptyHeading": "Kunden auf Abwanderungsrisiko prüfen",
+  "emptyBody": "Laden Sie eine CSV-Datei mit Kundenbestelldaten hoch und AskBiz markiert automatisch, wer möglicherweise nicht zurückkommt.",
+  "scanNow": "Jetzt prüfen",
+  "scanning": "Wird geprüft…",
+  "uploadDataFirst": "Zuerst Daten hochladen",
+  "noDataBody": "Ihre hochgeladenen Daten enthalten keine Kundenspalten. Laden Sie eine CSV-Datei mit Kunden-ID und Bestelldatum hoch, um die Abwanderungsanalyse zu aktivieren.",
+  "uploadCustomerData": "Kundendaten hochladen →",
+  "allHealthy": "Alle Kunden aktiv",
+  "customersScored": "{n} Kunden bewertet · Letzter Scan {date}",
+  "rescan": "Erneut scannen",
+  "askAskBiz": "AskBiz fragen ↗",
+  "askAllAtRisk": "Zeig mir alle gefährdeten Kunden und ihre Abwanderungsrisiko-Scores",
+  "atRiskStat": "{n} gefährdet · {symbol}{ltv} LTV",
+  "watchStat": "{n} zu beobachten",
+  "watchExtra": "+ {n} weitere",
+  "customerRowMeta": "{days}T seit letzter Bestellung · {orders} Bestellungen · {symbol}{ltv} LTV",
+  "analyse": "Analyse →",
+  "showLess": "Weniger anzeigen",
+  "showMore": "{n} weitere Kunden anzeigen",
+  "askCustomerPrompt": "Erzähl mir mehr über {name}s Kaufhistorie und warum sie möglicherweise abwandern. Letzte Bestellung vor {days} Tagen, {orders} Bestellungen insgesamt, Lifetime-Value {symbol}{ltv}."
+}

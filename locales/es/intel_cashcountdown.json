@@ -1,1 +1,17 @@
-{}
+{
+  "title": "Flujo de caja",
+  "askAi": "Preguntar a IA",
+  "askPrompt": "Analiza mi flujo de caja y proyección. ¿Qué debería hacer para mejorarlo?",
+  "balanceLabel": "Saldo de {amount}",
+  "revenueTrend": "{pct}% ingresos",
+  "addBalanceCta": "Agrega tu saldo en efectivo en la configuración para rastrear la proyección",
+  "dailyRevenue": "Ingresos diarios",
+  "dailyCosts": "Costos diarios",
+  "dailyNet": "Neto diario",
+  "weeklyTitle": "Flujo de caja neto semanal",
+  "twelveWeeksAgo": "Hace 12 sem.",
+  "thisWeek": "Esta semana",
+  "monthlyLabel": "Mensual: {income} entradas, {expenses} salidas",
+  "aboveBreakeven": "Ganando {amount}/día sobre el punto de equilibrio",
+  "belowBreakeven": "Necesitas {amount}/día más para cubrir el punto de equilibrio"
+}

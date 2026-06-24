@@ -1,1 +1,27 @@
-{}
+{
+  "newConversation": "Nieuw gesprek",
+  "uploadingLabel": "Uploaden…",
+  "uploadLabel": "Uploaden",
+  "emptyHeading": "Stel een vraag over je gegevens",
+  "emptySubGeo": "Prijzen weergegeven in {symbol} · {country}",
+  "emptySubDefault": "Upload een bestand en stel een bedrijfsvraag in gewone taal.",
+  "tapToAsk": "Tik om te vragen",
+  "aiError": "Kan de AI niet bereiken. Controleer je verbinding en probeer opnieuw.",
+  "inputPlaceholder": "Stel een vraag over je gegevens… (Enter om te verzenden)",
+  "bizRetail0": "Welke artikelen moet ik dringend aanvullen?",
+  "bizRetail1": "Welk product heeft mijn hoogste marge?",
+  "bizRetail2": "Kan ik mijn prijzen met 5% verhogen?",
+  "bizRetail3": "Waar verlies ik geld?",
+  "bizEcommerce0": "Welke SKU's hebben het hoogste retourpercentage?",
+  "bizEcommerce1": "Toon mijn best presterende categorie",
+  "bizEcommerce2": "Wat zijn mijn fulfillmentkosten per bestelling?",
+  "bizEcommerce3": "Welke producten moet ik in de aanbieding doen?",
+  "bizDistributor0": "Welke routes zijn het meest winstgevend?",
+  "bizDistributor1": "Toon margetrends per regio",
+  "bizDistributor2": "Waar groeit de vraag het snelst?",
+  "bizDistributor3": "Welke klanten hebben een betalingsachterstand?",
+  "bizExporter0": "Hoe beïnvloedt valutawissel mijn marges?",
+  "bizExporter1": "Welke markt heeft de hoogste vraag?",
+  "bizExporter2": "Toon mijn topproducten op waarde",
+  "bizExporter3": "Wat zijn mijn gemiddelde kosten per zending?"
+}

@@ -1,1 +1,13 @@
-{}
+{
+  "headingFactory": "🏭 Fabrik-Mitarbeiter-Rollenvorlagen",
+  "headingRestaurant": "🍽️ Restaurant-Mitarbeiter-Rollenvorlagen",
+  "subtitle": "Vorkonfigurierte Rollenvorlagen mit Standardberechtigungen. Nutzen Sie diese als Ausgangspunkt beim Anlegen von Mitarbeitern.",
+  "teamSizeLabel": "Teamgröße",
+  "permissionsLabel": "Berechtigungen",
+  "permissionsHeading": "BERECHTIGUNGEN",
+  "responsibilitiesHeading": "AUFGABEN",
+  "viewResponsibilities": "Aufgaben anzeigen",
+  "moreResponsibilities": "+{count} weitere",
+  "useTemplate": "Vorlage verwenden",
+  "tipText": "💡 Tipp: Diese Vorlagen sind Ausgangspunkte. Du kannst die Berechtigungen für jedes Teammitglied nach der Erstellung anpassen. Neue Berechtigungen oder Änderungen wirken sich nicht auf bestehende Mitarbeiter aus."
+}

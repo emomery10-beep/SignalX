@@ -1,1 +1,27 @@
-{}
+{
+  "sectionHeading": "Fidélisation client",
+  "riskLabelAtRisk": "🔴 À risque",
+  "riskLabelWatch": "🟡 À surveiller",
+  "riskLabelChurned": "⚫ Perdu",
+  "riskLabelHealthy": "🟢 Fidèle",
+  "emptyHeading": "Analysez vos clients pour détecter les risques d'attrition",
+  "emptyBody": "Importez un fichier CSV avec les données de commandes de vos clients et AskBiz signalera automatiquement ceux qui risquent de ne pas revenir.",
+  "scanNow": "Analyser maintenant",
+  "scanning": "Analyse en cours…",
+  "uploadDataFirst": "Importez d'abord vos données",
+  "noDataBody": "Vos données importées ne contiennent pas de colonnes clients. Importez un fichier CSV avec des colonnes d'identifiant client et de date de commande pour activer l'analyse de désabonnement.",
+  "uploadCustomerData": "Importer les données clients →",
+  "allHealthy": "Tous les clients sont en bonne santé",
+  "customersScored": "{n} clients évalués · Dernière analyse {date}",
+  "rescan": "Réanalyser",
+  "askAskBiz": "Demander à AskBiz ↗",
+  "askAllAtRisk": "Montrez-moi tous mes clients à risque et leurs scores de risque de désabonnement",
+  "atRiskStat": "{n} à risque · {symbol}{ltv} VCV",
+  "watchStat": "{n} à surveiller",
+  "watchExtra": "+ {n} à surveiller",
+  "customerRowMeta": "{days}j depuis la dernière commande · {orders} commandes · {symbol}{ltv} VCV",
+  "analyse": "Analyser →",
+  "showLess": "Afficher moins",
+  "showMore": "Afficher {n} autres clients",
+  "askCustomerPrompt": "Parle-moi de l'historique d'achats de {name} et des raisons pour lesquelles il ou elle pourrait se désengager. Dernière commande il y a {days} jours, {orders} commandes au total, valeur client sur la durée {symbol}{ltv}."
+}

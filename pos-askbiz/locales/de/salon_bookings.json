@@ -23,5 +23,21 @@
   "walk_in": "Laufkundschaft",
   "unassigned": "Nicht zugewiesen",
   "all_stylists": "Alle Stylisten",
-  "all_services": "Alle Leistungen"
+  "all_services": "Alle Leistungen",
+  "today": "Heute",
+  "appointments_count_one": "{count} Termin",
+  "appointments_count_other": "{count} Termine",
+  "day_timeline_title": "Tagesübersicht",
+  "no_appointments_day": "Keine Termine für diesen Tag",
+  "col_time": "Uhrzeit",
+  "col_client": "Kunde",
+  "col_services": "Leistung(en)",
+  "col_stylist": "Stylist",
+  "col_price": "Preis",
+  "col_status": "Status",
+  "loading": "Wird geladen…",
+  "no_appointments_filters": "Keine Termine für die gewählten Filter",
+  "dash": "–",
+  "no_show_title": "Keine Termine",
+  "no_show_empty": "Hier erscheinen Ihre Buchungen."
 }

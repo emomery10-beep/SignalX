@@ -1,1 +1,27 @@
-{}
+{
+  "newConversation": "Nouvelle conversation",
+  "uploadingLabel": "Chargement…",
+  "uploadLabel": "Importer",
+  "emptyHeading": "Posez n'importe quelle question sur vos données",
+  "emptySubGeo": "Prix affichés en {symbol} · {country}",
+  "emptySubDefault": "Importez un fichier puis posez une question business en français simple.",
+  "tapToAsk": "Appuyer pour poser une question",
+  "aiError": "Impossible de contacter l'IA. Vérifiez votre connexion et réessayez.",
+  "inputPlaceholder": "Posez une question BI sur vos données… (Entrée pour envoyer)",
+  "bizRetail0": "Quels articles dois-je réapprovisionner en urgence ?",
+  "bizRetail1": "Quel est mon produit à la meilleure marge ?",
+  "bizRetail2": "Puis-je augmenter mes prix de 5 % ?",
+  "bizRetail3": "Où est-ce que je perds de l'argent ?",
+  "bizEcommerce0": "Quels SKUs ont le taux de retour le plus élevé ?",
+  "bizEcommerce1": "Montrez-moi ma catégorie la plus performante",
+  "bizEcommerce2": "Quel est mon coût d'expédition par commande ?",
+  "bizEcommerce3": "Quels produits devrais-je mettre en promotion ?",
+  "bizDistributor0": "Quelles routes sont les plus rentables ?",
+  "bizDistributor1": "Afficher les tendances de marge par région",
+  "bizDistributor2": "Où la demande croît-elle le plus vite ?",
+  "bizDistributor3": "Quels clients ont des paiements en retard ?",
+  "bizExporter0": "Comment le taux de change affecte-t-il mes marges ?",
+  "bizExporter1": "Quel marché a la demande la plus forte ?",
+  "bizExporter2": "Afficher mes meilleurs produits par valeur",
+  "bizExporter3": "Quel est mon coût moyen par expédition ?"
+}

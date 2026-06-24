@@ -1,1 +1,27 @@
-{}
+{
+  "newConversation": "Neues Gespräch",
+  "uploadingLabel": "Wird hochgeladen…",
+  "uploadLabel": "Hochladen",
+  "emptyHeading": "Stellen Sie beliebige Fragen zu Ihren Daten",
+  "emptySubGeo": "Preise in {symbol} · {country}",
+  "emptySubDefault": "Laden Sie eine Datei hoch und stellen Sie eine Geschäftsfrage auf Deutsch.",
+  "tapToAsk": "Zum Fragen tippen",
+  "aiError": "KI nicht erreichbar. Überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+  "inputPlaceholder": "Frage zu Ihren Daten stellen… (Enter zum Senden)",
+  "bizRetail0": "Welche Artikel muss ich dringend nachbestellen?",
+  "bizRetail1": "Was ist mein margenstärkstes Produkt?",
+  "bizRetail2": "Kann ich meine Preise um 5 % erhöhen?",
+  "bizRetail3": "Wo verliere ich Geld?",
+  "bizEcommerce0": "Welche SKUs haben die höchste Rückgabequote?",
+  "bizEcommerce1": "Zeig mir meine umsatzstärkste Kategorie",
+  "bizEcommerce2": "Was sind meine Erfüllungskosten pro Bestellung?",
+  "bizEcommerce3": "Welche Produkte sollte ich rabattieren?",
+  "bizDistributor0": "Welche Routen sind am profitabelsten?",
+  "bizDistributor1": "Margentrends nach Region anzeigen",
+  "bizDistributor2": "Wo wächst die Nachfrage am schnellsten?",
+  "bizDistributor3": "Welche Kunden sind mit der Zahlung im Rückstand?",
+  "bizExporter0": "Wie wirkt sich der Wechselkurs auf meine Margen aus?",
+  "bizExporter1": "Welcher Markt hat die höchste Nachfrage?",
+  "bizExporter2": "Zeig mir meine umsatzstärksten Produkte",
+  "bizExporter3": "Was sind meine durchschnittlichen Kosten pro Lieferung?"
+}
