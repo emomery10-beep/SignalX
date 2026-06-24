@@ -9,10 +9,19 @@ export const maxDuration = 30
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
+const CACHE = new Map<string, { data: unknown; date: string }>()
+const today = () => new Date().toISOString().slice(0, 10)
+
 export async function POST(req: NextRequest) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const isRefresh = new URL(req.url).searchParams.get('refresh') === 'true'
+  const cached = CACHE.get(user.id)
+  if (!isRefresh && cached && cached.date === today()) {
+    return NextResponse.json(cached.data)
+  }
 
   const body = await req.json()
   const { totals, comparison, inventory, cash, alerts, logistics, sourceBreakdown, countryCode } = body
@@ -80,6 +89,7 @@ Return ONLY valid JSON.`
     const match = text.match(/\{[\s\S]*\}/)
     const parsed = match ? JSON.parse(match[0]) : { insights: [] }
 
+    CACHE.set(user.id, { data: parsed, date: today() })
     return NextResponse.json(parsed)
   } catch {
     return NextResponse.json({ insights: [] })

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrencySymbol } from '@/lib/get-currency'
 import Anthropic from '@anthropic-ai/sdk'
@@ -11,16 +11,17 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 // In-process cache: prevents repeat Claude calls when users tab-switch or refresh.
 // Per-user, 30-min TTL. Works within a warm serverless instance.
-const CACHE = new Map<string, { data: unknown; at: number }>()
-const CACHE_TTL_MS = 30 * 60 * 1000
+const CACHE = new Map<string, { data: unknown; date: string }>()
+const today = () => new Date().toISOString().slice(0, 10)
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const isRefresh = new URL(req.url).searchParams.get('refresh') === 'true'
   const cached = CACHE.get(user.id)
-  if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
+  if (!isRefresh && cached && cached.date === today()) {
     return NextResponse.json(cached.data)
   }
 
@@ -122,7 +123,7 @@ export async function GET() {
       actions: [{ title: 'All clear', why: 'No urgent actions detected today. Keep up the good work.', priority: 3, type: 'info' }],
       currency_symbol: sym,
     }
-    CACHE.set(user.id, { data: emptyResult, at: Date.now() })
+    CACHE.set(user.id, { data: emptyResult, date: today() })
     return NextResponse.json(emptyResult)
   }
 
@@ -146,7 +147,7 @@ Return ONLY the JSON array, no markdown.` }],
     const text = (response.content[0] as { type: string; text: string }).text
     const actions = JSON.parse(text)
     const result = { actions, currency_symbol: sym }
-    CACHE.set(user.id, { data: result, at: Date.now() })
+    CACHE.set(user.id, { data: result, date: today() })
     return NextResponse.json(result)
   } catch {
     const fallbackActions: any[] = []

@@ -27,6 +27,7 @@ export default function DailyActions({ onAsk, limit, onViewAll }: { onAsk?: (pro
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [dismissed, setDismissed] = useState<Set<number>>(new Set())
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     fetch('/api/daily-actions')
@@ -35,6 +36,23 @@ export default function DailyActions({ onAsk, limit, onViewAll }: { onAsk?: (pro
       .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, [])
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    try {
+      const res = await fetch('/api/daily-actions?refresh=true')
+      if (res.ok) {
+        const data = await res.json()
+        setActions(data.actions || [])
+        setDismissed(new Set())
+        setError(false)
+      }
+    } catch {
+      // silently ignore
+    } finally {
+      setRefreshing(false)
+    }
+  }
 
   const dismiss = (idx: number) => setDismissed(prev => new Set(prev).add(idx))
 
@@ -74,7 +92,24 @@ export default function DailyActions({ onAsk, limit, onViewAll }: { onAsk?: (pro
             </span>
           )}
         </div>
-        <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{allVisible.length !== 1 ? tc('intel_dailyactions.actionCountPlural', { n: allVisible.length }) : tc('intel_dailyactions.actionCount', { n: allVisible.length })}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{allVisible.length !== 1 ? tc('intel_dailyactions.actionCountPlural', { n: allVisible.length }) : tc('intel_dailyactions.actionCount', { n: allVisible.length })}</span>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            title="Refresh"
+            style={{
+              width: 22, height: 22, borderRadius: '50%', border: '1px solid var(--b)',
+              background: 'transparent', color: 'var(--tx3)', cursor: refreshing ? 'default' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 13, padding: 0, lineHeight: 1, fontFamily: 'inherit',
+              opacity: refreshing ? 0.5 : 1,
+              transition: 'opacity 150ms',
+            }}
+          >
+            <span style={{ display: 'inline-block', animation: refreshing ? 'spin 0.7s linear infinite' : 'none' }}>↻</span>
+          </button>
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>

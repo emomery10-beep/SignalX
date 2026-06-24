@@ -19,6 +19,7 @@ export default function DailyBrief({ onAsk }: Props) {
   const [brief, setBrief] = useState<Brief | null>(null)
   const [loading, setLoading] = useState(true)
   const [dismissed, setDismissed] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     const fetchBrief = async () => {
@@ -36,6 +37,21 @@ export default function DailyBrief({ onAsk }: Props) {
     }
     fetchBrief()
   }, [])
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    try {
+      const res = await fetch('/api/daily-brief?refresh=true')
+      if (res.ok) {
+        const data = await res.json()
+        setBrief(data.brief)
+      }
+    } catch {
+      // silently ignore
+    } finally {
+      setRefreshing(false)
+    }
+  }
 
   if (dismissed || (!loading && !brief)) return null
 
@@ -62,11 +78,28 @@ export default function DailyBrief({ onAsk }: Props) {
             <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{today}</div>
           </div>
         </div>
-        <button
-          onClick={() => setDismissed(true)}
-          style={{ width: 24, height: 24, borderRadius: '50%', border: 'none', background: 'var(--ev)', color: 'var(--tx3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, padding: 0 }}>
-          ✕
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            title="Refresh"
+            style={{
+              width: 24, height: 24, borderRadius: '50%', border: 'none',
+              background: 'var(--ev)', color: 'var(--tx3)', cursor: refreshing ? 'default' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 13, padding: 0, lineHeight: 1,
+              opacity: refreshing ? 0.5 : 1,
+              transition: 'opacity 150ms',
+            }}
+          >
+            <span style={{ display: 'inline-block', animation: refreshing ? 'spin 0.7s linear infinite' : 'none' }}>↻</span>
+          </button>
+          <button
+            onClick={() => setDismissed(true)}
+            style={{ width: 24, height: 24, borderRadius: '50%', border: 'none', background: 'var(--ev)', color: 'var(--tx3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, padding: 0 }}>
+            ✕
+          </button>
+        </div>
       </div>
 
       {loading ? (

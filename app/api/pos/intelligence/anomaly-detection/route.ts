@@ -8,6 +8,9 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
 
+const CACHE = new Map<string, { data: unknown; date: string }>()
+const today = () => new Date().toISOString().slice(0, 10)
+
 /**
  * POST /api/pos/intelligence/anomaly-detection
  *
@@ -25,6 +28,12 @@ const anthropic = new Anthropic({
 export async function POST(req: NextRequest) {
   const ownerId = await resolvePosOwner(req)
   if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+
+  const isRefresh = new URL(req.url).searchParams.get('refresh') === 'true'
+  const cached = CACHE.get(ownerId)
+  if (!isRefresh && cached && cached.date === today()) {
+    return NextResponse.json(cached.data)
+  }
 
   const service = createServiceClient()
   const body = await req.json() as any
@@ -95,14 +104,16 @@ export async function POST(req: NextRequest) {
       raw_analysis: analysis,
     })
 
-    return NextResponse.json({
+    const result = {
       analysis_date: new Date().toISOString(),
       period_analyzed: `${periodDays} days`,
       analysis_type: analysisType,
       anomalies: anomalies,
       raw_analysis: analysis,
       recommendations: generateRecommendations(anomalies),
-    })
+    }
+    CACHE.set(ownerId, { data: result, date: today() })
+    return NextResponse.json(result)
   } catch (error: any) {
     console.error('AI analysis error:', error)
     return NextResponse.json({ error: error.message || 'Analysis failed' }, { status: 500 })

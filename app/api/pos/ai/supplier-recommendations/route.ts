@@ -8,6 +8,9 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
 
+const CACHE = new Map<string, { data: unknown; date: string }>()
+const today = () => new Date().toISOString().slice(0, 10)
+
 /**
  * POST /api/pos/ai/supplier-recommendations
  *
@@ -22,6 +25,12 @@ const anthropic = new Anthropic({
 export async function POST(req: NextRequest) {
   const ownerId = await resolvePosOwner(req)
   if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+
+  const isRefresh = new URL(req.url).searchParams.get('refresh') === 'true'
+  const cached = CACHE.get(ownerId)
+  if (!isRefresh && cached && cached.date === today()) {
+    return NextResponse.json(cached.data)
+  }
 
   const service = createServiceClient()
   const body = await req.json()
@@ -94,11 +103,13 @@ Keep it practical and actionable. Include real supplier types (e.g., "Beauty who
 
     const response = message.content[0].type === 'text' ? message.content[0].text : 'Unable to generate recommendations'
 
-    return NextResponse.json({
+    const result = {
       response,
       items_analyzed: low_stock_items.length,
       timestamp: new Date().toISOString(),
-    })
+    }
+    CACHE.set(ownerId, { data: result, date: today() })
+    return NextResponse.json(result)
   } catch (error: any) {
     console.error('Supplier recommendation error:', error)
     return NextResponse.json(

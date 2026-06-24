@@ -22,6 +22,7 @@ export default function SupplierBrief({ onAsk }: { onAsk?: (prompt: string) => v
   const [loading, setLoading] = useState(true)
   const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null)
   const [loadingBrief, setLoadingBrief] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
   const [sym, setSym] = useState('£')
 
   useEffect(() => {
@@ -36,6 +37,27 @@ export default function SupplierBrief({ onAsk }: { onAsk?: (prompt: string) => v
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    const url = selectedSupplier
+      ? `/api/supplier-brief?refresh=true&supplier=${encodeURIComponent(selectedSupplier)}`
+      : '/api/supplier-brief?refresh=true'
+    try {
+      const res = await fetch(url)
+      if (res.ok) {
+        const data = await res.json()
+        setSuppliers(data.suppliers || [])
+        setBrief(data.brief || null)
+        setBriefSupplier(data.brief_supplier || '')
+        if (data.currency_symbol) setSym(data.currency_symbol)
+      }
+    } catch {
+      // silently ignore
+    } finally {
+      setRefreshing(false)
+    }
+  }
 
   const loadBrief = (name: string) => {
     setSelectedSupplier(name)
@@ -73,12 +95,29 @@ export default function SupplierBrief({ onAsk }: { onAsk?: (prompt: string) => v
           <div style={{ width: 3, height: 14, borderRadius: 2, background: '#EF4444' }} />
           <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intel_supplierbrief.title')}</span>
         </div>
-        {onAsk && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {onAsk && (
+            <button
+              onClick={() => onAsk(tc('intel_supplierbrief.askAiPrompt'))}
+              style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+            >{tc('intel_supplierbrief.askAi')}</button>
+          )}
           <button
-            onClick={() => onAsk(tc('intel_supplierbrief.askAiPrompt'))}
-            style={{ fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)', border: 'none', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
-          >{tc('intel_supplierbrief.askAi')}</button>
-        )}
+            onClick={handleRefresh}
+            disabled={refreshing}
+            title="Refresh"
+            style={{
+              width: 22, height: 22, borderRadius: '50%', border: '1px solid var(--b)',
+              background: 'transparent', color: 'var(--tx3)', cursor: refreshing ? 'default' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 13, padding: 0, lineHeight: 1, fontFamily: 'inherit',
+              opacity: refreshing ? 0.5 : 1,
+              transition: 'opacity 150ms',
+            }}
+          >
+            <span style={{ display: 'inline-block', animation: refreshing ? 'spin 0.7s linear infinite' : 'none' }}>↻</span>
+          </button>
+        </div>
       </div>
 
       {/* Negotiation leverage summary */}

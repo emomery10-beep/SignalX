@@ -26,10 +26,11 @@ export default function CfoAiInsight({ data, countryCode, onAsk }: Props) {
   const [loading, setLoading] = useState(false)
   const [loaded, setLoaded] = useState(false)
 
-  const fetchInsights = () => {
+  const fetchInsights = (force = false) => {
     if (!data?.totals || data.totals.revenue === 0) return
     setLoading(true)
-    fetch('/api/cfo/ai-insight', {
+    const url = force ? '/api/cfo/ai-insight?refresh=true' : '/api/cfo/ai-insight'
+    fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -69,7 +70,7 @@ export default function CfoAiInsight({ data, countryCode, onAsk }: Props) {
           <span style={{ fontSize: 10, color: 'var(--tx3)', fontStyle: 'italic' }}>{tc('cfo_aiinsight.poweredBy')}</span>
         </div>
         <button
-          onClick={fetchInsights}
+          onClick={() => fetchInsights(true)}
           disabled={loading}
           style={{
             fontSize: 10, color: '#6366F1', background: 'rgba(99,102,241,.08)',

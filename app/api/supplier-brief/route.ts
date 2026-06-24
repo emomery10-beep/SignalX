@@ -11,8 +11,8 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 // In-process cache: prevents repeat Claude calls when users tab-switch or refresh.
 // Per-user, 2h TTL. Supplier data doesn't change that fast.
-const CACHE = new Map<string, { data: unknown; at: number }>()
-const CACHE_TTL_MS = 2 * 60 * 60 * 1000
+const CACHE = new Map<string, { data: unknown; date: string }>()
+const today = () => new Date().toISOString().slice(0, 10)
 
 export async function GET(req: NextRequest) {
   const supabase = createClient()
@@ -21,9 +21,10 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url)
   const supplierName = searchParams.get('supplier')
+  const isRefresh = searchParams.get('refresh') === 'true'
   const cacheKey = `${user.id}:${supplierName || ''}`
   const cached = CACHE.get(cacheKey)
-  if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
+  if (!isRefresh && cached && cached.date === today()) {
     return NextResponse.json(cached.data)
   }
 
@@ -167,7 +168,7 @@ Return ONLY valid JSON.` }],
     brief_supplier: targetSupplier?.name || null,
     currency_symbol: sym,
   }
-  CACHE.set(cacheKey, { data: result, at: Date.now() })
+  CACHE.set(cacheKey, { data: result, date: today() })
   return NextResponse.json(result)
 }
 
