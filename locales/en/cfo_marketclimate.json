@@ -42,6 +42,7 @@
   "viaRoute": "via",
   "refresh": "Refresh",
   "refreshing": "Refreshing…",
+  "refreshLimited": "Updates twice daily",
   "collapse": "Collapse",
   "trackingPrefix": "Tracking:",
   "noAddedCost": "No added cost today",

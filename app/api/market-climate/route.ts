@@ -25,12 +25,12 @@ export const maxDuration = 60
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-// ── Module-level cache: keyed by country+sector, TTL 3h ───────────────────────
-// Avoids hammering Tavily/Claude on every dashboard load. Per-instance is fine —
-// signals move slowly relative to a 3h window.
-type Cached = { at: number; signals: SignalReading[]; supply: SupplyReading }
-const SIGNAL_TTL = 3 * 60 * 60 * 1000
-const signalCache = new Map<string, Cached>()
+// Persistent cache: the expensive result (signals + supply + narrative) is kept
+// in Supabase for 12h so the Tavily/Claude work runs at most ~twice a day per
+// business. A forced refresh is only honoured once the cache is older than
+// FORCE_MIN_MS, so the refresh button can't burn credits on repeat taps.
+const CACHE_TTL_MS = 12 * 60 * 60 * 1000
+const FORCE_MIN_MS = 11 * 60 * 60 * 1000
 
 interface SignalReading {
   key: string
@@ -173,6 +173,34 @@ Always include the local currency vs USD (${climate.fx.label}). Return ONLY JSON
   }
 }
 
+// Cheap, deterministic fields derived from the (cached or fresh) signals.
+// Recomputed every request so they stay correct without re-hitting any API.
+function computeDerived(signals: SignalReading[], supply: SupplyReading) {
+  let weightedAdverse = 0, weightSum = 0
+  for (const s of signals) {
+    const w = SIGNAL_KIND_WEIGHT[s.kind] ?? 0.3
+    weightSum += w
+    if (s.changePct == null) continue
+    const adverse = s.direction === 'down' || s.kind === 'fx'
+    if (adverse) weightedAdverse += w * Math.min(s.changePct / 5, 1)
+  }
+  const base = Math.min(100, Math.round((weightedAdverse / Math.max(weightSum, 0.1)) * 100))
+  const supplyPenalty = supply.lanes.filter(l => l.severity === 'alert').length * 12
+    + supply.lanes.filter(l => l.severity === 'watch').length * 6
+    + (supply.port?.severity === 'alert' ? 12 : supply.port?.severity === 'watch' ? 6 : 0)
+  const totalSeverity = Math.min(100, base + supplyPenalty)
+  const condition = totalSeverity >= 66 ? 'Stormy' : totalSeverity >= 33 ? 'Unsettled' : 'Calm'
+  const conditionIcon = totalSeverity >= 66 ? '⛈️' : totalSeverity >= 33 ? '🌥️' : '☀️'
+  const fxMovePct = signals.find(s => s.kind === 'fx')?.changePct ?? 0
+  return { totalSeverity, condition, conditionIcon, fxMovePct }
+}
+
+function estExtraCost(fxMovePct: number, monthlyImportSpend: number, supply: SupplyReading) {
+  const fxExtra = Math.round(monthlyImportSpend * (fxMovePct / 100))
+  const freightExtra = supply.lanes.some(l => l.severity !== 'ok') ? Math.round(monthlyImportSpend * 0.04) : 0
+  return Math.max(0, fxExtra + freightExtra)
+}
+
 export async function GET(request: NextRequest) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -241,19 +269,39 @@ export async function GET(request: NextRequest) {
   const lanes = detectShippingLanes(importCurrencies.length ? importCurrencies : [climate.currency])
   const portWatch = getPortWatch(countryCode)
 
-  // ── 2. Fetch live signals (cached) ──────────────────────────────────────────
-  // Cache is keyed by what the business actually trades, so two businesses in the
-  // same country with different products get different signals.
+  // ── 2. Live signals (persistent 12h cache, capped force-refresh) ────────────
+  // Keyed by what the business trades + how it sells, so two businesses in the
+  // same country get different signals. Runway/cash params are NOT in the key —
+  // those drive only cheap per-request maths, not the cached API result.
+  const runwayMonths = (cashBalance > 0 && monthlyFixed > 0) ? Math.round((cashBalance / monthlyFixed) * 10) / 10 : null
   const termSig = businessTerms.join('|').toLowerCase().slice(0, 120)
   const chanSig = `${channelMix.hasEcommerce ? 'e' : ''}${channelMix.hasPos ? 'p' : ''}`
   const cacheKey = `${climate.code}:${sector.key}:${chanSig}:${termSig}`
-  const cached = signalCache.get(cacheKey)
+
+  type CacheRow = { payload: { signals: SignalReading[]; supply: SupplyReading; narrative: Narrative }; fetched_at: string }
+  let cacheRow: CacheRow | null = null
+  try {
+    const { data } = await supabase
+      .from('market_climate_cache')
+      .select('payload, fetched_at')
+      .eq('user_id', user.id).eq('cache_key', cacheKey).maybeSingle()
+    cacheRow = (data as unknown as CacheRow) || null
+  } catch { cacheRow = null }  // table may not exist yet → treat as miss
+
+  const ageMs = cacheRow ? Date.now() - new Date(cacheRow.fetched_at).getTime() : Infinity
+  const forceAllowed = forceRefresh && ageMs >= FORCE_MIN_MS
+  const useCache = !!cacheRow && ageMs < CACHE_TTL_MS && !forceAllowed
+
   let signals: SignalReading[]
   let supply: SupplyReading
+  let narrative: Narrative
+  let fetchedAt: string
 
-  if (!forceRefresh && cached && Date.now() - cached.at < SIGNAL_TTL) {
-    signals = cached.signals
-    supply = cached.supply
+  if (useCache && cacheRow) {
+    signals = cacheRow.payload.signals
+    supply = cacheRow.payload.supply
+    narrative = cacheRow.payload.narrative
+    fetchedAt = cacheRow.fetched_at
   } else {
     const specs = await selectBusinessSignals({ climate, businessTerms, sectorLabel: sector.label, channelMix, userId: user.id })
     const [signalReadings, laneReadings, portReading] = await Promise.all([
@@ -270,62 +318,34 @@ export async function GET(request: NextRequest) {
     ])
     signals = signalReadings
     supply = { lanes: laneReadings, port: portReading }
-    signalCache.set(cacheKey, { at: Date.now(), signals, supply })
-  }
 
-  // ── 3. Weighted severity score (0-100) ──────────────────────────────────────
-  // Each signal's adverse move, scaled by how much this sector cares about it.
-  let weightedAdverse = 0
-  let weightSum = 0
-  for (const s of signals) {
-    const w = SIGNAL_KIND_WEIGHT[s.kind] ?? 0.3
-    weightSum += w
-    if (s.changePct == null) continue
-    // adverse = down for index/commodity/demand; any FX move is treated as cost risk.
-    const adverse = s.direction === 'down' || s.kind === 'fx'
-    if (adverse) weightedAdverse += w * Math.min(s.changePct / 5, 1) // 5%+ move = full weight
-  }
-  const severity = Math.min(100, Math.round((weightedAdverse / Math.max(weightSum, 0.1)) * 100))
-  const supplyPenalty = supply.lanes.filter(l => l.severity === 'alert').length * 12
-    + supply.lanes.filter(l => l.severity === 'watch').length * 6
-    + (supply.port?.severity === 'alert' ? 12 : supply.port?.severity === 'watch' ? 6 : 0)
-  const totalSeverity = Math.min(100, severity + supplyPenalty)
-
-  const condition = totalSeverity >= 66 ? 'Stormy' : totalSeverity >= 33 ? 'Unsettled' : 'Calm'
-  const conditionIcon = totalSeverity >= 66 ? '⛈️' : totalSeverity >= 33 ? '🌥️' : '☀️'
-
-  // ── 4. Estimated extra monthly cost ─────────────────────────────────────────
-  // FX move on import spend + a freight uplift when lanes are disrupted.
-  const fxSignal = signals.find(s => s.key === 'fx')
-  const fxMovePct = fxSignal?.changePct ?? 0
-  const fxExtra = Math.round(monthlyImportSpend * (fxMovePct / 100))
-  const freightDisrupted = supply.lanes.some(l => l.severity !== 'ok')
-  const freightExtra = freightDisrupted ? Math.round(monthlyImportSpend * 0.04) : 0
-  const estExtraMonthly = Math.max(0, fxExtra + freightExtra)
-  const runwayMonths = (cashBalance > 0 && monthlyFixed > 0) ? Math.round((cashBalance / monthlyFixed) * 10) / 10 : null
-
-  // ── 5. Claude: translate the numbers into a business narrative ──────────────
-  const narrative = await buildNarrative({
-    sym, condition, totalSeverity, climate, sector, signals, supply,
-    importPct, estExtraMonthly, monthlyImportSpend, runwayMonths,
-    userId: user.id,
-  })
-
-  // Merge Claude-cleaned values back into the signals so cards show a real
-  // reading instead of "—" when the regex couldn't parse the raw snippet.
-  if (narrative.readings?.length) {
-    const byKey = new Map(narrative.readings.map(r => [r.key, r]))
-    signals = signals.map(s => {
-      const r = byKey.get(s.key)
-      if (!r) return s
-      return {
-        ...s,
-        value: r.value && r.value !== '—' ? r.value : s.value,
-        direction: r.direction || s.direction,
-        changePct: r.changePct ?? s.changePct,
-      }
+    // Narrative needs provisional severity/cost; compute from the raw readings.
+    const d0 = computeDerived(signals, supply)
+    const estExtra0 = estExtraCost(d0.fxMovePct, monthlyImportSpend, supply)
+    narrative = await buildNarrative({
+      sym, condition: d0.condition, totalSeverity: d0.totalSeverity, climate, sector, signals, supply,
+      importPct, estExtraMonthly: estExtra0, monthlyImportSpend, runwayMonths, userId: user.id,
     })
+    // Merge Claude-cleaned values so cards show a real reading instead of "—".
+    if (narrative.readings?.length) {
+      const byKey = new Map(narrative.readings.map(r => [r.key, r]))
+      signals = signals.map(s => {
+        const r = byKey.get(s.key)
+        return r ? { ...s, value: r.value && r.value !== '—' ? r.value : s.value, direction: r.direction || s.direction, changePct: r.changePct ?? s.changePct } : s
+      })
+    }
+    fetchedAt = new Date().toISOString()
+    try {
+      await supabase.from('market_climate_cache').upsert(
+        { user_id: user.id, cache_key: cacheKey, payload: { signals, supply, narrative }, fetched_at: fetchedAt },
+        { onConflict: 'user_id,cache_key' },
+      )
+    } catch { /* table may not exist yet — serve fresh, don't break */ }
   }
+
+  // ── 3. Cheap derived fields (fresh every request, from current cash config) ──
+  const { totalSeverity, condition, conditionIcon } = computeDerived(signals, supply)
+  const estExtraMonthly = estExtraCost(computeDerived(signals, supply).fxMovePct, monthlyImportSpend, supply)
 
   return NextResponse.json({
     currency_symbol: sym,
@@ -354,7 +374,8 @@ export async function GET(request: NextRequest) {
       monthly_fixed: monthlyFixed,
     },
     narrative,
-    updated_at: new Date().toISOString(),
+    updated_at: fetchedAt,
+    cached: useCache,
   })
 }
 

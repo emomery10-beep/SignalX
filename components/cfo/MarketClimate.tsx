@@ -135,6 +135,10 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
   const sevColor = SEV_COLOR(data.severity)
   const updated = fmtDate(data.updated_at, { hour: '2-digit', minute: '2-digit' })
   const extra = data.exposure.est_extra_monthly
+  // Refresh fetches live data (Tavily + Claude); cap to ~twice a day, matching
+  // the server. Within the window the button is a disabled no-op, not a credit drain.
+  const dataAgeMs = data.updated_at ? Date.now() - new Date(data.updated_at).getTime() : Infinity
+  const canRefresh = dataAgeMs >= 11 * 60 * 60 * 1000
 
   // ── Collapsed: a single compact row. Click to expand the full widget. ──
   if (!expanded) {
@@ -190,11 +194,11 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
             <span style={{ fontSize: 9, color: '#94a3b8' }}>{tc('cfo_marketclimate.updatedAt')} {updated}</span>
             <button
               className="mc-iconbtn"
-              onClick={() => load(true)}
-              disabled={refreshing}
-              title={refreshing ? tc('cfo_marketclimate.refreshing') : tc('cfo_marketclimate.refresh')}
-              aria-label={refreshing ? tc('cfo_marketclimate.refreshing') : tc('cfo_marketclimate.refresh')}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 7, border: 'none', background: 'rgba(148,163,184,.16)', color: '#cbd5e1', cursor: refreshing ? 'default' : 'pointer', padding: 0 }}
+              onClick={() => { if (canRefresh && !refreshing) load(true) }}
+              disabled={refreshing || !canRefresh}
+              title={refreshing ? tc('cfo_marketclimate.refreshing') : canRefresh ? tc('cfo_marketclimate.refresh') : tc('cfo_marketclimate.refreshLimited')}
+              aria-label={refreshing ? tc('cfo_marketclimate.refreshing') : canRefresh ? tc('cfo_marketclimate.refresh') : tc('cfo_marketclimate.refreshLimited')}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 7, border: 'none', background: 'rgba(148,163,184,.16)', color: '#cbd5e1', cursor: refreshing || !canRefresh ? 'default' : 'pointer', opacity: canRefresh ? 1 : 0.45, padding: 0 }}
             >
               <svg className={refreshing ? 'mc-spin' : undefined} width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M23 4v6h-6M1 20v-6h6" /><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
