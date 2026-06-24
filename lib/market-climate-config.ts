@@ -9,7 +9,7 @@ export interface MarketSignalSpec {
   key: string                 // stable id, e.g. 'index', 'fx', 'oil'
   label: string               // display name, e.g. 'NGX All-Share'
   query: string               // Tavily search query to fetch today's move
-  kind: 'index' | 'fx' | 'commodity' | 'rate'
+  kind: 'index' | 'fx' | 'commodity' | 'rate' | 'demand'
 }
 
 export interface CountryClimate {
@@ -144,6 +144,51 @@ export function detectSector(categories: string[]): SectorProfile {
     if (keywords.some(k => blob.includes(k))) return SECTORS[sectorKey]
   }
   return SECTORS.general
+}
+
+// ── Business-specific commodity signals (deterministic fallback) ──────────────
+// Maps what a business actually trades → the specific commodity/demand signals
+// that move its margins. Used when the LLM selector is unavailable, so a sesame
+// trader sees sesame + edible-oil demand, not a generic national index.
+// [keywords, signal] — first matches win, deduped by key.
+const COMMODITY_KEYWORDS: Array<[string[], MarketSignalSpec[]]> = [
+  [['sesame', 'simsim', 'sim sim'], [
+    { key: 'sesame', label: 'Sesame Seed Price', query: 'sesame seed price per tonne world market today change', kind: 'commodity' },
+    { key: 'sesame_demand', label: 'Export Demand', query: 'sesame seed import demand China Japan Turkey latest', kind: 'demand' },
+  ]],
+  [['coffee'], [{ key: 'coffee', label: 'Coffee Price', query: 'arabica coffee price per pound today change', kind: 'commodity' }]],
+  [['tea'], [{ key: 'tea', label: 'Tea Price', query: 'tea auction price per kg Mombasa today', kind: 'commodity' }]],
+  [['cocoa'], [{ key: 'cocoa', label: 'Cocoa Price', query: 'cocoa price per tonne today change', kind: 'commodity' }]],
+  [['cashew'], [{ key: 'cashew', label: 'Cashew Price', query: 'raw cashew nut price per tonne today', kind: 'commodity' }]],
+  [['maize', 'corn'], [{ key: 'maize', label: 'Maize Price', query: 'maize corn price per tonne today change', kind: 'commodity' }]],
+  [['avocado'], [{ key: 'avocado', label: 'Avocado Export', query: 'avocado export price demand Europe today', kind: 'demand' }]],
+  [['macadamia'], [{ key: 'macadamia', label: 'Macadamia Price', query: 'macadamia nut price per kg today', kind: 'commodity' }]],
+  [['cotton'], [{ key: 'cotton', label: 'Cotton Price', query: 'cotton price per pound today change', kind: 'commodity' }]],
+  [['rubber'], [{ key: 'rubber', label: 'Rubber Price', query: 'natural rubber price per kg today', kind: 'commodity' }]],
+  [['gold', 'jewel'], [{ key: 'gold', label: 'Gold Price', query: 'gold price per ounce today change', kind: 'commodity' }]],
+  [['cattle', 'beef', 'livestock'], [{ key: 'cattle', label: 'Livestock Price', query: 'live cattle beef price today change', kind: 'commodity' }]],
+  [['fish', 'seafood'], [{ key: 'fish', label: 'Seafood Demand', query: 'fish seafood export price demand today', kind: 'demand' }]],
+  [['sugar'], [{ key: 'sugar', label: 'Sugar Price', query: 'sugar price per pound today change', kind: 'commodity' }]],
+  [['wheat', 'flour'], [{ key: 'wheat', label: 'Wheat Price', query: 'wheat price per bushel today change', kind: 'commodity' }]],
+  [['palm', 'cooking oil', 'vegetable oil', 'edible oil'], [{ key: 'palmoil', label: 'Edible Oil Price', query: 'palm oil edible oil price per tonne today', kind: 'commodity' }]],
+]
+
+export function detectBusinessCommodities(terms: string[]): MarketSignalSpec[] {
+  const blob = terms.join(' ').toLowerCase()
+  const out: MarketSignalSpec[] = []
+  const seen = new Set<string>()
+  for (const [keywords, signals] of COMMODITY_KEYWORDS) {
+    if (keywords.some(k => blob.includes(k))) {
+      for (const s of signals) if (!seen.has(s.key)) { seen.add(s.key); out.push(s) }
+    }
+  }
+  return out
+}
+
+// Severity weight by signal kind — used so dynamically-selected signals (whose
+// keys aren't in the fixed sector table) still score sensibly.
+export const SIGNAL_KIND_WEIGHT: Record<string, number> = {
+  fx: 0.95, commodity: 0.85, demand: 0.75, rate: 0.5, index: 0.4,
 }
 
 // ── Supplier currency → shipping lane exposure ────────────────────────────────

@@ -12,7 +12,8 @@ import { tavilySearch } from '@/lib/tavily'
 import {
   getCountryClimate, isCountryMapped, getCountryName,
   detectSector, detectShippingLanes, getPortWatch,
-  type MarketSignalSpec,
+  detectBusinessCommodities, SIGNAL_KIND_WEIGHT,
+  type MarketSignalSpec, type CountryClimate,
 } from '@/lib/market-climate-config'
 import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
@@ -96,6 +97,68 @@ function gradeDisruption(text: string): { status: string; severity: 'ok' | 'watc
   return { status, severity: 'ok' }
 }
 
+// Choose the signals that actually move THIS business. LLM picks commodities/
+// demand specific to what they trade; falls back to a keyword map + country
+// anchors. Local FX is always included (it's the universal import-cost driver).
+async function selectBusinessSignals(input: {
+  climate: CountryClimate
+  businessTerms: string[]
+  sectorLabel: string
+  userId: string
+}): Promise<MarketSignalSpec[]> {
+  const { climate } = input
+  const dedupe = (specs: MarketSignalSpec[]) => {
+    const seen = new Set<string>(); const out: MarketSignalSpec[] = []
+    for (const s of specs) if (s && !seen.has(s.key)) { seen.add(s.key); out.push(s) }
+    return out.slice(0, 6)
+  }
+  // Deterministic fallback: local FX + what they trade (keyword map) + anchors.
+  const kwCommodities = detectBusinessCommodities(input.businessTerms)
+  const fallback = dedupe([
+    climate.fx,
+    ...kwCommodities,
+    ...(kwCommodities.length ? [] : climate.commodities), // only use country default if nothing matched
+    climate.index,
+    climate.centralBank,
+  ])
+
+  if (!process.env.ANTHROPIC_API_KEY || input.businessTerms.length === 0) return fallback
+
+  const prompt = `A business in ${climate.name} (sector: ${input.sectorLabel}) trades in: ${input.businessTerms.join(', ')}.
+
+Pick the 4–5 LIVE market signals that most affect THIS business's costs, selling prices, or demand — specific to what they actually trade, not generic national indices. For a commodity producer/exporter include the commodity's world price AND its key import-market demand; for an importer include the relevant input price and FX.
+
+Always include the local currency vs USD (${climate.fx.label}). Return ONLY JSON:
+{"signals":[{"key":"short_slug","label":"≤3 words","query":"web search for today's price/level/demand","kind":"commodity|demand|fx|index|rate"}]}`
+
+  try {
+    const res = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 700,
+      messages: [{ role: 'user', content: prompt }],
+    })
+    logUsage({ route: '/api/market-climate#select', model: 'claude-haiku-4-5-20251001', usage: res.usage, userId: input.userId })
+    const textBlock = res.content.find(b => b.type === 'text') as { text: string } | undefined
+    const m = textBlock?.text.match(/\{[\s\S]*\}/)
+    if (!m) return fallback
+    const parsed = JSON.parse(m[0]) as { signals?: Array<{ key?: string; label?: string; query?: string; kind?: string }> }
+    const picked: MarketSignalSpec[] = (parsed.signals || [])
+      .filter(s => s.key && s.label && s.query)
+      .map(s => ({
+        key: String(s.key).toLowerCase().replace(/[^a-z0-9_]/g, '_').slice(0, 24),
+        label: String(s.label).slice(0, 28),
+        query: String(s.query).slice(0, 160),
+        kind: (['commodity', 'demand', 'fx', 'index', 'rate'].includes(s.kind || '') ? s.kind : 'commodity') as MarketSignalSpec['kind'],
+      }))
+    if (!picked.length) return fallback
+    // Guarantee local FX is present.
+    if (!picked.some(p => p.kind === 'fx')) picked.unshift(climate.fx)
+    return dedupe(picked)
+  } catch {
+    return fallback
+  }
+}
+
 export async function GET(request: NextRequest) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -127,7 +190,10 @@ export async function GET(request: NextRequest) {
 
   const rows = records || []
   const categories = Array.from(new Set(rows.map(r => r.category || r.product_name || '').filter(Boolean)))
+  const productNames = Array.from(new Set(rows.map(r => r.product_name || '').filter(Boolean)))
   const sector = detectSector(categories)
+  // Everything the business actually trades — feeds signal selection.
+  const businessTerms = Array.from(new Set([...categories, ...productNames])).slice(0, 40)
 
   // Spend by currency → import exposure + shipping lanes.
   const currencySpend = new Map<string, number>()
@@ -146,7 +212,10 @@ export async function GET(request: NextRequest) {
   const portWatch = getPortWatch(countryCode)
 
   // ── 2. Fetch live signals (cached) ──────────────────────────────────────────
-  const cacheKey = `${climate.code}:${sector.key}`
+  // Cache is keyed by what the business actually trades, so two businesses in the
+  // same country with different products get different signals.
+  const termSig = businessTerms.join('|').toLowerCase().slice(0, 120)
+  const cacheKey = `${climate.code}:${sector.key}:${termSig}`
   const cached = signalCache.get(cacheKey)
   let signals: SignalReading[]
   let supply: SupplyReading
@@ -155,7 +224,7 @@ export async function GET(request: NextRequest) {
     signals = cached.signals
     supply = cached.supply
   } else {
-    const specs: MarketSignalSpec[] = [climate.index, climate.fx, ...climate.commodities, climate.centralBank]
+    const specs = await selectBusinessSignals({ climate, businessTerms, sectorLabel: sector.label, userId: user.id })
     const [signalReadings, laneReadings, portReading] = await Promise.all([
       Promise.all(specs.map(readSignal)),
       Promise.all(lanes.map(async l => {
@@ -178,11 +247,11 @@ export async function GET(request: NextRequest) {
   let weightedAdverse = 0
   let weightSum = 0
   for (const s of signals) {
-    const w = sector.weights[s.key] ?? 0.3
+    const w = SIGNAL_KIND_WEIGHT[s.kind] ?? 0.3
     weightSum += w
     if (s.changePct == null) continue
-    // adverse = down for index/commodity; for fx a weaker local currency (depends on pair direction). Treat any large move as risk.
-    const adverse = s.direction === 'down' || s.key === 'fx'
+    // adverse = down for index/commodity/demand; any FX move is treated as cost risk.
+    const adverse = s.direction === 'down' || s.kind === 'fx'
     if (adverse) weightedAdverse += w * Math.min(s.changePct / 5, 1) // 5%+ move = full weight
   }
   const severity = Math.min(100, Math.round((weightedAdverse / Math.max(weightSum, 0.1)) * 100))
@@ -210,6 +279,22 @@ export async function GET(request: NextRequest) {
     importPct, estExtraMonthly, monthlyImportSpend, runwayMonths,
     userId: user.id,
   })
+
+  // Merge Claude-cleaned values back into the signals so cards show a real
+  // reading instead of "—" when the regex couldn't parse the raw snippet.
+  if (narrative.readings?.length) {
+    const byKey = new Map(narrative.readings.map(r => [r.key, r]))
+    signals = signals.map(s => {
+      const r = byKey.get(s.key)
+      if (!r) return s
+      return {
+        ...s,
+        value: r.value && r.value !== '—' ? r.value : s.value,
+        direction: r.direction || s.direction,
+        changePct: r.changePct ?? s.changePct,
+      }
+    })
+  }
 
   return NextResponse.json({
     currency_symbol: sym,
@@ -251,6 +336,7 @@ interface Narrative {
   opportunity: string | null
   timeline: Array<{ when: string; title: string; detail: string; severity: 'alert' | 'watch' | 'info' }>
   actions: Array<{ urgency: 'urgent' | 'soon' | 'watch'; title: string; detail: string }>
+  readings?: Array<{ key: string; value: string; direction: 'up' | 'down' | 'flat'; changePct: number | null }>
 }
 
 async function buildNarrative(input: NarrativeInput): Promise<Narrative> {
@@ -263,7 +349,7 @@ async function buildNarrative(input: NarrativeInput): Promise<Narrative> {
   }
   if (!process.env.ANTHROPIC_API_KEY) return fallback
 
-  const signalLines = input.signals.map(s => `- ${s.label}: ${s.value} (${s.direction}${s.changePct != null ? `, ${s.changePct}%` : ''}) — ${s.summary}`).join('\n')
+  const signalLines = input.signals.map(s => `- [${s.key}] ${s.label}: ${s.value} (${s.direction}${s.changePct != null ? `, ${s.changePct}%` : ''}) — ${s.summary}`).join('\n')
   const supplyLines = [
     ...input.supply.lanes.map(l => `- Lane ${l.lane} via ${l.route}: ${l.severity.toUpperCase()} — ${l.status}`),
     input.supply.port ? `- Port ${input.supply.port.port}: ${input.supply.port.severity.toUpperCase()} — ${input.supply.port.status}` : '',
@@ -279,6 +365,7 @@ ${supplyLines || '- No supply chain data'}
 
 Write a tight, plain-English read for this specific owner. No jargon, no hedging. Return ONLY valid JSON:
 {
+  "readings": [ {"key":"<the [key] from each signal>","value":"a clean current value from the snippet e.g. '$1,820/t' or '▼ 2.3%' or 'KSh 162'; if the snippet truly has no number, a 2-3 word state like 'Holding steady'","direction":"up|down|flat","changePct": number or null} , ... one per signal ],
   "headline": "max 7 words, concrete",
   "body": "2 sentences max. What today's conditions mean for THEIR costs specifically.",
   "opportunity": "1 sentence if there's a hidden upside (e.g. local sourcing now cheaper), else null",
@@ -304,6 +391,7 @@ Write a tight, plain-English read for this specific owner. No jargon, no hedging
       opportunity: parsed.opportunity ?? null,
       timeline: Array.isArray(parsed.timeline) ? parsed.timeline.slice(0, 4) : [],
       actions: Array.isArray(parsed.actions) ? parsed.actions.slice(0, 5) : [],
+      readings: Array.isArray(parsed.readings) ? parsed.readings : [],
     }
   } catch {
     return fallback
