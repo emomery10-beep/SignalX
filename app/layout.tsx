@@ -78,7 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang={lang} dir={isRTL(lang) ? 'rtl' : 'ltr'} suppressHydrationWarning>
       <body className={`${sora.variable} ${dm.variable} ${mono.variable} ${instrumentSerif.variable} ${plusJakarta.variable}`}>
         <GoogleAnalytics measurementId="G-ELBCMBBMEC" />
-        <TikTokPixel pixelId="D8UA4C3C77UDUI6572LG" />
+        <TikTokPixel pixelId="D8UAH7JC77UER4V7P7PG" />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <LanguageProvider initialLang={lang}>
             {children}
