@@ -456,7 +456,7 @@ function WeekPanel({ data, fmt }: { data: ClimateData; fmt: (n: number) => strin
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {hasChannels && (
         <div>
-          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Your sources · this week</div>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Your sources · last 30 days</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {channels.map(ch => (
               <div key={ch.name} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--ev, #f9fafb)', borderRadius: 9 }}>
@@ -484,7 +484,7 @@ function WeekPanel({ data, fmt }: { data: ClimateData; fmt: (n: number) => strin
 
       {hasProducts && (
         <div>
-          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Top products · this week</div>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Top products · last 30 days</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
             {products.map((p, i) => (
               <div key={p.product} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', background: 'var(--ev, #f9fafb)', borderRadius: 9 }}>
@@ -554,7 +554,7 @@ function SupplyPanel({ supply, topProducts, fmt }: { supply: ClimateData['supply
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {hasProducts && (
         <div>
-          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Your inventory · top movers this week</div>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Your inventory · top movers (30 days)</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
             {(topProducts || []).map((p, i) => (
               <div key={p.product} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--ev, #f9fafb)', borderRadius: 9 }}>

@@ -330,16 +330,17 @@ export async function GET(request: NextRequest) {
       .single(),
   ])
 
-  // ── 1b. Channel + product velocity (7d vs prior 7d) ─────────────────────────
-  const sevenDaysAgo    = new Date(Date.now() - 7  * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  // ── 1b. Channel + product velocity (30d vs prior 30d) ───────────────────────
+  // 30-day window gives meaningful data even for businesses that sync weekly/monthly
+  const thirtyDaysAgo  = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const sixtyDaysAgo   = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   const [{ data: thisWeekRows }, { data: prevWeekRows }] = await Promise.all([
     supabase.from('unified_data')
       .select('source_type, channel, product_name, gross_revenue, units_sold')
-      .eq('user_id', user.id).gte('record_date', sevenDaysAgo).limit(1000),
+      .eq('user_id', user.id).gte('record_date', thirtyDaysAgo).limit(1000),
     supabase.from('unified_data')
       .select('source_type, channel, gross_revenue')
-      .eq('user_id', user.id).gte('record_date', fourteenDaysAgo).lt('record_date', sevenDaysAgo).limit(1000),
+      .eq('user_id', user.id).gte('record_date', sixtyDaysAgo).lt('record_date', thirtyDaysAgo).limit(1000),
   ])
 
   const rows = records || []
