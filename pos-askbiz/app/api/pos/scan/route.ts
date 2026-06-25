@@ -74,12 +74,19 @@ TASK:
 Reply ONLY with valid JSON, nothing else:
 {"name":"product name","price":null}`, 300)
     logUsage({ route: 'pos/scan', model, usage, userId: ownerId })
-    const jsonMatch = text.match(/\{[\s\S]*?\}/)
-    if (!jsonMatch) return json({ error: 'Could not identify product' }, 422)
 
-    let parsed: { name?: string; price?: number | null }
-    try { parsed = JSON.parse(jsonMatch[0]) } catch {
-      return json({ error: 'Could not parse AI response' }, 422)
+    let parsed: { name?: string; price?: number | null } | null = null
+    // Try direct parse, then strip markdown fences, then greedy brace extraction
+    for (const candidate of [
+      text.trim(),
+      (text.match(/```(?:json)?\s*([\s\S]*?)```/)?.[1] ?? '').trim(),
+      (text.match(/\{[\s\S]*\}/)?.[0] ?? ''),
+    ]) {
+      try { parsed = JSON.parse(candidate); break } catch { /* try next */ }
+    }
+    if (!parsed) {
+      console.error('[pos/scan] unparseable AI response:', text)
+      return json({ error: 'Could not identify product' }, 422)
     }
 
     const productName = (parsed.name || '').trim()
