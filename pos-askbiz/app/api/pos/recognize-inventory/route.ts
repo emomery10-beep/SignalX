@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { logUsage } from '@/lib/log-usage'
+import { visionAI } from '@/lib/vision-ai'
 
 // CORS handled globally by next.config.js
 export async function OPTIONS() {
@@ -53,19 +54,7 @@ export async function POST(req: NextRequest) {
       ? `\n\nFREQUENTLY RECOGNIZED (prioritize these):\n${hotList.map((h: any) => `- ${h.recognized_name}`).join('\n')}`
       : ''
 
-    const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-        max_tokens: 500,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${image}` } },
-            {
-              type: 'text',
-              text: `You are a retail inventory assistant. Look at this image and identify the product.
+    const { text: _groqText, model, usage } = await visionAI(image, `You are a retail inventory assistant. Look at this image and identify the product.
 
 THIS STORE'S INVENTORY (reference list):
 ${catalogueText || '(Empty inventory)'}${hotListText}
@@ -80,15 +69,8 @@ TASK:
 7. Set LOW confidence (below 50) if it's too blurry, obscured, or truly unidentifiable
 
 Reply with ONLY valid JSON, no other text:
-{"name":"product name","confidence":70}`,
-            },
-          ],
-        }],
-      }),
-    })
-    const _groqData = await _groqRes.json()
-    const _groqText = _groqData.choices?.[0]?.message?.content || ''
-    logUsage({ route: 'pos/recognize-inventory', model: 'meta-llama/llama-4-scout-17b-16e-instruct', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId: auth.ownerId })
+{"name":"product name","confidence":70}`, 500)
+    logUsage({ route: 'pos/recognize-inventory', model, usage, userId: auth.ownerId })
 
     console.log('Groq response:', _groqText)
     const jsonMatch = _groqText.trim().match(/\{[\s\S]*?\}/)

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { logUsage } from '@/lib/log-usage'
+import { visionAI } from '@/lib/vision-ai'
 
 // Allow more time for AI image processing
 export const maxDuration = 60
@@ -27,15 +28,7 @@ export async function POST(req: NextRequest) {
   const { front, back } = await req.json()
   if (!front) return NextResponse.json({ error: 'front image required' }, { status: 400 })
 
-  // Build the content blocks — always include front, optionally include back
-  const imageBlocks: Array<{ type: 'image_url'; image_url: { url: string } }> = [
-    { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${front}` } },
-  ]
-  if (back) {
-    imageBlocks.push({ type: 'image_url', image_url: { url: `data:image/jpeg;base64,${back}` } })
-  }
-
-  const prompt = back
+  const promptText = back
     ? `You are a retail inventory assistant. You have been given TWO photos of the same product:
 - Image 1 = FRONT of the product (brand, name, size, price if visible)
 - Image 2 = BACK of the product (ingredients, batch number, expiry date, barcode, supplier, country of origin, nutritional info)
@@ -76,24 +69,8 @@ Reply with ONLY valid JSON, no markdown, no other text:
   try {
     console.log('[scan-product-full] front size:', Math.round(front.length / 1024), 'KB', back ? ', back: ' + Math.round(back.length / 1024) + ' KB' : '')
 
-    const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-        max_tokens: 600,
-        messages: [{
-          role: 'user',
-          content: [
-            ...imageBlocks,
-            { type: 'text', text: prompt + '\n\n' + instructions },
-          ],
-        }],
-      }),
-    })
-    const _groqData = await _groqRes.json()
-    const text = _groqData.choices?.[0]?.message?.content || ''
-    logUsage({ route: 'pos/scan-product-full', model: 'meta-llama/llama-4-scout-17b-16e-instruct', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId: auth.ownerId })
+    const { text, model, usage } = await visionAI(front, promptText + '\n\n' + instructions, 600)
+    logUsage({ route: 'pos/scan-product-full', model, usage, userId: auth.ownerId })
     console.log('[scan-product-full] Groq response:', text)
 
     const jsonMatch = text.match(/\{[\s\S]*\}/)

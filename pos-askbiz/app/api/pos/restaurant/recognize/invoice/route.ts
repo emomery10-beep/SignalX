@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { logUsage } from '@/lib/log-usage'
+import { visionAI } from '@/lib/vision-ai'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,19 +60,7 @@ export async function POST(req: NextRequest) {
     const service = createServiceClient()
 
     // STEP 1: Extract all line items from the delivery note / invoice image
-    const _groqExtractRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-        max_tokens: 2048,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image_url', image_url: { url: `data:${media_type};base64,${image}` } },
-            {
-              type: 'text',
-              text: `You are reading a restaurant supplier delivery note or invoice.
+    const { text: _extractText, model, usage } = await visionAI(image, `You are reading a restaurant supplier delivery note or invoice.
 
 Extract every line item you can see. For each item include:
 - name: the ingredient or product name, cleaned up (e.g. "Chicken Breast", "Olive Oil 5L", "Tenderstem Broccoli")
@@ -101,15 +90,8 @@ Reply ONLY with valid JSON matching this shape — no markdown, no explanation:
     {"name":"Chicken Breast","qty":10,"unit":"kg","unit_price":5.40,"line_total":54.00,"category":"meat"},
     {"name":"Plum Tomatoes","qty":3,"unit":"case","unit_price":12.50,"line_total":37.50,"category":"produce"}
   ]
-}`,
-            },
-          ],
-        }],
-      }),
-    })
-    const _groqExtractData = await _groqExtractRes.json()
-    const _extractText = _groqExtractData.choices?.[0]?.message?.content || ''
-    logUsage({ route: 'pos/restaurant/recognize/invoice', model: 'meta-llama/llama-4-scout-17b-16e-instruct', usage: { input_tokens: _groqExtractData.usage?.prompt_tokens ?? 0, output_tokens: _groqExtractData.usage?.completion_tokens ?? 0 }, userId: auth.ownerId })
+}`, 2048)
+    logUsage({ route: 'pos/restaurant/recognize/invoice', model, usage, userId: auth.ownerId })
 
     console.log('📄 INVOICE RAW:', _extractText.slice(0, 500))
 

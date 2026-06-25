@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { logUsage } from '@/lib/log-usage'
+import { visionAI } from '@/lib/vision-ai'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -52,19 +53,7 @@ export async function POST(req: NextRequest) {
   const { data: imageData, mediaType } = parseDataUrl(body.image)
 
   try {
-    const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-        max_tokens: 700,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image_url', image_url: { url: `data:${mediaType};base64,${imageData}` } },
-            {
-              type: 'text',
-              text: `You are a logistics document reader. Look at this photo and classify it as one of:
+    const { text, model, usage } = await visionAI(imageData, `You are a logistics document reader. Look at this photo and classify it as one of:
 - "waybill" (a parcel/shipment consignment note with sender + receiver details)
 - "invoice" (a vendor bill for fuel, maintenance, tolls, loading, etc.)
 - "receipt" (a payment receipt)
@@ -82,15 +71,8 @@ Reply ONLY with valid JSON, no prose:
     // for receipt: amount, currency, payment_method, receipt_number, payer_name, payee_name, date
   }
 }
-Use null for any field you cannot read. Do not invent values.`,
-            },
-          ],
-        }],
-      }),
-    })
-    const _groqData = await _groqRes.json()
-    const text = _groqData.choices?.[0]?.message?.content || ''
-    logUsage({ route: 'pos/parcels/scan', model: 'meta-llama/llama-4-scout-17b-16e-instruct', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId: auth.ownerId })
+Use null for any field you cannot read. Do not invent values.`, 700)
+    logUsage({ route: 'pos/parcels/scan', model, usage, userId: auth.ownerId })
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
       return json({ document_type: 'unknown', confidence: 0, data: {}, message: 'Could not read document' })

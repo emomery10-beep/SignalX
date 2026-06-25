@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { logUsage } from '@/lib/log-usage'
+import { visionAI } from '@/lib/vision-ai'
 
 export const dynamic = 'force-dynamic'
 
@@ -128,19 +129,7 @@ export async function PUT(req: NextRequest) {
 
   const menuList = (menuItems || []).slice(0, 150).map((m: any) => `- ${m.name}`).join('\n')
 
-  const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-    body: JSON.stringify({
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-      max_tokens: 512,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image_url', image_url: { url: `data:${media_type};base64,${image}` } },
-          {
-            type: 'text',
-            text: `You are a restaurant waste tracking assistant. Look at this photo of food waste.
+  const { text: _groqText, model, usage } = await visionAI(image, `You are a restaurant waste tracking assistant. Look at this photo of food waste.
 
 Identify:
 1. What food item is being wasted
@@ -166,15 +155,8 @@ Rules:
 - reason: one of: expired | dropped | overcooked | returned | spoiled | overproduced | trimming | other
 - menu_item_name: the closest match from the menu list above, or null if nothing fits
 - confidence: 0-100
-- notes: brief observation (max 20 words) or ""`,
-          },
-        ],
-      }],
-    }),
-  })
-  const _groqData = await _groqRes.json()
-  const _groqText = _groqData.choices?.[0]?.message?.content || ''
-  logUsage({ route: 'pos/restaurant/waste', model: 'meta-llama/llama-4-scout-17b-16e-instruct', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId: auth.ownerId })
+- notes: brief observation (max 20 words) or ""`, 512)
+  logUsage({ route: 'pos/restaurant/waste', model, usage, userId: auth.ownerId })
 
   const jsonMatch = _groqText.trim().match(/\{[\s\S]*\}/)
   if (!_groqText || !jsonMatch) return NextResponse.json({ recognized: null })

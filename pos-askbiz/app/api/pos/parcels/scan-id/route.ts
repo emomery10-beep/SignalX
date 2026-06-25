@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { resolvePosAuth, roleCanAccess } from '@/lib/pos-auth'
 import { logUsage } from '@/lib/log-usage'
+import { visionAI } from '@/lib/vision-ai'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -33,19 +34,7 @@ export async function POST(req: NextRequest) {
   const { data: imageData, mediaType } = parseDataUrl(body.image)
 
   try {
-    const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-        max_tokens: 300,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image_url', image_url: { url: `data:${mediaType};base64,${imageData}` } },
-            {
-              type: 'text',
-              text: `You are reading a government-issued identity document (national ID card, passport, or driver's licence).
+    const { text, model, usage } = await visionAI(imageData, `You are reading a government-issued identity document (national ID card, passport, or driver's licence).
 Extract ONLY what is clearly printed. Do not guess or invent.
 
 Reply with valid JSON only, no prose:
@@ -55,15 +44,8 @@ Reply with valid JSON only, no prose:
   "doc_type": "national_id" | "passport" | "drivers_licence" | "unknown",
   "confidence": 0.0-1.0
 }
-If the image is not an ID document or is unreadable, return all nulls with doc_type "unknown" and confidence 0.`,
-            },
-          ],
-        }],
-      }),
-    })
-    const _groqData = await _groqRes.json()
-    const text = _groqData.choices?.[0]?.message?.content || ''
-    logUsage({ route: 'pos/parcels/scan-id', model: 'meta-llama/llama-4-scout-17b-16e-instruct', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId: auth.ownerId })
+If the image is not an ID document or is unreadable, return all nulls with doc_type "unknown" and confidence 0.`, 300)
+    logUsage({ route: 'pos/parcels/scan-id', model, usage, userId: auth.ownerId })
     const m = text.match(/\{[\s\S]*\}/)
     if (!m) return json({ id_number: null, full_name: null, doc_type: 'unknown', confidence: 0, message: 'Could not read ID' })
 

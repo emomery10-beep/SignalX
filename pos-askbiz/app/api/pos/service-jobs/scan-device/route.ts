@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
 import { logUsage } from '@/lib/log-usage'
+import { visionAI } from '@/lib/vision-ai'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -25,19 +26,7 @@ export async function POST(req: NextRequest) {
   if (!image) return json({ error: 'image required' }, 400)
 
   try {
-    const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-        max_tokens: 400,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${image}` } },
-            {
-              type: 'text',
-              text: `You are a device identification assistant for a phone repair shop. Look at this image of a phone's rear label/sticker and extract all available information.
+    const { text, model, usage } = await visionAI(image, `You are a device identification assistant for a phone repair shop. Look at this image of a phone's rear label/sticker and extract all available information.
 
 TASK:
 1. Identify the device model (e.g., "iPhone 14 Pro", "Samsung Galaxy S24")
@@ -50,15 +39,8 @@ TASK:
 Reply ONLY with valid JSON, nothing else:
 {"model":"device model","serial":"serial or IMEI or null","manufacture_date":"date string or null","storage":"capacity or null","color":"color or null","model_number":"internal model number or null","confidence":75}
 
-Set confidence 80-100 if text is clearly readable, 50-79 if partially readable, below 50 if mostly guessing.`,
-            },
-          ],
-        }],
-      }),
-    })
-    const _groqData = await _groqRes.json()
-    const text = _groqData.choices?.[0]?.message?.content || ''
-    logUsage({ route: 'pos/service-jobs/scan-device', model: 'meta-llama/llama-4-scout-17b-16e-instruct', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId: auth.ownerId })
+Set confidence 80-100 if text is clearly readable, 50-79 if partially readable, below 50 if mostly guessing.`, 400)
+    logUsage({ route: 'pos/service-jobs/scan-device', model, usage, userId: auth.ownerId })
     const jsonMatch = text.match(/\{[\s\S]*?\}/)
     if (!jsonMatch) return json({ error: 'Could not read device label' }, 422)
 

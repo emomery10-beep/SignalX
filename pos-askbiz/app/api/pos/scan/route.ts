@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosOwner } from '@/lib/pos-auth'  // fix #20 — use shared auth helper
 import { logUsage } from '@/lib/log-usage'
+import { visionAI } from '@/lib/vision-ai'
 
 // CORS handled globally by next.config.js
 export async function OPTIONS() {
@@ -57,19 +58,7 @@ export async function POST(req: NextRequest) {
       ? `\n\nFREQUENTLY RECOGNIZED (prioritize these):\n${hotList.map((h: any) => `- ${h.recognized_name}`).join('\n')}`
       : ''
 
-    const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-        max_tokens: 300,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${image}` } },
-            {
-              type: 'text',
-              text: `You are a POS cashier assistant. Look at this product image and identify it.
+    const { text, model, usage } = await visionAI(image, `You are a POS cashier assistant. Look at this product image and identify it.
 
 YOUR STORE'S INVENTORY:
 ${catalogueText || '(Empty inventory)'}${hotListText}
@@ -83,15 +72,8 @@ TASK:
 6. Identify anything you can visually see clearly, even generic items without brand labels (e.g., rice, flour, eggs)
 
 Reply ONLY with valid JSON, nothing else:
-{"name":"product name","price":null}`,
-            },
-          ],
-        }],
-      }),
-    })
-    const _groqData = await _groqRes.json()
-    const text = _groqData.choices?.[0]?.message?.content || ''
-    logUsage({ route: 'pos/scan', model: 'meta-llama/llama-4-scout-17b-16e-instruct', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId: ownerId })
+{"name":"product name","price":null}`, 300)
+    logUsage({ route: 'pos/scan', model, usage, userId: ownerId })
     const jsonMatch = text.match(/\{[\s\S]*?\}/)
     if (!jsonMatch) return json({ error: 'Could not identify product' }, 422)
 
