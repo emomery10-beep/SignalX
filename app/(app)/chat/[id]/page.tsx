@@ -198,21 +198,19 @@ export default function ChatConversationPage() {
         <div style={{ maxWidth: 'min(680px, 100%)', margin:'0 auto', padding:'0 18px', display:'flex', flexDirection:'column', gap:2 }}>
           {isEmpty && (
             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:400, textAlign:'center', padding:28 }}>
-              <div style={{ width:50, height:50, borderRadius:14, background:'#6366F1', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 18px' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#04080f" strokeWidth="2" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-              </div>
               <div style={{ fontFamily:'var(--font-sora)', fontSize:19, fontWeight:600, marginBottom:7 }}>{tc('page_chat_id.emptyHeading')}</div>
-              <div style={{ fontSize:13, color:'var(--tx2)', lineHeight:1.65, maxWidth:360, marginBottom:26 }}>
+              <div style={{ fontSize:13, color:'var(--tx2)', lineHeight:1.65, maxWidth:360, marginBottom:20 }}>
                 {geo ? tc('page_chat_id.emptySubGeo').replace('{symbol}', geo.currencySymbol).replace('{country}', geo.country) : tc('page_chat_id.emptySubDefault')}
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:7, maxWidth:460, width:'100%' }}>
+              <div style={{ display:'flex', flexDirection:'column', gap:2, width:'100%', maxWidth:420, textAlign:'left' }}>
                 {suggestions.map((q, i) => (
-                  <div key={i} onClick={() => sendMessage(q)} style={{ padding:12, borderRadius:10, border:'1px solid var(--b)', background:'var(--ev)', cursor:'pointer', textAlign:'left', transition:'all 160ms' }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor='var(--b2)'; e.currentTarget.style.background='var(--ov)' }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor='var(--b)'; e.currentTarget.style.background='var(--ev)' }}>
-                    <div style={{ fontSize:12, fontWeight:500, marginBottom:3 }}>{q}</div>
-                    <div style={{ fontSize:11, color:'var(--tx3)' }}>{tc('page_chat_id.tapToAsk')}</div>
-                  </div>
+                  <button key={i} onClick={() => sendMessage(q)}
+                    style={{ display:'flex', alignItems:'center', gap:10, padding:'9px 12px', borderRadius:9, border:'none', background:'transparent', cursor:'pointer', fontFamily:'inherit', textAlign:'left', transition:'background 120ms', width:'100%' }}
+                    onMouseEnter={e => { e.currentTarget.style.background='var(--ev)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background='transparent' }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round" style={{ flexShrink:0 }}><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    <span style={{ fontSize:13, color:'var(--tx2)', lineHeight:1.4 }}>{q}</span>
+                  </button>
                 ))}
               </div>
             </div>

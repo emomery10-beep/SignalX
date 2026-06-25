@@ -545,7 +545,36 @@ export default function AppShellClient({ user, conversations, children }: {
         {children}
       </div>
 
-      {/* Mobile bottom nav removed — navigation via hamburger sidebar only */}
+      {/* Mobile bottom tab bar — Ask / My Business / POS */}
+      <nav
+        className="mobile-bottom-nav"
+        aria-label="Primary navigation"
+        style={{ display: 'none', height: 60, alignItems: 'stretch' }}
+      >
+        {PRIMARY_NAV.map(n => {
+          const active = pathname.startsWith(n.href)
+          const activeColor = navActiveColor(n.id)
+          return (
+            <Link
+              key={n.id}
+              href={n.href}
+              style={{
+                flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+                justifyContent: 'center', gap: 3, textDecoration: 'none',
+                color: active ? activeColor : 'var(--tx3)',
+                fontSize: 10, fontWeight: active ? 600 : 400,
+                transition: 'color 120ms',
+                fontFamily: 'var(--font-dm)',
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.7} strokeLinecap="round" strokeLinejoin="round">
+                <path d={n.icon}/>
+              </svg>
+              <span>{n.id === 'monitor' ? tc('appnav.monitor_short') : tc('appnav.' + n.id)}</span>
+            </Link>
+          )
+        })}
+      </nav>
       <HelpWidget />
     </div>
   )

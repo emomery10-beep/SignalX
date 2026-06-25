@@ -16,6 +16,7 @@
   --tx3:  #706b65;
   --acc:  #d08a59;
   --acc2: #8c6fe0;
+  --ai:   #6366F1;    /* conversational AI / Ask feature accent */
   --glow: 0 0 30px rgba(208,138,89,.15), 0 0 60px rgba(208,138,89,.06);
   --sh:   0 2px 12px rgba(0,0,0,.08);
   --shl:  0 8px 32px rgba(0,0,0,.12);
@@ -481,7 +482,7 @@ img {
   .main-content {
     margin-left: 0 !important;
     padding-top: 0;
-    padding-bottom: 16px;
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
   }
   .desktop-sidebar {
     display: flex !important;
@@ -490,7 +491,7 @@ img {
     display: block !important;
   }
   .mobile-bottom-nav {
-    display: none !important;
+    display: flex !important;
   }
   /* Larger tap targets on mobile */
   button, a {
