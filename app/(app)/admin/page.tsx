@@ -341,6 +341,7 @@ export default function AdminPage() {
 
             // Route → category
             const categorize = (r: string) => {
+              if (r.startsWith('pos-app/')) return 'posapp'
               if (r.includes('scout')) return 'scouts'
               if (r.startsWith('pos/') || r.includes('/pos/')) return 'pos'
               if (r.includes('cron/')) return 'cron'
@@ -348,11 +349,12 @@ export default function AdminPage() {
               return 'product'
             }
             const CAT: Record<string,{label:string;color:string;dot:string}> = {
-              scouts:  {label:'Marketing scouts', color:'#dc2626', dot:'#fca5a5'},
-              product: {label:'Product features', color:'#6366F1', dot:'#a5b4fc'},
-              pos:     {label:'POS / scans',      color:'#0891b2', dot:'#67e8f9'},
-              cron:    {label:'Cron jobs',         color:'#7c3aed', dot:'#c4b5fd'},
-              admin:   {label:'Admin / X agent',   color:'#64748b', dot:'#cbd5e1'},
+              scouts:  {label:'Marketing scouts',  color:'#dc2626', dot:'#fca5a5'},
+              product: {label:'Product features',  color:'#6366F1', dot:'#a5b4fc'},
+              pos:     {label:'POS / scans',        color:'#0891b2', dot:'#67e8f9'},
+              posapp:  {label:'POS App (pos.askbiz.co)', color:'#0e7490', dot:'#67e8f9'},
+              cron:    {label:'Cron jobs',           color:'#7c3aed', dot:'#c4b5fd'},
+              admin:   {label:'Admin / X agent',    color:'#64748b', dot:'#cbd5e1'},
             }
             const byRoute = apiUsage?.byRoute as Record<string,{calls:number;costUsd:number;model:string;inputTokens:number;outputTokens:number}> || {}
             const byModel = apiUsage?.byModel as Record<string,{calls:number;costUsd:number}> || {}

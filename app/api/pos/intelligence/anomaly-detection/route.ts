@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosOwner } from '@/lib/pos-auth'
 import { logUsage } from '@/lib/log-usage'
+import { getDailyCache, setDailyCache } from '@/lib/ai-daily-cache'
 
 const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_MODEL = 'llama-3.3-70b-versatile'
-
-const CACHE = new Map<string, { data: unknown; date: string }>()
-const today = () => new Date().toISOString().slice(0, 10)
+const ROUTE_KEY  = 'pos/anomaly-detection'
 
 /**
  * POST /api/pos/intelligence/anomaly-detection
@@ -28,9 +27,9 @@ export async function POST(req: NextRequest) {
   if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
   const isRefresh = new URL(req.url).searchParams.get('refresh') === 'true'
-  const cached = CACHE.get(ownerId)
-  if (!isRefresh && cached && cached.date === today()) {
-    return NextResponse.json(cached.data)
+  if (!isRefresh) {
+    const cached = await getDailyCache(ownerId, ROUTE_KEY)
+    if (cached) return NextResponse.json(cached)
   }
 
   const service = createServiceClient()
@@ -106,7 +105,7 @@ export async function POST(req: NextRequest) {
       raw_analysis: analysis,
       recommendations: generateRecommendations(anomalies),
     }
-    CACHE.set(ownerId, { data: result, date: today() })
+    setDailyCache(ownerId, ROUTE_KEY, result)
     return NextResponse.json(result)
   } catch (error: any) {
     console.error('AI analysis error:', error)

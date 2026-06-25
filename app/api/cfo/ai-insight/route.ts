@@ -2,15 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getRegionConfig } from '@/lib/region-config'
 import { logUsage } from '@/lib/log-usage'
+import { getDailyCache, setDailyCache } from '@/lib/ai-daily-cache'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
 
 const GROQ_MODEL = 'llama-3.3-70b-versatile'
 const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
-
-const CACHE = new Map<string, { data: unknown; date: string }>()
-const today = () => new Date().toISOString().slice(0, 10)
+const ROUTE_KEY  = 'cfo/ai-insight'
 
 export async function POST(req: NextRequest) {
   const supabase = createClient()
@@ -18,9 +17,9 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const isRefresh = new URL(req.url).searchParams.get('refresh') === 'true'
-  const cached = CACHE.get(user.id)
-  if (!isRefresh && cached && cached.date === today()) {
-    return NextResponse.json(cached.data)
+  if (!isRefresh) {
+    const cached = await getDailyCache(user.id, ROUTE_KEY)
+    if (cached) return NextResponse.json(cached)
   }
 
   const body = await req.json()
@@ -112,7 +111,7 @@ Return ONLY valid JSON.`,
     const match = text.match(/\{[\s\S]*\}/)
     const parsed = match ? JSON.parse(match[0]) : { insights: [] }
 
-    CACHE.set(user.id, { data: parsed, date: today() })
+    setDailyCache(user.id, ROUTE_KEY, parsed)
     return NextResponse.json(parsed)
   } catch (e) {
     console.error('[cfo/ai-insight] Groq error:', e)

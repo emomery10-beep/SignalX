@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosOwner } from '@/lib/pos-auth'
 import { logUsage } from '@/lib/log-usage'
+import { getDailyCache, setDailyCache } from '@/lib/ai-daily-cache'
 
 const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_MODEL = 'llama-3.3-70b-versatile'
-
-const CACHE = new Map<string, { data: unknown; date: string }>()
-const today = () => new Date().toISOString().slice(0, 10)
+const ROUTE_KEY  = 'pos/supplier-recommendations'
 
 /**
  * POST /api/pos/ai/supplier-recommendations
@@ -25,9 +24,9 @@ export async function POST(req: NextRequest) {
   if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
   const isRefresh = new URL(req.url).searchParams.get('refresh') === 'true'
-  const cached = CACHE.get(ownerId)
-  if (!isRefresh && cached && cached.date === today()) {
-    return NextResponse.json(cached.data)
+  if (!isRefresh) {
+    const cached = await getDailyCache(ownerId, ROUTE_KEY)
+    if (cached) return NextResponse.json(cached)
   }
 
   const service = createServiceClient()
@@ -102,7 +101,7 @@ Keep it practical and actionable. Include real supplier types (e.g., "Beauty who
       items_analyzed: low_stock_items.length,
       timestamp: new Date().toISOString(),
     }
-    CACHE.set(ownerId, { data: result, date: today() })
+    setDailyCache(ownerId, ROUTE_KEY, result)
     return NextResponse.json(result)
   } catch (error: any) {
     console.error('Supplier recommendation error:', error)

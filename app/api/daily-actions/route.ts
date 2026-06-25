@@ -2,17 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrencySymbol } from '@/lib/get-currency'
 import { logUsage } from '@/lib/log-usage'
+import { getDailyCache, setDailyCache } from '@/lib/ai-daily-cache'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
 
 const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_MODEL = 'llama-3.3-70b-versatile'
-
-// In-process cache: prevents repeat Claude calls when users tab-switch or refresh.
-// Per-user, 30-min TTL. Works within a warm serverless instance.
-const CACHE = new Map<string, { data: unknown; date: string }>()
-const today = () => new Date().toISOString().slice(0, 10)
+const ROUTE_KEY  = 'daily-actions'
 
 export async function GET(req: NextRequest) {
   const supabase = createClient()
@@ -20,9 +17,9 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const isRefresh = new URL(req.url).searchParams.get('refresh') === 'true'
-  const cached = CACHE.get(user.id)
-  if (!isRefresh && cached && cached.date === today()) {
-    return NextResponse.json(cached.data)
+  if (!isRefresh) {
+    const cached = await getDailyCache(user.id, ROUTE_KEY)
+    if (cached) return NextResponse.json(cached)
   }
 
   const sym = await getCurrencySymbol(supabase, user.id)
@@ -131,7 +128,7 @@ export async function GET(req: NextRequest) {
       actions: [{ title: 'All clear', why: 'No urgent actions detected today. Keep up the good work.', priority: 3, type: 'info' }],
       currency_symbol: sym,
     }
-    CACHE.set(user.id, { data: emptyResult, date: today() })
+    setDailyCache(user.id, ROUTE_KEY, emptyResult)
     return NextResponse.json(emptyResult)
   }
 
@@ -158,7 +155,7 @@ Return ONLY the JSON array, no markdown.` }],
     logUsage({ route: 'daily-actions', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: user.id })
     const actions = JSON.parse(groqData.choices?.[0]?.message?.content || '[]')
     const result = { actions, currency_symbol: sym }
-    CACHE.set(user.id, { data: result, date: today() })
+    setDailyCache(user.id, ROUTE_KEY, result)
     return NextResponse.json(result)
   } catch (e) {
     console.error('[daily-actions] Claude error:', e)
