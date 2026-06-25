@@ -193,6 +193,7 @@ function getSourceDisplayName(s: string): string {
 async function selectBusinessSignals(input: {
   climate: CountryClimate
   businessTerms: string[]
+  rankedProducts: Array<{ name: string; revPct: number }>
   sectorLabel: string
   channelMix: ChannelMix
   userId: string
@@ -213,27 +214,39 @@ async function selectBusinessSignals(input: {
       : [climate.fx, ...retail, climate.centralBank]
   )
 
-  if (!process.env.GROQ_API_KEY || input.businessTerms.length === 0) return fallback
+  if (!process.env.GROQ_API_KEY || input.rankedProducts.length === 0) return fallback
 
-  const products = input.businessTerms.slice(0, 10).join(', ')
+  // Revenue-ranked product list — Groq knows which products matter most to THIS business
+  const productLines = input.rankedProducts.slice(0, 8)
+    .map(p => p.revPct > 0 ? `${p.name} (${p.revPct}% of revenue)` : p.name)
+    .join(', ')
   const supplierLine = input.supplierSources.filter(s => s.sourceCountry)
     .map(s => `${s.product} sourced from ${s.sourceCountry}`).join(', ')
 
-  const prompt = `A small business owner is based in ${input.city}, ${climate.name}. They sell: ${products}.${supplierLine ? ` They source: ${supplierLine}.` : ''}
+  const prompt = `A small business owner is based in ${input.city}, ${climate.name}.
 
-Generate exactly 5 targeted web search queries that will tell this owner what they most need to know RIGHT NOW about their specific business. Each query must be about something that directly affects what they sell or buy — not generic economic indicators.
+Their actual top-selling products (from their connected sales: Shopify, POS, Amazon, etc.), ranked by revenue:
+${productLines}
+${supplierLine ? `\nThey source: ${supplierLine}` : ''}
 
-Cover these angles (pick the most relevant 5 for their specific products):
-1. Current LOCAL price of their main product(s) in ${input.city} or ${climate.name} — e.g. "sesame seed price ${input.city} ${climate.name} today"
-2. Supply disruptions or shortages affecting their products — e.g. "${input.city} port export ${products.split(',')[0].trim()} disruption"
-3. Crop / harvest / weather impact on their commodity supply — e.g. "East Africa ${products.split(',')[0].trim()} harvest forecast 2026 drought"
-4. Regional trade conditions for their goods — e.g. "${climate.region} ${products.split(',')[0].trim()} market price trend"
-5. ${climate.fx.label} — always include local currency vs USD as it affects import costs
+Generate exactly 5 targeted web search queries to find news that directly affects their highest-revenue products RIGHT NOW. Focus on the top earners first.
 
-Make queries SPECIFIC: include the actual product name + city/country. Do NOT use generic terms like "consumer demand" or "footfall" or "ad cost" unless this business demonstrably sells digital products.
+Each query must target one of these angles — pick whichever 5 fit best:
+- Current local price of their top product in ${input.city} / ${climate.name}
+- Supply shortage, harvest shortfall, or commodity price movement for their main goods
+- Weather or crop cycle that will affect future supply or price of their products
+- Port, export, or trade conditions for their specific goods at ${input.city} port / ${climate.name}
+- ${climate.region} regional trade or demand news for their products
+- ${climate.fx.label} exchange rate (always include — affects all import costs)
 
-Always include the local FX signal (${climate.fx.label}). Return ONLY JSON:
-{"signals":[{"key":"short_slug","label":"≤4 words, describes what it measures","query":"the exact web search query","kind":"commodity|supply|weather|export|fx"}]}`
+Rules:
+- Use the ACTUAL product names from their sales data in every query
+- Prioritise the highest revenue-share products
+- Never use generic terms like "consumer demand", "footfall", or "digital ad cost" unless they sell SaaS/digital products
+- Queries must be specific enough to return real news articles (product name + location)
+
+Return ONLY JSON:
+{"signals":[{"key":"short_slug","label":"≤4 words describing what it tracks","query":"exact search query using their real product names","kind":"commodity|supply|weather|export|fx"}]}`
 
   try {
     const groqRes = await fetch(GROQ_URL, {
@@ -350,17 +363,41 @@ export async function GET(request: NextRequest) {
   const rows = records || []
   const posItems = posRecords || []
 
-  // Merge product names from unified_data AND pos_items for richer signal selection
   const categories = Array.from(new Set(rows.map(r => r.category || r.product_name || '').filter(Boolean)))
-  const productNames = Array.from(new Set([
-    ...rows.map(r => r.product_name || ''),
-    ...posItems.map(p => p.name || p.category || ''),
-  ].filter(Boolean)))
   const sector = detectSector(categories)
-  // Everything the business actually trades — feeds signal selection.
-  // Strip billing/SaaS metadata before any downstream use (signal selection, supplier prompts)
-  const businessTerms = Array.from(new Set([...categories, ...productNames]))
-    .filter(t => !SERVICE_NOISE.some(n => t.toLowerCase().includes(n)))
+
+  // Build revenue-ranked product list from unified_data (all connected sources: Shopify, POS, Amazon, etc.)
+  // This is what Groq uses to know what this business ACTUALLY sells and how important each product is.
+  const revMap = new Map<string, number>()
+  for (const r of thisWeekRows || []) {
+    const pn = (r.product_name || '').trim()
+    if (!pn || SERVICE_NOISE.some(n => pn.toLowerCase().includes(n))) continue
+    revMap.set(pn, (revMap.get(pn) || 0) + (r.gross_revenue || 0))
+  }
+  const totalRev = Array.from(revMap.values()).reduce((a, b) => a + b, 0)
+  // Products ranked by revenue — most important to the business comes first
+  const revenueRankedProducts = Array.from(revMap.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 15)
+    .map(([name, rev]) => ({
+      name,
+      revPct: totalRev > 0 ? Math.round((rev / totalRev) * 100) : 0,
+    }))
+
+  // Supplement with POS item names not yet seen in unified_data
+  const seenNames = new Set(revenueRankedProducts.map(p => p.name.toLowerCase()))
+  const posOnlyTerms = posItems
+    .map(p => (p.name || p.category || '').trim())
+    .filter(n => n && !seenNames.has(n.toLowerCase()) && !SERVICE_NOISE.some(s => n.toLowerCase().includes(s)))
+    .slice(0, 10)
+    .map(name => ({ name, revPct: 0 }))
+
+  const rankedProducts = [...revenueRankedProducts, ...posOnlyTerms]
+
+  // Flat list for cache key + supplier prompts (order preserved = revenue order)
+  const businessTerms = rankedProducts
+    .map(p => p.name)
+    .filter(t => t.length > 2)
     .slice(0, 40)
 
   // Supplier sourcing context saved by user (where they buy each product from)
@@ -493,7 +530,7 @@ export async function GET(request: NextRequest) {
   } else {
     // Select signals: supplier-specific specs first, then AI-selected macro signals
     const supplierSpecs = buildSupplierSignals(supplierSources, climate)
-    const macroSpecs = await selectBusinessSignals({ climate, businessTerms, sectorLabel: sector.label, channelMix, userId: user.id, city: userCity, supplierSources })
+    const macroSpecs = await selectBusinessSignals({ climate, businessTerms, rankedProducts, sectorLabel: sector.label, channelMix, userId: user.id, city: userCity, supplierSources })
     // Merge: supplier specs take priority (they're the most personalised), then macro
     const seenKeys = new Set(supplierSpecs.map(s => s.key))
     const combinedSpecs = [
@@ -530,7 +567,7 @@ export async function GET(request: NextRequest) {
     narrative = await buildNarrative({
       sym, condition: d0.condition, totalSeverity: d0.totalSeverity, climate, sector, signals, supply,
       importPct, estExtraMonthly: estExtra0, monthlyImportSpend, runwayMonths, userId: user.id,
-      businessTerms, city: userCity,
+      businessTerms, rankedProducts, city: userCity, supplierSources,
     })
     // Merge Claude-cleaned values so cards show a real reading instead of "—",
     // but ONLY where Tavily actually returned data — never let the model invent
@@ -640,7 +677,9 @@ interface NarrativeInput {
   importPct: number; estExtraMonthly: number; monthlyImportSpend: number
   runwayMonths: number | null; userId: string
   businessTerms: string[]
+  rankedProducts: Array<{ name: string; revPct: number }>
   city: string
+  supplierSources: Array<{ product: string; sourceCountry?: string }>
 }
 
 interface Narrative {
@@ -668,8 +707,17 @@ async function buildNarrative(input: NarrativeInput): Promise<Narrative> {
     input.supply.port ? `- Port ${input.supply.port.port}: ${input.supply.port.severity.toUpperCase()} — ${input.supply.port.status}` : '',
   ].filter(Boolean).join('\n')
 
-  const products = input.businessTerms.slice(0, 8).join(', ') || input.sector.label
-  const prompt = `You advise a small business owner based in ${input.city}, ${input.climate.name}. They sell: ${products}. About ${input.importPct}% of their stock cost is import-exposed, ~${input.sym}${input.monthlyImportSpend.toLocaleString()}/month. ${input.runwayMonths != null ? `Cash runway: ${input.runwayMonths} months.` : ''} Extra cost from today's conditions: ${input.sym}${input.estExtraMonthly.toLocaleString()}/month.
+  const productLines = input.rankedProducts.slice(0, 8)
+    .map(p => p.revPct > 0 ? `${p.name} (${p.revPct}% of revenue)` : p.name)
+    .join(', ') || input.sector.label
+  const supplierCtx = input.supplierSources?.filter((s: {sourceCountry?: string}) => s.sourceCountry)
+    .map((s: {product: string; sourceCountry?: string}) => `${s.product} from ${s.sourceCountry}`).join(', ') || ''
+  const prompt = `You advise a small business owner based in ${input.city}, ${input.climate.name}.
+
+Their top-selling products (from their actual sales — Shopify, POS, Amazon, etc.), ranked by revenue:
+${productLines}
+${supplierCtx ? `They source: ${supplierCtx}` : ''}
+~${input.importPct}% of stock cost is import-exposed (~${input.sym}${input.monthlyImportSpend.toLocaleString()}/month).${input.runwayMonths != null ? ` Cash runway: ${input.runwayMonths} months.` : ''} Extra cost today: ${input.sym}${input.estExtraMonthly.toLocaleString()}/month.
 
 Today's signals (specific to their products and location):
 ${signalLines}
