@@ -1,29 +1,37 @@
 'use client'
 import Script from 'next/script'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
 const CONSENT_EVENT = 'askbiz:cookie-consent'
 
-function readAnalyticsConsent(): boolean {
+function hasAnalyticsConsent(): boolean {
   try {
     const raw = localStorage.getItem('askbiz_cookie_consent')
     if (!raw) return false
-    const parsed = JSON.parse(raw)
-    return parsed?.analytics === true
+    return JSON.parse(raw)?.analytics === true
   } catch {
     return false
   }
 }
 
 export default function TikTokPixel({ pixelId }: { pixelId: string }) {
-  const [enabled, setEnabled] = useState(false)
-
   useEffect(() => {
-    setEnabled(readAnalyticsConsent())
+    const applyConsent = () => {
+      if (typeof window === 'undefined' || !(window as any).ttq) return
+      if (hasAnalyticsConsent()) {
+        ;(window as any).ttq.grantConsent()
+      } else {
+        ;(window as any).ttq.holdConsent()
+      }
+    }
 
-    const handler = () => setEnabled(readAnalyticsConsent())
+    // Apply on mount (consent may already be stored)
+    applyConsent()
+
+    // Re-apply when the user interacts with the cookie banner
+    const handler = () => applyConsent()
     const storageHandler = (e: StorageEvent) => {
-      if (e.key === 'askbiz_cookie_consent') handler()
+      if (e.key === 'askbiz_cookie_consent') applyConsent()
     }
     window.addEventListener(CONSENT_EVENT, handler)
     window.addEventListener('storage', storageHandler)
@@ -32,8 +40,6 @@ export default function TikTokPixel({ pixelId }: { pixelId: string }) {
       window.removeEventListener('storage', storageHandler)
     }
   }, [])
-
-  if (!enabled) return null
 
   return (
     <Script id="tiktok-pixel" strategy="afterInteractive">
