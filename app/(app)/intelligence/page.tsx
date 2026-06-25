@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLang } from '@/components/LanguageProvider'
-import DailyBrief from '@/components/intelligence/DailyBrief'
 import AnomalyFeed from '@/components/intelligence/AnomalyFeed'
 import TeamPanel from '@/components/intelligence/TeamPanel'
 import LogisticsPulseCard from '@/components/LogisticsPulseCard'
@@ -352,8 +351,6 @@ export default function IntelligencePage() {
               onAsk={askAskBiz}
             />
 
-            {/* ── Daily brief ── */}
-            <DailyBrief onAsk={askAskBiz}/>
 
             {/* ── Today's Actions (compact — max 3) ── */}
             <DailyActions onAsk={askAskBiz} limit={3} onViewAll={() => setTab('actions')}/>
