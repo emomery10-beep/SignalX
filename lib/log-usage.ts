@@ -6,7 +6,7 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   opus:         { input: 15.0,  output: 75.0  },
   // Groq models
   'llama-3.3-70b-versatile':                     { input: 0.59, output: 0.79 },
-  'meta/llama-4-scout-17b-16e-instruct':         { input: 0.11, output: 0.34 },
+  'meta-llama/llama-4-scout-17b-16e-instruct':    { input: 0.11, output: 0.34 },
 }
 
 function costUsd(model: string, inputTokens: number, outputTokens: number): number {

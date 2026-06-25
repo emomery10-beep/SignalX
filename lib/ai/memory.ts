@@ -3,6 +3,7 @@
 // Injected into every AI prompt so the AI knows the user's business deeply.
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { logUsage } from '@/lib/log-usage'
 
 const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_MODEL = 'llama-3.3-70b-versatile'
@@ -61,6 +62,8 @@ Rules:
       }),
     })
     const groqData = await groqRes.json()
+    const usage = groqData.usage
+    if (usage) logUsage({ route: 'ai/memory', model: GROQ_MODEL, usage: { input_tokens: usage.prompt_tokens, output_tokens: usage.completion_tokens }, userId })
     const text = groqData.choices?.[0]?.message?.content || ''
     const match = text.match(/\[[\s\S]*\]/)
     if (!match) return

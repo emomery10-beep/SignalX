@@ -371,8 +371,25 @@ export default function AdminPage() {
             const days30 = Array.from({length:30},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(29-i));return d.toISOString().slice(0,10)})
             const dayMax = Math.max(...days30.map(d=>byDay[d]||0), 0.0001)
 
-            const modelLabel = (m:string) => m.includes('haiku')?'Haiku':m.includes('sonnet')?'Sonnet':m.includes('opus')?'Opus':m.slice(0,8)
-            const modelColor = (m:string) => m.includes('haiku')?'#0891b2':m.includes('sonnet')?'#7c3aed':m.includes('opus')?'#dc2626':'#64748b'
+            const isGroq = (m:string) => m.includes('llama') || m.includes('mixtral') || m.includes('whisper')
+            const modelLabel = (m:string) => {
+              if (m.includes('llama-4-scout')) return 'Llama 4 Scout'
+              if (m.includes('llama-3.3') || m.includes('llama-3-3')) return 'Llama 3.3'
+              if (m.includes('llama-3')) return 'Llama 3'
+              if (m.includes('haiku')) return 'Haiku'
+              if (m.includes('sonnet')) return 'Sonnet'
+              if (m.includes('opus')) return 'Opus'
+              return m.slice(0,10)
+            }
+            const modelColor = (m:string) => {
+              if (isGroq(m)) return '#f97316'
+              if (m.includes('haiku')) return '#0891b2'
+              if (m.includes('sonnet')) return '#7c3aed'
+              if (m.includes('opus')) return '#dc2626'
+              return '#64748b'
+            }
+            const groqTotal = Object.entries(byModel).filter(([m])=>isGroq(m)).reduce((s,[,d])=>s+d.costUsd,0)
+            const anthropicTotal = Object.entries(byModel).filter(([m])=>!isGroq(m)).reduce((s,[,d])=>s+d.costUsd,0)
 
             return <>
               {/* ── Summary KVs ── */}
@@ -418,9 +435,11 @@ export default function AdminPage() {
                   {Object.entries(byModel).sort((a,b)=>b[1].costUsd-a[1].costUsd).map(([model,d])=>{
                     const pct = total > 0 ? (d.costUsd/total*100) : 0
                     const col = modelColor(model)
+                    const groq = isGroq(model)
                     return <div key={model} style={{marginBottom:10}}>
                       <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:4}}>
                         <span style={{display:'flex',alignItems:'center',gap:6}}>
+                          <span style={{padding:'1px 5px',borderRadius:99,background:groq?'#f9731618':'#8b5cf618',color:groq?'#f97316':'#8b5cf6',fontSize:10,fontWeight:700}}>{groq?'Groq':'Anthropic'}</span>
                           <span style={{padding:'1px 7px',borderRadius:99,background:col+'22',color:col,fontSize:11,fontWeight:600}}>{modelLabel(model)}</span>
                           <span style={{color:'var(--tx3)'}}>{d.calls} calls</span>
                         </span>
@@ -461,9 +480,12 @@ export default function AdminPage() {
                         const col = modelColor(d.model||'')
                         return <div key={route} style={{display:'grid',gridTemplateColumns:'1fr auto',gap:8,padding:'7px 10px',borderRadius:8,background:'var(--sf)',border:'1px solid var(--b)',marginBottom:5,alignItems:'center'}}>
                           <div>
-                            <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:3}}>
+                            <div style={{display:'flex',alignItems:'center',gap:4,marginBottom:3,flexWrap:'wrap'}}>
                               <span style={{fontSize:11,fontFamily:'monospace',color:'var(--tx2)'}}>{route}</span>
-                              {d.model && <span style={{padding:'0px 5px',borderRadius:99,background:col+'22',color:col,fontSize:10,fontWeight:600,whiteSpace:'nowrap'}}>{modelLabel(d.model)}</span>}
+                              {d.model && <>
+                                <span style={{padding:'0px 4px',borderRadius:99,background:isGroq(d.model)?'#f9731618':'#8b5cf618',color:isGroq(d.model)?'#f97316':'#8b5cf6',fontSize:9,fontWeight:700,whiteSpace:'nowrap'}}>{isGroq(d.model)?'Groq':'Anthropic'}</span>
+                                <span style={{padding:'0px 5px',borderRadius:99,background:col+'22',color:col,fontSize:10,fontWeight:600,whiteSpace:'nowrap'}}>{modelLabel(d.model)}</span>
+                              </>}
                             </div>
                             <div style={{height:3,borderRadius:99,background:'var(--ev)',overflow:'hidden'}}>
                               <div style={{height:'100%',width:routePct+'%',background:meta.color,opacity:0.7,borderRadius:99}}/>
@@ -511,7 +533,9 @@ export default function AdminPage() {
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
                   {[
                     {label:tc('admin.ue_revenue_per_user'),value:'£'+(mrr/(payingCount||1)).toFixed(2)+'/mo'},
-                    {label:'API cost this month',value:total>0?('$'+total.toFixed(2)+'  (~$'+dailyAvg.toFixed(2)+'/day)'):'$0.00'},
+                    {label:'Total AI cost (month)',value:total>0?('$'+total.toFixed(2)+'  (~$'+dailyAvg.toFixed(2)+'/day)'):'$0.00'},
+                    {label:'Groq (llama) cost',value:groqTotal>0?'$'+groqTotal.toFixed(4):'$0.00'},
+                    {label:'Anthropic (claude) cost',value:anthropicTotal>0?'$'+anthropicTotal.toFixed(4):'$0.00'},
                     {label:tc('admin.ue_gross_margin'),value:mrr>0?Math.max(0,Math.round((1-(total*0.79)/mrr)*100))+'%':'~85%'},
                     {label:tc('admin.ue_ltv'),value:'£'+((mrr/(payingCount||1))*12).toFixed(0)},
                   ].map(({label,value})=>(
