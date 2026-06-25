@@ -27,6 +27,9 @@ export const maxDuration = 60
 const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
+// Billing / SaaS metadata terms that must never appear as market signals or product sourcing prompts
+const SERVICE_NOISE = ['subscription', 'invoice', 'charge', 'payment', 'fee', 'refund', 'credit', 'trial', 'plan', 'seat', 'license', 'renewal', 'setup', 'onboarding', 'consulting', 'support', 'maintenance', 'hosting', 'saas', 'addon', 'add-on', 'upgrade', 'downgrade']
+
 // Persistent cache: the expensive result (signals + supply + narrative) is kept
 // in Supabase for 12h so the Tavily/Claude work runs at most ~twice a day per
 // business. A forced refresh is only honoured once the cache is older than
@@ -354,7 +357,10 @@ export async function GET(request: NextRequest) {
   ].filter(Boolean)))
   const sector = detectSector(categories)
   // Everything the business actually trades — feeds signal selection.
-  const businessTerms = Array.from(new Set([...categories, ...productNames])).slice(0, 40)
+  // Strip billing/SaaS metadata before any downstream use (signal selection, supplier prompts)
+  const businessTerms = Array.from(new Set([...categories, ...productNames]))
+    .filter(t => !SERVICE_NOISE.some(n => t.toLowerCase().includes(n)))
+    .slice(0, 40)
 
   // Supplier sourcing context saved by user (where they buy each product from)
   const overrides = (overridesRow?.overrides as Record<string, unknown>) || {}
@@ -362,13 +368,8 @@ export async function GET(request: NextRequest) {
   const supplierSources: SupplierSource[] = supplierContext?.sources || []
 
   // Products we know about but have no supplier origin for — these become prompts in the UI
-  // Filter out service/billing terms that aren't physical products needing a source country
-  const SERVICE_NOISE = ['subscription', 'invoice', 'charge', 'payment', 'fee', 'refund', 'credit', 'trial', 'plan', 'seat', 'license', 'renewal', 'setup', 'onboarding', 'consulting', 'support', 'maintenance', 'hosting', 'saas', 'addon', 'add-on', 'upgrade', 'downgrade']
   const knownProductsWithoutSource = businessTerms
-    .filter(t => {
-      const tl = t.toLowerCase()
-      return !SERVICE_NOISE.some(n => tl.includes(n)) && t.length > 2
-    })
+    .filter(t => t.length > 2)
     .filter(t => !supplierSources.some(s => s.product.toLowerCase() === t.toLowerCase()))
     .slice(0, 5)
     .map(product => ({ product }))
