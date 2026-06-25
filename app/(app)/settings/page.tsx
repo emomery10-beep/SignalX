@@ -418,12 +418,12 @@ function TeamPanel() {
   const pendingCount = members.filter(m => m.status === 'pending').length
 
   const ROLE_DESC: Record<string, string> = {
-    owner:      'Full access',
-    admin:      'Read, write, invite',
-    analyst:    'Read & write',
-    accountant: 'Read & financial data',
-    buyer:      'Read & inventory',
-    viewer:     'Read only',
+    owner:      tc('settings.role_full_access'),
+    admin:      tc('settings.role_read_write_invite'),
+    analyst:    tc('settings.role_read_write'),
+    accountant: tc('settings.role_read_financial'),
+    buyer:      tc('settings.role_read_inventory'),
+    viewer:     tc('settings.role_read_only'),
   }
 
   return (
@@ -434,10 +434,10 @@ function TeamPanel() {
         <Card>
           <div style={{ padding: '28px 24px', textAlign: 'center' as const }}>
             <div style={{ fontSize: 28, marginBottom: 10 }}>👥</div>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 15, fontWeight: 600, marginBottom: 6 }}>Team collaboration is a Business feature</div>
-            <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 16, lineHeight: 1.6 }}>Invite up to 5 team members with role-based access — analysts, accountants, buyers, and more.</div>
+            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 15, fontWeight: 600, marginBottom: 6 }}>{tc('settings.team_upgrade_title')}</div>
+            <div style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 16, lineHeight: 1.6 }}>{tc('settings.team_upgrade_desc')}</div>
             <a href="/billing" style={{ display: 'inline-block', padding: '10px 22px', borderRadius: 'var(--r-md)', background: 'var(--acc)', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-sora)', boxShadow: '0 2px 8px rgba(208,138,89,.25)' }}>
-              Upgrade to Business →
+              {tc('settings.team_upgrade_btn')}
             </a>
           </div>
         </Card>
@@ -447,8 +447,8 @@ function TeamPanel() {
           <Card>
             <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
               <div style={{ fontSize: 13, color: 'var(--tx2)' }}>
-                <span style={{ fontWeight: 600, color: 'var(--tx)' }}>{activeCount}</span> of <span style={{ fontWeight: 600, color: 'var(--tx)' }}>{maxMembers === -1 ? '∞' : maxMembers}</span> seats used
-                {pendingCount > 0 && <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--tx3)' }}>· {pendingCount} invite{pendingCount > 1 ? 's' : ''} pending</span>}
+                <span style={{ fontWeight: 600, color: 'var(--tx)' }}>{activeCount}</span> {tc('settings.team_of')} <span style={{ fontWeight: 600, color: 'var(--tx)' }}>{maxMembers === -1 ? '∞' : maxMembers}</span> {tc('settings.team_seats_used')}
+                {pendingCount > 0 && <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--tx3)' }}>· {pendingCount} {pendingCount > 1 ? tc('settings.team_invites_pending') : tc('settings.team_invite_pending')}</span>}
               </div>
               {maxMembers !== -1 && (
                 <div style={{ width: 120, height: 4, background: 'var(--ev)', borderRadius: 2, overflow: 'hidden' }}>
@@ -464,16 +464,16 @@ function TeamPanel() {
             <div style={{ padding: '16px 20px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>Email *</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.team_email_label')}</label>
                   <input style={inp} value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} placeholder="colleague@company.com" type="email" onKeyDown={e => e.key === 'Enter' && invite()}/>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>Name (optional)</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.team_name_label')}</label>
                   <input style={inp} value={inviteName} onChange={e => setInviteName(e.target.value)} placeholder="Jane Smith"/>
                 </div>
               </div>
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 8 }}>Role</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 8 }}>{tc('settings.team_role_label')}</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 8 }}>
                   {roles.filter(r => r !== 'owner').map(r => (
                     <button
@@ -493,7 +493,7 @@ function TeamPanel() {
                 onClick={invite} disabled={inviting || !inviteEmail.trim() || activeCount >= maxMembers}
                 style={{ padding: '10px 20px', borderRadius: 'var(--r-md)', background: 'var(--acc)', color: '#fff', border: 'none', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', cursor: (inviting || !inviteEmail.trim() || activeCount >= maxMembers) ? 'not-allowed' : 'pointer', opacity: (inviting || !inviteEmail.trim() || activeCount >= maxMembers) ? .6 : 1, boxShadow: '0 2px 8px rgba(208,138,89,.2)' }}
               >
-                {inviting ? 'Sending invite…' : 'Send invite'}
+                {inviting ? tc('settings.team_sending_invite') : tc('settings.team_send_invite')}
               </button>
             </div>
           </Card>
@@ -511,7 +511,7 @@ function TeamPanel() {
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{useStore.getState().user.name || 'You'}</div>
                   <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{useStore.getState().user.email}</div>
                 </div>
-                <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 'var(--rf)', background: 'rgba(208,138,89,.1)', color: 'var(--acc)', fontWeight: 600, border: '1px solid rgba(208,138,89,.2)' }}>Owner</span>
+                <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 'var(--rf)', background: 'rgba(208,138,89,.1)', color: 'var(--acc)', fontWeight: 600, border: '1px solid rgba(208,138,89,.2)' }}>{tc('settings.team_owner')}</span>
               </div>
               {members.map((mb, i) => (
                 <div key={mb.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: i < members.length - 1 ? '1px solid var(--b)' : 'none' }}>
@@ -523,7 +523,7 @@ function TeamPanel() {
                     <div style={{ fontSize: 12, color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mb.email}</div>
                   </div>
                   {mb.status === 'pending' && (
-                    <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 'var(--rf)', background: 'rgba(245,158,11,.1)', color: '#d97706', fontWeight: 600, border: '1px solid rgba(245,158,11,.2)', flexShrink: 0 }}>Pending</span>
+                    <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 'var(--rf)', background: 'rgba(245,158,11,.1)', color: '#d97706', fontWeight: 600, border: '1px solid rgba(245,158,11,.2)', flexShrink: 0 }}>{tc('settings.team_pending_badge')}</span>
                   )}
                   <select
                     value={mb.role}
@@ -536,7 +536,7 @@ function TeamPanel() {
                     onClick={() => removeMember(mb.id)}
                     style={{ fontSize: 12, color: '#dc2626', background: 'transparent', border: '1px solid rgba(220,38,38,.2)', borderRadius: 'var(--r-md)', padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
                   >
-                    Remove
+                    {tc('settings.team_remove')}
                   </button>
                 </div>
               ))}
@@ -544,7 +544,7 @@ function TeamPanel() {
           )}
           {!loading && members.length === 0 && (
             <div style={{ padding: '32px', textAlign: 'center' as const, background: 'var(--ev)', borderRadius: 'var(--r-lg)', color: 'var(--tx3)', fontSize: 13 }}>
-              No team members yet. Invite your first colleague above.
+              {tc('settings.team_no_members')}
             </div>
           )}
         </>
@@ -784,16 +784,16 @@ function IntegrationsPanel() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{src.name || meta.label}</div>
                       <div style={{ fontSize: 12, color: isError ? '#dc2626' : 'var(--tx3)', marginTop: 1 }}>
-                        {isError ? src.error_message || 'Sync error — reconnect to fix' :
-                          src.last_synced_at ? `Synced ${new Date(src.last_synced_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : 'Never synced'}
+                        {isError ? src.error_message || tc('settings.int_sync_error') :
+                          src.last_synced_at ? `${tc('settings.int_synced')} ${new Date(src.last_synced_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}` : tc('settings.int_never_synced')}
                       </div>
                     </div>
                     <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 'var(--rf)', fontWeight: 600, background: isError ? 'rgba(220,38,38,.08)' : 'rgba(34,197,94,.08)', color: isError ? '#dc2626' : '#16a34a', border: `1px solid ${isError ? 'rgba(220,38,38,.2)' : 'rgba(34,197,94,.2)'}`, flexShrink: 0 }}>
-                      {isError ? 'Error' : 'Active'}
+                      {isError ? tc('settings.int_error_badge') : tc('settings.int_active')}
                     </span>
                     <button onClick={() => disconnect(src.id, src.name || meta.label)} disabled={disconnecting === src.id}
                       style={{ fontSize: 12, color: 'var(--tx3)', background: 'transparent', border: '1px solid var(--b2)', borderRadius: 'var(--r-md)', padding: '5px 10px', cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, opacity: disconnecting === src.id ? .5 : 1 }}>
-                      {disconnecting === src.id ? 'Removing…' : 'Disconnect'}
+                      {disconnecting === src.id ? tc('settings.int_removing') : tc('settings.int_disconnect')}
                     </button>
                   </div>
                 )
@@ -824,10 +824,10 @@ function IntegrationsPanel() {
                         <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 1 }}>{c.desc}</div>
                       </div>
                       {isConnected ? (
-                        <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 'var(--rf)', fontWeight: 600, background: 'rgba(34,197,94,.08)', color: '#16a34a', border: '1px solid rgba(34,197,94,.2)', flexShrink: 0 }}>Connected</span>
+                        <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 'var(--rf)', fontWeight: 600, background: 'rgba(34,197,94,.08)', color: '#16a34a', border: '1px solid rgba(34,197,94,.2)', flexShrink: 0 }}>{tc('settings.int_connected_badge')}</span>
                       ) : (
                         <a href={c.href} style={{ fontSize: 12, fontWeight: 600, color: 'var(--acc)', background: 'rgba(208,138,89,.08)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 'var(--r-md)', padding: '5px 12px', textDecoration: 'none', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                          {c.oauth ? 'Connect' : 'Set up →'}
+                          {c.oauth ? tc('settings.int_connect') : tc('settings.int_setup')}
                         </a>
                       )}
                     </div>
@@ -838,7 +838,7 @@ function IntegrationsPanel() {
           ))}
 
           <div style={{ padding: '12px 14px', borderRadius: 10, border: '1px dashed var(--b2)', fontSize: 13, color: 'var(--tx3)', lineHeight: 1.6 }}>
-            💡 No integration yet? <strong style={{ color: 'var(--tx)' }}>Upload a CSV or Excel file</strong> from the chat page — instant analysis, no connection needed.
+            💡 {tc('settings.int_csv_hint')}
           </div>
         </>
       )}
@@ -873,16 +873,16 @@ function AIPanel() {
 
       <Card>
         <CardHeader title={tc('settings.card_response_format')}/>
-        <SettingRow label="Charts and graphs" description="Automatically render charts when the answer contains numeric or trend data" right={<Toggle value={showCharts} onChange={() => toggle('showCharts')}/>}/>
-        <SettingRow label="KPI summary cards" description="Show key metrics as highlighted cards at the top of each answer" right={<Toggle value={showMetrics} onChange={() => toggle('showMetrics')}/>}/>
-        <SettingRow label="Follow-up suggestions" description="Suggest next questions after every answer to help you dig deeper" border={false} right={<Toggle value={showFollowUps} onChange={() => toggle('showFollowUps')}/>}/>
+        <SettingRow label={tc('settings.ai_charts')} description={tc('settings.ai_charts_desc')} right={<Toggle value={showCharts} onChange={() => toggle('showCharts')}/>}/>
+        <SettingRow label={tc('settings.ai_kpi')} description={tc('settings.ai_kpi_desc')} right={<Toggle value={showMetrics} onChange={() => toggle('showMetrics')}/>}/>
+        <SettingRow label={tc('settings.ai_followup')} description={tc('settings.ai_followup_desc')} border={false} right={<Toggle value={showFollowUps} onChange={() => toggle('showFollowUps')}/>}/>
       </Card>
 
       <Card>
         <CardHeader title={tc('settings.card_advanced')}/>
         <SettingRow
-          label="CFO Mode"
-          description="Board-ready responses — percentage-first language, executive summaries and formal tone"
+          label={tc('settings.ai_cfo')}
+          description={tc('settings.ai_cfo_desc')}
           border={false}
           right={
             canUseCfoMode
@@ -893,7 +893,7 @@ function AIPanel() {
       </Card>
 
       <div style={{ padding: '12px 16px', background: 'var(--ev)', borderRadius: 'var(--r-md)', fontSize: 13, color: 'var(--tx3)' }}>
-        These preferences are saved to your browser and apply to all future questions.
+        {tc('settings.ai_pref_hint')}
       </div>
     </div>
   )
@@ -1056,9 +1056,9 @@ function PrivacyPanel() {
             <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--b)' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>Financial data personalisation</div>
-                  <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5 }}>Store aggregated financial metrics to personalise AI answers. No individual transactions are ever stored.</div>
-                  {consent.data_consent_at && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>Consented {new Date(consent.data_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.priv_financial_title')}</div>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5 }}>{tc('settings.priv_financial_desc')}</div>
+                  {consent.data_consent_at && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.priv_consented')} {new Date(consent.data_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
                 </div>
                 <Toggle value={consent.data_consent} onChange={() => toggle('data')}/>
               </div>
@@ -1066,9 +1066,9 @@ function PrivacyPanel() {
             <div style={{ padding: '16px 20px' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>Help improve AskBiz AI</div>
-                  <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5 }}>Use fully anonymised interactions to improve AI accuracy. Your business is never identifiable.</div>
-                  {consent.training_consent_at && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>Consented {new Date(consent.training_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.priv_improve_title')}</div>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5 }}>{tc('settings.priv_improve_desc')}</div>
+                  {consent.training_consent_at && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.priv_consented')} {new Date(consent.training_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
                 </div>
                 <Toggle value={consent.training_consent} onChange={() => toggle('training')} color="#8c6fe0"/>
               </div>
@@ -1080,9 +1080,9 @@ function PrivacyPanel() {
             <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--b)' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>Camera scanning</div>
-                  <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5 }}>Allow AskBiz POS to access your device camera for barcode and price tag scanning. Images are processed in real time and never stored on our servers.</div>
-                  {consent.camera_consent_at && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>Consented {new Date(consent.camera_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.priv_camera_title')}</div>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5 }}>{tc('settings.priv_camera_desc')}</div>
+                  {consent.camera_consent_at && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.priv_consented')} {new Date(consent.camera_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
                 </div>
                 <Toggle value={consent.camera_consent} onChange={() => toggle('camera')} color="#16a34a"/>
               </div>
@@ -1090,9 +1090,9 @@ function PrivacyPanel() {
             <div style={{ padding: '16px 20px' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>Logistics &amp; delivery tracking</div>
-                  <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5 }}>Process parcel tracking, delivery routes, vehicle inspection photos, and driver handover records. Logistics data is retained for 12 months after delivery completion.</div>
-                  {consent.logistics_consent_at && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>Consented {new Date(consent.logistics_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.priv_logistics_title')}</div>
+                  <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5 }}>{tc('settings.priv_logistics_desc')}</div>
+                  {consent.logistics_consent_at && <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.priv_consented')} {new Date(consent.logistics_consent_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>}
                 </div>
                 <Toggle value={consent.logistics_consent} onChange={() => toggle('logistics')} color="#d08a59"/>
               </div>
@@ -1100,16 +1100,16 @@ function PrivacyPanel() {
           </Card>
 
           <div style={{ padding: '14px 16px', background: 'var(--ev)', borderRadius: 'var(--r-md)', marginBottom: 16 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>Payment processing</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx2)', marginBottom: 6 }}>{tc('settings.priv_payment_title')}</div>
             <p style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.6, margin: 0 }}>
-              Card payments are processed by Stripe. Mobile money payments (M-Pesa, MTN, Airtel) are processed via PesaPal. AskBiz never sees or stores your card details or mobile money PINs.
+              {tc('settings.priv_payment_desc')}
             </p>
           </div>
         </>
       )}
 
       <p style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.6, margin: 0 }}>
-        Read our full <a href="/privacy" style={{ color: 'var(--acc)', textDecoration: 'none', fontWeight: 500 }}>Privacy Policy</a> to understand how your data is handled.
+        {tc('settings.priv_read_full')} <a href="/privacy" style={{ color: 'var(--acc)', textDecoration: 'none', fontWeight: 500 }}>{tc('settings.priv_policy_link')}</a> {tc('settings.priv_read_full_post')}
       </p>
     </div>
   )
@@ -1163,11 +1163,11 @@ function AccountPanel() {
   }
 
   const PLAN_LIMITS = [
-    { label: 'Questions / month',  value: features.questions_per_month  === -1 ? 'Unlimited' : features.questions_per_month },
-    { label: 'File uploads / month', value: features.uploads_per_month  === -1 ? 'Unlimited' : features.uploads_per_month },
-    { label: 'Connected sources',  value: features.sources_limit        === -1 ? 'Unlimited' : features.sources_limit },
-    { label: 'Team seats',         value: features.team_members         === -1 ? 'Unlimited' : features.team_members },
-    { label: 'Alerts',             value: features.alerts_limit         === 0  ? 'Not included' : features.alerts_limit === -1 ? 'Unlimited' : features.alerts_limit },
+    { label: tc('settings.plan_questions'),  value: features.questions_per_month  === -1 ? tc('settings.acc_unlimited') : features.questions_per_month },
+    { label: tc('settings.plan_uploads'), value: features.uploads_per_month  === -1 ? tc('settings.acc_unlimited') : features.uploads_per_month },
+    { label: tc('settings.plan_sources'),  value: features.sources_limit        === -1 ? tc('settings.acc_unlimited') : features.sources_limit },
+    { label: tc('settings.plan_seats'),         value: features.team_members         === -1 ? tc('settings.acc_unlimited') : features.team_members },
+    { label: tc('settings.plan_alerts'),             value: features.alerts_limit         === 0  ? tc('settings.acc_not_included') : features.alerts_limit === -1 ? tc('settings.acc_unlimited') : features.alerts_limit },
   ]
 
   return (
@@ -1177,11 +1177,11 @@ function AccountPanel() {
       {pendingDeletion && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '14px 16px', background: 'rgba(220,38,38,.05)', border: '1px solid rgba(220,38,38,.18)', borderRadius: 'var(--r-md)', marginBottom: 20 }}>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#dc2626', marginBottom: 2 }}>Account deletion pending</div>
-            <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Your data will be deleted within 30 days. You can cancel this request at any time.</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#dc2626', marginBottom: 2 }}>{tc('settings.acc_deletion_pending')}</div>
+            <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('settings.acc_deletion_pending_desc')}</div>
           </div>
           <button onClick={cancelDeletion} disabled={cancellingDeletion} style={{ flexShrink: 0, padding: '7px 14px', borderRadius: 'var(--r-md)', border: '1px solid rgba(220,38,38,.3)', background: 'transparent', color: '#dc2626', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: cancellingDeletion ? .6 : 1 }}>
-            {cancellingDeletion ? 'Cancelling…' : 'Cancel deletion'}
+            {cancellingDeletion ? tc('settings.acc_cancelling') : tc('settings.acc_cancel_deletion')}
           </button>
         </div>
       )}
@@ -1191,11 +1191,11 @@ function AccountPanel() {
         <CardHeader title={tc('settings.card_current_plan')}/>
         <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--b)' }}>
           <div>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, color: 'var(--tx)', textTransform: 'capitalize', marginBottom: 3 }}>{plan} plan</div>
-            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{plan === 'free' ? 'No card required' : plan === 'growth' ? '£19 / month' : '£39 / month'}</div>
+            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, color: 'var(--tx)', textTransform: 'capitalize', marginBottom: 3 }}>{plan} {tc('settings.plan_suffix')}</div>
+            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{plan === 'free' ? tc('settings.acc_no_card') : plan === 'growth' ? tc('settings.acc_price_growth') : tc('settings.acc_price_business')}</div>
           </div>
           <a href="/billing" style={{ padding: '8px 18px', borderRadius: 'var(--r-md)', background: 'var(--acc)', color: '#fff', textDecoration: 'none', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(208,138,89,.2)', flexShrink: 0 }}>
-            {plan === 'free' ? 'Upgrade plan →' : 'Manage billing →'}
+            {plan === 'free' ? tc('settings.acc_upgrade_plan') : tc('settings.acc_manage_billing')}
           </a>
         </div>
         <div style={{ padding: '12px 20px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0 }}>
@@ -1213,11 +1213,11 @@ function AccountPanel() {
         <CardHeader title={tc('settings.card_your_data')}/>
         <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>Export my data</div>
-            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Download everything AskBiz holds about you (GDPR Article 15)</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.acc_export_title')}</div>
+            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('settings.acc_export_desc')}</div>
           </div>
           <button onClick={exportData} disabled={exporting} style={{ flexShrink: 0, padding: '8px 18px', borderRadius: 'var(--r-md)', border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer', fontWeight: 500, opacity: exporting ? .6 : 1 }}>
-            {exporting ? 'Preparing…' : 'Export'}
+            {exporting ? tc('settings.acc_preparing') : tc('settings.acc_export_btn')}
           </button>
         </div>
       </Card>
@@ -1227,11 +1227,11 @@ function AccountPanel() {
         <CardHeader title={tc('settings.card_danger_zone')} danger/>
         <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>Delete account</div>
-            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>Permanently delete your account and all data within 30 days (GDPR Article 17)</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.acc_delete_title')}</div>
+            <div style={{ fontSize: 13, color: 'var(--tx3)' }}>{tc('settings.acc_delete_desc')}</div>
           </div>
           <button onClick={() => setShowDeleteModal(true)} disabled={pendingDeletion} style={{ flexShrink: 0, padding: '8px 18px', borderRadius: 'var(--r-md)', border: '1px solid rgba(220,38,38,.3)', background: 'rgba(220,38,38,.04)', color: '#dc2626', fontSize: 13, fontFamily: 'inherit', cursor: pendingDeletion ? 'not-allowed' : 'pointer', fontWeight: 500, opacity: pendingDeletion ? .5 : 1 }}>
-            {pendingDeletion ? 'Pending' : 'Delete account'}
+            {pendingDeletion ? tc('settings.acc_pending') : tc('settings.acc_delete_btn')}
           </button>
         </div>
       </Card>
@@ -1240,16 +1240,16 @@ function AccountPanel() {
         <>
           <div onClick={() => setShowDeleteModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 199 }}/>
           <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '90%', maxWidth: 420, background: 'var(--sf)', borderRadius: 16, border: '1px solid rgba(220,38,38,.3)', zIndex: 200, padding: 24 }}>
-            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, color: '#dc2626', marginBottom: 8 }}>Delete your account</div>
-            <p style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 16, lineHeight: 1.6 }}>This will permanently delete all your data. Your request will be processed within 30 days in accordance with GDPR Article 17.</p>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 6 }}>Reason (optional)</label>
-            <textarea value={deleteReason} onChange={e => setDeleteReason(e.target.value)} placeholder="Tell us why you are leaving…" style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 13, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' as const, resize: 'none' as const, height: 80, marginBottom: 16 }}/>
+            <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, color: '#dc2626', marginBottom: 8 }}>{tc('settings.acc_modal_title')}</div>
+            <p style={{ fontSize: 13, color: 'var(--tx3)', marginBottom: 16, lineHeight: 1.6 }}>{tc('settings.acc_modal_desc')}</p>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 6 }}>{tc('settings.acc_reason_label')}</label>
+            <textarea value={deleteReason} onChange={e => setDeleteReason(e.target.value)} placeholder={tc('settings.acc_reason_placeholder')} style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 13, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' as const, resize: 'none' as const, height: 80, marginBottom: 16 }}/>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={requestDeletion} disabled={deleting} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', background: '#dc2626', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                {deleting ? 'Submitting…' : 'Request deletion'}
+                {deleting ? tc('settings.acc_submitting') : tc('settings.acc_request_deletion')}
               </button>
               <button onClick={() => setShowDeleteModal(false)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
-                Cancel
+                {tc('settings.acc_cancel')}
               </button>
             </div>
           </div>
@@ -1258,7 +1258,7 @@ function AccountPanel() {
 
       {deleteRequested && (
         <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', padding: '12px 20px', borderRadius: 12, background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.3)', color: '#16a34a', fontSize: 13, fontWeight: 500, zIndex: 300 }}>
-          ✅ Deletion request submitted. Your data will be deleted within 30 days.
+          ✅ {tc('settings.acc_deletion_toast')}
         </div>
       )}
     </div>
@@ -1330,10 +1330,10 @@ function CompliancePanel() {
         <div style={{ padding: '16px 20px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             {[
-              { label: 'Storage region', value: 'AWS eu-west-2 · London, UK' },
-              { label: 'Data sovereignty', value: 'United Kingdom (UK GDPR)' },
-              { label: 'EU transfers', value: 'UK adequacy decision applies' },
-              { label: 'Backup retention', value: '30 days, same region' },
+              { label: tc('settings.comp_storage_region'), value: 'AWS eu-west-2 · London, UK' },
+              { label: tc('settings.comp_data_sovereignty'), value: 'United Kingdom (UK GDPR)' },
+              { label: tc('settings.comp_eu_transfers'), value: 'UK adequacy decision applies' },
+              { label: tc('settings.comp_backup_retention'), value: '30 days, same region' },
             ].map(item => (
               <div key={item.label} style={{ padding: '12px 14px', borderRadius: 10, background: 'var(--ev)' }}>
                 <div style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 4 }}>{item.label}</div>
@@ -1349,12 +1349,12 @@ function CompliancePanel() {
         <CardHeader title={tc('settings.card_gdpr_status')}/>
         <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {STATUS_BADGE('Data minimisation', true)}
-            {STATUS_BADGE('Right to erasure (Art. 17)', true)}
-            {STATUS_BADGE('Data portability (Art. 20)', true)}
-            {STATUS_BADGE('Lawful basis recorded', true)}
-            {STATUS_BADGE('Privacy policy published', true)}
-            {STATUS_BADGE('DPA signed', true)}
+            {STATUS_BADGE(tc('settings.comp_data_min'), true)}
+            {STATUS_BADGE(tc('settings.comp_erasure'), true)}
+            {STATUS_BADGE(tc('settings.comp_portability'), true)}
+            {STATUS_BADGE(tc('settings.comp_lawful_basis'), true)}
+            {STATUS_BADGE(tc('settings.comp_policy_published'), true)}
+            {STATUS_BADGE(tc('settings.comp_dpa_signed'), true)}
           </div>
           <p style={{ fontSize: 12, color: 'var(--tx3)', margin: 0, lineHeight: 1.6 }}>
             AskBiz acts as a <strong>data processor</strong> on your behalf. You remain the data controller for any customer or staff data you process through the platform. Download our <a href="/dpa" target="_blank" rel="noreferrer" style={{ color: 'var(--acc)', textDecoration: 'none', fontWeight: 500 }}>Data Processing Agreement (DPA) →</a>
@@ -1368,31 +1368,31 @@ function CompliancePanel() {
           <CardHeader title={tc('settings.card_registration_numbers')}/>
           <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 6 }}>ICO registration number (UK)</label>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 6 }}>{tc('settings.comp_ico_label')}</label>
               <input
                 value={icoNumber}
                 onChange={e => setIcoNumber(e.target.value)}
                 placeholder="e.g. ZB123456"
                 style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 13, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' as const }}
               />
-              <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>Required if you process personal data in the UK. <a href="https://ico.org.uk/for-organisations/register/" target="_blank" rel="noreferrer" style={{ color: 'var(--acc)', textDecoration: 'none' }}>Register with ICO →</a></div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.comp_ico_hint')} <a href="https://ico.org.uk/for-organisations/register/" target="_blank" rel="noreferrer" style={{ color: 'var(--acc)', textDecoration: 'none' }}>{tc('settings.comp_ico_register')}</a></div>
             </div>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 6 }}>VAT registration number</label>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 6 }}>{tc('settings.comp_vat_label')}</label>
               <input
                 value={vatNumber}
                 onChange={e => setVatNumber(e.target.value)}
                 placeholder="e.g. GB 123456789"
                 style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 13, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' as const }}
               />
-              <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>Used on receipts and MTD-compatible VAT exports from your POS data.</div>
+              <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 5 }}>{tc('settings.comp_vat_hint')}</div>
             </div>
             <button
               onClick={saveCompliance}
               disabled={saving}
               style={{ alignSelf: 'flex-start', padding: '9px 20px', borderRadius: 10, border: 'none', background: 'var(--acc)', color: '#fff', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', opacity: saving ? .6 : 1 }}
             >
-              {saved ? '✓ Saved' : saving ? 'Saving…' : 'Save numbers'}
+              {saved ? `✓ ${tc('settings.saved')}` : saving ? tc('settings.saving') : tc('settings.comp_save_numbers')}
             </button>
           </div>
         </Card>
@@ -1403,19 +1403,19 @@ function CompliancePanel() {
         <CardHeader title={tc('settings.card_mtd')}/>
         <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {STATUS_BADGE('MTD-compatible exports', true)}
-            {STATUS_BADGE('Digital record-keeping', true)}
+            {STATUS_BADGE(tc('settings.comp_mtd_exports_badge'), true)}
+            {STATUS_BADGE(tc('settings.comp_digital_records_badge'), true)}
           </div>
           <p style={{ fontSize: 13, color: 'var(--tx3)', margin: 0, lineHeight: 1.6 }}>
             All POS transactions are stored as digital records in HMRC-compatible format. Export VAT-period reports directly from <a href="/pos" style={{ color: 'var(--acc)', textDecoration: 'none', fontWeight: 500 }}>Point of Sale → Export</a>.
           </p>
           <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(208,138,89,.06)', border: '1px solid rgba(208,138,89,.2)' }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--acc)', marginBottom: 3 }}>What's included in MTD exports</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--acc)', marginBottom: 3 }}>{tc('settings.comp_mtd_included')}</div>
             <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: 'var(--tx3)', lineHeight: 1.8 }}>
-              <li>Transaction date, reference, and total</li>
-              <li>VAT amount (20% standard, 5% reduced, 0% exempt)</li>
-              <li>Payment type (cash / card / other)</li>
-              <li>Net, VAT, and gross columns per line item</li>
+              <li>{tc('settings.comp_mtd_li1')}</li>
+              <li>{tc('settings.comp_mtd_li2')}</li>
+              <li>{tc('settings.comp_mtd_li3')}</li>
+              <li>{tc('settings.comp_mtd_li4')}</li>
             </ul>
           </div>
         </div>
@@ -1428,11 +1428,11 @@ function CompliancePanel() {
           <div style={{ padding: '16px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>Share anonymised benchmarks</div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.comp_anon_benchmark_title')}</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5, marginBottom: 6 }}>
-                  Contribute fully anonymised, aggregated metrics to AskBiz's collective intelligence layer. This powers answers like "How will my chocolates sell in Kenya?" — no individual business is ever identifiable.
+                  {tc('settings.comp_anon_benchmark_desc')}
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Opt out at any time. Only sector, region, and aggregated values are shared — never your business name, products, or transactions.</div>
+                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('settings.comp_anon_benchmark_note')}</div>
               </div>
               <Toggle value={collectiveOpt} onChange={toggleCollective} color="#8c6fe0"/>
             </div>
@@ -1447,11 +1447,11 @@ function CompliancePanel() {
           <div style={{ padding: '16px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24 }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>Contribute to the global price pool</div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--tx)', marginBottom: 3 }}>{tc('settings.comp_global_price_title')}</div>
                 <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5, marginBottom: 6 }}>
-                  Share anonymised selling prices and channel data from your connected stores. In return, see what products are actually selling for across thousands of merchants worldwide — by channel, region, and trend. Your identity, cost prices, and business name are never shared.
+                  {tc('settings.comp_global_price_desc')}
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Enabled by default for new accounts. Only product names, selling prices, channel, and region are pooled — aggregated across 3+ merchants minimum before any signal is published. You can opt out at any time.</div>
+                <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('settings.comp_global_price_note')}</div>
               </div>
               <Toggle value={marketIntelOpt} onChange={toggleMarketIntel} color="#d08a59"/>
             </div>
@@ -1480,10 +1480,10 @@ function CompliancePanel() {
             The POS logistics module processes delivery addresses, parcel tracking data, route information, and vehicle inspection photos. Camera scanning processes barcode and price tag images in real time without storing raw images.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 8 }}>
-            {STATUS_BADGE('Camera images not stored', true)}
-            {STATUS_BADGE('Logistics data: 12-month retention', true)}
-            {STATUS_BADGE('Vehicle photos: 6-month retention', true)}
-            {STATUS_BADGE('Offline data synced & cleared', true)}
+            {STATUS_BADGE(tc('settings.comp_camera_not_stored'), true)}
+            {STATUS_BADGE(tc('settings.comp_logistics_retention'), true)}
+            {STATUS_BADGE(tc('settings.comp_vehicle_retention'), true)}
+            {STATUS_BADGE(tc('settings.comp_offline_cleared'), true)}
           </div>
           <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 9, background: 'var(--ev)', fontSize: 12, color: 'var(--tx3)' }}>
             Offline mode stores transactions locally in your browser during internet outages. Data is automatically synced and cleared when connectivity resumes. Mobile money payments (M-Pesa, MTN, Airtel) are processed via PesaPal — AskBiz never sees your mobile money PIN.
