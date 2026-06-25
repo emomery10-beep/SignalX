@@ -502,6 +502,26 @@ export async function GET(request: NextRequest) {
 
   type GeoSig = { level: 'city' | 'country' | 'region'; location: string; summary: string; severity: 'ok' | 'watch' | 'alert' }
   type CacheRow = { payload: { signals: SignalReading[]; supply: SupplyReading; narrative: Narrative; geo_signals?: GeoSig[] }; fetched_at: string }
+
+  // Ensure the cache table exists — self-heals on any fresh environment
+  try {
+    await supabase.rpc('run_sql' as never, { query: `
+      CREATE TABLE IF NOT EXISTS public.market_climate_cache (
+        user_id    uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+        cache_key  text        NOT NULL,
+        payload    jsonb       NOT NULL,
+        fetched_at timestamptz NOT NULL DEFAULT now(),
+        PRIMARY KEY (user_id, cache_key)
+      );
+      DO $$ BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='market_climate_cache') THEN
+          ALTER TABLE public.market_climate_cache ENABLE ROW LEVEL SECURITY;
+          CREATE POLICY mc_cache_own ON public.market_climate_cache FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+        END IF;
+      END $$;
+    ` } as never)
+  } catch { /* table already exists — normal path */ }
+
   let cacheRow: CacheRow | null = null
   try {
     const { data } = await supabase
@@ -509,7 +529,7 @@ export async function GET(request: NextRequest) {
       .select('payload, fetched_at')
       .eq('user_id', user.id).eq('cache_key', cacheKey).maybeSingle()
     cacheRow = (data as unknown as CacheRow) || null
-  } catch { cacheRow = null }  // table may not exist yet → treat as miss
+  } catch { cacheRow = null }
 
   const ageMs = cacheRow ? Date.now() - new Date(cacheRow.fetched_at).getTime() : Infinity
   const forceAllowed = forceRefresh && ageMs >= FORCE_MIN_MS
