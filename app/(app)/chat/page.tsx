@@ -439,19 +439,18 @@ export default function ChatPage() {
 
                 {!uploadedFile && (
                   <>
-                    {/* Specialist tool cards */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, width: '100%', maxWidth: 460, marginBottom: 14 }} className="animate-fade-up stagger-3">
+                    {/* Suggested questions — text links, not cards */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%', maxWidth: 420, marginBottom: 14 }} className="animate-fade-up stagger-3">
                       {getSmartCards(tc, sourceTypes, settings.cfoMode).map(card => (
                         <button
                           key={card.title}
                           onClick={() => sendMessage(card.query)}
-                          style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 5, padding: '12px 14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'all 140ms' }}
-                          onMouseEnter={e => { e.currentTarget.style.borderColor = '#6366F1'; e.currentTarget.style.background = 'rgba(99,102,241,.04)' }}
-                          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.background = 'var(--sf)' }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 9, border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', transition: 'background 120ms', width: '100%' }}
+                          onMouseEnter={e => { e.currentTarget.style.background = 'var(--ev)' }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
                         >
-                          <span style={{ fontSize: 18 }}>{card.icon}</span>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)' }}>{card.title}</div>
-                          <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4 }}>{card.desc}</div>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                          <span style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.4 }}>{card.query}</span>
                         </button>
                       ))}
                     </div>

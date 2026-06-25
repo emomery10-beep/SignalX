@@ -390,6 +390,7 @@ export default function AppShellClient({ user, conversations, children }: {
           {/* More */}
           <button
             onClick={() => setMoreOpen(v => !v)}
+            aria-expanded={moreOpen}
             style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', borderRadius: 10, border: 'none', background: 'transparent', color: 'var(--tx3)', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', width: '100%', marginTop: 2, transition: 'background 120ms' }}
             onMouseEnter={e => (e.currentTarget.style.background = 'var(--ev)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
@@ -530,6 +531,7 @@ export default function AppShellClient({ user, conversations, children }: {
       >
         <button
           onClick={() => setSidebarOpen(v => !v)}
+          aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
           style={{ width: 36, height: 36, borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--tx)" strokeWidth="2" strokeLinecap="round">
