@@ -24,6 +24,7 @@ interface SupplierSource { product: string; sourceCountry: string; supplierName?
 interface MissingContext { product: string }
 interface ChannelStat { name: string; revenue_7d: number; prev_7d: number; trend: 'up' | 'down' | 'flat'; change_pct: number | null }
 interface ProductStat { product: string; revenue_7d: number; units_7d: number }
+interface GeoSignal { level: 'city' | 'country' | 'region'; location: string; summary: string; severity: 'ok' | 'watch' | 'alert' }
 interface ClimateData {
   currency_symbol: string
   country: string
@@ -48,6 +49,7 @@ interface ClimateData {
   supplier_sources: SupplierSource[]
   missing_context: MissingContext[]
   local_conditions: { event: string; severity: 'alert' | 'watch' | 'ok' } | null
+  geo_signals: GeoSignal[]
   channel_activity: { channels: ChannelStat[]; total_7d: number; prev_7d: number; trend: 'up' | 'down' | 'flat' }
   top_products: ProductStat[]
   updated_at: string
@@ -355,7 +357,7 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
       <div key={tab} className="mc-fade" style={{ background: 'var(--sf)', padding: 16 }}>
         {tab === 'now' && <NowPanel data={data} />}
         {tab === 'week' && <WeekPanel data={data} fmt={fmt} />}
-        {tab === 'supply' && <SupplyPanel supply={data.supply} topProducts={data.top_products} fmt={fmt} />}
+        {tab === 'supply' && <SupplyPanel supply={data.supply} topProducts={data.top_products} geoSignals={data.geo_signals || []} fmt={fmt} />}
       </div>
 
       {/* ── Footer: ask AI ── */}
@@ -527,31 +529,70 @@ function WeekPanel({ data, fmt }: { data: ClimateData; fmt: (n: number) => strin
 
 
 
-/* ── SUPPLY: inventory movement + shipping lanes + port watch ── */
-function SupplyPanel({ supply, topProducts, fmt }: { supply: ClimateData['supply']; topProducts: ClimateData['top_products']; fmt: (n: number) => string }) {
+/* ── SUPPLY: geographic zoom (city → country → region) + inventory + port ── */
+function SupplyPanel({ supply, topProducts, geoSignals, fmt }: {
+  supply: ClimateData['supply']
+  topProducts: ClimateData['top_products']
+  geoSignals: GeoSignal[]
+  fmt: (n: number) => string
+}) {
   const { tc } = useLang()
-  const badge = (sev: 'ok' | 'watch' | 'alert') => (
-    <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', padding: '2px 8px', borderRadius: 20, background: `${SEV_BG(sev)}1a`, color: SEV_BG(sev), flexShrink: 0 }}>
-      {sev === 'alert' ? tc('cfo_marketclimate.badgeDisrupted') : sev === 'watch' ? tc('cfo_marketclimate.badgeWatch') : tc('cfo_marketclimate.badgeClear')}
-    </span>
-  )
-  const cell = (icon: React.ReactNode, title: string, sev: 'ok' | 'watch' | 'alert', sub: string | null, status: string, key: string | number) => (
-    <div key={key} style={{ background: 'var(--ev, #f9fafb)', borderRadius: 10, padding: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: sub ? 3 : 5 }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 700, color: 'var(--tx)', minWidth: 0 }}>
-          <span style={{ color: 'var(--tx3)', flexShrink: 0 }}>{icon}</span>
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
-        </span>
-        {badge(sev)}
-      </div>
-      {sub && <div style={{ fontSize: 10, color: 'var(--tx3)', marginBottom: 5 }}>{tc('cfo_marketclimate.viaRoute')} {sub}</div>}
-      <div style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}>{status}</div>
-    </div>
-  )
   const hasProducts = (topProducts || []).length > 0
-  const hasLanes = supply.lanes.length > 0 || supply.port
+  const hasGeo = geoSignals.length > 0
+  const port = supply.port
+
+  const sevColor = (s: 'ok' | 'watch' | 'alert') => s === 'alert' ? RED : s === 'watch' ? AMBER : GREEN
+  const levIcon = (l: string) => l === 'city' ? (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+  ) : l === 'country' ? (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+  ) : (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 000 18 14 14 0 000-18"/></svg>
+  )
+  const levLabel = (l: string) => l === 'city' ? 'Local' : l === 'country' ? 'Country' : 'Region'
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+      {/* ── Geographic zoom: city → country → region ── */}
+      {hasGeo && (
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Local conditions</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, borderRadius: 11, overflow: 'hidden', border: '1px solid var(--b)' }}>
+            {geoSignals.map((g, i) => {
+              const color = sevColor(g.severity)
+              return (
+                <div key={g.level} style={{
+                  display: 'flex', gap: 12, padding: '11px 14px',
+                  borderLeft: `3px solid ${color}`,
+                  background: i % 2 === 0 ? 'var(--sf)' : 'var(--ev, #f9fafb)',
+                  borderBottom: i < geoSignals.length - 1 ? '1px solid var(--b)' : 'none',
+                }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 1, color: 'var(--tx3)', flexShrink: 0 }}>
+                    {levIcon(g.level)}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                      <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color }}>
+                        {levLabel(g.level)}
+                      </span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {g.location}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.55, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {g.summary}
+                    </div>
+                  </div>
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: color, flexShrink: 0, marginTop: 4 }} />
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Top inventory movers ── */}
       {hasProducts && (
         <div>
           <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Your inventory · top movers (30 days)</div>
@@ -567,15 +608,22 @@ function SupplyPanel({ supply, topProducts, fmt }: { supply: ClimateData['supply
           </div>
         </div>
       )}
-      {hasLanes && (
+
+      {/* ── Port watch (only if relevant) ── */}
+      {port && (
         <div>
-          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Shipping & ports</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {supply.lanes.map((l, i) => cell(<IconLane />, l.lane, l.severity, l.route, l.status, i))}
-            {supply.port && cell(<IconPort />, supply.port.port, supply.port.severity, null, supply.port.status, 'port')}
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Port</div>
+          <div style={{ display: 'flex', gap: 12, padding: '11px 14px', borderRadius: 10, background: 'var(--ev, #f9fafb)', borderLeft: `3px solid ${sevColor(port.severity)}`, border: `1px solid var(--b)`, borderLeftWidth: 3 }}>
+            <span style={{ color: 'var(--tx3)', flexShrink: 0, marginTop: 1 }}><IconPort /></span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', marginBottom: 3 }}>{port.port}</div>
+              <div style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}>{port.status}</div>
+            </div>
+            <div style={{ width: 7, height: 7, borderRadius: '50%', background: sevColor(port.severity), flexShrink: 0, marginTop: 4 }} />
           </div>
         </div>
       )}
+
     </div>
   )
 }

@@ -20,12 +20,17 @@ export interface CountryClimate {
   fx: MarketSignalSpec         // local currency vs USD
   commodities: MarketSignalSpec[]
   centralBank: MarketSignalSpec
+  capital: string             // primary commercial city, e.g. 'Nairobi'
+  region: string              // geographic region, e.g. 'East Africa'
+  regionQuery: string         // Tavily query for regional trade/supply news
 }
 
 // ── Per-country signal map ────────────────────────────────────────────────────
 const COUNTRIES: Record<string, CountryClimate> = {
   NG: {
     code: 'NG', name: 'Nigeria', currency: 'NGN',
+    capital: 'Lagos', region: 'West Africa',
+    regionQuery: 'West Africa trade supply chain business conditions latest',
     index: { key: 'index', label: 'NGX All-Share', query: 'Nigeria NGX All-Share Index today points change percent', kind: 'index' },
     fx:    { key: 'fx', label: 'USD / NGN', query: 'USD to NGN Naira exchange rate today official', kind: 'fx' },
     commodities: [
@@ -35,6 +40,8 @@ const COUNTRIES: Record<string, CountryClimate> = {
   },
   KE: {
     code: 'KE', name: 'Kenya', currency: 'KES',
+    capital: 'Nairobi', region: 'East Africa',
+    regionQuery: 'East Africa trade supply chain business conditions latest',
     index: { key: 'index', label: 'NSE 20', query: 'Nairobi Securities Exchange NSE 20 index today change', kind: 'index' },
     fx:    { key: 'fx', label: 'USD / KES', query: 'USD to KES Kenyan shilling exchange rate today', kind: 'fx' },
     commodities: [
@@ -45,6 +52,8 @@ const COUNTRIES: Record<string, CountryClimate> = {
   },
   GH: {
     code: 'GH', name: 'Ghana', currency: 'GHS',
+    capital: 'Accra', region: 'West Africa',
+    regionQuery: 'West Africa trade supply chain business conditions latest',
     index: { key: 'index', label: 'GSE Composite', query: 'Ghana Stock Exchange GSE Composite Index today change', kind: 'index' },
     fx:    { key: 'fx', label: 'USD / GHS', query: 'USD to GHS Ghana cedi exchange rate today', kind: 'fx' },
     commodities: [
@@ -55,6 +64,8 @@ const COUNTRIES: Record<string, CountryClimate> = {
   },
   ZA: {
     code: 'ZA', name: 'South Africa', currency: 'ZAR',
+    capital: 'Johannesburg', region: 'Southern Africa',
+    regionQuery: 'Southern Africa trade supply chain business conditions latest',
     index: { key: 'index', label: 'JSE All-Share', query: 'Johannesburg JSE All Share Index today change percent', kind: 'index' },
     fx:    { key: 'fx', label: 'USD / ZAR', query: 'USD to ZAR South African rand exchange rate today', kind: 'fx' },
     commodities: [
@@ -65,6 +76,8 @@ const COUNTRIES: Record<string, CountryClimate> = {
   },
   GB: {
     code: 'GB', name: 'United Kingdom', currency: 'GBP',
+    capital: 'London', region: 'Europe',
+    regionQuery: 'Europe UK trade supply chain business conditions latest',
     index: { key: 'index', label: 'FTSE 100', query: 'FTSE 100 index today points change percent', kind: 'index' },
     fx:    { key: 'fx', label: 'GBP / USD', query: 'GBP to USD pound dollar exchange rate today', kind: 'fx' },
     commodities: [
@@ -74,6 +87,8 @@ const COUNTRIES: Record<string, CountryClimate> = {
   },
   US: {
     code: 'US', name: 'United States', currency: 'USD',
+    capital: 'New York', region: 'North America',
+    regionQuery: 'North America trade supply chain business conditions latest',
     index: { key: 'index', label: 'S&P 500', query: 'S&P 500 index today points change percent', kind: 'index' },
     fx:    { key: 'fx', label: 'US Dollar Index', query: 'US dollar index DXY today change', kind: 'fx' },
     commodities: [

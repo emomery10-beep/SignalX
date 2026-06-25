@@ -542,20 +542,48 @@ export async function GET(request: NextRequest) {
     } catch { /* table may not exist yet — serve fresh, don't break */ }
   }
 
-  // ── 2b. Local conditions — protests/strikes/closures today (never cached) ────
+  // ── 2b. Geo signals — city → country → region (never cached, always fresh) ────
+  const userCity = (() => {
+    try { return decodeURIComponent(request.headers.get('x-vercel-ip-city') || '') || climate.capital } catch { return climate.capital }
+  })()
+  const sectorLabel = sector.label
+
   let localConditions: { event: string; severity: 'ok' | 'watch' | 'alert' } | null = null
+  let geoSignals: Array<{ level: 'city' | 'country' | 'region'; location: string; summary: string; severity: 'ok' | 'watch' | 'alert' }> = []
+
   try {
-    const lcRes = await marketSearch(
-      `${climate.name} business closed disruption protest strike shutdown today`,
-      { topic: 'news', days: 1, fallbackQuery: `${climate.name} business conditions today` },
-    )
-    if (lcRes.hasData) {
-      const graded = gradeDisruption(lcRes.answer)
-      if (graded.severity !== 'ok') {
-        localConditions = { event: lcRes.answer.slice(0, 300).trim(), severity: graded.severity }
-      }
+    const [cityRes, countryRes, regionRes] = await Promise.all([
+      marketSearch(
+        `${userCity} ${sectorLabel} business disruption supply roads trade protest today`,
+        { topic: 'news', days: 2, fallbackQuery: `${userCity} business conditions today` },
+      ),
+      marketSearch(
+        `${climate.name} ${sectorLabel} supply chain market business conditions`,
+        { topic: 'news', days: 7, fallbackQuery: `${climate.name} business conditions this week` },
+      ),
+      marketSearch(
+        climate.regionQuery,
+        { topic: 'news', days: 14, fallbackQuery: `${climate.region} trade supply news` },
+      ),
+    ])
+
+    const toGeo = (res: typeof cityRes, level: 'city' | 'country' | 'region', location: string) => {
+      if (!res.hasData) return null
+      const graded = gradeDisruption(res.answer)
+      return { level, location, summary: res.answer.slice(0, 200).trim(), severity: graded.severity }
     }
-  } catch { /* non-critical */ }
+
+    const cityGeo  = toGeo(cityRes,    'city',    userCity)
+    const countryGeo = toGeo(countryRes, 'country', climate.name)
+    const regionGeo  = toGeo(regionRes,  'region',  climate.region)
+
+    geoSignals = [cityGeo, countryGeo, regionGeo].filter(Boolean) as typeof geoSignals
+
+    // local_conditions for the Now tab: city-level only if severity > ok
+    if (cityGeo && cityGeo.severity !== 'ok') {
+      localConditions = { event: cityGeo.summary, severity: cityGeo.severity }
+    }
+  } catch { /* non-critical — geo signals are supplementary */ }
 
   // ── 3. Cheap derived fields (fresh every request, from current cash config) ──
   const { totalSeverity, condition, conditionIcon } = computeDerived(signals, supply)
@@ -596,6 +624,7 @@ export async function GET(request: NextRequest) {
     channel_activity: channelActivity,
     top_products: topProducts,
     local_conditions: localConditions,
+    geo_signals: geoSignals,
     updated_at: fetchedAt,
     cached: useCache,
   })
