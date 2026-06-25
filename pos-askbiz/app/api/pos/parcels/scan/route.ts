@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
-import Anthropic from '@anthropic-ai/sdk'
+import { logUsage } from '@/lib/log-usage'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
@@ -52,20 +52,19 @@ export async function POST(req: NextRequest) {
   const { data: imageData, mediaType } = parseDataUrl(body.image)
 
   try {
-    const anthropic = new Anthropic()
-    const aiResponse = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 700,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: mediaType as any, data: imageData },
-          },
-          {
-            type: 'text',
-            text: `You are a logistics document reader. Look at this photo and classify it as one of:
+    const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        max_tokens: 700,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image_url', image_url: { url: `data:${mediaType};base64,${imageData}` } },
+            {
+              type: 'text',
+              text: `You are a logistics document reader. Look at this photo and classify it as one of:
 - "waybill" (a parcel/shipment consignment note with sender + receiver details)
 - "invoice" (a vendor bill for fuel, maintenance, tolls, loading, etc.)
 - "receipt" (a payment receipt)
@@ -84,12 +83,14 @@ Reply ONLY with valid JSON, no prose:
   }
 }
 Use null for any field you cannot read. Do not invent values.`,
-          },
-        ],
-      }],
+            },
+          ],
+        }],
+      }),
     })
-
-    const text = aiResponse.content[0].type === 'text' ? aiResponse.content[0].text.trim() : ''
+    const _groqData = await _groqRes.json()
+    const text = _groqData.choices?.[0]?.message?.content || ''
+    logUsage({ route: 'pos/parcels/scan', model: 'meta-llama/llama-4-scout-17b-16e-instruct', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId: auth.ownerId })
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
       return json({ document_type: 'unknown', confidence: 0, data: {}, message: 'Could not read document' })
@@ -112,7 +113,6 @@ Use null for any field you cannot read. Do not invent values.`,
     })
   } catch (err: any) {
     console.error('Parcel scan error:', err)
-    const billing = err?.status === 400 && /credit balance/i.test(String(err?.message || ''))
-    return json({ document_type: 'unknown', confidence: 0, data: {}, message: billing ? 'AI scanning is paused — top up Anthropic API credits. Enter details manually for now.' : 'Scan failed. Check your connection.' }, billing ? 503 : 500)
+    return json({ document_type: 'unknown', confidence: 0, data: {}, message: 'AI recognition is temporarily unavailable. Enter details manually for now.' }, 500)
   }
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosOwner } from '@/lib/pos-auth'  // fix #20 — use shared auth helper
+import { logUsage } from '@/lib/log-usage'
 
 // CORS handled globally by next.config.js
 export async function OPTIONS() {
@@ -57,21 +57,19 @@ export async function POST(req: NextRequest) {
       ? `\n\nFREQUENTLY RECOGNIZED (prioritize these):\n${hotList.map((h: any) => `- ${h.recognized_name}`).join('\n')}`
       : ''
 
-    // fix #26 — use generic alias rather than date-pinned checkpoint
-    const anthropic = new Anthropic()
-    const aiResponse = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 300,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: 'image/jpeg', data: image },
-          },
-          {
-            type: 'text',
-            text: `You are a POS cashier assistant. Look at this product image and identify it.
+    const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${image}` } },
+            {
+              type: 'text',
+              text: `You are a POS cashier assistant. Look at this product image and identify it.
 
 YOUR STORE'S INVENTORY:
 ${catalogueText || '(Empty inventory)'}${hotListText}
@@ -86,12 +84,14 @@ TASK:
 
 Reply ONLY with valid JSON, nothing else:
 {"name":"product name","price":null}`,
-          },
-        ],
-      }],
+            },
+          ],
+        }],
+      }),
     })
-
-    const text = aiResponse.content[0].type === 'text' ? aiResponse.content[0].text.trim() : ''
+    const _groqData = await _groqRes.json()
+    const text = _groqData.choices?.[0]?.message?.content || ''
+    logUsage({ route: 'pos/scan', model: 'meta-llama/llama-4-scout-17b-16e-instruct', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId: ownerId })
     const jsonMatch = text.match(/\{[\s\S]*?\}/)
     if (!jsonMatch) return json({ error: 'Could not identify product' }, 422)
 
@@ -161,7 +161,6 @@ Reply ONLY with valid JSON, nothing else:
 
   } catch (err: any) {
     console.error('Scan error:', err)
-    const billing = err?.status === 400 && /credit balance/i.test(String(err?.message || ''))
-    return json({ error: billing ? 'AI recognition is paused — top up Anthropic API credits. Use Search to add items for now.' : 'Scan failed' }, billing ? 503 : 500)
+    return json({ error: 'AI recognition is temporarily unavailable. Use Search to add items for now.' }, 500)
   }
 }

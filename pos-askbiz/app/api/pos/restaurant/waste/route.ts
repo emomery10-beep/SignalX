@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosAuth } from '@/lib/pos-auth'
+import { logUsage } from '@/lib/log-usage'
 
 export const dynamic = 'force-dynamic'
 
@@ -117,7 +117,6 @@ export async function PUT(req: NextRequest) {
   if (!image) return NextResponse.json({ error: 'image required' }, { status: 400 })
 
   const service  = createServiceClient()
-  const anthropic = new Anthropic()
 
   // Fetch menu items to match against
   const { data: menuItems } = await service
@@ -129,19 +128,19 @@ export async function PUT(req: NextRequest) {
 
   const menuList = (menuItems || []).slice(0, 150).map((m: any) => `- ${m.name}`).join('\n')
 
-  const resp = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 512,
-    messages: [{
-      role: 'user',
-      content: [
-        {
-          type: 'image',
-          source: { type: 'base64', media_type: media_type as any, data: image },
-        },
-        {
-          type: 'text',
-          text: `You are a restaurant waste tracking assistant. Look at this photo of food waste.
+  const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      max_tokens: 512,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image_url', image_url: { url: `data:${media_type};base64,${image}` } },
+          {
+            type: 'text',
+            text: `You are a restaurant waste tracking assistant. Look at this photo of food waste.
 
 Identify:
 1. What food item is being wasted
@@ -168,16 +167,17 @@ Rules:
 - menu_item_name: the closest match from the menu list above, or null if nothing fits
 - confidence: 0-100
 - notes: brief observation (max 20 words) or ""`,
-        },
-      ],
-    }],
+          },
+        ],
+      }],
+    }),
   })
+  const _groqData = await _groqRes.json()
+  const _groqText = _groqData.choices?.[0]?.message?.content || ''
+  logUsage({ route: 'pos/restaurant/waste', model: 'meta-llama/llama-4-scout-17b-16e-instruct', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId: auth.ownerId })
 
-  const content = resp.content[0]
-  if (content.type !== 'text') return NextResponse.json({ recognized: null })
-
-  const jsonMatch = content.text.trim().match(/\{[\s\S]*\}/)
-  if (!jsonMatch) return NextResponse.json({ recognized: null })
+  const jsonMatch = _groqText.trim().match(/\{[\s\S]*\}/)
+  if (!_groqText || !jsonMatch) return NextResponse.json({ recognized: null })
 
   let recognized: any
   try { recognized = JSON.parse(jsonMatch[0]) } catch { return NextResponse.json({ recognized: null }) }

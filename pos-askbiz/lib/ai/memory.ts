@@ -2,10 +2,8 @@
 // Extracts business facts from conversations and persists them.
 // Injected into every AI prompt so the AI knows the user's business deeply.
 
-import Anthropic from '@anthropic-ai/sdk'
 import { createServiceClient } from '@/lib/supabase/server'
-
-const client = new Anthropic()
+import { logUsage } from '@/lib/log-usage'
 
 interface MemoryFact {
   category: 'finance' | 'product' | 'operations' | 'market' | 'goal' | 'challenge' | 'context'
@@ -21,10 +19,7 @@ export async function extractAndSaveMemory(
   aiAnswer: string,
 ): Promise<void> {
   try {
-    const extraction = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 512,
-      system: `You extract concrete business facts from a conversation between a business owner and an AI advisor.
+    const _systemPrompt = `You extract concrete business facts from a conversation between a business owner and an AI advisor.
 
 Only extract facts that are specific, numerical, or clearly stated — not vague inferences.
 Return a JSON array of facts. Each fact: { category, key, value, confidence }
@@ -45,14 +40,26 @@ Rules:
 - Do NOT extract things already known from their profile (sector, country)
 - confidence: high = stated explicitly, medium = clearly implied, low = inferred
 - Return [] if nothing concrete is extractable
-- Maximum 5 facts per call`,
-      messages: [{
-        role: 'user',
-        content: `User said: "${userMessage}"\n\nAI answered: "${aiAnswer.slice(0, 600)}"\n\nExtract business facts as JSON array:`,
-      }],
-    })
+- Maximum 5 facts per call`
 
-    const text = extraction.content[0]?.type === 'text' ? extraction.content[0].text : ''
+    const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 512,
+        messages: [
+          { role: 'system', content: _systemPrompt },
+          {
+            role: 'user',
+            content: `User said: "${userMessage}"\n\nAI answered: "${aiAnswer.slice(0, 600)}"\n\nExtract business facts as JSON array:`,
+          },
+        ],
+      }),
+    })
+    const _groqData = await _groqRes.json()
+    const text = _groqData.choices?.[0]?.message?.content || ''
+    logUsage({ route: 'memory/extract', model: 'llama-3.3-70b-versatile', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId })
     const match = text.match(/\[[\s\S]*\]/)
     if (!match) return
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosAuth } from '@/lib/pos-auth'
+import { logUsage } from '@/lib/log-usage'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,22 +57,21 @@ export async function POST(req: NextRequest) {
     if (!image) return NextResponse.json({ error: 'image required' }, { status: 400 })
 
     const service = createServiceClient()
-    const anthropic = new Anthropic()
 
     // STEP 1: Extract all line items from the delivery note / invoice image
-    const extractResp = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 2048,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: media_type as any, data: image },
-          },
-          {
-            type: 'text',
-            text: `You are reading a restaurant supplier delivery note or invoice.
+    const _groqExtractRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        max_tokens: 2048,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image_url', image_url: { url: `data:${media_type};base64,${image}` } },
+            {
+              type: 'text',
+              text: `You are reading a restaurant supplier delivery note or invoice.
 
 Extract every line item you can see. For each item include:
 - name: the ingredient or product name, cleaned up (e.g. "Chicken Breast", "Olive Oil 5L", "Tenderstem Broccoli")
@@ -103,29 +102,28 @@ Reply ONLY with valid JSON matching this shape — no markdown, no explanation:
     {"name":"Plum Tomatoes","qty":3,"unit":"case","unit_price":12.50,"line_total":37.50,"category":"produce"}
   ]
 }`,
-          },
-        ],
-      }],
+            },
+          ],
+        }],
+      }),
     })
+    const _groqExtractData = await _groqExtractRes.json()
+    const _extractText = _groqExtractData.choices?.[0]?.message?.content || ''
+    logUsage({ route: 'pos/restaurant/recognize/invoice', model: 'meta-llama/llama-4-scout-17b-16e-instruct', usage: { input_tokens: _groqExtractData.usage?.prompt_tokens ?? 0, output_tokens: _groqExtractData.usage?.completion_tokens ?? 0 }, userId: auth.ownerId })
 
-    const extractContent = extractResp.content[0]
-    if (extractContent.type !== 'text') {
-      return NextResponse.json({ error: 'No text response from vision' }, { status: 500 })
-    }
-
-    console.log('📄 INVOICE RAW:', extractContent.text.slice(0, 500))
+    console.log('📄 INVOICE RAW:', _extractText.slice(0, 500))
 
     // Parse JSON — strip any markdown fences
-    const jsonMatch = extractContent.text.trim().match(/\{[\s\S]*\}/)
+    const jsonMatch = _extractText.trim().match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
-      return NextResponse.json({ error: 'Could not parse invoice data', raw: extractContent.text }, { status: 422 })
+      return NextResponse.json({ error: 'Could not parse invoice data', raw: _extractText }, { status: 422 })
     }
 
     let extracted: ExtractionResult
     try {
       extracted = JSON.parse(jsonMatch[0])
     } catch {
-      return NextResponse.json({ error: 'Invalid JSON from vision model', raw: extractContent.text }, { status: 422 })
+      return NextResponse.json({ error: 'Invalid JSON from vision model', raw: _extractText }, { status: 422 })
     }
 
     if (!extracted.items || extracted.items.length === 0) {

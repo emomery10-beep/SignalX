@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosOwner } from '@/lib/pos-auth'
-import Anthropic from '@anthropic-ai/sdk'
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
+import { logUsage } from '@/lib/log-usage'
 
 /**
  * POST /api/pos/intelligence/anomaly-detection
@@ -54,22 +50,21 @@ export async function POST(req: NextRequest) {
       analysisData.tax = await getTaxData(service, ownerId, startDate)
     }
 
-    // Use Claude to analyze the data
+    // Use Groq to analyze the data
     const prompt = buildAnalysisPrompt(analysisData, periodDays)
 
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
+    const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      }),
     })
-
-    // Extract analysis from response
-    const analysis = message.content[0].type === 'text' ? message.content[0].text : ''
+    const _groqData = await _groqRes.json()
+    const analysis = _groqData.choices?.[0]?.message?.content || ''
+    logUsage({ route: 'pos/anomaly-detection', model: 'llama-3.3-70b-versatile', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId: ownerId })
 
     // Parse anomalies from response
     const anomalies = parseAnomalies(analysis)

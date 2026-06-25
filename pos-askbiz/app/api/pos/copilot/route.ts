@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
-import Anthropic from '@anthropic-ai/sdk'
+import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
 export const maxDuration = 15
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req: NextRequest) {
   const auth = await resolvePosAuth(req)
@@ -103,17 +101,22 @@ export async function POST(req: NextRequest) {
   const userMessage = question || 'Give me a quick, helpful tip for this moment in the sale.'
 
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 200,
-      messages: [{ role: 'user', content: `You are a smart POS cashier copilot. Give brief, actionable tips (1-2 sentences max). Be specific — use actual product names, numbers, customer details. No fluff.
+    const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 200,
+        messages: [{ role: 'user', content: `You are a smart POS cashier copilot. Give brief, actionable tips (1-2 sentences max). Be specific — use actual product names, numbers, customer details. No fluff.
 
 ${context}
 
 ${userMessage}` }],
+      }),
     })
-
-    const text = (response.content[0] as { type: string; text: string }).text
+    const _groqData = await _groqRes.json()
+    const text = _groqData.choices?.[0]?.message?.content || ''
+    logUsage({ route: 'pos/copilot', model: 'llama-3.3-70b-versatile', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId: auth.ownerId })
     return NextResponse.json({ tip: text })
   } catch {
     let tip = ''

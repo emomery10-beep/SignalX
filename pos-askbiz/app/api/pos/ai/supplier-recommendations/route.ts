@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosOwner } from '@/lib/pos-auth'
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
+import { logUsage } from '@/lib/log-usage'
 
 /**
  * POST /api/pos/ai/supplier-recommendations
@@ -79,18 +75,18 @@ ${urgencyIndicators > 0 ? `⚠️ URGENT: ${urgencyIndicators} item(s) are OUT O
 
 Keep it practical and actionable. Include real supplier types (e.g., "Beauty wholesale distributors", "FMCG suppliers", "Direct from manufacturers").`
 
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1500,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
+    const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 1500,
+        messages: [{ role: 'user', content: prompt }],
+      }),
     })
-
-    const response = message.content[0].type === 'text' ? message.content[0].text : 'Unable to generate recommendations'
+    const _groqData = await _groqRes.json()
+    const response = _groqData.choices?.[0]?.message?.content || 'Unable to generate recommendations'
+    logUsage({ route: 'pos/supplier-recommendations', model: 'llama-3.3-70b-versatile', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId: ownerId })
 
     return NextResponse.json({
       response,

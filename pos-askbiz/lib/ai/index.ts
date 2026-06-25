@@ -1,7 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { logUsage } from '@/lib/log-usage'
 import { isExpansionQuestion, buildExpansionContext, buildDataSummary } from './expansion'
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export interface AIResult {
   insight_header?: string
@@ -330,21 +328,26 @@ RULES:
 `
 }
 
-export async function askOnce({ messages, systemPrompt }: {
+export async function askOnce({ messages, systemPrompt, userId }: {
   messages: Array<{ role: string; content: string }>
   systemPrompt: string
+  userId?: string
 }): Promise<AIResult> {
-  const Anthropic = (await import('@anthropic-ai/sdk')).default
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2000,
-    system: systemPrompt,
-    messages: messages.slice(-14) as Array<{ role: 'user' | 'assistant'; content: string }>,
+  const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      max_tokens: 2000,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messages.slice(-14),
+      ],
+    }),
   })
-
-  const raw = response.content.map(b => (b.type === 'text' ? b.text : '')).join('')
+  const _groqData = await _groqRes.json()
+  const raw = _groqData.choices?.[0]?.message?.content || ''
+  logUsage({ route: 'askOnce', model: 'llama-3.3-70b-versatile', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId: userId ?? null })
 
   try {
     const clean = raw.replace(/```json|```/g, '').trim()

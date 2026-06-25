@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosAuth } from '@/lib/pos-auth'
+import { logUsage } from '@/lib/log-usage'
 
 // Allow more time for AI image processing
 export const maxDuration = 60
@@ -27,20 +27,12 @@ export async function POST(req: NextRequest) {
   const { front, back } = await req.json()
   if (!front) return NextResponse.json({ error: 'front image required' }, { status: 400 })
 
-  const anthropic = new Anthropic()
-
   // Build the content blocks — always include front, optionally include back
-  const imageBlocks: Anthropic.ImageBlockParam[] = [
-    {
-      type: 'image',
-      source: { type: 'base64', media_type: 'image/jpeg', data: front },
-    },
+  const imageBlocks: Array<{ type: 'image_url'; image_url: { url: string } }> = [
+    { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${front}` } },
   ]
   if (back) {
-    imageBlocks.push({
-      type: 'image',
-      source: { type: 'base64', media_type: 'image/jpeg', data: back },
-    })
+    imageBlocks.push({ type: 'image_url', image_url: { url: `data:image/jpeg;base64,${back}` } })
   }
 
   const prompt = back
@@ -84,20 +76,25 @@ Reply with ONLY valid JSON, no markdown, no other text:
   try {
     console.log('[scan-product-full] front size:', Math.round(front.length / 1024), 'KB', back ? ', back: ' + Math.round(back.length / 1024) + ' KB' : '')
 
-    const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 600,
-      messages: [{
-        role: 'user',
-        content: [
-          ...imageBlocks,
-          { type: 'text', text: prompt + '\n\n' + instructions },
-        ],
-      }],
+    const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        max_tokens: 600,
+        messages: [{
+          role: 'user',
+          content: [
+            ...imageBlocks,
+            { type: 'text', text: prompt + '\n\n' + instructions },
+          ],
+        }],
+      }),
     })
-
-    const text = response.content[0].type === 'text' ? response.content[0].text.trim() : ''
-    console.log('[scan-product-full] Claude response:', text)
+    const _groqData = await _groqRes.json()
+    const text = _groqData.choices?.[0]?.message?.content || ''
+    logUsage({ route: 'pos/scan-product-full', model: 'meta-llama/llama-4-scout-17b-16e-instruct', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId: auth.ownerId })
+    console.log('[scan-product-full] Groq response:', text)
 
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {

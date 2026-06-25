@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosAuth } from '@/lib/pos-auth'
+import { logUsage } from '@/lib/log-usage'
 
 // CORS handled globally by next.config.js
 export async function OPTIONS() {
@@ -53,20 +53,19 @@ export async function POST(req: NextRequest) {
       ? `\n\nFREQUENTLY RECOGNIZED (prioritize these):\n${hotList.map((h: any) => `- ${h.recognized_name}`).join('\n')}`
       : ''
 
-    const anthropic = new Anthropic()
-    const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 500,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: 'image/jpeg', data: image },
-          },
-          {
-            type: 'text',
-            text: `You are a retail inventory assistant. Look at this image and identify the product.
+    const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+        max_tokens: 500,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${image}` } },
+            {
+              type: 'text',
+              text: `You are a retail inventory assistant. Look at this image and identify the product.
 
 THIS STORE'S INVENTORY (reference list):
 ${catalogueText || '(Empty inventory)'}${hotListText}
@@ -82,21 +81,19 @@ TASK:
 
 Reply with ONLY valid JSON, no other text:
 {"name":"product name","confidence":70}`,
-          },
-        ],
-      }],
+            },
+          ],
+        }],
+      }),
     })
+    const _groqData = await _groqRes.json()
+    const _groqText = _groqData.choices?.[0]?.message?.content || ''
+    logUsage({ route: 'pos/recognize-inventory', model: 'meta-llama/llama-4-scout-17b-16e-instruct', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId: auth.ownerId })
 
-    const content = response.content[0]
-    if (content.type !== 'text') {
-      console.error('Unexpected response type:', content.type)
-      return NextResponse.json({ products: [] })
-    }
-
-    console.log('Claude response:', content.text)
-    const jsonMatch = content.text.trim().match(/\{[\s\S]*?\}/)
+    console.log('Groq response:', _groqText)
+    const jsonMatch = _groqText.trim().match(/\{[\s\S]*?\}/)
     if (!jsonMatch) {
-      console.error('No JSON found in response:', content.text)
+      console.error('No JSON found in response:', _groqText)
       return NextResponse.json({ products: [] })
     }
 

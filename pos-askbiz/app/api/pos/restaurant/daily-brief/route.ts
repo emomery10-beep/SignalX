@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
+import { logUsage } from '@/lib/log-usage'
 
 export const dynamic = 'force-dynamic'
 
@@ -118,9 +119,6 @@ async function generateBriefForUser(service: ReturnType<typeof createServiceClie
   let improved = '', worsened = '', action = '', health_score = 70
 
   try {
-    const Anthropic = (await import('@anthropic-ai/sdk')).default
-    const anthropic = new Anthropic()
-
     const prompt = `You are a restaurant operations advisor. Write a concise daily brief.
 
 Today's data:
@@ -132,13 +130,18 @@ Today's data:
 
 Respond with ONLY valid JSON: {"improved":"one thing going well (max 12 words)","worsened":"one thing to watch (max 12 words)","action":"one specific action for today (max 15 words)","health_score":number 0-100}`
 
-    const msg = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 200,
-      messages: [{ role: 'user', content: prompt }],
+    const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 200,
+        messages: [{ role: 'user', content: prompt }],
+      }),
     })
-
-    const raw = (msg.content[0] as any).text?.trim() || ''
+    const _groqData = await _groqRes.json()
+    const raw = _groqData.choices?.[0]?.message?.content?.trim() || ''
+    logUsage({ route: 'pos/restaurant/daily-brief', model: 'llama-3.3-70b-versatile', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId })
     const match = raw.match(/\{[\s\S]*\}/)
     if (match) {
       const parsed = JSON.parse(match[0])

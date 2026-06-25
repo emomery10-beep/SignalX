@@ -8,14 +8,12 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
 
 const RESTAURANT_TYPES = /restaurant|cafe|café|bar|pub|takeaway|takeout|food.?stall|catering|bistro|canteen|diner|eatery|food.?truck|brasserie|pizzeria|burger|sushi|kebab|chicken|fish.?chips/i
-
-const anthropic = new Anthropic()
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
@@ -293,12 +291,15 @@ async function processUser(service: ReturnType<typeof createServiceClient>, prof
   let brief = { improved: '', worsened: '', action: '', health_score: 70 }
 
   try {
-    const resp = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 256,
-      messages: [{
-        role: 'user',
-        content: `You are a restaurant intelligence system. Based on today's data, generate a daily brief.
+    const _groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 256,
+        messages: [{
+          role: 'user',
+          content: `You are a restaurant intelligence system. Based on today's data, generate a daily brief.
 
 DATA: ${JSON.stringify(briefData)}
 
@@ -309,14 +310,14 @@ RULES:
 - health_score: 0-100 overall restaurant health today (70 = average day, 90+ = excellent, <50 = problem day)
 
 Reply ONLY with JSON: {"improved":"...","worsened":"...","action":"...","health_score":75}`,
-      }],
+        }],
+      }),
     })
-
-    const content = resp.content[0]
-    if (content.type === 'text') {
-      const match = content.text.match(/\{[^{}]+\}/)
-      if (match) brief = { ...brief, ...JSON.parse(match[0]) }
-    }
+    const _groqData = await _groqRes.json()
+    logUsage({ route: 'cron/restaurant-brief', model: 'llama-3.3-70b-versatile', usage: { input_tokens: _groqData.usage?.prompt_tokens ?? 0, output_tokens: _groqData.usage?.completion_tokens ?? 0 }, userId })
+    const _groqText = _groqData.choices?.[0]?.message?.content || ''
+    const match = _groqText.match(/\{[^{}]+\}/)
+    if (match) brief = { ...brief, ...JSON.parse(match[0]) }
   } catch {
     // Fallback brief without Claude
     brief.improved = revToday > avg7DayRev ? `Revenue ${sym}${revToday.toFixed(0)} beat 7-day avg` : topDish ? `${topDish.name} was top performer` : 'Operations ran smoothly'
