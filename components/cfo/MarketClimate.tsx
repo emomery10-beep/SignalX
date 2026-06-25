@@ -2,6 +2,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useLang } from '@/components/LanguageProvider'
 
+// Module-level: survives re-mounts within the same browser session so the
+// loading skeleton never flashes when the user navigates away and back.
+let _memCache: ClimateData | null = null
+
 // ── Market Climate ────────────────────────────────────────────────────────────
 // Translates today's macro + supply-chain conditions into a personalised read
 // for THIS business: weighted severity, real cash impact, a time-horizon
@@ -107,8 +111,8 @@ const IconAlert = () => <svg {...ico}><path d="M10.3 4l-7.4 13A2 2 0 004.6 20h14
 
 export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, monthlyFixed = 0, defaultExpanded = false, onAsk }: Props) {
   const { tc, fmtDate } = useLang()
-  const [data, setData] = useState<ClimateData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState<ClimateData | null>(_memCache)
+  const [loading, setLoading] = useState(!_memCache)
   const [refreshing, setRefreshing] = useState(false)
   const [requested, setRequested] = useState(false)
   const [expanded, setExpanded] = useState(defaultExpanded)
@@ -123,7 +127,7 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
     const url = '/api/market-climate' + (qs.toString() ? `?${qs}` : '')
     fetch(url)
       .then(r => r.ok ? r.json() : null)
-      .then(d => setData(d))
+      .then(d => { if (d) _memCache = d; setData(d) })
       .catch(() => setData(null))
       .finally(() => { setLoading(false); setRefreshing(false) })
   }, [cashBalance, monthlyFixed])
@@ -394,15 +398,20 @@ function NowPanel({ data }: { data: ClimateData }) {
         </div>
       )}
       {!hasLive ? (
-        <div style={{ background: 'var(--ev, #f9fafb)', border: '1px solid var(--b)', borderRadius: 12, padding: 14, marginBottom: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: AMBER, marginBottom: 6 }}>
-            <IconAlert />
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_marketclimate.dataUnavailable')}</span>
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5, marginBottom: data.signals.length ? 10 : 0 }}>{tc('cfo_marketclimate.dataUnavailableHint')}</div>
-          {data.signals.length > 0 && (
-            <div style={{ fontSize: 10, color: 'var(--tx3)', fontWeight: 600 }}>
-              {tc('cfo_marketclimate.trackingPrefix')} {data.signals.map(s => s.label).join(' · ')}
+        <div style={{ marginBottom: 12 }}>
+          {data.signals.length > 0 ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
+              {data.signals.map(s => (
+                <div key={s.key} style={{ background: 'var(--ev, #f9fafb)', borderRadius: 10, padding: '10px 12px' }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 6 }}>{s.label}</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--tx3)' }}>—</div>
+                  <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4 }}>Calibrating&hellip;</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ background: 'var(--ev, #f9fafb)', borderRadius: 10, padding: 14, fontSize: 11, color: 'var(--tx3)' }}>
+              Personalising your signals — check back shortly.
             </div>
           )}
         </div>

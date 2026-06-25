@@ -30,11 +30,6 @@ export async function marketSearch(
     includeAnswer: true,
     topic: topic === 'news' ? 'news' : 'general',
     days: topic === 'news' ? days : undefined,
-    includeDomains: [
-      'tradingeconomics.com', 'investing.com', 'reuters.com',
-      'bloomberg.com', 'ft.com', 'cnbc.com', 'marketwatch.com',
-      'businessdayng.com', 'theeastafrican.co.ke', 'myjoyonline.com',
-    ],
   })
 
   const tavilyAnswer = tavilyRes?.answer || tavilyRes?.results?.[0]?.content || ''
