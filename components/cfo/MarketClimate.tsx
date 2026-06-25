@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useLang } from '@/components/LanguageProvider'
 
 // ── Market Climate ────────────────────────────────────────────────────────────
@@ -22,6 +22,8 @@ interface Signal {
 interface Lane { lane: string; route: string; status: string; severity: 'ok' | 'watch' | 'alert' }
 interface SupplierSource { product: string; sourceCountry: string; supplierName?: string; currency?: string }
 interface MissingContext { product: string }
+interface ChannelStat { name: string; revenue_7d: number; prev_7d: number; trend: 'up' | 'down' | 'flat'; change_pct: number | null }
+interface ProductStat { product: string; revenue_7d: number; units_7d: number }
 interface ClimateData {
   currency_symbol: string
   country: string
@@ -45,6 +47,9 @@ interface ClimateData {
   }
   supplier_sources: SupplierSource[]
   missing_context: MissingContext[]
+  local_conditions: { event: string; severity: 'alert' | 'watch' | 'ok' } | null
+  channel_activity: { channels: ChannelStat[]; total_7d: number; prev_7d: number; trend: 'up' | 'down' | 'flat' }
+  top_products: ProductStat[]
   updated_at: string
 }
 
@@ -105,7 +110,7 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
   const [refreshing, setRefreshing] = useState(false)
   const [requested, setRequested] = useState(false)
   const [expanded, setExpanded] = useState(defaultExpanded)
-  const [tab, setTab] = useState<'now' | 'week' | 'stress' | 'actions' | 'supply'>('now')
+  const [tab, setTab] = useState<'now' | 'week' | 'supply'>('now')
 
   const load = useCallback((force = false) => {
     if (force) setRefreshing(true)
@@ -153,7 +158,7 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
   const wcBorder = data.severity >= 66 ? '#fca5a5' : data.severity >= 33 ? '#fcd34d' : '#86efac'
   const wcInk = data.severity >= 66 ? '#991b1b' : data.severity >= 33 ? '#92400e' : '#14532d'
   const wcMuted = data.severity >= 66 ? '#ef444480' : data.severity >= 33 ? '#f59e0b80' : '#22c55e80'
-  const topAction = n.actions.find(a => a.urgency === 'urgent') || n.actions[0]
+  const topAction = n.actions?.[0] ?? null
 
   if (!expanded) {
     return (
@@ -231,8 +236,6 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
   const tabs: Array<{ id: typeof tab; label: string }> = [
     { id: 'now', label: tc('cfo_marketclimate.tabNow') },
     { id: 'week', label: tc('cfo_marketclimate.tabWeek') },
-    { id: 'stress', label: tc('cfo_marketclimate.tabStress') },
-    { id: 'actions', label: tc('cfo_marketclimate.tabActions') },
     { id: 'supply', label: tc('cfo_marketclimate.tabSupply') },
   ]
 
@@ -351,10 +354,8 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
       {/* ── Body ── */}
       <div key={tab} className="mc-fade" style={{ background: 'var(--sf)', padding: 16 }}>
         {tab === 'now' && <NowPanel data={data} />}
-        {tab === 'week' && <WeekPanel timeline={n.timeline} />}
-        {tab === 'stress' && <StressPanel exposure={data.exposure} fmt={fmt} />}
-        {tab === 'actions' && <ActionsPanel actions={n.actions} onAsk={onAsk} />}
-        {tab === 'supply' && <SupplyPanel supply={data.supply} />}
+        {tab === 'week' && <WeekPanel data={data} fmt={fmt} />}
+        {tab === 'supply' && <SupplyPanel supply={data.supply} topProducts={data.top_products} fmt={fmt} />}
       </div>
 
       {/* ── Footer: ask AI ── */}
@@ -376,8 +377,20 @@ function NowPanel({ data }: { data: ClimateData }) {
   const n = data.narrative
   const hasLive = data.signals.some(s => (s.value && s.value !== '—') || s.changePct != null)
 
+  const lc = data.local_conditions
   return (
     <div>
+      {lc && lc.severity !== 'ok' && (
+        <div style={{ marginBottom: 12, padding: 12, borderRadius: 10, background: lc.severity === 'alert' ? `${RED}12` : `${AMBER}12`, border: `1px solid ${lc.severity === 'alert' ? `${RED}40` : `${AMBER}40`}` }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            <span style={{ color: lc.severity === 'alert' ? RED : AMBER, flexShrink: 0, marginTop: 1 }}><IconAlert /></span>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', marginBottom: 3 }}>Local conditions today</div>
+              <div style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}>{lc.event}</div>
+            </div>
+          </div>
+        </div>
+      )}
       {!hasLive ? (
         <div style={{ background: 'var(--ev, #f9fafb)', border: '1px solid var(--b)', borderRadius: 12, padding: 14, marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: AMBER, marginBottom: 6 }}>
@@ -422,117 +435,100 @@ function Callout({ color, label, body }: { color: string; label: string; body: s
   )
 }
 
-/* ── THIS WEEK: time-horizon timeline ── */
-function WeekPanel({ timeline }: { timeline: ClimateData['narrative']['timeline'] }) {
+/* ── THIS WEEK: POS + connected sources + market events ── */
+function WeekPanel({ data, fmt }: { data: ClimateData; fmt: (n: number) => string }) {
   const { tc } = useLang()
-  if (!timeline.length) return <Empty msg={tc('cfo_marketclimate.emptyWeek')} />
-  const dot = (sev: string) => sev === 'alert' ? RED : sev === 'watch' ? AMBER : '#cbd5e1'
+  const n = data.narrative
+  const channels = data.channel_activity?.channels || []
+  const products = data.top_products || []
+  const timeline = n.timeline || []
+  const hasChannels = channels.some(c => c.revenue_7d > 0)
+  const hasProducts = products.length > 0
+  const hasTimeline = timeline.length > 0
+  const trendArrow = (t: 'up' | 'down' | 'flat') => t === 'up' ? '▲' : t === 'down' ? '▼' : '—'
+  const trendColor = (t: 'up' | 'down' | 'flat') => t === 'up' ? GREEN : t === 'down' ? RED : 'var(--tx3)'
+
+  if (!hasChannels && !hasProducts && !hasTimeline) {
+    return <Empty msg={tc('cfo_marketclimate.emptyWeek')} />
+  }
+
   return (
-    <div style={{ position: 'relative', paddingLeft: 4 }}>
-      {timeline.map((t, i) => (
-        <div key={i} style={{ display: 'flex', gap: 12, marginBottom: i === timeline.length - 1 ? 0 : 14 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ width: 9, height: 9, borderRadius: '50%', background: dot(t.severity), marginTop: 4, flexShrink: 0 }} />
-            {i !== timeline.length - 1 && <div style={{ width: 2, flex: 1, background: 'var(--b)', marginTop: 2 }} />}
-          </div>
-          <div style={{ flex: 1, paddingBottom: 2 }}>
-            <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)' }}>{t.when}</div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginTop: 1 }}>{t.title}</div>
-            <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2, lineHeight: 1.5 }}>{t.detail}</div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {hasChannels && (
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Your sources · this week</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {channels.map(ch => (
+              <div key={ch.name} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--ev, #f9fafb)', borderRadius: 9 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', flex: 1 }}>{ch.name}</span>
+                <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--tx)' }}>{fmt(ch.revenue_7d)}</span>
+                {ch.change_pct !== null && (
+                  <span style={{ fontSize: 10, fontWeight: 700, color: trendColor(ch.trend), minWidth: 44, textAlign: 'right' }}>
+                    {trendArrow(ch.trend)} {Math.abs(ch.change_pct)}%
+                  </span>
+                )}
+              </div>
+            ))}
+            {data.channel_activity?.total_7d > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 12px', fontSize: 10, color: 'var(--tx3)' }}>
+                <span>Total this week</span>
+                <span style={{ fontWeight: 700, color: trendColor(data.channel_activity.trend) }}>
+                  {fmt(data.channel_activity.total_7d)}
+                  {data.channel_activity.trend !== 'flat' && ` ${trendArrow(data.channel_activity.trend)} vs last week`}
+                </span>
+              </div>
+            )}
           </div>
         </div>
-      ))}
+      )}
+
+      {hasProducts && (
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Top products · this week</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {products.map((p, i) => (
+              <div key={p.product} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 12px', background: 'var(--ev, #f9fafb)', borderRadius: 9 }}>
+                <span style={{ fontSize: 10, color: 'var(--tx3)', minWidth: 14 }}>{i + 1}.</span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.product}</span>
+                {p.units_7d > 0 && <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{p.units_7d} units</span>}
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{fmt(p.revenue_7d)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {hasTimeline && (
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Market outlook</div>
+          <div style={{ position: 'relative', paddingLeft: 4 }}>
+            {timeline.map((t, i) => {
+              const dot = t.severity === 'alert' ? RED : t.severity === 'watch' ? AMBER : '#cbd5e1'
+              return (
+                <div key={i} style={{ display: 'flex', gap: 12, marginBottom: i === timeline.length - 1 ? 0 : 14 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{ width: 9, height: 9, borderRadius: '50%', background: dot, marginTop: 4, flexShrink: 0 }} />
+                    {i !== timeline.length - 1 && <div style={{ width: 2, flex: 1, background: 'var(--b)', marginTop: 2 }} />}
+                  </div>
+                  <div style={{ flex: 1, paddingBottom: 2 }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)' }}>{t.when}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginTop: 1 }}>{t.title}</div>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 2, lineHeight: 1.5 }}>{t.detail}</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-/* ── 30 DAYS: live stress test ── */
-function StressPanel({ exposure, fmt }: { exposure: ClimateData['exposure']; fmt: (n: number) => string }) {
-  const { tc } = useLang()
-  const [revDrop, setRevDrop] = useState(15)
-  const [costRise, setCostRise] = useState(7)
-  const [weeks, setWeeks] = useState(6)
 
-  const result = useMemo(() => {
-    const monthlyFixed = exposure.monthly_fixed || 0
-    const baseRevenue = Math.max(exposure.monthly_import_spend * 2.2, monthlyFixed * 1.5, 100000)
-    const baseCost = exposure.monthly_import_spend || baseRevenue * 0.55
-    const revImpact = baseRevenue * (revDrop / 100)
-    const costImpact = baseCost * (costRise / 100)
-    const monthlyHit = revImpact + costImpact
-    const baseRunway = exposure.runway_months ?? 4
-    const newRunway = Math.max(0.2, baseRunway - (weeks / 4.3) * (monthlyHit / Math.max(monthlyFixed, monthlyHit, 1)))
-    const beShift = Math.round(costImpact / 100) * 100
-    const verdict = newRunway > 3 ? tc('cfo_marketclimate.verdictComfortable') : newRunway > 1.5 ? tc('cfo_marketclimate.verdictManageable') : tc('cfo_marketclimate.verdictUrgent')
-    return { monthlyHit, newRunway: Math.round(newRunway * 10) / 10, beShift, verdict, ok: newRunway > 3 }
-  }, [revDrop, costRise, weeks, exposure, tc])
 
-  // Inline rows (not a nested component) so dragging keeps focus and stays smooth.
-  const sliderRow = (label: string, val: number, set: (n: number) => void, min: number, max: number, prefix: string, unit: string) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-      <label style={{ fontSize: 11, color: 'var(--tx2)', fontWeight: 600, minWidth: 86 }}>{label}</label>
-      <input type="range" min={min} max={max} value={val} onChange={e => set(Number(e.target.value))} aria-label={label} style={{ flex: 1, accentColor: INDIGO }} />
-      <span style={{ fontSize: 12, fontWeight: 700, color: INDIGO, minWidth: 40, textAlign: 'right' }}>{prefix}{val}{unit}</span>
-    </div>
-  )
-
-  return (
-    <div>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>{tc('cfo_marketclimate.stressTestTitle')}</div>
-      <div style={{ background: 'var(--ev, #f9fafb)', borderRadius: 10, padding: 14, marginBottom: 12 }}>
-        {sliderRow(tc('cfo_marketclimate.sliderRevenueDrop'), revDrop, setRevDrop, 0, 40, '–', '%')}
-        {sliderRow(tc('cfo_marketclimate.sliderCostIncrease'), costRise, setCostRise, 0, 30, '+', '%')}
-        {sliderRow(tc('cfo_marketclimate.sliderDuration'), weeks, setWeeks, 1, 12, '', tc('cfo_marketclimate.weeksAbbr'))}
-      </div>
-      <div style={{ background: result.ok ? `${GREEN}12` : `${RED}12`, border: `1px solid ${result.ok ? GREEN : RED}30`, borderRadius: 10, padding: 12 }}>
-        <SRow label={tc('cfo_marketclimate.runwayCurrent')} val={exposure.runway_months != null ? tc('cfo_marketclimate.runwayMonthsVal', { n: exposure.runway_months }) : tc('cfo_marketclimate.runwaySetBalance')} ok />
-        <SRow label={tc('cfo_marketclimate.runwayScenario')} val={tc('cfo_marketclimate.runwayMonthsVal', { n: result.newRunway })} ok={result.ok} />
-        <SRow label={tc('cfo_marketclimate.monthlyProfitImpact')} val={`–${fmt(result.monthlyHit)}`} />
-        <SRow label={tc('cfo_marketclimate.breakEvenShift')} val={`+${fmt(result.beShift)} ${tc('cfo_marketclimate.revenueNeeded')}`} />
-        <SRow label={tc('cfo_marketclimate.verdictRowLabel')} val={result.verdict} ok={result.ok} last />
-      </div>
-    </div>
-  )
-}
-function SRow({ label, val, ok, last }: { label: string; val: string; ok?: boolean; last?: boolean }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '5px 0', borderBottom: last ? 'none' : '1px solid var(--b)', fontSize: 11 }}>
-      <span style={{ color: 'var(--tx3)' }}>{label}</span>
-      <span style={{ fontWeight: 700, color: ok ? GREEN_INK : RED_INK, textAlign: 'right' }}>{val}</span>
-    </div>
-  )
-}
-
-/* ── ACTIONS: ranked, sector-specific ── */
-function ActionsPanel({ actions, onAsk }: { actions: ClimateData['narrative']['actions']; onAsk?: (s: string) => void }) {
-  const { tc } = useLang()
-  if (!actions.length) return <Empty msg={tc('cfo_marketclimate.emptyActions')} />
-  const tone = (u: string) => u === 'urgent' ? RED : u === 'soon' ? AMBER : '#94a3b8'
-  const label = (u: string) => u === 'urgent' ? tc('cfo_marketclimate.urgencyDoToday') : u === 'soon' ? tc('cfo_marketclimate.urgencyThisWeek') : tc('cfo_marketclimate.urgencyWatch')
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {actions.map((a, i) => {
-        const t = tone(a.urgency)
-        const Tag = onAsk ? 'button' : 'div'
-        return (
-          <Tag key={i} className={onAsk ? 'mc-row' : undefined} {...(onAsk ? { type: 'button', onClick: () => onAsk(`Help me with this: ${a.title}. ${a.detail}`) } : {})}
-            style={{ display: 'flex', gap: 10, padding: 12, borderRadius: 10, border: '1px solid var(--b)', cursor: onAsk ? 'pointer' : 'default', background: 'var(--ev, #f9fafb)', textAlign: 'left', width: '100%', fontFamily: 'inherit' }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: t, marginTop: 4, flexShrink: 0 }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: t, marginBottom: 3 }}>{label(a.urgency)}</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', marginBottom: 2 }}>{a.title}</div>
-              <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.45 }}>{a.detail}</div>
-            </div>
-            {onAsk && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ alignSelf: 'center', flexShrink: 0 }}><path d="M9 6l6 6-6 6" /></svg>}
-          </Tag>
-        )
-      })}
-    </div>
-  )
-}
-
-/* ── SUPPLY: shipping lanes + port watch ── */
-function SupplyPanel({ supply }: { supply: ClimateData['supply'] }) {
+/* ── SUPPLY: inventory movement + shipping lanes + port watch ── */
+function SupplyPanel({ supply, topProducts, fmt }: { supply: ClimateData['supply']; topProducts: ClimateData['top_products']; fmt: (n: number) => string }) {
   const { tc } = useLang()
   const badge = (sev: 'ok' | 'watch' | 'alert') => (
     <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', padding: '2px 8px', borderRadius: 20, background: `${SEV_BG(sev)}1a`, color: SEV_BG(sev), flexShrink: 0 }}>
@@ -552,10 +548,34 @@ function SupplyPanel({ supply }: { supply: ClimateData['supply'] }) {
       <div style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}>{status}</div>
     </div>
   )
+  const hasProducts = (topProducts || []).length > 0
+  const hasLanes = supply.lanes.length > 0 || supply.port
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {supply.lanes.map((l, i) => cell(<IconLane />, l.lane, l.severity, l.route, l.status, i))}
-      {supply.port && cell(<IconPort />, supply.port.port, supply.port.severity, null, supply.port.status, 'port')}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {hasProducts && (
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Your inventory · top movers this week</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {(topProducts || []).map((p, i) => (
+              <div key={p.product} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--ev, #f9fafb)', borderRadius: 9 }}>
+                <span style={{ fontSize: 10, color: 'var(--tx3)', minWidth: 14 }}>{i + 1}.</span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.product}</span>
+                {p.units_7d > 0 && <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{p.units_7d} units</span>}
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)' }}>{fmt(p.revenue_7d)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {hasLanes && (
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Shipping & ports</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {supply.lanes.map((l, i) => cell(<IconLane />, l.lane, l.severity, l.route, l.status, i))}
+            {supply.port && cell(<IconPort />, supply.port.port, supply.port.severity, null, supply.port.status, 'port')}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

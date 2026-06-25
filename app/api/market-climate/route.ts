@@ -166,6 +166,24 @@ function gradeDisruption(text: string): { status: string; severity: 'ok' | 'watc
   return { status, severity: 'ok' }
 }
 
+// Maps raw source_type/channel strings to display names for UI
+function getSourceDisplayName(s: string): string {
+  const sl = (s || '').toLowerCase()
+  if (sl.includes('shopify')) return 'Shopify'
+  if (sl.includes('amazon')) return 'Amazon'
+  if (sl.includes('stripe')) return 'Stripe'
+  if (sl.includes('ebay')) return 'eBay'
+  if (sl.includes('etsy')) return 'Etsy'
+  if (sl.includes('woocommerce')) return 'WooCommerce'
+  if (sl.includes('jumia')) return 'Jumia'
+  if (sl.includes('tiktok')) return 'TikTok Shop'
+  if (sl.includes('takealot')) return 'Takealot'
+  if (sl.includes('square')) return 'Square'
+  if (sl.includes('paystack')) return 'Paystack'
+  if (sl.includes('pos') || sl.includes('instore') || sl.includes('in-store') || sl.includes('counter') || sl.includes('shop')) return 'POS'
+  return s ? (s.charAt(0).toUpperCase() + s.slice(1)) : 'Sales'
+}
+
 // Choose the signals that actually move THIS business. LLM picks commodities/
 // demand specific to what they trade; falls back to a keyword map + country
 // anchors. Local FX is always included (it's the universal import-cost driver).
@@ -312,6 +330,18 @@ export async function GET(request: NextRequest) {
       .single(),
   ])
 
+  // ── 1b. Channel + product velocity (7d vs prior 7d) ─────────────────────────
+  const sevenDaysAgo    = new Date(Date.now() - 7  * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const [{ data: thisWeekRows }, { data: prevWeekRows }] = await Promise.all([
+    supabase.from('unified_data')
+      .select('source_type, channel, product_name, gross_revenue, units_sold')
+      .eq('user_id', user.id).gte('record_date', sevenDaysAgo).limit(1000),
+    supabase.from('unified_data')
+      .select('source_type, channel, gross_revenue')
+      .eq('user_id', user.id).gte('record_date', fourteenDaysAgo).lt('record_date', sevenDaysAgo).limit(1000),
+  ])
+
   const rows = records || []
   const posItems = posRecords || []
 
@@ -367,6 +397,48 @@ export async function GET(request: NextRequest) {
   const monthlyImportSpend = Math.round((importSpend / 3) || 0)
   const lanes = detectShippingLanes(importCurrencies.length ? importCurrencies : [climate.currency])
   const portWatch = getPortWatch(countryCode)
+
+  // ── Channel activity: this week vs prior week by source ───────────────────
+  const chanMap = new Map<string, { tw: number; pw: number }>()
+  for (const r of thisWeekRows || []) {
+    const name = getSourceDisplayName(r.source_type || r.channel || '')
+    const c = chanMap.get(name) || { tw: 0, pw: 0 }
+    c.tw += r.gross_revenue || 0
+    chanMap.set(name, c)
+  }
+  for (const r of prevWeekRows || []) {
+    const name = getSourceDisplayName(r.source_type || r.channel || '')
+    const c = chanMap.get(name) || { tw: 0, pw: 0 }
+    c.pw += r.gross_revenue || 0
+    chanMap.set(name, c)
+  }
+  const chanStats = Array.from(chanMap.entries())
+    .filter(([, v]) => v.tw > 0 || v.pw > 0)
+    .map(([name, { tw, pw }]) => {
+      const cp = pw > 0 ? Math.round(((tw - pw) / pw) * 100) : null
+      const trend: 'up' | 'down' | 'flat' = cp == null ? 'flat' : cp > 3 ? 'up' : cp < -3 ? 'down' : 'flat'
+      return { name, revenue_7d: tw, prev_7d: pw, trend, change_pct: cp }
+    })
+    .sort((a, b) => b.revenue_7d - a.revenue_7d)
+  const total7d     = chanStats.reduce((s, c) => s + c.revenue_7d, 0)
+  const prevTotal7d = chanStats.reduce((s, c) => s + c.prev_7d, 0)
+  const chanTrend: 'up' | 'down' | 'flat' = total7d > prevTotal7d * 1.03 ? 'up' : total7d < prevTotal7d * 0.97 ? 'down' : 'flat'
+  const channelActivity = { channels: chanStats.slice(0, 6), total_7d: total7d, prev_7d: prevTotal7d, trend: chanTrend }
+
+  // ── Top products this week (from all connected sources + POS) ─────────────
+  const prodMap = new Map<string, { rev: number; units: number }>()
+  for (const r of thisWeekRows || []) {
+    const pn = (r.product_name || '').trim()
+    if (!pn || pn.toLowerCase() === 'other') continue
+    const c = prodMap.get(pn) || { rev: 0, units: 0 }
+    c.rev += r.gross_revenue || 0
+    c.units += r.units_sold || 0
+    prodMap.set(pn, c)
+  }
+  const topProducts = Array.from(prodMap.entries())
+    .sort((a, b) => b[1].rev - a[1].rev)
+    .slice(0, 5)
+    .map(([product, { rev, units }]) => ({ product, revenue_7d: rev, units_7d: units }))
 
   // ── 2. Live signals (persistent 12h cache, capped force-refresh) ────────────
   // Keyed by what the business trades + how it sells, so two businesses in the
@@ -463,6 +535,21 @@ export async function GET(request: NextRequest) {
     } catch { /* table may not exist yet — serve fresh, don't break */ }
   }
 
+  // ── 2b. Local conditions — protests/strikes/closures today (never cached) ────
+  let localConditions: { event: string; severity: 'ok' | 'watch' | 'alert' } | null = null
+  try {
+    const lcRes = await marketSearch(
+      `${climate.name} business closed disruption protest strike shutdown today`,
+      { topic: 'news', days: 1, fallbackQuery: `${climate.name} business conditions today` },
+    )
+    if (lcRes.hasData) {
+      const graded = gradeDisruption(lcRes.answer)
+      if (graded.severity !== 'ok') {
+        localConditions = { event: lcRes.answer.slice(0, 300).trim(), severity: graded.severity }
+      }
+    }
+  } catch { /* non-critical */ }
+
   // ── 3. Cheap derived fields (fresh every request, from current cash config) ──
   const { totalSeverity, condition, conditionIcon } = computeDerived(signals, supply)
   const estExtraMonthly = estExtraCost(computeDerived(signals, supply).fxMovePct, monthlyImportSpend, supply)
@@ -498,6 +585,10 @@ export async function GET(request: NextRequest) {
     supplier_sources: supplierSources,
     // Products we track but don't know the source country for — shown as prompts in UI
     missing_context: knownProductsWithoutSource,
+    // Fresh per-request: channel velocity, top products, local conditions
+    channel_activity: channelActivity,
+    top_products: topProducts,
+    local_conditions: localConditions,
     updated_at: fetchedAt,
     cached: useCache,
   })
