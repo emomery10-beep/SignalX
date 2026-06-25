@@ -456,8 +456,13 @@ export async function GET(request: NextRequest) {
   const chanSig = `${channelMix.hasEcommerce ? 'e' : ''}${channelMix.hasPos ? 'p' : ''}`
   const supplierSig = supplierSources.map(s => `${s.product}:${s.sourceCountry}`).join('|').slice(0, 80)
   const cacheKey = `${climate.code}:${sector.key}:${chanSig}:${termSig}:${supplierSig}`
+  const userCity = (() => {
+    try { return decodeURIComponent(request.headers.get('x-vercel-ip-city') || '') || climate.capital } catch { return climate.capital }
+  })()
+  const sectorLabel = sector.label
 
-  type CacheRow = { payload: { signals: SignalReading[]; supply: SupplyReading; narrative: Narrative }; fetched_at: string }
+  type GeoSig = { level: 'city' | 'country' | 'region'; location: string; summary: string; severity: 'ok' | 'watch' | 'alert' }
+  type CacheRow = { payload: { signals: SignalReading[]; supply: SupplyReading; narrative: Narrative; geo_signals?: GeoSig[] }; fetched_at: string }
   let cacheRow: CacheRow | null = null
   try {
     const { data } = await supabase
@@ -475,11 +480,13 @@ export async function GET(request: NextRequest) {
   let supply: SupplyReading
   let narrative: Narrative
   let fetchedAt: string
+  let geoSignals: GeoSig[] = []
 
   if (useCache && cacheRow) {
     signals = cacheRow.payload.signals
     supply = cacheRow.payload.supply
     narrative = cacheRow.payload.narrative
+    geoSignals = cacheRow.payload.geo_signals || []
     fetchedAt = cacheRow.fetched_at
   } else {
     // Select signals: supplier-specific specs first, then AI-selected macro signals
@@ -533,57 +540,49 @@ export async function GET(request: NextRequest) {
         ? { ...s, value: r.value, direction: r.direction || s.direction, changePct: r.changePct ?? s.changePct }
         : s
     })
+    // Geo signals: city → country → region, sector-specific (cached with everything else)
+    try {
+      const [cityRes, countryRes, regionRes] = await Promise.all([
+        marketSearch(
+          `${userCity} ${sectorLabel} business disruption supply roads trade protest today`,
+          { topic: 'news', days: 2, fallbackQuery: `${userCity} business conditions today` },
+        ),
+        marketSearch(
+          `${climate.name} ${sectorLabel} supply chain market business conditions`,
+          { topic: 'news', days: 7, fallbackQuery: `${climate.name} business conditions this week` },
+        ),
+        marketSearch(
+          climate.regionQuery,
+          { topic: 'news', days: 14, fallbackQuery: `${climate.region} trade supply news` },
+        ),
+      ])
+      const toGeo = (res: typeof cityRes, level: GeoSig['level'], location: string): GeoSig | null => {
+        if (!res.hasData) return null
+        const graded = gradeDisruption(res.answer)
+        return { level, location, summary: res.answer.slice(0, 200).trim(), severity: graded.severity }
+      }
+      geoSignals = [
+        toGeo(cityRes, 'city', userCity),
+        toGeo(countryRes, 'country', climate.name),
+        toGeo(regionRes, 'region', climate.region),
+      ].filter(Boolean) as GeoSig[]
+    } catch { /* non-critical */ }
+
     fetchedAt = new Date().toISOString()
     try {
       await supabase.from('market_climate_cache').upsert(
-        { user_id: user.id, cache_key: cacheKey, payload: { signals, supply, narrative }, fetched_at: fetchedAt },
+        { user_id: user.id, cache_key: cacheKey, payload: { signals, supply, narrative, geo_signals: geoSignals }, fetched_at: fetchedAt },
         { onConflict: 'user_id,cache_key' },
       )
     } catch { /* table may not exist yet — serve fresh, don't break */ }
   }
 
-  // ── 2b. Geo signals — city → country → region (never cached, always fresh) ────
-  const userCity = (() => {
-    try { return decodeURIComponent(request.headers.get('x-vercel-ip-city') || '') || climate.capital } catch { return climate.capital }
-  })()
-  const sectorLabel = sector.label
-
-  let localConditions: { event: string; severity: 'ok' | 'watch' | 'alert' } | null = null
-  let geoSignals: Array<{ level: 'city' | 'country' | 'region'; location: string; summary: string; severity: 'ok' | 'watch' | 'alert' }> = []
-
-  try {
-    const [cityRes, countryRes, regionRes] = await Promise.all([
-      marketSearch(
-        `${userCity} ${sectorLabel} business disruption supply roads trade protest today`,
-        { topic: 'news', days: 2, fallbackQuery: `${userCity} business conditions today` },
-      ),
-      marketSearch(
-        `${climate.name} ${sectorLabel} supply chain market business conditions`,
-        { topic: 'news', days: 7, fallbackQuery: `${climate.name} business conditions this week` },
-      ),
-      marketSearch(
-        climate.regionQuery,
-        { topic: 'news', days: 14, fallbackQuery: `${climate.region} trade supply news` },
-      ),
-    ])
-
-    const toGeo = (res: typeof cityRes, level: 'city' | 'country' | 'region', location: string) => {
-      if (!res.hasData) return null
-      const graded = gradeDisruption(res.answer)
-      return { level, location, summary: res.answer.slice(0, 200).trim(), severity: graded.severity }
-    }
-
-    const cityGeo  = toGeo(cityRes,    'city',    userCity)
-    const countryGeo = toGeo(countryRes, 'country', climate.name)
-    const regionGeo  = toGeo(regionRes,  'region',  climate.region)
-
-    geoSignals = [cityGeo, countryGeo, regionGeo].filter(Boolean) as typeof geoSignals
-
-    // local_conditions for the Now tab: city-level only if severity > ok
-    if (cityGeo && cityGeo.severity !== 'ok') {
-      localConditions = { event: cityGeo.summary, severity: cityGeo.severity }
-    }
-  } catch { /* non-critical — geo signals are supplementary */ }
+  // Derive local_conditions from the cached city-level geo signal (Now tab banner)
+  const cityGeoSignal = geoSignals.find(g => g.level === 'city')
+  const localConditions: { event: string; severity: 'ok' | 'watch' | 'alert' } | null =
+    cityGeoSignal && cityGeoSignal.severity !== 'ok'
+      ? { event: cityGeoSignal.summary, severity: cityGeoSignal.severity }
+      : null
 
   // ── 3. Cheap derived fields (fresh every request, from current cash config) ──
   const { totalSeverity, condition, conditionIcon } = computeDerived(signals, supply)
