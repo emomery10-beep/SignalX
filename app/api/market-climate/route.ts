@@ -362,7 +362,13 @@ export async function GET(request: NextRequest) {
   const supplierSources: SupplierSource[] = supplierContext?.sources || []
 
   // Products we know about but have no supplier origin for — these become prompts in the UI
+  // Filter out service/billing terms that aren't physical products needing a source country
+  const SERVICE_NOISE = ['subscription', 'invoice', 'charge', 'payment', 'fee', 'refund', 'credit', 'trial', 'plan', 'seat', 'license', 'renewal', 'setup', 'onboarding', 'consulting', 'support', 'maintenance', 'hosting', 'saas', 'addon', 'add-on', 'upgrade', 'downgrade']
   const knownProductsWithoutSource = businessTerms
+    .filter(t => {
+      const tl = t.toLowerCase()
+      return !SERVICE_NOISE.some(n => tl.includes(n)) && t.length > 2
+    })
     .filter(t => !supplierSources.some(s => s.product.toLowerCase() === t.toLowerCase()))
     .slice(0, 5)
     .map(product => ({ product }))

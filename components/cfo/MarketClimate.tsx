@@ -597,27 +597,32 @@ function SupplierPrompts({ missing, wcInk, wcBorder, onSaved }: {
   const [country, setCountry] = useState('')
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
+  const [flash, setFlash] = useState<{ ok: boolean; msg: string } | null>(null)
 
   if (done || missing.length === 0) return null
   const current = missing[idx]
   if (!current) return null
 
+  const advance = () => {
+    if (idx + 1 >= missing.length) { setDone(true); onSaved() }
+    else { setIdx(i => i + 1); setCountry('') }
+  }
+
   const save = async () => {
     if (!country.trim()) return
     setSaving(true)
+    setFlash(null)
     try {
-      await fetch('/api/supplier-context', {
+      const res = await fetch('/api/supplier-context', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ upsert: { product: current.product, sourceCountry: country.trim() } }),
       })
-      if (idx + 1 >= missing.length) {
-        setDone(true)
-        onSaved()
-      } else {
-        setIdx(i => i + 1)
-        setCountry('')
-      }
+      if (!res.ok) throw new Error('save failed')
+      setFlash({ ok: true, msg: `Saved — sourced from ${country.trim()}` })
+      setTimeout(advance, 1000)
+    } catch {
+      setFlash({ ok: false, msg: 'Could not save, please try again' })
     } finally {
       setSaving(false)
     }
@@ -629,14 +634,18 @@ function SupplierPrompts({ missing, wcInk, wcBorder, onSaved }: {
         Help us track your costs · {idx + 1} of {missing.length}
       </div>
       <div style={{ fontSize: 12, fontWeight: 700, color: wcInk, marginBottom: 8 }}>
-        Where do you buy your <em>{current.product}</em> from?
+        Where do you source your <em>{current.product}</em>?
       </div>
+      {flash ? (
+        <div style={{ fontSize: 12, fontWeight: 600, color: flash.ok ? '#166534' : '#991b1b', padding: '7px 0' }}>{flash.msg}</div>
+      ) : (
       <div style={{ display: 'flex', gap: 6 }}>
         <input
           value={country}
           onChange={e => setCountry(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && save()}
           placeholder="e.g. UK, China, India, Ethiopia…"
+          autoFocus
           style={{
             flex: 1, fontSize: 12, padding: '7px 10px', borderRadius: 8,
             border: `1.5px solid ${wcBorder}`, background: 'rgba(255,255,255,.7)',
@@ -656,12 +665,13 @@ function SupplierPrompts({ missing, wcInk, wcBorder, onSaved }: {
           {saving ? '…' : 'Save'}
         </button>
         <button
-          onClick={() => { if (idx + 1 >= missing.length) setDone(true); else { setIdx(i => i + 1); setCountry('') } }}
+          onClick={advance}
           style={{ padding: '7px 10px', borderRadius: 8, border: `1px solid ${wcBorder}`, background: 'transparent', color: wcInk, fontSize: 11, cursor: 'pointer', opacity: .6, fontFamily: 'inherit' }}
         >
           Skip
         </button>
       </div>
+      )}
     </div>
   )
 }
