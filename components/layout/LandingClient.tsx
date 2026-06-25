@@ -14,18 +14,18 @@ const SkullCanvas = dynamic(() => import('@/components/three/SkullCanvas'), {
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const T = {
-  bg:     '#FAF8F5',
+  bg:     '#f2f3f5',   /* clean blue-gray neutral — amber is the only warmth */
   card:   '#FFFFFF',
-  alt:    '#F4EFE8',
+  alt:    '#e8eaed',   /* cool elevated surface */
   tx:     '#1A1410',
   tx2:    '#4A4038',
-  tx3:    '#8C7B6B',
-  bd:     '#E8DDD4',
-  bd2:    '#D5C9BE',
+  tx3:    '#6b6560',
+  bd:     '#dde0e4',   /* cool border */
+  bd2:    '#c8ccd2',   /* cool strong border */
   acc:    '#C97A44',
   accBg:  'rgba(201,122,68,.08)',
   accBdr: 'rgba(201,122,68,.28)',
-  nav:    'rgba(250,248,245,.92)',
+  nav:    'rgba(242,243,245,.92)',  /* matches bg */
 }
 
 interface Geo {
