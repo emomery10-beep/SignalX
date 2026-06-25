@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useLang } from '@/components/LanguageProvider'
+import LanguageToggle from '@/components/LanguageToggle'
 
 type Mode = 'signin' | 'signup'
 
@@ -144,6 +145,11 @@ export default function AuthPage() {
       padding: '24px 16px', fontFamily: 'var(--font-dm, DM Sans, sans-serif)',
       position: 'fixed', inset: 0, overflowY: 'auto',
     }}>
+
+      {/* Language toggle — top-right corner */}
+      <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 10 }}>
+        <LanguageToggle compact/>
+      </div>
 
       {/* Shopify install banner */}
       {searchParams.get('ref') === 'shopify' && searchParams.get('shop') && (
