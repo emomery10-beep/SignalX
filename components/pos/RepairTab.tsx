@@ -1001,7 +1001,8 @@ function TicketsSub({
                       onClick={() => setExpanded(expanded === j.id ? null : j.id)}
                       style={{
                         ...cardStyle, padding: 12, cursor: 'pointer',
-                        borderLeft: `3px solid ${statusMeta[status].color}`,
+                        border: `1px solid color-mix(in srgb, ${statusMeta[status].color} 25%, var(--b))`,
+                        background: `color-mix(in srgb, ${statusMeta[status].color} 5%, var(--sf))`,
                         boxShadow: '0 1px 3px rgba(0,0,0,.06)',
                       }}
                     >

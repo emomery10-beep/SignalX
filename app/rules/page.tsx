@@ -307,7 +307,7 @@ export default function RulesPage() {
         /* Compliance badges */
         .rl-compliance { margin-bottom:64px; }
         .rl-badges { display:flex; flex-wrap:wrap; gap:10px; }
-        .rl-badge { display:flex; flex-direction:column; padding:10px 16px; background:var(--sf); border:1.5px solid var(--b); border-left:3px solid var(--bc,var(--acc)); border-radius:var(--r-sm); min-width:120px; }
+        .rl-badge { display:flex; flex-direction:column; padding:10px 16px; background:color-mix(in srgb, var(--bc,var(--acc)) 6%, var(--sf)); border:1.5px solid color-mix(in srgb, var(--bc,var(--acc)) 30%, var(--b)); border-radius:var(--r-sm); min-width:120px; }
         .rl-badge-label { font-size:13px; font-weight:700; color:var(--tx); }
         .rl-badge-sub { font-size:11px; color:var(--tx3); margin-top:2px; }
 

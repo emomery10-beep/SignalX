@@ -194,12 +194,11 @@ export default function SectorPageClient() {
       <section style={{ padding: '64px 24px' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 40 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: sector.color, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 8 }}>Use Cases</div>
             <h2 style={{ fontSize: 28, fontWeight: 800, color: C.tx, margin: '0 0 12px', letterSpacing: '-0.02em' }}>Who uses AskBiz for {sector.label.toLowerCase()}?</h2>
           </div>
           <div className="use-cases-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             {sector.useCases.map((uc, i) => (
-              <div key={i} className="card-hover" style={{ background: C.sf, border: `1px solid ${C.b}`, borderRadius: 12, padding: '22px 24px', borderLeft: `3px solid ${sector.color}` }}>
+              <div key={i} className="card-hover" style={{ background: `color-mix(in srgb, ${sector.color} 6%, ${C.sf})`, border: `1px solid ${C.b}`, borderRadius: 12, padding: '22px 24px' }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: C.tx, marginBottom: 8 }}>{uc.title}</div>
                 <div style={{ fontSize: 13, color: C.tx2, lineHeight: 1.65 }}>{uc.desc}</div>
               </div>

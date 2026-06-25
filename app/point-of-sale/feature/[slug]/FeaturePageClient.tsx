@@ -137,12 +137,11 @@ export default function FeaturePageClient() {
       <section style={{ background: C.sf, borderTop: `1px solid ${C.b}`, borderBottom: `1px solid ${C.b}`, padding: '56px 24px' }}>
         <div style={{ maxWidth: 880, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: feature.color, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 8 }}>Use Cases</div>
             <h2 style={{ fontSize: 24, fontWeight: 800, color: C.tx, margin: 0, letterSpacing: '-0.02em' }}>Who uses this</h2>
           </div>
           <div className="use-cases-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 14 }}>
             {feature.useCases.map((uc, i) => (
-              <div key={i} className="card-hover" style={{ background: C.bg, border: `1px solid ${C.b}`, borderRadius: 12, padding: '20px 20px', borderLeft: `3px solid ${feature.color}` }}>
+              <div key={i} className="card-hover" style={{ background: `color-mix(in srgb, ${feature.color} 6%, ${C.bg})`, border: `1px solid ${C.b}`, borderRadius: 12, padding: '20px 20px' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: C.tx, marginBottom: 8 }}>{uc.title}</div>
                 <div style={{ fontSize: 12, color: C.tx2, lineHeight: 1.65 }}>{uc.desc}</div>
               </div>

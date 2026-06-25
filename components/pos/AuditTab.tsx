@@ -516,8 +516,7 @@ export default function AuditTab({ selectedSector, currencySymbol: _currencySymb
                 onClick={() => setExpandedId(expanded ? null : event.id)}
                 style={{
                   borderRadius: 10,
-                  border: `1px solid var(--b)`,
-                  borderLeft: `3px solid ${sev.border}`,
+                  border: `1px solid ${sev.border || 'var(--b)'}`,
                   background: sev.bg || 'var(--sf)',
                   cursor: 'pointer',
                   transition: 'border-color .15s, background .15s',
