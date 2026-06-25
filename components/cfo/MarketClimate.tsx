@@ -573,8 +573,7 @@ function SupplyPanel({ supply, topProducts, geoSignals, fmt }: {
               return (
                 <div key={g.level} style={{
                   display: 'flex', gap: 12, padding: '11px 14px',
-                  borderLeft: `3px solid ${color}`,
-                  background: i % 2 === 0 ? 'var(--sf)' : 'var(--ev, #f9fafb)',
+                  background: `color-mix(in srgb, ${color} 8%, ${i % 2 === 0 ? 'var(--sf)' : 'var(--ev, #f9fafb)'})`,
                   borderBottom: i < geoSignals.length - 1 ? '1px solid var(--b)' : 'none',
                 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 1, color: 'var(--tx3)', flexShrink: 0 }}>
@@ -622,7 +621,7 @@ function SupplyPanel({ supply, topProducts, geoSignals, fmt }: {
       {port && (
         <div>
           <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>Port</div>
-          <div style={{ display: 'flex', gap: 12, padding: '11px 14px', borderRadius: 10, background: 'var(--ev, #f9fafb)', borderLeft: `3px solid ${sevColor(port.severity)}`, border: `1px solid var(--b)`, borderLeftWidth: 3 }}>
+          <div style={{ display: 'flex', gap: 12, padding: '11px 14px', borderRadius: 10, background: `color-mix(in srgb, ${sevColor(port.severity)} 8%, var(--ev, #f9fafb))`, border: `1px solid var(--b)` }}>
             <span style={{ color: 'var(--tx3)', flexShrink: 0, marginTop: 1 }}><IconPort /></span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', marginBottom: 3 }}>{port.port}</div>

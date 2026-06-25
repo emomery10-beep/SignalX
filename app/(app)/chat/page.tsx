@@ -429,15 +429,7 @@ export default function ChatPage() {
           <div style={{ maxWidth: 680, margin: '0 auto', padding: `16px ${isMobile ? '12px' : '18px'} 8px`, display: 'flex', flexDirection: 'column', gap: 2 }}>
 
             {isEmpty && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 0 16px', textAlign: 'center' }} className="animate-scale-up">
-                <div style={{ width: 50, height: 50, borderRadius: 14, background: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }} className="animate-float">
-                  <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
-                    <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/>
-                    <rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/>
-                    <rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/>
-                    <path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 0 16px', textAlign: 'center' }} className="animate-scale-up">
                 <div style={{ fontFamily: 'var(--font-sora)', fontSize: 19, fontWeight: 600, marginBottom: 7, letterSpacing: '-.02em' }} className="animate-fade-up stagger-1">
                   {uploadedFile ? tc('chat.empty_greeting_named', { name: user?.initials || tc('chat.empty_default_name') }) : tc('chat.empty_greeting')}
                 </div>
@@ -491,7 +483,7 @@ export default function ChatPage() {
                 </div>
                 <div style={{ flex: 1, maxWidth: '88%', display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
                   {msg.role === 'user' ? (
-                    <div style={{ padding: '10px 14px', borderRadius: 13, borderBottomRightRadius: 3, background: 'var(--acc)', color: '#fff', fontSize: 13, lineHeight: 1.5 }}>
+                    <div style={{ padding: '10px 14px', borderRadius: 13, borderBottomRightRadius: 3, background: 'var(--acc)', color: '#1a1410', fontSize: 13, lineHeight: 1.5 }}>
                       {msg.content}
                     </div>
                   ) : (

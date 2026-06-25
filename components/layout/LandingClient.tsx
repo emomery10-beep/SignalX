@@ -1435,7 +1435,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
         {/* Mobile hamburger */}
         <div className="nav-mobile-btn" style={{ display:'none',alignItems:'center',gap:8 }}>
-          <button onClick={()=>setMenuOpen(o=>!o)} style={{ width:38,height:38,borderRadius:9,border:`1px solid ${T.bd}`,background:'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0 }}>
+          <button onClick={()=>setMenuOpen(o=>!o)} aria-label={menuOpen ? 'Close menu' : 'Open menu'} style={{ width:38,height:38,borderRadius:9,border:`1px solid ${T.bd}`,background:'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0 }}>
             {menuOpen
               ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.tx} strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
               : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.tx} strokeWidth="2" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>}
@@ -1488,9 +1488,6 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <div className="hero-grid" style={{ gap:'clamp(32px,4vw,64px)' }}>
             {/* Left — headline */}
             <div>
-              <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.18em',textTransform:'uppercase',marginBottom:24 }}>
-                {tc('landing.hero_eyebrow')}
-              </p>
               <h1 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(38px,5vw,72px)',fontWeight:400,lineHeight:.98,letterSpacing:'-.025em',marginBottom:28,color:T.tx }}>
                 {tc('landing.hero_title_line1')}<br/>
                 <em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.hero_title_line2')}</em>
@@ -1499,7 +1496,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                 {tc('landing.hero_subtitle')}
               </p>
               <div className="hero-ctas" style={{ display:'flex',gap:12,flexWrap:'wrap',marginBottom:24 }}>
-                <Link href="/signin?mode=signup" className="cta-btn" style={{ padding:'14px 28px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8,boxShadow:`0 4px 24px rgba(201,122,68,.3)` }}>
+                <Link href="/signin?mode=signup" className="cta-btn" style={{ padding:'14px 28px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8,boxShadow:`0 4px 24px rgba(201,122,68,.3)` }}>
                   {tc('landing.hero_cta_primary')}
                 </Link>
                 <a href="#pos" style={{ padding:'14px 20px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'rgba(255,255,255,.6)',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6,backdropFilter:'blur(8px)' }}>
@@ -1522,9 +1519,6 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             </div>
             {/* Right — calculator */}
             <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
-              <p style={{ fontSize:10,fontWeight:700,color:T.acc,letterSpacing:'.14em',textTransform:'uppercase',marginBottom:4,textAlign:'center' }}>
-                {tc('landing.hero_calc_eyebrow')}
-              </p>
               <MiniCalcWidget tc={tc} />
             </div>
           </div>
@@ -1535,12 +1529,19 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
       </section>
 
-      {/* ── STATS BAR ─────────────────────────────────────────────────── */}
-      <div style={{ borderTop:`1px solid ${T.bd}`,borderBottom:`1px solid ${T.bd}`,background:T.card,padding:'16px clamp(16px,4vw,40px)',display:'flex',alignItems:'center',justifyContent:'center',gap:'clamp(24px,4vw,64px)',flexWrap:'wrap' }}>
-        {[0,1,2,3].map(i=>({value:tc('landing.stat_'+i+'_value'),label:tc('landing.stat_'+i+'_label')})).map((stat,i)=>(
-          <div key={i} style={{ textAlign:'center',flexShrink:0 }}>
-            <div style={{ fontFamily:'var(--font-instrument)',fontSize:26,fontWeight:400,color:T.acc,lineHeight:1 }}>{stat.value}</div>
-            <div style={{ fontSize:11,color:T.tx3,marginTop:2,maxWidth:140 }}>{stat.label}</div>
+      {/* ── PROOF STRIP ───────────────────────────────────────────────── */}
+      <div style={{ borderTop:`1px solid ${T.bd}`,borderBottom:`1px solid ${T.bd}`,background:T.card,padding:'14px clamp(16px,4vw,40px)',display:'flex',alignItems:'center',justifyContent:'center',gap:'clamp(20px,3vw,48px)',flexWrap:'wrap' }}>
+        {[
+          { before:tc('landing.stat_0_label'), after:tc('landing.stat_0_value') },
+          { before:tc('landing.stat_1_label'), after:tc('landing.stat_1_value') },
+          { before:tc('landing.stat_2_label'), after:tc('landing.stat_2_value') },
+          { before:tc('landing.stat_3_label'), after:tc('landing.stat_3_value') },
+        ].map((s,i)=>(
+          <div key={i} style={{ display:'flex',alignItems:'center',gap:7,flexShrink:0 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={T.acc} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+            <span style={{ fontSize:12,color:T.tx2,lineHeight:1.4 }}>
+              <strong style={{ color:T.tx,fontWeight:600 }}>{s.after}</strong>{' '}{s.before}
+            </span>
           </div>
         ))}
       </div>
@@ -1550,7 +1551,6 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         <div style={{ maxWidth:1060,margin:'0 auto' }}>
           <div className="two-col-wide" style={{ gap:'clamp(36px,5vw,64px)' }}>
             <div data-reveal>
-              <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:18 }}>{tc('landing.monitor_eyebrow')}</p>
               <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
                 {tc('landing.monitor_title_line1')}<br/><em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.monitor_title_line2')}</em>
               </h2>
@@ -1585,7 +1585,6 @@ function LandingInner({ geo }: { geo: Geo | null }) {
               <SourcesUIReplica tc={tc} />
             </div>
             <div data-reveal data-reveal-delay="1">
-              <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:18 }}>{tc('landing.sources_eyebrow')}</p>
               <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
                 {tc('landing.sources_title_line1')}<br/><em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.sources_title_line2')}</em>
               </h2>
@@ -1608,7 +1607,6 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       <section id="pos" style={{ padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)',background:T.bg }}>
         <div style={{ maxWidth:1180,margin:'0 auto' }}>
           <div style={{ textAlign:'center',marginBottom:44 }} data-reveal>
-            <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:14 }}>{tc('landing.pos_eyebrow')}</p>
             <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(28px,4vw,54px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',color:T.tx,marginBottom:12 }}>
               {tc('landing.pos_title_line1')}<br/><em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.pos_title_line2')}</em>
             </h2>
@@ -1625,7 +1623,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             ))}
           </div>
           <div style={{ textAlign:'center',marginTop:24,display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap' }}>
-            <Link href="/signin?mode=signup" className="cta-btn" style={{ padding:'11px 26px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7 }}>
+            <Link href="/signin?mode=signup" className="cta-btn" style={{ padding:'11px 26px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7 }}>
               {tc('landing.pos_cta')}
             </Link>
             <span style={{ fontSize:12,color:T.tx3,alignSelf:'center' }}>{tc('landing.pos_cta_note',{pos:posPrice})}</span>
@@ -1637,7 +1635,6 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       <section style={{ background:T.alt,borderTop:`1px solid ${T.bd}`,borderBottom:`1px solid ${T.bd}`,padding:'clamp(56px,7vw,88px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:1060,margin:'0 auto' }}>
           <div style={{ textAlign:'center',marginBottom:44 }} data-reveal>
-            <p style={{ fontSize:11,fontWeight:700,color:T.acc,letterSpacing:'.16em',textTransform:'uppercase',marginBottom:14 }}>{tc('landing.compare_eyebrow')}</p>
             <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
               {tc('landing.compare_title_line1')}<br/><em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.compare_title_line2')}</em>
             </h2>

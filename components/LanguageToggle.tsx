@@ -45,6 +45,7 @@ export default function LanguageToggle({ compact }: { compact?: boolean }) {
       {/* Toggle button */}
       <button
         onClick={() => setOpen(o => !o)}
+        aria-label={tc('lang_toggle.changeLanguage')}
         title={tc('lang_toggle.changeLanguage')}
         style={compact ? {
           width: 30, height: 30, borderRadius: 7,

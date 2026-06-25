@@ -185,12 +185,12 @@ export default function CfoReportExport({ data, currencySymbol: sym, period }: P
           <ReportSection number={5} title={tc('cfo_report.section_risks')}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {criticalAlerts.map((a, i) => (
-                <div key={`c${i}`} style={{ fontSize: 12, color: '#333', padding: '8px 12px', borderRadius: 6, background: '#fef2f2', borderLeft: '3px solid #EF4444' }}>
+                <div key={`c${i}`} style={{ fontSize: 12, color: '#333', padding: '8px 12px', borderRadius: 6, background: '#fef2f2', border: '1px solid #fca5a5' }}>
                   <strong style={{ color: '#EF4444' }}>{tc('cfo_report.label_critical')}</strong> {a.message}
                 </div>
               ))}
               {warningAlerts.map((a, i) => (
-                <div key={`w${i}`} style={{ fontSize: 12, color: '#333', padding: '8px 12px', borderRadius: 6, background: '#fffbeb', borderLeft: '3px solid #F59E0B' }}>
+                <div key={`w${i}`} style={{ fontSize: 12, color: '#333', padding: '8px 12px', borderRadius: 6, background: '#fffbeb', border: '1px solid #fcd34d' }}>
                   <strong style={{ color: '#F59E0B' }}>{tc('cfo_report.label_warning')}</strong> {a.message}
                 </div>
               ))}

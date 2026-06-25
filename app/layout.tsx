@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Sora, DM_Sans, JetBrains_Mono, Instrument_Serif, Plus_Jakarta_Sans } from 'next/font/google'
+import { Sora, Barlow, JetBrains_Mono, Instrument_Serif, Plus_Jakarta_Sans } from 'next/font/google'
 import { cookies, headers } from 'next/headers'
 import './globals.css'
 import { LanguageProvider } from '@/components/LanguageProvider'
@@ -16,10 +16,10 @@ const sora = Sora({
   weight: ['300', '400', '500', '600', '700', '800'],
   display: 'swap',
 })
-const dm = DM_Sans({
+const dm = Barlow({
   subsets: ['latin'],
   variable: '--font-dm',
-  weight: ['400', '500'],
+  weight: ['300', '400', '500', '600', '700'],
   display: 'swap',
 })
 const mono = JetBrains_Mono({

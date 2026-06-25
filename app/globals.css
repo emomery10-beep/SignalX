@@ -4,17 +4,16 @@
 
 /* ── Design tokens ──────────────────────────────────────────── */
 :root {
-  /* Claude-inspired warm neutral palette — easy on the eyes */
-  --bg:   #f9f8f6;
+  --bg:   #f4f3f1;
   --sf:   #ffffff;
-  --ev:   #f3f2ef;
-  --ov:   #ece9e3;
+  --ev:   #edecea;
+  --ov:   #e4e2de;
   --b:    rgba(0,0,0,.08);
   --b2:   rgba(0,0,0,.14);
   --b3:   rgba(208,138,89,.4);
-  --tx:   #1a1916;
-  --tx2:  #6b6760;
-  --tx3:  #a39e97;
+  --tx:   #161412;
+  --tx2:  #5a5652;
+  --tx3:  #706b65;
   --acc:  #d08a59;
   --acc2: #8c6fe0;
   --glow: 0 0 30px rgba(208,138,89,.15), 0 0 60px rgba(208,138,89,.06);
@@ -39,7 +38,7 @@ html { height: 100%; scroll-behavior: smooth; }
 body {
   background: var(--bg);
   color: var(--tx);
-  font-family: var(--font-dm), 'DM Sans', sans-serif;
+  font-family: var(--font-dm), 'Barlow', sans-serif;
   font-size: var(--fs-md);
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
