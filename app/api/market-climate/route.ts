@@ -196,6 +196,8 @@ async function selectBusinessSignals(input: {
   sectorLabel: string
   channelMix: ChannelMix
   userId: string
+  city: string
+  supplierSources: Array<{ product: string; sourceCountry?: string }>
 }): Promise<MarketSignalSpec[]> {
   const { climate, channelMix } = input
   const dedupe = (specs: MarketSignalSpec[]) => {
@@ -203,9 +205,6 @@ async function selectBusinessSignals(input: {
     for (const s of specs) if (s && !seen.has(s.key)) { seen.add(s.key); out.push(s) }
     return out.slice(0, 6)
   }
-  // Deterministic fallback: local FX + what they trade. Commodity businesses get
-  // commodity prices + index; retail/ecommerce businesses get consumer-demand and
-  // ad-cost signals tuned to how they sell.
   const kwCommodities = detectBusinessCommodities(input.businessTerms)
   const retail = buildRetailSignals(climate, channelMix)
   const fallback = dedupe(
@@ -216,23 +215,25 @@ async function selectBusinessSignals(input: {
 
   if (!process.env.GROQ_API_KEY || input.businessTerms.length === 0) return fallback
 
-  const channelLine = channelMix.hasEcommerce && channelMix.hasPos
-    ? `They sell both online (${channelMix.ecommercePct}% of revenue via ecommerce) and in-store (${channelMix.posPct}% via POS).`
-    : channelMix.hasEcommerce ? 'They sell primarily ONLINE (ecommerce).'
-    : channelMix.hasPos ? 'They sell primarily IN-STORE (POS / physical shop).'
-    : 'Channel mix unknown.'
+  const products = input.businessTerms.slice(0, 10).join(', ')
+  const supplierLine = input.supplierSources.filter(s => s.sourceCountry)
+    .map(s => `${s.product} sourced from ${s.sourceCountry}`).join(', ')
 
-  const prompt = `A business in ${climate.name} (sector: ${input.sectorLabel}) trades in: ${input.businessTerms.join(', ')}.
-${channelLine}
+  const prompt = `A small business owner is based in ${input.city}, ${climate.name}. They sell: ${products}.${supplierLine ? ` They source: ${supplierLine}.` : ''}
 
-Pick the 4–5 LIVE market signals that most affect THIS business's costs, selling prices, or demand — specific to what they actually trade and how they sell, not generic national indices.
-- Commodity producer/exporter → the commodity's world price AND its key import-market demand.
-- Importer/retailer → the relevant input/import price and FX.
-- ONLINE sellers → include a digital ad-cost / CAC signal (Meta/Google) and consumer demand — these drive their economics.
-- IN-STORE sellers → include local consumer spending / footfall.
+Generate exactly 5 targeted web search queries that will tell this owner what they most need to know RIGHT NOW about their specific business. Each query must be about something that directly affects what they sell or buy — not generic economic indicators.
 
-Always include the local currency vs USD (${climate.fx.label}). Return ONLY JSON:
-{"signals":[{"key":"short_slug","label":"≤3 words","query":"web search for today's price/level/demand","kind":"commodity|demand|fx|index|rate"}]}`
+Cover these angles (pick the most relevant 5 for their specific products):
+1. Current LOCAL price of their main product(s) in ${input.city} or ${climate.name} — e.g. "sesame seed price ${input.city} ${climate.name} today"
+2. Supply disruptions or shortages affecting their products — e.g. "${input.city} port export ${products.split(',')[0].trim()} disruption"
+3. Crop / harvest / weather impact on their commodity supply — e.g. "East Africa ${products.split(',')[0].trim()} harvest forecast 2026 drought"
+4. Regional trade conditions for their goods — e.g. "${climate.region} ${products.split(',')[0].trim()} market price trend"
+5. ${climate.fx.label} — always include local currency vs USD as it affects import costs
+
+Make queries SPECIFIC: include the actual product name + city/country. Do NOT use generic terms like "consumer demand" or "footfall" or "ad cost" unless this business demonstrably sells digital products.
+
+Always include the local FX signal (${climate.fx.label}). Return ONLY JSON:
+{"signals":[{"key":"short_slug","label":"≤4 words, describes what it measures","query":"the exact web search query","kind":"commodity|supply|weather|export|fx"}]}`
 
   try {
     const groqRes = await fetch(GROQ_URL, {
@@ -251,7 +252,7 @@ Always include the local currency vs USD (${climate.fx.label}). Return ONLY JSON
         key: String(s.key).toLowerCase().replace(/[^a-z0-9_]/g, '_').slice(0, 24),
         label: String(s.label).slice(0, 28),
         query: String(s.query).slice(0, 160),
-        kind: (['commodity', 'demand', 'fx', 'index', 'rate'].includes(s.kind || '') ? s.kind : 'commodity') as MarketSignalSpec['kind'],
+        kind: (['commodity', 'supply', 'weather', 'export', 'demand', 'fx', 'index', 'rate'].includes(s.kind || '') ? s.kind : 'commodity') as MarketSignalSpec['kind'],
       }))
     if (!picked.length) return fallback
     // Guarantee local FX is present.
@@ -492,7 +493,7 @@ export async function GET(request: NextRequest) {
   } else {
     // Select signals: supplier-specific specs first, then AI-selected macro signals
     const supplierSpecs = buildSupplierSignals(supplierSources, climate)
-    const macroSpecs = await selectBusinessSignals({ climate, businessTerms, sectorLabel: sector.label, channelMix, userId: user.id })
+    const macroSpecs = await selectBusinessSignals({ climate, businessTerms, sectorLabel: sector.label, channelMix, userId: user.id, city: userCity, supplierSources })
     // Merge: supplier specs take priority (they're the most personalised), then macro
     const seenKeys = new Set(supplierSpecs.map(s => s.key))
     const combinedSpecs = [
@@ -529,6 +530,7 @@ export async function GET(request: NextRequest) {
     narrative = await buildNarrative({
       sym, condition: d0.condition, totalSeverity: d0.totalSeverity, climate, sector, signals, supply,
       importPct, estExtraMonthly: estExtra0, monthlyImportSpend, runwayMonths, userId: user.id,
+      businessTerms, city: userCity,
     })
     // Merge Claude-cleaned values so cards show a real reading instead of "—",
     // but ONLY where Tavily actually returned data — never let the model invent
@@ -637,6 +639,8 @@ interface NarrativeInput {
   signals: SignalReading[]; supply: SupplyReading
   importPct: number; estExtraMonthly: number; monthlyImportSpend: number
   runwayMonths: number | null; userId: string
+  businessTerms: string[]
+  city: string
 }
 
 interface Narrative {
@@ -664,22 +668,25 @@ async function buildNarrative(input: NarrativeInput): Promise<Narrative> {
     input.supply.port ? `- Port ${input.supply.port.port}: ${input.supply.port.severity.toUpperCase()} — ${input.supply.port.status}` : '',
   ].filter(Boolean).join('\n')
 
-  const prompt = `You advise a small business owner in ${input.climate.name}. Their business is ${input.sector.label}. About ${input.importPct}% of their stock cost is import-exposed, ~${input.sym}${input.monthlyImportSpend.toLocaleString()}/month. ${input.runwayMonths != null ? `Cash runway: ${input.runwayMonths} months.` : ''} Estimated extra cost from today's conditions: ${input.sym}${input.estExtraMonthly.toLocaleString()}/month.
+  const products = input.businessTerms.slice(0, 8).join(', ') || input.sector.label
+  const prompt = `You advise a small business owner based in ${input.city}, ${input.climate.name}. They sell: ${products}. About ${input.importPct}% of their stock cost is import-exposed, ~${input.sym}${input.monthlyImportSpend.toLocaleString()}/month. ${input.runwayMonths != null ? `Cash runway: ${input.runwayMonths} months.` : ''} Extra cost from today's conditions: ${input.sym}${input.estExtraMonthly.toLocaleString()}/month.
 
-Today's market signals:
+Today's signals (specific to their products and location):
 ${signalLines}
 
 Supply chain:
 ${supplyLines || '- No supply chain data'}
 
-Write a tight, plain-English read for this specific owner. No jargon, no hedging. Return ONLY valid JSON:
+Write a brutally practical read for THIS owner selling THESE specific products in ${input.city}. Mention their actual products by name. Be specific — if sesame prices are rising, say by how much and why. If a port issue affects their exports, name the port. If a drought will affect next season's crop, say when prices will likely move and by how much. If they should stock up now, say how much extra to hold.
+
+No generic sector talk. No hedging. Every sentence must be about what they sell. Return ONLY valid JSON:
 {
-  "readings": [ {"key":"<the [key] from each signal>","value":"a clean current value taken from the snippet e.g. '$1,820/t' or '▼ 2.3%' or 'KSh 162'. ONLY if the snippet contains a real figure or clear qualitative move. If the snippet says 'No fresh reading' or has no real data, return null — never invent a value or a state.","direction":"up|down|flat","changePct": number or null} , ... one per signal ],
-  "headline": "max 7 words, concrete",
-  "body": "2 sentences max. What today's conditions mean for THEIR costs specifically.",
-  "opportunity": "1 sentence if there's a hidden upside (e.g. local sourcing now cheaper), else null",
-  "timeline": [ {"when":"Today","title":"...","detail":"1 sentence","severity":"alert|watch|info"}, ... up to 4 entries spanning today → 30 days ],
-  "actions": [ {"urgency":"urgent|soon|watch","title":"max 8 words","detail":"1 sentence, specific to their sector/imports"}, ... 3-5 actions ]
+  "readings": [ {"key":"<the [key] from each signal>","value":"a clean current value e.g. '$1,820/t' or '▼ 2.3%' or 'KSh 162'. ONLY if the snippet contains a real figure. If no real data, return null — never invent.","direction":"up|down|flat","changePct": number or null} , ... one per signal ],
+  "headline": "max 7 words, names their actual product",
+  "body": "2 sentences. What today's conditions mean for the price/supply of THEIR specific products. Name the products.",
+  "opportunity": "1 sentence about a specific buying, stocking, or pricing opportunity for their products, or null",
+  "timeline": [ {"when":"Today|This week|Next 2 weeks|Next month","title":"concrete event affecting their products","detail":"1 sentence with specific numbers or %","severity":"alert|watch|info"}, ... up to 4 entries ],
+  "actions": [ {"urgency":"urgent|soon|watch","title":"max 8 words, product-specific","detail":"1 sentence with specific numbers e.g. 'Stock 20% more sesame now before harvest shortfall'"}, ... 3-5 actions ]
 }`
 
   try {
