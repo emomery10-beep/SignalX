@@ -1960,7 +1960,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     content: [
       {
         heading: "The Answering Process",
-        body: "When you ask a question, AskBiz:\n1. **Parses your intent** — understands what you're asking and what data is needed\n2. **Queries your connected data** — pulls relevant metrics from your sources\n3. **Applies AI analysis** — uses Claude (by Anthropic) to reason over your data\n4. **Generates a structured response** — with numbers, charts, or a narrative explanation\n5. **Flags confidence level** — indicates how certain the answer is based on data completeness",
+        body: "When you ask a question, AskBiz:\n1. **Parses your intent** — understands what you're asking and what data is needed\n2. **Queries your connected data** — pulls relevant metrics from your sources\n3. **Applies AI analysis** — uses Llama (by Meta, via Groq) to reason over your data\n4. **Generates a structured response** — with numbers, charts, or a narrative explanation\n5. **Flags confidence level** — indicates how certain the answer is based on data completeness",
       },
       {
         heading: "Confidence Levels",
@@ -1976,7 +1976,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
     ],
     faq: [
-      { q: "Is AskBiz powered by ChatGPT?", a: "No. AskBiz uses Claude by Anthropic — a different AI model known for careful reasoning and reduced hallucination on factual tasks." },
+      { q: "Is AskBiz powered by ChatGPT?", a: "No. AskBiz uses Llama by Meta (via Groq) — a different AI model known for careful reasoning and reduced hallucination on factual tasks." },
       { q: "What should I do if an answer seems wrong?", a: "Click the thumbs-down icon on any response to flag it. Include a note about what was incorrect. Our team reviews flagged responses to improve accuracy." },
     ],
     related: ["what-can-i-ask", "connect-first-data-source", "data-security"],
@@ -2377,7 +2377,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Third-Party AI Providers",
-        body: "AskBiz uses **Claude by Anthropic** as its AI reasoning engine. When you ask a question, relevant excerpts of your data are sent to Anthropic's API to generate an answer. Anthropic's API usage policy prohibits using API requests to train models. Your data is processed transiently and not retained by Anthropic beyond the duration of the API call.\n\nAskBiz's Anthropic API agreement includes a data processing addendum confirming this.",
+        body: "AskBiz uses **Llama by Meta (via Groq)** as its AI reasoning engine. When you ask a question, relevant excerpts of your data are sent to Groq's API to generate an answer. Groq's API usage policy prohibits using API requests to train models. Your data is processed transiently and not retained by Groq beyond the duration of the API call.\n\nAskBiz's Groq API agreement includes a data processing addendum confirming this.",
       },
       {
         heading: "Aggregate Analytics",
@@ -2945,7 +2945,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     content: [
       {
         heading: "AI as a Tool, Not an Authority",
-        body: "AskBiz uses AI (Claude by Anthropic) to analyse your business data and generate insights, summaries, and recommendations. The AI is a powerful analytical tool — but it is not infallible, and it is not a substitute for professional judgement.\n\nThink of AskBiz as a very capable analyst who works quickly and has read a great deal about business and finance — but who can make mistakes, miss context, and whose advice should be verified before acting on it for major decisions. This is not a limitation unique to AskBiz — it applies to all AI systems currently available.",
+        body: "AskBiz uses AI (Llama by Meta, via Groq) to analyse your business data and generate insights, summaries, and recommendations. The AI is a powerful analytical tool — but it is not infallible, and it is not a substitute for professional judgement.\n\nThink of AskBiz as a very capable analyst who works quickly and has read a great deal about business and finance — but who can make mistakes, miss context, and whose advice should be verified before acting on it for major decisions. This is not a limitation unique to AskBiz — it applies to all AI systems currently available.",
       },
       {
         heading: "What the AI Is Good At",
@@ -3051,7 +3051,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Platform Safety Events",
-        body: "Beyond data breaches, AskBiz monitors for other safety events:\n\n**AI-generated harm:** If an AI response causes harm — for example, generating false financial data that a user relied on for a significant decision — we investigate the root cause, update our AI guardrails, and contact the affected user directly.\n\n**Service misuse:** If AskBiz is used to facilitate fraud or illegal activity, we suspend the account, preserve evidence, and cooperate with law enforcement. We may notify other affected parties where we are legally permitted to do so.\n\n**Third-party platform security events:** If Shopify, Amazon, or another connected platform suffers a breach that may affect our integration (e.g. their OAuth tokens are compromised), we proactively revoke and regenerate all affected tokens and notify connected users.\n\n**Supply chain incidents:** If one of our infrastructure providers (Vercel, Supabase, Anthropic) reports a security incident, we assess the impact on AskBiz users and notify accordingly.",
+        body: "Beyond data breaches, AskBiz monitors for other safety events:\n\n**AI-generated harm:** If an AI response causes harm — for example, generating false financial data that a user relied on for a significant decision — we investigate the root cause, update our AI guardrails, and contact the affected user directly.\n\n**Service misuse:** If AskBiz is used to facilitate fraud or illegal activity, we suspend the account, preserve evidence, and cooperate with law enforcement. We may notify other affected parties where we are legally permitted to do so.\n\n**Third-party platform security events:** If Shopify, Amazon, or another connected platform suffers a breach that may affect our integration (e.g. their OAuth tokens are compromised), we proactively revoke and regenerate all affected tokens and notify connected users.\n\n**Supply chain incidents:** If one of our infrastructure providers (Vercel, Supabase, Groq) reports a security incident, we assess the impact on AskBiz users and notify accordingly.",
       },
       {
         heading: "Post-Incident Review",
@@ -14118,7 +14118,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     faq: [
       { q: "What if I do not have enough data for a meaningful brief?", a: "The brief uses whatever data is available. In the first few days of use, the AI will note that the baseline is still being established. Recommendations become more specific as your transaction history grows." },
       { q: "Can I share the brief with my manager or head chef?", a: "The brief is currently visible only within the restaurant hub. Shareable exports and email delivery are planned for a future release." },
-      { q: "What AI model powers the brief?", a: "The brief is generated by Claude (Anthropic). The prompt is built from your actual transaction data — the AI has no access to information beyond what is in your AskBiz account." },
+      { q: "What AI model powers the brief?", a: "The brief is generated by Llama (by Meta, via Groq). The prompt is built from your actual transaction data — the AI has no access to information beyond what is in your AskBiz account." },
     ],
     related: ["pos-restaurant-getting-started", "pos-restaurant-orders", "pos-dashboards-and-reports"],
     keywords: ["restaurant daily brief", "AI morning report", "health score", "anomaly detection", "covers", "average ticket", "restaurant intelligence"],
