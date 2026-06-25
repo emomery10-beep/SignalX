@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
 import { logUsage } from '@/lib/log-usage'
 import {
@@ -15,7 +14,8 @@ import {
 export const runtime = 'nodejs'
 export const maxDuration = 30
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 const PARSE_SYSTEM_PROMPT = `You extract parcel shipping details from natural language.
 Return ONLY valid JSON, no markdown, no explanation, no extra text.
@@ -104,15 +104,22 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'text is required' }, { status: 400 })
       }
 
-      const response = await anthropic.messages.create({
-        model: 'claude-haiku-4-5',
-        max_tokens: 500,
-        system: PARSE_SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: text }],
+      const groqRes = await fetch(GROQ_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+        body: JSON.stringify({
+          model: GROQ_MODEL,
+          max_tokens: 500,
+          messages: [
+            { role: 'system', content: PARSE_SYSTEM_PROMPT },
+            { role: 'user', content: text },
+          ],
+        }),
       })
-      logUsage({ route: 'quote', model: 'claude-haiku-4-5', usage: response.usage, userId: user.id })
+      const groqData = await groqRes.json()
+      logUsage({ route: 'quote', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: user.id })
 
-      const raw = response.content[0].type === 'text' ? response.content[0].text : ''
+      const raw = groqData.choices?.[0]?.message?.content || ''
 
       let parsed
       try {

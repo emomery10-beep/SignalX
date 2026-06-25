@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrencySymbol } from '@/lib/get-currency'
-import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 // In-process cache: prevents repeat Claude calls when users tab-switch or refresh.
 // Per-user, 30-min TTL. Works within a warm serverless instance.
@@ -136,10 +136,13 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 800,
-      messages: [{ role: 'user', content: `You are a business operations assistant. Given these signals from a small business, produce a prioritised daily action list.
+    const groqRes = await fetch(GROQ_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        max_tokens: 800,
+        messages: [{ role: 'user', content: `You are a business operations assistant. Given these signals from a small business, produce a prioritised daily action list.
 
 SIGNALS:
 ${signals.join('\n')}
@@ -149,11 +152,11 @@ Return a JSON array of max 7 actions. Each action: {"title": "short imperative (
 Priority 1 = do now (revenue at risk), 2 = do today, 3 = this week.
 Sort by priority ascending. Be specific — use actual product names, customer names, amounts.
 Return ONLY the JSON array, no markdown.` }],
+      }),
     })
-    logUsage({ route: 'daily-actions', model: 'claude-haiku-4-5', usage: response.usage, userId: user.id })
-
-    const text = (response.content[0] as { type: string; text: string }).text
-    const actions = JSON.parse(text)
+    const groqData = await groqRes.json()
+    logUsage({ route: 'daily-actions', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: user.id })
+    const actions = JSON.parse(groqData.choices?.[0]?.message?.content || '[]')
     const result = { actions, currency_symbol: sym }
     CACHE.set(user.id, { data: result, date: today() })
     return NextResponse.json(result)

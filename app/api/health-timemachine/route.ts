@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrencySymbol } from '@/lib/get-currency'
-import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
 export const maxDuration = 20
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 export async function GET(req: NextRequest) {
   const supabase = createClient()
@@ -83,17 +83,22 @@ export async function GET(req: NextRequest) {
       ].filter(Boolean).join('\n')
 
       try {
-        const response = await anthropic.messages.create({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 300,
-          messages: [{ role: 'user', content: `You are a business analyst. Compare these two health score snapshots and explain what changed in 2-3 concise bullet points. Be specific about which metrics improved or declined and why it matters.
+        const groqRes = await fetch(GROQ_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+          body: JSON.stringify({
+            model: GROQ_MODEL,
+            max_tokens: 300,
+            messages: [{ role: 'user', content: `You are a business analyst. Compare these two health score snapshots and explain what changed in 2-3 concise bullet points. Be specific about which metrics improved or declined and why it matters.
 
 ${context}
 
 Respond with plain text bullet points only, no markdown headers.` }],
+          }),
         })
-        logUsage({ route: 'health-timemachine', model: 'claude-haiku-4-5-20251001', usage: response.usage, userId: user.id })
-        analysis = (response.content[0] as { type: string; text: string }).text
+        const groqData = await groqRes.json()
+        logUsage({ route: 'health-timemachine', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: user.id })
+        analysis = groqData.choices?.[0]?.message?.content || ''
       } catch {
         analysis = null
       }

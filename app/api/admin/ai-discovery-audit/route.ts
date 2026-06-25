@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 
 export const runtime   = 'nodejs'
 export const maxDuration = 60
 
 const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
-const client       = new Anthropic()
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 /* ─── platform definitions ───────────────────────────────────────────── */
 export const PLATFORMS = [
@@ -176,14 +176,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `No manifest template for: ${platformId}` }, { status: 400 })
   }
 
-  const msg = await client.messages.create({
-    model:      'claude-sonnet-4-5',
-    max_tokens: 2000,
-    messages:   [{ role: 'user', content: prompt }],
+  const manifestRes = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({ model: GROQ_MODEL, max_tokens: 2000, messages: [{ role: 'user', content: prompt }] }),
   })
-  logUsage({ route: 'admin/ai-discovery-audit#manifest', model: 'claude-sonnet-4-5', usage: msg.usage, userId: null })
+  const manifestData = await manifestRes.json()
+  logUsage({ route: 'admin/ai-discovery-audit#manifest', model: GROQ_MODEL, usage: { input_tokens: manifestData.usage?.prompt_tokens || 0, output_tokens: manifestData.usage?.completion_tokens || 0 }, userId: null })
 
-  const manifest = msg.content[0].type === 'text' ? msg.content[0].text.trim() : ''
+  const manifest = (manifestData.choices?.[0]?.message?.content || '').trim()
 
   // Log generation to DB
   const supabase = createServiceClient()
@@ -213,16 +214,21 @@ export async function runAudit() {
     ),
     Promise.allSettled(
       PLATFORMS.map(async (p) => {
-        const msg  = await client.messages.create({
-          model:      'claude-haiku-4-5',
-          max_tokens: 100,
-          system:     `Answer in 1–2 sentences as if you are an AI assistant responding to a founder's question about business tools.
-If AskBiz (askbiz.co) would realistically appear for this query, mention it and start with "AskBiz".
-Otherwise give a realistic response without it. Be concise.`,
-          messages: [{ role: 'user', content: p.probeQ }],
+        const probeRes = await fetch(GROQ_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+          body: JSON.stringify({
+            model: GROQ_MODEL,
+            max_tokens: 100,
+            messages: [
+              { role: 'system', content: `Answer in 1–2 sentences as if you are an AI assistant responding to a founder's question about business tools.\nIf AskBiz (askbiz.co) would realistically appear for this query, mention it and start with "AskBiz".\nOtherwise give a realistic response without it. Be concise.` },
+              { role: 'user', content: p.probeQ },
+            ],
+          }),
         })
-        logUsage({ route: 'admin/ai-discovery-audit#probe', model: 'claude-haiku-4-5', usage: msg.usage, userId: null })
-        const reply = msg.content[0].type === 'text' ? msg.content[0].text : ''
+        const probeData = await probeRes.json()
+        logUsage({ route: 'admin/ai-discovery-audit#probe', model: GROQ_MODEL, usage: { input_tokens: probeData.usage?.prompt_tokens || 0, output_tokens: probeData.usage?.completion_tokens || 0 }, userId: null })
+        const reply = probeData.choices?.[0]?.message?.content || ''
         const hit   = reply.toLowerCase().includes('askbiz')
         return {
           id:       p.id,

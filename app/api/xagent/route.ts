@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { searchTweetsViaTavily, postTweet, validateXCredentials, X_KEYWORD_PRESETS } from '@/lib/x-api'
-import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
@@ -9,7 +8,8 @@ export const maxDuration = 60
 export const dynamic = 'force-dynamic'
 
 const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 // ── Reply prompt ─────────────────────────────────────────────────────────────
 function buildReplyPrompt(tweetText: string, tweetAuthor: string): string {
@@ -171,13 +171,14 @@ export async function POST(request: NextRequest) {
 
       for (const angle of angles) {
         try {
-          const res = await anthropic.messages.create({
-            model: 'claude-sonnet-4-5',
-            max_tokens: 300,
-            messages: [{ role: 'user', content: buildOriginalPostPrompt(query, angle) }],
+          const groqRes = await fetch(GROQ_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+            body: JSON.stringify({ model: GROQ_MODEL, max_tokens: 300, messages: [{ role: 'user', content: buildOriginalPostPrompt(query, angle) }] }),
           })
-          logUsage({ route: 'xagent#search', model: 'claude-sonnet-4-5', usage: res.usage, userId: null })
-          const post = res.content[0].type === 'text' ? res.content[0].text.trim() : ''
+          const groqData = await groqRes.json()
+          logUsage({ route: 'xagent#search', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: null })
+          const post = (groqData.choices?.[0]?.message?.content || '').trim()
           if (post) originalPosts.push({ topic: query, post: post.length > 255 ? post.slice(0, 252) + '...' : post })
         } catch (err: any) {
           console.error('[xagent] Claude error generating post:', JSON.stringify(err))
@@ -265,16 +266,14 @@ export async function POST(request: NextRequest) {
 
     // ── REGENERATE ───────────────────────────────────────────
     if (action === 'regenerate') {
-      const res = await anthropic.messages.create({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 300,
-        messages: [{
-          role: 'user',
-          content: buildReplyPrompt(body.tweetText || '', body.tweetAuthor || 'founder'),
-        }],
+      const regenRes = await fetch(GROQ_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+        body: JSON.stringify({ model: GROQ_MODEL, max_tokens: 300, messages: [{ role: 'user', content: buildReplyPrompt(body.tweetText || '', body.tweetAuthor || 'founder') }] }),
       })
-      logUsage({ route: 'xagent#regenerate', model: 'claude-sonnet-4-5', usage: res.usage, userId: null })
-      const reply = res.content[0].type === 'text' ? res.content[0].text.trim() : ''
+      const regenData = await regenRes.json()
+      logUsage({ route: 'xagent#regenerate', model: GROQ_MODEL, usage: { input_tokens: regenData.usage?.prompt_tokens || 0, output_tokens: regenData.usage?.completion_tokens || 0 }, userId: null })
+      const reply = (regenData.choices?.[0]?.message?.content || '').trim()
       return safeJson({ reply: reply.length > 255 ? reply.slice(0, 252) + '...' : reply })
     }
 

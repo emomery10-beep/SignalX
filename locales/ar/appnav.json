@@ -12,5 +12,13 @@
   "alerts": "التنبيهات",
   "templates": "القوالب",
   "billing": "ترقية الخطة",
-  "settings": "الإعدادات"
+  "settings": "الإعدادات",
+  "new_question": "سؤال جديد",
+  "more": "المزيد",
+  "admin": "المسؤول",
+  "search_placeholder": "ابحث في المحادثات…",
+  "history": "السجل",
+  "today": "اليوم",
+  "earlier": "سابقاً",
+  "no_conversations": "لا توجد محادثات بعد"
 }

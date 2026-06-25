@@ -262,7 +262,7 @@ export default function AdminPage() {
                 <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
                   <thead>
                     <tr style={{background:'var(--ev)'}}>
-                      {[tc('admin.th_name'),tc('admin.th_email'),tc('admin.th_plan'),tc('admin.th_type'),tc('admin.th_country'),tc('admin.th_questions'),tc('admin.th_joined'),tc('admin.th_actions')].map(h => (
+                      {[tc('admin.th_name'),tc('admin.th_email'),tc('admin.th_plan'),tc('admin.th_type'),tc('admin.th_country'),tc('admin.th_questions'),'POS Sales','POS Revenue',tc('admin.th_joined'),tc('admin.th_actions')].map(h => (
                         <th key={h} style={{padding:'10px 12px',textAlign:'left',fontWeight:600,whiteSpace:'nowrap',color:'var(--tx2)'}}>{h}</th>
                       ))}
                     </tr>
@@ -276,6 +276,8 @@ export default function AdminPage() {
                         <td style={{padding:'9px 12px',color:'var(--tx2)',textTransform:'capitalize'}}>{u.business_type||tc('admin.empty_dash')}</td>
                         <td style={{padding:'9px 12px',color:'var(--tx2)'}}>{u.registration_country||tc('admin.empty_dash')}</td>
                         <td style={{padding:'9px 12px'}}>{u.questions_used||0}</td>
+                        <td style={{padding:'9px 12px'}}>{u.pos_tx_count > 0 ? <span style={{padding:'2px 8px',borderRadius:9999,fontSize:11,fontWeight:600,background:'#0891b220',color:'#0891b2'}}>{u.pos_tx_count}</span> : <span style={{color:'var(--tx3)'}}>—</span>}</td>
+                        <td style={{padding:'9px 12px',fontWeight:u.pos_revenue>0?600:'normal',color:u.pos_revenue>0?'var(--tx)':'var(--tx3)'}}>{u.pos_revenue>0 ? (u.pos_revenue>=1000 ? (u.pos_revenue/1000).toFixed(1)+'K' : u.pos_revenue.toFixed(0)) : '—'}</td>
                         <td style={{padding:'9px 12px',color:'var(--tx3)'}}>{new Date(u.created_at).toLocaleDateString('en-GB')}</td>
                         <td style={{padding:'9px 12px'}}>
                           <select onChange={e=>changePlan(u.id,e.target.value)} value={u.plan_id} style={{padding:'3px 6px',borderRadius:6,border:'1px solid var(--b)',background:'var(--ev)',fontFamily:'inherit',fontSize:11,cursor:'pointer'}}>

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { hasPermission } from '@/lib/pos-permissions'
 import { logUsage } from '@/lib/log-usage'
@@ -26,20 +25,21 @@ export async function POST(req: NextRequest) {
   if (!image) return json({ error: 'image required' }, 400)
 
   try {
-    const anthropic = new Anthropic()
-    const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 400,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: 'image/jpeg', data: image },
-          },
-          {
-            type: 'text',
-            text: `You are a device identification assistant for a phone repair shop. Look at this image of a phone's rear label/sticker and extract all available information.
+    const GROQ_VISION_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+    const GROQ_VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
+    const groqRes = await fetch(GROQ_VISION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: GROQ_VISION_MODEL,
+        max_tokens: 400,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${image}` } },
+            {
+              type: 'text',
+              text: `You are a device identification assistant for a phone repair shop. Look at this image of a phone's rear label/sticker and extract all available information.
 
 TASK:
 1. Identify the device model (e.g., "iPhone 14 Pro", "Samsung Galaxy S24")
@@ -53,13 +53,15 @@ Reply ONLY with valid JSON, nothing else:
 {"model":"device model","serial":"serial or IMEI or null","manufacture_date":"date string or null","storage":"capacity or null","color":"color or null","model_number":"internal model number or null","confidence":75}
 
 Set confidence 80-100 if text is clearly readable, 50-79 if partially readable, below 50 if mostly guessing.`,
-          },
-        ],
-      }],
+            },
+          ],
+        }],
+      }),
     })
-    logUsage({ route: 'pos/service-jobs/scan-device', model: 'claude-haiku-4-5-20251001', usage: response.usage, userId: auth.ownerId })
+    const groqData = await groqRes.json()
+    logUsage({ route: 'pos/service-jobs/scan-device', model: GROQ_VISION_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: auth.ownerId })
 
-    const text = response.content[0].type === 'text' ? response.content[0].text.trim() : ''
+    const text = (groqData.choices?.[0]?.message?.content || '').trim()
     const jsonMatch = text.match(/\{[\s\S]*?\}/)
     if (!jsonMatch) return json({ error: 'Could not read device label' }, 422)
 

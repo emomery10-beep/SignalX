@@ -2,10 +2,10 @@
 // Extracts business facts from conversations and persists them.
 // Injected into every AI prompt so the AI knows the user's business deeply.
 
-import Anthropic from '@anthropic-ai/sdk'
 import { createServiceClient } from '@/lib/supabase/server'
 
-const client = new Anthropic()
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 interface MemoryFact {
   category: 'finance' | 'product' | 'operations' | 'market' | 'goal' | 'challenge' | 'context'
@@ -21,10 +21,16 @@ export async function extractAndSaveMemory(
   aiAnswer: string,
 ): Promise<void> {
   try {
-    const extraction = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 512,
-      system: `You extract concrete business facts from a conversation between a business owner and an AI advisor.
+    const groqRes = await fetch(GROQ_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        max_tokens: 512,
+        messages: [
+          {
+            role: 'system',
+            content: `You extract concrete business facts from a conversation between a business owner and an AI advisor.
 
 Only extract facts that are specific, numerical, or clearly stated — not vague inferences.
 Return a JSON array of facts. Each fact: { category, key, value, confidence }
@@ -46,13 +52,16 @@ Rules:
 - confidence: high = stated explicitly, medium = clearly implied, low = inferred
 - Return [] if nothing concrete is extractable
 - Maximum 5 facts per call`,
-      messages: [{
-        role: 'user',
-        content: `User said: "${userMessage}"\n\nAI answered: "${aiAnswer.slice(0, 600)}"\n\nExtract business facts as JSON array:`,
-      }],
+          },
+          {
+            role: 'user',
+            content: `User said: "${userMessage}"\n\nAI answered: "${aiAnswer.slice(0, 600)}"\n\nExtract business facts as JSON array:`,
+          },
+        ],
+      }),
     })
-
-    const text = extraction.content[0]?.type === 'text' ? extraction.content[0].text : ''
+    const groqData = await groqRes.json()
+    const text = groqData.choices?.[0]?.message?.content || ''
     const match = text.match(/\[[\s\S]*\]/)
     if (!match) return
 

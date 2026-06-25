@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 import { getCurrencySymbol } from '@/lib/get-currency'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 export async function POST(request: NextRequest) {
   const supabase = createClient()
@@ -158,12 +158,15 @@ async function generateBrief(userId: string, supabase: ReturnType<typeof createC
       sourcesContext,
     ].filter(Boolean).join('\n')
 
-    const res = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 400,
-      messages: [{
-        role: 'user',
-        content: `You are AskBiz — a plain-English business intelligence advisor. Write a concise morning brief for a business owner. Be specific and direct. No jargon. Return ONLY valid JSON.
+    const groqRes = await fetch(GROQ_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        max_tokens: 400,
+        messages: [{
+          role: 'user',
+          content: `You are AskBiz — a plain-English business intelligence advisor. Write a concise morning brief for a business owner. Be specific and direct. No jargon. Return ONLY valid JSON.
 
 Business data:
 ${contextParts}
@@ -174,11 +177,13 @@ Return exactly:
   "worsened": "One specific thing that needs attention. One sentence, max 20 words. Be specific.",
   "action": "The single most important action for today. One sentence, max 25 words. Start with a strong verb."
 }`,
-      }],
+        }],
+      }),
     })
-    logUsage({ route: 'daily-brief', model: 'claude-haiku-4-5', usage: res.usage, userId })
+    const groqData = await groqRes.json()
+    logUsage({ route: 'daily-brief', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId })
 
-    const raw = res.content[0].type === 'text' ? res.content[0].text : ''
+    const raw = groqData.choices?.[0]?.message?.content || ''
     const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim())
     brief = {
       ...brief,

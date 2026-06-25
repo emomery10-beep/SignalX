@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { tavilySearch } from '@/lib/tavily'
-import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 
 export const runtime     = 'nodejs'
 export const maxDuration = 300
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 const SCOUT_QUERIES = [
   // ── Trend / news queries ──────────────────────────────────────────────────
@@ -239,10 +239,7 @@ async function writeMarketingBlogPost(input: SearchInput, recentPublished: Recen
       }\n`
     : ''
 
-  const res = await anthropic.messages.create({
-    model:      'claude-haiku-4-5',
-    max_tokens: 3000,
-    system: `You are Maya Chen, Head of Marketing Intelligence at AskBiz. You write sharp, data-led marketing guides for SME founders — the kind of briefing a growth-focused founder reads before their Monday morning standup. Your style:
+  const _SYSTEM_ = `You are Maya Chen, Head of Marketing Intelligence at AskBiz. You write sharp, data-led marketing guides for SME founders — the kind of briefing a growth-focused founder reads before their Monday morning standup. Your style:
 
 VOICE & TONE:
 - You write like someone who reads Marketing Week, Search Engine Journal, and Social Media Examiner before breakfast — but translates it for founders, not agencies
@@ -287,11 +284,9 @@ AskBiz is an AI business intelligence platform for SME founders. Key capabilitie
 - PRICING: Free plan (10 questions/month, no card), Growth (£19/mo — 3 months free trial), Business (£39/mo — 3 months free trial), Enterprise (custom)
 - COMPETITORS: Unlike Fathom (web analytics only) or Tableau (needs a data team), AskBiz answers plain-English marketing questions with your actual connected data in seconds.
 
-Revenue target: UK/Global SME founders doing £100k–£2M annual revenue, spending £500–£10k/month on marketing.`,
+Revenue target: UK/Global SME founders doing £100k–£2M annual revenue, spending £500–£10k/month on marketing.`
 
-    messages: [{
-      role:    'user',
-      content: `Write a blog post based on today's marketing intelligence. Research topic: "${query}"
+  const userPrompt = `Write a blog post based on today's marketing intelligence. Research topic: "${query}"
 
 Cluster: "${cluster}" | Pillar: "${pillar}"
 
@@ -335,12 +330,24 @@ Return ONLY valid JSON (no markdown fences):
     "role": "Head of Marketing Intelligence",
     "bio": "Maya Chen leads AskBiz's marketing intelligence function, tracking platform algorithm shifts, ad cost benchmarks, and channel ROI data across Meta, Google, TikTok, and email — and turning them into briefs that help SME founders spend less and grow faster."
   }
-}`,
-    }],
-  })
+}`
 
-  logUsage({ route: 'agent/marketing-scout', model: 'claude-haiku-4-5', usage: res.usage })
-  const raw    = res.content[0].type === 'text' ? res.content[0].text : ''
+  const groqRes = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      max_tokens: 3000,
+      messages: [
+        { role: 'system', content: _SYSTEM_ },
+        { role: 'user',   content: userPrompt },
+      ],
+    }),
+  })
+  const groqData = await groqRes.json()
+
+  logUsage({ route: 'agent/marketing-scout', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 } })
+  const raw    = groqData.choices?.[0]?.message?.content || ''
   const clean  = raw.replace(/```json\n?|```/g, '').trim()
   const parsed = JSON.parse(clean)
 

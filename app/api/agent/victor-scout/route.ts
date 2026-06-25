@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { tavilySearch } from '@/lib/tavily'
-import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 
 export const runtime     = 'nodejs'
 export const maxDuration = 300
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 const SCOUT_QUERIES = [
   // ── Trend / news queries ──────────────────────────────────────────────────
@@ -239,10 +239,7 @@ async function writeAfricanMktgBlogPost(input: SearchInput, recentPublished: Rec
       }\n`
     : ''
 
-  const res = await anthropic.messages.create({
-    model:      'claude-haiku-4-5',
-    max_tokens: 3000,
-    system: `You are Victor Ojeakhena, Co-Founder of Marketing Analytics Africa (MAA). You are Nigeria-first: Lagos is your primary lens, with strong coverage of West Africa (Ghana, Senegal, Côte d'Ivoire) and South Africa (Johannesburg, Cape Town). You've spent 10+ years building marketing strategy for Zenith Bank, FCMB, Ladycare, Hypo, NCC, and ADVAN. You co-founded VantageTech Branding, led strategy at Accret Experience, and built AMTEC — a 5,000-person free-to-attend marketing conference — because you believe knowledge shouldn't have a paywall.
+  const _SYSTEM_ = `You are Victor Ojeakhena, Co-Founder of Marketing Analytics Africa (MAA). You are Nigeria-first: Lagos is your primary lens, with strong coverage of West Africa (Ghana, Senegal, Côte d'Ivoire) and South Africa (Johannesburg, Cape Town). You've spent 10+ years building marketing strategy for Zenith Bank, FCMB, Ladycare, Hypo, NCC, and ADVAN. You co-founded VantageTech Branding, led strategy at Accret Experience, and built AMTEC — a 5,000-person free-to-attend marketing conference — because you believe knowledge shouldn't have a paywall.
 
 YOUR CORE THESIS:
 The benchmarks that dominate global marketing were calibrated for California, not Lagos. A 30% email open rate in Nigeria isn't below average — it's exceptional. African marketers are constantly being told to follow playbooks written for different markets, using tools that cost $600/month and were never designed for Nairobi or Port Harcourt. You publish the real data, for free, so that stops.
@@ -293,11 +290,9 @@ AskBiz is an AI business intelligence platform for founders and marketing teams.
 - PROACTIVE ALERTS: Weekly marketing digest — what's working, what's draining your ₦ budget, what to fix before Monday
 - PRICING: Free plan (3 questions/month), Growth (₦49,000/mo), Business (₦130,000/mo), Enterprise (custom)
 
-Revenue target: Nigerian SME founders and marketing managers at businesses doing ₦5M–₦200M annual revenue.`,
+Revenue target: Nigerian SME founders and marketing managers at businesses doing ₦5M–₦200M annual revenue.`
 
-    messages: [{
-      role:    'user',
-      content: `Write a blog post based on today's African marketing intelligence. Research topic: "${query}"
+  const userPrompt = `Write a blog post based on today's African marketing intelligence. Research topic: "${query}"
 
 Cluster: "${cluster}" | Pillar: "${pillar}"
 
@@ -341,12 +336,24 @@ Return ONLY valid JSON (no markdown fences):
     "role": "Co-Founder, Marketing Analytics Africa",
     "bio": "Victor Ojeakhena co-founded Marketing Analytics Africa to give Nigerian and African marketers data that actually applies to their markets. He's spent 10+ years building strategy for Zenith Bank, FCMB, Ladycare, Hypo, and NCC — and is tired of watching Lagos brands fail because they followed playbooks written for California."
   }
-}`,
-    }],
-  })
+}`
 
-  logUsage({ route: 'agent/victor-scout', model: 'claude-haiku-4-5', usage: res.usage })
-  const raw   = res.content[0].type === 'text' ? res.content[0].text : ''
+  const groqRes = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      max_tokens: 3000,
+      messages: [
+        { role: 'system', content: _SYSTEM_ },
+        { role: 'user',   content: userPrompt },
+      ],
+    }),
+  })
+  const groqData = await groqRes.json()
+
+  logUsage({ route: 'agent/victor-scout', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 } })
+  const raw   = groqData.choices?.[0]?.message?.content || ''
   const clean = raw.replace(/```json\n?|```/g, '').trim()
   const parsed = JSON.parse(clean)
 

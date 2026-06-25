@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosOwner } from '@/lib/pos-auth'  // fix #20 — use shared auth helper
 import { logUsage } from '@/lib/log-usage'
 
@@ -58,21 +57,21 @@ export async function POST(req: NextRequest) {
       ? `\n\nFREQUENTLY RECOGNIZED (prioritize these):\n${hotList.map((h: any) => `- ${h.recognized_name}`).join('\n')}`
       : ''
 
-    // fix #26 — use generic alias rather than date-pinned checkpoint
-    const anthropic = new Anthropic()
-    const aiResponse = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 300,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: { type: 'base64', media_type: 'image/jpeg', data: image },
-          },
-          {
-            type: 'text',
-            text: `You are a POS cashier assistant. Look at this product image and identify it.
+    const GROQ_VISION_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+    const GROQ_VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
+    const groqRes = await fetch(GROQ_VISION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: GROQ_VISION_MODEL,
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${image}` } },
+            {
+              type: 'text',
+              text: `You are a POS cashier assistant. Look at this product image and identify it.
 
 YOUR STORE'S INVENTORY:
 ${catalogueText || '(Empty inventory)'}${hotListText}
@@ -87,13 +86,15 @@ TASK:
 
 Reply ONLY with valid JSON, nothing else:
 {"name":"product name","price":null}`,
-          },
-        ],
-      }],
+            },
+          ],
+        }],
+      }),
     })
-    logUsage({ route: 'pos/scan', model: 'claude-haiku-4-5-20251001', usage: aiResponse.usage, userId: ownerId })
+    const groqData = await groqRes.json()
+    logUsage({ route: 'pos/scan', model: GROQ_VISION_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: ownerId })
 
-    const text = aiResponse.content[0].type === 'text' ? aiResponse.content[0].text.trim() : ''
+    const text = (groqData.choices?.[0]?.message?.content || '').trim()
     console.log('[scan] Claude raw response:', text)
     console.log('[scan] Image size:', Math.round(image.length / 1024), 'KB, hash:', image.substring(0, 20))
     const jsonMatch = text.match(/\{[\s\S]*?\}/)

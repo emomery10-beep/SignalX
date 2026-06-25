@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosOwner } from '@/lib/pos-auth'
-import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 const CACHE = new Map<string, { data: unknown; date: string }>()
 const today = () => new Date().toISOString().slice(0, 10)
@@ -75,20 +73,16 @@ export async function POST(req: NextRequest) {
     // Use Claude to analyze the data
     const prompt = buildAnalysisPrompt(analysisData, periodDays)
 
-    const message = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 1024,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
+    const groqRes = await fetch(GROQ_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({ model: GROQ_MODEL, max_tokens: 1024, messages: [{ role: 'user', content: prompt }] }),
     })
-    logUsage({ route: 'pos/intelligence/anomaly-detection', model: 'claude-haiku-4-5', usage: message.usage, userId: ownerId })
+    const groqData = await groqRes.json()
+    logUsage({ route: 'pos/intelligence/anomaly-detection', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: ownerId })
 
     // Extract analysis from response
-    const analysis = message.content[0].type === 'text' ? message.content[0].text : ''
+    const analysis = groqData.choices?.[0]?.message?.content || ''
 
     // Parse anomalies from response
     const anomalies = parseAnomalies(analysis)

@@ -1,9 +1,9 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { isExpansionQuestion, buildExpansionContext, buildDataSummary } from './expansion'
 import { logUsage } from '@/lib/log-usage'
 import { LANG_ENGLISH_NAMES, type Lang } from '@/lib/i18n'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 export interface AIResult {
   insight_header?: string
@@ -312,23 +312,23 @@ export async function askOnce({ messages, systemPrompt, userId }: {
   systemPrompt: string
   userId?: string | null
 }): Promise<AIResult> {
-  const Anthropic = (await import('@anthropic-ai/sdk')).default
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
-  const MODEL = 'claude-sonnet-4-6'
-  const response = await client.messages.create({
-    model: MODEL,
-    max_tokens: 2000,
-    // Cache the system prompt (business context). On follow-up questions within
-    // the 5-min window the cached prefix is read at ~0.1x input cost instead of
-    // full price — the bulk of the input on a multi-question session.
-    system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
-    messages: messages.slice(-14) as Array<{ role: 'user' | 'assistant'; content: string }>,
+  const groqRes = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      max_tokens: 2000,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messages.slice(-14),
+      ],
+    }),
   })
+  const groqData = await groqRes.json()
 
-  logUsage({ route: 'chat', model: MODEL, usage: response.usage, userId })
+  logUsage({ route: 'chat', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId })
 
-  const raw = response.content.map(b => (b.type === 'text' ? b.text : '')).join('')
+  const raw = groqData.choices?.[0]?.message?.content || ''
 
   try {
     const clean = raw.replace(/```json|```/g, '').trim()

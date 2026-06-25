@@ -12,5 +12,13 @@
   "alerts": "Alertas",
   "templates": "Plantillas",
   "billing": "Mejorar plan",
-  "settings": "Ajustes"
+  "settings": "Ajustes",
+  "new_question": "Nueva pregunta",
+  "more": "Más",
+  "admin": "Admin",
+  "search_placeholder": "Buscar conversaciones…",
+  "history": "Historial",
+  "today": "Hoy",
+  "earlier": "Antes",
+  "no_conversations": "Aún no hay conversaciones"
 }

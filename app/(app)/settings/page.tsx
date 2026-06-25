@@ -121,19 +121,20 @@ function PanelHeader({ title, description }: { title: string; description: strin
   )
 }
 
-function SaveRow({ onClick, saving, saved, label = 'Save changes' }: { onClick: () => void; saving: boolean; saved: boolean; label?: string }) {
+function SaveRow({ onClick, saving, saved, label }: { onClick: () => void; saving: boolean; saved: boolean; label?: string }) {
+  const { tc } = useLang()
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       <button
         onClick={onClick} disabled={saving}
         style={{ padding: '10px 22px', borderRadius: 'var(--r-md)', background: 'var(--acc)', color: '#fff', border: 'none', fontSize: 13, fontWeight: 600, fontFamily: 'inherit', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? .7 : 1, boxShadow: '0 2px 8px rgba(208,138,89,.25)', transition: 'opacity 150ms' }}
       >
-        {saving ? 'Saving…' : label}
+        {saving ? tc('settings.saving') : (label ?? tc('settings.save_changes'))}
       </button>
       {saved && (
         <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5 }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
-          Saved
+          {tc('settings.saved')}
         </span>
       )}
     </div>
@@ -304,45 +305,45 @@ function ProfilePanel({ onSignOut }: { onSignOut: () => void }) {
           </div>
           <div style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 11px', borderRadius: 'var(--rf)', background: 'rgba(208,138,89,.1)', border: '1px solid rgba(208,138,89,.2)' }}>
             <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--acc)' }}/>
-            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--acc)', textTransform: 'capitalize' }}>{user.plan} plan</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--acc)', textTransform: 'capitalize' }}>{user.plan} {tc('settings.plan_suffix')}</span>
           </div>
         </div>
 
         {/* Name editing */}
         <div style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>First name</label>
-            <input style={inp} value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First name"/>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.first_name')}</label>
+            <input style={inp} value={firstName} onChange={e => setFirstName(e.target.value)} placeholder={tc('settings.first_name')}/>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>Last name</label>
-            <input style={inp} value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last name"/>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.last_name')}</label>
+            <input style={inp} value={lastName} onChange={e => setLastName(e.target.value)} placeholder={tc('settings.last_name')}/>
           </div>
         </div>
         <div style={{ padding: '0 20px 16px' }}>
-          <SaveRow onClick={save} saving={saving} saved={saved} label="Update name"/>
+          <SaveRow onClick={save} saving={saving} saved={saved} label={tc('settings.update_name')}/>
         </div>
       </Card>
 
       {/* Sign-in methods */}
       <Card>
         <CardHeader title={tc('settings.card_signin_methods')}/>
-        <SettingRow label="Google" description="Sign in with your Google account" right={<span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.08)', color: '#16a34a', fontWeight: 600, border: '1px solid rgba(34,197,94,.2)' }}>Connected</span>}/>
-        <SettingRow label="Email magic link" description="Sign in with a one-time link sent to your email" right={<span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.08)', color: '#16a34a', fontWeight: 600, border: '1px solid rgba(34,197,94,.2)' }}>Connected</span>}/>
+        <SettingRow label="Google" description={tc('settings.google_desc')} right={<span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.08)', color: '#16a34a', fontWeight: 600, border: '1px solid rgba(34,197,94,.2)' }}>{tc('settings.badge_connected')}</span>}/>
+        <SettingRow label="Email magic link" description={tc('settings.magic_link_desc')} right={<span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.08)', color: '#16a34a', fontWeight: 600, border: '1px solid rgba(34,197,94,.2)' }}>{tc('settings.badge_connected')}</span>}/>
         <SettingRow
           label="Passkey"
-          description="Sign in with Face ID, Touch ID, or a security key"
+          description={tc('settings.passkey_desc')}
           border={false}
           right={
             hasPasskey || passkeyStatus === 'enrolled' ? (
-              <span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.08)', color: '#16a34a', fontWeight: 600, border: '1px solid rgba(34,197,94,.2)' }}>Registered</span>
+              <span style={{ fontSize: 12, padding: '4px 12px', borderRadius: 'var(--rf)', background: 'rgba(34,197,94,.08)', color: '#16a34a', fontWeight: 600, border: '1px solid rgba(34,197,94,.2)' }}>{tc('settings.badge_registered')}</span>
             ) : (
               <button
                 onClick={enrollPasskey}
                 disabled={passkeyStatus === 'enrolling'}
                 style={{ fontSize: 12, padding: '6px 14px', borderRadius: 'var(--rf)', background: 'var(--acc)', color: '#fff', fontWeight: 600, border: 'none', cursor: passkeyStatus === 'enrolling' ? 'not-allowed' : 'pointer', opacity: passkeyStatus === 'enrolling' ? .6 : 1, fontFamily: 'inherit' }}
               >
-                {passkeyStatus === 'enrolling' ? 'Registering…' : 'Register passkey'}
+                {passkeyStatus === 'enrolling' ? tc('settings.registering') : tc('settings.register_passkey')}
               </button>
             )
           }
@@ -356,7 +357,7 @@ function ProfilePanel({ onSignOut }: { onSignOut: () => void }) {
         onClick={onSignOut}
         style={{ width: '100%', padding: '11px', borderRadius: 'var(--r-md)', border: '1px solid var(--b2)', background: 'transparent', color: 'var(--tx2)', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer', fontWeight: 500 }}
       >
-        Sign out
+        {tc('settings.sign_out')}
       </button>
     </div>
   )
@@ -640,7 +641,7 @@ function AddressPanel() {
       {!addressComplete && (
         <div style={{ display: 'flex', gap: 10, padding: '12px 16px', background: 'rgba(208,138,89,.07)', border: '1px solid rgba(208,138,89,.2)', borderRadius: 'var(--r-md)', marginBottom: 20, fontSize: 13, color: '#7a4a1c', lineHeight: 1.6 }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Add your address to unlock live parcel quotes in the search bar.
+          {tc('settings.address_complete_hint')}
         </div>
       )}
 
@@ -650,37 +651,37 @@ function AddressPanel() {
         <Card>
           <div style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>Business name</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_business_name')}</label>
               <input style={inp} value={address.business_name} onChange={e => setAddress(a => ({ ...a, business_name: e.target.value }))} placeholder="e.g. Acme Ltd"/>
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>Phone number</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_phone')}</label>
               <input style={inp} value={address.phone} onChange={e => setAddress(a => ({ ...a, phone: e.target.value }))} placeholder="e.g. 07700 900000"/>
             </div>
           </div>
           <div style={{ padding: '0 20px 14px' }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>Address line 1 *</label>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_line1')} *</label>
             <input style={{ ...inp, borderColor: errors.address ? '#dc2626' : 'var(--b2)' }} value={address.address} onChange={e => { setAddress(a => ({ ...a, address: e.target.value })); setErrors(er => ({ ...er, address: undefined })) }} placeholder="e.g. 12 High Street"/>
-            {errors.address && <div style={{ fontSize: 11, color: '#dc2626', marginTop: 4 }}>Required</div>}
+            {errors.address && <div style={{ fontSize: 11, color: '#dc2626', marginTop: 4 }}>{tc('settings.address_required')}</div>}
           </div>
           <div style={{ padding: '0 20px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr 140px', gap: 12 }}>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>Town / city *</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_town')} *</label>
               <input style={{ ...inp, borderColor: errors.town ? '#dc2626' : 'var(--b2)' }} value={address.town} onChange={e => { setAddress(a => ({ ...a, town: e.target.value })); setErrors(er => ({ ...er, town: undefined })) }} placeholder="e.g. London"/>
-              {errors.town && <div style={{ fontSize: 11, color: '#dc2626', marginTop: 4 }}>Required</div>}
+              {errors.town && <div style={{ fontSize: 11, color: '#dc2626', marginTop: 4 }}>{tc('settings.address_required')}</div>}
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>County</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_county')}</label>
               <input style={inp} value={address.county} onChange={e => setAddress(a => ({ ...a, county: e.target.value }))} placeholder="e.g. Greater London"/>
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>Postcode *</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.address_postcode')} *</label>
               <input style={{ ...inp, borderColor: errors.postcode ? '#dc2626' : 'var(--b2)' }} value={address.postcode} onChange={e => { setAddress(a => ({ ...a, postcode: e.target.value })); setErrors(er => ({ ...er, postcode: undefined })) }} placeholder="EC1A 1BB"/>
-              {errors.postcode && <div style={{ fontSize: 11, color: '#dc2626', marginTop: 4 }}>Required</div>}
+              {errors.postcode && <div style={{ fontSize: 11, color: '#dc2626', marginTop: 4 }}>{tc('settings.address_required')}</div>}
             </div>
           </div>
           <div style={{ padding: '0 20px 16px' }}>
-            <SaveRow onClick={save} saving={saving} saved={saved} label="Save address"/>
+            <SaveRow onClick={save} saving={saving} saved={saved} label={tc('settings.save_address')}/>
             {saveError && <div style={{ fontSize: 12, color: '#dc2626', marginTop: 8 }}>{saveError}</div>}
           </div>
         </Card>
@@ -959,15 +960,15 @@ function NotificationsPanel() {
 
       {/* Channels */}
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>Channels</div>
-        {row('Email alerts', 'Receive an email when a critical or warning alert fires.', form.notify_email_alerts, () => setForm(f => ({ ...f, notify_email_alerts: !f.notify_email_alerts })))}
-        {row('WhatsApp alerts', 'Get a WhatsApp message for stock, revenue, and shipment alerts.', form.notify_whatsapp, () => setForm(f => ({ ...f, notify_whatsapp: !f.notify_whatsapp })))}
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 4 }}>{tc('settings.notif_channels')}</div>
+        {row(tc('settings.notif_email_alerts'), tc('settings.notif_email_alerts_desc'), form.notify_email_alerts, () => setForm(f => ({ ...f, notify_email_alerts: !f.notify_email_alerts })))}
+        {row(tc('settings.notif_whatsapp'), tc('settings.notif_whatsapp_desc'), form.notify_whatsapp, () => setForm(f => ({ ...f, notify_whatsapp: !f.notify_whatsapp })))}
       </div>
 
       {/* WhatsApp number */}
       {form.notify_whatsapp && (
         <div style={{ marginBottom: 24 }}>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>WhatsApp number</label>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--tx3)', marginBottom: 6 }}>{tc('settings.notif_whatsapp_number')}</label>
           <input
             style={inp}
             value={form.whatsapp_number}
@@ -975,7 +976,7 @@ function NotificationsPanel() {
             placeholder="+44 7700 900000"
           />
           <p style={{ margin: '6px 0 0', fontSize: 11, color: 'var(--tx3)' }}>
-            Include country code (e.g. +44 for UK, +234 for Nigeria). Must be a WhatsApp-enabled number.
+            {tc('settings.notif_whatsapp_hint')}
           </p>
         </div>
       )}
@@ -983,7 +984,7 @@ function NotificationsPanel() {
       {/* Info box */}
       <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(208,138,89,.06)', border: '1px solid rgba(208,138,89,.2)', marginBottom: 24 }}>
         <p style={{ margin: 0, fontSize: 12, color: 'var(--tx2)', lineHeight: 1.6 }}>
-          AskBiz checks your data every 4 hours and sends alerts for low stock, revenue drops, delayed shipments, and sector news relevant to your business and region.
+          {tc('settings.notif_info')}
         </p>
       </div>
 
@@ -992,7 +993,7 @@ function NotificationsPanel() {
         disabled={saving}
         style={{ padding: '10px 22px', borderRadius: 9999, border: 'none', background: '#d08a59', color: '#fff', fontSize: 13, fontWeight: 600, cursor: saving ? 'default' : 'pointer', fontFamily: 'inherit' }}
       >
-        {saved ? 'Saved ✓' : saving ? 'Saving…' : 'Save preferences'}
+        {saved ? `${tc('settings.saved')} ✓` : saving ? tc('settings.saving') : tc('settings.save_preferences')}
       </button>
     </div>
   )

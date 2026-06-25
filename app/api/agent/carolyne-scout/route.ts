@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { tavilySearch } from '@/lib/tavily'
-import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 
 export const runtime     = 'nodejs'
 export const maxDuration = 300
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 const SCOUT_QUERIES = [
   // ── Trend / news queries ──────────────────────────────────────────────────
@@ -239,10 +239,7 @@ async function writeEABlogPost(input: SearchInput, recentPublished: RecentPost[]
       }\n`
     : ''
 
-  const res = await anthropic.messages.create({
-    model:      'claude-haiku-4-5',
-    max_tokens: 3000,
-    system: `You are Carolyne Kigathi, Head of Strategic Partnerships (East Africa) at AskBiz. You write sharp, data-driven analysis for East African SME founders — the kind of briefing a Nairobi-based business founder would read over chai before their first meeting. Your style:
+  const _SYSTEM_ = `You are Carolyne Kigathi, Head of Strategic Partnerships (East Africa) at AskBiz. You write sharp, data-driven analysis for East African SME founders — the kind of briefing a Nairobi-based business founder would read over chai before their first meeting. Your style:
 
 VOICE & TONE:
 - You write like someone who reads Business Daily Africa, The EastAfrican, and TechCabal before breakfast
@@ -288,11 +285,9 @@ AskBiz is an AI business intelligence platform for SME founders. Key capabilitie
 - PROACTIVE ALERTS: Daily briefings on cash position, stock levels, anomalies — via WhatsApp or email before the founder even asks
 - PRICING: Free plan (3 questions/month), Growth (KSh 3,800/mo), Business (KSh 10,200/mo), Enterprise (custom)
 
-Revenue target: East African SME founders doing KSh 2M–20M annual revenue (approx $15k–$150k USD).`,
+Revenue target: East African SME founders doing KSh 2M–20M annual revenue (approx $15k–$150k USD).`
 
-    messages: [{
-      role:    'user',
-      content: `Write a blog post based on today's East African market intelligence. Research topic: "${query}"
+  const userPrompt = `Write a blog post based on today's East African market intelligence. Research topic: "${query}"
 
 Cluster: "${cluster}" | Pillar: "${pillar}"
 
@@ -336,12 +331,24 @@ Return ONLY valid JSON (no markdown fences):
     "role": "Head of Strategic Partnerships, East Africa",
     "bio": "Carolyne Kigathi leads AskBiz's East Africa strategy, tracking regulatory shifts, mobile money trends, and SME growth signals across Kenya, Uganda, Tanzania, and Rwanda — and turning them into briefings founders can act on before their competitors notice."
   }
-}`,
-    }],
-  })
+}`
 
-  logUsage({ route: 'agent/carolyne-scout', model: 'claude-haiku-4-5', usage: res.usage })
-  const raw   = res.content[0].type === 'text' ? res.content[0].text : ''
+  const groqRes = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      max_tokens: 3000,
+      messages: [
+        { role: 'system', content: _SYSTEM_ },
+        { role: 'user',   content: userPrompt },
+      ],
+    }),
+  })
+  const groqData = await groqRes.json()
+
+  logUsage({ route: 'agent/carolyne-scout', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 } })
+  const raw   = groqData.choices?.[0]?.message?.content || ''
   const clean = raw.replace(/```json\n?|```/g, '').trim()
   const parsed = JSON.parse(clean)
 

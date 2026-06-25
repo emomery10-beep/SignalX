@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { resolvePosAuth } from '@/lib/pos-auth'
 import { logUsage } from '@/lib/log-usage'
 
@@ -28,21 +27,14 @@ export async function POST(req: NextRequest) {
   const { front, back } = await req.json()
   if (!front) return NextResponse.json({ error: 'front image required' }, { status: 400 })
 
-  const anthropic = new Anthropic()
+  const GROQ_VISION_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+  const GROQ_VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
 
-  // Build the content blocks — always include front, optionally include back
-  const imageBlocks: Anthropic.ImageBlockParam[] = [
-    {
-      type: 'image',
-      source: { type: 'base64', media_type: 'image/jpeg', data: front },
-    },
+  // Build the image content blocks — always include front, optionally include back
+  const imageBlocks = [
+    { type: 'image_url' as const, image_url: { url: `data:image/jpeg;base64,${front}` } },
+    ...(back ? [{ type: 'image_url' as const, image_url: { url: `data:image/jpeg;base64,${back}` } }] : []),
   ]
-  if (back) {
-    imageBlocks.push({
-      type: 'image',
-      source: { type: 'base64', media_type: 'image/jpeg', data: back },
-    })
-  }
 
   const prompt = back
     ? `You are a retail inventory assistant. You have been given TWO photos of the same product:
@@ -86,21 +78,26 @@ Reply with ONLY valid JSON, no markdown, no other text:
     console.log('[scan-product-full] front image size:', Math.round(front.length / 1024), 'KB', back ? ', back size: ' + Math.round(back.length / 1024) + ' KB' : '(no back)')
     console.log('[scan-product-full] front hash (first 20 chars):', front.substring(0, 20))
 
-    const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 600,
-      messages: [{
-        role: 'user',
-        content: [
-          ...imageBlocks,
-          { type: 'text', text: prompt + '\n\n' + instructions },
-        ],
-      }],
+    const response = await fetch(GROQ_VISION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: GROQ_VISION_MODEL,
+        max_tokens: 600,
+        messages: [{
+          role: 'user',
+          content: [
+            ...imageBlocks,
+            { type: 'text', text: prompt + '\n\n' + instructions },
+          ],
+        }],
+      }),
     })
-    logUsage({ route: 'pos/scan-product-full', model: 'claude-haiku-4-5-20251001', usage: response.usage, userId: auth.ownerId })
+    const groqData = await response.json()
+    logUsage({ route: 'pos/scan-product-full', model: GROQ_VISION_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: auth.ownerId })
 
-    const text = response.content[0].type === 'text' ? response.content[0].text.trim() : ''
-    console.log('[scan-product-full] Claude raw response:', text)
+    const text = (groqData.choices?.[0]?.message?.content || '').trim()
+    console.log('[scan-product-full] Groq raw response:', text)
 
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {

@@ -12,5 +12,13 @@
   "alerts": "Alerts",
   "templates": "Templates",
   "billing": "Upgrade plan",
-  "settings": "Settings"
+  "settings": "Settings",
+  "new_question": "New question",
+  "more": "More",
+  "admin": "Admin",
+  "search_placeholder": "Search conversations…",
+  "history": "History",
+  "today": "Today",
+  "earlier": "Earlier",
+  "no_conversations": "No conversations yet"
 }

@@ -5,6 +5,7 @@ import './globals.css'
 import { LanguageProvider } from '@/components/LanguageProvider'
 import CookieConsent from '@/components/CookieConsent'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
+import TikTokPixel from '@/components/TikTokPixel'
 import type { Lang } from '@/lib/i18n'
 import { resolveLocale, isRTL } from '@/lib/i18n-locale'
 import { ThemeProvider } from 'next-themes'
@@ -77,6 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang={lang} dir={isRTL(lang) ? 'rtl' : 'ltr'} suppressHydrationWarning>
       <body className={`${sora.variable} ${dm.variable} ${mono.variable} ${instrumentSerif.variable} ${plusJakarta.variable}`}>
         <GoogleAnalytics measurementId="G-ELBCMBBMEC" />
+        <TikTokPixel pixelId="D8UA4C3C77UDUI6572LG" />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <LanguageProvider initialLang={lang}>
             {children}

@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 
 function json(data: unknown, status = 200) {
   return NextResponse.json(data, { status })
 }
 
-// POST — scan receipt image via Claude vision, extract expense fields
+const GROQ_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+
+// POST — scan receipt image via Groq vision, extract expense fields
 export async function POST(req: NextRequest) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -27,24 +29,27 @@ export async function POST(req: NextRequest) {
   const safeMediaType = allowedTypes.includes(mediaType) ? mediaType : 'image/jpeg'
 
   try {
-    const anthropic = new Anthropic()
-    const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 500,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: {
-              type: 'base64',
-              media_type: safeMediaType as 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif',
-              data: image,
+    const groqRes = await fetch(GROQ_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        max_tokens: 500,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image_url',
+              image_url: {
+                url: `data:${safeMediaType};base64,${image}`,
+              },
             },
-          },
-          {
-            type: 'text',
-            text: `You are a receipt scanning assistant for a business expense tracker. Analyse this receipt image and extract all expense information.
+            {
+              type: 'text',
+              text: `You are a receipt scanning assistant for a business expense tracker. Analyse this receipt image and extract all expense information.
 
 TASK: Extract the following from the receipt:
 1. Vendor / merchant name (the business that issued the receipt)
@@ -62,13 +67,31 @@ Rules:
 - amount must be a number (not a string)
 - date must be YYYY-MM-DD format
 - category must exactly match one of the options listed`,
-          },
-        ],
-      }],
+            },
+          ],
+        }],
+      }),
     })
-    logUsage({ route: 'cfo/scan-receipt', model: 'claude-haiku-4-5-20251001', usage: response.usage, userId: user.id })
 
-    const text = response.content[0].type === 'text' ? response.content[0].text.trim() : ''
+    if (!groqRes.ok) {
+      const err = await groqRes.text()
+      console.error('[cfo/scan-receipt] Groq error:', err)
+      return json({ error: 'Receipt scan failed' }, 500)
+    }
+
+    const groqData = await groqRes.json()
+    const text = (groqData.choices?.[0]?.message?.content || '').trim()
+
+    logUsage({
+      route: 'cfo/scan-receipt',
+      model: GROQ_MODEL,
+      usage: {
+        input_tokens: groqData.usage?.prompt_tokens || 0,
+        output_tokens: groqData.usage?.completion_tokens || 0,
+      },
+      userId: user.id,
+    })
+
     const jsonMatch = text.match(/\{[\s\S]*?\}/)
     if (!jsonMatch) return json({ error: 'Could not read receipt' }, 422)
 

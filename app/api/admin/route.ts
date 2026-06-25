@@ -72,6 +72,19 @@ export async function GET(request: NextRequest) {
     const subsMap: Record<string, string> = {}
     subs?.forEach((s: any) => { subsMap[s.user_id] = s.plan_id })
 
+    // Get POS stats per user — transaction count and total revenue
+    const { data: posStats } = await supabase
+      .from('pos_transactions')
+      .select('owner_id, total, status')
+      .in('status', ['paid', 'completed', 'complete'])
+
+    const posMap: Record<string, { txCount: number; revenue: number }> = {}
+    posStats?.forEach((tx: any) => {
+      if (!posMap[tx.owner_id]) posMap[tx.owner_id] = { txCount: 0, revenue: 0 }
+      posMap[tx.owner_id].txCount++
+      posMap[tx.owner_id].revenue += Number(tx.total) || 0
+    })
+
     // Build user rows — fallback to auth users if profiles table is empty/errored
     let users: any[]
     if (profiles && profiles.length > 0) {
@@ -83,6 +96,8 @@ export async function GET(request: NextRequest) {
         business_type: p.business_type,
         registration_country: p.registration_country,
         questions_used: usageMap[p.id] || 0,
+        pos_tx_count: posMap[p.id]?.txCount || 0,
+        pos_revenue: posMap[p.id]?.revenue || 0,
         created_at: p.created_at,
         is_suspicious: p.is_suspicious,
       }))

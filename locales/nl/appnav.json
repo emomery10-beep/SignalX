@@ -12,5 +12,13 @@
   "alerts": "Meldingen",
   "templates": "Sjablonen",
   "billing": "Abonnement upgraden",
-  "settings": "Instellingen"
+  "settings": "Instellingen",
+  "new_question": "Nieuwe vraag",
+  "more": "Meer",
+  "admin": "Beheerder",
+  "search_placeholder": "Gesprekken zoeken…",
+  "history": "Geschiedenis",
+  "today": "Vandaag",
+  "earlier": "Eerder",
+  "no_conversations": "Nog geen gesprekken"
 }

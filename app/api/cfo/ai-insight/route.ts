@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { getRegionConfig } from '@/lib/region-config'
 import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
 
 const CACHE = new Map<string, { data: unknown; date: string }>()
 const today = () => new Date().toISOString().slice(0, 10)
@@ -68,23 +68,46 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 400,
-      messages: [{
-        role: 'user',
-        content: `You are a CFO advisor for a small/medium business in ${region.countryName}. Analyze these financial metrics and provide exactly 3 actionable insights. Be specific with numbers. Reference local context where relevant (${region.currencyCode}, local market conditions). No fluff.
+    const groqRes = await fetch(GROQ_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        max_tokens: 400,
+        messages: [{
+          role: 'user',
+          content: `You are a CFO advisor for a small/medium business in ${region.countryName}. Analyze these financial metrics and provide exactly 3 actionable insights. Be specific with numbers. Reference local context where relevant (${region.currencyCode}, local market conditions). No fluff.
 
 ${signals.join('\n')}
 
 Format as JSON: {"insights": [{"title": "short title", "body": "1-2 sentence insight with specific numbers and action", "type": "opportunity|risk|action"}]}
-Return ONLY valid JSON.`
-      }],
+Return ONLY valid JSON.`,
+        }],
+      }),
     })
-    logUsage({ route: 'cfo/ai-insight', model: 'claude-haiku-4-5', usage: response.usage, userId: user.id })
 
-    const block = response.content[0]
-    const text = block?.type === 'text' ? block.text : ''
+    if (!groqRes.ok) {
+      const err = await groqRes.text()
+      console.error('[cfo/ai-insight] Groq error:', err)
+      return NextResponse.json({ insights: [], error: true }, { status: 500 })
+    }
+
+    const groqData = await groqRes.json()
+    const text = groqData.choices?.[0]?.message?.content || ''
+
+    logUsage({
+      route: 'cfo/ai-insight',
+      model: GROQ_MODEL,
+      usage: {
+        input_tokens: groqData.usage?.prompt_tokens || 0,
+        output_tokens: groqData.usage?.completion_tokens || 0,
+      },
+      userId: user.id,
+    })
+
     if (!text) return NextResponse.json({ insights: [] })
     const match = text.match(/\{[\s\S]*\}/)
     const parsed = match ? JSON.parse(match[0]) : { insights: [] }
@@ -92,7 +115,7 @@ Return ONLY valid JSON.`
     CACHE.set(user.id, { data: parsed, date: today() })
     return NextResponse.json(parsed)
   } catch (e) {
-    console.error('[cfo/ai-insight] Claude error:', e)
+    console.error('[cfo/ai-insight] Groq error:', e)
     return NextResponse.json({ insights: [], error: true }, { status: 500 })
   }
 }

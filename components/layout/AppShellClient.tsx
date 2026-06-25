@@ -358,7 +358,7 @@ export default function AppShellClient({ user, conversations, children }: {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            New question
+            {tc('appnav.new_question')}
           </button>
 
           {/* Business Tools */}
@@ -397,7 +397,7 @@ export default function AppShellClient({ user, conversations, children }: {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
               <path d="M6 9l6 6 6-6"/>
             </svg>
-            More
+            {tc('appnav.more')}
           </button>
         </div>
 
@@ -431,7 +431,7 @@ export default function AppShellClient({ user, conversations, children }: {
             {isAdmin && (
               <Link href="/admin" style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', borderRadius: 8, textDecoration: 'none', fontSize: 12, color: 'var(--tx3)', marginBottom: 1 }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
-                Admin
+                {tc('appnav.admin')}
               </Link>
             )}
           </div>
@@ -448,7 +448,7 @@ export default function AppShellClient({ user, conversations, children }: {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search conversations…"
+              placeholder={tc('appnav.search_placeholder')}
               style={{ fontFamily: 'inherit', fontSize: 12, color: 'var(--tx)', background: 'var(--ev)', border: '1px solid var(--b2)', borderRadius: 8, padding: '6px 8px 6px 26px', outline: 'none', width: '100%', boxSizing: 'border-box' }}
             />
           </div>
@@ -461,7 +461,7 @@ export default function AppShellClient({ user, conversations, children }: {
           onMouseEnter={e => (e.currentTarget.style.background = 'var(--ev)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
         >
-          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>History</span>
+          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em' }}>{tc('appnav.history')}</span>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2.5" strokeLinecap="round" style={{ transition: 'transform 200ms', transform: convOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
             <path d="M6 9l6 6 6-6"/>
           </svg>
@@ -472,18 +472,18 @@ export default function AppShellClient({ user, conversations, children }: {
           <div style={{ height: '100%', overflowY: 'auto', padding: '3px 7px' }}>
             {todayConvs.length > 0 && (
               <>
-                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', padding: '3px 5px 2px' }}>Today</div>
+                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', padding: '3px 5px 2px' }}>{tc('appnav.today')}</div>
                 {todayConvs.map(c => <ConvItem key={c.id} conv={c} active={pathname.includes(c.id)}/>)}
               </>
             )}
             {olderConvs.length > 0 && (
               <>
-                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', padding: '5px 5px 2px' }}>Earlier</div>
+                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', padding: '5px 5px 2px' }}>{tc('appnav.earlier')}</div>
                 {olderConvs.slice(0, 30).map(c => <ConvItem key={c.id} conv={c} active={pathname.includes(c.id)}/>)}
               </>
             )}
             {conversations.length === 0 && (
-              <div style={{ padding: '12px 8px', fontSize: 12, color: 'var(--tx3)', textAlign: 'center' }}>No conversations yet</div>
+              <div style={{ padding: '12px 8px', fontSize: 12, color: 'var(--tx3)', textAlign: 'center' }}>{tc('appnav.no_conversations')}</div>
             )}
           </div>
         </div>

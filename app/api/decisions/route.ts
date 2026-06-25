@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 // POST: log a new decision
 export async function POST(request: NextRequest) {
@@ -72,12 +72,15 @@ export async function PATCH(request: NextRequest) {
   let review_verdict: 'good_call' | 'bad_call' | 'neutral' = 'neutral'
 
   try {
-    const res = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 300,
-      messages: [{
-        role: 'user',
-        content: `You are reviewing the outcome of a business decision made 6 weeks ago. Return ONLY valid JSON.
+    const groqRes = await fetch(GROQ_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: `You are reviewing the outcome of a business decision made 6 weeks ago. Return ONLY valid JSON.
 
 Decision: "${decision.title}"
 What they changed: ${decision.before_value} → ${decision.after_value}
@@ -91,11 +94,13 @@ Return:
 {
   "review_result": "2-3 sentence plain English summary of what happened after this decision. Be specific about whether it worked. Include any numbers if available.",
   "review_verdict": "good_call|bad_call|neutral"
-}`
-      }],
+}`,
+        }],
+      }),
     })
-    logUsage({ route: 'decisions', model: 'claude-sonnet-4-6', usage: res.usage, userId: user.id })
-    const raw = res.content[0].type === 'text' ? res.content[0].text : ''
+    const groqData = await groqRes.json()
+    logUsage({ route: 'decisions', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: user.id })
+    const raw = groqData.choices?.[0]?.message?.content || ''
     const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim())
     review_result = parsed.review_result
     review_verdict = parsed.review_verdict

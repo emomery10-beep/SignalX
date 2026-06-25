@@ -18,14 +18,14 @@ import {
   type MarketSignalSpec, type CountryClimate, type ChannelMix,
 } from '@/lib/market-climate-config'
 import type { SupplierSource } from '@/app/api/supplier-context/route'
-import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 // Persistent cache: the expensive result (signals + supply + narrative) is kept
 // in Supabase for 12h so the Tavily/Claude work runs at most ~twice a day per
@@ -193,7 +193,7 @@ async function selectBusinessSignals(input: {
       : [climate.fx, ...retail, climate.centralBank]
   )
 
-  if (!process.env.ANTHROPIC_API_KEY || input.businessTerms.length === 0) return fallback
+  if (!process.env.GROQ_API_KEY || input.businessTerms.length === 0) return fallback
 
   const channelLine = channelMix.hasEcommerce && channelMix.hasPos
     ? `They sell both online (${channelMix.ecommercePct}% of revenue via ecommerce) and in-store (${channelMix.posPct}% via POS).`
@@ -214,14 +214,14 @@ Always include the local currency vs USD (${climate.fx.label}). Return ONLY JSON
 {"signals":[{"key":"short_slug","label":"≤3 words","query":"web search for today's price/level/demand","kind":"commodity|demand|fx|index|rate"}]}`
 
   try {
-    const res = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 700,
-      messages: [{ role: 'user', content: prompt }],
+    const groqRes = await fetch(GROQ_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({ model: GROQ_MODEL, max_tokens: 700, messages: [{ role: 'user', content: prompt }] }),
     })
-    logUsage({ route: '/api/market-climate#select', model: 'claude-haiku-4-5-20251001', usage: res.usage, userId: input.userId })
-    const textBlock = res.content.find(b => b.type === 'text') as { text: string } | undefined
-    const m = textBlock?.text.match(/\{[\s\S]*\}/)
+    const groqData = await groqRes.json()
+    logUsage({ route: '/api/market-climate#select', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: input.userId })
+    const m = (groqData.choices?.[0]?.message?.content || '').match(/\{[\s\S]*\}/)
     if (!m) return fallback
     const parsed = JSON.parse(m[0]) as { signals?: Array<{ key?: string; label?: string; query?: string; kind?: string }> }
     const picked: MarketSignalSpec[] = (parsed.signals || [])
@@ -529,7 +529,7 @@ async function buildNarrative(input: NarrativeInput): Promise<Narrative> {
     timeline: [],
     actions: [],
   }
-  if (!process.env.ANTHROPIC_API_KEY) return fallback
+  if (!process.env.GROQ_API_KEY) return fallback
 
   const signalLines = input.signals.map(s => `- [${s.key}] ${s.label}: ${s.value} (${s.direction}${s.changePct != null ? `, ${s.changePct}%` : ''}) — ${s.summary}`).join('\n')
   const supplyLines = [
@@ -556,14 +556,14 @@ Write a tight, plain-English read for this specific owner. No jargon, no hedging
 }`
 
   try {
-    const res = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1200,
-      messages: [{ role: 'user', content: prompt }],
+    const groqNarrRes = await fetch(GROQ_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({ model: GROQ_MODEL, max_tokens: 1200, messages: [{ role: 'user', content: prompt }] }),
     })
-    logUsage({ route: '/api/market-climate', model: 'claude-haiku-4-5-20251001', usage: res.usage, userId: input.userId })
-    const textBlock = res.content.find(b => b.type === 'text') as { text: string } | undefined
-    const text = textBlock?.text || ''
+    const groqNarrData = await groqNarrRes.json()
+    logUsage({ route: '/api/market-climate', model: GROQ_MODEL, usage: { input_tokens: groqNarrData.usage?.prompt_tokens || 0, output_tokens: groqNarrData.usage?.completion_tokens || 0 }, userId: input.userId })
+    const text = groqNarrData.choices?.[0]?.message?.content || ''
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) return fallback
     const parsed = JSON.parse(jsonMatch[0]) as Narrative

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { tavilySearch } from '@/lib/tavily'
-import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 const SCOUT_QUERIES = [
   // ── Trend / news queries ──────────────────────────────────────────────────
@@ -266,10 +266,7 @@ async function writeBlogPost(input: SearchInput, recentPublished: RecentPost[] =
       }\n`
     : ''
 
-  const res = await anthropic.messages.create({
-    model: 'claude-haiku-4-5',
-    max_tokens: 3000,
-    system: `You are Alice Watson, Head of Market Intelligence at AskBiz. You write like a sharp, opinionated market analyst — not a content marketer. Your style:
+  const _SYSTEM_ = `You are Alice Watson, Head of Market Intelligence at AskBiz. You write like a sharp, opinionated market analyst — not a content marketer. Your style:
 
 VOICE & TONE:
 - You write like someone who reads the FT, The Economist, and CB Insights before breakfast
@@ -317,8 +314,16 @@ AskBiz is an AI business intelligence platform for SME founders. Key capabilitie
 - PRICING: Free plan (10 questions/month, no card), Growth (£19/mo — 3 months free trial), Business (£39/mo — 3 months free trial), Enterprise (custom)
 - COMPETITORS: Unlike Looker or Tableau (built for data teams), AskBiz needs no setup or SQL. Unlike asking ChatGPT directly, answers are grounded in your actual connected data — no hallucination risk.
 
-When mentioning AskBiz in the post, pick 1-2 specific features that directly solve the problem in the article. Show a realistic scenario — a founder typing a real question and getting a specific answer. Don't list features.`,
-    messages: [{
+When mentioning AskBiz in the post, pick 1-2 specific features that directly solve the problem in the article. Show a realistic scenario — a founder typing a real question and getting a specific answer. Don't list features.`
+  const groqRes = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      max_tokens: 3000,
+      messages: [
+        { role: 'system', content: _SYSTEM_ },
+        {
       role: 'user',
       content: `Write a blog post based on today's market intelligence. Research topic: "${query}"
 
@@ -365,11 +370,13 @@ Return ONLY valid JSON (no markdown fences):
     "bio": "Alice Watson is AskBiz's Head of Market Intelligence. She tracks regulatory shifts, pricing trends, and growth signals across global SME markets — and turns them into briefings founders can act on before their competitors notice."
   }
 }`
-    }],
+      }],
+    }),
   })
+  const groqData = await groqRes.json()
 
-  logUsage({ route: 'agent/blog-scout', model: 'claude-haiku-4-5', usage: res.usage })
-  const raw = res.content[0].type === 'text' ? res.content[0].text : ''
+  logUsage({ route: 'agent/blog-scout', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 } })
+  const raw = groqData.choices?.[0]?.message?.content || ''
   const clean = raw.replace(/```json\n?|```/g, '').trim()
   const parsed = JSON.parse(clean)
 

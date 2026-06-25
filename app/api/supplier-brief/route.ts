@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrencySymbol } from '@/lib/get-currency'
-import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 // In-process cache: prevents repeat Claude calls when users tab-switch or refresh.
 // Per-user, 2h TTL. Supplier data doesn't change that fast.
@@ -142,20 +142,23 @@ export async function GET(req: NextRequest) {
     ].filter(Boolean).join('\n')
 
     try {
-      const response = await anthropic.messages.create({
-        model: 'claude-haiku-4-5',
-        max_tokens: 600,
-        messages: [{ role: 'user', content: `You are a procurement strategist. Generate a concise negotiation brief for renegotiating terms with this supplier.
+      const groqRes = await fetch(GROQ_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+        body: JSON.stringify({
+          model: GROQ_MODEL,
+          max_tokens: 600,
+          messages: [{ role: 'user', content: `You are a procurement strategist. Generate a concise negotiation brief for renegotiating terms with this supplier.
 
 ${signals}
 
 Format as JSON: {"leverage_points": ["point1", "point2", "point3"], "risks": ["risk1", "risk2"], "recommended_ask": "what to ask for", "talking_points": ["point1", "point2", "point3"], "timing": "when to negotiate"}
 Return ONLY valid JSON.` }],
+        }),
       })
-      logUsage({ route: 'supplier-brief', model: 'claude-haiku-4-5', usage: response.usage, userId: user.id })
-
-      const text = (response.content[0] as { type: string; text: string }).text
-      brief = text
+      const groqData = await groqRes.json()
+      logUsage({ route: 'supplier-brief', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: user.id })
+      brief = groqData.choices?.[0]?.message?.content || ''
     } catch (e) {
       console.error('[supplier-brief] Claude error:', e)
       brief = null

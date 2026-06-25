@@ -12,5 +12,13 @@
   "alerts": "Warnungen",
   "templates": "Vorlagen",
   "billing": "Tarif upgraden",
-  "settings": "Einstellungen"
+  "settings": "Einstellungen",
+  "new_question": "Neue Frage",
+  "more": "Mehr",
+  "admin": "Admin",
+  "search_placeholder": "Gespräche suchen…",
+  "history": "Verlauf",
+  "today": "Heute",
+  "earlier": "Früher",
+  "no_conversations": "Noch keine Gespräche"
 }

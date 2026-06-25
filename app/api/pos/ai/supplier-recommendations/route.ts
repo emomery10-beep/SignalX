@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { createServiceClient } from '@/lib/supabase/server'
 import { resolvePosOwner } from '@/lib/pos-auth'
 import { logUsage } from '@/lib/log-usage'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 const CACHE = new Map<string, { data: unknown; date: string }>()
 const today = () => new Date().toISOString().slice(0, 10)
@@ -89,19 +87,15 @@ ${urgencyIndicators > 0 ? `⚠️ URGENT: ${urgencyIndicators} item(s) are OUT O
 
 Keep it practical and actionable. Include real supplier types (e.g., "Beauty wholesale distributors", "FMCG suppliers", "Direct from manufacturers").`
 
-    const message = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 1500,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
+    const groqRes = await fetch(GROQ_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({ model: GROQ_MODEL, max_tokens: 1500, messages: [{ role: 'user', content: prompt }] }),
     })
-    logUsage({ route: 'pos/ai/supplier-recommendations', model: 'claude-haiku-4-5', usage: message.usage, userId: ownerId })
+    const groqData = await groqRes.json()
+    logUsage({ route: 'pos/ai/supplier-recommendations', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: ownerId })
 
-    const response = message.content[0].type === 'text' ? message.content[0].text : 'Unable to generate recommendations'
+    const response = groqData.choices?.[0]?.message?.content || 'Unable to generate recommendations'
 
     const result = {
       response,

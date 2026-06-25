@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { tavilySearch } from '@/lib/tavily'
-import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 
 export const runtime     = 'nodejs'
 export const maxDuration = 300
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 const SCOUT_QUERIES = [
   // ── Trend / news queries ──────────────────────────────────────────────────
@@ -239,10 +239,7 @@ async function writeUSBlogPost(input: SearchInput, recentPublished: RecentPost[]
       }\n`
     : ''
 
-  const res = await anthropic.messages.create({
-    model:      'claude-haiku-4-5',
-    max_tokens: 3000,
-    system: `You are Ben Carlson, Head of Strategic Partnerships (Americas) at AskBiz and founder of RoG Consulting — a firm he built helping main street US businesses get clear on their numbers. You write sharp, data-driven analysis for US SMB owners: the briefing a founder in Cleveland, Austin, or Atlanta would read with their morning coffee before the team arrives. Your style:
+  const _SYSTEM_ = `You are Ben Carlson, Head of Strategic Partnerships (Americas) at AskBiz and founder of RoG Consulting — a firm he built helping main street US businesses get clear on their numbers. You write sharp, data-driven analysis for US SMB owners: the briefing a founder in Cleveland, Austin, or Atlanta would read with their morning coffee before the team arrives. Your style:
 
 VOICE & TONE:
 - You write like someone who reads WSJ Small Business, Inc., Forbes Small Business, and the NFIB reports before breakfast
@@ -288,11 +285,9 @@ AskBiz is an AI business intelligence platform for SMB founders. Key capabilitie
 - PROACTIVE ALERTS: Daily briefings on cash position, stock levels, margin anomalies — via SMS or email before the founder even opens their laptop
 - PRICING: Free plan (3 questions/month), Growth ($49/mo), Business ($129/mo), Enterprise (custom)
 
-Revenue target: US SMB founders doing $200k–$5M annual revenue.`,
+Revenue target: US SMB founders doing $200k–$5M annual revenue.`
 
-    messages: [{
-      role:    'user',
-      content: `Write a blog post based on today's US market intelligence. Research topic: "${query}"
+  const userPrompt = `Write a blog post based on today's US market intelligence. Research topic: "${query}"
 
 Cluster: "${cluster}" | Pillar: "${pillar}"
 
@@ -336,12 +331,24 @@ Return ONLY valid JSON (no markdown fences):
     "role": "Head of Strategic Partnerships, Americas · Founder, RoG Consulting",
     "bio": "Ben Carlson leads AskBiz's Americas strategy and founded RoG Consulting, where he spent a decade helping US main street businesses understand their numbers. He writes briefings that translate macro market shifts into decisions founders can act on before their competitors notice."
   }
-}`,
-    }],
-  })
+}`
 
-  logUsage({ route: 'agent/ben-scout', model: 'claude-haiku-4-5', usage: res.usage })
-  const raw   = res.content[0].type === 'text' ? res.content[0].text : ''
+  const groqRes = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      max_tokens: 3000,
+      messages: [
+        { role: 'system', content: _SYSTEM_ },
+        { role: 'user',   content: userPrompt },
+      ],
+    }),
+  })
+  const groqData = await groqRes.json()
+
+  logUsage({ route: 'agent/ben-scout', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 } })
+  const raw   = groqData.choices?.[0]?.message?.content || ''
   const clean = raw.replace(/```json\n?|```/g, '').trim()
   const parsed = JSON.parse(clean)
 

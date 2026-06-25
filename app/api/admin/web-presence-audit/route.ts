@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 
 export const runtime     = 'nodejs'
 export const maxDuration = 60
 
 const ADMIN_EMAILS = ['emomery10@gmail.com', 'emomery10@googlemail.com']
-const client       = new Anthropic()
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 /* ─── platform definitions ────────────────────────────────────────────── */
 export const LISTING_PLATFORMS = [
@@ -152,14 +152,21 @@ async function checkHNMentions() {
 async function runCitationProbes() {
   const results = await Promise.allSettled(
     CITATION_QUERIES.map(async (query) => {
-      const msg   = await client.messages.create({
-        model:      'claude-haiku-4-5',
-        max_tokens: 220,
-        system:     `You are a helpful AI assistant answering a small business owner's question about software tools. Recommend 2–3 specific tools by name. Be direct and realistic.`,
-        messages:   [{ role: 'user', content: query }],
+      const groqRes = await fetch(GROQ_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+        body: JSON.stringify({
+          model: GROQ_MODEL,
+          max_tokens: 220,
+          messages: [
+            { role: 'system', content: `You are a helpful AI assistant answering a small business owner's question about software tools. Recommend 2–3 specific tools by name. Be direct and realistic.` },
+            { role: 'user', content: query },
+          ],
+        }),
       })
-      logUsage({ route: 'admin/web-presence-audit#citation', model: 'claude-haiku-4-5', usage: msg.usage, userId: null })
-      const reply       = msg.content[0].type === 'text' ? msg.content[0].text : ''
+      const groqData = await groqRes.json()
+      logUsage({ route: 'admin/web-presence-audit#citation', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: null })
+      const reply       = groqData.choices?.[0]?.message?.content || ''
       const hit         = reply.toLowerCase().includes('askbiz')
       const matches     = reply.match(COMPETITOR_PATTERN) ?? []
       const competitors = [...new Set(matches.map(m => m.trim()))]

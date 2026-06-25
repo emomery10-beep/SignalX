@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { tavilySearch } from '@/lib/tavily'
-import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
@@ -16,7 +15,8 @@ const SCOUT_QUERIES = [
   'UK EU trade import export small business 2026',
 ]
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama-3.3-70b-versatile'
 
 // ── GET: manual trigger ───────────────────────────────────────────────────────
 export async function GET(request: NextRequest) {
@@ -146,12 +146,15 @@ async function runAgent() {
 }
 
 async function analyseNews(query: string, context: string, title: string, url: string) {
-  const res = await anthropic.messages.create({
-    model: 'claude-haiku-4-5',
-    max_tokens: 800,
-    messages: [{
-      role: 'user',
-      content: `You are an expert SME business analyst. Analyse this news for small business owners and return ONLY valid JSON.
+  const groqRes = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      max_tokens: 800,
+      messages: [{
+        role: 'user',
+        content: `You are an expert SME business analyst. Analyse this news for small business owners and return ONLY valid JSON.
 
 News topic: "${query}"
 Article: "${title}"
@@ -168,12 +171,14 @@ Return this exact JSON:
   "slug_suffix": "3-5 word kebab-case slug suffix",
   "blog_title": "SEO-friendly blog post title under 65 chars",
   "meta_description": "Blog meta description under 155 chars, active voice"
-}`
-    }],
+}`,
+      }],
+    }),
   })
-  logUsage({ route: 'agent#analyze', model: 'claude-haiku-4-5', usage: res.usage, userId: null })
+  const groqData = await groqRes.json()
+  logUsage({ route: 'agent#analyze', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: null })
 
-  const raw = res.content[0].type === 'text' ? res.content[0].text : ''
+  const raw = groqData.choices?.[0]?.message?.content || ''
   const clean = raw.replace(/```json|```/g, '').trim()
   try {
     return JSON.parse(clean)
@@ -183,12 +188,15 @@ Return this exact JSON:
 }
 
 async function writeBlogPost(analysis: Record<string, string>, query: string, context: string, article: { title: string; url: string; content: string }) {
-  const res = await anthropic.messages.create({
-    model: 'claude-haiku-4-5',
-    max_tokens: 2000,
-    messages: [{
-      role: 'user',
-      content: `You are the AskBiz blog writer. Write a blog post for SME founders in plain English. Return ONLY valid JSON.
+  const groqRes = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      max_tokens: 2000,
+      messages: [{
+        role: 'user',
+        content: `You are the AskBiz blog writer. Write a blog post for SME founders in plain English. Return ONLY valid JSON.
 
 News source: "${article.title}" (${article.url})
 Key insight: ${analysis.key_insight}
@@ -225,23 +233,28 @@ Return this JSON structure:
     "body": "Upload your data to AskBiz and ask about this in plain English. Get your answer in seconds."
   },
   "relatedSlugs": ["ai-business-health-score", "predictive-analytics-small-business"]
-}`
-    }],
+}`,
+      }],
+    }),
   })
-  logUsage({ route: 'agent#blog', model: 'claude-haiku-4-5', usage: res.usage, userId: null })
+  const groqData = await groqRes.json()
+  logUsage({ route: 'agent#blog', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: null })
 
-  const raw = res.content[0].type === 'text' ? res.content[0].text : ''
+  const raw = groqData.choices?.[0]?.message?.content || ''
   const clean = raw.replace(/```json|```/g, '').trim()
   return JSON.parse(clean)
 }
 
 async function writeThread(analysis: Record<string, string>, article: { title: string; url: string }) {
-  const res = await anthropic.messages.create({
-    model: 'claude-haiku-4-5',
-    max_tokens: 800,
-    messages: [{
-      role: 'user',
-      content: `Write a 5-tweet thread for SME founders about this news. Plain English. Under 280 chars per tweet. Return ONLY valid JSON.
+  const groqRes = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      max_tokens: 800,
+      messages: [{
+        role: 'user',
+        content: `Write a 5-tweet thread for SME founders about this news. Plain English. Under 280 chars per tweet. Return ONLY valid JSON.
 
 News: "${article.title}"
 Key insight: ${analysis.key_insight}
@@ -256,23 +269,28 @@ Return:
     {"num": 4, "text": "One action to take now"},
     {"num": 5, "text": "CTA mentioning askbiz.co"}
   ]
-}`
-    }],
+}`,
+      }],
+    }),
   })
-  logUsage({ route: 'agent#thread', model: 'claude-haiku-4-5', usage: res.usage, userId: null })
+  const groqData = await groqRes.json()
+  logUsage({ route: 'agent#thread', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: null })
 
-  const raw = res.content[0].type === 'text' ? res.content[0].text : ''
+  const raw = groqData.choices?.[0]?.message?.content || ''
   const clean = raw.replace(/```json|```/g, '').trim()
   return JSON.parse(clean)
 }
 
 async function writeSmartReplies(analysis: Record<string, string>, article: { title: string }) {
-  const res = await anthropic.messages.create({
-    model: 'claude-haiku-4-5',
-    max_tokens: 600,
-    messages: [{
-      role: 'user',
-      content: `Write 3 smart social media replies about this news topic. Under 255 chars each. Add genuine value. Mention askbiz.co naturally. Return ONLY valid JSON.
+  const groqRes = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      max_tokens: 600,
+      messages: [{
+        role: 'user',
+        content: `Write 3 smart social media replies about this news topic. Under 255 chars each. Add genuine value. Mention askbiz.co naturally. Return ONLY valid JSON.
 
 News: "${article.title}"
 Key insight: ${analysis.key_insight}
@@ -284,12 +302,14 @@ Return:
     {"trigger": "Someone asking what to do", "reply": "Your reply text"},
     {"trigger": "Someone sharing the news", "reply": "Your reply text"}
   ]
-}`
-    }],
+}`,
+      }],
+    }),
   })
-  logUsage({ route: 'agent#replies', model: 'claude-haiku-4-5', usage: res.usage, userId: null })
+  const groqData = await groqRes.json()
+  logUsage({ route: 'agent#replies', model: GROQ_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: null })
 
-  const raw = res.content[0].type === 'text' ? res.content[0].text : ''
+  const raw = groqData.choices?.[0]?.message?.content || ''
   const clean = raw.replace(/```json|```/g, '').trim()
   return JSON.parse(clean)
 }

@@ -12,5 +12,13 @@
   "alerts": "Alertes",
   "templates": "Modèles",
   "billing": "Améliorer l'offre",
-  "settings": "Paramètres"
+  "settings": "Paramètres",
+  "new_question": "Nouvelle question",
+  "more": "Plus",
+  "admin": "Admin",
+  "search_placeholder": "Rechercher des conversations…",
+  "history": "Historique",
+  "today": "Aujourd'hui",
+  "earlier": "Plus tôt",
+  "no_conversations": "Aucune conversation pour l instant"
 }

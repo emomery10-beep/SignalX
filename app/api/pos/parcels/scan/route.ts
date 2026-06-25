@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { resolvePosAuth } from '@/lib/pos-auth'
-import Anthropic from '@anthropic-ai/sdk'
 import { logUsage } from '@/lib/log-usage'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
+const GROQ_VISION_URL   = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -15,22 +15,19 @@ export async function POST(req: NextRequest) {
   const { image } = await req.json()
   if (!image) return NextResponse.json({ error: 'image (base64) required' }, { status: 400 })
 
-  const base64 = image.replace(/^data:image\/\w+;base64,/, '')
-  const mediaType = image.startsWith('data:image/png') ? 'image/png' : 'image/jpeg'
-
-  const response = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 1024,
-    messages: [{
-      role: 'user',
-      content: [
-        {
-          type: 'image',
-          source: { type: 'base64', media_type: mediaType, data: base64 },
-        },
-        {
-          type: 'text',
-          text: `You are a logistics document reader for a Kenyan parcel courier company.
+  const groqRes = await fetch(GROQ_VISION_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+    body: JSON.stringify({
+      model: GROQ_VISION_MODEL,
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image_url', image_url: { url: image } },
+          {
+            type: 'text',
+            text: `You are a logistics document reader for a Kenyan parcel courier company.
 
 Classify this photo as exactly one of: "waybill", "invoice", or "receipt".
 Then extract all relevant fields.
@@ -50,13 +47,15 @@ If the photo is unclear or not a document, return:
 {"document_type":"unknown","confidence":0,"data":{},"message":"Could not identify document"}
 
 Extract phone numbers in Kenyan format (07XX or +254). Use KES as default currency. Leave fields empty string if not visible.`,
-        },
-      ],
-    }],
+          },
+        ],
+      }],
+    }),
   })
-  logUsage({ route: 'pos/parcels/scan', model: 'claude-haiku-4-5-20251001', usage: response.usage, userId: auth.ownerId })
+  const groqData = await groqRes.json()
+  logUsage({ route: 'pos/parcels/scan', model: GROQ_VISION_MODEL, usage: { input_tokens: groqData.usage?.prompt_tokens || 0, output_tokens: groqData.usage?.completion_tokens || 0 }, userId: auth.ownerId })
 
-  const text = response.content[0].type === 'text' ? response.content[0].text : ''
+  const text = groqData.choices?.[0]?.message?.content || ''
   const jsonMatch = text.match(/\{[\s\S]*\}/)
   if (!jsonMatch) {
     return NextResponse.json({ error: 'Failed to parse document', raw: text }, { status: 422 })
