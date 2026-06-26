@@ -20,5 +20,7 @@
   "continue": "Continuer",
   "done": "Terminé",
   "add": "Ajouter",
-  "remove": "Supprimer"
+  "remove": "Supprimer",
+  "legal_mt_notice": "Traduction automatique — la version anglaise est le texte juridique contraignant.",
+  "legal_mt_link": "Lire en anglais →"
 }

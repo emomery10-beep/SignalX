@@ -36,6 +36,13 @@ export default function TermsPage() {
 
       <div style={{ maxWidth: 780, margin: '0 auto', padding: '52px 24px 80px' }}>
 
+        {locale !== 'en' && (
+          <div style={{ marginBottom: 24, padding: '12px 16px', borderRadius: 10, background: 'rgba(234,179,8,.08)', border: '1px solid rgba(234,179,8,.3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.5 }}>⚠️ {t('common.legal_mt_notice')}</span>
+            <Link href="/terms" style={{ fontSize: 13, fontWeight: 600, color: 'var(--acc, #d08a59)', whiteSpace: 'nowrap', textDecoration: 'none' }}>{t('common.legal_mt_link')}</Link>
+          </div>
+        )}
+
         {/* Header */}
         <div style={{ marginBottom: 48 }}>
           <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>{t('terms.eyebrow')}</div>

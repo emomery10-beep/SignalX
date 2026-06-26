@@ -20,5 +20,7 @@
   "continue": "Doorgaan",
   "done": "Klaar",
   "add": "Toevoegen",
-  "remove": "Verwijderen"
+  "remove": "Verwijderen",
+  "legal_mt_notice": "Machinale vertaling — de Engelse versie is de bindende juridische tekst.",
+  "legal_mt_link": "Lees in het Engels →"
 }

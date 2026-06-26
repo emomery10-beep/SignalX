@@ -20,5 +20,7 @@
   "continue": "Fortfahren",
   "done": "Fertig",
   "add": "Hinzufügen",
-  "remove": "Entfernen"
+  "remove": "Entfernen",
+  "legal_mt_notice": "Maschinelle Übersetzung — die englische Version ist der rechtlich bindende Text.",
+  "legal_mt_link": "Auf Englisch lesen →"
 }

@@ -351,13 +351,26 @@ export async function GET(request: NextRequest) {
   // 30-day window gives meaningful data even for businesses that sync weekly/monthly
   const thirtyDaysAgo  = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   const sixtyDaysAgo   = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  const [{ data: thisWeekRows }, { data: prevWeekRows }] = await Promise.all([
+  const [{ data: thisWeekRows }, { data: prevWeekRows }, { data: posTxThis }, { data: posTxPrev }] = await Promise.all([
     supabase.from('unified_data')
       .select('source_type, channel, product_name, gross_revenue, units_sold')
-      .eq('user_id', user.id).gte('record_date', thirtyDaysAgo).limit(1000),
+      .eq('user_id', user.id).gte('record_date', thirtyDaysAgo).neq('source_type', 'pos').limit(1000),
     supabase.from('unified_data')
       .select('source_type, channel, gross_revenue')
-      .eq('user_id', user.id).gte('record_date', sixtyDaysAgo).lt('record_date', thirtyDaysAgo).limit(1000),
+      .eq('user_id', user.id).gte('record_date', sixtyDaysAgo).lt('record_date', thirtyDaysAgo).neq('source_type', 'pos').limit(1000),
+    supabase.from('pos_transactions')
+      .select('total')
+      .eq('owner_id', user.id)
+      .eq('status', 'completed')
+      .gte('created_at', thirtyDaysAgo + 'T00:00:00')
+      .limit(2000),
+    supabase.from('pos_transactions')
+      .select('total')
+      .eq('owner_id', user.id)
+      .eq('status', 'completed')
+      .gte('created_at', sixtyDaysAgo + 'T00:00:00')
+      .lt('created_at', thirtyDaysAgo + 'T00:00:00')
+      .limit(2000),
   ])
 
   const rows = records || []
@@ -458,6 +471,15 @@ export async function GET(request: NextRequest) {
     c.pw += r.gross_revenue || 0
     chanMap.set(name, c)
   }
+  // Supplement with native POS register revenue (pos_transactions, not unified_data)
+  const posThisRev = (posTxThis || []).reduce((s: number, t: any) => s + (t.total || 0), 0)
+  const posPrevRev = (posTxPrev || []).reduce((s: number, t: any) => s + (t.total || 0), 0)
+  if (posThisRev > 0 || posPrevRev > 0) {
+    const posEntry = chanMap.get('POS') || { tw: 0, pw: 0 }
+    posEntry.tw += posThisRev
+    posEntry.pw += posPrevRev
+    chanMap.set('POS', posEntry)
+  }
   const chanStats = Array.from(chanMap.entries())
     .filter(([, v]) => v.tw > 0 || v.pw > 0)
     .map(([name, { tw, pw }]) => {
@@ -475,7 +497,7 @@ export async function GET(request: NextRequest) {
   const prodMap = new Map<string, { rev: number; units: number }>()
   for (const r of thisWeekRows || []) {
     const pn = (r.product_name || '').trim()
-    if (!pn || pn.toLowerCase() === 'other') continue
+    if (!pn || pn.toLowerCase() === 'other' || SERVICE_NOISE.some(n => pn.toLowerCase().includes(n))) continue
     const c = prodMap.get(pn) || { rev: 0, units: 0 }
     c.rev += r.gross_revenue || 0
     c.units += r.units_sold || 0

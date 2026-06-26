@@ -127,10 +127,17 @@ function POSGroup({ tc, heading, prefix, count }: { tc: (key: string) => string;
 }
 
 export default function PrivacyPage() {
-  const { tc } = useLang()
+  const { tc, lang } = useLang()
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', fontFamily: 'var(--font-dm, DM Sans)' }}>
       <div style={{ maxWidth: 'min(760px, 100%)', margin: '0 auto', padding: 'clamp(20px, 4vw, 48px) clamp(14px, 4vw, 24px) 80px' }}>
+
+        {lang !== 'en' && (
+          <div style={{ marginBottom: 24, padding: '12px 16px', borderRadius: 10, background: 'rgba(234,179,8,.08)', border: '1px solid rgba(234,179,8,.3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.5 }}>⚠️ {tc('common.legal_mt_notice')}</span>
+            <Link href="/privacy" style={{ fontSize: 13, fontWeight: 600, color: 'var(--acc, #d08a59)', whiteSpace: 'nowrap', textDecoration: 'none' }}>{tc('common.legal_mt_link')}</Link>
+          </div>
+        )}
 
         {/* Header */}
         <div style={{ marginBottom: 48 }}>
