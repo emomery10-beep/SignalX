@@ -1,6 +1,8 @@
 'use client'
 
 import Link from 'next/link'
+import { useLang } from '@/components/LanguageProvider'
+import { localePath } from '@/lib/i18n-locale'
 import { ASKBIZ_TRAINING_ARTICLES } from '@/lib/askbiz-training-articles'
 import { ASKBIZ_POS_TRAINING_ARTICLES } from '@/lib/askbiz-pos-training-articles'
 import { ASKBIZ_POS_RETAIL_ARTICLES } from '@/lib/askbiz-pos-retail-articles'
@@ -49,6 +51,7 @@ const jsonLd = {
 }
 
 export default function LearningAskBizPageClient() {
+  const { lang, tc } = useLang()
   return (
     <div style={{ fontFamily: 'DM Sans, system-ui', background: BG, minHeight: '100vh' }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
@@ -63,7 +66,7 @@ export default function LearningAskBizPageClient() {
       {/* Nav */}
       <nav style={{ borderBottom: `1px solid ${BD}`, background: SF, padding: '0 clamp(16px,4vw,24px)', height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
+          <Link href={localePath('/', lang)} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
             <div style={{ width: 26, height: 26, borderRadius: 7, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="12" height="12" viewBox="0 0 32 32" fill="none">
                 <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/>
@@ -74,31 +77,31 @@ export default function LearningAskBizPageClient() {
             <span style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
           </Link>
         </div>
-        <Link href="/signin" style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>Try free →</Link>
+        <Link href={localePath('/signin', lang)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{tc('academy.lab_try_free')}</Link>
       </nav>
 
       {/* Breadcrumbs */}
       <div style={{ background: SF, borderBottom: `1px solid ${BD}`, padding: '10px clamp(16px,4vw,48px)', fontSize: 13, color: TX3 }}>
-        <Link href="/" style={{ color: TX3, textDecoration: 'none' }}>Home</Link>
+        <Link href={localePath('/', lang)} style={{ color: TX3, textDecoration: 'none' }}>{tc('academy.lab_breadcrumb_home')}</Link>
         {' / '}
-        <Link href="/academy" style={{ color: TX3, textDecoration: 'none' }}>Academy</Link>
+        <Link href={localePath('/academy', lang)} style={{ color: TX3, textDecoration: 'none' }}>{tc('academy.lab_breadcrumb_academy')}</Link>
         {' / '}
-        <span style={{ color: TX }}>All About Learning AskBiz</span>
+        <span style={{ color: TX }}>{tc('academy.lab_hero_title')}</span>
       </div>
 
       {/* Hero */}
       <div style={{ background: `linear-gradient(135deg, ${TX} 0%, #2c2a26 100%)`, padding: 'clamp(40px,6vw,72px) clamp(24px,4vw,48px)', textAlign: 'center' }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>🎓</div>
         <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(24px,4vw,36px)', fontWeight: 700, letterSpacing: '-.025em', color: SF, marginBottom: 12 }}>
-          All About Learning AskBiz
+          {tc('academy.lab_hero_title')}
         </h1>
         <p style={{ fontSize: 'clamp(14px,1.6vw,17px)', color: TX3, maxWidth: 600, margin: '0 auto 20px', lineHeight: 1.6 }}>
-          {ARTICLES.length} step-by-step training articles to help you master AskBiz — from your first login through every feature of the Point of Sale.
+          {ARTICLES.length} {tc('academy.lab_hero_subtitle_suffix')}
         </p>
         <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap', fontSize: 13, color: '#a39e97' }}>
-          <span>📚 {ARTICLES.length} articles</span>
-          <span>⏱ {ARTICLES.reduce((s, a) => s + a.readTime, 0)} min total</span>
-          <span>🆓 Free to read</span>
+          <span>📚 {ARTICLES.length} {tc('academy.lab_hero_stat_articles')}</span>
+          <span>⏱ {ARTICLES.reduce((s, a) => s + a.readTime, 0)} {tc('academy.lab_hero_stat_min')}</span>
+          <span>🆓 {tc('academy.lab_hero_stat_free')}</span>
         </div>
       </div>
 
@@ -108,10 +111,10 @@ export default function LearningAskBizPageClient() {
         {/* Intro */}
         <div style={{ background: SF, border: `1.5px solid ${BD}`, borderRadius: 14, padding: 'clamp(20px,3vw,32px)', marginBottom: 32 }}>
           <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 18, fontWeight: 700, color: TX, marginBottom: 8, letterSpacing: '-.02em' }}>
-            How to use this training
+            {tc('academy.lab_how_to_title')}
           </h2>
           <p style={{ fontSize: 14, color: TX2, lineHeight: 1.7, margin: 0 }}>
-            These articles are designed to be read in order. Start with getting set up, learn how to navigate the platform, then explore the features that matter most to your business. Each article takes 4–6 minutes to read and includes practical steps you can follow along with in your own AskBiz account.
+            {tc('academy.lab_how_to_body')}
           </p>
         </div>
 
@@ -134,7 +137,7 @@ export default function LearningAskBizPageClient() {
               {articles.map((article, i) => (
                 <Link
                   key={article.slug}
-                  href={`/academy/${article.slug}`}
+                  href={localePath(`/academy/${article.slug}`, lang)}
                   className="lab-card"
                   style={{ background: SF, border: `1.5px solid ${BD}`, borderRadius: 14, padding: 0, overflow: 'hidden' }}
                 >
@@ -158,7 +161,7 @@ export default function LearningAskBizPageClient() {
                         }}>
                           {article.difficulty}
                         </span>
-                        <span style={{ fontSize: 12, color: TX3 }}>{article.readTime} min read</span>
+                        <span style={{ fontSize: 12, color: TX3 }}>{article.readTime} {tc('academy.lab_min_read')}</span>
                       </div>
 
                       <h3 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(15px,1.4vw,17px)', fontWeight: 600, color: TX, letterSpacing: '-.02em', marginBottom: 4, lineHeight: 1.35 }}>
@@ -186,29 +189,29 @@ export default function LearningAskBizPageClient() {
           borderRadius: 16, padding: 'clamp(28px,4vw,44px)', textAlign: 'center', marginTop: 40
         }}>
           <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(18px,2.5vw,24px)', fontWeight: 700, color: SF, marginBottom: 8, letterSpacing: '-.025em' }}>
-            Ready to try AskBiz?
+            {tc('academy.lab_cta_title')}
           </h2>
           <p style={{ fontSize: 14, color: TX3, marginBottom: 20, maxWidth: 460, margin: '0 auto 20px' }}>
-            Start free — no credit card needed. Connect your data and get your first insight in under 30 minutes.
+            {tc('academy.lab_cta_body')}
           </p>
-          <Link href="/signin" style={{
+          <Link href={localePath('/signin', lang)} style={{
             display: 'inline-block', fontSize: 14, fontWeight: 600, color: TX,
             background: ACC, borderRadius: 9999, padding: '12px 28px', textDecoration: 'none'
           }}>
-            Start free — no card needed
+            {tc('academy.lab_cta_button')}
           </Link>
         </div>
 
         {/* Footer links */}
         <div style={{ marginTop: 40, paddingTop: 24, borderTop: `1px solid ${BD}`, display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
           {([
-            ['Academy Home', '/academy'],
-            ['Learning Paths', '/academy/learning-paths'],
-            ['Checklists', '/academy/checklists'],
-            ['Free Tools', '/free-tools'],
-            ['Pricing', '/pricing'],
+            [tc('academy.lab_footer_academy'), '/academy'],
+            [tc('academy.lab_footer_paths'), '/academy/learning-paths'],
+            [tc('academy.lab_footer_checklists'), '/academy/checklists'],
+            [tc('academy.lab_footer_free_tools'), '/free-tools'],
+            [tc('academy.lab_footer_pricing'), '/pricing'],
           ] as [string, string][]).map(([label, href]) => (
-            <Link key={href} href={href} style={{ fontSize: 13, color: TX2, textDecoration: 'none' }}>{label}</Link>
+            <Link key={href} href={localePath(href, lang)} style={{ fontSize: 13, color: TX2, textDecoration: 'none' }}>{label}</Link>
           ))}
         </div>
       </main>

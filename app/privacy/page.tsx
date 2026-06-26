@@ -2,6 +2,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { useLang } from '@/components/LanguageProvider'
+import { localePath } from '@/lib/i18n-locale'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -135,13 +136,13 @@ export default function PrivacyPage() {
         {lang !== 'en' && (
           <div style={{ marginBottom: 24, padding: '12px 16px', borderRadius: 10, background: 'rgba(234,179,8,.08)', border: '1px solid rgba(234,179,8,.3)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 13, color: 'var(--tx2)', lineHeight: 1.5 }}>⚠️ {tc('common.legal_mt_notice')}</span>
-            <Link href="/privacy" style={{ fontSize: 13, fontWeight: 600, color: 'var(--acc, #d08a59)', whiteSpace: 'nowrap', textDecoration: 'none' }}>{tc('common.legal_mt_link')}</Link>
+            <Link href={localePath('/privacy', lang)} style={{ fontSize: 13, fontWeight: 600, color: 'var(--acc, #d08a59)', whiteSpace: 'nowrap', textDecoration: 'none' }}>{tc('common.legal_mt_link')}</Link>
           </div>
         )}
 
         {/* Header */}
         <div style={{ marginBottom: 48 }}>
-          <Link href="/" style={{ fontSize: 13, color: 'var(--tx3)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>{tc('privacy.back_to_askbiz')}</Link>
+          <Link href={localePath('/', lang)} style={{ fontSize: 13, color: 'var(--tx3)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 24 }}>{tc('privacy.back_to_askbiz')}</Link>
           <h1 style={{ fontFamily: 'var(--font-sora)', fontSize: 32, fontWeight: 700, marginBottom: 8, letterSpacing: '-.025em' }}>{tc('privacy.page_title')}</h1>
           <p style={{ fontSize: 14, color: 'var(--tx3)' }}>{tc('privacy.page_meta')}</p>
         </div>
@@ -250,7 +251,7 @@ export default function PrivacyPage() {
           />
 
           <P>{tc('privacy.sec_6_p2_pre')}<strong>{tc('privacy.sec_6_p2_bold')}</strong>{tc('privacy.sec_6_p2_post')}</P>
-          <P>{tc('privacy.sec_6_p3_pre')}<Link href="/settings" style={{ color: 'var(--acc)', textDecoration: 'none' }}>{tc('privacy.sec_6_p3_link')}</Link>{tc('privacy.sec_6_p3_post')}</P>
+          <P>{tc('privacy.sec_6_p3_pre')}<Link href={localePath('/settings', lang)} style={{ color: 'var(--acc)', textDecoration: 'none' }}>{tc('privacy.sec_6_p3_link')}</Link>{tc('privacy.sec_6_p3_post')}</P>
         </Section>
 
         <Section title={tc('privacy.sec_7_title')}>
@@ -270,7 +271,7 @@ export default function PrivacyPage() {
             ))}
           </ul>
           <P>{tc('privacy.sec_8_p2')}</P>
-          <P>{tc('privacy.sec_8_p3_pre')}<Link href="/dpa" style={{ color: 'var(--ac, #d08a59)' }}>{tc('privacy.sec_8_p3_link')}</Link>{tc('privacy.sec_8_p3_post')}</P>
+          <P>{tc('privacy.sec_8_p3_pre')}<Link href={localePath('/dpa', lang)} style={{ color: 'var(--ac, #d08a59)' }}>{tc('privacy.sec_8_p3_link')}</Link>{tc('privacy.sec_8_p3_post')}</P>
         </Section>
 
         <Section title={tc('privacy.sec_9_title')}>

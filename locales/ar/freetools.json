@@ -117,5 +117,13 @@
   "footer_link_help": "مركز المساعدة",
   "footer_link_rules": "القواعد والسياسات",
   "footer_link_privacy": "الخصوصية",
-  "footer_disclaimer": "المعدلات استرشادية وتُحدَّث كل ربع سنة. تحقق دائمًا من قواعد بيانات التعريفة الرسمية قبل اتخاذ قرارات الاستيراد."
+  "footer_disclaimer": "المعدلات استرشادية وتُحدَّث كل ربع سنة. تحقق دائمًا من قواعد بيانات التعريفة الرسمية قبل اتخاذ قرارات الاستيراد.",
+
+  "cogs_ph_product_name": "اسم المنتج",
+  "fx_ph_product_name": "الاسم",
+  "fx_ph_rate_override": "الحالي: {rate}",
+  "pm_ph_product_name": "مثال: سماعات لاسلكية",
+  "lc_ph_product_name": "مثال: تيشيرتات قطنية",
+  "lc_ph_freight_estimated": "تقدير: ${amount}",
+  "lc_ph_selling_price": "أدخل لرؤية الهامش"
 }

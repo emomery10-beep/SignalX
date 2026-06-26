@@ -1,9 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { cookies, headers } from 'next/headers'
 import { getPost, getAllPosts, type BlogPost } from '@/lib/blog-content'
 import { academyArticles } from '@/lib/academy-content'
 import { createClient } from '@supabase/supabase-js'
+import { resolveLocale, localePath } from '@/lib/i18n-locale'
+import { t } from '@/lib/i18n-catalog'
 
 export const dynamicParams = true
 export const dynamic = 'force-dynamic'
@@ -284,6 +287,7 @@ export async function generateMetadata(
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default async function BlogPostPage({ params }: { params: { slug: string } }) {
+  const lang = resolveLocale({ urlLocale: headers().get('x-locale'), cookie: cookies().get('askbiz_lang')?.value })
   const post = await getPostWithFallback(params.slug)
 
   if (!post) {
@@ -448,7 +452,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
       {/* Nav */}
       <nav style={{ background: SF, borderBottom: `1px solid ${B}`, padding: '0 clamp(16px,4vw,32px)', height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
+        <Link href={localePath('/', lang)} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
           <div style={{ width: 26, height: 26, borderRadius: 7, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="12" height="12" viewBox="0 0 32 32" fill="none">
               <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/>
@@ -459,8 +463,8 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
           <span style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <Link href="/blog" className="nav-link" style={{ fontSize: 13, color: TX2, textDecoration: 'none', transition: 'color 120ms' }}>← All articles</Link>
-          <Link href="/home" style={{ fontSize: 13, fontWeight: 600, color: ACC, textDecoration: 'none', padding: '6px 14px', background: 'rgba(208,138,89,.1)', borderRadius: 9999 }}>
+          <Link href={localePath('/blog', lang)} className="nav-link" style={{ fontSize: 13, color: TX2, textDecoration: 'none', transition: 'color 120ms' }}>{t(lang, 'blog.back_to_articles')}</Link>
+          <Link href={localePath('/home', lang)} style={{ fontSize: 13, fontWeight: 600, color: ACC, textDecoration: 'none', padding: '6px 14px', background: 'rgba(208,138,89,.1)', borderRadius: 9999 }}>
             Try AskBiz free →
           </Link>
         </div>
@@ -471,11 +475,11 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
         {/* Breadcrumb */}
         <nav aria-label="breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 20, fontSize: 12, color: TX3, flexWrap: 'wrap' }}>
-          <Link href="/" style={{ color: TX3, textDecoration: 'none' }}>Home</Link>
+          <Link href={localePath('/', lang)} style={{ color: TX3, textDecoration: 'none' }}>{t(lang, 'blog.home')}</Link>
           <span>/</span>
-          <Link href="/blog" style={{ color: TX3, textDecoration: 'none' }}>Blog</Link>
+          <Link href={localePath('/blog', lang)} style={{ color: TX3, textDecoration: 'none' }}>{t(lang, 'blog.blog_label')}</Link>
           <span>/</span>
-          <Link href={`/blog?cluster=${encodeURIComponent(post.cluster)}`} style={{ color: TX3, textDecoration: 'none' }}>{post.cluster}</Link>
+          <Link href={localePath(`/blog?cluster=${encodeURIComponent(post.cluster)}`, lang)} style={{ color: TX3, textDecoration: 'none' }}>{post.cluster}</Link>
           <span>/</span>
           <span style={{ color: TX2 }}>{post.title.length > 48 ? post.title.slice(0, 48) + '…' : post.title}</span>
         </nav>
@@ -483,14 +487,14 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         {/* Cluster + pillar badges */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
           <Link
-            href={`/blog?cluster=${encodeURIComponent(post.cluster)}`}
+            href={localePath(`/blog?cluster=${encodeURIComponent(post.cluster)}`, lang)}
             style={{ fontSize: 11, fontWeight: 700, color: clusterColour.text, background: clusterColour.bg, padding: '3px 10px', borderRadius: 9999, textTransform: 'uppercase', letterSpacing: '.06em', textDecoration: 'none' }}
           >
             {post.cluster}
           </Link>
           {post.pillar && (
             <Link
-              href={`/blog?cluster=${encodeURIComponent(post.cluster)}&pillar=${encodeURIComponent(post.pillar)}`}
+              href={localePath(`/blog?cluster=${encodeURIComponent(post.cluster)}&pillar=${encodeURIComponent(post.pillar)}`, lang)}
               style={{ fontSize: 11, color: TX3, textDecoration: 'none', background: EV, padding: '3px 9px', borderRadius: 9999 }}
             >
               {post.pillar}
@@ -506,7 +510,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         {/* Meta row */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
           {post.author?.name && <>
-            <span style={{ fontSize: 13, fontWeight: 600, color: TX }}>Written by {post.author.name}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: TX }}>{t(lang, 'blog.written_by', { name: post.author.name })}</span>
             <span style={{ fontSize: 13, color: TX3 }}>·</span>
           </>}
           {(() => {
@@ -568,7 +572,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
-            <span style={{ fontSize: 11, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.08em' }}>Key Takeaways</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.08em' }}>{t(lang, 'blog.key_takeaways')}</span>
           </div>
           <p style={{ fontSize: 14, color: TX2, lineHeight: 1.7, margin: '0 0 12px' }}>{post.tldr}</p>
           <ul style={{ margin: 0, padding: '0 0 0 18px', display: 'flex', flexDirection: 'column', gap: 5, listStyleType: 'disc' }}>
@@ -609,7 +613,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {contextualLinks.map(p => (
-                        <Link key={p.slug} href={`/blog/${p.slug}`} style={{ fontSize: 13, color: clusterColour.text, textDecoration: 'none', fontWeight: 500, lineHeight: 1.4 }}>
+                        <Link key={p.slug} href={localePath(`/blog/${p.slug}`, lang)} style={{ fontSize: 13, color: clusterColour.text, textDecoration: 'none', fontWeight: 500, lineHeight: 1.4 }}>
                           → {p.title}
                         </Link>
                       ))}
@@ -689,10 +693,10 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             {clusterCta?.body || post.cta?.body || 'AskBiz connects to your existing tools and surfaces insights like these automatically — no spreadsheets, no analysts, no waiting.'}
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href={clusterCta?.href || post.cta?.href || '/signin'} style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 28px', background: ACC, color: '#fff', borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 12px rgba(208,138,89,.4)' }}>
+            <Link href={localePath(clusterCta?.href || post.cta?.href || '/signin', lang)} style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 28px', background: ACC, color: '#fff', borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 12px rgba(208,138,89,.4)' }}>
               {clusterCta?.cta || 'Start free trial →'}
             </Link>
-            <Link href="/pricing" style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 20px', background: 'rgba(255,255,255,.08)', color: 'rgba(255,255,255,.8)', borderRadius: 10, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+            <Link href={localePath('/pricing', lang)} style={{ display: 'inline-flex', alignItems: 'center', padding: '13px 20px', background: 'rgba(255,255,255,.08)', color: 'rgba(255,255,255,.8)', borderRadius: 10, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
               See pricing
             </Link>
           </div>
@@ -708,14 +712,14 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         {(prevPost || nextPost) && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 48 }}>
             {prevPost ? (
-              <Link href={`/blog/${prevPost.slug}`} className="prevnext-card" style={{ display: 'block', padding: '14px 16px', background: SF, border: `1px solid ${B}`, borderRadius: 12, textDecoration: 'none', transition: 'background 120ms' }}>
+              <Link href={localePath(`/blog/${prevPost.slug}`, lang)} className="prevnext-card" style={{ display: 'block', padding: '14px 16px', background: SF, border: `1px solid ${B}`, borderRadius: 12, textDecoration: 'none', transition: 'background 120ms' }}>
                 <div style={{ fontSize: 11, color: TX3, marginBottom: 6 }}>← Previous</div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: TX, lineHeight: 1.4 }}>{prevPost.title}</div>
                 <div style={{ fontSize: 11, color: TX3, marginTop: 4 }}>{prevPost.readTime} min read</div>
               </Link>
             ) : <div />}
             {nextPost && (
-              <Link href={`/blog/${nextPost.slug}`} className="prevnext-card" style={{ display: 'block', padding: '14px 16px', background: SF, border: `1px solid ${B}`, borderRadius: 12, textDecoration: 'none', textAlign: 'right', transition: 'background 120ms' }}>
+              <Link href={localePath(`/blog/${nextPost.slug}`, lang)} className="prevnext-card" style={{ display: 'block', padding: '14px 16px', background: SF, border: `1px solid ${B}`, borderRadius: 12, textDecoration: 'none', textAlign: 'right', transition: 'background 120ms' }}>
                 <div style={{ fontSize: 11, color: TX3, marginBottom: 6 }}>Next →</div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: TX, lineHeight: 1.4 }}>{nextPost.title}</div>
                 <div style={{ fontSize: 11, color: TX3, marginTop: 4 }}>{nextPost.readTime} min read</div>
@@ -732,7 +736,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px,1fr))', gap: 12 }}>
               {relatedPosts.map((r, i) => r && (
-                <Link key={i} href={`/blog/${r.slug}`} className="related-card" style={{ display: 'block', padding: '14px 16px', background: SF, border: `1px solid ${B}`, borderRadius: 12, textDecoration: 'none', transition: 'background 120ms' }}>
+                <Link key={i} href={localePath(`/blog/${r.slug}`, lang)} className="related-card" style={{ display: 'block', padding: '14px 16px', background: SF, border: `1px solid ${B}`, borderRadius: 12, textDecoration: 'none', transition: 'background 120ms' }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: ACC, textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{r.cluster}</div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: TX, lineHeight: 1.4 }}>{r.title}</div>
                   <div style={{ fontSize: 11, color: TX3, marginTop: 6 }}>{r.readTime} min read</div>
@@ -750,7 +754,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px,1fr))', gap: 12 }}>
               {academyCrossLinks.map((a, i) => (
-                <Link key={i} href={`/academy/${a.slug}`} className="related-card" style={{ display: 'block', padding: '14px 16px', background: SF, border: `1px solid ${B}`, borderRadius: 12, textDecoration: 'none', transition: 'background 120ms' }}>
+                <Link key={i} href={localePath(`/academy/${a.slug}`, lang)} className="related-card" style={{ display: 'block', padding: '14px 16px', background: SF, border: `1px solid ${B}`, borderRadius: 12, textDecoration: 'none', transition: 'background 120ms' }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: '#6366F1', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6 }}>{a.category}</div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: TX, lineHeight: 1.4 }}>{a.title}</div>
                   <div style={{ fontSize: 11, color: TX3, marginTop: 6 }}>{a.readTime} min · {a.difficulty}</div>
@@ -771,7 +775,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             ['/privacy', 'Privacy'],
             ['/developers', 'API'],
           ].map(([href, label]) => (
-            <Link key={href} href={href} style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>{label}</Link>
+            <Link key={href} href={localePath(href, lang)} style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>{label}</Link>
           ))}
         </div>
       </footer>

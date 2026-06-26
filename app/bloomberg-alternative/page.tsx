@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { cookies, headers } from 'next/headers'
+import { resolveLocale, localePath } from '@/lib/i18n-locale'
 
 export const metadata: Metadata = {
   title: 'The Human-Friendly Alternative to the Bloomberg Terminal | AskBiz',
@@ -26,6 +28,7 @@ const comparisons = [
 ]
 
 export default function BloombergAlternativePage() {
+  const lang = resolveLocale({ urlLocale: headers().get('x-locale'), cookie: cookies().get('askbiz_lang')?.value })
   return (
     <div style={{ fontFamily: 'var(--font-dm, system-ui)', color: '#1a1916', background: '#f9f8f6' }}>
 
@@ -46,13 +49,13 @@ export default function BloombergAlternativePage() {
 
       {/* Nav */}
       <nav style={{ borderBottom: '1px solid #e8e6e1', background: '#fff', padding: '0 clamp(16px,4vw,24px)', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: '#1a1916' }}>
+        <Link href={localePath('/', lang)} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: '#1a1916' }}>
           <div style={{ width: 26, height: 26, borderRadius: 7, background:'#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/><path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
           <span style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 15, fontWeight: 700 }}>AskBiz</span>
         </Link>
-        <Link href="/signin" style={{ fontSize: 13, fontWeight: 600, color: '#fff', background: '#d08a59', borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>Try free →</Link>
+        <Link href={localePath('/signin', lang)} style={{ fontSize: 13, fontWeight: 600, color: '#fff', background: '#d08a59', borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>Try free →</Link>
       </nav>
 
       {/* Hero */}
@@ -67,7 +70,7 @@ export default function BloombergAlternativePage() {
           Bloomberg translates global financial data for institutional investors. AskBiz translates <em>your</em> business data into plain English for business owners. No financial jargon. No £24,000/year terminal. No data science degree required.
         </p>
         <p style={{ fontSize: 14, color: '#a39e97', marginBottom: 32 }}>From £19/month. Works with any CSV or Excel file.</p>
-        <Link href="/signin" style={{ fontSize: 15, fontWeight: 600, color: '#fff', background: '#d08a59', borderRadius: 9999, padding: '13px 32px', textDecoration: 'none', display: 'inline-block' }}>
+        <Link href={localePath('/signin', lang)} style={{ fontSize: 15, fontWeight: 600, color: '#fff', background: '#d08a59', borderRadius: 9999, padding: '13px 32px', textDecoration: 'none', display: 'inline-block' }}>
           Translate your business data — free →
         </Link>
       </section>
@@ -144,7 +147,7 @@ export default function BloombergAlternativePage() {
       <section style={{ maxWidth: 760, margin: '0 auto', padding: 'clamp(48px,8vw,72px) clamp(16px,4vw,24px)', textAlign: 'center' }}>
         <h2 style={{ fontFamily: 'var(--font-sora, system-ui)', fontSize: 'clamp(22px,4vw,32px)', fontWeight: 700, letterSpacing: '-.025em', marginBottom: 14 }}>Understand your business data — in plain English</h2>
         <p style={{ fontSize: 16, color: '#6b6760', lineHeight: 1.7, marginBottom: 28, maxWidth: 480, margin: '0 auto 28px' }}>Upload your CSV, ask your question, get your answer. No financial jargon. No data science degree. No terminal subscription.</p>
-        <Link href="/signin" style={{ fontSize: 16, fontWeight: 600, color: '#fff', background: '#d08a59', borderRadius: 9999, padding: '14px 36px', textDecoration: 'none', display: 'inline-block' }}>
+        <Link href={localePath('/signin', lang)} style={{ fontSize: 16, fontWeight: 600, color: '#fff', background: '#d08a59', borderRadius: 9999, padding: '14px 36px', textDecoration: 'none', display: 'inline-block' }}>
           Start free — no card needed →
         </Link>
         <p style={{ fontSize: 12, color: '#a39e97', marginTop: 14 }}>10 free questions every month. Growth from £19/month.</p>
@@ -161,7 +164,7 @@ export default function BloombergAlternativePage() {
               ['what-is-cash-flow', 'Cash Flow'], ['what-is-mrr', 'MRR'],
               ['what-is-contribution-margin', 'Contribution Margin'], ['what-is-churn-rate', 'Churn Rate'],
             ].map(([slug, label]) => (
-              <Link key={slug} href={`/translate/${slug}`} style={{ fontSize: 13, color: '#8c6fe0', textDecoration: 'none', padding: '6px 14px', borderRadius: 9999, border: '1px solid rgba(140,111,224,.25)', background: 'rgba(140,111,224,.04)' }}>
+              <Link key={slug} href={localePath(`/translate/${slug}`, lang)} style={{ fontSize: 13, color: '#8c6fe0', textDecoration: 'none', padding: '6px 14px', borderRadius: 9999, border: '1px solid rgba(140,111,224,.25)', background: 'rgba(140,111,224,.04)' }}>
                 {label} →
               </Link>
             ))}
@@ -170,7 +173,7 @@ export default function BloombergAlternativePage() {
       </section>
 
       <footer style={{ borderTop: '1px solid #e8e6e1', padding: 'clamp(20px,3vw,32px) clamp(16px,4vw,24px)', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 7, textDecoration: 'none' }}>
+        <Link href={localePath('/', lang)} style={{ display: 'flex', alignItems: 'center', gap: 7, textDecoration: 'none' }}>
           <div style={{ width: 20, height: 20, borderRadius: 5, background:'#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/><rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/><rect x="19" y="9" width="5" height="20" rx="1.5" fill="white"/><path d="M21 7 L24 3 L27 7" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
@@ -179,7 +182,7 @@ export default function BloombergAlternativePage() {
         </Link>
         <div style={{ display: 'flex', gap: 16 }}>
           {[['/', 'Home'], ['/translate', 'Glossary'], ['/how-to', 'How-to'], ['/privacy', 'Privacy']].map(([href, label]) => (
-            <Link key={href} href={href} style={{ fontSize: 13, color: '#6b6760', textDecoration: 'none' }}>{label}</Link>
+            <Link key={href} href={localePath(href, lang)} style={{ fontSize: 13, color: '#6b6760', textDecoration: 'none' }}>{label}</Link>
           ))}
         </div>
       </footer>

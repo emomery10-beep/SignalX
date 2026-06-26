@@ -40,5 +40,15 @@
   "related_safety_desc": "كيف نتعامل مع خروقات البيانات وأحداث أمان المنصة.",
   "contact_title": "هل لديك أسئلة حول آلية عملنا؟",
   "contact_sub": "إذا كان أي محتوى في مركز الشفافية هذا غير واضح أو ناقص، أو إذا كنت تعتقد أنه غير دقيق، فنحن نودّ أن نعلم. راسلنا عبر البريد الإلكتروني وسنردّ خلال يومي عمل.",
-  "contact_btn": "راسلنا ←"
+  "contact_btn": "راسلنا ←",
+  "article_updated_prefix": "تم التحديث",
+  "article_min_read": "دقيقة قراءة",
+  "article_copy_link": "نسخ الرابط",
+  "article_copied": "✓ تم النسخ",
+  "article_live_metrics": "مقاييس مباشرة",
+  "article_on_this_page": "في هذه الصفحة",
+  "article_related_articles": "مقالات ذات صلة",
+  "article_related_read": "اقرأ →",
+  "article_footer_reviewed": "تمت مراجعة هذا المقال آخر مرة في",
+  "article_footer_inaccurate": "إذا كان هناك شيء غير واضح أو تعتقد أنه غير دقيق، راسل"
 }

@@ -6,6 +6,8 @@ import { LanguageProvider, useLang } from '@/components/LanguageProvider'
 import LanguageToggle from '@/components/LanguageToggle'
 import type { Lang } from '@/lib/i18n'
 import { COUNTRY_TO_LANG } from '@/lib/i18n'
+import { localePath } from '@/lib/i18n-locale'
+import type { Locale } from '@/lib/i18n-locale'
 
 const SkullCanvas = dynamic(() => import('@/components/three/SkullCanvas'), {
   ssr: false,
@@ -1113,7 +1115,7 @@ function CalcResult({value,label,color}:{value:string;label:string;color:string}
 }
 
 // ── Calculator ────────────────────────────────────────────────────────────────
-function MiniCalcWidget({tc}:{tc:(k:string)=>string}) {
+function MiniCalcWidget({tc,lang}:{tc:(k:string)=>string;lang:Locale}) {
   const BIZ_TYPES = buildBizTypes(tc)
   const [mode,setMode] = useState<'margin'|'industry'>('margin')
   const [biz,setBiz] = useState<BizType>('retail')
@@ -1227,7 +1229,7 @@ function MiniCalcWidget({tc}:{tc:(k:string)=>string}) {
           </>
         )}
         <div style={{marginTop:8,textAlign:'center'}}>
-          <Link href={mode==='margin'?'/free-tools/profit-margin-calculator':'/free-tools/cogs-calculator'}
+          <Link href={localePath(mode==='margin'?'/free-tools/profit-margin-calculator':'/free-tools/cogs-calculator', lang)}
             style={{fontSize:11,color:T.acc,fontWeight:600,textDecoration:'none'}}>
             {mode==='margin'?tc('landing.calc_open_full_margin'):tc('landing.calc_open_full_cogs')}
           </Link>
@@ -1240,7 +1242,7 @@ function MiniCalcWidget({tc}:{tc:(k:string)=>string}) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 // ── Nav Dropdown ─────────────────────────────────────────────────────────────
 interface DropGroup { group: string; links: { href: string; label: string; desc: string }[] }
-function NavDropdown({ label, items }: { label: string; items: DropGroup[] }) {
+function NavDropdown({ label, items, lang }: { label: string; items: DropGroup[]; lang: Locale }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -1265,7 +1267,7 @@ function NavDropdown({ label, items }: { label: string; items: DropGroup[] }) {
             <div key={gi} style={{ flex:1,padding:'0 8px' }}>
               <div style={{ fontSize:9,fontWeight:700,color:T.acc,letterSpacing:'.12em',textTransform:'uppercase',padding:'4px 8px 8px' }}>{grp.group}</div>
               {grp.links.map(lnk => (
-                <Link key={lnk.href} href={lnk.href} onClick={() => setOpen(false)}
+                <Link key={lnk.href} href={localePath(lnk.href, lang)} onClick={() => setOpen(false)}
                   style={{ display:'block',padding:'7px 8px',borderRadius:8,textDecoration:'none' }}
                   className="nav-drop-item"
                 >
@@ -1374,7 +1376,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
       {/* ── NAV ──────────────────────────────────────────────────────── */}
       <nav aria-label="Primary navigation" style={{ position:'sticky',top:0,zIndex:50,background:T.nav,backdropFilter:'blur(20px)',borderBottom:`1px solid ${T.bd}`,padding:'0 clamp(16px,3vw,32px)',height:56,display:'flex',alignItems:'center',justifyContent:'space-between',gap:8 }}>
-        <Link href="/" style={{ display:'flex',alignItems:'center',gap:8,textDecoration:'none',color:T.tx,flexShrink:0 }}>
+        <Link href={localePath('/', lang as Locale)} style={{ display:'flex',alignItems:'center',gap:8,textDecoration:'none',color:T.tx,flexShrink:0 }}>
           <div style={{ width:28,height:28,borderRadius:8,background:T.acc,display:'flex',alignItems:'center',justifyContent:'center' }}><Logo size={13}/></div>
           <span style={{ fontFamily:'var(--font-instrument)',fontSize:18,fontWeight:400,letterSpacing:'-.01em' }}>AskBiz</span>
         </Link>
@@ -1387,11 +1389,11 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             ['/point-of-sale',tc('landing.nav_point_of_sale')],
             ['/integrations',tc('landing.nav_integrations')],
           ].map(([href,label])=>(
-            <Link key={href} href={href} className="nav-link" style={{ fontSize:12,color:T.tx2,textDecoration:'none',padding:'0 9px',transition:'color 150ms',whiteSpace:'nowrap' }}>{label}</Link>
+            <Link key={href} href={localePath(href, lang as Locale)} className="nav-link" style={{ fontSize:12,color:T.tx2,textDecoration:'none',padding:'0 9px',transition:'color 150ms',whiteSpace:'nowrap' }}>{label}</Link>
           ))}
 
           {/* Resources mega-dropdown */}
-          <NavDropdown label={tc('landing.nav_resources')} items={[
+          <NavDropdown lang={lang as Locale} label={tc('landing.nav_resources')} items={[
             {group:tc('landing.nav_group_learn'), links:[
               {href:'/academy',label:tc('landing.nav_academy_label'),desc:tc('landing.nav_academy_desc')},
               {href:'/blog',label:tc('landing.nav_blog_label'),desc:tc('landing.nav_blog_desc')},
@@ -1412,7 +1414,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           ]}/>
 
           {/* Support */}
-          <NavDropdown label={tc('landing.nav_support')} items={[
+          <NavDropdown lang={lang as Locale} label={tc('landing.nav_support')} items={[
             {group:tc('landing.nav_group_help'), links:[
               {href:'/help',label:tc('landing.nav_help_centre_label'),desc:tc('landing.nav_help_centre_desc')},
               {href:'/help/faq',label:tc('landing.nav_faq_label'),desc:tc('landing.nav_faq_desc')},
@@ -1425,7 +1427,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
         <div style={{ display:'flex',alignItems:'center',gap:6,flexShrink:0 }}>
           <LanguageToggle />
-          <Link href="/signin" style={{ width:36,height:36,borderRadius:8,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',textDecoration:'none' }}>
+          <Link href={localePath('/signin', lang as Locale)} style={{ width:36,height:36,borderRadius:8,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',textDecoration:'none' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
@@ -1468,12 +1470,12 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             !href ? (
               <div key={i} style={{ padding:'12px 12px 4px',fontSize:9,fontWeight:700,color:T.acc,letterSpacing:'.12em',textTransform:'uppercase' }}>{label}</div>
             ) : (
-              <a key={href} href={href} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'11px 12px',fontSize:14,fontWeight:500,color:T.tx,textDecoration:'none',borderBottom:`1px solid ${T.bd}` }}>{label}</a>
+              <a key={href} href={href.startsWith('#') ? href : localePath(href, lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'11px 12px',fontSize:14,fontWeight:500,color:T.tx,textDecoration:'none',borderBottom:`1px solid ${T.bd}` }}>{label}</a>
             )
           )}
           <div style={{ marginTop:20,display:'flex',flexDirection:'column',gap:10 }}>
-            <Link href="/signin?mode=signup" onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:15,fontWeight:700,textDecoration:'none',textAlign:'center' }}>{tc('landing.mobile_start_free')}</Link>
-            <Link href="/signin" onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',textAlign:'center' }}>{tc('landing.mobile_sign_in')}</Link>
+            <Link href={localePath('/signin?mode=signup', lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:15,fontWeight:700,textDecoration:'none',textAlign:'center' }}>{tc('landing.mobile_start_free')}</Link>
+            <Link href={localePath('/signin', lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',textAlign:'center' }}>{tc('landing.mobile_sign_in')}</Link>
           </div>
         </div>
       )}
@@ -1496,7 +1498,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                 {tc('landing.hero_subtitle')}
               </p>
               <div className="hero-ctas" style={{ display:'flex',gap:12,flexWrap:'wrap',marginBottom:24 }}>
-                <Link href="/signin?mode=signup" className="cta-btn" style={{ padding:'14px 28px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8,boxShadow:`0 4px 24px rgba(201,122,68,.3)` }}>
+                <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ padding:'14px 28px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8,boxShadow:`0 4px 24px rgba(201,122,68,.3)` }}>
                   {tc('landing.hero_cta_primary')}
                 </Link>
                 <a href="#pos" style={{ padding:'14px 20px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'rgba(255,255,255,.6)',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6,backdropFilter:'blur(8px)' }}>
@@ -1519,7 +1521,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             </div>
             {/* Right — calculator */}
             <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
-              <MiniCalcWidget tc={tc} />
+              <MiniCalcWidget tc={tc} lang={lang as Locale} />
             </div>
           </div>
         </div>
@@ -1623,7 +1625,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             ))}
           </div>
           <div style={{ textAlign:'center',marginTop:24,display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap' }}>
-            <Link href="/signin?mode=signup" className="cta-btn" style={{ padding:'11px 26px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7 }}>
+            <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ padding:'11px 26px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7 }}>
               {tc('landing.pos_cta')}
             </Link>
             <span style={{ fontSize:12,color:T.tx3,alignSelf:'center' }}>{tc('landing.pos_cta_note',{pos:posPrice})}</span>
@@ -1703,7 +1705,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           </div>
 
           <div style={{ textAlign:'center' }}>
-            <Link href="/compare" style={{ fontSize:13,color:T.tx3,textDecoration:'none',borderBottom:`1px solid ${T.bd}`,paddingBottom:1 }}>
+            <Link href={localePath('/compare', lang as Locale)} style={{ fontSize:13,color:T.tx3,textDecoration:'none',borderBottom:`1px solid ${T.bd}`,paddingBottom:1 }}>
               {tc('landing.compare_full_link')}
             </Link>
           </div>
@@ -1731,7 +1733,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                   <span style={{ fontFamily:'var(--font-instrument)',fontSize:32,color:T.tx }}>{posPrice}</span>
                   <span style={{ fontSize:12,color:T.tx3 }}>{tc('landing.pricing_pos_per_seat')}</span>
                 </div>
-                <Link href="/signin?mode=signup" className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'8px 18px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:12,fontWeight:700,textDecoration:'none',marginTop:10 }}>
+                <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'8px 18px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:12,fontWeight:700,textDecoration:'none',marginTop:10 }}>
                   {tc('landing.pricing_pos_cta')}
                 </Link>
               </div>
@@ -1782,7 +1784,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                     </div>
                   ))}
                 </div>
-                <Link href="/signin?mode=signup" className="cta-btn" style={{ display:'block',padding:'10px',borderRadius:10,border:plan.popular?'none':`1px solid ${T.bd}`,background:plan.popular?T.acc:'transparent',color:plan.popular?'#fff':T.tx2,fontSize:12,fontWeight:600,textDecoration:'none',textAlign:'center' }}>
+                <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ display:'block',padding:'10px',borderRadius:10,border:plan.popular?'none':`1px solid ${T.bd}`,background:plan.popular?T.acc:'transparent',color:plan.popular?'#fff':T.tx2,fontSize:12,fontWeight:600,textDecoration:'none',textAlign:'center' }}>
                   {plan.id==='free'?tc('landing.plan_free_cta'):plan.id==='growth'?tc('landing.plan_growth_cta'):tc('landing.plan_business_cta')}
                 </Link>
               </div>
@@ -1816,7 +1818,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         </div>
         <nav aria-label="Footer navigation" style={{ display:'flex',gap:16,flexWrap:'wrap' }}>
           {[['/', tc('landing.footer_home')],['/blog',tc('landing.footer_blog')],['/academy',tc('landing.footer_academy')],['/free-tools',tc('landing.footer_free_tools')],['/integrations',tc('landing.footer_integrations')],['/help',tc('landing.footer_help')],['/privacy',tc('landing.footer_privacy')],['/terms',tc('landing.footer_terms')],['/dpa',tc('landing.footer_dpa')],['mailto:hello@askbiz.co',tc('landing.footer_contact')]].map(([href,label])=>(
-            <a key={href} href={href} className="nav-link" style={{ fontSize:12,color:T.tx3,textDecoration:'none',transition:'color 150ms' }}>{label}</a>
+            <a key={href} href={href.startsWith('mailto:') ? href : localePath(href, lang as Locale)} className="nav-link" style={{ fontSize:12,color:T.tx3,textDecoration:'none',transition:'color 150ms' }}>{label}</a>
           ))}
         </nav>
       </footer>

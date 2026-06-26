@@ -117,5 +117,13 @@
   "footer_link_help": "Centre d'aide",
   "footer_link_rules": "Règles et politiques",
   "footer_link_privacy": "Confidentialité",
-  "footer_disclaimer": "Les taux sont indicatifs et mis à jour chaque trimestre. Vérifiez toujours auprès des bases tarifaires officielles avant de prendre des décisions d'importation."
+  "footer_disclaimer": "Les taux sont indicatifs et mis à jour chaque trimestre. Vérifiez toujours auprès des bases tarifaires officielles avant de prendre des décisions d'importation.",
+
+  "cogs_ph_product_name": "Nom du produit",
+  "fx_ph_product_name": "Nom",
+  "fx_ph_rate_override": "Actuel : {rate}",
+  "pm_ph_product_name": "ex. Écouteurs sans fil",
+  "lc_ph_product_name": "ex. T-shirts en coton",
+  "lc_ph_freight_estimated": "Estimé : ${amount}",
+  "lc_ph_selling_price": "Saisir pour voir la marge"
 }

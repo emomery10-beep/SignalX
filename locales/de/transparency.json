@@ -40,5 +40,15 @@
   "related_safety_desc": "Unser Umgang mit Datenpannen und sicherheitsrelevanten Ereignissen auf der Plattform.",
   "contact_title": "Fragen zu unserer Arbeitsweise?",
   "contact_sub": "Wenn etwas in diesem Transparenzzentrum unklar oder unvollständig ist oder Sie es für unzutreffend halten, möchten wir das wissen. Schreiben Sie uns – wir antworten innerhalb von 2 Werktagen.",
-  "contact_btn": "E-Mail senden →"
+  "contact_btn": "E-Mail senden →",
+  "article_updated_prefix": "Aktualisiert",
+  "article_min_read": "Min. Lesezeit",
+  "article_copy_link": "Link kopieren",
+  "article_copied": "✓ Kopiert",
+  "article_live_metrics": "Live-Metriken",
+  "article_on_this_page": "Auf dieser Seite",
+  "article_related_articles": "Verwandte Artikel",
+  "article_related_read": "Lesen →",
+  "article_footer_reviewed": "Dieser Artikel wurde zuletzt überprüft im",
+  "article_footer_inaccurate": "Falls etwas unklar ist oder Sie es für ungenau halten, schreiben Sie an"
 }

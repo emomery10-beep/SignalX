@@ -1,5 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { cookies, headers } from 'next/headers'
+import { resolveLocale, localePath } from '@/lib/i18n-locale'
+import { t as catalogT } from '@/lib/i18n-catalog'
 import { COMPARISONS } from '@/lib/comparisons-content'
 
 export const metadata: Metadata = {
@@ -17,6 +20,7 @@ const TX3 = '#a39e97'
 const BD  = '#e8e6e1'
 
 export default function VsIndexPage() {
+  const lang = resolveLocale({ urlLocale: headers().get('x-locale'), cookie: cookies().get('askbiz_lang')?.value })
   return (
     <div style={{ fontFamily: 'DM Sans, system-ui', background: BG, minHeight: '100vh' }}>
       <style>{`
@@ -25,7 +29,7 @@ export default function VsIndexPage() {
       `}</style>
 
       <nav style={{ borderBottom: `1px solid ${BD}`, background: SF, padding: '0 clamp(16px,4vw,24px)', height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
+        <Link href={localePath('/', lang)} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
           <div style={{ width: 26, height: 26, borderRadius: 7, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="12" height="12" viewBox="0 0 32 32" fill="none">
               <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/>
@@ -35,16 +39,16 @@ export default function VsIndexPage() {
           </div>
           <span style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
         </Link>
-        <Link href="/signin" style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>Try free →</Link>
+        <Link href={localePath('/signin', lang)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{catalogT(lang, 'vs.try_free')}</Link>
       </nav>
 
       <div style={{ maxWidth: 900, margin: '0 auto', padding: 'clamp(40px,5vw,72px) clamp(16px,4vw,32px)' }}>
         <div style={{ textAlign: 'center', marginBottom: 56 }}>
           <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(26px,4vw,40px)', fontWeight: 700, color: TX, letterSpacing: '-.03em', marginBottom: 14 }}>
-            AskBiz vs the alternatives
+            {catalogT(lang, 'vs.vs_the_alternatives')}
           </h1>
           <p style={{ fontSize: 16, color: TX2, maxWidth: 520, margin: '0 auto', lineHeight: 1.7 }}>
-            See how AskBiz compares to the most popular business intelligence and dashboard tools — feature by feature, for SME founders.
+            {catalogT(lang, 'vs.index_subtitle')}
           </p>
         </div>
 
@@ -52,7 +56,7 @@ export default function VsIndexPage() {
           {COMPARISONS.map(c => (
             <Link
               key={c.slug}
-              href={`/vs/${c.slug}`}
+              href={localePath(`/vs/${c.slug}`, lang)}
               className="vs-card"
               style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 14, padding: '24px 22px', display: 'block' }}
             >
@@ -61,25 +65,25 @@ export default function VsIndexPage() {
                 <span style={{ fontSize: 16, color: TX3 }}>vs</span>
                 <div style={{ width: 36, height: 36, borderRadius: 9, background: c.theirColor + '18', border: `1px solid ${c.theirColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: c.theirColor, fontFamily: 'Sora, system-ui' }}>{c.competitor[0]}</div>
               </div>
-              <div style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, color: TX, marginBottom: 6 }}>AskBiz vs {c.competitor}</div>
+              <div style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, color: TX, marginBottom: 6 }}>{catalogT(lang, 'vs.askbiz_vs', { competitor: c.competitor })}</div>
               <p style={{ fontSize: 13, color: TX2, lineHeight: 1.55, marginBottom: 14 }}>{c.description.slice(0, 100)}…</p>
-              <span style={{ fontSize: 12, color: ACC, fontWeight: 600 }}>See comparison →</span>
+              <span style={{ fontSize: 12, color: ACC, fontWeight: 600 }}>{catalogT(lang, 'vs.see_comparison')}</span>
             </Link>
           ))}
         </div>
 
         <div style={{ marginTop: 64, padding: '32px', background: SF, border: `1px solid ${BD}`, borderRadius: 16, textAlign: 'center' }}>
-          <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 22, fontWeight: 700, color: TX, marginBottom: 10 }}>Ready to see for yourself?</h2>
-          <p style={{ fontSize: 14, color: TX2, marginBottom: 20 }}>Connect your first data source in under 10 minutes. No credit card required.</p>
-          <Link href="/signin" style={{ fontSize: 14, fontWeight: 700, color: SF, background: ACC, borderRadius: 10, padding: '12px 28px', textDecoration: 'none', display: 'inline-block' }}>Start free trial →</Link>
+          <h2 style={{ fontFamily: 'Sora, system-ui', fontSize: 22, fontWeight: 700, color: TX, marginBottom: 10 }}>{catalogT(lang, 'vs.ready_heading')}</h2>
+          <p style={{ fontSize: 14, color: TX2, marginBottom: 20 }}>{catalogT(lang, 'vs.ready_body')}</p>
+          <Link href={localePath('/signin', lang)} style={{ fontSize: 14, fontWeight: 700, color: SF, background: ACC, borderRadius: 10, padding: '12px 28px', textDecoration: 'none', display: 'inline-block' }}>{catalogT(lang, 'vs.start_free_trial')}</Link>
         </div>
       </div>
 
       <footer style={{ borderTop: `1px solid ${BD}`, padding: '20px clamp(16px,4vw,32px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, background: SF }}>
-        <span style={{ fontSize: 12, color: TX3 }}>© 2026 AskBiz Ltd. All rights reserved.</span>
+        <span style={{ fontSize: 12, color: TX3 }}>{catalogT(lang, 'vs.footer_copyright')}</span>
         <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
-          {([['/', 'Home'], ['/academy', 'Academy'], ['/help', 'Help'], ['/privacy', 'Privacy']] as [string, string][]).map(([href, label]) => (
-            <Link key={href} href={href} style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>{label}</Link>
+          {([['/','vs.footer_home'],['/academy','vs.footer_academy'],['/help','vs.footer_help'],['/privacy','vs.footer_privacy']] as [string,string][]).map(([href, key]) => (
+            <Link key={href} href={localePath(href, lang)} style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>{catalogT(lang, key)}</Link>
           ))}
         </div>
       </footer>

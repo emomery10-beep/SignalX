@@ -22,5 +22,7 @@
   "add": "Hinzufügen",
   "remove": "Entfernen",
   "legal_mt_notice": "Maschinelle Übersetzung — die englische Version ist der rechtlich bindende Text.",
-  "legal_mt_link": "Auf Englisch lesen →"
+  "legal_mt_link": "Auf Englisch lesen →",
+  "search_placeholder": "Artikel, Leitfäden und Hilfedokumente suchen…",
+  "search_no_results_try": "Andere Suchbegriffe ausprobieren oder die"
 }

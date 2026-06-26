@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { localePath } from "@/lib/i18n-locale";
+import { useLang } from "@/components/LanguageProvider";
 
 const C = {
   bg: "#f9f8f6", sf: "#ffffff", el: "#f3f2ef",
@@ -129,6 +131,7 @@ const SECTORS: Sector[] = [
 ];
 
 export default function BenchmarksClient() {
+  const { lang, tc } = useLang()
   const [activeSector, setActiveSector] = useState("ecommerce");
   const sector = SECTORS.find((s) => s.id === activeSector)!;
 
@@ -136,17 +139,17 @@ export default function BenchmarksClient() {
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: "'DM Sans', system-ui, sans-serif", color: C.tx }}>
       {/* Nav */}
       <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(249,248,246,.96)", backdropFilter: "blur(16px)", borderBottom: `1px solid ${C.b}`, padding: "0 clamp(16px,4vw,32px)", height: 54, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: C.tx }}>
+        <Link href={localePath("/", lang)} style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: C.tx }}>
           <div style={{ width: 26, height: 26, borderRadius: 7, background: C.acc, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="14" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg>
           </div>
           <span style={{ fontFamily: "var(--font-sora)", fontSize: 15, fontWeight: 700 }}>AskBiz</span>
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Link href="/blog" style={{ fontSize: 13, color: C.tx2, textDecoration: "none" }}>Blog</Link>
-          <Link href="/case-studies" style={{ fontSize: 13, color: C.tx2, textDecoration: "none" }}>Case Studies</Link>
-          <Link href="/pricing" style={{ fontSize: 13, color: C.tx2, textDecoration: "none" }}>Pricing</Link>
-          <Link href="/signin" style={{ padding: "7px 16px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>Try free →</Link>
+          <Link href={localePath("/blog", lang)} style={{ fontSize: 13, color: C.tx2, textDecoration: "none" }}>Blog</Link>
+          <Link href={localePath("/case-studies", lang)} style={{ fontSize: 13, color: C.tx2, textDecoration: "none" }}>Case Studies</Link>
+          <Link href={localePath("/pricing", lang)} style={{ fontSize: 13, color: C.tx2, textDecoration: "none" }}>Pricing</Link>
+          <Link href={localePath("/signin", lang)} style={{ padding: "7px 16px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>Try free →</Link>
         </div>
       </nav>
 
@@ -287,7 +290,7 @@ export default function BenchmarksClient() {
           <p style={{ fontSize: 15, color: "rgba(255,255,255,.5)", margin: "0 0 24px", lineHeight: 1.6 }}>
             AskBiz shows you exactly where you sit vs. these benchmarks — using your actual sales, margins, and costs. Connect your data in 2 minutes.
           </p>
-          <Link href="/signin" style={{ display: "inline-flex", padding: "13px 28px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 15, fontWeight: 700, textDecoration: "none" }}>
+          <Link href={localePath("/signin", lang)} style={{ display: "inline-flex", padding: "13px 28px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 15, fontWeight: 700, textDecoration: "none" }}>
             Try AskBiz Free →
           </Link>
         </div>
@@ -297,8 +300,8 @@ export default function BenchmarksClient() {
       <footer style={{ borderTop: `1px solid ${C.b}`, background: C.sf, padding: "clamp(20px,3vw,28px) clamp(16px,4vw,40px)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <span style={{ fontSize: 12, color: C.tx3 }}>© 2026 AskBiz Ltd</span>
         <nav style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-          {[["/", "Home"], ["/blog", "Blog"], ["/case-studies", "Case Studies"], ["/free-tools", "Free Tools"], ["/pricing", "Pricing"], ["/help", "Help"], ["/privacy", "Privacy"], ["/terms", "Terms"]].map(([href, label]) => (
-            <a key={href} href={href} style={{ fontSize: 12, color: C.tx3, textDecoration: "none" }}>{label}</a>
+          {[["/", "Home"], ["/blog", "Blog"], ["/case-studies", "Case Studies"], ["/free-tools", "Free Tools"], ["/pricing", "Pricing"], ["/help", "Help"], ["/privacy", "Privacy"], ["/terms", "Terms"]].map(([path, label]) => (
+            <a key={path} href={localePath(path, lang)} style={{ fontSize: 12, color: C.tx3, textDecoration: "none" }}>{label}</a>
           ))}
         </nav>
       </footer>

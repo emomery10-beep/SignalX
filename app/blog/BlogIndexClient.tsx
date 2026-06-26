@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { getAllPosts } from '@/lib/blog-content'
 import { useLang } from '@/components/LanguageProvider'
+import { localePath } from '@/lib/i18n-locale'
 
 function getContentType(title: string, pillar: string): string {
   const t = title.toLowerCase()
@@ -212,7 +213,7 @@ const PAGE_SIZE = 20
 
 // ── Inner component (needs useSearchParams → requires Suspense wrapper) ──────
 function BlogContent() {
-  const { tc }         = useLang()
+  const { lang, tc }   = useLang()
   const searchParams   = useSearchParams()
   const staticPosts    = getAllPosts()
   const [agentPosts, setAgentPosts] = useState<ReturnType<typeof getAllPosts>>([])
@@ -364,7 +365,7 @@ function BlogContent() {
     const c = getColour(post.cluster)
     return (
       <Link
-        href={`/blog/${post.slug}`}
+        href={localePath(`/blog/${post.slug}`, lang)}
         className="post-row"
         style={{
           textDecoration: 'none', display: 'grid',
@@ -439,7 +440,7 @@ function BlogContent() {
               {sidebarOpen ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></> : <><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>}
             </svg>
           </button>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
+          <Link href={localePath('/', lang)} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
             <div style={{ width: 26, height: 26, borderRadius: 7, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <svg width="12" height="12" viewBox="0 0 32 32" fill="none">
                 <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/>
@@ -450,7 +451,7 @@ function BlogContent() {
             <span style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
           </Link>
         </div>
-        <Link href="/signin" style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>
+        <Link href={localePath('/signin', lang)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>
           {tc('blog_index.nav_try_free')}
         </Link>
       </nav>
@@ -732,7 +733,7 @@ function BlogContent() {
         <span style={{ fontSize: 12, color: TX3 }}>{tc('blog_index.footer_copyright')}</span>
         <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center' }}>
           {[['/', 'footer_home'], ['/blog', 'footer_blog'], ['/rss.xml', 'footer_rss'], ['/privacy', 'footer_privacy'], ['/developers', 'footer_api']].map(([href, key]) => (
-            <Link key={href} href={href} style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>{tc('blog_index.' + key)}</Link>
+            <Link key={href} href={localePath(href, lang)} style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>{tc('blog_index.' + key)}</Link>
           ))}
         </div>
       </footer>

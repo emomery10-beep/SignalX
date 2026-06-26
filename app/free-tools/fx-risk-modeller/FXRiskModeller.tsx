@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useLang } from "@/components/LanguageProvider";
 import {
   FX_PAIRS,
   CURRENCIES,
@@ -55,6 +56,7 @@ function fmt(n: number, sym: string): string {
 }
 
 export default function FXRiskModeller() {
+  const { tc } = useLang();
   const [baseCurrency, setBaseCurrency] = useState("GBP");
   const [quoteCurrency, setQuoteCurrency] = useState("USD");
   const [customRate, setCustomRate] = useState<string>("");
@@ -237,7 +239,7 @@ export default function FXRiskModeller() {
                 min="0"
                 value={customRate}
                 onChange={(e) => setCustomRate(e.target.value)}
-                placeholder={`Current: ${currentRate.toFixed(4)}`}
+                placeholder={tc("freetools.fx_ph_rate_override", { rate: currentRate.toFixed(4) })}
               />
             </div>
           </div>
@@ -294,7 +296,7 @@ export default function FXRiskModeller() {
                     type="text"
                     value={product.name}
                     onChange={(e) => updateProduct(product.id, "name", e.target.value)}
-                    placeholder="Name"
+                    placeholder={tc("freetools.fx_ph_product_name")}
                   />
                   <input
                     className="fx-input"

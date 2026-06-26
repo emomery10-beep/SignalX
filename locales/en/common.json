@@ -22,5 +22,7 @@
   "add": "Add",
   "remove": "Remove",
   "legal_mt_notice": "Machine translation — the English version is the binding legal text.",
-  "legal_mt_link": "Read in English →"
+  "legal_mt_link": "Read in English →",
+  "search_placeholder": "Search articles, guides, and help docs…",
+  "search_no_results_try": "Try different keywords or browse the"
 }

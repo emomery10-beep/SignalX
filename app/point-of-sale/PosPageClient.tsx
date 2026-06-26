@@ -3,6 +3,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { SECTORS as SHARED_SECTORS } from '@/lib/pos-sectors'
 import { useLang } from '@/components/LanguageProvider'
+import { localePath } from '@/lib/i18n-locale'
+import type { Locale } from '@/lib/i18n-locale'
 
 const C = {
   bg:'#f9f8f6', sf:'#ffffff', ev:'#f3f2ef',
@@ -47,7 +49,7 @@ const buildDemoSteps = (tc: (key: string) => string) => ['1','2','3','4'].map(n 
 }))
 
 export default function PosPageClient() {
-  const { tc } = useLang()
+  const { tc, lang } = useLang()
   const FEATURES = buildFeatures(tc)
   const WORKFLOW = buildWorkflow(tc)
   const DEMO_STEPS = buildDemoSteps(tc)
@@ -117,12 +119,12 @@ export default function PosPageClient() {
 
       {/* Nav */}
       <nav style={{ position:'sticky', top:0, zIndex:50, background:'rgba(249,248,246,.96)', backdropFilter:'blur(16px)', borderBottom:`1px solid ${C.b}`, padding:'0 clamp(16px,4vw,32px)', height:56, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <Link href="/" style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:800, color:C.tx, textDecoration:'none', letterSpacing:'-.03em' }}>
+        <Link href={localePath('/', lang as Locale)} style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:800, color:C.tx, textDecoration:'none', letterSpacing:'-.03em' }}>
           ask<span style={{ color:C.acc }}>biz</span>
         </Link>
         <div style={{ display:'flex', alignItems:'center', gap:16 }}>
-          <Link href="/#pricing" style={{ fontSize:13, color:C.tx2, textDecoration:'none', fontWeight:500 }}>{tc('pos_marketing.nav_pricing')}</Link>
-          <Link href="/signin" className="btn-primary" style={{ padding:'8px 18px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none' }}>
+          <Link href={localePath('/#pricing', lang as Locale)} style={{ fontSize:13, color:C.tx2, textDecoration:'none', fontWeight:500 }}>{tc('pos_marketing.nav_pricing')}</Link>
+          <Link href={localePath('/signin', lang as Locale)} className="btn-primary" style={{ padding:'8px 18px', borderRadius:9999, background:C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none' }}>
             {tc('pos_marketing.nav_try_free')}
           </Link>
         </div>
@@ -143,7 +145,7 @@ export default function PosPageClient() {
             {tc('pos_marketing.hero_pricing_note').split('{price}').join(seatPrice)}
           </p>
           <div className="fade-up" style={{ display:'flex', gap:12, flexWrap:'wrap', alignItems:'center' }}>
-            <Link href="/signin" className="btn-primary" style={{ padding:'13px 28px', borderRadius:10, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8 }}>
+            <Link href={localePath('/signin', lang as Locale)} className="btn-primary" style={{ padding:'13px 28px', borderRadius:10, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:8 }}>
               {tc('pos_marketing.hero_cta_start')}
             </Link>
             <a href="#features" style={{ fontSize:14, color:C.tx2, fontWeight:500, textDecoration:'none', display:'inline-flex', alignItems:'center', gap:5, borderBottom:`1px solid ${C.b2}`, paddingBottom:1 }}>
@@ -406,7 +408,7 @@ export default function PosPageClient() {
           {/* Feature cards — 4 col, 3 rows — each links to its feature page */}
           <div className="features-grid" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14 }}>
             {FEATURES.map((f, i) => (
-              <Link key={i} href={`/point-of-sale/feature/${(f as any).slug}`} style={{ textDecoration:'none' }}>
+              <Link key={i} href={localePath(`/point-of-sale/feature/${(f as any).slug}`, lang as Locale)} style={{ textDecoration:'none' }}>
                 <div className="card-hover" style={{ padding:'22px 18px', borderRadius:14, border:`1px solid ${C.b}`, background:C.bg, display:'flex', flexDirection:'column', gap:10, height:'100%', position:'relative', cursor:'pointer' }}>
                   <span style={{ fontSize:22 }}>{f.icon}</span>
                   <div style={{ fontFamily:'var(--font-sora)', fontSize:15, fontWeight:700, color:C.tx }}>{f.title}</div>
@@ -497,7 +499,7 @@ export default function PosPageClient() {
                 {/* CTA to dedicated sector page */}
                 <div style={{ marginTop:20, display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
                   <p style={{ fontSize:13, color:C.tx3, margin:0 }}>{tc('pos_marketing.sectors_shared_note')}</p>
-                  <Link href={`/point-of-sale/${sectorTab}`} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'9px 18px', borderRadius:9999, background:SECTORS.find(s => s.id === sectorTab)?.color || C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none' }}>
+                  <Link href={localePath(`/point-of-sale/${sectorTab}`, lang as Locale)} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'9px 18px', borderRadius:9999, background:SECTORS.find(s => s.id === sectorTab)?.color || C.acc, color:'#fff', fontSize:13, fontWeight:700, textDecoration:'none' }}>
                     {tc('pos_marketing.sectors_full_guide').split('{label}').join(SECTORS.find(s => s.id === sectorTab)?.label || '')}
                   </Link>
                 </div>
@@ -812,7 +814,7 @@ export default function PosPageClient() {
               </div>
             ))}
           </div>
-          <Link href="/signin" className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'13px 32px', borderRadius:10, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none' }}>
+          <Link href={localePath('/signin', lang as Locale)} className="btn-primary" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'13px 32px', borderRadius:10, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none' }}>
             {tc('pos_marketing.pricing_cta')}
           </Link>
           <p style={{ fontSize:12, color:C.tx3, marginTop:12 }}>{tc('pos_marketing.pricing_free_note')}</p>
@@ -830,7 +832,7 @@ export default function PosPageClient() {
             {tc('pos_marketing.cta_subtitle')}
           </p>
         </div>
-        <Link href="/signin" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'14px 32px', borderRadius:10, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', whiteSpace:'nowrap', flexShrink:0 }}>
+        <Link href={localePath('/signin', lang as Locale)} style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'14px 32px', borderRadius:10, background:C.acc, color:'#fff', fontSize:15, fontWeight:700, textDecoration:'none', whiteSpace:'nowrap', flexShrink:0 }}>
           {tc('pos_marketing.cta_button')}
         </Link>
       </div>
@@ -838,13 +840,13 @@ export default function PosPageClient() {
 
       {/* Footer */}
       <footer style={{ borderTop:`1px solid ${C.b}`, padding:'28px clamp(16px,4vw,40px)', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:12, fontSize:12, color:C.tx3 }}>
-        <Link href="/" style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:800, color:C.tx, textDecoration:'none' }}>
+        <Link href={localePath('/', lang as Locale)} style={{ fontFamily:'var(--font-sora)', fontSize:16, fontWeight:800, color:C.tx, textDecoration:'none' }}>
           ask<span style={{ color:C.acc }}>biz</span>
         </Link>
         <div style={{ display:'flex', gap:20 }}>
-          <Link href="/" style={{ color:C.tx3, textDecoration:'none' }}>{tc('pos_marketing.footer_home')}</Link>
-          <Link href="/#pricing" style={{ color:C.tx3, textDecoration:'none' }}>{tc('pos_marketing.footer_pricing')}</Link>
-          <Link href="/signin" style={{ color:C.tx3, textDecoration:'none' }}>{tc('pos_marketing.footer_signin')}</Link>
+          <Link href={localePath('/', lang as Locale)} style={{ color:C.tx3, textDecoration:'none' }}>{tc('pos_marketing.footer_home')}</Link>
+          <Link href={localePath('/#pricing', lang as Locale)} style={{ color:C.tx3, textDecoration:'none' }}>{tc('pos_marketing.footer_pricing')}</Link>
+          <Link href={localePath('/signin', lang as Locale)} style={{ color:C.tx3, textDecoration:'none' }}>{tc('pos_marketing.footer_signin')}</Link>
         </div>
       </footer>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({

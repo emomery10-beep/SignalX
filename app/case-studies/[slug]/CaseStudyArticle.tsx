@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { getCaseStudy, getAllCaseStudies } from "@/lib/case-studies-content";
+import { useLang } from "@/lib/i18n-catalog";
+import { localePath } from "@/lib/i18n-locale";
 
 const C = {
   bg: "#f9f8f6", sf: "#ffffff", el: "#f3f2ef",
@@ -11,6 +13,7 @@ const C = {
 };
 
 export default function CaseStudyArticle({ slug }: { slug: string }) {
+  const { lang, tc } = useLang();
   const cs = getCaseStudy(slug);
   if (!cs) return null;
 
@@ -19,25 +22,25 @@ export default function CaseStudyArticle({ slug }: { slug: string }) {
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: "'DM Sans', system-ui, sans-serif", color: C.tx }}>
       <nav style={{ position: "sticky", top: 0, zIndex: 50, background: "rgba(249,248,246,.96)", backdropFilter: "blur(16px)", borderBottom: `1px solid ${C.b}`, padding: "0 clamp(16px,4vw,32px)", height: 54, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: C.tx }}>
+        <Link href={localePath("/", lang)} style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: C.tx }}>
           <div style={{ width: 26, height: 26, borderRadius: 7, background: C.acc, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="14" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg>
           </div>
           <span style={{ fontFamily: "var(--font-sora)", fontSize: 15, fontWeight: 700 }}>AskBiz</span>
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Link href="/case-studies" style={{ fontSize: 13, color: C.tx2, textDecoration: "none" }}>All Case Studies</Link>
-          <Link href="/pricing" style={{ fontSize: 13, color: C.tx2, textDecoration: "none" }}>Pricing</Link>
-          <Link href="/signin" style={{ padding: "7px 16px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>Try free →</Link>
+          <Link href={localePath("/case-studies", lang)} style={{ fontSize: 13, color: C.tx2, textDecoration: "none" }}>{tc("case_studies.nav_all_case_studies")}</Link>
+          <Link href={localePath("/pricing", lang)} style={{ fontSize: 13, color: C.tx2, textDecoration: "none" }}>{tc("case_studies.nav_pricing")}</Link>
+          <Link href={localePath("/signin", lang)} style={{ padding: "7px 16px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>{tc("case_studies.nav_try_free")}</Link>
         </div>
       </nav>
 
       <article style={{ maxWidth: 760, margin: "0 auto", padding: "clamp(32px,5vw,56px) clamp(16px,4vw,40px)" }}>
         {/* Breadcrumb */}
         <nav style={{ fontSize: 13, color: C.tx3, marginBottom: 24, display: "flex", gap: 6, alignItems: "center" }}>
-          <Link href="/" style={{ color: C.tx3, textDecoration: "none" }}>Home</Link>
+          <Link href={localePath("/", lang)} style={{ color: C.tx3, textDecoration: "none" }}>{tc("case_studies.breadcrumb_home")}</Link>
           <span>›</span>
-          <Link href="/case-studies" style={{ color: C.tx3, textDecoration: "none" }}>Case Studies</Link>
+          <Link href={localePath("/case-studies", lang)} style={{ color: C.tx3, textDecoration: "none" }}>{tc("case_studies.breadcrumb_case_studies")}</Link>
           <span>›</span>
           <span style={{ color: C.tx2 }}>{cs.company}</span>
         </nav>
@@ -79,7 +82,7 @@ export default function CaseStudyArticle({ slug }: { slug: string }) {
         {/* Info pills */}
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 36 }}>
           <div style={{ background: C.el, borderRadius: 8, padding: "8px 14px", fontSize: 13, color: C.tx2 }}>
-            <strong style={{ color: C.tx }}>Timeline:</strong> {cs.timeline}
+            <strong style={{ color: C.tx }}>{tc("case_studies.timeline_label")}</strong> {cs.timeline}
           </div>
           {cs.productsUsed.map((p) => (
             <div key={p} style={{ background: C.el, borderRadius: 8, padding: "8px 14px", fontSize: 13, color: C.tx2 }}>
@@ -99,25 +102,25 @@ export default function CaseStudyArticle({ slug }: { slug: string }) {
         {/* CTA */}
         <div style={{ background: "linear-gradient(135deg, #1a1916 0%, #2d2a26 100%)", borderRadius: 14, padding: "36px 32px", textAlign: "center", marginTop: 40 }}>
           <h2 style={{ fontFamily: "var(--font-sora)", fontSize: 22, fontWeight: 700, color: "#fff", margin: "0 0 10px" }}>
-            Get Results Like {cs.company}
+            {tc("case_studies.article_cta_heading", { company: cs.company })}
           </h2>
           <p style={{ fontSize: 14, color: "rgba(255,255,255,.72)", margin: "0 0 20px", lineHeight: 1.6 }}>
-            Connect your data and start asking questions in plain English. Free to start — no card needed.
+            {tc("case_studies.article_cta_body")}
           </p>
-          <Link href="/signin" style={{ display: "inline-flex", padding: "12px 26px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 14, fontWeight: 700, textDecoration: "none" }}>
-            Try AskBiz Free →
+          <Link href={localePath("/signin", lang)} style={{ display: "inline-flex", padding: "12px 26px", borderRadius: 9999, background: C.acc, color: "#fff", fontSize: 14, fontWeight: 700, textDecoration: "none" }}>
+            {tc("case_studies.article_cta_button")}
           </Link>
         </div>
 
         {/* Related */}
         {related.length > 0 && (
           <div style={{ marginTop: 48 }}>
-            <h3 style={{ fontFamily: "var(--font-sora)", fontSize: 18, fontWeight: 700, color: C.tx, margin: "0 0 20px" }}>More Case Studies</h3>
+            <h3 style={{ fontFamily: "var(--font-sora)", fontSize: 18, fontWeight: 700, color: C.tx, margin: "0 0 20px" }}>{tc("case_studies.more_case_studies")}</h3>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               {related.map((r) => (
                 <Link
                   key={r.slug}
-                  href={`/case-studies/${r.slug}`}
+                  href={localePath(`/case-studies/${r.slug}`, lang)}
                   style={{ background: C.sf, border: `1.5px solid ${C.b}`, borderRadius: 12, padding: 20, textDecoration: "none", color: C.tx, transition: "border-color .2s" }}
                   onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accBdr; }}
                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.b; }}
@@ -127,7 +130,7 @@ export default function CaseStudyArticle({ slug }: { slug: string }) {
                     <span style={{ fontFamily: "var(--font-sora)", fontSize: 13, fontWeight: 700 }}>{r.company}</span>
                   </div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: C.tx, lineHeight: 1.4, marginBottom: 8 }}>{r.headline}</div>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: C.acc }}>Read →</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: C.acc }}>{tc("case_studies.read_short")}</span>
                 </Link>
               ))}
             </div>
@@ -136,10 +139,10 @@ export default function CaseStudyArticle({ slug }: { slug: string }) {
       </article>
 
       <footer style={{ borderTop: `1px solid ${C.b}`, background: C.sf, padding: "clamp(20px,3vw,28px) clamp(16px,4vw,40px)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-        <span style={{ fontSize: 12, color: C.tx3 }}>© 2026 AskBiz Ltd</span>
+        <span style={{ fontSize: 12, color: C.tx3 }}>{tc("case_studies.footer_copyright")}</span>
         <nav style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-          {[["/", "Home"], ["/case-studies", "Case Studies"], ["/blog", "Blog"], ["/free-tools", "Free Tools"], ["/pricing", "Pricing"], ["/privacy", "Privacy"], ["/terms", "Terms"]].map(([href, label]) => (
-            <a key={href} href={href} style={{ fontSize: 12, color: C.tx3, textDecoration: "none" }}>{label}</a>
+          {([["/", tc("case_studies.footer_home")], ["/case-studies", tc("case_studies.footer_case_studies")], ["/blog", tc("case_studies.nav_blog")], ["/free-tools", tc("case_studies.nav_free_tools")], ["/pricing", tc("case_studies.nav_pricing")], ["/privacy", tc("case_studies.footer_privacy")], ["/terms", tc("case_studies.footer_terms")]] as [string, string][]).map(([href, label]) => (
+            <a key={href} href={localePath(href, lang)} style={{ fontSize: 12, color: C.tx3, textDecoration: "none" }}>{label}</a>
           ))}
         </nav>
       </footer>

@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { useLang } from '@/components/LanguageProvider'
+import { localePath } from '@/lib/i18n-locale'
 import { academyCategories, academyArticles } from '@/lib/academy-content'
 import type { AcademyArticle } from '@/lib/academy-types'
 
@@ -35,11 +36,11 @@ const DIFF_COLORS: Record<string, string> = {
 }
 
 function ArticleRow({ article, index, total }: { article: AcademyArticle; index: number; total: number }) {
-  const { tc } = useLang()
+  const { lang, tc } = useLang()
   const color = academyCategories.find(c => c.slug === article.categorySlug)?.color || ACC
   return (
     <Link
-      href={`/academy/${article.slug}`}
+      href={localePath(`/academy/${article.slug}`, lang)}
       className="ac-row"
       style={{
         textDecoration: 'none', display: 'grid', gridTemplateColumns: '1fr auto',
@@ -67,7 +68,7 @@ function ArticleRow({ article, index, total }: { article: AcademyArticle; index:
 }
 
 export default function AcademyClient() {
-  const { tc } = useLang()
+  const { lang, tc } = useLang()
   const searchRef = useRef<HTMLInputElement>(null)
 
   const [activeCategory,    setActiveCategory]    = useState<string | null>(null)
@@ -184,7 +185,7 @@ export default function AcademyClient() {
                 : <><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>}
             </svg>
           </button>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
+          <Link href={localePath('/', lang)} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
             <div style={{ width: 26, height: 26, borderRadius: 7, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <svg width="12" height="12" viewBox="0 0 32 32" fill="none">
                 <rect x="3"  y="22" width="5" height="7"  rx="1.5" fill="white" opacity="0.5"/>
@@ -195,7 +196,7 @@ export default function AcademyClient() {
             <span style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
           </Link>
         </div>
-        <Link href="/signin" style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>
+        <Link href={localePath('/signin', lang)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>
           {tc('academy.try_free')}
         </Link>
       </nav>
@@ -230,7 +231,7 @@ export default function AcademyClient() {
           {/* Learn AskBiz shortcut */}
           <div style={{ padding: '4px 12px 8px' }}>
             <Link
-              href="/academy/learning-askbiz"
+              href={localePath('/academy/learning-askbiz', lang)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 8,
                 padding: '8px 12px', borderRadius: 8,
@@ -286,7 +287,7 @@ export default function AcademyClient() {
                 {isExp && (
                   <div style={{ paddingLeft: 26, paddingBottom: 4 }}>
                     {academyArticles.filter(a => a.categorySlug === cat.slug).map(article => (
-                      <Link key={article.slug} href={`/academy/${article.slug}`} className="ac-art-link" onClick={() => setSidebarOpen(false)}>
+                      <Link key={article.slug} href={localePath(`/academy/${article.slug}`, lang)} className="ac-art-link" onClick={() => setSidebarOpen(false)}>
                         {article.title}
                       </Link>
                     ))}
@@ -301,13 +302,13 @@ export default function AcademyClient() {
             <div style={{ height: 1, background: BD, margin: '8px 0 12px' }} />
             <div style={{ fontSize: 10, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.1em', padding: '4px 10px 6px' }}>{tc('academy.tools')}</div>
             {([[tc('academy.tool_learning_paths'), '/academy/learning-paths'], [tc('academy.tool_checklists'), '/academy/checklists']] as [string,string][]).map(([label, href]) => (
-              <Link key={href} href={href} className="ac-sb-btn" style={{ display: 'block', padding: '6px 10px', fontSize: 13, color: TX2, textDecoration: 'none', borderRadius: 6 }}>
+              <Link key={href} href={localePath(href, lang)} className="ac-sb-btn" style={{ display: 'block', padding: '6px 10px', fontSize: 13, color: TX2, textDecoration: 'none', borderRadius: 6 }}>
                 {label}
               </Link>
             ))}
             <div style={{ height: 1, background: BD, margin: '8px 0 8px' }} />
             {([[tc('academy.link_help_centre'), '/help'], [tc('academy.link_blog'), '/blog'], [tc('academy.link_free_tools'), '/free-tools']] as [string,string][]).map(([label, href]) => (
-              <Link key={href} href={href} className="ac-sb-btn" style={{ display: 'block', padding: '6px 10px', fontSize: 13, color: TX2, textDecoration: 'none', borderRadius: 6 }}>
+              <Link key={href} href={localePath(href, lang)} className="ac-sb-btn" style={{ display: 'block', padding: '6px 10px', fontSize: 13, color: TX2, textDecoration: 'none', borderRadius: 6 }}>
                 {label}
               </Link>
             ))}
@@ -355,14 +356,14 @@ export default function AcademyClient() {
             <>
               {/* Learning Paths + Checklists promo */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 14, marginBottom: 36 }}>
-                <Link href="/academy/learning-paths" style={{ textDecoration: 'none', background: '#fff8f3', border: `1px solid ${ACC}30`, borderRadius: 12, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14, transition: 'box-shadow 140ms' }}>
+                <Link href={localePath('/academy/learning-paths', lang)} style={{ textDecoration: 'none', background: '#fff8f3', border: `1px solid ${ACC}30`, borderRadius: 12, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14, transition: 'box-shadow 140ms' }}>
                   <span style={{ fontSize: 28, flexShrink: 0 }}>🗺️</span>
                   <div>
                     <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 3 }}>{tc('academy.promo_learning_paths_title')}</div>
                     <div style={{ fontSize: 12, color: TX2 }}>{tc('academy.promo_learning_paths_desc')}</div>
                   </div>
                 </Link>
-                <Link href="/academy/checklists" style={{ textDecoration: 'none', background: '#f3faf6', border: '1px solid #a3e4b830', borderRadius: 12, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14, transition: 'box-shadow 140ms' }}>
+                <Link href={localePath('/academy/checklists', lang)} style={{ textDecoration: 'none', background: '#f3faf6', border: '1px solid #a3e4b830', borderRadius: 12, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14, transition: 'box-shadow 140ms' }}>
                   <span style={{ fontSize: 28, flexShrink: 0 }}>✅</span>
                   <div>
                     <div style={{ fontFamily: 'Sora, system-ui', fontSize: 14, fontWeight: 700, color: TX, marginBottom: 3 }}>{tc('academy.promo_checklists_title')}</div>
@@ -504,7 +505,7 @@ export default function AcademyClient() {
             <span style={{ fontSize: 12, color: TX3 }}>{tc('academy.footer_copyright')}</span>
             <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center' }}>
               {([['/', tc('academy.footer_home')], ['/blog', tc('academy.footer_blog')], ['/help', tc('academy.footer_help')], ['/academy', tc('academy.footer_academy')], ['/rules', tc('academy.footer_rules')], ['/privacy', tc('academy.footer_privacy')]] as [string,string][]).map(([href, label]) => (
-                <Link key={href} href={href} style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>{label}</Link>
+                <Link key={href} href={localePath(href, lang)} style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>{label}</Link>
               ))}
             </div>
           </footer>

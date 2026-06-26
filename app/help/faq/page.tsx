@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "../help.css";
+import { cookies, headers } from "next/headers";
+import { resolveLocale, localePath } from "@/lib/i18n-locale";
 
 export const metadata: Metadata = {
   title: "Frequently Asked Questions | AskBiz Help",
@@ -91,6 +93,7 @@ const breadcrumbSchema = {
 };
 
 export default function FAQPage() {
+  const lang = resolveLocale({ urlLocale: headers().get('x-locale'), cookie: cookies().get('askbiz_lang')?.value })
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
@@ -100,7 +103,7 @@ export default function FAQPage() {
         {/* Header */}
         <header className="hc-header">
           <div className="hc-header-inner">
-            <Link href="/help" className="hc-brand">
+            <Link href={localePath('/help', lang)} className="hc-brand">
               <div className="hc-brand-icon">
                 <svg width="12" height="12" viewBox="0 0 32 32" fill="none">
                   <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/>
@@ -111,11 +114,11 @@ export default function FAQPage() {
               <span className="hc-brand-name">AskBiz</span>
             </Link>
             <div className="hc-brand-divider" />
-            <Link href="/help" className="hc-brand-label" style={{ textDecoration: 'none' }}>Help Centre</Link>
+            <Link href={localePath('/help', lang)} className="hc-brand-label" style={{ textDecoration: 'none' }}>Help Centre</Link>
 
             <nav className="hc-breadcrumb" aria-label="Breadcrumb">
               <ol className="hc-breadcrumb-list">
-                <li><Link href="/help" className="hc-breadcrumb-link">Help Centre</Link></li>
+                <li><Link href={localePath('/help', lang)} className="hc-breadcrumb-link">Help Centre</Link></li>
                 <li><span className="hc-breadcrumb-sep">›</span></li>
                 <li className="hc-breadcrumb-current">FAQ</li>
               </ol>
@@ -139,8 +142,8 @@ export default function FAQPage() {
               </a>
             ))}
             <div className="hc-nav-divider" />
-            <Link href="/help" className="hc-nav-link">← All Help Topics</Link>
-            <Link href="/help/glossary" className="hc-nav-link">Glossary</Link>
+            <Link href={localePath('/help', lang)} className="hc-nav-link">← All Help Topics</Link>
+            <Link href={localePath('/help/glossary', lang)} className="hc-nav-link">Glossary</Link>
           </aside>
 
           {/* Main */}
@@ -168,7 +171,7 @@ export default function FAQPage() {
                         <dt className="faq-q">{item.q}</dt>
                         <dd className="faq-a">
                           <p>{item.a}</p>
-                          <Link href={`/help/${item.slug}`} className="faq-article-link">
+                          <Link href={localePath(`/help/${item.slug}`, lang)} className="faq-article-link">
                             Read full article →
                           </Link>
                         </dd>

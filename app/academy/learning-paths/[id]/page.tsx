@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { cookies, headers } from 'next/headers'
+import { resolveLocale, localePath } from '@/lib/i18n-locale'
 import { LEARNING_PATHS } from '@/lib/learning-paths-content'
 
 const ACC = '#d08a59'
@@ -21,6 +23,7 @@ export const metadata = {
 }
 
 export default function LearningPathPage({ params }: { params: { id: string } }) {
+  const lang = resolveLocale({ urlLocale: headers().get('x-locale'), cookie: cookies().get('askbiz_lang')?.value })
   const id = params.id
   const path = LEARNING_PATHS.find(p => p.id === id)
 
@@ -30,7 +33,7 @@ export default function LearningPathPage({ params }: { params: { id: string } })
         <div style={{ textAlign: 'center', maxWidth: 560 }}>
           <h1 style={{ fontSize: 28, fontWeight: 700, color: TX, marginBottom: 12 }}>Learning Path Not Found</h1>
           <p style={{ fontSize: 15, color: TX2, marginBottom: 36 }}>The learning path you're looking for doesn't exist.</p>
-          <Link href="/academy/learning-paths" style={{ display: 'inline-block', padding: '12px 28px', background: ACC, color: SF, textDecoration: 'none', borderRadius: 10, fontWeight: 700 }}>
+          <Link href={localePath('/academy/learning-paths', lang)} style={{ display: 'inline-block', padding: '12px 28px', background: ACC, color: SF, textDecoration: 'none', borderRadius: 10, fontWeight: 700 }}>
             ← Back to Learning Paths
           </Link>
         </div>
@@ -67,7 +70,7 @@ export default function LearningPathPage({ params }: { params: { id: string } })
       {/* Header */}
       <div style={{ background: SF, borderBottom: `1px solid ${BD}`, padding: '24px clamp(16px, 4vw, 32px)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <Link href="/academy/learning-paths" style={{ color: ACC, textDecoration: 'none', fontSize: 14, fontWeight: 600, marginBottom: 16, display: 'inline-block' }}>
+          <Link href={localePath('/academy/learning-paths', lang)} style={{ color: ACC, textDecoration: 'none', fontSize: 14, fontWeight: 600, marginBottom: 16, display: 'inline-block' }}>
             ← Back to Learning Paths
           </Link>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, marginBottom: 24 }}>
@@ -156,7 +159,7 @@ export default function LearningPathPage({ params }: { params: { id: string } })
             <p style={{ fontSize: 15, margin: '0 0 24px 0', lineHeight: 1.6 }}>
               Follow this learning path to master {path.title.toLowerCase()}.
             </p>
-            <Link href="/signin" style={{
+            <Link href={localePath('/signin', lang)} style={{
               display: 'inline-block',
               padding: '12px 32px',
               background: SF,

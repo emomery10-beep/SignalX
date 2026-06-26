@@ -52,5 +52,14 @@
   "min_suffix": "min",
   "new_tag": "New",
   "show_more_prefix": "Show more",
-  "show_more_suffix": "remaining"
+  "show_more_suffix": "remaining",
+  "faq_page_title": "Frequently Asked Questions",
+  "faq_page_sub": "Quick answers to the most common questions about AskBiz. Can't find what you need?",
+  "faq_email_team": "Email our team",
+  "faq_read_full": "Read full article →",
+  "faq_sections_label": "Sections",
+  "faq_all_topics": "← All Help Topics",
+  "faq_still_question": "Still have a question?",
+  "faq_cta_sub": "Our team typically responds within 2 business hours, Mon–Fri 8am–6pm GMT.",
+  "faq_email_support": "Email Support"
 }

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useLang } from "@/components/LanguageProvider";
 import {
   IMPORT_COUNTRIES,
   ORIGIN_COUNTRIES,
@@ -83,6 +84,7 @@ function pct(n: number): string {
 }
 
 export default function LandedCostCalculator() {
+  const { tc } = useLang();
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [result, setResult] = useState<Result | null>(null);
   const [calculated, setCalculated] = useState(false);
@@ -206,7 +208,7 @@ export default function LandedCostCalculator() {
                 <input
                   className="lc-input"
                   type="text"
-                  placeholder="e.g. Cotton T-shirts"
+                  placeholder={tc("freetools.lc_ph_product_name")}
                   value={form.productName}
                   onChange={(e) => set("productName", e.target.value)}
                 />
@@ -354,7 +356,7 @@ export default function LandedCostCalculator() {
                       min="0"
                       value={form.freightCost}
                       onChange={(e) => set("freightCost", Number(e.target.value))}
-                      placeholder={`Estimated: $${estimatedFreight}`}
+                      placeholder={tc("freetools.lc_ph_freight_estimated", { amount: estimatedFreight })}
                     />
                   </div>
                   {form.freightCost === 0 && (
@@ -405,7 +407,7 @@ export default function LandedCostCalculator() {
                       step="0.01"
                       value={form.sellingPricePerUnit || ""}
                       onChange={(e) => set("sellingPricePerUnit", Number(e.target.value))}
-                      placeholder="Enter to see margin"
+                      placeholder={tc("freetools.lc_ph_selling_price")}
                     />
                   </div>
                 </div>

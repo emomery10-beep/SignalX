@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useLang } from "@/components/LanguageProvider";
 
 const CURRENCIES = [
   { code: "GBP", sym: "£", flag: "🇬🇧" },
@@ -37,6 +38,7 @@ function makeProduct(id: string): Product {
 }
 
 export default function COGSCalculator() {
+  const { tc } = useLang();
   const [currency, setCurrency] = useState("GBP");
   const [products, setProducts] = useState<Product[]>([makeProduct("1")]);
 
@@ -145,7 +147,7 @@ export default function COGSCalculator() {
                     value={p.name}
                     onChange={(e) => updateProduct(p.id, "name", e.target.value)}
                     style={{ fontFamily: "Sora, sans-serif", fontSize: 15, fontWeight: 700, color: "#1a1a2e", background: "none", border: "none", outline: "none", flex: 1 }}
-                    placeholder="Product name"
+                    placeholder={tc("freetools.cogs_ph_product_name")}
                   />
                   {products.length > 1 && (
                     <button onClick={() => removeProduct(p.id)}

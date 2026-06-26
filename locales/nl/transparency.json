@@ -40,5 +40,15 @@
   "related_safety_desc": "Hoe wij reageren op datalekken en veiligheidsincidenten op het platform.",
   "contact_title": "Vragen over hoe wij werken?",
   "contact_sub": "Als iets in dit Transparantiecentrum onduidelijk of onvolledig is, of als u denkt dat het onjuist is, horen wij dat graag. Stuur ons een e-mail en wij reageren binnen 2 werkdagen.",
-  "contact_btn": "E-mail ons →"
+  "contact_btn": "E-mail ons →",
+  "article_updated_prefix": "Bijgewerkt",
+  "article_min_read": "min lezen",
+  "article_copy_link": "Link kopiëren",
+  "article_copied": "✓ Gekopieerd",
+  "article_live_metrics": "Live statistieken",
+  "article_on_this_page": "Op deze pagina",
+  "article_related_articles": "Gerelateerde artikelen",
+  "article_related_read": "Lees →",
+  "article_footer_reviewed": "Dit artikel is voor het laatst herzien in",
+  "article_footer_inaccurate": "Als iets onduidelijk is of u denkt dat het onjuist is, e-mail dan"
 }

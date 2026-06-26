@@ -117,5 +117,13 @@
   "footer_link_help": "Centro de Ayuda",
   "footer_link_rules": "Normas y Políticas",
   "footer_link_privacy": "Privacidad",
-  "footer_disclaimer": "Las tasas son orientativas y se actualizan trimestralmente. Verifícalas siempre con las bases de datos arancelarias oficiales antes de tomar decisiones de importación."
+  "footer_disclaimer": "Las tasas son orientativas y se actualizan trimestralmente. Verifícalas siempre con las bases de datos arancelarias oficiales antes de tomar decisiones de importación.",
+
+  "cogs_ph_product_name": "Nombre del producto",
+  "fx_ph_product_name": "Nombre",
+  "fx_ph_rate_override": "Actual: {rate}",
+  "pm_ph_product_name": "p. ej. Auriculares inalámbricos",
+  "lc_ph_product_name": "p. ej. Camisetas de algodón",
+  "lc_ph_freight_estimated": "Estimado: ${amount}",
+  "lc_ph_selling_price": "Introduce para ver el margen"
 }

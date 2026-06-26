@@ -40,5 +40,15 @@
   "related_safety_desc": "Cómo respondemos ante filtraciones de datos y eventos de seguridad en la plataforma.",
   "contact_title": "¿Preguntas sobre cómo trabajamos?",
   "contact_sub": "Si algo en este Centro de transparencia no está claro, está incompleto o crees que es inexacto, queremos saberlo. Escríbenos y responderemos en un plazo de 2 días hábiles.",
-  "contact_btn": "Escríbenos →"
+  "contact_btn": "Escríbenos →",
+  "article_updated_prefix": "Actualizado",
+  "article_min_read": "min de lectura",
+  "article_copy_link": "Copiar enlace",
+  "article_copied": "✓ Copiado",
+  "article_live_metrics": "Métricas en vivo",
+  "article_on_this_page": "En esta página",
+  "article_related_articles": "Artículos relacionados",
+  "article_related_read": "Leer →",
+  "article_footer_reviewed": "Este artículo fue revisado por última vez en",
+  "article_footer_inaccurate": "Si algo no está claro o crees que es inexacto, escribe a"
 }

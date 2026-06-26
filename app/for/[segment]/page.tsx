@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { USE_CASES, getUseCase } from '@/lib/use-cases-content'
+import { cookies, headers } from 'next/headers'
+import { resolveLocale, localePath } from '@/lib/i18n-locale'
 
 export async function generateStaticParams() {
   return USE_CASES.map(u => ({ segment: u.slug }))
@@ -27,6 +29,7 @@ const TX3 = '#a39e97'
 const BD  = '#e8e6e1'
 
 export default function UseCasePage({ params }: { params: { segment: string } }) {
+  const lang = resolveLocale({ urlLocale: headers().get('x-locale'), cookie: cookies().get('askbiz_lang')?.value })
   const u = getUseCase(params.segment)
   if (!u) notFound()
 
@@ -35,7 +38,7 @@ export default function UseCasePage({ params }: { params: { segment: string } })
 
       {/* Nav */}
       <nav style={{ borderBottom: `1px solid ${BD}`, background: SF, padding: '0 clamp(16px,4vw,24px)', height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
+        <Link href={localePath('/', lang)} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
           <div style={{ width: 26, height: 26, borderRadius: 7, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="12" height="12" viewBox="0 0 32 32" fill="none">
               <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/>
@@ -45,7 +48,7 @@ export default function UseCasePage({ params }: { params: { segment: string } })
           </div>
           <span style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
         </Link>
-        <Link href="/signin" style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>Try free →</Link>
+        <Link href={localePath('/signin', lang)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>Try free →</Link>
       </nav>
 
       {/* Hero */}
@@ -58,7 +61,7 @@ export default function UseCasePage({ params }: { params: { segment: string } })
         <p style={{ fontSize: 17, color: TX2, maxWidth: 600, margin: '0 auto 36px', lineHeight: 1.7 }}>
           {u.subheadline}
         </p>
-        <Link href="/signin" style={{ fontSize: 15, fontWeight: 700, color: SF, background: u.color, borderRadius: 10, padding: '14px 32px', textDecoration: 'none', display: 'inline-block' }}>
+        <Link href={localePath('/signin', lang)} style={{ fontSize: 15, fontWeight: 700, color: SF, background: u.color, borderRadius: 10, padding: '14px 32px', textDecoration: 'none', display: 'inline-block' }}>
           {u.cta} →
         </Link>
       </section>
@@ -97,7 +100,7 @@ export default function UseCasePage({ params }: { params: { segment: string } })
             </h2>
             <div style={{ background: SF, border: `1px solid ${BD}`, borderRadius: 14, padding: '24px', lineHeight: 1.8 }}>
               <p style={{ fontSize: 14, color: TX2, margin: '0 0 16px' }}>{u.description}</p>
-              <Link href="/signin" style={{ fontSize: 13, fontWeight: 600, color: SF, background: u.color, borderRadius: 8, padding: '9px 20px', textDecoration: 'none', display: 'inline-block' }}>
+              <Link href={localePath('/signin', lang)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: u.color, borderRadius: 8, padding: '9px 20px', textDecoration: 'none', display: 'inline-block' }}>
                 Try free for 14 days →
               </Link>
             </div>
@@ -138,7 +141,7 @@ export default function UseCasePage({ params }: { params: { segment: string } })
           <p style={{ fontSize: 15, color: '#b0b8c8', marginBottom: 28, maxWidth: 420, margin: '0 auto 28px', lineHeight: 1.6 }}>
             Connect your first data source in under 10 minutes. No credit card required. No dashboards to build.
           </p>
-          <Link href="/signin" style={{ fontSize: 15, fontWeight: 700, color: TX, background: ACC, borderRadius: 10, padding: '14px 32px', textDecoration: 'none', display: 'inline-block' }}>
+          <Link href={localePath('/signin', lang)} style={{ fontSize: 15, fontWeight: 700, color: TX, background: ACC, borderRadius: 10, padding: '14px 32px', textDecoration: 'none', display: 'inline-block' }}>
             {u.cta} →
           </Link>
         </div>
@@ -148,7 +151,7 @@ export default function UseCasePage({ params }: { params: { segment: string } })
           <h3 style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, color: TX, marginBottom: 14 }}>AskBiz also works for</h3>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {USE_CASES.filter(x => x.slug !== u.slug).map(x => (
-              <Link key={x.slug} href={`/for/${x.slug}`} style={{ fontSize: 13, color: TX2, background: SF, border: `1px solid ${BD}`, borderRadius: 8, padding: '6px 14px', textDecoration: 'none' }}>
+              <Link key={x.slug} href={localePath(`/for/${x.slug}`, lang)} style={{ fontSize: 13, color: TX2, background: SF, border: `1px solid ${BD}`, borderRadius: 8, padding: '6px 14px', textDecoration: 'none' }}>
                 {x.icon} {x.title}
               </Link>
             ))}
@@ -160,7 +163,7 @@ export default function UseCasePage({ params }: { params: { segment: string } })
         <span style={{ fontSize: 12, color: TX3 }}>© 2026 AskBiz Ltd.</span>
         <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
           {([['/', 'Home'], ['/academy', 'Academy'], ['/help', 'Help'], ['/vs', 'Comparisons'], ['/privacy', 'Privacy']] as [string, string][]).map(([href, label]) => (
-            <Link key={href} href={href} style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>{label}</Link>
+            <Link key={href} href={localePath(href, lang)} style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>{label}</Link>
           ))}
         </div>
       </footer>

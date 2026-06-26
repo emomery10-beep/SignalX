@@ -117,5 +117,13 @@
   "footer_link_help": "Hilfe-Center",
   "footer_link_rules": "Regeln & Richtlinien",
   "footer_link_privacy": "Datenschutz",
-  "footer_disclaimer": "Sätze sind indikativ und werden vierteljährlich aktualisiert. Überprüfen Sie diese stets anhand offizieller Zolltarifdatenbanken, bevor Sie Importentscheidungen treffen."
+  "footer_disclaimer": "Sätze sind indikativ und werden vierteljährlich aktualisiert. Überprüfen Sie diese stets anhand offizieller Zolltarifdatenbanken, bevor Sie Importentscheidungen treffen.",
+
+  "cogs_ph_product_name": "Produktname",
+  "fx_ph_product_name": "Name",
+  "fx_ph_rate_override": "Aktuell: {rate}",
+  "pm_ph_product_name": "z. B. Kabellose Kopfhörer",
+  "lc_ph_product_name": "z. B. Baumwoll-T-Shirts",
+  "lc_ph_freight_estimated": "Geschätzt: ${amount}",
+  "lc_ph_selling_price": "Eingeben, um Marge zu sehen"
 }

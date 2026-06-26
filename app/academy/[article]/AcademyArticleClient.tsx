@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { AcademyArticle } from "@/lib/academy-types";
 import { academyArticles } from "@/lib/academy-content";
+import { useLang } from '@/components/LanguageProvider'
+import { localePath } from '@/lib/i18n-locale'
 
 interface BlogCrossLink {
   slug: string;
@@ -17,6 +19,7 @@ interface Props {
 }
 
 export default function AcademyArticleClient({ article, blogCrossLinks = [] }: Props) {
+  const { lang, tc } = useLang()
   const related = academyArticles.filter((a) => article.relatedSlugs.includes(a.slug));
 
   const diffColor =
@@ -31,11 +34,11 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
       {/* Breadcrumb */}
       <div style={{ background: "#fff", borderBottom: "1px solid #eee", padding: "12px 24px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", fontSize: 13, color: "#999" }}>
-          <Link href="/" style={{ color: "#999", textDecoration: "none" }}>Home</Link>
+          <Link href={localePath('/', lang)} style={{ color: "#999", textDecoration: "none" }}>{tc('academy.art_breadcrumb_home')}</Link>
           {" / "}
-          <Link href="/academy" style={{ color: "#999", textDecoration: "none" }}>Academy</Link>
+          <Link href={localePath('/academy', lang)} style={{ color: "#999", textDecoration: "none" }}>{tc('academy.art_breadcrumb_academy')}</Link>
           {" / "}
-          <Link href={`/academy/category/${article.categorySlug}`} style={{ color: "#999", textDecoration: "none" }}>
+          <Link href={localePath(`/academy/category/${article.categorySlug}`, lang)} style={{ color: "#999", textDecoration: "none" }}>
             {article.category}
           </Link>
           {" / "}
@@ -55,7 +58,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
               {article.difficulty}
             </span>
             <span style={{ color: "#999", fontSize: 12, padding: "4px 0" }}>
-              {article.readTime} min read
+              {article.readTime} {tc('academy.art_min_read')}
             </span>
           </div>
 
@@ -92,7 +95,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
           {/* Key Takeaways */}
           <div style={{ background: "#fff8f3", border: "1px solid #f0e0cc", borderRadius: 12, padding: 24, marginBottom: 40 }}>
             <h2 style={{ fontFamily: "Sora, system-ui", fontSize: 15, fontWeight: 700, color: "#d08a59", margin: "0 0 14px" }}>
-              Key Takeaways
+              {tc('academy.art_key_takeaways')}
             </h2>
             <ul style={{ margin: 0, paddingLeft: 20 }}>
               {article.keyTakeaways.map((kt, i) => (
@@ -133,13 +136,13 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
           {related.length > 0 && (
             <div style={{ marginTop: 48, paddingTop: 32, borderTop: "1px solid #eee" }}>
               <h2 style={{ fontFamily: "Sora, system-ui", fontSize: 18, fontWeight: 700, color: "#1a1a2e", marginBottom: 20 }}>
-                Related Articles
+                {tc('academy.art_related_articles')}
               </h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
                 {related.map((rel) => (
                   <Link
                     key={rel.slug}
-                    href={`/academy/${rel.slug}`}
+                    href={localePath(`/academy/${rel.slug}`, lang)}
                     style={{
                       display: "block",
                       padding: "14px 16px",
@@ -154,7 +157,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
                   >
                     {rel.title}
                     <span style={{ display: "block", color: "#999", fontSize: 11, marginTop: 6 }}>
-                      {rel.readTime} min · {rel.difficulty}
+                      {rel.readTime} {tc('academy.art_min_read')} · {rel.difficulty}
                     </span>
                   </Link>
                 ))}
@@ -166,13 +169,13 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
           {blogCrossLinks.length > 0 && (
             <div style={{ marginTop: 48, paddingTop: 32, borderTop: "1px solid #eee" }}>
               <h2 style={{ fontFamily: "Sora, system-ui", fontSize: 18, fontWeight: 700, color: "#1a1a2e", marginBottom: 20 }}>
-                Further Reading
+                {tc('academy.art_further_reading')}
               </h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
                 {blogCrossLinks.map((post) => (
                   <Link
                     key={post.slug}
-                    href={`/blog/${post.slug}`}
+                    href={localePath(`/blog/${post.slug}`, lang)}
                     style={{
                       display: "block",
                       padding: "14px 16px",
@@ -190,7 +193,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
                     </span>
                     {post.title}
                     <span style={{ display: "block", color: "#999", fontSize: 11, marginTop: 6 }}>
-                      {post.readTime} min read
+                      {post.readTime} {tc('academy.art_min_read')}
                     </span>
                   </Link>
                 ))}
@@ -203,7 +206,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
         <aside style={{ position: "sticky", top: 80 }}>
           <div style={{ background: "#fff", border: "1px solid #eee", borderRadius: 14, padding: 24, marginBottom: 24 }}>
             <h3 style={{ fontFamily: "Sora, system-ui", fontSize: 13, fontWeight: 700, color: "#999", margin: "0 0 14px" }}>
-              Contents
+              {tc('academy.art_toc_heading')}
             </h3>
             <nav>
               {article.content.map((section, i) => (
@@ -229,16 +232,16 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
           {/* CTA box */}
           <div style={{ background: "#1a1a2e", borderRadius: 14, padding: 24, textAlign: "center" }}>
             <p style={{ color: "#d08a59", fontFamily: "Sora, system-ui", fontSize: 12, fontWeight: 600, marginBottom: 10 }}>
-              Free — no card needed
+              {tc('academy.art_cta_eyebrow')}
             </p>
             <p style={{ color: "#fff", fontFamily: "Sora, system-ui", fontSize: 16, fontWeight: 700, marginBottom: 10, lineHeight: 1.3 }}>
-              See this data for your own business
+              {tc('academy.art_cta_heading')}
             </p>
             <p style={{ color: "#b0b8c8", fontSize: 13, marginBottom: 20, lineHeight: 1.5 }}>
-              AskBiz connects to your existing tools and tracks metrics like these automatically — no spreadsheets needed.
+              {tc('academy.art_cta_body')}
             </p>
             <Link
-              href="/signin"
+              href={localePath('/signin', lang)}
               style={{
                 display: "block",
                 background: "#d08a59",
@@ -252,10 +255,10 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
                 marginBottom: 10,
               }}
             >
-              Start for free →
+              {tc('academy.art_cta_button')}
             </Link>
             <Link
-              href="/pricing"
+              href={localePath('/pricing', lang)}
               style={{
                 display: "block",
                 color: "#b0b8c8",
@@ -263,7 +266,7 @@ export default function AcademyArticleClient({ article, blogCrossLinks = [] }: P
                 textDecoration: "none",
               }}
             >
-              See pricing & integrations
+              {tc('academy.art_cta_pricing')}
             </Link>
           </div>
         </aside>

@@ -40,5 +40,15 @@
   "related_safety_desc": "Comment nous répondons aux violations de données et aux incidents de sécurité sur la plateforme.",
   "contact_title": "Des questions sur notre fonctionnement ?",
   "contact_sub": "Si quelque chose dans ce Centre de transparence vous semble flou, incomplet ou inexact, faites-le nous savoir. Écrivez-nous et nous vous répondrons sous 2 jours ouvrés.",
-  "contact_btn": "Nous écrire →"
+  "contact_btn": "Nous écrire →",
+  "article_updated_prefix": "Mis à jour",
+  "article_min_read": "min de lecture",
+  "article_copy_link": "Copier le lien",
+  "article_copied": "✓ Copié",
+  "article_live_metrics": "Métriques en direct",
+  "article_on_this_page": "Sur cette page",
+  "article_related_articles": "Articles connexes",
+  "article_related_read": "Lire →",
+  "article_footer_reviewed": "Cet article a été révisé pour la dernière fois en",
+  "article_footer_inaccurate": "Si quelque chose n'est pas clair ou si vous pensez que c'est inexact, écrivez à"
 }

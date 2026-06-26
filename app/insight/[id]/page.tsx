@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { cookies, headers } from 'next/headers'
+import { resolveLocale, localePath } from '@/lib/i18n-locale'
 
 interface KpiCard { label: string; value: string; trend?: string; status?: string }
 
@@ -48,6 +50,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 }
 
 export default async function InsightPage({ params }: { params: { id: string } }) {
+  const lang = resolveLocale({ urlLocale: headers().get('x-locale'), cookie: cookies().get('askbiz_lang')?.value })
   const supabase = createClient()
   const { data: insight, error } = await supabase
     .from('shared_insights')
@@ -90,7 +93,7 @@ export default async function InsightPage({ params }: { params: { id: string } }
         alignItems: 'center',
         justifyContent: 'space-between',
       }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none' }}>
+        <Link href={localePath('/', lang)} style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none' }}>
           <div style={{ width: 28, height: 28, borderRadius: 8, background: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="14" height="14" viewBox="0 0 32 32" fill="none">
               <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/>
@@ -104,7 +107,7 @@ export default async function InsightPage({ params }: { params: { id: string } }
           </span>
         </Link>
 
-        <Link href="/signin" style={{
+        <Link href={localePath('/signin', lang)} style={{
           padding: '8px 18px',
           borderRadius: 9999,
           background: '#6366F1',
@@ -278,7 +281,7 @@ export default async function InsightPage({ params }: { params: { id: string } }
           <div style={{ fontSize: 14, opacity: 0.82, marginBottom: 24, lineHeight: 1.6 }}>
             Upload your data and ask anything — in plain English.<br/>No spreadsheets. No jargon. Just answers.
           </div>
-          <Link href="/signin" style={{
+          <Link href={localePath('/signin', lang)} style={{
             display: 'inline-block',
             padding: '13px 32px',
             borderRadius: 9999,

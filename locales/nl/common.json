@@ -22,5 +22,7 @@
   "add": "Toevoegen",
   "remove": "Verwijderen",
   "legal_mt_notice": "Machinale vertaling — de Engelse versie is de bindende juridische tekst.",
-  "legal_mt_link": "Lees in het Engels →"
+  "legal_mt_link": "Lees in het Engels →",
+  "search_placeholder": "Zoek artikelen, handleidingen en helpdocumenten…",
+  "search_no_results_try": "Probeer andere trefwoorden of blader door de"
 }

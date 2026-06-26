@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { useLang } from '@/components/LanguageProvider'
+import { localePath } from '@/lib/i18n-locale'
 
 const ACC = '#d08a59'
 const BG  = '#f9f8f6'
@@ -364,6 +366,7 @@ const CHECKLISTS: Checklist[] = [
 ]
 
 export default function ChecklistsPageClient() {
+  const { lang, tc } = useLang()
   const [active, setActive] = useState<string | null>(null)
   const [checked, setChecked] = useState<Set<string>>(new Set())
 
@@ -398,7 +401,7 @@ export default function ChecklistsPageClient() {
 
       {/* Nav */}
       <nav style={{ borderBottom: `1px solid ${BD}`, background: SF, padding: '0 clamp(16px,4vw,24px)', height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
+        <Link href={localePath('/', lang)} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
           <div style={{ width: 26, height: 26, borderRadius: 7, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="12" height="12" viewBox="0 0 32 32" fill="none">
               <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.5"/>
@@ -409,8 +412,8 @@ export default function ChecklistsPageClient() {
           <span style={{ fontFamily: 'Sora, system-ui', fontSize: 15, fontWeight: 700, letterSpacing: '-.025em' }}>AskBiz</span>
         </Link>
         <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-          <Link href="/academy" style={{ fontSize: 13, color: TX2, textDecoration: 'none' }}>← Academy</Link>
-          <Link href="/signin" style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>Try free →</Link>
+          <Link href={localePath('/academy', lang)} style={{ fontSize: 13, color: TX2, textDecoration: 'none' }}>{tc('academy.cl_back_academy')}</Link>
+          <Link href={localePath('/signin', lang)} style={{ fontSize: 13, fontWeight: 600, color: SF, background: ACC, borderRadius: 9999, padding: '7px 18px', textDecoration: 'none' }}>{tc('academy.cl_try_free')}</Link>
         </div>
       </nav>
 
@@ -421,10 +424,10 @@ export default function ChecklistsPageClient() {
           <>
             <div style={{ marginBottom: 40 }}>
               <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(24px,3vw,34px)', fontWeight: 700, color: TX, marginBottom: 10, letterSpacing: '-.025em' }}>
-                Business Checklists
+                {tc('academy.cl_page_title')}
               </h1>
               <p style={{ fontSize: 15, color: TX2, maxWidth: 560, lineHeight: 1.6 }}>
-                Practical, interactive checklists for the most important business processes. Click any item to mark it done — progress is saved in your session.
+                {tc('academy.cl_page_subtitle')}
               </p>
             </div>
 
@@ -448,9 +451,9 @@ export default function ChecklistsPageClient() {
                       {cl.description.slice(0, 80)}…
                     </p>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: 11, color: TX3 }}>{total} items</span>
+                      <span style={{ fontSize: 11, color: TX3 }}>{total} {tc('academy.cl_items')}</span>
                       {done > 0 && (
-                        <span style={{ fontSize: 11, color: '#27ae60', fontWeight: 600 }}>{p}% done</span>
+                        <span style={{ fontSize: 11, color: '#27ae60', fontWeight: 600 }}>{p}% {tc('academy.cl_pct_done')}</span>
                       )}
                     </div>
                     {done > 0 && (
@@ -469,14 +472,14 @@ export default function ChecklistsPageClient() {
         {active && activeChecklist && (
           <>
             <button className="cl-back" onClick={() => setActive(null)} style={{ fontSize: 13, color: ACC, fontWeight: 500, marginBottom: 28 }}>
-              ← All checklists
+              {tc('academy.cl_back_all')}
             </button>
 
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 20 }}>
               <div style={{ fontSize: 36, flexShrink: 0 }}>{activeChecklist.icon}</div>
               <div>
                 <h1 style={{ fontFamily: 'Sora, system-ui', fontSize: 'clamp(20px,3vw,28px)', fontWeight: 700, color: TX, margin: 0, letterSpacing: '-.02em' }}>{activeChecklist.title}</h1>
-                <div style={{ fontSize: 13, color: TX3, marginTop: 2 }}>{activeChecklist.subtitle} · {totalItems} items</div>
+                <div style={{ fontSize: 13, color: TX3, marginTop: 2 }}>{activeChecklist.subtitle} · {totalItems} {tc('academy.cl_items')}</div>
               </div>
             </div>
 
@@ -488,7 +491,7 @@ export default function ChecklistsPageClient() {
                 <div style={{ height: '100%', width: `${pct}%`, background: activeChecklist.color, borderRadius: 9999, transition: 'width 300ms' }} />
               </div>
               <span style={{ fontSize: 13, fontWeight: 700, color: pct === 100 ? '#27ae60' : activeChecklist.color, flexShrink: 0 }}>
-                {checkedCount}/{totalItems} {pct === 100 ? '✓ Complete' : `(${pct}%)`}
+                {checkedCount}/{totalItems} {pct === 100 ? tc('academy.cl_complete_label') : `(${pct}%)`}
               </span>
             </div>
 
@@ -534,8 +537,8 @@ export default function ChecklistsPageClient() {
             {pct === 100 && (
               <div style={{ padding: '20px 24px', background: '#f0faf4', border: '1px solid #a3e4b8', borderRadius: 12, textAlign: 'center', marginTop: 8 }}>
                 <div style={{ fontSize: 24, marginBottom: 8 }}>✅</div>
-                <div style={{ fontFamily: 'Sora, system-ui', fontSize: 16, fontWeight: 700, color: '#1e7e34', marginBottom: 4 }}>Checklist complete!</div>
-                <div style={{ fontSize: 13, color: '#2d8a47' }}>All {totalItems} items checked off.</div>
+                <div style={{ fontFamily: 'Sora, system-ui', fontSize: 16, fontWeight: 700, color: '#1e7e34', marginBottom: 4 }}>{tc('academy.cl_complete_heading')}</div>
+                <div style={{ fontSize: 13, color: '#2d8a47' }}>{tc('academy.cl_complete_body_prefix')} {totalItems} {tc('academy.cl_complete_body_suffix')}</div>
               </div>
             )}
           </>
@@ -543,10 +546,10 @@ export default function ChecklistsPageClient() {
       </div>
 
       <footer style={{ borderTop: `1px solid ${BD}`, padding: '20px clamp(16px,4vw,32px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, background: SF, marginTop: 48 }}>
-        <span style={{ fontSize: 12, color: TX3 }}>© 2026 AskBiz. AI-powered business intelligence for SMEs.</span>
+        <span style={{ fontSize: 12, color: TX3 }}>{tc('academy.cl_footer_copyright')}</span>
         <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
-          {([['/', 'Home'], ['/academy', 'Academy'], ['/help', 'Help'], ['/blog', 'Blog']] as [string,string][]).map(([href, label]) => (
-            <Link key={href} href={href} style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>{label}</Link>
+          {([['/', tc('academy.cl_footer_home')], ['/academy', tc('academy.cl_footer_academy')], ['/help', tc('academy.cl_footer_help')], ['/blog', tc('academy.cl_footer_blog')]] as [string,string][]).map(([href, label]) => (
+            <Link key={href} href={localePath(href, lang)} style={{ fontSize: 12, color: TX3, textDecoration: 'none' }}>{label}</Link>
           ))}
         </div>
       </footer>

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useStore } from '@/store'
 import { useLang } from '@/components/LanguageProvider'
+import { localePath } from '@/lib/i18n-locale'
 import { useMotion } from '@/hooks/useMotion'
 import HelpWidget from '@/components/help/HelpWidget'
 import NotificationBell from '@/components/layout/NotificationBell'
@@ -39,9 +40,10 @@ const ASK  = '#6366F1'
 const ASK_BG = 'rgba(99,102,241,.1)'
 
 function ConvItem({ conv, active }: { conv: { id: string; title?: string }; active: boolean }) {
+  const { lang } = useLang()
   return (
     <Link
-      href={'/ask/' + conv.id}
+      href={localePath('/ask/' + conv.id, lang)}
       style={{
         display: 'block',
         padding: '6px 9px',
@@ -91,6 +93,7 @@ function ProfilePanel({ user, onClose, onSignOut }: {
   onSignOut: () => void
 }) {
   const router = useRouter()
+  const { lang } = useLang()
   const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
   const [includeCharts, setIncludeCharts] = useState(true)
   const [includeFollowUps, setIncludeFollowUps] = useState(true)
@@ -168,8 +171,8 @@ function ProfilePanel({ user, onClose, onSignOut }: {
             Sign out
           </button>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 16, paddingTop: 4 }}>
-            <a href="/privacy" style={{ fontSize: 11, color: 'var(--tx3)', textDecoration: 'none' }}>Privacy</a>
-            <a href="/terms" style={{ fontSize: 11, color: 'var(--tx3)', textDecoration: 'none' }}>Terms</a>
+            <a href={localePath('/privacy', lang)} style={{ fontSize: 11, color: 'var(--tx3)', textDecoration: 'none' }}>Privacy</a>
+            <a href={localePath('/terms', lang)} style={{ fontSize: 11, color: 'var(--tx3)', textDecoration: 'none' }}>Terms</a>
           </div>
         </div>
       </div>
@@ -186,7 +189,7 @@ export default function AppShellClient({ user, conversations, children }: {
   const router = useRouter()
   const supabase = createClient()
   const { setUser, updateSettings } = useStore()
-  const { tc } = useLang()
+  const { tc, lang } = useLang()
   const [profileOpen, setProfileOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -257,7 +260,7 @@ export default function AppShellClient({ user, conversations, children }: {
             <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
         </button>
-        <Link href="/home" title="Home" aria-label="AskBiz home" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
+        <Link href={localePath('/home', lang)} title="Home" aria-label="AskBiz home" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}>
           <div style={{ width: 28, height: 28, borderRadius: 7, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="13" height="13" viewBox="0 0 32 32" fill="none">
               <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/>
@@ -285,7 +288,7 @@ export default function AppShellClient({ user, conversations, children }: {
       >
         {/* Logo row */}
         <div style={{ padding: '14px 12px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-          <Link href="/home" style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none', color: 'var(--tx)', minWidth: 0 }}>
+          <Link href={localePath('/home', lang)} style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none', color: 'var(--tx)', minWidth: 0 }}>
             <div style={{ width: 30, height: 30, borderRadius: 8, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <svg width="15" height="15" viewBox="0 0 32 32" fill="none">
                 <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/>
@@ -321,7 +324,7 @@ export default function AppShellClient({ user, conversations, children }: {
             return (
               <Link
                 key={n.id}
-                href={n.href}
+                href={localePath(n.href, lang)}
                 style={{
                   flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
                   padding: '7px 4px', borderRadius: 8,
@@ -367,7 +370,7 @@ export default function AppShellClient({ user, conversations, children }: {
             return (
               <Link
                 key={n.id}
-                href={n.href}
+                href={localePath(n.href, lang)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 9,
                   padding: '9px 10px', borderRadius: 10,
@@ -410,7 +413,7 @@ export default function AppShellClient({ user, conversations, children }: {
               return (
                 <Link
                   key={n.id}
-                  href={n.href}
+                  href={localePath(n.href, lang)}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 9,
                     padding: '8px 10px', borderRadius: 8,
@@ -430,7 +433,7 @@ export default function AppShellClient({ user, conversations, children }: {
               )
             })}
             {isAdmin && (
-              <Link href="/admin" style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', borderRadius: 8, textDecoration: 'none', fontSize: 12, color: 'var(--tx3)', marginBottom: 1 }}>
+              <Link href={localePath('/admin', lang)} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', borderRadius: 8, textDecoration: 'none', fontSize: 12, color: 'var(--tx3)', marginBottom: 1 }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg>
                 {tc('appnav.admin')}
               </Link>
@@ -557,7 +560,7 @@ export default function AppShellClient({ user, conversations, children }: {
           return (
             <Link
               key={n.id}
-              href={n.href}
+              href={localePath(n.href, lang)}
               style={{
                 flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
                 justifyContent: 'center', gap: 3, textDecoration: 'none',

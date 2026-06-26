@@ -132,5 +132,13 @@
   "footer_link_help": "Help Center",
   "footer_link_rules": "Rules & Policies",
   "footer_link_privacy": "Privacy",
-  "footer_disclaimer": "Rates are indicative and updated quarterly. Always verify with official tariff databases before making import decisions."
+  "footer_disclaimer": "Rates are indicative and updated quarterly. Always verify with official tariff databases before making import decisions.",
+
+  "cogs_ph_product_name": "Product name",
+  "fx_ph_product_name": "Name",
+  "fx_ph_rate_override": "Current: {rate}",
+  "pm_ph_product_name": "e.g. Wireless Earbuds",
+  "lc_ph_product_name": "e.g. Cotton T-shirts",
+  "lc_ph_freight_estimated": "Estimated: ${amount}",
+  "lc_ph_selling_price": "Enter to see margin"
 }

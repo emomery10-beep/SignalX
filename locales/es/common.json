@@ -22,5 +22,7 @@
   "add": "Agregar",
   "remove": "Eliminar",
   "legal_mt_notice": "Traducción automática — la versión en inglés es el texto legal vinculante.",
-  "legal_mt_link": "Leer en inglés →"
+  "legal_mt_link": "Leer en inglés →",
+  "search_placeholder": "Buscar artículos, guías y documentos de ayuda…",
+  "search_no_results_try": "Prueba con otras palabras clave o explora el"
 }

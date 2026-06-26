@@ -40,5 +40,15 @@
   "related_safety_desc": "How we respond to data breaches and platform safety events.",
   "contact_title": "Questions About How We Work?",
   "contact_sub": "If something in this Transparency Centre is unclear, incomplete, or you believe it is inaccurate, we want to know. Email us and we will respond within 2 business days.",
-  "contact_btn": "Email us →"
+  "contact_btn": "Email us →",
+  "article_updated_prefix": "Updated",
+  "article_min_read": "min read",
+  "article_copy_link": "Copy link",
+  "article_copied": "✓ Copied",
+  "article_live_metrics": "Live metrics",
+  "article_on_this_page": "On this page",
+  "article_related_articles": "Related Articles",
+  "article_related_read": "Read →",
+  "article_footer_reviewed": "This article was last reviewed in",
+  "article_footer_inaccurate": "If something is unclear or you believe it is inaccurate, email"
 }

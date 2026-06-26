@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useLang } from "@/components/LanguageProvider";
+import { localePath } from '@/lib/i18n-locale';
+import type { Locale } from '@/lib/i18n-locale';
 
 const buildTools = (tc: (key: string) => string) => [
   {
@@ -79,7 +81,7 @@ const buildFaqs = (tc: (key: string) => string) =>
   }));
 
 export default function FreeToolsClient() {
-  const { tc } = useLang();
+  const { tc, lang } = useLang();
   const TOOLS = buildTools(tc);
   const FAQS = buildFaqs(tc);
 
@@ -120,15 +122,15 @@ export default function FreeToolsClient() {
         {/* ── Nav ── */}
         <nav className="ft-nav">
           <div className="ft-nav-inner">
-            <Link href="/" className="ft-nav-logo">AskBiz</Link>
+            <Link href={localePath('/', lang as Locale)} className="ft-nav-logo">AskBiz</Link>
             <div className="ft-nav-links">
-              <Link href="/help" className="ft-nav-link">{tc("freetools.nav_help")}</Link>
-              <Link href="/free-tools/landed-cost-calculator" className="ft-nav-link">{tc("freetools.nav_landed")}</Link>
-              <Link href="/free-tools/vat-calculator" className="ft-nav-link">{tc("freetools.nav_vat")}</Link>
-              <Link href="/free-tools/profit-margin-calculator" className="ft-nav-link">{tc("freetools.nav_margin")}</Link>
-              <Link href="/free-tools/cogs-calculator" className="ft-nav-link">{tc("freetools.nav_cogs")}</Link>
-              <Link href="/free-tools/break-even-calculator" className="ft-nav-link">{tc("freetools.nav_breakeven")}</Link>
-              <Link href="/#pricing" className="ft-nav-cta">{tc("freetools.nav_cta")}</Link>
+              <Link href={localePath('/help', lang as Locale)} className="ft-nav-link">{tc("freetools.nav_help")}</Link>
+              <Link href={localePath('/free-tools/landed-cost-calculator', lang as Locale)} className="ft-nav-link">{tc("freetools.nav_landed")}</Link>
+              <Link href={localePath('/free-tools/vat-calculator', lang as Locale)} className="ft-nav-link">{tc("freetools.nav_vat")}</Link>
+              <Link href={localePath('/free-tools/profit-margin-calculator', lang as Locale)} className="ft-nav-link">{tc("freetools.nav_margin")}</Link>
+              <Link href={localePath('/free-tools/cogs-calculator', lang as Locale)} className="ft-nav-link">{tc("freetools.nav_cogs")}</Link>
+              <Link href={localePath('/free-tools/break-even-calculator', lang as Locale)} className="ft-nav-link">{tc("freetools.nav_breakeven")}</Link>
+              <Link href={localePath('/#pricing', lang as Locale)} className="ft-nav-cta">{tc("freetools.nav_cta")}</Link>
             </div>
           </div>
         </nav>
@@ -164,7 +166,7 @@ export default function FreeToolsClient() {
                       </li>
                     ))}
                   </ul>
-                  <Link href={tool.href} className="ft-tool-cta" style={{ background: tool.color }}>
+                  <Link href={localePath(tool.href, lang as Locale)} className="ft-tool-cta" style={{ background: tool.color }}>
                     {tool.cta}
                   </Link>
                 </div>
@@ -242,8 +244,8 @@ export default function FreeToolsClient() {
               </p>
             </div>
             <div className="ft-cta-actions">
-              <Link href="/" className="ft-cta-btn ft-cta-btn--primary">{tc("freetools.cta_primary")}</Link>
-              <Link href="/help" className="ft-cta-btn ft-cta-btn--ghost">{tc("freetools.cta_ghost")}</Link>
+              <Link href={localePath('/', lang as Locale)} className="ft-cta-btn ft-cta-btn--primary">{tc("freetools.cta_primary")}</Link>
+              <Link href={localePath('/help', lang as Locale)} className="ft-cta-btn ft-cta-btn--ghost">{tc("freetools.cta_ghost")}</Link>
             </div>
           </div>
         </section>
@@ -265,7 +267,7 @@ export default function FreeToolsClient() {
                 ["/rules", tc("freetools.footer_link_rules")],
                 ["/privacy", tc("freetools.footer_link_privacy")],
               ].map(([href, label]) => (
-                <Link key={href} href={href} className="ft-footer-link">{label}</Link>
+                <Link key={href} href={localePath(href, lang as Locale)} className="ft-footer-link">{label}</Link>
               ))}
             </div>
             <p className="ft-footer-disclaimer">

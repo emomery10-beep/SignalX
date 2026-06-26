@@ -117,5 +117,13 @@
   "footer_link_help": "Helpcentrum",
   "footer_link_rules": "Regels en beleid",
   "footer_link_privacy": "Privacy",
-  "footer_disclaimer": "Tarieven zijn indicatief en worden per kwartaal bijgewerkt. Verifieer altijd bij officiële tariefendatabases voordat u importbeslissingen neemt."
+  "footer_disclaimer": "Tarieven zijn indicatief en worden per kwartaal bijgewerkt. Verifieer altijd bij officiële tariefendatabases voordat u importbeslissingen neemt.",
+
+  "cogs_ph_product_name": "Productnaam",
+  "fx_ph_product_name": "Naam",
+  "fx_ph_rate_override": "Huidig: {rate}",
+  "pm_ph_product_name": "bijv. Draadloze oordopjes",
+  "lc_ph_product_name": "bijv. Katoenen T-shirts",
+  "lc_ph_freight_estimated": "Geschat: ${amount}",
+  "lc_ph_selling_price": "Invullen om marge te zien"
 }

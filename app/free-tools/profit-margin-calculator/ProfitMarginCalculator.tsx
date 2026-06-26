@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useLang } from "@/components/LanguageProvider";
 
 interface Product {
   id: number;
@@ -70,6 +71,7 @@ function getMarginLabel(margin: number): string {
 }
 
 export default function ProfitMarginCalculator() {
+  const { tc } = useLang();
   const [currency, setCurrency] = useState("GBP");
   const [products, setProducts] = useState<Product[]>([{ ...EMPTY_PRODUCT }]);
   const [results, setResults] = useState<ProductResult[] | null>(null);
@@ -200,7 +202,7 @@ export default function ProfitMarginCalculator() {
                   <input
                     className="pm-input"
                     type="text"
-                    placeholder="e.g. Wireless Earbuds"
+                    placeholder={tc("freetools.pm_ph_product_name")}
                     value={p.name}
                     onChange={(e) => updateProduct(p.id, "name", e.target.value)}
                   />

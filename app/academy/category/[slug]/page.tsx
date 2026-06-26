@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { cookies, headers } from 'next/headers';
+import { resolveLocale, localePath } from '@/lib/i18n-locale';
 import { academyCategories, academyArticles } from "@/lib/academy-content";
 
 interface Props {
@@ -41,6 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default function CategoryPage({ params }: Props) {
+  const lang = resolveLocale({ urlLocale: headers().get('x-locale'), cookie: cookies().get('askbiz_lang')?.value })
   const category = academyCategories.find((c) => c.slug === params.slug);
   if (!category) notFound();
 
@@ -85,9 +88,9 @@ export default function CategoryPage({ params }: Props) {
         {/* Breadcrumb */}
         <div style={{ background: "#fff", borderBottom: "1px solid #eee", padding: "12px 24px" }}>
           <div style={{ maxWidth: 1100, margin: "0 auto", fontSize: 13, color: "#999" }}>
-            <Link href="/" style={{ color: "#999", textDecoration: "none" }}>Home</Link>
+            <Link href={localePath('/', lang)} style={{ color: "#999", textDecoration: "none" }}>Home</Link>
             {" / "}
-            <Link href="/academy" style={{ color: "#999", textDecoration: "none" }}>Academy</Link>
+            <Link href={localePath('/academy', lang)} style={{ color: "#999", textDecoration: "none" }}>Academy</Link>
             {" / "}
             <span style={{ color: "#1a1a2e" }}>{category.title}</span>
           </div>
@@ -111,7 +114,7 @@ export default function CategoryPage({ params }: Props) {
             {articles.map((article) => (
               <Link
                 key={article.slug}
-                href={`/academy/${article.slug}`}
+                href={localePath(`/academy/${article.slug}`, lang)}
                 style={{
                   display: "block",
                   background: "#fff",
@@ -148,7 +151,7 @@ export default function CategoryPage({ params }: Props) {
           )}
 
           <div style={{ marginTop: 48, textAlign: "center" }}>
-            <Link href="/academy" style={{ color: "#d08a59", fontWeight: 600, textDecoration: "none", fontSize: 15 }}>
+            <Link href={localePath('/academy', lang)} style={{ color: "#d08a59", fontWeight: 600, textDecoration: "none", fontSize: 15 }}>
               ← Back to all Academy articles
             </Link>
           </div>
