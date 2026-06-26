@@ -146,7 +146,7 @@ function parseSignal(text: string, kind: string): { value: string; direction: 'u
   // headline number for the value chip
   let value = '—'
   if (kind === 'fx') {
-    const fxMatch = text.match(/([₦$£€]\s?\d[\d,]*(?:\.\d+)?)|(\d[\d,]*(?:\.\d+)?\s?(?:naira|shilling|cedi|rand))/i)
+    const fxMatch = text.match(/(KSh\s?\d[\d,]*(?:\.\d+)?)|([₦$£€]\s?\d[\d,]*(?:\.\d+)?)|(\d[\d,]*(?:\.\d+)?\s?(?:naira|shilling|cedi|rand|KSh|KES))/i)
     value = fxMatch ? fxMatch[0].trim() : (changePct != null ? `${direction === 'down' ? '▼' : direction === 'up' ? '▲' : ''} ${changePct}%` : '—')
   } else if (changePct != null) {
     value = `${direction === 'down' ? '▼' : direction === 'up' ? '▲' : ''} ${changePct}%`

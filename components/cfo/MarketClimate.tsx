@@ -405,7 +405,9 @@ function NowPanel({ data }: { data: ClimateData }) {
                 <div key={s.key} style={{ background: 'var(--ev, #f9fafb)', borderRadius: 10, padding: '10px 12px' }}>
                   <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 6 }}>{s.label}</div>
                   <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--tx3)' }}>—</div>
-                  <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4 }}>Calibrating&hellip;</div>
+                  <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 4, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>
+                    {s.summary && s.summary !== 'No fresh reading available.' ? s.summary : 'Calibrating…'}
+                  </div>
                 </div>
               ))}
             </div>
