@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { withUtm } from "@/lib/utm";
-import { useLang } from "@/lib/i18n-hooks";
+import { useLang } from "@/components/LanguageProvider";
 import { localePath } from "@/lib/i18n-locale";
 import type { TransparencyArticle, TransparencySection } from "@/lib/transparency-content";
 
