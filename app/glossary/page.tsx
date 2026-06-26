@@ -1,41 +1,46 @@
 // app/glossary/page.tsx
 // Auto-generates from all academyArticles — zero manual maintenance
 
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { academyArticles, academyCategories } from "@/lib/academy-content";
+import { getLocale, getT } from "@/lib/i18n-server";
+import { localePath } from "@/lib/i18n-locale";
 import GlossaryClient from "./GlossaryClient";
 
-export const metadata: Metadata = {
-  title: "Business Glossary — 300 Terms Explained | AskBiz",
-  description:
-    "Free business glossary covering 300 terms across strategy, finance, eCommerce, FX, marketing, HR, tax, retail, and AI — explained in plain English for SME founders.",
-  keywords: [
-    "business glossary",
-    "business terms explained",
-    "what is gross margin",
-    "business metrics glossary",
-    "eCommerce glossary",
-    "finance glossary for founders",
-    "startup glossary",
-    "SME business terms",
-  ].join(", "),
-  openGraph: {
-    title: "Business Glossary — 300 Terms Explained | AskBiz",
-    description:
-      "300 business terms explained in plain English. From ARR to Zero-based budgeting — the complete SME founder glossary.",
-    url: "https://askbiz.co/glossary",
-    type: "website",
-    siteName: "AskBiz",
-  },
-  twitter: {
-    card: "summary",
-    title: "Business Glossary — 300 Terms | AskBiz",
-    description: "300 business terms explained in plain English for SME founders.",
-  },
-  alternates: {
-    canonical: "https://askbiz.co/glossary",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = getLocale();
+  const t = getT();
+  const title = t("glossary.meta_title");
+  const description = t("glossary.meta_description");
+  const canonical = `https://askbiz.co${localePath("/glossary", locale)}`;
+  return {
+    title,
+    description,
+    keywords: [
+      "business glossary",
+      "business terms explained",
+      "what is gross margin",
+      "business metrics glossary",
+      "eCommerce glossary",
+      "finance glossary for founders",
+      "startup glossary",
+      "SME business terms",
+    ].join(", "),
+    openGraph: { title, description, url: canonical, type: "website", siteName: "AskBiz" },
+    twitter: { card: "summary", title, description },
+    alternates: {
+      canonical,
+      languages: {
+        en: "https://askbiz.co/glossary",
+        es: "https://askbiz.co/es/glossary",
+        fr: "https://askbiz.co/fr/glossary",
+        de: "https://askbiz.co/de/glossary",
+        nl: "https://askbiz.co/nl/glossary",
+        ar: "https://askbiz.co/ar/glossary",
+      },
+    },
+  };
+}
 
 export default function GlossaryPage() {
   // ── JSON-LD: DefinedTermSet schema ─────────────────────────────────────────
