@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { getAllCaseStudies } from "@/lib/case-studies-content";
-import { useLang } from "@/lib/i18n-catalog";
+import { useLang } from "@/components/LanguageProvider";
 import { localePath } from "@/lib/i18n-locale";
 
 const C = {
