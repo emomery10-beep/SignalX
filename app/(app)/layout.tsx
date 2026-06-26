@@ -13,8 +13,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .eq('id', user.id)
     .single()
 
-  // First-time users go through onboarding
-  // (only redirect if they're hitting the root, not a specific page)
+  // First-time users go through onboarding (/onboarding lives outside this route group
+  // so this redirect does not loop back through this layout).
   if (profile && !profile.onboarded) {
     redirect('/onboarding')
   }
