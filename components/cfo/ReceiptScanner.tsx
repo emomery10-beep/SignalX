@@ -214,7 +214,7 @@ export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCance
                 <input value={editedExpense.vendor} onChange={e => setEditedExpense(p => p ? { ...p, vendor: e.target.value } : p)} placeholder={tc('cfo_receipts.placeholderVendor')} style={inputStyle} />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
                 {/* Date */}
                 <div>
                   <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_receipts.labelDate')}</label>

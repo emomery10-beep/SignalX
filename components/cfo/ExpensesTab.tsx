@@ -68,6 +68,13 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Omit<ScannedExpense, 'confidence'>>({ vendor: '', date: '', amount: 0, category: 'Other', notes: '' })
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const showToast = (msg: string) => {
     setToast(msg)
@@ -217,6 +224,12 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
     fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
   }
 
+  const cellInput: React.CSSProperties = {
+    width: '100%', fontSize: 12, color: 'var(--tx)', background: 'var(--sf)',
+    border: '1px solid var(--b)', borderRadius: 6, padding: '5px 8px',
+    fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
+  }
+
   const SortIcon = ({ k }: { k: SortKey }) =>
     sortKey === k ? <span style={{ fontSize: 9, marginLeft: 2 }}>{sortDir === -1 ? '▼' : '▲'}</span> : null
 
@@ -230,22 +243,22 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
       )}
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 4, height: 20, borderRadius: 4, background: INDIGO }} />
-          <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)' }}>{tc('cfo_expenses.heading')}</span>
-          {filtered.length > 0 && <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{tc('cfo_expenses.items_summary', { n: filtered.length, total: fmt(grandTotal) })}</span>}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+          <div style={{ width: 4, height: 20, borderRadius: 4, background: INDIGO, flexShrink: 0 }} />
+          <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--tx)', whiteSpace: 'nowrap' }}>{tc('cfo_expenses.heading')}</span>
+          {filtered.length > 0 && !isMobile && <span style={{ fontSize: 11, color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tc('cfo_expenses.items_summary', { n: filtered.length, total: fmt(grandTotal) })}</span>}
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
           <button
             onClick={() => { setShowManual(false); setShowScanner(v => !v) }}
-            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: isMobile ? '8px 12px' : '7px 14px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
           >
-            {tc('cfo_expenses.scan_receipt')}
+            {isMobile ? '📷 ' : ''}{tc('cfo_expenses.scan_receipt')}
           </button>
           <button
             onClick={() => { setShowScanner(false); setShowManual(v => !v) }}
-            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 8, border: `1px solid ${INDIGO}40`, background: 'transparent', color: INDIGO, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: isMobile ? '8px 12px' : '7px 14px', borderRadius: 8, border: `1px solid ${INDIGO}40`, background: 'transparent', color: INDIGO, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
           >
             {tc('cfo_expenses.manual')}
           </button>
@@ -265,7 +278,7 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
       {showManual && (
         <div style={{ borderRadius: 12, border: `1px solid ${INDIGO}30`, background: `${INDIGO}04`, padding: '16px' }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', marginBottom: 12 }}>{tc('cfo_expenses.add_manually_title')}</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 10 }}>
             <div>
               <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 5 }}>{tc('cfo_expenses.label_vendor')}</label>
               <input value={manualForm.vendor} onChange={e => setManualForm(p => ({ ...p, vendor: e.target.value }))} placeholder={tc('cfo_expenses.placeholder_vendor')} style={inputStyle} />
@@ -397,83 +410,125 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
         </div>
       ) : (
         <div style={{ borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)', overflow: 'hidden' }}>
-          {/* Table header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 100px 90px 60px', gap: 4, padding: '8px 14px', background: 'var(--ev)', borderBottom: '1px solid var(--b)' }}>
-            {[
-              { key: 'date' as SortKey, label: tc('cfo_expenses.col_date') },
-              { key: 'vendor' as SortKey, label: tc('cfo_expenses.col_vendor_category') },
-              { key: 'category' as SortKey, label: tc('cfo_expenses.col_category') },
-              { key: 'amount' as SortKey, label: tc('cfo_expenses.col_amount'), right: true },
-            ].map(h => (
-              <button key={h.key} onClick={() => toggleSort(h.key)} style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', justifyContent: h.right ? 'flex-end' : 'flex-start', padding: 0 }}>
-                {h.label}<SortIcon k={h.key} />
-              </button>
-            ))}
-            <div />
-          </div>
-
-          {/* Rows */}
-          {filtered.map((e, i) => {
-            const isEditing = editingId === e.id
-            const rowStyle: React.CSSProperties = {
-              display: 'grid',
-              gridTemplateColumns: '100px 1fr 100px 90px 60px',
-              gap: 4,
-              padding: isEditing ? '10px 14px 12px' : '10px 14px',
-              borderTop: i > 0 ? '1px solid var(--b)' : undefined,
-              alignItems: isEditing ? 'start' : 'center',
-              background: isEditing ? `${INDIGO}04` : undefined,
-            }
-            const cellInput: React.CSSProperties = {
-              width: '100%', fontSize: 12, color: 'var(--tx)', background: 'var(--sf)',
-              border: '1px solid var(--b)', borderRadius: 6, padding: '5px 8px',
-              fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
-            }
-            return (
-              <div key={e.id} style={rowStyle}>
-                {isEditing ? (
-                  <>
-                    <input type="date" value={editForm.date} onChange={ev => setEditForm(p => ({ ...p, date: ev.target.value }))} style={cellInput} />
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <input value={editForm.vendor} onChange={ev => setEditForm(p => ({ ...p, vendor: ev.target.value }))} placeholder={tc('cfo_expenses.placeholder_vendor_short')} style={cellInput} />
-                      <input value={editForm.notes} onChange={ev => setEditForm(p => ({ ...p, notes: ev.target.value }))} placeholder={tc('cfo_expenses.placeholder_notes_short')} style={{ ...cellInput, fontSize: 11 }} />
-                    </div>
-                    <select value={editForm.category} onChange={ev => setEditForm(p => ({ ...p, category: ev.target.value }))} style={{ ...cellInput, cursor: 'pointer' }}>
-                      {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{catLabel(c)}</option>)}
-                    </select>
-                    <input type="number" min="0" step="0.01" value={editForm.amount || ''} onChange={ev => setEditForm(p => ({ ...p, amount: Number(ev.target.value) }))} placeholder={tc('cfo_expenses.placeholder_amount')} style={{ ...cellInput, textAlign: 'right' }} />
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      <button onClick={saveEdit} disabled={saving || !editForm.vendor} title={tc('cfo_expenses.title_save')} style={{ flex: 1, height: 28, borderRadius: 6, border: 'none', background: INDIGO, color: '#fff', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (!editForm.vendor || saving) ? 0.5 : 1 }}>✓</button>
-                      <button onClick={cancelEdit} title={tc('cfo_expenses.title_cancel')} style={{ flex: 1, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{e.date}</span>
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.vendor}</div>
-                      {e.notes && <div style={{ fontSize: 10, color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.notes}</div>}
-                    </div>
-                    <span style={{ fontSize: 10, color: 'var(--tx3)', padding: '2px 6px', borderRadius: 5, background: 'var(--ev)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{catLabel(e.category)}</span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: RED, textAlign: 'right' }}>{fmt(e.amount)}</span>
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      <button onClick={() => startEdit(e)} title={tc('cfo_expenses.title_edit')} style={{ flex: 1, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✎</button>
-                      <button onClick={() => deleteExpense(e.id)} title={tc('cfo_expenses.title_delete')} style={{ flex: 1, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
-                    </div>
-                  </>
-                )}
+          {isMobile ? (
+            // ── Mobile: card list ─────────────────────────────────────────────
+            <>
+              {filtered.map((e, i) => {
+                const isEditing = editingId === e.id
+                return (
+                  <div key={e.id} style={{ padding: '12px 14px', borderTop: i > 0 ? '1px solid var(--b)' : undefined, background: isEditing ? `${INDIGO}04` : undefined }}>
+                    {isEditing ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <input type="date" value={editForm.date} onChange={ev => setEditForm(p => ({ ...p, date: ev.target.value }))} style={cellInput} />
+                        <input value={editForm.vendor} onChange={ev => setEditForm(p => ({ ...p, vendor: ev.target.value }))} placeholder={tc('cfo_expenses.placeholder_vendor_short')} style={cellInput} />
+                        <input value={editForm.notes} onChange={ev => setEditForm(p => ({ ...p, notes: ev.target.value }))} placeholder={tc('cfo_expenses.placeholder_notes_short')} style={{ ...cellInput, fontSize: 11 }} />
+                        <select value={editForm.category} onChange={ev => setEditForm(p => ({ ...p, category: ev.target.value }))} style={{ ...cellInput, cursor: 'pointer' }}>
+                          {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{catLabel(c)}</option>)}
+                        </select>
+                        <input type="number" min="0" step="0.01" value={editForm.amount || ''} onChange={ev => setEditForm(p => ({ ...p, amount: Number(ev.target.value) }))} placeholder="0.00" style={{ ...cellInput, textAlign: 'right' }} />
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button onClick={cancelEdit} style={{ flex: 1, padding: '9px', borderRadius: 7, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12 }}>{tc('cfo_expenses.cancel')}</button>
+                          <button onClick={saveEdit} disabled={saving || !editForm.vendor} style={{ flex: 2, padding: '9px', borderRadius: 7, border: 'none', background: INDIGO, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 600, opacity: (!editForm.vendor || saving) ? 0.5 : 1 }}>✓ {saving ? tc('cfo_expenses.saving') : tc('cfo_expenses.save_expense')}</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 5 }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.vendor}</div>
+                            {e.notes && <div style={{ fontSize: 11, color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 1 }}>{e.notes}</div>}
+                          </div>
+                          <span style={{ fontSize: 15, fontWeight: 800, color: RED, flexShrink: 0 }}>{fmt(e.amount)}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontSize: 10, color: 'var(--tx3)', padding: '2px 7px', borderRadius: 5, background: 'var(--ev)', whiteSpace: 'nowrap' }}>{catLabel(e.category)}</span>
+                            <span style={{ fontSize: 10, color: 'var(--tx3)' }}>{e.date}</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            <button onClick={() => startEdit(e)} title={tc('cfo_expenses.title_edit')} style={{ width: 34, height: 34, borderRadius: 7, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✎</button>
+                            <button onClick={() => deleteExpense(e.id)} title={tc('cfo_expenses.title_delete')} style={{ width: 34, height: 34, borderRadius: 7, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )
+              })}
+              {/* Mobile footer */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderTop: '2px solid var(--b)', background: 'var(--ev)' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)' }}>{tc('cfo_expenses.footer_count', { n: filtered.length })}</span>
+                <span style={{ fontSize: 15, fontWeight: 800, color: RED }}>{fmt(grandTotal)}</span>
               </div>
-            )
-          })}
+            </>
+          ) : (
+            // ── Desktop: grid table ───────────────────────────────────────────
+            <>
+              {/* Table header */}
+              <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr 100px 90px 56px', gap: 4, padding: '8px 14px', background: 'var(--ev)', borderBottom: '1px solid var(--b)' }}>
+                {[
+                  { key: 'date' as SortKey, label: tc('cfo_expenses.col_date') },
+                  { key: 'vendor' as SortKey, label: tc('cfo_expenses.col_vendor') },
+                  { key: 'category' as SortKey, label: tc('cfo_expenses.col_category') },
+                  { key: 'amount' as SortKey, label: tc('cfo_expenses.col_amount'), right: true },
+                ].map(h => (
+                  <button key={h.key} onClick={() => toggleSort(h.key)} style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.04em', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', justifyContent: h.right ? 'flex-end' : 'flex-start', padding: 0 }}>
+                    {h.label}<SortIcon k={h.key} />
+                  </button>
+                ))}
+                <div />
+              </div>
 
-          {/* Footer total */}
-          <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 100px 90px 60px', gap: 4, padding: '10px 14px', borderTop: '2px solid var(--b)', background: 'var(--ev)' }}>
-            <div />
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)' }}>{tc('cfo_expenses.footer_count', { n: filtered.length })}</span>
-            <div />
-            <span style={{ fontSize: 14, fontWeight: 700, color: RED, textAlign: 'right' }}>{fmt(grandTotal)}</span>
-            <div />
-          </div>
+              {/* Rows */}
+              {filtered.map((e, i) => {
+                const isEditing = editingId === e.id
+                return (
+                  <div key={e.id} style={{ display: 'grid', gridTemplateColumns: '90px 1fr 100px 90px 56px', gap: 4, padding: isEditing ? '10px 14px 12px' : '10px 14px', borderTop: i > 0 ? '1px solid var(--b)' : undefined, alignItems: isEditing ? 'start' : 'center', background: isEditing ? `${INDIGO}04` : undefined }}>
+                    {isEditing ? (
+                      <>
+                        <input type="date" value={editForm.date} onChange={ev => setEditForm(p => ({ ...p, date: ev.target.value }))} style={cellInput} />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <input value={editForm.vendor} onChange={ev => setEditForm(p => ({ ...p, vendor: ev.target.value }))} placeholder={tc('cfo_expenses.placeholder_vendor_short')} style={cellInput} />
+                          <input value={editForm.notes} onChange={ev => setEditForm(p => ({ ...p, notes: ev.target.value }))} placeholder={tc('cfo_expenses.placeholder_notes_short')} style={{ ...cellInput, fontSize: 11 }} />
+                        </div>
+                        <select value={editForm.category} onChange={ev => setEditForm(p => ({ ...p, category: ev.target.value }))} style={{ ...cellInput, cursor: 'pointer' }}>
+                          {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{catLabel(c)}</option>)}
+                        </select>
+                        <input type="number" min="0" step="0.01" value={editForm.amount || ''} onChange={ev => setEditForm(p => ({ ...p, amount: Number(ev.target.value) }))} placeholder={tc('cfo_expenses.placeholder_amount')} style={{ ...cellInput, textAlign: 'right' }} />
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button onClick={saveEdit} disabled={saving || !editForm.vendor} title={tc('cfo_expenses.title_save')} style={{ flex: 1, height: 28, borderRadius: 6, border: 'none', background: INDIGO, color: '#fff', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (!editForm.vendor || saving) ? 0.5 : 1 }}>✓</button>
+                          <button onClick={cancelEdit} title={tc('cfo_expenses.title_cancel')} style={{ flex: 1, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{e.date}</span>
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.vendor}</div>
+                          {e.notes && <div style={{ fontSize: 10, color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.notes}</div>}
+                        </div>
+                        <span style={{ fontSize: 10, color: 'var(--tx3)', padding: '2px 6px', borderRadius: 5, background: 'var(--ev)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{catLabel(e.category)}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: RED, textAlign: 'right' }}>{fmt(e.amount)}</span>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button onClick={() => startEdit(e)} title={tc('cfo_expenses.title_edit')} style={{ flex: 1, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✎</button>
+                          <button onClick={() => deleteExpense(e.id)} title={tc('cfo_expenses.title_delete')} style={{ flex: 1, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )
+              })}
+
+              {/* Footer total */}
+              <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr 100px 90px 56px', gap: 4, padding: '10px 14px', borderTop: '2px solid var(--b)', background: 'var(--ev)' }}>
+                <div />
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)' }}>{tc('cfo_expenses.footer_count', { n: filtered.length })}</span>
+                <div />
+                <span style={{ fontSize: 14, fontWeight: 700, color: RED, textAlign: 'right' }}>{fmt(grandTotal)}</span>
+                <div />
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
