@@ -1,0 +1,16 @@
+{
+  "title": "Bedrijfsglosssarium",
+  "subtitle": "{n} zakelijke begrippen uitgelegd in het Nederlands — van ARR tot werkkapitaal. Geen vakjargon.",
+  "search_placeholder": "Zoek termen — probeer 'marge', 'EBITDA', 'cashflow'...",
+  "filter_label": "Filteren op categorie",
+  "all_categories": "Alle categorieën",
+  "showing": "Weergave",
+  "of_n_terms": "van {n} termen",
+  "clear_filters": "Filters wissen",
+  "no_terms": "Geen termen gevonden voor \"{query}\"",
+  "all": "ALLE",
+  "term_count": "{n} termen",
+  "cta_heading": "Bekijk deze statistieken voor uw bedrijf",
+  "cta_body": "AskBiz verbindt zich met uw gegevens en toont elke statistiek in dit glossarium — automatisch.",
+  "cta_button": "Gratis starten"
+}

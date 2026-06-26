@@ -1,0 +1,16 @@
+{
+  "title": "Glosario de Negocios",
+  "subtitle": "{n} términos de negocio explicados en español — de ARR a capital de trabajo. Sin jerga.",
+  "search_placeholder": "Buscar términos — prueba 'margen', 'EBITDA', 'flujo de caja'...",
+  "filter_label": "Filtrar por categoría",
+  "all_categories": "Todas las categorías",
+  "showing": "Mostrando",
+  "of_n_terms": "de {n} términos",
+  "clear_filters": "Limpiar filtros",
+  "no_terms": "No se encontraron términos para \"{query}\"",
+  "all": "TODOS",
+  "term_count": "{n} términos",
+  "cta_heading": "Consulta estas métricas para tu negocio",
+  "cta_body": "AskBiz se conecta a tus datos y muestra cada métrica de este glosario — automáticamente.",
+  "cta_button": "Empieza gratis"
+}

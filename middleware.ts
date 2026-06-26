@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { COUNTRY_TO_LANG } from '@/lib/i18n'
-import { ACTIVE_LOCALES, DEFAULT_LOCALE, resolveLocale, isAppPath } from '@/lib/i18n-locale'
+import { ACTIVE_LOCALES, DEFAULT_LOCALE, resolveLocale } from '@/lib/i18n-locale'
 
 // Non-default locales carry a URL prefix (/es, /fr, …); English stays unprefixed
 // so existing indexed URLs and inbound links are untouched.
@@ -16,18 +16,16 @@ export async function middleware(request: NextRequest) {
   const hasLocalePrefix = (PREFIXED_LOCALES as string[]).includes(maybePrefix)
   const logicalPath = hasLocalePrefix ? '/' + segments.slice(2).join('/') : request.nextUrl.pathname
 
-  // Locale source: a URL prefix wins (public, SEO-driven). Otherwise, authenticated
-  // app routes follow the user's chosen language (cookie/profile); public routes
-  // default to English. This lets the signed-in app render in the user's language
-  // without prefixing every nav link.
+  // Locale source: a URL prefix wins (public, SEO-driven). Otherwise all routes
+  // (both public and authenticated) follow the user's cookie/geo — matching the
+  // landing page's behaviour. Public visitors arriving without a prefix get content
+  // in their detected language; the /es, /fr, … prefixed URLs remain canonical for SEO.
   const locale = hasLocalePrefix
     ? maybePrefix
-    : isAppPath(logicalPath)
-      ? resolveLocale({
-          cookie: request.cookies.get('askbiz_lang')?.value,
-          country: request.headers.get('x-vercel-ip-country'),
-        })
-      : DEFAULT_LOCALE
+    : resolveLocale({
+        cookie: request.cookies.get('askbiz_lang')?.value,
+        country: request.headers.get('x-vercel-ip-country'),
+      })
 
   // Headers server components (and the root layout) read to render the right locale.
   const requestHeaders = new Headers(request.headers)
@@ -63,14 +61,23 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/sell', request.url))
   }
 
-  // ── Language detection ─────────────────────────────────────────────────────
+  // ── Language cookie ────────────────────────────────────────────────────────
+  // When the user visits a locale-prefixed URL (/es/...) the URL IS their
+  // explicit choice — write it to the cookie so subsequent unprefixed routes
+  // (signin, glossary, etc.) automatically appear in the same language.
   const existingLang = request.cookies.get('askbiz_lang')?.value
-  if (!existingLang) {
+  if (hasLocalePrefix && existingLang !== locale) {
+    response.cookies.set('askbiz_lang', locale, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 30,
+      sameSite: 'lax',
+    })
+  } else if (!existingLang) {
     const country = request.headers.get('x-vercel-ip-country') || ''
     const detectedLang = COUNTRY_TO_LANG[country.toUpperCase() as keyof typeof COUNTRY_TO_LANG] || 'en'
     response.cookies.set('askbiz_lang', detectedLang, {
       path: '/',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: 60 * 60 * 24 * 30,
       sameSite: 'lax',
     })
   }

@@ -1,0 +1,16 @@
+{
+  "title": "Glossaire des Affaires",
+  "subtitle": "{n} termes commerciaux expliqués en français — de l'ARR au fonds de roulement. Pas de jargon.",
+  "search_placeholder": "Rechercher — essayez 'marge', 'EBITDA', 'trésorerie'...",
+  "filter_label": "Filtrer par catégorie",
+  "all_categories": "Toutes les catégories",
+  "showing": "Affichage",
+  "of_n_terms": "sur {n} termes",
+  "clear_filters": "Effacer les filtres",
+  "no_terms": "Aucun terme trouvé pour \"{query}\"",
+  "all": "TOUT",
+  "term_count": "{n} termes",
+  "cta_heading": "Découvrez ces métriques pour votre entreprise",
+  "cta_body": "AskBiz se connecte à vos données et affiche chaque métrique de ce glossaire — automatiquement.",
+  "cta_button": "Démarrer gratuitement"
+}

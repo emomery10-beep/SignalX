@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { AcademyArticle, AcademyCategory } from "@/lib/academy-types";
+import { useLang } from "@/components/LanguageProvider";
 
 interface Props {
   articles: AcademyArticle[];
@@ -24,6 +25,7 @@ function getFirstLetter(title: string): string {
 }
 
 export default function GlossaryClient({ articles, categories }: Props) {
+  const { tc } = useLang();
   const [activeLetter, setActiveLetter] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -119,7 +121,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
             lineHeight: 1.2,
           }}
         >
-          Business Glossary
+          {tc("glossary.title")}
         </h1>
         <p
           style={{
@@ -130,8 +132,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
             lineHeight: 1.6,
           }}
         >
-          {articles.length} business terms explained in plain English — from
-          ARR to working capital. No jargon without explanation.
+          {tc("glossary.subtitle", { n: articles.length })}
         </p>
 
         {/* Search */}
@@ -151,7 +152,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
           </span>
           <input
             type="text"
-            placeholder="Search terms — try 'churn', 'EBITDA', 'IR35'..."
+            placeholder={tc("glossary.search_placeholder")}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -230,7 +231,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
               fontFamily: "DM Sans, sans-serif",
             }}
           >
-            ALL
+            {tc("glossary.all")}
           </button>
           {ALPHABET.map((letter) => {
             const hasArticles = activeLetters.has(letter);
@@ -291,7 +292,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
               margin: "0 0 12px",
             }}
           >
-            Filter by Category
+            {tc("glossary.filter_label")}
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <button
@@ -309,7 +310,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
                 fontFamily: "DM Sans, sans-serif",
               }}
             >
-              All Categories
+              {tc("glossary.all_categories")}
               <span style={{ float: "right", color: "#aaa", fontWeight: 400 }}>
                 {articles.length}
               </span>
@@ -371,7 +372,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
                 fontWeight: 700,
               }}
             >
-              Showing
+              {tc("glossary.showing")}
             </p>
             <p
               style={{
@@ -385,7 +386,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
               {totalShowing}
             </p>
             <p style={{ fontSize: 13, color: "#999", margin: 0 }}>
-              of {articles.length} terms
+              {tc("glossary.of_n_terms", { n: articles.length })}
             </p>
             {isFiltered && (
               <button
@@ -408,7 +409,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
                   fontFamily: "DM Sans, sans-serif",
                 }}
               >
-                Clear filters
+{tc("glossary.clear_filters")}
               </button>
             )}
           </div>
@@ -425,7 +426,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
                 fontSize: 15,
               }}
             >
-              No terms found for &quot;{query}&quot;
+              {tc("glossary.no_terms", { query })}
             </div>
           ) : (
             groupedLetters.map((letter) => (
@@ -469,8 +470,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
                     }}
                   />
                   <span style={{ fontSize: 12, color: "#bbb", flexShrink: 0 }}>
-                    {grouped[letter].length} term
-                    {grouped[letter].length !== 1 ? "s" : ""}
+                    {tc("glossary.term_count", { n: grouped[letter].length })}
                   </span>
                 </div>
 
@@ -602,7 +602,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
             marginBottom: 14,
           }}
         >
-          See these metrics for your business
+          {tc("glossary.cta_heading")}
         </h2>
         <p
           style={{
@@ -613,8 +613,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
             margin: "0 auto 28px",
           }}
         >
-          AskBiz connects to your data and surfaces every metric in this
-          glossary — automatically.
+          {tc("glossary.cta_body")}
         </p>
         <Link
           href="/signin"
@@ -630,7 +629,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
             fontFamily: "Sora, sans-serif",
           }}
         >
-          Start Free Trial
+          {tc("glossary.cta_button")}
         </Link>
       </section>
     </main>

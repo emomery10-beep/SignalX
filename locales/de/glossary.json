@@ -1,0 +1,16 @@
+{
+  "title": "Geschäftsglossar",
+  "subtitle": "{n} Geschäftsbegriffe auf Deutsch erklärt — von ARR bis Betriebskapital. Kein Fachjargon.",
+  "search_placeholder": "Begriffe suchen — z. B. 'Marge', 'EBITDA', 'Cashflow'...",
+  "filter_label": "Nach Kategorie filtern",
+  "all_categories": "Alle Kategorien",
+  "showing": "Anzeigen",
+  "of_n_terms": "von {n} Begriffen",
+  "clear_filters": "Filter löschen",
+  "no_terms": "Keine Begriffe für \"{query}\" gefunden",
+  "all": "ALLE",
+  "term_count": "{n} Begriffe",
+  "cta_heading": "Diese Kennzahlen für Ihr Unternehmen anzeigen",
+  "cta_body": "AskBiz verbindet sich mit Ihren Daten und zeigt jede Kennzahl dieses Glossars — automatisch.",
+  "cta_button": "Kostenlos starten"
+}
