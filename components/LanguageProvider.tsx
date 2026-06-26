@@ -1,9 +1,13 @@
 'use client'
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { usePathname } from 'next/navigation'
 import type { Lang, TranslationKey } from '@/lib/i18n'
 import { TRANSLATIONS, LANG_NAMES, LANG_FLAGS, RTL_LANGS, t as tFn } from '@/lib/i18n'
 import { t as catalogT } from '@/lib/i18n-catalog'
 import { formatCurrency, formatNumber, formatDate, formatDateTime, formatPercent } from '@/lib/i18n-format'
+
+// Non-default locale prefixes that appear in the URL
+const URL_PREFIXED_LOCALES = ['es', 'fr', 'de', 'nl', 'ar'] as const
 
 interface LangContextType {
   lang: Lang
@@ -40,6 +44,17 @@ const LangContext = createContext<LangContextType>({
 
 export function LanguageProvider({ children, initialLang = 'en' }: { children: React.ReactNode; initialLang?: Lang | string }) {
   const [lang, setLangState] = useState<Lang>((initialLang as Lang) || 'en')
+  const pathname = usePathname()
+
+  // Sync lang from URL prefix on every client-side navigation.
+  // Without this, soft-navigating from /glossary (en) to /ar/glossary keeps lang='en'
+  // because the root layout doesn't re-mount across navigations.
+  useEffect(() => {
+    const seg = pathname.split('/')[1]
+    if ((URL_PREFIXED_LOCALES as readonly string[]).includes(seg) && seg !== lang) {
+      setLangState(seg as Lang)
+    }
+  }, [pathname])
 
   const setLang = useCallback((l: Lang) => {
     setLangState(l)
