@@ -1,4 +1,4 @@
-// Catalogue-backed translation lookup with guaranteed graceful fallback.
+// Catalog-backed translation lookup with guaranteed graceful fallback.
 //
 //   t('es', 'common.save')                    → "Guardar"
 //   t('de', 'common.save_changes')            → "Änderungen speichern"
