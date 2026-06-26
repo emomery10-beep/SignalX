@@ -420,6 +420,10 @@ export default function SourcesPage() {
         <div style={{ marginTop: 28, padding: '13px 16px', borderRadius: 12, border: '1px dashed var(--b2)', fontSize: 13, color: 'var(--tx3)', lineHeight: 1.6 }}>
           {tc('sources.csv_hint_prefix')} <strong style={{ color: 'var(--tx)' }}>{tc('sources.csv_hint_strong')}</strong> {tc('sources.csv_hint_suffix')}
         </div>
+
+        <p style={{ marginTop: 16, fontSize: 11, color: 'var(--tx3)', lineHeight: 1.6, textAlign: 'center' }}>
+          The term &ldquo;Etsy&rdquo; is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy, Inc.
+        </p>
       </div>
 
       {/* ── Shopify connect modal ─────────────────────────────────────────────── */}
@@ -543,6 +547,11 @@ export default function SourcesPage() {
             {activeSrc.oauthFlow && (
               <p style={{ marginTop: 12, fontSize: 11, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.6 }}>
                 {tc('sources.modal_oauth_footer', { label: activeSrc.label })}
+              </p>
+            )}
+            {activeSrc.id === 'etsy' && (
+              <p style={{ marginTop: 8, fontSize: 10, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.5, padding: '8px 4px 0', borderTop: '1px solid var(--b)' }}>
+                The term &ldquo;Etsy&rdquo; is a trademark of Etsy, Inc. This application uses the Etsy API but is not endorsed or certified by Etsy, Inc.
               </p>
             )}
           </div>
