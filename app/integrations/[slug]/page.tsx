@@ -52,9 +52,15 @@ export default function IntegrationPage({ params }: { params: { slug: string } }
   const t = getT()
   const rtl = isRTL(locale)
   const dir = rtl ? 'rtl' : 'ltr'
+  const sk = int.slug.replace(/-/g, '_')
 
   const integrationsHref = localePath('/integrations', locale)
   const signinHref = localePath('/signin', locale)
+
+  const tOrFallback = (key: string, fallback: string) => {
+    const v = t(key)
+    return v !== key ? v : fallback
+  }
 
   return (
     <div style={{ fontFamily: 'DM Sans, system-ui', background: BG, minHeight: '100vh', direction: dir }}>
@@ -94,9 +100,7 @@ export default function IntegrationPage({ params }: { params: { slug: string } }
             {t('integrations_page.slug_hero_connect', { name: int.name })}
           </h1>
           <p style={{ fontSize: 16, color: TX2, lineHeight: 1.7, marginBottom: 28, maxWidth: 600 }}>
-            {t('integrations_page.desc_' + int.slug) !== 'integrations_page.desc_' + int.slug
-              ? t('integrations_page.desc_' + int.slug)
-              : int.longDescription}
+            {tOrFallback(`integrations_page.desc_${sk}`, int.longDescription)}
           </p>
           <Link href={signinHref} style={{ fontSize: 14, fontWeight: 700, color: SF, background: int.color, borderRadius: 10, padding: '12px 28px', textDecoration: 'none', display: 'inline-block' }}>
             {t('integrations_page.slug_hero_cta', { name: int.name })}
@@ -115,7 +119,7 @@ export default function IntegrationPage({ params }: { params: { slug: string } }
             {int.whatYouGet.map((item, i) => (
               <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '14px 16px', background: SF, border: `1px solid ${BD}`, borderRadius: 10 }}>
                 <span style={{ color: '#27ae60', fontSize: 16, flexShrink: 0, marginTop: 1 }}>✓</span>
-                <span style={{ fontSize: 14, color: TX, lineHeight: 1.5 }}>{item}</span>
+                <span style={{ fontSize: 14, color: TX, lineHeight: 1.5 }}>{tOrFallback(`integrations_page.${sk}_wyg_${i}`, item)}</span>
               </div>
             ))}
           </div>
@@ -129,7 +133,7 @@ export default function IntegrationPage({ params }: { params: { slug: string } }
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {int.metrics.map((m, i) => (
               <span key={i} style={{ fontSize: 13, fontWeight: 600, color: int.color, background: int.color + '12', border: `1px solid ${int.color}30`, borderRadius: 9999, padding: '5px 14px' }}>
-                {m}
+                {tOrFallback(`integrations_page.${sk}_metric_${i}`, m)}
               </span>
             ))}
           </div>
@@ -146,7 +150,7 @@ export default function IntegrationPage({ params }: { params: { slug: string } }
                 <div style={{ width: 26, height: 26, borderRadius: '50%', background: int.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 12, fontWeight: 700, color: 'white' }}>
                   {i + 1}
                 </div>
-                <span style={{ fontSize: 14, color: TX, lineHeight: 1.55, paddingTop: 3 }}>{step}</span>
+                <span style={{ fontSize: 14, color: TX, lineHeight: 1.55, paddingTop: 3 }}>{tOrFallback(`integrations_page.${sk}_step_${i}`, step)}</span>
               </div>
             ))}
           </div>

@@ -75,9 +75,7 @@ export default function IntegrationsPage() {
                   </div>
                 </div>
                 <p style={{ fontSize: 13, color: TX2, lineHeight: 1.55, marginBottom: 12 }}>
-                  {t('integrations_page.desc_' + int.slug) !== 'integrations_page.desc_' + int.slug
-                    ? t('integrations_page.desc_' + int.slug)
-                    : int.description}
+                  {(() => { const k = int.slug.replace(/-/g, '_'); const v = t('integrations_page.desc_' + k); return v !== 'integrations_page.desc_' + k ? v : int.description })()}
                 </p>
                 <span style={{ fontSize: 12, color: ACC, fontWeight: 600 }}>{t('integrations_page.learn_more')} →</span>
               </Link>
