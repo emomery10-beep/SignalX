@@ -1,7 +1,8 @@
 'use client'
 import { usePlan } from '@/lib/hooks/usePlan'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useLang } from '@/components/LanguageProvider'
+import { QRCodeSVG } from 'qrcode.react'
 
 interface Source {
   id: string; source_type: string; name: string; status: string
@@ -47,7 +48,7 @@ const SOURCES: SourceDef[] = [
   { id: 'mailchimp',        label: 'Mailchimp',        category: 'Marketing & Ads', desc: 'Campaigns, open rates, click rates, audience',    icon: '🐒', accent: '#f0b429', color: 'rgba(240,180,41,.15)', oauthFlow: true,  hint: 'Redirects to Mailchimp — read-only access',                          fields: [] },
 
   // ── Social Commerce ───────────────────────────────────────────────────────
-  { id: 'tiktok_shop', label: 'TikTok Shop',        category: 'Social Commerce', desc: 'Orders, video analytics, product performance',        icon: '🎵', accent: '#010101', color: 'rgba(1,1,1,.06)',      oauthFlow: false, hint: 'Paste your access token from TikTok Partner Center › Apps', fields: [{ key: 'access_token', label: 'Access Token', placeholder: 'act.xxxxxxxxxxxx', type: 'password', required: true }, { key: 'shop_id', label: 'Shop ID', placeholder: '7xxxxxxxxxxxxxxxxx', type: 'text', required: true }] },
+  { id: 'tiktok_shop', label: 'TikTok Shop',        category: 'Social Commerce', desc: 'Orders, video analytics, product performance',        icon: '🎵', accent: '#010101', color: 'rgba(1,1,1,.06)',      oauthFlow: true,  hint: 'Scan the QR code with your TikTok app to connect your shop', fields: [] },
   { id: 'instagram',   label: 'Instagram Shopping', category: 'Social Commerce', desc: 'Post insights, product clicks, shopping orders',       icon: '📸', accent: '#E1306C', color: 'rgba(225,48,108,.06)', oauthFlow: false, hint: 'Paste your Meta Graph API token from Meta Business Suite › Apps', fields: [{ key: 'access_token', label: 'Access Token', placeholder: 'EAAxxxxxxxxxxxx', type: 'password', required: true }, { key: 'ig_user_id', label: 'Instagram User ID', placeholder: '17xxxxxxxxxxxxxxxxx', type: 'text', required: true }, { key: 'catalog_id', label: 'Catalog ID (optional)', placeholder: '10xxxxxxxxxx', type: 'text', required: false }] },
   { id: 'pinterest',   label: 'Pinterest',          category: 'Social Commerce', desc: 'Pin analytics, saves, product catalog performance',    icon: '📌', accent: '#E60023', color: 'rgba(230,0,35,.06)',   oauthFlow: false, hint: 'Paste your access token from Pinterest Business › Apps', fields: [{ key: 'access_token', label: 'Access Token', placeholder: 'pina_xxxxxxxxxxxx', type: 'password', required: true }] },
 
@@ -84,6 +85,8 @@ const OAUTH_URL: Record<string, (f: Record<string, string>) => string> = {
   mailchimp:        ()  => '/api/auth/mailchimp',
   // Inventory
   linnworks:        ()  => '/api/auth/linnworks',
+  // Social Commerce
+  tiktok_shop:      ()  => '/api/auth/tiktok-shop',
   // Data
   google_sheets:    (f) => `/api/auth/google?spreadsheet_id=${encodeURIComponent(f.spreadsheet_id || '')}`,
 }
@@ -138,6 +141,10 @@ export default function SourcesPage() {
   const [shopifyConnecting, setShopifyConnecting] = useState<'manual' | 'oauth' | null>(null)
   const [shopifyError,      setShopifyError]      = useState('')
   const [shopifyTab,        setShopifyTab]        = useState<'oauth' | 'manual'>('oauth')
+  // TikTok Shop QR modal
+  const [tiktokQr,          setTiktokQr]          = useState<{ authUrl: string } | null>(null)
+  const [tiktokQrLoading,   setTiktokQrLoading]   = useState(false)
+  const tiktokPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     loadSources()
@@ -145,6 +152,7 @@ export default function SourcesPage() {
     const error     = searchParams?.get('error')
     if (connected) showToast(tc('sources.toast_connected', { name: connected.replace(/_/g, ' ') }), true)
     if (error)     showToast(tc('sources.toast_connection_failed', { error: error.replace(/_/g, ' ') }), false)
+    return () => { if (tiktokPollRef.current) clearInterval(tiktokPollRef.current) }
   }, [])
 
   const showToast = (msg: string, ok: boolean) => {
@@ -206,6 +214,37 @@ export default function SourcesPage() {
     if (!src) return
 
     if (src.oauthFlow) {
+      if (srcId === 'tiktok_shop') {
+        setModal(null)
+        setTiktokQrLoading(true)
+        try {
+          const res  = await fetch('/api/auth/tiktok-shop')
+          const data = await res.json()
+          if (data.auth_url) {
+            setTiktokQr({ authUrl: data.auth_url })
+            // Poll loadSources every 3s — when tiktok_shop appears, close modal + toast
+            tiktokPollRef.current = setInterval(async () => {
+              const pollRes  = await fetch('/api/sources')
+              const pollData = await pollRes.json().catch(() => ({ sources: [] }))
+              const found = (pollData.sources as Source[]).find(s => s.source_type === 'tiktok_shop')
+              if (found) {
+                clearInterval(tiktokPollRef.current!)
+                tiktokPollRef.current = null
+                setTiktokQr(null)
+                showToast(tc('sources.toast_connected', { name: 'TikTok Shop' }), true)
+                await loadSources()
+              }
+            }, 3000)
+          } else {
+            showToast(data.error || 'Failed to start TikTok connection', false)
+          }
+        } catch {
+          showToast('Failed to start TikTok connection', false)
+        } finally {
+          setTiktokQrLoading(false)
+        }
+        return
+      }
       const required = src.fields.filter(f => f.required)
       const missing  = required.find(f => !modalFields[f.key]?.trim())
       if (missing) { showToast(tc('sources.toast_please_enter', { label: missing.label }), false); return }
@@ -506,6 +545,36 @@ export default function SourcesPage() {
             <p style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', margin: '10px 0 0', lineHeight: 1.4 }}>
               {tc('sources.shopify_modal_footer')}
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── TikTok Shop QR modal ───────────────────────────────────────────────── */}
+      {tiktokQr && (
+        <div onClick={() => { setTiktokQr(null); if (tiktokPollRef.current) { clearInterval(tiktokPollRef.current); tiktokPollRef.current = null } }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: 'var(--sf)', borderRadius: 20, padding: 28, width: '100%', maxWidth: 360, border: '1px solid var(--b)', textAlign: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 8 }}>
+              <span style={{ fontSize: 28 }}>🎵</span>
+              <span style={{ fontFamily: 'var(--font-sora)', fontSize: 17, fontWeight: 700 }}>Connect TikTok Shop</span>
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 20, lineHeight: 1.6 }}>
+              Open the <strong>TikTok</strong> app on your phone, tap the scan icon, and scan this code to authorise your shop.
+            </p>
+            <div style={{ display: 'inline-flex', padding: 12, background: '#fff', borderRadius: 12, border: '1px solid var(--b)', marginBottom: 20 }}>
+              <QRCodeSVG value={tiktokQr.authUrl} size={180} level="M" />
+            </div>
+            <p style={{ fontSize: 11, color: 'var(--tx3)', marginBottom: 14 }}>Waiting for authorisation<span className="dots">…</span></p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <a href={tiktokQr.authUrl} target="_blank" rel="noopener noreferrer"
+                style={{ flex: 1, padding: 10, borderRadius: 10, background: '#010101', color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                Open on this device
+              </a>
+              <button onClick={() => { setTiktokQr(null); if (tiktokPollRef.current) { clearInterval(tiktokPollRef.current); tiktokPollRef.current = null } }}
+                style={{ padding: '10px 16px', borderRadius: 10, border: '1px solid var(--b)', background: 'transparent', fontSize: 13, color: 'var(--tx2)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
