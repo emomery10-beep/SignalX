@@ -9,7 +9,7 @@ import { resolveLocale, localePath } from '@/lib/i18n-locale'
 import { t } from '@/lib/i18n-catalog'
 
 export const dynamicParams = true
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600 // cache for 1 hour, regenerate in background
 
 async function getPostWithFallback(slug: string): Promise<BlogPost | null> {
   const staticPost = getPost(slug)
@@ -31,19 +31,18 @@ async function getPostWithFallback(slug: string): Promise<BlogPost | null> {
       .maybeSingle()
 
     if (error || !data) {
-      // Fallback: fetch recent published posts and match slug in JS
-      const { data: rows } = await supabase
+      // Fallback: filter by slug cast — avoids fetching all 500+ posts
+      const { data: row } = await supabase
         .from('agent_content')
         .select('content, created_at')
         .eq('type', 'blog')
         .eq('status', 'published')
-        .order('created_at', { ascending: false })
-        .limit(500)
-      const match = (rows || []).find((r: any) => r.content?.slug === slug)
-      if (!match) return null
+        .eq('content->>slug', slug)
+        .maybeSingle()
+      if (!row) return null
       return {
-        ...match.content,
-        publishDate: match.content.publishDate || match.created_at?.slice(0, 10),
+        ...row.content,
+        publishDate: row.content.publishDate || row.created_at?.slice(0, 10),
       }
     }
 

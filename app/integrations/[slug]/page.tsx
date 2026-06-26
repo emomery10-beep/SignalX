@@ -5,8 +5,7 @@ import { INTEGRATIONS, getIntegration } from '@/lib/integrations-content'
 import { getLocale, getT } from '@/lib/i18n-server'
 import { localePath, isRTL } from '@/lib/i18n-locale'
 
-// Dynamic so middleware x-locale header is readable at request time
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const int = getIntegration(params.slug)
