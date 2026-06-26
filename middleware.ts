@@ -7,12 +7,26 @@ import { ACTIVE_LOCALES, DEFAULT_LOCALE, resolveLocale } from '@/lib/i18n-locale
 // so existing indexed URLs and inbound links are untouched.
 const PREFIXED_LOCALES = ACTIVE_LOCALES.filter(l => l !== DEFAULT_LOCALE)
 
+// Inactive locale codes that once had URL prefixes — redirect to strip them.
+// Prevents 404s for users with /sw/..., /pt/..., etc. in their browser history.
+const INACTIVE_LOCALE_PREFIXES = ['sw', 'pt', 'it', 'pl']
+
 export async function middleware(request: NextRequest) {
   // ── Locale prefix → content locale (URL is the source of truth) ─────────────
   // /es/blog/x is rewritten to /blog/x internally with x-locale=es injected, so
   // the flat route tree renders translated content without being physically moved.
   const segments = request.nextUrl.pathname.split('/')
   const maybePrefix = segments[1]
+
+  // Inactive locale prefixes (sw, pt, …): strip and redirect to avoid 404s.
+  if (INACTIVE_LOCALE_PREFIXES.includes(maybePrefix)) {
+    const rest = '/' + segments.slice(2).join('/')
+    const cleanPath = rest === '/' ? '/' : rest.replace(/\/$/, '') || '/'
+    const target = new URL(cleanPath, request.url)
+    target.search = request.nextUrl.search
+    return NextResponse.redirect(target, { status: 301 })
+  }
+
   const hasLocalePrefix = (PREFIXED_LOCALES as string[]).includes(maybePrefix)
   const logicalPath = hasLocalePrefix ? '/' + segments.slice(2).join('/') : request.nextUrl.pathname
 
