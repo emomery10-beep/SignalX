@@ -74,7 +74,12 @@ export async function middleware(request: NextRequest) {
     })
   } else if (!existingLang) {
     const country = request.headers.get('x-vercel-ip-country') || ''
-    const detectedLang = COUNTRY_TO_LANG[country.toUpperCase() as keyof typeof COUNTRY_TO_LANG] || 'en'
+    const rawLang = COUNTRY_TO_LANG[country.toUpperCase() as keyof typeof COUNTRY_TO_LANG] || 'en'
+    // Only persist active locales — inactive ones (e.g. sw) must not be stored
+    // because downstream code may read the cookie directly and build prefixed URLs.
+    const detectedLang = (PREFIXED_LOCALES as string[]).includes(rawLang) || rawLang === DEFAULT_LOCALE
+      ? rawLang
+      : DEFAULT_LOCALE
     response.cookies.set('askbiz_lang', detectedLang, {
       path: '/',
       maxAge: 60 * 60 * 24 * 30,
