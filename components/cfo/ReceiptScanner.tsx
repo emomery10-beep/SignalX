@@ -61,43 +61,63 @@ export default function ReceiptScanner({ currencySymbol: sym, onConfirm, onCance
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
+  // Compress image to max 1280px / JPEG 0.85 before sending.
+  // Mobile camera photos are 3-8MB — base64 pushes them past Vercel's 4.5MB body limit.
+  // After compression they're typically 150-300KB, well within limits and fine for OCR.
+  const compressImage = (file: File): Promise<{ base64: string; previewUrl: string }> =>
+    new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file)
+      const img = new Image()
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        const MAX = 1280
+        let { width, height } = img
+        if (width > MAX || height > MAX) {
+          if (width > height) { height = Math.round(height * MAX / width); width = MAX }
+          else { width = Math.round(width * MAX / height); height = MAX }
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width; canvas.height = height
+        const ctx = canvas.getContext('2d')
+        if (!ctx) { reject(new Error('Canvas not supported')); return }
+        ctx.drawImage(img, 0, 0, width, height)
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
+        resolve({ base64: dataUrl.split(',')[1], previewUrl: dataUrl })
+      }
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not load image')) }
+      img.src = url
+    })
+
   const handleFile = async (file: File) => {
     if (!file.type.startsWith('image/')) { setErrorMsg(tc('cfo_receipts.errNotImage')); setStage('error'); return }
-    if (file.size > 10 * 1024 * 1024) { setErrorMsg(tc('cfo_receipts.errTooLarge')); setStage('error'); return }
+    if (file.size > 20 * 1024 * 1024) { setErrorMsg(tc('cfo_receipts.errTooLarge')); setStage('error'); return }
 
-    const reader = new FileReader()
-    reader.onload = async (e) => {
-      const dataUrl = e.target?.result as string
-      setPreview(dataUrl)
-      setStage('scanning')
-
-      try {
-        const base64 = dataUrl.split(',')[1]
-        const mediaType = file.type as 'image/jpeg' | 'image/png' | 'image/webp'
-        const res = await fetch('/api/cfo/scan-receipt', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: base64, mediaType }),
-        })
-        if (!res.ok) throw new Error(await res.text())
-        const data = await res.json()
-        const expense: ScannedExpense = {
-          vendor: data.vendor || '',
-          date: data.date || new Date().toISOString().split('T')[0],
-          amount: data.amount || 0,
-          category: data.category || 'Other',
-          notes: data.notes || '',
-          confidence: data.confidence || 0,
-        }
-        setScanned(expense)
-        setEditedExpense({ ...expense })
-        setStage('review')
-      } catch (err: any) {
-        setErrorMsg(err.message || tc('cfo_receipts.errScanFailed'))
-        setStage('error')
+    setStage('scanning')
+    try {
+      const { base64, previewUrl } = await compressImage(file)
+      setPreview(previewUrl)
+      const res = await fetch('/api/cfo/scan-receipt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64, mediaType: 'image/jpeg' }),
+      })
+      if (!res.ok) throw new Error(await res.text())
+      const data = await res.json()
+      const expense: ScannedExpense = {
+        vendor: data.vendor || '',
+        date: data.date || new Date().toISOString().split('T')[0],
+        amount: data.amount || 0,
+        category: data.category || 'Other',
+        notes: data.notes || '',
+        confidence: data.confidence || 0,
       }
+      setScanned(expense)
+      setEditedExpense({ ...expense })
+      setStage('review')
+    } catch (err: any) {
+      setErrorMsg(err.message || tc('cfo_receipts.errScanFailed'))
+      setStage('error')
     }
-    reader.readAsDataURL(file)
   }
 
   const inputStyle: React.CSSProperties = {
