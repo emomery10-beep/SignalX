@@ -119,7 +119,7 @@ export default function IntegrationPage({ params }: { params: { slug: string } }
             {int.whatYouGet.map((item, i) => (
               <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '14px 16px', background: SF, border: `1px solid ${BD}`, borderRadius: 10 }}>
                 <span style={{ color: '#27ae60', fontSize: 16, flexShrink: 0, marginTop: 1 }}>✓</span>
-                <span style={{ fontSize: 14, color: TX, lineHeight: 1.5 }}>{tOrFallback(`integrations_page.${sk}_wyg_${i}`, item)}</span>
+                <span style={{ fontSize: 14, color: TX, lineHeight: 1.5 }}>{tOrFallback(`integrations_detail.${sk}_wyg_${i}`, item)}</span>
               </div>
             ))}
           </div>
@@ -133,7 +133,7 @@ export default function IntegrationPage({ params }: { params: { slug: string } }
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {int.metrics.map((m, i) => (
               <span key={i} style={{ fontSize: 13, fontWeight: 600, color: int.color, background: int.color + '12', border: `1px solid ${int.color}30`, borderRadius: 9999, padding: '5px 14px' }}>
-                {tOrFallback(`integrations_page.${sk}_metric_${i}`, m)}
+                {tOrFallback(`integrations_detail.${sk}_metric_${i}`, m)}
               </span>
             ))}
           </div>
@@ -150,7 +150,7 @@ export default function IntegrationPage({ params }: { params: { slug: string } }
                 <div style={{ width: 26, height: 26, borderRadius: '50%', background: int.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 12, fontWeight: 700, color: 'white' }}>
                   {i + 1}
                 </div>
-                <span style={{ fontSize: 14, color: TX, lineHeight: 1.55, paddingTop: 3 }}>{tOrFallback(`integrations_page.${sk}_step_${i}`, step)}</span>
+                <span style={{ fontSize: 14, color: TX, lineHeight: 1.55, paddingTop: 3 }}>{tOrFallback(`integrations_detail.${sk}_step_${i}`, step)}</span>
               </div>
             ))}
           </div>
