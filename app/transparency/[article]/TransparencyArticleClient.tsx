@@ -114,7 +114,7 @@ export default function TransparencyArticleClient({ article, section, sectionArt
               <span className="ta-sep-dot">·</span>
               <span className="ta-read">{article.readTime} min read</span>
               <span className="ta-sep-dot">·</span>
-              <span className="ta-updated">Updated {new Date(article.lastUpdated).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
+              <span className="ta-updated">Updated {new Date(article.lastUpdated).toLocaleDateString(lang, { day: "numeric", month: "long", year: "numeric" })}</span>
             </div>
             <h1 className="ta-title">{article.title}</h1>
             <p className="ta-desc">{article.description}</p>
@@ -194,7 +194,7 @@ export default function TransparencyArticleClient({ article, section, sectionArt
           {/* Footer */}
           <div className="ta-footer-note">
             <p>
-              This article was last reviewed in <strong>{new Date(article.lastUpdated).toLocaleDateString("en-GB", { month: "long", year: "numeric" })}</strong>.
+              This article was last reviewed in <strong>{new Date(article.lastUpdated).toLocaleDateString(lang, { month: "long", year: "numeric" })}</strong>.
               If something is unclear or you believe it is inaccurate, email{" "}
               <a href="mailto:support@askbiz.co" className="ta-inline-link">support@askbiz.co</a>.
             </p>
