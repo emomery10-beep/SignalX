@@ -135,9 +135,17 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
     .filter(m => {
       if (!searchQuery) return true
       const q = searchQuery.toLowerCase()
-      return m.name.toLowerCase().includes(q) ||
-             m.region.toLowerCase().includes(q) ||
-             m.hot_categories.some(c => c.includes(q))
+      // Direct match: market name, region, or category slug
+      if (m.name.toLowerCase().includes(q) ||
+          m.region.toLowerCase().includes(q) ||
+          m.hot_categories.some(c => c.includes(q))) return true
+      // Category inference: e.g. "sesame" → food_beverage via parseExportQuery
+      const parsed = parseExportQuery(q)
+      if (parsed.specificMarkets.length > 0) return parsed.specificMarkets.includes(m.id)
+      if (parsed.regions.length > 0) return parsed.regions.some(r => m.region === r || m.region.includes(r))
+      if (parsed.categories.length > 0) return m.hot_categories.some(c => parsed.categories.includes(c))
+      // Unknown product keyword — show all markets ranked by score rather than 0 results
+      return true
     })
     .sort((a, b) => {
       if (sortBy === 'score')     return b.score - a.score
@@ -150,6 +158,16 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
 
   const hasBrexit = filtered.some(m => m.duty_environment === 'post_brexit')
   const topMarket = filtered[0]
+
+  // Was the search a direct hit, or did we fall back to showing all markets?
+  const searchIsDirectHit = searchQuery
+    ? scored.some(m =>
+        m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.region.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.hot_categories.some(c => c.includes(searchQuery.toLowerCase())) ||
+        (() => { const p = parseExportQuery(searchQuery.toLowerCase()); return p.specificMarkets.length > 0 || p.regions.length > 0 || p.categories.length > 0 })()
+      )
+    : true
 
   if (loading) {
     return (
@@ -250,7 +268,8 @@ export default function ExportMarkets({ onAsk, sym = '£' }: { onAsk: (prompt: s
         {filtered.length !== 1
           ? tc('intel_exportmarkets.resultsCountPlural').replace('{n}', String(filtered.length))
           : tc('intel_exportmarkets.resultsCount').replace('{n}', String(filtered.length))}
-        {searchQuery ? tc('intel_exportmarkets.resultsMatching').replace('{query}', searchQuery) : ''}
+        {searchQuery && searchIsDirectHit ? tc('intel_exportmarkets.resultsMatching').replace('{query}', searchQuery) : ''}
+        {searchQuery && !searchIsDirectHit ? ` · no exact match for "${searchQuery}" — showing all markets` : ''}
         {topMarket && !searchQuery ? tc('intel_exportmarkets.topOpportunity').replace('{flag}', topMarket.flag).replace('{name}', topMarket.name) : ''}
       </div>
 
