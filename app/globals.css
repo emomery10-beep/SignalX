@@ -288,7 +288,7 @@ input, textarea, select {
     background .18s var(--ease-out);
 }
 input:focus, textarea:focus, select:focus {
-  box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+  box-shadow: 0 0 0 3px rgba(208,138,89,.18);
 }
 
 /* Nav links — underline slide */
@@ -301,7 +301,7 @@ input:focus, textarea:focus, select:focus {
   position: absolute;
   bottom: -2px; left: 0;
   width: 0; height: 2px;
-  background: #6366F1;
+  background: var(--acc);
   border-radius: 1px;
   transition: width .2s var(--ease);
 }
@@ -927,7 +927,7 @@ img {
 
 /* Focus visible for accessibility */
 :focus-visible {
-  outline: 2px solid #6366F1;
+  outline: 2px solid var(--acc);
   outline-offset: 2px;
   border-radius: 4px;
 }

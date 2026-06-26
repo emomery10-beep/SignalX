@@ -190,8 +190,7 @@ export default function AuthPage() {
       <div style={{
         width: '100%', maxWidth: 'min(420px, 100%)',
         background: 'var(--sf)', border: '1px solid var(--b)',
-        borderRadius: 20, padding: '32px',
-        boxShadow: '0 8px 32px rgba(0,0,0,.08)'
+        borderRadius: 'var(--r-lg)', padding: '32px',
       }}>
 
         {/* Mode tabs */}
@@ -218,7 +217,7 @@ export default function AuthPage() {
         <h1 style={{ fontFamily: 'var(--font-sora, Sora)', fontSize: 20, fontWeight: 700, marginBottom: 6, textAlign: 'center', letterSpacing: '-.02em' }}>
           {mode === 'signin' ? tc('auth.welcome_back') : tc('auth.get_started')}
         </h1>
-        <p style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 24, textAlign: 'center' }}>
+        <p style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 24, textAlign: 'center', lineHeight: 1.5 }}>
           {mode === 'signin' ? tc('auth.signin_subtitle') : tc('auth.signup_subtitle')}
         </p>
 
@@ -262,7 +261,7 @@ export default function AuthPage() {
         )}
 
         {/* Email */}
-        <input value={email} onChange={e => setEmail(e.target.value)} placeholder={tc('auth.email_placeholder')} type="email" style={{ ...inp, marginBottom: 10 }}
+        <input value={email} onChange={e => setEmail(e.target.value)} placeholder={tc('auth.email_placeholder')} type="email" autoFocus style={{ ...inp, marginBottom: 10 }}
           onKeyDown={e => e.key === 'Enter' && triggerAuth('email')}/>
 
         {/* Password */}
@@ -289,26 +288,26 @@ export default function AuthPage() {
         )}
 
         {/* Error / Success */}
-        {error && <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(244,128,128,.1)', border: '1px solid rgba(244,128,128,.3)', fontSize: 13, color: '#f48080', marginBottom: 14 }}>{error}</div>}
-        {success && <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.3)', fontSize: 13, color: '#22c55e', marginBottom: 14 }}>✓ {success}</div>}
+        {error && <div role="alert" aria-live="polite" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(244,128,128,.1)', border: '1px solid rgba(244,128,128,.3)', fontSize: 13, color: '#b91c1c', marginBottom: 14 }}>{error}</div>}
+        {success && <div role="status" aria-live="polite" style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.3)', fontSize: 13, color: '#15803d', marginBottom: 14 }}>✓ {success}</div>}
 
         {/* Primary CTA */}
         <button onClick={() => triggerAuth('email')} disabled={loading || !email || !password || (mode === 'signup' && !consentChecked)}
           style={{ width: '100%', padding: '12px', borderRadius: 9999, border: 'none', background: 'var(--acc)', color: '#fff', fontFamily: 'var(--font-sora, Sora)', fontSize: 15, fontWeight: 600, cursor: loading || !email || !password || (mode === 'signup' && !consentChecked) ? 'not-allowed' : 'pointer', opacity: loading || !email || !password || (mode === 'signup' && !consentChecked) ? .6 : 1, marginBottom: 10 }}>
-          {loading ? tc('auth.please_wait') : mode === 'signin' ? `${tc('auth.tab_signin')} →` : `${tc('auth.tab_signup')} →`}
+          {loading ? (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <svg style={{ animation: 'spin .7s linear infinite' }} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+              {tc('auth.please_wait')}
+            </span>
+          ) : mode === 'signin' ? `${tc('auth.tab_signin')} →` : `${tc('auth.tab_signup')} →`}
         </button>
 
         {/* Inline consent details for signup */}
         {mode === 'signup' && (
-          <div style={{ marginTop: 8 }}>
-            <p style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.6, marginBottom: 6 }}>
-              {tc('auth.age_confirm')}
-            </p>
-            <p style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.6, margin: 0 }}>
-              {tc('auth.consent_details')}{' '}
-              <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--tx2)', textDecoration: 'underline' }}>{tc('auth.privacy_policy')}</a>.
-            </p>
-          </div>
+          <p style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.6, marginTop: 8 }}>
+            {tc('auth.age_confirm')}{' '}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--tx2)', textDecoration: 'underline' }}>{tc('auth.privacy_policy')}</a>.
+          </p>
         )}
 
         {/* Magic link */}

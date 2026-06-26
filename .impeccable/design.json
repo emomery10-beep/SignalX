@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-27T00:00:00Z",
+  "title": "Design System: AskBiz",
+  "extensions": {
+    "colorMeta": {
+      "accent":           { "role": "primary",   "displayName": "Terracotta Amber",    "canonical": "oklch(65% 0.12 55)",  "tonalRamp": ["oklch(20% 0.12 55)","oklch(30% 0.12 55)","oklch(42% 0.12 55)","oklch(53% 0.12 55)","oklch(65% 0.12 55)","oklch(75% 0.10 55)","oklch(85% 0.07 55)","oklch(95% 0.03 55)"] },
+      "accent-ai":        { "role": "secondary", "displayName": "Conversational Indigo","canonical": "oklch(58% 0.22 265)", "tonalRamp": ["oklch(18% 0.22 265)","oklch(28% 0.22 265)","oklch(38% 0.22 265)","oklch(48% 0.22 265)","oklch(58% 0.22 265)","oklch(68% 0.18 265)","oklch(80% 0.12 265)","oklch(93% 0.04 265)"] },
+      "accent-secondary": { "role": "tertiary",  "displayName": "Soft Violet",          "canonical": "oklch(62% 0.18 290)", "tonalRamp": ["oklch(20% 0.18 290)","oklch(30% 0.18 290)","oklch(42% 0.18 290)","oklch(52% 0.18 290)","oklch(62% 0.18 290)","oklch(72% 0.14 290)","oklch(83% 0.09 290)","oklch(94% 0.03 290)"] },
+      "bg":               { "role": "neutral",   "displayName": "Page Shell",           "canonical": "oklch(93% 0.005 230)","tonalRamp": ["oklch(15% 0.005 230)","oklch(30% 0.005 230)","oklch(50% 0.005 230)","oklch(70% 0.005 230)","oklch(85% 0.005 230)","oklch(90% 0.005 230)","oklch(93% 0.005 230)","oklch(97% 0.002 230)"] },
+      "surface":          { "role": "neutral",   "displayName": "Surface White",        "canonical": "oklch(100% 0 0)",    "tonalRamp": ["oklch(15% 0 0)","oklch(30% 0 0)","oklch(50% 0 0)","oklch(65% 0 0)","oklch(80% 0 0)","oklch(90% 0 0)","oklch(95% 0 0)","oklch(100% 0 0)"] },
+      "ink":              { "role": "neutral",   "displayName": "Warm Ink",             "canonical": "oklch(13% 0.01 55)",  "tonalRamp": ["oklch(13% 0.01 55)","oklch(22% 0.01 55)","oklch(34% 0.01 55)","oklch(45% 0.01 55)","oklch(56% 0.01 55)","oklch(68% 0.01 55)","oklch(80% 0.01 55)","oklch(95% 0.005 55)"] },
+      "ink-muted":        { "role": "neutral",   "displayName": "Muted Ink",            "canonical": "oklch(42% 0.01 40)",  "tonalRamp": ["oklch(15% 0.01 40)","oklch(25% 0.01 40)","oklch(35% 0.01 40)","oklch(42% 0.01 40)","oklch(55% 0.01 40)","oklch(68% 0.01 40)","oklch(80% 0.01 40)","oklch(93% 0.005 40)"] },
+      "ink-faint":        { "role": "neutral",   "displayName": "Faint Ink",            "canonical": "oklch(50% 0.01 40)",  "tonalRamp": ["oklch(20% 0.01 40)","oklch(30% 0.01 40)","oklch(40% 0.01 40)","oklch(50% 0.01 40)","oklch(62% 0.01 40)","oklch(74% 0.01 40)","oklch(85% 0.01 40)","oklch(95% 0.005 40)"] }
+    },
+    "shadows": [
+      { "name": "sh-rest",    "value": "0 2px 8px rgba(0,0,0,0.08)",   "purpose": "Interactive hover lift — buttons, card hover" },
+      { "name": "sh-float",   "value": "0 8px 32px rgba(0,0,0,0.12)",  "purpose": "Floating surfaces — modals, popovers, drawers" },
+      { "name": "sh-accent",  "value": "0 2px 8px rgba(208,138,89,0.3)","purpose": "Accent-shadow for active tab chips" },
+      { "name": "sh-glow",    "value": "0 0 30px rgba(208,138,89,0.15), 0 0 60px rgba(208,138,89,0.06)", "purpose": "Hero accent glow — use very sparingly" }
+    ],
+    "motion": [
+      { "name": "ease",        "value": "cubic-bezier(.16,1,.3,1)",      "purpose": "Default spring — most state transitions" },
+      { "name": "ease-out",    "value": "cubic-bezier(0,0,.2,1)",        "purpose": "Deceleration — menus, dropdowns arriving" },
+      { "name": "ease-in",     "value": "cubic-bezier(.4,0,1,1)",        "purpose": "Acceleration — elements departing" },
+      { "name": "ease-back",   "value": "cubic-bezier(.34,1.56,.64,1)",  "purpose": "Micro-overshoot — logo pop-in, toast enter only" },
+      { "name": "ease-snappy", "value": "cubic-bezier(.23,1,.32,1)",     "purpose": "Fast snappy spring — sidebar item active state" }
+    ],
+    "breakpoints": [
+      { "name": "mobile",  "value": "480px"  },
+      { "name": "sm",      "value": "640px"  },
+      { "name": "tablet",  "value": "768px"  },
+      { "name": "desktop", "value": "960px"  }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main CTA. Full-pill shape, terracotta fill. Used for submit actions and sign-in.",
+      "html": "<button class=\"ds-btn-primary\">Create account →</button>",
+      "css": ".ds-btn-primary { background: #d08a59; color: #fff; padding: 12px 24px; border-radius: 9999px; border: none; font-family: 'Sora', system-ui, sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.15s cubic-bezier(0,0,.2,1), transform 0.15s cubic-bezier(0,0,.2,1), box-shadow 0.2s cubic-bezier(0,0,.2,1); will-change: transform; } .ds-btn-primary:hover { background: #b87540; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); } .ds-btn-primary:active { transform: translateY(0) scale(0.97); box-shadow: none; transition-duration: 0.08s; } .ds-btn-primary:focus-visible { outline: 2px solid #d08a59; outline-offset: 3px; border-radius: 9999px; } .ds-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action — magic link, cancel. Transparent background with subtle border.",
+      "html": "<button class=\"ds-btn-ghost\">Send magic link</button>",
+      "css": ".ds-btn-ghost { background: transparent; color: #5a5652; padding: 11px 24px; border-radius: 9999px; border: 1px solid rgba(0,0,0,0.14); font-family: 'DM Sans', system-ui, sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s cubic-bezier(0,0,.2,1), border-color 0.15s cubic-bezier(0,0,.2,1); } .ds-btn-ghost:hover { background: #e8eaed; border-color: rgba(0,0,0,0.20); } .ds-btn-ghost:focus-visible { outline: 2px solid #d08a59; outline-offset: 3px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Email, password, and other form fields. Elevated background at rest.",
+      "html": "<input class=\"ds-input\" type=\"email\" placeholder=\"Email address\" />",
+      "css": ".ds-input { width: 100%; background: #ffffff; color: #161412; border: 1px solid rgba(0,0,0,0.14); border-radius: 10px; padding: 11px 14px; font-family: 'DM Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.4; outline: none; box-sizing: border-box; transition: border-color 0.18s cubic-bezier(0,0,.2,1), box-shadow 0.18s cubic-bezier(0,0,.2,1); } .ds-input:focus { border-color: rgba(208,138,89,0.5); box-shadow: 0 0 0 3px rgba(208,138,89,0.15); } .ds-input::placeholder { color: #9e9792; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card-default",
+      "description": "Standard container for content blocks. White surface on gray shell; border, no shadow at rest.",
+      "html": "<div class=\"ds-card\"><p>Card content here</p></div>",
+      "css": ".ds-card { background: #ffffff; border: 1px solid rgba(0,0,0,0.08); border-radius: 16px; padding: 20px; box-sizing: border-box; } .ds-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: box-shadow 0.25s cubic-bezier(0,0,.2,1); }"
+    },
+    {
+      "name": "Tab Switcher",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Sign in / Create account toggle. Pill tray with elevated background; active tab is terracotta.",
+      "html": "<div class=\"ds-tab-tray\"><button class=\"ds-tab ds-tab-active\">Sign in</button><button class=\"ds-tab\">Create account</button></div>",
+      "css": ".ds-tab-tray { display: flex; background: #e8eaed; border-radius: 12px; padding: 4px; } .ds-tab { flex: 1; padding: 10px; border-radius: 9px; border: none; background: transparent; color: #5a5652; font-family: 'DM Sans', system-ui, sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s, color 0.15s, box-shadow 0.15s; } .ds-tab.ds-tab-active { background: #d08a59; color: #fff; box-shadow: 0 2px 8px rgba(208,138,89,0.3); } .ds-tab:focus-visible { outline: 2px solid #d08a59; outline-offset: 2px; }"
+    },
+    {
+      "name": "Logo Mark",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "36x36px terracotta pill. Three analytics bars + ascending arrow. Always terracotta — never any other fill.",
+      "html": "<div class=\"ds-logo\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 32 32\" fill=\"none\"><rect x=\"3\" y=\"22\" width=\"5\" height=\"7\" rx=\"1.5\" fill=\"white\" opacity=\"0.45\"/><rect x=\"11\" y=\"16\" width=\"5\" height=\"13\" rx=\"1.5\" fill=\"white\" opacity=\"0.7\"/><rect x=\"19\" y=\"9\" width=\"5\" height=\"20\" rx=\"1.5\" fill=\"white\"/><path d=\"M21 7 L24 3 L27 7\" fill=\"none\" stroke=\"white\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></div>",
+      "css": ".ds-logo { width: 36px; height: 36px; border-radius: 10px; background: #d08a59; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Founder's Terminal",
+    "overview": "AskBiz looks like something a CFO would have on their desk if CFOs had good taste. Data-forward without being clinical; warm without being soft. The visual vocabulary is precise: clean tokens, sharp type, a single amber accent that carries all the brand warmth while the surface stays neutral and cool.\n\nEvery design decision serves one master: time-to-answer. Founders open this app with a specific question and need an answer in under 60 seconds. Anything that adds delay, hesitation, or cognitive weight is eliminated. The interface does not try to be beautiful; it tries to be right. The beauty is a side-effect of the precision.\n\nThe tone is that of a blunt, trusted analyst: never hedges, never over-explains, always gives you the number and the action. The visual system is the voice made visible — sharp edges, precise type, no decoration that doesn't earn its place.",
+    "keyCharacteristics": [
+      "Cool blue-gray shell; white cards; terracotta (#d08a59) as the only accent",
+      "Sora (display) + DM Sans (body) — geometric precision meets humanist legibility",
+      "Spacing varies for rhythm — tight within groups, generous between sections",
+      "Spring-based motion (cubic-bezier(.16,1,.3,1)) — fast and decisive",
+      "RTL support built in (Arabic is an active locale)"
+    ],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "#d08a59 is the only brand color used on interactive elements. Never place a second accent (#6366f1, #8c6fe0) on a primary button or navigation active state. Indigo is for AI surfaces only.", "section": "colors" },
+      { "name": "The Cool Shell Rule", "body": "The page background (#f2f3f5) must remain cool. Do not warm it. The amber reads stronger against a cool field. A warm shell muddy the contrast and reads as cream — which is the generic 2026 AI tell.", "section": "colors" },
+      { "name": "The Tracking Floor Rule", "body": "Display and headline letter-spacing never exceeds -0.03em. Below that, letters touch and the page reads cramped. -0.02em to -0.03em is the working range.", "section": "typography" },
+      { "name": "The Sora-for-Identity Rule", "body": "Sora appears on headings and the wordmark only. Body copy, form labels, and navigation always use DM Sans. Mixing them at comparable weights destroys the hierarchy.", "section": "typography" },
+      { "name": "The One-or-the-Other Rule", "body": "A surface element either has a border OR a shadow — never both. The ghost-card pattern (border + wide box-shadow on the same element) is prohibited.", "section": "elevation" },
+      { "name": "The Flat-By-Default Rule", "body": "Cards at rest are flat (border only). Shadow appears as a response to state (hover, drag, elevation), never as decoration.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use #d08a59 as the single brand accent on all CTAs, active states, and the logo mark",
+      "Do keep the background #f2f3f5 — cool, not warm",
+      "Do use Sora exclusively for headlines and the wordmark; DM Sans everywhere else",
+      "Do use tonal layering (shell → surface) as the primary depth cue; border on resting cards, shadow only on floating elements",
+      "Do use the spring easing (cubic-bezier(.16,1,.3,1)) for state transitions",
+      "Do use font-size 16px minimum on mobile inputs to prevent iOS zoom",
+      "Do reserve #6366f1 (indigo) for the AI / Ask conversational feature only",
+      "Do test all text against WCAG AA (≥ 4.5:1)",
+      "Do provide a :focus-visible ring — 2px solid #d08a59 — on all interactive elements"
+    ],
+    "donts": [
+      "Don't use the warm-cream background band (#f9f7f2, #faf8f4, etc.) as a page shell — this is the 2026 AI monoculture tell",
+      "Don't use a border AND a shadow on the same card — the ghost-card pattern is prohibited",
+      "Don't exceed border-radius: 16px on cards — over-rounding reads as generic SaaS",
+      "Don't use indigo (#6366f1) on primary buttons, tab switchers, or navigation",
+      "Don't use gradient text (background-clip: text) — use a single solid color",
+      "Don't put a side-stripe border (border-left: 3px solid #d08a59) on list items or cards",
+      "Don't use border-radius values 24/28/32/40px on cards — codex over-rounding tell",
+      "Don't place gray text (--tx3) on the amber accent background — use white",
+      "Don't use navy-blue-white enterprise SaaS color schemes (Salesforce/HubSpot energy — prohibited)",
+      "Don't use bouncy/elastic easing on main UI transitions — spring or decel only"
+    ]
+  }
+}
