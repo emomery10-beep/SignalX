@@ -175,7 +175,7 @@ export default function AuthPage() {
 
       {/* Logo */}
       <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 32, textDecoration: 'none', color: 'var(--tx)' }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: '#d08a59', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="18" height="18" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="3" y="22" width="5" height="7" rx="1.5" fill="white" opacity="0.45"/>
             <rect x="11" y="16" width="5" height="13" rx="1.5" fill="white" opacity="0.7"/>
