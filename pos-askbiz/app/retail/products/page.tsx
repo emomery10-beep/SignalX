@@ -116,7 +116,7 @@ function RetailProducts() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       streamRef.current = stream
-      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play() }
+      if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play().catch(() => {}) }
     } catch (e: any) {
       console.error('camera error', e)
       setCamError(tc('retail_products.camera_unavailable'))

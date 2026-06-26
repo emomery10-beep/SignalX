@@ -130,7 +130,7 @@ export default function ShiftPage() {
         video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
       })
       streamRef.current = stream
-      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play() }
+      if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play().catch(() => {}) }
       setCameraOn(true)
     } catch (err: any) {
       setCameraErr(err?.name === 'NotAllowedError' ? tc('factory_shift.camera_access_denied') : tc('factory_shift.camera_unavailable'))

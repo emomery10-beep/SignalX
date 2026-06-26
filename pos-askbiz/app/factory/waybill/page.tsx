@@ -130,7 +130,7 @@ export default function WaybillPage() {
       streamRef.current = stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream
-        await videoRef.current.play()
+        videoRef.current.play().catch(() => {})
       }
     } catch { setError(tc('error_camera_denied')); setStage('hub') }
   }, [tc])

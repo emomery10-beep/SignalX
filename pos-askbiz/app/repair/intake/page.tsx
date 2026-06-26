@@ -117,7 +117,7 @@ export default function RepairIntake() {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
       })
-      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play() }
+      if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play().catch(() => {}) }
       setCameraActive(true)
     } catch (err: any) {
       // Permission denied or no camera — fall back to file input (capture attr opens native camera on mobile)

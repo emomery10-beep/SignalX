@@ -122,7 +122,7 @@ export default function FactoryCapturePage() {
       streamRef.current = stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream
-        await videoRef.current.play()
+        videoRef.current.play().catch(() => {})
       }
       setCameraOn(true)
     } catch (err: any) {

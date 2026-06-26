@@ -109,7 +109,7 @@ export default function RetailStocktake() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
       streamRef.current = stream
-      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play() }
+      if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.play().catch(() => {}) }
     } catch (e) {
       console.error('camera error', e)
       setCamError(tc('retail_stocktake.camera_unavailable'))
