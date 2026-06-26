@@ -84,21 +84,17 @@ function getColour(cluster: string) {
   return CLUSTER_COLOURS[cluster] || { text: ACC, bg: 'rgba(208,138,89,.08)', border: 'rgba(208,138,89,.2)' }
 }
 
-function fmtDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+function fmtDateShort(dateStr: string, lang: string) {
+  return new Date(dateStr).toLocaleDateString(lang, { month: 'short', year: 'numeric' })
 }
 
-function fmtDateShort(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
-}
-
-function relativeDate(dateStr: string, tc: (key: string, vars?: Record<string, string | number>) => string): string {
+function relativeDate(dateStr: string, lang: string, tc: (key: string, vars?: Record<string, string | number>) => string): string {
   const diffDays = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000)
   if (diffDays === 0) return tc('blog_index.date_today')
   if (diffDays === 1) return tc('blog_index.date_yesterday')
   if (diffDays < 7) return tc('blog_index.date_days_ago', { count: diffDays })
   if (diffDays < 30) return tc('blog_index.date_weeks_ago', { count: Math.floor(diffDays / 7) })
-  return fmtDateShort(dateStr)
+  return fmtDateShort(dateStr, lang)
 }
 
 function isNew(dateStr: string): boolean {
@@ -213,7 +209,7 @@ const PAGE_SIZE = 20
 
 // ── Inner component (needs useSearchParams → requires Suspense wrapper) ──────
 function BlogContent() {
-  const { lang, tc }   = useLang()
+  const { lang, tc, isRTL }   = useLang()
   const searchParams   = useSearchParams()
   const staticPosts    = getAllPosts()
   const [agentPosts, setAgentPosts] = useState<ReturnType<typeof getAllPosts>>([])
@@ -389,11 +385,11 @@ function BlogContent() {
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
           <div style={{ fontSize: 11, color: TX3, whiteSpace: 'nowrap' }}>{tc('blog_index.post_min', { count: post.readTime })}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', marginTop: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: isRTL ? 'flex-start' : 'flex-end', marginTop: 2 }}>
             {isNew(post.publishDate) && (
               <span style={{ fontSize: 9, fontWeight: 700, color: '#16a34a', background: 'rgba(22,163,74,.1)', border: '1px solid rgba(22,163,74,.2)', borderRadius: 4, padding: '1px 5px', letterSpacing: '.04em', lineHeight: 1.4 }}>{tc('blog_index.badge_new')}</span>
             )}
-            <div style={{ fontSize: 11, color: isNew(post.publishDate) ? '#16a34a' : TX3, whiteSpace: 'nowrap', fontWeight: isNew(post.publishDate) ? 500 : 400 }}>{relativeDate(post.publishDate, tc)}</div>
+            <div style={{ fontSize: 11, color: isNew(post.publishDate) ? '#16a34a' : TX3, whiteSpace: 'nowrap', fontWeight: isNew(post.publishDate) ? 500 : 400 }}>{relativeDate(post.publishDate, lang, tc)}</div>
           </div>
         </div>
       </Link>
@@ -424,7 +420,7 @@ function BlogContent() {
         }
         @media (max-width: 860px) {
           .blog-layout { grid-template-columns: 1fr !important; }
-          .blog-sidebar-wrap { display: none; position: fixed; top: 54px; left: 0; bottom: 0; width: 280px; z-index: 40; background: ${SF}; box-shadow: 4px 0 24px rgba(0,0,0,.12); overflow-y: auto; }
+          .blog-sidebar-wrap { display: none; position: fixed; top: 54px; ${isRTL ? 'right' : 'left'}: 0; bottom: 0; width: 280px; z-index: 40; background: ${SF}; box-shadow: ${isRTL ? '-4px' : '4px'} 0 24px rgba(0,0,0,.12); overflow-y: auto; }
           .blog-sidebar-wrap.open { display: block; }
           .sidebar-overlay.open { display: block; }
           .mobile-toggle { display: flex !important; }
@@ -464,7 +460,7 @@ function BlogContent() {
 
         {/* ── Sidebar ── */}
         <div className={`blog-sidebar-wrap${sidebarOpen ? ' open' : ''}`}>
-          <aside style={{ minHeight: '100%', borderRight: `1px solid ${BD}`, padding: '20px 0 32px' }}>
+          <aside style={{ minHeight: '100%', [isRTL ? 'borderLeft' : 'borderRight']: `1px solid ${BD}`, padding: '20px 0 32px' }}>
 
             <div style={{ padding: '0 12px', marginBottom: 4 }}>
               <button className="sb-btn" onClick={goHome} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '8px 12px', borderRadius: 8, background: isHome ? 'rgba(208,138,89,.12)' : 'transparent', color: isHome ? ACC : TX2, fontSize: 13, fontWeight: isHome ? 600 : 400 }}>
@@ -530,11 +526,11 @@ function BlogContent() {
               </div>
             )}
             <div style={{ position: 'relative', maxWidth: isHome ? 580 : 480 }}>
-              <svg style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="2" strokeLinecap="round">
+              <svg style={{ position: 'absolute', [isRTL ? 'right' : 'left']: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TX3} strokeWidth="2" strokeLinecap="round">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
               </svg>
               <input className="search-input" type="text" placeholder={tc('blog_index.search_placeholder')} value={search} onChange={e => { setSearch(e.target.value); setActive(null); setActivePillar(null); setVisibleCount(PAGE_SIZE) }}
-                style={{ width: '100%', boxSizing: 'border-box', padding: '11px 38px 11px 44px', fontSize: 14, color: TX, background: SF, border: `1.5px solid ${BD}`, borderRadius: 10, transition: 'border-color 150ms, box-shadow 150ms' }}
+                style={{ width: '100%', boxSizing: 'border-box', padding: isRTL ? '11px 44px 11px 38px' : '11px 38px 11px 44px', fontSize: 14, color: TX, background: SF, border: `1.5px solid ${BD}`, borderRadius: 10, transition: 'border-color 150ms, box-shadow 150ms' }}
               />
               {search && (
                 <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: TX3, fontSize: 18, lineHeight: 1, padding: '0 2px' }}>×</button>

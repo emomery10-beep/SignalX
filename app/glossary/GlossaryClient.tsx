@@ -25,7 +25,7 @@ function getFirstLetter(title: string): string {
 }
 
 export default function GlossaryClient({ articles, categories }: Props) {
-  const { tc } = useLang();
+  const { tc, isRTL } = useLang();
   const [activeLetter, setActiveLetter] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -140,7 +140,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
           <span
             style={{
               position: "absolute",
-              left: 16,
+              [isRTL ? "right" : "left"]: 16,
               top: "50%",
               transform: "translateY(-50%)",
               fontSize: 17,
@@ -160,7 +160,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
             }}
             style={{
               width: "100%",
-              padding: "14px 42px 14px 46px",
+              padding: isRTL ? "14px 46px 14px 42px" : "14px 42px 14px 46px",
               borderRadius: 10,
               border: "none",
               fontSize: 15,
@@ -176,7 +176,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
               onClick={() => setQuery("")}
               style={{
                 position: "absolute",
-                right: 14,
+                [isRTL ? "left" : "right"]: 14,
                 top: "50%",
                 transform: "translateY(-50%)",
                 background: "none",
@@ -207,6 +207,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
         }}
       >
         <div
+          dir="ltr"
           style={{
             display: "flex",
             gap: 4,
@@ -298,7 +299,10 @@ export default function GlossaryClient({ articles, categories }: Props) {
             <button
               onClick={() => setActiveCategory(null)}
               style={{
-                textAlign: "left",
+                textAlign: "start",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
                 padding: "8px 12px",
                 borderRadius: 8,
                 border: "none",
@@ -310,8 +314,8 @@ export default function GlossaryClient({ articles, categories }: Props) {
                 fontFamily: "DM Sans, sans-serif",
               }}
             >
-              {tc("glossary.all_categories")}
-              <span style={{ float: "right", color: "#aaa", fontWeight: 400 }}>
+              <span>{tc("glossary.all_categories")}</span>
+              <span style={{ color: "#aaa", fontWeight: 400 }}>
                 {articles.length}
               </span>
             </button>
@@ -327,7 +331,11 @@ export default function GlossaryClient({ articles, categories }: Props) {
                     setActiveCategory(isActive ? null : cat.slug)
                   }
                   style={{
-                    textAlign: "left",
+                    textAlign: "start",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 6,
                     padding: "8px 12px",
                     borderRadius: 8,
                     border: "none",
@@ -340,11 +348,11 @@ export default function GlossaryClient({ articles, categories }: Props) {
                     lineHeight: 1.4,
                   }}
                 >
-                  <span style={{ marginRight: 6 }}>{cat.icon}</span>
-                  {cat.title}
-                  <span
-                    style={{ float: "right", color: "#aaa", fontWeight: 400 }}
-                  >
+                  <span style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, minWidth: 0 }}>
+                    <span>{cat.icon}</span>
+                    <span>{cat.title}</span>
+                  </span>
+                  <span style={{ color: "#aaa", fontWeight: 400, flexShrink: 0 }}>
                     {count}
                   </span>
                 </button>
@@ -524,7 +532,7 @@ export default function GlossaryClient({ articles, categories }: Props) {
                             flexShrink: 0,
                           }}
                         >
-                          →
+                          {isRTL ? "←" : "→"}
                         </span>
                       </div>
                       <p
