@@ -84,7 +84,8 @@ async function runMarketingScout() {
       .like('run_id', 'blog_mktg_uk_%')
       .gte('created_at', `${today}T00:00:00Z`)
     if ((todayCount ?? 0) > 0) {
-      return NextResponse.json({ skipped: true, reason: 'already_ran_today', date: today })
+      log.push(`Already ran today (${today}) — skipping to avoid duplicates`)
+      return NextResponse.json({ skipped: true, reason: 'already_ran_today', date: today, log })
     }
 
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -123,9 +124,9 @@ async function runMarketingScout() {
     })
 
     scoredQueries.sort((a, b) => a.penalty - b.penalty || Math.random() - 0.5)
-    const selected = scoredQueries.slice(0, 1)
+    const selected = scoredQueries.slice(0, 5)
 
-    log.push(`Selected 5 topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
+    log.push(`Selected ${selected.length} topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
     log.push('Searching Tavily for marketing intelligence...')
 
     const searchResults = await Promise.allSettled(
