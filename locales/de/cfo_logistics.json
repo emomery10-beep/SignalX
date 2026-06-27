@@ -1,20 +1,18 @@
 {
-  "cfo_logistics": {
-    "title": "Logistik & Sendungen",
-    "provider": "Track17",
-    "emptyState": "Keine aktiven Sendungen verfolgt. Füge Sendungen über die Track17-Integration hinzu, um deren Auswirkungen auf das Umlaufkapital zu sehen.",
-    "askAi": "KI fragen",
-    "askPrompt": "Meine Sendungen: {inTransitCount} unterwegs im Wert von {inTransitValue}, {delayedCount} verzögert ({delayedValue} gefährdet), Finanzierungskosten {financingCost}, durchschn. Lieferzeit {avgDays} Tage. Wie kann ich Logistikkosten und gebundenes Umlaufkapital reduzieren?",
-    "metricInTransit": "Unterwegs",
-    "metricDelayed": "Verzögert",
-    "metricAvgDelivery": "Ø Lieferzeit",
-    "metricFinanceCost": "Finanzierungskosten",
-    "workingCapitalDays": "Umlaufkapitaltage",
-    "capitalTiedUp": "gebundenes Kapital",
-    "shipmentHealth": "Sendungsstatus",
-    "onTime": "{n} pünktlich",
-    "delayedCount": "{n} verzögert",
-    "atRiskWarning": "{n} Sendung als gefährdet markiert – weitere Verzögerungen können zu Lieferengpässen oder Umsatzausfällen führen.",
-    "inTransitSummary": "{value} an Lagerbestand sind derzeit unterwegs. Dieses Kapital ist durchschnittlich {days} Tage gebunden, bis die Ware eintrifft und verkauft werden kann."
-  }
+  "title": "Logistik & Sendungen",
+  "provider": "Track17",
+  "emptyState": "Keine aktiven Sendungen verfolgt. Füge Sendungen über die Track17-Integration hinzu, um deren Auswirkungen auf das Umlaufkapital zu sehen.",
+  "askAi": "KI fragen",
+  "askPrompt": "Meine Sendungen: {inTransitCount} unterwegs im Wert von {inTransitValue}, {delayedCount} verzögert ({delayedValue} gefährdet), Finanzierungskosten {financingCost}, durchschn. Lieferzeit {avgDays} Tage. Wie kann ich Logistikkosten und gebundenes Umlaufkapital reduzieren?",
+  "metricInTransit": "Unterwegs",
+  "metricDelayed": "Verzögert",
+  "metricAvgDelivery": "Ø Lieferzeit",
+  "metricFinanceCost": "Finanzierungskosten",
+  "workingCapitalDays": "Umlaufkapitaltage",
+  "capitalTiedUp": "gebundenes Kapital",
+  "shipmentHealth": "Sendungsstatus",
+  "onTime": "{n} pünktlich",
+  "delayedCount": "{n} verzögert",
+  "atRiskWarning": "{n} Sendung als gefährdet markiert – weitere Verzögerungen können zu Lieferengpässen oder Umsatzausfällen führen.",
+  "inTransitSummary": "{value} an Lagerbestand sind derzeit unterwegs. Dieses Kapital ist durchschnittlich {days} Tage gebunden, bis die Ware eintrifft und verkauft werden kann."
 }

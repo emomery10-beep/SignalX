@@ -1,20 +1,18 @@
 {
-  "cfo_logistics": {
-    "title": "الخدمات اللوجستية والشحنات",
-    "provider": "Track17",
-    "emptyState": "لا توجد شحنات نشطة مُتتبَّعة. أضف شحنات عبر تكامل Track17 لرؤية تأثير الخدمات اللوجستية على رأس المال العامل.",
-    "askAi": "اسأل الذكاء الاصطناعي",
-    "askPrompt": "شحناتي: {inTransitCount} في الطريق بقيمة {inTransitValue}، و{delayedCount} متأخرة ({delayedValue} في خطر)، تكلفة التمويل {financingCost}، متوسط التسليم {avgDays} أيام. كيف يمكنني تقليل تكاليف الخدمات اللوجستية ورأس المال المُجمَّد في الشحنات؟",
-    "metricInTransit": "في الطريق",
-    "metricDelayed": "متأخرة",
-    "metricAvgDelivery": "متوسط التسليم",
-    "metricFinanceCost": "تكلفة التمويل",
-    "workingCapitalDays": "أيام رأس المال العامل",
-    "capitalTiedUp": "رأس المال المُجمَّد",
-    "shipmentHealth": "حالة الشحنات",
-    "onTime": "{n} في الموعد",
-    "delayedCount": "{n} متأخرة",
-    "atRiskWarning": "{n} شحنة مُصنَّفة كخطرة — قد تُسبب نفاد المخزون أو خسارة في الإيرادات إذا تأخرت أكثر.",
-    "inTransitSummary": "{value} من المخزون في الطريق حالياً. هذا الرأس المال مُجمَّد لمتوسط {days} أيام حتى وصول البضاعة وإمكانية بيعها."
-  }
+  "title": "الخدمات اللوجستية والشحنات",
+  "provider": "Track17",
+  "emptyState": "لا توجد شحنات نشطة مُتتبَّعة. أضف شحنات عبر تكامل Track17 لرؤية تأثير الخدمات اللوجستية على رأس المال العامل.",
+  "askAi": "اسأل الذكاء الاصطناعي",
+  "askPrompt": "شحناتي: {inTransitCount} في الطريق بقيمة {inTransitValue}، و{delayedCount} متأخرة ({delayedValue} في خطر)، تكلفة التمويل {financingCost}، متوسط التسليم {avgDays} أيام. كيف يمكنني تقليل تكاليف الخدمات اللوجستية ورأس المال المُجمَّد في الشحنات؟",
+  "metricInTransit": "في الطريق",
+  "metricDelayed": "متأخرة",
+  "metricAvgDelivery": "متوسط التسليم",
+  "metricFinanceCost": "تكلفة التمويل",
+  "workingCapitalDays": "أيام رأس المال العامل",
+  "capitalTiedUp": "رأس المال المُجمَّد",
+  "shipmentHealth": "حالة الشحنات",
+  "onTime": "{n} في الموعد",
+  "delayedCount": "{n} متأخرة",
+  "atRiskWarning": "{n} شحنة مُصنَّفة كخطرة — قد تُسبب نفاد المخزون أو خسارة في الإيرادات إذا تأخرت أكثر.",
+  "inTransitSummary": "{value} من المخزون في الطريق حالياً. هذا الرأس المال مُجمَّد لمتوسط {days} أيام حتى وصول البضاعة وإمكانية بيعها."
 }

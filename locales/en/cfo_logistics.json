@@ -1,20 +1,18 @@
 {
-  "cfo_logistics": {
-    "title": "Logistics & Shipments",
-    "provider": "Track17",
-    "emptyState": "No active shipments tracked. Add shipments via the Track17 integration to see logistics impact on working capital.",
-    "askAi": "Ask AI",
-    "askPrompt": "My shipments: {inTransitCount} in transit worth {inTransitValue}, {delayedCount} delayed ({delayedValue} at risk), financing cost {financingCost}, avg delivery {avgDays} days. How can I reduce logistics costs and working capital tied up in transit?",
-    "metricInTransit": "In Transit",
-    "metricDelayed": "Delayed",
-    "metricAvgDelivery": "Avg Delivery",
-    "metricFinanceCost": "Finance Cost",
-    "workingCapitalDays": "working capital days",
-    "capitalTiedUp": "capital tied up",
-    "shipmentHealth": "Shipment Health",
-    "onTime": "{n} on time",
-    "delayedCount": "{n} delayed",
-    "atRiskWarning": "{n} shipment flagged as at-risk — may cause stockout or revenue loss if delayed further.",
-    "inTransitSummary": "{value} in inventory is currently in transit. This capital is tied up for an average of {days} days until goods arrive and can be sold."
-  }
+  "title": "Logistics & Shipments",
+  "provider": "Track17",
+  "emptyState": "No active shipments tracked. Add shipments via the Track17 integration to see logistics impact on working capital.",
+  "askAi": "Ask AI",
+  "askPrompt": "My shipments: {inTransitCount} in transit worth {inTransitValue}, {delayedCount} delayed ({delayedValue} at risk), financing cost {financingCost}, avg delivery {avgDays} days. How can I reduce logistics costs and working capital tied up in transit?",
+  "metricInTransit": "In Transit",
+  "metricDelayed": "Delayed",
+  "metricAvgDelivery": "Avg Delivery",
+  "metricFinanceCost": "Finance Cost",
+  "workingCapitalDays": "working capital days",
+  "capitalTiedUp": "capital tied up",
+  "shipmentHealth": "Shipment Health",
+  "onTime": "{n} on time",
+  "delayedCount": "{n} delayed",
+  "atRiskWarning": "{n} shipment flagged as at-risk — may cause stockout or revenue loss if delayed further.",
+  "inTransitSummary": "{value} in inventory is currently in transit. This capital is tied up for an average of {days} days until goods arrive and can be sold."
 }
