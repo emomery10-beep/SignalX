@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { tavilySearch } from '@/lib/tavily'
+import { tavilySearch, type TavilySearchResponse } from '@/lib/tavily'
+import { serperSearch } from '@/lib/serper'
 import { logUsage } from '@/lib/log-usage'
 
 export const runtime     = 'nodejs'
@@ -84,7 +85,7 @@ async function runCarolyneScout() {
       .like('run_id', 'blog_ea_%')
       .gte('created_at', `${today}T00:00:00Z`)
     if ((todayCount ?? 0) > 0) {
-      return NextResponse.json({ skipped: true, reason: 'already_ran_today', date: today })
+      return NextResponse.json({ skipped: true, reason: 'already_ran_today', date: today, log: [`Carolyne already ran today (${today}) — skipping to avoid duplicates.`] })
     }
 
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -123,25 +124,47 @@ async function runCarolyneScout() {
     })
 
     scoredQueries.sort((a, b) => a.penalty - b.penalty || Math.random() - 0.5)
-    const selected = scoredQueries.slice(0, 1)
+    const selected = scoredQueries.slice(0, 5)
+
+    const hasTavily = !!process.env.TAVILY_API_KEY
+    const hasSerper = !!process.env.SERPER_API_KEY
+    if (!hasTavily && !hasSerper) {
+      log.push('ERROR: No search keys set — add TAVILY_API_KEY or SERPER_API_KEY to Vercel env vars')
+      return NextResponse.json({ success: false, log }, { status: 200 })
+    }
 
     log.push(`Selected 5 topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
-    log.push('Searching Tavily for East African market data...')
+    log.push(`Searching ${hasTavily ? 'Tavily' : ''}${hasTavily && hasSerper ? ' + ' : ''}${hasSerper ? 'Serper' : ''} for East African market data...`)
 
     const searchResults = await Promise.allSettled(
-      selected.map(s =>
-        tavilySearch(s.query, {
-          searchDepth:   'advanced',
-          maxResults:    5,
-          includeAnswer: true,
-          topic:         'news',
-          days:          14,
-        }).then(result => ({ ...s, searchResult: result }))
-      )
+      selected.map(async s => {
+        let searchResult: TavilySearchResponse | null = null
+        if (hasTavily) {
+          searchResult = await tavilySearch(s.query, {
+            searchDepth:   'advanced',
+            maxResults:    5,
+            includeAnswer: true,
+            topic:         'news',
+            days:          14,
+          })
+        }
+        if (!searchResult?.results?.length && hasSerper) {
+          const serperRes = await serperSearch(s.query, { type: 'news', num: 5 })
+          if (serperRes?.organic?.length) {
+            searchResult = {
+              query:   s.query,
+              answer:  serperRes.answerBox?.snippet || serperRes.answerBox?.answer || '',
+              results: serperRes.organic.map(r => ({ url: r.link, title: r.title, content: r.snippet, score: 0.7, published_date: r.date })),
+              response_time: 0,
+            } as TavilySearchResponse
+          }
+        }
+        return { ...s, searchResult }
+      })
     )
 
     const validResults = searchResults
-      .filter((r): r is PromiseFulfilledResult<typeof selected[0] & { searchResult: Awaited<ReturnType<typeof tavilySearch>> }> =>
+      .filter((r): r is PromiseFulfilledResult<typeof selected[0] & { searchResult: TavilySearchResponse }> =>
         r.status === 'fulfilled' && !!r.value.searchResult?.results?.length
       )
       .map(r => r.value)
