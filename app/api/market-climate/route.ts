@@ -349,12 +349,14 @@ export async function GET(request: NextRequest) {
       .eq('user_id', user.id)
       .gte('record_date', since)
       .limit(2000),
-    // Also pull directly from POS scan history for product names
+    // Native POS items — joined via pos_transactions to filter by owner
     supabase
       .from('pos_items')
-      .select('name, category, sku, price')
-      .eq('user_id', user.id)
-      .limit(200),
+      .select('name, qty, unit_price, line_total, pos_transactions!inner(owner_id, status, created_at)')
+      .eq('pos_transactions.owner_id', user.id)
+      .eq('pos_transactions.status', 'completed')
+      .gte('pos_transactions.created_at', since)
+      .limit(500),
     // Supplier context saved by user
     supabase
       .from('cost_profile_overrides')
@@ -519,6 +521,17 @@ export async function GET(request: NextRequest) {
     c.units += r.units_sold || 0
     prodMap.set(pn, c)
   }
+  // Supplement prodMap with native POS items from last 30 days
+  for (const item of posItems) {
+    const tx = (item.pos_transactions as unknown as { created_at: string }) || null
+    if (!tx || tx.created_at < thirtyDaysAgo) continue
+    const pn = (item.name || '').trim()
+    if (!pn || SERVICE_NOISE.some(n => pn.toLowerCase().includes(n))) continue
+    const c = prodMap.get(pn) || { rev: 0, units: 0 }
+    c.rev += item.line_total || (item.unit_price * (item.qty || 1)) || 0
+    c.units += item.qty || 1
+    prodMap.set(pn, c)
+  }
   const topProducts = Array.from(prodMap.entries())
     .sort((a, b) => b[1].rev - a[1].rev)
     .slice(0, 5)
@@ -680,12 +693,12 @@ export async function GET(request: NextRequest) {
 
     const seenInSalesSet = new Set(Array.from(prodMap.keys()).map(k => k.toLowerCase()))
     const zeroFromCatalog = posItems
-      .filter((p: { name?: string; price?: number }) => {
+      .filter((p: { name?: string; unit_price?: number }) => {
         const name = (p.name || '').trim()
         return name && !seenInSalesSet.has(name.toLowerCase()) && !SERVICE_NOISE.some(n => name.toLowerCase().includes(n))
       })
       .slice(0, 3)
-      .map((p: { name: string; price?: number }) => ({ product: p.name, revenue_7d: 0, units_7d: 0, your_price: (p.price as number) || null }))
+      .map((p: { name: string; unit_price?: number }) => ({ product: p.name, revenue_7d: 0, units_7d: 0, your_price: (p.unit_price as number) || null }))
 
     const allWorst = [...worstFromSales, ...zeroFromCatalog].slice(0, 5)
     const topForPricing = rankedProducts.slice(0, 3)
@@ -734,8 +747,8 @@ Return ONLY valid JSON: {"items":[{"product":"exact product name","reason":"one 
       const worstReasonsList = worstReasonsData as Array<{ product: string; reason: string; action: string }>
 
       worstSellers = allWorst.map(w => {
-        const posItem = posItems.find((p: { name?: string; price?: number }) => p.name?.toLowerCase() === w.product.toLowerCase())
-        const yourPrice = posItem?.price ?? w.your_price
+        const posItem = posItems.find((p: { name?: string; unit_price?: number }) => p.name?.toLowerCase() === w.product.toLowerCase())
+        const yourPrice = posItem?.unit_price ?? w.your_price
         const reasonObj = worstReasonsList.find(r => r.product?.toLowerCase() === w.product.toLowerCase())
         return {
           product: w.product,
@@ -750,8 +763,8 @@ Return ONLY valid JSON: {"items":[{"product":"exact product name","reason":"one 
       localPrices = (priceData as Array<{ product: string; answer: string; hasData: boolean }>)
         .filter(r => r.hasData && r.answer)
         .map(r => {
-          const posItem = posItems.find((p: { name?: string; price?: number }) => p.name?.toLowerCase() === r.product.toLowerCase())
-          const yourPrice = posItem?.price ?? null
+          const posItem = posItems.find((p: { name?: string; unit_price?: number }) => p.name?.toLowerCase() === r.product.toLowerCase())
+          const yourPrice = posItem?.unit_price ?? null
           // Best-effort: extract a price value from the search answer
           const numMatch = r.answer.match(/[\₦\$\£\€]?\s?\d[\d,]*(?:\.\d+)?(?:\s?(?:per|each|\/unit|KSh|NGN|KES|GHS|ZAR))?/i)
           const marketValue = numMatch ? numMatch[0].trim().slice(0, 24) : '—'
