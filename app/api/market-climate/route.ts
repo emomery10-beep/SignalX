@@ -34,8 +34,11 @@ const SERVICE_NOISE = ['subscription', 'invoice', 'charge', 'payment', 'fee', 'r
 // in Supabase for 12h so the Tavily/Claude work runs at most ~twice a day per
 // business. A forced refresh is only honoured once the cache is older than
 // FORCE_MIN_MS, so the refresh button can't burn credits on repeat taps.
-const CACHE_TTL_MS = 12 * 60 * 60 * 1000
-const FORCE_MIN_MS = 11 * 60 * 60 * 1000
+const CACHE_TTL_MS      = 12 * 60 * 60 * 1000
+const FORCE_MIN_MS      = 11 * 60 * 60 * 1000
+// If every signal came back with no data (search keys missing / quota hit),
+// cache for only 15 min so it self-heals as soon as keys are added.
+const EMPTY_CACHE_TTL_MS = 15 * 60 * 1000
 
 interface SignalReading {
   key: string
@@ -584,7 +587,11 @@ export async function GET(request: NextRequest) {
 
   const ageMs = cacheRow ? Date.now() - new Date(cacheRow.fetched_at).getTime() : Infinity
   const forceAllowed = forceRefresh && ageMs >= FORCE_MIN_MS
-  const useCache = !!cacheRow && ageMs < CACHE_TTL_MS && !forceAllowed
+  // If the cached result had zero live signals, treat it as stale after 15 min
+  // so the API self-heals once search keys are added to the environment.
+  const cachedAllEmpty = !!cacheRow && (cacheRow.payload.signals || []).every(s => !s.hasData)
+  const effectiveTTL = cachedAllEmpty ? EMPTY_CACHE_TTL_MS : CACHE_TTL_MS
+  const useCache = !!cacheRow && ageMs < effectiveTTL && !forceAllowed
 
   let signals: SignalReading[]
   let supply: SupplyReading
