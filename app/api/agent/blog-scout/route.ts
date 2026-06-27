@@ -137,9 +137,9 @@ async function runBlogScout() {
 
     // Sort by penalty ascending (freshest topics first), then shuffle within same penalty tier
     scoredQueries.sort((a, b) => a.penalty - b.penalty || Math.random() - 0.5)
-    const selected = scoredQueries.slice(0, 1)
+    const selected = scoredQueries.slice(0, 5)
 
-    log.push(`Selected 5 topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
+    log.push(`Selected ${selected.length} topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
     log.push('Searching Tavily + Serper for live data...')
 
     const searchResults = await Promise.allSettled(
