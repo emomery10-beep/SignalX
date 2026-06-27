@@ -162,16 +162,28 @@ function parseSignal(text: string, kind: string): { value: string; direction: 'u
   // percent change
   const pctMatch = text.match(/(-?\d+(?:\.\d+)?)\s?(?:%|percent)/)
   const changePct = pctMatch ? Math.abs(parseFloat(pctMatch[1])) : null
-  // headline number for the value chip
+  // headline value chip
   let value = '—'
   if (kind === 'fx') {
     const fxMatch = text.match(/(KSh\s?\d[\d,]*(?:\.\d+)?)|([₦$£€]\s?\d[\d,]*(?:\.\d+)?)|(\d[\d,]*(?:\.\d+)?\s?(?:naira|shilling|cedi|rand|KSh|KES))/i)
     value = fxMatch ? fxMatch[0].trim() : (changePct != null ? `${direction === 'down' ? '▼' : direction === 'up' ? '▲' : ''} ${changePct}%` : '—')
   } else if (changePct != null) {
     value = `${direction === 'down' ? '▼' : direction === 'up' ? '▲' : ''} ${changePct}%`
+  } else if (kind !== 'commodity' && kind !== 'rate') {
+    // Supply/demand/weather/export signals: a bare number is meaningless (often a year or quantity).
+    // Show a status word based on the detected direction instead.
+    value = direction === 'down' ? 'Disrupted' : direction === 'up' ? 'Elevated' : 'Normal'
   } else {
-    const numMatch = text.match(/\d[\d,]*(?:\.\d+)?/)
-    value = numMatch ? numMatch[0] : '—'
+    // Commodity/rate: try a currency-anchored price first to avoid matching years or product dimensions.
+    const currMatch = text.match(/(?:KSh|KES|NGN|₦|\$|£|€|GHS|ZAR|USD|EUR|GBP)\s*\d[\d,]*(?:\.\d+)?|\d[\d,]*(?:\.\d+)?\s*(?:KSh|KES|NGN|GHS|ZAR)/i)
+    if (currMatch) {
+      value = currMatch[0].trim().slice(0, 20)
+    } else {
+      // Fallback: first number that is NOT a 4-digit year (19xx / 20xx)
+      const nums = [...text.matchAll(/\b(\d[\d,]*(?:\.\d+)?)\b/g)]
+      const nonYear = nums.find(m => !/^(19|20)\d{2}$/.test(m[1]))
+      value = nonYear ? nonYear[1] : '—'
+    }
   }
   return { value, direction, changePct }
 }
@@ -658,9 +670,10 @@ export async function GET(request: NextRequest) {
     signals = signals.map(s => {
       if (!s.hasData) return { ...s, value: '—', direction: 'flat', changePct: null }
       const r = byKey.get(s.key)
-      return r && r.value && r.value !== '—'
-        ? { ...s, value: r.value, direction: r.direction || s.direction, changePct: r.changePct ?? s.changePct }
-        : s
+      if (r === undefined) return s  // Groq didn't cover this key — keep parseSignal result
+      // Groq explicitly returned null/empty → it saw the text but found no real figure; trust that over parseSignal's guess
+      if (!r.value || r.value === '—') return { ...s, value: '—', direction: r.direction || s.direction, changePct: r.changePct ?? s.changePct }
+      return { ...s, value: r.value, direction: r.direction || s.direction, changePct: r.changePct ?? s.changePct }
     })
     // Geo signals: city → country → region, sector-specific (cached with everything else)
     try {
