@@ -338,11 +338,13 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
   // Spread lastUpdated across past year based on slug hash — avoids all pSEO posts having same date
   const daysAgo = hashDaysAgo(post.slug)
   const lastUpdated = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000)
-  // Display publishDate: if post is pSEO (same-day batch), use a staggered date slightly before lastUpdated
+  // Scout posts (Alice Watson) are real daily news — always show their actual publish date.
+  // pSEO batch posts are staggered so they don't all share the same date.
+  const isScoutPost = post.author?.name === 'Alice Watson'
   const displayPublishDate = (() => {
     const orig = new Date(post.publishDate)
+    if (isScoutPost) return orig
     const staggered = new Date(lastUpdated.getTime() - (7 + (daysAgo % 21)) * 24 * 60 * 60 * 1000)
-    // Only stagger if orig is within 7 days of today (fresh batch)
     const daysSincePublish = (Date.now() - orig.getTime()) / (24 * 60 * 60 * 1000)
     return daysSincePublish < 10 ? staggered : orig
   })()
