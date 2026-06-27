@@ -222,21 +222,27 @@ export async function GET() {
     }
 
     // POS fallback: aggregate by product name across recent completed sales
-    const byName: Record<string, { costSum: number; sellSum: number; revenue: number; n: number }> = {}
+    // cost_price is optional in POS — if missing, estimate at 60% of sell price
+    const byName: Record<string, { costSum: number; sellSum: number; revenue: number; n: number; hasCost: boolean }> = {}
     for (const item of posItems) {
-      if (!item.cost_price || !item.unit_price) continue
+      if (!item.unit_price) continue
       const k = item.name || 'Unknown'
-      const e = byName[k] ||= { costSum: 0, sellSum: 0, revenue: 0, n: 0 }
-      e.costSum  += item.cost_price * item.qty
-      e.sellSum  += item.unit_price * item.qty
-      e.revenue  += item.line_total || 0
-      e.n        += item.qty
+      const e = byName[k] ||= { costSum: 0, sellSum: 0, revenue: 0, n: 0, hasCost: false }
+      const qty = item.qty || 1
+      if (item.cost_price) {
+        e.costSum += item.cost_price * qty
+        e.hasCost  = true
+      }
+      e.sellSum += item.unit_price * qty
+      e.revenue += item.line_total || (item.unit_price * qty)
+      e.n       += qty
     }
     const top = Object.entries(byName).sort((a, b) => b[1].revenue - a[1].revenue)[0]
-    if (!top || top[1].costSum === 0) return null
+    if (!top) return null
     const [name, agg] = top
-    const cost    = agg.costSum / agg.n
     const sell    = agg.sellSum / agg.n
+    // If no cost data, estimate at 60% of sell (typical wholesale/retail split)
+    const cost    = agg.hasCost ? agg.costSum / agg.n : sell * 0.6
     const freight = cost * 0.12
     const duty    = cost * 0.08
     const vat     = (cost + freight + duty) * 0.2
