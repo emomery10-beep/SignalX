@@ -140,7 +140,13 @@ async function runBlogScout() {
     const selected = scoredQueries.slice(0, 5)
 
     log.push(`Selected ${selected.length} topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
-    log.push('Searching Tavily + Serper for live data...')
+    const hasTavily = !!process.env.TAVILY_API_KEY
+    const hasSerper = !!process.env.SERPER_API_KEY
+    if (!hasTavily && !hasSerper) {
+      log.push('ERROR: No search keys set — add TAVILY_API_KEY or SERPER_API_KEY to Vercel env vars')
+      return NextResponse.json({ success: false, log }, { status: 200 })
+    }
+    log.push(`Searching ${hasTavily ? 'Tavily' : ''}${hasTavily && hasSerper ? ' + ' : ''}${hasSerper ? 'Serper' : ''} for live data...`)
 
     const searchResults = await Promise.allSettled(
       selected.map(async s => {
