@@ -803,6 +803,7 @@ function SupplierPrompts({ missing, wcInk, wcBorder, onSaved }: {
   if (!current) return null
 
   const advance = () => {
+    setFlash(null)
     if (idx + 1 >= missing.length) { setDone(true); onSaved() }
     else { setIdx(i => i + 1); setCountry('') }
   }
