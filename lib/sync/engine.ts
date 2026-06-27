@@ -604,7 +604,7 @@ async function syncEbay(
     // Fetch orders from last 30 days
     const createdFrom = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
     let res = await fetch(
-      `https://api.ebay.com/sell/fulfillment/v1/order?filter=creationdate:[${createdFrom}..] &limit=100`,
+      `https://api.ebay.com/sell/fulfillment/v1/order?filter=creationdate:[${createdFrom}..]&limit=100`,
       { headers: { Authorization: `Bearer ${access_token}`, Accept: 'application/json' } }
     )
 
@@ -617,7 +617,7 @@ async function syncEbay(
           credentials: encryptCredentials({ ...source.credentials, access_token })
         }).eq('id', source.id)
         res = await fetch(
-          `https://api.ebay.com/sell/fulfillment/v1/order?filter=creationdate:[${createdFrom}..] &limit=100`,
+          `https://api.ebay.com/sell/fulfillment/v1/order?filter=creationdate:[${createdFrom}..]&limit=100`,
           { headers: { Authorization: `Bearer ${access_token}`, Accept: 'application/json' } }
         )
       }

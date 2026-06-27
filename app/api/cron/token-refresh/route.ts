@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
   const { data: sources } = await supabase
     .from('connected_sources')
     .select('id, source_type, config, credentials, user_id')
-    .eq('status', 'active')
+    .in('status', ['active', 'error'])
 
   if (!sources?.length) {
     return NextResponse.json({ message: 'No active sources', refreshed: 0 })
@@ -149,7 +149,11 @@ export async function GET(request: NextRequest) {
 
       await supabase
         .from('connected_sources')
-        .update({ credentials: encryptCredentials(newCreds) })
+        .update({
+          credentials: encryptCredentials(newCreds),
+          status: 'active',
+          error_message: null,
+        })
         .eq('id', source.id)
 
       refreshed++

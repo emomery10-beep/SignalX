@@ -29,6 +29,8 @@ interface MissingContext { product: string }
 interface ChannelStat { name: string; revenue_7d: number; prev_7d: number; trend: 'up' | 'down' | 'flat'; change_pct: number | null }
 interface ProductStat { product: string; revenue_7d: number; units_7d: number }
 interface GeoSignal { level: 'city' | 'country' | 'region'; location: string; summary: string; severity: 'ok' | 'watch' | 'alert' }
+interface WorstSeller { product: string; revenue_7d: number; units_7d: number; your_price: number | null; reason: string; action: string }
+interface LocalPrice { product: string; your_price: number | null; market_note: string; market_value: string }
 interface ClimateData {
   currency_symbol: string
   country: string
@@ -56,6 +58,8 @@ interface ClimateData {
   geo_signals: GeoSignal[]
   channel_activity: { channels: ChannelStat[]; total_7d: number; prev_7d: number; trend: 'up' | 'down' | 'flat' }
   top_products: ProductStat[]
+  worst_sellers: WorstSeller[]
+  local_prices: LocalPrice[]
   updated_at: string
 }
 
@@ -116,7 +120,7 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
   const [refreshing, setRefreshing] = useState(false)
   const [requested, setRequested] = useState(false)
   const [expanded, setExpanded] = useState(defaultExpanded)
-  const [tab, setTab] = useState<'now' | 'week' | 'supply'>('now')
+  const [tab, setTab] = useState<'now' | 'week' | 'supply' | 'local'>('now')
 
   const load = useCallback((force = false) => {
     if (force) setRefreshing(true)
@@ -243,6 +247,7 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
     { id: 'now', label: tc('cfo_marketclimate.tabNow') },
     { id: 'week', label: tc('cfo_marketclimate.tabWeek') },
     { id: 'supply', label: tc('cfo_marketclimate.tabSupply') },
+    { id: 'local', label: 'LOCAL' },
   ]
 
   return (
@@ -362,6 +367,7 @@ export default function MarketClimate({ currencySymbol: sym, cashBalance = 0, mo
         {tab === 'now' && <NowPanel data={data} />}
         {tab === 'week' && <WeekPanel data={data} fmt={fmt} />}
         {tab === 'supply' && <SupplyPanel supply={data.supply} topProducts={data.top_products} geoSignals={data.geo_signals || []} fmt={fmt} />}
+        {tab === 'local' && <LocalPanel data={data} fmt={fmt} />}
       </div>
 
       {/* ── Footer: ask AI ── */}
@@ -630,6 +636,141 @@ function SupplyPanel({ supply, topProducts, geoSignals, fmt }: {
               <div style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.5 }}>{port.status}</div>
             </div>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: sevColor(port.severity), flexShrink: 0, marginTop: 4 }} />
+          </div>
+        </div>
+      )}
+
+    </div>
+  )
+}
+
+/* ── LOCAL: best/worst sellers with AI reasoning + area competitive pricing ── */
+function LocalPanel({ data, fmt }: { data: ClimateData; fmt: (n: number) => string }) {
+  const worstSellers = data.worst_sellers || []
+  const localPrices = data.local_prices || []
+  const topProduct = (data.top_products || [])[0] ?? null
+  const sym = data.currency_symbol
+
+  const hasWorst = worstSellers.length > 0
+  const hasPrices = localPrices.length > 0
+  const hasTop = !!topProduct
+
+  if (!hasWorst && !hasPrices && !hasTop) {
+    return (
+      <div style={{ padding: 24, textAlign: 'center' }}>
+        <div style={{ fontSize: 24, marginBottom: 8 }}>📊</div>
+        <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.6 }}>
+          Connect your POS or sales channels to see<br />local performance and area pricing data.
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+      {/* ── Best seller highlight ── */}
+      {hasTop && (
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>
+            Your best seller · last 30 days
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, background: `${GREEN}12`, border: `1px solid ${GREEN}33` }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 10, background: `${GREEN}20`, flexShrink: 0 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" />
+              </svg>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {topProduct.product}
+              </div>
+              <div style={{ fontSize: 11, color: GREEN_INK, marginTop: 2 }}>
+                {fmt(topProduct.revenue_7d)} revenue
+                {topProduct.units_7d > 0 && ` · ${topProduct.units_7d} units sold`}
+              </div>
+            </div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: GREEN, background: `${GREEN}20`, padding: '3px 8px', borderRadius: 20, flexShrink: 0 }}>
+              #1
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Worst sellers with AI reasoning ── */}
+      {hasWorst && (
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>
+            Underperforming · why &amp; what to do
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {worstSellers.map(w => (
+              <div key={w.product} className="mc-row" style={{ padding: '11px 14px', borderRadius: 11, background: 'var(--ev, #f9fafb)', border: '1px solid var(--b)' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: w.reason ? 8 : 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 8, background: `${AMBER}18`, flexShrink: 0, marginTop: 1 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={AMBER} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="22 17 13.5 8.5 8.5 13.5 2 7" /><polyline points="16 17 22 17 22 11" />
+                    </svg>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {w.product}
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--tx3)', marginTop: 1 }}>
+                      {w.revenue_7d > 0
+                        ? `${fmt(w.revenue_7d)} · ${w.units_7d} units in 30 days`
+                        : 'No sales in last 30 days'}
+                      {w.your_price != null && ` · priced at ${sym}${w.your_price.toLocaleString()}`}
+                    </div>
+                  </div>
+                </div>
+                {w.reason && (
+                  <div style={{ paddingLeft: 38 }}>
+                    <div style={{ fontSize: 11, color: 'var(--tx2)', lineHeight: 1.55, marginBottom: 6 }}>
+                      {w.reason}
+                    </div>
+                    {w.action && (
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, padding: '7px 10px', borderRadius: 8, background: `${INDIGO}0c`, border: `1px solid ${INDIGO}22` }}>
+                        <span style={{ fontSize: 10 }}>💡</span>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: INDIGO, lineHeight: 1.45 }}>{w.action}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Local area pricing ── */}
+      {hasPrices && (
+        <div>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: 'var(--tx3)', marginBottom: 8 }}>
+            Area market prices · {data.country}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {localPrices.map(lp => (
+              <div key={lp.product} style={{ padding: '10px 13px', borderRadius: 10, background: 'var(--ev, #f9fafb)', border: '1px solid var(--b)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: lp.market_note ? 5 : 0 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lp.product}</span>
+                  {lp.market_value && lp.market_value !== '—' && (
+                    <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--tx)', flexShrink: 0 }}>~{lp.market_value}</span>
+                  )}
+                  {lp.your_price != null && (
+                    <span style={{ fontSize: 10, color: 'var(--tx3)', flexShrink: 0 }}>you: {sym}{lp.your_price.toLocaleString()}</span>
+                  )}
+                </div>
+                {lp.market_note && (
+                  <div style={{ fontSize: 10, color: 'var(--tx3)', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }}>
+                    {lp.market_note}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--tx3)', marginTop: 6, fontStyle: 'italic' }}>
+            Area prices sourced from live web data · updated with market refresh
           </div>
         </div>
       )}

@@ -53,6 +53,22 @@ interface SupplyReading {
   port: { port: string; status: string; severity: 'ok' | 'watch' | 'alert' } | null
 }
 
+interface WorstSeller {
+  product: string
+  revenue_7d: number
+  units_7d: number
+  your_price: number | null
+  reason: string
+  action: string
+}
+
+interface LocalPrice {
+  product: string
+  your_price: number | null
+  market_note: string
+  market_value: string
+}
+
 // Pull a single signal using dual search (Tavily + Google). Falls back to a
 // rephrased query so transient Tavily outages don't leave cards blank.
 async function readSignal(spec: MarketSignalSpec): Promise<SignalReading> {
@@ -336,7 +352,7 @@ export async function GET(request: NextRequest) {
     // Also pull directly from POS scan history for product names
     supabase
       .from('pos_items')
-      .select('name, category, sku')
+      .select('name, category, sku, price')
       .eq('user_id', user.id)
       .limit(200),
     // Supplier context saved by user
@@ -523,7 +539,7 @@ export async function GET(request: NextRequest) {
   const sectorLabel = sector.label
 
   type GeoSig = { level: 'city' | 'country' | 'region'; location: string; summary: string; severity: 'ok' | 'watch' | 'alert' }
-  type CacheRow = { payload: { signals: SignalReading[]; supply: SupplyReading; narrative: Narrative; geo_signals?: GeoSig[] }; fetched_at: string }
+  type CacheRow = { payload: { signals: SignalReading[]; supply: SupplyReading; narrative: Narrative; geo_signals?: GeoSig[]; worst_sellers?: WorstSeller[]; local_prices?: LocalPrice[] }; fetched_at: string }
 
   // Ensure the cache table exists — self-heals on any fresh environment
   try {
@@ -562,12 +578,16 @@ export async function GET(request: NextRequest) {
   let narrative: Narrative
   let fetchedAt: string
   let geoSignals: GeoSig[] = []
+  let worstSellers: WorstSeller[] = []
+  let localPrices: LocalPrice[] = []
 
   if (useCache && cacheRow) {
     signals = cacheRow.payload.signals
     supply = cacheRow.payload.supply
     narrative = cacheRow.payload.narrative
     geoSignals = cacheRow.payload.geo_signals || []
+    worstSellers = cacheRow.payload.worst_sellers || []
+    localPrices = cacheRow.payload.local_prices || []
     fetchedAt = cacheRow.fetched_at
   } else {
     // Select signals: supplier-specific specs first, then AI-selected macro signals
@@ -650,10 +670,99 @@ export async function GET(request: NextRequest) {
       ].filter(Boolean) as GeoSig[]
     } catch { /* non-critical */ }
 
+    // ── Worst sellers + local competitive pricing ────────────────────────────
+    // Bottom performers: low sellers from unified_data + items never sold from POS catalog
+    const worstFromSales = Array.from(prodMap.entries())
+      .filter(([, v]) => v.rev > 0)
+      .sort((a, b) => a[1].rev - b[1].rev)
+      .slice(0, 3)
+      .map(([product, { rev, units }]) => ({ product, revenue_7d: rev, units_7d: units, your_price: null as number | null }))
+
+    const seenInSalesSet = new Set(Array.from(prodMap.keys()).map(k => k.toLowerCase()))
+    const zeroFromCatalog = posItems
+      .filter((p: { name?: string; price?: number }) => {
+        const name = (p.name || '').trim()
+        return name && !seenInSalesSet.has(name.toLowerCase()) && !SERVICE_NOISE.some(n => name.toLowerCase().includes(n))
+      })
+      .slice(0, 3)
+      .map((p: { name: string; price?: number }) => ({ product: p.name, revenue_7d: 0, units_7d: 0, your_price: (p.price as number) || null }))
+
+    const allWorst = [...worstFromSales, ...zeroFromCatalog].slice(0, 5)
+    const topForPricing = rankedProducts.slice(0, 3)
+
+    try {
+      const worstReasonPromise: Promise<Array<{ product: string; reason: string; action: string }>> =
+        allWorst.length > 0 && process.env.GROQ_API_KEY
+          ? (async () => {
+              const worstLines = allWorst.map(w =>
+                `- ${w.product}: ${w.revenue_7d > 0 ? `${sym}${Math.round(w.revenue_7d).toLocaleString()} revenue, ${w.units_7d} units sold in 30 days` : 'no sales in last 30 days'}`
+              ).join('\n')
+              const signalSummary = signals.slice(0, 3).map(s => `${s.label}: ${s.value} (${s.direction})`).join(', ')
+              const worstPrompt = `You advise a small business in ${userCity}, ${climate.name} (${sector.label} sector).
+
+These products are their WORST performers in the last 30 days:
+${worstLines}
+
+Current market signals: ${signalSummary}
+
+For each underperforming product, explain in ONE short sentence WHY it might not be selling (consider: seasonality, price vs competitors, low local demand, supply issues, wrong target market). Then suggest ONE concrete action to improve sales.
+
+Return ONLY valid JSON: {"items":[{"product":"exact product name","reason":"one sentence why","action":"one concrete action"}]}`
+              const gr = await fetch(GROQ_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
+                body: JSON.stringify({ model: GROQ_MODEL, max_tokens: 500, messages: [{ role: 'user', content: worstPrompt }] }),
+              })
+              const gd = await gr.json()
+              logUsage({ route: '/api/market-climate#worst', model: GROQ_MODEL, usage: { input_tokens: gd.usage?.prompt_tokens || 0, output_tokens: gd.usage?.completion_tokens || 0 }, userId: user.id })
+              const m = (gd.choices?.[0]?.message?.content || '').match(/\{[\s\S]*\}/)
+              if (!m) return []
+              const p = JSON.parse(m[0]) as { items?: Array<{ product: string; reason: string; action: string }> }
+              return p.items || []
+            })()
+          : Promise.resolve([])
+
+      const pricingPromises = topForPricing.map(p =>
+        marketSearch(`${p.name} price ${userCity} ${climate.name} retail today`, {
+          topic: 'general', days: 14,
+          fallbackQuery: `${p.name} retail price ${climate.name}`,
+        }).then(r => ({ product: p.name, answer: r.answer || '', hasData: r.hasData }))
+          .catch(() => ({ product: p.name, answer: '', hasData: false }))
+      )
+
+      const [worstReasonsData, ...priceData] = await Promise.all([worstReasonPromise, ...pricingPromises])
+      const worstReasonsList = worstReasonsData as Array<{ product: string; reason: string; action: string }>
+
+      worstSellers = allWorst.map(w => {
+        const posItem = posItems.find((p: { name?: string; price?: number }) => p.name?.toLowerCase() === w.product.toLowerCase())
+        const yourPrice = posItem?.price ?? w.your_price
+        const reasonObj = worstReasonsList.find(r => r.product?.toLowerCase() === w.product.toLowerCase())
+        return {
+          product: w.product,
+          revenue_7d: w.revenue_7d,
+          units_7d: w.units_7d,
+          your_price: yourPrice,
+          reason: reasonObj?.reason || '',
+          action: reasonObj?.action || '',
+        }
+      })
+
+      localPrices = (priceData as Array<{ product: string; answer: string; hasData: boolean }>)
+        .filter(r => r.hasData && r.answer)
+        .map(r => {
+          const posItem = posItems.find((p: { name?: string; price?: number }) => p.name?.toLowerCase() === r.product.toLowerCase())
+          const yourPrice = posItem?.price ?? null
+          // Best-effort: extract a price value from the search answer
+          const numMatch = r.answer.match(/[\₦\$\£\€]?\s?\d[\d,]*(?:\.\d+)?(?:\s?(?:per|each|\/unit|KSh|NGN|KES|GHS|ZAR))?/i)
+          const marketValue = numMatch ? numMatch[0].trim().slice(0, 24) : '—'
+          return { product: r.product, your_price: yourPrice, market_note: r.answer.slice(0, 200).trim(), market_value: marketValue }
+        })
+    } catch { /* non-critical — don't block the response */ }
+
     fetchedAt = new Date().toISOString()
     try {
       await supabase.from('market_climate_cache').upsert(
-        { user_id: user.id, cache_key: cacheKey, payload: { signals, supply, narrative, geo_signals: geoSignals }, fetched_at: fetchedAt },
+        { user_id: user.id, cache_key: cacheKey, payload: { signals, supply, narrative, geo_signals: geoSignals, worst_sellers: worstSellers, local_prices: localPrices }, fetched_at: fetchedAt },
         { onConflict: 'user_id,cache_key' },
       )
     } catch { /* table may not exist yet — serve fresh, don't break */ }
@@ -704,6 +813,8 @@ export async function GET(request: NextRequest) {
     // Fresh per-request: channel velocity, top products, local conditions
     channel_activity: channelActivity,
     top_products: topProducts,
+    worst_sellers: worstSellers,
+    local_prices: localPrices,
     local_conditions: localConditions,
     geo_signals: geoSignals,
     updated_at: fetchedAt,
