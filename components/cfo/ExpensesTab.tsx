@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import ReceiptScanner, { EXPENSE_CATEGORIES, type ScannedExpense } from './ReceiptScanner'
 import { useLang } from '@/components/LanguageProvider'
+import { getDateRange } from '@/lib/cfo-date-range'
 
 // Maps backend category enum values → i18n key suffixes. Enum values stay as-is
 // for the API; only DISPLAY labels are translated.
@@ -42,11 +43,12 @@ interface Expense {
 interface Props {
   currencySymbol: string
   onAsk?: (prompt: string) => void
+  period?: string
 }
 
 type SortKey = 'date' | 'amount' | 'vendor' | 'category'
 
-export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
+export default function ExpensesTab({ currencySymbol: sym, onAsk, period }: Props) {
   const { tc } = useLang()
   // Translate a backend category enum value to its display label.
   const catLabel = (c: string) => CATEGORY_KEYS[c] ? tc('cfo_expenses.' + CATEGORY_KEYS[c]) : c
@@ -179,13 +181,22 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
   const now = new Date()
   const rangeMs: Record<string, number> = { '7d': 7, '30d': 30, '90d': 90 }
 
+  // Resolve active date window: global period prop takes priority over internal dropdown
+  const activeDateRange: { start: string; end: string } | null = (() => {
+    if (period) {
+      const r = getDateRange(period, now)
+      return { start: r.start, end: r.end }
+    }
+    if (filterDateRange === 'all') return null
+    const days = rangeMs[filterDateRange]
+    const start = new Date(now.getTime() - days * 86400000).toISOString().split('T')[0]
+    return { start, end: now.toISOString().split('T')[0] }
+  })()
+
   const filtered = expenses.filter(e => {
     if (filterCategory !== 'All' && e.category !== filterCategory) return false
-    if (filterDateRange !== 'all') {
-      const days = rangeMs[filterDateRange]
-      const expDate = new Date(e.date)
-      const diff = (now.getTime() - expDate.getTime()) / (1000 * 60 * 60 * 24)
-      if (diff > days) return false
+    if (activeDateRange) {
+      if (e.date < activeDateRange.start || e.date > activeDateRange.end) return false
     }
     if (search) {
       const q = search.toLowerCase()
@@ -254,7 +265,7 @@ export default function ExpensesTab({ currencySymbol: sym, onAsk }: Props) {
             onClick={() => { setShowManual(false); setShowScanner(v => !v) }}
             style={{ display: 'flex', alignItems: 'center', gap: 5, padding: isMobile ? '8px 12px' : '7px 14px', borderRadius: 8, border: 'none', background: INDIGO, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
           >
-            {isMobile ? '📷 ' : ''}{tc('cfo_expenses.scan_receipt')}
+            {tc('cfo_expenses.scan_receipt')}
           </button>
           <button
             onClick={() => { setShowScanner(false); setShowManual(v => !v) }}

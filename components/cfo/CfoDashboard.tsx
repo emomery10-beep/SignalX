@@ -551,7 +551,7 @@ export default function CfoDashboard({ onAsk }: Props) {
       {/* ─── EXPENSES VIEW ─── */}
       {subTab === 'expenses' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <ExpensesTab currencySymbol={sym} onAsk={onAsk} />
+          <ExpensesTab currencySymbol={sym} onAsk={onAsk} period={period} />
         </div>
       )}
 

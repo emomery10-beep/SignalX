@@ -22,7 +22,15 @@ export default function PeriodSelector({ value, onChange }: Props) {
   const PERIODS = buildPeriods(tc)
 
   return (
-    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+    <div style={{
+      display: 'flex',
+      gap: 4,
+      overflowX: 'auto',
+
+      scrollbarWidth: 'none',
+      msOverflowStyle: 'none',
+      paddingBottom: 2,
+    }}>
       {PERIODS.map(p => (
         <button
           key={p.key}
@@ -38,6 +46,8 @@ export default function PeriodSelector({ value, onChange }: Props) {
             cursor: 'pointer',
             fontFamily: 'inherit',
             transition: 'all 120ms',
+            flexShrink: 0,
+            whiteSpace: 'nowrap',
           }}
         >
           {p.label}
