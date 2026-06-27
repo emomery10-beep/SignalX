@@ -91,7 +91,8 @@ async function runBlogScout() {
       .not('run_id', 'like', 'blog_%_%') // excludes blog_mktg_*, blog_ea_*, blog_us_*
       .gte('created_at', `${today}T00:00:00Z`)
     if ((todayCount ?? 0) > 0) {
-      return NextResponse.json({ skipped: true, reason: 'already_ran_today', date: today })
+      log.push(`Already ran today (${today}) — skipping to avoid duplicates`)
+      return NextResponse.json({ skipped: true, reason: 'already_ran_today', date: today, log })
     }
 
     // Fetch recent coverage for topic dedup and relatedSlugs context

@@ -84,7 +84,8 @@ async function runVictorScout() {
       .like('run_id', 'blog_mktg_africa_%')
       .gte('created_at', `${today}T00:00:00Z`)
     if ((todayCount ?? 0) > 0) {
-      return NextResponse.json({ skipped: true, reason: 'already_ran_today', date: today })
+      log.push(`Already ran today (${today}) — skipping to avoid duplicates`)
+      return NextResponse.json({ skipped: true, reason: 'already_ran_today', date: today, log })
     }
 
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
