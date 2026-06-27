@@ -52,6 +52,7 @@ export interface WhatIfResult {
 // ── Simple linear regression ──────────────────────────────────
 function linearRegression(y: number[]): { slope: number; intercept: number; r2: number } {
   const n = y.length
+  if (n <= 1) return { slope: 0, intercept: n === 1 ? y[0] : 0, r2: 1 }
   const x = Array.from({ length: n }, (_, i) => i)
   const sumX = x.reduce((a, b) => a + b, 0)
   const sumY = y.reduce((a, b) => a + b, 0)

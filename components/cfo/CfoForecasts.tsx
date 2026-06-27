@@ -338,7 +338,7 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
 
   // ── Revenue Forecast ─────────────────────────────────────
   const revForecast = useMemo(() => {
-    if (completedMonths.length < 2) return null
+    if (completedMonths.length === 0) return null
     const revenueData = completedMonths.map(m => m.revenue)
     try {
       return forecast(revenueData, months, 'auto', 1.5)
@@ -347,7 +347,7 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
 
   // ── P&L Forecast (all lines) ──────────────────────────────
   const pnlForecast = useMemo(() => {
-    if (completedMonths.length < 2) return null
+    if (completedMonths.length === 0) return null
     const revData = completedMonths.map(m => m.revenue)
     const cogsData = completedMonths.map(m => m.cogs)
     const fixedData = completedMonths.map(m => m.fixed)
@@ -405,7 +405,7 @@ export default function CfoForecasts({ pnlMonthly, totals, cash, dailyCashflow, 
 
   // ── Chart data for Revenue Forecast ────────────────────────
   const revChartData = useMemo(() => {
-    if (!revForecast || completedMonths.length < 2) return null
+    if (!revForecast || completedMonths.length === 0) return null
     const n = completedMonths.length
     // Include current partial month in chart labels/actuals (but NOT in regression)
     const allActual = currentPartial ? [...completedMonths, currentPartial] : completedMonths
