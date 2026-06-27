@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
     { data: posItems6m },
     { data: cfoExpenses },
     { data: cfoExpenses6m },
+    { data: cfoExpensesComp },
   ] = await Promise.all([
     supabase
       .from('unified_data')
@@ -177,6 +178,13 @@ export async function GET(request: NextRequest) {
       .eq('user_id', user.id)
       .gte('date', sixMonthsAgo)
       .lte('date', todayStr),                          // always today, not period end
+    // Stage 2c: tracked expenses — comparison period (for apples-to-apples net profit)
+    supabase
+      .from('cfo_expenses')
+      .select('date, amount, category')
+      .eq('user_id', user.id)
+      .gte('date', compStart)
+      .lte('date', compEnd),
   ])
 
   const overrides = (overridesRow?.overrides || {}) as Record<string, any>
@@ -287,10 +295,19 @@ export async function GET(request: NextRequest) {
       compPosCogs += (Number(it.qty) || 0) * (Number(it.cost_price) || 0)
     }
   }
-  compCogs = compPosCogs > 0 ? compPosCogs : compCogs
+  // Comparison-period tracked expenses — split same way as current period
+  const compTrackedExpensesTotal = (cfoExpensesComp || [])
+    .filter(e => !COGS_CATEGORIES.has(e.category))
+    .reduce((s: number, e: any) => s + (e.amount || 0), 0)
+  const compTrackedCogsTotal = (cfoExpensesComp || [])
+    .filter(e => COGS_CATEGORIES.has(e.category))
+    .reduce((s: number, e: any) => s + (e.amount || 0), 0)
+  // Use POS COGS if available, else fall back to unified_data COGS + expense-tracked COGS
+  compCogs = compPosCogs > 0 ? compPosCogs : compCogs + compTrackedCogsTotal
   const compGrossProfit = compRevenue - compCogs
   const compPeriodDays = Math.max(daysBetween(compStart, compEnd), 1)
-  const compFixed = (monthlyFixedCosts / 30) * compPeriodDays
+  // Include comparison-period tracked expenses so net profit comparison is apples-to-apples
+  const compFixed = (monthlyFixedCosts / 30) * compPeriodDays + compTrackedExpensesTotal
   const compNetProfit = compGrossProfit - compFixed
   const compGrossMarginPct = compRevenue > 0 ? (compGrossProfit / compRevenue) * 100 : 0
 
