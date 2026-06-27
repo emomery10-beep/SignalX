@@ -396,8 +396,8 @@ export async function GET(request: NextRequest) {
       sparkline: grossProfitSparkline,
     },
     {
-      key: 'net_cashflow',
-      label: 'Net Cash Flow',
+      key: 'net_profit',
+      label: 'Net Profit',
       value: netProfit,
       subValue: `${netMarginPct.toFixed(1)}% of revenue`,
       change: pctChange(netProfit, compNetProfit),

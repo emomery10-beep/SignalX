@@ -30,6 +30,7 @@ const STATUS_COLORS: Record<string, string> = {
 const KPI_TAB_MAP: Record<string, string> = {
   revenue: 'pnl',
   gross_profit: 'margins',
+  net_profit: 'pnl',
   net_margin: 'pnl',
   net_cashflow: 'cashflow',
   inventory: 'inventory',
@@ -78,7 +79,7 @@ export default function FinancialSnapshot({ kpis, currencySymbol, loading, onNav
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
       {kpis.map(kpi => {
         const color = STATUS_COLORS[kpi.status] || STATUS_COLORS.gray
-        const isCurrency = ['revenue', 'gross_profit', 'net_cashflow', 'inventory'].includes(kpi.key)
+        const isCurrency = ['revenue', 'gross_profit', 'net_profit', 'net_cashflow', 'inventory'].includes(kpi.key)
         const displayValue = kpi.valueLabel
           ? kpi.valueLabel
           : kpi.value != null
