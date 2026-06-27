@@ -911,28 +911,23 @@ export default function POSPage() {
       mapRef.current = map
       mapMarkersRef.current = []
       ;(window as any).L = L
+      // Draw markers immediately after map is ready — avoids the async race
+      // where the renderMarkers effect fires before init() completes.
+      renderMarkers(L, map)
     }
     init()
     return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, loading])
 
   // ── Render map markers whenever geo points change ──────
   useEffect(() => {
-    // If Leaflet hasn't loaded yet (async), retry once after the init delay
-    if (tab === 'map' && !mapRef.current) {
-      const retry = setTimeout(() => {
-        const L = (window as any).L; const map = mapRef.current
-        if (!L || !map) return
-        renderMarkers(L, map)
-      }, 200)
-      return () => clearTimeout(retry)
-    }
     const L   = (window as any).L
     const map = mapRef.current
     if (!L || !map) return
     renderMarkers(L, map)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geoPoints, tab])
+  }, [geoPoints])
 
   // Load factory captures when switching to captures or approvals tab
   useEffect(() => {
