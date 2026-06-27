@@ -68,7 +68,7 @@ export async function GET() {
   const since90 = new Date(Date.now() - 90 * 86_400_000).toISOString().split('T')[0]
   const since30 = new Date(Date.now() - 30 * 86_400_000).toISOString().split('T')[0]
 
-  const [unifiedRes, shipRes, socialRes, healthRes, srcRes] = await Promise.allSettled([
+  const [unifiedRes, shipRes, socialRes, healthRes, srcRes, posRes, posItemsRes] = await Promise.allSettled([
     supabase
       .from('unified_data')
       .select('sku, product_name, category, currency, cost_price, selling_price, gross_margin, gross_revenue, total_cost')
@@ -102,13 +102,31 @@ export async function GET() {
       .select('source_type, status')
       .eq('user_id', user.id)
       .eq('status', 'active'),
+
+    // Native POS: check if user has any transactions
+    supabase
+      .from('pos_transactions')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', user.id),
+
+    // Native POS: recent line items for landed cost preview
+    supabase
+      .from('pos_items')
+      .select('name, qty, unit_price, cost_price, line_total, pos_transactions!inner(owner_id, created_at, status)')
+      .eq('pos_transactions.owner_id', user.id)
+      .eq('pos_transactions.status', 'completed')
+      .gte('pos_transactions.created_at', since90)
+      .limit(500),
   ])
 
-  const records = unifiedRes.status === 'fulfilled' ? (unifiedRes.value.data || []) : []
-  const ships   = shipRes.status === 'fulfilled'    ? (shipRes.value.data   || []) : []
-  const social  = socialRes.status === 'fulfilled'  ? (socialRes.value.data || []) : []
-  const health  = healthRes.status === 'fulfilled'  ? healthRes.value.data          : null
-  const sources = srcRes.status === 'fulfilled'     ? (srcRes.value.data    || []) : []
+  const records   = unifiedRes.status === 'fulfilled'   ? (unifiedRes.value.data   || []) : []
+  const ships     = shipRes.status === 'fulfilled'       ? (shipRes.value.data      || []) : []
+  const social    = socialRes.status === 'fulfilled'     ? (socialRes.value.data    || []) : []
+  const health    = healthRes.status === 'fulfilled'     ? healthRes.value.data             : null
+  const sources   = srcRes.status === 'fulfilled'        ? (srcRes.value.data       || []) : []
+  const posCount  = posRes.status === 'fulfilled'        ? (posRes.value.count      || 0)  : 0
+  const posItems  = posItemsRes.status === 'fulfilled'   ? (posItemsRes.value.data  || []) : []
+  const hasPOS    = posCount > 0
 
   // ── FX preview ────────────────────────────────────────────────
   const fxData = (() => {
@@ -168,30 +186,64 @@ export async function GET() {
 
   // ── Landed Cost preview ───────────────────────────────────────
   const landedData = (() => {
-    if (!records.length) return null
-    const byKey: Record<string, { name: string; rev: number; costSum: number; sellSum: number; marginSum: number; n: number }> = {}
-    for (const r of records) {
-      const k = r.sku || r.product_name || 'Unknown'
-      const e = byKey[k] ||= { name: r.product_name || r.sku || 'Unknown', rev: 0, costSum: 0, sellSum: 0, marginSum: 0, n: 0 }
-      e.rev       += r.gross_revenue || 0
-      e.costSum   += r.cost_price    || 0
-      e.sellSum   += r.selling_price || 0
-      e.marginSum += r.gross_margin  || 0
-      e.n++
+    // Prefer unified_data (external connectors); fall back to native POS items
+    const useRecords = records.length > 0
+    if (!useRecords && !posItems.length) return null
+
+    if (useRecords) {
+      const byKey: Record<string, { name: string; rev: number; costSum: number; sellSum: number; marginSum: number; n: number }> = {}
+      for (const r of records) {
+        const k = r.sku || r.product_name || 'Unknown'
+        const e = byKey[k] ||= { name: r.product_name || r.sku || 'Unknown', rev: 0, costSum: 0, sellSum: 0, marginSum: 0, n: 0 }
+        e.rev       += r.gross_revenue || 0
+        e.costSum   += r.cost_price    || 0
+        e.sellSum   += r.selling_price || 0
+        e.marginSum += r.gross_margin  || 0
+        e.n++
+      }
+      const top = Object.values(byKey).sort((a, b) => b.rev - a.rev)[0]
+      if (!top || top.costSum === 0) return null
+      const cost    = top.costSum / top.n
+      const sell    = top.sellSum / top.n
+      const freight = cost * 0.12
+      const duty    = cost * 0.08
+      const vat     = (cost + freight + duty) * 0.2
+      const landed  = cost + freight + duty + vat
+      const margin  = top.marginSum > 0
+        ? top.marginSum / top.n
+        : sell > 0 ? ((sell - landed) / sell) * 100 : 0
+      return {
+        sku:         top.name,
+        cost:        parseFloat(cost.toFixed(2)),
+        sell_price:  parseFloat(sell.toFixed(2)),
+        landed_cost: parseFloat(landed.toFixed(2)),
+        margin_pct:  parseFloat(margin.toFixed(1)),
+      }
     }
-    const top = Object.values(byKey).sort((a, b) => b.rev - a.rev)[0]
-    if (!top || top.costSum === 0) return null
-    const cost    = top.costSum / top.n
-    const sell    = top.sellSum / top.n
+
+    // POS fallback: aggregate by product name across recent completed sales
+    const byName: Record<string, { costSum: number; sellSum: number; revenue: number; n: number }> = {}
+    for (const item of posItems) {
+      if (!item.cost_price || !item.unit_price) continue
+      const k = item.name || 'Unknown'
+      const e = byName[k] ||= { costSum: 0, sellSum: 0, revenue: 0, n: 0 }
+      e.costSum  += item.cost_price * item.qty
+      e.sellSum  += item.unit_price * item.qty
+      e.revenue  += item.line_total || 0
+      e.n        += item.qty
+    }
+    const top = Object.entries(byName).sort((a, b) => b[1].revenue - a[1].revenue)[0]
+    if (!top || top[1].costSum === 0) return null
+    const [name, agg] = top
+    const cost    = agg.costSum / agg.n
+    const sell    = agg.sellSum / agg.n
     const freight = cost * 0.12
     const duty    = cost * 0.08
     const vat     = (cost + freight + duty) * 0.2
     const landed  = cost + freight + duty + vat
-    const margin  = top.marginSum > 0
-      ? top.marginSum / top.n
-      : sell > 0 ? ((sell - landed) / sell) * 100 : 0
+    const margin  = sell > 0 ? ((sell - landed) / sell) * 100 : 0
     return {
-      sku:         top.name,
+      sku:         name,
       cost:        parseFloat(cost.toFixed(2)),
       sell_price:  parseFloat(sell.toFixed(2)),
       landed_cost: parseFloat(landed.toFixed(2)),
@@ -287,7 +339,7 @@ export async function GET() {
   return NextResponse.json({
     sym,
     health:       health ? { score: health.score, label: health.label } : { score: null, label: null },
-    source_count: sources.length,
+    source_count: sources.length + (hasPOS ? 1 : 0),
     signals:      signals.slice(0, 3),
     fx:           fxData,
     suppliers:    suppliersData,
