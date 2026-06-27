@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { tavilySearch } from '@/lib/tavily'
+import { tavilySearch, type TavilySearchResponse } from '@/lib/tavily'
+import { serperSearch } from '@/lib/serper'
 import { logUsage } from '@/lib/log-usage'
 
 export const runtime = 'nodejs'
@@ -139,30 +140,53 @@ async function runBlogScout() {
     const selected = scoredQueries.slice(0, 1)
 
     log.push(`Selected 5 topics (${selected.filter(s => s.penalty === 0).length} fresh, ${selected.filter(s => s.penalty > 0).length} revisits)`)
-    log.push('Searching Tavily for live data...')
+    log.push('Searching Tavily + Serper for live data...')
 
     const searchResults = await Promise.allSettled(
-      selected.map(s =>
-        tavilySearch(s.query, {
+      selected.map(async s => {
+        // Try Tavily first
+        let searchResult = await tavilySearch(s.query, {
           searchDepth: 'advanced',
           maxResults: 5,
           includeAnswer: true,
           topic: 'news',
           days: 14,
-        }).then(result => ({ ...s, searchResult: result }))
-      )
+        })
+
+        // Fall back to Serper if Tavily returns nothing
+        if (!searchResult?.results?.length) {
+          const serperRes = await serperSearch(s.query, { type: 'news', num: 5 })
+          if (serperRes?.organic?.length) {
+            searchResult = {
+              query: s.query,
+              results: serperRes.organic.map(r => ({
+                title: r.title,
+                url: r.link,
+                content: r.snippet,
+                score: 1,
+                published_date: r.date,
+              })),
+              answer: serperRes.answerBox?.snippet || serperRes.answerBox?.answer || '',
+              response_time: 0,
+            } satisfies TavilySearchResponse
+            log.push(`Serper fallback used for: "${s.query}"`)
+          }
+        }
+
+        return { ...s, searchResult }
+      })
     )
 
     const validResults = searchResults
-      .filter((r): r is PromiseFulfilledResult<typeof selected[0] & { searchResult: Awaited<ReturnType<typeof tavilySearch>> }> =>
+      .filter((r): r is PromiseFulfilledResult<typeof selected[0] & { searchResult: TavilySearchResponse }> =>
         r.status === 'fulfilled' && !!r.value.searchResult?.results?.length
       )
       .map(r => r.value)
 
     const rejectedCount = searchResults.filter(r => r.status === 'rejected').length
     const nullCount = searchResults.filter(r => r.status === 'fulfilled' && !r.value.searchResult?.results?.length).length
-    if (rejectedCount > 0) log.push(`${rejectedCount} Tavily requests threw errors`)
-    if (nullCount > 0) log.push(`${nullCount} Tavily requests returned no results (null or empty — check TAVILY_API_KEY)`)
+    if (rejectedCount > 0) log.push(`${rejectedCount} requests threw errors`)
+    if (nullCount > 0) log.push(`${nullCount} queries returned no results from Tavily or Serper`)
 
     if (validResults.length === 0) {
       log.push('No search results from any query — exiting')
