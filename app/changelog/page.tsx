@@ -43,6 +43,20 @@ const TYPE_STYLE: Record<ChangeType, { labelKey: string; bg: string; color: stri
 }
 
 const buildReleases = (t: (key: string) => string): Release[] => [
+  { version: '2.18.0', date: '2026-06-27', summary: t('changelog.rel_14_summary'), changes: [
+    { type: 'new',      text: t('changelog.rel_14_change_0') },
+    { type: 'fixed',    text: t('changelog.rel_14_change_1') },
+    { type: 'fixed',    text: t('changelog.rel_14_change_2') },
+    { type: 'improved', text: t('changelog.rel_14_change_3') },
+    { type: 'fixed',    text: t('changelog.rel_14_change_4') },
+    { type: 'fixed',    text: t('changelog.rel_14_change_5') },
+    { type: 'fixed',    text: t('changelog.rel_14_change_6') },
+    { type: 'fixed',    text: t('changelog.rel_14_change_7') },
+    { type: 'fixed',    text: t('changelog.rel_14_change_8') },
+    { type: 'improved', text: t('changelog.rel_14_change_9') },
+    { type: 'fixed',    text: t('changelog.rel_14_change_10') },
+    { type: 'fixed',    text: t('changelog.rel_14_change_11') },
+  ] },
   { version: '2.17.0', date: '2026-06-17', summary: t('changelog.rel_0_summary'), changes: [
     { type: 'new',      text: t('changelog.rel_0_change_0') },
     { type: 'new',      text: t('changelog.rel_0_change_1') },

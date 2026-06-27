@@ -172,5 +172,19 @@
   "rel_13_summary": "Actualizaciones de seguridad y correcciones de errores.",
   "rel_13_change_0": "Se actualizó la biblioteca de autenticación para resolver dos CVE de baja gravedad",
   "rel_13_change_1": "Se corrigieron las descripciones emergentes de los gráficos que desaparecían en dispositivos táctiles",
-  "rel_13_change_2": "Se resolvió un problema por el que los usuarios invitados podían ver una pantalla en blanco tras registrarse"
+  "rel_13_change_2": "Se resolvió un problema por el que los usuarios invitados podían ver una pantalla en blanco tras registrarse",
+
+  "rel_14_summary": "Integración con TikTok Shop, correcciones de inteligencia CFO, marcadores del mapa POS y fiabilidad de agentes scouts.",
+  "rel_14_change_0": "TikTok Shop — conecta tu tienda TikTok Shop mediante un flujo OAuth 2.0 con código QR; escanea el código en tu teléfono, aprueba el acceso y tus pedidos se sincronizan automáticamente",
+  "rel_14_change_1": "Previsiones CFO — los ingresos y beneficios netos proyectados ahora muestran cifras con solo 1 mes de historial; los botones de horizonte (1M / 3M / 6M / 12M) cambian visiblemente los totales proyectados",
+  "rel_14_change_2": "Panel CFO — la tarjeta KPI renombrada de 'Flujo de caja neto' a 'Beneficio neto'",
+  "rel_14_change_3": "PyG — el período de comparación del beneficio neto ahora incluye los gastos registrados para una comparación justa",
+  "rel_14_change_4": "Tarjetas de señales del clima de mercado — corregido el problema de que las tarjetas mostraban años o dimensiones de productos como valor principal",
+  "rel_14_change_5": "Cuestionario de abastecimiento — el widget ahora avanza a la siguiente pregunta tras guardar",
+  "rel_14_change_6": "Mapa POS — los marcadores GPS ahora se renderizan de forma fiable en la primera carga",
+  "rel_14_change_7": "Pestaña Gastos — el filtro de período de fecha ahora filtra correctamente los recibos y gastos",
+  "rel_14_change_8": "Pestaña Gastos — eliminado el emoji de cámara duplicado en el botón Escanear recibo",
+  "rel_14_change_9": "Agentes scouts — Maya y Carolyne ahora buscan en 5 temas por ejecución en lugar de 1",
+  "rel_14_change_10": "Agentes scouts — corregido el 'Error desconocido' en el registro cuando un scout omitía una ejecución",
+  "rel_14_change_11": "Herramienta de vista previa POS — el Coste aterrizado ahora se muestra correctamente para artículos POS incluso cuando el precio de coste es nulo"
 }

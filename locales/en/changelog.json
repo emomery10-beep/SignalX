@@ -186,5 +186,19 @@
   "rel_13_summary": "Security updates and bug fixes.",
   "rel_13_change_0": "Upgraded authentication library to address two low-severity CVEs",
   "rel_13_change_1": "Fixed chart tooltips disappearing on touch devices",
-  "rel_13_change_2": "Resolved an issue where invited users could land on a blank screen after sign-up"
+  "rel_13_change_2": "Resolved an issue where invited users could land on a blank screen after sign-up",
+
+  "rel_14_summary": "TikTok Shop integration, CFO intelligence fixes, POS map markers, and scout agent reliability.",
+  "rel_14_change_0": "TikTok Shop — connect your TikTok Shop store via QR code OAuth 2.0 flow; scan the code on your phone, approve access, and your orders sync automatically",
+  "rel_14_change_1": "CFO Forecasts — projected revenue and net profit now show numbers when you have 1 month of history instead of showing dashes; horizon buttons (1M / 3M / 6M / 12M) now visibly change the projected totals",
+  "rel_14_change_2": "CFO dashboard — KPI card renamed from 'Net Cash Flow' to 'Net Profit' to correctly reflect what the figure represents",
+  "rel_14_change_3": "P&L comparison — net profit comparison period now includes tracked expenses so the 'vs last period' figure is a fair apples-to-apples comparison",
+  "rel_14_change_4": "Market climate signal cards — fixed cards showing years (2025, 2026) or product dimensions (500 from '500ml') as the headline value; price cards now extract currency-anchored figures, and route cards show Normal / Elevated / Disrupted instead of a meaningless number",
+  "rel_14_change_5": "Market climate sourcing questionnaire — after saving a sourcing answer the widget now advances to the next question instead of staying frozen on the saved confirmation",
+  "rel_14_change_6": "POS map — GPS location markers now render reliably on first load; fixed a race condition where the Leaflet library finished initialising after the marker draw call",
+  "rel_14_change_7": "Expenses tab — date period filter (Today, This Week, This Month etc.) now correctly filters receipts and expenses to match the selected period",
+  "rel_14_change_8": "Expenses tab — removed duplicate camera emoji that was appearing on the Scan Receipt button on mobile",
+  "rel_14_change_9": "Scout agents — Maya and Carolyne now search across 5 topics per run instead of 1, dramatically improving the chance of finding relevant market intelligence",
+  "rel_14_change_10": "Scout agents — fixed 'Unknown error' showing in the agent log when a scout skipped because it had already run today; the log now shows a clear skip reason",
+  "rel_14_change_11": "POS preview tool — Landed Cost now shows correctly for POS items even when the cost price field is null"
 }

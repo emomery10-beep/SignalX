@@ -172,5 +172,19 @@
   "rel_13_summary": "Beveiligingsupdates en bugoplossingen.",
   "rel_13_change_0": "Authenticatiebibliotheek bijgewerkt om twee CVE's met lage ernst aan te pakken",
   "rel_13_change_1": "Probleem opgelost waarbij grafiektooltips verdwenen op aanraakapparaten",
-  "rel_13_change_2": "Probleem opgelost waarbij uitgenodigde gebruikers na aanmelding op een leeg scherm terechtkwamen"
+  "rel_13_change_2": "Probleem opgelost waarbij uitgenodigde gebruikers na aanmelding op een leeg scherm terechtkwamen",
+
+  "rel_14_summary": "TikTok Shop-integratie, CFO-intelligentie-fixes, POS-kaartmarkeringen en betrouwbaarheid van scoutagenten.",
+  "rel_14_change_0": "TikTok Shop — verbind je TikTok Shop-winkel via een QR-code OAuth 2.0-stroom; scan de code op je telefoon, geef toegang goed en je bestellingen worden automatisch gesynchroniseerd",
+  "rel_14_change_1": "CFO-prognoses — geprojecteerde omzet en nettowinst tonen nu cijfers met slechts 1 maand geschiedenis; horizonknoppen (1M / 3M / 6M / 12M) veranderen zichtbaar de geprojecteerde totalen",
+  "rel_14_change_2": "CFO-dashboard — KPI-kaart hernoemd van 'Netto kasstroom' naar 'Nettowinst'",
+  "rel_14_change_3": "W&V — de vergelijkingsperiode voor nettowinst bevat nu gevolgde uitgaven voor een eerlijke vergelijking",
+  "rel_14_change_4": "Marktklimaat-signaalkaarten — opgelost: kaarten toonden jaren of productafmetingen als hoofdwaarde",
+  "rel_14_change_5": "Inkoop-vragenlijst — de widget gaat nu door naar de volgende vraag na het opslaan",
+  "rel_14_change_6": "POS-kaart — GPS-markeringen worden nu betrouwbaar weergegeven bij de eerste laadbeurt",
+  "rel_14_change_7": "Tabblad Uitgaven — het datumperiodefilter filtert nu correct bonnen en uitgaven",
+  "rel_14_change_8": "Tabblad Uitgaven — dubbele camera-emoji verwijderd van de knop Bon scannen",
+  "rel_14_change_9": "Scoutagenten — Maya en Carolyne doorzoeken nu 5 onderwerpen per run in plaats van 1",
+  "rel_14_change_10": "Scoutagenten — 'Onbekende fout' in het logboek opgelost wanneer een scout een run oversloeg",
+  "rel_14_change_11": "POS-voorbeeldtool — Landingskosten worden nu correct weergegeven voor POS-artikelen, ook als de kostprijs nul is"
 }

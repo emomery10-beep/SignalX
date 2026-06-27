@@ -172,5 +172,19 @@
   "rel_13_summary": "Mises à jour de sécurité et corrections de bugs.",
   "rel_13_change_0": "Mise à jour de la bibliothèque d'authentification pour corriger deux CVE de faible gravité",
   "rel_13_change_1": "Correction des infobulles de graphiques qui disparaissaient sur les appareils tactiles",
-  "rel_13_change_2": "Résolution d'un problème où les utilisateurs invités pouvaient arriver sur un écran vide après leur inscription"
+  "rel_13_change_2": "Résolution d'un problème où les utilisateurs invités pouvaient arriver sur un écran vide après leur inscription",
+
+  "rel_14_summary": "Intégration TikTok Shop, corrections de l'intelligence CFO, marqueurs de carte POS et fiabilité des agents scouts.",
+  "rel_14_change_0": "TikTok Shop — connectez votre boutique TikTok Shop via un flux OAuth 2.0 par QR code ; scannez le code sur votre téléphone, approuvez l'accès et vos commandes se synchronisent automatiquement",
+  "rel_14_change_1": "Prévisions CFO — les revenus et bénéfices nets projetés affichent désormais des chiffres avec seulement 1 mois d'historique ; les boutons d'horizon (1M / 3M / 6M / 12M) modifient visiblement les totaux projetés",
+  "rel_14_change_2": "Tableau de bord CFO — la carte KPI renommée de « Flux de trésorerie net » à « Bénéfice net »",
+  "rel_14_change_3": "Compte de résultat — la période de comparaison du bénéfice net inclut désormais les dépenses suivies pour une comparaison équitable",
+  "rel_14_change_4": "Cartes de signaux climatiques du marché — correction des cartes affichant des années ou des dimensions de produits comme valeur principale",
+  "rel_14_change_5": "Questionnaire d'approvisionnement — le widget passe désormais à la question suivante après l'enregistrement",
+  "rel_14_change_6": "Carte POS — les marqueurs GPS s'affichent désormais de manière fiable au premier chargement",
+  "rel_14_change_7": "Onglet Dépenses — le filtre de période de date filtre désormais correctement les reçus et dépenses",
+  "rel_14_change_8": "Onglet Dépenses — suppression de l'emoji de caméra en double sur le bouton Numériser le reçu",
+  "rel_14_change_9": "Agents scouts — Maya et Carolyne effectuent désormais des recherches sur 5 sujets par exécution au lieu de 1",
+  "rel_14_change_10": "Agents scouts — correction de l'affichage d'« Erreur inconnue » dans le journal lorsqu'un scout sautait une exécution",
+  "rel_14_change_11": "Outil d'aperçu POS — le Coût atterri s'affiche désormais correctement pour les articles POS même lorsque le prix de revient est nul"
 }
