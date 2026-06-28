@@ -23,6 +23,7 @@ interface PreviewData {
   message?: string
   upgrade_url?: string
   sym: string
+  has_store?: boolean
   health: { score: number | null; label: string | null }
   source_count: number
   signals: Signal[]
@@ -118,8 +119,10 @@ function LivePreview({ id, data, loading }: { id: string; data: PreviewData | nu
 
   if (id === 'fx') {
     if (!data.fx) return (
-      <EmptyState colour="#6366F1" message="No cost data yet"
-        sub="Connect your store to see real currency exposure" href="/sources" />
+      <EmptyState colour="#6366F1"
+        message={data.has_store ? 'No import costs detected' : 'No cost data yet'}
+        sub={data.has_store ? 'Add shipment costs in foreign currencies to track your FX exposure' : 'Connect your store to see real currency exposure'}
+        href="/shipments" />
     )
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -147,7 +150,7 @@ function LivePreview({ id, data, loading }: { id: string; data: PreviewData | nu
   if (id === 'suppliers') {
     if (!data.suppliers) return (
       <EmptyState colour="#16a34a" message="No shipments tracked"
-        sub="Add a tracking number to score your suppliers" href="/shipments" />
+        sub="Add a shipment tracking number to grade your suppliers" href="/shipments" />
     )
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
@@ -169,8 +172,10 @@ function LivePreview({ id, data, loading }: { id: string; data: PreviewData | nu
 
   if (id === 'landed') {
     if (!data.landed) return (
-      <EmptyState colour={ACC} message="No product data yet"
-        sub="Connect a data source to auto-calculate true landed cost" href="/sources" />
+      <EmptyState colour={ACC}
+        message={data.has_store ? 'No product cost data found' : 'No product data yet'}
+        sub={data.has_store ? 'Add cost prices to your inventory or POS products to calculate true landed cost' : 'Connect a data source to auto-calculate true landed cost'}
+        href="/pos/inventory" />
     )
     const l = data.landed
     const rows = [

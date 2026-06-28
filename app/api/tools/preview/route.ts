@@ -186,13 +186,14 @@ export async function GET() {
 
   // ── Landed Cost preview ───────────────────────────────────────
   const landedData = (() => {
-    // Prefer unified_data (external connectors); fall back to native POS items
-    const useRecords = records.length > 0
+    // Prefer unified_data records that have actual cost data; fall back to native POS items
+    const costRecords = records.filter(r => (r.cost_price || 0) > 0)
+    const useRecords = costRecords.length > 0
     if (!useRecords && !posItems.length) return null
 
     if (useRecords) {
       const byKey: Record<string, { name: string; rev: number; costSum: number; sellSum: number; marginSum: number; n: number }> = {}
-      for (const r of records) {
+      for (const r of costRecords) {
         const k = r.sku || r.product_name || 'Unknown'
         const e = byKey[k] ||= { name: r.product_name || r.sku || 'Unknown', rev: 0, costSum: 0, sellSum: 0, marginSum: 0, n: 0 }
         e.rev       += r.gross_revenue || 0
@@ -342,8 +343,11 @@ export async function GET() {
     })
   }
 
+  const hasStore = hasPOS || sources.length > 0
+
   return NextResponse.json({
     sym,
+    has_store:    hasStore,
     health:       health ? { score: health.score, label: health.label } : { score: null, label: null },
     source_count: sources.length + (hasPOS ? 1 : 0),
     signals:      signals.slice(0, 3),
