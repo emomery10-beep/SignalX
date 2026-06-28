@@ -95,7 +95,7 @@ export default function ShipmentsPage() {
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null)
 
   const [form, setForm] = useState({
-    tracking_number: '', supplier_name: '', sku: '', quantity: '',
+    tracking_number: '', carrier: '', supplier_name: '', sku: '', quantity: '',
     unit_cost: '', expected_arrival: '', shipment_type: 'inbound', purchase_order_ref: '',
   })
 
@@ -159,7 +159,7 @@ export default function ShipmentsPage() {
       }
       showToast(d.warning || tc('shipments.toast_added'), !d.warning)
       setShowAdd(false)
-      setForm({ tracking_number: '', supplier_name: '', sku: '', quantity: '', unit_cost: '', expected_arrival: '', shipment_type: 'inbound', purchase_order_ref: '' })
+      setForm({ tracking_number: '', carrier: '', supplier_name: '', sku: '', quantity: '', unit_cost: '', expected_arrival: '', shipment_type: 'inbound', purchase_order_ref: '' })
       load()
     } catch (e: any) {
       showToast(e.message, false)
@@ -404,6 +404,42 @@ export default function ShipmentsPage() {
                 <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>{tc('shipments.label_tracking_number')}</label>
                 <input value={form.tracking_number} onChange={e => setForm(f => ({ ...f, tracking_number: e.target.value }))}
                   placeholder={tc('shipments.placeholder_tracking_number')} style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 13, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none', boxSizing: 'border-box' }}/>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx2)', display: 'block', marginBottom: 5 }}>
+                  Carrier <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--tx3)' }}>(optional — helps if auto-detection fails)</span>
+                </label>
+                <select value={form.carrier} onChange={e => setForm(f => ({ ...f, carrier: e.target.value }))}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b)', background: 'var(--bg)', fontSize: 13, fontFamily: 'inherit', color: form.carrier ? 'var(--tx)' : 'var(--tx3)', outline: 'none', boxSizing: 'border-box' as const }}>
+                  <option value="">Auto-detect carrier</option>
+                  <optgroup label="Global">
+                    <option value="DHL">DHL</option>
+                    <option value="FedEx">FedEx</option>
+                    <option value="UPS">UPS</option>
+                    <option value="TNT">TNT</option>
+                  </optgroup>
+                  <optgroup label="UK &amp; Europe">
+                    <option value="RoyalMail">Royal Mail</option>
+                    <option value="Evri">Evri / Hermes</option>
+                    <option value="DPD">DPD</option>
+                    <option value="ParcelForce">Parcelforce</option>
+                  </optgroup>
+                  <optgroup label="US">
+                    <option value="USPS">USPS</option>
+                    <option value="AmazonLogistics">Amazon Logistics</option>
+                  </optgroup>
+                  <optgroup label="China &amp; Asia">
+                    <option value="ChinaPost">China Post</option>
+                    <option value="YunExpress">YunExpress</option>
+                    <option value="4PX">4PX</option>
+                    <option value="Cainiao">Cainiao</option>
+                  </optgroup>
+                  <optgroup label="Africa">
+                    <option value="CouriersPlease">Couriers Please</option>
+                    <option value="Aramex">Aramex</option>
+                  </optgroup>
+                </select>
               </div>
 
               <div>
