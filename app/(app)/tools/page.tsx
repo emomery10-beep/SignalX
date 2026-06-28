@@ -529,8 +529,16 @@ export default function IntelligencePage() {
                     </button>
                   </div>
                   {!mktResult && !mktLoading && <div style={{ fontSize: 13, color: TX3 }}>{tc('page_tools.marketEmptyState')}</div>}
+                  {mktResult?.locked && (
+                    <div style={{ padding: '20px 18px', borderRadius: 14, border: `1px solid ${ACC}40`, background: `${ACC}08`, textAlign: 'center' }}>
+                      <div style={{ fontSize: 24, marginBottom: 8 }}>🌍</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: TX, marginBottom: 6 }}>Market Intelligence</div>
+                      <div style={{ fontSize: 13, color: TX2, marginBottom: 14, lineHeight: 1.5 }}>Available on Growth and above. See real market prices, channel benchmarks, and live web signals.</div>
+                      <a href="/billing" style={{ display: 'inline-block', padding: '10px 24px', borderRadius: 9999, background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Upgrade to Growth →</a>
+                    </div>
+                  )}
                   {mktResult?.error && <div style={{ padding: '14px 16px', borderRadius: 10, background: 'rgba(239,68,68,.07)', color: '#ef4444', fontSize: 14 }}>{mktResult.error}</div>}
-                  {mktResult && !mktResult.error && (
+                  {mktResult && !mktResult.locked && !mktResult.error && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {(mktResult.products || mktResult.results || []).map((item: any, i: number) => (
                         <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: 10, border: `1px solid ${B}`, background: EV, gap: 12, flexWrap: 'wrap' }}>
