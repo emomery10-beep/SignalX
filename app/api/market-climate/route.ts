@@ -136,15 +136,29 @@ function buildSupplierSignals(
     }
 
     // Shipping disruption for the source country → destination
-    const laneKey = `lane_${country.toLowerCase().replace(/\s+/g, '_').slice(0, 12)}`
-    if (!seen.has(laneKey)) {
-      seen.add(laneKey)
-      specs.push({
-        key: laneKey,
-        label: `${country} → ${climate.name}`,
-        query: `shipping freight disruption ${country} to ${climate.name} 2025 delay`,
-        kind: 'demand',
-      })
+    // Skip if the source is local: same country as the user, or a multi-word
+    // place name that contains the user's country/capital (e.g. "China Square
+    // Nyali Mombasa" is a local market in Kenya, not an international origin).
+    const countryLower = country.toLowerCase()
+    const climateLower = climate.name.toLowerCase()
+    const isLocal =
+      countryLower === climateLower ||
+      countryLower.includes(climateLower) ||
+      (climate.capital && countryLower.includes(climate.capital.toLowerCase())) ||
+      // Heuristic: more than 3 words usually means a local place name, not a country
+      country.trim().split(/\s+/).length > 3
+
+    if (!isLocal) {
+      const laneKey = `lane_${country.toLowerCase().replace(/\s+/g, '_').slice(0, 12)}`
+      if (!seen.has(laneKey)) {
+        seen.add(laneKey)
+        specs.push({
+          key: laneKey,
+          label: `${country} → ${climate.name}`,
+          query: `shipping freight disruption ${country} to ${climate.name} 2025 delay`,
+          kind: 'demand',
+        })
+      }
     }
   }
 
