@@ -33,7 +33,7 @@ export default function LogisticsAlertBanner() {
             <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('logistics_alertbanner.trackShipmentsDesc')}</div>
           </div>
         </div>
-        <button onClick={() => router.push('/shipments')} style={{ padding: '7px 14px', borderRadius: 9999, border: 'none', background: '#6366F1', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+        <button onClick={() => router.push('/intelligence')} style={{ padding: '7px 14px', borderRadius: 9999, border: 'none', background: '#6366F1', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
           {tc('logistics_alertbanner.addShipment')}
         </button>
       </div>
@@ -49,7 +49,7 @@ export default function LogisticsAlertBanner() {
         <div style={{ fontSize: 13, color: '#d97706', flex: 1 }}>
           <strong>{tc(health.at_risk !== 1 ? 'logistics_alertbanner.shipmentsAtRiskPlural' : 'logistics_alertbanner.shipmentsAtRiskSingular', { n: health.at_risk || 0 })}</strong> · {health.summary || ''}
         </div>
-        <button onClick={() => router.push('/shipments')} style={{ padding: '5px 12px', borderRadius: 9999, border: '1px solid rgba(245,158,11,.3)', background: 'transparent', color: '#d97706', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+        <button onClick={() => router.push('/intelligence')} style={{ padding: '5px 12px', borderRadius: 9999, border: '1px solid rgba(245,158,11,.3)', background: 'transparent', color: '#d97706', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
           {tc('logistics_alertbanner.view')}
         </button>
       </div>
@@ -79,7 +79,7 @@ export default function LogisticsAlertBanner() {
         </div>
         <p style={{ fontSize: 13, color: 'var(--tx2)', margin: '0 0 10px', lineHeight: 1.5 }}>{top.message || ''}</p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button onClick={() => router.push('/shipments')} style={{ padding: '7px 14px', borderRadius: 9999, border: 'none', background: color, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <button onClick={() => router.push('/intelligence')} style={{ padding: '7px 14px', borderRadius: 9999, border: 'none', background: color, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
             {tc('logistics_alertbanner.viewShipment')}
           </button>
           <button onClick={() => { router.push('/ask'); setTimeout(() => window.dispatchEvent(new CustomEvent('askbiz:send', { detail: tc('logistics_alertbanner.askBizPrompt', { trackingNumber: top.tracking_number }) })), 400) }}
@@ -96,7 +96,7 @@ export default function LogisticsAlertBanner() {
             {(brief.delayed || 0) > 0 && <span style={{ color: '#d97706' }}>⏱ {tc('logistics_alertbanner.delayed', { n: brief.delayed })}</span>}
             {(brief.customs_holds || 0) > 0 && <span style={{ color: '#dc2626' }}>🛃 {tc('logistics_alertbanner.customsHold', { n: brief.customs_holds })}</span>}
           </div>
-          <button onClick={() => router.push('/shipments')} style={{ fontSize: 12, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+          <button onClick={() => router.push('/intelligence')} style={{ fontSize: 12, color: '#6366F1', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
             {tc('logistics_alertbanner.viewAll')}
           </button>
         </div>

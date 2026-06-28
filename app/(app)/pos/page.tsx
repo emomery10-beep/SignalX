@@ -3690,7 +3690,7 @@ export default function POSPage() {
                 { icon: '📗', title: 'QuickBooks', desc: tc('pos_app.int_quickbooks_desc'), status: 'available', action: () => window.open('/api/auth/quickbooks', '_blank') },
                 { icon: '💳', title: 'M-Pesa', desc: tc('pos_app.int_mpesa_desc'), status: 'available', action: () => handleSetTab('overview') },
                 { icon: '📧', title: tc('pos_app.int_email_title'), desc: tc('pos_app.int_email_desc'), status: 'coming_soon' },
-                { icon: '📦', title: tc('pos_app.int_shipping_title'), desc: tc('pos_app.int_shipping_desc'), status: 'available', action: () => window.location.href = '/shipments' },
+                { icon: '📦', title: tc('pos_app.int_shipping_title'), desc: tc('pos_app.int_shipping_desc'), status: 'available', action: () => window.location.href = '/intelligence' },
                 { icon: '🛒', title: tc('pos_app.int_ecommerce_title'), desc: tc('pos_app.int_ecommerce_desc'), status: 'available', action: () => window.location.href = '/sources' },
               ].map((int, i) => (
                 <div key={i} style={{ background: 'var(--sf)', border: '1px solid var(--b)', borderRadius: 12, padding: 20, position: 'relative' }}>

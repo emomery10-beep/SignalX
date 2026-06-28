@@ -122,7 +122,7 @@ function LivePreview({ id, data, loading }: { id: string; data: PreviewData | nu
       <EmptyState colour="#6366F1"
         message={data.has_store ? 'No import costs detected' : 'No cost data yet'}
         sub={data.has_store ? 'Add shipment costs in foreign currencies to track your FX exposure' : 'Connect your store to see real currency exposure'}
-        href="/shipments" />
+        href="/intelligence" />
     )
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -150,7 +150,7 @@ function LivePreview({ id, data, loading }: { id: string; data: PreviewData | nu
   if (id === 'suppliers') {
     if (!data.suppliers) return (
       <EmptyState colour="#16a34a" message="No shipments tracked"
-        sub="Add a shipment tracking number to grade your suppliers" href="/shipments" />
+        sub="Add a shipment tracking number to grade your suppliers" href="/intelligence" />
     )
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>

@@ -23,7 +23,6 @@ const MORE_NAV = [
   { id: 'expansion',  href: '/expansion',  label: 'Find new products',  icon: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z' },
   { id: 'sources',    href: '/sources',    label: 'Connect data',       icon: 'M12 2c4.97 0 9 2.24 9 5s-4.03 5-9 5-9-2.24-9-5 4.03-5 9-5z M3 7c0 2.76 4.03 5 9 5s9-2.24 9-5 M3 12c0 2.76 4.03 5 9 5s9-2.24 9-5 M3 17c0 2.76 4.03 5 9 5s9-2.24 9-5' },
   { id: 'files',      href: '/files',      label: 'My files',           icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6' },
-  { id: 'shipments',  href: '/shipments',  label: 'Shipments',          icon: 'M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z' },
   { id: 'alerts',     href: '/alerts',     label: 'Alerts',             icon: 'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0' },
   { id: 'templates',  href: '/templates',  label: 'Templates',          icon: 'M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2' },
   { id: 'billing',    href: '/billing',    label: 'Upgrade plan',       icon: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z' },
