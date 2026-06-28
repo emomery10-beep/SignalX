@@ -1,18 +1,12 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { PLAN_HIGHLIGHTS, PLAN_DESCRIPTIONS, getPlanBadge } from '@/lib/plans'
 import { useLang } from '@/components/LanguageProvider'
 
-const ACC  = '#d08a59'
-const TX   = '#1a1916'
-const TX2  = '#6b6760'
-const TX3  = '#a39e97'
-const B    = 'rgba(0,0,0,.08)'
-const SF   = '#ffffff'
-const EV   = '#f3f2ef'
-
+// ACC is a fixed brand token — intentionally not a CSS variable
+const ACC = '#d08a59'
 
 // ── Feature comparison table data ─────────────────────────────
 const buildFeaturesTable = (tc: (key: string, vars?: Record<string, string | number>) => string) => {
@@ -101,7 +95,9 @@ export default function BillingPage() {
   const router = useRouter()
   const supabase = createClient()
   const { tc } = useLang()
-  const FEATURES_TABLE = buildFeaturesTable(tc)
+
+  // Memoised so it doesn't rebuild on every state change
+  const FEATURES_TABLE = useMemo(() => buildFeaturesTable(tc), [tc])
 
   const [currentPlan,  setCurrentPlan]  = useState('free')
   const [usage,        setUsage]        = useState<any>(null)
@@ -110,6 +106,7 @@ export default function BillingPage() {
   const [pageLoading,  setPageLoading]  = useState(true)
   const [showTable,    setShowTable]    = useState(false)
   const [annual,       setAnnual]       = useState(false)
+  const [checkoutError, setCheckoutError] = useState('')
   // POS seats
   const [posEnabled,   setPosEnabled]   = useState(false)
   const [posSeatCount, setPosSeatCount] = useState(0)
@@ -131,7 +128,6 @@ export default function BillingPage() {
   useEffect(() => {
     const init = async () => {
       try {
-        // Non-owners (team members) cannot access billing
         const roleRes = await fetch('/api/me/role')
         if (roleRes.ok) {
           const { role } = await roleRes.json()
@@ -153,11 +149,9 @@ export default function BillingPage() {
             if (data.pos.seatCount > 0) setPosSeats(data.pos.seatCount)
           }
           if (data.trials) setTrials(data.trials)
-          // Detect Kenyan user from profile currency
           const uc = (data.userCurrency || '').toUpperCase()
           if (uc === 'KES') setIsKenyan(true)
         }
-        // Check for pos_success in URL
         if (window.location.search.includes('pos_success=true')) {
           setPosSuccess(true)
           setTimeout(() => setPosSuccess(false), 6000)
@@ -194,14 +188,13 @@ export default function BillingPage() {
   const handleUpgrade = async (planId: string) => {
     if (planId === 'free' || planId === currentPlan) return
     setLoading(planId)
+    setCheckoutError('')
     try {
       const res = await fetch('/api/billing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'checkout', plan: planId, currency, annual }),
       })
-      // Try to parse JSON even on non-2xx — surface the API's error message
-      // rather than a generic "something went wrong" that hides the cause.
       const text = await res.text()
       let data: any = {}
       try { data = JSON.parse(text) } catch {}
@@ -209,15 +202,15 @@ export default function BillingPage() {
         window.location.href = data.url
         return
       }
-      const msg = data.error || tc('billing.alert_checkout_failed', { status: res.status, detail: text.slice(0, 200) })
-      alert(msg)
+      setCheckoutError(data.error || tc('billing.alert_checkout_failed', { status: res.status, detail: text.slice(0, 200) }))
     } catch (err) {
-      alert(err instanceof Error ? err.message : tc('billing.alert_something_wrong_retry'))
+      setCheckoutError(err instanceof Error ? err.message : tc('billing.alert_something_wrong_retry'))
     } finally { setLoading('') }
   }
 
   const handlePosCheckout = async () => {
     setPosLoading(true)
+    setCheckoutError('')
     try {
       const additionalSeats = posSeats - posSeatCount
       const res = await fetch('/api/billing', {
@@ -227,8 +220,8 @@ export default function BillingPage() {
       })
       const data = await res.json()
       if (data.url) window.location.href = data.url
-      else alert(data.error || tc('billing.alert_something_wrong'))
-    } catch { alert(tc('billing.alert_something_wrong_retry')) }
+      else setCheckoutError(data.error || tc('billing.alert_something_wrong'))
+    } catch { setCheckoutError(tc('billing.alert_something_wrong_retry')) }
     finally { setPosLoading(false) }
   }
 
@@ -249,6 +242,7 @@ export default function BillingPage() {
   const handlePesapalCheckout = async (planId: string) => {
     if (planId === 'free' || planId === currentPlan) return
     setPesapalLoading(planId)
+    setCheckoutError('')
     try {
       const res = await fetch('/api/pesapal', {
         method: 'POST',
@@ -260,14 +254,15 @@ export default function BillingPage() {
         window.location.href = data.redirectUrl
         return
       }
-      alert(data.error || tc('billing.alert_something_wrong'))
+      setCheckoutError(data.error || tc('billing.alert_something_wrong'))
     } catch {
-      alert(tc('billing.alert_something_wrong_retry'))
+      setCheckoutError(tc('billing.alert_something_wrong_retry'))
     } finally { setPesapalLoading('') }
   }
 
   const handleStartTrial = async (type: 'pos' | 'growth') => {
     setTrialLoading(type)
+    setCheckoutError('')
     try {
       const res = await fetch('/api/billing', {
         method: 'POST',
@@ -278,7 +273,6 @@ export default function BillingPage() {
       if (data.success) {
         setTrialSuccess(type)
         setTimeout(() => setTrialSuccess(''), 6000)
-        // Reload billing data
         const refresh = await fetch('/api/billing')
         if (refresh.ok) {
           const d = await refresh.json()
@@ -293,14 +287,15 @@ export default function BillingPage() {
           if (d.trials) setTrials(d.trials)
         }
       } else {
-        alert(data.error || tc('billing.alert_something_wrong'))
+        setCheckoutError(data.error || tc('billing.alert_something_wrong'))
       }
-    } catch { alert(tc('billing.alert_something_wrong_retry')) }
+    } catch { setCheckoutError(tc('billing.alert_something_wrong_retry')) }
     finally { setTrialLoading('') }
   }
 
   const handlePesapalPosCheckout = async () => {
     setPosLoading(true)
+    setCheckoutError('')
     try {
       const res = await fetch('/api/pesapal', {
         method: 'POST',
@@ -309,8 +304,8 @@ export default function BillingPage() {
       })
       const data = await res.json()
       if (data.redirectUrl) window.location.href = data.redirectUrl
-      else alert(data.error || tc('billing.alert_something_wrong'))
-    } catch { alert(tc('billing.alert_something_wrong_retry')) }
+      else setCheckoutError(data.error || tc('billing.alert_something_wrong'))
+    } catch { setCheckoutError(tc('billing.alert_something_wrong_retry')) }
     finally { setPosLoading(false) }
   }
 
@@ -357,18 +352,19 @@ export default function BillingPage() {
 
   return (
     <div className="page-shell">
-
       <div className="page-shell-body" style={{ maxWidth: 860 }}>
-
 
         {/* Annual toggle */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 24 }}>
           <span style={{ fontSize: 13, color: annual ? 'var(--tx3)' : 'var(--tx)', fontWeight: annual ? 400 : 600 }}>{tc('billing.toggle_monthly')}</span>
           <button
+            role="switch"
+            aria-checked={annual}
+            aria-label={tc('billing.toggle_label') || 'Switch between monthly and annual billing'}
             onClick={() => setAnnual(v => !v)}
-            style={{ width: 44, height: 24, borderRadius: 12, background: annual ? ACC : 'var(--b2)', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 200ms' }}
+            style={{ width: 48, height: 28, borderRadius: 14, background: annual ? ACC : 'var(--b2)', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 200ms', flexShrink: 0 }}
           >
-            <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: annual ? 23 : 3, transition: 'left 200ms', boxShadow: '0 1px 4px rgba(0,0,0,.2)' }}/>
+            <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: annual ? 23 : 3, transition: 'left 200ms', boxShadow: '0 1px 4px rgba(0,0,0,.2)' }}/>
           </button>
           <span style={{ fontSize: 13, color: annual ? 'var(--tx)' : 'var(--tx3)', fontWeight: annual ? 600 : 400 }}>
             {tc('billing.toggle_annual')}
@@ -376,14 +372,28 @@ export default function BillingPage() {
           </span>
         </div>
 
+        {/* Inline checkout error — replaces blocking alert() */}
+        {checkoutError && (
+          <div
+            role="alert"
+            aria-live="assertive"
+            style={{ marginBottom: 20, padding: '12px 16px', borderRadius: 12, background: 'rgba(239,68,68,.06)', border: '1px solid rgba(239,68,68,.2)', display: 'flex', alignItems: 'center', gap: 10 }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span style={{ fontSize: 13, color: '#dc2626', flex: 1 }}>{checkoutError}</span>
+            <button onClick={() => setCheckoutError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: 16, lineHeight: 1, padding: '0 2px' }} aria-label="Dismiss error">×</button>
+          </div>
+        )}
+
         {/* Plan cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 14, marginBottom: 24 }}>
           {PLANS.map(plan => {
             const isCurrent = currentPlan === plan.id
-            // Show annual per-month price when toggle is on, otherwise monthly price
             const shownPrice = annual && plan.annualMonthly ? plan.annualMonthly : plan.displayPrice
             return (
-              <div key={plan.id} style={{ borderRadius: 18, border: plan.popular ? `2px solid ${plan.colour}` : `1px solid ${B}`, background: plan.popular ? `rgba(99,102,241,.02)` : SF, padding: '22px 20px', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+              <div key={plan.id} style={{ borderRadius: 18, border: plan.popular ? `2px solid ${plan.colour}` : '1px solid var(--b)', background: plan.popular ? `rgba(99,102,241,.02)` : 'var(--sf)', padding: '22px 20px', position: 'relative', display: 'flex', flexDirection: 'column' }}>
                 {plan.popular && (
                   <div style={{ position: 'absolute', top: -12, left: 20, fontSize: 11, fontWeight: 700, color: '#fff', background: plan.colour, borderRadius: 9999, padding: '3px 12px', letterSpacing: '.04em', textTransform: 'uppercase' }}>
                     {tc('billing.badge_most_popular')}
@@ -396,7 +406,6 @@ export default function BillingPage() {
                     {isCurrent && <span style={{ fontSize: 10, fontWeight: 700, color: plan.colour, background: plan.colour + '18', borderRadius: 9999, padding: '2px 8px' }}>{tc('billing.badge_current')}</span>}
                   </div>
 
-                  {/* Price display */}
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
                     <span style={{ fontFamily: 'var(--font-sora)', fontSize: 30, fontWeight: 800, color: 'var(--tx)', letterSpacing: '-.03em' }}>
                       {shownPrice}
@@ -408,7 +417,6 @@ export default function BillingPage() {
                     )}
                   </div>
 
-                  {/* Annual total note */}
                   {annual && plan.annualTotal && (
                     <div style={{ fontSize: 11, color: '#16a34a', marginTop: 4, fontWeight: 500 }}>
                       {tc('billing.annual_total_note', { total: plan.annualTotal })}
@@ -421,7 +429,7 @@ export default function BillingPage() {
                 <div style={{ flex: 1, marginBottom: 18 }}>
                   {plan.highlights.map((item, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 13, color: 'var(--tx2)', marginBottom: 7 }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={plan.colour} strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 2 }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={plan.colour} strokeWidth="2.5" strokeLinecap="round" aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }}>
                         <path d="M20 6L9 17l-5-5"/>
                       </svg>
                       {item}
@@ -432,7 +440,8 @@ export default function BillingPage() {
                 {/* Trial badge */}
                 {plan.id === 'growth' && trials.growth?.active && (
                   <div style={{ marginBottom: 10, padding: '8px 12px', borderRadius: 10, background: 'rgba(99,102,241,.06)', border: '1px solid rgba(99,102,241,.15)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366F1', animation: 'pulse 2s infinite' }} />
+                    {/* Static dot — pulse removed to respect prefers-reduced-motion */}
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366F1', flexShrink: 0 }} aria-hidden="true"/>
                     <span style={{ fontSize: 12, fontWeight: 600, color: '#6366F1' }}>{tc(trials.growth.daysLeft === 1 ? 'billing.trial_active_one' : 'billing.trial_active', { days: trials.growth.daysLeft })}</span>
                   </div>
                 )}
@@ -453,10 +462,10 @@ export default function BillingPage() {
                         onClick={() => handleStartTrial('growth')}
                         disabled={trialLoading === 'growth'}
                         style={{
-                          width: '100%', padding: '11px', borderRadius: 10, border: 'none',
-                          background: 'linear-gradient(135deg, #6366F1, #8b5cf6)',
+                          width: '100%', padding: '13px', borderRadius: 10, border: 'none', minHeight: 44,
+                          background: '#6366F1',
                           color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                          fontFamily: 'inherit', boxShadow: '0 2px 12px rgba(99,102,241,.35)',
+                          fontFamily: 'inherit',
                         }}
                       >
                         {trialLoading === 'growth' ? tc('billing.btn_starting') : tc('billing.btn_start_free')}
@@ -469,13 +478,12 @@ export default function BillingPage() {
                       onClick={() => isKenyan ? handlePesapalCheckout(plan.id) : handleUpgrade(plan.id)}
                       disabled={(!trialExpired && isCurrent) || plan.id === 'free' || loading === plan.id || pesapalLoading === plan.id}
                       style={{
-                        width: '100%', padding: '11px', borderRadius: 10,
-                        border: (!trialExpired && isCurrent) || plan.id === 'free' ? `1px solid ${B}` : 'none',
+                        width: '100%', padding: '13px', borderRadius: 10, minHeight: 44,
+                        border: (!trialExpired && isCurrent) || plan.id === 'free' ? '1px solid var(--b)' : 'none',
                         background: (!trialExpired && isCurrent) || plan.id === 'free' ? 'transparent' : plan.colour,
                         color: (!trialExpired && isCurrent) || plan.id === 'free' ? 'var(--tx3)' : '#fff',
                         fontSize: 14, fontWeight: 600, cursor: (!trialExpired && isCurrent) || plan.id === 'free' ? 'default' : 'pointer',
                         fontFamily: 'inherit',
-                        boxShadow: (!trialExpired && isCurrent) || plan.id === 'free' ? 'none' : `0 2px 12px ${plan.colour}35`,
                       }}
                     >
                       {(loading === plan.id || pesapalLoading === plan.id) ? tc('billing.btn_loading')
@@ -495,26 +503,26 @@ export default function BillingPage() {
 
         {/* PesaPal success toast */}
         {pesapalSuccess && (
-          <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+          <div role="status" aria-live="polite" style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
             <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500 }}>{tc('billing.pesapal_success')}</span>
           </div>
         )}
 
-        {/* M-Pesa / PesaPal section — Kenyan users (all plans) */}
+        {/* M-Pesa / PesaPal section — Kenyan users */}
         {isKenyan && (
           <div style={{ borderRadius: 18, border: '1px solid rgba(76,175,80,.3)', background: 'rgba(76,175,80,.03)', padding: '22px 24px', marginBottom: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
               <div style={{ width: 32, height: 32, borderRadius: 9, background: '#4CAF50', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><path d="M12 1v4M12 19v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M1 12h4M19 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 1v4M12 19v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M1 12h4M19 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
               </div>
               <div>
                 <span style={{ fontSize: 16, fontWeight: 700, color: '#4CAF50' }}>{tc('billing.mpesa_title')}</span>
-                <div style={{ fontSize: 12, color: TX3 }}>{tc('billing.mpesa_subtitle')}</div>
+                <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('billing.mpesa_subtitle')}</div>
               </div>
             </div>
 
-            <p style={{ fontSize: 13, color: TX2, marginBottom: 16, lineHeight: 1.6 }}>
+            <p style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 16, lineHeight: 1.6 }}>
               {tc('billing.mpesa_intro')}
             </p>
 
@@ -523,7 +531,7 @@ export default function BillingPage() {
                 <button
                   onClick={() => handlePesapalCheckout('growth')}
                   disabled={!!pesapalLoading}
-                  style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#4CAF50', color: '#fff', fontSize: 13, fontWeight: 600, cursor: pesapalLoading ? 'default' : 'pointer', fontFamily: 'inherit', opacity: pesapalLoading ? .6 : 1 }}
+                  style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#4CAF50', color: '#fff', fontSize: 13, fontWeight: 600, cursor: pesapalLoading ? 'default' : 'pointer', fontFamily: 'inherit', opacity: pesapalLoading ? .6 : 1, minHeight: 44 }}
                 >
                   {pesapalLoading === 'growth' ? tc('billing.mpesa_btn_redirecting') : tc('billing.mpesa_btn_growth')}
                 </button>
@@ -532,7 +540,7 @@ export default function BillingPage() {
                 <button
                   onClick={() => handlePesapalCheckout('business')}
                   disabled={!!pesapalLoading}
-                  style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#388E3C', color: '#fff', fontSize: 13, fontWeight: 600, cursor: pesapalLoading ? 'default' : 'pointer', fontFamily: 'inherit', opacity: pesapalLoading ? .6 : 1 }}
+                  style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#388E3C', color: '#fff', fontSize: 13, fontWeight: 600, cursor: pesapalLoading ? 'default' : 'pointer', fontFamily: 'inherit', opacity: pesapalLoading ? .6 : 1, minHeight: 44 }}
                 >
                   {pesapalLoading === 'business' ? tc('billing.mpesa_btn_redirecting') : tc('billing.mpesa_btn_business')}
                 </button>
@@ -540,7 +548,7 @@ export default function BillingPage() {
               <button
                 onClick={handlePesapalPosCheckout}
                 disabled={!!pesapalLoading || posLoading}
-                style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid rgba(76,175,80,.4)', background: 'transparent', color: '#4CAF50', fontSize: 13, fontWeight: 600, cursor: (pesapalLoading || posLoading) ? 'default' : 'pointer', fontFamily: 'inherit', opacity: (pesapalLoading || posLoading) ? .6 : 1 }}
+                style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid rgba(76,175,80,.4)', background: 'transparent', color: '#4CAF50', fontSize: 13, fontWeight: 600, cursor: (pesapalLoading || posLoading) ? 'default' : 'pointer', fontFamily: 'inherit', opacity: (pesapalLoading || posLoading) ? .6 : 1, minHeight: 44 }}
               >
                 {posLoading ? tc('billing.btn_loading') : tc(posSeats === 1 ? 'billing.mpesa_btn_pos_one' : 'billing.mpesa_btn_pos', { seats: posSeats, total: (posSeats * 500).toLocaleString() })}
               </button>
@@ -548,37 +556,37 @@ export default function BillingPage() {
 
             <div style={{ marginTop: 14, display: 'flex', flexWrap: 'wrap', gap: 12 }}>
               {['mpesa_method_mpesa', 'mpesa_method_airtel', 'mpesa_method_card'].map(k => (
-                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: TX3, padding: '4px 10px', borderRadius: 8, background: 'rgba(76,175,80,.06)', border: '1px solid rgba(76,175,80,.12)' }}>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--tx3)', padding: '4px 10px', borderRadius: 8, background: 'rgba(76,175,80,.06)', border: '1px solid rgba(76,175,80,.12)' }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
                   {tc('billing.' + k)}
                 </div>
               ))}
             </div>
 
-            <p style={{ fontSize: 11, color: TX3, marginTop: 12, lineHeight: 1.5 }}>
+            <p style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 12, lineHeight: 1.5 }}>
               {tc('billing.mpesa_footnote')}
             </p>
           </div>
         )}
 
-        {/* Trial success toasts */}
+        {/* Trial success toasts — role="status" so AT announces them politely */}
         {trialSuccess === 'pos' && (
-          <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+          <div role="status" aria-live="polite" style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
             <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500 }}>{tc('billing.toast_pos_trial')}</span>
           </div>
         )}
         {trialSuccess === 'growth' && (
-          <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+          <div role="status" aria-live="polite" style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
             <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500 }}>{tc('billing.toast_growth_trial')}</span>
           </div>
         )}
 
         {/* POS success toast */}
         {posSuccess && (
-          <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+          <div role="status" aria-live="polite" style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(34,197,94,.06)', border: '1px solid rgba(34,197,94,.2)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
             <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500 }}>{tc('billing.toast_pos_activated')}</span>
           </div>
         )}
@@ -589,7 +597,7 @@ export default function BillingPage() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                 <div style={{ width: 32, height: 32, borderRadius: 9, background: ACC, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
                 </div>
                 <span style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, color: ACC }}>{tc('billing.pos_title')}</span>
                 {posEnabled && trials.pos?.active && (
@@ -604,7 +612,7 @@ export default function BillingPage() {
                   <span style={{ fontSize: 10, fontWeight: 700, color: '#16a34a', background: 'rgba(34,197,94,.1)', borderRadius: 9999, padding: '2px 8px' }}>{tc(posSeatCount === 1 ? 'billing.pos_badge_active_one' : 'billing.pos_badge_active', { seats: posSeatCount })}</span>
                 )}
               </div>
-              <p style={{ fontSize: 13, color: TX2, margin: 0, lineHeight: 1.6, maxWidth: 480 }}>
+              <p style={{ fontSize: 13, color: 'var(--tx2)', margin: 0, lineHeight: 1.6, maxWidth: 480 }}>
                 {trials.pos?.active
                   ? <>{tc('billing.pos_desc_trial_pre')}<a href="https://pos.askbiz.co" target="_blank" rel="noreferrer" style={{ color: ACC, textDecoration: 'none' }}>pos.askbiz.co</a>{tc('billing.pos_desc_trial_post')}</>
                   : <>{tc('billing.pos_desc_pre')}<strong>{tc('billing.pos_desc_price', { price: isKenyan ? 'KSh 500' : '£5' })}</strong>{tc('billing.pos_desc_post')}<a href="https://pos.askbiz.co" target="_blank" rel="noreferrer" style={{ color: ACC, textDecoration: 'none' }}>pos.askbiz.co</a>{tc('billing.pos_desc_post2')}</>
@@ -616,29 +624,36 @@ export default function BillingPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', flexShrink: 0 }}>
                 {trials.pos?.active ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 12, color: TX3 }}>{tc('billing.pos_seats_included')}</span>
+                    <span style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('billing.pos_seats_included')}</span>
                     <button
                       onClick={isKenyan ? handlePesapalPosCheckout : handlePosCheckout}
                       disabled={posLoading}
-                      style={{ padding: '10px 20px', borderRadius: 10, border: `1px solid rgba(208,138,89,.4)`, background: 'transparent', color: ACC, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: posLoading ? .6 : 1 }}
+                      style={{ padding: '10px 20px', borderRadius: 10, border: `1px solid rgba(208,138,89,.4)`, background: 'transparent', color: ACC, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: posLoading ? .6 : 1, minHeight: 44 }}
                     >
                       {posLoading ? tc('billing.btn_loading') : tc('billing.pos_btn_subscribe_now')}
                     </button>
                   </div>
                 ) : (
                   <>
-                    {/* Seat stepper for amendment */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 0, border: `1px solid rgba(208,138,89,.3)`, borderRadius: 10, overflow: 'hidden', background: SF }}>
+                    {/* Seat stepper */}
+                    <div style={{ display: 'flex', alignItems: 'center', border: `1px solid rgba(208,138,89,.3)`, borderRadius: 10, overflow: 'hidden', background: 'var(--sf)' }}>
                       <button
                         onClick={() => setPosSeats(s => Math.max(1, s - 1))}
-                        style={{ width: 36, height: 36, border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: ACC, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        aria-label={tc('billing.pos_decrease_seat') || 'Remove a POS seat'}
+                        style={{ width: 44, height: 44, border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: ACC, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       >−</button>
-                      <div style={{ width: 44, textAlign: 'center', fontSize: 14, fontWeight: 700, color: TX }}>
+                      <div
+                        aria-live="polite"
+                        aria-atomic="true"
+                        aria-label={`${posSeats} ${posSeats === 1 ? 'seat' : 'seats'}`}
+                        style={{ width: 44, textAlign: 'center', fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}
+                      >
                         {posSeats}
                       </div>
                       <button
                         onClick={() => setPosSeats(s => Math.min(50, s + 1))}
-                        style={{ width: 36, height: 36, border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: ACC, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        aria-label={tc('billing.pos_increase_seat') || 'Add a POS seat'}
+                        style={{ width: 44, height: 44, border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: ACC, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       >+</button>
                     </div>
 
@@ -646,12 +661,12 @@ export default function BillingPage() {
                       <button
                         onClick={handlePosCheckout}
                         disabled={posLoading}
-                        style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 2px 10px rgba(208,138,89,.3)`, opacity: posLoading ? .6 : 1 }}
+                        style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: posLoading ? .6 : 1, minHeight: 44 }}
                       >
                         {posLoading ? tc('billing.btn_loading') : tc(posSeats - posSeatCount === 1 ? 'billing.pos_btn_add_seats_one' : 'billing.pos_btn_add_seats', { n: posSeats - posSeatCount })}
                       </button>
                     ) : (
-                      <button onClick={handleManagePos} disabled={posLoading} style={{ padding: '10px 20px', borderRadius: 10, border: `1px solid rgba(208,138,89,.4)`, background: 'transparent', color: ACC, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: posLoading ? .6 : 1 }}>
+                      <button onClick={handleManagePos} disabled={posLoading} style={{ padding: '10px 20px', borderRadius: 10, border: `1px solid rgba(208,138,89,.4)`, background: 'transparent', color: ACC, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: posLoading ? .6 : 1, minHeight: 44 }}>
                         {posLoading ? tc('billing.btn_loading') : tc('billing.pos_btn_manage')}
                       </button>
                     )}
@@ -670,51 +685,58 @@ export default function BillingPage() {
                 </div>
               )}
 
-              {/* Free trial button (only if never trialled) */}
+              {/* Free trial button — flat colour, no gradient */}
               {!trials.pos?.used && (
                 <div style={{ marginBottom: 14 }}>
                   <button
                     onClick={() => handleStartTrial('pos')}
                     disabled={trialLoading === 'pos'}
                     style={{
-                      padding: '12px 24px', borderRadius: 10, border: 'none',
-                      background: 'linear-gradient(135deg, #d08a59, #e6a06a)',
+                      padding: '13px 24px', borderRadius: 10, border: 'none', minHeight: 44,
+                      background: ACC,
                       color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                      fontFamily: 'inherit', boxShadow: '0 2px 12px rgba(208,138,89,.35)',
+                      fontFamily: 'inherit',
                       opacity: trialLoading === 'pos' ? .6 : 1,
                     }}
                   >
                     {trialLoading === 'pos' ? tc('billing.btn_starting') : tc('billing.pos_btn_start_free')}
                   </button>
-                  <div style={{ fontSize: 12, color: TX3, marginTop: 6 }}>{tc('billing.pos_no_card')}</div>
+                  <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 6 }}>{tc('billing.pos_no_card')}</div>
                 </div>
               )}
 
               {/* Paid seat purchase */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
                 {/* Seat stepper */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 0, border: `1px solid rgba(208,138,89,.3)`, borderRadius: 10, overflow: 'hidden', background: SF }}>
+                <div style={{ display: 'flex', alignItems: 'center', border: `1px solid rgba(208,138,89,.3)`, borderRadius: 10, overflow: 'hidden', background: 'var(--sf)' }}>
                   <button
                     onClick={() => setPosSeats(s => Math.max(1, s - 1))}
-                    style={{ width: 36, height: 36, border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: ACC, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    aria-label={tc('billing.pos_decrease_seat') || 'Remove a POS seat'}
+                    style={{ width: 44, height: 44, border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: ACC, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   >−</button>
-                  <div style={{ width: 44, textAlign: 'center', fontSize: 14, fontWeight: 700, color: TX }}>
+                  <div
+                    aria-live="polite"
+                    aria-atomic="true"
+                    aria-label={`${posSeats} ${posSeats === 1 ? 'seat' : 'seats'}`}
+                    style={{ width: 44, textAlign: 'center', fontSize: 14, fontWeight: 700, color: 'var(--tx)' }}
+                  >
                     {posSeats}
                   </div>
                   <button
                     onClick={() => setPosSeats(s => Math.min(50, s + 1))}
-                    style={{ width: 36, height: 36, border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: ACC, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    aria-label={tc('billing.pos_increase_seat') || 'Add a POS seat'}
+                    style={{ width: 44, height: 44, border: 'none', background: 'transparent', fontSize: 18, cursor: 'pointer', color: ACC, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   >+</button>
                 </div>
 
-                <div style={{ fontSize: 13, color: TX2 }}>
+                <div style={{ fontSize: 13, color: 'var(--tx2)' }}>
                   {tc(posSeats === 1 ? 'billing.pos_seat_count_price_one' : 'billing.pos_seat_count_price', { seats: posSeats, price: isKenyan ? `KSh ${(posSeats * 500).toLocaleString()}` : `£${posSeats * 5}` })}
                 </div>
 
                 <button
                   onClick={isKenyan ? handlePesapalPosCheckout : handlePosCheckout}
                   disabled={posLoading}
-                  style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', boxShadow: `0 2px 10px rgba(208,138,89,.3)`, opacity: posLoading ? .6 : 1 }}
+                  style={{ padding: '10px 22px', borderRadius: 10, border: 'none', background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: posLoading ? .6 : 1, minHeight: 44 }}
                 >
                   {posLoading ? tc('billing.btn_loading') : tc(posSeats === 1 ? 'billing.pos_btn_add_seats_one' : 'billing.pos_btn_add_seats', { n: posSeats })}
                 </button>
@@ -724,67 +746,72 @@ export default function BillingPage() {
 
           <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', gap: 16 }}>
             {[0, 1, 2, 3, 4, 5].map(i => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: TX2 }}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--tx2)' }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={ACC} strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
                 {tc('billing.pos_feat_' + i)}
               </div>
             ))}
           </div>
         </div>
 
-        {/* Feature comparison table toggle */}
+        {/* Feature comparison table toggle — aria-expanded communicates open/closed to AT */}
         <button
           onClick={() => setShowTable(v => !v)}
-          style={{ width: '100%', padding: '12px', borderRadius: 12, border: `1px solid ${B}`, background: EV, fontSize: 13, fontWeight: 600, color: TX2, cursor: 'pointer', fontFamily: 'inherit', marginBottom: showTable ? 0 : 24, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+          aria-expanded={showTable}
+          aria-controls="feature-comparison-table"
+          style={{ width: '100%', padding: '12px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--ev)', fontSize: 13, fontWeight: 600, color: 'var(--tx2)', cursor: 'pointer', fontFamily: 'inherit', marginBottom: showTable ? 0 : 24, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 44 }}
         >
           {showTable ? tc('billing.compare_hide') : tc('billing.compare_show')}
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ transform: showTable ? 'rotate(180deg)' : 'none', transition: 'transform 200ms' }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true" style={{ transform: showTable ? 'rotate(180deg)' : 'none', transition: 'transform 200ms' }}>
             <path d="M6 9l6 6 6-6"/>
           </svg>
         </button>
 
         {showTable && (
-          <div style={{ border: `1px solid ${B}`, borderRadius: 16, overflow: 'hidden', marginBottom: 24 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', background: EV, borderBottom: `1px solid ${B}` }}>
-              <div style={{ padding: '12px 16px', fontSize: 12, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('billing.table_col_feature')}</div>
-              {['table_col_free', 'table_col_growth', 'table_col_business'].map((k, i) => (
-                <div key={k} style={{ padding: '12px 12px', fontSize: 13, fontWeight: 700, color: ['#6b6760','#6366F1','#7c3aed'][i], textAlign: 'center' }}>{tc('billing.' + k)}</div>
-              ))}
-            </div>
-            {FEATURES_TABLE.map((section, si) => (
-              <div key={si}>
-                <div style={{ padding: '10px 16px 6px', fontSize: 11, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', background: 'rgba(0,0,0,.02)', borderBottom: `1px solid ${B}` }}>
-                  {section.category}
-                </div>
-                {section.rows.map((row, ri) => (
-                  <div key={ri} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', borderBottom: `1px solid ${B}`, background: ri % 2 === 0 ? SF : 'rgba(0,0,0,.01)' }}>
-                    <div style={{ padding: '10px 16px', fontSize: 13, color: TX2 }}>{row.label}</div>
-                    {[row.free, row.growth, row.business].map((val, i) => {
-                      const isGood = val === tc('billing.val_check') || val === tc('billing.val_full') || val === tc('billing.val_unlimited') || val === tc('billing.val_real_time') || val === tc('billing.val_prefilled')
-                      const isDash = val === tc('billing.val_dash')
-                      const isLimit = val === tc('billing.val_manual') || val === tc('billing.val_view') || val === tc('billing.val_monthly') || val === tc('billing.val_basic')
-                      return (
-                        <div key={i} style={{
-                          padding: '10px 12px',
-                          textAlign: 'center',
-                          fontSize: 13,
-                          fontWeight: isGood ? 600 : 400,
-                          color: isDash ? TX3 : isGood ? '#16a34a' : isLimit ? '#d08a59' : TX2,
-                        }}>
-                          {val}
-                        </div>
-                      )
-                    })}
-                  </div>
+          /* Horizontal scroll wrapper so the 4-column table doesn't clip on mobile */
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <div id="feature-comparison-table" style={{ border: '1px solid var(--b)', borderRadius: 16, overflow: 'hidden', minWidth: 560 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', background: 'var(--ev)', borderBottom: '1px solid var(--b)' }}>
+                <div style={{ padding: '12px 16px', fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('billing.table_col_feature')}</div>
+                {['table_col_free', 'table_col_growth', 'table_col_business'].map((k, i) => (
+                  <div key={k} style={{ padding: '12px 12px', fontSize: 13, fontWeight: 700, color: ['#6b6760','#6366F1','#7c3aed'][i], textAlign: 'center' }}>{tc('billing.' + k)}</div>
                 ))}
               </div>
-            ))}
+              {FEATURES_TABLE.map((section, si) => (
+                <div key={si}>
+                  <div style={{ padding: '10px 16px 6px', fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', background: 'rgba(0,0,0,.02)', borderBottom: '1px solid var(--b)' }}>
+                    {section.category}
+                  </div>
+                  {section.rows.map((row, ri) => (
+                    <div key={ri} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', borderBottom: '1px solid var(--b)', background: ri % 2 === 0 ? 'var(--sf)' : 'rgba(0,0,0,.01)' }}>
+                      <div style={{ padding: '10px 16px', fontSize: 13, color: 'var(--tx2)' }}>{row.label}</div>
+                      {[row.free, row.growth, row.business].map((val, i) => {
+                        const isGood = val === tc('billing.val_check') || val === tc('billing.val_full') || val === tc('billing.val_unlimited') || val === tc('billing.val_real_time') || val === tc('billing.val_prefilled')
+                        const isDash = val === tc('billing.val_dash')
+                        const isLimit = val === tc('billing.val_manual') || val === tc('billing.val_view') || val === tc('billing.val_monthly') || val === tc('billing.val_basic')
+                        return (
+                          <div key={i} style={{
+                            padding: '10px 12px',
+                            textAlign: 'center',
+                            fontSize: 13,
+                            fontWeight: isGood ? 600 : 400,
+                            color: isDash ? 'var(--tx3)' : isGood ? '#16a34a' : isLimit ? '#d08a59' : 'var(--tx2)',
+                          }}>
+                            {val}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
         {/* API callout */}
         <div style={{ padding: '14px 18px', borderRadius: 12, background: 'rgba(99,102,241,.04)', border: '1px solid rgba(99,102,241,.12)', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" aria-hidden="true" style={{ flexShrink: 0 }}>
             <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
           </svg>
           <p style={{ fontSize: 13, color: 'var(--tx2)', margin: 0, lineHeight: 1.5 }}>
@@ -792,21 +819,23 @@ export default function BillingPage() {
           </p>
         </div>
 
-        {/* FAQ */}
+        {/* FAQ — dl/dt/dd for semantic Q&A structure */}
         <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: TX3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>{tc('billing.faq_heading')}</div>
-          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(i => {
-            let a: string
-            if (i === 11) a = tc('billing.faq_11_a', { price: isKenyan ? 'KSh 500' : '£5' })
-            else if (i === 12) a = isKenyan ? tc('billing.faq_12_a_kes') : tc('billing.faq_12_a_gbp')
-            else a = tc('billing.faq_' + i + '_a')
-            return { q: tc('billing.faq_' + i + '_q'), a }
-          }).map((faq, i) => (
-            <div key={i} style={{ borderBottom: `1px solid ${B}`, padding: '14px 0' }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: TX, marginBottom: 5 }}>{faq.q}</div>
-              <div style={{ fontSize: 13, color: TX3, lineHeight: 1.6 }}>{faq.a}</div>
-            </div>
-          ))}
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>{tc('billing.faq_heading')}</div>
+          <dl style={{ margin: 0 }}>
+            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(i => {
+              let a: string
+              if (i === 11) a = tc('billing.faq_11_a', { price: isKenyan ? 'KSh 500' : '£5' })
+              else if (i === 12) a = isKenyan ? tc('billing.faq_12_a_kes') : tc('billing.faq_12_a_gbp')
+              else a = tc('billing.faq_' + i + '_a')
+              return { q: tc('billing.faq_' + i + '_q'), a }
+            }).map((faq, i) => (
+              <div key={i} style={{ borderBottom: '1px solid var(--b)', padding: '14px 0' }}>
+                <dt style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 5 }}>{faq.q}</dt>
+                <dd style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.6, margin: 0 }}>{faq.a}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
 
       </div>
