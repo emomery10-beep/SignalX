@@ -131,6 +131,16 @@ export default function BillingPage() {
   useEffect(() => {
     const init = async () => {
       try {
+        // Non-owners (team members) cannot access billing
+        const roleRes = await fetch('/api/me/role')
+        if (roleRes.ok) {
+          const { role } = await roleRes.json()
+          if (role && role !== 'owner') {
+            router.replace('/intelligence')
+            return
+          }
+        }
+
         const res = await fetch('/api/billing')
         if (res.ok) {
           const data = await res.json()
