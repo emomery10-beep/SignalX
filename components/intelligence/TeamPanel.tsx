@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useLang } from '@/components/LanguageProvider'
 import type { CallerRole } from '@/lib/team-auth'
 
@@ -13,118 +13,44 @@ interface TeamMember {
   invite_token?: string | null
 }
 
-/* ─── Role definitions ─── */
+/* ─── Role system ─── */
 
-interface PermissionBucket { area: string; level: 'full' | 'edit' | 'view' | 'none' }
-interface RoleDetail {
-  label: string; color: string; desc: string; who: string; emoji: string
-  permissions: PermissionBucket[]; cannotAccess: string[]; useCases: string[]
+const ROLE_META: Record<string, { color: string; bg: string; label: string; short: string }> = {
+  owner:      { color: '#d08a59', bg: 'rgba(208,138,89,.1)',  label: 'Owner',      short: 'Full control' },
+  admin:      { color: '#7c3aed', bg: 'rgba(124,58,237,.08)', label: 'Admin',      short: 'Full + can invite' },
+  analyst:    { color: '#0284c7', bg: 'rgba(2,132,199,.08)',  label: 'Analyst',    short: 'Read & write, view billing' },
+  accountant: { color: '#059669', bg: 'rgba(5,150,105,.08)',  label: 'Accountant', short: 'Financial data & CFO reports' },
+  buyer:      { color: '#b45309', bg: 'rgba(180,83,9,.08)',   label: 'Buyer',      short: 'Inventory & POS only' },
+  viewer:     { color: '#5a5652', bg: 'rgba(90,86,82,.07)',   label: 'Viewer',     short: 'Read-only access' },
 }
 
-function buildLevelBadge(tc: (k: string) => string) {
-  return {
-    full: { label: tc('intel_teampanel.levelFull'), bg: 'rgba(34,197,94,.12)',   fg: '#16a34a' },
-    edit: { label: tc('intel_teampanel.levelEdit'), bg: 'rgba(59,130,246,.12)',  fg: '#2563eb' },
-    view: { label: tc('intel_teampanel.levelView'), bg: 'rgba(168,162,158,.12)', fg: '#78716c' },
-    none: { label: tc('intel_teampanel.levelNone'), bg: 'rgba(239,68,68,.08)',   fg: '#dc2626' },
-  }
+const ROLE_PERMS: Record<string, Record<string, 'full' | 'edit' | 'view' | 'none'>> = {
+  owner:      { Dashboards: 'full', 'AI chat': 'full', 'Business tools': 'full', 'CFO reports': 'full', 'Data sources': 'full', POS: 'full', Team: 'full', Settings: 'full', Billing: 'full' },
+  admin:      { Dashboards: 'full', 'AI chat': 'full', 'Business tools': 'full', 'CFO reports': 'full', 'Data sources': 'full', POS: 'full', Team: 'edit', Settings: 'edit', Billing: 'view' },
+  analyst:    { Dashboards: 'full', 'AI chat': 'full', 'Business tools': 'full', 'CFO reports': 'view', 'Data sources': 'view', POS: 'view', Team: 'none', Settings: 'view', Billing: 'view' },
+  accountant: { Dashboards: 'view', 'AI chat': 'edit', 'Business tools': 'none', 'CFO reports': 'full', 'Data sources': 'none', POS: 'none', Team: 'none', Settings: 'none', Billing: 'none' },
+  buyer:      { Dashboards: 'view', 'AI chat': 'edit', 'Business tools': 'view', 'CFO reports': 'none', 'Data sources': 'none', POS: 'full', Team: 'none', Settings: 'none', Billing: 'none' },
+  viewer:     { Dashboards: 'view', 'AI chat': 'view', 'Business tools': 'view', 'CFO reports': 'view', 'Data sources': 'none', POS: 'view', Team: 'none', Settings: 'none', Billing: 'none' },
 }
 
-function buildRoles(tc: (k: string) => string): Record<string, RoleDetail> {
-  const area = {
-    dashboards:    tc('intel_teampanel.areaPermDashboards'),
-    aiChat:        tc('intel_teampanel.areaPermAiChat'),
-    businessTools: tc('intel_teampanel.areaPermBusinessTools'),
-    cfo:           tc('intel_teampanel.areaPermCfo'),
-    dataSources:   tc('intel_teampanel.areaPermDataSources'),
-    team:          tc('intel_teampanel.areaPermTeam'),
-    billing:       tc('intel_teampanel.areaPermBilling'),
-    pos:           tc('intel_teampanel.areaPermPos'),
-    settings:      tc('intel_teampanel.areaPermSettings'),
-  }
-  return {
-    owner: {
-      label: tc('intel_teampanel.roleOwnerLabel'), color: '#6366F1', emoji: '👑',
-      desc: tc('intel_teampanel.roleOwnerDesc'), who: tc('intel_teampanel.roleOwnerWho'),
-      permissions: [
-        { area: area.dashboards, level: 'full' }, { area: area.aiChat, level: 'full' },
-        { area: area.businessTools, level: 'full' }, { area: area.cfo, level: 'full' },
-        { area: area.dataSources, level: 'full' }, { area: area.team, level: 'full' },
-        { area: area.billing, level: 'full' }, { area: area.pos, level: 'full' },
-        { area: area.settings, level: 'full' },
-      ],
-      cannotAccess: [],
-      useCases: [tc('intel_teampanel.roleOwnerUseCase0'), tc('intel_teampanel.roleOwnerUseCase1'), tc('intel_teampanel.roleOwnerUseCase2')],
-    },
-    admin: {
-      label: tc('intel_teampanel.roleAdminLabel'), color: '#7c3aed', emoji: '🛡️',
-      desc: tc('intel_teampanel.roleAdminDesc'), who: tc('intel_teampanel.roleAdminWho'),
-      permissions: [
-        { area: area.dashboards, level: 'full' }, { area: area.aiChat, level: 'full' },
-        { area: area.businessTools, level: 'full' }, { area: area.cfo, level: 'full' },
-        { area: area.dataSources, level: 'full' }, { area: area.team, level: 'edit' },
-        { area: area.billing, level: 'view' }, { area: area.pos, level: 'full' },
-        { area: area.settings, level: 'edit' },
-      ],
-      cannotAccess: [tc('intel_teampanel.roleAdminCannotAccess0'), tc('intel_teampanel.roleAdminCannotAccess1'), tc('intel_teampanel.roleAdminCannotAccess2')],
-      useCases: [tc('intel_teampanel.roleAdminUseCase0'), tc('intel_teampanel.roleAdminUseCase1'), tc('intel_teampanel.roleAdminUseCase2')],
-    },
-    analyst: {
-      label: tc('intel_teampanel.roleAnalystLabel'), color: '#0284c7', emoji: '📊',
-      desc: tc('intel_teampanel.roleAnalystDesc'), who: tc('intel_teampanel.roleAnalystWho'),
-      permissions: [
-        { area: area.dashboards, level: 'full' }, { area: area.aiChat, level: 'full' },
-        { area: area.businessTools, level: 'full' }, { area: area.cfo, level: 'view' },
-        { area: area.dataSources, level: 'view' }, { area: area.team, level: 'none' },
-        { area: area.billing, level: 'view' }, { area: area.pos, level: 'view' },
-        { area: area.settings, level: 'view' },
-      ],
-      cannotAccess: [tc('intel_teampanel.roleAnalystCannotAccess0'), tc('intel_teampanel.roleAnalystCannotAccess1'), tc('intel_teampanel.roleAnalystCannotAccess2'), tc('intel_teampanel.roleAnalystCannotAccess3')],
-      useCases: [tc('intel_teampanel.roleAnalystUseCase0'), tc('intel_teampanel.roleAnalystUseCase1'), tc('intel_teampanel.roleAnalystUseCase2')],
-    },
-    accountant: {
-      label: tc('intel_teampanel.roleAccountantLabel'), color: '#16a34a', emoji: '🧮',
-      desc: tc('intel_teampanel.roleAccountantDesc'), who: tc('intel_teampanel.roleAccountantWho'),
-      permissions: [
-        { area: area.dashboards, level: 'view' }, { area: area.aiChat, level: 'edit' },
-        { area: area.businessTools, level: 'none' }, { area: area.cfo, level: 'full' },
-        { area: area.dataSources, level: 'none' }, { area: area.team, level: 'none' },
-        { area: area.billing, level: 'none' }, { area: area.pos, level: 'none' },
-        { area: area.settings, level: 'none' },
-      ],
-      cannotAccess: [tc('intel_teampanel.roleAccountantCannotAccess0'), tc('intel_teampanel.roleAccountantCannotAccess1'), tc('intel_teampanel.roleAccountantCannotAccess2'), tc('intel_teampanel.roleAccountantCannotAccess3')],
-      useCases: [tc('intel_teampanel.roleAccountantUseCase0'), tc('intel_teampanel.roleAccountantUseCase1'), tc('intel_teampanel.roleAccountantUseCase2')],
-    },
-    buyer: {
-      label: tc('intel_teampanel.roleBuyerLabel'), color: '#d97706', emoji: '📦',
-      desc: tc('intel_teampanel.roleBuyerDesc'), who: tc('intel_teampanel.roleBuyerWho'),
-      permissions: [
-        { area: area.dashboards, level: 'view' }, { area: area.aiChat, level: 'edit' },
-        { area: area.businessTools, level: 'view' }, { area: area.cfo, level: 'none' },
-        { area: area.dataSources, level: 'none' }, { area: area.team, level: 'none' },
-        { area: area.billing, level: 'none' }, { area: area.pos, level: 'full' },
-        { area: area.settings, level: 'none' },
-      ],
-      cannotAccess: [tc('intel_teampanel.roleBuyerCannotAccess0'), tc('intel_teampanel.roleBuyerCannotAccess1'), tc('intel_teampanel.roleBuyerCannotAccess2'), tc('intel_teampanel.roleBuyerCannotAccess3')],
-      useCases: [tc('intel_teampanel.roleBuyerUseCase0'), tc('intel_teampanel.roleBuyerUseCase1'), tc('intel_teampanel.roleBuyerUseCase2')],
-    },
-    viewer: {
-      label: tc('intel_teampanel.roleViewerLabel'), color: '#94a3b8', emoji: '👁️',
-      desc: tc('intel_teampanel.roleViewerDesc'), who: tc('intel_teampanel.roleViewerWho'),
-      permissions: [
-        { area: area.dashboards, level: 'view' }, { area: area.aiChat, level: 'view' },
-        { area: area.businessTools, level: 'view' }, { area: area.cfo, level: 'view' },
-        { area: area.dataSources, level: 'none' }, { area: area.team, level: 'none' },
-        { area: area.billing, level: 'none' }, { area: area.pos, level: 'view' },
-        { area: area.settings, level: 'none' },
-      ],
-      cannotAccess: [tc('intel_teampanel.roleViewerCannotAccess0'), tc('intel_teampanel.roleViewerCannotAccess1'), tc('intel_teampanel.roleViewerCannotAccess2')],
-      useCases: [tc('intel_teampanel.roleViewerUseCase0'), tc('intel_teampanel.roleViewerUseCase1'), tc('intel_teampanel.roleViewerUseCase2')],
-    },
-  }
+const AREAS = ['Dashboards', 'AI chat', 'Business tools', 'CFO reports', 'Data sources', 'POS', 'Team', 'Settings', 'Billing']
+const ROLES_ORDER = ['owner', 'admin', 'analyst', 'accountant', 'buyer', 'viewer']
+
+const ROLE_ICONS: Record<string, string> = {
+  owner: 'M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z',
+  admin: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z',
+  analyst: 'M3 3v18h18M9 17V9M13 17v-5M17 17V5',
+  accountant: 'M9 7H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M9 7h6M12 12v4M10 14h4',
+  buyer: 'M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM1 3h22M1 21h22',
+  viewer: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 9a3 3 0 0 1 0 6 3 3 0 0 1 0-6z',
 }
 
-const COMPARE_ROLES = ['owner', 'admin', 'analyst', 'accountant', 'buyer', 'viewer'] as const
+const LEVEL_STYLES = {
+  full: { label: 'Full',  bg: 'rgba(5,150,105,.1)',   fg: '#047857' },
+  edit: { label: 'Edit',  bg: 'rgba(2,132,199,.1)',   fg: '#0369a1' },
+  view: { label: 'View',  bg: 'rgba(90,86,82,.08)',   fg: '#5a5652' },
+  none: { label: '—',     bg: 'transparent',          fg: '#a39e97' },
+}
 
 function getInitials(name: string, email: string) {
   const src = name?.trim() || email || ''
@@ -133,11 +59,31 @@ function getInitials(name: string, email: string) {
   return src.slice(0, 2).toUpperCase()
 }
 
-function formatDate(iso: string) {
+function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-/* ─── Component ─── */
+function RoleIcon({ role, size = 16 }: { role: string; size?: number }) {
+  const d = ROLE_ICONS[role] || ROLE_ICONS.viewer
+  const isPolyline = role === 'analyst'
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      {isPolyline ? (
+        <>
+          <polyline points="3 3 3 21 21 21"/>
+          <polyline points="9 17 9 9"/>
+          <polyline points="13 17 13 12"/>
+          <polyline points="17 17 17 5"/>
+        </>
+      ) : (
+        <path d={d}/>
+      )}
+    </svg>
+  )
+}
+
+/* ─── Main component ─── */
 
 export default function TeamPanel() {
   const { tc } = useLang()
@@ -148,24 +94,12 @@ export default function TeamPanel() {
   const [resendingId, setResendingId] = useState<string | null>(null)
   const [removingId, setRemovingId] = useState<string | null>(null)
   const [form, setForm] = useState({ email: '', role: 'analyst', name: '' })
-  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' }>({ msg: '', type: 'success' })
+  const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null)
   const [expandedRole, setExpandedRole] = useState<string | null>(null)
   const [showCompare, setShowCompare] = useState(false)
-  const [editingRole, setEditingRole] = useState<string | null>(null)
-
-  const LEVEL_BADGE = buildLevelBadge(tc)
-  const ROLES = buildRoles(tc)
-  const PERMISSION_AREAS = Object.values({
-    dashboards: tc('intel_teampanel.areaPermDashboards'),
-    aiChat: tc('intel_teampanel.areaPermAiChat'),
-    businessTools: tc('intel_teampanel.areaPermBusinessTools'),
-    cfo: tc('intel_teampanel.areaPermCfo'),
-    dataSources: tc('intel_teampanel.areaPermDataSources'),
-    team: tc('intel_teampanel.areaPermTeam'),
-    billing: tc('intel_teampanel.areaPermBilling'),
-    pos: tc('intel_teampanel.areaPermPos'),
-    settings: tc('intel_teampanel.areaPermSettings'),
-  })
+  const [editingRoleId, setEditingRoleId] = useState<string | null>(null)
+  const emailRef = useRef<HTMLInputElement>(null)
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const canManage = callerRole === 'owner' || callerRole === 'admin'
 
@@ -173,71 +107,61 @@ export default function TeamPanel() {
     Promise.all([
       fetch('/api/team').then(r => r.json()),
       fetch('/api/me/role').then(r => r.json()),
-    ]).then(([teamData, roleData]) => {
-      setMembers(teamData.members || [])
-      if (roleData.role) setCallerRole(roleData.role)
+    ]).then(([td, rd]) => {
+      setMembers(td.members || [])
+      if (rd.role) setCallerRole(rd.role)
     }).finally(() => setLoading(false))
   }, [])
 
-  const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
+  function showToast(msg: string, type: 'ok' | 'err' = 'ok') {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
     setToast({ msg, type })
-    setTimeout(() => setToast({ msg: '', type: 'success' }), 4000)
+    toastTimer.current = setTimeout(() => setToast(null), 4000)
   }
 
-  const invite = async () => {
-    if (!form.email) return
+  async function invite() {
+    if (!form.email || inviting) return
     setInviting(true)
     try {
       const res = await fetch('/api/team', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
       const data = await res.json()
       if (data.member) {
         setMembers(m => [data.member, ...m])
         setForm({ email: '', role: 'analyst', name: '' })
-        if (data.emailSent) {
-          showToast(`Invite sent to ${form.email}`)
-        } else {
-          navigator.clipboard?.writeText(data.acceptUrl).catch(() => {})
-          showToast(`Link copied — email not sent. Share: ${data.acceptUrl}`)
-        }
+        emailRef.current?.focus()
+        showToast(data.emailSent ? `Invite sent to ${form.email}` : `Link copied — share it with ${form.email}`)
+        if (!data.emailSent) navigator.clipboard?.writeText(data.acceptUrl).catch(() => {})
       } else {
-        showToast(data.error || 'Failed to send invite', 'error')
+        showToast(data.error || 'Could not send invite', 'err')
       }
-    } finally {
-      setInviting(false)
-    }
+    } finally { setInviting(false) }
   }
 
-  const resendInvite = async (member: TeamMember) => {
-    setResendingId(member.id)
+  async function resendInvite(m: TeamMember) {
+    setResendingId(m.id)
     try {
-      // Re-send by POSTing again with same email/role (upserts, resets token + expiry)
       const res = await fetch('/api/team', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: member.email, role: member.role, name: member.name }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: m.email, role: m.role, name: m.name }),
       })
       const data = await res.json()
       if (data.member) {
-        setMembers(m => m.map(x => x.id === member.id ? data.member : x))
-        showToast(data.emailSent ? `Invite resent to ${member.email}` : `Link copied for ${member.email}`)
+        setMembers(prev => prev.map(x => x.id === m.id ? data.member : x))
+        showToast(data.emailSent ? `Resent to ${m.email}` : 'Link copied')
         if (!data.emailSent) navigator.clipboard?.writeText(data.acceptUrl).catch(() => {})
       } else {
-        showToast(data.error || 'Failed to resend', 'error')
+        showToast(data.error || 'Failed to resend', 'err')
       }
-    } finally {
-      setResendingId(null)
-    }
+    } finally { setResendingId(null) }
   }
 
-  const changeRole = async (id: string, newRole: string) => {
-    setEditingRole(null)
+  async function changeRole(id: string, newRole: string) {
+    setEditingRoleId(null)
     const res = await fetch('/api/team', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, role: newRole }),
     })
     const data = await res.json()
@@ -245,16 +169,15 @@ export default function TeamPanel() {
       setMembers(m => m.map(x => x.id === id ? data.member : x))
       showToast('Role updated')
     } else {
-      showToast(data.error || 'Failed to update role', 'error')
+      showToast(data.error || 'Failed to update', 'err')
     }
   }
 
-  const removeMember = async (id: string) => {
+  async function removeMember(id: string) {
     setRemovingId(id)
     try {
       const res = await fetch('/api/team', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status: 'removed' }),
       })
       const data = await res.json()
@@ -262,337 +185,377 @@ export default function TeamPanel() {
         setMembers(m => m.filter(x => x.id !== id))
         showToast('Member removed')
       } else {
-        showToast(data.error || 'Failed to remove', 'error')
+        showToast(data.error || 'Failed to remove', 'err')
       }
-    } finally {
-      setRemovingId(null)
-    }
+    } finally { setRemovingId(null) }
   }
 
-  const activeMembers = members.filter(m => m.status === 'active')
-  const pendingMembers = members.filter(m => m.status === 'pending')
+  const active  = members.filter(m => m.status === 'active')
+  const pending = members.filter(m => m.status === 'pending')
 
   return (
-    <div style={{ maxWidth: 760 }}>
+    <div style={{ maxWidth: 720 }}>
+
       {/* Toast */}
-      {toast.msg && (
+      {toast && (
         <div style={{
-          position: 'fixed', top: 16, right: 16, zIndex: 9999,
-          padding: '10px 16px', borderRadius: 10, fontSize: 13, fontWeight: 500,
-          background: toast.type === 'error' ? 'rgba(239,68,68,.1)' : 'rgba(34,197,94,.1)',
-          border: `1px solid ${toast.type === 'error' ? 'rgba(239,68,68,.3)' : 'rgba(34,197,94,.3)'}`,
-          color: toast.type === 'error' ? '#dc2626' : '#16a34a',
-          maxWidth: 340, wordBreak: 'break-all',
+          position: 'fixed', top: 20, right: 20, zIndex: 9999,
+          padding: '10px 16px', borderRadius: 'var(--r-md)', fontSize: 13,
+          fontFamily: 'var(--font-dm), sans-serif', fontWeight: 500,
+          background: toast.type === 'err' ? 'rgba(220,38,38,.08)' : 'rgba(5,150,105,.08)',
+          border: `1px solid ${toast.type === 'err' ? 'rgba(220,38,38,.2)' : 'rgba(5,150,105,.2)'}`,
+          color: toast.type === 'err' ? '#b91c1c' : '#047857',
+          maxWidth: 320,
         }}>
           {toast.msg}
         </div>
       )}
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-        <div>
-          <h2 style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, marginBottom: 4 }}>
-            {tc('intel_teampanel.headingTeam')}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 6 }}>
+          <h2 style={{ fontFamily: 'var(--font-sora), system-ui', fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--tx)', margin: 0 }}>
+            Your Team
           </h2>
-          <p style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.5 }}>
-            {tc('intel_teampanel.headingDesc')}
-          </p>
+          {callerRole !== 'owner' && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px',
+              borderRadius: 'var(--r-pill, 9999px)', border: `1px solid ${ROLE_META[callerRole]?.color || '#888'}30`,
+              background: ROLE_META[callerRole]?.bg || 'var(--ev)',
+              fontSize: 12, fontWeight: 600, color: ROLE_META[callerRole]?.color,
+              fontFamily: 'var(--font-dm), sans-serif', flexShrink: 0,
+            }}>
+              <RoleIcon role={callerRole} size={13} />
+              {ROLE_META[callerRole]?.label}
+            </span>
+          )}
+        </div>
+        <p style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.55, margin: 0, maxWidth: 480 }}>
+          Give your accountant, ops manager, or buyer their own view — filtered to what they need.
+        </p>
+      </div>
+
+      {/* Roles section */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif' }}>
+            Roles
+          </span>
+          <button
+            onClick={() => { setShowCompare(v => !v); setExpandedRole(null) }}
+            style={{
+              padding: '5px 12px', borderRadius: 'var(--r-pill, 9999px)',
+              border: '1px solid var(--b2)', background: showCompare ? 'var(--ev)' : 'transparent',
+              color: 'var(--tx2)', fontSize: 12, fontWeight: 500, cursor: 'pointer',
+              fontFamily: 'var(--font-dm), sans-serif', transition: 'background 150ms',
+            }}>
+            {showCompare ? 'Back to roles' : 'Compare all roles'}
+          </button>
         </div>
 
-        {/* Role badge for non-owners */}
-        {callerRole !== 'owner' && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px',
-            borderRadius: 9999, border: `1px solid ${ROLES[callerRole]?.color || '#888'}40`,
-            background: `${ROLES[callerRole]?.color || '#888'}08`, flexShrink: 0,
-          }}>
-            <span style={{ fontSize: 13 }}>{ROLES[callerRole]?.emoji}</span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: ROLES[callerRole]?.color }}>
-              Your role: {ROLES[callerRole]?.label}
-            </span>
+        {showCompare ? (
+          /* Compare table */
+          <div style={{ borderRadius: 'var(--r-lg)', border: '1px solid var(--b)', overflow: 'hidden', marginBottom: 0 }}>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 600 }}>
+                <thead>
+                  <tr style={{ background: 'var(--ev)' }}>
+                    <th style={{ textAlign: 'left', padding: '10px 14px', fontSize: 12, fontWeight: 600, color: 'var(--tx2)', borderBottom: '1px solid var(--b)', whiteSpace: 'nowrap', fontFamily: 'var(--font-dm), sans-serif' }}>
+                      Area
+                    </th>
+                    {ROLES_ORDER.map(r => {
+                      const m = ROLE_META[r]
+                      return (
+                        <th key={r} style={{ textAlign: 'center', padding: '10px 8px', fontSize: 11, fontWeight: 700, color: m.color, borderBottom: '1px solid var(--b)', whiteSpace: 'nowrap', fontFamily: 'var(--font-dm), sans-serif' }}>
+                          {m.label}
+                        </th>
+                      )
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {AREAS.map((area, i) => (
+                    <tr key={area} style={{ background: i % 2 === 1 ? 'var(--ev)' : 'transparent' }}>
+                      <td style={{ padding: '8px 14px', fontSize: 12, color: 'var(--tx2)', borderBottom: '1px solid var(--b)', fontFamily: 'var(--font-dm), sans-serif', fontWeight: 500 }}>
+                        {area}
+                      </td>
+                      {ROLES_ORDER.map(r => {
+                        const lvl = ROLE_PERMS[r]?.[area] || 'none'
+                        const s = LEVEL_STYLES[lvl]
+                        return (
+                          <td key={r} style={{ textAlign: 'center', padding: '8px 4px', borderBottom: '1px solid var(--b)' }}>
+                            <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 'var(--r-pill, 9999px)', background: s.bg, color: s.fg, fontSize: 10, fontWeight: 600, fontFamily: 'var(--font-dm), sans-serif' }}>
+                              {s.label}
+                            </span>
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
+        ) : (
+          <>
+            {/* Role cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              {ROLES_ORDER.map(key => {
+                const meta = ROLE_META[key]
+                const isExpanded = expandedRole === key
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setExpandedRole(isExpanded ? null : key)}
+                    style={{
+                      padding: '14px 14px 12px',
+                      borderRadius: 'var(--r-md)',
+                      border: `1px solid ${isExpanded ? `${meta.color}35` : 'var(--b)'}`,
+                      background: isExpanded ? meta.bg : 'var(--sf)',
+                      cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
+                      transition: 'border-color 150ms, background 150ms',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <div style={{
+                        width: 30, height: 30, borderRadius: 'var(--r-sm)',
+                        background: meta.bg, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: meta.color,
+                      }}>
+                        <RoleIcon role={key} size={15} />
+                      </div>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" strokeWidth="2" strokeLinecap="round"
+                        style={{ transform: isExpanded ? 'rotate(180deg)' : undefined, transition: 'transform 200ms var(--ease)' }}>
+                        <polyline points="6 9 12 15 18 9"/>
+                      </svg>
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: isExpanded ? meta.color : 'var(--tx)', marginBottom: 3, fontFamily: 'var(--font-dm), sans-serif' }}>
+                      {meta.label}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4, fontFamily: 'var(--font-dm), sans-serif' }}>
+                      {meta.short}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Expanded detail */}
+            {expandedRole && (() => {
+              const meta = ROLE_META[expandedRole]
+              const perms = ROLE_PERMS[expandedRole] || {}
+              return (
+                <div style={{
+                  marginTop: 8, padding: '18px 20px', borderRadius: 'var(--r-md)',
+                  border: `1px solid ${meta.color}20`, background: meta.bg,
+                  animation: 'fadeUp .2s var(--ease) both',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 'var(--r-sm)', background: 'var(--sf)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: meta.color, border: `1px solid ${meta.color}20` }}>
+                      <RoleIcon role={expandedRole} size={17} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: meta.color, fontFamily: 'var(--font-dm), sans-serif' }}>{meta.label}</div>
+                      <div style={{ fontSize: 12, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>{meta.short}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4 }}>
+                    {AREAS.map(area => {
+                      const lvl = perms[area] || 'none'
+                      const s = LEVEL_STYLES[lvl]
+                      return (
+                        <div key={area} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 10px', borderRadius: 'var(--r-sm)', background: 'var(--sf)', border: '1px solid var(--b)' }}>
+                          <span style={{ fontSize: 11, color: 'var(--tx2)', fontFamily: 'var(--font-dm), sans-serif' }}>{area}</span>
+                          <span style={{ padding: '1px 6px', borderRadius: 'var(--r-pill, 9999px)', background: s.bg, color: s.fg, fontSize: 10, fontWeight: 600, fontFamily: 'var(--font-dm), sans-serif', marginLeft: 6, flexShrink: 0 }}>
+                            {s.label}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })()}
+          </>
         )}
       </div>
 
-      {/* Role grid + compare toggle */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 8 }}>
-        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx2)', textTransform: 'uppercase', letterSpacing: '.05em' }}>
-          Roles
-        </span>
-        <button
-          onClick={() => { setShowCompare(v => !v); setExpandedRole(null) }}
-          style={{
-            padding: '5px 12px', borderRadius: 9999, border: '1px solid var(--b)',
-            background: showCompare ? 'rgba(99,102,241,.08)' : 'transparent',
-            color: showCompare ? '#6366F1' : 'var(--tx2)',
-            fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-          }}>
-          {showCompare ? '← Back to roles' : tc('intel_teampanel.btnCompareRoles')}
-        </button>
-      </div>
-
-      {showCompare ? (
-        /* ─── Compare table ─── */
-        <div style={{ overflowX: 'auto', marginBottom: 28, borderRadius: 12, border: '1px solid var(--b)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, minWidth: 580 }}>
-            <thead>
-              <tr style={{ background: 'var(--ev)' }}>
-                <th style={{ textAlign: 'left', padding: '10px 12px', fontWeight: 700, color: 'var(--tx)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '.04em', borderBottom: '1px solid var(--b)' }}>
-                  Area
-                </th>
-                {COMPARE_ROLES.map(r => (
-                  <th key={r} style={{ textAlign: 'center', padding: '10px 6px', fontWeight: 700, color: ROLES[r].color, fontSize: 11, whiteSpace: 'nowrap', borderBottom: '1px solid var(--b)' }}>
-                    {ROLES[r].emoji} {ROLES[r].label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {PERMISSION_AREAS.map((area, i) => (
-                <tr key={area} style={{ background: i % 2 === 0 ? 'transparent' : 'var(--ev)' }}>
-                  <td style={{ padding: '7px 12px', borderBottom: '1px solid var(--b)', color: 'var(--tx2)', fontWeight: 500 }}>
-                    {area}
-                  </td>
-                  {COMPARE_ROLES.map(r => {
-                    const perm = ROLES[r].permissions.find(p => p.area === area)
-                    const badge = perm ? LEVEL_BADGE[perm.level] : LEVEL_BADGE.none
-                    return (
-                      <td key={r} style={{ textAlign: 'center', padding: '7px 4px', borderBottom: '1px solid var(--b)' }}>
-                        <span style={{ display: 'inline-block', padding: '1px 7px', borderRadius: 9999, background: badge.bg, color: badge.fg, fontSize: 10, fontWeight: 600 }}>
-                          {badge.label}
-                        </span>
-                      </td>
-                    )
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <>
-          {/* ─── Role cards ─── */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 8, marginBottom: expandedRole ? 0 : 24 }}>
-            {Object.entries(ROLES).map(([key, role]) => {
-              const isExpanded = expandedRole === key
-              return (
-                <button key={key} onClick={() => setExpandedRole(isExpanded ? null : key)}
-                  style={{
-                    padding: '10px 12px', borderRadius: 10, border: `1px solid ${isExpanded ? `${role.color}50` : 'var(--b)'}`,
-                    background: isExpanded ? `${role.color}10` : 'var(--sf)',
-                    cursor: 'pointer', textAlign: 'left', transition: 'all 150ms', fontFamily: 'inherit',
-                  }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontSize: 15 }}>{role.emoji}</span>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={isExpanded ? role.color : 'var(--tx3)'} strokeWidth="2.5" strokeLinecap="round"
-                      style={{ transform: isExpanded ? 'rotate(180deg)' : undefined, transition: 'transform 150ms' }}>
-                      <polyline points="6 9 12 15 18 9"/>
-                    </svg>
-                  </div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: isExpanded ? role.color : 'var(--tx)', marginBottom: 2 }}>{role.label}</div>
-                  <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.35 }}>{role.desc}</div>
-                </button>
-              )
-            })}
-          </div>
-
-          {/* ─── Expanded role detail ─── */}
-          {expandedRole && (() => {
-            const role = ROLES[expandedRole]
-            return (
-              <div style={{
-                margin: '8px 0 24px', padding: 20, borderRadius: 14,
-                border: `1px solid ${role.color}25`, background: `${role.color}04`,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 10, background: `${role.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
-                    {role.emoji}
-                  </div>
-                  <div>
-                    <div style={{ fontFamily: 'var(--font-sora)', fontSize: 15, fontWeight: 700, color: role.color }}>{role.label}</div>
-                    <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 1 }}>{role.who}</div>
-                  </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
-                  <div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.05em' }}>
-                      {tc('intel_teampanel.sectionPermissions')}
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      {role.permissions.map(p => {
-                        const badge = LEVEL_BADGE[p.level]
-                        return (
-                          <div key={p.area} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '5px 8px', borderRadius: 7, background: 'var(--sf)', border: '1px solid var(--b)' }}>
-                            <span style={{ fontSize: 12, color: 'var(--tx2)' }}>{p.area}</span>
-                            <span style={{ padding: '1px 7px', borderRadius: 9999, background: badge.bg, color: badge.fg, fontSize: 10, fontWeight: 600 }}>
-                              {badge.label}
-                            </span>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ marginBottom: 14 }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.05em' }}>
-                        {tc('intel_teampanel.sectionBestFor')}
-                      </div>
-                      {role.useCases.map((u, i) => (
-                        <div key={i} style={{ display: 'flex', gap: 7, alignItems: 'flex-start', marginBottom: 5 }}>
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={role.color} strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 2 }}>
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                          <span style={{ fontSize: 12, color: 'var(--tx2)', lineHeight: 1.4 }}>{u}</span>
-                        </div>
-                      ))}
-                    </div>
-                    {role.cannotAccess.length > 0 && (
-                      <div>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.05em' }}>
-                          {tc('intel_teampanel.sectionCannotAccess')}
-                        </div>
-                        {role.cannotAccess.map((c, i) => (
-                          <div key={i} style={{ display: 'flex', gap: 7, alignItems: 'flex-start', marginBottom: 5 }}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" style={{ flexShrink: 0, marginTop: 2 }}>
-                              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                            </svg>
-                            <span style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.4 }}>{c}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )
-          })()}
-        </>
-      )}
-
-      {/* ─── Invite form (owner/admin only) ─── */}
+      {/* Invite form — owner/admin only */}
       {canManage && (
         <div style={{
-          padding: 16, borderRadius: 14, marginBottom: 24,
-          border: '1px solid rgba(99,102,241,.2)', background: 'rgba(99,102,241,.03)',
+          padding: '18px 20px', borderRadius: 'var(--r-lg)',
+          border: '1px solid var(--b)', background: 'var(--sf)', marginBottom: 28,
         }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#6366F1', marginBottom: 12 }}>
-            {tc('intel_teampanel.inviteTitle')}
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif', marginBottom: 14 }}>
+            Invite a team member
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
             <input
-              placeholder={tc('intel_teampanel.invitePlaceholder')}
+              ref={emailRef}
+              type="email"
+              placeholder="their@email.com"
               value={form.email}
               onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
               onKeyDown={e => e.key === 'Enter' && invite()}
-              style={{ padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--sf)', fontSize: 13, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none' }}
+              style={{
+                padding: '9px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--b2)',
+                background: 'var(--ev)', fontSize: 13, fontFamily: 'var(--font-dm), sans-serif',
+                color: 'var(--tx)', outline: 'none', width: '100%', boxSizing: 'border-box',
+              }}
             />
             <input
+              type="text"
               placeholder="Name (optional)"
               value={form.name}
               onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-              style={{ padding: '9px 12px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--sf)', fontSize: 13, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none' }}
+              style={{
+                padding: '9px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--b2)',
+                background: 'var(--ev)', fontSize: 13, fontFamily: 'var(--font-dm), sans-serif',
+                color: 'var(--tx)', outline: 'none', width: '100%', boxSizing: 'border-box',
+              }}
             />
           </div>
+
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <select
               value={form.role}
               onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
-              style={{ flex: 1, padding: '9px 10px', borderRadius: 9, border: '1px solid var(--b2)', background: 'var(--sf)', fontSize: 13, fontFamily: 'inherit', color: 'var(--tx)', outline: 'none' }}>
-              {Object.entries(ROLES)
-                .filter(([r]) => r !== 'owner' && !(callerRole === 'admin' && r === 'admin'))
-                .map(([role, info]) => (
-                  <option key={role} value={role}>{info.emoji} {info.label}</option>
+              style={{
+                flex: 1, padding: '9px 12px', borderRadius: 'var(--r-md)', border: '1px solid var(--b2)',
+                background: 'var(--ev)', fontSize: 13, fontFamily: 'var(--font-dm), sans-serif',
+                color: 'var(--tx)', outline: 'none',
+              }}>
+              {ROLES_ORDER
+                .filter(r => r !== 'owner' && !(callerRole === 'admin' && r === 'admin'))
+                .map(r => (
+                  <option key={r} value={r}>{ROLE_META[r].label} — {ROLE_META[r].short}</option>
                 ))}
             </select>
             <button
               onClick={invite}
               disabled={!form.email || inviting}
-              style={{ padding: '9px 20px', borderRadius: 9, border: 'none', background: form.email && !inviting ? '#6366F1' : 'var(--b2)', color: form.email && !inviting ? '#fff' : 'var(--tx3)', fontSize: 13, fontWeight: 600, cursor: form.email && !inviting ? 'pointer' : 'default', fontFamily: 'inherit', whiteSpace: 'nowrap', transition: 'all 150ms' }}>
-              {inviting ? 'Sending…' : tc('intel_teampanel.btnSendInvite')}
+              style={{
+                padding: '9px 20px', borderRadius: 'var(--r-md)', border: 'none',
+                background: form.email && !inviting ? 'var(--acc)' : 'var(--ev)',
+                color: form.email && !inviting ? '#fff' : 'var(--tx3)',
+                fontSize: 13, fontWeight: 600, cursor: form.email && !inviting ? 'pointer' : 'not-allowed',
+                fontFamily: 'var(--font-dm), sans-serif', whiteSpace: 'nowrap',
+                transition: 'background 150ms, color 150ms',
+              }}>
+              {inviting ? 'Sending…' : 'Send invite'}
             </button>
           </div>
         </div>
       )}
 
-      {/* ─── Member list ─── */}
+      {/* Member list */}
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {[1, 2, 3].map(i => <div key={i} className="skeleton" style={{ height: 64, borderRadius: 12 }} />)}
+          {[1, 2, 3].map(i => (
+            <div key={i} className="skeleton" style={{ height: 60, borderRadius: 'var(--r-md)' }} />
+          ))}
         </div>
       ) : members.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px 20px', borderRadius: 14, border: '1px dashed var(--b)' }}>
-          <div style={{ fontSize: 32, marginBottom: 8 }}>👥</div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 4 }}>No team members yet</div>
-          <div style={{ fontSize: 13, color: 'var(--tx3)' }}>
+        <div style={{ textAlign: 'center', padding: '48px 24px', borderRadius: 'var(--r-lg)', border: '1px dashed var(--b2)' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 'var(--r-md)', background: 'var(--ev)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', color: 'var(--tx3)' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--tx)', marginBottom: 5, fontFamily: 'var(--font-dm), sans-serif' }}>
+            No team members yet
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif', lineHeight: 1.5 }}>
             {canManage
               ? 'Invite your accountant, ops manager, or co-founder above.'
-              : 'Ask your account owner to invite you to their team.'}
+              : 'Ask your account owner to invite you.'}
           </div>
         </div>
       ) : (
-        <div>
-          {/* Active */}
-          {activeMembers.length > 0 && (
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>
-                Active · {activeMembers.length}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+          {/* Active members */}
+          {active.length > 0 && (
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8, fontFamily: 'var(--font-dm), sans-serif' }}>
+                Active · {active.length}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {activeMembers.map((m, i) => {
-                  const roleInfo = ROLES[m.role] || ROLES.viewer
-                  const isEditing = editingRole === m.id
+                {active.map((m, i) => {
+                  const meta = ROLE_META[m.role] || ROLE_META.viewer
+                  const isEditing = editingRoleId === m.id
                   return (
-                    <div key={m.id} style={{
-                      padding: '12px 14px', borderRadius: 12, border: '1px solid var(--b)',
-                      background: 'var(--sf)', display: 'flex', alignItems: 'center', gap: 12,
-                      animation: `fadeUp .2s ease ${i * 0.04}s both`,
-                    }}>
+                    <div key={m.id} className="animate-fade-up"
+                      style={{
+                        animationDelay: `${i * 0.04}s`,
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '11px 14px', borderRadius: 'var(--r-md)',
+                        border: '1px solid var(--b)', background: 'var(--sf)',
+                      }}>
                       <div style={{
-                        width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
-                        background: `${roleInfo.color}22`, display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', fontSize: 13, fontWeight: 700, color: roleInfo.color,
+                        width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                        background: meta.bg, display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', fontSize: 12, fontWeight: 700,
+                        color: meta.color, fontFamily: 'var(--font-dm), sans-serif',
                       }}>
                         {getInitials(m.name, m.email)}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif', marginBottom: 2 }}>
                           {m.name || m.email.split('@')[0]}
                         </div>
-                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>{m.email}</div>
+                        <div style={{ fontSize: 11, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>
+                          {m.email}
+                        </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                        {/* Role badge or change dropdown */}
                         {canManage && isEditing ? (
                           <select
                             autoFocus
                             defaultValue={m.role}
                             onChange={e => changeRole(m.id, e.target.value)}
-                            onBlur={() => setEditingRole(null)}
-                            style={{ padding: '4px 8px', borderRadius: 7, border: `1px solid ${roleInfo.color}40`, background: 'var(--sf)', fontSize: 11, fontFamily: 'inherit', color: roleInfo.color, fontWeight: 600, cursor: 'pointer' }}>
-                            {Object.entries(ROLES)
-                              .filter(([r]) => r !== 'owner' && !(callerRole === 'admin' && r === 'admin'))
-                              .map(([r, info]) => (
-                                <option key={r} value={r}>{info.emoji} {info.label}</option>
+                            onBlur={() => setEditingRoleId(null)}
+                            style={{
+                              padding: '4px 8px', borderRadius: 'var(--r-sm)', border: `1px solid ${meta.color}30`,
+                              background: meta.bg, fontSize: 11, fontFamily: 'var(--font-dm), sans-serif',
+                              color: meta.color, fontWeight: 600, cursor: 'pointer', outline: 'none',
+                            }}>
+                            {ROLES_ORDER
+                              .filter(r => r !== 'owner' && !(callerRole === 'admin' && r === 'admin'))
+                              .map(r => (
+                                <option key={r} value={r}>{ROLE_META[r].label}</option>
                               ))}
                           </select>
                         ) : (
                           <button
-                            onClick={() => canManage ? setEditingRole(m.id) : undefined}
+                            onClick={() => canManage && setEditingRoleId(m.id)}
                             title={canManage ? 'Click to change role' : undefined}
                             style={{
-                              padding: '4px 10px', borderRadius: 9999, border: `1px solid ${roleInfo.color}30`,
-                              background: `${roleInfo.color}12`, color: roleInfo.color,
-                              fontSize: 11, fontWeight: 600, fontFamily: 'inherit',
+                              padding: '3px 10px', borderRadius: 'var(--r-pill, 9999px)',
+                              border: `1px solid ${meta.color}25`, background: meta.bg,
+                              color: meta.color, fontSize: 11, fontWeight: 600,
                               cursor: canManage ? 'pointer' : 'default',
+                              fontFamily: 'var(--font-dm), sans-serif',
+                              display: 'flex', alignItems: 'center', gap: 4,
                             }}>
-                            {roleInfo.emoji} {roleInfo.label}
+                            <RoleIcon role={m.role} size={11} />
+                            {meta.label}
                           </button>
                         )}
                         {canManage && (
                           <button
                             onClick={() => removeMember(m.id)}
                             disabled={removingId === m.id}
-                            style={{ padding: '5px 8px', borderRadius: 7, border: '1px solid var(--b)', background: 'transparent', fontSize: 11, color: 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                            style={{
+                              padding: '4px 10px', borderRadius: 'var(--r-sm)',
+                              border: '1px solid var(--b)', background: 'transparent',
+                              fontSize: 11, color: 'var(--tx3)', cursor: 'pointer',
+                              fontFamily: 'var(--font-dm), sans-serif', transition: 'color 120ms',
+                            }}>
                             {removingId === m.id ? '…' : 'Remove'}
                           </button>
                         )}
@@ -605,56 +568,70 @@ export default function TeamPanel() {
           )}
 
           {/* Pending */}
-          {pendingMembers.length > 0 && (
+          {pending.length > 0 && (
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>
-                Pending invite · {pendingMembers.length}
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 8, fontFamily: 'var(--font-dm), sans-serif' }}>
+                Awaiting acceptance · {pending.length}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {pendingMembers.map((m, i) => {
-                  const roleInfo = ROLES[m.role] || ROLES.viewer
+                {pending.map((m, i) => {
+                  const meta = ROLE_META[m.role] || ROLE_META.viewer
                   return (
-                    <div key={m.id} style={{
-                      padding: '12px 14px', borderRadius: 12, border: '1px solid rgba(245,158,11,.2)',
-                      background: 'rgba(245,158,11,.03)', display: 'flex', alignItems: 'center', gap: 12,
-                      animation: `fadeUp .2s ease ${i * 0.04}s both`,
-                    }}>
+                    <div key={m.id} className="animate-fade-up"
+                      style={{
+                        animationDelay: `${i * 0.04}s`,
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '11px 14px', borderRadius: 'var(--r-md)',
+                        border: '1px solid var(--b)', background: 'var(--sf)',
+                      }}>
                       <div style={{
-                        width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
-                        background: 'rgba(245,158,11,.15)', display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#d97706',
+                        width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                        background: 'var(--ev)', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', fontSize: 12, fontWeight: 700,
+                        color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif',
                       }}>
                         {getInitials(m.name, m.email)}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 1 }}>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2 }}>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif' }}>
                             {m.name || m.email.split('@')[0]}
                           </span>
-                          <span style={{ fontSize: 10, fontWeight: 600, color: '#d97706', background: 'rgba(245,158,11,.12)', padding: '1px 7px', borderRadius: 9999 }}>
+                          <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 7px', borderRadius: 'var(--r-pill, 9999px)', background: 'rgba(180,83,9,.08)', color: '#b45309', fontFamily: 'var(--font-dm), sans-serif' }}>
                             Pending
                           </span>
                         </div>
-                        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
-                          {m.email} · Invited {formatDate(m.invited_at)}
+                        <div style={{ fontSize: 11, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>
+                          {m.email} · Invited {fmtDate(m.invited_at)}
                         </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                        <span style={{ padding: '4px 10px', borderRadius: 9999, border: `1px solid ${roleInfo.color}30`, background: `${roleInfo.color}12`, color: roleInfo.color, fontSize: 11, fontWeight: 600 }}>
-                          {roleInfo.emoji} {roleInfo.label}
+                        <span style={{ padding: '3px 10px', borderRadius: 'var(--r-pill, 9999px)', border: `1px solid ${meta.color}25`, background: meta.bg, color: meta.color, fontSize: 11, fontWeight: 600, fontFamily: 'var(--font-dm), sans-serif', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          <RoleIcon role={m.role} size={11} />
+                          {meta.label}
                         </span>
                         {canManage && (
                           <>
                             <button
                               onClick={() => resendInvite(m)}
                               disabled={resendingId === m.id}
-                              style={{ padding: '5px 10px', borderRadius: 7, border: '1px solid rgba(99,102,241,.3)', background: 'rgba(99,102,241,.06)', color: '#6366F1', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                              style={{
+                                padding: '4px 10px', borderRadius: 'var(--r-sm)',
+                                border: '1px solid var(--b2)', background: 'transparent',
+                                fontSize: 11, color: 'var(--tx2)', cursor: 'pointer',
+                                fontFamily: 'var(--font-dm), sans-serif',
+                              }}>
                               {resendingId === m.id ? '…' : 'Resend'}
                             </button>
                             <button
                               onClick={() => removeMember(m.id)}
                               disabled={removingId === m.id}
-                              style={{ padding: '5px 8px', borderRadius: 7, border: '1px solid var(--b)', background: 'transparent', fontSize: 11, color: 'var(--tx3)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                              style={{
+                                padding: '4px 10px', borderRadius: 'var(--r-sm)',
+                                border: '1px solid var(--b)', background: 'transparent',
+                                fontSize: 11, color: 'var(--tx3)', cursor: 'pointer',
+                                fontFamily: 'var(--font-dm), sans-serif',
+                              }}>
                               {removingId === m.id ? '…' : 'Cancel'}
                             </button>
                           </>
@@ -666,6 +643,7 @@ export default function TeamPanel() {
               </div>
             </div>
           )}
+
         </div>
       )}
     </div>
