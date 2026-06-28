@@ -1779,36 +1779,37 @@ export const HELP_ARTICLES: HelpArticle[] = [
     topicSlug: "business-tools",
     readTime: 5,
     popular: true,
-    lastUpdated: "2026-04-01",
+    lastUpdated: "2026-06-28",
     keywords: ["business tools guide", "fx risk modeller", "landed cost calculator", "supplier scorecard", "askbiz tools"],
     content: [
       {
         heading: "What Are Business Tools?",
-        body: "Business Tools are standalone calculators and intelligence modules built into AskBiz. They are separate from the AI chat — you use them by navigating to **/tools** in the sidebar. Each tool solves a specific business calculation or analysis task that would otherwise require a spreadsheet or specialist software.",
+        body: "Business Tools are standalone calculators and intelligence modules built into AskBiz. They are separate from the AI chat — you use them by navigating to **Calculators & Tools** in the sidebar. Each tool solves a specific business calculation or analysis task that would otherwise require a spreadsheet or specialist software.\n\nWhen you have data connected (POS, Shopify, QuickBooks, etc.), the tool cards on the overview page automatically pre-fill with your real data — so the Landed Cost card shows your top-selling product's true cost breakdown without any input required.",
       },
       {
         heading: "FX Risk Modeller",
-        body: "The **FX Risk Modeller** helps you quantify currency risk on international transactions. Enter your expected invoice value, currency pair, and payment timeline, and the tool shows you the range of potential outcomes given current volatility — plus the cost of hedging options like forward contracts or currency accounts.\n\nBest for: businesses that invoice or pay in foreign currencies.\n\n→ [Use the FX Risk Modeller](/free-tools/fx-risk-modeller)",
+        body: "The **FX Risk Modeller** quantifies currency risk on international purchases. It pulls from your shipment records and connected channel data to show which foreign currencies you're exposed to and how much a 10% exchange rate move would cost you.\n\nThe card shows live data when you have shipments with foreign currency values recorded. If all your costs are in your local currency, the card will note that no import costs were detected — this is correct behaviour, not a data problem.\n\nBest for: businesses that source stock in foreign currencies (USD, CNY, EUR, etc.).\n\n→ [Use the FX Risk Modeller](/free-tools/fx-risk-modeller)",
       },
       {
         heading: "Landed Cost Calculator",
-        body: "The **Landed Cost Calculator** adds up the true cost of importing goods — purchase price, shipping, insurance, customs duty, VAT, and handling fees — to give you the real unit cost before you set your retail price.\n\nBest for: importers, wholesalers, and any product business that sources from overseas.\n\n→ [Use the Landed Cost Calculator](/free-tools/landed-cost-calculator)",
+        body: "The **Landed Cost Calculator** adds up the true cost of importing goods — purchase price, freight, insurance, customs duty, VAT, and handling fees — to give you the real unit cost before you set your retail price.\n\nThe card auto-populates from your data in this order of preference: (1) connected channel data (Shopify, QuickBooks) if it includes cost prices, (2) your native POS inventory if products have a cost price set. If products don't have cost prices entered, the card will prompt you to add them in **POS → Inventory**.\n\nBest for: importers, wholesalers, and any product business that sources from overseas.\n\n→ [Use the Landed Cost Calculator](/free-tools/landed-cost-calculator)",
       },
       {
         heading: "Supplier Scorecard",
-        body: "The **Supplier Scorecard** rates your suppliers across five dimensions: price competitiveness, lead time reliability, quality consistency, communication responsiveness, and payment terms. Connect your data or enter manually — AskBiz generates a score and flags at-risk supplier relationships.\n\nBest for: businesses with 3+ active suppliers who want to reduce supply chain risk.",
+        body: "The **Supplier Scorecard** grades each supplier based on real shipment performance: on-time delivery rate, average delay, customs hold frequency, and financial impact. Every shipment you track in the Shipments page feeds this automatically — no manual input required.\n\nTo see supplier grades, add at least one shipment in **Shipments** with a supplier name. The card updates as shipments are delivered or delayed.\n\nBest for: businesses that import stock and want to reduce supply chain risk.",
       },
       {
         heading: "Social Commerce Intelligence",
-        body: "**Social Commerce Intelligence** tracks product demand signals on TikTok, Instagram, and Pinterest — showing trending products in your category before they spike in sales. Demand Spike Alerts notify you 24–72 hours ahead so you can act on inventory, ads, or creator briefs.\n\nBest for: product businesses with a social commerce channel or anyone wanting to anticipate demand shifts.",
+        body: "**Social Commerce Intelligence** tracks product demand signals on TikTok, Instagram, and Pinterest — showing trending products in your category before they spike in sales. Connect a TikTok Shop, Instagram, or Pinterest account in **Connected Sources** to activate it.\n\nBest for: product businesses with a social commerce channel or anyone wanting to anticipate demand shifts.",
       },
       {
         heading: "Free vs. Paid Tools",
-        body: "The **FX Risk Modeller** and **Landed Cost Calculator** are fully free — no account required. All other Business Tools (Supplier Scorecard, Social Commerce Intelligence, pre-filled calculators from your connected data) require a Growth or Business plan. On the free plan, you can access the tools but must enter data manually; on paid plans, your connected data pre-fills the inputs automatically.",
+        body: "The **FX Risk Modeller** and **Landed Cost Calculator** are fully free — no account required. All other Business Tools (Supplier Scorecard, Social Commerce Intelligence, live data pre-fill) require a Growth or Business plan. On the free plan, tools accept manual input; on paid plans, your connected data pre-fills the inputs automatically.",
       },
     ],
     faq: [
-      { q: "Can I use the tools without connecting any data?", a: "Yes. All tools accept manual input. Connecting your data (Shopify, QuickBooks, etc.) pre-fills the inputs automatically, saving time and reducing errors — but it is not required." },
+      { q: "Can I use the tools without connecting any data?", a: "Yes. All tools accept manual input. Connecting your data (Shopify, QuickBooks, POS) pre-fills the inputs automatically, saving time and reducing errors — but it is not required." },
+      { q: "The Landed Cost card says 'No product cost data found' even though I have products. What does that mean?", a: "This means your products don't have a cost price set. Go to POS → Inventory, open each product, and add the cost price (what you paid for it). Once cost prices are saved, the Landed Cost card will calculate your true landed cost automatically." },
       { q: "Are the free tools really free?", a: "Yes. The FX Risk Modeller and Landed Cost Calculator at askbiz.co/free-tools are completely free with no account required." },
     ],
     related: ["fx-risk-modeller-guide", "landed-cost-calculator-guide", "social-commerce-guide"],
@@ -1897,12 +1898,16 @@ export const HELP_ARTICLES: HelpArticle[] = [
     topicSlug: "ask-askbiz",
     readTime: 5,
     popular: true,
-    lastUpdated: "2026-04-01",
+    lastUpdated: "2026-06-28",
     keywords: ["what can askbiz answer", "business ai questions", "ai business analyst questions"],
     content: [
       {
         heading: "Overview",
         body: "AskBiz is trained to act as an AI Chief of Staff for SME founders. It can answer questions grounded in your connected data, general business questions, and strategic questions using a combination of your data and external market intelligence.",
+      },
+      {
+        heading: "POS & Product Sales Questions",
+        body: "If you use the AskBiz POS system or have Shopify/TikTok Shop connected, you can ask product-level sales questions:\n- *'How many [product name] have I sold this month?'*\n- *'What's my best-selling product today?'*\n- *'What's my total revenue this week?'*\n- *'Which products have the highest margin?'*\n- *'What was my busiest hour yesterday?'*\n- *'How many transactions did I complete today?'*\n\nAskBiz pulls from your native POS transactions and all connected sales channels — answers combine both sources automatically.",
       },
       {
         heading: "Data-Grounded Questions",
@@ -1924,6 +1929,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     faq: [
       { q: "What languages can I ask questions in?", a: "English, Arabic, French, German, Spanish, and Mandarin. Set your preference in Account Settings → Language." },
       { q: "Can I ask follow-up questions?", a: "Yes — AskBiz maintains context within your session. You can say 'Tell me more about the third product' or 'Now show me that by channel' without re-explaining the context." },
+      { q: "I asked about a specific product and got zero results — why?", a: "If you're asking about a native POS product (one sold through the AskBiz POS register), make sure the question includes the time period ('this month', 'today', 'last week'). AskBiz searches your POS transactions and connected channels — if the product genuinely had no sales in that period, the answer will correctly report zero." },
     ],
     related: ["how-answers-work", "question-limits", "ask-first-question"],
   },
@@ -5344,7 +5350,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
     faq: [
       { q: "How far ahead can AskBiz forecast?", a: "AskBiz forecasts up to 24 months ahead. Accuracy degrades significantly beyond 12 months for most businesses, so we recommend using 3–12 month forecasts for operational planning and treating anything beyond 12 months as a directional indication rather than a reliable number." },
-      { q: "How much historical data does AskBiz need to generate a reliable forecast?", a: "A minimum of 6 months of connected data is needed for a baseline forecast. For seasonality to be properly captured, 18–24 months of data is recommended — enough to see at least one full annual cycle. If you have less than 6 months of data, AskBiz will produce a simpler trend projection rather than a seasonality-adjusted forecast." },
+      { q: "How much historical data does AskBiz need to generate a forecast?", a: "AskBiz can produce a flat trend projection with as little as 1 month of data — useful when you're just getting started. For a seasonality-adjusted forecast with confidence bands, 6 months is the practical minimum, and 18–24 months is recommended to capture a full annual cycle. The CFO Forecasts tab shows a banner indicating data confidence when history is limited." },
       { q: "My forecast was wrong last quarter. How do I improve it?", a: "Review your forecast adjustments first — were there events that you did not model? Add those retrospectively to understand the gap. Then check whether the baseline model itself was off: go to Forecast vs Actual and click 'Analyse Gap' to see whether the miss was trend-based, seasonal, or channel-specific. This analysis improves future forecasts by surfacing which assumptions need adjusting." },
     ],
     related: ["scenario-planning-with-askbiz", "cash-flow-forecasting-guide", "budget-vs-actual-tracking"],
@@ -13057,20 +13063,25 @@ export const HELP_ARTICLES: HelpArticle[] = [
     readTime: 2,
     popular: false,
     keywords: ["add shipment", "new shipment", "tracking number", "add tracking"],
-    lastUpdated: "2026-05-15",
+    lastUpdated: "2026-06-28",
     content: [
       {
         heading: "How to add a shipment",
-        body: "1. Go to **Shipments** in the sidebar\n2. Click the **+ Add shipment** button\n3. Fill in the details:\n   - **Tracking number** — from your carrier or supplier\n   - **Supplier name** — who's sending the goods\n   - **SKU** — the product or order reference\n   - **Quantity** — number of units\n   - **Total value** — the value of the goods (for financial impact calculations)\n   - **Expected arrival** — when you expect delivery\n   - **Shipment type** — inbound (from supplier) or outbound (to customer)\n4. Click **Add shipment** to start tracking",
+        body: "1. Go to **Shipments** in the sidebar\n2. Click the **+ Add shipment** button\n3. Fill in the details:\n   - **Tracking number** — from your carrier or supplier\n   - **Supplier name** — who's sending the goods\n   - **SKU** — the product or order reference\n   - **Quantity** — number of units\n   - **Unit cost** — per-unit cost (used to calculate financial impact on Growth/Business plans)\n   - **Expected arrival** — when you expect delivery\n   - **Shipment type** — inbound (from supplier) or outbound (to customer)\n4. Click **Add & Track →** to save and begin tracking",
       },
       {
         heading: "After adding",
-        body: "AskBiz immediately starts pulling tracking updates from the carrier. The shipment appears in your list with a 'Pending' status until the first tracking event is received. This usually takes a few minutes.",
+        body: "AskBiz registers your shipment and attempts to pull live tracking updates from the carrier. The shipment appears with a **Pending** status until the first tracking event is received.\n\nIf the carrier cannot be automatically detected from your tracking number format, the shipment is still saved and appears in your list — you'll see an amber notice confirming it was saved without live tracking. This does not affect Supplier Scorecard grading; the shipment is recorded and counts toward your supplier's performance profile.",
+      },
+      {
+        heading: "Shipment and Supplier Scorecard",
+        body: "Every shipment you add is automatically fed into the **Supplier Scorecard** (accessible via Calculators & Tools). As shipments are delivered, delayed, or flagged for customs holds, the Scorecard grades each supplier across on-time rate, delay frequency, customs risk, and financial impact — with no extra input required from you.",
       },
     ],
     faq: [
       { q: "Can I bulk-add shipments?", a: "Not currently through the UI. If you have many shipments to track, contact us about the API or CSV import options." },
-      { q: "What carriers are supported?", a: "AskBiz supports most major carriers worldwide through our tracking integration. If your carrier isn't recognised, the tracking number will show as Pending until a match is found." },
+      { q: "What carriers are supported?", a: "AskBiz supports most major carriers worldwide via 17track. If your carrier format isn't automatically recognised, the shipment is saved as Pending without live tracking — it will still appear in your Supplier Scorecard. You can update the status manually as events happen." },
+      { q: "Why did I get an amber notice after adding my shipment?", a: "An amber notice means the shipment was saved successfully, but live carrier tracking couldn't be activated — usually because the tracking number format didn't match a known carrier. Your shipment is recorded and visible in the Shipments list; update the status manually as events occur." },
     ],
     related: ["shipments-overview", "tracking-shipment-status", "shipments-plan-features"],
   },
