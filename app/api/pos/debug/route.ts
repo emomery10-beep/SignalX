@@ -53,6 +53,35 @@ export async function GET() {
       .select('*')
       .limit(1)
 
+    // Test 5: Transaction counts by month (last 6 months)
+    const now = new Date()
+    const sixMonthsAgo = new Date(now); sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6); sixMonthsAgo.setDate(1); sixMonthsAgo.setHours(0,0,0,0)
+    const { data: txData, error: txError } = await service
+      .from('pos_transactions')
+      .select('id,status,created_at,owner_id')
+      .eq('owner_id', user.id)
+      .gte('created_at', sixMonthsAgo.toISOString())
+      .order('created_at', { ascending: false })
+
+    // Group by month
+    const byMonth: Record<string, { total: number; completed: number; other: number; statuses: Record<string, number> }> = {}
+    for (const tx of (txData || [])) {
+      const month = tx.created_at?.slice(0, 7) || 'unknown'
+      if (!byMonth[month]) byMonth[month] = { total: 0, completed: 0, other: 0, statuses: {} }
+      byMonth[month].total++
+      if (tx.status === 'completed') byMonth[month].completed++
+      else byMonth[month].other++
+      byMonth[month].statuses[tx.status] = (byMonth[month].statuses[tx.status] || 0) + 1
+    }
+
+    // Test 6: Most recent 5 transactions regardless of date
+    const { data: recentTxs } = await service
+      .from('pos_transactions')
+      .select('id,status,created_at,total,owner_id')
+      .eq('owner_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5)
+
     return NextResponse.json({
       authenticated: true,
       user_id: user.id,
@@ -76,6 +105,15 @@ export async function GET() {
           success: !itemsError,
           error: itemsError?.message,
           sample: itemsData?.[0] ? Object.keys(itemsData[0]) : null
+        },
+        transactions_by_month: {
+          success: !txError,
+          error: txError?.message,
+          total_last_6_months: txData?.length || 0,
+          by_month: byMonth,
+        },
+        most_recent_5_transactions: {
+          data: recentTxs || [],
         }
       }
     }, { status: 200 })
