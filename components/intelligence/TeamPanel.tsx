@@ -76,7 +76,7 @@ function buildRoles(tc: (k: string) => string): Record<string, RoleDetail> {
         { area: area.dashboards, level: 'full' }, { area: area.aiChat, level: 'full' },
         { area: area.businessTools, level: 'full' }, { area: area.cfo, level: 'view' },
         { area: area.dataSources, level: 'view' }, { area: area.team, level: 'none' },
-        { area: area.billing, level: 'none' }, { area: area.pos, level: 'view' },
+        { area: area.billing, level: 'view' }, { area: area.pos, level: 'view' },
         { area: area.settings, level: 'view' },
       ],
       cannotAccess: [tc('intel_teampanel.roleAnalystCannotAccess0'), tc('intel_teampanel.roleAnalystCannotAccess1'), tc('intel_teampanel.roleAnalystCannotAccess2'), tc('intel_teampanel.roleAnalystCannotAccess3')],

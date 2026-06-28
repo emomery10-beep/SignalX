@@ -11,7 +11,7 @@ export interface CallerContext {
 const PERM_MATRIX: Record<string, CallerRole[]> = {
   invite:       ['owner', 'admin'],
   manage_team:  ['owner', 'admin'],
-  billing:      ['owner'],
+  billing:      ['owner', 'analyst'],
   sources:      ['owner', 'admin'],
   settings:     ['owner', 'admin'],
 }

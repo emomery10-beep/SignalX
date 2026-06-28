@@ -135,7 +135,7 @@ export default function BillingPage() {
         const roleRes = await fetch('/api/me/role')
         if (roleRes.ok) {
           const { role } = await roleRes.json()
-          if (role && role !== 'owner') {
+          if (role && role !== 'owner' && role !== 'analyst') {
             router.replace('/intelligence')
             return
           }
