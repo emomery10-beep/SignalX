@@ -1,9 +1,7 @@
 {
-  "logistics_pulsecard": {
-    "title": "📦 Logistik",
-    "outOf100": "/100",
-    "active": "aktiv",
-    "atRisk": "gefährdet",
-    "customsHold": "Zollstopp"
-  }
+  "title": "Lieferstatus",
+  "outOf100": "/100",
+  "active": "auf Kurs",
+  "atRisk": "gefährdet",
+  "customsHold": "Zollstopp"
 }

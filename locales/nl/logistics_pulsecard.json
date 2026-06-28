@@ -1,9 +1,7 @@
 {
-  "logistics_pulsecard": {
-    "title": "📦 Logistiek",
-    "outOf100": "/100",
-    "active": "actief",
-    "atRisk": "op risico",
-    "customsHold": "douaneblokkering"
-  }
+  "title": "Verzendstatus",
+  "outOf100": "/100",
+  "active": "op koers",
+  "atRisk": "op risico",
+  "customsHold": "douaneblokkering"
 }

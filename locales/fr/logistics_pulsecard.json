@@ -1,9 +1,7 @@
 {
-  "logistics_pulsecard": {
-    "title": "📦 Logistique",
-    "outOf100": "/100",
-    "active": "actif",
-    "atRisk": "à risque",
-    "customsHold": "blocage douanier"
-  }
+  "title": "Santé des Expéditions",
+  "outOf100": "/100",
+  "active": "en cours",
+  "atRisk": "à risque",
+  "customsHold": "blocage douanier"
 }

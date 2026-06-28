@@ -1,9 +1,7 @@
 {
-  "logistics_pulsecard": {
-    "title": "📦 اللوجستيات",
-    "outOf100": "/100",
-    "active": "نشط",
-    "atRisk": "في خطر",
-    "customsHold": "توقف جمركي"
-  }
+  "title": "صحة الشحنات",
+  "outOf100": "/100",
+  "active": "على المسار",
+  "atRisk": "في خطر",
+  "customsHold": "توقف جمركي"
 }

@@ -676,33 +676,49 @@ export default function IntelligencePage() {
         {/* ─── LOGISTICS (merged Ships + Courier) ─── */}
         {tab === 'logistics' && (
           <div style={{ maxWidth: 720 }}>
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 16, fontWeight: 700, marginBottom: 3 }}>{tc('intelligence.logistics_heading')}</div>
-              <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intelligence.logistics_sub')}</div>
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontFamily: 'var(--font-sora)', fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 4, color: 'var(--tx)' }}>{tc('intelligence.logistics_heading')}</div>
+              <div style={{ fontSize: 13, color: 'var(--tx3)', lineHeight: 1.55 }}>{tc('intelligence.logistics_sub')}</div>
             </div>
 
             {/* Sub-tab toggle — Outgoing (ships) / Incoming (courier) */}
-            <div style={{ display: 'inline-flex', padding: 3, borderRadius: 10, background: 'var(--bg)', border: '1px solid var(--b)', marginBottom: 18 }}>
+            <div style={{ display: 'inline-flex', padding: 3, borderRadius: 'var(--r-md)', background: 'var(--ev)', border: '1px solid var(--b)', marginBottom: 20 }}>
               {([
-                { id: 'outgoing', emoji: '📦', label: tc('intelligence.logistics_sub_outgoing'), accent: '#6366F1' },
-                { id: 'incoming', emoji: '🚛', label: tc('intelligence.logistics_sub_incoming'), accent: '#0891b2' },
+                {
+                  id: 'outgoing',
+                  label: tc('intelligence.logistics_sub_outgoing'),
+                  icon: (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                    </svg>
+                  ),
+                },
+                {
+                  id: 'incoming',
+                  label: tc('intelligence.logistics_sub_incoming'),
+                  icon: (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                    </svg>
+                  ),
+                },
               ] as const).map(s => {
-                const active = logisticsView === s.id
+                const isActive = logisticsView === s.id
                 return (
                   <button
                     key={s.id}
                     onClick={() => setLogisticsView(s.id)}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 6,
-                      padding: '7px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                      fontSize: 13, fontWeight: active ? 600 : 500,
-                      background: active ? 'var(--sf)' : 'transparent',
-                      color: active ? s.accent : 'var(--tx3)',
-                      boxShadow: active ? '0 1px 4px rgba(0,0,0,.08), 0 0 0 1px var(--b)' : 'none',
-                      transition: 'all 150ms',
+                      padding: '7px 16px', borderRadius: 'var(--r-sm)', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-dm), sans-serif',
+                      fontSize: 13, fontWeight: isActive ? 600 : 500,
+                      background: isActive ? 'var(--sf)' : 'transparent',
+                      color: isActive ? 'var(--tx)' : 'var(--tx3)',
+                      boxShadow: isActive ? '0 1px 3px rgba(0,0,0,.07), 0 0 0 1px var(--b)' : 'none',
+                      transition: 'all 150ms var(--ease)',
                     }}
                   >
-                    <span style={{ fontSize: 15 }}>{s.emoji}</span>
+                    {s.icon}
                     {s.label}
                   </button>
                 )
@@ -712,22 +728,24 @@ export default function IntelligencePage() {
             {/* ── OUTGOING (Ships) ── */}
             {logisticsView === 'outgoing' && (
               <div>
-                <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                <div style={{ marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
                   <div>
-                    <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{tc('intelligence.shipments_heading')}</div>
+                    <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 700, marginBottom: 2, color: 'var(--tx)' }}>{tc('intelligence.shipments_heading')}</div>
                     <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intelligence.shipments_sub')}</div>
                   </div>
                   <button
                     onClick={() => router.push('/shipments')}
-                    style={{ padding: '8px 16px', borderRadius: 9999, border: 'none', background: '#6366F1', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                    style={{ padding: '8px 18px', borderRadius: 'var(--r-pill, 9999px)', border: 'none', background: 'var(--acc)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-dm), sans-serif', transition: 'opacity 150ms' }}
+                    onMouseEnter={e => { e.currentTarget.style.opacity = '0.88' }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
                   >
                     {tc('intelligence.shipments_open_full')}
                   </button>
                 </div>
                 <LogisticsPulseCard />
-                <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 12, background: 'var(--sf)', border: '1px solid var(--b)' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>{tc('intelligence.quick_actions')}</div>
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ marginTop: 14, padding: '14px 16px', borderRadius: 'var(--r-md)', background: 'var(--sf)', border: '1px solid var(--b)' }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif', marginBottom: 10 }}>{tc('intelligence.quick_actions')}</div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {[
                       { label: tc('intelligence.shipments_qa_add'), action: () => router.push('/shipments') },
                       { label: tc('intelligence.shipments_qa_at_risk'), action: () => router.push('/shipments?filter=at_risk') },
@@ -737,9 +755,9 @@ export default function IntelligencePage() {
                       <button
                         key={i}
                         onClick={item.action}
-                        style={{ padding: '8px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx2)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms' }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#6366F1'; e.currentTarget.style.color = '#6366F1' }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.color = 'var(--tx2)' }}
+                        style={{ padding: '7px 14px', borderRadius: 'var(--r-pill, 9999px)', border: '1px solid var(--b2)', background: 'var(--ev)', color: 'var(--tx2)', fontSize: 12, cursor: 'pointer', fontFamily: 'var(--font-dm), sans-serif', transition: 'border-color 150ms, color 150ms' }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--acc)'; e.currentTarget.style.color = 'var(--acc)' }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b2)'; e.currentTarget.style.color = 'var(--tx2)' }}
                       >
                         {item.label}
                       </button>
@@ -752,14 +770,14 @@ export default function IntelligencePage() {
             {/* ── INCOMING (Courier) ── */}
             {logisticsView === 'incoming' && (
               <div>
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{tc('intelligence.courier_heading')}</div>
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontFamily: 'var(--font-sora)', fontSize: 14, fontWeight: 700, marginBottom: 2, color: 'var(--tx)' }}>{tc('intelligence.courier_heading')}</div>
                   <div style={{ fontSize: 12, color: 'var(--tx3)' }}>{tc('intelligence.courier_sub')}</div>
                 </div>
                 <CourierPulseCard onAsk={askAskBiz} />
-                <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 12, background: 'var(--sf)', border: '1px solid var(--b)' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 12 }}>{tc('intelligence.quick_actions')}</div>
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ marginTop: 14, padding: '14px 16px', borderRadius: 'var(--r-md)', background: 'var(--sf)', border: '1px solid var(--b)' }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif', marginBottom: 10 }}>{tc('intelligence.quick_actions')}</div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {[
                       { label: tc('intelligence.courier_qa_failures'), action: () => askAskBiz('Analyse our delivery failures — what are the top reasons and which routes are worst?') },
                       { label: tc('intelligence.courier_qa_revenue_risk'), action: () => askAskBiz('How much courier revenue is unpaid? Which parcels should we chase first?') },
@@ -770,9 +788,9 @@ export default function IntelligencePage() {
                       <button
                         key={i}
                         onClick={item.action}
-                        style={{ padding: '8px 14px', borderRadius: 9999, border: '1px solid var(--b)', background: 'var(--bg)', color: 'var(--tx2)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 150ms' }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#0891b2'; e.currentTarget.style.color = '#0891b2' }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)'; e.currentTarget.style.color = 'var(--tx2)' }}
+                        style={{ padding: '7px 14px', borderRadius: 'var(--r-pill, 9999px)', border: '1px solid var(--b2)', background: 'var(--ev)', color: 'var(--tx2)', fontSize: 12, cursor: 'pointer', fontFamily: 'var(--font-dm), sans-serif', transition: 'border-color 150ms, color 150ms' }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--acc)'; e.currentTarget.style.color = 'var(--acc)' }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b2)'; e.currentTarget.style.color = 'var(--tx2)' }}
                       >
                         {item.label}
                       </button>

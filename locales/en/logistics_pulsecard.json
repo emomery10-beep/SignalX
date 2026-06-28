@@ -1,9 +1,7 @@
 {
-  "logistics_pulsecard": {
-    "title": "📦 Logistics",
-    "outOf100": "/100",
-    "active": "active",
-    "atRisk": "at risk",
-    "customsHold": "customs hold"
-  }
+  "title": "Shipment Health",
+  "outOf100": "/100",
+  "active": "on track",
+  "atRisk": "at risk",
+  "customsHold": "customs hold"
 }
