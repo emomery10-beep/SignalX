@@ -637,8 +637,45 @@ export async function POST(request: NextRequest) {
     if (topProducts.length > 0) {
       posContext += `Top products: ${topProducts.map(([name, s]) => `${name} (${s.qty} sold, ${finalSymbol}${s.revenue.toFixed(2)}, margin ${s.revenue > 0 ? ((s.revenue - s.cost) / s.revenue * 100).toFixed(0) : 0}%)`).join(', ')}.\n`
     }
+    // Include ALL inventory names so the AI can answer product-specific questions
+    if (inv.length > 0) {
+      posContext += `Inventory (${inv.length} products): ${(inv as any[]).slice(0, 60).map((i: any) => `${i.name} (stock:${i.stock_qty}${i.sale_price ? `, price:${finalSymbol}${i.sale_price}` : ''})`).join(', ')}.\n`
+    }
     if (lowStock.length > 0) {
       posContext += `Low/out of stock (${lowStock.length} items): ${lowStock.slice(0, 10).map((i: any) => `${i.name} (${i.stock_qty} left)`).join(', ')}.\n`
+    }
+    // If this period has no transactions, add a broader 90-day window so the AI can answer historical questions
+    if (completed.length === 0) {
+      const broad90From = new Date(now); broad90From.setDate(broad90From.getDate() - 90); broad90From.setHours(0, 0, 0, 0)
+      const { data: broadTxs } = await service
+        .from('pos_transactions')
+        .select('total,status,created_at,pos_items(name,qty,unit_price)')
+        .eq('owner_id', user.id)
+        .eq('status', 'completed')
+        .gte('created_at', broad90From.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(200)
+      const broadCompleted = broadTxs || []
+      if (broadCompleted.length > 0) {
+        posContext += `\nNote: No transactions found for "${periodLabel}" but found ${broadCompleted.length} completed transactions in the last 90 days. `
+        const broad90Revenue = broadCompleted.reduce((s: number, t: any) => s + t.total, 0)
+        posContext += `90-day revenue: ${finalSymbol}${broad90Revenue.toFixed(2)}.\n`
+        // Build product sales from broader window
+        const broadProducts: Record<string, { qty: number; revenue: number }> = {}
+        for (const t of broadCompleted) {
+          for (const item of (t.pos_items || [])) {
+            if (!broadProducts[item.name]) broadProducts[item.name] = { qty: 0, revenue: 0 }
+            broadProducts[item.name].qty += item.qty
+            broadProducts[item.name].revenue += item.qty * item.unit_price
+          }
+        }
+        const topBroad = Object.entries(broadProducts).sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 5)
+        if (topBroad.length > 0) {
+          posContext += `Top products (last 90 days): ${topBroad.map(([name, s]) => `${name} (${s.qty} sold, ${finalSymbol}${s.revenue.toFixed(2)})`).join(', ')}.\n`
+        }
+      } else {
+        posContext += `\nNote: No transactions found in pos_transactions for this user in the last 90 days. If sales were recorded via the POS, there may be a data sync issue.\n`
+      }
     }
     if (staffList.length > 0) {
       posContext += `Staff: ${(staffList as any[]).filter(s => s.active).map(s => `${s.name} (${s.role})`).join(', ')}.\n`
