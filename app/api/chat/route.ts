@@ -587,13 +587,12 @@ export async function POST(request: NextRequest) {
     // ── Unified data (Stripe, eBay, Shopify etc.) ───────────────────────────
     // Always query — no source-existence gate, fixed 365-day window so
     // historical patterns (busiest day, trends) have enough data.
-    // Exclude channel='pos' to avoid double-counting (POS auto-syncs there).
+    // Include channel='pos' so POS product sales appear when pos_transactions returns 0.
     const udFrom = new Date(now); udFrom.setDate(udFrom.getDate() - 365)
     const { data: udData, error: udError } = await service
       .from('unified_data')
       .select('record_date,gross_revenue,net_revenue,channel,product_name,units_sold,source_type,payment_status')
       .eq('user_id', user.id)
-      .neq('channel', 'pos')
       .gte('record_date', udFrom.toISOString().slice(0, 10))
       .order('record_date', { ascending: false })
       .limit(1000)
@@ -707,9 +706,10 @@ export async function POST(request: NextRequest) {
           productSalesUd[row.product_name].revenue += row.gross_revenue || 0
         }
       }
-      const topUdProducts = Object.entries(productSalesUd).sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 5)
+      // Only include products with actual units sold (excludes Stripe subscription events)
+      const topUdProducts = Object.entries(productSalesUd).filter(([, s]) => s.units > 0).sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 5)
 
-      posContext += `\nCONNECTED CHANNEL REVENUE (${periodLabel}, from ${Object.keys(channelRevenue).join(', ')}):\n`
+      posContext += `\nALL CHANNEL REVENUE (${periodLabel}, from ${Object.keys(channelRevenue).join(', ')}):\n`
       posContext += `Total: ${finalSymbol}${udTotal.toFixed(2)} across ${unifiedRows.length} records.\n`
       posContext += `By channel: ${Object.entries(channelRevenue).map(([ch, rev]) => `${ch}: ${finalSymbol}${rev.toFixed(2)}`).join(', ')}.\n`
       if (topUdProducts.length > 0) {
