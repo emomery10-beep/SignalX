@@ -257,6 +257,20 @@ export default function ShipmentsPage() {
             </div>
           )}
 
+          {/* Header row with Add button */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx2)' }}>
+              {activeCount > 0 ? tc('shipments.stat_active') + ': ' + activeCount : ''}
+            </div>
+            <button
+              onClick={() => setShowAdd(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 9999, border: 'none', background: '#6366F1', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              <span style={{ fontSize: 16, lineHeight: 1 }}>+</span>
+              {tc('shipments.empty_cta')}
+            </button>
+          </div>
+
           {/* Filter tabs */}
           <div className="tab-strip" style={{ gap: 6, marginBottom: 16, borderBottom: '1px solid var(--b)' }}>
             {(['active', 'all', 'delivered'] as const).map(f => (
