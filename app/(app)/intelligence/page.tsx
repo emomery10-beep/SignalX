@@ -392,60 +392,80 @@ export default function IntelligencePage() {
 
             {/* ── Shipping & Delivery ── */}
             {(logisticsHealth || courierSummary) && (
-              <div style={{ padding: '16px 18px', borderRadius: 16, border: '1px solid var(--b)', background: 'linear-gradient(180deg, var(--sf) 0%, rgba(6,182,212,.02) 100%)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                  <div style={{ width: 3, height: 14, borderRadius: 2, background: '#0891B2' }} />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)', letterSpacing: '.02em' }}>{tc('intelligence.shipping_delivery')}</span>
+              <div style={{ padding: '16px 18px', borderRadius: 'var(--r-lg)', border: '1px solid var(--b)', background: 'var(--sf)' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--tx)', marginBottom: 14, fontFamily: 'var(--font-dm), sans-serif' }}>
+                  {tc('intelligence.shipping_delivery')}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   {/* Shipments card */}
-                  {logisticsHealth && (
-                    <button
-                      onClick={() => openLogistics('outgoing')}
-                      style={{
-                        padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)',
-                        textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', transition: 'box-shadow 200ms',
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,.06)'}
-                      onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                        <span style={{ fontSize: 16 }}>📦</span>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('intelligence.shipments_card_title')}</span>
-                        <span style={{
-                          fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 9999,
-                          color: logisticsHealth.color === 'green' ? '#16a34a' : logisticsHealth.color === 'red' ? '#dc2626' : '#d97706',
-                          background: logisticsHealth.color === 'green' ? 'rgba(34,197,94,.1)' : logisticsHealth.color === 'red' ? 'rgba(239,68,68,.1)' : 'rgba(245,158,11,.1)',
-                        }}>{logisticsHealth.label}</span>
-                      </div>
-                      <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora, inherit)', marginBottom: 4 }}>{logisticsHealth.score}<span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 400 }}>/100</span></div>
-                      <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4 }}>
-                        {logisticsHealth.active_shipments > 0 ? tc('intelligence.shipments_active', { active: logisticsHealth.active_shipments, transit: logisticsHealth.in_transit || 0 }) : tc('intelligence.shipments_none')}
-                      </div>
-                    </button>
-                  )}
+                  {logisticsHealth && (() => {
+                    const hColor = logisticsHealth.color === 'green' ? '#16a34a' : logisticsHealth.color === 'red' ? '#dc2626' : '#d97706'
+                    const hBg    = logisticsHealth.color === 'green' ? 'rgba(34,197,94,.08)' : logisticsHealth.color === 'red' ? 'rgba(239,68,68,.08)' : 'rgba(245,158,11,.08)'
+                    const score  = Math.min(100, Math.max(0, logisticsHealth.score))
+                    return (
+                      <button
+                        onClick={() => openLogistics('outgoing')}
+                        style={{
+                          padding: '13px 14px', borderRadius: 'var(--r-md)', border: '1px solid var(--b)',
+                          background: 'var(--ev)', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit',
+                          transition: 'border-color 150ms var(--ease)',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--b2)' }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)' }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={hColor} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                          </svg>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif' }}>{tc('intelligence.shipments_card_title')}</span>
+                          <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 'var(--r-pill, 9999px)', color: hColor, background: hBg, fontFamily: 'var(--font-dm), sans-serif', marginLeft: 'auto' }}>
+                            {logisticsHealth.label}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 8 }}>
+                          <span style={{ fontSize: 26, fontWeight: 800, color: hColor, fontFamily: 'var(--font-sora), system-ui', lineHeight: 1 }}>{score}</span>
+                          <span style={{ fontSize: 12, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>/100</span>
+                        </div>
+                        <div style={{ height: 3, borderRadius: 'var(--r-pill, 9999px)', background: 'var(--b2)', overflow: 'hidden', marginBottom: 8 }}>
+                          <div style={{ height: '100%', width: `${score}%`, background: hColor, borderRadius: 'var(--r-pill, 9999px)' }} />
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4, fontFamily: 'var(--font-dm), sans-serif' }}>
+                          {logisticsHealth.active_shipments > 0 ? tc('intelligence.shipments_active', { active: logisticsHealth.active_shipments, transit: logisticsHealth.in_transit || 0 }) : tc('intelligence.shipments_none')}
+                        </div>
+                      </button>
+                    )
+                  })()}
                   {/* Courier card */}
                   {courierSummary && courierSummary.total > 0 && (
                     <button
                       onClick={() => openLogistics('incoming')}
                       style={{
-                        padding: '14px', borderRadius: 12, border: '1px solid var(--b)', background: 'var(--sf)',
-                        textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', transition: 'box-shadow 200ms',
+                        padding: '13px 14px', borderRadius: 'var(--r-md)', border: '1px solid var(--b)',
+                        background: 'var(--ev)', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit',
+                        transition: 'border-color 150ms var(--ease)',
                       }}
-                      onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,.06)'}
-                      onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--b2)' }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)' }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                        <span style={{ fontSize: 16 }}>🚛</span>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--tx)' }}>{tc('intelligence.courier_card_title')}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--tx2)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                        </svg>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', fontFamily: 'var(--font-dm), sans-serif' }}>{tc('intelligence.courier_card_title')}</span>
                         {courierSummary.stuck > 0 && (
-                          <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 9999, color: '#EF4444', background: 'rgba(239,68,68,.1)' }}>
+                          <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 'var(--r-pill, 9999px)', color: '#dc2626', background: 'rgba(239,68,68,.08)', fontFamily: 'var(--font-dm), sans-serif', marginLeft: 'auto' }}>
                             {tc('intelligence.courier_stuck', { n: courierSummary.stuck })}
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--tx)', fontFamily: 'var(--font-sora, inherit)', marginBottom: 4 }}>{courierSummary.deliveryRate}%<span style={{ fontSize: 11, color: 'var(--tx3)', fontWeight: 400 }}>{tc('intelligence.courier_delivery_rate')}</span></div>
-                      <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4 }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 8 }}>
+                        <span style={{ fontSize: 26, fontWeight: 800, color: 'var(--tx)', fontFamily: 'var(--font-sora), system-ui', lineHeight: 1 }}>{courierSummary.deliveryRate}%</span>
+                        <span style={{ fontSize: 12, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>{tc('intelligence.courier_delivery_rate')}</span>
+                      </div>
+                      <div style={{ height: 3, borderRadius: 'var(--r-pill, 9999px)', background: 'var(--b2)', overflow: 'hidden', marginBottom: 8 }}>
+                        <div style={{ height: '100%', width: `${Math.min(100, courierSummary.deliveryRate)}%`, background: '#16a34a', borderRadius: 'var(--r-pill, 9999px)' }} />
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.4, fontFamily: 'var(--font-dm), sans-serif' }}>
                         {tc('intelligence.courier_summary_line', { transit: courierSummary.inTransit, delivered: courierSummary.delivered })}
                       </div>
                     </button>
@@ -460,21 +480,28 @@ export default function IntelligencePage() {
                 onClick={() => router.push('/sources')}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 12, width: '100%',
-                  padding: '12px 16px', borderRadius: 12,
-                  background: 'rgba(99,102,241,.04)', border: '1px solid rgba(99,102,241,.12)',
+                  padding: '12px 16px', borderRadius: 'var(--r-md)',
+                  background: 'var(--ev)', border: '1px solid var(--b)',
                   cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                  transition: 'border-color 150ms var(--ease)',
                 }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--b2)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b)' }}
               >
-                <span style={{ fontSize: 18 }}>🔗</span>
+                <div style={{ width: 32, height: 32, borderRadius: 'var(--r-sm)', background: 'var(--sf)', border: '1px solid var(--b)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--tx2)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                  </svg>
+                </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', marginBottom: 2 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--tx)', marginBottom: 2, fontFamily: 'var(--font-dm), sans-serif' }}>
                     {tc('intelligence.connect_more_title')}
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--tx3)' }}>
+                  <div style={{ fontSize: 11, color: 'var(--tx3)', fontFamily: 'var(--font-dm), sans-serif' }}>
                     {tc('intelligence.connect_more_sub', { connected: connectedCount, total: totalSources })}
                   </div>
                 </div>
-                <span style={{ fontSize: 11, color: '#6366F1', fontWeight: 600, whiteSpace: 'nowrap' }}>{tc('intelligence.connect_cta')}</span>
+                <span style={{ fontSize: 11, color: 'var(--acc)', fontWeight: 600, whiteSpace: 'nowrap', fontFamily: 'var(--font-dm), sans-serif' }}>{tc('intelligence.connect_cta')}</span>
               </button>
             )}
 
