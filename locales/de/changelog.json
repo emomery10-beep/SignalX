@@ -177,14 +177,14 @@
   "rel_14_summary": "TikTok Shop-Integration, CFO-Korrekturen, POS-Kartenmarkierungen und Scout-Agenten-Zuverlässigkeit.",
   "rel_14_change_0": "TikTok Shop — verbinden Sie Ihren TikTok Shop über einen QR-Code OAuth 2.0-Fluss; scannen Sie den Code auf Ihrem Telefon, genehmigen Sie den Zugriff und Ihre Bestellungen werden automatisch synchronisiert",
   "rel_14_change_1": "CFO-Prognosen — projizierte Umsätze und Nettogewinne zeigen jetzt Zahlen mit nur 1 Monat Verlauf; Horizont-Schaltflächen (1M / 3M / 6M / 12M) ändern die projizierten Gesamtsummen sichtbar",
-  "rel_14_change_2": "CFO-Dashboard — KPI-Karte von „Netto-Cashflow" in „Nettogewinn" umbenannt",
+  "rel_14_change_2": "CFO-Dashboard — KPI-Karte von „Netto-Cashflow“ in „Nettogewinn“ umbenannt",
   "rel_14_change_3": "GuV — der Vergleichszeitraum für den Nettogewinn enthält jetzt erfasste Ausgaben für einen fairen Vergleich",
   "rel_14_change_4": "Marktklimasignal-Karten — behoben: Karten zeigten Jahre oder Produktabmessungen als Hauptwert an",
   "rel_14_change_5": "Beschaffungsfragebogen — das Widget geht jetzt nach dem Speichern zur nächsten Frage über",
   "rel_14_change_6": "POS-Karte — GPS-Markierungen werden jetzt beim ersten Laden zuverlässig gerendert",
   "rel_14_change_7": "Registerkarte Ausgaben — der Datumszeitraumfilter filtert jetzt Belege und Ausgaben korrekt",
-  "rel_14_change_8": "Registerkarte Ausgaben — doppeltes Kamera-Emoji von der Schaltfläche „Beleg scannen" entfernt",
+  "rel_14_change_8": "Registerkarte Ausgaben — doppeltes Kamera-Emoji von der Schaltfläche „Beleg scannen“ entfernt",
   "rel_14_change_9": "Scout-Agenten — Maya und Carolyne durchsuchen jetzt 5 Themen pro Lauf statt 1",
-  "rel_14_change_10": "Scout-Agenten — „Unbekannter Fehler" im Protokoll behoben, wenn ein Scout einen Lauf übersprang",
+  "rel_14_change_10": "Scout-Agenten — „Unbekannter Fehler“ im Protokoll behoben, wenn ein Scout einen Lauf übersprang",
   "rel_14_change_11": "POS-Vorschau-Tool — Landekosten werden jetzt korrekt für POS-Artikel angezeigt, auch wenn der Einstandspreis null ist"
 }
