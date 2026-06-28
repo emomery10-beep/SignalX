@@ -346,7 +346,8 @@ export default function AgentAdminPage() {
       const res = await fetch('/api/agent/blog-scout?secret=dev-test')
       const data = await res.json()
       setAliceRunLog(data.log || [String(data.error || 'Unknown error')])
-      if (data.success) { showToast(tc('page_admin_agent.aliceDrafted', { n: data.blogsGenerated })); setAliceLoading(true); setAliceFilter('published'); loadAliceCounts() }
+      if (data.skipped) { showToast('Already ran today — no duplicates', true) }
+      else if (data.success) { showToast(tc('page_admin_agent.aliceDrafted', { n: data.blogsGenerated })); setAliceLoading(true); setAliceFilter('published'); loadAliceCounts() }
       else showToast(tc('page_admin_agent.scoutFailedLog'), false)
     } catch (e) { setAliceRunLog([`Error: ${String(e)}`]); showToast(tc('page_admin_agent.scoutFailed'), false) }
     finally { setAliceRunning(false) }
@@ -358,7 +359,8 @@ export default function AgentAdminPage() {
       const res  = await fetch('/api/agent/victor-scout?secret=dev-test')
       const data = await res.json()
       setVictorRunLog(data.log || [String(data.error || 'Unknown error')])
-      if (data.success) { showToast(tc('page_admin_agent.victorDrafted', { n: data.blogsGenerated })); setVictorLoading(true); setVictorFilter('published'); loadVictorCounts() }
+      if (data.skipped) { showToast('Already ran today — no duplicates', true) }
+      else if (data.success) { showToast(tc('page_admin_agent.victorDrafted', { n: data.blogsGenerated })); setVictorLoading(true); setVictorFilter('published'); loadVictorCounts() }
       else showToast(tc('page_admin_agent.scoutFailedLog'), false)
     } catch (e) { setVictorRunLog([`Error: ${String(e)}`]); showToast(tc('page_admin_agent.scoutFailed'), false) }
     finally { setVictorRunning(false) }
@@ -408,7 +410,8 @@ export default function AgentAdminPage() {
       const res  = await fetch('/api/agent/ben-scout?secret=dev-test')
       const data = await res.json()
       setBenRunLog(data.log || [String(data.error || 'Unknown error')])
-      if (data.success) { showToast(tc('page_admin_agent.benDrafted', { n: data.blogsGenerated })); setBenLoading(true); setBenFilter('published'); loadBenCounts() }
+      if (data.skipped) { showToast('Already ran today — no duplicates', true) }
+      else if (data.success) { showToast(tc('page_admin_agent.benDrafted', { n: data.blogsGenerated })); setBenLoading(true); setBenFilter('published'); loadBenCounts() }
       else showToast(tc('page_admin_agent.scoutFailedLog'), false)
     } catch (e) { setBenRunLog([`Error: ${String(e)}`]); showToast(tc('page_admin_agent.scoutFailed'), false) }
     finally { setBenRunning(false) }
@@ -458,7 +461,8 @@ export default function AgentAdminPage() {
       const res  = await fetch('/api/agent/carolyne-scout?secret=dev-test')
       const data = await res.json()
       setCarolyneRunLog(data.log || [String(data.error || 'Unknown error')])
-      if (data.success) { showToast(tc('page_admin_agent.carolyneDrafted', { n: data.blogsGenerated })); setCarolyneLoading(true); setCarolyneFilter('published'); loadCarolyneCounts() }
+      if (data.skipped) { showToast('Already ran today — no duplicates', true) }
+      else if (data.success) { showToast(tc('page_admin_agent.carolyneDrafted', { n: data.blogsGenerated })); setCarolyneLoading(true); setCarolyneFilter('published'); loadCarolyneCounts() }
       else showToast(tc('page_admin_agent.scoutFailedLog'), false)
     } catch (e) { setCarolyneRunLog([`Error: ${String(e)}`]); showToast(tc('page_admin_agent.scoutFailed'), false) }
     finally { setCarolyneRunning(false) }
@@ -470,7 +474,8 @@ export default function AgentAdminPage() {
       const res  = await fetch('/api/agent/marketing-scout?secret=dev-test')
       const data = await res.json()
       setMayaRunLog(data.log || [String(data.error || 'Unknown error')])
-      if (data.success) { showToast(tc('page_admin_agent.mayaDrafted', { n: data.blogsGenerated })); setMayaLoading(true); setMayaFilter('published'); loadMayaCounts() }
+      if (data.skipped) { showToast('Already ran today — no duplicates', true) }
+      else if (data.success) { showToast(tc('page_admin_agent.mayaDrafted', { n: data.blogsGenerated })); setMayaLoading(true); setMayaFilter('published'); loadMayaCounts() }
       else showToast(tc('page_admin_agent.scoutFailedLog'), false)
     } catch (e) { setMayaRunLog([`Error: ${String(e)}`]); showToast(tc('page_admin_agent.scoutFailed'), false) }
     finally { setMayaRunning(false) }
