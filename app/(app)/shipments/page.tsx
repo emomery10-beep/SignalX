@@ -157,7 +157,7 @@ export default function ShipmentsPage() {
         }
         return showToast(d.error || tc('shipments.toast_failed_to_add'), false)
       }
-      showToast(tc('shipments.toast_added'))
+      showToast(d.warning || tc('shipments.toast_added'), !d.warning)
       setShowAdd(false)
       setForm({ tracking_number: '', supplier_name: '', sku: '', quantity: '', unit_cost: '', expected_arrival: '', shipment_type: 'inbound', purchase_order_ref: '' })
       load()

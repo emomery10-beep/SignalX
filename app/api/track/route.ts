@@ -198,11 +198,18 @@ export async function POST(request: NextRequest) {
 
       if (!tracking_number) return safeJson({ error: 'tracking_number required' }, 400)
 
-      // Register with 17Track
+      // Register with 17Track — if carrier can't be detected, save without live tracking
       const t17res = await t17('/register', [{ number: tracking_number, ...(carrier ? { carrier } : {}) }])
       const accepted = t17res?.data?.accepted?.[0]
       const rejected = t17res?.data?.rejected?.[0]
-      if (rejected) return safeJson({ error: `17Track: ${rejected.error?.message || 'Rejected'}` }, 400)
+      const carrierUndetected = rejected && (
+        rejected.error?.message?.toLowerCase().includes('carrier') ||
+        rejected.error?.code === -18019901
+      )
+      // Only hard-fail on non-carrier errors (e.g. invalid format, duplicate)
+      if (rejected && !carrierUndetected) {
+        return safeJson({ error: `17Track: ${rejected.error?.message || 'Rejected'}` }, 400)
+      }
 
       // Financial fields: only save if plan allows
       const totalValue = limits.financial && unit_cost && quantity
@@ -239,6 +246,9 @@ export async function POST(request: NextRequest) {
         success: true,
         shipment: applyPlanFilter(shipment, plan),
         plan,
+        warning: carrierUndetected
+          ? 'Shipment saved. Live tracking unavailable — carrier not recognised. Update manually if needed.'
+          : undefined,
         remaining_slots: limits.shipments === Infinity
           ? 'unlimited'
           : limits.shipments - ((await supabase.from('shipments').select('*', { count: 'exact', head: true }).eq('user_id', user.id).not('track_status', 'in', '("Delivered","Undelivered","Expired")')).count || 0),
