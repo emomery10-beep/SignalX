@@ -1171,7 +1171,7 @@ async function syncWalmart(
   }
 
   // Sync orders from last 90 days
-  const createdStartDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+  const createdStartDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   const records: UnifiedRecord[] = []
 
   try {
