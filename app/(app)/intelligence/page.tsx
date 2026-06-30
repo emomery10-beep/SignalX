@@ -874,6 +874,7 @@ export default function IntelligencePage() {
                   <option value="ebay">eBay</option>
                   <option value="etsy">Etsy</option>
                   <option value="woocommerce">WooCommerce</option>
+                  <option value="walmart">Walmart</option>
                   <option value="pos">POS</option>
                 </select>
               </div>

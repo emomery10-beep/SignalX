@@ -12,6 +12,7 @@ import { normaliseAmazonOrder } from './amazon-normaliser'
 import { normaliseEbayOrder } from './ebay-normaliser'
 import { normaliseEtsyReceipt } from './etsy-normaliser'
 import { normaliseWooOrder } from './woocommerce-normaliser'
+import { normaliseWalmartOrder } from './walmart-normaliser'
 import {
   normaliseTikTokOrders, normaliseTikTokAnalytics,
   normaliseInstagramOrders, normaliseInstagramInsights,
@@ -1129,6 +1130,83 @@ async function syncPinterest(
   }
 }
 
+// ── Walmart ───────────────────────────────────────────────────
+async function syncWalmart(
+  source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> }
+): Promise<{ records: UnifiedRecord[]; error?: string }> {
+  const client_id     = String(source.config?.client_id     || '')
+  const client_secret = String(source.credentials?.client_secret || '')
+
+  if (!client_id || !client_secret) {
+    return { records: [], error: 'Missing Walmart client_id or client_secret' }
+  }
+
+  // Exchange for access token
+  const basicAuth = Buffer.from(`${client_id}:${client_secret}`).toString('base64')
+  const tokenRes  = await fetch('https://marketplace.walmartapis.com/v3/token', {
+    method: 'POST',
+    headers: {
+      Authorization:          `Basic ${basicAuth}`,
+      'WM_SVC.NAME':          'Walmart Marketplace',
+      'WM_QOS.CORRELATION_ID': `askbiz-sync-${Date.now()}`,
+      'Content-Type':         'application/x-www-form-urlencoded',
+      Accept:                 'application/json',
+    },
+    body: 'grant_type=client_credentials',
+  })
+
+  if (!tokenRes.ok) {
+    const err = await tokenRes.text()
+    return { records: [], error: `Walmart auth failed ${tokenRes.status}: ${err.slice(0, 200)}` }
+  }
+
+  const { access_token } = await tokenRes.json() as { access_token: string }
+  if (!access_token) return { records: [], error: 'Walmart: no access_token in response' }
+
+  const headers = {
+    Authorization:          `Bearer ${access_token}`,
+    'WM_SVC.NAME':          'Walmart Marketplace',
+    'WM_QOS.CORRELATION_ID': `askbiz-sync-${Date.now()}`,
+    Accept:                 'application/json',
+  }
+
+  // Sync orders from last 90 days
+  const createdStartDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+  const records: UnifiedRecord[] = []
+
+  try {
+    let nextCursor: string | undefined
+    do {
+      const params = new URLSearchParams({ createdStartDate, limit: '200' })
+      if (nextCursor) params.set('nextCursor', nextCursor)
+
+      const res = await fetch(
+        `https://marketplace.walmartapis.com/v3/orders?${params}`,
+        { headers }
+      )
+      if (!res.ok) {
+        const err = await res.text()
+        return { records, error: `Walmart orders error ${res.status}: ${err.slice(0, 200)}` }
+      }
+
+      const body = await res.json() as Record<string, unknown>
+      const list  = (body.list as Record<string, unknown>) || {}
+      const meta  = (list.meta as Record<string, unknown>) || {}
+      const orders = (
+        (list.elements as Record<string, unknown>)?.order as Record<string, unknown>[]
+      ) || []
+
+      for (const order of orders) records.push(...normaliseWalmartOrder(order))
+
+      nextCursor = meta.nextCursor ? String(meta.nextCursor).trim() || undefined : undefined
+    } while (nextCursor)
+
+    return { records }
+  } catch (e: unknown) {
+    return { records, error: e instanceof Error ? e.message : 'Walmart sync failed' }
+  }
+}
+
 // ── WooCommerce ───────────────────────────────────────────────
 async function syncWooCommerce(
   source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> }
@@ -1240,6 +1318,9 @@ export async function runSync(userId?: string): Promise<SyncResult[]> {
         await upsertSocialSignals(supabase, source.user_id, source.id, r.signals)
       } else if (source.source_type === 'woocommerce') {
         const r = await syncWooCommerce(decryptedSource)
+        records = r.records; syncError = r.error
+      } else if (source.source_type === 'walmart') {
+        const r = await syncWalmart(decryptedSource)
         records = r.records; syncError = r.error
       }
     } catch (e: unknown) {

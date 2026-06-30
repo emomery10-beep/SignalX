@@ -16,6 +16,7 @@ const SOURCE_LABELS: Record<string, string> = {
   google_sheets: 'Google Sheets',
   manual_csv: 'Manual CSV',
   woocommerce: 'WooCommerce',
+  walmart: 'Walmart',
   square: 'Square',
   tiktok_shop: 'TikTok Shop',
   jumia: 'Jumia',
