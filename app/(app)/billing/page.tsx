@@ -5,8 +5,13 @@ import { createClient } from '@/lib/supabase/client'
 import { PLAN_HIGHLIGHTS, PLAN_DESCRIPTIONS, getPlanBadge } from '@/lib/plans'
 import { useLang } from '@/components/LanguageProvider'
 
-// ACC is a fixed brand token — intentionally not a CSS variable
+// Brand tokens — fixed by plan identity, intentionally not CSS variables
 const ACC = '#d08a59'
+const PLAN_CLR = {
+  free:     '#6b6760',
+  growth:   '#6366F1',
+  business: '#7c3aed',
+}
 
 // ── Feature comparison table data ─────────────────────────────
 const buildFeaturesTable = (tc: (key: string, vars?: Record<string, string | number>) => string) => {
@@ -318,7 +323,7 @@ export default function BillingPage() {
     {
       id: 'free',
       name: tc('billing.plan_0_name'),
-      colour: '#6b6760',
+      colour: PLAN_CLR.free,
       popular: false,
       displayPrice: `${sym}0`,
       annualMonthly: null,
@@ -329,7 +334,7 @@ export default function BillingPage() {
     {
       id: 'growth',
       name: tc('billing.plan_1_name'),
-      colour: '#6366F1',
+      colour: PLAN_CLR.growth,
       popular: true,
       displayPrice: growthPrice?.monthly || `${sym}19`,
       annualMonthly: growthPrice?.annualMonthly || null,
@@ -340,7 +345,7 @@ export default function BillingPage() {
     {
       id: 'business',
       name: tc('billing.plan_2_name'),
-      colour: '#7c3aed',
+      colour: PLAN_CLR.business,
       popular: false,
       displayPrice: bizPrice?.monthly || `${sym}49`,
       annualMonthly: bizPrice?.annualMonthly || null,
@@ -774,7 +779,7 @@ export default function BillingPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', background: 'var(--ev)', borderBottom: '1px solid var(--b)' }}>
                 <div style={{ padding: '12px 16px', fontSize: 12, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('billing.table_col_feature')}</div>
                 {['table_col_free', 'table_col_growth', 'table_col_business'].map((k, i) => (
-                  <div key={k} style={{ padding: '12px 12px', fontSize: 13, fontWeight: 700, color: ['#6b6760','#6366F1','#7c3aed'][i], textAlign: 'center' }}>{tc('billing.' + k)}</div>
+                  <div key={k} style={{ padding: '12px 12px', fontSize: 13, fontWeight: 700, color: [PLAN_CLR.free, PLAN_CLR.growth, PLAN_CLR.business][i], textAlign: 'center' }}>{tc('billing.' + k)}</div>
                 ))}
               </div>
               {FEATURES_TABLE.map((section, si) => (
