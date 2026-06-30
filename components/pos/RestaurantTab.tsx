@@ -86,7 +86,7 @@ function buildSubTabs(tc: (key: string) => string): { id: SubTab; label: string 
   return [
     { id: 'overview', label: tc('pos_restaurant.tabOverview') },
     { id: 'orders',   label: tc('pos_restaurant.tabOrders') },
-    { id: 'menu',     label: tc('pos_restaurant.tabMenu') },
+    { id: 'menu',     label: tc('pos_restaurant.tabMenuShort') },
     { id: 'floor',    label: tc('pos_restaurant.tabFloor') },
     { id: 'staff',    label: tc('pos_restaurant.tabStaff') },
     { id: 'kitchen',  label: tc('pos_restaurant.tabKitchen') },
@@ -353,36 +353,47 @@ function SubTabStrip({ active, onChange }: { active: SubTab; onChange: (t: SubTa
   const tabs = buildSubTabs(tc)
   return (
     <div style={{
-      display: 'flex',
-      gap: 4,
+      position: 'relative',
       borderBottom: '1px solid var(--b)',
-      overflowX: 'auto',
-      flexWrap: 'nowrap',
     }}>
-      {tabs.map((t) => {
-        const isActive = t.id === active
-        return (
-          <button
-            key={t.id}
-            onClick={() => onChange(t.id)}
-            style={{
-              padding: '10px 16px',
-              border: 'none',
-              borderBottom: isActive ? `2.5px solid ${ACC}` : '2.5px solid transparent',
-              background: 'transparent',
-              color: isActive ? ACC : 'var(--tx2)',
-              fontSize: 13,
-              fontWeight: isActive ? 700 : 500,
-              cursor: 'pointer',
-              fontFamily: 'var(--font-sora)',
-              whiteSpace: 'nowrap',
-              transition: 'color .15s, border-color .15s',
-            }}
-          >
-            {t.label}
-          </button>
-        )
-      })}
+      <div style={{
+        display: 'flex',
+        gap: 0,
+        overflowX: 'auto',
+        overflowY: 'visible',
+        WebkitOverflowScrolling: 'touch' as any,
+        scrollbarWidth: 'none' as any,
+        msOverflowStyle: 'none' as any,
+        paddingBottom: 1,
+        marginBottom: -1,
+      }}>
+        {tabs.map((t) => {
+          const isActive = t.id === active
+          return (
+            <button
+              key={t.id}
+              onClick={() => onChange(t.id)}
+              style={{
+                flexShrink: 0,
+                padding: '10px 14px',
+                border: 'none',
+                borderBottom: isActive ? `2.5px solid ${ACC}` : '2.5px solid transparent',
+                background: 'transparent',
+                color: isActive ? ACC : 'var(--tx2)',
+                fontSize: 13,
+                fontWeight: isActive ? 700 : 500,
+                cursor: 'pointer',
+                fontFamily: 'var(--font-sora)',
+                whiteSpace: 'nowrap',
+                transition: 'color .15s, border-color .15s',
+              }}
+            >
+              {t.label}
+            </button>
+          )
+        })}
+      </div>
+      <style>{`.rst-tabs::-webkit-scrollbar{display:none}`}</style>
     </div>
   )
 }
