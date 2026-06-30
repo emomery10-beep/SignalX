@@ -362,9 +362,9 @@ export default function BillingPage() {
             aria-checked={annual}
             aria-label={tc('billing.toggle_label') || 'Switch between monthly and annual billing'}
             onClick={() => setAnnual(v => !v)}
-            style={{ width: 48, height: 28, borderRadius: 14, background: annual ? ACC : 'var(--b2)', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 200ms', flexShrink: 0 }}
+            style={{ width: 48, height: 44, borderRadius: 14, background: annual ? ACC : 'var(--b2)', border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 200ms', flexShrink: 0 }}
           >
-            <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#fff', position: 'absolute', top: 3, left: annual ? 23 : 3, transition: 'left 200ms', boxShadow: '0 1px 4px rgba(0,0,0,.2)' }}/>
+            <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#fff', position: 'absolute', top: 11, left: annual ? 23 : 3, transition: 'left 200ms', boxShadow: '0 1px 4px rgba(0,0,0,.2)' }}/>
           </button>
           <span style={{ fontSize: 13, color: annual ? 'var(--tx)' : 'var(--tx3)', fontWeight: annual ? 600 : 400 }}>
             {tc('billing.toggle_annual')}
@@ -402,7 +402,7 @@ export default function BillingPage() {
 
                 <div style={{ marginBottom: 16 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                    <span style={{ fontFamily: 'var(--font-sora)', fontSize: 17, fontWeight: 700, color: plan.colour }}>{plan.name}</span>
+                    <h3 style={{ fontFamily: 'var(--font-sora)', fontSize: 17, fontWeight: 700, color: plan.colour, margin: 0 }}>{plan.name}</h3>
                     {isCurrent && <span style={{ fontSize: 10, fontWeight: 700, color: plan.colour, background: plan.colour + '18', borderRadius: 9999, padding: '2px 8px' }}>{tc('billing.badge_current')}</span>}
                   </div>
 
