@@ -11,6 +11,7 @@ import {
 import { normaliseAmazonOrder } from './amazon-normaliser'
 import { normaliseEbayOrder } from './ebay-normaliser'
 import { normaliseEtsyReceipt } from './etsy-normaliser'
+import { normaliseWooOrder } from './woocommerce-normaliser'
 import {
   normaliseTikTokOrders, normaliseTikTokAnalytics,
   normaliseInstagramOrders, normaliseInstagramInsights,
@@ -1128,6 +1129,50 @@ async function syncPinterest(
   }
 }
 
+// ── WooCommerce ───────────────────────────────────────────────
+async function syncWooCommerce(
+  source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> }
+): Promise<{ records: UnifiedRecord[]; error?: string }> {
+  const consumer_key    = String(source.config?.consumer_key    || '')
+  const consumer_secret = String(source.credentials?.consumer_secret || '')
+  const site_url        = String(source.config?.site_url        || '').replace(/\/$/, '')
+
+  if (!consumer_key || !consumer_secret || !site_url) {
+    return { records: [], error: 'Missing WooCommerce credentials or site URL' }
+  }
+
+  const auth = Buffer.from(`${consumer_key}:${consumer_secret}`).toString('base64')
+  const headers = { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' }
+  const base = `${site_url}/wp-json/wc/v3`
+
+  // Sync orders from the last 90 days
+  const after = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+  const records: UnifiedRecord[] = []
+
+  try {
+    let page = 1
+    while (true) {
+      const res = await fetch(
+        `${base}/orders?per_page=100&page=${page}&after=${after}&status=any`,
+        { headers }
+      )
+      if (!res.ok) {
+        const err = await res.text()
+        return { records, error: `WooCommerce orders error ${res.status}: ${err.slice(0, 200)}` }
+      }
+      const orders = await res.json() as Record<string, unknown>[]
+      if (!orders.length) break
+      for (const order of orders) records.push(...normaliseWooOrder(order))
+      const totalPages = Number(res.headers.get('X-WP-TotalPages') || 1)
+      if (page >= totalPages) break
+      page++
+    }
+    return { records }
+  } catch (e: unknown) {
+    return { records, error: e instanceof Error ? e.message : 'WooCommerce sync failed' }
+  }
+}
+
 // ── Main sync runner ──────────────────────────────────────────
 export async function runSync(userId?: string): Promise<SyncResult[]> {
   const supabase = createServiceClient()
@@ -1193,6 +1238,9 @@ export async function runSync(userId?: string): Promise<SyncResult[]> {
         const r = await syncPinterest(decryptedSource)
         records = r.records; syncError = r.error
         await upsertSocialSignals(supabase, source.user_id, source.id, r.signals)
+      } else if (source.source_type === 'woocommerce') {
+        const r = await syncWooCommerce(decryptedSource)
+        records = r.records; syncError = r.error
       }
     } catch (e: unknown) {
       syncError = e instanceof Error ? e.message : 'Unknown sync error'
