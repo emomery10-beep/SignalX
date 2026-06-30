@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { runSync } from '@/lib/sync/engine'
 import { decryptCredentials, encryptCredentials } from '@/lib/crypto'
 import { validateStripeKey } from '@/lib/connectors/stripe'
+import { validateWalmartCredentials } from '@/lib/connectors/walmart'
 
 export async function GET() {
   const supabase = createClient()
@@ -33,6 +34,14 @@ export async function POST(request: NextRequest) {
     if (!key) return NextResponse.json({ error: 'Stripe secret key is required' }, { status: 400 })
     const valid = await validateStripeKey(key)
     if (!valid) return NextResponse.json({ error: 'Invalid Stripe key — check it in your Stripe Dashboard → Developers → API keys' }, { status: 400 })
+  }
+
+  if (source_type === 'walmart') {
+    const clientId     = config?.client_id
+    const clientSecret = credentials?.client_secret
+    if (!clientId || !clientSecret) return NextResponse.json({ error: 'Walmart Client ID and Client Secret are required' }, { status: 400 })
+    const { valid, error } = await validateWalmartCredentials(String(clientId), String(clientSecret))
+    if (!valid) return NextResponse.json({ error }, { status: 400 })
   }
 
   // Encrypt credentials before storing
