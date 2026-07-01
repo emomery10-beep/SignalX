@@ -1164,10 +1164,10 @@ async function syncWalmart(
   if (!access_token) return { records: [], error: 'Walmart: no access_token in response' }
 
   const headers = {
-    Authorization:          `Bearer ${access_token}`,
-    'WM_SVC.NAME':          'Walmart Marketplace',
+    'WM_SEC.ACCESS_TOKEN':   access_token,
+    'WM_SVC.NAME':           'Walmart Marketplace',
     'WM_QOS.CORRELATION_ID': `askbiz-sync-${Date.now()}`,
-    Accept:                 'application/json',
+    Accept:                  'application/json',
   }
 
   // Sync orders from last 90 days

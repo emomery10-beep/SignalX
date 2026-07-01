@@ -38,7 +38,7 @@ export async function validateWalmartCredentials(
       'https://marketplace.walmartapis.com/v3/orders?limit=1',
       {
         headers: {
-          Authorization:           `Bearer ${access_token}`,
+          'WM_SEC.ACCESS_TOKEN':   access_token,
           'WM_SVC.NAME':           'Walmart Marketplace',
           'WM_QOS.CORRELATION_ID': `${correlationId}-probe`,
           Accept:                  'application/json',
