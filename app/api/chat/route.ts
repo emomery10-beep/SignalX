@@ -677,6 +677,39 @@ export async function POST(request: NextRequest) {
         posContext += `\nNote: No transactions found in pos_transactions for this user in the last 90 days. If sales were recorded via the POS, there may be a data sync issue.\n`
       }
     }
+    // Early-month supplement: if "this month" has <50 transactions and we're in the first 7 days,
+    // also pull last month so the AI can answer questions about recent history
+    if (periodLabel === 'This month' && completed.length < 50 && now.getDate() <= 7) {
+      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+      const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 1)
+      const lastMonthName = lastMonthStart.toLocaleString('en', { month: 'long', year: 'numeric' })
+      const { data: lastMonthTxs } = await service
+        .from('pos_transactions')
+        .select('total,status,created_at,pos_items(name,qty,unit_price)')
+        .eq('owner_id', user.id)
+        .eq('status', 'completed')
+        .gte('created_at', lastMonthStart.toISOString())
+        .lt('created_at', lastMonthEnd.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(300)
+      const lmCompleted = lastMonthTxs || []
+      if (lmCompleted.length > 0) {
+        const lmRevenue = lmCompleted.reduce((s: number, t: any) => s + t.total, 0)
+        const lmProducts: Record<string, { qty: number; revenue: number }> = {}
+        for (const t of lmCompleted) {
+          for (const item of (t.pos_items || [])) {
+            if (!lmProducts[item.name]) lmProducts[item.name] = { qty: 0, revenue: 0 }
+            lmProducts[item.name].qty += item.qty
+            lmProducts[item.name].revenue += item.qty * item.unit_price
+          }
+        }
+        const topLm = Object.entries(lmProducts).sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 10)
+        posContext += `\nLast month (${lastMonthName}): ${lmCompleted.length} completed transactions, ${finalSymbol}${lmRevenue.toFixed(2)} revenue.\n`
+        if (topLm.length > 0) {
+          posContext += `Last month top products: ${topLm.map(([name, s]) => `${name} (${s.qty} sold, ${finalSymbol}${s.revenue.toFixed(2)})`).join(', ')}.\n`
+        }
+      }
+    }
     if (staffList.length > 0) {
       posContext += `Staff: ${(staffList as any[]).filter(s => s.active).map(s => `${s.name} (${s.role})`).join(', ')}.\n`
     }
