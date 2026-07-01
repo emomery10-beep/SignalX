@@ -49,8 +49,19 @@ export const viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://askbiz.co'),
-  title: 'AskBiz — Ask Your Business Data Anything',
-  description: 'AI-powered business intelligence for SME owners. Upload your data and get plain-English answers instantly.',
+  title: 'AskBiz — Sell With Your Phone. Know Your Money Tonight.',
+  description: 'Phone POS and business tracker for market stalls, street vendors, and small businesses. M-Pesa, cash, or card. Any phone, free to start.',
+  alternates: {
+    languages: {
+      'x-default': 'https://askbiz.co',
+      'en': 'https://askbiz.co',
+      'en-KE': 'https://askbiz.co',
+      'en-NG': 'https://askbiz.co',
+      'en-UG': 'https://askbiz.co',
+      'en-GB': 'https://askbiz.co',
+      'en-US': 'https://askbiz.co',
+    },
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: '48x48' },

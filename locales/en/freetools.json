@@ -66,7 +66,7 @@
   "tool_breakeven_cta": "Calculate Break-Even →",
 
   "faq_0_q": "Are these tools really free?",
-  "faq_0_a": "Yes — completely free, no sign-up required. You can use them as many times as you like. They are powered by AskBiz, a business intelligence platform for SME founders. If you find them useful, there's a link to learn more about AskBiz at the bottom.",
+  "faq_0_a": "Yes — completely free, no sign-up required. Use them as many times as you like. They are built by AskBiz, a phone POS and business tracker used by market stalls and small businesses across Africa and the UK. If you find them useful, there's a link to learn more at the bottom.",
   "faq_1_q": "How accurate are the duty rates?",
   "faq_1_a": "Duty rates are sourced from the UK Global Tariff, US HTS, and EU Combined Nomenclature, updated quarterly. They are indicative — always verify with a customs broker or the official tariff database before making a significant import decision. Rates can change with trade agreements and budget announcements.",
   "faq_2_q": "What is a landed cost?",
@@ -79,7 +79,7 @@
   "faq_5_a": "Yes — these tools are designed for business planning. Use the Landed Cost Calculator to set accurate product pricing and the FX Risk Modeller to stress-test your margins before a large purchase order. For deeper analysis connected to your live sales data, AskBiz's full platform goes significantly further.",
 
   "schema_page_name": "Free Business Tools — AskBiz",
-  "schema_page_desc": "Free business calculators — landed cost, FX risk, VAT, and break-even analysis for SME founders.",
+  "schema_page_desc": "Free business calculators — profit margin, landed cost, FX risk, VAT, and break-even analysis for small business owners in Africa and the UK.",
 
   "nav_help": "Help Center",
   "nav_landed": "Landed Cost",
@@ -117,7 +117,7 @@
   "faq_heading": "Frequently Asked Questions",
 
   "cta_title": "Want These Calculations Connected to Your Live Data?",
-  "cta_sub": "AskBiz connects to your Shopify, Amazon, or QuickBooks account and pre-fills these tools with your real products, prices, and margins. Ask questions in plain English and get answers grounded in your actual numbers.",
+  "cta_sub": "AskBiz connects to M-Pesa, Shopify, QuickBooks, and more — and pre-fills these tools with your real products, prices, and margins. Ask questions in plain English and get answers grounded in your actual numbers.",
   "cta_primary": "Try AskBiz Free →",
   "cta_ghost": "Help Center",
 

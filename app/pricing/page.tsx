@@ -10,7 +10,32 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t('pricing.meta_title'),
     description: t('pricing.meta_description'),
-    alternates: { canonical: `https://askbiz.co${localePath('/pricing', locale)}` },
+    alternates: {
+      canonical: `https://askbiz.co${localePath('/pricing', locale)}`,
+      languages: {
+        'x-default': 'https://askbiz.co/pricing',
+        'en': 'https://askbiz.co/pricing',
+        'en-KE': 'https://askbiz.co/pricing',
+        'en-NG': 'https://askbiz.co/pricing',
+        'en-UG': 'https://askbiz.co/pricing',
+        'en-GB': 'https://askbiz.co/pricing',
+        'en-US': 'https://askbiz.co/pricing',
+      },
+    },
+    openGraph: {
+      title: t('pricing.og_title'),
+      description: t('pricing.og_description'),
+      url: `https://askbiz.co${localePath('/pricing', locale)}`,
+      type: 'website',
+      siteName: 'AskBiz',
+      images: [{ url: 'https://askbiz.co/og-image.png', width: 1200, height: 630, alt: 'AskBiz Pricing — Phone POS from £5/month' }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t('pricing.og_title'),
+      description: t('pricing.og_description'),
+      images: ['https://askbiz.co/og-image.png'],
+    },
   }
 }
 
@@ -56,7 +81,7 @@ const JSON_LD_SOFTWARE: object = {
   applicationCategory: 'BusinessApplication',
   operatingSystem: 'Web',
   url: 'https://askbiz.co',
-  description: 'AI business intelligence platform for SME founders. Ask questions about your revenue, margins, stock, and forecasts in plain English.',
+  description: 'Phone POS and daily business tracker for market stalls, street vendors, and small businesses. Take M-Pesa, cash, or card. Know what you made today — any phone, free to start.',
   offers: [
     { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'GBP', description: '10 questions per month, CSV/Excel uploads, Business Pulse score.' },
     { '@type': 'Offer', name: 'Growth', price: '19', priceCurrency: 'GBP', description: 'Unlimited questions, all AI tools pre-filled from your data, Daily Brief, social commerce, churn intelligence.' },
