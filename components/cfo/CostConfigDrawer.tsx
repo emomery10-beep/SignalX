@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useLang } from '@/components/LanguageProvider'
 
 const INDIGO = '#6366F1'
@@ -77,6 +77,83 @@ export function loadCostConfig(): CostConfig {
 export function sumFixed(config: CostConfig) { return config.fixedCosts.reduce((s, c) => s + (Number(c.amount) || 0), 0) }
 export function sumVariable(config: CostConfig) { return config.variableCosts.reduce((s, c) => s + (Number(c.amount) || 0), 0) }
 
+const INPUT_STYLE: React.CSSProperties = {
+  fontSize: 12, color: 'var(--tx)', background: 'var(--ev)',
+  border: '1px solid var(--b)', borderRadius: 6, padding: '6px 8px',
+  fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box',
+}
+
+interface CostTableProps {
+  lines: CostLine[]
+  setter: React.Dispatch<React.SetStateAction<CostLine[]>>
+  total: number
+  accent: string
+  sym: string
+  fmt: (n: number) => string
+  labelPlaceholder: string
+  addRowLabel: string
+  categoryHeader: string
+  monthlyHeader: string
+  monthlyTotalLabel: string
+}
+
+function CostTable({ lines, setter, total, accent, sym, fmt, labelPlaceholder, addRowLabel, categoryHeader, monthlyHeader, monthlyTotalLabel }: CostTableProps) {
+  const updateLine = useCallback((id: string, field: 'label' | 'amount', value: string) =>
+    setter(prev => prev.map(c => c.id === id ? { ...c, [field]: field === 'amount' ? (value === '' ? 0 : Number(value)) : value } : c))
+  , [setter])
+
+  const addLine = useCallback(() =>
+    setter(prev => [...prev, { id: `custom_${Date.now()}`, label: '', amount: 0 }])
+  , [setter])
+
+  const removeLine = useCallback((id: string) =>
+    setter(prev => prev.filter(c => c.id !== id))
+  , [setter])
+
+  return (
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 130px 28px', gap: 6, paddingBottom: 6, borderBottom: '1px solid var(--b)', marginBottom: 8 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{categoryHeader}</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', textAlign: 'right', paddingRight: 8 }}>{monthlyHeader}</span>
+        <span />
+      </div>
+      {lines.map(line => (
+        <div key={line.id} style={{ display: 'grid', gridTemplateColumns: '1fr 130px 28px', gap: 6, alignItems: 'center', marginBottom: 6 }}>
+          <input
+            value={line.label}
+            onChange={e => updateLine(line.id, 'label', e.target.value)}
+            placeholder={labelPlaceholder}
+            style={INPUT_STYLE}
+          />
+          <div style={{ position: 'relative' }}>
+            <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: 'var(--tx3)', pointerEvents: 'none' }}>{sym}</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={line.amount || ''}
+              onChange={e => updateLine(line.id, 'amount', e.target.value.replace(/[^0-9.]/g, ''))}
+              placeholder="0"
+              style={{ ...INPUT_STYLE, paddingLeft: 20, textAlign: 'right' }}
+            />
+          </div>
+          <button
+            onClick={() => removeLine(line.id)}
+            style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 14, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+          >×</button>
+        </div>
+      ))}
+      <button
+        onClick={addLine}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, width: '100%', padding: '6px 0', borderRadius: 7, border: `1px dashed ${accent}50`, background: 'transparent', color: accent, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}
+      >{addRowLabel}</button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0 0', borderTop: '2px solid var(--b)', marginTop: 12 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{monthlyTotalLabel}</span>
+        <span style={{ fontSize: 16, fontWeight: 700, color: accent }}>{fmt(total)}</span>
+      </div>
+    </div>
+  )
+}
+
 interface Props {
   open: boolean
   initialSection?: 'balance' | 'fixed' | 'variable'
@@ -124,67 +201,6 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
     onClose()
   }
 
-  const updateLine = (
-    setter: React.Dispatch<React.SetStateAction<CostLine[]>>,
-    id: string, field: 'label' | 'amount', value: string
-  ) => setter(prev => prev.map(c => c.id === id ? { ...c, [field]: field === 'amount' ? (value === '' ? 0 : Number(value)) : value } : c))
-
-  const addLine = (setter: React.Dispatch<React.SetStateAction<CostLine[]>>) =>
-    setter(prev => [...prev, { id: `custom_${Date.now()}`, label: '', amount: 0 }])
-
-  const removeLine = (setter: React.Dispatch<React.SetStateAction<CostLine[]>>, id: string) =>
-    setter(prev => prev.filter(c => c.id !== id))
-
-  const inputStyle: React.CSSProperties = {
-    fontSize: 12, color: 'var(--tx)', background: 'var(--ev)',
-    border: '1px solid var(--b)', borderRadius: 6, padding: '6px 8px',
-    fontFamily: 'inherit', outline: 'none', width: '100%', boxSizing: 'border-box',
-  }
-
-  const CostTable = ({ lines, setter, total, accent }: {
-    lines: CostLine[]; setter: React.Dispatch<React.SetStateAction<CostLine[]>>; total: number; accent: string
-  }) => (
-    <div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 130px 28px', gap: 6, paddingBottom: 6, borderBottom: '1px solid var(--b)', marginBottom: 8 }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('cfo_costconfig.tableHeaderCategory')}</span>
-        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em', textAlign: 'right', paddingRight: 8 }}>{tc('cfo_costconfig.tableHeaderMonthly')}</span>
-        <span />
-      </div>
-      {lines.map(line => (
-        <div key={line.id} style={{ display: 'grid', gridTemplateColumns: '1fr 130px 28px', gap: 6, alignItems: 'center', marginBottom: 6 }}>
-          <input
-            value={line.label}
-            onChange={e => updateLine(setter, line.id, 'label', e.target.value)}
-            placeholder={tc('cfo_costconfig.categoryNamePlaceholder')}
-            style={inputStyle}
-          />
-          <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: 'var(--tx3)', pointerEvents: 'none' }}>{sym}</span>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={line.amount || ''}
-              onChange={e => updateLine(setter, line.id, 'amount', e.target.value.replace(/[^0-9.]/g, ''))}
-              placeholder="0"
-              style={{ ...inputStyle, paddingLeft: 20, textAlign: 'right' }}
-            />
-          </div>
-          <button
-            onClick={() => removeLine(setter, line.id)}
-            style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx3)', cursor: 'pointer', fontSize: 14, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-          >×</button>
-        </div>
-      ))}
-      <button
-        onClick={() => addLine(setter)}
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, width: '100%', padding: '6px 0', borderRadius: 7, border: `1px dashed ${accent}50`, background: 'transparent', color: accent, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', marginTop: 4 }}
-      >{tc('cfo_costconfig.addRow')}</button>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0 0', borderTop: '2px solid var(--b)', marginTop: 12 }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--tx3)', textTransform: 'uppercase', letterSpacing: '.06em' }}>{tc('cfo_costconfig.monthlyTotal')}</span>
-        <span style={{ fontSize: 16, fontWeight: 700, color: accent }}>{fmt(total)}</span>
-      </div>
-    </div>
-  )
 
   if (!open) return null
 
@@ -250,7 +266,7 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
               <p style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 18, lineHeight: 1.6, margin: '0 0 18px' }}>
                 {tc('cfo_costconfig.fixedDescription')}
               </p>
-              <CostTable lines={fixed} setter={setFixed} total={fixedTotal} accent={RED} />
+              <CostTable lines={fixed} setter={setFixed} total={fixedTotal} accent={RED} sym={sym} fmt={fmt} labelPlaceholder={tc('cfo_costconfig.categoryNamePlaceholder')} addRowLabel={tc('cfo_costconfig.addRow')} categoryHeader={tc('cfo_costconfig.tableHeaderCategory')} monthlyHeader={tc('cfo_costconfig.tableHeaderMonthly')} monthlyTotalLabel={tc('cfo_costconfig.monthlyTotal')} />
             </div>
           )}
           {section === 'variable' && (
@@ -258,7 +274,7 @@ export default function CostConfigDrawer({ open, initialSection = 'balance', onC
               <p style={{ fontSize: 12, color: 'var(--tx3)', marginBottom: 18, lineHeight: 1.6, margin: '0 0 18px' }}>
                 {tc('cfo_costconfig.variableDescription')}
               </p>
-              <CostTable lines={variable} setter={setVariable} total={variableTotal} accent={INDIGO} />
+              <CostTable lines={variable} setter={setVariable} total={variableTotal} accent={INDIGO} sym={sym} fmt={fmt} labelPlaceholder={tc('cfo_costconfig.categoryNamePlaceholder')} addRowLabel={tc('cfo_costconfig.addRow')} categoryHeader={tc('cfo_costconfig.tableHeaderCategory')} monthlyHeader={tc('cfo_costconfig.tableHeaderMonthly')} monthlyTotalLabel={tc('cfo_costconfig.monthlyTotal')} />
             </div>
           )}
         </div>
