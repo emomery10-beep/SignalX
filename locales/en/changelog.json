@@ -17,6 +17,18 @@
   "footer_contact": "Contact support",
   "footer_back": "← Back to Help Centre",
 
+  "rel_15_summary": "Team roles & access control, Logistics Intelligence redesign, blog scout reliability fixes, and i18n corrections.",
+  "rel_15_change_0": "Team roles — six roles (Owner, Admin, Analyst, Accountant, Buyer, Viewer) with a centralised permission matrix; each role has clearly scoped access to dashboards, AI chat, billing, data sources, POS, and team management",
+  "rel_15_change_1": "Team member management — invite by email, resend expiring invites, change a member's role inline, and remove members; API routes enforce role-based guards so only Owners and Admins can invite or manage",
+  "rel_15_change_2": "Analyst role can now view the Billing page — previously restricted to Owner only",
+  "rel_15_change_3": "Team panel redesigned — role cards in a 3×2 grid with SVG icons and clear label/description hierarchy; member rows show initials avatars with role-tinted colour, role badges with icons, and separate Active / Awaiting acceptance sections",
+  "rel_15_change_4": "Blog scout was running only 1 topic per run instead of 5 — a slice(0,1) bug limited topic selection regardless of how many topics were scored",
+  "rel_15_change_5": "Blog posts written by the scout agent were showing staggered dates (up to a year in the past) instead of their real publish date — scout posts are now detected by author and bypass the pSEO date-spreading logic",
+  "rel_15_change_6": "Logistics Intelligence tab redesigned — circular score gauge (hero-metric pattern) replaced with a slim horizontal health bar; emoji tab icons replaced with SVG; all hardcoded indigo (#6366F1) colours replaced with brand tokens; uppercase eyebrow labels removed",
+  "rel_15_change_7": "Shipping & Delivery card on the Overview redesigned — side-stripe left border removed; ghost-card hover (border + drop-shadow) replaced with border-colour transition only; score number separated from label with baseline alignment; emoji replaced with SVG icons; Data Connection block colours corrected to brand tokens",
+  "rel_15_change_8": "Logistics pulse card translations showing raw keys (logistics_pulsecard.title, logistics_pulsecard.active) in all languages — all six locale files had an extra namespace wrapper level that the i18n resolver couldn't traverse",
+  "rel_15_change_9": "Quick action hover colours on the Logistics tab were using AI-feature indigo (#6366F1 / #0891b2) — corrected to var(--acc) on both Outgoing and Incoming sub-tabs",
+
   "rel_0_summary": "GDPR compliance hardening — consent gating, data-retention enforcement, customer DSAR self-service, a Data Processing Agreement, and PII log redaction across both apps.",
   "rel_0_change_0": "Data Processing Agreement page (/dpa) with sub-processor list — linked from the privacy policy and site footer",
   "rel_0_change_1": "Customer data-subject request (DSAR) UI on the POS customers page — export and delete a customer’s personal data on request, fulfilling GDPR access and erasure rights",
