@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "prebuild": "node scripts/i18n-audit.mjs --skip-typecheck",
-    "build": "next build",
+    "build": "NODE_OPTIONS='--max-old-space-size=6144' next build",
     "start": "next start",
     "lint": "next lint",
     "i18n:audit": "node scripts/i18n-audit.mjs && node scripts/i18n-audit.mjs --app pos",
