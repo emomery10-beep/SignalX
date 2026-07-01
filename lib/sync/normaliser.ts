@@ -259,11 +259,16 @@ export function normaliseSquare(order: Record<string, unknown>): UnifiedRecord[]
 }
 
 // ── QUICKBOOKS ───────────────────────────────────────────────
-// Maps QuickBooks P&L / invoice lines
+// Maps QuickBooks invoices → unified sales records
 export function normaliseQuickBooks(invoice: Record<string, unknown>): UnifiedRecord[] {
   const records: UnifiedRecord[] = []
   const lines = (invoice.Line as Record<string, unknown>[]) || []
   const currency = safeStr((invoice.CurrencyRef as Record<string, unknown>)?.value) || 'USD'
+  // Balance > 0 means the invoice has an outstanding amount owed
+  const balance = safeNum(invoice.Balance)
+  const totalAmt = safeNum(invoice.TotalAmt)
+  const paymentStatus = balance > 0 ? (balance === totalAmt ? 'pending' : 'partially_paid') : 'paid'
+  const customerName = safeStr((invoice.CustomerRef as Record<string, unknown>)?.name)
 
   for (const line of lines) {
     if (safeStr(line.DetailType) !== 'SalesItemLineDetail') continue
@@ -275,10 +280,10 @@ export function normaliseQuickBooks(invoice: Record<string, unknown>): UnifiedRe
     records.push({
       record_date: safeDate(invoice.TxnDate),
       sku: safeStr((detail.ItemRef as Record<string, unknown>)?.value),
-      product_name: safeStr((detail.ItemRef as Record<string, unknown>)?.name),
+      product_name: safeStr((detail.ItemRef as Record<string, unknown>)?.name) || customerName,
       category: '',
       variant: '',
-      supplier: safeStr((invoice.VendorRef as Record<string, unknown>)?.name),
+      supplier: customerName,
       units_sold: qty,
       selling_price: price,
       discount: safeNum(invoice.DiscountAmt),
@@ -303,15 +308,49 @@ export function normaliseQuickBooks(invoice: Record<string, unknown>): UnifiedRe
       campaign: '',
       coupon_code: '',
       coupon_discount: 0,
-      payment_status: safeStr(invoice.EmailStatus),
+      payment_status: paymentStatus,
       refund_amount: 0,
       payout_amount: grossRev,
       source_record_id: `qb_invoice_${invoice.Id}_line_${line.Id}`,
       source_type: 'quickbooks',
-      raw_data: { invoice_id: invoice.Id, ...line },
+      raw_data: { invoice_id: invoice.Id, doc_number: invoice.DocNumber, due_date: invoice.DueDate, balance, ...line },
     })
   }
   return records
+}
+
+// Maps QuickBooks Bills → cfo_expenses rows
+export interface QBExpenseRow {
+  vendor: string
+  date: string
+  amount: number
+  category: string
+  notes: string
+  source_record_id: string
+}
+
+export function normaliseQuickBooksBill(bill: Record<string, unknown>): QBExpenseRow | null {
+  const totalAmt = safeNum(bill.TotalAmt)
+  if (!totalAmt) return null
+  const vendorName = safeStr((bill.VendorRef as Record<string, unknown>)?.name) || 'Unknown vendor'
+  // Derive a category from the first account line
+  const lines = (bill.Line as Record<string, unknown>[]) || []
+  let category = 'Other'
+  for (const line of lines) {
+    if (safeStr(line.DetailType) === 'AccountBasedExpenseLineDetail') {
+      const acct = (line.AccountBasedExpenseLineDetail as Record<string, unknown>)
+      category = safeStr((acct?.AccountRef as Record<string, unknown>)?.name) || 'Other'
+      break
+    }
+  }
+  return {
+    vendor: vendorName,
+    date: safeDate(bill.TxnDate) || new Date().toISOString().slice(0, 10),
+    amount: totalAmt,
+    category,
+    notes: safeStr(bill.PrivateNote) || `QB Bill #${bill.DocNumber || bill.Id}`,
+    source_record_id: `qb_bill_${bill.Id}`,
+  }
 }
 
 // ── GOOGLE SHEETS ────────────────────────────────────────────

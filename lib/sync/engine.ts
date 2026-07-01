@@ -5,8 +5,8 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import {
   normaliseShopify, normaliseStripe, normaliseSquare,
-  normaliseQuickBooks, normaliseGoogleSheets,
-  type UnifiedRecord
+  normaliseQuickBooks, normaliseQuickBooksBill, normaliseGoogleSheets,
+  type UnifiedRecord, type QBExpenseRow
 } from './normaliser'
 import { normaliseAmazonOrder } from './amazon-normaliser'
 import { normaliseEbayOrder } from './ebay-normaliser'
@@ -421,40 +421,75 @@ async function syncSquare(
 // ── QuickBooks sync ───────────────────────────────────────────
 async function syncQuickBooks(
   source: { id: string; config: Record<string, unknown>; credentials: Record<string, unknown> },
-  supabase: ReturnType<typeof createServiceClient>
+  supabase: ReturnType<typeof createServiceClient>,
+  userId: string
 ): Promise<{ records: UnifiedRecord[]; error?: string }> {
   let { access_token, refresh_token } = source.credentials
   const { realm_id } = source.config
   if (!access_token || !realm_id) return { records: [], error: 'Missing QuickBooks credentials' }
 
-  try {
-    // Try to fetch invoices; if 401, refresh token first
+  const qbBase = process.env.QUICKBOOKS_SANDBOX === 'true'
+    ? 'https://sandbox-quickbooks.api.intuit.com'
+    : 'https://quickbooks.api.intuit.com'
+
+  const qbFetch = async (query: string) => {
     let res = await fetch(
-      `https://quickbooks.api.intuit.com/v3/company/${realm_id}/query?query=SELECT * FROM Invoice MAXRESULTS 500&minorversion=65`,
+      `${qbBase}/v3/company/${realm_id}/query?query=${encodeURIComponent(query)}&minorversion=65`,
       { headers: { Authorization: `Bearer ${access_token}`, Accept: 'application/json' } }
     )
-
     if (res.status === 401 && refresh_token) {
       const refreshed = await refreshQuickBooksToken(String(refresh_token))
       if (refreshed) {
         access_token = refreshed.access_token
         refresh_token = refreshed.refresh_token
-        // Update stored tokens (re-encrypt)
         await supabase.from('connected_sources').update({
           credentials: encryptCredentials({ access_token, refresh_token })
         }).eq('id', source.id)
-
         res = await fetch(
-          `https://quickbooks.api.intuit.com/v3/company/${realm_id}/query?query=SELECT * FROM Invoice MAXRESULTS 500&minorversion=65`,
+          `${qbBase}/v3/company/${realm_id}/query?query=${encodeURIComponent(query)}&minorversion=65`,
           { headers: { Authorization: `Bearer ${access_token}`, Accept: 'application/json' } }
         )
       }
     }
+    if (!res.ok) throw new Error(`QuickBooks API error ${res.status}: ${query.slice(0, 40)}`)
+    return res.json()
+  }
 
-    if (!res.ok) throw new Error(`QuickBooks API error: ${res.status}`)
-    const data = await res.json()
-    const invoices = data?.QueryResponse?.Invoice || []
+  try {
+    const [invoiceData, billData] = await Promise.all([
+      qbFetch('SELECT * FROM Invoice ORDERBY MetaData.LastUpdatedTime DESC MAXRESULTS 500'),
+      qbFetch('SELECT * FROM Bill ORDERBY MetaData.LastUpdatedTime DESC MAXRESULTS 500'),
+    ])
+
+    // ── Invoices → unified_data ───────────────────────────────
+    const invoices = invoiceData?.QueryResponse?.Invoice || []
     const records = (invoices as Record<string, unknown>[]).flatMap(normaliseQuickBooks)
+
+    // ── Bills → cfo_expenses (upsert by source_record_id) ────
+    const bills = billData?.QueryResponse?.Bill || []
+    const expenseRows: QBExpenseRow[] = (bills as Record<string, unknown>[])
+      .map(normaliseQuickBooksBill)
+      .filter((r): r is QBExpenseRow => r !== null)
+
+    if (expenseRows.length > 0) {
+      // Check which source_record_ids already exist to avoid overwriting manual edits
+      const ids = expenseRows.map(r => r.source_record_id)
+      const { data: existing } = await supabase
+        .from('cfo_expenses')
+        .select('source_record_id')
+        .eq('user_id', userId)
+        .in('source_record_id', ids)
+
+      const existingIds = new Set((existing || []).map((r: { source_record_id: string }) => r.source_record_id))
+      const toInsert = expenseRows
+        .filter(r => !existingIds.has(r.source_record_id))
+        .map(r => ({ ...r, user_id: userId }))
+
+      if (toInsert.length > 0) {
+        await supabase.from('cfo_expenses').insert(toInsert)
+      }
+    }
+
     return { records }
   } catch (e: unknown) {
     return { records: [], error: e instanceof Error ? e.message : 'QuickBooks sync failed' }
@@ -1290,7 +1325,7 @@ export async function runSync(userId?: string): Promise<SyncResult[]> {
         const r = await syncSquare(decryptedSource)
         records = r.records; syncError = r.error
       } else if (source.source_type === 'quickbooks') {
-        const r = await syncQuickBooks(decryptedSource, supabase)
+        const r = await syncQuickBooks(decryptedSource, supabase, source.user_id)
         records = r.records; syncError = r.error
       } else if (source.source_type === 'google_sheets') {
         const r = await syncGoogleSheetsWithRefresh(decryptedSource, supabase)

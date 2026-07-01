@@ -17,6 +17,7 @@ function json(data: unknown, status = 200) {
     category text not null default 'Other',
     notes text,
     receipt_url text,
+    source_record_id text,  -- e.g. qb_bill_123 — prevents duplicate imports from QuickBooks
     created_at timestamptz not null default now()
   );
 
@@ -28,6 +29,11 @@ function json(data: unknown, status = 200) {
     with check (auth.uid() = user_id);
 
   create index on cfo_expenses (user_id, date desc);
+  create index on cfo_expenses (user_id, source_record_id);
+
+  -- Migration (run if table already exists):
+  -- alter table cfo_expenses add column if not exists source_record_id text;
+  -- create index if not exists cfo_expenses_source_record_id on cfo_expenses (user_id, source_record_id);
 */
 
 // GET — list expenses for the current user
