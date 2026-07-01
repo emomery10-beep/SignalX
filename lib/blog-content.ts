@@ -750,6 +750,7 @@ import { batch17LogisticsDeliveryPosts } from './integration-blogs-batch17-logis
 import { batch18CrisisResiliencePosts } from './integration-blogs-batch18-crisis-resilience'
 import { batch19MarketingAnalyticsPosts } from './integration-blogs-batch19-marketing-analytics'
 import { batch20GrowthScalingPosts } from './integration-blogs-batch20-growth-scaling'
+import { POS_SEO_AFRICA_BATCH1 } from './pos-seo-africa-batch1'
 
 export interface BlogPost {
   slug: string
@@ -935,6 +936,8 @@ const ALL_POSTS = [
   ...batch12AutomationPosts, ...batch13RestaurantPosts, ...batch14DigitalMarketingPosts,
   ...batch15RepairServicesPosts, ...batch16FactoryManufacturingPosts, ...batch17LogisticsDeliveryPosts,
   ...batch18CrisisResiliencePosts, ...batch19MarketingAnalyticsPosts, ...batch20GrowthScalingPosts,
+  // Africa informal business SEO — duka, spaza, mama mboga, jua kali, kiosk, tuck shop
+  ...POS_SEO_AFRICA_BATCH1,
 ]
 
 // Cache expanded posts so they're available for both sitemap and routing
