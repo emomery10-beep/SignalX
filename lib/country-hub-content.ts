@@ -1826,5 +1826,77 @@ export const COUNTRY_HUBS: CountryHub[] = [
       { q: "Is AskBiz available in Bangla?", a: "AskBiz provides Bangla language support for the interface, reports, and core features. The platform is localized for Bangladeshi business practices and NBR tax compliance requirements." },
       { q: "How does AskBiz help manage export payment cycles?", a: "AskBiz tracks your LC document submission timelines, buyer payment histories, and receivables aging. You can forecast cash inflows more accurately and negotiate with banks on working capital facilities armed with organized financial data." }
     ]
+  },
+  {
+    slug: "kenya",
+    country: "Kenya",
+    region: "East Africa",
+    flag: "\u{1F1F0}\u{1F1EA}",
+    metaTitle: "Business Tracking App for Kenya | M-Pesa POS & Sales Tracking | AskBiz",
+    metaDescription: "AskBiz is the business tracking app built for Kenyan small businesses. Track M-Pesa, cash, and card sales from your phone. Know your daily profit, stock levels, and cash position — no laptop needed.",
+    heroHeading: "Track Your Business From Your Phone — Built for Kenya",
+    heroSubtitle: "M-Pesa, cash, and card sales in one place. Daily profit. Low stock alerts. No spreadsheets.",
+    marketOverview: "Kenya has over 7.4 million micro, small, and medium enterprises, accounting for more than 80% of all business activity in the country. Most operate informally — market stalls, kiosks, salons, hardware shops, and food sellers — relying on M-Pesa for the majority of transactions. With over 30 million active M-Pesa users and 70%+ of retail payments flowing through mobile money, any business tool that doesn't natively understand M-Pesa is useless for most Kenyan traders. AskBiz is built phone-first: open the app, scan a product, take payment via M-Pesa or cash, and your daily report updates automatically. KRA eTIMS compliance is built in for businesses that need it.",
+    challenges: [
+      { title: "M-Pesa Reconciliation", description: "Most Kenyan businesses receive payments across M-Pesa till numbers, personal M-Pesa, and cash — making it hard to know the true day's revenue without manually checking multiple sources." },
+      { title: "Informal Credit (Bado)", description: "Credit sales to regular customers ('bado' — not yet paid) are common in Kenyan retail but are rarely tracked systematically, leading to unknown receivables and cash flow surprises." },
+      { title: "Stock Management Without Barcode Scanners", description: "Many informal retailers manage dozens or hundreds of products without barcodes or a formal inventory system, leading to stockouts and overbuying." },
+      { title: "KRA eTIMS Compliance", description: "The Kenya Revenue Authority's eTIMS system requires electronic fiscal invoicing. Many small businesses are unsure how to comply without expensive dedicated POS hardware." }
+    ],
+    solutions: [
+      { title: "M-Pesa Native Integration", description: "AskBiz connects directly to your M-Pesa till or Paybill. Every incoming payment is automatically recorded against the correct sale — no manual matching." },
+      { title: "Credit Sales Tracker", description: "Record credit sales to named customers and track who owes what. Send payment reminders and see your total outstanding receivables at a glance." },
+      { title: "Phone-Camera Inventory", description: "Add products by photographing them — no barcode scanner needed. AskBiz reads labels and suggests names, prices, and categories automatically." },
+      { title: "Daily Profit Summary", description: "Every evening, AskBiz sends a plain-English summary of the day: total revenue by payment method, top-selling products, and net profit after costs." }
+    ],
+    keyStats: [
+      { label: "MSMEs in Kenya", value: "7.4M+" },
+      { label: "M-Pesa users", value: "30M+" },
+      { label: "Retail via mobile money", value: "70%+" },
+      { label: "Smartphone penetration", value: "55%+" }
+    ],
+    industries: ["Retail & Kiosks", "Salons & Barbershops", "Hardware Stores", "Food & Restaurants", "Wholesale & Distribution"],
+    faqs: [
+      { q: "Does AskBiz work with M-Pesa?", a: "Yes. AskBiz connects to your M-Pesa till number or Paybill and automatically records every payment against the correct sale. You can also record M-Pesa payments manually if you receive them on a personal number. All M-Pesa transactions appear in your daily sales report alongside cash and card." },
+      { q: "Do I need a laptop or receipt printer to use AskBiz?", a: "No. AskBiz works entirely from your phone. You can take sales, track stock, and view reports from any Android or iPhone. If you want to print receipts you can connect a Bluetooth printer, but it is not required." },
+      { q: "Is AskBiz KRA eTIMS compliant?", a: "AskBiz generates eTIMS-compatible fiscal receipts for businesses that need to comply with KRA electronic invoicing requirements. You can connect your KRA credentials and AskBiz will submit receipts automatically." },
+      { q: "How much does AskBiz cost in Kenya?", a: "AskBiz pricing for Kenyan businesses starts from KSh 500 per month for the basic POS plan. Growth and Business plans with full analytics and multi-user access are available from KSh 1,500 per month. All plans include a 14-day free trial — no card required." }
+    ]
+  },
+  {
+    slug: "uganda",
+    country: "Uganda",
+    region: "East Africa",
+    flag: "\u{1F1FA}\u{1F1EC}",
+    metaTitle: "Business App with MTN MoMo & Airtel Money for Uganda | AskBiz",
+    metaDescription: "AskBiz is the business tracking app built for Uganda. Accept MTN Mobile Money and Airtel Money, track daily sales, manage stock, and see your profit — all from your phone. No laptop needed.",
+    heroHeading: "MTN MoMo & Airtel Money Built In — Track Your Business From Your Phone",
+    heroSubtitle: "Sales tracking, stock management, and daily profit reports — built for Ugandan businesses.",
+    marketOverview: "Uganda has over 1 million registered small businesses and millions more operating informally — market traders, salons, hardware shops, supermarkets, and mobile money agents. MTN Mobile Money and Airtel Money together process billions of shillings in transactions daily, yet most POS and business management tools available in Uganda either ignore mobile money entirely or treat it as an afterthought. Uganda's '#1 POS software' by its own description has no mention of MTN MoMo or Airtel Money anywhere on its website. AskBiz fills this gap: every sale, whether paid by MTN MoMo, Airtel Money, cash, or card, flows into one daily report. No reconciliation. No guesswork.",
+    challenges: [
+      { title: "Mobile Money Fragmentation", description: "Ugandan businesses typically receive payments across MTN MoMo, Airtel Money, and cash — with no tool that unifies these into one daily revenue picture." },
+      { title: "Manual Stock Counts", description: "Most small Ugandan retailers count stock manually or not at all, leading to stockouts on fast-moving items and overstocking on slow ones." },
+      { title: "URA Tax Compliance", description: "Uganda Revenue Authority requires accurate record-keeping for VAT and income tax. Many small businesses lack the documentation to file correctly." },
+      { title: "Credit to Known Customers", description: "Giving goods on credit to trusted customers is standard practice in Ugandan retail, but tracking who owes what — and following up — is usually done informally." }
+    ],
+    solutions: [
+      { title: "MTN MoMo & Airtel Money Integration", description: "AskBiz connects to both MTN Mobile Money and Airtel Money. Payments are recorded automatically against the correct sale, giving you a unified view of all revenue." },
+      { title: "Stock Management from Your Phone", description: "Add products, set reorder levels, and get low-stock alerts. AskBiz updates stock counts automatically with every sale — no separate stock count needed." },
+      { title: "URA-Ready Reports", description: "Generate daily, monthly, and annual revenue reports formatted for URA tax filing. Share directly with your accountant or attach to your return." },
+      { title: "Credit Sales Ledger", description: "Record credit sales to named customers. Track balances, send reminders, and see your total outstanding credit at a glance — replacing the notebook." }
+    ],
+    keyStats: [
+      { label: "Registered SMEs", value: "1M+" },
+      { label: "MTN MoMo users", value: "20M+" },
+      { label: "Airtel Money users", value: "8M+" },
+      { label: "Mobile money growth", value: "35% YoY" }
+    ],
+    industries: ["Retail & Supermarkets", "Salons & Barbershops", "Hardware Stores", "Restaurants & Food", "Mobile Money Agents"],
+    faqs: [
+      { q: "Does AskBiz support MTN Mobile Money and Airtel Money in Uganda?", a: "Yes. AskBiz integrates with both MTN Mobile Money and Airtel Money. Incoming payments are automatically matched to sales and appear in your daily revenue report alongside cash transactions. This is the feature that most Ugandan POS systems currently lack." },
+      { q: "Can I use AskBiz without internet all day?", a: "AskBiz works offline for taking sales and recording stock — transactions sync automatically when your connection is restored. This means the app keeps working even when your data runs out mid-day." },
+      { q: "How is AskBiz different from UgaPOS?", a: "UgaPOS is a desktop-first POS system. AskBiz is phone-first and includes MTN MoMo and Airtel Money integration, AI-powered daily business insights, multi-branch support, and a built-in chat that answers questions about your business in plain English. You do not need a laptop or receipt printer to use AskBiz." },
+      { q: "What does AskBiz cost in Uganda?", a: "AskBiz for Ugandan businesses starts from UGX 20,000 per month for the basic POS plan. Full analytics and multi-user plans start from UGX 55,000 per month. A 14-day free trial is available with no card required." }
+    ]
   }
 ];
