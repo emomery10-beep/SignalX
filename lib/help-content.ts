@@ -80,7 +80,7 @@ export const HELP_TOPICS: HelpTopic[] = [
   {
     slug: "connecting-data",
     title: "Connecting Data Sources",
-    description: "Connect Shopify, Amazon, TikTok Shop, QuickBooks, Stripe, and more to unlock AI-powered insights.",
+    description: "Connect Shopify, Amazon, TikTok Shop, QuickBooks, Stripe, WooCommerce, Walmart, and more to unlock AI-powered insights.",
     icon: "🔌",
     color: "#5b7fa6",
     articles: [
@@ -90,6 +90,7 @@ export const HELP_TOPICS: HelpTopic[] = [
       "connect-quickbooks",
       "upload-csv-excel",
       "connect-woocommerce",
+      "connect-walmart",
       "connect-xero",
       "connect-stripe",
       "connect-etsy",
@@ -220,6 +221,7 @@ export const HELP_TOPICS: HelpTopic[] = [
       "xero-sync-error",
       "stripe-sync-error",
       "woocommerce-sync-error",
+      "walmart-sync-error",
       "ebay-sync-error",
       "paypal-sync-error",
     ],
@@ -3228,15 +3230,15 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Step 2 — Connect in AskBiz",
-        body: "In AskBiz, go to **Settings → Integrations → WooCommerce**.\n\nEnter:\n- Your store URL (include https://)\n- Consumer Key\n- Consumer Secret\n\nClick **Connect**. AskBiz will test the connection and begin your initial data import.",
+        body: "In AskBiz, go to **Sources** and click **Connect** next to WooCommerce.\n\nEnter:\n- Your store URL (include https://)\n- Consumer Key\n- Consumer Secret\n\nClick **Connect**. AskBiz validates your credentials against the WooCommerce REST API and begins your initial data import immediately.",
       },
       {
         heading: "Step 3 — Wait for the initial import",
-        body: "The first import pulls up to 2 years of historical orders, products, and customer data. This typically takes **20 to 90 minutes** depending on your order volume. You will receive an email when the import is complete.\n\nDo not disconnect or refresh the integration during the initial import.",
+        body: "The first import pulls your orders from the last **90 days**. This typically takes **2 to 10 minutes** depending on your order volume. Once complete, your orders appear in Intelligence, CFO Mode, and the Ask tab.",
       },
       {
         heading: "Ongoing sync",
-        body: "After the initial import, AskBiz syncs new orders and inventory changes every **6 hours**. To trigger an immediate sync — for example after a promotional campaign — go to **Settings → Integrations → WooCommerce → Sync Now**.",
+        body: "After the initial import, AskBiz syncs new orders every **6 hours**. To trigger an immediate sync — for example after a promotional campaign — go to **Sources**, find WooCommerce, and click **Sync Now**.",
       },
     ],
     faq: [
@@ -3245,6 +3247,47 @@ export const HELP_ARTICLES: HelpArticle[] = [
       { q: "Does AskBiz support WooCommerce multisite?", a: "Each WooCommerce site needs its own AskBiz integration. If you have multiple stores on a WordPress multisite network, connect each store separately using the store's specific URL and API key." },
     ],
     related: ["connect-shopify", "connect-amazon", "upload-csv-excel"],
+  },
+
+  {
+    slug: "connect-walmart",
+    title: "Connect Walmart Marketplace to AskBiz",
+    description: "Step-by-step guide to connecting your Walmart Marketplace seller account and syncing orders and revenue data.",
+    topic: "Connecting Data Sources",
+    topicSlug: "connecting-data",
+    readTime: 4,
+    popular: false,
+    lastUpdated: "2026-07-01",
+    keywords: ["connect Walmart", "Walmart Marketplace", "Walmart seller", "Walmart API", "marketplace orders"],
+    content: [
+      {
+        heading: "Before you start",
+        body: "You will need:\n- An active **Walmart Marketplace seller account** (US marketplace)\n- Access to **Walmart Seller Center → Developer Tools**\n- Your account must be approved and in good standing\n\nWalmart Marketplace connection requires the **Growth or Business plan**.",
+      },
+      {
+        heading: "Step 1 — Generate API credentials in Seller Center",
+        body: "Log in to **Walmart Seller Center** and go to **Settings → Developer Tools** (or search for 'API' in the top navigation).\n\nClick **Add new key for a Solution Provider or Seller App**. Give it a name (e.g. AskBiz), set permissions to **Read Only**, and confirm.\n\nYou will receive a **Client ID** and **Client Secret**. Copy both — the Client Secret is shown only once.",
+      },
+      {
+        heading: "Step 2 — Connect in AskBiz",
+        body: "In AskBiz, go to **Sources** and click **Connect** next to Walmart.\n\nEnter:\n- **Client ID** — the UUID from Seller Center\n- **Client Secret** — the secret shown after key generation\n\nClick **Connect**. AskBiz immediately validates your credentials against the Walmart API — if they are correct the connection is confirmed, if not you will see a specific error message explaining the problem.",
+      },
+      {
+        heading: "Step 3 — Initial data import",
+        body: "The first import pulls your orders from the last **90 days**. This typically takes **2 to 10 minutes**. Once complete, your Walmart orders appear in Intelligence, CFO Mode, and the Ask tab.\n\nWalmart orders include line-item detail, product names, SKUs, shipping costs, and your estimated marketplace referral fee.",
+      },
+      {
+        heading: "Ongoing sync",
+        body: "After the initial import, AskBiz syncs new Walmart orders every **6 hours**. To trigger an immediate sync, go to **Sources**, find Walmart, and click **Sync Now**.\n\nNote: Walmart access tokens expire after 15 minutes. AskBiz handles token refresh automatically — you do not need to reconnect.",
+      },
+    ],
+    faq: [
+      { q: "My Client Secret disappeared before I could copy it. What do I do?", a: "You cannot retrieve a Client Secret after it is generated. Return to Walmart Seller Center → Developer Tools, revoke the existing key, and generate a new one. Copy the new Client Secret immediately and update the connection in AskBiz Sources." },
+      { q: "AskBiz says my credentials are invalid but I copied them correctly.", a: "The most common cause is using the old Walmart API format — Consumer ID and Private Key — which uses RSA signatures and is not compatible. AskBiz requires the newer Client ID and Client Secret format from Walmart Developer Tools. If your Seller Center account predates 2021, you may need to generate new credentials." },
+      { q: "Does AskBiz support Walmart Canada or Walmart Mexico?", a: "Not currently. AskBiz connects to the US Walmart Marketplace only. Canada and Mexico marketplace support is planned for a future release." },
+      { q: "Where does the marketplace fee figure come from?", a: "AskBiz estimates the Walmart referral fee at 8% of the item price, which is the approximate average across most categories. Actual fees vary by category (typically 6–15%). You can see the estimated fee per order in the CFO Mode cost breakdown." },
+    ],
+    related: ["connect-shopify", "connect-amazon", "connect-ebay"],
   },
 
   {
@@ -13567,6 +13610,43 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
     related: ["data-not-syncing", "connect-woocommerce", "troubleshooting"],
   },
+
+  {
+    slug: "walmart-sync-error",
+    title: "Walmart Marketplace Sync Errors",
+    description: "Fix common Walmart Marketplace connection and sync problems — invalid credentials, permission errors, and missing orders.",
+    topic: "Troubleshooting",
+    topicSlug: "troubleshooting",
+    readTime: 3,
+    popular: false,
+    keywords: ["walmart error", "walmart sync", "walmart marketplace connection", "walmart not syncing", "walmart credentials"],
+    lastUpdated: "2026-07-01",
+    content: [
+      {
+        heading: "Invalid credentials error on connect",
+        body: "AskBiz validates your Walmart credentials immediately when you connect. If you see an invalid credentials error:\n\n1. Log in to **Walmart Seller Center → Settings → Developer Tools**\n2. Confirm you are copying the **Client ID** (a UUID) and **Client Secret** exactly — check for leading or trailing spaces\n3. If you generated the key more than a few minutes ago and the secret is no longer visible, revoke the key and generate a new one — the secret cannot be retrieved after initial display\n4. Make sure the key was created under your own Seller Center account, not a Solution Provider's account\n\nNote: AskBiz uses the newer **Client ID + Client Secret** format. If your Walmart account previously used Consumer ID and Private Key (RSA-based), generate new credentials in Developer Tools.",
+      },
+      {
+        heading: "Credentials valid but no orders appear",
+        body: "If connection succeeds but orders are missing after the initial sync:\n\n- The initial sync covers the last **90 days** — check that you had orders in that window\n- Orders must be in **Acknowledged**, **Shipped**, or **Delivered** status; draft or cancelled orders are not imported\n- Allow **2–10 minutes** for the first sync to complete on large accounts\n- Go to **Sources** and click **Sync Now** to force an immediate refresh",
+      },
+      {
+        heading: "Sync worked then stopped",
+        body: "Walmart access tokens expire after 15 minutes. AskBiz refreshes tokens automatically before each sync, but if your Client Secret has been rotated or revoked in Seller Center the refresh will fail.\n\nIf sync stops:\n1. Go to **Sources** and click **Reconnect** next to Walmart\n2. Enter your current Client ID and Client Secret\n3. AskBiz will re-validate and resume syncing\n\nTo avoid interruptions, do not revoke Walmart API keys without reconnecting AskBiz immediately afterward.",
+      },
+      {
+        heading: "Marketplace access permission error",
+        body: "If validation passes but syncing fails with a permission error, your API key may lack Orders read permission.\n\nIn Walmart Seller Center → Developer Tools, check the permissions assigned to your key. It needs at minimum **Orders → Read**. If permissions cannot be edited after creation, generate a new key with the correct permissions.",
+      },
+    ],
+    faq: [
+      { q: "AskBiz says my account has no orders, but Seller Center shows sales.", a: "The initial sync only fetches the last 90 days. Sales older than 90 days are not imported. If your recent sales are still missing, check that they are in Acknowledged, Shipped, or Delivered status — other statuses are excluded." },
+      { q: "Can I connect a Walmart Canada or Walmart Mexico account?", a: "Not currently. AskBiz supports the US Walmart Marketplace only. International marketplace support is planned for a future release." },
+      { q: "The sync keeps showing a 400 error in the logs.", a: "A 400 error usually means a malformed API request. This can happen if your Client ID contains special characters or extra whitespace — check for hidden characters when copying from Seller Center. If the problem persists, disconnect and reconnect with freshly generated credentials." },
+    ],
+    related: ["data-not-syncing", "connect-walmart", "troubleshooting"],
+  },
+
   {
     slug: "ebay-sync-error",
     title: "eBay Sync Errors",
