@@ -1,17 +1,16 @@
 {
-  "default_card_0_title": "Currency Risk",
+  "default_card_0_title": "Exchange rate",
   "default_card_0_desc": "What happens if the pound drops?",
   "default_card_0_query": "Model what happens to my margin if GBP falls 10% against my import currency",
   "default_card_1_title": "My Suppliers",
   "default_card_1_desc": "Who is the most reliable?",
   "default_card_1_query": "Score my suppliers by on-time delivery rate and financial impact",
-  "default_card_2_title": "True Cost",
+  "default_card_2_title": "Real cost",
   "default_card_2_desc": "What does shipping actually cost me?",
   "default_card_2_query": "Calculate my true landed cost including freight, duty, VAT and FX buffer",
-  "default_card_3_title": "New Markets",
+  "default_card_3_title": "Where to sell next",
   "default_card_3_desc": "Where should I sell next?",
   "default_card_3_query": "Which export market should I expand into next based on my product?",
-
   "pos_card_0_title": "Today’s Sales",
   "pos_card_0_desc": "Live revenue and transaction count",
   "pos_card_0_query": "What are my POS sales today? Show revenue, transaction count, and top products.",
@@ -24,7 +23,6 @@
   "pos_card_3_title": "Stock Check",
   "pos_card_3_desc": "Low inventory alerts",
   "pos_card_3_query": "Which products are running low on stock? Show items below reorder point.",
-
   "stripe_card_0_title": "Stripe Revenue",
   "stripe_card_0_desc": "Payments and payouts",
   "stripe_card_0_query": "Show me my Stripe revenue this month — total charges, refunds, and net revenue.",
@@ -37,7 +35,6 @@
   "stripe_card_3_title": "Average Order",
   "stripe_card_3_desc": "AOV and trends",
   "stripe_card_3_query": "What is my average order value this month and how does it compare to last month?",
-
   "shopify_card_0_title": "Shopify Sales",
   "shopify_card_0_desc": "Orders and revenue today",
   "shopify_card_0_query": "Show me my Shopify sales today — orders, revenue, and top products.",
@@ -50,7 +47,6 @@
   "shopify_card_3_title": "Best Sellers",
   "shopify_card_3_desc": "Top products this week",
   "shopify_card_3_query": "What are my best selling Shopify products this week by revenue?",
-
   "xero_card_0_title": "P&L Summary",
   "xero_card_0_desc": "Profit and loss snapshot",
   "xero_card_0_query": "Give me a profit and loss summary for this month from my Xero data.",
@@ -63,7 +59,6 @@
   "xero_card_3_title": "Expenses",
   "xero_card_3_desc": "Cost breakdown by category",
   "xero_card_3_query": "Break down my expenses by category this month. What are my biggest cost areas?",
-
   "quickbooks_card_0_title": "P&L Summary",
   "quickbooks_card_0_desc": "Profit and loss snapshot",
   "quickbooks_card_0_query": "Give me a profit and loss summary for this month from my QuickBooks data.",
@@ -76,7 +71,6 @@
   "quickbooks_card_3_title": "Expenses",
   "quickbooks_card_3_desc": "Cost breakdown by category",
   "quickbooks_card_3_query": "Break down my expenses by category this month from QuickBooks.",
-
   "amazon_fba_card_0_title": "Amazon Sales",
   "amazon_fba_card_0_desc": "Orders and revenue",
   "amazon_fba_card_0_query": "Show me my Amazon FBA sales this month — orders, revenue, and top ASINs.",
@@ -89,7 +83,6 @@
   "amazon_fba_card_3_title": "Returns",
   "amazon_fba_card_3_desc": "Return rate by product",
   "amazon_fba_card_3_query": "Which Amazon products have the highest return rate? Show return rate and reason breakdown.",
-
   "cfo_card_0_title": "P&L Summary",
   "cfo_card_0_desc": "Revenue, costs, and net profit",
   "cfo_card_0_query": "Give me a detailed profit and loss summary for this month. Include revenue, COGS, gross profit, operating expenses, and net profit with month-over-month comparison.",
@@ -102,7 +95,6 @@
   "cfo_card_3_title": "Growth Metrics",
   "cfo_card_3_desc": "MoM revenue and margin trends",
   "cfo_card_3_query": "Show my month-over-month revenue growth, gross margin trend, and net margin trend for the last 6 months.",
-
   "track_status_label": "Status",
   "track_customs_hold": "CUSTOMS HOLD",
   "track_last_event": "Last event",
@@ -121,50 +113,41 @@
   "track_add_prompt": "Want me to add it to your shipment tracker for ongoing monitoring?",
   "track_no_data": "📦 Tracking number **{number}** — no tracking data available yet. The shipment may not have been scanned by the carrier. [{link}](https://www.17track.net/en/track?nums={number})",
   "track_error": "📦 Could not retrieve tracking data for **{number}**. Please try again or [{link}](https://www.17track.net/en/track?nums={number})",
-
   "saved_insight": "Saved insight",
   "my_dashboard": "My Dashboard",
-
   "file_upload_failed": "File upload failed",
   "file_loaded": "I’ve loaded **{name}** — {rows} rows, {cols} columns ({headers}). What would you like to know?",
-
   "new_conversation": "New conversation",
   "badge_live": "AskBiz Live",
   "badge_speaking": "Speaking",
   "scenario_tooltip": "Run a “what if” scenario on your business",
-  "scenario_on": "Scenario ON",
-  "scenario_run": "Run scenario",
+  "scenario_on": "What if: ON",
+  "scenario_run": "What if…",
   "cfo_tooltip": "Switch to accountant-style reports with metrics and tables",
-  "cfo_view_on": "CFO view ON",
-  "cfo_view": "CFO view",
+  "cfo_view_on": "Finance view: ON",
+  "cfo_view": "Finance view",
   "uploading": "Uploading…",
   "upload": "Upload",
   "saving": "Saving…",
   "saved": "Saved ✓",
   "save_error": "Error",
   "save": "Save",
-
   "empty_greeting_named": "What do you want to know, {name}?",
   "empty_greeting": "What do you want to know?",
   "empty_default_name": "there",
   "empty_geo_subtitle": "Prices in {symbol} · {country}",
   "empty_subtitle": "Just ask in plain English — no jargon, no spreadsheets needed.",
-
   "saved_prompts_heading": "Saved prompts",
   "remove_saved_prompt": "Remove saved prompt",
-
   "connect_cta_title": "Get answers with your actual numbers",
   "connect_cta_desc": "Connect Shopify, Amazon, QuickBooks or upload a CSV",
   "connect_cta_button": "Connect →",
-
   "limit_emoji_heading": "Free questions used up",
   "limit_body": "You’ve used all your free questions this month. Upgrade to keep going.",
   "limit_upgrade": "Upgrade →",
   "limit_see_plans": "See all plans",
   "limit_reset_note": "Free plan resets next month.",
-
   "connection_error": "Connection issue — please check your internet and try again.",
-
   "status_connected_file": "Connected: {name}",
   "status_sources_connected": "{sources} connected",
   "status_synced_ago": " · synced {ago}",
@@ -176,7 +159,6 @@
   "sync_just_now": "just now",
   "sync_hours_ago": "{hours}h ago",
   "sync_days_ago": "{days}d ago",
-
   "save_prompt_title": "Save prompt",
   "save_prompt_subtitle": "Give it a short label so you can reuse it.",
   "save_prompt_placeholder": "e.g. Weekly revenue check",

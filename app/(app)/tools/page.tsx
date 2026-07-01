@@ -365,7 +365,7 @@ export default function IntelligencePage() {
           {[
             {
               label: 'Health Score',
-              value: preview?.health?.score != null ? `${preview.health.score}/100` : '—',
+              value: preview?.health?.score != null ? `${preview.health.score}/100` : 'Connect a source',
               colour: healthColour,
             },
             {

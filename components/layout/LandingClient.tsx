@@ -61,7 +61,7 @@ const buildBizTypes = (tc: (k: string) => string) => [
 // The server-side script handles Google rich results; <details>/<summary> ensures answers
 // are always in the HTML for crawlers regardless of JS execution.
 const buildFaqs = (tc: (key: string) => string) =>
-  [0, 1, 2, 3, 4, 5, 6].map(i => ({ q: tc('landing.faq_' + i + '_q'), a: tc('landing.faq_' + i + '_a') }))
+  [0, 1, 2, 3, 4, 5, 6, 7].map(i => ({ q: tc('landing.faq_' + i + '_q'), a: tc('landing.faq_' + i + '_a') }))
 
 function Logo({size=12,color='white'}:{size?:number;color?:string}) {
   return (
@@ -562,6 +562,11 @@ function SourcesUIReplica({tc}:{tc:(k:string)=>string}) {
       </div>
       <div style={{maxHeight:300,overflowY:'auto'}}>
         {[
+          {cat:tc('landing.src_cat_mobile_money'),items:[
+            {icon:'🟢',name:'M-Pesa',desc:tc('landing.src_desc_mpesa'),status:'connected'},
+            {icon:'🟡',name:'MTN Mobile Money',desc:tc('landing.src_desc_mtn'),status:'connect'},
+            {icon:'🔴',name:'Airtel Money',desc:tc('landing.src_desc_airtel'),status:'connect'},
+          ]},
           {cat:tc('landing.src_cat_ecommerce'),items:[
             {icon:'🛒',name:'Shopify',desc:tc('landing.src_desc_shopify'),status:'connect'},
             {icon:'📦',name:'Amazon FBA',desc:tc('landing.src_desc_amazon'),status:'connect'},
@@ -1427,11 +1432,12 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
         <div style={{ display:'flex',alignItems:'center',gap:6,flexShrink:0 }}>
           <LanguageToggle />
-          <Link href={localePath('/signin', lang as Locale)} style={{ width:36,height:36,borderRadius:8,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',textDecoration:'none' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <Link href={localePath('/signin', lang as Locale)} style={{ display:'flex',alignItems:'center',gap:7,padding:'7px 14px',borderRadius:8,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,cursor:'pointer',textDecoration:'none',fontSize:13,fontWeight:500,whiteSpace:'nowrap' }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
+            {tc('landing.nav_sign_in')}
           </Link>
         </div>
 
@@ -1548,8 +1554,36 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         ))}
       </div>
 
+      {/* ── POINT OF SALE ─────────────────────────────────────────────── */}
+      <section id="pos" style={{ padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)',background:T.bg }}>
+        <div style={{ maxWidth:1180,margin:'0 auto' }}>
+          <div style={{ textAlign:'center',marginBottom:44 }} data-reveal>
+            <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(28px,4vw,54px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',color:T.tx,marginBottom:12 }}>
+              {tc('landing.pos_title_line1')}<br/><em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.pos_title_line2')}</em>
+            </h2>
+            <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,maxWidth:480,margin:'0 auto' }}>
+              {tc('landing.pos_subtitle')}
+            </p>
+          </div>
+          <div data-reveal data-reveal-delay="1">
+            <PosShowcase tc={tc} />
+          </div>
+          <div style={{ display:'flex',flexWrap:'wrap',gap:7,justifyContent:'center',marginTop:24 }}>
+            {[0,1,2,3,4,5,6,7,8,9].map(i=>tc('landing.pos_pill_'+i)).map(f=>(
+              <span key={f} style={{ padding:'6px 14px',borderRadius:9999,border:`1px solid ${T.bd}`,background:T.card,fontSize:12,color:T.tx2,fontWeight:500 }}>{f}</span>
+            ))}
+          </div>
+          <div style={{ textAlign:'center',marginTop:24,display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap' }}>
+            <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ padding:'11px 26px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7 }}>
+              {tc('landing.pos_cta')}
+            </Link>
+            <span style={{ fontSize:12,color:T.tx3,alignSelf:'center' }}>{tc('landing.pos_cta_note',{pos:posPrice})}</span>
+          </div>
+        </div>
+      </section>
+
       {/* ── INTELLIGENCE / MONITOR ────────────────────────────────────── */}
-      <section style={{ padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)',background:T.bg }}>
+      <section style={{ padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)',background:T.alt,borderTop:`1px solid ${T.bd}`,borderBottom:`1px solid ${T.bd}` }}>
         <div style={{ maxWidth:1060,margin:'0 auto' }}>
           <div className="two-col-wide" style={{ gap:'clamp(36px,5vw,64px)' }}>
             <div data-reveal>
@@ -1580,7 +1614,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       </section>
 
       {/* ── SOURCES / CONNECT ─────────────────────────────────────────── */}
-      <section style={{ background:T.alt,borderTop:`1px solid ${T.bd}`,borderBottom:`1px solid ${T.bd}`,padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)' }}>
+      <section style={{ background:T.bg,padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)' }}>
         <div style={{ maxWidth:1060,margin:'0 auto' }}>
           <div className="two-col" style={{ gap:'clamp(36px,5vw,64px)' }}>
             <div data-reveal>
@@ -1601,34 +1635,6 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                 ))}
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── POINT OF SALE ─────────────────────────────────────────────── */}
-      <section id="pos" style={{ padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)',background:T.bg }}>
-        <div style={{ maxWidth:1180,margin:'0 auto' }}>
-          <div style={{ textAlign:'center',marginBottom:44 }} data-reveal>
-            <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(28px,4vw,54px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',color:T.tx,marginBottom:12 }}>
-              {tc('landing.pos_title_line1')}<br/><em style={{ color:T.acc,fontStyle:'italic' }}>{tc('landing.pos_title_line2')}</em>
-            </h2>
-            <p style={{ fontSize:14,color:T.tx2,lineHeight:1.7,maxWidth:480,margin:'0 auto' }}>
-              {tc('landing.pos_subtitle')}
-            </p>
-          </div>
-          <div data-reveal data-reveal-delay="1">
-            <PosShowcase tc={tc} />
-          </div>
-          <div style={{ display:'flex',flexWrap:'wrap',gap:7,justifyContent:'center',marginTop:24 }}>
-            {[0,1,2,3,4,5,6,7,8,9].map(i=>tc('landing.pos_pill_'+i)).map(f=>(
-              <span key={f} style={{ padding:'6px 14px',borderRadius:9999,border:`1px solid ${T.bd}`,background:T.card,fontSize:12,color:T.tx2,fontWeight:500 }}>{f}</span>
-            ))}
-          </div>
-          <div style={{ textAlign:'center',marginTop:24,display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap' }}>
-            <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ padding:'11px 26px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7 }}>
-              {tc('landing.pos_cta')}
-            </Link>
-            <span style={{ fontSize:12,color:T.tx3,alignSelf:'center' }}>{tc('landing.pos_cta_note',{pos:posPrice})}</span>
           </div>
         </div>
       </section>
