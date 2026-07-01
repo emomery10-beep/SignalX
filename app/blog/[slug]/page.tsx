@@ -238,8 +238,11 @@ function extractStats(sections: { body?: string; content?: string }[]): string[]
 }
 
 // ── Static generation ────────────────────────────────────────────────────────
+// Return empty array — pages render on first request via ISR (revalidate = 3600).
+// Pre-rendering all posts at build time causes OOM on Vercel's 8 GB build machine
+// because blog-content.ts imports hundreds of batch files (~3,000+ posts total).
 export async function generateStaticParams() {
-  return getAllPosts().map(p => ({ slug: p.slug }))
+  return []
 }
 
 // ── Per-post metadata ────────────────────────────────────────────────────────
