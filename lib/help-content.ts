@@ -99,7 +99,7 @@ export const HELP_TOPICS: HelpTopic[] = [
   {
     slug: "business-tools",
     title: "Business Tools",
-    description: "Master the FX Risk Modeller, Landed Cost Calculator, Export Market Scoring, and all AskBiz free tools.",
+    description: "Master the Exchange Rate Risk tool, Landed Cost Calculator, Export Market Scoring, and all AskBiz free tools.",
     icon: "🛠️",
     color: "#8b6ba8",
     articles: [
@@ -896,7 +896,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     content: [
       {
         heading: "Where to ask questions",
-        body: "The main AI chat bar is at `/ask` in the left sidebar. You can also ask questions from three other places: tap any metric in your **Daily Brief** to ask a follow-up ('Why did this change?'), click the **Ask AskBiz** button on any Intelligence dashboard panel to ask about that specific metric, and click **Ask about this** on any Business Tool result card (FX Risk Modeller, Landed Cost Calculator, etc.) to dig deeper into your results.",
+        body: "The main AI chat bar is at `/ask` in the left sidebar. You can also ask questions from three other places: tap any metric in your **Daily Brief** to ask a follow-up ('Why did this change?'), click the **Ask AskBiz** button on any Intelligence dashboard panel to ask about that specific metric, and click **Ask about this** on any Business Tool result card (Exchange Rate Risk, Landed Cost Calculator, etc.) to dig deeper into your results.",
       },
       {
         heading: "Start with these five questions",
@@ -908,7 +908,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Intent detection — tools that open automatically",
-        body: "When you type certain phrases, AskBiz automatically opens the right specialist tool instead of a plain text answer:\n- Mention **export markets** or a specific country → Export Market Scoring tool opens\n- Mention **FX**, **exchange rate**, or **currency risk** → FX Risk Modeller opens\n- Mention **landed cost**, **duty**, or **import cost** → Landed Cost Calculator opens\n- Mention **churn**, **at-risk customers**, or **customer loss** → Churn Intelligence opens\n- Mention **TikTok**, **Instagram trends**, or **social commerce** → Social Commerce tool opens\n\nYou can also open any tool directly from the sidebar without going through the chat.",
+        body: "When you type certain phrases, AskBiz automatically opens the right specialist tool instead of a plain text answer:\n- Mention **export markets** or a specific country → Export Market Scoring tool opens\n- Mention **FX**, **exchange rate**, or **currency risk** → Exchange Rate Risk opens\n- Mention **landed cost**, **duty**, or **import cost** → Landed Cost Calculator opens\n- Mention **churn**, **at-risk customers**, or **customer loss** → Churn Intelligence opens\n- Mention **TikTok**, **Instagram trends**, or **social commerce** → Social Commerce tool opens\n\nYou can also open any tool directly from the sidebar without going through the chat.",
       },
       {
         heading: "Tips for getting better answers",
@@ -1531,12 +1531,12 @@ export const HELP_ARTICLES: HelpArticle[] = [
   {
     slug: "connect-quickbooks",
     title: "Connect QuickBooks to AskBiz",
-    description: "Connect QuickBooks Online to AskBiz for profit and loss intelligence, cash flow tracking, and expense analysis.",
+    description: "Connect QuickBooks Online to AskBiz for profit and loss intelligence, cash flow tracking, expense analysis, and supplier bill tracking.",
     topic: "Connecting Data Sources",
     topicSlug: "connecting-data",
     readTime: 3,
-    lastUpdated: "2026-04-01",
-    keywords: ["connect quickbooks askbiz", "quickbooks analytics ai", "accounting intelligence"],
+    lastUpdated: "2026-07-01",
+    keywords: ["connect quickbooks askbiz", "quickbooks analytics ai", "accounting intelligence", "quickbooks bills", "quickbooks expenses"],
     content: [
       {
         heading: "Prerequisites",
@@ -1548,18 +1548,23 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Data Synced from QuickBooks",
-        body: "- **Profit & Loss** — revenue, COGS, gross margin, operating expenses, net profit\n- **Balance Sheet** — assets, liabilities, equity\n- **Cash Flow** — operating, investing, and financing activities\n- **Accounts Receivable** — outstanding invoices, average days to pay\n- **Accounts Payable** — supplier balances, upcoming payments\n- **Expenses** — categorised by type, monthly trends",
+        body: "- **Invoices** — sales invoices with payment status (paid, partially paid, pending) and customer detail\n- **Bills** — supplier bills synced directly into CFO Mode expenses, categorised by vendor and account type\n- **Profit & Loss** — revenue, COGS, gross margin, operating expenses, net profit\n- **Balance Sheet** — assets, liabilities, equity\n- **Cash Flow** — operating, investing, and financing activities\n- **Accounts Receivable** — outstanding invoices, average days to pay\n- **Accounts Payable** — supplier balances, upcoming payments",
+      },
+      {
+        heading: "Bills in CFO Mode",
+        body: "QuickBooks Bills are synced directly into your **CFO Mode → Expenses** view alongside any manually entered costs. Each bill shows the vendor name, account category, amount, and due date.\n\nBills are deduped automatically — reconnecting QuickBooks or triggering a manual sync will never create duplicate expense rows. Rows you have manually edited in CFO Mode are never overwritten by a sync.",
       },
       {
         heading: "How AskBiz Uses QuickBooks Data",
-        body: "QuickBooks data feeds the **Cash Flow Health** dimension of your Business Pulse score and enables questions like:\n- *'What's my net profit margin this quarter?'*\n- *'Which expense category has grown fastest this year?'*\n- *'How many days of cash runway do I have?'*\n- *'Which customers have the oldest outstanding invoices?'*",
+        body: "QuickBooks data feeds the **Cash Flow Health** dimension of your Business Pulse score and enables questions like:\n- *'What's my net profit margin this quarter?'*\n- *'Which expense category has grown fastest this year?'*\n- *'How many days of cash runway do I have?'*\n- *'Which customers have the oldest outstanding invoices?'*\n- *'What do I owe suppliers this month?'*",
       },
     ],
     faq: [
-      { q: "Does AskBiz work with Xero?", a: "Xero integration is in development and expected in Q2 2026. For now, you can export a CSV from Xero and upload it via the CSV connector." },
+      { q: "Does AskBiz work with Xero?", a: "Yes — Xero is fully supported. Go to Sources and click Connect next to Xero to link your account." },
       { q: "Can AskBiz create transactions in QuickBooks?", a: "No — AskBiz is read-only. It cannot create, edit, or delete any QuickBooks records." },
+      { q: "Why does a bill show as a different amount than in QuickBooks?", a: "AskBiz syncs the bill's total amount including tax. If your QuickBooks bill has partial payments applied, AskBiz shows the original bill total, not the remaining balance. The payment status (paid / partially paid / pending) is derived from the Balance field in QuickBooks." },
     ],
-    related: ["connect-shopify", "upload-csv-excel", "fx-risk-modeller-guide"],
+    related: ["connect-shopify", "upload-csv-excel", "connect-xero"],
   },
   {
     slug: "upload-csv-excel",
@@ -1599,8 +1604,8 @@ export const HELP_ARTICLES: HelpArticle[] = [
   // ── BUSINESS TOOLS ────────────────────────────────────────────────────────
   {
     slug: "fx-risk-modeller-guide",
-    title: "FX Risk Modeller Guide",
-    description: "How to use the AskBiz FX Risk Modeller. Model currency depreciation scenarios, see per-product margin impact, and protect your export margins.",
+    title: "Exchange Rate Risk Guide",
+    description: "How to use the AskBiz Exchange Rate Risk tool. Model currency depreciation scenarios, see per-product margin impact, and protect your export margins.",
     topic: "Business Tools",
     topicSlug: "business-tools",
     readTime: 5,
@@ -1609,12 +1614,12 @@ export const HELP_ARTICLES: HelpArticle[] = [
     keywords: ["fx risk modeller", "currency risk business", "export margin calculator", "foreign exchange business tool"],
     content: [
       {
-        heading: "What Is the FX Risk Modeller?",
-        body: "The FX Risk Modeller helps you understand how currency movements will affect your margins. If you price products in GBP but pay suppliers in USD or EUR, a currency shift can wipe out your margin without a single business decision changing. This tool makes that risk visible and quantifiable.",
+        heading: "What Is the Exchange Rate Risk Tool?",
+        body: "The Exchange Rate Risk helps you understand how currency movements will affect your margins. If you price products in GBP but pay suppliers in USD or EUR, a currency shift can wipe out your margin without a single business decision changing. This tool makes that risk visible and quantifiable.",
       },
       {
         heading: "Accessing the Tool",
-        body: "Go to `/tools` → **FX Risk Modeller**. If you're on the Growth or Business plan with Shopify or Amazon connected, your products will be pre-loaded. On Free or without a connected source, enter products manually.",
+        body: "Go to `/tools` → **Exchange Rate Risk**. If you're on the Growth or Business plan with Shopify or Amazon connected, your products will be pre-loaded. On Free or without a connected source, enter products manually.",
       },
       {
         heading: "Running a Scenario",
@@ -1776,7 +1781,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
   {
     slug: "business-tools-overview",
     title: "Business Tools Overview",
-    description: "A complete guide to all the free and paid tools available in AskBiz — from the FX Risk Modeller to the Landed Cost Calculator and Social Commerce Intelligence.",
+    description: "A complete guide to all the free and paid tools available in AskBiz — from the Exchange Rate Risk tool to the Landed Cost Calculator and Social Commerce Intelligence.",
     topic: "Business Tools",
     topicSlug: "business-tools",
     readTime: 5,
@@ -1789,8 +1794,8 @@ export const HELP_ARTICLES: HelpArticle[] = [
         body: "Business Tools are standalone calculators and intelligence modules built into AskBiz. They are separate from the AI chat — you use them by navigating to **Calculators & Tools** in the sidebar. Each tool solves a specific business calculation or analysis task that would otherwise require a spreadsheet or specialist software.\n\nWhen you have data connected (POS, Shopify, QuickBooks, etc.), the tool cards on the overview page automatically pre-fill with your real data — so the Landed Cost card shows your top-selling product's true cost breakdown without any input required.",
       },
       {
-        heading: "FX Risk Modeller",
-        body: "The **FX Risk Modeller** quantifies currency risk on international purchases. It pulls from your shipment records and connected channel data to show which foreign currencies you're exposed to and how much a 10% exchange rate move would cost you.\n\nThe card shows live data when you have shipments with foreign currency values recorded. If all your costs are in your local currency, the card will note that no import costs were detected — this is correct behaviour, not a data problem.\n\nBest for: businesses that source stock in foreign currencies (USD, CNY, EUR, etc.).\n\n→ [Use the FX Risk Modeller](/free-tools/fx-risk-modeller)",
+        heading: "Exchange Rate Risk",
+        body: "The **Exchange Rate Risk** quantifies currency risk on international purchases. It pulls from your shipment records and connected channel data to show which foreign currencies you're exposed to and how much a 10% exchange rate move would cost you.\n\nThe card shows live data when you have shipments with foreign currency values recorded. If all your costs are in your local currency, the card will note that no import costs were detected — this is correct behaviour, not a data problem.\n\nBest for: businesses that source stock in foreign currencies (USD, CNY, EUR, etc.).\n\n→ [Use the Exchange Rate Risk](/free-tools/fx-risk-modeller)",
       },
       {
         heading: "Landed Cost Calculator",
@@ -1806,13 +1811,13 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Free vs. Paid Tools",
-        body: "The **FX Risk Modeller** and **Landed Cost Calculator** are fully free — no account required. All other Business Tools (Supplier Scorecard, Social Commerce Intelligence, live data pre-fill) require a Growth or Business plan. On the free plan, tools accept manual input; on paid plans, your connected data pre-fills the inputs automatically.",
+        body: "The **Exchange Rate Risk** and **Landed Cost Calculator** are fully free — no account required. All other Business Tools (Supplier Scorecard, Social Commerce Intelligence, live data pre-fill) require a Growth or Business plan. On the free plan, tools accept manual input; on paid plans, your connected data pre-fills the inputs automatically.",
       },
     ],
     faq: [
       { q: "Can I use the tools without connecting any data?", a: "Yes. All tools accept manual input. Connecting your data (Shopify, QuickBooks, POS) pre-fills the inputs automatically, saving time and reducing errors — but it is not required." },
       { q: "The Landed Cost card says 'No product cost data found' even though I have products. What does that mean?", a: "This means your products don't have a cost price set. Go to POS → Inventory, open each product, and add the cost price (what you paid for it). Once cost prices are saved, the Landed Cost card will calculate your true landed cost automatically." },
-      { q: "Are the free tools really free?", a: "Yes. The FX Risk Modeller and Landed Cost Calculator at askbiz.co/free-tools are completely free with no account required." },
+      { q: "Are the free tools really free?", a: "Yes. The Exchange Rate Risk and Landed Cost Calculator at askbiz.co/free-tools are completely free with no account required." },
     ],
     related: ["fx-risk-modeller-guide", "landed-cost-calculator-guide", "social-commerce-guide"],
   },
@@ -1834,7 +1839,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Saving Multiple Scenarios",
-        body: "You can save multiple versions of the same tool with different inputs — useful for scenario planning. For example, save three FX Risk Modeller runs with optimistic, base, and pessimistic exchange rate assumptions. Each saved result is independent; changing inputs in one does not affect the others.",
+        body: "You can save multiple versions of the same tool with different inputs — useful for scenario planning. For example, save three Exchange Rate Risk runs with optimistic, base, and pessimistic exchange rate assumptions. Each saved result is independent; changing inputs in one does not affect the others.",
       },
       {
         heading: "Sharing Results Externally",
@@ -1865,7 +1870,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     content: [
       {
         heading: "Tools as a Decision Framework",
-        body: "Business Tools work best when used at the moment of a specific decision — not as ongoing dashboards. Think of them as calculators you reach for when you have a concrete question:\n- *Should I switch to a cheaper supplier in Vietnam?* → Landed Cost Calculator\n- *What if the pound drops 10% before my invoice is due?* → FX Risk Modeller\n- *Which of my suppliers is a liability?* → Supplier Scorecard\n- *Is this TikTok trend worth acting on?* → Social Commerce Intelligence",
+        body: "Business Tools work best when used at the moment of a specific decision — not as ongoing dashboards. Think of them as calculators you reach for when you have a concrete question:\n- *Should I switch to a cheaper supplier in Vietnam?* → Landed Cost Calculator\n- *What if the pound drops 10% before my invoice is due?* → Exchange Rate Risk\n- *Which of my suppliers is a liability?* → Supplier Scorecard\n- *Is this TikTok trend worth acting on?* → Social Commerce Intelligence",
       },
       {
         heading: "Landed Cost for Pricing Strategy",
@@ -1873,7 +1878,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "FX Risk for Cash Flow Planning",
-        body: "If you have large international payments due in the next 90 days, run the FX Risk Modeller for each one. Save the outputs as 'worst case', 'base case', and 'best case' scenarios. Add these to your cash flow dashboard as a planning overlay — this shows your team the range of possible cash positions depending on exchange rate movements, and helps you decide whether to hedge.",
+        body: "If you have large international payments due in the next 90 days, run the Exchange Rate Risk for each one. Save the outputs as 'worst case', 'base case', and 'best case' scenarios. Add these to your cash flow dashboard as a planning overlay — this shows your team the range of possible cash positions depending on exchange rate movements, and helps you decide whether to hedge.",
       },
       {
         heading: "Supplier Scorecard for Annual Reviews",
@@ -1885,7 +1890,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
     ],
     faq: [
-      { q: "Can I use Business Tools on mobile?", a: "Yes. Business Tools are fully accessible on the AskBiz mobile app (iOS and Android). The FX Risk Modeller and Landed Cost Calculator are optimised for mobile input." },
+      { q: "Can I use Business Tools on mobile?", a: "Yes. Business Tools are fully accessible on the AskBiz mobile app (iOS and Android). The Exchange Rate Risk and Landed Cost Calculator are optimised for mobile input." },
       { q: "Is there a limit to how many calculations I can save?", a: "Free plan: up to 5 saved calculations. Growth plan: 50. Business plan: unlimited." },
     ],
     related: ["business-tools-overview", "fx-risk-modeller-guide", "landed-cost-calculator-guide"],
@@ -2598,7 +2603,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Key Endpoints",
-        body: "- `GET /pulse` — current Business Pulse score and dimension breakdown\n- `GET /alerts` — list of active anomaly alerts\n- `GET /brief/latest` — today's Daily Brief as structured JSON\n- `POST /ask` — submit a question; returns AI answer as JSON\n- `POST /data/push` — push custom data records to your AskBiz dataset\n- `GET /tools/fx-risk` — retrieve FX Risk Modeller results\n- `GET /tools/landed-cost` — run a landed cost calculation",
+        body: "- `GET /pulse` — current Business Pulse score and dimension breakdown\n- `GET /alerts` — list of active anomaly alerts\n- `GET /brief/latest` — today's Daily Brief as structured JSON\n- `POST /ask` — submit a question; returns AI answer as JSON\n- `POST /data/push` — push custom data records to your AskBiz dataset\n- `GET /tools/fx-risk` — retrieve Exchange Rate Risk results\n- `GET /tools/landed-cost` — run a landed cost calculation",
       },
       {
         heading: "Use Cases",
@@ -7388,7 +7393,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "Managing FX Volatility in Your Export Pricing",
-        body: "If you price in your home currency (e.g. GBP), FX movements change your effective local price without you doing anything. A 10% weakening of GBP vs EUR means your product becomes 10% cheaper for German customers — good for sales, but a signal that you may have room to raise EUR prices and capture the margin.\n\nBest practice for export pricing:\n- **Price in local currency** where you have significant volumes — this gives customers a stable price and puts FX risk on you to manage (hedge or absorb)\n- **Review export prices quarterly** for FX impact\n- **Use the FX Risk Modeller** to model your revenue exposure before entering a new market\n- **Hedge material exposures** — if you invoice > £10k/month in foreign currency, consider a forward contract to fix your rate",
+        body: "If you price in your home currency (e.g. GBP), FX movements change your effective local price without you doing anything. A 10% weakening of GBP vs EUR means your product becomes 10% cheaper for German customers — good for sales, but a signal that you may have room to raise EUR prices and capture the margin.\n\nBest practice for export pricing:\n- **Price in local currency** where you have significant volumes — this gives customers a stable price and puts FX risk on you to manage (hedge or absorb)\n- **Review export prices quarterly** for FX impact\n- **Use the Exchange Rate Risk** to model your revenue exposure before entering a new market\n- **Hedge material exposures** — if you invoice > £10k/month in foreign currency, consider a forward contract to fix your rate",
       },
     ],
     faq: [
@@ -7673,8 +7678,8 @@ export const HELP_ARTICLES: HelpArticle[] = [
         body: "**Transaction risk:** the risk on specific invoiced transactions. You invoiced €10,000; by the time it's paid, the EUR/GBP rate has moved and you receive £8,000 instead of the £8,500 you expected.\n\n**Translation risk:** the risk that the GBP value of foreign-currency assets, revenues, or costs changes when you consolidate your accounts.\n\n**Economic risk:** the longer-term risk that exchange rate shifts make your prices uncompetitive in foreign markets (e.g. if GBP strengthens significantly, your EUR prices become expensive relative to local competitors).\n\nFor most SME exporters, **transaction risk** is the most immediate and manageable concern.",
       },
       {
-        heading: "Using the AskBiz FX Risk Modeller",
-        body: "The AskBiz FX Risk Modeller quantifies your transaction risk on specific invoices or payment schedules:\n1. Go to **Business Tools → FX Risk Modeller** (or /free-tools/fx-risk-modeller)\n2. Enter the invoice amount, currency pair, and expected payment date\n3. The tool shows: expected GBP value, worst-case scenario at current volatility, and cost-of-hedging estimates\n4. Save the output to your dashboard for reference when making hedging decisions\n\nFor a portfolio of international invoices, ask AskBiz: *'What is my total USD receivables exposure this quarter and what is my downside risk at current volatility?'*",
+        heading: "Using the AskBiz Exchange Rate Risk Tool",
+        body: "The AskBiz Exchange Rate Risk quantifies your transaction risk on specific invoices or payment schedules:\n1. Go to **Business Tools → Exchange Rate Risk** (or /free-tools/fx-risk-modeller)\n2. Enter the invoice amount, currency pair, and expected payment date\n3. The tool shows: expected GBP value, worst-case scenario at current volatility, and cost-of-hedging estimates\n4. Save the output to your dashboard for reference when making hedging decisions\n\nFor a portfolio of international invoices, ask AskBiz: *'What is my total USD receivables exposure this quarter and what is my downside risk at current volatility?'*",
       },
       {
         heading: "Hedging Options",
