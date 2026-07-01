@@ -35,7 +35,7 @@ export default function AuthPage() {
     return base
   }
 
-  const getPostAuthRedirect = () => shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/chat'
+  const getPostAuthRedirect = () => shopifyShop ? `/api/shopify/link-pending?shop=${shopifyShop}` : '/pos'
 
   const executeAuth = async (action: 'email' | 'google' | 'apple' | 'azure') => {
     setError(''); setSuccess(''); setLoading(true)
@@ -307,6 +307,16 @@ export default function AuthPage() {
           <p style={{ fontSize: 11, color: 'var(--tx3)', textAlign: 'center', lineHeight: 1.6, marginTop: 8 }}>
             {tc('auth.age_confirm')}{' '}
             <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--tx2)', textDecoration: 'underline' }}>{tc('auth.privacy_policy')}</a>.
+          </p>
+        )}
+
+        {/* Quick switch for signup mode */}
+        {mode === 'signup' && (
+          <p style={{ fontSize: 13, color: 'var(--tx3)', textAlign: 'center', marginTop: 12 }}>
+            Already have an account?{' '}
+            <button onClick={() => setMode('signin')} style={{ background: 'none', border: 'none', color: 'var(--acc)', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: 0 }}>
+              Sign in
+            </button>
           </p>
         )}
 

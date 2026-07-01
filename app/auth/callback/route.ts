@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type')
-  const next = searchParams.get('next') ?? '/chat'
+  const next = searchParams.get('next') ?? '/pos'
   // If next is a Shopify link-pending route, always honour it (even for new users)
   const isShopifyLink = next.startsWith('/api/shopify/link-pending')
 

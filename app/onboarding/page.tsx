@@ -20,15 +20,23 @@ const BG   = '#f9f8f6'
 const STEPS = ['welcome', 'business', 'location', 'sector', 'export', 'connect', 'done'] as const
 type Step = typeof STEPS[number]
 
+// Business types that need a sector (product category) step
+const NEEDS_SECTOR = new Set(['ecommerce', 'distributor', 'manufacturer', 'importer', 'exporter'])
+// Business types that should see the export markets step
+const NEEDS_EXPORT = new Set(['exporter', 'ecommerce', 'importer'])
+
 const buildBizTypes = (tc: TC) => [
-  { id: 'ecommerce',    label: tc('onboarding.biz_ecommerce_label'),    icon: '🛒', desc: tc('onboarding.biz_ecommerce_desc') },
   { id: 'retail',       label: tc('onboarding.biz_retail_label'),       icon: '🏪', desc: tc('onboarding.biz_retail_desc') },
+  { id: 'market_stall', label: tc('onboarding.biz_market_stall_label'), icon: '🧺', desc: tc('onboarding.biz_market_stall_desc') },
+  { id: 'food_bev',     label: tc('onboarding.biz_food_bev_label'),     icon: '🍽️', desc: tc('onboarding.biz_food_bev_desc') },
+  { id: 'salon',        label: tc('onboarding.biz_salon_label'),        icon: '✂️', desc: tc('onboarding.biz_salon_desc') },
+  { id: 'courier',      label: tc('onboarding.biz_courier_label'),      icon: '🛵', desc: tc('onboarding.biz_courier_desc') },
+  { id: 'ecommerce',    label: tc('onboarding.biz_ecommerce_label'),    icon: '🛒', desc: tc('onboarding.biz_ecommerce_desc') },
+  { id: 'services',     label: tc('onboarding.biz_services_label'),     icon: '💼', desc: tc('onboarding.biz_services_desc') },
   { id: 'distributor',  label: tc('onboarding.biz_distributor_label'),  icon: '🚚', desc: tc('onboarding.biz_distributor_desc') },
   { id: 'manufacturer', label: tc('onboarding.biz_manufacturer_label'), icon: '🏭', desc: tc('onboarding.biz_manufacturer_desc') },
   { id: 'importer',     label: tc('onboarding.biz_importer_label'),     icon: '📦', desc: tc('onboarding.biz_importer_desc') },
   { id: 'exporter',     label: tc('onboarding.biz_exporter_label'),     icon: '🌍', desc: tc('onboarding.biz_exporter_desc') },
-  { id: 'services',     label: tc('onboarding.biz_services_label'),     icon: '💼', desc: tc('onboarding.biz_services_desc') },
-  { id: 'food_bev',     label: tc('onboarding.biz_food_bev_label'),     icon: '🍽️', desc: tc('onboarding.biz_food_bev_desc') },
 ]
 
 const SECTOR_IDS = [
@@ -113,11 +121,18 @@ export default function OnboardingPage() {
     setExportMkts(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
 
   const next = () => {
+    // Skip sector for informal business types (shops, salons, couriers, food stalls, etc.)
+    if (step === 'location' && !NEEDS_SECTOR.has(bizType)) { setStep('connect'); return }
+    // Skip export markets for non-exporters
+    if (step === 'sector' && !NEEDS_EXPORT.has(bizType)) { setStep('connect'); return }
     const idx = STEPS.indexOf(step)
     if (idx < STEPS.length - 1) setStep(STEPS[idx + 1])
   }
 
   const back = () => {
+    // Reverse the same skips
+    if (step === 'connect' && !NEEDS_SECTOR.has(bizType)) { setStep('location'); return }
+    if (step === 'connect' && NEEDS_SECTOR.has(bizType) && !NEEDS_EXPORT.has(bizType)) { setStep('sector'); return }
     const idx = STEPS.indexOf(step)
     if (idx > 0) setStep(STEPS[idx - 1])
   }
@@ -415,14 +430,24 @@ export default function OnboardingPage() {
                 {tc('onboarding.connect_subtitle')}
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 28 }}>
-                {[
-                  { icon: '🛍️', label: tc('onboarding.connect_source_shopify') },
-                  { icon: '📦', label: tc('onboarding.connect_source_amazon') },
-                  { icon: '📒', label: tc('onboarding.connect_source_quickbooks') },
-                  { icon: '💳', label: tc('onboarding.connect_source_stripe') },
-                  { icon: '📊', label: tc('onboarding.connect_source_sheets') },
-                  { icon: '🎵', label: tc('onboarding.connect_source_tiktok') },
-                ].map(s => (
+                {(NEEDS_SECTOR.has(bizType)
+                  ? [
+                      { icon: '📱', label: 'M-Pesa' },
+                      { icon: '🛍️', label: tc('onboarding.connect_source_shopify') },
+                      { icon: '📒', label: tc('onboarding.connect_source_quickbooks') },
+                      { icon: '💳', label: tc('onboarding.connect_source_stripe') },
+                      { icon: '📦', label: tc('onboarding.connect_source_amazon') },
+                      { icon: '📊', label: tc('onboarding.connect_source_sheets') },
+                    ]
+                  : [
+                      { icon: '📱', label: 'M-Pesa' },
+                      { icon: '📱', label: 'MTN Money' },
+                      { icon: '📱', label: 'Airtel Money' },
+                      { icon: '💳', label: tc('onboarding.connect_source_stripe') },
+                      { icon: '🛍️', label: tc('onboarding.connect_source_shopify') },
+                      { icon: '📒', label: tc('onboarding.connect_source_quickbooks') },
+                    ]
+                ).map(s => (
                   <div key={s.label} style={{ padding: '14px 10px', borderRadius: 12, border: `1px solid ${B}`, background: SF, textAlign: 'center' }}>
                     <div style={{ fontSize: 24, marginBottom: 6 }}>{s.icon}</div>
                     <div style={{ fontSize: 12, color: TX2, fontWeight: 500 }}>{s.label}</div>

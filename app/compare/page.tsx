@@ -9,13 +9,96 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t('compare.meta_title'),
     description: t('compare.meta_description'),
-    alternates: { canonical: `https://askbiz.co${localePath('/compare', locale)}` },
+    alternates: {
+      canonical: `https://askbiz.co${localePath('/compare', locale)}`,
+      languages: {
+        'x-default': 'https://askbiz.co/compare',
+        'en': 'https://askbiz.co/compare',
+        'en-KE': 'https://askbiz.co/compare',
+        'en-NG': 'https://askbiz.co/compare',
+        'en-UG': 'https://askbiz.co/compare',
+        'en-GB': 'https://askbiz.co/compare',
+        'en-US': 'https://askbiz.co/compare',
+      },
+    },
     openGraph: {
       title: t('compare.og_title'),
       description: t('compare.og_description'),
       url: `https://askbiz.co${localePath('/compare', locale)}`,
+      type: 'website',
+      siteName: 'AskBiz',
+      images: [{ url: 'https://askbiz.co/og-image.png', width: 1200, height: 630, alt: 'AskBiz vs Shopify vs Power BI — phone POS comparison' }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t('compare.og_title'),
+      description: t('compare.og_description'),
+      images: ['https://askbiz.co/og-image.png'],
     },
   }
+}
+
+const COMPARE_BREADCRUMB_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://askbiz.co' },
+    { '@type': 'ListItem', position: 2, name: 'Compare', item: 'https://askbiz.co/compare' },
+  ],
+}
+
+const COMPARE_SOFTWARE_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'AskBiz',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web, Android, iOS',
+  url: 'https://askbiz.co',
+  description: 'Phone POS and daily business tracker for market stalls, street vendors, and small businesses. Take M-Pesa, cash, or card. Camera scan, no hardware needed.',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'GBP', description: 'Free to start — no card required. POS add-on from £5/seat/month.' },
+  publisher: { '@type': 'Organization', name: 'AskBiz', url: 'https://askbiz.co' },
+}
+
+const COMPARE_FAQ_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'How does AskBiz compare to Shopify?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Shopify is an ecommerce platform built for online stores. AskBiz is a phone POS built for in-person selling — market stalls, street vendors, and physical shops. AskBiz supports M-Pesa, MTN, and Airtel natively and requires no hardware. It starts free vs Shopify\'s $29/month minimum.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'How does AskBiz compare to Power BI?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Power BI is a business intelligence tool requiring a data team and technical setup. AskBiz is designed for business owners who want to know what they made today without a spreadsheet or IT department. It combines POS, stock tracking, and daily reporting in one phone app.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'Does AskBiz work without internet?',
+      acceptedAnswer: { '@type': 'Answer', text: 'AskBiz works best with a data connection. For low-connectivity environments, it is optimised for 2G/3G speeds common in Kenya, Nigeria, and Uganda.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'How does AskBiz compare to Square?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Square requires a card reader (hardware) and charges transaction fees from day one. AskBiz requires no hardware — your phone is your till. AskBiz also supports M-Pesa, MTN Mobile Money, and Airtel Money, which Square does not. AskBiz is free to start with no card required.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'How does AskBiz compare to SumUp or iZettle?',
+      acceptedAnswer: { '@type': 'Answer', text: 'SumUp and iZettle both require a physical card reader to take payments. AskBiz takes M-Pesa, MTN Mobile Money, Airtel Money, and cash — all from your phone, with no hardware. For businesses in Africa where mobile money is the primary payment method, SumUp and iZettle are not viable alternatives.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'How does AskBiz compare to Yoco?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Yoco is a South Africa-focused card payment solution that requires a card machine. AskBiz works across all of Africa with no hardware — just a phone. AskBiz supports M-Pesa (Kenya), MTN Mobile Money (Nigeria, Uganda, Ghana), and Airtel Money, plus cash and card via Stripe. It also includes stock management, daily reporting, and staff tracking that Yoco does not offer.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'What cities and countries does AskBiz serve?',
+      acceptedAnswer: { '@type': 'Answer', text: 'AskBiz is used by businesses in Nairobi, Lagos, Kampala, Accra, Dar es Salaam, Abuja, Abidjan, Lusaka, Harare, Kigali, and across Africa, as well as the United Kingdom. Pricing is available in KES, NGN, GHS, UGX, ZAR, GBP, USD, and more.' },
+    },
+  ],
 }
 
 type T = (key: string) => string
@@ -131,11 +214,24 @@ export default function ComparePage() {
   const ROWS = buildRows(t)
   const VERDICT = buildVerdict(t)
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(COMPARE_BREADCRUMB_LD) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(COMPARE_SOFTWARE_LD) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(COMPARE_FAQ_LD) }} />
     <div style={{ background: C.bg, minHeight: '100vh' }}>
       <style>{`
         @media (max-width: 767px) { .compare-table { display: none } .compare-mobile { display: block !important } }
         @media (min-width: 768px) { .compare-mobile { display: none !important } }
       `}</style>
+
+      {/* Breadcrumb */}
+      <nav aria-label="Breadcrumb" style={{ background: 'rgba(249,248,246,.9)', borderBottom: `1px solid ${C.b}`, padding: '0 clamp(16px,4vw,32px)' }}>
+        <ol style={{ listStyle: 'none', margin: 0, padding: '7px 0', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: C.tx3 }}>
+          <li><Link href={localePath('/', locale)} style={{ color: C.tx3, textDecoration: 'none' }}>Home</Link></li>
+          <li style={{ margin: '0 2px' }}>›</li>
+          <li style={{ color: C.tx2, fontWeight: 500 }}>Compare</li>
+        </ol>
+      </nav>
 
       {/* Nav */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(249,248,246,.96)', backdropFilter: 'blur(16px)', borderBottom: `1px solid ${C.b}`, padding: '0 clamp(16px,4vw,32px)', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -277,5 +373,6 @@ export default function ComparePage() {
         ))}
       </footer>
     </div>
+    </>
   )
 }

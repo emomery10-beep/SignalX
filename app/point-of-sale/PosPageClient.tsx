@@ -117,6 +117,15 @@ export default function PosPageClient() {
         }
       `}</style>
 
+      {/* Breadcrumb */}
+      <nav aria-label="Breadcrumb" style={{ background:'rgba(249,248,246,.9)', borderBottom:`1px solid ${C.b}`, padding:'0 clamp(16px,4vw,32px)' }}>
+        <ol style={{ listStyle:'none', margin:0, padding:'7px 0', display:'flex', alignItems:'center', gap:4, fontSize:12, color:C.tx3 }}>
+          <li><Link href={localePath('/', lang as Locale)} style={{ color:C.tx3, textDecoration:'none' }}>Home</Link></li>
+          <li style={{ margin:'0 2px' }}>›</li>
+          <li style={{ color:C.tx2, fontWeight:500 }}>Point of Sale</li>
+        </ol>
+      </nav>
+
       {/* Nav */}
       <nav style={{ position:'sticky', top:0, zIndex:50, background:'rgba(249,248,246,.96)', backdropFilter:'blur(16px)', borderBottom:`1px solid ${C.b}`, padding:'0 clamp(16px,4vw,32px)', height:56, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <Link href={localePath('/', lang as Locale)} style={{ fontFamily:'var(--font-sora)', fontSize:18, fontWeight:800, color:C.tx, textDecoration:'none', letterSpacing:'-.03em' }}>

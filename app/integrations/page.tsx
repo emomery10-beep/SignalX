@@ -10,8 +10,53 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t('integrations_page.meta_title'),
     description: t('integrations_page.meta_description'),
-    alternates: { canonical: `https://askbiz.co${localePath('/integrations', locale)}` },
+    alternates: {
+      canonical: `https://askbiz.co${localePath('/integrations', locale)}`,
+      languages: {
+        'x-default': 'https://askbiz.co/integrations',
+        'en': 'https://askbiz.co/integrations',
+        'en-KE': 'https://askbiz.co/integrations',
+        'en-NG': 'https://askbiz.co/integrations',
+        'en-UG': 'https://askbiz.co/integrations',
+        'en-GB': 'https://askbiz.co/integrations',
+        'en-US': 'https://askbiz.co/integrations',
+      },
+    },
+    openGraph: {
+      title: t('integrations_page.og_title'),
+      description: t('integrations_page.og_description'),
+      url: `https://askbiz.co${localePath('/integrations', locale)}`,
+      type: 'website',
+      siteName: 'AskBiz',
+      images: [{ url: 'https://askbiz.co/og-image.png', width: 1200, height: 630, alt: 'AskBiz Integrations — M-Pesa, Shopify, Xero and more' }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t('integrations_page.og_title'),
+      description: t('integrations_page.og_description'),
+      images: ['https://askbiz.co/og-image.png'],
+    },
   }
+}
+
+const INTEGRATIONS_BREADCRUMB_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://askbiz.co' },
+    { '@type': 'ListItem', position: 2, name: 'Integrations', item: 'https://askbiz.co/integrations' },
+  ],
+}
+
+const INTEGRATIONS_SOFTWARE_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'AskBiz',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web, Android, iOS',
+  url: 'https://askbiz.co',
+  description: 'Phone POS and business tracker that connects to M-Pesa, MTN Mobile Money, Airtel, Shopify, Xero, QuickBooks, Stripe, Meta Ads, and 25+ more tools. One tap to connect.',
+  publisher: { '@type': 'Organization', name: 'AskBiz', url: 'https://askbiz.co' },
 }
 
 const ACC = '#d08a59'
@@ -25,12 +70,37 @@ const BD  = '#e8e6e1'
 export default function IntegrationsPage() {
   const t = getT()
   const locale = getLocale()
+  const INTEGRATIONS_ITEM_LIST_LD = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'AskBiz Integrations',
+    description: 'Payment, ecommerce, accounting, and marketing integrations supported by AskBiz',
+    itemListElement: INTEGRATIONS.slice(0, 20).map((int, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: int.name,
+      url: `https://askbiz.co/integrations/${int.slug}`,
+    })),
+  }
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(INTEGRATIONS_BREADCRUMB_LD) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(INTEGRATIONS_SOFTWARE_LD) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(INTEGRATIONS_ITEM_LIST_LD) }} />
     <div style={{ fontFamily: 'DM Sans, system-ui', background: BG, minHeight: '100vh' }}>
       <style>{`
         .int-card { transition: transform 140ms, box-shadow 140ms; }
         .int-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.09) !important; }
       `}</style>
+
+      {/* Breadcrumb */}
+      <nav aria-label="Breadcrumb" style={{ background: SF, borderBottom: `1px solid ${BD}`, padding: '0 clamp(16px,4vw,24px)' }}>
+        <ol style={{ listStyle: 'none', margin: 0, padding: '7px 0', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: TX3 }}>
+          <li><Link href={localePath('/', locale)} style={{ color: TX3, textDecoration: 'none' }}>Home</Link></li>
+          <li style={{ margin: '0 2px' }}>›</li>
+          <li style={{ color: TX2, fontWeight: 500 }}>Connect your tools</li>
+        </ol>
+      </nav>
 
       <nav style={{ borderBottom: `1px solid ${BD}`, background: SF, padding: '0 clamp(16px,4vw,24px)', height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
         <Link href={localePath('/', locale)} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: TX }}>
@@ -56,6 +126,24 @@ export default function IntegrationsPage() {
           <p style={{ fontSize: 15, color: TX2, maxWidth: 480, lineHeight: 1.7, marginBottom: 0 }}>
             {t('integrations_page.hero_subtitle', { count: INTEGRATIONS.length })}
           </p>
+        </div>
+      </section>
+
+      {/* Mobile money callout — Africa-first context */}
+      <section style={{ background: SF, borderBottom: `1px solid ${BD}`, padding: 'clamp(24px,3vw,40px) clamp(16px,4vw,32px)' }}>
+        <div style={{ maxWidth: 1060, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: 40, alignItems: 'flex-start' }}>
+          <div style={{ flex: '1 1 300px' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: ACC, letterSpacing: '.14em', textTransform: 'uppercase', marginBottom: 10 }}>Mobile money — Africa built in</p>
+            <p style={{ fontSize: 14, color: TX2, lineHeight: 1.75, margin: 0 }}>
+              M-Pesa, MTN Mobile Money, and Airtel Money are connected out of the box — no developer, no API keys, no setup fee. If your customers pay by mobile money in Nairobi, Lagos, Kampala, Accra, or anywhere across Africa, AskBiz handles it automatically and updates your stock and daily report in real time.
+            </p>
+          </div>
+          <div style={{ flex: '1 1 300px' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: TX3, letterSpacing: '.14em', textTransform: 'uppercase', marginBottom: 10 }}>eCommerce & accounting</p>
+            <p style={{ fontSize: 14, color: TX2, lineHeight: 1.75, margin: 0 }}>
+              Connect Shopify, WooCommerce, Amazon, TikTok Shop, Xero, or QuickBooks in one tap. Your sales, stock levels, and profit margins sync automatically — no CSV exports, no manual reconciliation, no spreadsheet at the end of the day.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -125,5 +213,6 @@ export default function IntegrationsPage() {
         </div>
       </footer>
     </div>
+    </>
   )
 }

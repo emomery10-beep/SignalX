@@ -560,7 +560,7 @@ function SourcesUIReplica({tc}:{tc:(k:string)=>string}) {
         <span style={{fontSize:9,color:'#16a34a',fontWeight:700}}>{tc('landing.src_connected_count')}</span>
         <span style={{fontSize:8,color:'#AAA'}}>{tc('landing.src_connected_synced')}</span>
       </div>
-      <div style={{maxHeight:300,overflowY:'auto'}}>
+      <div style={{maxHeight:300,overflowY:'hidden'}}>
         {[
           {cat:tc('landing.src_cat_mobile_money'),items:[
             {icon:'🟢',name:'M-Pesa',desc:tc('landing.src_desc_mpesa'),status:'connected'},
@@ -1388,56 +1388,22 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
         {/* Desktop nav */}
         <div className="nav-links" style={{ display:'flex',alignItems:'center',gap:0,flex:1,justifyContent:'center' }}>
-          {/* Product links */}
           {[
-            ['/free-tools',tc('landing.nav_free_tools')],
-            ['/point-of-sale',tc('landing.nav_point_of_sale')],
-            ['/integrations',tc('landing.nav_integrations')],
+            ['#pos',tc('landing.nav_how_it_works')],
+            ['#pricing',tc('landing.nav_pricing')],
+            ['/help',tc('landing.nav_help')],
           ].map(([href,label])=>(
-            <Link key={href} href={localePath(href, lang as Locale)} className="nav-link" style={{ fontSize:12,color:T.tx2,textDecoration:'none',padding:'0 9px',transition:'color 150ms',whiteSpace:'nowrap' }}>{label}</Link>
+            <a key={href} href={href} className="nav-link" style={{ fontSize:13,color:T.tx2,textDecoration:'none',padding:'0 14px',transition:'color 150ms',whiteSpace:'nowrap' }}>{label}</a>
           ))}
-
-          {/* Resources mega-dropdown */}
-          <NavDropdown lang={lang as Locale} label={tc('landing.nav_resources')} items={[
-            {group:tc('landing.nav_group_learn'), links:[
-              {href:'/academy',label:tc('landing.nav_academy_label'),desc:tc('landing.nav_academy_desc')},
-              {href:'/blog',label:tc('landing.nav_blog_label'),desc:tc('landing.nav_blog_desc')},
-              {href:'/how-to',label:tc('landing.nav_howto_label'),desc:tc('landing.nav_howto_desc')},
-              {href:'/academy/learning-paths',label:tc('landing.nav_learning_paths_label'),desc:tc('landing.nav_learning_paths_desc')},
-            ]},
-            {group:tc('landing.nav_group_reference'), links:[
-              {href:'/glossary',label:tc('landing.nav_glossary_label'),desc:tc('landing.nav_glossary_desc')},
-              {href:'/benchmarks',label:tc('landing.nav_benchmarks_label'),desc:tc('landing.nav_benchmarks_desc')},
-              {href:'/free-tools',label:tc('landing.nav_all_free_tools_label'),desc:tc('landing.nav_all_free_tools_desc')},
-              {href:'/case-studies',label:tc('landing.nav_case_studies_label'),desc:tc('landing.nav_case_studies_desc')},
-            ]},
-            {group:tc('landing.nav_group_company'), links:[
-              {href:'/changelog',label:tc('landing.nav_changelog_label'),desc:tc('landing.nav_changelog_desc')},
-              {href:'/developers',label:tc('landing.nav_developers_label'),desc:tc('landing.nav_developers_desc')},
-              {href:'/transparency',label:tc('landing.nav_transparency_label'),desc:tc('landing.nav_transparency_desc')},
-            ]},
-          ]}/>
-
-          {/* Support */}
-          <NavDropdown lang={lang as Locale} label={tc('landing.nav_support')} items={[
-            {group:tc('landing.nav_group_help'), links:[
-              {href:'/help',label:tc('landing.nav_help_centre_label'),desc:tc('landing.nav_help_centre_desc')},
-              {href:'/help/faq',label:tc('landing.nav_faq_label'),desc:tc('landing.nav_faq_desc')},
-              {href:'/help/glossary',label:tc('landing.nav_metric_glossary_label'),desc:tc('landing.nav_metric_glossary_desc')},
-            ]},
-          ]}/>
-
-          <Link href="#pricing" className="nav-link" style={{ fontSize:12,color:T.tx2,textDecoration:'none',padding:'0 9px',whiteSpace:'nowrap',transition:'color 150ms' }}>{tc('landing.nav_pricing')}</Link>
         </div>
 
-        <div style={{ display:'flex',alignItems:'center',gap:6,flexShrink:0 }}>
+        <div style={{ display:'flex',alignItems:'center',gap:8,flexShrink:0 }}>
           <LanguageToggle />
-          <Link href={localePath('/signin', lang as Locale)} style={{ display:'flex',alignItems:'center',gap:7,padding:'7px 14px',borderRadius:8,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,cursor:'pointer',textDecoration:'none',fontSize:13,fontWeight:500,whiteSpace:'nowrap' }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
+          <Link href={localePath('/signin', lang as Locale)} style={{ fontSize:13,color:T.tx2,textDecoration:'none',padding:'0 4px',fontWeight:500,whiteSpace:'nowrap' }}>
             {tc('landing.nav_sign_in')}
+          </Link>
+          <Link href={localePath('/signin?mode=signup', lang as Locale)} style={{ fontSize:13,fontWeight:700,color:'#fff',background:T.acc,borderRadius:9999,padding:'8px 18px',textDecoration:'none',whiteSpace:'nowrap',boxShadow:'0 2px 12px rgba(208,138,89,.3)' }}>
+            {tc('landing.nav_get_started')}
           </Link>
         </div>
 
@@ -1455,32 +1421,18 @@ function LandingInner({ geo }: { geo: Geo | null }) {
       {menuOpen&&(
         <div style={{ display:'flex',flexDirection:'column',position:'fixed',top:56,left:0,right:0,bottom:0,background:T.bg,zIndex:49,overflowY:'auto',padding:'8px 20px 32px' }}>
           {[
-            ['',tc('landing.mobile_section_product'),''],
-            ['/free-tools',tc('landing.nav_free_tools'),''],
-            ['/point-of-sale',tc('landing.nav_point_of_sale'),''],
-            ['/integrations',tc('landing.nav_integrations'),''],
-            ['',tc('landing.mobile_section_learn'),''],
-            ['/academy',tc('landing.nav_academy_label'),''],
-            ['/blog',tc('landing.nav_blog_label'),''],
-            ['/how-to',tc('landing.nav_howto_label'),''],
-            ['/case-studies',tc('landing.nav_case_studies_label'),''],
-            ['/glossary',tc('landing.nav_glossary_label'),''],
-            ['/benchmarks',tc('landing.nav_benchmarks_label'),''],
-            ['',tc('landing.mobile_section_company'),''],
-            ['/changelog',tc('landing.nav_changelog_label'),''],
-            ['/developers',tc('landing.nav_developers_label'),''],
-            ['/help',tc('landing.nav_help_centre_label'),''],
-            ['/help/faq',tc('landing.nav_faq_label'),''],
-            ['#pricing',tc('landing.nav_pricing'),''],
-          ].map(([href,label],i)=>
-            !href ? (
-              <div key={i} style={{ padding:'12px 12px 4px',fontSize:9,fontWeight:700,color:T.acc,letterSpacing:'.12em',textTransform:'uppercase' }}>{label}</div>
-            ) : (
-              <a key={href} href={href.startsWith('#') ? href : localePath(href, lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'11px 12px',fontSize:14,fontWeight:500,color:T.tx,textDecoration:'none',borderBottom:`1px solid ${T.bd}` }}>{label}</a>
-            )
-          )}
+            ['#pos',tc('landing.nav_how_it_works')],
+            ['/point-of-sale',tc('landing.nav_point_of_sale')],
+            ['#pricing',tc('landing.nav_pricing')],
+            ['/integrations',tc('landing.nav_integrations')],
+            ['/help',tc('landing.nav_help_centre_label')],
+            ['/academy',tc('landing.nav_academy_label')],
+            ['/blog',tc('landing.nav_blog_label')],
+          ].map(([href,label])=>(
+            <a key={href} href={href.startsWith('#') ? href : localePath(href, lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px 12px',fontSize:15,fontWeight:500,color:T.tx,textDecoration:'none',borderBottom:`1px solid ${T.bd}` }}>{label}</a>
+          ))}
           <div style={{ marginTop:20,display:'flex',flexDirection:'column',gap:10 }}>
-            <Link href={localePath('/signin?mode=signup', lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:15,fontWeight:700,textDecoration:'none',textAlign:'center' }}>{tc('landing.mobile_start_free')}</Link>
+            <Link href={localePath('/signin?mode=signup', lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:15,fontWeight:700,textDecoration:'none',textAlign:'center' }}>{tc('landing.nav_get_started')}</Link>
             <Link href={localePath('/signin', lang as Locale)} onClick={()=>setMenuOpen(false)} style={{ display:'block',padding:'14px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',textAlign:'center' }}>{tc('landing.mobile_sign_in')}</Link>
           </div>
         </div>
@@ -1577,7 +1529,10 @@ function LandingInner({ geo }: { geo: Geo | null }) {
             <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ padding:'11px 26px',borderRadius:9999,background:T.acc,color:'#1a1410',fontSize:14,fontWeight:700,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:7 }}>
               {tc('landing.pos_cta')}
             </Link>
-            <span style={{ fontSize:12,color:T.tx3,alignSelf:'center' }}>{tc('landing.pos_cta_note',{pos:posPrice})}</span>
+            <Link href={localePath('/pos-preview', lang as Locale)} style={{ padding:'11px 22px',borderRadius:9999,border:`1px solid ${T.bd}`,background:'transparent',color:T.tx2,fontSize:14,fontWeight:500,textDecoration:'none',display:'inline-flex',alignItems:'center',gap:6 }}>
+              Try the demo →
+            </Link>
+            <span style={{ fontSize:12,color:T.tx3,alignSelf:'center',width:'100%' }}>{tc('landing.pos_cta_note',{pos:posPrice})}</span>
           </div>
         </div>
       </section>
