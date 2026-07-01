@@ -86,7 +86,7 @@ export default function LanguageToggle({ compact }: { compact?: boolean }) {
       {open && (
         <div style={{
           position: 'absolute',
-          ...(compact ? { bottom: 'calc(100% + 6px)' } : { top: 'calc(100% + 6px)' }),
+          top: 'calc(100% + 6px)',
           ...(lang === 'ar' ? { left: 0 } : { right: 0 }),
           background: 'var(--sf, #1a1a2e)', border: '1px solid var(--b, rgba(255,255,255,.12))',
           borderRadius: 12, padding: 6, minWidth: 160,
