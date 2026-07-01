@@ -263,7 +263,7 @@ export const HELP_TOPICS: HelpTopic[] = [
   {
     slug: "success-best-practices",
     title: "Success & Best Practices",
-    description: "Get more from AskBiz with proven workflows, KPI setup guides, and decision-making frameworks for SME founders.",
+    description: "Get more from AskBiz with proven workflows, KPI setup guides, and decision-making frameworks for business owners.",
     icon: "🎯",
     color: "#8e44ad",
     articles: [
@@ -1690,7 +1690,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       },
       {
         heading: "The 20 Markets Covered",
-        body: "**Europe:** Germany, France, Netherlands, Spain, Italy, Sweden, Poland\n**Middle East:** UAE, Saudi Arabia, Qatar, Kuwait\n**North America:** USA, Canada\n**Asia-Pacific:** Australia, Singapore, Japan, South Korea, India\n**Africa:** South Africa, Nigeria",
+        body: "**Europe:** Germany, France, Netherlands, Spain, Italy, Sweden, Poland\n**Middle East:** UAE, Saudi Arabia, Qatar, Kuwait\n**North America:** USA, Canada\n**Asia-Pacific:** Australia, Singapore, Japan, South Korea, India\n**Africa:** Kenya, Nigeria, Uganda, South Africa",
       },
       {
         heading: "Scoring Dimensions",
@@ -1910,7 +1910,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     content: [
       {
         heading: "Overview",
-        body: "AskBiz is trained to act as an AI Chief of Staff for SME founders. It can answer questions grounded in your connected data, general business questions, and strategic questions using a combination of your data and external market intelligence.",
+        body: "AskBiz is trained to act as an AI business advisor for business owners. It can answer questions grounded in your connected data, general business questions, and strategic questions using a combination of your data and external market intelligence.",
       },
       {
         heading: "POS & Product Sales Questions",
@@ -4568,7 +4568,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
   {
     slug: "weekly-business-review-guide",
     title: "How to Run a Weekly Business Review with AskBiz",
-    description: "A step-by-step guide to the weekly business review cadence used by high-performing SME founders — built around your AskBiz data.",
+    description: "A step-by-step guide to the weekly business review cadence used by high-performing business owners — built around your AskBiz data.",
     topic: "Success & Best Practices",
     topicSlug: "success-best-practices",
     readTime: 6,
