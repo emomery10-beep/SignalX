@@ -1374,7 +1374,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                 <span style={{ fontSize:11,color:T.tx3 }}>·</span>
                 <span style={{ fontSize:11,color:T.tx2,fontWeight:600 }}>{tc('landing.hero_badge_pricing',{growth:growthPrice,business:businessPrice})}</span>
                 <span style={{ fontSize:11,color:T.tx3 }}>·</span>
-                <span style={{ fontSize:11,color:T.tx3 }}>{tc('landing.hero_badge_pos')}</span>
+                <span style={{ fontSize:11,color:T.tx3 }}>{tc('landing.hero_badge_pos',{pos:posPrice})}</span>
               </div>
               {country && <p style={{ fontSize:12,color:T.tx3,marginTop:8 }}>{tc('landing.hero_local_currency',{flag,country})}</p>}
             </div>

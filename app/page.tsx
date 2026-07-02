@@ -7,9 +7,9 @@ import { COUNTRY_TO_LANG } from '@/lib/i18n'
 
 // ── SEO Metadata ─────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
-  title: 'AskBiz — Free Phone POS App for Kenya, Nigeria & Uganda | M-Pesa Till, Stock & Daily Sales',
-  description: 'AskBiz is a free phone POS and daily sales tracker for market stalls, kiosks, salons and small shops in Kenya, Nigeria, Uganda and across Africa. Take M-Pesa, MTN Mobile Money, Airtel Money, cash or card — know your profit by tonight.',
-  keywords: 'mobile POS Africa, M-Pesa POS, phone POS, market stall app, street vendor app, small shop POS, kiosk POS, spaza shop POS, duuka POS, barbershop POS, salon POS Africa, restaurant POS Africa, courier payment app, boda boda payment, hawker POS, jua kali business app, informal business tracker, sell with phone, mobile money POS, MTN mobile money, Airtel Money, M-Pesa receipt, float management, Kenya POS app, Nigeria small business app, Nairobi POS, Lagos POS, Kampala POS, Accra POS, Dar es Salaam POS, camera barcode scan, no hardware POS, daily sales tracker, daily takings, end of day report, track daily sales, sales book phone, stock management phone, affordable POS Africa, free POS Kenya, free POS Nigeria, phone till, unregistered business tracker, sole trader Africa',
+  title: 'AskBiz — Phone POS App for Kenya, Nigeria & Uganda | Free to Start, M-Pesa Till & Daily Sales',
+  description: 'AskBiz is a phone POS and daily sales tracker for market stalls, kiosks, salons and small shops in Kenya, Nigeria, Uganda and across Africa. Free to start — take M-Pesa, MTN Mobile Money, Airtel Money, cash or card and know your profit by tonight.',
+  keywords: 'mobile POS Africa, M-Pesa POS, phone POS, market stall app, street vendor app, small shop POS, kiosk POS, spaza shop POS, duuka POS, barbershop POS, salon POS Africa, restaurant POS Africa, courier payment app, boda boda payment, hawker POS, jua kali business app, informal business tracker, sell with phone, mobile money POS, MTN mobile money, Airtel Money, M-Pesa receipt, float management, Kenya POS app, Nigeria small business app, Nairobi POS, Lagos POS, Kampala POS, Accra POS, Dar es Salaam POS, camera barcode scan, no hardware POS, daily sales tracker, daily takings, end of day report, track daily sales, sales book phone, stock management phone, affordable POS Africa, affordable POS Kenya, affordable POS Nigeria, phone till, unregistered business tracker, sole trader Africa',
   authors: [{ name: 'AskBiz' }],
   creator: 'AskBiz',
   publisher: 'AskBiz',
@@ -239,7 +239,7 @@ export default async function LandingPage({ searchParams }: { searchParams: { co
         'boda boda payment tracking', 'hawker POS', 'jua kali business tracker',
         'camera barcode scan', 'stock management phone', 'daily sales tracker',
         'daily takings report', 'end of day report', 'mobile money receipt', 'M-Pesa receipt',
-        'affordable POS Africa', 'free POS Kenya', 'free POS Nigeria', 'phone till',
+        'affordable POS Africa', 'affordable POS Kenya', 'affordable POS Nigeria', 'phone till',
         'no hardware POS', 'unregistered business tracker', 'sole trader POS Africa',
         'roadside business app', 'float management', 'till reconciliation',
       ],
