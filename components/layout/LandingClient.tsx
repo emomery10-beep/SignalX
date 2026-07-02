@@ -1159,6 +1159,24 @@ function NavDropdown({ label, items, lang }: { label: string; items: DropGroup[]
   )
 }
 
+// Founder photo with a graceful initials fallback — renders cleanly even
+// before /public/images/founder.jpg exists or if it fails to load.
+function FounderAvatar({ src, name, size=72 }: { src: string; name: string; size?: number }) {
+  const [failed, setFailed] = useState(false)
+  const initials = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()
+  if (failed) {
+    return (
+      <div style={{ width:size,height:size,borderRadius:'50%',background:T.accBg,border:`1px solid ${T.accBdr}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:size*0.32,fontWeight:700,color:T.acc,flexShrink:0 }}>
+        {initials}
+      </div>
+    )
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt={name} width={size} height={size} onError={()=>setFailed(true)} style={{ width:size,height:size,borderRadius:'50%',objectFit:'cover',border:`2px solid ${T.card}`,boxShadow:'0 2px 10px rgba(0,0,0,.12)',flexShrink:0 }}/>
+  )
+}
+
 function LandingInner({ geo }: { geo: Geo | null }) {
   const { lang, setLang, tc } = useLang()
   const FAQS = buildFaqs(tc)
@@ -1244,6 +1262,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
         .nav-drop-item:hover{background:${T.alt}!important}
         @media(max-width:768px){
           .nav-links{display:none!important}.nav-mobile-btn{display:flex!important}
+          .nav-signin-link{display:none!important}
           .hero-ctas{flex-direction:column!important}
           .hero-ctas a{width:100%!important;text-align:center!important;justify-content:center!important}
         }
@@ -1281,7 +1300,7 @@ function LandingInner({ geo }: { geo: Geo | null }) {
 
         <div style={{ display:'flex',alignItems:'center',gap:8,flexShrink:0 }}>
           <LanguageToggle />
-          <Link href={localePath('/signin', lang as Locale)} style={{ fontSize:13,color:T.tx2,textDecoration:'none',padding:'0 4px',fontWeight:500,whiteSpace:'nowrap' }}>
+          <Link href={localePath('/signin', lang as Locale)} className="nav-signin-link" style={{ fontSize:13,color:T.tx2,textDecoration:'none',padding:'0 4px',fontWeight:500,whiteSpace:'nowrap' }}>
             {tc('landing.nav_sign_in')}
           </Link>
           <Link href={localePath('/signin?mode=signup', lang as Locale)} style={{ fontSize:13,fontWeight:700,color:'#fff',background:T.acc,borderRadius:9999,padding:'8px 18px',textDecoration:'none',whiteSpace:'nowrap',boxShadow:'0 2px 12px rgba(208,138,89,.3)' }}>
@@ -1523,10 +1542,16 @@ function LandingInner({ geo }: { geo: Geo | null }) {
           <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,44px)',fontWeight:400,lineHeight:1.1,letterSpacing:'-.02em',color:T.tx,marginBottom:20 }}>
             {tc('landing.proof_note_title')}
           </h2>
-          <p style={{ fontSize:'clamp(14px,1.3vw,16px)',color:T.tx2,lineHeight:1.8,marginBottom:14 }}>
+          <p style={{ fontSize:'clamp(14px,1.3vw,16px)',color:T.tx2,lineHeight:1.8,marginBottom:22 }}>
             {tc('landing.proof_note_body')}
           </p>
-          <p style={{ fontSize:13,color:T.tx3,marginBottom:26 }}>{tc('landing.proof_note_sign')}</p>
+          <div style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:12,marginBottom:26 }}>
+            <FounderAvatar src="/images/founder.jpg" name={tc('landing.proof_note_name')} />
+            <div style={{ textAlign:'left' }}>
+              <div style={{ fontSize:14,fontWeight:700,color:T.tx }}>{tc('landing.proof_note_name')}</div>
+              <div style={{ fontSize:12,color:T.tx3 }}>{tc('landing.proof_note_title_role')}</div>
+            </div>
+          </div>
           <p style={{ fontSize:14,color:T.tx2,marginBottom:18 }}>{tc('landing.proof_note_join')}</p>
           <Link href={localePath('/signin?mode=signup', lang as Locale)} className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:7,padding:'12px 26px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:14,fontWeight:700,textDecoration:'none' }}>
             {tc('landing.proof_note_cta')}

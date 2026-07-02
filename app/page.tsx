@@ -17,14 +17,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     url: 'https://askbiz.co',
-    title: 'AskBiz — Sell With Your Phone. Know Your Money Tonight.',
+    title: 'AskBiz — Sell With Your Phone. See What You Made Tonight.',
     description: 'Phone-based POS and daily business tracker for market stalls, street vendors, and informal sellers. M-Pesa, cash, or card. See what you made today — on any phone, free to start.',
     siteName: 'AskBiz',
-    images: [{ url: 'https://askbiz.co/og-image.png', width: 1200, height: 630, alt: 'AskBiz — Sell with your phone. Know your money tonight.' }],
+    images: [{ url: 'https://askbiz.co/og-image.png', width: 1200, height: 630, alt: 'AskBiz — Sell with your phone. See what you made tonight.' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AskBiz — Sell With Your Phone. Know Your Money Tonight.',
+    title: 'AskBiz — Sell With Your Phone. See What You Made Tonight.',
     description: 'Phone-based POS and daily tracker for market stalls and informal sellers. M-Pesa, cash, or card. See what you made today — any phone, free to start.',
     images: ['https://askbiz.co/og-image.png'],
   },

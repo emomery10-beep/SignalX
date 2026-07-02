@@ -65,7 +65,7 @@
   "mobile_sign_in": "Sign in",
   "hero_eyebrow": "POS · Inventory · AI Intelligence — One Platform",
   "hero_title_line1": "Sell with your phone.",
-  "hero_title_line2": "Know your money by tonight.",
+  "hero_title_line2": "See what you made — by tonight.",
   "hero_subtitle": "Your camera is your till. Take M-Pesa, cash, or card. Track every sale and see exactly what you made today — from any phone, anywhere.",
   "hero_cta_primary": "Start free — no card needed",
   "hero_cta_secondary": "Try the live demo →",
@@ -702,5 +702,7 @@
   "where_country_5": "South Africa",
   "where_seg_0": "Salon owners",
   "where_seg_1": "Hardware stores",
-  "where_seg_2": "Mini supermarkets"
+  "where_seg_2": "Mini supermarkets",
+  "proof_note_name": "Idarus Ali",
+  "proof_note_title_role": "Founder, AskBiz"
 }
