@@ -842,5 +842,9 @@
   "toast_capture_approved": "Erfassung genehmigt",
   "toast_capture_rejected": "Erfassung abgelehnt",
   "toast_analysis_failed": "Analyse fehlgeschlagen – bitte erneut versuchen",
-  "toast_receipt_copied": "Beleg in die Zwischenablage kopiert"
+  "toast_receipt_copied": "Beleg in die Zwischenablage kopiert",
+  "delete": "Löschen",
+  "confirm_delete_branch_empty": "„{name}“ löschen? Dies kann nicht rückgängig gemacht werden.",
+  "confirm_delete_branch_with_data": "„{name}“ löschen? Sie hat {staff} Mitarbeiter und {products} Produkte — diese werden nur zugeordnet entfernt, nicht gelöscht. Dies kann nicht rückgängig gemacht werden.",
+  "toast_branch_deleted": "Filiale gelöscht"
 }

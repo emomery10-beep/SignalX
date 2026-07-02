@@ -69,3 +69,34 @@ export async function PATCH(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ location: data })
 }
+
+// DELETE — remove a location. Staff/inventory/transactions assigned to it are
+// unassigned (location_id set to null), not deleted — see migration 033.
+export async function DELETE(req: NextRequest) {
+  const ownerId = await resolvePosOwner(req)
+  if (!ownerId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+
+  const { searchParams } = new URL(req.url)
+  const id = searchParams.get('id')
+  if (!id) return NextResponse.json({ error: 'Location id required' }, { status: 400 })
+
+  const service = createServiceClient()
+
+  const { count } = await service
+    .from('pos_locations')
+    .select('id', { count: 'exact', head: true })
+    .eq('owner_id', ownerId)
+
+  if ((count ?? 0) <= 1) {
+    return NextResponse.json({ error: 'You need at least one branch — add a new one before deleting this one' }, { status: 409 })
+  }
+
+  const { error } = await service
+    .from('pos_locations')
+    .delete()
+    .eq('id', id)
+    .eq('owner_id', ownerId)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true })
+}

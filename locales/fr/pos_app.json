@@ -842,5 +842,9 @@
   "toast_capture_approved": "Capture approuvée",
   "toast_capture_rejected": "Capture rejetée",
   "toast_analysis_failed": "Analyse échouée — veuillez réessayer",
-  "toast_receipt_copied": "Reçu copié dans le presse-papiers"
+  "toast_receipt_copied": "Reçu copié dans le presse-papiers",
+  "delete": "Supprimer",
+  "confirm_delete_branch_empty": "Supprimer « {name} » ? Cette action est irréversible.",
+  "confirm_delete_branch_with_data": "Supprimer « {name} » ? Elle compte {staff} employé(s) et {products} produit(s) — ils seront désassignés, pas supprimés. Cette action est irréversible.",
+  "toast_branch_deleted": "Filiale supprimée"
 }

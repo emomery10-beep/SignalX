@@ -842,5 +842,9 @@
   "toast_capture_approved": "Captura aprobada",
   "toast_capture_rejected": "Captura rechazada",
   "toast_analysis_failed": "Error en el análisis — inténtalo de nuevo",
-  "toast_receipt_copied": "Recibo copiado al portapapeles"
+  "toast_receipt_copied": "Recibo copiado al portapapeles",
+  "delete": "Eliminar",
+  "confirm_delete_branch_empty": "¿Eliminar \"{name}\"? Esta acción no se puede deshacer.",
+  "confirm_delete_branch_with_data": "¿Eliminar \"{name}\"? Tiene {staff} empleado(s) y {products} producto(s) — se desasignarán, no se eliminarán. Esta acción no se puede deshacer.",
+  "toast_branch_deleted": "Sucursal eliminada"
 }

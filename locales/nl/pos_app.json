@@ -842,5 +842,9 @@
   "toast_capture_approved": "Capture goedgekeurd",
   "toast_capture_rejected": "Capture afgewezen",
   "toast_analysis_failed": "Analyse mislukt — probeer het opnieuw",
-  "toast_receipt_copied": "Bon gekopieerd naar klembord"
+  "toast_receipt_copied": "Bon gekopieerd naar klembord",
+  "delete": "Verwijderen",
+  "confirm_delete_branch_empty": "\"{name}\" verwijderen? Dit kan niet ongedaan worden gemaakt.",
+  "confirm_delete_branch_with_data": "\"{name}\" verwijderen? Deze heeft {staff} medewerker(s) en {products} product(en) — ze worden losgekoppeld, niet verwijderd. Dit kan niet ongedaan worden gemaakt.",
+  "toast_branch_deleted": "Filiaal verwijderd"
 }

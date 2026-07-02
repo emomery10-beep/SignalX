@@ -2553,12 +2553,24 @@ export default function POSPage() {
                         }
                       </div>
                     </div>
-                    <button onClick={() => {
-                      const newName = prompt(tc('pos_app.prompt_rename_branch'), loc.name)
-                      if (!newName?.trim() || newName.trim() === loc.name) return
-                      fetch('/api/pos/locations', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: loc.id, name: newName.trim() }) })
-                        .then(r => r.json()).then(d => { if (d.location) { setLocations(prev => prev.map(l => l.id === loc.id ? d.location : l)); notify(tc('pos_app.toast_branch_renamed')) } else { notify(d.error || tc('pos_app.toast_failed'), false) } })
-                    }} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)' }}>{tc('pos_app.edit')}</button>
+                    <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                      <button onClick={() => {
+                        const newName = prompt(tc('pos_app.prompt_rename_branch'), loc.name)
+                        if (!newName?.trim() || newName.trim() === loc.name) return
+                        fetch('/api/pos/locations', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: loc.id, name: newName.trim() }) })
+                          .then(r => r.json()).then(d => { if (d.location) { setLocations(prev => prev.map(l => l.id === loc.id ? d.location : l)); notify(tc('pos_app.toast_branch_renamed')) } else { notify(d.error || tc('pos_app.toast_failed'), false) } })
+                      }} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: '1px solid var(--b)', background: 'transparent', color: 'var(--tx2)' }}>{tc('pos_app.edit')}</button>
+                      <button onClick={() => {
+                        const staffCount = staff.filter(s => s.location_id === loc.id).length
+                        const productCount = inventory.filter(p => p.location_id === loc.id).length
+                        const msg = staffCount > 0 || productCount > 0
+                          ? tc('pos_app.confirm_delete_branch_with_data', { name: loc.name, staff: staffCount, products: productCount })
+                          : tc('pos_app.confirm_delete_branch_empty', { name: loc.name })
+                        if (!confirm(msg)) return
+                        fetch(`/api/pos/locations?id=${loc.id}`, { method: 'DELETE' })
+                          .then(r => r.json()).then(d => { if (d.ok) { setLocations(prev => prev.filter(l => l.id !== loc.id)); notify(tc('pos_app.toast_branch_deleted')) } else { notify(d.error || tc('pos_app.toast_failed'), false) } })
+                      }} style={{ padding: '6px 12px', borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', border: `1px solid ${RED}55`, background: 'transparent', color: RED }}>{tc('pos_app.delete')}</button>
+                    </div>
                   </div>
                 ))}
               </div>

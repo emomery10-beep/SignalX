@@ -39,7 +39,6 @@
   "view_branch": "View branch →",
   "analyse_arrow": "Analyse →",
   "breakdown_arrow": "Breakdown →",
-
   "tab_overview": "Overview",
   "tab_staff": "Staff",
   "tab_branches": "Branches",
@@ -51,7 +50,6 @@
   "tab_services_repair": "Repairs",
   "tab_services_salon": "Bookings",
   "tab_services_operations": "Operations",
-
   "sector_restaurant": "Restaurant",
   "sector_repair": "Repair",
   "sector_salon": "Salon",
@@ -65,21 +63,17 @@
   "sector_factory_only": "Factory only",
   "sector_logistics_only": "Logistics only",
   "all_sectors_shared": "All sectors (shared item)",
-
   "action_vat_export": "MTD VAT export",
   "action_export_csv": "Export CSV",
   "action_open_till": "Open till",
-
   "filter_branch": "Branch:",
   "filter_all_branches": "All Branches",
   "filter_sector": "Sector:",
   "filter_all_sectors": "All Sectors",
-
   "range_today": "Today",
   "range_yesterday": "Yesterday",
   "range_last7": "Last 7 days",
   "range_last30": "Last 30 days",
-
   "disabled_title": "Point of Sale",
   "disabled_desc": "Turn any phone into a till. Add cashier and inventory staff seats to unlock the POS system — camera price scanning, WhatsApp receipts, live stock tracking, and BI insights all in one place.",
   "disabled_feature_1": "Cashier & inventory roles with WhatsApp OTP login",
@@ -91,7 +85,6 @@
   "disabled_per_seat": "/seat/month",
   "disabled_owner_note": "Owner dashboard always included — seats are for cashier and inventory staff only",
   "disabled_add_seats": "Add seats in billing →",
-
   "kpi_revenue": "Revenue",
   "kpi_sales": "Sales",
   "kpi_refunds": "Refunds",
@@ -101,7 +94,6 @@
   "card_avg_sale": "Avg sale",
   "card_sale_price": "Sale price",
   "card_cost_price": "Cost price",
-
   "modal_gross_profit": "Gross Profit Analysis",
   "modal_margin": "Margin Breakdown",
   "modal_avg_sale": "Average Sale Analysis",
@@ -111,12 +103,10 @@
   "modal_payment_type": "{type} payments",
   "modal_branch": "{name} branch",
   "modal_customer_history": "{name}’s history",
-
   "ask_analyse_today": "Analyse today",
   "ask_top_products": "Top products",
   "ask_staff_ranking": "Staff ranking",
   "ask_stock_alerts": "Stock alerts",
-
   "sales_by_hour": "Sales by hour",
   "revenue_by_hour": "Revenue by hour",
   "units_sold_by_hour": "Units sold by hour",
@@ -129,13 +119,11 @@
   "staff_performance": "Staff performance",
   "sales_avg": "{n} sales · avg {avg}",
   "sales_avg_pct": "{n} sales · avg {avg} · {pct}% of revenue",
-
   "stock_alerts": "Stock alerts",
   "out_of_stock": "OUT OF STOCK",
   "archive": "Archive",
   "archive_title": "Archive — hide this item from inventory",
   "stock_left": "{n} left",
-
   "reorder_suggestions": "Reorder suggestions",
   "ai_powered": "AI-powered",
   "urgency_urgent": "URGENT",
@@ -152,7 +140,6 @@
   "restock": "Restock",
   "restocking": "Restocking...",
   "restock_plus": "Restock +{qty}",
-
   "profit_loss": "Profit & loss",
   "pl_daily": "Daily",
   "pl_weekly": "Weekly",
@@ -161,7 +148,6 @@
   "col_revenue": "Revenue",
   "col_cost": "Cost",
   "col_profit": "Profit",
-
   "inventory_intelligence": "Inventory intelligence",
   "stock_value_cost": "STOCK VALUE (COST)",
   "retail_value": "RETAIL VALUE",
@@ -175,7 +161,6 @@
   "expired_action_required": "Expired products — action required",
   "expired_item_line": "{name} — expired {date} ({qty} {unit} in stock)",
   "more_check_inventory": "+{n} more — check Inventory tab",
-
   "recent_transactions": "Recent transactions",
   "no_sales_yet": "No sales yet",
   "no_sales_hint_pre": "Share ",
@@ -184,7 +169,6 @@
   "previous": "Previous",
   "next": "Next",
   "page_of": "{current} of {total}",
-
   "restaurant_ops": "Restaurant Operations",
   "restaurant_ops_desc": "Floor plan, kitchen, orders, menu and labour — all in one place.",
   "repair_ops": "Repair Operations",
@@ -197,7 +181,6 @@
   "logistics_ops_desc": "Parcels, fleet, routes & revenue across all branches.",
   "retail_ops": "Retail Operations",
   "retail_ops_desc": "Stock management, sales tracking, and supplier orders.",
-
   "rest_hub": "Hub",
   "rest_hub_desc": "Live operations dashboard",
   "rest_floor": "Floor Plan",
@@ -220,7 +203,6 @@
   "rest_waste_desc": "Log & track food waste",
   "rest_staff": "Staff",
   "rest_staff_desc": "Server revenue & shifts",
-
   "tile_service_jobs": "Service Jobs",
   "tile_service_jobs_desc": "All jobs by status",
   "tile_staff": "Staff",
@@ -279,7 +261,6 @@
   "tile_integrations": "Integrations",
   "tile_integrations_desc": "Xero, payments & more",
   "tile_retail_audit_desc": "Transaction & change log",
-
   "seats_used": "{used} of {total} seats used",
   "add_seats_link": "Add seats →",
   "upgrade_seats": "Upgrade seats →",
@@ -297,7 +278,6 @@
   "add_staff_member": "Add staff member",
   "staff_login_hint_pre": "They’ll log in at ",
   "staff_login_hint_post": " using their phone (WhatsApp code) or email address.",
-
   "role_group_factory": "FACTORY",
   "role_group_restaurant": "RESTAURANT",
   "role_group_repair": "REPAIR",
@@ -335,7 +315,6 @@
   "role_logistics_driver": "Driver",
   "role_logistics_dispatcher": "Dispatcher",
   "role_logistics_branch_manager": "Branch Manager",
-
   "staff_filtered": "Showing {shown} of {total} staff · filtered by {sector}",
   "no_staff_yet": "No staff added yet",
   "no_sector_staff": "No {sector} staff",
@@ -351,7 +330,6 @@
   "sector_edit_limit": "Edit limit reached (purchase a new seat to change)",
   "changes_remaining_one": "{n} change remaining",
   "changes_remaining_other": "{n} changes remaining",
-
   "inventory": "Inventory",
   "product_count_one": "{n} product",
   "product_count_other": "{n} products",
@@ -369,7 +347,6 @@
   "untagged_count_other": "{n} items",
   "untagged_explain": "have no sector tag — they appear in every sector’s badge count.",
   "tag_all_as": "Tag all untagged as:",
-
   "scan_product": "Scan product",
   "scan_product_desc": "Take a photo of the front (and optionally the back) — Claude will fill in the product details automatically.",
   "front": "Front",
@@ -400,7 +377,6 @@
   "point_back": "Point at the BACK of the product",
   "capture": "Capture",
   "capture_photo": "Capture photo",
-
   "product_found": "Product found",
   "sale_price_label": "Sale price",
   "stock_label": "Stock",
@@ -413,13 +389,11 @@
   "margin_label": "Margin",
   "profit_label": "Profit",
   "add_to_inventory": "Add to inventory",
-
   "bulk_import_csv": "Bulk import from CSV",
   "csv_format_pre": "Format: ",
   "csv_format_post": " (one product per line)",
   "choose_csv": "Choose CSV file",
   "import_products": "Import products",
-
   "new_product": "New product",
   "ph_product_name": "Product name",
   "ph_sale_price": "Sale price",
@@ -441,7 +415,6 @@
   "tag_sector_only_pre": "This item will be tagged to the ",
   "tag_sector_only_post": " sector only.",
   "add_product": "Add product",
-
   "unit_pcs": "Pieces (pcs)",
   "unit_kg": "Kilograms (kg)",
   "unit_g": "Grams (g)",
@@ -454,7 +427,6 @@
   "unit_bottle": "Bottles",
   "unit_tin": "Tins",
   "unit_dozen": "Dozen",
-
   "no_matching_products": "No matching products",
   "no_products_yet": "No products yet",
   "no_matching_hint": "Try a different search or category.",
@@ -472,7 +444,6 @@
   "exp_short": "Exp",
   "last_sold": "Last sold {date}",
   "click_restock": "Click to restock",
-
   "branch_count_one": "{n} branch",
   "branch_count_other": "{n} branches",
   "prompt_branch_name": "Branch name (e.g. “Downtown”, “Mall Branch”):",
@@ -482,13 +453,11 @@
   "branch_stats_all": "{staff} staff · {products} products",
   "branch_stats_sector": "{staff} {sector} staff · {sales} sales",
   "prompt_rename_branch": "Rename branch:",
-
   "no_geo_sales": "No geo-tagged sales in this period — cashiers must allow location access when checking out",
   "geo_sales_one": "{n} geo-tagged sale in this period",
   "geo_sales_other": "{n} geo-tagged sales in this period",
   "no_pins_yet": "No pins yet for this period",
   "no_pins_hint": "Cashiers must allow location access when checking out",
-
   "production_captures": "Production Captures",
   "production_captures_desc": "All intake, output, wastage and dispatch records",
   "loading_captures": "Loading captures…",
@@ -500,7 +469,6 @@
   "col_captured_by": "Captured by",
   "col_status": "Status",
   "col_approved_by": "Approved by",
-
   "pending_approvals": "Pending Approvals",
   "pending_approvals_desc": "Captures awaiting supervisor sign-off",
   "no_pending_approvals": "No pending approvals — all captures are reviewed.",
@@ -509,7 +477,6 @@
   "unlabelled_capture": "Unlabelled capture",
   "submitted_by": "Submitted by {name} · {date}",
   "prompt_rejection_reason": "Rejection reason (optional):",
-
   "logistics_network": "Logistics Network",
   "logistics_network_desc": "Parcels, fleet, routes & revenue across all branches",
   "loading_logistics": "Loading logistics data…",
@@ -576,7 +543,6 @@
   "fadr_excellent": "Excellent delivery rate",
   "fadr_needs_improvement": "Needs improvement",
   "fadr_critical": "Critical — review routes",
-
   "pstatus_received": "Received",
   "pstatus_at_branch": "At Branch",
   "pstatus_assigned": "Assigned",
@@ -588,7 +554,6 @@
   "pstatus_collected": "Collected",
   "pstatus_failed": "Failed",
   "pstatus_returned": "Returned",
-
   "photo_pickup": "Pickup",
   "photo_delivered": "Delivered",
   "photo_delivery_video": "Delivery Video",
@@ -599,7 +564,6 @@
   "photo_waybill": "Waybill Scan",
   "photo_invoice": "Invoice",
   "photo_receipt": "Receipt",
-
   "meta_weight": "Weight",
   "meta_fee": "Fee",
   "meta_payment": "Payment",
@@ -609,7 +573,6 @@
   "evidence_chain": "Evidence chain",
   "no_photos_yet": "No photos yet",
   "no_photos_hint": "Driver photos will appear here as the parcel moves",
-
   "production_intelligence": "Production Intelligence",
   "production_intelligence_desc": "AI-powered anomaly detection across your production floor",
   "run_production_analysis": "Run Production Analysis",
@@ -623,7 +586,6 @@
   "risk_Medium": "Medium",
   "risk_Low": "Low",
   "no_anomalies": "No significant anomalies detected — production looks healthy.",
-
   "customers": "Customers",
   "customers_desc": "Customer profiles, purchase history and segments",
   "no_customers_yet": "No customers yet",
@@ -635,7 +597,6 @@
   "col_orders": "Orders",
   "col_spent": "Spent",
   "col_last_visit": "Last visit",
-
   "promotions_title": "Promotions & Discounts",
   "promotions_desc": "Track discounts applied across your sales",
   "discounted_sales": "Discounted sales",
@@ -646,7 +607,6 @@
   "col_items": "Items",
   "col_subtotal": "Subtotal",
   "col_discount": "Discount",
-
   "returns_title": "Returns & Exchanges",
   "returns_desc": "Refunds processed at the till this period",
   "total_returns": "Total returns",
@@ -656,7 +616,6 @@
   "no_returns_hint": "Refunds will appear here when processed via the till’s refund flow.",
   "col_amount": "Amount",
   "full_refund_label": "Full refund",
-
   "loyalty_title": "Customer Loyalty",
   "loyalty_desc": "Repeat customers, retention and lifetime value",
   "repeat_rate": "Repeat rate",
@@ -665,7 +624,6 @@
   "top_customers_spend": "Top customers by spend",
   "col_visits": "Visits",
   "col_total_spent": "Total spent",
-
   "reports_title": "Reports",
   "reports_desc": "Sales, inventory, margins and business insights",
   "stock_value": "Stock value",
@@ -685,7 +643,6 @@
   "report_discounts_desc": "Promotions usage & discount totals",
   "report_audit": "Audit trail",
   "report_audit_desc": "Full change log & transaction history",
-
   "purchase_orders_title": "Purchase Orders",
   "purchase_orders_desc": "Order stock from suppliers and track deliveries",
   "supplier_orders": "Supplier orders",
@@ -702,7 +659,6 @@
   "po_auto_reorder_desc": "AI suggests when to restock",
   "po_insights": "Supplier insights",
   "po_insights_desc": "Lead times & cost trends",
-
   "gift_cards_title": "Gift Cards",
   "gift_cards_desc": "Issue, redeem and track gift card balances",
   "gift_cards_credit": "Gift cards & store credit",
@@ -719,7 +675,6 @@
   "gc_liability_desc": "Track outstanding balances",
   "gc_custom": "Custom designs",
   "gc_custom_desc": "Branded cards for your store",
-
   "integrations_title": "Integrations",
   "integrations_desc": "Connect your accounting, payments and marketing tools",
   "int_xero_desc": "Auto-sync sales, refunds & tax to Xero",
@@ -731,7 +686,6 @@
   "int_shipping_desc": "Track shipments via 17Track, DHL & more",
   "int_ecommerce_title": "E-commerce",
   "int_ecommerce_desc": "Connect Shopify, WooCommerce & more",
-
   "transaction_details": "Transaction details",
   "just_now": "just now",
   "minutes_ago": "{n}m ago",
@@ -762,7 +716,6 @@
   "thank_you": "Thank you!",
   "copy_receipt": "Copy receipt",
   "whatsapp": "WhatsApp",
-
   "no_completed_sales": "No completed sales in this period.",
   "no_refunds": "No refunds in this period.",
   "all_stock_healthy": "All stock levels healthy.",
@@ -837,7 +790,6 @@
   "transactions_with_product": "Transactions containing this product",
   "no_product_sales": "No sales of this product today.",
   "revenue_by_hour_label": "Revenue by hour",
-
   "sale_hash": "Sale #",
   "reason_required": "Reason (required)",
   "select_reason": "Select reason...",
@@ -847,7 +799,6 @@
   "reason_duplicate": "Duplicate charge",
   "reason_other": "Other",
   "full_refund": "Full refund",
-
   "toast_new_sale": "New sale: {amount}",
   "toast_refund_processed": "Refund processed for {amount}",
   "toast_refund_failed": "Refund failed",
@@ -891,5 +842,9 @@
   "toast_capture_approved": "Capture approved",
   "toast_capture_rejected": "Capture rejected",
   "toast_analysis_failed": "Analysis failed — please try again",
-  "toast_receipt_copied": "Receipt copied to clipboard"
+  "toast_receipt_copied": "Receipt copied to clipboard",
+  "delete": "Delete",
+  "confirm_delete_branch_empty": "Delete \"{name}\"? This can't be undone.",
+  "confirm_delete_branch_with_data": "Delete \"{name}\"? It has {staff} staff and {products} products — they'll be unassigned, not deleted. This can't be undone.",
+  "toast_branch_deleted": "Branch deleted"
 }

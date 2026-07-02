@@ -842,5 +842,9 @@
   "toast_capture_approved": "تمت الموافقة على الالتقاط",
   "toast_capture_rejected": "تم رفض الالتقاط",
   "toast_analysis_failed": "فشل التحليل — يرجى المحاولة مجدداً",
-  "toast_receipt_copied": "تم نسخ الإيصال إلى الحافظة"
+  "toast_receipt_copied": "تم نسخ الإيصال إلى الحافظة",
+  "delete": "حذف",
+  "confirm_delete_branch_empty": "حذف \"{name}\"؟ لا يمكن التراجع عن هذا الإجراء.",
+  "confirm_delete_branch_with_data": "حذف \"{name}\"؟ يضم {staff} موظف و{products} منتج — سيتم إلغاء ربطهم بالفرع، وليس حذفهم. لا يمكن التراجع عن هذا الإجراء.",
+  "toast_branch_deleted": "تم حذف الفرع"
 }
