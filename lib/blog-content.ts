@@ -752,6 +752,33 @@ import { batch19MarketingAnalyticsPosts } from './integration-blogs-batch19-mark
 import { batch20GrowthScalingPosts } from './integration-blogs-batch20-growth-scaling'
 import { POS_SEO_AFRICA_BATCH1 } from './pos-seo-africa-batch1'
 
+// Africa Informal Business — 250 articles for street vendors, market stall owners, and car-boot sellers across 25 countries
+import { AFRICA_INFORMAL_UGANDA } from './africa-informal-batch-uganda'
+import { AFRICA_INFORMAL_TANZANIA } from './africa-informal-batch-tanzania'
+import { AFRICA_INFORMAL_RWANDA } from './africa-informal-batch-rwanda'
+import { AFRICA_INFORMAL_ETHIOPIA } from './africa-informal-batch-ethiopia'
+import { AFRICA_INFORMAL_SENEGAL } from './africa-informal-batch-senegal'
+import { AFRICA_INFORMAL_COTE_DIVOIRE } from './africa-informal-batch-cote-divoire'
+import { AFRICA_INFORMAL_CAMEROON } from './africa-informal-batch-cameroon'
+import { AFRICA_INFORMAL_ZAMBIA } from './africa-informal-batch-zambia'
+import { AFRICA_INFORMAL_MALAWI } from './africa-informal-batch-malawi'
+import { AFRICA_INFORMAL_MOZAMBIQUE } from './africa-informal-batch-mozambique'
+import { AFRICA_INFORMAL_ZIMBABWE } from './africa-informal-batch-zimbabwe'
+import { AFRICA_INFORMAL_BOTSWANA } from './africa-informal-batch-botswana'
+import { AFRICA_INFORMAL_NAMIBIA } from './africa-informal-batch-namibia'
+import { AFRICA_INFORMAL_EGYPT } from './africa-informal-batch-egypt'
+import { AFRICA_INFORMAL_MOROCCO } from './africa-informal-batch-morocco'
+import { AFRICA_INFORMAL_ALGERIA } from './africa-informal-batch-algeria'
+import { AFRICA_INFORMAL_TUNISIA } from './africa-informal-batch-tunisia'
+import { AFRICA_INFORMAL_DR_CONGO } from './africa-informal-batch-dr-congo'
+import { AFRICA_INFORMAL_SIERRA_LEONE } from './africa-informal-batch-sierra-leone'
+import { AFRICA_INFORMAL_BENIN } from './africa-informal-batch-benin'
+import { AFRICA_INFORMAL_TOGO } from './africa-informal-batch-togo'
+import { AFRICA_INFORMAL_ANGOLA } from './africa-informal-batch-angola'
+import { AFRICA_INFORMAL_MALI } from './africa-informal-batch-mali'
+import { AFRICA_INFORMAL_BURKINA_FASO } from './africa-informal-batch-burkina-faso'
+import { AFRICA_INFORMAL_MADAGASCAR } from './africa-informal-batch-madagascar'
+
 export interface BlogPost {
   slug: string
   title: string
@@ -938,6 +965,12 @@ const ALL_POSTS = [
   ...batch18CrisisResiliencePosts, ...batch19MarketingAnalyticsPosts, ...batch20GrowthScalingPosts,
   // Africa informal business SEO — duka, spaza, mama mboga, jua kali, kiosk, tuck shop
   ...POS_SEO_AFRICA_BATCH1,
+  // Africa Informal Business — 250 articles across 25 countries for street vendors, market stalls, car-boot sellers
+  ...AFRICA_INFORMAL_UGANDA, ...AFRICA_INFORMAL_TANZANIA, ...AFRICA_INFORMAL_RWANDA, ...AFRICA_INFORMAL_ETHIOPIA, ...AFRICA_INFORMAL_SENEGAL,
+  ...AFRICA_INFORMAL_COTE_DIVOIRE, ...AFRICA_INFORMAL_CAMEROON, ...AFRICA_INFORMAL_ZAMBIA, ...AFRICA_INFORMAL_MALAWI, ...AFRICA_INFORMAL_MOZAMBIQUE,
+  ...AFRICA_INFORMAL_ZIMBABWE, ...AFRICA_INFORMAL_BOTSWANA, ...AFRICA_INFORMAL_NAMIBIA, ...AFRICA_INFORMAL_EGYPT, ...AFRICA_INFORMAL_MOROCCO,
+  ...AFRICA_INFORMAL_ALGERIA, ...AFRICA_INFORMAL_TUNISIA, ...AFRICA_INFORMAL_DR_CONGO, ...AFRICA_INFORMAL_SIERRA_LEONE, ...AFRICA_INFORMAL_BENIN,
+  ...AFRICA_INFORMAL_TOGO, ...AFRICA_INFORMAL_ANGOLA, ...AFRICA_INFORMAL_MALI, ...AFRICA_INFORMAL_BURKINA_FASO, ...AFRICA_INFORMAL_MADAGASCAR,
 ]
 
 // Cache expanded posts so they're available for both sitemap and routing
