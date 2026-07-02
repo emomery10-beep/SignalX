@@ -320,4 +320,122 @@ export function makeTruckLocations(seed: number, trucks: { id: string; plate_num
   }))
 }
 
+// ── Sector-specific front-of-house fixtures ── restaurant floor, salon
+// bookings, repair intake device scan. Matches the real GET /api/pos/staff,
+// GET /api/pos/restaurant/tables, GET /api/pos/salon/appointments, and
+// POST /api/pos/service-jobs/scan-device response shapes (read directly from
+// the route handlers, not guessed).
+
+// GET /api/pos/staff → { staff: [...] } — used by restaurant/floor (loadStaff)
+// and salon/bookings (both filter/map on id, name, role, active).
+export function makeStaffList(seed: number, count = 6) {
+  const { pick, uuid, daysAgo } = makeHelpers(seed + 9)
+  const roles = ['cashier', 'waiter', 'stylist', 'manager']
+  return Array.from({ length: count }, () => ({
+    id: uuid(),
+    name: `${pick(FIRST)} ${pick(LAST)}`,
+    email: null as string | null,
+    phone: null as string | null,
+    role: pick(roles),
+    active: true,
+    last_login_at: daysAgo(0),
+    created_at: daysAgo(90),
+    location_id: 'loc-preview',
+    location: { id: 'loc-preview', name: 'Main Branch' },
+  }))
+}
+
+// GET /api/pos/restaurant/tables → { tables: [...] } — matches Table
+// interface in restaurant/floor/page.tsx exactly (x_pos/y_pos/width/height
+// drive the floor-plan layout, so these need to be sane, non-overlapping).
+export function makeRestaurantTables(seed: number, staff: { id: string; name: string }[], count = 10) {
+  const { rnd, pick, between, uuid, hoursAgo } = makeHelpers(seed + 10)
+  const sections = ['Main Floor', 'Patio', 'Bar']
+  const statuses = ['available', 'available', 'seated', 'seated', 'reserved', 'available']
+  return Array.from({ length: count }, (_, i) => {
+    const status = pick(statuses)
+    const col = i % 5, row = Math.floor(i / 5)
+    const server = pick(staff)
+    const hasOrder = status === 'seated'
+    return {
+      id: uuid(),
+      name: `T${i + 1}`,
+      section: sections[i % sections.length],
+      capacity: pick([2, 2, 4, 4, 6]),
+      shape: pick(['round', 'square']),
+      x_pos: col * 140 + 20,
+      y_pos: row * 140 + 20,
+      width: 100,
+      height: 100,
+      status,
+      current_order_id: hasOrder ? uuid() : null,
+      server_id: status !== 'available' ? server.id : null,
+      seated_at: status === 'seated' ? hoursAgo(Math.floor(between(0, 1))) : null,
+      reservation_name: status === 'reserved' ? `${pick(FIRST)} ${pick(LAST)}` : null,
+      reservation_at: status === 'reserved' ? hoursAgo(-Math.floor(between(1, 3))) : null,
+      server: status !== 'available' ? { id: server.id, name: server.name, role: 'waiter' } : null,
+      current_order: hasOrder ? {
+        id: uuid(), status: 'in_progress', covers: pick([2, 3, 4]),
+        total: Math.round(between(15, 90)), created_at: hoursAgo(0.5), seated_at: hoursAgo(0.5),
+        order_items: [
+          { id: uuid(), name: 'Jollof Rice & Chicken', qty: 2, status: 'fired' },
+          { id: uuid(), name: 'Bottled Water', qty: 2, status: 'served' },
+        ],
+      } : null,
+      upcoming_reservations: rnd() < 0.3 ? [{ id: uuid(), customer_name: `${pick(FIRST)} ${pick(LAST)}`, covers: pick([2, 4]), reserved_at: hoursAgo(-2), status: 'confirmed' }] : [],
+    }
+  })
+}
+
+// GET /api/pos/salon/appointments → { appointments: [...] } — matches
+// Appointment interface in salon/bookings/page.tsx exactly.
+export function makeAppointments(seed: number, staff: { id: string; name: string }[], count = 14) {
+  const { pick, between, uuid, hoursAgo, daysAgo } = makeHelpers(seed + 11)
+  const services = [
+    { name: "Ladies' Haircut & Style", cat: 'Hair', price: 35, mins: 45 },
+    { name: 'Full Head Colour', cat: 'Colour', price: 75, mins: 120 },
+    { name: 'Gel Manicure', cat: 'Nails', price: 30, mins: 40 },
+    { name: 'Pedicure', cat: 'Nails', price: 35, mins: 45 },
+    { name: 'Keratin Treatment', cat: 'Treatment', price: 90, mins: 150 },
+  ]
+  const statuses = ['booked', 'booked', 'confirmed', 'completed', 'cancelled']
+  return Array.from({ length: count }, (_, i) => {
+    const svc = pick(services)
+    const stylist = pick(staff)
+    const isPast = i % 3 === 0
+    return {
+      id: uuid(),
+      client_id: uuid(),
+      stylist_id: stylist.id,
+      service_name: svc.name,
+      service_category: svc.cat,
+      scheduled_at: isPast ? daysAgo(Math.floor(between(1, 5))) : hoursAgo(-Math.floor(between(0, 72))),
+      duration_mins: svc.mins,
+      price: svc.price,
+      status: isPast ? 'completed' : pick(statuses),
+      notes: null as string | null,
+      client: { id: uuid(), name: `${pick(FIRST)} ${pick(LAST)}`, phone: `+254 7${Math.floor(between(10000000, 99999999))}` },
+      stylist: { id: stylist.id, name: stylist.name },
+    }
+  })
+}
+
+// POST /api/pos/service-jobs/scan-device → { device: DeviceInfo, warranty_info }
+// — camera-based AI scan; mock returns one fixed, clearly-fake sample device
+// since there's no real hardware to scan in a demo.
+export function makeScanDeviceResult() {
+  return {
+    device: {
+      model: 'iPhone 13 Pro',
+      serial: 'DEMO-SN-0001',
+      manufacture_date: '2022-03',
+      storage: '256GB',
+      color: 'Sierra Blue',
+      model_number: 'A2483',
+      confidence: 0.92,
+    },
+    warranty_info: null,
+  }
+}
+
 export { FIRST, LAST }

@@ -543,6 +543,49 @@ function SourcesUIReplica({tc}:{tc:(k:string)=>string}) {
   )
 }
 
+// ── Live staff-demo UI replica ── real, clickable links out to the deployed
+// staff app (pos.askbiz.co), unlike the other UI replicas on this page which
+// are illustrative-only mockups.
+function DemoUIReplica({tc}:{tc:(k:string)=>string}) {
+  const DEMO_BASE = 'https://pos.askbiz.co/preview'
+  const items = [
+    {icon:'card',    name:tc('landing.demo_cashier_name'),   desc:tc('landing.demo_cashier_desc'),   path:'/cashier'},
+    {icon:'package', name:tc('landing.demo_inventory_name'), desc:tc('landing.demo_inventory_desc'), path:'/inventory'},
+    {icon:'chart',   name:tc('landing.demo_manager_name'),   desc:tc('landing.demo_manager_desc'),   path:'/manager'},
+    {icon:'truck',   name:tc('landing.demo_logistics_name'), desc:tc('landing.demo_logistics_desc'), path:'/logistics'},
+  ]
+  return (
+    <div style={{background:'#FAFAFA',borderRadius:16,border:'1px solid #E5E5E5',overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.09)',width:'100%',fontFamily:'system-ui,-apple-system,sans-serif'}}>
+      <div style={{padding:'12px 18px',borderBottom:'1px solid #F0F0F0',background:'#fff',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div>
+          <span style={{fontSize:10,fontWeight:700,color:'#1A1410'}}>{tc('landing.demo_header')}</span>
+          <span style={{fontSize:9,color:'#AAA',marginLeft:6}}>{tc('landing.demo_header_sub')}</span>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:5,padding:'5px 10px',borderRadius:6,background:'rgba(34,197,94,.08)'}}>
+          <span style={{width:6,height:6,borderRadius:'50%',background:'#16a34a',display:'inline-block'}}/>
+          <span style={{fontSize:9,color:'#16a34a',fontWeight:700}}>{tc('landing.demo_live_badge')}</span>
+        </div>
+      </div>
+      <div style={{padding:'7px 18px 3px',fontSize:8,fontWeight:700,color:'#BBB',letterSpacing:'.1em',background:'#FAFAFA'}}>{tc('landing.demo_cat')}</div>
+      <div>
+        {items.map((item,i)=>(
+          <a key={i} href={DEMO_BASE+item.path} target="_blank" rel="noopener noreferrer"
+             style={{display:'flex',alignItems:'center',gap:10,padding:'9px 18px',borderTop:'1px solid #F5F5F5',background:'#fff',textDecoration:'none'}}>
+            <div style={{width:26,height:26,borderRadius:6,background:'#F5F5F5',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Ic n={item.icon} size={13}/></div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:10,fontWeight:600,color:'#1A1410',marginBottom:1}}>{item.name}</div>
+              <div style={{fontSize:8,color:'#AAA',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{item.desc}</div>
+            </div>
+            <span style={{fontSize:8,fontWeight:700,padding:'3px 9px',borderRadius:5,background:'rgba(201,122,68,.1)',color:'#C97A44',border:'1px solid rgba(201,122,68,.2)',whiteSpace:'nowrap',flexShrink:0}}>
+              {tc('landing.demo_try_it')} →
+            </span>
+          </a>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── POS full tabbed showcase ──────────────────────────────────────────────────
 function PosShowcase({tc,demo}:{tc:(k:string)=>string;demo:Demo}) {
   type TabId = 'overview'|'operations'|'staff'|'branches'|'map'|'audit'|'payments'|'logistics'
@@ -1528,6 +1571,35 @@ function LandingInner({ geo }: { geo: Geo | null }) {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── LIVE STAFF DEMO ───────────────────────────────────────────── */}
+      <section style={{ background:T.bg,padding:'clamp(60px,7vw,88px) clamp(16px,4vw,40px)' }}>
+        <div style={{ maxWidth:1060,margin:'0 auto' }}>
+          <div className="two-col" style={{ gap:'clamp(36px,5vw,64px)' }}>
+            <div data-reveal>
+              <DemoUIReplica tc={tc} />
+            </div>
+            <div data-reveal data-reveal-delay="1">
+              <h2 style={{ fontFamily:'var(--font-instrument)',fontSize:'clamp(26px,3.5vw,46px)',fontWeight:400,lineHeight:1.05,letterSpacing:'-.02em',marginBottom:14,color:T.tx }}>
+                {tc('landing.demo_title_line1')} {tc('landing.demo_title_line2')}
+              </h2>
+              <p style={{ fontSize:14,color:T.tx2,lineHeight:1.75,marginBottom:22,maxWidth:320 }}>
+                {tc('landing.demo_subtitle')}
+              </p>
+              <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
+                {[0,1,2,3].map(i=>tc('landing.demo_feat_'+i)).map((f,i)=>(
+                  <div key={i} style={{ display:'flex',gap:8,alignItems:'center',fontSize:13,color:T.tx2 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T.acc} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>{f}
+                  </div>
+                ))}
+              </div>
+              <a href="https://pos.askbiz.co/preview" target="_blank" rel="noopener noreferrer" className="cta-btn" style={{ display:'inline-flex',alignItems:'center',gap:7,marginTop:22,padding:'11px 22px',borderRadius:9999,background:T.acc,color:'#fff',fontSize:13,fontWeight:700,textDecoration:'none' }}>
+                {tc('landing.demo_cta')} →
+              </a>
             </div>
           </div>
         </div>
