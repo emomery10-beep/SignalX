@@ -79,6 +79,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...(['es', 'fr', 'de', 'nl', 'ar'] as const).map(l => ({ url: `${base}/${l}`, lastModified: now, changeFrequency: "weekly" as const, priority: 0.9 })),
     { url: `${base}/pricing`,                                    lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/point-of-sale`,                              lastModified: now, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${base}/pos-preview`,                                lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     ...SECTORS.map(s => ({ url: `${base}/point-of-sale/${s.id}`,  lastModified: now, changeFrequency: "monthly" as const, priority: 0.8 })),
     ...POS_FEATURES.map(f => ({ url: `${base}/point-of-sale/feature/${f.slug}`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.7 })),
     { url: `${base}/compare`,                                     lastModified: now, changeFrequency: "monthly", priority: 0.9 },

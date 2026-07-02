@@ -43,6 +43,29 @@ const TYPE_STYLE: Record<ChangeType, { labelKey: string; bg: string; color: stri
 }
 
 const buildReleases = (t: (key: string) => string): Release[] => [
+  { version: '2.20.0', date: '2026-07-02', summary: t('changelog.rel_16_summary'), changes: [
+    { type: 'new',      text: t('changelog.rel_16_change_0') },
+    { type: 'new',      text: t('changelog.rel_16_change_1') },
+    { type: 'new',      text: t('changelog.rel_16_change_2') },
+    { type: 'new',      text: t('changelog.rel_16_change_3') },
+    { type: 'new',      text: t('changelog.rel_16_change_4') },
+    { type: 'improved', text: t('changelog.rel_16_change_5') },
+    { type: 'improved', text: t('changelog.rel_16_change_6') },
+    { type: 'improved', text: t('changelog.rel_16_change_7') },
+    { type: 'improved', text: t('changelog.rel_16_change_8') },
+    { type: 'improved', text: t('changelog.rel_16_change_9') },
+    { type: 'improved', text: t('changelog.rel_16_change_10') },
+    { type: 'improved', text: t('changelog.rel_16_change_11') },
+    { type: 'improved', text: t('changelog.rel_16_change_12') },
+    { type: 'improved', text: t('changelog.rel_16_change_13') },
+    { type: 'fixed',    text: t('changelog.rel_16_change_14') },
+    { type: 'fixed',    text: t('changelog.rel_16_change_15') },
+    { type: 'fixed',    text: t('changelog.rel_16_change_16') },
+    { type: 'fixed',    text: t('changelog.rel_16_change_17') },
+    { type: 'fixed',    text: t('changelog.rel_16_change_18') },
+    { type: 'fixed',    text: t('changelog.rel_16_change_19') },
+    { type: 'fixed',    text: t('changelog.rel_16_change_20') },
+  ] },
   { version: '2.19.0', date: '2026-07-01', summary: t('changelog.rel_15_summary'), changes: [
     { type: 'new',      text: t('changelog.rel_15_change_0') },
     { type: 'new',      text: t('changelog.rel_15_change_1') },

@@ -21,6 +21,7 @@ export default function robots(): MetadataRoute.Robots {
         '/profit-margin-calculator',
         '/ai-business-analytics',
         '/point-of-sale',
+        '/pos-preview',
         '/pricing',
         '/vs',
         '/integrations',

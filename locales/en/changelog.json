@@ -1,4 +1,26 @@
 {
+  "rel_16_summary": "Africa-first homepage rebuild, phone number sign-in, a live interactive staff-app demo, and branch delete for Point of Sale.",
+  "rel_16_change_0": "Sign up and sign in with just your phone number and an SMS code — no email required. Your country code is pre-filled from your location.",
+  "rel_16_change_1": "Try a live, fully interactive demo of the staff app — real cashier, inventory, manager and courier screens — free, no sign-up, right from the homepage.",
+  "rel_16_change_2": "Restaurant, salon, repair and factory sectors each get their own real screen in the demo (table map, appointment calendar, device-scan wizard, production capture) instead of a generic checkout.",
+  "rel_16_change_3": "Delete a branch from Point of Sale → Branches — previously you could only rename one, with no way to remove it.",
+  "rel_16_change_4": "A short note from the founder on why AskBiz exists, on the homepage.",
+  "rel_16_change_5": "Homepage rebuilt around phone-first, Africa-first positioning throughout — camera-as-till framing, M-Pesa and mobile money first.",
+  "rel_16_change_6": "Product demo figures (revenue, couriers, order references) now show in your own currency and market instead of always GBP.",
+  "rel_16_change_7": "The \"AskBiz vs the alternatives\" comparison shows a notebook and a hardware till for Kenya, Nigeria and Uganda visitors, and Shopify/Power BI elsewhere.",
+  "rel_16_change_8": "Replaced emoji icons across the homepage and product previews with a consistent icon set that renders reliably on every device.",
+  "rel_16_change_9": "New \"Where it works\" section linking directly to country and business-type pages — now covers Kenya, Nigeria, Uganda, Ghana, Tanzania and South Africa.",
+  "rel_16_change_10": "Homepage title, description and structured data tuned for search visibility in Kenya, Nigeria and Uganda.",
+  "rel_16_change_11": "Translated homepages (/es /fr /de /nl /ar) now correctly self-index in search instead of pointing back to the English page.",
+  "rel_16_change_12": "Mobile navigation decluttered — removed a \"Sign in\" link that duplicated the menu.",
+  "rel_16_change_13": "Installable app (PWA) manifest and homepage structured data updated to match the phone-first positioning.",
+  "rel_16_change_14": "Pricing tiers and the comparison table were rendering as unreadable narrow columns on mobile.",
+  "rel_16_change_15": "\"Watch it in 60 seconds\" linked nowhere useful — it now opens the live product demo.",
+  "rel_16_change_16": "Some pages described the Point of Sale add-on as \"free\" — it's a paid add-on from £5/seat/month; the core AskBiz plan remains free to start.",
+  "rel_16_change_17": "Business plan price shown in structured data didn't match the pricing page.",
+  "rel_16_change_18": "Homepage social-share image (used by WhatsApp and Twitter link previews) was returning a broken link.",
+  "rel_16_change_19": "Visitors from Kenya and Tanzania were being sent to an unsupported language, breaking every link on the homepage.",
+  "rel_16_change_20": "Homepage headline said \"Kenya, Nigeria & Uganda\" while the country list right below it already covered six countries — updated to match.",
   "meta_title": "Changelog | AskBiz",
   "meta_description": "See what’s new in AskBiz — product updates, improvements, and fixes.",
   "type_new": "New",
@@ -16,7 +38,6 @@
   "footer_older": "Looking for older releases?",
   "footer_contact": "Contact support",
   "footer_back": "← Back to Help Centre",
-
   "rel_15_summary": "Team roles & access control, Logistics Intelligence redesign, blog scout reliability fixes, and i18n corrections.",
   "rel_15_change_0": "Team roles — six roles (Owner, Admin, Analyst, Accountant, Buyer, Viewer) with a centralised permission matrix; each role has clearly scoped access to dashboards, AI chat, billing, data sources, POS, and team management",
   "rel_15_change_1": "Team member management — invite by email, resend expiring invites, change a member's role inline, and remove members; API routes enforce role-based guards so only Owners and Admins can invite or manage",
@@ -28,7 +49,6 @@
   "rel_15_change_7": "Shipping & Delivery card on the Overview redesigned — side-stripe left border removed; ghost-card hover (border + drop-shadow) replaced with border-colour transition only; score number separated from label with baseline alignment; emoji replaced with SVG icons; Data Connection block colours corrected to brand tokens",
   "rel_15_change_8": "Logistics pulse card translations showing raw keys (logistics_pulsecard.title, logistics_pulsecard.active) in all languages — all six locale files had an extra namespace wrapper level that the i18n resolver couldn't traverse",
   "rel_15_change_9": "Quick action hover colours on the Logistics tab were using AI-feature indigo (#6366F1 / #0891b2) — corrected to var(--acc) on both Outgoing and Incoming sub-tabs",
-
   "rel_0_summary": "GDPR compliance hardening — consent gating, data-retention enforcement, customer DSAR self-service, a Data Processing Agreement, and PII log redaction across both apps.",
   "rel_0_change_0": "Data Processing Agreement page (/dpa) with sub-processor list — linked from the privacy policy and site footer",
   "rel_0_change_1": "Customer data-subject request (DSAR) UI on the POS customers page — export and delete a customer’s personal data on request, fulfilling GDPR access and erasure rights",
@@ -42,7 +62,6 @@
   "rel_0_change_9": "PIN handling hardened — shared PIN hashing helper plus a rate limiter on the pos-askbiz OTP route, matching the main app",
   "rel_0_change_10": "Personal data (PII) redacted from server logs in notification send and Shopify compliance webhook routes",
   "rel_0_change_11": "Production ‘dev-test’ bypass removed from the gdpr-retention cron — the cron can no longer be triggered without a valid secret in production",
-
   "rel_1_summary": "AI discoverability overhaul — new compare page, camera-first POS hero, homepage rewrite, and removal of 3-month trial messaging.",
   "rel_1_change_0": "/compare page — AskBiz vs Shopify vs Power BI: 12-row feature table, pricing clarity strip, honest verdict section, and explicit correction of the $199/month figure circulating on AI platforms",
   "rel_1_change_1": "Homepage hero rewritten: label now reads “POS · INVENTORY · AI INTELLIGENCE — ONE PLATFORM”, headline “Your shop. Your stock. All in one place.”, subtext leads with “No training. No setup. Just plug in and go.”",
@@ -51,7 +70,6 @@
   "rel_1_change_4": "Point of Sale hero rewritten to camera-first: “Point your camera. That’s your checkout.” with label POINT OF SALE · CAMERA-FIRST and subtext “No barcode gun. No manual entry. No Shopify needed.”",
   "rel_1_change_5": "3-month free trial messaging removed from all user-facing surfaces — homepage CTA, pricing section badge, pricing page plan notes, POS page CTAs, billing page intro, POS section body, trial buttons, FAQ answer, and expired-access message",
   "rel_1_change_6": "Sitemap: /compare added at priority 0.9 with monthly revalidation",
-
   "rel_2_summary": "Blog agent reliability fixes, AI Discovery scoring overhaul, blog topic polish, and Discovery Agent state persistence.",
   "rel_2_change_0": "Victor, Carolyne, and Ben blog agents were silently failing DB inserts — root cause was custom type values (blog_ea, blog_us, blog_mktg_africa) violating the agent_content CHECK constraint. All agents now use type: blog, differentiated via run_id prefix (blog_ea_*, blog_us_*, blog_mktg_africa_*)",
   "rel_2_change_1": "Agent post counts (pending / published / rejected) showing 0 in Victor, Carolyne, and Ben tabs — list routes now filter by run_id prefix instead of type, so Alice’s posts are correctly isolated from the other agents",
@@ -64,7 +82,6 @@
   "rel_2_change_8": "Discovery Agent “Generate manifest” state was lost on page refresh — generated manifests are now written to localStorage on success so the Listed status survives navigation",
   "rel_2_change_9": "AI Discovery audit scoring upgraded to 10-point model: +4 for URL endpoint returning 200, +2 for structured data configured and valid, +4 for probe question returning AskBiz HIT. Previous model capped at 7/10 regardless of probe results",
   "rel_2_change_10": "Discovery audit now runs probe questions across all 6 platforms in parallel (was limited to first 4), and probe hit results feed directly into platform scoring",
-
   "rel_3_summary": "Smart notification system, Paystack payment tracking, POS inventory archiving, CFO dashboard cleanup, and blog + academy design polish.",
   "rel_3_change_0": "In-app notification inbox — payment failures, reorder alerts, daily sales summaries, large sale flags, and source connection health all fire as notifications",
   "rel_3_change_1": "Paystack webhook on main app — charge.success and charge.failed events update payment status and create instant notifications",
@@ -90,7 +107,6 @@
   "rel_3_change_21": "Academy article — removed side-stripe border from description and fixed uppercase tracked headings",
   "rel_3_change_22": "Academy article rows — stripped badge overload (category + difficulty pills) down to plain category label",
   "rel_3_change_23": "Font fallback inconsistency across blog and academy — all changed from sans-serif to system-ui",
-
   "rel_4_summary": "Critical Shopify OAuth fix, proper 404 status codes for dynamic pages, and 3-month free trial promotion on landing page.",
   "rel_4_change_0": "Shopify OAuth route returned 500 due to variable used before declaration — prevented store connection during app review",
   "rel_4_change_1": "Blog posts with invalid slugs returned HTTP 200 instead of 404 — now correctly returns 404 via Next.js notFound()",
@@ -102,7 +118,6 @@
   "rel_4_change_7": "Growth plan CTA in pricing section updated to “Start free trial” with direct signup link",
   "rel_4_change_8": "Trust badges, subtitle, and geo sub-text all updated to reflect the 3-month free trial offer",
   "rel_4_change_9": "FAQ updated to mention 3-month free trial for Growth and PoS",
-
   "rel_5_summary": "3-month free trials for Growth plan and Point of Sale — no card required. Works for both Stripe and M-Pesa/PesaPal users.",
   "rel_5_change_0": "3-month free trial for Growth plan — full Growth features (unlimited questions, daily brief, social commerce, churn intelligence) with no card upfront",
   "rel_5_change_1": "3-month free trial for Point of Sale — up to 5 seats included, no card or M-Pesa required",
@@ -115,7 +130,6 @@
   "rel_5_change_8": "Growth trial expiry check now correctly handles PesaPal-paid users (was only checking for Stripe subscription)",
   "rel_5_change_9": "usePlan hook extended with TrialInfo interface — components can check trial.active, trial.daysLeft, trial.expired",
   "rel_5_change_10": "Growth trial expiry would incorrectly downgrade PesaPal/M-Pesa subscribers who had no Stripe subscription ID",
-
   "rel_6_summary": "Point of Sale marketing page, global currency support, interactive demos, geo-aware PoS pricing, and full logistics API.",
   "rel_6_change_0": "/point-of-sale marketing page — hero, camera-first scan demo, 12-feature grid, comparison table, and per-seat pricing",
   "rel_6_change_1": "Camera-first PoS demo — animated phone mock showing scan → recognise → basket → pay in 4 steps with a progress tracker",
@@ -128,7 +142,6 @@
   "rel_6_change_8": "Growth and Business plan prices now correctly use geo-detected currency on landing page (was hardcoded £ regardless of country)",
   "rel_6_change_9": "/free-tools/break-even-calculator and /free-tools/vat-calculator were returning 404 — files committed and deployed",
   "rel_6_change_10": "PoS pricing card showing £5 for Kenyan users instead of KSh 600 — currency detection now wired end-to-end",
-
   "rel_7_summary": "New free tools, case studies, industry benchmarks, geo-aware CTAs, and POS seat pricing on the landing page.",
   "rel_7_change_0": "VAT Calculator — supports 30+ countries with auto-filled VAT rates and reverse VAT calculation",
   "rel_7_change_1": "Break-Even Calculator — 12 currencies, interactive chart, and what-if price scenarios",
@@ -140,7 +153,6 @@
   "rel_7_change_7": "Navigation mega-menu updated with Resources dropdown linking to all new sections",
   "rel_7_change_8": "Footer updated with Case Studies and Benchmarks links",
   "rel_7_change_9": "Sitemap expanded with all new routes for improved SEO coverage",
-
   "rel_8_summary": "Introducing AskBiz POS — a fully integrated point of sale system with camera scanning, inventory management, staff roles, and real-time BI.",
   "rel_8_change_0": "AskBiz POS — built-in point of sale system accessible from any smartphone or tablet",
   "rel_8_change_1": "Camera-based barcode and price tag scanning using your phone camera — no extra hardware needed",
@@ -159,7 +171,6 @@
   "rel_8_change_14": "22 new Help Centre articles including compliance guides (HMRC, GDPR, receipt law)",
   "rel_8_change_15": "“Retail POS Mastery” learning path — from first sale to full intelligence",
   "rel_8_change_16": "Help Centre POS integration reference updated (previously CSV-only for Zettle/Square)",
-
   "rel_9_summary": "Major help centre overhaul with contextual search, smart escalation, and an in-app help widget.",
   "rel_9_change_0": "In-app floating help widget — contextual article suggestions based on current page",
   "rel_9_change_1": "Live search autocomplete with article title and topic suggestions",
@@ -175,31 +186,26 @@
   "rel_9_change_11": "Click-to-copy on inline code snippets in articles",
   "rel_9_change_12": "Video embed support for articles with a video guide",
   "rel_9_change_13": "Print/PDF view hides navigation and sidebar for clean output",
-
   "rel_10_summary": "Dashboard performance improvements and Shopify sync reliability fixes.",
   "rel_10_change_0": "Dashboard load time reduced by ~40% for accounts with 3+ connected sources",
   "rel_10_change_1": "Shopify order sync now retries automatically on rate-limit errors",
   "rel_10_change_2": "Fixed a bug where revenue figures could show as $0 for the current day",
   "rel_10_change_3": "Resolved an issue with date filters not persisting across page refreshes",
-
   "rel_11_summary": "Forecasting accuracy improvements and minor UI polish.",
   "rel_11_change_0": "Forecasting model now incorporates seasonal trends for more accurate projections",
   "rel_11_change_1": "Ask AI now remembers context across follow-up questions in the same session",
   "rel_11_change_2": "Fixed export button not working on Firefox 124",
   "rel_11_change_3": "Resolved sidebar overlap on screens narrower than 375px",
-
   "rel_12_summary": "Launched Business Tools v2 with new integrations and a redesigned tools sidebar.",
   "rel_12_change_0": "Business Tools v2 — redesigned sidebar with search and favourites",
   "rel_12_change_1": "Xero integration now supports multi-currency accounts",
   "rel_12_change_2": "New “Profit Pulse” widget on the home dashboard",
   "rel_12_change_3": "Google Analytics integration now pulls session and conversion data",
   "rel_12_change_4": "Removed legacy CSV importer — replaced by the new Data Import wizard",
-
   "rel_13_summary": "Security updates and bug fixes.",
   "rel_13_change_0": "Upgraded authentication library to address two low-severity CVEs",
   "rel_13_change_1": "Fixed chart tooltips disappearing on touch devices",
   "rel_13_change_2": "Resolved an issue where invited users could land on a blank screen after sign-up",
-
   "rel_14_summary": "TikTok Shop integration, CFO intelligence fixes, POS map markers, and scout agent reliability.",
   "rel_14_change_0": "TikTok Shop — connect your TikTok Shop store via QR code OAuth 2.0 flow; scan the code on your phone, approve access, and your orders sync automatically",
   "rel_14_change_1": "CFO Forecasts — projected revenue and net profit now show numbers when you have 1 month of history instead of showing dashes; horizon buttons (1M / 3M / 6M / 12M) now visibly change the projected totals",
