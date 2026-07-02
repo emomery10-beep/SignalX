@@ -9,6 +9,8 @@ interface SendOptions {
   subject: string
   html: string
   replyTo?: string
+  /** Extra message headers, e.g. List-Unsubscribe for one-click opt-out */
+  headers?: Record<string, string>
 }
 
 export async function sendEmail(opts: SendOptions): Promise<boolean> {
@@ -31,6 +33,7 @@ export async function sendEmail(opts: SendOptions): Promise<boolean> {
         subject: opts.subject,
         html: opts.html,
         reply_to: opts.replyTo,
+        ...(opts.headers ? { headers: opts.headers } : {}),
       }),
     })
 
@@ -192,6 +195,92 @@ export async function sendMagicLinkEmail(email: string, magicLinkUrl: string, na
       </div>
     </div>`,
   })
+}
+
+// ── Lifecycle emails: shared shell ───────────────────────────────────────────
+// Same visual system as the alert email: #d08a59 header, white card, quiet footer.
+function lifecycleShell(body: string, unsubscribeUrl: string): string {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f3f1;font-family:system-ui,-apple-system,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f3f1;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:#d08a59;padding:24px 36px;text-align:center;">
+            <span style="font-family:Georgia,serif;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-.02em;">AskBiz</span>
+          </td>
+        </tr>
+        <tr><td style="padding:32px 36px 28px;">${body}</td></tr>
+        <tr>
+          <td style="padding:16px 36px;border-top:1px solid #e8e6e1;text-align:center;">
+            <p style="margin:0 0 4px;font-size:11px;color:#a39e97;">AskBiz &middot; <a href="https://askbiz.co" style="color:#d08a59;text-decoration:none;">askbiz.co</a></p>
+            <p style="margin:0;font-size:11px;color:#a39e97;">
+              Don't want emails like this? <a href="${unsubscribeUrl}" style="color:#a39e97;text-decoration:underline;">Unsubscribe</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+}
+
+// ── Welcome email — sent once, shortly after signup ──────────────────────────
+export function welcomeEmail(opts: { firstName: string; unsubscribeUrl: string }): { subject: string; html: string } {
+  const name = opts.firstName || 'there'
+  return {
+    subject: 'Welcome to AskBiz — your first sale takes 2 minutes',
+    html: lifecycleShell(`
+      <h1 style="margin:0 0 10px;font-size:22px;font-weight:700;color:#1a1916;letter-spacing:-.02em;">Hi ${name}, you're in.</h1>
+      <p style="margin:0 0 24px;font-size:15px;color:#6b6760;line-height:1.65;">
+        AskBiz is your till, your stock tracker, and your end-of-day report — on the phone already in your pocket. Here's all it takes:
+      </p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+        <tr><td style="padding:12px 16px;background:#f4f3f1;border-radius:12px;">
+          <p style="margin:0 0 10px;font-size:14px;color:#1a1916;line-height:1.6;"><strong style="color:#d08a59;">1.</strong>&nbsp; Point your camera at a product — no barcode gun, no setup.</p>
+          <p style="margin:0 0 10px;font-size:14px;color:#1a1916;line-height:1.6;"><strong style="color:#d08a59;">2.</strong>&nbsp; Take M-Pesa, mobile money, cash or card.</p>
+          <p style="margin:0;font-size:14px;color:#1a1916;line-height:1.6;"><strong style="color:#d08a59;">3.</strong>&nbsp; Tonight, see exactly what you made and what's running low.</p>
+        </td></tr>
+      </table>
+      <table cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+        <tr><td style="background:#d08a59;border-radius:9999px;padding:14px 28px;">
+          <a href="https://askbiz.co/home" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;display:block;">Make your first sale &rarr;</a>
+        </td></tr>
+      </table>
+      <p style="margin:0;font-size:13px;color:#a39e97;line-height:1.6;">
+        Stuck on anything? Reply to this email — a real person reads it.
+      </p>
+    `, opts.unsubscribeUrl),
+  }
+}
+
+// ── Re-engagement email — sent once, after 14+ days of inactivity ─────────────
+export function reEngagementEmail(opts: { firstName: string; unsubscribeUrl: string }): { subject: string; html: string } {
+  const name = opts.firstName || 'there'
+  return {
+    subject: `Where have you been, ${name}? Your numbers miss you`,
+    html: lifecycleShell(`
+      <h1 style="margin:0 0 10px;font-size:22px;font-weight:700;color:#1a1916;letter-spacing:-.02em;">It's been a while.</h1>
+      <p style="margin:0 0 16px;font-size:15px;color:#6b6760;line-height:1.65;">
+        Hi ${name} — we noticed you haven't been in lately. No guilt trip. Just a reminder of what's waiting:
+      </p>
+      <p style="margin:0 0 24px;font-size:15px;color:#1a1916;line-height:1.7;">
+        Every sale rung on your phone. Stock that warns you before it runs out.
+        And at the end of the day, one number that matters: <strong>what you actually made.</strong>
+      </p>
+      <table cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+        <tr><td style="background:#d08a59;border-radius:9999px;padding:14px 28px;">
+          <a href="https://askbiz.co/signin" style="color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;display:block;">Pick up where you left off &rarr;</a>
+        </td></tr>
+      </table>
+      <p style="margin:0;font-size:13px;color:#a39e97;line-height:1.6;">
+        Your account and the free plan are exactly where you left them. If something didn't work for you, reply and tell us — we read every one.
+      </p>
+    `, opts.unsubscribeUrl),
+  }
 }
 
 // ── Alert fired email ─────────────────────────────────────────────────────────
