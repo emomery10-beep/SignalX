@@ -218,5 +218,6 @@
   "rel_14_change_8": "Expenses tab — removed duplicate camera emoji that was appearing on the Scan Receipt button on mobile",
   "rel_14_change_9": "Scout agents — Maya and Carolyne now search across 5 topics per run instead of 1, dramatically improving the chance of finding relevant market intelligence",
   "rel_14_change_10": "Scout agents — fixed 'Unknown error' showing in the agent log when a scout skipped because it had already run today; the log now shows a clear skip reason",
-  "rel_14_change_11": "POS preview tool — Landed Cost now shows correctly for POS items even when the cost price field is null"
+  "rel_14_change_11": "POS preview tool — Landed Cost now shows correctly for POS items even when the cost price field is null",
+  "rel_16_change_21": "Welcome and re-engagement emails, with one-click unsubscribe on every send."
 }

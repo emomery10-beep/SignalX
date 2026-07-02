@@ -49,6 +49,7 @@ const buildReleases = (t: (key: string) => string): Release[] => [
     { type: 'new',      text: t('changelog.rel_16_change_2') },
     { type: 'new',      text: t('changelog.rel_16_change_3') },
     { type: 'new',      text: t('changelog.rel_16_change_4') },
+    { type: 'new',      text: t('changelog.rel_16_change_21') },
     { type: 'improved', text: t('changelog.rel_16_change_5') },
     { type: 'improved', text: t('changelog.rel_16_change_6') },
     { type: 'improved', text: t('changelog.rel_16_change_7') },
