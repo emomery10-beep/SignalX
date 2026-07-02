@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       payment_type, status, notes, created_at, pos_location_id,
       pos_staff!cashier_id(id, name, role),
       pos_customers(id, phone, name),
-      pos_items!transaction_id(name, qty, unit_price, cost_price, inventory_id)
+      pos_items!transaction_id(id, name, qty, unit_price, cost_price, inventory_id, line_total, refunded)
     `)
     .eq('owner_id', auth.ownerId)
     .gte('created_at', from)
@@ -83,6 +83,24 @@ export async function POST(req: NextRequest) {
   const service = createServiceClient()
   const body = await req.json()
   const { items, payment_type, customer_phone, notes, discount_amount, amount_tendered, shift_id, initial_payment_status } = body
+
+  // Idempotency: a client_tx_id makes retries and offline-queue replays safe.
+  // Dedupe before doing anything with money or stock.
+  const clientTxId = (typeof body.client_tx_id === 'string' && body.client_tx_id.length <= 64) ? body.client_tx_id : null
+  if (clientTxId) {
+    try {
+      const { data: dupe, error: dupeErr } = await service
+        .from('pos_transactions')
+        .select('id, total')
+        .eq('owner_id', ownerId)
+        .eq('client_tx_id', clientTxId)
+        .maybeSingle()
+      // dupeErr means the client_tx_id column isn't in the live schema yet — behave as before
+      if (!dupeErr && dupe) {
+        return NextResponse.json({ transaction_id: dupe.id, total: dupe.total, deduped: true })
+      }
+    } catch { /* dedupe is best-effort — never block a sale on it */ }
+  }
 
   // shift_id is a uuid column — ignore client-side placeholder ids like
   // "shift_1781595035263_mxnf5" so a sale never fails on a bad shift id.
@@ -161,61 +179,108 @@ export async function POST(req: NextRequest) {
     taxCodeMap[tc.category] = { rate: tc.rate, code: tc.code }
   })
 
-  // NOTE: Tax calculation disabled temporarily while schema is being prepared
-  // Items are stored without tax information for now
-  const itemsWithTax = items  // Just use items as-is, no tax processing
+  // Look up cost_price + category server-side for tracked items — cost so we
+  // don't trust client-sent values (fix #16), category to map items to tax codes.
+  const trackedInventoryIds = items
+    .map((i: { inventory_id?: string }) => i.inventory_id)
+    .filter(Boolean) as string[]
+
+  const costPriceMap: Record<string, number> = {}
+  const categoryMap: Record<string, string> = {}
+  if (trackedInventoryIds.length > 0) {
+    const { data: invItems } = await service
+      .from('inventory')
+      .select('id, cost_price, category')
+      .in('id', trackedInventoryIds)
+      .eq('owner_id', ownerId)
+    for (const inv of invItems || []) {
+      costPriceMap[inv.id] = inv.cost_price || 0
+      if (inv.category) categoryMap[inv.id] = String(inv.category).toLowerCase()
+    }
+  }
+
+  // Tax is INCLUSIVE of the sale price (VAT model): we back the tax component
+  // out of the gross, so the customer total is identical with or without tax
+  // codes configured. No codes for this jurisdiction → items carry no tax,
+  // exactly the previous behaviour.
+  const itemsWithTax = items.map((i: any) => {
+    const cat = (i.inventory_id && categoryMap[i.inventory_id]) || ''
+    const code = taxCodeMap[cat] || taxCodeMap['general_merchandise']
+    if (!code || !(code.rate > 0)) return { ...i, tax_code: code?.code || null, tax_rate: code?.rate ?? null, tax_amount: code ? 0 : null }
+    const lineGross = i.qty * i.unit_price
+    const taxAmount = Math.round((lineGross - lineGross / (1 + code.rate / 100)) * 100) / 100
+    return { ...i, tax_code: code.code, tax_rate: code.rate, tax_amount: taxAmount }
+  })
+  const totalTax = Math.round(itemsWithTax.reduce((s: number, i: any) => s + (i.tax_amount || 0), 0) * 100) / 100
 
   const subtotal        = items.reduce((s: number, i: { qty: number; unit_price: number }) => s + i.qty * i.unit_price, 0)
   const discountAmt     = Math.max(0, Number(discount_amount) || 0)
-  const total           = Math.max(0, subtotal - discountAmt)  // No tax included
+  const total           = Math.max(0, subtotal - discountAmt)  // tax-inclusive — unchanged by tax recording
 
   // Create transaction — fix #3: use verified cashier_id from header
-  // NOTE: Tax fields removed temporarily - only core transaction fields
-  // Tax features will be added once database is ready
-  const { data: tx, error: txErr } = await service
+  const txRow: Record<string, unknown> = {
+    owner_id:        ownerId,
+    cashier_id:      verifiedCashierId || null,
+    customer_id,
+    subtotal,
+    discount_amount: discountAmt || null,
+    total,
+    payment_type,
+    amount_tendered: amount_tendered ? Number(amount_tendered) : null,
+    // cash = completed immediately; card/mobile = pending until payment webhook/polling confirms
+    status:          initial_payment_status === 'paid' ? 'completed' : 'pending',
+    payment_status:  initial_payment_status === 'paid' ? 'paid' : 'pending',
+    pos_location_id: txLocationId,
+    shift_id:        safeShiftId,
+    notes:           notes || null,
+  }
+  if (clientTxId) txRow.client_tx_id = clientTxId
+  if (totalTax > 0) {
+    txRow.total_tax               = totalTax
+    txRow.tax_jurisdiction        = jurisdiction
+    txRow.tax_country_code        = taxCountryCode
+    txRow.tax_calculation_version = 'v1_inclusive'
+  }
+
+  let { data: tx, error: txErr } = await service
     .from('pos_transactions')
-    .insert({
-      owner_id:        ownerId,
-      cashier_id:      verifiedCashierId || null,
-      customer_id,
-      subtotal,
-      discount_amount: discountAmt || null,
-      total,
-      payment_type,
-      amount_tendered: amount_tendered ? Number(amount_tendered) : null,
-      // cash = completed immediately; card/mobile = pending until payment webhook/polling confirms
-      status:          initial_payment_status === 'paid' ? 'completed' : 'pending',
-      payment_status:  initial_payment_status === 'paid' ? 'paid' : 'pending',
-      pos_location_id: txLocationId,
-      shift_id:        safeShiftId,
-      notes:           notes || null,
-    })
+    .insert(txRow)
     .select('id')
     .single()
+
+  if (txErr) {
+    // 23505 = unique violation: a concurrent retry already recorded this sale — return it
+    if (clientTxId && txErr.code === '23505') {
+      const { data: dupe } = await service
+        .from('pos_transactions')
+        .select('id, total')
+        .eq('owner_id', ownerId)
+        .eq('client_tx_id', clientTxId)
+        .maybeSingle()
+      if (dupe) return NextResponse.json({ transaction_id: dupe.id, total: dupe.total, deduped: true })
+    }
+    // Live schema may predate the client_tx_id / tax migrations — a sale must
+    // never fail because an optional column is missing. Retry with core fields only.
+    if (/client_tx_id|total_tax|tax_jurisdiction|tax_country_code|tax_calculation_version|column|schema cache/i.test(txErr.message || '')) {
+      delete txRow.client_tx_id
+      delete txRow.total_tax
+      delete txRow.tax_jurisdiction
+      delete txRow.tax_country_code
+      delete txRow.tax_calculation_version
+      ;({ data: tx, error: txErr } = await service
+        .from('pos_transactions')
+        .insert(txRow)
+        .select('id')
+        .single())
+    }
+  }
 
   if (txErr || !tx) {
     console.error('Transaction insert error:', txErr)
     return NextResponse.json({ error: txErr?.message || 'Failed to create transaction' }, { status: 500 })
   }
 
-  // Insert line items — fix #16: look up cost_price server-side for tracked items
-  // Build a map of inventory_id → cost_price from DB so we don't trust client-sent values
-  const trackedInventoryIds = items
-    .map((i: { inventory_id?: string }) => i.inventory_id)
-    .filter(Boolean) as string[]
-
-  const costPriceMap: Record<string, number> = {}
-  if (trackedInventoryIds.length > 0) {
-    const { data: invItems } = await service
-      .from('inventory')
-      .select('id, cost_price')
-      .in('id', trackedInventoryIds)
-      .eq('owner_id', ownerId)
-    for (const inv of invItems || []) {
-      costPriceMap[inv.id] = inv.cost_price || 0
-    }
-  }
-
+  // Insert line items (inventory cost/category map was built above, pre-insert)
   const lineItems = itemsWithTax.map((i: any) => ({
     transaction_id: tx.id,
     inventory_id:   i.inventory_id || null,
@@ -225,12 +290,35 @@ export async function POST(req: NextRequest) {
     // fix #16 — use server-looked-up cost_price for tracked items; fall back to client for manual items
     cost_price:     i.inventory_id ? (costPriceMap[i.inventory_id] ?? 0) : (i.cost_price || 0),
     line_total:     i.qty * i.unit_price,
-    // NOTE: tax fields (tax_code, tax_rate, tax_amount) removed temporarily
-    // Will be re-enabled once database schema supports them
+    tax_code:       i.tax_code ?? null,
+    tax_rate:       i.tax_rate ?? null,
+    tax_amount:     i.tax_amount ?? null,
   }))
 
-  const { error: itemsErr } = await service.from('pos_items').insert(lineItems)
+  let { error: itemsErr } = await service.from('pos_items').insert(lineItems)
+  if (itemsErr && /tax_code|tax_rate|tax_amount|column|schema cache/i.test(itemsErr.message || '')) {
+    // pos_items tax columns not in the live schema yet — store core fields only
+    ;({ error: itemsErr } = await service.from('pos_items').insert(
+      lineItems.map(({ tax_code, tax_rate, tax_amount, ...core }: any) => core)
+    ))
+  }
   if (itemsErr) return NextResponse.json({ error: itemsErr.message }, { status: 500 })
+
+  // Immutable tax audit trail — best-effort, never blocks the sale
+  if (totalTax > 0) {
+    try {
+      await service.from('pos_tax_audit_log').insert({
+        owner_id:       ownerId,
+        transaction_id: tx.id,
+        items_json:     itemsWithTax.map((i: any) => ({ name: i.name, qty: i.qty, unit_price: i.unit_price, tax_code: i.tax_code, tax_rate: i.tax_rate, tax_amount: i.tax_amount })),
+        subtotal,
+        total_tax:      totalTax,
+        total,
+        jurisdiction,
+        tax_calculation_version: 'v1_inclusive',
+      })
+    } catch { /* audit log missing/unreachable — the sale still stands */ }
+  }
 
   // Stock deduction — fix #1: use single atomic UPDATE (no prior SELECT = no race condition)
   // This replaces the old read-modify-write loop that could double-deduct if a DB trigger also ran.

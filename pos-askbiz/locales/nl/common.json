@@ -17,5 +17,10 @@
   "pay": "Betalen",
   "checkout": "Afrekenen",
   "yes": "Ja",
-  "no": "Nee"
+  "no": "Nee",
+  "consent_aria": "Privacyverklaring",
+  "consent_notice": "AskBiz POS bewaart je inlogsessie en verkoopgegevens lokaal op dit apparaat om de app te laten werken. Geen advertenties of analyse door derden.",
+  "consent_privacy": "Privacybeleid",
+  "consent_cookies": "Cookiebeleid",
+  "consent_got_it": "Begrepen"
 }

@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useLang } from '@/components/LanguageProvider'
 
 const API = process.env.NEXT_PUBLIC_API_URL || ''
 
@@ -27,6 +28,7 @@ export default function PosCardPayment({
   onPaymentComplete,
   onPaymentFailed,
 }: PosCardPaymentProps) {
+  const { tc } = useLang()
   const supabase = createClient()
   const [status, setStatus] = useState<'idle' | 'generating' | 'waiting' | 'completed' | 'failed'>('idle')
   const [qrCode, setQrCode] = useState<string | null>(null)
@@ -60,7 +62,7 @@ export default function PosCardPayment({
           onPaymentComplete()
         } else if (payment.status === 'failed') {
           setStatus('failed')
-          onPaymentFailed('Payment failed. Please try again.')
+          onPaymentFailed(tc('sell.payment_failed_retry'))
         }
       })
       .subscribe()
@@ -78,7 +80,7 @@ export default function PosCardPayment({
       if (attempts > 90) { // 3 min timeout
         clearInterval(timer)
         setStatus('failed')
-        onPaymentFailed('Payment timed out. Please try again.')
+        onPaymentFailed(tc('sell.payment_timed_out'))
         return
       }
       try {
@@ -94,7 +96,7 @@ export default function PosCardPayment({
         } else if (data.status === 'failed') {
           clearInterval(timer)
           setStatus('failed')
-          onPaymentFailed('Payment declined. Try another method.')
+          onPaymentFailed(tc('sell.payment_declined'))
         }
       } catch {}
     }, 2000)
@@ -133,7 +135,7 @@ export default function PosCardPayment({
       const data = await res.json()
       if (!res.ok || !data.success) {
         setStatus('failed')
-        onPaymentFailed(data.error || 'Could not create payment link')
+        onPaymentFailed(data.error || tc('sell.payment_link_failed'))
         return
       }
       setQrCode(data.qr_code)
@@ -142,7 +144,7 @@ export default function PosCardPayment({
       setStatus('waiting')
     } catch (err: any) {
       setStatus('failed')
-      onPaymentFailed(err.message || 'Network error')
+      onPaymentFailed(tc('sell.network_error'))
     }
   }
 
@@ -152,8 +154,8 @@ export default function PosCardPayment({
   if (status === 'generating') return (
     <div style={{ marginTop: 14, padding: '24px 16px', background: '#fff', borderRadius: 16, border: '1px solid #e5e2dc', textAlign: 'center' }}>
       <div style={{ fontSize: 28, marginBottom: 8 }}>⏳</div>
-      <div style={{ fontSize: 14, fontWeight: 600, color: '#1a1916' }}>Generating payment link...</div>
-      <div style={{ fontSize: 12, color: '#6b6760', marginTop: 4 }}>Just a moment</div>
+      <div style={{ fontSize: 14, fontWeight: 600, color: '#1a1916' }}>{tc('sell.cardpay_generating')}</div>
+      <div style={{ fontSize: 12, color: '#6b6760', marginTop: 4 }}>{tc('sell.just_a_moment')}</div>
     </div>
   )
 
@@ -162,14 +164,14 @@ export default function PosCardPayment({
     <div style={{ marginTop: 14 }}>
       {/* Amount banner */}
       <div style={{ padding: '12px 16px', background: ACC, borderRadius: '12px 12px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>Amount due</span>
+        <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{tc('sell.amount_due')}</span>
         <span style={{ color: '#fff', fontSize: 22, fontWeight: 900 }}>{currencySymbol}{amount.toFixed(2)}</span>
       </div>
 
       <div style={{ background: '#fff', border: '1px solid #e5e2dc', borderTop: 'none', borderRadius: '0 0 16px 16px', padding: '16px' }}>
         {/* Cashier instruction */}
         <div style={{ fontSize: 12, fontWeight: 600, color: '#6b6760', textAlign: 'center', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Show customer this QR code
+          {tc('sell.cardpay_show_qr')}
         </div>
 
         {/* QR Code */}
@@ -177,7 +179,7 @@ export default function PosCardPayment({
           <div style={{ textAlign: 'center', marginBottom: 16 }}>
             <img
               src={qrCode}
-              alt="Scan to pay"
+              alt={tc('sell.cardpay_scan_alt')}
               style={{ width: 200, height: 200, borderRadius: 12, border: '3px solid #e5e2dc', display: 'block', margin: '0 auto' }}
             />
           </div>
@@ -187,23 +189,23 @@ export default function PosCardPayment({
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
           <div style={{ padding: '10px 8px', background: '#f9f8f6', borderRadius: 10, textAlign: 'center' }}>
             <div style={{ fontSize: 18, marginBottom: 2 }}>📱</div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#374151' }}>Scan QR</div>
-            <div style={{ fontSize: 10, color: '#6b6760' }}>with any camera</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: '#374151' }}>{tc('sell.cardpay_scan_qr')}</div>
+            <div style={{ fontSize: 10, color: '#6b6760' }}>{tc('sell.cardpay_any_camera')}</div>
           </div>
           <div style={{ padding: '10px 8px', background: '#f9f8f6', borderRadius: 10, textAlign: 'center' }}>
             <div style={{ fontSize: 18, marginBottom: 2 }}>󰀀</div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#374151' }}>Apple / Google Pay</div>
-            <div style={{ fontSize: 10, color: '#6b6760' }}>tap to pay on device</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: '#374151' }}>{tc('sell.apple_google_pay')}</div>
+            <div style={{ fontSize: 10, color: '#6b6760' }}>{tc('sell.cardpay_tap_to_pay')}</div>
           </div>
         </div>
 
         {/* Waiting indicator */}
         <div style={{ padding: '10px', background: 'rgba(59,130,246,.06)', borderRadius: 10, border: '1px solid rgba(59,130,246,.15)', textAlign: 'center' }}>
           <div style={{ fontSize: 12, color: '#2563eb', fontWeight: 600 }}>
-            ⏳ Waiting for customer to pay...
+            ⏳ {tc('sell.cardpay_waiting')}
           </div>
           <div style={{ fontSize: 11, color: '#6b6760', marginTop: 2 }}>
-            Page updates automatically
+            {tc('sell.updates_automatically')}
           </div>
         </div>
 
@@ -212,7 +214,7 @@ export default function PosCardPayment({
           <div style={{ marginTop: 10, textAlign: 'center' }}>
             <a href={checkoutUrl} target="_blank" rel="noopener noreferrer"
               style={{ fontSize: 11, color: '#6b6760', textDecoration: 'underline' }}>
-              Share payment link instead
+              {tc('sell.cardpay_share_link')}
             </a>
           </div>
         )}
@@ -224,8 +226,8 @@ export default function PosCardPayment({
   if (status === 'completed') return (
     <div style={{ marginTop: 14, padding: '24px', background: 'rgba(22,163,74,.06)', border: '2px solid rgba(22,163,74,.3)', borderRadius: 16, textAlign: 'center' }}>
       <div style={{ fontSize: 40, marginBottom: 8 }}>✅</div>
-      <div style={{ fontSize: 18, fontWeight: 800, color: '#16a34a' }}>Payment received!</div>
-      <div style={{ fontSize: 13, color: '#6b6760', marginTop: 4 }}>{currencySymbol}{amount.toFixed(2)} by card</div>
+      <div style={{ fontSize: 18, fontWeight: 800, color: '#16a34a' }}>{tc('sell.payment_received')}</div>
+      <div style={{ fontSize: 13, color: '#6b6760', marginTop: 4 }}>{tc('sell.cardpay_by_card', { amount: `${currencySymbol}${amount.toFixed(2)}` })}</div>
     </div>
   )
 
@@ -233,9 +235,9 @@ export default function PosCardPayment({
   if (status === 'failed') return (
     <div style={{ marginTop: 14, padding: '20px 16px', background: 'rgba(220,38,38,.05)', border: '1px solid rgba(220,38,38,.2)', borderRadius: 16, textAlign: 'center' }}>
       <div style={{ fontSize: 28, marginBottom: 8 }}>❌</div>
-      <div style={{ fontSize: 14, fontWeight: 600, color: '#dc2626', marginBottom: 12 }}>Payment failed</div>
+      <div style={{ fontSize: 14, fontWeight: 600, color: '#dc2626', marginBottom: 12 }}>{tc('sell.payment_failed')}</div>
       <button onClick={initiateCard} style={{ padding: '10px 20px', borderRadius: 10, background: ACC, color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
-        Try again
+        {tc('sell.try_again')}
       </button>
     </div>
   )

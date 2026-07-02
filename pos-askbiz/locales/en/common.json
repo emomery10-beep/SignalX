@@ -17,5 +17,10 @@
   "pay": "Pay",
   "checkout": "Checkout",
   "yes": "Yes",
-  "no": "No"
+  "no": "No",
+  "consent_aria": "Privacy notice",
+  "consent_notice": "AskBiz POS stores your sign-in session and sale data locally on this device to keep the app working. We don't use advertising or third-party analytics.",
+  "consent_privacy": "Privacy policy",
+  "consent_cookies": "Cookie policy",
+  "consent_got_it": "Got it"
 }

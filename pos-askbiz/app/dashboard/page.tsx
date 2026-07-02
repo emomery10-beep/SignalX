@@ -629,7 +629,10 @@ function RetailManagerDashboard({ session }: { session: StaffSession }) {
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <span style={{ fontWeight: 700, fontSize: 15 }}>{tc('dashboard.retail_recent_sales')}</span>
-          <button onClick={load} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>↻</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <a href="/refunds" style={{ color: ACC, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>{tc('dashboard.refunds_link')}</a>
+            <button onClick={load} style={{ background: 'none', border: 'none', color: ACC, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>↻</button>
+          </div>
         </div>
         {txns.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--pos-muted)', fontSize: 14 }}>{tc('dashboard.retail_no_sales')}</div>
@@ -957,7 +960,10 @@ function ManagerDashboard({ session, notify }: { session: StaffSession; notify: 
       </Card>
 
       <Card>
-        <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>{tc('dashboard.manager_todays_transactions')}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <span style={{ fontWeight: 700, fontSize: 15 }}>{tc('dashboard.manager_todays_transactions')}</span>
+          <a href="/refunds" style={{ color: ACC, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>{tc('dashboard.refunds_link')}</a>
+        </div>
         {txns.length === 0 ? <div style={{ color: 'var(--pos-muted)', fontSize: 13 }}>{tc('dashboard.manager_no_transactions')}</div> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {txns.slice(0, 8).map((t, idx) => (

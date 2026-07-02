@@ -126,14 +126,58 @@ export default function SellPage() {
   const [lastTotal, setLastTotal]       = useState(0)
   const [sendingReceipt, setSendingReceipt] = useState(false)
   const [receiptSent, setReceiptSent]   = useState(false)
+  const [receiptError, setReceiptError] = useState('')
   const [oversold, setOversold]         = useState<string[]>([])
   const [expiryWarning, setExpiryWarning] = useState<string | null>(null)
   const [mpesaPhone, setMpesaPhone]       = useState('')
   const [paymentError, setPaymentError]   = useState<string | null>(null)
+  const [offlineSale, setOfflineSale]     = useState(false)
+
+  // One id per sale, stable across retries — the API dedupes on it so a
+  // timed-out checkout can be retried (or replayed from the offline queue)
+  // without ever recording the sale twice.
+  const saleIdRef = useRef('')
+  const getSaleId = () => {
+    if (!saleIdRef.current) {
+      saleIdRef.current = (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : `tx_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+    }
+    return saleIdRef.current
+  }
 
   // Payment config
   const [stripeVerified, setStripeVerified] = useState(false)
   const [cardProvider, setCardProvider] = useState<'stripe' | 'paystack' | null>(null)
+  // null = unknown (fetch failed / still loading) — only nag or block when we know for sure
+  const [paymentConfigured, setPaymentConfigured] = useState<boolean | null>(null)
+  const [productCount, setProductCount] = useState<number | null>(null)
+
+  // Practice mode — fully on-device guided run-through: demo products,
+  // simulated scan, checkout never calls the API. Nothing is recorded.
+  const [practice, setPractice] = useState(false)
+  const [showPracticeCard, setShowPracticeCard] = useState(false)
+  const practiceDoneKey = (s: StaffSession) => `pos_practice_done_${s.id}`
+  const demoItems = (): InventoryItem[] => [
+    { id: 'demo_1', name: tc('sell.demo_rice'),  sale_price: 2.50, cost_price: 1.80, stock_qty: 20 },
+    { id: 'demo_2', name: tc('sell.demo_milk'),  sale_price: 1.20, cost_price: 0.85, stock_qty: 12 },
+    { id: 'demo_3', name: tc('sell.demo_soap'),  sale_price: 0.90, cost_price: 0.55, stock_qty: 30 },
+    { id: 'demo_4', name: tc('sell.demo_bread'), sale_price: 1.00, cost_price: 0.60, stock_qty: 8 },
+  ]
+  const startPractice = () => {
+    setPractice(true); setPaymentType('cash'); setCart([])
+    setScanResult(null); setScanError(''); setSearchQuery(''); setSearchResults([])
+    setScreen('add'); setAddMode('camera')
+  }
+  const exitPractice = () => {
+    if (staff) { try { localStorage.setItem(practiceDoneKey(staff), '1') } catch {} }
+    setShowPracticeCard(false); setPractice(false); setCart([])
+    setSearchQuery(''); setSearchResults([]); setScanResult(null)
+    setAmountTendered(''); setCheckoutError('')
+    // Clear the fake practice transaction so the next real checkout renders its Complete button
+    setLastTxId(''); setLastTotal(0); setPaymentError(null)
+    setScreen('home')
+  }
 
   // Shift
   const [shiftOpen, setShiftOpen]     = useState<boolean | null>(null)
@@ -154,6 +198,7 @@ export default function SellPage() {
     setStaff(s)
     setSym(s.currency_symbol || '£')
     setBiz(bizLabel(s.business_type || 'retail', tc))
+    try { if (!localStorage.getItem(`pos_practice_done_${s.id}`)) setShowPracticeCard(true) } catch {}
     loadTodayStats(s)
     if (s.location_id) checkShift(s)  // sync localStorage check
     // Fetch fresh owner config to get correct currency symbol
@@ -165,10 +210,20 @@ export default function SellPage() {
     }).catch(() => {})
 
     // Fetch payment config to know if Stripe is verified (for Apple Pay sub-option)
+    // and whether card/M-Pesa are available at all (surfaced on home + checkout)
     fetch(`${API}/api/pos/payment/setup`, {
       headers: { 'x-owner-id': s.owner_id, 'x-staff-id': s.id },
     }).then(r => r.json()).then(cfg => {
       if (cfg.stripe_onboarding_complete) setStripeVerified(true)
+      if (typeof cfg.configured === 'boolean') setPaymentConfigured(cfg.configured && cfg.is_active !== false)
+    }).catch(() => {})
+
+    // Product count — a brand-new business with zero products gets pointed
+    // at manual entry instead of discovering an empty search at the till
+    fetch(`${API}/api/pos/inventory?limit=1`, {
+      headers: { 'x-owner-id': s.owner_id, 'x-staff-id': s.id },
+    }).then(r => r.json()).then(data => {
+      if (typeof data.total === 'number') setProductCount(data.total)
     }).catch(() => {})
 
     // Start capturing location immediately so it's ready by checkout
@@ -267,6 +322,50 @@ export default function SellPage() {
     setShiftLoading(false)
   }
 
+  // ── Offline queue — cash sales made without signal upload later ──
+  const offlineKey = (s: StaffSession) => `pos_offline_sales_${s.owner_id}_${s.id}`
+  const replayingRef = useRef(false)
+
+  const replayOfflineSales = useCallback(async () => {
+    if (!staff || replayingRef.current) return
+    let queue: { client_tx_id: string; body: any }[] = []
+    try { queue = JSON.parse(localStorage.getItem(offlineKey(staff)) || '[]') } catch {}
+    if (!queue.length) return
+    replayingRef.current = true
+    const remaining = [...queue]
+    for (const entry of queue) {
+      try {
+        const res = await fetch(`${API}/api/pos/transactions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-owner-id': staff.owner_id, 'x-staff-id': staff.id },
+          body: JSON.stringify(entry.body),
+        })
+        // Uploaded (or rejected as permanently invalid) → drop from the queue.
+        // 5xx / network errors keep the entry for the next replay.
+        if (res.ok || res.status === 400) remaining.splice(remaining.findIndex(e => e.client_tx_id === entry.client_tx_id), 1)
+        else break
+      } catch { break }
+    }
+    try { localStorage.setItem(offlineKey(staff), JSON.stringify(remaining)) } catch {}
+    replayingRef.current = false
+    if (remaining.length < queue.length) loadTodayStats(staff)
+  }, [staff])
+
+  useEffect(() => {
+    if (!staff) return
+    replayOfflineSales()
+    window.addEventListener('online', replayOfflineSales)
+    return () => window.removeEventListener('online', replayOfflineSales)
+  }, [staff, replayOfflineSales])
+
+  // ── Navigation guard — warn before leaving with an unpaid cart ──
+  useEffect(() => {
+    if (cart.length === 0 || screen === 'receipt') return
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = '' }
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [cart.length, screen])
+
   // ── Computed totals ─────────────────────────────────────────
   const subtotal = cart.reduce((s, i) => s + i.qty * i.unit_price, 0)
   const discountAmt = (() => {
@@ -280,7 +379,20 @@ export default function SellPage() {
   const changeDue  = paymentType === 'cash' && tendered > cartTotal ? tendered - cartTotal : 0
 
   // ── Camera (native capture — reliable on iOS / incognito) ──────
-  const openProductCamera = () => prodInputRef.current?.click()
+  const openProductCamera = () => {
+    if (practice) {
+      // Simulate a successful scan — no camera, no API, nothing recorded
+      const demo = demoItems()[cart.length % 4]
+      setScanError('')
+      setScanning(true)
+      setTimeout(() => {
+        setScanResult({ name: demo.name, price: demo.sale_price, inventory_id: demo.id })
+        setScanning(false)
+      }, 700)
+      return
+    }
+    prodInputRef.current?.click()
+  }
   const stopCamera = () => {} // retained as a no-op for legacy call sites
 
   const scanProductFile = async (file: File) => {
@@ -304,6 +416,12 @@ export default function SellPage() {
 
   // ── Inventory search ─────────────────────────────────────────
   const searchInventory = useCallback(async (q: string) => {
+    if (practice) {
+      // Demo products only — visible without typing so there's nothing to guess
+      const all = demoItems()
+      setSearchResults(q.trim() ? all.filter(i => i.name.toLowerCase().includes(q.trim().toLowerCase())) : all)
+      return
+    }
     if (!q.trim() || !staff) { setSearchResults([]); return }
     setSearchLoading(true)
     try {
@@ -314,7 +432,7 @@ export default function SellPage() {
       setSearchResults(data.inventory || [])
     } catch {}
     setSearchLoading(false)
-  }, [staff])
+  }, [staff, practice, tc])
 
   useEffect(() => {
     const t = setTimeout(() => searchInventory(searchQuery), 300)
@@ -393,6 +511,13 @@ export default function SellPage() {
   // ── Checkout ──────────────────────────────────────────────────
   const handleCheckout = async () => {
     if (!staff || cart.length === 0) return
+    if (practice) {
+      // Practice checkout stays entirely on-device — no transaction is created
+      setLastTxId('practice')
+      setLastTotal(cartTotal)
+      setScreen('receipt')
+      return
+    }
     setProcessing(true)
     setCheckoutError('')
     try {
@@ -408,22 +533,34 @@ export default function SellPage() {
           )
         })
       }
-      const res = await fetch(`${API}/api/pos/transactions`, {
+      const txBody = {
+        items:           cart,
+        payment_type:    paymentType === 'mobile' ? 'mpesa' : paymentType,
+        cashier_id:      staff.id,
+        customer_phone:  paymentType === 'mobile' ? (mpesaPhone || customerPhone || null) : (customerPhone || null),
+        discount_amount:          discountAmt || null,
+        amount_tendered:          paymentType === 'cash' && tendered ? tendered : null,
+        shift_id:                 shiftId || null,
+        // cash = paid straight away; card/mobile = pending until webhook/polling confirms
+        initial_payment_status:   paymentType === 'cash' ? 'paid' : 'pending',
+        notes:           [tableNumber ? `Table: ${tableNumber}` : '', geo ? `|__geo:${geo.lat.toFixed(6)},${geo.lng.toFixed(6)}` : ''].filter(Boolean).join(' ') || undefined,
+        client_tx_id:    getSaleId(),
+      }
+
+      // The client_tx_id makes this POST idempotent, so a request that timed
+      // out mid-flight can be retried once without risking a double record.
+      const postSale = () => fetch(`${API}/api/pos/transactions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-owner-id': staff.owner_id, 'x-staff-id': staff.id },
-        body: JSON.stringify({
-          items:           cart,
-          payment_type:    paymentType === 'mobile' ? 'mpesa' : paymentType,
-          cashier_id:      staff.id,
-          customer_phone:  paymentType === 'mobile' ? (mpesaPhone || customerPhone || null) : (customerPhone || null),
-          discount_amount:          discountAmt || null,
-          amount_tendered:          paymentType === 'cash' && tendered ? tendered : null,
-          shift_id:                 shiftId || null,
-          // cash = paid straight away; card/mobile = pending until webhook/polling confirms
-          initial_payment_status:   paymentType === 'cash' ? 'paid' : 'pending',
-          notes:           [tableNumber ? `Table: ${tableNumber}` : '', geo ? `|__geo:${geo.lat.toFixed(6)},${geo.lng.toFixed(6)}` : ''].filter(Boolean).join(' ') || undefined,
-        }),
+        body: JSON.stringify(txBody),
       })
+      let res: Response
+      try {
+        res = await postSale()
+      } catch {
+        await new Promise(r => setTimeout(r, 800))
+        res = await postSale() // second network failure falls through to the outer catch
+      }
       const data = await res.json()
       if (data.transaction_id) {
         setLastTxId(data.transaction_id)
@@ -439,33 +576,72 @@ export default function SellPage() {
         setCheckoutError(data.error || tc('sell.payment_failed_retry'))
       }
     } catch (err: any) {
-      setCheckoutError(tc('sell.network_error'))
+      // Cash was already handed over — record the sale on-device and upload
+      // when signal returns. Card/M-Pesa can't proceed without a connection.
+      if (paymentType === 'cash' && staff) {
+        try {
+          const queue = JSON.parse(localStorage.getItem(offlineKey(staff)) || '[]')
+          if (!queue.some((e: any) => e.client_tx_id === saleIdRef.current)) {
+            queue.push({
+              client_tx_id: saleIdRef.current,
+              body: {
+                items: cart, payment_type: 'cash', cashier_id: staff.id,
+                customer_phone: customerPhone || null, discount_amount: discountAmt || null,
+                amount_tendered: tendered || null, shift_id: shiftId || null,
+                initial_payment_status: 'paid',
+                notes: tableNumber ? `Table: ${tableNumber}` : undefined,
+                client_tx_id: saleIdRef.current,
+              },
+            })
+            localStorage.setItem(offlineKey(staff), JSON.stringify(queue))
+          }
+          setOfflineSale(true)
+          setLastTxId(`offline_${saleIdRef.current}`)
+          setLastTotal(cartTotal)
+          setTodaySales(s => s + 1)
+          setTodayRevenue(r => r + cartTotal)
+          setScreen('receipt')
+        } catch {
+          setCheckoutError(tc('sell.network_error'))
+        }
+      } else {
+        setCheckoutError(tc('sell.network_error'))
+      }
     }
     setProcessing(false)
   }
 
   const handleSendReceipt = async () => {
-    if (!customerPhone || !lastTxId) return
+    if (!customerPhone || !lastTxId || sendingReceipt) return
     setSendingReceipt(true)
+    setReceiptError('')
     try {
-      await fetch(`${API}/api/pos/receipt`, {
+      const res = await fetch(`${API}/api/pos/receipt`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-staff-id': staff?.id || '', 'x-owner-id': staff?.owner_id || '' },
         body: JSON.stringify({ transaction_id: lastTxId, phone: customerPhone }),
       })
-      setReceiptSent(true)
-    } catch {}
+      if (res.ok) setReceiptSent(true)
+      else {
+        const data = await res.json().catch(() => ({}))
+        setReceiptError(data.error || tc('sell.receipt_send_failed'))
+      }
+    } catch {
+      setReceiptError(tc('sell.receipt_send_failed'))
+    }
     setSendingReceipt(false)
   }
 
   const resetSale = () => {
+    if (practice) { exitPractice(); return }
     setCart([]); setCustomerPhone(''); setPaymentType('cash')
     setDiscountValue(''); setDiscountType('amount')
     setAmountTendered(''); setTableNumber('')
-    setLastTxId(''); setLastTotal(0); setReceiptSent(false)
+    setLastTxId(''); setLastTotal(0); setReceiptSent(false); setReceiptError('')
     setOversold([]); setScanResult(null); setScanError('')
     setSearchQuery(''); setSearchResults([])
     setKgInputs({}); setCheckoutError(''); setGeoCoords(null)
+    setOfflineSale(false); saleIdRef.current = ''
     setScreen('home')
   }
 
@@ -473,10 +649,28 @@ export default function SellPage() {
     <CashierCopilot screen={screen} cart={cart} customerPhone={customerPhone} ownerId={staff.owner_id} staffId={staff.id} />
   ) : null
 
+  // Practice banner — pinned guidance for the current step, with an exit
+  const practiceBanner = practice ? (
+    <div style={{ position: 'sticky', top: 0, zIndex: 100, padding: '10px 14px', background: '#1e3a5f', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+      <div style={{ fontSize: 13, color: '#fff', lineHeight: 1.4 }}>
+        <span style={{ fontWeight: 800 }}>🎓 {tc('sell.practice_banner')}</span>
+        {' — '}
+        {screen === 'add' ? tc('sell.practice_hint_add')
+          : screen === 'cart' ? tc('sell.practice_hint_cart')
+          : screen === 'checkout' ? tc('sell.practice_hint_checkout')
+          : screen === 'receipt' ? tc('sell.practice_hint_receipt')
+          : tc('sell.practice_hint_home')}
+      </div>
+      <button onClick={exitPractice} style={{ flexShrink: 0, padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,.15)', border: '1px solid rgba(255,255,255,.3)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+        {tc('sell.practice_exit')}
+      </button>
+    </div>
+  ) : null
+
   // ─────────────────────────────────────────────────────────────
   // HOME SCREEN
   // ─────────────────────────────────────────────────────────────
-  if (screen === 'home') return (<>{copilot}
+  if (screen === 'home') return (<>{copilot}{practiceBanner}
     <div className="pos-screen" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--pos-bg)' }}>
       {/* Header */}
       <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid var(--pos-border)' }}>
@@ -554,6 +748,52 @@ export default function SellPage() {
         </button>
       )}
 
+      {/* First-run practice invitation */}
+      {showPracticeCard && !practice && cart.length === 0 && (
+        <div style={{ margin: '0 20px 12px', padding: '14px 16px', borderRadius: 14, background: '#1e3a5f', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 24 }}>🎓</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{tc('sell.practice_card_title')}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,.75)', marginTop: 2, lineHeight: 1.4 }}>{tc('sell.practice_card_body')}</div>
+            <button onClick={startPractice} style={{ marginTop: 8, padding: '8px 16px', borderRadius: 9, background: '#fff', border: 'none', color: '#1e3a5f', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              {tc('sell.practice_start')}
+            </button>
+          </div>
+          <button onClick={() => { if (staff) { try { localStorage.setItem(practiceDoneKey(staff), '1') } catch {} } setShowPracticeCard(false) }} aria-label={tc('sell.dismiss')} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'rgba(255,255,255,.6)', fontSize: 16, cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}>×</button>
+        </div>
+      )}
+
+      {/* Setup checklist — surfaces prerequisites that used to fail silently at checkout */}
+      {(() => {
+        const needShift  = !!staff?.location_id && shiftOpen === false
+        const noProducts = productCount === 0
+        const noPayments = paymentConfigured === false
+        if (!needShift && !noProducts && !noPayments) return null
+        return (
+          <div style={{ margin: '0 20px 12px', padding: '14px 16px', borderRadius: 14, background: 'var(--pos-surface)', border: '1px solid var(--pos-border)' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--pos-ink)', marginBottom: 10 }}>{tc('sell.setup_heading')}</div>
+            {needShift && (
+              <button onClick={() => { setShiftAction('open'); setShowShiftModal(true) }} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, width: '100%', padding: '10px 12px', marginBottom: 6, borderRadius: 10, background: 'var(--pos-accent-pale)', border: '1px solid var(--pos-accent-ring)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
+                <span style={{ fontSize: 16 }}>🕐</span>
+                <span style={{ fontSize: 13, color: 'var(--pos-ink)', lineHeight: 1.45 }}>{tc('sell.setup_open_shift')}</span>
+              </button>
+            )}
+            {noProducts && (
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', marginBottom: 6, borderRadius: 10, background: 'var(--pos-bg)', border: '1px solid var(--pos-border)' }}>
+                <span style={{ fontSize: 16 }}>📦</span>
+                <span style={{ fontSize: 13, color: 'var(--pos-ink)', lineHeight: 1.45 }}>{tc('sell.setup_no_products')}</span>
+              </div>
+            )}
+            {noPayments && (
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', borderRadius: 10, background: 'var(--pos-bg)', border: '1px solid var(--pos-border)' }}>
+                <span style={{ fontSize: 16 }}>💳</span>
+                <span style={{ fontSize: 13, color: 'var(--pos-ink)', lineHeight: 1.45 }}>{tc('sell.setup_no_payments')}</span>
+              </div>
+            )}
+          </div>
+        )
+      })()}
+
       {/* Cart resume banner */}
       {cart.length > 0 && (
         <div onClick={() => setScreen('cart')} style={{ margin: '0 20px 12px', padding: '14px 16px', borderRadius: 14, background: 'var(--pos-accent-pale)', border: '1px solid var(--pos-accent-ring)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -621,7 +861,7 @@ export default function SellPage() {
   // ─────────────────────────────────────────────────────────────
   // ADD ITEM SCREEN (Camera + Search tabs)
   // ─────────────────────────────────────────────────────────────
-  if (screen === 'add') return (<>{copilot}
+  if (screen === 'add') return (<>{copilot}{practiceBanner}
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#000' }}>
       {/* Header */}
       <div style={{ padding: '16px 20px 0', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -767,7 +1007,7 @@ export default function SellPage() {
   // ─────────────────────────────────────────────────────────────
   // CART SCREEN
   // ─────────────────────────────────────────────────────────────
-  if (screen === 'cart') return (<>{copilot}
+  if (screen === 'cart') return (<>{copilot}{practiceBanner}
     <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '16px 20px 8px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => setScreen('home')} aria-label={tc('sell.back_to_home')} style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', color: 'var(--pos-ink)', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
@@ -850,7 +1090,10 @@ export default function SellPage() {
           </button>
         </div>
         {cart.length > 0 && (
-          <button onClick={() => { setCart([]); setScreen('home') }} style={{ width: '100%', padding: '11px', borderRadius: 12, background: 'transparent', border: '1px solid var(--pos-danger-ring)', color: 'var(--pos-danger)', fontSize: 14, cursor: 'pointer' }}>
+          <button onClick={() => {
+            // Guard the most destructive one-tap action on the page
+            if (window.confirm(tc('sell.cancel_confirm', { heading: biz.heading.toLowerCase() }))) { setCart([]); setScreen('home') }
+          }} style={{ width: '100%', padding: '11px', borderRadius: 12, background: 'transparent', border: '1px solid var(--pos-danger-ring)', color: 'var(--pos-danger)', fontSize: 14, cursor: 'pointer' }}>
             {tc('sell.cancel_heading', { heading: biz.heading.toLowerCase() })}
           </button>
         )}
@@ -861,7 +1104,7 @@ export default function SellPage() {
   // ─────────────────────────────────────────────────────────────
   // CHECKOUT SCREEN
   // ─────────────────────────────────────────────────────────────
-  if (screen === 'checkout') return (<>{copilot}
+  if (screen === 'checkout') return (<>{copilot}{practiceBanner}
     <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '16px 20px 8px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <button onClick={() => setScreen('cart')} aria-label={tc('sell.back_to_cart')} style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--pos-surface)', border: '1px solid var(--pos-border)', color: 'var(--pos-ink)', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
@@ -891,13 +1134,22 @@ export default function SellPage() {
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--pos-ink)', marginBottom: 8 }}>{tc('sell.payment_method')}</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-            {([['cash', tc('sell.pay_cash')], ['card', tc('sell.pay_card')], ['mobile', tc('sell.pay_mobile')]] as const).map(([type, label]) => (
+            {([['cash', tc('sell.pay_cash')], ['card', tc('sell.pay_card')], ['mobile', tc('sell.pay_mobile')]] as const)
+              .filter(([type]) => !practice || type === 'cash') // practice is cash-only: card/M-Pesa would hit real payment providers
+              .map(([type, label]) => (
               <button key={type} onClick={() => { setPaymentType(type); setLastTxId(''); setPaymentError(null); setCardProvider(null); }} className="pos-tab" style={{ padding: '13px 8px', borderRadius: 12, border: `2px solid ${paymentType === type ? ACC : 'var(--pos-border)'}`, background: paymentType === type ? 'var(--pos-accent-pale)' : '#fff', color: paymentType === type ? ACC : 'var(--pos-muted)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 {label}
               </button>
             ))}
           </div>
         </div>
+
+        {/* Payments not configured — explain instead of failing after the transaction is created */}
+        {paymentConfigured === false && paymentType !== 'cash' && (
+          <div className="pos-banner" style={{ marginBottom: 14, padding: '12px 14px', borderRadius: 12, background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.3)', fontSize: 13, color: '#b45309', lineHeight: 1.5 }}>
+            {tc('sell.checkout_payments_not_setup')}
+          </div>
+        )}
 
         {/* Card sub-selector — shown when Card is selected and merchant has both Stripe + Paystack */}
         {paymentType === 'card' && stripeVerified && !lastTxId && (
@@ -1067,7 +1319,7 @@ export default function SellPage() {
         {!lastTxId && (
           <button
             onClick={handleCheckout}
-            disabled={processing || (paymentType === 'cash' && (!amountTendered || tendered < cartTotal)) || (paymentType === 'card' && stripeVerified && !cardProvider)}
+            disabled={processing || (paymentType === 'cash' && (!amountTendered || tendered < cartTotal)) || (paymentType === 'card' && stripeVerified && !cardProvider) || (paymentType !== 'cash' && paymentConfigured === false)}
             className="pos-btn-primary"
             style={{ width: '100%', padding: '18px', borderRadius: 14, background: ACC, color: '#fff', fontSize: 18, fontWeight: 800, border: 'none', cursor: processing ? 'wait' : 'pointer', opacity: (paymentType === 'cash' && (!amountTendered || tendered < cartTotal)) ? 0.5 : 1 }}
           >
@@ -1087,7 +1339,7 @@ export default function SellPage() {
   // ─────────────────────────────────────────────────────────────
   // RECEIPT SCREEN
   // ─────────────────────────────────────────────────────────────
-  if (screen === 'receipt') return (<>{copilot}
+  if (screen === 'receipt') return (<>{copilot}{practiceBanner}
     <div className="pos-screen" style={{ minHeight: '100vh', background: 'var(--pos-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       <div style={{ width: '100%', maxWidth: 340, textAlign: 'center' }}>
         <div className="pos-success-icon" style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--pos-success-pale)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
@@ -1105,6 +1357,20 @@ export default function SellPage() {
           <div style={{ marginBottom: 16, padding: '10px 16px', borderRadius: 12, background: 'var(--pos-success-pale)', border: '1px solid var(--pos-success-ring)' }}>
             <div style={{ fontSize: 12, color: 'var(--pos-success)', marginBottom: 2 }}>{tc('sell.change_to_give')}</div>
             <div style={{ fontSize: 28, fontWeight: 900, color: 'var(--pos-success)' }}>{sym}{changeDue.toFixed(2)}</div>
+          </div>
+        )}
+
+        {/* Practice sale — celebrate, and be explicit that nothing was recorded */}
+        {practice && (
+          <div style={{ marginBottom: 14, padding: '12px 14px', borderRadius: 10, background: '#1e3a5f', fontSize: 13, color: '#fff', textAlign: 'left', lineHeight: 1.5 }}>
+            🎓 {tc('sell.practice_receipt_note')}
+          </div>
+        )}
+
+        {/* Offline sale — recorded on-device, uploads when signal returns */}
+        {offlineSale && (
+          <div style={{ marginBottom: 14, padding: '10px 14px', borderRadius: 10, background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.3)', fontSize: 12, color: '#d97706', textAlign: 'left', lineHeight: 1.5 }}>
+            {tc('sell.offline_sale_saved')}
           </div>
         )}
 
@@ -1130,8 +1396,8 @@ export default function SellPage() {
           )}
         </div>
 
-        {/* WhatsApp receipt */}
-        {!receiptSent ? (
+        {/* WhatsApp receipt — needs the server copy of the sale, so not available for queued offline or practice sales */}
+        {(offlineSale || practice) ? null : !receiptSent ? (
           <div style={{ marginBottom: 16 }}>
             {!customerPhone ? (
               <>
@@ -1148,6 +1414,11 @@ export default function SellPage() {
               <button onClick={handleSendReceipt} disabled={sendingReceipt} style={{ width: '100%', padding: '13px', borderRadius: 12, background: '#25D366', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer' }}>
                 {sendingReceipt ? tc('sell.sending') : tc('sell.send_to_phone', { phone: customerPhone })}
               </button>
+            )}
+            {receiptError && (
+              <div role="alert" style={{ marginTop: 8, padding: '9px 12px', borderRadius: 10, background: 'var(--pos-danger-pale)', border: '1px solid var(--pos-danger-ring)', fontSize: 12, color: 'var(--pos-danger)', fontWeight: 500 }}>
+                ⚠ {receiptError}
+              </div>
             )}
           </div>
         ) : (

@@ -17,5 +17,10 @@
   "pay": "Bezahlen",
   "checkout": "Zur Kasse",
   "yes": "Ja",
-  "no": "Nein"
+  "no": "Nein",
+  "consent_aria": "Datenschutzhinweis",
+  "consent_notice": "AskBiz POS speichert Ihre Anmeldesitzung und Verkaufsdaten lokal auf diesem Gerät, damit die App funktioniert. Keine Werbung, keine Analyse durch Dritte.",
+  "consent_privacy": "Datenschutzrichtlinie",
+  "consent_cookies": "Cookie-Richtlinie",
+  "consent_got_it": "Verstanden"
 }

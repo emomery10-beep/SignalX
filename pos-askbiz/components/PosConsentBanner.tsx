@@ -1,10 +1,12 @@
 'use client'
 import React from 'react'
 import Link from 'next/link'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACK_KEY = 'pos_consent_ack'
 
 export default function PosConsentBanner() {
+  const { tc } = useLang()
   const [visible, setVisible] = React.useState(false)
 
   React.useEffect(() => {
@@ -29,7 +31,7 @@ export default function PosConsentBanner() {
   return (
     <div
       role="dialog"
-      aria-label="Privacy notice"
+      aria-label={tc('common.consent_aria')}
       style={{
         position: 'fixed',
         left: 0,
@@ -67,15 +69,14 @@ export default function PosConsentBanner() {
             color: 'var(--pos-muted)',
           }}
         >
-          AskBiz POS stores your sign-in session and sale data locally on this device to keep the app working. We don&apos;t use advertising or third-party analytics. See our{' '}
+          {tc('common.consent_notice')}{' '}
           <Link href="/privacy" style={{ color: 'var(--pos-accent)', textDecoration: 'underline' }}>
-            Privacy
+            {tc('common.consent_privacy')}
           </Link>{' '}
-          and{' '}
+          ·{' '}
           <Link href="/cookies" style={{ color: 'var(--pos-accent)', textDecoration: 'underline' }}>
-            Cookie
-          </Link>{' '}
-          policies.
+            {tc('common.consent_cookies')}
+          </Link>
         </p>
         <button
           onClick={acknowledge}
@@ -92,7 +93,7 @@ export default function PosConsentBanner() {
             cursor: 'pointer',
           }}
         >
-          Got it
+          {tc('common.consent_got_it')}
         </button>
       </div>
     </div>

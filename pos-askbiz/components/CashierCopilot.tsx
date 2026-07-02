@@ -1,5 +1,6 @@
 'use client'
 import { useState, useCallback } from 'react'
+import { useLang } from '@/components/LanguageProvider'
 
 const ACC = '#d08a59'
 
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export default function CashierCopilot({ screen, cart, customerPhone, ownerId, staffId }: Props) {
+  const { tc } = useLang()
   const [open, setOpen] = useState(false)
   const [tip, setTip] = useState('')
   const [loading, setLoading] = useState(false)
@@ -37,10 +39,10 @@ export default function CashierCopilot({ screen, cart, customerPhone, ownerId, s
       })
       if (res.ok) {
         const data = await res.json()
-        setTip(data.tip || 'No tips right now.')
+        setTip(data.tip || tc('sell.copilot_no_tips'))
       }
     } catch {
-      setTip('Could not load tip.')
+      setTip(tc('sell.copilot_error'))
     } finally {
       setLoading(false)
     }
@@ -73,7 +75,7 @@ export default function CashierCopilot({ screen, cart, customerPhone, ownerId, s
           boxShadow: '0 4px 16px rgba(208,138,89,.4)',
           transition: 'transform 150ms',
         }}
-        title="AI Copilot"
+        title={tc('sell.copilot_title')}
       >
         <span style={{ fontSize: 22 }}>🤖</span>
       </button>
@@ -97,7 +99,7 @@ export default function CashierCopilot({ screen, cart, customerPhone, ownerId, s
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontSize: 18 }}>🤖</span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>Copilot</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{tc('sell.copilot_title')}</span>
         </div>
         <button
           onClick={() => setOpen(false)}
@@ -110,30 +112,30 @@ export default function CashierCopilot({ screen, cart, customerPhone, ownerId, s
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: ACC, animation: 'pulse 1s infinite' }} />
-            <span style={{ fontSize: 12, color: '#999' }}>Thinking...</span>
+            <span style={{ fontSize: 12, color: '#999' }}>{tc('sell.copilot_thinking')}</span>
           </div>
         ) : tip ? (
           <div className="pos-reveal" style={{ fontSize: 13, color: '#e0e0e0', lineHeight: 1.5 }}>{tip}</div>
         ) : (
-          <div style={{ fontSize: 12, color: '#777' }}>Ask me anything about your sale, stock, or customers.</div>
+          <div style={{ fontSize: 12, color: '#777' }}>{tc('sell.copilot_hint')}</div>
         )}
       </div>
 
       {/* Quick actions */}
       <div style={{ padding: '0 10px 8px', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         {screen === 'home' && (
-          <QuickBtn label="What's selling?" onClick={() => fetchTip("What are today's top sellers and what should I push?")} />
+          <QuickBtn label={tc('sell.copilot_q_selling')} onClick={() => fetchTip("What are today's top sellers and what should I push?")} />
         )}
         {screen === 'cart' && cart.length > 0 && (
           <>
-            <QuickBtn label="Cart margin?" onClick={() => fetchTip("What's the margin on this cart and how can I improve it?")} />
-            <QuickBtn label="Suggest add-on" onClick={() => fetchTip("Suggest a high-margin add-on for this cart based on what customers usually buy together.")} />
+            <QuickBtn label={tc('sell.copilot_q_margin')} onClick={() => fetchTip("What's the margin on this cart and how can I improve it?")} />
+            <QuickBtn label={tc('sell.copilot_q_addon')} onClick={() => fetchTip("Suggest a high-margin add-on for this cart based on what customers usually buy together.")} />
           </>
         )}
         {screen === 'checkout' && (
-          <QuickBtn label="Upsell tip" onClick={() => fetchTip("Any last-minute upsell I should suggest before checkout?")} />
+          <QuickBtn label={tc('sell.copilot_q_upsell')} onClick={() => fetchTip("Any last-minute upsell I should suggest before checkout?")} />
         )}
-        <QuickBtn label="Low stock?" onClick={() => fetchTip("Which items are running low that I should mention to the manager?")} />
+        <QuickBtn label={tc('sell.copilot_q_lowstock')} onClick={() => fetchTip("Which items are running low that I should mention to the manager?")} />
       </div>
 
       {/* Input */}
@@ -142,7 +144,7 @@ export default function CashierCopilot({ screen, cart, customerPhone, ownerId, s
           value={question}
           onChange={e => setQuestion(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleAsk()}
-          placeholder="Ask anything..."
+          placeholder={tc('sell.copilot_placeholder')}
           style={{
             flex: 1, padding: '8px 10px', borderRadius: 8,
             background: '#2a2a2a', border: '1px solid #444',
